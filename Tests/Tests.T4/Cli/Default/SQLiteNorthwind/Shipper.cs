@@ -15,7 +15,7 @@ namespace Cli.Default.SQLiteNorthwind
 	[Table("Shippers")]
 	public class Shipper
 	{
-		[Column("ShipperID"  , IsPrimaryKey = true )] public int     ShipperId   { get; set; } // int
+		[Column("ShipperID"  , IsPrimaryKey = true )] public int     ShipperId   { get; set; } // INT
 		[Column("CompanyName", CanBeNull    = false)] public string  CompanyName { get; set; } = null!; // varchar(40)
 		[Column("Phone"                            )] public string? Phone       { get; set; } // varchar(24)
 	}

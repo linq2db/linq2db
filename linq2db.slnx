@@ -13,12 +13,14 @@
     <File Path=".github/ISSUE_TEMPLATE/02_bug_report_linq2db.efcore.yml" />
     <File Path=".github/ISSUE_TEMPLATE/03_bug_report_linq2db.cli.yml" />
     <File Path=".github/ISSUE_TEMPLATE/04_bug_report_linq2db.t4.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/05_bug_report_linq2db.other.yml" />
+    <File Path=".github/ISSUE_TEMPLATE/05_bug_report_linq2db.linqpad.yml" />
+    <File Path=".github/ISSUE_TEMPLATE/09_bug_report_linq2db.other.yml" />
     <File Path=".github/ISSUE_TEMPLATE/11_feture_request_linq2db.yml" />
     <File Path=".github/ISSUE_TEMPLATE/12_feture_request_linq2db.efcore.yml" />
     <File Path=".github/ISSUE_TEMPLATE/13_feture_request_linq2db.cli.yml" />
     <File Path=".github/ISSUE_TEMPLATE/14_feture_request_linq2db.t4.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/15_feture_request_linq2db.other.yml" />
+    <File Path=".github/ISSUE_TEMPLATE/15_feture_request_linq2db.linqpad.yml" />
+    <File Path=".github/ISSUE_TEMPLATE/19_feture_request_linq2db.other.yml" />
     <File Path=".github/ISSUE_TEMPLATE/config.yml" />
   </Folder>
   <Folder Name="/.root/">
@@ -53,7 +55,7 @@
     <File Path="Build/Azure/net80/access.ace.json" />
     <File Path="Build/Azure/net80/access.ace.x64.json" />
     <File Path="Build/Azure/net80/access.mdb.json" />
-    <File Path="Build/Azure/net80/clickhouse.client.json" />
+    <File Path="Build/Azure/net80/clickhouse.driver.json" />
     <File Path="Build/Azure/net80/clickhouse.mysql.json" />
     <File Path="Build/Azure/net80/clickhouse.octonica.json" />
     <File Path="Build/Azure/net80/db2.json" />
@@ -99,7 +101,7 @@
     <File Path="Build/Azure/net90/access.ace.json" />
     <File Path="Build/Azure/net90/access.ace.x64.json" />
     <File Path="Build/Azure/net90/access.mdb.json" />
-    <File Path="Build/Azure/net90/clickhouse.client.json" />
+    <File Path="Build/Azure/net90/clickhouse.driver.json" />
     <File Path="Build/Azure/net90/clickhouse.mysql.json" />
     <File Path="Build/Azure/net90/clickhouse.octonica.json" />
     <File Path="Build/Azure/net90/db2.json" />
@@ -306,6 +308,9 @@
     <Project Path="Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.STS.csproj" />
     <Project Path="Source/LinqToDB.Extensions/LinqToDB.Extensions.csproj" />
     <Project Path="Source/LinqToDB.FSharp/LinqToDB.FSharp.fsproj" />
+    <Project Path="Source/LinqToDB.LINQPad/LinqToDB.LINQPad.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
     <Project Path="Source/LinqToDB.Remote.Grpc/LinqToDB.Remote.Grpc.csproj" />
     <Project Path="Source/LinqToDB.Remote.HttpClient.Client/LinqToDB.Remote.HttpClient.Client.csproj" />
     <Project Path="Source/LinqToDB.Remote.HttpClient.Server/LinqToDB.Remote.HttpClient.Server.csproj" />

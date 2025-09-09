@@ -15,7 +15,7 @@ namespace Tests.Linq
 		[Test]
 		public void Join6([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var actual =
 					from g in db.GrandChild

@@ -24,11 +24,13 @@ namespace LinqToDB.Common
 	public static class Configuration
 	{
 		/// <summary>
-		/// If <c>true</c> - non-primitive and non-enum value types (structures) will be treated as scalar types (e.g. <see cref="DateTime"/>) during mapping;
+		/// If <c>true</c> - structures (except primitive values including enums) will be treated as scalar types during mapping;
 		/// otherwise they will be treated the same way as classes.
-		/// Default value: <c>true</c>.
+		/// Default value: <c>false</c>.
 		/// </summary>
-		public static bool IsStructIsScalarType = true;
+		// TODO: Remove in v7
+		[Obsolete("This API planned for removal in version 7. Use MappingSchema.SetScalarType or ScalarTypeAttribute to configure scalar structs"), EditorBrowsable(EditorBrowsableState.Never)]
+		public static bool IsStructIsScalarType = false;
 
 		/// <summary>
 		/// If <c>true</c> - Enum values are stored as by calling ToString().
@@ -206,17 +208,55 @@ namespace LinqToDB.Common
 
 			/// <summary>
 			/// Controls behavior, when LINQ query chain contains multiple <see cref="System.Linq.Queryable.OrderBy{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> or <see cref="System.Linq.Queryable.OrderByDescending{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> calls:
+			/// <list type="bullet">
+			/// <item>if <c>true</c> - non-first OrderBy* call will be treated as ThenBy* call;</item>
+			/// <item>if <c>false</c> - OrderBy* call will place sort specifications, added by previous OrderBy* and ThenBy* calls, after current call.</item>
+			/// </list>
+			/// Default value: <c>false</c>.
+			/// <para>
+			/// Example:
+			/// <code>
+			/// query.OrderBy(r => r.FirstName).OrderBy(r => r.LastName)
+			/// 
+			/// // <c><see cref="ConcatenateOrderBy"/>=true</c> - non-first OrderBy* calls treated as ordering continuation (non-standard)
+			/// ORDER BY p.FIRST_NAME, p.LAST_NAME
+			/// 
+			/// // <c><see cref="ConcatenateOrderBy"/>=false</c> - last OrderBy* calls have higher priority like they should per API documentation
+			/// ORDER BY p.LAST_NAME, p.FIRST_NAME
+			/// 
+			/// // to completely discard old sort specification, use <see cref="LinqExtensions.RemoveOrderBy{TSource}(System.Linq.IQueryable{TSource})"/> API:
+			/// query.OrderBy(r => r.FirstName).RemoveOrderBy().OrderBy(r => r.LastName)
+			/// 
+			/// // for any <see cref="ConcatenateOrderBy"/> value will produce
+			/// ORDER BY p.LAST_NAME
+			/// </code>
+			/// </para>
+			/// </summary>
+			public static bool ConcatenateOrderBy
+			{
+				get => Options.ConcatenateOrderBy;
+				set
+				{
+					if (Options.ConcatenateOrderBy != value)
+						Options = Options with { ConcatenateOrderBy = value };
+				}
+			}
+
+			/// <summary>
+			/// Controls behavior, when LINQ query chain contains multiple <see cref="System.Linq.Queryable.OrderBy{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> or <see cref="System.Linq.Queryable.OrderByDescending{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> calls:
 			/// - if <c>true</c> - non-first OrderBy* call will be treated as ThenBy* call;
 			/// - if <c>false</c> - OrderBy* call will discard sort specifications, added by previous OrderBy* and ThenBy* calls.
 			/// Default value: <c>false</c>.
 			/// </summary>
+			// TODO: Remove in v7
+			[property: Obsolete("This API was renamed to ConcatenateOrderBy. Compatibility alias will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 			public static bool DoNotClearOrderBys
 			{
-				get => Options.DoNotClearOrderBys;
+				get => Options.ConcatenateOrderBy;
 				set
 				{
-					if (Options.DoNotClearOrderBys != value)
-						Options = Options with { DoNotClearOrderBys = value };
+					if (Options.ConcatenateOrderBy != value)
+						Options = Options with { ConcatenateOrderBy = value };
 				}
 			}
 

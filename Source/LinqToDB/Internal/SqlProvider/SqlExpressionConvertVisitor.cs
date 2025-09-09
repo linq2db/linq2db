@@ -36,6 +36,7 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual bool SupportsBooleanInColumn           => false;
 		protected virtual bool SupportsNullInColumn              => true;
 		protected virtual bool SupportsDistinctAsExistsIntersect => false;
+		protected virtual bool SupportsNullIf                    => true;
 
 		public virtual IQueryElement Convert(OptimizationContext optimizationContext, NullabilityContext nullabilityContext, IQueryElement element, bool visitQueries)
 		{
@@ -131,6 +132,19 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 			{
 				return Visit(NotifyReplaced(newElement, element));
+			}
+
+			if (SupportsNullIf)
+			{
+				if (element.Condition is SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr
+				    && element.TrueValue.IsNullValue())
+				{
+					if (element.FalseValue.Equals(exprExpr.Expr1, LinqToDB.Internal.SqlQuery.SqlExtensions.DefaultComparer))
+						return NotifyReplaced(new SqlFunction(QueryHelper.GetDbDataType(element.FalseValue, MappingSchema), "NULLIF", false, true, exprExpr.Expr1, exprExpr.Expr2), element);
+
+					if (element.FalseValue.Equals(exprExpr.Expr2, LinqToDB.Internal.SqlQuery.SqlExtensions.DefaultComparer))
+						return NotifyReplaced(new SqlFunction(QueryHelper.GetDbDataType(element.FalseValue, MappingSchema), "NULLIF", false, true, exprExpr.Expr2, exprExpr.Expr1), element);
+				}
 			}
 
 			return element;
@@ -466,7 +480,8 @@ namespace LinqToDB.Internal.SqlProvider
 					var exprExpr = new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, predicate.Expr2, null);
 					var condition = !invert
 						? new SqlConditionExpression(exprExpr, trueValue, falseValue)
-						: new SqlConditionExpression(exprExpr.Invert(NullabilityContext), falseValue, trueValue);
+						// plain Invert will restore UnknownAsValue for comparison operators
+						: new SqlConditionExpression(exprExpr.InvertWithoutNull(), falseValue, trueValue);
 
 					if (!SqlProviderFlags.SupportsBooleanType)
 						return new SqlPredicate.IsTrue(condition, trueValue, falseValue, null, false);
@@ -1106,12 +1121,56 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
+			var wrappedElement = WrapBooleanCoalesceItems(element, newElement);
+			if (wrappedElement != null)
+				return Visit(wrappedElement);
+
 			var converted = ConvertCoalesce(element);
 
 			if (!ReferenceEquals(converted, element))
 				return Visit(Optimize(converted));
 
 			return element;
+		}
+
+		protected virtual SqlCoalesceExpression? WrapBooleanCoalesceItems(SqlCoalesceExpression element, IQueryElement newElement, bool forceConvert = false)
+		{
+			var isWrapped = false;
+			ISqlExpression[]? wrappedExpressions = null;
+
+			for (var i = 0; i < element.Expressions.Length; i++)
+			{
+				var wrapped = WrapBooleanExpression(element.Expressions[i], includeFields : false, forceConvert: forceConvert);
+
+				if (!ReferenceEquals(wrapped, element.Expressions[i]))
+				{
+					isWrapped = true;
+
+					if (GetVisitMode(newElement) == VisitMode.Modify)
+					{
+						element.Expressions[i] = wrapped;
+					}
+					else
+					{
+						if (wrappedExpressions == null)
+						{
+							wrappedExpressions = new ISqlExpression[element.Expressions.Length];
+							Array.Copy(element.Expressions, wrappedExpressions, wrappedExpressions.Length);
+						}
+
+						wrappedExpressions[i] = wrapped;
+					}
+				}
+			}
+
+			if (isWrapped)
+			{
+				return GetVisitMode(newElement) == VisitMode.Modify
+					? element
+					: new SqlCoalesceExpression(wrappedExpressions!);
+			}
+
+			return null;
 		}
 
 		#endregion Visitor overrides

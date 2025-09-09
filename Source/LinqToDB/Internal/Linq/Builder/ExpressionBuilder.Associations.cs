@@ -145,17 +145,28 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			AssociationDescriptor? descriptor = null;
 
-			if (accessorMember.MemberInfo.MemberType == MemberTypes.Method)
+			var memberInfo = accessorMember.MemberInfo;
+
+			if (memberInfo is { MemberType: MemberTypes.Method, DeclaringType: not null })
 			{
-				var attribute = MappingSchema.GetAttribute<AssociationAttribute>(
-					accessorMember.MemberInfo.DeclaringType!, accessorMember.MemberInfo);
+				var attribute = MappingSchema.GetAttribute<AssociationAttribute>(memberInfo.DeclaringType!, memberInfo);
+
+				if (attribute == null && memberInfo.DeclaringType?.IsInterface == true && !entityDescriptor.ObjectType.IsInterface)
+				{
+					var newInfo = entityDescriptor.ObjectType.GetImplementation(memberInfo);
+					if (newInfo != null)
+					{
+						attribute  = MappingSchema.GetAttribute<AssociationAttribute>(newInfo.DeclaringType!, newInfo);
+						memberInfo = newInfo;
+					}
+				}
 
 				if (attribute != null)
 					descriptor = new AssociationDescriptor
 					(
 						MappingSchema,
 						entityDescriptor.ObjectType,
-						accessorMember.MemberInfo,
+						memberInfo,
 						attribute.GetThisKeys(),
 						attribute.GetOtherKeys(),
 						attribute.ExpressionPredicate,
@@ -169,15 +180,15 @@ namespace LinqToDB.Internal.Linq.Builder
 						attribute.AliasName
 					);
 			}
-			else if (accessorMember.MemberInfo.MemberType == MemberTypes.Property || accessorMember.MemberInfo.MemberType == MemberTypes.Field)
+			else if (memberInfo.MemberType == MemberTypes.Property || memberInfo.MemberType == MemberTypes.Field)
 			{
 				foreach (var ed in entityDescriptor.Associations)
-					if (ed.MemberInfo.EqualsTo(accessorMember.MemberInfo))
+					if (ed.MemberInfo.EqualsTo(memberInfo))
 						return ed;
 
 				foreach (var m in entityDescriptor.InheritanceMapping)
 					foreach (var ed in MappingSchema.GetEntityDescriptor(m.Type).Associations)
-						if (ed.MemberInfo.EqualsTo(accessorMember.MemberInfo))
+						if (ed.MemberInfo.EqualsTo(memberInfo))
 							return ed;
 			}
 

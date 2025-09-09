@@ -13,9 +13,9 @@ namespace Cli.NoMetadata.SQLite
 {
 	public class FkTestPosition
 	{
-		public long   Company    { get; set; } // integer
-		public long   Department { get; set; } // integer
-		public long   PositionId { get; set; } // integer
+		public long   Company    { get; set; } // INTEGER
+		public long   Department { get; set; } // INTEGER
+		public long   PositionId { get; set; } // INTEGER
 		public string Name       { get; set; } = null!; // nvarchar(50)
 	}
 }

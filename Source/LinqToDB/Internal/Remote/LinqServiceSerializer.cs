@@ -1096,7 +1096,6 @@ namespace LinqToDB.Internal.Remote
 							var elem = (SqlPredicate.Expr)e;
 
 							Append(elem.Expr1);
-							Append(elem.Precedence);
 
 							break;
 						}
@@ -2082,9 +2081,8 @@ namespace LinqToDB.Internal.Remote
 					case QueryElementType.ExprPredicate :
 						{
 							var expr1      = Read<ISqlExpression>()!;
-							var precedence = ReadInt();
 
-							obj = new SqlPredicate.Expr(expr1, precedence);
+							obj = new SqlPredicate.Expr(expr1);
 
 							break;
 						}
@@ -2897,7 +2895,7 @@ namespace LinqToDB.Internal.Remote
 					QueryID      = new Guid(ReadString()!),
 					FieldNames   = new string[fieldCount],
 					FieldTypes   = new Type  [fieldCount],
-					Data         = new List<string[]>(),
+					Data         = new List<string?[]>(),
 				};
 
 				NextLine();

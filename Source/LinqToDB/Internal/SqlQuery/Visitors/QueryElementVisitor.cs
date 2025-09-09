@@ -2516,7 +2516,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				case VisitMode.Modify:
 				{
-					predicate.Expr1 = (ISqlExpression)Visit(predicate.Expr1);
+					predicate.Expr1      = (ISqlExpression)Visit(predicate.Expr1);
+					predicate.Precedence = predicate.Expr1.Precedence;
 					break;
 				}
 				case VisitMode.Transform:
@@ -2525,7 +2526,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					if (ShouldReplace(predicate) || !ReferenceEquals(predicate.Expr1, e))
 					{
-						return NotifyReplaced(new SqlPredicate.Expr(e, predicate.Precedence), predicate);
+						return NotifyReplaced(new SqlPredicate.Expr(e), predicate);
 					}
 
 					break;

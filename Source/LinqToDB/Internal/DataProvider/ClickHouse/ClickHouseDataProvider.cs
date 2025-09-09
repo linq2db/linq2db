@@ -23,7 +23,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 {
 #pragma warning disable MA0048 // File name must match type name
 	sealed class ClickHouseOctonicaDataProvider : ClickHouseDataProvider { public ClickHouseOctonicaDataProvider() : base(ProviderName.ClickHouseOctonica, ClickHouseProvider.Octonica        ) { } }
-	sealed class ClickHouseClientDataProvider   : ClickHouseDataProvider { public ClickHouseClientDataProvider  () : base(ProviderName.ClickHouseClient  , ClickHouseProvider.ClickHouseClient) { } }
+	sealed class ClickHouseDriverDataProvider   : ClickHouseDataProvider { public ClickHouseDriverDataProvider() : base(ProviderName.ClickHouseDriver, ClickHouseProvider.ClickHouseDriver) { } }
 	sealed class ClickHouseMySqlDataProvider    : ClickHouseDataProvider { public ClickHouseMySqlDataProvider   () : base(ProviderName.ClickHouseMySql   , ClickHouseProvider.MySqlConnector  ) { } }
 #pragma warning restore MA0048 // File name must match type name
 
@@ -114,14 +114,6 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					}]                    = Expression.Lambda(body, dataReaderParameter, indexParameter);
 				}
 			}
-
-			if (Provider == ClickHouseProvider.ClickHouseClient && Adapter.ClientDecimalType != null && Adapter.HasFaultyClientDecimalType)
-			{
-				SetProviderField(Adapter.ClientDecimalType, (DbDataReader rd, int idx) => (int  )rd.GetDecimal(idx));
-				SetProviderField(Adapter.ClientDecimalType, (DbDataReader rd, int idx) => (uint )rd.GetDecimal(idx));
-				SetProviderField(Adapter.ClientDecimalType, (DbDataReader rd, int idx) => (long )rd.GetDecimal(idx));
-				SetProviderField(Adapter.ClientDecimalType, (DbDataReader rd, int idx) => (ulong)rd.GetDecimal(idx));
-			}
 		}
 
 		protected override IMemberTranslator CreateMemberTranslator()
@@ -199,17 +191,17 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 					// CLIENT provider
 #if SUPPORTS_DATEONLY
-					(ClickHouseProvider.ClickHouseClient, DataType.Date or  DataType.Date32, DateOnly val)      => val.ToDateTime(default),
+					(ClickHouseProvider.ClickHouseDriver, DataType.Date or  DataType.Date32, DateOnly val)      => val.ToDateTime(default),
 #endif
-					(ClickHouseProvider.ClickHouseClient, DataType.Date or DataType.Date32, DateTimeOffset val) => val.Date,
+					(ClickHouseProvider.ClickHouseDriver, DataType.Date or DataType.Date32, DateTimeOffset val) => val.Date,
 					// https://github.com/DarkWanderer/ClickHouse.Client/issues/138
-					(ClickHouseProvider.ClickHouseClient, DataType.VarBinary or DataType.Binary, byte[] val)    => Encoding.UTF8.GetString(val),
-					(ClickHouseProvider.ClickHouseClient, DataType.IPv4, uint val)                              => new IPAddress(new byte[] { (byte)((val >> 24) & 0xFF), (byte)((val >> 16) & 0xFF), (byte)((val >> 8) & 0xFF), (byte)(val & 0xFF) }).ToString(),
+					(ClickHouseProvider.ClickHouseDriver, DataType.VarBinary or DataType.Binary, byte[] val)    => Encoding.UTF8.GetString(val),
+					(ClickHouseProvider.ClickHouseDriver, DataType.IPv4, uint val)                              => new IPAddress(new byte[] { (byte)((val >> 24) & 0xFF), (byte)((val >> 16) & 0xFF), (byte)((val >> 8) & 0xFF), (byte)(val & 0xFF) }).ToString(),
 					// https://github.com/DarkWanderer/ClickHouse.Client/issues/145
-					(ClickHouseProvider.ClickHouseClient, DataType.IPv6, IPAddress val)                         => val.AddressFamily == AddressFamily.InterNetworkV6 ? val : val.MapToIPv6(),
+					(ClickHouseProvider.ClickHouseDriver, DataType.IPv6, IPAddress val)                         => val.AddressFamily == AddressFamily.InterNetworkV6 ? val : val.MapToIPv6(),
 					// https://github.com/DarkWanderer/ClickHouse.Client/issues/145
-					(ClickHouseProvider.ClickHouseClient, DataType.IPv6, string val)                            => IPAddress.Parse(val).MapToIPv6(),
-					(ClickHouseProvider.ClickHouseClient, DataType.IPv6, byte[] val)                            => new IPAddress(val).MapToIPv6(),
+					(ClickHouseProvider.ClickHouseDriver, DataType.IPv6, string val)                            => IPAddress.Parse(val).MapToIPv6(),
+					(ClickHouseProvider.ClickHouseDriver, DataType.IPv6, byte[] val)                            => new IPAddress(val).MapToIPv6(),
 
 					_ => value
 				};
@@ -265,7 +257,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		{
 			return provider switch
 			{
-				ClickHouseProvider.ClickHouseClient => new ClickHouseMappingSchema.ClientMappingSchema  (),
+				ClickHouseProvider.ClickHouseDriver => new ClickHouseMappingSchema.ClientMappingSchema  (),
 				ClickHouseProvider.MySqlConnector   => new ClickHouseMappingSchema.MySqlMappingSchema   (),
 				_                                   => new ClickHouseMappingSchema.OctonicaMappingSchema()
 			};

@@ -401,7 +401,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue171Test([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
 			db.GetTable<Table171>()
 				.Where (t => t.Gender == Gender.Male)
 				.Select(t => new { value = (int)t.Gender })
@@ -1168,6 +1168,79 @@ namespace Tests.Linq
 			Assert.That(() => db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count(), Throws.TypeOf<InvalidCastException>());
 		}
 
+		#region Issue 5057
+
+		static class Issue5057
+		{
+			[Table]
+			public sealed class Tender
+			{
+				[Column] public TenderId Id { get; set; }
+				[Column] public string? Name { get; set; }
+
+				public static readonly Tender[] Data =
+				[
+					new() { Id = TenderId.From(TestData.Guid1), Name = "Name 1" },
+					new() { Id = TenderId.From(TestData.Guid2), Name = "Name 2" },
+					new() { Id = TenderId.From(TestData.Guid3), Name = "Name 3" },
+				];
+			}
+
+#pragma warning disable CS0660 // Type defines operator == or operator != but does not override Object.Equals(object o)
+#pragma warning disable CS0661 // Type defines operator == or operator != but does not override Object.GetHashCode()
+			[ScalarType]
+			public struct TenderId
+#pragma warning restore CS0661 // Type defines operator == or operator != but does not override Object.GetHashCode()
+#pragma warning restore CS0660 // Type defines operator == or operator != but does not override Object.Equals(object o)
+			{
+				public Guid Value { get; set; }
+				public static TenderId From(Guid value) => new TenderId { Value = value };
+				public static TenderId? From(Guid? value) => value.HasValue ? new TenderId { Value = value.Value } : null;
+
+				public static bool operator ==(TenderId a, TenderId b) => a.Value == b.Value;
+				public static bool operator !=(TenderId a, TenderId b) => !(a == b);
+				public static bool operator ==(TenderId a, Guid b) => a.Value == b;
+				public static bool operator !=(TenderId a, Guid b) => !(a == b);
+				public static bool operator ==(Guid a, TenderId b) => a == b.Value;
+				public static bool operator !=(Guid a, TenderId b) => !(a == b);
+
+				public static MappingSchema GetMappings()
+				{
+					var ms = new MappingSchema();
+
+					ms.SetConverter<TenderId, Guid>(id => id.Value);
+					ms.SetConverter<TenderId, Guid?>(id => id.Value);
+					ms.SetConverter<TenderId?, Guid>(id => id?.Value ?? default);
+					ms.SetConverter<TenderId?, Guid?>(id => id?.Value);
+					ms.SetConverter<Guid, TenderId>(From);
+					ms.SetConverter<Guid, TenderId?>(g => From(g));
+					ms.SetConverter<Guid?, TenderId>(g => g == null ? default : From((Guid)g));
+					ms.SetConverter<Guid?, TenderId?>(From);
+
+					ms.SetConverter<TenderId, LinqToDB.Data.DataParameter>(id => new LinqToDB.Data.DataParameter { DataType = DataType.Guid, Value = id.Value });
+					ms.SetConverter<TenderId?, LinqToDB.Data.DataParameter>(id => new LinqToDB.Data.DataParameter { DataType = DataType.Guid, Value = id?.Value });
+					// sqlite.ms returns byte[]
+					ms.SetConverter<byte[], TenderId>(raw => From(new Guid(raw)));
+
+					return ms;
+				}
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5057")]
+		public void Issue5057Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, Issue5057.TenderId.GetMappings());
+			using var tb = db.CreateLocalTable(Issue5057.Tender.Data);
+
+			var ids = new List<Issue5057.TenderId> { Issue5057.Tender.Data[0].Id, Issue5057.Tender.Data[2].Id };
+
+			var result = tb
+				.Where(i => ids.Any(id => id == i.Id))
+				.FirstOrDefault();
+		}
+		#endregion
+
 		#region issue 4798
 
 #pragma warning disable CS0660 // Type defines operator == or operator != but does not override Object.Equals(object o)
@@ -1236,7 +1309,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4437")]
 		public void Issue4437Test1([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(new Issue4437Record[] { new("value") });
 
 			var result = db.GetTable<Issue4437Record>().ToArray();
@@ -1249,7 +1322,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4437")]
 		public void Issue4437Test2([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(new Issue4437Record[] { new("value") });
 
 			var result = db.Query<Issue4437Record>("select some_column from test4437").ToArray();
@@ -1261,7 +1334,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4437")]
 		public void Issue4437Test3([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(new Issue4437Record[] { new("value") });
 
 			var result = db.Query<Issue4437Record>("select some_column as SomeColumn from test4437").ToArray();

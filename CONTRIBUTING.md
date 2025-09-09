@@ -20,7 +20,12 @@ uid: contributing
 |.\Source\LinqToDB.EntityFrameworkCore| LINQ to DB integration with Entity Framework Core source code|
 |.\Source\LinqToDB.Extensions| LINQ to DB Dependency Injection and Logging extensions library source code|
 |.\Source\LinqToDB.FSharp | F# support extension for Linq To DB|
+|.\Source\LinqToDB.LINQPad | LINQPad driver for Linq To DB|
 |.\Source\LinqToDB.Remote.Grpc| LINQ to DB Remote Context GRPC client/server source code|
+|.\Source\LinqToDB.Remote.HttpClient.Client| LINQ to DB Remote Context HttpClient client source code|
+|.\Source\LinqToDB.Remote.HttpClient.Server| LINQ to DB Remote Context HttpClient server source code|
+|.\Source\LinqToDB.Remote.SignalR.Client| LINQ to DB Remote Context Signal/R client source code|
+|.\Source\LinqToDB.Remote.SignalR.Server| LINQ to DB Remote Context Signal/R server source code|
 |.\Source\LinqToDB.Remote.Wcf| LINQ to DB Remote Context WCF client/server source code|
 |.\Source\LinqToDB.Scaffold| LINQ to DB scaffold framework for cli and T4|
 |.\Source\LinqToDB.Templates| LINQ to DB t4models source code|

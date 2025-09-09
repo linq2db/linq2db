@@ -43,7 +43,7 @@ namespace Cli.All.Firebird
 
 		#region Associations
 		/// <summary>
-		/// INTEG_52
+		/// INTEG_18
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Person.PersonId))]
 		public Person Integ { get; set; } = null!;

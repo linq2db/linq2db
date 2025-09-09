@@ -47,7 +47,7 @@ namespace Tests.Linq
 				),
 				aliases : new AliasesContext(), nullabilityContext : null);
 
-			return connection.Query<T>(sb.ToString());
+			return dataContext.Query<T>(sb.ToString());
 		}
 
 		[Test]

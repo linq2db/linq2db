@@ -15,6 +15,6 @@ namespace Cli.NewCliFeatures.SQLite
 	[Table("Dual")]
 	public class Dual
 	{
-		[Column("Dummy")] public string? Dummy { get; internal set; } // varchar(10)
+		[Column("Dummy")] public string? Dummy { get; internal set; } // VARCHAR(10)
 	}
 }

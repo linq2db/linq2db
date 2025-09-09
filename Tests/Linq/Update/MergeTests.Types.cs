@@ -455,11 +455,11 @@ namespace Tests.xUpdate
 					while (expected.Length > 1 && expected[expected.Length - 1] == 0)
 						expected = expected.Take(expected.Length - 1).ToArray();
 
-					 if (expected.Length == 0)
+					if (expected.Length == 0)
 						expected = new byte[] { 0 };
 				}
 
-				if (provider.IsAnyOf(ProviderName.ClickHouseMySql, ProviderName.ClickHouseClient))
+				if (provider.IsAnyOf(ProviderName.ClickHouseMySql, ProviderName.ClickHouseDriver))
 				{
 					// https://github.com/DarkWanderer/ClickHouse.Client/issues/138
 					// https://github.com/ClickHouse/ClickHouse/issues/38790

@@ -14,6 +14,6 @@ namespace Cli.NoMetadata.SQLiteNorthwind
 	public class CustomerDemographic
 	{
 		public string  CustomerTypeId { get; set; } = null!; // varchar(10)
-		public string? CustomerDesc   { get; set; } // text(max)
+		public string? CustomerDesc   { get; set; } // TEXT
 	}
 }

@@ -32,7 +32,7 @@ namespace LinqToDB.Internal.Linq
 
 		public abstract int                    ExecuteNonQuery();
 		public abstract object?                ExecuteScalar  ();
-		public abstract DataReaderWrapper      ExecuteReader  ();
+		public abstract IDataReaderAsync       ExecuteReader  ();
 		public abstract Task<object?>          ExecuteScalarAsync  (CancellationToken cancellationToken);
 		public abstract Task<IDataReaderAsync> ExecuteReaderAsync  (CancellationToken cancellationToken);
 		public abstract Task<int>              ExecuteNonQueryAsync(CancellationToken cancellationToken);

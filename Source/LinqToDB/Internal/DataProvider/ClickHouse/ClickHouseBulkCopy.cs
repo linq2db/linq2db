@@ -54,7 +54,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				if (_provider.Adapter.OctonicaCreateWriterAsync != null)
 					return SafeAwaiter.Run(() => ProviderSpecificOctonicaBulkCopyAsync(connections.Value, table, options.BulkCopyOptions, source, default));
 
-				if (_provider.Adapter.ClientBulkCopyCreator != null)
+				if (_provider.Adapter.DriverBulkCopyCreator != null)
 					return SafeAwaiter.Run(() => ProviderSpecificClientBulkCopyAsync(connections.Value, table, options, columns => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source), default));
 			}
 
@@ -73,7 +73,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				if (_provider.Adapter.OctonicaCreateWriter != null)
 					return ProviderSpecificOctonicaBulkCopy(connections.Value, table, options.BulkCopyOptions, source);
 
-				if (_provider.Adapter.ClientBulkCopyCreator != null)
+				if (_provider.Adapter.DriverBulkCopyCreator != null)
 					return await ProviderSpecificClientBulkCopyAsync(connections.Value, table, options, (columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source), cancellationToken).ConfigureAwait(false);
 			}
 
@@ -92,7 +92,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				if (_provider.Adapter.OctonicaCreateWriter != null)
 					return ProviderSpecificOctonicaBulkCopy(connections.Value, table, options.BulkCopyOptions, EnumerableHelper.AsyncToSyncEnumerable(source.GetAsyncEnumerator(cancellationToken)));
 
-				if (_provider.Adapter.ClientBulkCopyCreator != null)
+				if (_provider.Adapter.DriverBulkCopyCreator != null)
 					return await ProviderSpecificClientBulkCopyAsync(connections.Value, table, options, (columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source, cancellationToken), cancellationToken).ConfigureAwait(false);
 			}
 
@@ -232,8 +232,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					options.RowsCopiedCallback(rc);
 					if (rc.Abort)
 					{
-						if (table.DataContext.CloseAfterUse)
-							table.DataContext.Close();
+						CloseConnectionIfNecessary(table.DataContext);
 
 						return rc;
 					}
@@ -247,8 +246,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 				options.RowsCopiedCallback(rc);
 
-			if (table.DataContext.CloseAfterUse)
-				table.DataContext.Close();
+			CloseConnectionIfNecessary(table.DataContext);
 
 			return rc;
 		}
@@ -346,8 +344,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 						options.RowsCopiedCallback(rc);
 						if (rc.Abort)
 						{
-							if (table.DataContext.CloseAfterUse)
-								await table.DataContext.CloseAsync().ConfigureAwait(false);
+							await CloseConnectionIfNecessaryAsync(table.DataContext).ConfigureAwait(false);
 
 							return rc;
 						}
@@ -361,8 +358,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 					options.RowsCopiedCallback(rc);
 
-				if (table.DataContext.CloseAfterUse)
-					await table.DataContext.CloseAsync().ConfigureAwait(false);
+				await CloseConnectionIfNecessaryAsync(table.DataContext).ConfigureAwait(false);
 
 				return rc;
 			}
@@ -464,8 +460,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 						options.RowsCopiedCallback(rc);
 						if (rc.Abort)
 						{
-							if (table.DataContext.CloseAfterUse)
-								await table.DataContext.CloseAsync().ConfigureAwait(false);
+							await CloseConnectionIfNecessaryAsync(table.DataContext).ConfigureAwait(false);
 
 							return rc;
 						}
@@ -479,8 +474,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 					options.RowsCopiedCallback(rc);
 
-				if (table.DataContext.CloseAfterUse)
-					await table.DataContext.CloseAsync().ConfigureAwait(false);
+				await CloseConnectionIfNecessaryAsync(table.DataContext).ConfigureAwait(false);
 
 				return rc;
 			}
@@ -512,7 +506,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			{
 				if (copyOptions.WithoutSession)
 				{
-					var cnBuilder = _provider.Adapter.CreateClientConnectionStringBuilder!(connection.ConnectionString);
+					var cnBuilder = _provider.Adapter.CreateDriverConnectionStringBuilder!(connection.ConnectionString);
 
 					if (cnBuilder.UseSession)
 					{
@@ -539,7 +533,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					}
 				}
 
-				using var bc = _provider.Adapter.ClientBulkCopyCreator!(connection);
+				using var bc = _provider.Adapter.DriverBulkCopyCreator!(connection);
 
 				if (copyOptions.MaxBatchSize.HasValue)
 					bc.BatchSize = copyOptions.MaxBatchSize.Value;
@@ -583,8 +577,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				}
 			}
 
-			if (table.DataContext.CloseAfterUse)
-				await table.DataContext.CloseAsync().ConfigureAwait(false);
+			await CloseConnectionIfNecessaryAsync(table.DataContext).ConfigureAwait(false);
 
 			return rc;
 		}

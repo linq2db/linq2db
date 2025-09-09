@@ -19,8 +19,8 @@ namespace Cli.All.SQLiteNorthwind
 	[Table("CustomerDemographics")]
 	public class CustomerDemographic : IEquatable<CustomerDemographic>
 	{
-		[Column("CustomerTypeID", CanBeNull = false        , DataType = DataType.VarChar, DbType = "varchar(10)", Length    = 10, Precision = 0, Scale = 0, IsPrimaryKey = true)] public string  CustomerTypeId { get; set; } = null!; // varchar(10)
-		[Column("CustomerDesc"  , DataType  = DataType.Text, DbType   = "text(max)"     , Length = 2147483647   , Precision = 0 , Scale     = 0                                )] public string? CustomerDesc   { get; set; } // text(max)
+		[Column("CustomerTypeID", CanBeNull = false            , DataType = DataType.NVarChar, DbType = "varchar(10)", Length = 10, IsPrimaryKey = true)] public string  CustomerTypeId { get; set; } = null!; // varchar(10)
+		[Column("CustomerDesc"  , DataType  = DataType.NVarChar, DbType   = "TEXT"                                                                     )] public string? CustomerDesc   { get; set; } // TEXT
 
 		#region IEquatable<T> support
 		private static readonly IEqualityComparer<CustomerDemographic> _equalityComparer = ComparerBuilder.GetEqualityComparer<CustomerDemographic>(c => c.CustomerTypeId);

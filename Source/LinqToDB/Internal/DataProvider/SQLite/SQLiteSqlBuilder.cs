@@ -103,6 +103,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		{
 			switch (type.DataType)
 			{
+				case DataType.Int64 :
 				case DataType.Int32 : StringBuilder.Append("INTEGER");                                 break;
 				default             : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
 			}

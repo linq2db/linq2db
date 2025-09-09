@@ -16,8 +16,8 @@ namespace Cli.All.SQLite
 	[Table("GrandChild")]
 	public class GrandChild
 	{
-		[Column("ParentID"    , DataType = DataType.Int32, DbType = "int", Length = 4, Precision = 10, Scale = 0)] public int? ParentId     { get; set; } // int
-		[Column("ChildID"     , DataType = DataType.Int32, DbType = "int", Length = 4, Precision = 10, Scale = 0)] public int? ChildId      { get; set; } // int
-		[Column("GrandChildID", DataType = DataType.Int32, DbType = "int", Length = 4, Precision = 10, Scale = 0)] public int? GrandChildId { get; set; } // int
+		[Column("ParentID"    , DataType = DataType.Int32, DbType = "INT")] public int? ParentId     { get; set; } // INT
+		[Column("ChildID"     , DataType = DataType.Int32, DbType = "INT")] public int? ChildId      { get; set; } // INT
+		[Column("GrandChildID", DataType = DataType.Int32, DbType = "INT")] public int? GrandChildId { get; set; } // INT
 	}
 }

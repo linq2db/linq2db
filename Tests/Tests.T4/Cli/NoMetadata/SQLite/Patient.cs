@@ -13,14 +13,14 @@ namespace Cli.NoMetadata.SQLite
 {
 	public class Patient
 	{
-		public long   PersonId  { get; set; } // integer
+		public long   PersonId  { get; set; } // INTEGER
 		public string Diagnosis { get; set; } = null!; // nvarchar(256)
 
 		#region Associations
 		/// <summary>
-		/// FK_Patient_0_0
+		/// FK_Patient_0
 		/// </summary>
-		public Person FkPatient00 { get; set; } = null!;
+		public Person FkPatient0 { get; set; } = null!;
 		#endregion
 	}
 }

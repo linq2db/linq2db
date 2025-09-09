@@ -433,7 +433,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertFromCrossJoinedSourceQuery2Workaround([MergeDataContextSource(false, ProviderName.DB2)] string context)
 		{
-			using (var db = (DataConnection)GetDataConnection(context))
+			using (var db = (DataConnection)GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -478,7 +478,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertFromCrossJoinedSourceQuery2([MergeDataContextSource(false)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				PrepareData(db);
 
@@ -1535,7 +1535,7 @@ namespace Tests.xUpdate
 				AssertRow(InitialTargetData[2], result[2], null, 203);
 				AssertRow(InitialTargetData[3], result[3], null, null);
 				if (result.Count != 6)
-				AssertRow(InitialSourceData[3], result[4], null, 216);
+					AssertRow(InitialSourceData[3], result[4], null, 216);
 			}
 		}
 

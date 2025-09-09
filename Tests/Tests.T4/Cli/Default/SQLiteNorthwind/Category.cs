@@ -15,9 +15,9 @@ namespace Cli.Default.SQLiteNorthwind
 	[Table("Categories")]
 	public class Category
 	{
-		[Column("CategoryID"  , IsPrimaryKey = true )] public int     CategoryId   { get; set; } // int
+		[Column("CategoryID"  , IsPrimaryKey = true )] public int     CategoryId   { get; set; } // INT
 		[Column("CategoryName", CanBeNull    = false)] public string  CategoryName { get; set; } = null!; // varchar(15)
-		[Column("Description"                       )] public string? Description  { get; set; } // text(max)
-		[Column("Picture"                           )] public byte[]? Picture      { get; set; } // blob
+		[Column("Description"                       )] public string? Description  { get; set; } // TEXT
+		[Column("Picture"                           )] public byte[]? Picture      { get; set; } // BLOB
 	}
 }

@@ -16,7 +16,7 @@
 		<PackageReference Include="System.Data.SqlClient" />
 		<PackageReference Include="AdoNetCore.AseClient" />
 		<PackageReference Include="Microsoft.Data.SQLite" />
-		<PackageReference Include="ClickHouse.Client" />
+		<PackageReference Include="ClickHouse.Driver" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">

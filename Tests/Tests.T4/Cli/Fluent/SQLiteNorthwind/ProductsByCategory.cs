@@ -16,7 +16,7 @@ namespace Cli.Fluent.SQLiteNorthwind
 		public string  CategoryName    { get; set; } = null!; // varchar(15)
 		public string  ProductName     { get; set; } = null!; // varchar(40)
 		public string? QuantityPerUnit { get; set; } // varchar(20)
-		public int?    UnitsInStock    { get; set; } // int
-		public int     Discontinued    { get; set; } // int
+		public int?    UnitsInStock    { get; set; } // INT
+		public int     Discontinued    { get; set; } // INT
 	}
 }

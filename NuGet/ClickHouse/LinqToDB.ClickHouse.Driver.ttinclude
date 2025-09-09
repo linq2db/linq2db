@@ -1,0 +1,26 @@
+<#@ assembly name="$(LinqToDBT4ClickHouseClientPath)ClickHouse.Driver.dll"        #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude" once="true"       #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude" once="true" #>
+<#+
+LinqToDB.Data.DataConnection GetClickHouseConnection(string connectionString)
+{
+	return LinqToDB.DataProvider.ClickHouse.ClickHouseTools.CreateDataConnection(connectionString, LinqToDB.DataProvider.ClickHouse.ClickHouseProvider.ClickHouseDriver);
+}
+
+LinqToDB.Data.DataConnection GetClickHouseConnection(string host, string database, string user, string password, int port=8123)
+{
+	return GetClickHouseConnection(string.Format("Host={0};Port={1};Database={2};Username={3};Password={4}", host, port, database, user, password));
+}
+
+public void LoadClickHouseMetadata(string connectionString)
+{
+	using (var dataConnection = GetClickHouseConnection(connectionString))
+		LoadMetadata(dataConnection);
+}
+
+public void LoadClickHouseMetadata(string host, string database, string user, string password, int port=8123)
+{
+	using (var dataConnection = GetClickHouseConnection(host, database, user, password, port))
+		LoadMetadata(dataConnection);
+}
+#>

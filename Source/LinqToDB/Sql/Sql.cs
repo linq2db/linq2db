@@ -167,29 +167,21 @@ namespace LinqToDB
 			return obj;
 		}
 
-		[Expression("NULLIF({0}, {1})", PreferServerSide = true)]
-		[Expression(PN.Access, "IIF({0} = {1}, null, {0})", PreferServerSide = false)]
-		[Expression(PN.SqlCe,  "CASE WHEN {0} = {1} THEN NULL ELSE {0} END", PreferServerSide = false)]
 		public static T? NullIf<T>(T? value, T? compareTo) where T : class
 		{
 			return value != null && compareTo != null && EqualityComparer<T>.Default.Equals(value, compareTo) ? null : value;
 		}
 
-		[Expression("NULLIF({0}, {1})", PreferServerSide = true)]
-		[Expression(PN.Access, "IIF({0} = {1}, null, {0})", PreferServerSide = false)]
-		[Expression(PN.SqlCe,  "CASE WHEN {0} = {1} THEN NULL ELSE {0} END", PreferServerSide = false)]
 		public static T? NullIf<T>(T? value, T compareTo) where T : struct
 		{
 			return value.HasValue && EqualityComparer<T>.Default.Equals(value.Value, compareTo) ? null : value;
 		}
 
-		[Expression("NULLIF({0}, {1})", PreferServerSide = true)]
-		[Expression(PN.Access, "IIF({0} = {1}, null, {0})", PreferServerSide = false)]
-		[Expression(PN.SqlCe,  "CASE WHEN {0} = {1} THEN NULL ELSE {0} END", PreferServerSide = false)]
 		public static T? NullIf<T>(T? value, T? compareTo) where T : struct
 		{
 			return value.HasValue && compareTo.HasValue && EqualityComparer<T>.Default.Equals(value.Value, compareTo.Value) ? null : value;
 		}
+
 		#endregion
 
 		#region NoConvert
@@ -1446,6 +1438,9 @@ namespace LinqToDB
 		/// <summary>
 		/// Returns last identity value (current value) for specific table.
 		/// </summary>
+		/// <remarks>
+		/// Note that for SQL Server this function will return start value if no values were generated yet.
+		/// </remarks>
 		[Function  (PN.SqlServer    , "IDENT_CURRENT", ServerSideOnly = true, CanBeNull = true)]
 		[Expression(                  "NULL"         , ServerSideOnly = true, CanBeNull = true)]
 		internal static object? CurrentIdentity(string tableName) => throw new ServerSideOnlyException(nameof(CurrentIdentity));

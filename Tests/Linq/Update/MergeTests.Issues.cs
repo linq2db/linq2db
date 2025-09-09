@@ -32,7 +32,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Issue200InSource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<AllTypes2>().Delete();
@@ -77,7 +77,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Issue200InPredicate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<AllTypes2>().Delete();
@@ -120,7 +120,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Issue200InPredicate2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<AllTypes2>().Delete();
@@ -168,7 +168,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Issue200InInsert([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<AllTypes2>().Delete();
@@ -225,7 +225,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Issue200InUpdate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<AllTypes2>().Delete();
@@ -1019,7 +1019,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeSubquery([MergeDataContextSource(false, TestProvName.AllOracle, TestProvName.AllFirebird, TestProvName.AllSybase)] string context, [Values(1, 2)] int iteration)
 		{
-			using var db  = GetDataConnection(context);
+			using var db  = GetDataContext(context);
 
 			db.BeginTransaction();
 

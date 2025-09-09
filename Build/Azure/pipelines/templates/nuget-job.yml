@@ -1,5 +1,6 @@
 parameters:
   publish: false
+  release: false
 
 jobs:
 - job: build_nugets_job
@@ -123,6 +124,12 @@ jobs:
       artifactName: '$(artifact_t4_binaries)'
       targetPath: '$(Build.SourcesDirectory)/.build/bin/NuGet/$(release_configuration)'
 
+  - task: DownloadPipelineArtifact@2
+    displayName: Download LinqToDB.LINQPad files
+    inputs:
+      artifactName: '$(artifact_linq2db_linqpad_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.LINQPad/Release/'
+
 #dotnet tool install -g dotnet-script
   - task: DotNetCoreCLI@2
     displayName: Install dotnet-script tool
@@ -203,3 +210,20 @@ jobs:
       publishFeedCredentials: 'linq2db nuget.org feed'
     displayName: Publish to Nuget.org
     condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['release_branch']), ${{ parameters.publish }})
+
+  - task: PowerShell@2
+    inputs:
+      targetType: 'inline'
+      script: |
+        $relnotesVersion = '$(assemblyVersion)' -replace '\.',''
+        Write-Host "Add linqpad nuget to release v$(assemblyVersion) draft"
+        $output = gh release upload v$(assemblyVersion) "$(Build.SourcesDirectory)/.build/nugets/linq2db.LINQPad.$(assemblyVersion).nupkg"
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Command failed. Error code ${LASTEXITCODE}, output: ${output}"
+            exit 1
+        }
+      workingDirectory: '$(System.DefaultWorkingDirectory)'
+    displayName: Upload LINQPad nuget to Release Draft
+    condition: and(succeeded(), ${{ parameters.release }})
+    env:
+      GITHUB_TOKEN: $(RELEASES_GH_PAT)

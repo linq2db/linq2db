@@ -106,7 +106,7 @@ namespace Tests.UserTests
 			}
 			finally
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					try
 					{

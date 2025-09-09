@@ -15,7 +15,7 @@ namespace Cli.Default.SQLiteNorthwind
 	[Table("Suppliers")]
 	public class Supplier
 	{
-		[Column("SupplierID"  , IsPrimaryKey = true )] public int     SupplierId   { get; set; } // int
+		[Column("SupplierID"  , IsPrimaryKey = true )] public int     SupplierId   { get; set; } // INT
 		[Column("CompanyName" , CanBeNull    = false)] public string  CompanyName  { get; set; } = null!; // varchar(40)
 		[Column("ContactName"                       )] public string? ContactName  { get; set; } // varchar(30)
 		[Column("ContactTitle"                      )] public string? ContactTitle { get; set; } // varchar(30)
@@ -26,6 +26,6 @@ namespace Cli.Default.SQLiteNorthwind
 		[Column("Country"                           )] public string? Country      { get; set; } // varchar(15)
 		[Column("Phone"                             )] public string? Phone        { get; set; } // varchar(24)
 		[Column("Fax"                               )] public string? Fax          { get; set; } // varchar(24)
-		[Column("HomePage"                          )] public string? HomePage     { get; set; } // text(max)
+		[Column("HomePage"                          )] public string? HomePage     { get; set; } // TEXT
 	}
 }

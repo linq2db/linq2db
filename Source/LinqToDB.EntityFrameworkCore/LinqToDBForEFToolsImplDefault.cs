@@ -402,7 +402,7 @@ namespace LinqToDB.EntityFrameworkCore
 					{
 						var typedLabels = labels.ToDictionary(kv => kv.Key, kv => $"'{kv.Value}'::{mapping.StoreType}");
 
-						mappingSchema.SetDataType(type, new SqlDataType(new DbDataType(type, DataType.Enum, mapping.StoreType)));
+						mappingSchema.AddScalarType(type, new SqlDataType(new DbDataType(type, DataType.Enum, mapping.StoreType)));
 						mappingSchema.SetValueToSqlConverter(type, (sb, _, v) => sb.Append(typedLabels[v]));
 					}
 				}
