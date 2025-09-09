@@ -34,7 +34,13 @@ namespace LinqToDB
 			TableOptions      tableOptions = TableOptions.IsTemporary)
 			where T : class
 		{
-			return new TempTable<T>(db, tableName, databaseName, schemaName, serverName, tableOptions);
+			return db.CreateTempTable<T>(
+				new CreateTempTableOptions(
+					tableName   : tableName,
+					databaseName: databaseName,
+					schemaName  : schemaName,
+					serverName  : serverName,
+					tableOptions: tableOptions));
 		}
 
 		/// <summary>
@@ -43,7 +49,7 @@ namespace LinqToDB
 		/// <param name="db">Database connection instance.</param>
 		/// <param name="createOptions">Options for temporary table creation.</param>
 		public static TempTable<T> CreateTempTable<T>(
-			this IDataContext db,
+			this IDataContext       db,
 			CreateTempTableOptions? createOptions)
 			where T : class
 		{
@@ -74,7 +80,14 @@ namespace LinqToDB
 			TableOptions      tableOptions = TableOptions.IsTemporary)
 			where T : class
 		{
-			return db.CreateTempTable(new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, options);
+			return db.CreateTempTable(
+				new CreateTempTableOptions(
+					tableName   : tableName,
+					databaseName: databaseName,
+					schemaName  : schemaName,
+					serverName  : serverName,
+					tableOptions: tableOptions),
+				items, options);
 		}
 
 		/// <summary>
@@ -124,7 +137,14 @@ namespace LinqToDB
 			TableOptions                    tableOptions = TableOptions.IsTemporary)
 			where T : class
 		{
-			return db.CreateTempTable(new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, setTable, options);
+			return db.CreateTempTable(
+				new CreateTempTableOptions(
+					tableName   :tableName,
+					databaseName: databaseName,
+					schemaName  : schemaName,
+					serverName  : serverName,
+					tableOptions: tableOptions),
+				items, setTable, options);
 		}
 		
 		/// <summary>
@@ -179,7 +199,14 @@ namespace LinqToDB
 			TableOptions      tableOptions = TableOptions.IsTemporary)
 			where T : class
 		{
-			return db.CreateTempTable(new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, options);
+			return db.CreateTempTable(
+				new CreateTempTableOptions(
+					tableName   : tableName,
+					databaseName: databaseName,
+					schemaName  : schemaName,
+					serverName  : serverName,
+					tableOptions: tableOptions),
+				items, options);
 		}
 
 		/// <summary>
@@ -212,7 +239,14 @@ namespace LinqToDB
 			TableOptions                    tableOptions = TableOptions.IsTemporary)
 			where T : class
 		{
-			return db.CreateTempTable(new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, setTable, options);
+			return db.CreateTempTable(
+				new CreateTempTableOptions(
+					tableName   : tableName,
+					databaseName: databaseName,
+					schemaName  : schemaName,
+					serverName  : serverName,
+					tableOptions: tableOptions),
+				items, setTable, options);
 		}
 
 		/// <summary>
@@ -239,7 +273,14 @@ namespace LinqToDB
 			TableOptions       tableOptions = TableOptions.IsTemporary)
 			where T : class
 		{
-			return db.CreateTempTable(new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, action);
+			return db.CreateTempTable(
+				new CreateTempTableOptions(
+					tableName   : tableName,
+					databaseName: databaseName,
+					schemaName  : schemaName,
+					serverName  : serverName,
+					tableOptions: tableOptions),
+				items, action);
 		}
 
 		/// <summary>
@@ -290,7 +331,14 @@ namespace LinqToDB
 			TableOptions                    tableOptions = TableOptions.IsTemporary)
 			where T : class
 		{
-			return db.CreateTempTable(new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, setTable, action);
+			return db.CreateTempTable(
+				new CreateTempTableOptions(
+					tableName   :tableName,
+					databaseName: databaseName,
+					schemaName  : schemaName,
+					serverName  : serverName,
+					tableOptions: tableOptions),
+				items, setTable, action);
 		}
 
 		/// <summary>
@@ -344,7 +392,14 @@ namespace LinqToDB
 			TableOptions       tableOptions = TableOptions.IsTemporary)
 			where T : class
 		{
-			return db.CreateTempTable(new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, action);
+			return db.CreateTempTable(
+				new CreateTempTableOptions(
+					tableName   : tableName,
+					databaseName: databaseName,
+					schemaName  : schemaName,
+					serverName  : serverName,
+					tableOptions: tableOptions),
+				items, action);
 		}
 
 		/// <summary>
@@ -378,7 +433,14 @@ namespace LinqToDB
 			TableOptions                    tableOptions = TableOptions.IsTemporary)
 			where T : class
 		{
-			return db.CreateTempTable(new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, setTable, action);
+			return db.CreateTempTable(
+				new CreateTempTableOptions(
+					tableName   : tableName,
+					databaseName: databaseName,
+					schemaName  : schemaName,
+					serverName  : serverName,
+					tableOptions: tableOptions),
+				items, setTable, action);
 		}
 
 		/// <summary>
@@ -403,7 +465,14 @@ namespace LinqToDB
 			CancellationToken cancellationToken = default)
 			where T : class
 		{
-			return db.CreateTempTableAsync<T>(new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), cancellationToken);
+			return db.CreateTempTableAsync<T>(
+				new CreateTempTableOptions(
+					tableName   : tableName,
+					databaseName: databaseName,
+					schemaName  : schemaName,
+					serverName  : serverName,
+					tableOptions: tableOptions),
+				cancellationToken);
 		}
 		
 		/// <summary>
@@ -447,7 +516,14 @@ namespace LinqToDB
 			CancellationToken cancellationToken = default)
 			where T : class
 		{
-			return db.CreateTempTableAsync(new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, options, cancellationToken);
+			return db.CreateTempTableAsync(
+				new CreateTempTableOptions(
+					tableName   : tableName,
+					databaseName: databaseName,
+					schemaName  : schemaName,
+					serverName  : serverName,
+					tableOptions: tableOptions),
+				items, options, cancellationToken);
 		}
 		
 		/// <summary>
@@ -501,7 +577,14 @@ namespace LinqToDB
 			CancellationToken               cancellationToken = default)
 			where T : class
 		{
-			return db.CreateTempTableAsync(new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, setTable, options, cancellationToken);
+			return db.CreateTempTableAsync(
+				new CreateTempTableOptions(
+					tableName   : tableName,
+					databaseName: databaseName,
+					schemaName  : schemaName,
+					serverName  : serverName,
+					tableOptions: tableOptions),
+				items, setTable, options, cancellationToken);
 		}
 
 		/// <summary>
@@ -522,7 +605,7 @@ namespace LinqToDB
 			CreateTempTableOptions?         createOptions,
 			IEnumerable<T>                  items,
 			Action<EntityMappingBuilder<T>> setTable,
-			BulkCopyOptions?                bulkCopyOptions           = default,
+			BulkCopyOptions?                bulkCopyOptions   = default,
 			CancellationToken               cancellationToken = default)
 			where T : class
 		{
@@ -559,7 +642,14 @@ namespace LinqToDB
 			CancellationToken cancellationToken = default)
 			where T : class
 		{
-			return db.CreateTempTableAsync(new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, options, cancellationToken);
+			return db.CreateTempTableAsync(
+				new CreateTempTableOptions(
+					tableName   : tableName,
+					databaseName: databaseName,
+					schemaName  : schemaName,
+					serverName  : serverName,
+					tableOptions: tableOptions),
+				items, options, cancellationToken);
 		}
 
 		/// <summary>
@@ -594,7 +684,14 @@ namespace LinqToDB
 			CancellationToken               cancellationToken = default)
 			where T : class
 		{
-			return db.CreateTempTableAsync(new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, setTable, options, cancellationToken);
+			return db.CreateTempTableAsync(
+				new CreateTempTableOptions(
+					tableName   : tableName,
+					databaseName: databaseName,
+					schemaName  : schemaName,
+					serverName  : serverName,
+					tableOptions: tableOptions),
+				items, setTable, options, cancellationToken);
 		}
 
 		/// <summary>
@@ -623,7 +720,14 @@ namespace LinqToDB
 			CancellationToken      cancellationToken = default)
 			where T : class
 		{
-			return db.CreateTempTableAsync(new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, action, cancellationToken);
+			return db.CreateTempTableAsync(
+				new CreateTempTableOptions(
+					tableName   : tableName,
+					databaseName: databaseName,
+					schemaName  : schemaName,
+					serverName  : serverName,
+					tableOptions: tableOptions),
+				items, action, cancellationToken);
 		}
 
 		/// <summary>
@@ -678,7 +782,14 @@ namespace LinqToDB
 			CancellationToken               cancellationToken = default)
 			where T : class
 		{
-			return db.CreateTempTableAsync(new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, setTable, action, cancellationToken);
+			return db.CreateTempTableAsync(
+				new CreateTempTableOptions(
+					tableName   :tableName,
+					databaseName: databaseName,
+					schemaName  : schemaName,
+					serverName  : serverName,
+					tableOptions: tableOptions),
+				items, setTable, action, cancellationToken);
 		}
 
 		/// <summary>
@@ -701,14 +812,14 @@ namespace LinqToDB
 			Action<EntityMappingBuilder<T>> setTable,
 			Func<ITable<T>, Task>?          action            = default,
 			CancellationToken               cancellationToken = default)
-         	where T : class
-        {
-         	if (setTable == null) throw new ArgumentNullException(nameof(setTable));
+			 where T : class
+		{
+			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
 
-         	var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
+			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
-         	return TempTable<T>.CreateAsync(db, tempTableDescriptor, createOptions, items, action, cancellationToken);
-        }
+			return TempTable<T>.CreateAsync(db, tempTableDescriptor, createOptions, items, action, cancellationToken);
+		}
 
 		/// <summary>
 		/// Creates new temporary table and populate it using data from provided query.
@@ -736,7 +847,14 @@ namespace LinqToDB
 			CancellationToken      cancellationToken = default)
 			where T : class
 		{
-			return db.CreateTempTableAsync(new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, action, cancellationToken);
+			return db.CreateTempTableAsync(
+				new CreateTempTableOptions(
+					tableName   : tableName,
+					databaseName: databaseName,
+					schemaName  : schemaName,
+					serverName  : serverName,
+					tableOptions: tableOptions),
+				items, action, cancellationToken);
 		}
 
 		/// <summary>
@@ -772,7 +890,14 @@ namespace LinqToDB
 			CancellationToken               cancellationToken = default)
 			where T : class
 		{
-			return db.CreateTempTableAsync(new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, setTable, action, cancellationToken);
+			return db.CreateTempTableAsync(
+				new CreateTempTableOptions(
+					tableName   : tableName,
+					databaseName: databaseName,
+					schemaName  : schemaName,
+					serverName  : serverName,
+					tableOptions: tableOptions),
+				items, setTable, action, cancellationToken);
 		}
 
 		#endregion
@@ -803,7 +928,15 @@ namespace LinqToDB
 			BulkCopyOptions?    options      = default)
 			where T : class
 		{
-			return items.IntoTempTable(db, new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), options);
+			return items.IntoTempTable(
+				db,
+				new CreateTempTableOptions(
+					tableName   : tableName,
+					databaseName: databaseName,
+					schemaName  : schemaName,
+					serverName  : serverName,
+					tableOptions: tableOptions),
+				options);
 		}
 
 		/// <summary>
@@ -851,16 +984,23 @@ namespace LinqToDB
 			Action<EntityMappingBuilder<T>>? setTable     = default)
 			where T : class
 		{
-			if (items is IExpressionQuery eq)
-			{
-				TempTableDescriptor? tempTableDescriptor = null;
-				if (setTable != null)
-					tempTableDescriptor = GetTempTableDescriptor(eq.DataContext, setTable);
+			if (items is not IExpressionQuery eq)
+				throw new ArgumentException($"The '{nameof(items)}' argument must be of type 'LinqToDB.Linq.IExpressionQuery'.");
 
-				return new TempTable<T>(eq.DataContext, tempTableDescriptor, new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, action);
-			}
+			TempTableDescriptor? tempTableDescriptor = null;
+			if (setTable != null)
+				tempTableDescriptor = GetTempTableDescriptor(eq.DataContext, setTable);
 
-			throw new ArgumentException($"The '{nameof(items)}' argument must be of type 'LinqToDB.Linq.IExpressionQuery'.");
+			return new TempTable<T>(
+				eq.DataContext,
+				tempTableDescriptor,
+				new CreateTempTableOptions(
+					tableName   : tableName,
+					databaseName: databaseName,
+					schemaName  : schemaName,
+					serverName  : serverName,
+					tableOptions: tableOptions),
+				items, action);
 		}
 
 		/// <summary>
@@ -889,7 +1029,15 @@ namespace LinqToDB
 			CancellationToken   cancellationToken = default)
 			where T : class
 		{
-			return items.IntoTempTableAsync(db, new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), options, cancellationToken);
+			return items.IntoTempTableAsync(
+				db,
+				new CreateTempTableOptions(
+					tableName   : tableName,
+					databaseName: databaseName,
+					schemaName  : schemaName,
+					serverName  : serverName,
+					tableOptions: tableOptions),
+				options, cancellationToken);
 		}
 		
 		/// <summary>
@@ -942,16 +1090,23 @@ namespace LinqToDB
 			CancellationToken                cancellationToken = default)
 			where T : class
 		{
-			if (items is IExpressionQuery eq)
-			{
-				TempTableDescriptor? tempTableDescriptor = null;
-				if (setTable != null)
-					tempTableDescriptor = GetTempTableDescriptor(eq.DataContext, setTable);
+			if (items is not IExpressionQuery eq)
+				throw new ArgumentException($"The '{nameof(items)}' argument must be of type 'LinqToDB.Linq.IExpressionQuery'.");
 
-				return TempTable<T>.CreateAsync(eq.DataContext, tempTableDescriptor, new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, action, cancellationToken);
-			}
+			TempTableDescriptor? tempTableDescriptor = null;
+			if (setTable != null)
+				tempTableDescriptor = GetTempTableDescriptor(eq.DataContext, setTable);
 
-			throw new ArgumentException($"The '{nameof(items)}' argument must be of type 'LinqToDB.Linq.IExpressionQuery'.");
+			return TempTable<T>.CreateAsync(
+				eq.DataContext,
+				tempTableDescriptor,
+				new CreateTempTableOptions(
+					tableName   : tableName,
+					databaseName: databaseName,
+					schemaName  : schemaName,
+					serverName  : serverName,
+					tableOptions: tableOptions),
+				items, action, cancellationToken);
 		}
 
 		private static TempTableDescriptor GetTempTableDescriptor<T>(IDataContext dataContext, Action<EntityMappingBuilder<T>> setTable)
