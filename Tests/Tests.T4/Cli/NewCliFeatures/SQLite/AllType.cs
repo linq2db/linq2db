@@ -16,29 +16,29 @@ namespace Cli.NewCliFeatures.SQLite
 	[Table("AllTypes")]
 	public class AllType
 	{
-		[Column("ID"                      , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long      Id                       { get; internal set; } // integer
+		[Column("ID"                      , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long      Id                       { get; internal set; } // INTEGER
 		[Column("bigintDataType"                                                                                            )] public long?     BigintDataType           { get; internal set; } // bigint
 		[Column("numericDataType"                                                                                           )] public decimal?  NumericDataType          { get; internal set; } // numeric
 		[Column("bitDataType"                                                                                               )] public bool?     BitDataType              { get; internal set; } // bit
 		[Column("smallintDataType"                                                                                          )] public short?    SmallintDataType         { get; internal set; } // smallint
 		[Column("decimalDataType"                                                                                           )] public decimal?  DecimalDataType          { get; internal set; } // decimal
-		[Column("intDataType"                                                                                               )] public int?      IntDataType              { get; internal set; } // int
+		[Column("intDataType"                                                                                               )] public int?      IntDataType              { get; internal set; } // INT
 		[Column("tinyintDataType"                                                                                           )] public byte?     TinyintDataType          { get; internal set; } // tinyint
 		[Column("moneyDataType"                                                                                             )] public decimal?  MoneyDataType            { get; internal set; } // money
 		[Column("floatDataType"                                                                                             )] public double?   FloatDataType            { get; internal set; } // float
-		[Column("realDataType"                                                                                              )] public double?   RealDataType             { get; internal set; } // real
+		[Column("realDataType"                                                                                              )] public double?   RealDataType             { get; internal set; } // REAL
 		[Column("datetimeDataType"                                                                                          )] public DateTime? DatetimeDataType         { get; internal set; } // datetime
 		[Column("charDataType"                                                                                              )] public char?     CharDataType             { get; internal set; } // char(1)
 		[Column("char20DataType"                                                                                            )] public string?   Char20DataType           { get; internal set; } // char(20)
 		[Column("varcharDataType"                                                                                           )] public string?   VarcharDataType          { get; internal set; } // varchar(20)
-		[Column("textDataType"                                                                                              )] public string?   TextDataType             { get; internal set; } // text(max)
-		[Column("ncharDataType"                                                                                             )] public string?   NcharDataType            { get; internal set; } // char(20)
+		[Column("textDataType"                                                                                              )] public string?   TextDataType             { get; internal set; } // TEXT
+		[Column("ncharDataType"                                                                                             )] public string?   NcharDataType            { get; internal set; } // nchar(20)
 		[Column("nvarcharDataType"                                                                                          )] public string?   NvarcharDataType         { get; internal set; } // nvarchar(20)
-		[Column("ntextDataType"                                                                                             )] public string?   NtextDataType            { get; internal set; } // ntext(max)
+		[Column("ntextDataType"                                                                                             )] public string?   NtextDataType            { get; internal set; } // ntext
 		[Column("binaryDataType"                                                                                            )] public byte[]?   BinaryDataType           { get; internal set; } // binary
 		[Column("varbinaryDataType"                                                                                         )] public byte[]?   VarbinaryDataType        { get; internal set; } // varbinary
 		[Column("imageDataType"                                                                                             )] public byte[]?   ImageDataType            { get; internal set; } // image
 		[Column("uniqueidentifierDataType"                                                                                  )] public Guid?     UniqueidentifierDataType { get; internal set; } // uniqueidentifier
-		[Column("objectDataType"                                                                                            )] public object?   ObjectDataType           { get; internal set; } // object
+		[Column("objectDataType"                                                                                            )] public object?   ObjectDataType           { get; internal set; } // Object
 	}
 }

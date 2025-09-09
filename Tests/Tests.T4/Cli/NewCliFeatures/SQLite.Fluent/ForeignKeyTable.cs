@@ -13,12 +13,12 @@ namespace Cli.NewCliFeatures.FluentSQLite
 {
 	public class ForeignKeyTable
 	{
-		public long   PrimaryKeyTableId { get; set; } // integer
+		public long   PrimaryKeyTableId { get; set; } // INTEGER
 		public string Name              { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0
+		/// FK_ForeignKeyTable_0
 		/// </summary>
 		public PrimaryKeyTable PrimaryKeyTable { get; set; } = null!;
 		#endregion

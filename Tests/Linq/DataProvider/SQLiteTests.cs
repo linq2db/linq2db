@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.Common;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -11,7 +12,10 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Internal.DataProvider.SQLite;
+using LinqToDB.Internal.Logging;
 using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+using LinqToDB.Tools.Activity;
 
 using NUnit.Framework;
 
@@ -607,7 +611,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Issue784Test([IncludeDataSources(TestProvName.AllSQLiteClassic)] string context)
+		public void Issue784Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -913,17 +917,119 @@ namespace Tests.DataProvider
 			[Column] public int Field { get; set; }
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2099")]
 		public void Issue2099Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue2099Table>();
+
+			db.Insert(new Issue2099Table());
+			var result = tb.Single();
+
+			Assert.That(result.Id, Is.EqualTo(1));
 		}
 
 		sealed class Issue2099Table
 		{
 			[PrimaryKey, Identity] public long Id { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/934")]
+		public void Issue934Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			try
+			{
+			db.Execute(@"
+CREATE TABLE withid_1(x INTEGER PRIMARY KEY ASC, y, z);
+CREATE TABLE withid_2(x INTEGER, y, z, PRIMARY KEY(x ASC));
+CREATE TABLE withid_3(x INTEGER, y, z, PRIMARY KEY(x DESC));
+CREATE TABLE withoutid_1(x INTEGER PRIMARY KEY DESC, y, z);
+CREATE TABLE withoutid_2(x INTEGER PRIMARY KEY ASC, y, z) without rowid;
+CREATE TABLE withoutid_3(x INTEGER, y, z, PRIMARY KEY(x ASC)) without rowid;
+CREATE TABLE withoutid_4(x INTEGER, y, z, PRIMARY KEY(x DESC)) without rowid;
+");
+
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
+
+				AssertIdentity(schema.Tables.FirstOrDefault(t => t.TableName == "withid_1"), true);
+				AssertIdentity(schema.Tables.FirstOrDefault(t => t.TableName == "withid_2"), true);
+				AssertIdentity(schema.Tables.FirstOrDefault(t => t.TableName == "withid_3"), true);
+				AssertIdentity(schema.Tables.FirstOrDefault(t => t.TableName == "withoutid_1"), false);
+				AssertIdentity(schema.Tables.FirstOrDefault(t => t.TableName == "withoutid_2"), false);
+				AssertIdentity(schema.Tables.FirstOrDefault(t => t.TableName == "withoutid_3"), false);
+				AssertIdentity(schema.Tables.FirstOrDefault(t => t.TableName == "withoutid_4"), false);
+
+				static void AssertIdentity(TableSchema? table, bool hasIdentity)
+				{
+					Assert.That(table, Is.Not.Null);
+
+					var pk = table.Columns.Where(c => c.IsPrimaryKey).ToArray();
+
+					Assert.That(pk, Has.Length.EqualTo(1));
+					using (Assert.EnterMultipleScope())
+					{
+						Assert.That(pk[0].ColumnName, Is.EqualTo("x"));
+						Assert.That(pk[0].IsIdentity, Is.EqualTo(hasIdentity));
+					}
+				}
+			}
+			finally
+			{
+				db.Execute(@"
+DROP TABLE withid_1;
+DROP TABLE withid_2;
+DROP TABLE withid_3;
+DROP TABLE withoutid_1;
+DROP TABLE withoutid_2;
+DROP TABLE withoutid_3;
+DROP TABLE withoutid_4;
+");
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4736")]
+		public void Issue4736Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			try
+			{
+				db.Execute(@"
+CREATE TABLE FirstTable (PkField1 INT, PkField2 INT, AdditionalField INTEGER, PRIMARY KEY (PkField1, PkField2));
+CREATE TABLE SecondTable (FkField1 INT, FkField2 INT, FOREIGN KEY (FkField1, FkField2) REFERENCES FirstTable (PkField1, PkField2));
+");
+
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
+
+				var firstTable = schema.Tables.FirstOrDefault(t => t.TableName == "FirstTable");
+				var secondTable = schema.Tables.FirstOrDefault(t => t.TableName == "SecondTable");
+
+				Assert.That(firstTable, Is.Not.Null);
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(firstTable.Columns.Count(c => c.IsPrimaryKey), Is.EqualTo(2));
+
+					Assert.That(secondTable, Is.Not.Null);
+				}
+
+				Assert.That(secondTable.ForeignKeys, Has.Count.EqualTo(1));
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(secondTable.ForeignKeys[0].ThisColumns, Has.Count.EqualTo(2));
+					Assert.That(secondTable.ForeignKeys[0].OtherColumns, Has.Count.EqualTo(2));
+				}
+			}
+			finally
+			{
+				db.Execute(@"
+DROP TABLE FirstTable;
+DROP TABLE SecondTable;
+");
+			}
 		}
 
 		#region issue 4808
@@ -1035,7 +1141,7 @@ namespace Tests.DataProvider
 
 		// TODO: Enable AllSQLite when MSSQLite provider is supported. Related: #4117
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5014")]
-		public void Issue5014Test([IncludeDataSources(TestProvName.AllSQLiteClassic)] string context)
+		public void Issue5014Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataConnection(context);
 

@@ -13,16 +13,16 @@ namespace Cli.NoMetadata.SQLiteNorthwind
 {
 	public class AlphabeticalListOfProduct
 	{
-		public int     ProductId       { get; set; } // int
+		public int     ProductId       { get; set; } // INT
 		public string  ProductName     { get; set; } = null!; // varchar(40)
-		public int?    SupplierId      { get; set; } // int
-		public int?    CategoryId      { get; set; } // int
+		public int?    SupplierId      { get; set; } // INT
+		public int?    CategoryId      { get; set; } // INT
 		public string? QuantityPerUnit { get; set; } // varchar(20)
-		public double? UnitPrice       { get; set; } // float
-		public int?    UnitsInStock    { get; set; } // int
-		public int?    UnitsOnOrder    { get; set; } // int
-		public int?    ReorderLevel    { get; set; } // int
-		public int     Discontinued    { get; set; } // int
+		public double? UnitPrice       { get; set; } // float(26)
+		public int?    UnitsInStock    { get; set; } // INT
+		public int?    UnitsOnOrder    { get; set; } // INT
+		public int?    ReorderLevel    { get; set; } // INT
+		public int     Discontinued    { get; set; } // INT
 		public string  CategoryName    { get; set; } = null!; // varchar(15)
 	}
 }

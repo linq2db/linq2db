@@ -13,7 +13,7 @@ namespace Cli.Fluent.SQLiteNorthwind
 {
 	public class EmployeeTerritory
 	{
-		public int    EmployeeId  { get; set; } // int
+		public int    EmployeeId  { get; set; } // INT
 		public string TerritoryId { get; set; } = null!; // varchar(20)
 	}
 }

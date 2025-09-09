@@ -16,12 +16,12 @@ namespace Cli.NewCliFeatures.SQLite
 	[Table("PrimaryKeyTable")]
 	public class PrimaryKeyTable
 	{
-		[Column("ID"  , IsPrimaryKey = true )] public long   Id   { get; internal set; } // integer
-		[Column("Name", CanBeNull    = false)] public string Name { get; internal set; } = null!; // nvarchar(50)
+		[Column("ID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long   Id   { get; internal set; } // INTEGER
+		[Column("Name", CanBeNull    = false                                                             )] public string Name { get; internal set; } = null!; // nvarchar(50)
 
 		#region Associations
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0 backreference
+		/// FK_ForeignKeyTable_0 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(Id), OtherKey = nameof(ForeignKeyTable.PrimaryKeyTableId))]
 		public IEnumerable<ForeignKeyTable> ForeignKeyTables { get; set; } = null!;

@@ -15,7 +15,7 @@ namespace Cli.NewCliFeatures.SQLite
 	[Table("Person")]
 	public class Person
 	{
-		[Column("PersonID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long    PersonId   { get; internal set; } // integer
+		[Column("PersonID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long    PersonId   { get; internal set; } // INTEGER
 		[Column("FirstName" , CanBeNull    = false                                                             )] public string  FirstName  { get; internal set; } = null!; // nvarchar(50)
 		[Column("LastName"  , CanBeNull    = false                                                             )] public string  LastName   { get; internal set; } = null!; // nvarchar(50)
 		[Column("MiddleName"                                                                                   )] public string? MiddleName { get; internal set; } // nvarchar(50)
@@ -23,13 +23,13 @@ namespace Cli.NewCliFeatures.SQLite
 
 		#region Associations
 		/// <summary>
-		/// FK_Doctor_0_0 backreference
+		/// FK_Doctor_0 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(SQLite.Doctor.PersonId))]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// FK_Patient_0_0 backreference
+		/// FK_Patient_0 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(SQLite.Patient.PersonId))]
 		public Patient? Patient { get; set; }

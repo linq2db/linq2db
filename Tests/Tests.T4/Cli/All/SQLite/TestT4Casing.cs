@@ -16,12 +16,12 @@ namespace Cli.All.SQLite
 	[Table("TEST_T4_CASING")]
 	public class TestT4Casing
 	{
-		[Column("ALL_CAPS"             , DataType = DataType.Int32, DbType = "int", Length = 4, Precision = 10, Scale = 0)] public int AllCaps             { get; set; } // int
-		[Column("CAPS"                 , DataType = DataType.Int32, DbType = "int", Length = 4, Precision = 10, Scale = 0)] public int Caps                { get; set; } // int
-		[Column("PascalCase"           , DataType = DataType.Int32, DbType = "int", Length = 4, Precision = 10, Scale = 0)] public int PascalCase          { get; set; } // int
-		[Column("Pascal_Snake_Case"    , DataType = DataType.Int32, DbType = "int", Length = 4, Precision = 10, Scale = 0)] public int PascalSnakeCase     { get; set; } // int
-		[Column("PascalCase_Snake_Case", DataType = DataType.Int32, DbType = "int", Length = 4, Precision = 10, Scale = 0)] public int PascalCaseSnakeCase { get; set; } // int
-		[Column("snake_case"           , DataType = DataType.Int32, DbType = "int", Length = 4, Precision = 10, Scale = 0)] public int SnakeCase           { get; set; } // int
-		[Column("camelCase"            , DataType = DataType.Int32, DbType = "int", Length = 4, Precision = 10, Scale = 0)] public int CamelCase           { get; set; } // int
+		[Column("ALL_CAPS"             , DataType = DataType.Int32, DbType = "INT")] public int AllCaps             { get; set; } // INT
+		[Column("CAPS"                 , DataType = DataType.Int32, DbType = "INT")] public int Caps                { get; set; } // INT
+		[Column("PascalCase"           , DataType = DataType.Int32, DbType = "INT")] public int PascalCase          { get; set; } // INT
+		[Column("Pascal_Snake_Case"    , DataType = DataType.Int32, DbType = "INT")] public int PascalSnakeCase     { get; set; } // INT
+		[Column("PascalCase_Snake_Case", DataType = DataType.Int32, DbType = "INT")] public int PascalCaseSnakeCase { get; set; } // INT
+		[Column("snake_case"           , DataType = DataType.Int32, DbType = "INT")] public int SnakeCase           { get; set; } // INT
+		[Column("camelCase"            , DataType = DataType.Int32, DbType = "INT")] public int CamelCase           { get; set; } // INT
 	}
 }

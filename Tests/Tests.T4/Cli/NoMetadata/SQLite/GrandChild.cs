@@ -13,8 +13,8 @@ namespace Cli.NoMetadata.SQLite
 {
 	public class GrandChild
 	{
-		public int? ParentId     { get; set; } // int
-		public int? ChildId      { get; set; } // int
-		public int? GrandChildId { get; set; } // int
+		public int? ParentId     { get; set; } // INT
+		public int? ChildId      { get; set; } // INT
+		public int? GrandChildId { get; set; } // INT
 	}
 }

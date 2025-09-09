@@ -16,7 +16,7 @@ namespace Cli.All.SQLite
 	[Table("Child")]
 	public class Child
 	{
-		[Column("ParentID", DataType = DataType.Int32, DbType = "int", Length = 4, Precision = 10, Scale = 0)] public int? ParentId { get; set; } // int
-		[Column("ChildID" , DataType = DataType.Int32, DbType = "int", Length = 4, Precision = 10, Scale = 0)] public int? ChildId  { get; set; } // int
+		[Column("ParentID", DataType = DataType.Int32, DbType = "INT")] public int? ParentId { get; set; } // INT
+		[Column("ChildID" , DataType = DataType.Int32, DbType = "INT")] public int? ChildId  { get; set; } // INT
 	}
 }

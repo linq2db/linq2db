@@ -13,9 +13,9 @@ namespace Cli.NoMetadata.SQLiteNorthwind
 {
 	public class Category
 	{
-		public int     CategoryId   { get; set; } // int
+		public int     CategoryId   { get; set; } // INT
 		public string  CategoryName { get; set; } = null!; // varchar(15)
-		public string? Description  { get; set; } // text(max)
-		public byte[]? Picture      { get; set; } // blob
+		public string? Description  { get; set; } // TEXT
+		public byte[]? Picture      { get; set; } // BLOB
 	}
 }

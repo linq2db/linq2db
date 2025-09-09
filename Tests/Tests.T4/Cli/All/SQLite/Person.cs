@@ -19,11 +19,11 @@ namespace Cli.All.SQLite
 	[Table("Person")]
 	public class Person : IEquatable<Person>
 	{
-		[Column("PersonID"  , DataType  = DataType.Int64   , DbType   = "integer"        , Length = 8             , Precision = 19, Scale     = 0, IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long    PersonId   { get; set; } // integer
-		[Column("FirstName" , CanBeNull = false            , DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length    = 50, Precision = 0, Scale        = 0                                                                )] public string  FirstName  { get; set; } = null!; // nvarchar(50)
-		[Column("LastName"  , CanBeNull = false            , DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length    = 50, Precision = 0, Scale        = 0                                                                )] public string  LastName   { get; set; } = null!; // nvarchar(50)
-		[Column("MiddleName", DataType  = DataType.NVarChar, DbType   = "nvarchar(50)"   , Length = 50            , Precision = 0 , Scale     = 0                                                                                  )] public string? MiddleName { get; set; } // nvarchar(50)
-		[Column("Gender"    , DataType  = DataType.NChar   , DbType   = "char(1)"        , Length = 1             , Precision = 0 , Scale     = 0                                                                                  )] public char    Gender     { get; set; } // char(1)
+		[Column("PersonID"  , DataType  = DataType.Int64   , DbType   = "INTEGER"        , IsPrimaryKey = true          , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long    PersonId   { get; set; } // INTEGER
+		[Column("FirstName" , CanBeNull = false            , DataType = DataType.NVarChar, DbType       = "nvarchar(50)", Length     = 50                                            )] public string  FirstName  { get; set; } = null!; // nvarchar(50)
+		[Column("LastName"  , CanBeNull = false            , DataType = DataType.NVarChar, DbType       = "nvarchar(50)", Length     = 50                                            )] public string  LastName   { get; set; } = null!; // nvarchar(50)
+		[Column("MiddleName", DataType  = DataType.NVarChar, DbType   = "nvarchar(50)"   , Length       = 50                                                                         )] public string? MiddleName { get; set; } // nvarchar(50)
+		[Column("Gender"    , DataType  = DataType.NVarChar, DbType   = "char(1)"        , Length       = 1                                                                          )] public char    Gender     { get; set; } // char(1)
 
 		#region IEquatable<T> support
 		private static readonly IEqualityComparer<Person> _equalityComparer = ComparerBuilder.GetEqualityComparer<Person>(c => c.PersonId);
@@ -46,13 +46,13 @@ namespace Cli.All.SQLite
 
 		#region Associations
 		/// <summary>
-		/// FK_Doctor_0_0 backreference
+		/// FK_Doctor_0 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(SQLite.Doctor.PersonId))]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// FK_Patient_0_0 backreference
+		/// FK_Patient_0 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(SQLite.Patient.PersonId))]
 		public Patient? Patient { get; set; }

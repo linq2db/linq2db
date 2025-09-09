@@ -16,9 +16,9 @@ namespace Cli.All.SQLite
 	[Table("InheritanceChild")]
 	public class InheritanceChild
 	{
-		[Column("InheritanceChildId" , DataType = DataType.Int64   , DbType = "integer"     , Length = 8 , Precision = 19, Scale = 0)] public long    InheritanceChildId  { get; set; } // integer
-		[Column("InheritanceParentId", DataType = DataType.Int64   , DbType = "integer"     , Length = 8 , Precision = 19, Scale = 0)] public long    InheritanceParentId { get; set; } // integer
-		[Column("TypeDiscriminator"  , DataType = DataType.Int64   , DbType = "integer"     , Length = 8 , Precision = 19, Scale = 0)] public long?   TypeDiscriminator   { get; set; } // integer
-		[Column("Name"               , DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50, Precision = 0 , Scale = 0)] public string? Name                { get; set; } // nvarchar(50)
+		[Column("InheritanceChildId" , DataType = DataType.Int64   , DbType = "INTEGER"                  )] public long    InheritanceChildId  { get; set; } // INTEGER
+		[Column("InheritanceParentId", DataType = DataType.Int64   , DbType = "INTEGER"                  )] public long    InheritanceParentId { get; set; } // INTEGER
+		[Column("TypeDiscriminator"  , DataType = DataType.Int64   , DbType = "INTEGER"                  )] public long?   TypeDiscriminator   { get; set; } // INTEGER
+		[Column("Name"               , DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50)] public string? Name                { get; set; } // nvarchar(50)
 	}
 }
