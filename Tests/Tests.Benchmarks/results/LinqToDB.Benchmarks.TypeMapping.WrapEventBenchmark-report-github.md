@@ -13,27 +13,27 @@ Jit=RyuJit  Platform=X64
 ```
 | Method                    | Runtime              | Mean         | Allocated |
 |-------------------------- |--------------------- |-------------:|----------:|
-| TypeMapperEmpty           | .NET 8.0             |    13.655 ns |      64 B |
-| DirectAccessEmpty         | .NET 8.0             |    10.132 ns |      64 B |
-| TypeMapperAddFireRemove   | .NET 8.0             |    60.569 ns |     224 B |
-| DirectAccessAddFireRemove | .NET 8.0             |    49.834 ns |     192 B |
-| TypeMapperSubscribed      | .NET 8.0             |    44.054 ns |      96 B |
-| DirectAccessSubscribed    | .NET 8.0             |    10.391 ns |      64 B |
-| TypeMapperAddRemove       | .NET 8.0             | 1,037.691 ns |     344 B |
-| DirectAccessAddRemove     | .NET 8.0             |    32.688 ns |     152 B |
-| TypeMapperEmpty           | .NET 9.0             |     4.631 ns |      64 B |
-| DirectAccessEmpty         | .NET 9.0             |     8.544 ns |      64 B |
-| TypeMapperAddFireRemove   | .NET 9.0             |    78.773 ns |     224 B |
-| DirectAccessAddFireRemove | .NET 9.0             |    48.413 ns |     192 B |
-| TypeMapperSubscribed      | .NET 9.0             |    43.328 ns |      96 B |
-| DirectAccessSubscribed    | .NET 9.0             |     8.610 ns |      64 B |
-| TypeMapperAddRemove       | .NET 9.0             | 1,092.629 ns |     344 B |
-| DirectAccessAddRemove     | .NET 9.0             |    42.588 ns |     152 B |
-| TypeMapperEmpty           | .NET Framework 4.6.2 |    10.735 ns |      64 B |
-| DirectAccessEmpty         | .NET Framework 4.6.2 |    13.983 ns |      64 B |
-| TypeMapperAddFireRemove   | .NET Framework 4.6.2 |    64.685 ns |     225 B |
-| DirectAccessAddFireRemove | .NET Framework 4.6.2 |    64.247 ns |     193 B |
-| TypeMapperSubscribed      | .NET Framework 4.6.2 |    67.018 ns |      96 B |
-| DirectAccessSubscribed    | .NET Framework 4.6.2 |    14.533 ns |      64 B |
-| TypeMapperAddRemove       | .NET Framework 4.6.2 |   608.619 ns |     345 B |
-| DirectAccessAddRemove     | .NET Framework 4.6.2 |    70.396 ns |     152 B |
+| TypeMapperEmpty           | .NET 8.0             |    13.517 ns |      64 B |
+| DirectAccessEmpty         | .NET 8.0             |     9.773 ns |      64 B |
+| TypeMapperAddFireRemove   | .NET 8.0             |    71.060 ns |     224 B |
+| DirectAccessAddFireRemove | .NET 8.0             |    36.447 ns |     192 B |
+| TypeMapperSubscribed      | .NET 8.0             |    42.898 ns |      96 B |
+| DirectAccessSubscribed    | .NET 8.0             |    10.024 ns |      64 B |
+| TypeMapperAddRemove       | .NET 8.0             |   855.838 ns |     344 B |
+| DirectAccessAddRemove     | .NET 8.0             |    33.575 ns |     152 B |
+| TypeMapperEmpty           | .NET 9.0             |    31.452 ns |      64 B |
+| DirectAccessEmpty         | .NET 9.0             |     7.971 ns |      64 B |
+| TypeMapperAddFireRemove   | .NET 9.0             |    67.790 ns |     224 B |
+| DirectAccessAddFireRemove | .NET 9.0             |    49.406 ns |     192 B |
+| TypeMapperSubscribed      | .NET 9.0             |    43.408 ns |      96 B |
+| DirectAccessSubscribed    | .NET 9.0             |     6.993 ns |      64 B |
+| TypeMapperAddRemove       | .NET 9.0             |   970.457 ns |     344 B |
+| DirectAccessAddRemove     | .NET 9.0             |    41.282 ns |     152 B |
+| TypeMapperEmpty           | .NET Framework 4.6.2 |    13.610 ns |      64 B |
+| DirectAccessEmpty         | .NET Framework 4.6.2 |    13.704 ns |      64 B |
+| TypeMapperAddFireRemove   | .NET Framework 4.6.2 |   157.461 ns |     225 B |
+| DirectAccessAddFireRemove | .NET Framework 4.6.2 |    86.914 ns |     193 B |
+| TypeMapperSubscribed      | .NET Framework 4.6.2 |    63.829 ns |      96 B |
+| DirectAccessSubscribed    | .NET Framework 4.6.2 |    14.843 ns |      64 B |
+| TypeMapperAddRemove       | .NET Framework 4.6.2 | 1,377.337 ns |     345 B |
+| DirectAccessAddRemove     | .NET Framework 4.6.2 |    70.806 ns |     152 B |
