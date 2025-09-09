@@ -2235,7 +2235,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override Expression VisitDefaultValueExpression(DefaultValueExpression node)
 		{
-			if (_buildPurpose is BuildPurpose.Sql && _buildContext is not null)
+			if (_buildPurpose is BuildPurpose.Sql && BuildContext is not null)
 			{
 				if (node.IsNull)
 				{
@@ -2584,7 +2584,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (_alias != null)
 					node = node.WithAlias(_alias);
 
-				//return Builder.UpdateNesting(_buildContext!, node);
+				//return Builder.UpdateNesting(BuildContext!, node);
 				return node;
 			}
 
@@ -2671,7 +2671,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		public SqlPlaceholderExpression CreatePlaceholder(ISqlExpression sqlExpression, Expression path)
 		{
 			if (BuildContext == null)
-				throw new InvalidOperationException("_buildContext is not initialized");
+				throw new InvalidOperationException("BuildContext is not initialized");
 
 			var placeholder = ExpressionBuilder.CreatePlaceholder(BuildContext, sqlExpression, path, alias: _alias);
 			return placeholder;
@@ -3243,7 +3243,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public bool BuildSearchCondition(IBuildContext? context, Expression expression, SqlSearchCondition searchCondition, [NotNullWhen(false)] out SqlErrorExpression? error)
 		{
-			using var saveContext = UsingBuildContext(context ?? _buildContext);
+			using var saveContext = UsingBuildContext(context ?? BuildContext);
 			using var savePurpose = UsingBuildPurpose(BuildPurpose.Sql);
 
 			var result = Visit(expression);
@@ -3995,10 +3995,10 @@ namespace LinqToDB.Internal.Linq.Builder
 					case ExpressionType.Equal:
 					case ExpressionType.NotEqual:
 
-						if (!_buildContext!.SelectQuery.IsParameterDependent &&
+						if (!BuildContext!.SelectQuery.IsParameterDependent &&
 							(l is SqlParameter && lOriginal.CanBeNullable(nullability) || r is SqlParameter && r.CanBeNullable(nullability)))
 						{
-							_buildContext.SelectQuery.IsParameterDependent = true;
+							BuildContext.SelectQuery.IsParameterDependent = true;
 						}
 
 						break;
@@ -5298,7 +5298,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		NullabilityContext GetNullabilityContext()
 		{
-			_nullabilityContext ??= NullabilityContext.GetContext(_buildContext?.SelectQuery);
+			_nullabilityContext ??= NullabilityContext.GetContext(BuildContext?.SelectQuery);
 			return _nullabilityContext;
 		}
 
