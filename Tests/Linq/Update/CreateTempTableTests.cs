@@ -123,7 +123,7 @@ namespace Tests.xUpdate
 				statementHeader: "/* THIS IS HEADER*/ CREATE TABLE temp.CreateTableWithHeaderFooter",
 				statementFooter: "/* THIS IS FOOTER*/"));
 
-			var parts = db.LastQuery!.Split("CreateTableWithHeaderFooter");
+			var parts = db.LastQuery!.Split(["CreateTableWithHeaderFooter"], StringSplitOptions.None);
 			Assert.That(parts, Has.Length.EqualTo(2));
 			using (Assert.EnterMultipleScope())
 			{
@@ -144,7 +144,7 @@ namespace Tests.xUpdate
 				statementHeader: "/* THIS IS ASYNC HEADER*/ CREATE TABLE temp.CreateTableWithHeaderFooter",
 				statementFooter: "/* THIS IS ASYNC FOOTER*/"));
 
-			var parts = db.LastQuery!.Split("CreateTableWithHeaderFooter");
+			var parts = db.LastQuery!.Split(["CreateTableWithHeaderFooter"], StringSplitOptions.None);
 			Assert.That(parts, Has.Length.EqualTo(2));
 			using (Assert.EnterMultipleScope())
 			{
