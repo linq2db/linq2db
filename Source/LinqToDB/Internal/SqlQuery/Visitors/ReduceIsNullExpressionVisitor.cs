@@ -159,6 +159,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				ReduceOrAdd(parameters[2]);
 			}
 
+			if (nullabilityType == ParametersNullabilityType.SameAsFirstOrSecondParameter)
+			{
+				ReduceOrAdd(parameters[0]);
+				ReduceOrAdd(parameters[1]);
+			}
+
 			if (nullabilityType == ParametersNullabilityType.SameAsLastParameter)
 			{
 				ReduceOrAdd(parameters[^1]);

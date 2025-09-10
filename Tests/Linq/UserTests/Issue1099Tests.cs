@@ -19,7 +19,7 @@ namespace Tests.UserTests
 
 		public interface IBackgroundTask
 		{
-			[Column]
+			[PrimaryKey]
 			int? ID { get; set; }
 			[Column]
 			int DurationID { get; set; }

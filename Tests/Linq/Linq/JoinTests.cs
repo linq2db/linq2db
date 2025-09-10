@@ -471,8 +471,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[RequiresCorrelatedSubquery]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		public void GroupJoin54([DataSources(TestProvName.AllClickHouse)] string context)
+		public void GroupJoin54([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1204,7 +1205,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinSubQuerySum([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void JoinSubQuerySum([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -2878,6 +2880,7 @@ namespace Tests.Linq
 		#region issue 1455
 		public class Alert
 		{
+			[PrimaryKey] public int Id { get; set; }
 			[Column(CanBeNull = false)]
 			public string    AlertKey     { get; set; } = null!;
 			[Column(CanBeNull = false)]
@@ -2891,18 +2894,19 @@ namespace Tests.Linq
 		}
 		public class Trade
 		{
-			public int     DealId       { get; set; }
-			public int     ParcelId     { get; set; }
+			[PrimaryKey] public int     DealId       { get; set; }
+			[PrimaryKey] public int     ParcelId     { get; set; }
 			public string? CounterParty { get; set; }
 		}
 		public class Nomin
 		{
-			public int     CargoId              { get; set; }
-			public int     DeliveryId           { get; set; }
+			[PrimaryKey] public int     CargoId              { get; set; }
+			[PrimaryKey] public int     DeliveryId           { get; set; }
 			public string? DeliveryCounterParty { get; set; }
 		}
 		public class Flat
 		{
+			[PrimaryKey] public int Id { get; set; }
 			public string?   AlertKey             { get; set; }
 			public string?   AlertCode            { get; set; }
 			public int?      CargoId              { get; set; }
@@ -3140,27 +3144,29 @@ namespace Tests.Linq
 		[Table]
 		private class Issue4160Person
 		{
+			[PrimaryKey] public int Id { get; set; }
 			[Column] public string Code { get; set; } = default!;
 
 			public static readonly Issue4160Person[] Data = new[]
 			{
-				new Issue4160Person() { Code = "SD" },
-				new Issue4160Person() { Code = "SD" },
-				new Issue4160Person() { Code = "SH" },
+				new Issue4160Person() { Id = 1, Code = "SD" },
+				new Issue4160Person() { Id = 2, Code = "SD" },
+				new Issue4160Person() { Id = 3, Code = "SH" },
 			};
 		}
 
 		[Table]
 		private class Issue4160City
 		{
+			[PrimaryKey] public int Id { get; set; }
 			[Column] public string  Code { get; set; } = default!;
 			[Column] public string? Name { get; set; }
 
 			public static readonly Issue4160City[] Data = new[]
 			{
-				new Issue4160City() { Code = "SD", Name = "SYDNEY" },
-				new Issue4160City() { Code = "SD", Name = "SUNDAY" },
-				new Issue4160City() { Code = "SH", Name = "SYDHIP" }
+				new Issue4160City() { Id = 1, Code = "SD", Name = "SYDNEY" },
+				new Issue4160City() { Id = 2, Code = "SD", Name = "SUNDAY" },
+				new Issue4160City() { Id = 3, Code = "SH", Name = "SYDHIP" }
 			};
 		}
 
@@ -3340,7 +3346,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllFirebirdLess4, TestProvName.AllInformix, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllClickHouse], ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3311")]
 		public void Issue3311Test3([DataSources] string context)
 		{
@@ -3427,24 +3433,24 @@ namespace Tests.Linq
 		{
 			public DateTime StartDate { get; set; }
 			public DateTime EndDate { get; set; }
-			public int Year { get; set; }
+			[PrimaryKey] public int Year { get; set; }
 		}
 
 		public class Sample
 		{
-			public int SampleId { get; set; }
+			[PrimaryKey] public int SampleId { get; set; }
 		}
 
 		public class Source
 		{
-			public int Key1 { get; set; }
-			public int Key2 { get; set; }
+			[PrimaryKey] public int Key1 { get; set; }
+			[PrimaryKey] public int Key2 { get; set; }
 		}
 
 		public class SelectionMap
 		{
-			public int Key1 { get; set; }
-			public int Key2 { get; set; }
+			[PrimaryKey] public int Key1 { get; set; }
+			[PrimaryKey] public int Key2 { get; set; }
 			public decimal SelectionProperty { get; set; }
 		}
 
@@ -3496,9 +3502,9 @@ namespace Tests.Linq
 				new { ID = 2, Value = (string?)null     },
 			};
 
-			using var temp1 = db.CreateTempTable("tmptbl1", data1, ed => ed.Property(p => p.Value).IsNullable());
-			using var temp2 = db.CreateTempTable("tmptbl2", data2, ed => ed.Property(p => p.Value).IsNotNull());
-			using var temp3 = db.CreateTempTable("tmptbl3", data3, ed => ed.Property(p => p.Value).IsNullable());
+			using var temp1 = db.CreateTempTable("tmptbl1", data1, ed => ed.Property(p => p.Value).IsNullable().Property(p => p.ID).IsPrimaryKey());
+			using var temp2 = db.CreateTempTable("tmptbl2", data2, ed => ed.Property(p => p.Value).IsNotNull().Property(p => p.ID).IsPrimaryKey());
+			using var temp3 = db.CreateTempTable("tmptbl3", data3, ed => ed.Property(p => p.Value).IsNullable().Property(p => p.ID).IsPrimaryKey());
 
 			var query =
 				from t2 in temp1

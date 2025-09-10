@@ -34,7 +34,7 @@ namespace Tests.xUpdate
 
 				Assert.That(db.Parent.Count (p => p.ParentID == parent.ParentID), Is.EqualTo(1));
 				var cnt = db.Parent.Delete(p => p.ParentID == parent.ParentID);
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 				Assert.That(db.Parent.Count (p => p.ParentID == parent.ParentID), Is.Zero);
 			}
@@ -53,7 +53,7 @@ namespace Tests.xUpdate
 
 				Assert.That(db.Parent.Count(p => p.ParentID == parent.ParentID), Is.EqualTo(1));
 				var cnt = db.Parent.Where(p => p.ParentID == parent.ParentID).Delete();
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 				Assert.That(db.Parent.Count(p => p.ParentID == parent.ParentID), Is.Zero);
 			}
@@ -119,7 +119,7 @@ namespace Tests.xUpdate
 
 					Assert.That(db.Parent.Count(_ => _.ParentID > 1000), Is.EqualTo(2));
 					var cnt = db.Parent.Delete(_ => values.Contains(_.ParentID));
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(2));
 					Assert.That(db.Parent.Count(_ => _.ParentID > 1000), Is.Zero);
 				}
@@ -514,7 +514,7 @@ namespace Tests.xUpdate
 
 					var ret = db.Parent.Delete(p => list.Contains(p) );
 
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(ret, Is.EqualTo(2));
 				}
 				finally
@@ -628,10 +628,10 @@ namespace Tests.xUpdate
 			var deleted = db.Parent.Delete(c => c.ParentID == 1003) == 1;
 			using (Assert.EnterMultipleScope())
 			{
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(2));
 				Assert.That(left, Is.EqualTo(1));
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(deleted, Is.True);
 			}
 		}
@@ -656,10 +656,10 @@ namespace Tests.xUpdate
 			var deleted = db.Parent.Delete(c => c.ParentID > 1000) == 1;
 			using (Assert.EnterMultipleScope())
 			{
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(2));
 				Assert.That(left, Is.EqualTo(1));
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(deleted, Is.True);
 			}
 		}

@@ -369,8 +369,8 @@ namespace Tests.Linq
 		#endregion
 
 		#region Issue 4622
-		public record Issue4674StockItem(string TenantId, string Code, string Description);
-		public record Issue4674StockRoomItem(string TenantId, string StockroomCode, string ItemCode, decimal Quantity);
+		public record Issue4674StockItem([property: PrimaryKey] string TenantId, string Code, string Description);
+		public record Issue4674StockRoomItem(string TenantId, string StockroomCode, [property:PrimaryKey] string ItemCode, decimal Quantity);
 
 		static IQueryable<T2> Issue4674JoinTable<T2>(IDataContext db, Expression<Func<T2, bool>> joinExpression)
 		  where T2 : class

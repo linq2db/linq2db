@@ -17,7 +17,8 @@ namespace Tests.Linq
 	public class SubQueryTests : TestBase
 	{
 		[Test]
-		public void Test1([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Test1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -30,7 +31,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test2([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Test2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -73,7 +75,8 @@ namespace Tests.Linq
 		static int _testValue = 3;
 
 		[Test]
-		public void Test5([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Test5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -110,7 +113,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test6([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Test6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -150,7 +154,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test7([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Test7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -279,7 +284,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubSub1([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void SubSub1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -314,9 +320,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[RequiresCorrelatedSubquery]
 		public void SubSub2([DataSources(
 			TestProvName.AllAccess,
-			TestProvName.AllClickHouse,
 			ProviderName.DB2,
 			TestProvName.AllOracle,
 			TestProvName.AllSybase,
@@ -407,7 +413,8 @@ namespace Tests.Linq
 		//}
 
 		[Test]
-		public void SubSub21([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void SubSub21([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -450,7 +457,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubSub211([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void SubSub211([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -495,7 +503,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubSub212([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void SubSub212([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -538,9 +547,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[RequiresCorrelatedSubquery]
 		public void SubSub22([DataSources(
 			ProviderName.SqlCe, ProviderName.DB2,
-			TestProvName.AllClickHouse,
 			TestProvName.AllOracle, TestProvName.AllSapHana)]
 			string context)
 		{
@@ -587,7 +596,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Count1([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Count1([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -637,7 +647,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Count3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Count3([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -683,9 +694,9 @@ namespace Tests.Linq
 		[Table]
 		sealed class Contract_Distributor_Agent
 		{
-			[Column] public int Agent_Id { get; set; }
-			[Column] public int Distributor_Id { get; set; }
-			[Column] public int Contract_Id { get; set; }
+			[PrimaryKey] public int Agent_Id { get; set; }
+			[PrimaryKey] public int Distributor_Id { get; set; }
+			[PrimaryKey] public int Contract_Id { get; set; }
 			[Column] public string? Distributor_Type_Code { get; set; }
 			[Column] public string? Distributor_Agent_Type_Prefix { get; set; }
 			[Column] public string? Represents_Type_Prefix { get; set; }
@@ -699,7 +710,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class Agent
 		{
-			[Column] public int Agent_Id { get; set; }
+			[PrimaryKey] public int Agent_Id { get; set; }
 			[Column] public string? First_Name { get; set; }
 			[Column] public string? Last_Name { get; set; }
 
@@ -712,7 +723,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class Distributor
 		{
-			[Column] public int Distributor_Id { get; set; }
+			[PrimaryKey] public int Distributor_Id { get; set; }
 			[Column] public string? Type_Code { get; set; }
 			[Column] public string? Distributor_Name { get; set; }
 
@@ -725,8 +736,8 @@ namespace Tests.Linq
 		[Table]
 		sealed class Distributor_Commercial_Propert
 		{
-			[Column] public int Distributor_Id { get; set; }
-			[Column] public int Commercial_Property_Id { get; set; }
+			[PrimaryKey] public int Distributor_Id { get; set; }
+			[PrimaryKey] public int Commercial_Property_Id { get; set; }
 			[Column] public string? Distributor_Type_Code { get; set; }
 
 			public static readonly Distributor_Commercial_Propert[] Data = new[]
@@ -738,7 +749,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class Commercial_Property
 		{
-			[Column              ] public int     Commercial_Property_Id { get; set; }
+			[PrimaryKey          ] public int     Commercial_Property_Id { get; set; }
 			[Column(Length = 100)] public string? Street_Number          { get; set; }
 			[Column(Length = 100)] public string? Street_Name            { get; set; }
 			[Column(Length = 100)] public string? State                  { get; set; }
@@ -755,7 +766,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class Contract_Dates
 		{
-			[Column] public int Contract_Id { get; set; }
+			[PrimaryKey] public int Contract_Id { get; set; }
 			[Column] public string? Type_Code { get; set; }
 			[Column] public string? Effective_Date { get; set; }
 
@@ -768,7 +779,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class Cities
 		{
-			[Column] public string? City_Code { get; set; }
+			[PrimaryKey] public string City_Code { get; set; } = null!;
 			[Column] public string? City_Name { get; set; }
 
 			public static readonly Cities[] Data = new[]
@@ -889,7 +900,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class Issue4458Item
 		{
-			[Column(CanBeNull = false)] public string Id { get; set; } = null!;
+			[Column(CanBeNull = false), PrimaryKey] public string Id { get; set; } = null!;
 
 			public static readonly Issue4458Item[] Data =
 			[
@@ -902,7 +913,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class WarehouseStock
 		{
-			[Column(CanBeNull = false)] public string ItemId { get; set; } = null!;
+			[Column(CanBeNull = false), PrimaryKey] public string ItemId { get; set; } = null!;
 			[Column] public int QuantityAvailable { get; set; }
 			[Column(CanBeNull = false)] public string WarehouseId { get; set; } = null!;
 
@@ -920,8 +931,8 @@ namespace Tests.Linq
 		[Table]
 		sealed class Review
 		{
-			[Column(CanBeNull = false)] public string ItemId { get; set; } = null!;
-			[Column(CanBeNull = false)] public string UserId { get; set; } = null!;
+			[Column(CanBeNull = false), PrimaryKey] public string ItemId { get; set; } = null!;
+			[Column(CanBeNull = false), PrimaryKey] public string UserId { get; set; } = null!;
 			[Column] public int Score { get; set; }
 
 			public static readonly Review[] Data =
@@ -966,8 +977,9 @@ namespace Tests.Linq
 			public IEnumerable<Review> Reviews { get; set; } = null!;
 		}
 
+		[RequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4458")]
-		public void Issue4458Test1([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Issue4458Test1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable(Issue4458Item.Data);
@@ -997,8 +1009,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[RequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4458")]
-		public void Issue4458Test2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Issue4458Test2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable(Issue4458Item.Data);
@@ -1315,7 +1328,7 @@ namespace Tests.Linq
 
 		public class Trp004
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			[Column(Length = 10)] public string? CarNo { get; set; }
 			[Column(Length = 10)] public string? RuleNo { get; set; }
@@ -1333,7 +1346,7 @@ namespace Tests.Linq
 
 		public class Tdm100
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			[Column(Length = 10)] public string? CarSelf { get; set; }
 			[Column(Length = 10)] public string? CarNo { get; set; }
@@ -1346,7 +1359,7 @@ namespace Tests.Linq
 
 		public class Trp003
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			[Column(Length = 10)] public string? RuleNo { get; set; }
 			[Column(Length = 10)] public string? RuleName { get; set; }
@@ -1358,7 +1371,7 @@ namespace Tests.Linq
 
 		public class Trp0041
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			[Column(Length = 10)] public string? CarNo { get; set; }
 			[Column(Length = 10)] public string? FirstVal { get; set; }

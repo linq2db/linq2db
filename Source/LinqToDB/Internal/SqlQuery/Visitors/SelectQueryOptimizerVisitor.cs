@@ -2047,6 +2047,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					foreach (var join in tableSource.Joins)
 					{
+						if (!_providerFlags.IsComplexJoinConditionSupported)
+							MoveJoinConditionsToWhere(join, selectQuery.Where, NullabilityContext.GetContext(selectQuery));
+
 						if (JoinMoveSubQueryUp(selectQuery, join))
 							replaced = true;
 					}
@@ -2082,6 +2085,31 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 
 			return replaced;
+		}
+
+		private void MoveJoinConditionsToWhere(SqlJoinedTable join, SqlWhereClause where, NullabilityContext nullabilityContext)
+		{
+			if (join.JoinType != JoinType.Inner || join.Condition.IsOr || join.Condition.Predicates.Count == 0)
+				return;
+
+			SqlSearchCondition? whereCond = null;
+			for (var i = 0; i < join.Condition.Predicates.Count; i++)
+			{
+				var predicate = join.Condition.Predicates[i];
+
+				var move = predicate is not SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr
+					|| exprExpr != exprExpr.Reduce(nullabilityContext, _evaluationContext, false, _dataOptions.LinqOptions)
+					|| exprExpr.Expr1 is SqlValue || exprExpr.Expr2 is SqlValue;
+
+				if (move)
+				{
+					(whereCond ??= where.EnsureConjunction()).Predicates.Add(predicate);
+					join.Condition.Predicates.RemoveAt(i);
+					i--;
+				}
+			}
+
+			// this could result in empty condition, but it is fine - user created unsupported query
 		}
 
 		bool CorrectRecursiveCteJoins(SelectQuery selectQuery)
@@ -2391,7 +2419,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					var join = table.Joins[joinIndex];
 					if (join.JoinType == JoinType.Inner && join.Condition.IsTrue())
 					{
-						if (_providerFlags.IsCrossJoinSupported && (table.Joins.Count > 1 || !QueryHelper.IsDependsOnSource(selectQuery.Where, join.Table.Source)))
+						if (_providerFlags.IsCrossJoinSupported && (table.Joins.Count > 0 || !QueryHelper.IsDependsOnSource(selectQuery.Where, join.Table.Source)))
 						{
 							join.JoinType = JoinType.Cross;
 							if (join.Table.Joins.Count > 0)

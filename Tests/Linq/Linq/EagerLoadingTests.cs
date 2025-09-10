@@ -1150,7 +1150,7 @@ FROM
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllFirebirdLess4, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllOracle11, TestProvName.AllMariaDB, TestProvName.AllDB2, TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void TestAggregate([DataSources] string context)
 		{
@@ -1181,7 +1181,7 @@ FROM
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllFirebirdLess4, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllOracle11, TestProvName.AllMariaDB, TestProvName.AllDB2, TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void TestAggregateAverage([DataSources] string context)
 		{
@@ -1932,13 +1932,14 @@ FROM
 		[Table]
 		sealed class ItemValue
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			[Column] public int ItemId { get; set; }
 			[Column] public decimal Value { get; set; }
 		}
 
+		[RequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
-		public void Issue3226Test1([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Issue3226Test1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<Item>();
@@ -1969,7 +1970,7 @@ FROM
 				.ToList();
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllClickHouse], ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
 		public void Issue3226Test3([DataSources] string context)
 		{
@@ -1987,7 +1988,7 @@ FROM
 				.ToList();
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllClickHouse], ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
 		public void Issue3226Test4([DataSources] string context)
 		{
@@ -3090,7 +3091,7 @@ FROM
 
 			fluentMappingBuilder
 				.Entity<Issue4585TableNested>()
-				.Property(x => x.Id)
+				.Property(x => x.Id).IsPrimaryKey()
 				.Property(x => x.Code);
 
 			fluentMappingBuilder
@@ -3233,7 +3234,7 @@ FROM
 
 		sealed class Order
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			public string? Name { get; set; }
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(SubOrder.OrderId))]
 			public List<SubOrder> SubOrders { get; set; } = null!;
@@ -3241,7 +3242,7 @@ FROM
 
 		sealed class SubOrder
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			public int OrderId { get; set; }
 			[Association(ThisKey = nameof(OrderId), OtherKey = nameof(Order.Id))]
 			public Order? Order { get; set; }
@@ -3251,7 +3252,7 @@ FROM
 
 		sealed class SubOrderDetail
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			public int SubOrderId { get; set; }
 			[Association(ThisKey = nameof(SubOrderId), OtherKey = nameof(SubOrder.Id))]
 			public SubOrder? SubOrder { get; set; }
@@ -3265,6 +3266,7 @@ FROM
 
 		class CteTable
 		{
+			[PrimaryKey]
 			public int Id { get; set; }
 			public int Value1 { get; set; }
 			public int Value2 { get; set; }
@@ -3275,6 +3277,7 @@ FROM
 
 		class CteChildTable
 		{
+			[PrimaryKey]
 			public int Id { get; set; }
 			public int Value { get; set; }
 
@@ -3285,7 +3288,7 @@ FROM
 		sealed record CteRecord(int Id, int Value1, int Value2, int Value4, int Value5);
 
 		[Test]
-		public void CteCloning_Original([CteContextSource(TestProvName.AllSapHana)] string context)
+		public void CteCloning_Original([RecursiveCteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<CteTable>();
@@ -3392,7 +3395,7 @@ FROM
 		}
 
 		[Test]
-		public void CteCloning_RecursiveChain([CteContextSource(TestProvName.AllSapHana, TestProvName.AllOracle)] string context)
+		public void CteCloning_RecursiveChain([RecursiveCteContextSource(TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<CteTable>();

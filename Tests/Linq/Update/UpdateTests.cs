@@ -38,7 +38,7 @@ namespace Tests.xUpdate
 				Assert.That(db.Parent.Count(p => p.ParentID == parent.ParentID), Is.EqualTo(1));
 
 				var cnt = db.Parent.Update(p => p.ParentID == parent.ParentID, p => new Parent { ParentID = p.ParentID + 1 });
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 
 				Assert.That(db.Parent.Count(p => p.ParentID == parent.ParentID + 1), Is.EqualTo(1));
@@ -58,7 +58,7 @@ namespace Tests.xUpdate
 				Assert.That(await db.Parent.CountAsync(p => p.ParentID == parent.ParentID), Is.EqualTo(1));
 
 				var cnt = await db.Parent.UpdateAsync(p => p.ParentID == parent.ParentID, p => new Parent { ParentID = p.ParentID + 1 });
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 
 				Assert.That(await db.Parent.CountAsync(p => p.ParentID == parent.ParentID + 1), Is.EqualTo(1));
@@ -78,7 +78,7 @@ namespace Tests.xUpdate
 				Assert.That(db.Parent.Count(p => p.ParentID == parent.ParentID), Is.EqualTo(1));
 
 				var cnt = db.Parent.Where(p => p.ParentID == parent.ParentID).Update(p => new Parent { ParentID = p.ParentID + 1 });
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 
 				Assert.That(db.Parent.Count(p => p.ParentID == parent.ParentID + 1), Is.EqualTo(1));
@@ -98,7 +98,7 @@ namespace Tests.xUpdate
 				Assert.That(await db.Parent.CountAsync(p => p.ParentID == parent.ParentID), Is.EqualTo(1));
 
 				var cnt = await db.Parent.Where(p => p.ParentID == parent.ParentID).UpdateAsync(p => new Parent { ParentID = p.ParentID + 1 });
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 
 				Assert.That(await db.Parent.CountAsync(p => p.ParentID == parent.ParentID + 1), Is.EqualTo(1));
@@ -218,7 +218,7 @@ namespace Tests.xUpdate
 						.Where(p => p.ParentID == id)
 							.Set(p => p.Value1, () => TypeValue.Value2)
 						.Update();
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 
 				Assert.That(db.Parent4.Count(p => p.ParentID == id && p.Value1 == TypeValue.Value2), Is.EqualTo(1));
@@ -240,7 +240,7 @@ namespace Tests.xUpdate
 						.Where(p => p.ParentID == id)
 							.Set(p => p.Value1, TypeValue.Value2)
 						.Update();
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 				Assert.That(db.Parent4.Count(p => p.ParentID == id && p.Value1 == TypeValue.Value2), Is.EqualTo(1));
 
@@ -248,7 +248,7 @@ namespace Tests.xUpdate
 						.Where(p => p.ParentID == id)
 							.Set(p => p.Value1, TypeValue.Value3)
 						.Update();
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 
 				Assert.That(db.Parent4.Count(p => p.ParentID == id && p.Value1 == TypeValue.Value3), Is.EqualTo(1));
@@ -694,7 +694,7 @@ namespace Tests.xUpdate
 						.Set(_ => _.Gender, _ => nullableGender.HasValue ? nullableGender.Value : _.Gender)
 						.Update();
 
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 
 				var obj = db.GetTable<ComplexPerson2>()
@@ -735,7 +735,7 @@ namespace Tests.xUpdate
 						.Set(_ => _.Name.LastName, _ => _.Name.FirstName)
 						.Update();
 
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 
 				var obj = db.GetTable<ComplexPerson2>().First(_ => _.ID == id);
@@ -1278,7 +1278,8 @@ namespace Tests.xUpdate
 							Value1 = queryResult.Value.ParentID
 						});
 
-				Assert.That(cnt, Is.EqualTo(1));
+				if (context.SupportsRowcount())
+					Assert.That(cnt, Is.EqualTo(1));
 			}
 		}
 
@@ -1988,7 +1989,7 @@ namespace Tests.xUpdate
 		[Table]
 		sealed class MainTable
 		{
-			[Column] public int Id;
+			[PrimaryKey] public int Id;
 			[Column] public string? Field;
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(AssociatedTable.Id))]
@@ -2008,7 +2009,7 @@ namespace Tests.xUpdate
 		[Table]
 		sealed class AssociatedTable
 		{
-			[Column] public int Id;
+			[PrimaryKey] public int Id;
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(MainTable.Id))]
 			public MainTable MainOptional = null!;
@@ -2042,7 +2043,8 @@ namespace Tests.xUpdate
 				var data = main.OrderBy(_ => _.Id).ToArray();
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(cnt, Is.EqualTo(1));
+					if (context.SupportsRowcount())
+						Assert.That(cnt, Is.EqualTo(1));
 					Assert.That(data[0].Field, Is.EqualTo("value 1"));
 					Assert.That(data[1].Field, Is.EqualTo("value 2"));
 					Assert.That(data[2].Field, Is.EqualTo("test"));
@@ -2069,7 +2071,8 @@ namespace Tests.xUpdate
 				var data = main.OrderBy(_ => _.Id).ToArray();
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(cnt, Is.EqualTo(1));
+					if (context.SupportsRowcount())
+						Assert.That(cnt, Is.EqualTo(1));
 					Assert.That(data[0].Field, Is.EqualTo("value 1"));
 					Assert.That(data[1].Field, Is.EqualTo("value 2"));
 					Assert.That(data[2].Field, Is.EqualTo("test"));
@@ -2096,7 +2099,8 @@ namespace Tests.xUpdate
 				var data = main.OrderBy(_ => _.Id).ToArray();
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(cnt, Is.EqualTo(1));
+					if (context.SupportsRowcount())
+						Assert.That(cnt, Is.EqualTo(1));
 					Assert.That(data[0].Field, Is.EqualTo("value 1"));
 					Assert.That(data[1].Field, Is.EqualTo("value 2"));
 					Assert.That(data[2].Field, Is.EqualTo("test"));
@@ -2123,7 +2127,8 @@ namespace Tests.xUpdate
 				var data = main.OrderBy(_ => _.Id).ToArray();
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(cnt, Is.EqualTo(1));
+					if (context.SupportsRowcount())
+						Assert.That(cnt, Is.EqualTo(1));
 					Assert.That(data[0].Field, Is.EqualTo("value 1"));
 					Assert.That(data[1].Field, Is.EqualTo("value 2"));
 					Assert.That(data[2].Field, Is.EqualTo("test"));

@@ -11,21 +11,21 @@ open Tests.Tools
 
 [<Table>]
 type Names =
-    { [<Column>]
+    { [<PrimaryKey>]
       Id: int
       [<Column>]
       Name: string }
 
 [<Table>]
 type Addresses =
-    { [<Column>]
+    { [<PrimaryKey>]
       Id: int
       [<Column>]
       Text: string }
 
 [<Table>]
 type TradeValid =
-    { [<Column>]
+    { [<PrimaryKey>]
       Id: int
       [<Column>]
       DealNumber: int
@@ -36,7 +36,7 @@ type TradeValid =
 
 [<Table>]
 type NominationValid =
-    { [<Column>]
+    { [<PrimaryKey>]
       Id: int
       [<Column>]
       DeliveryDealNumber: int

@@ -72,7 +72,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains3([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Contains3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -118,7 +119,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		public void Contains701([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
