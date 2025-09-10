@@ -53,7 +53,14 @@ namespace LinqToDB
 			string?      schemaName   = default,
 			string?      serverName   = default,
 			TableOptions tableOptions = default)
-			: this(db, new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions))
+			: this(
+				  db,
+				  new CreateTempTableOptions(
+					  TableName   : tableName,
+					  DatabaseName: databaseName,
+					  SchemaName  : schemaName,
+					  ServerName  : serverName,
+					  TableOptions: tableOptions))
 		{
 		}
 
@@ -68,9 +75,7 @@ namespace LinqToDB
 		{
 			if (db == null) throw new ArgumentNullException(nameof(db));
 
-			createOptions ??= new CreateTempTableOptions();
-
-			_table = db.CreateTable<T>(createOptions.TableName, createOptions.DatabaseName, createOptions.SchemaName, createOptions.StatementHeader, createOptions.StatementFooter, serverName: createOptions.ServerName, tableOptions: createOptions.TableOptions);
+			_table = db.CreateTable<T>(createOptions ?? CreateTableOptions.Default);
 		}
 
 		/// <summary>
@@ -92,7 +97,7 @@ namespace LinqToDB
 			string?          schemaName   = default,
 			string?          serverName   = default,
 			TableOptions     tableOptions = default)
-			: this(db, new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, options)
+			: this(db, new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, TableOptions: tableOptions), items, options)
 		{
 		}
 
@@ -131,9 +136,7 @@ namespace LinqToDB
 			if (db    == null) throw new ArgumentNullException(nameof(db));
 			if (items == null) throw new ArgumentNullException(nameof(items));
 
-			createOptions ??= new CreateTempTableOptions();
-
-			_table           = db.CreateTable<T>(tableDescriptor?.EntityDescriptor, createOptions.TableName, createOptions.DatabaseName, createOptions.SchemaName, createOptions.StatementHeader, createOptions.StatementFooter, serverName: createOptions.ServerName, tableOptions: createOptions.TableOptions);
+			_table           = db.CreateTable<T>(tableDescriptor?.EntityDescriptor, createOptions ?? CreateTableOptions.Default);
 			_tableDescriptor = tableDescriptor;
 
 			try
@@ -198,7 +201,17 @@ namespace LinqToDB
 			Action<ITable<T>>? action       = default,
 			string?            serverName   = default,
 			TableOptions       tableOptions = default)
-			: this(db, null, new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, action)
+			: this(
+				  db,
+				  null,
+				  new CreateTempTableOptions(
+					  TableName   : tableName,
+					  DatabaseName: databaseName,
+					  SchemaName  : schemaName,
+					  ServerName  : serverName,
+					  TableOptions: tableOptions),
+				  items,
+				  action)
 		{
 		}
 
@@ -237,9 +250,7 @@ namespace LinqToDB
 			if (db    == null) throw new ArgumentNullException(nameof(db));
 			if (items == null) throw new ArgumentNullException(nameof(items));
 
-			createOptions ??= new CreateTempTableOptions();
-
-			_table           = db.CreateTable<T>(tableDescriptor?.EntityDescriptor, createOptions.TableName, createOptions.DatabaseName, createOptions.SchemaName, createOptions.StatementHeader, createOptions.StatementFooter, serverName: createOptions.ServerName, tableOptions: createOptions.TableOptions);
+			_table           = db.CreateTable<T>(tableDescriptor?.EntityDescriptor, createOptions ?? CreateTableOptions.Default);
 			_tableDescriptor = tableDescriptor;
 
 			try
@@ -317,7 +328,15 @@ namespace LinqToDB
 		{
 			if (db == null) throw new ArgumentNullException(nameof(db));
 
-			return CreateAsync(db, new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), cancellationToken);
+			return CreateAsync(
+				db,
+				new CreateTempTableOptions(
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				cancellationToken);
 		}
 
 		/// <summary>
@@ -352,10 +371,8 @@ namespace LinqToDB
 		{
 			if (db == null) throw new ArgumentNullException(nameof(db));
 
-			createOptions ??= new CreateTempTableOptions();
-
 			return new TempTable<T>(await db
-				.CreateTableAsync<T>(tableDescriptor, createOptions.TableName, createOptions.DatabaseName, createOptions.SchemaName, createOptions.StatementHeader, createOptions.StatementFooter, serverName: createOptions.ServerName, tableOptions: createOptions.TableOptions, token: cancellationToken)
+				.CreateTableAsync<T>(tableDescriptor, createOptions ?? CreateTableOptions.Default, token: cancellationToken)
 				.ConfigureAwait(false),
 				tableDescriptor);
 		}
@@ -383,7 +400,17 @@ namespace LinqToDB
 			TableOptions      tableOptions      = default,
 			CancellationToken cancellationToken = default)
 		{
-			return CreateAsync(db, new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, options, cancellationToken);
+			return CreateAsync(
+				db,
+				new CreateTempTableOptions(
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				items,
+				options,
+				cancellationToken);
 		}
 
 		/// <summary>
@@ -429,7 +456,17 @@ namespace LinqToDB
 			TableOptions      tableOptions      = default,
 			CancellationToken cancellationToken = default)
 		{
-			return CreateAsync(db, new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, options, cancellationToken);
+			return CreateAsync(
+				db,
+				new CreateTempTableOptions(
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				items,
+				options,
+				cancellationToken);
 		}
 
 		/// <summary>
@@ -501,7 +538,17 @@ namespace LinqToDB
 			if (db    == null) throw new ArgumentNullException(nameof(db));
 			if (items == null) throw new ArgumentNullException(nameof(items));
 
-			return CreateAsync(db, new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, action, cancellationToken);
+			return CreateAsync(
+				db,
+				new CreateTempTableOptions(
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				items,
+				action,
+				cancellationToken);
 		}
 
 		/// <summary>
@@ -594,7 +641,18 @@ namespace LinqToDB
 			TableOptions          tableOptions      = default,
 			CancellationToken     cancellationToken = default)
 		{
-			return CreateAsync(db, null, new CreateTempTableOptions(tableName, databaseName, schemaName, serverName, tableOptions: tableOptions), items, action, cancellationToken);
+			return CreateAsync(
+				db,
+				null,
+				new CreateTempTableOptions(
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				items,
+				action,
+				cancellationToken);
 		}
 
 		/// <summary>

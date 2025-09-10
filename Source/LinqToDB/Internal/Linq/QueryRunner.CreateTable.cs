@@ -6,7 +6,6 @@ using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Metrics;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.Linq
 {
@@ -18,36 +17,29 @@ namespace LinqToDB.Internal.Linq
 			where T : notnull
 		{
 			public static ITable<T> Query(
-				IDataContext      dataContext,
-				EntityDescriptor? tableDescriptor,
-				string?           tableName,
-				string?           serverName,
-				string?           databaseName,
-				string?           schemaName,
-				string?           statementHeader,
-				string?           statementFooter,
-				DefaultNullable   defaultNullable,
-				TableOptions      tableOptions)
+				IDataContext       dataContext,
+				EntityDescriptor?  tableDescriptor,
+				CreateTableOptions createOptions)
 			{
 				using var m = ActivityService.Start(ActivityID.CreateTable);
 
 				var sqlTable    = tableDescriptor != null ? new SqlTable(tableDescriptor) : SqlTable.Create<T>(dataContext);
 				var createTable = new SqlCreateTableStatement(sqlTable);
 
-				if (tableName != null || schemaName != null || databaseName != null || serverName != null)
+				if (createOptions.TableName != null || createOptions.SchemaName != null || createOptions.DatabaseName != null || createOptions.ServerName != null)
 				{
 					sqlTable.TableName = new(
-						          tableName    ?? sqlTable.TableName.Name,
-						Server  : serverName   ?? sqlTable.TableName.Server,
-						Database: databaseName ?? sqlTable.TableName.Database,
-						Schema  : schemaName   ?? sqlTable.TableName.Schema);
+								  createOptions.TableName    ?? sqlTable.TableName.Name,
+						Server  : createOptions.ServerName   ?? sqlTable.TableName.Server,
+						Database: createOptions.DatabaseName ?? sqlTable.TableName.Database,
+						Schema  : createOptions.SchemaName   ?? sqlTable.TableName.Schema);
 				}
 
-				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
+				if (createOptions.TableOptions.IsSet()) sqlTable.TableOptions = createOptions.TableOptions;
 
-				createTable.StatementHeader = statementHeader;
-				createTable.StatementFooter = statementFooter;
-				createTable.DefaultNullable = defaultNullable;
+				createTable.StatementHeader = createOptions.StatementHeader;
+				createTable.StatementFooter = createOptions.StatementFooter;
+				createTable.DefaultNullable = createOptions.DefaultNullable;
 
 				var query = new Query<int>(dataContext)
 				{
@@ -72,14 +64,7 @@ namespace LinqToDB.Internal.Linq
 			public static async Task<ITable<T>> QueryAsync(
 				IDataContext         dataContext,
 				TempTableDescriptor? tableDescriptor,
-				string?              tableName,
-				string?              serverName,
-				string?              databaseName,
-				string?              schemaName,
-				string?              statementHeader,
-				string?              statementFooter,
-				DefaultNullable      defaultNullable,
-				TableOptions         tableOptions,
+				CreateTableOptions   createOptions,
 				CancellationToken    token)
 			{
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.CreateTableAsync))
@@ -87,20 +72,20 @@ namespace LinqToDB.Internal.Linq
 					var sqlTable    = tableDescriptor != null ? new SqlTable(tableDescriptor.EntityDescriptor) : SqlTable.Create<T>(dataContext);
 					var createTable = new SqlCreateTableStatement(sqlTable);
 
-					if (tableName != null || schemaName != null || databaseName != null || serverName != null)
+					if (createOptions.TableName != null || createOptions.SchemaName != null || createOptions.DatabaseName != null || createOptions.ServerName != null)
 					{
 						sqlTable.TableName = new(
-							tableName              ?? sqlTable.TableName.Name,
-							Server  : serverName   ?? sqlTable.TableName.Server,
-							Database: databaseName ?? sqlTable.TableName.Database,
-							Schema  : schemaName   ?? sqlTable.TableName.Schema);
+							createOptions.TableName              ?? sqlTable.TableName.Name,
+							Server  : createOptions.ServerName   ?? sqlTable.TableName.Server,
+							Database: createOptions.DatabaseName ?? sqlTable.TableName.Database,
+							Schema  : createOptions.SchemaName   ?? sqlTable.TableName.Schema);
 					}
 
-					if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
+					if (createOptions.TableOptions.IsSet()) sqlTable.TableOptions = createOptions.TableOptions;
 
-					createTable.StatementHeader = statementHeader;
-					createTable.StatementFooter = statementFooter;
-					createTable.DefaultNullable = defaultNullable;
+					createTable.StatementHeader = createOptions.StatementHeader;
+					createTable.StatementFooter = createOptions.StatementFooter;
+					createTable.DefaultNullable = createOptions.DefaultNullable;
 
 					var query = new Query<int>(dataContext)
 					{

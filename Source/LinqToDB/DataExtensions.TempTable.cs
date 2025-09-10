@@ -36,11 +36,11 @@ namespace LinqToDB
 		{
 			return db.CreateTempTable<T>(
 				new CreateTempTableOptions(
-					tableName   : tableName,
-					databaseName: databaseName,
-					schemaName  : schemaName,
-					serverName  : serverName,
-					tableOptions: tableOptions));
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions));
 		}
 
 		/// <summary>
@@ -82,12 +82,13 @@ namespace LinqToDB
 		{
 			return db.CreateTempTable(
 				new CreateTempTableOptions(
-					tableName   : tableName,
-					databaseName: databaseName,
-					schemaName  : schemaName,
-					serverName  : serverName,
-					tableOptions: tableOptions),
-				items, options);
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				items,
+				options);
 		}
 
 		/// <summary>
@@ -139,12 +140,14 @@ namespace LinqToDB
 		{
 			return db.CreateTempTable(
 				new CreateTempTableOptions(
-					tableName   :tableName,
-					databaseName: databaseName,
-					schemaName  : schemaName,
-					serverName  : serverName,
-					tableOptions: tableOptions),
-				items, setTable, options);
+					TableName   :tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				items,
+				setTable,
+				options);
 		}
 		
 		/// <summary>
@@ -201,12 +204,13 @@ namespace LinqToDB
 		{
 			return db.CreateTempTable(
 				new CreateTempTableOptions(
-					tableName   : tableName,
-					databaseName: databaseName,
-					schemaName  : schemaName,
-					serverName  : serverName,
-					tableOptions: tableOptions),
-				items, options);
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				items,
+				options);
 		}
 
 		/// <summary>
@@ -241,12 +245,14 @@ namespace LinqToDB
 		{
 			return db.CreateTempTable(
 				new CreateTempTableOptions(
-					tableName   : tableName,
-					databaseName: databaseName,
-					schemaName  : schemaName,
-					serverName  : serverName,
-					tableOptions: tableOptions),
-				items, setTable, options);
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				items,
+				setTable,
+				options);
 		}
 
 		/// <summary>
@@ -275,12 +281,13 @@ namespace LinqToDB
 		{
 			return db.CreateTempTable(
 				new CreateTempTableOptions(
-					tableName   : tableName,
-					databaseName: databaseName,
-					schemaName  : schemaName,
-					serverName  : serverName,
-					tableOptions: tableOptions),
-				items, action);
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				items,
+				action);
 		}
 
 		/// <summary>
@@ -333,12 +340,14 @@ namespace LinqToDB
 		{
 			return db.CreateTempTable(
 				new CreateTempTableOptions(
-					tableName   :tableName,
-					databaseName: databaseName,
-					schemaName  : schemaName,
-					serverName  : serverName,
-					tableOptions: tableOptions),
-				items, setTable, action);
+					TableName   :tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				items,
+				setTable,
+				action);
 		}
 
 		/// <summary>
@@ -394,12 +403,13 @@ namespace LinqToDB
 		{
 			return db.CreateTempTable(
 				new CreateTempTableOptions(
-					tableName   : tableName,
-					databaseName: databaseName,
-					schemaName  : schemaName,
-					serverName  : serverName,
-					tableOptions: tableOptions),
-				items, action);
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				items,
+				action);
 		}
 
 		/// <summary>
@@ -435,12 +445,14 @@ namespace LinqToDB
 		{
 			return db.CreateTempTable(
 				new CreateTempTableOptions(
-					tableName   : tableName,
-					databaseName: databaseName,
-					schemaName  : schemaName,
-					serverName  : serverName,
-					tableOptions: tableOptions),
-				items, setTable, action);
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				items,
+				setTable,
+				action);
 		}
 
 		/// <summary>
@@ -467,11 +479,11 @@ namespace LinqToDB
 		{
 			return db.CreateTempTableAsync<T>(
 				new CreateTempTableOptions(
-					tableName   : tableName,
-					databaseName: databaseName,
-					schemaName  : schemaName,
-					serverName  : serverName,
-					tableOptions: tableOptions),
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
 				cancellationToken);
 		}
 		
@@ -518,12 +530,14 @@ namespace LinqToDB
 		{
 			return db.CreateTempTableAsync(
 				new CreateTempTableOptions(
-					tableName   : tableName,
-					databaseName: databaseName,
-					schemaName  : schemaName,
-					serverName  : serverName,
-					tableOptions: tableOptions),
-				items, options, cancellationToken);
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				items,
+				options,
+				cancellationToken);
 		}
 		
 		/// <summary>
@@ -579,12 +593,15 @@ namespace LinqToDB
 		{
 			return db.CreateTempTableAsync(
 				new CreateTempTableOptions(
-					tableName   : tableName,
-					databaseName: databaseName,
-					schemaName  : schemaName,
-					serverName  : serverName,
-					tableOptions: tableOptions),
-				items, setTable, options, cancellationToken);
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				items,
+				setTable,
+				options,
+				cancellationToken);
 		}
 
 		/// <summary>
@@ -644,12 +661,14 @@ namespace LinqToDB
 		{
 			return db.CreateTempTableAsync(
 				new CreateTempTableOptions(
-					tableName   : tableName,
-					databaseName: databaseName,
-					schemaName  : schemaName,
-					serverName  : serverName,
-					tableOptions: tableOptions),
-				items, options, cancellationToken);
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				items,
+				options,
+				cancellationToken);
 		}
 
 		/// <summary>
@@ -686,12 +705,15 @@ namespace LinqToDB
 		{
 			return db.CreateTempTableAsync(
 				new CreateTempTableOptions(
-					tableName   : tableName,
-					databaseName: databaseName,
-					schemaName  : schemaName,
-					serverName  : serverName,
-					tableOptions: tableOptions),
-				items, setTable, options, cancellationToken);
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				items,
+				setTable,
+				options,
+				cancellationToken);
 		}
 
 		/// <summary>
@@ -722,12 +744,14 @@ namespace LinqToDB
 		{
 			return db.CreateTempTableAsync(
 				new CreateTempTableOptions(
-					tableName   : tableName,
-					databaseName: databaseName,
-					schemaName  : schemaName,
-					serverName  : serverName,
-					tableOptions: tableOptions),
-				items, action, cancellationToken);
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				items,
+				action,
+				cancellationToken);
 		}
 
 		/// <summary>
@@ -784,12 +808,15 @@ namespace LinqToDB
 		{
 			return db.CreateTempTableAsync(
 				new CreateTempTableOptions(
-					tableName   :tableName,
-					databaseName: databaseName,
-					schemaName  : schemaName,
-					serverName  : serverName,
-					tableOptions: tableOptions),
-				items, setTable, action, cancellationToken);
+					TableName   :tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				items,
+				setTable,
+				action,
+				cancellationToken);
 		}
 
 		/// <summary>
@@ -849,12 +876,14 @@ namespace LinqToDB
 		{
 			return db.CreateTempTableAsync(
 				new CreateTempTableOptions(
-					tableName   : tableName,
-					databaseName: databaseName,
-					schemaName  : schemaName,
-					serverName  : serverName,
-					tableOptions: tableOptions),
-				items, action, cancellationToken);
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				items,
+				action,
+				cancellationToken);
 		}
 
 		/// <summary>
@@ -892,12 +921,15 @@ namespace LinqToDB
 		{
 			return db.CreateTempTableAsync(
 				new CreateTempTableOptions(
-					tableName   : tableName,
-					databaseName: databaseName,
-					schemaName  : schemaName,
-					serverName  : serverName,
-					tableOptions: tableOptions),
-				items, setTable, action, cancellationToken);
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				items,
+				setTable,
+				action,
+				cancellationToken);
 		}
 
 		#endregion
@@ -931,11 +963,11 @@ namespace LinqToDB
 			return items.IntoTempTable(
 				db,
 				new CreateTempTableOptions(
-					tableName   : tableName,
-					databaseName: databaseName,
-					schemaName  : schemaName,
-					serverName  : serverName,
-					tableOptions: tableOptions),
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
 				options);
 		}
 
@@ -995,12 +1027,13 @@ namespace LinqToDB
 				eq.DataContext,
 				tempTableDescriptor,
 				new CreateTempTableOptions(
-					tableName   : tableName,
-					databaseName: databaseName,
-					schemaName  : schemaName,
-					serverName  : serverName,
-					tableOptions: tableOptions),
-				items, action);
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				items,
+				action);
 		}
 
 		/// <summary>
@@ -1032,12 +1065,13 @@ namespace LinqToDB
 			return items.IntoTempTableAsync(
 				db,
 				new CreateTempTableOptions(
-					tableName   : tableName,
-					databaseName: databaseName,
-					schemaName  : schemaName,
-					serverName  : serverName,
-					tableOptions: tableOptions),
-				options, cancellationToken);
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				options,
+				cancellationToken);
 		}
 		
 		/// <summary>
@@ -1101,12 +1135,14 @@ namespace LinqToDB
 				eq.DataContext,
 				tempTableDescriptor,
 				new CreateTempTableOptions(
-					tableName   : tableName,
-					databaseName: databaseName,
-					schemaName  : schemaName,
-					serverName  : serverName,
-					tableOptions: tableOptions),
-				items, action, cancellationToken);
+					TableName   : tableName,
+					DatabaseName: databaseName,
+					SchemaName  : schemaName,
+					ServerName  : serverName,
+					TableOptions: tableOptions),
+				items,
+				action,
+				cancellationToken);
 		}
 
 		private static TempTableDescriptor GetTempTableDescriptor<T>(IDataContext dataContext, Action<EntityMappingBuilder<T>> setTable)

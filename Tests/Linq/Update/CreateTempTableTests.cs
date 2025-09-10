@@ -119,9 +119,9 @@ namespace Tests.xUpdate
 			using var db = GetDataConnection(context);
 
 			using var tmp = db.CreateTempTable<IDTable>(new CreateTempTableOptions(
-				tableName: "CreateTableWithHeaderFooter",
-				statementHeader: "/* THIS IS HEADER*/ CREATE TABLE temp.CreateTableWithHeaderFooter",
-				statementFooter: "/* THIS IS FOOTER*/"));
+				TableName      : "CreateTableWithHeaderFooter",
+				StatementHeader: "/* THIS IS HEADER*/ CREATE TABLE {0}",
+				StatementFooter: "/* THIS IS FOOTER*/"));
 
 			var parts = db.LastQuery!.Split(["CreateTableWithHeaderFooter"], StringSplitOptions.None);
 			Assert.That(parts, Has.Length.EqualTo(2));
@@ -140,9 +140,9 @@ namespace Tests.xUpdate
 			db.DropTable<IDTable>(schemaName: "temp", tableName: "CreateTableWithHeaderFooter", tableOptions: TableOptions.CheckExistence);
 
 			await using var tmp = await db.CreateTempTableAsync<IDTable>(new CreateTempTableOptions(
-				tableName: "CreateTableWithHeaderFooter",
-				statementHeader: "/* THIS IS ASYNC HEADER*/ CREATE TABLE temp.CreateTableWithHeaderFooter",
-				statementFooter: "/* THIS IS ASYNC FOOTER*/"));
+				TableName      : "CreateTableWithHeaderFooter",
+				StatementHeader: "/* THIS IS ASYNC HEADER*/ CREATE TABLE {0}",
+				StatementFooter: "/* THIS IS ASYNC FOOTER*/"));
 
 			var parts = db.LastQuery!.Split(["CreateTableWithHeaderFooter"], StringSplitOptions.None);
 			Assert.That(parts, Has.Length.EqualTo(2));
@@ -365,9 +365,9 @@ namespace Tests.xUpdate
 
 			using var tmp = db.CreateTempTable(
 				new CreateTempTableOptions(
-					tableName: "TempTable",
-					statementHeader: "/* THIS IS HEADER*/ CREATE TABLE temp.TempTable",
-					statementFooter: "/* THIS IS FOOTER*/"),
+					TableName: "TempTable",
+					StatementHeader: "/* THIS IS HEADER*/ CREATE TABLE {0}",
+					StatementFooter: "/* THIS IS FOOTER*/"),
 				data);
 
 			var list = tmp.ToList();
@@ -386,10 +386,10 @@ namespace Tests.xUpdate
 
 			await using var tmp = await db.CreateTempTableAsync(
 				new CreateTempTableOptions(
-					tableName: "TempTable",
-					tableOptions: TableOptions.IsTemporary,
-					statementHeader: "/* THIS IS ASYNC HEADER*/ CREATE TABLE temp.TempTable",
-					statementFooter: "/* THIS IS ASYNC FOOTER*/"),
+					TableName: "TempTable",
+					TableOptions: TableOptions.IsTemporary,
+					StatementHeader: "/* THIS IS ASYNC HEADER*/ CREATE TABLE {0}",
+					StatementFooter: "/* THIS IS ASYNC FOOTER*/"),
 				data);
 
 			var list = await tmp.ToListAsync();
@@ -613,10 +613,10 @@ namespace Tests.xUpdate
 
 			using var tmp = db.CreateTempTable(
 				new CreateTempTableOptions(
-					tableName: "TempTable",
-					statementHeader: "/* THIS IS HEADER*/ CREATE TABLE temp.TempTable",
-					statementFooter: "/* THIS IS FOOTER*/",
-					tableOptions   :TableOptions.CheckExistence),
+					TableName: "TempTable",
+					StatementHeader: "/* THIS IS HEADER*/ CREATE TABLE {0}",
+					StatementFooter: "/* THIS IS FOOTER*/",
+					TableOptions   :TableOptions.CheckExistence),
 				new[] { new { Name = "John" } },
 				m => m
 					.Property(p => p.Name)
@@ -644,10 +644,10 @@ namespace Tests.xUpdate
 
 			await using var tmp = await db.CreateTempTableAsync(
 				new CreateTempTableOptions(
-					tableName: "TempTable",
-					statementHeader: "/* THIS IS ASYNC HEADER*/ CREATE TABLE temp.TempTable",
-					statementFooter: "/* THIS IS ASYNC FOOTER*/",
-					tableOptions   :TableOptions.CheckExistence),
+					TableName: "TempTable",
+					StatementHeader: "/* THIS IS ASYNC HEADER*/ CREATE TABLE {0}",
+					StatementFooter: "/* THIS IS ASYNC FOOTER*/",
+					TableOptions   :TableOptions.CheckExistence),
 				new[] { new { Name = "John" } },
 				m => m
 					.Property(p => p.Name)
@@ -675,9 +675,9 @@ namespace Tests.xUpdate
 
 			using var temp = db.CreateTempTable(
 				new CreateTempTableOptions(
-					tableName: "TestPersons2",
-					statementHeader: "/* THIS IS HEADER*/ CREATE TABLE temp.TestPersons2",
-					statementFooter: "/* THIS IS FOOTER*/"),
+					TableName: "TestPersons2",
+					StatementHeader: "/* THIS IS HEADER*/ CREATE TABLE {0}",
+					StatementFooter: "/* THIS IS FOOTER*/"),
 				db.Person);
 
 			Assert.That(temp.Count(), Is.EqualTo(db.Person.Count()));
@@ -692,10 +692,10 @@ namespace Tests.xUpdate
 
 			await using var temp = await db.CreateTempTableAsync(
 				new CreateTempTableOptions(
-					tableOptions: TableOptions.IsTemporary,
-					statementHeader: "/* THIS IS ASYNC HEADER*/ CREATE TABLE temp.TestPersons2",
-					statementFooter: "/* THIS IS ASYNC FOOTER*/",
-					tableName      : "TestPersons2"),
+					TableOptions: TableOptions.IsTemporary,
+					StatementHeader: "/* THIS IS ASYNC HEADER*/ CREATE TABLE {0}",
+					StatementFooter: "/* THIS IS ASYNC FOOTER*/",
+					TableName      : "TestPersons2"),
 				db.Person);
 
 			Assert.That(await temp.CountAsync(), Is.EqualTo(await db.Person.CountAsync()));
@@ -710,9 +710,10 @@ namespace Tests.xUpdate
 
 			using var tmp = db.CreateTempTable(
 				new CreateTempTableOptions(
-					statementHeader: "/* THIS IS HEADER*/ CREATE TABLE temp.TempTable",
-					statementFooter: "/* THIS IS FOOTER*/",
-					tableOptions   :TableOptions.CheckExistence),
+					StatementHeader: "/* THIS IS HEADER*/ CREATE TABLE {0}",
+					StatementFooter: "/* THIS IS FOOTER*/",
+					TableName      : "TempTable",
+					TableOptions   :TableOptions.CheckExistence),
 				db.Person,
 				m => m.HasTableName("TempTable"));
 
@@ -732,9 +733,10 @@ namespace Tests.xUpdate
 
 			await using var tmp = await db.CreateTempTableAsync(
 				new CreateTempTableOptions(
-					statementHeader: "/* THIS IS ASYNC HEADER*/ CREATE TABLE temp.TempTable",
-					statementFooter: "/* THIS IS ASYNC FOOTER*/",
-					tableOptions   :TableOptions.CheckExistence),
+					StatementHeader: "/* THIS IS ASYNC HEADER*/ CREATE TABLE {0}",
+					StatementFooter: "/* THIS IS ASYNC FOOTER*/",
+					TableName      : "TempTable",
+					TableOptions   :TableOptions.CheckExistence),
 				db.Person,
 				m => m.HasTableName("TempTable"));
 
@@ -786,7 +788,7 @@ namespace Tests.xUpdate
 
 			using var t = new[] { new TableWithPrimaryKey() { Key = 1 } }
 				.IntoTempTable(db,
-				new CreateTempTableOptions(tableName: "TableWithPrimaryKey2", tableOptions: TableOptions.IsTemporary));
+				new CreateTempTableOptions(TableName: "TableWithPrimaryKey2", TableOptions: TableOptions.IsTemporary));
 		}
 
 		[Test]
@@ -796,7 +798,7 @@ namespace Tests.xUpdate
 
 			await using var t = await new[] { new TableWithPrimaryKey() { Key = 1 } }
 				.IntoTempTableAsync(db,
-				new CreateTempTableOptions(tableName: "TableWithPrimaryKey2", tableOptions: TableOptions.IsTemporary));
+				new CreateTempTableOptions(TableName: "TableWithPrimaryKey2", TableOptions: TableOptions.IsTemporary));
 		}
 	}
 }
