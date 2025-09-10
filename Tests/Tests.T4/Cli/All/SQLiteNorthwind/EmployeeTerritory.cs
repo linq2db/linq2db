@@ -19,8 +19,8 @@ namespace Cli.All.SQLiteNorthwind
 	[Table("EmployeeTerritories")]
 	public class EmployeeTerritory : IEquatable<EmployeeTerritory>
 	{
-		[Column("EmployeeID" , DataType  = DataType.Int32, DbType   = "int"           , Length = 4            , Precision = 10, Scale     = 0, IsPrimaryKey = true, PrimaryKeyOrder = 0                        )] public int    EmployeeId  { get; set; } // int
-		[Column("TerritoryID", CanBeNull = false         , DataType = DataType.VarChar, DbType = "varchar(20)", Length    = 20, Precision = 0, Scale        = 0   , IsPrimaryKey    = true, PrimaryKeyOrder = 1)] public string TerritoryId { get; set; } = null!; // varchar(20)
+		[Column("EmployeeID" , DataType  = DataType.Int32, DbType   = "INT"            , IsPrimaryKey = true         , PrimaryKeyOrder = 0                                           )] public int    EmployeeId  { get; set; } // INT
+		[Column("TerritoryID", CanBeNull = false         , DataType = DataType.NVarChar, DbType       = "varchar(20)", Length          = 20, IsPrimaryKey = true, PrimaryKeyOrder = 1)] public string TerritoryId { get; set; } = null!; // varchar(20)
 
 		#region IEquatable<T> support
 		private static readonly IEqualityComparer<EmployeeTerritory> _equalityComparer = ComparerBuilder.GetEqualityComparer<EmployeeTerritory>(c => c.EmployeeId, c => c.TerritoryId);

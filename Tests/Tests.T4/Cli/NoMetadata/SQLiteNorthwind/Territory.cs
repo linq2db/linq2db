@@ -15,6 +15,6 @@ namespace Cli.NoMetadata.SQLiteNorthwind
 	{
 		public string TerritoryId          { get; set; } = null!; // varchar(20)
 		public string TerritoryDescription { get; set; } = null!; // varchar(50)
-		public int    RegionId             { get; set; } // int
+		public int    RegionId             { get; set; } // INT
 	}
 }

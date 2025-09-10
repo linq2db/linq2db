@@ -17,8 +17,8 @@ namespace Cli.All.SQLiteNorthwind
 	[Table("Summary of Sales by Quarter", IsView = true)]
 	public class SummaryOfSalesByQuarter
 	{
-		[Column("ShippedDate", DataType = DataType.Timestamp, DbType = "timestamp", Length    = 8, Precision = 0 , Scale = 0)] public DateTime? ShippedDate { get; set; } // timestamp
-		[Column("OrderID"    , DataType = DataType.Int32    , DbType = "int"      , Length    = 4, Precision = 10, Scale = 0)] public int       OrderId     { get; set; } // int
-		[Column("Subtotal"   , DbType   = "NUMERIC"         , Length = 2147483647 , Precision = 0, Scale     = 0            )] public object?   Subtotal    { get; set; } // NUMERIC
+		[Column("ShippedDate", DataType = DataType.DateTime2, DbType = "timestamp")] public DateTime? ShippedDate { get; set; } // timestamp
+		[Column("OrderID"    , DataType = DataType.Int32    , DbType = "INT"      )] public int       OrderId     { get; set; } // INT
+		[Column("Subtotal"   , DataType = DataType.Double   , DbType = "REAL"     )] public double?   Subtotal    { get; set; } // REAL
 	}
 }

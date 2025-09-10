@@ -3,158 +3,253 @@ using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SchemaProvider;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.SQLite
 {
 	public class SQLiteSchemaProvider : SchemaProviderBase
 	{
-		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
-		{
-			// TODO: Connection.GetSchema is not supported by MS provider, so we need to implement direct read of metadata
-			if (dataConnection.DataProvider.Name == ProviderName.SQLiteMS)
-				return new DatabaseSchema()
-				{
-					DataSource      = string.Empty,
-					Database        = string.Empty,
-					ServerVersion   = string.Empty,
-					Tables          = new List<TableSchema>(),
-					Procedures      = new List<ProcedureSchema>(),
-					DataTypesSchema = new DataTable()
-				};
+		static Regex _extract = new (@"^(\w+)(\((\d+)(,\s*(\d+))?\))?$", RegexOptions.Compiled);
 
-			return base.GetSchema(dataConnection, options);
+		static IReadOnlyDictionary<string, (Type dotnetType, DataType dataType)> _typeMappings = new Dictionary<string, (Type dotnetType, DataType dataType)>(StringComparer.OrdinalIgnoreCase)
+		{
+			// affinities
+			{ "blob",    ( typeof(byte[]),  DataType.VarBinary) },
+			{ "integer", ( typeof(long),    DataType.Int64)     },
+			{ "text",    ( typeof(string),  DataType.NVarChar)  },
+			{ "real",    ( typeof(double),  DataType.Double)    },
+			{ "numeric", ( typeof(decimal), DataType.Decimal)   },
+
+			// types
+			// note that it doesn't make sense to use too specific DataType values for SQLite and better to stick to affinity/more generic types
+			{ "smallint",         ( typeof(short),    DataType.Int16)     },
+			{ "int",              ( typeof(int),      DataType.Int32)     },
+			{ "mediumint",        ( typeof(int),      DataType.Int32)     },
+			{ "single",           ( typeof(float),    DataType.Single)    },
+			{ "float",            ( typeof(double),   DataType.Double)    },
+			{ "double",           ( typeof(double),   DataType.Double)    },
+			{ "money",            ( typeof(decimal),  DataType.Decimal)   },
+			{ "currency",         ( typeof(decimal),  DataType.Decimal)   },
+			{ "decimal",          ( typeof(decimal),  DataType.Decimal)   },
+			{ "bit",              ( typeof(bool),     DataType.Boolean)   },
+			{ "yesno",            ( typeof(bool),     DataType.Boolean)   },
+			{ "logical",          ( typeof(bool),     DataType.Boolean)   },
+			{ "bool",             ( typeof(bool),     DataType.Boolean)   },
+			{ "boolean",          ( typeof(bool),     DataType.Boolean)   },
+			{ "tinyint",          ( typeof(byte),     DataType.Byte)      },
+			{ "counter",          ( typeof(long),     DataType.Int64)     },
+			{ "autoincrement",    ( typeof(long),     DataType.Int64)     },
+			{ "identity",         ( typeof(long),     DataType.Int64)     },
+			{ "long",             ( typeof(long),     DataType.Int64)     },
+			{ "bigint",           ( typeof(long),     DataType.Int64)     },
+			{ "binary",           ( typeof(byte[]),   DataType.VarBinary) },
+			{ "varbinary",        ( typeof(byte[]),   DataType.VarBinary) },
+			{ "image",            ( typeof(byte[]),   DataType.VarBinary) },
+			{ "general",          ( typeof(byte[]),   DataType.VarBinary) },
+			{ "oleobject",        ( typeof(byte[]),   DataType.VarBinary) },
+			{ "varchar",          ( typeof(string),   DataType.NVarChar)  },
+			{ "nvarchar",         ( typeof(string),   DataType.NVarChar)  },
+			{ "memo",             ( typeof(string),   DataType.NVarChar)  },
+			{ "longtext",         ( typeof(string),   DataType.NVarChar)  },
+			{ "note",             ( typeof(string),   DataType.NVarChar)  },
+			{ "ntext",            ( typeof(string),   DataType.NVarChar)  },
+			{ "string",           ( typeof(string),   DataType.NVarChar)  },
+			{ "char",             ( typeof(string),   DataType.NVarChar)  },
+			{ "nchar",            ( typeof(string),   DataType.NVarChar)  },
+			{ "datetime",         ( typeof(DateTime), DataType.DateTime2) },
+			{ "smalldate",        ( typeof(DateTime), DataType.DateTime2) },
+			{ "timestamp",        ( typeof(DateTime), DataType.DateTime2) },
+			{ "date",             ( typeof(DateTime), DataType.Date)      },
+			{ "time",             ( typeof(TimeSpan), DataType.Time)      },
+			{ "uniqueidentifier", ( typeof(Guid),     DataType.Guid)      },
+			{ "guid",             ( typeof(Guid),     DataType.Guid)      },
+
+			// additional mappings
+			{ "datetime2",        ( typeof(DateTime), DataType.DateTime2) },
+			// affinity-based typing for unknown types doesn't work well with providers
+			{ "object",           ( typeof(object),   DataType.Variant)   },
+		};
+
+		// sqlite types are not useful as sqlite has only type affinity, but not types
+		static readonly List<DataTypeInfo> _dataTypes = [];
+		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection) => _dataTypes;
+
+		private string GenerateTableFilter(string t)
+		{
+			// by default return only main schema tables and don't include system tables to maintain compatibility with
+			// System.Data.Sqlite behavior (also by default those tables not expected by user)
+
+			string filter = $" AND {t}.name NOT IN ('sqlite_sequence', 'sqlite_schema')";
+			if (IncludedSchemas.Count == 0 && ExcludedSchemas.Count == 0)
+			{
+				// exclude temp schema
+				filter += $" AND {t}.schema = 'main'";
+			}
+
+			return filter;
 		}
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var dbConnection = dataConnection.OpenDbConnection();
-
-			var tables = dbConnection.GetSchema("Tables");
-			var views =  dbConnection.GetSchema("Views");
-
-			return Enumerable
-				.Empty<TableInfo>()
-				.Concat
-				(
-					from t in tables.AsEnumerable()
-					where t.Field<string>("TABLE_TYPE") != "SYSTEM_TABLE"
-					let catalog = t.Field<string>("TABLE_CATALOG")
-					let schema  = t.Field<string>("TABLE_SCHEMA")
-					let name    = t.Field<string>("TABLE_NAME")
-					select new TableInfo
-					{
-						TableID         = catalog + '.' + schema + '.' + name,
-						CatalogName     = catalog,
-						SchemaName      = schema,
-						TableName       = name,
-						IsDefaultSchema = string.IsNullOrEmpty(schema),
-					}
-				)
-				.Concat(
-					from t in views.AsEnumerable()
-					let catalog = t.Field<string>("TABLE_CATALOG")
-					let schema  = t.Field<string>("TABLE_SCHEMA")
-					let name    = t.Field<string>("TABLE_NAME")
-					select new TableInfo
-					{
-						TableID         = catalog + '.' + schema + '.' + name,
-						CatalogName     = catalog,
-						SchemaName      = schema,
-						TableName       = name,
-						IsDefaultSchema = string.IsNullOrEmpty(schema),
-						IsView          = true,
-					}
-				).ToList();
+			// https://www.sqlite.org/pragma.html#pragma_table_list
+			return dataConnection.Query<TableInfo>(@$"
+				SELECT
+					t.schema || '..' || t.name AS TableID,
+					''                         AS CatalogName,
+					t.schema                   AS SchemaName,
+					t.name                     AS TableName,
+					t.schema = 'main'          AS IsDefaultSchema,
+					t.type = 'view'            AS IsView
+				FROM pragma_table_list() t
+				WHERE t.type IN ('table', 'view'){GenerateTableFilter("t")}
+			").ToList();
 		}
 
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var dbConnection = dataConnection.OpenDbConnection();
-			var pks          = dbConnection.GetSchema("IndexColumns");
-			var idxs         = dbConnection.GetSchema("Indexes");
-
-			return
-			(
-				from pk  in pks. AsEnumerable()
-				join idx in idxs.AsEnumerable()
-					on pk.Field<string>("CONSTRAINT_NAME") equals idx.Field<string>("INDEX_NAME")
-				where idx.Field<bool>("PRIMARY_KEY")
-				select new PrimaryKeyInfo
-				{
-					TableID        = pk.Field<string>("TABLE_CATALOG") + "." + pk.Field<string>("TABLE_SCHEMA") + "." + pk.Field<string>("TABLE_NAME"),
-					PrimaryKeyName = pk.Field<string>("CONSTRAINT_NAME")!,
-					ColumnName     = pk.Field<string>("COLUMN_NAME")!,
-					Ordinal        = pk.Field<int>   ("ORDINAL_POSITION"),
-				}
-			).ToList();
+			// https://www.sqlite.org/pragma.html#pragma_table_list
+			// https://www.sqlite.org/pragma.html#pragma_table_info
+			// https://www.sqlite.org/pragma.html#pragma_index_list
+			return dataConnection.Query<PrimaryKeyInfo>(@$"
+				SELECT
+					t.schema || '..' || t.name AS TableID,
+					i.name                     AS PrimaryKeyName,
+					c.name                     AS ColumnName,
+					c.pk - 1                   AS Ordinal
+				FROM pragma_table_list() t
+					LEFT OUTER JOIN pragma_table_info(t.name) c
+					LEFT OUTER JOIN pragma_index_list(t.name) i ON i.origin = 'pk'
+				WHERE t.type IN ('table', 'view') AND c.pk != 0{GenerateTableFilter("t")}
+			").ToList();
 		}
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var cs = dataConnection.OpenDbConnection().GetSchema("Columns");
-
-			return
-			(
-				from c in cs.AsEnumerable()
-				let tschema  = c.Field<string>("TABLE_SCHEMA")
-				let schema   = tschema == "sqlite_default_schema" ? "" : tschema
-				let dataType = c.Field<string>("DATA_TYPE")!.Trim()
-				let length   = Converter.ChangeTypeTo<long>(c["CHARACTER_MAXIMUM_LENGTH"])
-				select new ColumnInfo
+			// https://www.sqlite.org/pragma.html#pragma_table_list
+			// https://www.sqlite.org/pragma.html#pragma_table_info
+			// https://www.sqlite.org/schematab.html
+			// https://www.sqlite.org/autoinc.html
+			var columns = dataConnection
+				.Query<ColumnInfo>(@$"
+					WITH pk_counts AS (
+						SELECT
+							t.name   AS table_name,
+							COUNT(*) AS pk_count
+						FROM pragma_table_list() t
+							JOIN pragma_table_info(t.name) c
+						WHERE c.pk > 0
+						GROUP BY t.name
+					)
+					SELECT
+						t.schema || '..' || t.name                                                                    AS TableID,
+						c.name                                                                                        AS Name,
+						c.[notnull] = 0                                                                               AS IsNullable,
+						c.cid                                                                                         AS Ordinal,
+						c.type                                                                                        AS DataType,
+						(pk.pk_count = 1
+							AND c.pk = 1
+							AND UPPER(c.type) = 'INTEGER'
+							AND m.sql NOT LIKE '%PRIMARY KEY DESC%'
+							AND (m.sql LIKE '%AUTOINCREMENT%' OR m.sql NOT LIKE '%WITHOUT ROWID%'))                   AS [IsIdentity]
+					FROM pragma_table_list() t
+						LEFT OUTER JOIN pragma_table_info(t.name) c
+						INNER JOIN sqlite_master m ON m.tbl_name = t.name AND m.type IN ('table', 'view')
+						LEFT JOIN pk_counts pk ON pk.table_name = t.name
+					WHERE t.type IN ('table', 'view'){GenerateTableFilter("t")}
+				")
+				.Select(x =>
 				{
-					TableID    = c.Field<string>("TABLE_CATALOG") + "." + schema + "." + c.Field<string>("TABLE_NAME"),
-					Name       = c.Field<string>("COLUMN_NAME")!,
-					IsNullable = c.Field<bool>  ("IS_NULLABLE"),
-					Ordinal    = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
-					DataType   = dataType,
-					Length     = length > int.MaxValue ? null : (int?)length,
-					Precision  = Converter.ChangeTypeTo<int> (c["NUMERIC_PRECISION"]),
-					Scale      = Converter.ChangeTypeTo<int> (c["NUMERIC_SCALE"]),
-					IsIdentity = c.Field<bool>  ("AUTOINCREMENT"),
+					// length/precision/scale actually doesn't make sense for SQLite, we just extract numbers from type name, used on column creation
+					x.ColumnType = x.DataType;
+					(x.Length, x.Precision, x.Scale, x.Type, _) = InferTypeInformation(x.DataType);
+
+					x.SkipOnInsert = x.IsIdentity;
+					x.SkipOnUpdate = x.IsIdentity;
+
+					return x;
+				})
+				.ToList();
+
+			// for views query above doesn't provide proper type information and we need to query schema for each view
+			var views = dataConnection.Query<TableInfo>(@$"
+				SELECT
+					t.schema AS SchemaName,
+					t.name   AS TableName
+				FROM pragma_table_list() t
+				WHERE t.type IN ('view'){GenerateTableFilter("t")}
+			").ToList();
+
+			if (views.Count > 0)
+			{
+				var sqlbuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, dataConnection.Options);
+				var columnsLookup = columns.ToDictionary(c => (c.TableID, c.Name));
+
+				foreach (var view in views)
+				{
+					using var sb = Pools.StringBuilder.Allocate();
+					var tableName = sqlbuilder.BuildObjectName(sb.Value, new(view.TableName, Schema:view.SchemaName), ConvertType.NameToQueryTable);
+
+					using var rd = dataConnection.ExecuteReader($"SELECT * FROM {tableName}", CommandType.Text, CommandBehavior.SchemaOnly);
+					var schema = rd.Reader!.GetSchemaTable()!;
+
+					var tableId = $"{view.SchemaName}..{view.TableName}";
+					foreach (DataRow row in schema.Rows)
+					{
+						if (columnsLookup.TryGetValue((tableId, row.Field<string>("ColumnName")!), out var column))
+						{
+							// MS provider returns DBNull for expression columns
+							if (row["AllowDBNull"] is bool allowDbNull && !allowDbNull)
+								column.IsNullable = false;
+
+							// MS provider returns DBNull for expression columns
+							if (row["IsAutoIncrement"] is bool isIdentity && isIdentity)
+							{
+								column.IsIdentity   = true;
+								column.SkipOnUpdate = true;
+								column.SkipOnInsert = true;
+							}
+
+							if (string.IsNullOrEmpty(column.DataType))
+							{
+								column.ColumnType = column.DataType = row.Field<string>("DataTypeName");
+								(column.Length, column.Precision, column.Scale, column.Type, _) = InferTypeInformation(column.DataType);
+							}
+						}
+					}
 				}
-			).ToList();
+			}
+
+			return columns;
 		}
 
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var fks = dataConnection.OpenDbConnection().GetSchema("ForeignKeys");
-
-			var result =
-			(
-				from fk in fks.AsEnumerable()
-				where fk.Field<string>("CONSTRAINT_TYPE") == "FOREIGN KEY"
-				select new ForeignKeyInfo
-				{
-					Name         = fk.Field<string>("CONSTRAINT_NAME"           )!,
-					ThisTableID  = fk.Field<string>("TABLE_CATALOG"             ) + "." + fk.Field<string>("TABLE_SCHEMA")   + "." + fk.Field<string>("TABLE_NAME"),
-					ThisColumn   = fk.Field<string>("FKEY_FROM_COLUMN"          )!,
-					OtherTableID = fk.Field<string>("FKEY_TO_CATALOG"           ) + "." + fk.Field<string>("FKEY_TO_SCHEMA") + "." + fk.Field<string>("FKEY_TO_TABLE"),
-					OtherColumn  = fk.Field<string>("FKEY_TO_COLUMN"            )!,
-					Ordinal      = fk.Field<int>   ("FKEY_FROM_ORDINAL_POSITION"),
-				}
-			).ToList();
-
-			// Handle case where Foreign Key reference does not include a column name (Issue #784)
-			if (result.Any(fk => string.IsNullOrEmpty(fk.OtherColumn)))
-			{
-				var pks = GetPrimaryKeys(dataConnection, tables, options).ToDictionary(pk => string.Format(CultureInfo.InvariantCulture, "{0}:{1}", pk.TableID, pk.Ordinal), pk => pk.ColumnName);
-				foreach (var f in result.Where(fk => string.IsNullOrEmpty(fk.OtherColumn)))
-				{
-					var k = string.Format(CultureInfo.InvariantCulture, "{0}:{1}", f.OtherTableID, f.Ordinal);
-					if (pks.TryGetValue(k, out var column))
-						f.OtherColumn = column;
-				}
-			}
-
-			return result;
+			// https://www.sqlite.org/pragma.html#pragma_table_list
+			// https://www.sqlite.org/pragma.html#pragma_foreign_key_list
+			// https://www.sqlite.org/pragma.html#pragma_table_info
+			return dataConnection.Query<ForeignKeyInfo>(@$"
+				SELECT
+					'FK_' || tThis.name || '_' || f.id   AS Name,
+					tThis.schema || '..' || tThis.name   AS ThisTableID,
+					f.[from]                             AS ThisColumn,
+					tOther.schema || '..' || tOther.name AS OtherTableID,
+					coalesce(f.[to], cOther.name)        AS OtherColumn,
+					f.seq                                AS Ordinal
+				FROM pragma_table_list() tThis
+					LEFT OUTER JOIN pragma_foreign_key_list(tThis.name) f
+					INNER JOIN pragma_table_list() tOther ON f.[table] = tOther.name
+					LEFT JOIN pragma_table_info(tOther.name) cOther ON (cOther.pk -1) == f.seq
+				WHERE tThis.type IN ('table', 'view'){GenerateTableFilter("tThis")}
+			").ToList();
 		}
 
 		protected override string GetDatabaseName(DataConnection dbConnection)
@@ -164,72 +259,118 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
-			// note that sqlite doesn't have types (it has facets) so type name will contain anything
-			// user specified in create table statement
-			// here we just map some well-known database types (non-sqlite specific) but this list
-			// will never be complete
-			return dataType switch
-			{
-				"smallint"         => DataType.Int16,
-				"int"              => DataType.Int32,
-				"real"             => DataType.Single,
-				"float"            => DataType.Double,
-				"double"           => DataType.Double,
-				"money"            => DataType.Money,
-				"currency"         => DataType.Money,
-				"decimal"          => DataType.Decimal,
-				"numeric"          => DataType.Decimal,
-				"bit"              => DataType.Boolean,
-				"yesno"            => DataType.Boolean,
-				"logical"          => DataType.Boolean,
-				"bool"             => DataType.Boolean,
-				"boolean"          => DataType.Boolean,
-				"tinyint"          => DataType.Byte,
-				"integer"          => DataType.Int64,
-				"counter"          => DataType.Int64,
-				"autoincrement"    => DataType.Int64,
-				"identity"         => DataType.Int64,
-				"long"             => DataType.Int64,
-				"bigint"           => DataType.Int64,
-				"binary"           => DataType.Binary,
-				"varbinary"        => DataType.VarBinary,
-				"blob"             => DataType.VarBinary,
-				"image"            => DataType.Image,
-				"general"          => DataType.VarBinary,
-				"oleobject"        => DataType.VarBinary,
-				"object"           => DataType.Variant,
-				"varchar"          => DataType.VarChar,
-				"nvarchar"         => DataType.NVarChar,
-				"memo"             => DataType.Text,
-				"longtext"         => DataType.Text,
-				"note"             => DataType.Text,
-				"text"             => DataType.Text,
-				"ntext"            => DataType.NText,
-				"string"           => DataType.Char,
-				"char"             => DataType.Char,
-				"nchar"            => DataType.NChar,
-				"datetime"         => DataType.DateTime,
-				"datetime2"        => DataType.DateTime2,
-				"smalldate"        => DataType.SmallDateTime,
-				"timestamp"        => DataType.Timestamp,
-				"date"             => DataType.Date,
-				"time"             => DataType.Time,
-				"uniqueidentifier" => DataType.Guid,
-				"guid"             => DataType.Guid,
-				_                  => DataType.Undefined,
-			};
+			// shouldn't be called
+			throw new NotImplementedException();
+		}
+
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
+		{
+			var type = InferTypeInformation(dataType).dotnetType;
+
+			if (!options.GenerateChar1AsString && length == 1 && type == typeof(string))
+				type = typeof(char);
+
+			return type;
 		}
 
 		protected override string? GetProviderSpecificTypeNamespace() => null;
 
-		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
+		// we cannot get column type (except for strict tables) in sqlite and all we have is a type name string, used to define column
+		// from this string we just try to guess user's intention for column data type using some well known db type names
+		// plus type information from SDS client DataTypes schema table, which contains 45 mappings for some well known types
+		static (int? length, int? precision, int? scale, DataType dataType, Type dotnetType) InferTypeInformation(string? typeName)
 		{
-			return dataType switch
+			// should be blob
+			// but we use object to avoid errors from provider on value mapping when affinity is not correct
+			if (string.IsNullOrWhiteSpace(typeName))
+				typeName = "object";
+
+			var m = _extract.Match(typeName);
+
+			// extract type facets
+			int? facet1 = null;
+			int? facet2 = null;
+
+			if (m.Success)
 			{
-				"object"    => typeof(object),
-				"datetime2" => typeof(DateTime),
-				_ => base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options),
-			};
+				typeName = m.Groups[1].Value;
+				if (m.Groups[3].Success)
+					facet1 = int.Parse(m.Groups[3].Value, CultureInfo.InvariantCulture);
+				if (m.Groups[5].Success)
+					facet2 = int.Parse(m.Groups[5].Value, CultureInfo.InvariantCulture);
+			}
+
+			int? length         = null;
+			int? precision      = null;
+			int? scale          = null;
+			DataType dataType;
+			Type dotnetTypeName;
+
+			if (!_typeMappings.TryGetValue(typeName!, out var typeInfo))
+			{
+				typeInfo = GetTypeByAffinity(typeName!);
+			}
+
+			dotnetTypeName = typeInfo.dotnetType;
+			dataType       = typeInfo.dataType;
+
+			switch (dataType)
+			{
+				case DataType.Decimal:
+					precision = facet1;
+					scale = facet2;
+					break;
+				case DataType.NVarChar:
+				case DataType.VarBinary:
+					length = facet1;
+					break;
+			}
+
+			return (length, precision, scale, dataType, dotnetTypeName);
+
+			// https://www.sqlite.org/datatype3.html#determination_of_column_affinity
+			static (Type dotnetType, DataType dataType) GetTypeByAffinity(string dataType)
+			{
+				// (3) If the data type is null or whitespace, it's considered BLOB.
+				if (string.IsNullOrWhiteSpace(dataType))
+				{
+					// should be blob
+					// but we use object to avoid errors from provider on value mapping when affinity is not correct
+					return _typeMappings["object"];
+				}
+
+				// 1. Check for INTEGER affinity.
+				if (dataType.Contains("INT", StringComparison.OrdinalIgnoreCase))
+				{
+					return _typeMappings["integer"];
+				}
+
+				// 2. Check for TEXT affinity.
+				if (dataType.Contains("CHAR", StringComparison.OrdinalIgnoreCase)
+					|| dataType.Contains("CLOB", StringComparison.OrdinalIgnoreCase)
+					|| dataType.Contains("TEXT", StringComparison.OrdinalIgnoreCase))
+				{
+					return _typeMappings["text"];
+				}
+
+				// 3. Check for BLOB affinity.
+				if (dataType.Contains("BLOB", StringComparison.OrdinalIgnoreCase))
+				{
+					return _typeMappings["blob"];
+				}
+
+				// 4. Check for REAL affinity.
+				if (dataType.Contains("REAL", StringComparison.OrdinalIgnoreCase)
+					|| dataType.Contains("FLOA", StringComparison.OrdinalIgnoreCase)
+					|| dataType.Contains("DOUB", StringComparison.OrdinalIgnoreCase))
+				{
+					return _typeMappings["real"];
+				}
+
+				// 5. Otherwise, the affinity is NUMERIC.
+				// but we use object to avoid errors from provider on value mapping when affinity is not correct
+				return _typeMappings["object"];
+			}
 		}
 	}
 }

@@ -14,6 +14,6 @@ namespace Cli.Fluent.SQLiteNorthwind
 	public class ProductsAboveAveragePrice
 	{
 		public string  ProductName { get; set; } = null!; // varchar(40)
-		public double? UnitPrice   { get; set; } // float
+		public double? UnitPrice   { get; set; } // float(26)
 	}
 }

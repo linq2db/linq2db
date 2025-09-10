@@ -16,16 +16,16 @@ namespace Cli.All.SQLiteNorthwind
 	[Table("Alphabetical list of products", IsView = true)]
 	public class AlphabeticalListOfProduct
 	{
-		[Column("ProductID"      , DataType  = DataType.Int32  , DbType   = "int"           , Length = 4            , Precision = 10, Scale     = 0           )] public int     ProductId       { get; set; } // int
-		[Column("ProductName"    , CanBeNull = false           , DataType = DataType.VarChar, DbType = "varchar(40)", Length    = 40, Precision = 0, Scale = 0)] public string  ProductName     { get; set; } = null!; // varchar(40)
-		[Column("SupplierID"     , DataType  = DataType.Int32  , DbType   = "int"           , Length = 4            , Precision = 10, Scale     = 0           )] public int?    SupplierId      { get; set; } // int
-		[Column("CategoryID"     , DataType  = DataType.Int32  , DbType   = "int"           , Length = 4            , Precision = 10, Scale     = 0           )] public int?    CategoryId      { get; set; } // int
-		[Column("QuantityPerUnit", DataType  = DataType.VarChar, DbType   = "varchar(20)"   , Length = 20           , Precision = 0 , Scale     = 0           )] public string? QuantityPerUnit { get; set; } // varchar(20)
-		[Column("UnitPrice"      , DataType  = DataType.Double , DbType   = "float"         , Length = 8            , Precision = 26, Scale     = 0           )] public double? UnitPrice       { get; set; } // float
-		[Column("UnitsInStock"   , DataType  = DataType.Int32  , DbType   = "int"           , Length = 4            , Precision = 10, Scale     = 0           )] public int?    UnitsInStock    { get; set; } // int
-		[Column("UnitsOnOrder"   , DataType  = DataType.Int32  , DbType   = "int"           , Length = 4            , Precision = 10, Scale     = 0           )] public int?    UnitsOnOrder    { get; set; } // int
-		[Column("ReorderLevel"   , DataType  = DataType.Int32  , DbType   = "int"           , Length = 4            , Precision = 10, Scale     = 0           )] public int?    ReorderLevel    { get; set; } // int
-		[Column("Discontinued"   , DataType  = DataType.Int32  , DbType   = "int"           , Length = 4            , Precision = 10, Scale     = 0           )] public int     Discontinued    { get; set; } // int
-		[Column("CategoryName"   , CanBeNull = false           , DataType = DataType.VarChar, DbType = "varchar(15)", Length    = 15, Precision = 0, Scale = 0)] public string  CategoryName    { get; set; } = null!; // varchar(15)
+		[Column("ProductID"      , DataType  = DataType.Int32   , DbType   = "INT"                                                 )] public int     ProductId       { get; set; } // INT
+		[Column("ProductName"    , CanBeNull = false            , DataType = DataType.NVarChar, DbType = "varchar(40)", Length = 40)] public string  ProductName     { get; set; } = null!; // varchar(40)
+		[Column("SupplierID"     , DataType  = DataType.Int32   , DbType   = "INT"                                                 )] public int?    SupplierId      { get; set; } // INT
+		[Column("CategoryID"     , DataType  = DataType.Int32   , DbType   = "INT"                                                 )] public int?    CategoryId      { get; set; } // INT
+		[Column("QuantityPerUnit", DataType  = DataType.NVarChar, DbType   = "varchar(20)"    , Length = 20                        )] public string? QuantityPerUnit { get; set; } // varchar(20)
+		[Column("UnitPrice"      , DataType  = DataType.Double  , DbType   = "float(26)"                                           )] public double? UnitPrice       { get; set; } // float(26)
+		[Column("UnitsInStock"   , DataType  = DataType.Int32   , DbType   = "INT"                                                 )] public int?    UnitsInStock    { get; set; } // INT
+		[Column("UnitsOnOrder"   , DataType  = DataType.Int32   , DbType   = "INT"                                                 )] public int?    UnitsOnOrder    { get; set; } // INT
+		[Column("ReorderLevel"   , DataType  = DataType.Int32   , DbType   = "INT"                                                 )] public int?    ReorderLevel    { get; set; } // INT
+		[Column("Discontinued"   , DataType  = DataType.Int32   , DbType   = "INT"                                                 )] public int     Discontinued    { get; set; } // INT
+		[Column("CategoryName"   , CanBeNull = false            , DataType = DataType.NVarChar, DbType = "varchar(15)", Length = 15)] public string  CategoryName    { get; set; } = null!; // varchar(15)
 	}
 }

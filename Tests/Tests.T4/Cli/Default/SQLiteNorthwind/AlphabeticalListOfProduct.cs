@@ -15,16 +15,16 @@ namespace Cli.Default.SQLiteNorthwind
 	[Table("Alphabetical list of products", IsView = true)]
 	public class AlphabeticalListOfProduct
 	{
-		[Column("ProductID"                         )] public int     ProductId       { get; set; } // int
+		[Column("ProductID"                         )] public int     ProductId       { get; set; } // INT
 		[Column("ProductName"    , CanBeNull = false)] public string  ProductName     { get; set; } = null!; // varchar(40)
-		[Column("SupplierID"                        )] public int?    SupplierId      { get; set; } // int
-		[Column("CategoryID"                        )] public int?    CategoryId      { get; set; } // int
+		[Column("SupplierID"                        )] public int?    SupplierId      { get; set; } // INT
+		[Column("CategoryID"                        )] public int?    CategoryId      { get; set; } // INT
 		[Column("QuantityPerUnit"                   )] public string? QuantityPerUnit { get; set; } // varchar(20)
-		[Column("UnitPrice"                         )] public double? UnitPrice       { get; set; } // float
-		[Column("UnitsInStock"                      )] public int?    UnitsInStock    { get; set; } // int
-		[Column("UnitsOnOrder"                      )] public int?    UnitsOnOrder    { get; set; } // int
-		[Column("ReorderLevel"                      )] public int?    ReorderLevel    { get; set; } // int
-		[Column("Discontinued"                      )] public int     Discontinued    { get; set; } // int
+		[Column("UnitPrice"                         )] public double? UnitPrice       { get; set; } // float(26)
+		[Column("UnitsInStock"                      )] public int?    UnitsInStock    { get; set; } // INT
+		[Column("UnitsOnOrder"                      )] public int?    UnitsOnOrder    { get; set; } // INT
+		[Column("ReorderLevel"                      )] public int?    ReorderLevel    { get; set; } // INT
+		[Column("Discontinued"                      )] public int     Discontinued    { get; set; } // INT
 		[Column("CategoryName"   , CanBeNull = false)] public string  CategoryName    { get; set; } = null!; // varchar(15)
 	}
 }

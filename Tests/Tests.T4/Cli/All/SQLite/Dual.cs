@@ -16,6 +16,6 @@ namespace Cli.All.SQLite
 	[Table("Dual")]
 	public class Dual
 	{
-		[Column("Dummy", DataType = DataType.VarChar, DbType = "varchar(10)", Length = 10, Precision = 0, Scale = 0)] public string? Dummy { get; set; } // varchar(10)
+		[Column("Dummy", DataType = DataType.NVarChar, DbType = "VARCHAR(10)", Length = 10)] public string? Dummy { get; set; } // VARCHAR(10)
 	}
 }

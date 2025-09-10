@@ -48,7 +48,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeWithDelete([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<LinqDataTypes2>()
@@ -65,7 +65,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeWithDeletePredicate1([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<LinqDataTypes2>()
@@ -82,7 +82,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeWithDeletePredicate3([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				db.Insert(new Person()
@@ -116,7 +116,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeWithDeletePredicate4([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				db.Insert(new Person()
@@ -152,7 +152,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeWithDeletePredicate5([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<Child>()
@@ -194,7 +194,7 @@ namespace Tests.xUpdate
 		{
 			ResetAllTypesIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				var id = ConvertTo<int>.From(db.GetTable<AllType>().InsertWithIdentity(() => new AllType
@@ -226,7 +226,7 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<AllType>()
@@ -264,7 +264,7 @@ namespace Tests.xUpdate
 		{
 			ResetAllTypesIdentity(context);
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				var lastId = db.GetTable<AllType>().Select(_ => _.ID).Max();

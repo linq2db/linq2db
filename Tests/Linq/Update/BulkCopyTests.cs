@@ -284,7 +284,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void ReuseOptionTest([DataSources(false, ProviderName.DB2)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
 			using (db.BeginTransaction())
 			{
@@ -503,7 +503,7 @@ namespace Tests.xUpdate
 
 			((IDataContext)db).Close();
 			// TODO: uncomment after DataConnectionExtensions refactored to work with IDataContext
-			//MySqlTestUtils.EnableNativeBulk(db.GetDataConnection(), context);
+			//MySqlTestUtils.EnableNativeBulk(db.GetDataContext(), context);
 			db.CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 			db.DataProvider.BulkCopy(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } });
@@ -543,7 +543,7 @@ namespace Tests.xUpdate
 
 			((IDataContext)db).Close();
 			// TODO: uncomment after DataConnectionExtensions refactored to work with IDataContext
-			//MySqlTestUtils.EnableNativeBulk(db.GetDataConnection(), context);
+			//MySqlTestUtils.EnableNativeBulk(db.GetDataContext(), context);
 			db.CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } }, default);
@@ -584,7 +584,7 @@ namespace Tests.xUpdate
 
 			((IDataContext)db).Close();
 			// TODO: uncomment after DataConnectionExtensions refactored to work with IDataContext
-			//MySqlTestUtils.EnableNativeBulk(db.GetDataConnection(), context);
+			//MySqlTestUtils.EnableNativeBulk(db.GetDataContext(), context);
 			db.CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, AsyncEnumerableData(2, 1), default);

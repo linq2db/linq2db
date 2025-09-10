@@ -8,36 +8,6 @@ namespace LinqToDB.Remote.HttpClient.Server
 	[ApiController]
 	public class LinqToDBController : ControllerBase
 	{
-		[HttpPost("GetInfo/{configuration?}")]
-		public virtual LinqServiceInfo GetInfo(string? configuration)
-		{
-			return LinqService.GetInfo(configuration);
-		}
-
-		[HttpPost("ExecuteNonQuery/{configuration?}")]
-		public virtual int ExecuteNonQuery(string? configuration, [FromBody] string queryData)
-		{
-			return LinqService.ExecuteNonQuery(configuration, queryData);
-		}
-
-		[HttpPost("ExecuteScalar/{configuration?}")]
-		public virtual string? ExecuteScalar(string? configuration, [FromBody] string queryData)
-		{
-			return LinqService.ExecuteScalar(configuration, queryData);
-		}
-
-		[HttpPost("ExecuteReader/{configuration?}")]
-		public virtual string ExecuteReader(string? configuration, [FromBody] string queryData)
-		{
-			return LinqService.ExecuteReader(configuration, queryData);
-		}
-
-		[HttpPost("ExecuteBatch/{configuration?}")]
-		public virtual int ExecuteBatch(string? configuration, [FromBody] string queryData)
-		{
-			return LinqService.ExecuteBatch(configuration, queryData);
-		}
-
 		[HttpPost("GetInfoAsync/{configuration?}")]
 		[ActionName("GetInfoAsync")]
 		public virtual Task<LinqServiceInfo> GetInfoAsync(string? configuration, CancellationToken cancellationToken)

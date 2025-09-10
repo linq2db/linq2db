@@ -274,7 +274,7 @@ namespace Tests.Linq
 		[Test]
 		public void MethodExpression9([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 				AreEqual(
 					from ch in Child
 					from p in

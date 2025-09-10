@@ -507,7 +507,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MultipleDelete([DataSources(false, TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				db.Parent.Delete(c => c.ParentID >= 1000);
 

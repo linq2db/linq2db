@@ -13,8 +13,8 @@ namespace Cli.NewCliFeatures.FluentSQLite
 {
 	public class InheritanceParent
 	{
-		public long    InheritanceParentId { get; set; } // integer
-		public long?   TypeDiscriminator   { get; set; } // integer
+		public long    InheritanceParentId { get; set; } // INTEGER
+		public long?   TypeDiscriminator   { get; set; } // INTEGER
 		public string? Name                { get; set; } // nvarchar(50)
 	}
 }

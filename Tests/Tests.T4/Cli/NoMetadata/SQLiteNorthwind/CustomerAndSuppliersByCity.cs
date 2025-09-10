@@ -16,6 +16,6 @@ namespace Cli.NoMetadata.SQLiteNorthwind
 		public string? City         { get; set; } // varchar(15)
 		public string  CompanyName  { get; set; } = null!; // varchar(40)
 		public string? ContactName  { get; set; } // varchar(30)
-		public object? Relationship { get; set; } // NUMERIC
+		public string? Relationship { get; set; } // TEXT
 	}
 }
