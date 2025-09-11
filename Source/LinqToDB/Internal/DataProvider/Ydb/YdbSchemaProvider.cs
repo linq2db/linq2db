@@ -138,7 +138,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					var schemaName = dt.Columns.Contains("TABLE_SCHEMA") ? Invariant(row["TABLE_SCHEMA"]) : null;
 					var catalog    = dt.Columns.Contains("TABLE_CATALOG") ? Invariant(row["TABLE_CATALOG"]) : null;
 
-					// отсеиваем .sys*
+					// delete .sys*
 					if (schemaName?.StartsWith(".sys", StringComparison.OrdinalIgnoreCase) == true) continue;
 					if (name.StartsWith(".sys", StringComparison.OrdinalIgnoreCase)) continue;
 
@@ -416,7 +416,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 	new(@"^Decimal\(\d+,\s*\d+\)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
 		protected override DataType GetDataType(
-			string? dataType,    // INFORMATION_SCHEMA.COLUMNS.DATA_TYPE или TYPE_NAME
+			string? dataType,    // INFORMATION_SCHEMA.COLUMNS.DATA_TYPE or TYPE_NAME
 			string? columnType,
 			int? length,
 			int? precision,

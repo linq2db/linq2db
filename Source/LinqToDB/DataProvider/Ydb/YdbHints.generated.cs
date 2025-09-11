@@ -26,12 +26,14 @@ namespace LinqToDB.DataProvider.Ydb
 			return (query, columns) => QueryHint(query, Unique, columns);
 		}
 
+		// 2) IQueryable<T>
 		[ExpressionMethod(nameof(UniqueHintQImpl))]
 		public static IYdbSpecificQueryable<TSource> UniqueHint<TSource>(
 			this IQueryable<TSource> query,
 			params string[]          columns)
 			where TSource : notnull
 		{
+			// QueryHint(IQueryable<T>)
 			return QueryHint(query, Unique, columns);
 		}
 		static Expression<Func<IQueryable<TSource>,string[],IYdbSpecificQueryable<TSource>>> UniqueHintQImpl<TSource>()
@@ -55,12 +57,14 @@ namespace LinqToDB.DataProvider.Ydb
 			return (query, columns) => QueryHint(query, Distinct, columns);
 		}
 
+		// 2) IQueryable<T>
 		[ExpressionMethod(nameof(DistinctHintQImpl))]
 		public static IYdbSpecificQueryable<TSource> DistinctHint<TSource>(
 			this IQueryable<TSource> query,
 			params string[]          columns)
 			where TSource : notnull
 		{
+			// QueryHint(IQueryable<T>)
 			return QueryHint(query, Distinct, columns);
 		}
 		static Expression<Func<IQueryable<TSource>,string[],IYdbSpecificQueryable<TSource>>> DistinctHintQImpl<TSource>()

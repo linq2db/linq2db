@@ -53,7 +53,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					or DataType.Blob:
 					return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
 
-					//// Остаток от деления: приводим к decimal, если требуется
 					//case "%":
 					//{
 					//	var dbType = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
@@ -92,15 +91,15 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					return func.WithName("Unicode::ToUpper");
 
 				////----------------------------------------------------------------
-				//// Безопасные преобразования типов
+				//// save cast
 				//case PseudoFunctions.TRY_CONVERT:
-				//	// CAST(x AS <type>?) → null при ошибке
+				//	// CAST(x AS <type>?) → null
 				//	return new SqlExpression(
 				//		func.Type,
 				//		"CAST({0} AS {1}?)",
 				//		Precedence.Primary,
-				//		func.Parameters[2],      // значение
-				//		func.Parameters[0]);     // целевой тип
+				//		func.Parameters[2],      // value
+				//		func.Parameters[0]);     // type
 
 				//case PseudoFunctions.TRY_CONVERT_OR_DEFAULT:
 				//	// COALESCE(CAST(x AS <type>?), default)
@@ -108,8 +107,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				//			func.Type,
 				//			"COALESCE(CAST({0} AS {1}?), {2})",
 				//			Precedence.Primary,
-				//			func.Parameters[2],    // значение
-				//			func.Parameters[0],    // целевой тип
+				//			func.Parameters[2],    // value
+				//			func.Parameters[0],    // type
 				//			func.Parameters[3])    // default
 				//	{
 				//		CanBeNull =
@@ -118,7 +117,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				//	};
 
 				////----------------------------------------------------------------
-				//// CharIndex (аналога POSITION в YDB нет; используем FIND)
+				//// CharIndex (there is no POSITION analog in YDB; using FIND)
 				//case "CharIndex":
 				//	switch (func.Parameters.Length)
 				//	{
@@ -149,7 +148,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		}
 
 		//// ------------------------------------------------------------------
-		//// CAST / преобразование bool → CASE
+		//// CAST bool → CASE
 		//// ------------------------------------------------------------------
 		//protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		//{
@@ -157,8 +156,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		//	    !(cast.IsMandatory && cast.Expression.SystemType?.ToNullableUnderlying() == typeof(bool)) &&
 		//	    cast.Expression is not SqlSearchCondition and not SqlCaseExpression)
 		//	{
-		//		// YDB не поддерживает CAST(condition AS bool),
-		//		// поэтому превращаем в CASE WHEN ... THEN TRUE ELSE FALSE END
+		//		// YDB not supporting CAST(condition AS bool),
+		//		// cast to CASE WHEN ... THEN TRUE ELSE FALSE END
 		//		return ConvertBooleanToCase(cast.Expression, cast.ToType);
 		//	}
 

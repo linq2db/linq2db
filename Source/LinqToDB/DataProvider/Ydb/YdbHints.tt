@@ -36,14 +36,14 @@ namespace LinqToDB.DataProvider.Ydb
 			return (query, columns) => QueryHint(query, <#= name #>, columns);
 		}
 
-		// 2) IQueryable<T> (мостик)
+		// 2) IQueryable<T>
 		[ExpressionMethod(nameof(<#= name #>HintQImpl))]
 		public static IYdbSpecificQueryable<TSource> <#= name #>Hint<TSource>(
 			this IQueryable<TSource> query,
 			params string[]          columns)
 			where TSource : notnull
 		{
-			// через перегрузку QueryHint(IQueryable<T>)
+			// QueryHint(IQueryable<T>)
 			return QueryHint(query, <#= name #>, columns);
 		}
 		static Expression<Func<IQueryable<TSource>,string[],IYdbSpecificQueryable<TSource>>> <#= name #>HintQImpl<TSource>()
