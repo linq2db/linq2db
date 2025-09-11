@@ -542,6 +542,7 @@ namespace Tests.Linq
 			{
 				new User()
 				{
+					Id = 1,
 					Name = "Freddy",
 					Residence = new Address()
 					{
@@ -661,6 +662,7 @@ namespace Tests.Linq
 			{
 				new UserStruct()
 				{
+					Id = 1,
 					Name = "Freddy",
 					Residence = new AddressStruct()
 					{
