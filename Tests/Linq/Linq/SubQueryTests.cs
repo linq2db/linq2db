@@ -779,7 +779,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class Cities
 		{
-			[PrimaryKey] public string City_Code { get; set; } = null!;
+			[PrimaryKey, Column(CanBeNull = false, Length = 50)] public string City_Code { get; set; } = null!;
 			[Column] public string? City_Name { get; set; }
 
 			public static readonly Cities[] Data = new[]
@@ -900,7 +900,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class Issue4458Item
 		{
-			[Column(CanBeNull = false), PrimaryKey] public string Id { get; set; } = null!;
+			[Column(CanBeNull = false, Length = 100), PrimaryKey] public string Id { get; set; } = null!;
 
 			public static readonly Issue4458Item[] Data =
 			[
@@ -913,7 +913,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class WarehouseStock
 		{
-			[Column(CanBeNull = false), PrimaryKey] public string ItemId { get; set; } = null!;
+			[Column(CanBeNull = false, Length = 100), PrimaryKey] public string ItemId { get; set; } = null!;
 			[Column] public int QuantityAvailable { get; set; }
 			[Column(CanBeNull = false)] public string WarehouseId { get; set; } = null!;
 
@@ -931,8 +931,8 @@ namespace Tests.Linq
 		[Table]
 		sealed class Review
 		{
-			[Column(CanBeNull = false), PrimaryKey] public string ItemId { get; set; } = null!;
-			[Column(CanBeNull = false), PrimaryKey] public string UserId { get; set; } = null!;
+			[Column(CanBeNull = false, Length = 100), PrimaryKey] public string ItemId { get; set; } = null!;
+			[Column(CanBeNull = false, Length = 100), PrimaryKey] public string UserId { get; set; } = null!;
 			[Column] public int Score { get; set; }
 
 			public static readonly Review[] Data =

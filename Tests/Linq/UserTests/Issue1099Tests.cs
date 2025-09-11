@@ -19,9 +19,9 @@ namespace Tests.UserTests
 
 		public interface IBackgroundTask
 		{
-			[PrimaryKey]
-			int? ID { get; set; }
 			[Column]
+			int? ID { get; set; }
+			[PrimaryKey]
 			int DurationID { get; set; }
 			[Column]
 			int DurationInterval { get; set; }

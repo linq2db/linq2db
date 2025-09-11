@@ -3815,7 +3815,7 @@ namespace Tests.Linq
 				select new
 				{
 					gr.First().Value,
-				}, ed => ed.Property(r => r.Value).IsPrimaryKey());
+				}, ed => ed.Property(r => r.Value).IsPrimaryKey().IsNotNull().HasLength(50));
 		}
 
 		static class Issue5070
