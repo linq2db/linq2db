@@ -13,19 +13,23 @@
 		<NetPreLatestForNuget>8.0.0</NetPreLatestForNuget>
 		<NetLatestForNuget>9.0.0</NetLatestForNuget>
 		<!--latest version for .NET LATEST packages (not referenced from nuspec)-->
-		<NetLatest>9.0.8</NetLatest>
-		<NetPreLatest>8.0.19</NetPreLatest>
+		<NetLatest>9.0.9</NetLatest>
+		<NetPreLatest>8.0.20</NetPreLatest>
 		<!--EF 3.1 vesions for netfx support-->
 		<EF3Latest>3.1.32</EF3Latest>
 		<EF3LatestNuget>3.1.0</EF3LatestNuget>
+		
+		<!--used by VersionOverride in project files-->
+		<EF3NpgsqlVersion>4.1.14</EF3NpgsqlVersion>
+		<OracleManagedLinqPadVersion>23.9.1</OracleManagedLinqPadVersion>
 	</PropertyGroup>
 	
 	<ItemGroup Label="Build: Analyzers and Tools">
-		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.212"                      />
-		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.49"                       />
+		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.218"                      />
+		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.50"                       />
 		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                      Version="5.0.0-1.25277.114"            />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="5.0.0-1.25277.114"            />
-		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"                   Version="10.0.0-preview.25380.108"     />
+		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"                   Version="10.0.100-rc.1.25451.107"      />
 		<PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers"             Version="5.0.0-1.25277.114"            />
 		<PackageVersion Include="Microsoft.SourceLink.GitHub"                           Version="8.0.0"                        />
 		<PackageVersion Include="Lindhart.Analyser.MissingAwaitWarning"                 Version="3.1.0-beta"                   />
@@ -69,8 +73,7 @@
 
 	<ItemGroup Label="Database Providers">
 		<PackageVersion Include="AdoNetCore.AseClient"                                  Version="0.19.3-beta.1"                />
-		<!--version pinned till https://github.com/ClickHouse/clickhouse-cs/issues/13 resolved-->
-		<PackageVersion Include="ClickHouse.Driver"                                     Version="0.7.18"                       />
+		<PackageVersion Include="ClickHouse.Driver"                                     Version="0.7.20"                       />
 		<PackageVersion Include="Devart.Data.Oracle"                                    Version="10.4.290"                     />
 		<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="1.5.0"                        />
 		<!--<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="2.5.0"                 />-->
@@ -95,7 +98,8 @@
 		<PackageVersion Include="System.Data.Odbc"                                      Version="$(NetLatest)"                 />
 		<PackageVersion Include="System.Data.OleDb"                                     Version="$(NetLatest)"                 />
 		<PackageVersion Include="System.Data.SqlClient"                                 Version="4.9.0"                        />
-		<PackageVersion Include="System.Data.SQLite.Core"                               Version="1.0.119"                      />
+		<PackageVersion Include="System.Data.SQLite"                                    Version="2.0.1"                        />
+		<PackageVersion Include="SourceGear.sqlite3"                                    Version="3.50.4.2"                     />
 	</ItemGroup>
 
 	<ItemGroup Label="Remote">
@@ -119,9 +123,9 @@
 		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.10.0"                       />
 		<PackageVersion Include="NUnit3TestAdapter"                                     Version="5.1.0"                        />
 
-		<PackageVersion Include="Microsoft.AspNet.OData"                                Version="7.7.8"                        />
+		<PackageVersion Include="Microsoft.AspNet.OData"                                Version="7.7.9"                        />
 		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="8.3.1"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
-		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="9.3.2"                        Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))"  />
+		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="9.4.0"                        Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))"  />
 		<PackageVersion Include="MiniProfiler.Shared"                                   Version="4.5.4"                        />
 		<PackageVersion Include="MiniProfiler.Minimal"                                  Version="4.5.4"                        />
 		<PackageVersion Include="NodaTime"                                              Version="3.2.2"                        />
@@ -137,7 +141,7 @@
 
 		<PackageVersion Include="Pomelo.EntityFrameworkCore.MySql"                      Version="3.2.7"                        Condition="'$(TargetFramework)'=='net462'" />
 		<PackageVersion Include="Pomelo.EntityFrameworkCore.MySql"                      Version="8.0.3"                        Condition="'$(TargetFramework)'=='net8.0'" />
-		<PackageVersion Include="Pomelo.EntityFrameworkCore.MySql"                      Version="9.0.0-rc.1.efcore.9.0.0"      Condition="'$(TargetFramework)'=='net9.0'" />
+		<PackageVersion Include="Pomelo.EntityFrameworkCore.MySql"                      Version="9.0.0"                        Condition="'$(TargetFramework)'=='net9.0'" />
 		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="3.1.18"                       Condition="'$(TargetFramework)'=='net462'" />
 		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="8.0.11"                       Condition="'$(TargetFramework)'=='net8.0'" />
 		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="9.0.4"                        Condition="'$(TargetFramework)'=='net9.0'" />

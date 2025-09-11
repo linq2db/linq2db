@@ -16,7 +16,8 @@
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
 		<PackageReference Include="Oracle.ManagedDataAccess" />
 		<PackageReference Include="Npgsql" />
-		<PackageReference Include="System.Data.SQLite.Core" />
+		<PackageReference Include="System.Data.SQLite" />
+		<PackageReference Include="SourceGear.sqlite3" />
 		<PackageReference Include="Microsoft.SqlServer.Types" />
 
 		<None Include="..\Data\*">
