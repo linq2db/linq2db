@@ -530,8 +530,6 @@ namespace Tests.Linq
 		[Column("user_name", "Name")]
 		public class User
 		{
-			[PrimaryKey] public int Id { get; set; }
-
 			public string? Name;
 
 			[Column("street", ".Street")]
@@ -542,7 +540,6 @@ namespace Tests.Linq
 			{
 				new User()
 				{
-					Id = 1,
 					Name = "Freddy",
 					Residence = new Address()
 					{
@@ -650,8 +647,6 @@ namespace Tests.Linq
 		[Column("user_name", "Name")]
 		class UserStruct
 		{
-			[PrimaryKey] public int Id { get; set; }
-
 			public string? Name;
 
 			[Column("street", ".Street")]
@@ -662,7 +657,6 @@ namespace Tests.Linq
 			{
 				new UserStruct()
 				{
-					Id = 1,
 					Name = "Freddy",
 					Residence = new AddressStruct()
 					{
