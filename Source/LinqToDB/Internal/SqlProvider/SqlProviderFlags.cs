@@ -533,7 +533,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// FROM T1 INNER JOIN T2 ON t1.field1 == t2.field1 AND t1.field2 == t2.field2
 		/// WHERE t1.field3 > 10
 		/// </code>
-		/// Default: <c>false</c>.
+		/// Default: <c>true</c>.
 		/// </summary>
 		[DataMember(Order = 61), DefaultValue(true)]
 		public bool IsComplexJoinConditionSupported { get; set; } = true;
