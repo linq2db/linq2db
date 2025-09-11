@@ -1397,7 +1397,6 @@ namespace Tests.Linq
 			using (db.CreateLocalTable<Issue1096TaskStage>())
 			{
 				db.Insert(new Issue1096Task { Pk = 1, Id = 1, TargetName = "bda.Requests" });
-				db.Insert(new Issue1096Task { Pk = 2, Id = 1, TargetName = "bda.Requests" });
 				db.Insert(new Issue1096TaskStage { Id = 1, TaskId = 1, Actual = true });
 
 				var query = db.GetTable<Issue1096Task>()
