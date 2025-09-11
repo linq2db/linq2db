@@ -1152,6 +1152,13 @@ namespace LinqToDB
 			return DateTime.Now;
 		}
 
+		[Property(               "CURRENT_TIMESTAMP", ServerSideOnly = true, CanBeNull = false)]
+		[Property(PN.Firebird,   "LOCALTIMESTAMP",    ServerSideOnly = true, CanBeNull = false)]
+		[Property(PN.Informix,   "CURRENT",           ServerSideOnly = true, CanBeNull = false)]
+		[Property(PN.Access,     "Now",               ServerSideOnly = true, CanBeNull = false)]
+		[Function(PN.SqlCe,      "GetDate",           ServerSideOnly = true, CanBeNull = false)]
+		[Function(PN.Sybase,     "GetDate",           ServerSideOnly = true, CanBeNull = false)]
+		[Function(PN.ClickHouse, "now",               ServerSideOnly = true, CanBeNull = false)]
 		public static DateTime CurrentTimestamp => throw new ServerSideOnlyException(nameof(CurrentTimestamp));
 
 		[Function  (PN.SqlServer , "SYSUTCDATETIME"                      , ServerSideOnly = true, CanBeNull = false)]
