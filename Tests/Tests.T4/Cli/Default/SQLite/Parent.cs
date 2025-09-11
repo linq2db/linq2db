@@ -15,7 +15,7 @@ namespace Cli.Default.SQLite
 	[Table("Parent")]
 	public class Parent
 	{
-		[Column("ParentID")] public int? ParentId { get; set; } // int
-		[Column("Value1"  )] public int? Value1   { get; set; } // int
+		[Column("ParentID")] public int? ParentId { get; set; } // INT
+		[Column("Value1"  )] public int? Value1   { get; set; } // INT
 	}
 }

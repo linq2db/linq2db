@@ -102,14 +102,17 @@ namespace Cli.NewCliFeatures.FluentSQLite
 					.Member(e => e.PersonId)
 						.HasAttribute(new ColumnAttribute("PersonID")
 						{
-							IsPrimaryKey = true
+							IsPrimaryKey = true,
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
 						})
 					.Member(e => e.Taxonomy)
 						.HasAttribute(new ColumnAttribute("Taxonomy")
 						{
 							CanBeNull = false
 						})
-					.Member(e => e.FkDoctor00)
+					.Member(e => e.FkDoctor0)
 						.HasAttribute(new AssociationAttribute()
 						{
 							CanBeNull = false,
@@ -258,14 +261,17 @@ namespace Cli.NewCliFeatures.FluentSQLite
 					.Member(e => e.PersonId)
 						.HasAttribute(new ColumnAttribute("PersonID")
 						{
-							IsPrimaryKey = true
+							IsPrimaryKey = true,
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
 						})
 					.Member(e => e.Diagnosis)
 						.HasAttribute(new ColumnAttribute("Diagnosis")
 						{
 							CanBeNull = false
 						})
-					.Member(e => e.FkPatient00)
+					.Member(e => e.FkPatient0)
 						.HasAttribute(new AssociationAttribute()
 						{
 							CanBeNull = false,
@@ -321,7 +327,10 @@ namespace Cli.NewCliFeatures.FluentSQLite
 					.Member(e => e.Id)
 						.HasAttribute(new ColumnAttribute("ID")
 						{
-							IsPrimaryKey = true
+							IsPrimaryKey = true,
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
 						})
 					.Member(e => e.Name)
 						.HasAttribute(new ColumnAttribute("Name")

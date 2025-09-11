@@ -25,31 +25,6 @@ namespace LinqToDB.Remote.Wcf
 
 		#region ILinqService Members
 
-		LinqServiceInfo ILinqService.GetInfo(string? configuration)
-		{
-			return Channel.GetInfo(configuration);
-		}
-
-		int ILinqService.ExecuteNonQuery(string? configuration, string queryData)
-		{
-			return Channel.ExecuteNonQuery(configuration, queryData);
-		}
-
-		string? ILinqService.ExecuteScalar(string? configuration, string queryData)
-		{
-			return Channel.ExecuteScalar(configuration, queryData);
-		}
-
-		string ILinqService.ExecuteReader(string? configuration, string queryData)
-		{
-			return Channel.ExecuteReader(configuration, queryData);
-		}
-
-		int ILinqService.ExecuteBatch(string? configuration, string queryData)
-		{
-			return Channel.ExecuteBatch(configuration, queryData);
-		}
-
 		Task<LinqServiceInfo> ILinqService.GetInfoAsync(string? configuration, CancellationToken cancellationToken)
 		{
 			return Channel.GetInfoAsync(configuration);

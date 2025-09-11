@@ -13,12 +13,12 @@ namespace Cli.NewCliFeatures.FluentSQLite
 {
 	public class TestT4Casing
 	{
-		public int AllCaps             { get; set; } // int
-		public int Caps                { get; set; } // int
-		public int PascalCase          { get; set; } // int
-		public int PascalSnakeCase     { get; set; } // int
-		public int PascalCaseSnakeCase { get; set; } // int
-		public int SnakeCase           { get; set; } // int
-		public int CamelCase           { get; set; } // int
+		public int AllCaps             { get; set; } // INT
+		public int Caps                { get; set; } // INT
+		public int PascalCase          { get; set; } // INT
+		public int PascalSnakeCase     { get; set; } // INT
+		public int PascalCaseSnakeCase { get; set; } // INT
+		public int SnakeCase           { get; set; } // INT
+		public int CamelCase           { get; set; } // INT
 	}
 }

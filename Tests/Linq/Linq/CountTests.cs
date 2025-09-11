@@ -94,7 +94,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubQueryCount([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				AreEqual(
 					from p in Parent

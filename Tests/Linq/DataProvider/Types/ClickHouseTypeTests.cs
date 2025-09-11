@@ -675,11 +675,10 @@ namespace Tests.DataProvider
 				//	filterByValue: false, filterByNullableValue: false,
 				//	getExpectedValue: _ => "(0)", getExpectedNullableValue: _ => "(0)");
 
-				// Why number became string...
 				await TestType<string, string?>(context, new(typeof(string), DataType.Json),
 					/*lang=json,strict*/ "{ \"prop\": 333 }", /*lang=json,strict*/ "{ \"prop\": 123 }",
 					filterByValue: false, filterByNullableValue: false,
-					getExpectedValue: _ => /*lang=json,strict*/ "{\"prop\":\"333\"}", getExpectedNullableValue: _ => "(123)");
+					getExpectedValue: _ => /*lang=json,strict*/ "{\"prop\":333}", getExpectedNullableValue: _ => "(123)");
 			}
 		}
 

@@ -19,7 +19,7 @@ namespace Cli.All.SQLite
 	[Table("TestIdentity")]
 	public class TestIdentity : IEquatable<TestIdentity>
 	{
-		[Column("ID", DataType = DataType.Int64, DbType = "integer", Length = 8, Precision = 19, Scale = 0, IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long Id { get; set; } // integer
+		[Column("ID", DataType = DataType.Int64, DbType = "INTEGER", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long Id { get; set; } // INTEGER
 
 		#region IEquatable<T> support
 		private static readonly IEqualityComparer<TestIdentity> _equalityComparer = ComparerBuilder.GetEqualityComparer<TestIdentity>(c => c.Id);

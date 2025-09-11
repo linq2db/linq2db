@@ -13,7 +13,7 @@ namespace Cli.Fluent.SQLiteNorthwind
 {
 	public class Region
 	{
-		public int    RegionId          { get; set; } // int
+		public int    RegionId          { get; set; } // INT
 		public string RegionDescription { get; set; } = null!; // varchar(50)
 	}
 }

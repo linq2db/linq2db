@@ -19,11 +19,11 @@ namespace Cli.All.SQLiteNorthwind
 	[Table("Order Details")]
 	public class OrderDetail : IEquatable<OrderDetail>
 	{
-		[Column("OrderID"  , DataType = DataType.Int32 , DbType = "int"  , Length = 4, Precision = 10, Scale = 0, IsPrimaryKey = true, PrimaryKeyOrder = 0)] public int     OrderId   { get; set; } // int
-		[Column("ProductID", DataType = DataType.Int32 , DbType = "int"  , Length = 4, Precision = 10, Scale = 0, IsPrimaryKey = true, PrimaryKeyOrder = 1)] public int     ProductId { get; set; } // int
-		[Column("UnitPrice", DataType = DataType.Double, DbType = "float", Length = 8, Precision = 26, Scale = 0                                          )] public double? UnitPrice { get; set; } // float
-		[Column("Quantity" , DataType = DataType.Int32 , DbType = "int"  , Length = 4, Precision = 10, Scale = 0                                          )] public int?    Quantity  { get; set; } // int
-		[Column("Discount" , DataType = DataType.Double, DbType = "float", Length = 8, Precision = 13, Scale = 0                                          )] public double? Discount  { get; set; } // float
+		[Column("OrderID"  , DataType = DataType.Int32 , DbType = "INT"      , IsPrimaryKey = true, PrimaryKeyOrder = 0)] public int?    OrderId   { get; set; } // INT
+		[Column("ProductID", DataType = DataType.Int32 , DbType = "INT"      , IsPrimaryKey = true, PrimaryKeyOrder = 1)] public int?    ProductId { get; set; } // INT
+		[Column("UnitPrice", DataType = DataType.Double, DbType = "float(26)"                                          )] public double? UnitPrice { get; set; } // float(26)
+		[Column("Quantity" , DataType = DataType.Int32 , DbType = "INT"                                                )] public int?    Quantity  { get; set; } // INT
+		[Column("Discount" , DataType = DataType.Double, DbType = "float(13)"                                          )] public double? Discount  { get; set; } // float(13)
 
 		#region IEquatable<T> support
 		private static readonly IEqualityComparer<OrderDetail> _equalityComparer = ComparerBuilder.GetEqualityComparer<OrderDetail>(c => c.OrderId, c => c.ProductId);

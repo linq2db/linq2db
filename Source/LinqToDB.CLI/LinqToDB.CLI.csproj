@@ -46,7 +46,7 @@
 		<PackageReference Include="Mono.TextTemplating" />
 
 		<!--providers-->
-		<PackageReference Include="System.Data.SQLite.Core" />
+		<PackageReference Include="Microsoft.Data.SQLite" />
 		<PackageReference Include="Microsoft.Data.SqlClient" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
 		<PackageReference Include="MySqlConnector" />

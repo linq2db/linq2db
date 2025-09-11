@@ -1095,9 +1095,33 @@ namespace LinqToDB
 			where T: notnull
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.CreateTable<T>.Query(dataContext,
+			return QueryRunner.CreateTable<T>.Query(
+				dataContext,
 				tableDescriptor: null,
-				tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, statementHeader, statementFooter, defaultNullable, tableOptions);
+				new CreateTableOptions(
+					TableName      : tableName,
+					ServerName     : serverName,
+					DatabaseName   : databaseName,
+					SchemaName     : schemaName,
+					StatementHeader: statementHeader,
+					StatementFooter: statementFooter,
+					DefaultNullable: defaultNullable,
+					TableOptions   : tableOptions));
+		}
+
+		/// <summary>
+		/// Creates new table in database for mapping class <typeparamref name="T"/>.
+		/// Information about table name, columns names and types is taken from mapping class.
+		/// </summary>
+		/// <typeparam name="T">Mapping class.</typeparam>
+		/// <param name="dataContext">Database connection context.</param>
+		/// <param name="tableOptions">Create table options.</param>
+		/// <returns>Created table as queryable source.</returns>
+		public static ITable<T> CreateTable<T>(this IDataContext dataContext, CreateTableOptions tableOptions)
+			where T: notnull
+		{
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			return QueryRunner.CreateTable<T>.Query(dataContext,tableDescriptor: null, tableOptions);
 		}
 
 		/// <summary>
@@ -1135,11 +1159,37 @@ namespace LinqToDB
 			where T : notnull
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			return QueryRunner.CreateTable<T>.QueryAsync(dataContext,
+			return QueryRunner.CreateTable<T>.QueryAsync(
+				dataContext,
 				tableDescriptor: null,
-				tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, statementHeader, statementFooter, defaultNullable, tableOptions, token);
+				new CreateTableOptions(
+					TableName      : tableName,
+					ServerName     : serverName,
+					DatabaseName   : databaseName,
+					SchemaName     : schemaName,
+					StatementHeader: statementHeader,
+					StatementFooter: statementFooter,
+					DefaultNullable: defaultNullable,
+					TableOptions   : tableOptions),
+				token);
 		}
 
+		/// <summary>
+		/// Creates new table in database for mapping class <typeparamref name="T"/>.
+		/// Information about table name, columns names and types is taken from mapping class.
+		/// </summary>
+		/// <typeparam name="T">Mapping class.</typeparam>
+		/// <param name="dataContext">Database connection context.</param>
+		/// <param name="tableOptions">Create table options.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>Created table as queryable source.</returns>
+		public static Task<ITable<T>> CreateTableAsync<T>(this IDataContext dataContext, CreateTableOptions tableOptions, CancellationToken token = default)
+			where T : notnull
+		{
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+
+			return QueryRunner.CreateTable<T>.QueryAsync(dataContext, tableDescriptor: null, tableOptions, token);
+		}
 		#endregion
 
 		#region DropTable

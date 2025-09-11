@@ -12,6 +12,7 @@ using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.SqlQuery;
 using LinqToDB.Mapping;
+using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.DataProvider
 {
@@ -116,6 +117,8 @@ namespace LinqToDB.Internal.DataProvider
 
 			var rowsCopied = new BulkCopyRowsCopied();
 
+			using var _ = table.DataContext is DataContext dctx ? (IDisposable)dctx.AcquireLock() : null;
+
 			foreach (var item in source)
 			{
 				table.DataContext.Insert(
@@ -153,6 +156,8 @@ namespace LinqToDB.Internal.DataProvider
 
 			var rowsCopied = new BulkCopyRowsCopied();
 
+			await using var _ = (table.DataContext is DataContext dctx ? dctx.AcquireLock() : EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
+
 			foreach (var item in source)
 			{
 				await table.DataContext
@@ -182,7 +187,7 @@ namespace LinqToDB.Internal.DataProvider
 
 		protected virtual async Task<BulkCopyRowsCopied> RowByRowCopyAsync<T>(
 			ITable<T> table, DataOptions dataOptions, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
-			where T: notnull
+			where T : notnull
 		{
 			var options = dataOptions.BulkCopyOptions;
 
@@ -192,6 +197,8 @@ namespace LinqToDB.Internal.DataProvider
 				throw new LinqToDBException($"{nameof(BulkCopyOptions)}.{nameof(BulkCopyOptions.KeepIdentity)} = true is not supported by {nameof(BulkCopyType)}.{nameof(BulkCopyType.RowByRow)} mode");
 
 			var rowsCopied = new BulkCopyRowsCopied();
+
+			await using var _ = (table.DataContext is DataContext dctx ? dctx.AcquireLock() : EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
 			await foreach (var item in source.ConfigureAwait(false).WithCancellation(cancellationToken))
 			{
@@ -380,8 +387,8 @@ namespace LinqToDB.Internal.DataProvider
 
 					if (!helper.Execute())
 					{
-						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-							helper.OriginalContext.Close();
+						if (!helper.SuppressCloseAfterUse)
+							CloseConnectionIfNecessary(helper.OriginalContext);
 
 						return helper.RowsCopied;
 					}
@@ -399,8 +406,8 @@ namespace LinqToDB.Internal.DataProvider
 				helper.Execute();
 			}
 
-			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-				helper.OriginalContext.Close();
+			if (!helper.SuppressCloseAfterUse)
+				CloseConnectionIfNecessary(helper.OriginalContext);
 
 			return helper.RowsCopied;
 		}
@@ -443,8 +450,8 @@ namespace LinqToDB.Internal.DataProvider
 					finishFunction(helper);
 					if (!await helper.ExecuteAsync(cancellationToken).ConfigureAwait(false))
 					{
-						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-							await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+						if (!helper.SuppressCloseAfterUse)
+							await CloseConnectionIfNecessaryAsync(helper.OriginalContext).ConfigureAwait(false);
 
 						return helper.RowsCopied;
 					}
@@ -462,10 +469,28 @@ namespace LinqToDB.Internal.DataProvider
 				await helper.ExecuteAsync(cancellationToken).ConfigureAwait(false);
 			}
 
-			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-				await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+			if (!helper.SuppressCloseAfterUse)
+				await CloseConnectionIfNecessaryAsync(helper.OriginalContext).ConfigureAwait(false);
 
 			return helper.RowsCopied;
+		}
+
+		internal static void CloseConnectionIfNecessary(IDataContext dataContext)
+		{
+			if (dataContext.CloseAfterUse)
+				dataContext.Close();
+
+			if (dataContext is DataContext { KeepConnectionAlive: false } dctx)
+				dctx.ReleaseQuery();
+		}
+
+		internal static async ValueTask CloseConnectionIfNecessaryAsync(IDataContext dataContext)
+		{
+			if (dataContext.CloseAfterUse)
+				await dataContext.CloseAsync().ConfigureAwait(false);
+
+			if (dataContext is DataContext { KeepConnectionAlive: false } dctx)
+				await dctx.ReleaseQueryAsync().ConfigureAwait(false);
 		}
 
 		protected static async Task<BulkCopyRowsCopied> MultipleRowsCopyHelperAsync<T>(
@@ -506,8 +531,8 @@ namespace LinqToDB.Internal.DataProvider
 					finishFunction(helper);
 					if (!await helper.ExecuteAsync(cancellationToken).ConfigureAwait(false))
 					{
-						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-							await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+						if (!helper.SuppressCloseAfterUse)
+							await CloseConnectionIfNecessaryAsync(helper.OriginalContext).ConfigureAwait(false);
 
 						return helper.RowsCopied;
 					}
@@ -525,8 +550,8 @@ namespace LinqToDB.Internal.DataProvider
 				await helper.ExecuteAsync(cancellationToken).ConfigureAwait(false);
 			}
 
-			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-				await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+			if (!helper.SuppressCloseAfterUse)
+				await CloseConnectionIfNecessaryAsync(helper.OriginalContext).ConfigureAwait(false);
 
 			return helper.RowsCopied;
 		}

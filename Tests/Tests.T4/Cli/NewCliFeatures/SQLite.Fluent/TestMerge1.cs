@@ -14,25 +14,25 @@ namespace Cli.NewCliFeatures.FluentSQLite
 {
 	public class TestMerge1
 	{
-		public long      Id              { get; set; } // integer
-		public long?     Field1          { get; set; } // integer
-		public long?     Field2          { get; set; } // integer
-		public long?     Field3          { get; set; } // integer
-		public long?     Field4          { get; set; } // integer
-		public long?     Field5          { get; set; } // integer
-		public long?     FieldInt64      { get; set; } // bigint
-		public bool?     FieldBoolean    { get; set; } // bit
-		public string?   FieldString     { get; set; } // varchar(20)
-		public string?   FieldNString    { get; set; } // nvarchar(20)
-		public char?     FieldChar       { get; set; } // char(1)
-		public char?     FieldNChar      { get; set; } // char(1)
-		public double?   FieldFloat      { get; set; } // float
-		public double?   FieldDouble     { get; set; } // float
-		public DateTime? FieldDateTime   { get; set; } // datetime
-		public byte[]?   FieldBinary     { get; set; } // varbinary
-		public Guid?     FieldGuid       { get; set; } // uniqueidentifier
-		public DateTime? FieldDate       { get; set; } // date
-		public string?   FieldEnumString { get; set; } // varchar(20)
-		public int?      FieldEnumNumber { get; set; } // int
+		public long      Id              { get; set; } // INTEGER
+		public long?     Field1          { get; set; } // INTEGER
+		public long?     Field2          { get; set; } // INTEGER
+		public long?     Field3          { get; set; } // INTEGER
+		public long?     Field4          { get; set; } // INTEGER
+		public long?     Field5          { get; set; } // INTEGER
+		public long?     FieldInt64      { get; set; } // BIGINT
+		public bool?     FieldBoolean    { get; set; } // BIT
+		public string?   FieldString     { get; set; } // VARCHAR(20)
+		public string?   FieldNString    { get; set; } // NVARCHAR(20)
+		public char?     FieldChar       { get; set; } // CHAR(1)
+		public char?     FieldNChar      { get; set; } // NCHAR(1)
+		public double?   FieldFloat      { get; set; } // FLOAT(24)
+		public double?   FieldDouble     { get; set; } // FLOAT(53)
+		public DateTime? FieldDateTime   { get; set; } // DATETIME
+		public byte[]?   FieldBinary     { get; set; } // VARBINARY(20)
+		public Guid?     FieldGuid       { get; set; } // UNIQUEIDENTIFIER
+		public DateTime? FieldDate       { get; set; } // DATE
+		public string?   FieldEnumString { get; set; } // VARCHAR(20)
+		public int?      FieldEnumNumber { get; set; } // INT
 	}
 }

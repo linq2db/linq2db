@@ -15,12 +15,12 @@ namespace Cli.NewCliFeatures.SQLite
 	[Table("TEST_T4_CASING")]
 	public class TestT4Casing
 	{
-		[Column("ALL_CAPS"             )] public int AllCaps             { get; internal set; } // int
-		[Column("CAPS"                 )] public int Caps                { get; internal set; } // int
-		[Column("PascalCase"           )] public int PascalCase          { get; internal set; } // int
-		[Column("Pascal_Snake_Case"    )] public int PascalSnakeCase     { get; internal set; } // int
-		[Column("PascalCase_Snake_Case")] public int PascalCaseSnakeCase { get; internal set; } // int
-		[Column("snake_case"           )] public int SnakeCase           { get; internal set; } // int
-		[Column("camelCase"            )] public int CamelCase           { get; internal set; } // int
+		[Column("ALL_CAPS"             )] public int AllCaps             { get; internal set; } // INT
+		[Column("CAPS"                 )] public int Caps                { get; internal set; } // INT
+		[Column("PascalCase"           )] public int PascalCase          { get; internal set; } // INT
+		[Column("Pascal_Snake_Case"    )] public int PascalSnakeCase     { get; internal set; } // INT
+		[Column("PascalCase_Snake_Case")] public int PascalCaseSnakeCase { get; internal set; } // INT
+		[Column("snake_case"           )] public int SnakeCase           { get; internal set; } // INT
+		[Column("camelCase"            )] public int CamelCase           { get; internal set; } // INT
 	}
 }

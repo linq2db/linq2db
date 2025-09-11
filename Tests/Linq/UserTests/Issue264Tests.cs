@@ -15,7 +15,7 @@ namespace Tests.UserTests
 		[Test]
 		public void Test1([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var actualCount = db.GetTable<LinqDataTypes>()
 					.GroupBy(_ => new { month = ByMonth(_.DateTimeValue), year = ByYear(_.DateTimeValue) })
@@ -32,7 +32,7 @@ namespace Tests.UserTests
 		[Test]
 		public void Test2([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var actual = db.GetTable<LinqDataTypes>()
 					.GroupBy(_ => new { month = ByMonth(_.DateTimeValue), year = ByYear(_.DateTimeValue) })
@@ -49,7 +49,7 @@ namespace Tests.UserTests
 		[Test]
 		public void Test3([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var actual = db.GetTable<LinqDataTypes>()
 					.GroupBy(_ => ByMonth(_.DateTimeValue))
@@ -66,7 +66,7 @@ namespace Tests.UserTests
 		[Test]
 		public void TestWorkaround([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var actualCount = db.GetTable<LinqDataTypes>()
 					.GroupBy(_ => new { month = ByMonth(_.DateTimeValue), year = ByYear(_.DateTimeValue) })
