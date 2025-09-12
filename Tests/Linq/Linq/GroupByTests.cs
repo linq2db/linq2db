@@ -3808,14 +3808,14 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			using var t1 = db.CreateTempTable("temp_table_1", [new { ID = 1, Value = ""}], ed => ed.Property(r => r.ID).IsPrimaryKey());
+			using var t1 = db.CreateTempTable("temp_table_1", [new { ID = 1, Value = "Value"}], ed => ed.Property(r => r.ID).IsPrimaryKey(), tableOptions: TableOptions.None);
 			using var t2 = db.CreateTempTable("temp_table_2",
 				from c in t1
 				group c by c.ID into gr
 				select new
 				{
 					gr.First().Value,
-				}, ed => ed.Property(r => r.Value).IsPrimaryKey().IsNotNull().HasLength(50));
+				}, ed => ed.Property(r => r.Value).IsPrimaryKey().IsNotNull().HasLength(50), tableOptions: TableOptions.None);
 		}
 
 		static class Issue5070
