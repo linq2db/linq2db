@@ -2419,7 +2419,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					var join = table.Joins[joinIndex];
 					if (join.JoinType == JoinType.Inner && join.Condition.IsTrue())
 					{
-						if (_providerFlags.IsCrossJoinSupported && (table.Joins.Count > 0 || !QueryHelper.IsDependsOnSource(selectQuery.Where, join.Table.Source)))
+						if (_providerFlags.IsCrossJoinSupported
+							&& (table.Joins.Count > (_providerFlags.IsCrossJoinSyntaxRequired ? 0 : 1)
+								|| !QueryHelper.IsDependsOnSource(selectQuery.Where, join.Table.Source)))
 						{
 							join.JoinType = JoinType.Cross;
 							if (join.Table.Joins.Count > 0)

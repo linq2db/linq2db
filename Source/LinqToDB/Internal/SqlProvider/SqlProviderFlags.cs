@@ -538,6 +538,13 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 61), DefaultValue(true)]
 		public bool IsComplexJoinConditionSupported { get; set; } = true;
 
+		/// <summary>
+		/// When enabled, always prefer "FROM T1 CROSS JOIN T2" over "FROM T1, T2" join syntax.
+		/// Default: <c>false</c>.
+		/// </summary>
+		[DataMember(Order = 62), DefaultValue(false)]
+		public bool IsCrossJoinSyntaxRequired { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null;
@@ -622,6 +629,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ DoesProviderTreatsEmptyStringAsNull                  .GetHashCode()
 				^ IsOrderByAggregateFunctionSupported                  .GetHashCode()
 				^ IsComplexJoinConditionSupported                      .GetHashCode()
+				^ IsCrossJoinSyntaxRequired                            .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -688,6 +696,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& DoesProviderTreatsEmptyStringAsNull                   == other.DoesProviderTreatsEmptyStringAsNull
 				&& IsOrderByAggregateFunctionSupported                   == other.IsOrderByAggregateFunctionSupported
 				&& IsComplexJoinConditionSupported                       == other.IsComplexJoinConditionSupported
+				&& IsCrossJoinSyntaxRequired                             == other.IsCrossJoinSyntaxRequired
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

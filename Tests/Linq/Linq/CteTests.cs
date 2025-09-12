@@ -1326,10 +1326,6 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		// TODO: implement recursive CTE outer joins optimization for firebird to generate "T1, T2 WHERE condition"
-		// to workaround limitation:
-		// A recursive reference cannot participate in an outer join. (https://www.firebirdsql.org/refdocs/langrefupd21-select.html#langrefupd21-select-cte-recursive)
-		[ActiveIssue(Configuration = TestProvName.AllFirebird)]
 		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
 		public void Issue3360_TypeByOtherQuery_AllProviders([RecursiveCteContextSource(ProviderName.DB2)] string context)
 		{
