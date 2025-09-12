@@ -2706,5 +2706,44 @@ namespace Tests.Linq
 
 			ti.Where(i => cte.Any(tuple => tuple.Id1 == i.Id)).Delete();
 		}
+
+		public class DateRangeHelper
+		{
+			public int      Counter { get; set; }
+			public DateTime Date    { get; set; }
+		}
+
+		[Theory]
+		public void SelectQueryTest([CteContextSource] string context, bool inlineParams)
+		{
+			using var db = GetDataContext(context);
+
+			var dateFrom = DateTime.Today;
+			var dateTo   = dateFrom.AddDays(10);
+
+			var cte = db.GetCte<DateRangeHelper>(
+				x =>
+				   db
+					   .SelectQuery(() => new DateRangeHelper { Counter = 1, Date = dateFrom.Date })
+					   .Concat
+					   (
+						   x
+							   .Select(_ => new DateRangeHelper { Counter = _.Counter + 1, Date = _.Date.AddDays(1) })
+							   .Where(_ => _.Date < dateTo)
+					   ));
+
+			if (inlineParams)
+				cte = cte.InlineParameters();
+
+			AreEqual(
+				Enumerable.Range(0, 10).Select(i => dateFrom.AddDays(i)),
+				cte.AsEnumerable().Select(_ => _.Date)
+				);
+			AreEqual(
+				Enumerable.Range(1, 10),
+				cte.AsEnumerable().Select(_ => _.Counter)
+				);
+
+		}
 	}
 }
