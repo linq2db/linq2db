@@ -553,7 +553,7 @@ namespace Tests.DataProvider
 						await TestType<decimal, decimal?>(context, decimalType, minDecimal, maxDecimal);
 
 					var zero = "0";
-					if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseDriver) && s > 0)
+					if (context.IsAnyOf(ProviderName.ClickHouseDriver) && s > 0)
 						zero = $"{zero}.{new string('0', s)}";
 					await TestType<string, string?>(context, stringType, "0", default, getExpectedValue: v => zero);
 					if (!skipBasicTypes)
@@ -614,29 +614,32 @@ namespace Tests.DataProvider
 			// https://github.com/ClickHouse/ClickHouse/issues/38059
 			// we are not trimming trailing \0 for ClickHouse
 			var padValues = true;
+			// recent server change, probably https://github.com/ClickHouse/ClickHouse/pull/85063
+			// affected only binary protocol?
+			var trimAllZeros = context.IsAnyOf(ProviderName.ClickHouseOctonica);
 
-			await TestType<string, string?>(context, new(typeof(string), DataType.NChar,  null, length: 7), string.Empty, default, getExpectedValue: v => padValues ? "\0\0\0\0\0\0\0" : v);
+			await TestType<string, string?>(context, new(typeof(string), DataType.NChar,  null, length: 7), string.Empty, default, getExpectedValue: v => !trimAllZeros ? "\0\0\0\0\0\0\0" : v);
 			await TestType<string, string?>(context, new(typeof(string), DataType.NChar,  null, length: 7), "test ", "test\0", getExpectedValue: v => padValues ? "test \0\0" : v, getExpectedNullableValue: v => padValues ? "test\0\0\0" : "test");
-			await TestType<string, string?>(context, new(typeof(string), DataType.Char,   null, length: 7), string.Empty, default, getExpectedValue: v => padValues ? "\0\0\0\0\0\0\0" : v);
+			await TestType<string, string?>(context, new(typeof(string), DataType.Char,   null, length: 7), string.Empty, default, getExpectedValue: v => !trimAllZeros ? "\0\0\0\0\0\0\0" : v);
 			await TestType<string, string?>(context, new(typeof(string), DataType.Char,   null, length: 7), "test ", "test\0", getExpectedValue: v => padValues ? "test \0\0" : v, getExpectedNullableValue: v => padValues ? "test\0\0\0" : "test");
-			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary, null, length: 7), Array.Empty<byte>(), default, getExpectedValue: v => new byte[7]);
+			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary, null, length: 7), Array.Empty<byte>(), default, getExpectedValue: v => trimAllZeros ? v : new byte[7]);
 			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary, null, length: 7), new byte[] { 1, 2, 0, 3, 4 }, new byte[] { 1, 2, 3, 0, 4, 0, 0 }, getExpectedValue: v => { Array.Resize(ref v, 7);return v; }, getExpectedNullableValue: v => { Array.Resize(ref v, 7); return v; });
 
 			// default length (ClickHouseMappingSchema.DEFAULT_FIXED_STRING_LENGTH=100)
 			var defaultBinary = new byte[100];
 			var defaultString = new string('\0', 100);
-			await TestType<string, string?>(context, new(typeof(string), DataType.NChar), string.Empty, default, getExpectedValue: _ => defaultString);
-			await TestType<string, string?>(context, new(typeof(string), DataType.Char), string.Empty, default, getExpectedValue: _ => defaultString);
-			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary), Array.Empty<byte>(), default, getExpectedValue: _ => defaultBinary);
+			await TestType<string, string?>(context, new(typeof(string), DataType.NChar), string.Empty, default, getExpectedValue: v => trimAllZeros ? v : defaultString);
+			await TestType<string, string?>(context, new(typeof(string), DataType.Char), string.Empty, default, getExpectedValue: v => trimAllZeros ? v : defaultString);
+			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary), Array.Empty<byte>(), default, getExpectedValue: v => trimAllZeros ? v : defaultBinary);
 
 			// various characters handing
-			await TestType<string, string?>(context, new(typeof(string), DataType.NChar, null, length: 7), "\x00", "\x01", getExpectedValue: v => padValues ? "\0\0\0\0\0\0\0" : string.Empty, getExpectedNullableValue: v => padValues ? "\x1\0\0\0\0\0\0" : v);
+			await TestType<string, string?>(context, new(typeof(string), DataType.NChar, null, length: 7), "\x00", "\x01", getExpectedValue: v => !trimAllZeros ? "\0\0\0\0\0\0\0" : string.Empty, getExpectedNullableValue: v => padValues ? "\x1\0\0\0\0\0\0" : v);
 			await TestType<string, string?>(context, new(typeof(string), DataType.NChar, null, length: 7), "\x02", "\x03", getExpectedValue: v => padValues ? "\x2\0\0\0\0\0\0" : v, getExpectedNullableValue: v => padValues ? "\x3\0\0\0\0\0\0" : v);
 			await TestType<string, string?>(context, new(typeof(string), DataType.NChar, null, length: 7), "\xFF", "\xFE", getExpectedValue: v => padValues ? "\xff\0\0\0\0\0" : v, getExpectedNullableValue: v => padValues ? "\xfe\0\0\0\0\0" : v);
 			await TestType<string, string?>(context, new(typeof(string), DataType.NChar, null, length: 7), "\r", "\n", getExpectedValue: v => padValues ? "\r\0\0\0\0\0\0" : v, getExpectedNullableValue: v => padValues ? "\n\0\0\0\0\0\0" : v);
 			await TestType<string, string?>(context, new(typeof(string), DataType.NChar, null, length: 7), "'", "\\", getExpectedValue: v => padValues ? "'\0\0\0\0\0\0" : v, getExpectedNullableValue: v => padValues ? "\\\0\0\0\0\0\0" : v);
 
-			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary, null, length: 7), new byte[] { 0 }, new byte[] { 1 }, getExpectedValue: v => { Array.Resize(ref v, 7); return v; }, getExpectedNullableValue: v => { Array.Resize(ref v, 7); return v; });
+			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary, null, length: 7), new byte[] { 0 }, new byte[] { 1 }, getExpectedValue: v => { if (trimAllZeros) return Array.Empty<byte>(); Array.Resize(ref v, 7); return v; }, getExpectedNullableValue: v => { Array.Resize(ref v, 7); return v; });
 			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary, null, length: 7), new byte[] { 2 }, new byte[] { 3 }, getExpectedValue: v => { Array.Resize(ref v, 7); return v; }, getExpectedNullableValue: v => { Array.Resize(ref v, 7); return v; });
 			// https://github.com/DarkWanderer/ClickHouse.Client/issues/138
 			// https://github.com/ClickHouse/ClickHouse/issues/38790

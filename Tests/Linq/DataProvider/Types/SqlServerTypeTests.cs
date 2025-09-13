@@ -88,6 +88,8 @@ namespace Tests.DataProvider
 			var asArray1 = new float[] { 1.2f, -1.1f };
 			var asArray2 = new float[] { 5.2f, -3.1f };
 			var asArray3 = new float[] { 11.2f, -4.1f };
+			var asArray4 = new float[] { -1.2f };
+			var asArray5 = new float[] { 44.12f };
 
 			// string
 			//await TestType<string, string?>(context, new(typeof(string), dt, null, length: 2), asString1, default, filterByValue: false, getExpectedValue: _ => asString1Expected);
@@ -107,6 +109,8 @@ namespace Tests.DataProvider
 				var sqlVector1 = new SqlVector<float>(asArray1.AsMemory());
 				var sqlVector2 = new SqlVector<float>(asArray2.AsMemory());
 				var sqlVector3 = new SqlVector<float>(asArray3.AsMemory());
+				var sqlVector4 = new SqlVector<float>(asArray4.AsMemory());
+				var sqlVector5 = new SqlVector<float>(asArray5.AsMemory());
 
 				await TestType<SqlVector<float>, SqlVector<float>?>(context, type, sqlVector1, default, filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector1.Memory.ToArray()));
 
