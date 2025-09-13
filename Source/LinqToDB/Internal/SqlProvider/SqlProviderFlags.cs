@@ -525,6 +525,26 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 60)]
 		public bool IsOrderByAggregateFunctionSupported { get; set; }
 
+		/// <summary>
+		/// When disabled, all conditions from INNER JOIN ON moved to WHERE except conjunction of equality predicates.
+		/// <code>
+		/// FROM T1 INNER JOIN T2 ON t1.field1 == t2.field1 AND t1.field2 == t2.field2 AND t1.field3 > 10
+		/// -- with flag:
+		/// FROM T1 INNER JOIN T2 ON t1.field1 == t2.field1 AND t1.field2 == t2.field2
+		/// WHERE t1.field3 > 10
+		/// </code>
+		/// Default: <c>true</c>.
+		/// </summary>
+		[DataMember(Order = 61), DefaultValue(true)]
+		public bool IsComplexJoinConditionSupported { get; set; } = true;
+
+		/// <summary>
+		/// When enabled, always prefer "FROM T1 CROSS JOIN T2" over "FROM T1, T2" join syntax.
+		/// Default: <c>false</c>.
+		/// </summary>
+		[DataMember(Order = 62), DefaultValue(false)]
+		public bool IsCrossJoinSyntaxRequired { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null;
@@ -608,6 +628,8 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsDistinctFromSupported                              .GetHashCode()
 				^ DoesProviderTreatsEmptyStringAsNull                  .GetHashCode()
 				^ IsOrderByAggregateFunctionSupported                  .GetHashCode()
+				^ IsComplexJoinConditionSupported                      .GetHashCode()
+				^ IsCrossJoinSyntaxRequired                            .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -673,6 +695,8 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsDistinctFromSupported                               == other.IsDistinctFromSupported
 				&& DoesProviderTreatsEmptyStringAsNull                   == other.DoesProviderTreatsEmptyStringAsNull
 				&& IsOrderByAggregateFunctionSupported                   == other.IsOrderByAggregateFunctionSupported
+				&& IsComplexJoinConditionSupported                       == other.IsComplexJoinConditionSupported
+				&& IsCrossJoinSyntaxRequired                             == other.IsCrossJoinSyntaxRequired
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion
