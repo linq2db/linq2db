@@ -117,7 +117,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				var jsonDocumentType = Type.GetType("System.Text.Json.JsonDocument, System.Text.Json");
 				if (jsonDocumentType != null)
 				{
+#pragma warning disable CA2263 // Prefer generic overload when type is known (false positive)
 					SetGetFieldValueReader(jsonDocumentType, typeof(string), dataReaderType: Adapter.DataReaderType, typeName: "json");
+#pragma warning restore CA2263 // Prefer generic overload when type is known
 				}
 			}
 
