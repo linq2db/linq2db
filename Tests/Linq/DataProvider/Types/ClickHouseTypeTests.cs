@@ -553,6 +553,7 @@ namespace Tests.DataProvider
 						await TestType<decimal, decimal?>(context, decimalType, minDecimal, maxDecimal);
 
 					var zero = "0";
+					// also this "if" needed for Octonica if no primary key defined (different table engine)
 					if (context.IsAnyOf(ProviderName.ClickHouseDriver) && s > 0)
 						zero = $"{zero}.{new string('0', s)}";
 					await TestType<string, string?>(context, stringType, "0", default, getExpectedValue: v => zero);
@@ -614,8 +615,7 @@ namespace Tests.DataProvider
 			// https://github.com/ClickHouse/ClickHouse/issues/38059
 			// we are not trimming trailing \0 for ClickHouse
 			var padValues = true;
-			// recent server change, probably https://github.com/ClickHouse/ClickHouse/pull/85063
-			// affected only binary protocol?
+			// this happens only if table has primary key (other engine used) and only for binary protocol
 			var trimAllZeros = context.IsAnyOf(ProviderName.ClickHouseOctonica);
 
 			await TestType<string, string?>(context, new(typeof(string), DataType.NChar,  null, length: 7), string.Empty, default, getExpectedValue: v => !trimAllZeros ? "\0\0\0\0\0\0\0" : v);
