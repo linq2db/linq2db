@@ -460,8 +460,8 @@ namespace Tests.Linq
 				return HashCode.Combine(ChildID, ParentID);
 			}
 
-			public int ChildID  { get; set; }
-			public int ParentID { get; set; }
+			[PrimaryKey] public int ChildID  { get; set; }
+			[PrimaryKey] public int ParentID { get; set; }
 		}
 
 		[Test]
@@ -502,7 +502,7 @@ namespace Tests.Linq
 
 				query.ToArray();
 
-				Assert.That(str, Does.Contain("WITH"));
+					Assert.That(str, Does.Contain("WITH"));
 			}
 		}
 
@@ -518,20 +518,20 @@ namespace Tests.Linq
 					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).AsCte("LAST").InnerJoin(c4 => c4.ParentID == p.ParentID)
 					select new CteDMLTests
 					{
-						ChildID = c4.ChildID,
+						ChildID  = c4.ChildID,
 						ParentID = c4.ParentID
 					};
 
-				var affected = toInsert.Insert(testTable, c => c);
+				var affected = toInsert.Distinct().Insert(testTable, c => c);
 
 				var _cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1);
-				var expected = from p in _cte1
+				var expected = (from p in _cte1
 					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).InnerJoin(c4 => c4.ParentID == p.ParentID)
 					select new CteDMLTests
 					{
-						ChildID = c4.ChildID,
+						ChildID  = c4.ChildID,
 						ParentID = c4.ParentID
-					};
+					}).Distinct();
 
 				var result = testTable.OrderBy(c => c.ChildID).ThenBy(c => c.ParentID);
 				expected   = expected. OrderBy(c => c.ChildID).ThenBy(c => c.ParentID);
@@ -632,6 +632,7 @@ namespace Tests.Linq
 
 		public class HierarchyTree
 		{
+			[PrimaryKey]
 			public int Id { get; set; }
 			public int? ParentId { get; set; }
 		}
@@ -673,6 +674,7 @@ namespace Tests.Linq
 
 		sealed class HierarchyData
 		{
+			[PrimaryKey]
 			public int Id { get; set; }
 			public int Level { get; set; }
 		}
@@ -1045,6 +1047,7 @@ namespace Tests.Linq
 
 		class NestingA
 		{
+			[PrimaryKey] public int Id { get; set; }
 			public string? Property1 { get; set; }
 		}
 
@@ -1142,6 +1145,7 @@ namespace Tests.Linq
 		[Table(Name = "NC_CODE")]
 		public partial class NcCode
 		{
+			[PrimaryKey] public int Id { get; set; }
 			[Column("HANDLE"), NotNull             ] public string    Handle           { get; set; } = null!; // NVARCHAR2(1236)
 			[Column("CHANGE_STAMP"), Nullable      ] public decimal?  ChangeStamp      { get; set; } // NUMBER (38,0)
 			[Column("SITE", Length = 18),          ] public string?   Site             { get; set; } // NVARCHAR2(18)
@@ -1156,6 +1160,7 @@ namespace Tests.Linq
 		[Table(Name = "NC_GROUP_MEMBER")]
 		public partial class NcGroupMember
 		{
+			[PrimaryKey] public int Id { get; set; }
 			[Column("HANDLE"), NotNull               ] public string   Handle           { get; set; } = null!; // NVARCHAR2(1236)
 			[Column("NC_GROUP_BO"), Nullable         ] public string?  NcGroupBo        { get; set; } // NVARCHAR2(1236)
 			[Column("NC_CODE_OR_GROUP_GBO"), Nullable] public string?  NcCodeOrGroupGbo { get; set; } // NVARCHAR2(1236)
@@ -1351,7 +1356,7 @@ namespace Tests.Linq
 		[Table]
 		private class Issue3360WithEnum
 		{
-			[Column                                          ] public int     Id  { get; set; }
+			[PrimaryKey                                      ] public int     Id  { get; set; }
 			[Column(DataType = DataType.VarChar, Length = 50)] public StrEnum Str { get; set; }
 		}
 
@@ -1501,7 +1506,7 @@ namespace Tests.Linq
 		[Table]
 		private class Issue3360NullInAnchor
 		{
-			[Column                                          ] public int       Id    { get; set; }
+			[PrimaryKey                                      ] public int       Id    { get; set; }
 			[NotColumn(Configuration = ProviderName.Firebird)]
 			[NotColumn(Configuration = ProviderName.DB2)     ]
 			[Column                                          ] public Guid?     Guid  { get; set; }
@@ -1942,7 +1947,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class TestFolder
 		{
-			[Column] public Guid        Id       { get; set; }
+			[PrimaryKey] public Guid    Id       { get; set; }
 			[Column] public string?     Label    { get; set; }
 			[Column] public Guid?       ParentId { get; set; }
 
@@ -2164,7 +2169,7 @@ namespace Tests.Linq
 		#region Issue 4366
 		sealed class Dto
 		{
-			public int id { get; set; }
+			[PrimaryKey] public int id { get; set; }
 			public string name { get; set; } = null!;
 			public int? parent_id { get; set; }
 			public string? FullName;

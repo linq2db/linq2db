@@ -205,13 +205,28 @@ namespace Tests.Linq
 			_ = db.Parent.Select(c => c.Value1).Contains(null);
 		}
 
+		sealed class TestRecord
+		{
+			[PrimaryKey]
+			public int PK { get; set; }
+			public int ID { get; set; }
+		}
+
+		sealed class TestRecordNullable
+		{
+			[PrimaryKey]
+			public int PK { get; set; }
+			public int? ID { get; set; }
+			public int? GV { get; set; }
+		}
+
 		[Test]
 		public void NotNull_In_NotNull_Test([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
-			using var t1 = db.CreateLocalTable("test_in_1", new[] { 1, 2, 4 }.Select(i => new { ID = i }));
-			using var t2 = db.CreateLocalTable("test_in_2", new[] { 1, 2, 3 }.Select(i => new { ID = i }));
+			using var t1 = db.CreateLocalTable("test_in_1", new[] { 1, 2, 4 }.Select((i, idx) => new TestRecord { PK = idx, ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", new[] { 1, 2, 3 }.Select((i, idx) => new TestRecord { PK = idx, ID = i }));
 
 			var query = t1.Where(t => t.ID.In(t2.Select(p => p.ID)));
 
@@ -223,8 +238,8 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
-			using var t1 = db.CreateLocalTable("test_in_1", new[] { 1, 3 }.Select(i => new { ID = i }));
-			using var t2 = db.CreateLocalTable("test_in_2", new[] { 1, 2 }.Select(i => new { ID = i }));
+			using var t1 = db.CreateLocalTable("test_in_1", new[] { 1, 3 }.Select((i, idx) => new TestRecord { PK = idx, ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", new[] { 1, 2 }.Select((i, idx) => new TestRecord { PK = idx, ID = i }));
 
 			var query = t1.Where(t => t.ID.NotIn(t2.Select(p => p.ID))).OrderBy(i => i);
 
@@ -236,8 +251,8 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
-			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select(i => new { ID = i }));
-			using var t2 = db.CreateLocalTable("test_in_2", new[] {       1, 2       }.Select(i => new { ID = i }));
+			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", new[] {       1, 2       }.Select((i, idx) => new TestRecord { PK = idx, ID = i }));
 
 			var query = t1.Where(t => t.ID.In(t2.Select(p => (int?)p.ID)));
 
@@ -249,8 +264,8 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
-			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select(i => new { ID = i }));
-			using var t2 = db.CreateLocalTable("test_in_2", new[] {       1, 2       }.Select(i => new { ID = i }));
+			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", new[] {       1, 2       }.Select((i, idx) => new TestRecord { PK = idx, ID = i }));
 
 			var query = t1.Where(t => (compareNullsAsValues ? t.ID == null : false) || t.ID.NotIn(t2.Select(p => (int?)p.ID)));
 
@@ -262,8 +277,8 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
-			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3 }.Select(i => new { ID = i }));
-			using var t2 = db.CreateLocalTable("test_in_2", new[] {       1, 2 }.Select(i => new { ID = i }));
+			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3 }.Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", new[] {       1, 2 }.Select((i, idx) => new TestRecord { PK = idx, ID = i }));
 
 			var query = t1.Where(t => UseInQuery(t.ID, compareNullsAsValues) && t.ID.NotIn(t2.Select(p => (int?)p.ID).Where(v => UseInQuery(v, compareNullsAsValues))));
 
@@ -275,8 +290,8 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
-			using var t1 = db.CreateLocalTable("test_in_1", new[] {       1, 3       }.Select(i => new { ID = i }));
-			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, null }.Select(i => new { ID = i }));
+			using var t1 = db.CreateLocalTable("test_in_1", new[] {       1, 3       }.Select((i, idx) => new TestRecord { PK = idx, ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, null }.Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
 
 			var query = t1.Where(t => ((int?)t.ID).In(t2.Select(p => p.ID)));
 
@@ -291,8 +306,8 @@ namespace Tests.Linq
 				.UseCompareNulls(compareNullsAsValues ? CompareNulls.LikeClr : CompareNulls.LikeSql)
 				.UseBulkCopyType(BulkCopyType.MultipleRows));
 
-			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select(i => new { ID = i }));
-			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, null }.Select(i => new { ID = i }));
+			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, null }.Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
 
 			var query = t1.Where(t => UseInQuery(t.ID, compareNullsAsValues) && t.ID.In(t2.Select(p => p.ID).Where(v => UseInQuery(v, compareNullsAsValues))));
 
@@ -304,8 +319,8 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
-			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select(i => new { ID = i }));
-			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2       }.Select(i => new { ID = i }));
+			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2       }.Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
 
 			var query = t1.Where(t => UseInQuery(t.ID, compareNullsAsValues) && t.ID.In(t2.Select(p => p.ID).Where(v => UseInQuery(v, compareNullsAsValues))));
 
@@ -317,8 +332,8 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
-			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3,      }.Select(i => new { ID = i }));
-			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, null }.Select(i => new { ID = i }));
+			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3,      }.Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, null }.Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
 
 			var query = t1.Where(t => t.ID.In(t2.Select(p => p.ID)));
 
@@ -330,8 +345,8 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3,      }.Select(i => new { ID = i }));
-			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, null }.Select(i => new { ID = i, GV = i % 2 }));
+			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3,      }.Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, null }.Select((i, idx) => new TestRecordNullable { PK = idx, ID = i, GV = i % 2 }));
 
 			var subQuery =
 				from t in t2
@@ -349,8 +364,8 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
-			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, 4, 5, null }.Select(i => new { ID = i }));
-			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, 4, 6, null }.Select(i => new { ID = i }));
+			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, 4, 5, null }.Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, 4, 6, null }.Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
 
 			var query = t1.Where(t => UseInQuery(t.ID, compareNullsAsValues) && t.ID.NotIn(t2.Select(p => p.ID).Where(v => UseInQuery(v, compareNullsAsValues))));
 
@@ -362,8 +377,8 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
-			using var t1 = db.CreateLocalTable("test_in_1", ((int?[])[ 1, 3, 4, 5       ]).Select(i => new { ID = i }));
-			using var t2 = db.CreateLocalTable("test_in_2", ((int?[])[ 1, 2, 4, 6, null ]).Select(i => new { ID = i }));
+			using var t1 = db.CreateLocalTable("test_in_1", ((int?[])[ 1, 3, 4, 5       ]).Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", ((int?[])[ 1, 2, 4, 6, null ]).Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
 
 			var query = t1.Where(t => t.ID.NotIn(t2.Select(p => p.ID)));
 
@@ -375,8 +390,8 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
-			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, 4, 5, null }.Select(i => new { ID = i }));
-			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, 4, 6       }.Select(i => new { ID = i }));
+			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, 4, 5, null }.Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, 4, 6       }.Select((i, idx) => new TestRecordNullable { PK = idx, ID = i }));
 
 			var query = t1.Where(t => t.ID.NotIn(t2.Select(p => p.ID)));
 

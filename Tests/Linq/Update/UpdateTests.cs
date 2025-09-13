@@ -1278,7 +1278,7 @@ namespace Tests.xUpdate
 							Value1 = queryResult.Value.ParentID
 						});
 
-				Assert.That(cnt, Is.EqualTo(1));
+					Assert.That(cnt, Is.EqualTo(1));
 			}
 		}
 
@@ -1988,7 +1988,7 @@ namespace Tests.xUpdate
 		[Table]
 		sealed class MainTable
 		{
-			[Column] public int Id;
+			[PrimaryKey] public int Id;
 			[Column] public string? Field;
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(AssociatedTable.Id))]
@@ -2008,7 +2008,7 @@ namespace Tests.xUpdate
 		[Table]
 		sealed class AssociatedTable
 		{
-			[Column] public int Id;
+			[PrimaryKey] public int Id;
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(MainTable.Id))]
 			public MainTable MainOptional = null!;
@@ -2042,7 +2042,7 @@ namespace Tests.xUpdate
 				var data = main.OrderBy(_ => _.Id).ToArray();
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(cnt, Is.EqualTo(1));
+						Assert.That(cnt, Is.EqualTo(1));
 					Assert.That(data[0].Field, Is.EqualTo("value 1"));
 					Assert.That(data[1].Field, Is.EqualTo("value 2"));
 					Assert.That(data[2].Field, Is.EqualTo("test"));
@@ -2069,7 +2069,7 @@ namespace Tests.xUpdate
 				var data = main.OrderBy(_ => _.Id).ToArray();
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(cnt, Is.EqualTo(1));
+						Assert.That(cnt, Is.EqualTo(1));
 					Assert.That(data[0].Field, Is.EqualTo("value 1"));
 					Assert.That(data[1].Field, Is.EqualTo("value 2"));
 					Assert.That(data[2].Field, Is.EqualTo("test"));
@@ -2096,7 +2096,7 @@ namespace Tests.xUpdate
 				var data = main.OrderBy(_ => _.Id).ToArray();
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(cnt, Is.EqualTo(1));
+						Assert.That(cnt, Is.EqualTo(1));
 					Assert.That(data[0].Field, Is.EqualTo("value 1"));
 					Assert.That(data[1].Field, Is.EqualTo("value 2"));
 					Assert.That(data[2].Field, Is.EqualTo("test"));
@@ -2123,7 +2123,7 @@ namespace Tests.xUpdate
 				var data = main.OrderBy(_ => _.Id).ToArray();
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(cnt, Is.EqualTo(1));
+						Assert.That(cnt, Is.EqualTo(1));
 					Assert.That(data[0].Field, Is.EqualTo("value 1"));
 					Assert.That(data[1].Field, Is.EqualTo("value 2"));
 					Assert.That(data[2].Field, Is.EqualTo("test"));

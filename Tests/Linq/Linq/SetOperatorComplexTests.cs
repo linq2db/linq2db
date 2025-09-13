@@ -74,8 +74,8 @@ namespace Tests.Linq
 
 		class BookAuthor
 		{
-			public int FkBookId   { get; set; }
-			public int FkAuthorId { get; set; }
+			[PrimaryKey] public int FkBookId   { get; set; }
+			[PrimaryKey] public int FkAuthorId { get; set; }
 
 			[Association(ThisKey = nameof(FkBookId), OtherKey = "BookId")]
 			public Book   Book   { get; set; } = default!;

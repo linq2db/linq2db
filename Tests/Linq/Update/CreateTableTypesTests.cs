@@ -25,6 +25,7 @@ namespace Tests.xUpdate
 		[Table]
 		public class CreateTableTypes
 		{
+			[PrimaryKey]
 			public int         Id                 { get; set; }
 			public int         Int32              { get; set; }
 			public int?        Int32Nullable      { get; set; }

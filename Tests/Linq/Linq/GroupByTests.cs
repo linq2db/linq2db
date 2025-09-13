@@ -816,31 +816,32 @@ namespace Tests.Linq
 
 		class AggregationData
 		{
+			[PrimaryKey] public int Id { get; set; }
 			public int GroupId { get; set; }
 			public double? DataValue   { get; set; }
 
 			public static AggregationData[] Data = new[]
 			{
-				new AggregationData { GroupId = 1, DataValue = 1 },
-				new AggregationData { GroupId = 1, DataValue = null },
-				new AggregationData { GroupId = 1, DataValue = 3 },
-				new AggregationData { GroupId = 1, DataValue = 1 },
-				new AggregationData { GroupId = 1, DataValue = 5 },
-				new AggregationData { GroupId = 1, DataValue = 6 },
+				new AggregationData { Id = 1, GroupId = 1, DataValue = 1 },
+				new AggregationData { Id = 2, GroupId = 1, DataValue = null },
+				new AggregationData { Id = 3, GroupId = 1, DataValue = 3 },
+				new AggregationData { Id = 4, GroupId = 1, DataValue = 1 },
+				new AggregationData { Id = 5, GroupId = 1, DataValue = 5 },
+				new AggregationData { Id = 6, GroupId = 1, DataValue = 6 },
 
-				new AggregationData { GroupId = 2, DataValue = 7 },
-				new AggregationData { GroupId = 2, DataValue = 8 },
-				new AggregationData { GroupId = 2, DataValue = 9 },
-				new AggregationData { GroupId = 2, DataValue = null },
-				new AggregationData { GroupId = 2, DataValue = 11 },
-				new AggregationData { GroupId = 2, DataValue = 7 },
+				new AggregationData { Id = 7, GroupId = 2, DataValue = 7 },
+				new AggregationData { Id = 8, GroupId = 2, DataValue = 8 },
+				new AggregationData { Id = 9, GroupId = 2, DataValue = 9 },
+				new AggregationData { Id = 10, GroupId = 2, DataValue = null },
+				new AggregationData { Id = 11, GroupId = 2, DataValue = 11 },
+				new AggregationData { Id = 12, GroupId = 2, DataValue = 7 },
 
-				new AggregationData { GroupId = 3, DataValue = 13 },
-				new AggregationData { GroupId = 3, DataValue = 16 },
-				new AggregationData { GroupId = 3, DataValue = 16 },
-				new AggregationData { GroupId = 3, DataValue = 16 },
-				new AggregationData { GroupId = 3, DataValue = null },
-				new AggregationData { GroupId = 3, DataValue = 18 },
+				new AggregationData { Id = 13, GroupId = 3, DataValue = 13 },
+				new AggregationData { Id = 14, GroupId = 3, DataValue = 16 },
+				new AggregationData { Id = 15, GroupId = 3, DataValue = 16 },
+				new AggregationData { Id = 16, GroupId = 3, DataValue = 16 },
+				new AggregationData { Id = 17, GroupId = 3, DataValue = null },
+				new AggregationData { Id = 18, GroupId = 3, DataValue = 18 },
 			};
 		}
 
@@ -2372,6 +2373,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class Issue680Table
 		{
+			[PrimaryKey] public int Id;
 			[Column] public DateTime TimeStamp;
 		}
 
@@ -2539,7 +2541,7 @@ namespace Tests.Linq
 
 		sealed class Issue1192Table
 		{
-			public int IdId { get; internal set; }
+			[PrimaryKey] public int IdId { get; internal set; }
 			public int MyOtherId { get; internal set; }
 			public int Status { get; internal set; }
 		}
@@ -2785,23 +2787,24 @@ namespace Tests.Linq
 		#region Issue 4098
 		sealed class Transaction
 		{
+			[PrimaryKey]				public int     Id         { get; set; }
 										public string? InvestorId   { get; set; }
 			[Column(CanBeNull = false)] public string SecurityClass { get; set; } = null!;
-										public int     Units        { get; set; }
+									public int     Units        { get; set; }
 
 			public static readonly Transaction[] Data = new []
 			{
-				new Transaction() { InvestorId = "inv1", SecurityClass = "test", Units = 100 },
-				new Transaction() { InvestorId = "inv1", SecurityClass = "test", Units = 200 },
-				new Transaction() { InvestorId = "inv2", SecurityClass = "test", Units = 300 },
-				new Transaction() { InvestorId = "inv2", SecurityClass = "test", Units = 400 },
+				new Transaction() { Id = 1, InvestorId = "inv1", SecurityClass = "test", Units = 100 },
+				new Transaction() { Id = 2, InvestorId = "inv1", SecurityClass = "test", Units = 200 },
+				new Transaction() { Id = 3, InvestorId = "inv2", SecurityClass = "test", Units = 300 },
+				new Transaction() { Id = 4, InvestorId = "inv2", SecurityClass = "test", Units = 400 },
 			};
 		}
 
 		[Table(IsColumnAttributeRequired = false)]
 		sealed class InvestorPayment
 		{
-										public int     Id         { get; set; }
+			[PrimaryKey]				public int     Id         { get; set; }
 			[Column(CanBeNull = false)] public string  InvestorId { get; set; } = null!;
 										public int     NetPayment { get; set; }
 
@@ -2814,7 +2817,7 @@ namespace Tests.Linq
 
 		sealed class PaymentEvent
 		{
-										public int     Id           { get; set; }
+			[PrimaryKey]				public int     Id           { get; set; }
 										public string? Description  { get; set; }
 			[Column(CanBeNull = false)] public string SecurityClass { get; set; } = null!;
 
@@ -2828,7 +2831,7 @@ namespace Tests.Linq
 		sealed class InvestorPaymentDetail
 		{
 			public string? InvestorId    { get; set; }
-			public int     CalculationId { get; set; }
+			[PrimaryKey] public int     CalculationId { get; set; }
 
 			public static readonly InvestorPaymentDetail[] Data = new []
 			{
@@ -2839,7 +2842,7 @@ namespace Tests.Linq
 
 		sealed class PaymentCalculation
 		{
-			public int Id      { get; set; }
+			[PrimaryKey] public int Id      { get; set; }
 			public int EventId { get; set; }
 
 			public static readonly PaymentCalculation[] Data = new []
@@ -3804,29 +3807,29 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			using var t1 = db.CreateLocalTable("temp_table_1", [new { ID = 1, Value = ""}]);
+			using var t1 = db.CreateTempTable("temp_table_1", [new { ID = 1, Value = "Value"}], ed => ed.Property(r => r.ID).IsPrimaryKey(), tableOptions: TableOptions.None);
 			using var t2 = db.CreateTempTable("temp_table_2",
 				from c in t1
 				group c by c.ID into gr
 				select new
 				{
 					gr.First().Value,
-				});
+				}, ed => ed.Property(r => r.Value).IsPrimaryKey().IsNotNull().HasLength(50), tableOptions: TableOptions.None);
 		}
 
 		static class Issue5070
 		{
 			public sealed class CustomerPrice
 			{
-				public int CustomerId { get; set; }
-				public int FinalCustomerId { get; set; }
+				[PrimaryKey] public int CustomerId { get; set; }
+				[PrimaryKey] public int FinalCustomerId { get; set; }
 				public bool IsActive { get; set; }
 				public decimal Price { get; set; }
 			}
 
 			public sealed class Inventory
 			{
-				public int CustomerId { get; set; }
+				[PrimaryKey] public int CustomerId { get; set; }
 				public decimal Volume { get; set; }
 			}
 		}
