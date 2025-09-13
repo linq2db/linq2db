@@ -423,6 +423,10 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					}
 
 					break;
+
+				case DataType.Array | DataType.Single:
+					parameter.Size = 0;
+					break;
 			}
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
