@@ -346,7 +346,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// See Issue3557Case1 test.
 		/// </remarks>
 		[DataMember(Order = 43), DefaultValue(false)]
-		public bool IsColumnSubqueryShouldNotContainParentIsNotNull { get; set; } = false;
+		public bool IsColumnSubqueryShouldNotContainParentIsNotNull { get; set; }
 
 		/// <summary>
 		/// Provider supports INNER JOIN with condition inside Recursive CTE, currently not supported only by DB2

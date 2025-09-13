@@ -196,7 +196,7 @@
 		SmallDateTime,
 
 		/// <summary>
-		/// Date and time data with time zone awareness.
+		/// Date and time data with DST offset awareness.
 		/// Date value range is from January 1,1 AD through December 31, 9999 AD.
 		/// Time value range is 00:00:00 through 23:59:59.9999999 with an accuracy of 100 nanoseconds.
 		/// Time zone value range is -14:00 through +14:00.
