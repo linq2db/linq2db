@@ -290,7 +290,7 @@ namespace LinqToDB.Internal.DataProvider
 			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType,                        DataTypeName = typeName }, out expr) ||
 			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType                                                 }, out expr) ||
 			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType                                                 }, out expr) ||
-			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+				FindExpression(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
 			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
 			    FindExpression(new ReaderInfo { ToType = toType,                                   FieldType = fieldType, DataTypeName = typeName }, out expr) ||
 			    FindExpression(new ReaderInfo { ToType = toType,                                   FieldType = fieldType                          }, out expr) ||
@@ -423,6 +423,7 @@ namespace LinqToDB.Internal.DataProvider
 				case DataType.NChar          : dbType = DbType.StringFixedLength;     break;
 				case DataType.NVarChar       : dbType = DbType.String;                break;
 				case DataType.Blob           :
+				case DataType.Binary         : dbType = DbType.Binary;                break;
 				case DataType.VarBinary      : dbType = DbType.Binary;                break;
 				case DataType.Boolean        : dbType = DbType.Boolean;               break;
 				case DataType.SByte          : dbType = DbType.SByte;                 break;
