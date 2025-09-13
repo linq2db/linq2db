@@ -2353,7 +2353,7 @@ namespace Tests.Linq
 			[Column(Precision = 10, Scale = 0)] public decimal StockOnHand { get; set; }
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4717")]
 		public void Issue4717Test([CteContextSource] string context)
 		{
