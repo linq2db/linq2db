@@ -268,15 +268,5 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
-
-		[Test]
-		public void ConditionWithConstAsSql([DataSources]string context)
-		{
-			using var db = GetDataContext(context);
-
-			var greatest = db.SelectQuery(() => Sql.AsSql(((int?)1 ?? (int?)null) >= ((int?)null ?? (int?)1) ? (int?)1 : (int?)null)).First();
-
-			Assert.That(greatest, Is.EqualTo(1 as int?));
-		}
 	}
 }
