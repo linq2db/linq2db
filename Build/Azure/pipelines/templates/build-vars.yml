@@ -2,7 +2,7 @@ variables:
 # also check hardcoded branch names in pipeline triggers and nuget-vars.yml
   master_branch: master
   release_branch: release
-  baselines_master: master
+  baselines_master: baselines/pr_5136-reviewed
   solution: 'linq2db.slnx'
   netfx_tfm: 'net462'
   release_configuration: 'Release'
