@@ -7,8 +7,9 @@
 		<tags>Sqlite</tags>
 	</metadata>
 	<files>
-		<file src="t4bin\System.Data.SQLite.dll" target="tools"     />
-		<file src="t4bin\x86\SQLite.Interop.dll" target="tools\x86" />
-		<file src="t4bin\x64\SQLite.Interop.dll" target="tools\x64" />
+		<file src="t4bin\System.Data.SQLite.dll"                  target="tools"     />
+		<file src="t4bin\runtimes\win-x64\native\e_sqlite3.dll"   target="runtimes\win-x64\native" />
+		<file src="t4bin\runtimes\win-x86\native\e_sqlite3.dll"   target="runtimes\win-x86\native" />
+		<file src="t4bin\runtimes\win-arm64\native\e_sqlite3.dll" target="runtimes\win-arm64\native" />
 	</files>
 </package>
