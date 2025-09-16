@@ -1,49 +1,76 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 
 namespace LinqToDB.Internal.DataProvider.Ydb
 {
-	internal static class YdbTransientExceptionDetector
+	/// <summary>
+	/// Детектор «транзиентности» исключений YDB без жёсткой зависимости от Ydb.Sdk.
+	/// Работает по полям YdbException: bool IsTransient, enum Code.
+	/// </summary>
+	public static class YdbTransientExceptionDetector
 	{
-		public static bool ShouldRetryOn(Exception ex, bool idempotent)
+		private const string YdbExceptionFullName = "Ydb.Sdk.Ado.YdbException";
+
+		/// <summary> Есть ли внутри/рядом YDB-исключение. </summary>
+		public static bool TryGetYdbException(Exception ex, [NotNullWhen(true)] out Exception? ydbEx)
 		{
-			if (ex is AggregateException ae && ae.InnerException != null)
-				ex = ae.InnerException;
-
-			// Ydb.Sdk.Ado.YdbException ?
-			if (ex.GetType().FullName == "Ydb.Sdk.Ado.YdbException")
+			// YdbException всегда верхнеуровневое в ADO-клиенте, но на всякий случай «пройдёмся вниз».
+			for (var e = ex; e != null; e = e.InnerException!)
 			{
-				// 1) Prefer fag from SDK:
-				//    IsTransientWhenIdempotent / IsTransient
-				var propName = idempotent ? "IsTransientWhenIdempotent" : "IsTransient";
-				var prop     = ex.GetType().GetProperty(propName, BindingFlags.Instance | BindingFlags.Public);
-				if (prop?.PropertyType == typeof(bool))
+				if (e.GetType().FullName == YdbExceptionFullName)
 				{
-					var val = (bool)(prop.GetValue(ex) ?? false);
-					if (val) return true;
-				}
-
-				// 2) Most popular gRPC-code from InnerException
-				//    (Unavailable, DeadlineExceeded, ResourceExhausted, Aborted)
-				var inner = ex.InnerException;
-				if (inner != null && inner.GetType().FullName == "Grpc.Core.RpcException")
-				{
-					// RpcException.Status.StatusCode (enum)
-					var status  = inner.GetType().GetProperty("Status")?.GetValue(inner);
-					var codeObj = status?.GetType().GetProperty("StatusCode")?.GetValue(status);
-					var code    = Convert.ToString(codeObj, CultureInfo.InvariantCulture);
-
-					if (code is "Unavailable" or "DeadlineExceeded" or "ResourceExhausted" or "Aborted")
-						return true;
-				}
-
-				// 3) Special case from YDB: disabling processing lock
-				if (ex.Message?.IndexOf("Transaction Lock Invalidated", StringComparison.OrdinalIgnoreCase) >= 0)
+					ydbEx = e;
 					return true;
+				}
 			}
 
+			ydbEx = null;
 			return false;
+		}
+
+		/// <summary> Прочитать YDB Code (enum) как строку имени, и IsTransient. </summary>
+		public static bool TryGetCodeAndTransient(Exception ydbEx, out string? codeName, out bool isTransient)
+		{
+			var t = ydbEx.GetType();
+
+			// bool IsTransient { get; }
+			var isTransientProp = t.GetProperty("IsTransient", BindingFlags.Public | BindingFlags.Instance);
+			isTransient = isTransientProp is not null && isTransientProp.GetValue(ydbEx) is bool b && b;
+
+			// StatusCode Code { get; }
+			var codeProp = t.GetProperty("Code", BindingFlags.Public | BindingFlags.Instance);
+			var codeVal  = codeProp?.GetValue(ydbEx);
+			codeName = Convert.ToString(codeVal, CultureInfo.InvariantCulture);
+			return codeProp != null;
+		}
+
+		/// <summary>
+		/// Минимальный детект «стоит ли вообще пытаться ретраить» для стратегии ретраев.
+		/// Логика близка sdk: транзиентные статусы и сервисные таймауты.
+		/// </summary>
+		public static bool ShouldRetryOn(Exception ex, bool enableRetryIdempotence)
+		{
+			if (TryGetYdbException(ex, out var ydbEx))
+			{
+				_ = TryGetCodeAndTransient(ydbEx, out var code, out var isTransient);
+
+				// Если idempotence выключен — ориентируемся только на IsTransient
+				if (!enableRetryIdempotence)
+					return isTransient;
+
+				// При idempotence=true добавим набор кодов, которые sdk ретраит со своей схемой задержек.
+				// (Используем имена enum-элементов, чтобы не тянуть сам enum из сборки.)
+				return isTransient || code is
+					"BadSession" or "SessionBusy" or
+					"Aborted" or "Undetermined" or
+					"Unavailable" or "ClientTransportUnknown" or "ClientTransportUnavailable" or
+					"Overloaded" or "ClientTransportResourceExhausted";
+			}
+
+			// Плюс общие сетевые/временные случаи.
+			return ex is TimeoutException;
 		}
 	}
 }

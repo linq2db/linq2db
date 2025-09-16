@@ -28,14 +28,16 @@ namespace LinqToDB.Data.RetryPolicy
 
 			if (dataContext.DataProvider is YdbDataProvider)
 			{
-				var o = dataContext.Options.RetryPolicyOptions;
+				var o           = dataContext.Options.RetryPolicyOptions;
+				var maxAttempts = o.MaxRetryCount > 0 ? o.MaxRetryCount : 10;
+				// YdbRetryPolicyConfig.Default
 				return new YdbRetryPolicy(
-					o.MaxRetryCount,
-					o.MaxDelay,
-					o.RandomFactor,
-					o.ExponentialBase,
-					o.Coefficient,
-					treatAsIdempotent : true
+					maxAttempts,
+					fastBackoffBaseMs: 5,
+					slowBackoffBaseMs: 50,
+					fastCapBackoffMs: 500,
+					slowCapBackoffMs: 5000,
+					enableRetryIdempotence: false
 				);
 			}
 
