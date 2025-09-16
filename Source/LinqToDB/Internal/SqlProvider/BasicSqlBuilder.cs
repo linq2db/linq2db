@@ -1886,10 +1886,7 @@ namespace LinqToDB.Internal.SqlProvider
 				if (i > 0)
 					StringBuilder.Append(InlineComma);
 				var field = valuesTable.Fields[i];
-				// if (IsSqlValuesTableValueTypeRequired(valuesTable, [], -1, i))
-					BuildTypedExpression(QueryHelper.GetDbDataType(field, MappingSchema), new SqlValue(field.Type, null));
-				// else
-					// BuildExpression(new SqlValue(field.Type, null));
+				BuildTypedExpression(QueryHelper.GetDbDataType(field, MappingSchema), new SqlValue(field.Type, null));
 				StringBuilder.Append(' ');
 				Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 			}
