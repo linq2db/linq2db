@@ -2,6 +2,7 @@
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Internal.DataProvider.ClickHouse;
 using LinqToDB.Internal.DataProvider.SqlServer;
+using LinqToDB.Internal.DataProvider.Ydb;
 
 namespace LinqToDB.Data.RetryPolicy
 {
@@ -24,6 +25,19 @@ namespace LinqToDB.Data.RetryPolicy
 
 			if (dataContext.DataProvider is ClickHouseDataProvider { Name: ProviderName.ClickHouseOctonica } clickHouseDataProvider)
 				return new ClickHouseRetryPolicy();
+
+			if (dataContext.DataProvider is YdbDataProvider)
+			{
+				var o = dataContext.Options.RetryPolicyOptions;
+				return new YdbRetryPolicy(
+					o.MaxRetryCount,
+					o.MaxDelay,
+					o.RandomFactor,
+					o.ExponentialBase,
+					o.Coefficient,
+					treatAsIdempotent : true
+				);
+			}
 
 			return null;
 		}
