@@ -365,9 +365,24 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <summary>
 		/// Check if <paramref name="expr"/> could be evaluated on client side.
 		/// </summary>
-		public bool CanBeEvaluatedOnClient(Expression expr)
+		public bool CanBeEvaluatedOnClient(Expression expr, bool checkTranslation = true)
 		{
-			return _optimizationContext.CanBeEvaluatedOnClient(expr);
+			var result = _optimizationContext.CanBeEvaluatedOnClient(expr);
+			if (result && checkTranslation && HasTranslation(expr))
+				result = false;
+			return result;
+		}
+
+		public bool HasTranslation(Expression expression)
+		{
+			expression = expression.Unwrap();
+			if (_buildVisitor.TranslateMember(_buildVisitor.BuildContext, expression, out _))
+				return true;
+
+			if (expression is BinaryExpression binary)
+				return HasTranslation(binary.Left) || HasTranslation(binary.Right);
+
+			return false;
 		}
 
 		#endregion

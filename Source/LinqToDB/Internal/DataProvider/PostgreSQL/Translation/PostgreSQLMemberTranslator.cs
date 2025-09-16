@@ -224,6 +224,12 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 
 				return resultExpression;
 			}
+
+			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.Function(dbDataType, "timezone", factory.Value("UTC"), factory.Function(dbDataType, "now"));
+			}
 		}
 
 		protected class MathMemberTranslator : MathMemberTranslatorBase

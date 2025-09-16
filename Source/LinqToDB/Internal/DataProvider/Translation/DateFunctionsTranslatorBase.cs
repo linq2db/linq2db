@@ -669,15 +669,17 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			var translated = TranslateSqlGetDate(translationContext, translationFlags);
 			if (translated == null)
-				return null;
+				return SqlErrorExpression.EnsureError(memberExpression);
 			return translationContext.CreatePlaceholder(translated, memberExpression);
 		}
 
 		protected virtual Expression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 		{
-			var translated = TranslateSqlCurrentTimestampUtc(translationContext, translationFlags);
+			var dbType = translationContext.CurrentColumnDescriptor?.GetDbDataType(true) ?? translationContext.ExpressionFactory.GetDbDataType(memberExpression.Type);
+
+			var translated = TranslateSqlCurrentTimestampUtc(translationContext, dbType, translationFlags);
 			if (translated == null)
-				return null;
+				return SqlErrorExpression.EnsureError(memberExpression);
 			return translationContext.CreatePlaceholder(translated, memberExpression);
 		}
 
@@ -688,7 +690,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return currentTimeStamp;
 		}
 
-		protected virtual ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, TranslationFlags translationFlags)
+		protected virtual ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 		{
 			return null;
 		}
