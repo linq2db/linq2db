@@ -2718,7 +2718,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var dateFrom = DateTime.Today;
+			var dateFrom = TestData.DateTime.Date;
 			var dateTo   = dateFrom.AddDays(10);
 
 			var cte = db.GetCte<DateRangeHelper>(

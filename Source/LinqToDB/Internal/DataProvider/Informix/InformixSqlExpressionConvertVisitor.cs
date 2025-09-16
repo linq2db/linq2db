@@ -101,6 +101,9 @@ namespace LinqToDB.Internal.DataProvider.Informix
 						break;
 
 					case TypeCode.DateTime :
+						if (argument.ElementType == QueryElementType.SqlParameter)
+							break;
+
 						if (IsDateDataType(toType, "Date"))
 						{
 							if (argument.SystemType == typeof(string))
