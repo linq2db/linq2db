@@ -1208,6 +1208,7 @@ namespace Tests.Linq
 				{
 					var ms = new MappingSchema();
 
+					ms.SetDataType(typeof(TenderId), DataType.Guid);
 					ms.SetConverter<TenderId, Guid>(id => id.Value);
 					ms.SetConverter<TenderId, Guid?>(id => id.Value);
 					ms.SetConverter<TenderId?, Guid>(id => id?.Value ?? default);
