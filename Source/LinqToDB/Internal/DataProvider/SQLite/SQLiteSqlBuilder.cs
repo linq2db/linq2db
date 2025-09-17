@@ -219,7 +219,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 				StringBuilder.AppendLine();
 				AppendIndent();
-				BuildEmptyValues(valuesTable);
+				BuildEmptyValues(valuesTable, false);
 				StringBuilder.AppendLine();
 
 				AppendIndent();
