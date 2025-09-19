@@ -168,6 +168,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 #endif
 			   )
 			{
+				if (argument.ElementType == QueryElementType.SqlParameter)
+					return argument;
+
 				if (IsTimeDataType(toType))
 				{
 					if (argument.SystemType == typeof(string))

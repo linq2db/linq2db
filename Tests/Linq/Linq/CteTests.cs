@@ -2714,7 +2714,7 @@ namespace Tests.Linq
 		}
 
 		[Theory]
-		public void SelectQueryTest([CteContextSource] string context, bool inlineParams)
+		public void SelectQueryTest([CteContextSource(TestProvName.AllSapHana)] string context, bool inlineParams)
 		{
 			using var db = GetDataContext(context);
 
