@@ -449,10 +449,14 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				case "Utf8":
 				case "Text": return DataType.NVarChar;
 
-				case "Date": return DataType.Date;
-				case "Datetime": return DataType.DateTime;
-				case "Timestamp": return DataType.DateTime2;
-				case "Interval": return DataType.Interval;
+				case "Date"       : return DataType.Date;
+				case "Date32"     : return DataType.Date;
+				case "Datetime"   : return DataType.DateTime;
+				case "Datetime64" : return DataType.DateTime2;
+				case "Timestamp"  : return DataType.DateTime2;
+				case "Timestamp64": return DataType.DateTime2;
+				case "Interval"   : return DataType.Interval;
+				case "Interval64" : return DataType.Interval;
 
 				case "Json": return DataType.Json;
 				case "Uuid": return DataType.Guid;
@@ -501,9 +505,13 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			new() { TypeName = "Yson",          DataType = typeof(byte[]). AssemblyQualifiedName! },
 			new() { TypeName = "Uuid",          DataType = typeof(Guid).   AssemblyQualifiedName! },
 			new() { TypeName = "Date",          DataType = typeof(DateTime).AssemblyQualifiedName! },
+			new() { TypeName = "Date32",        DataType = typeof(DateTime).AssemblyQualifiedName! },
 			new() { TypeName = "Datetime",      DataType = typeof(DateTime).AssemblyQualifiedName! },
+			new() { TypeName = "Datetime64",    DataType = typeof(DateTime).AssemblyQualifiedName! },
 			new() { TypeName = "Timestamp",     DataType = typeof(DateTime).AssemblyQualifiedName! },
+			new() { TypeName = "Timestamp64",   DataType = typeof(DateTime).AssemblyQualifiedName! },
 			new() { TypeName = "Interval",      DataType = typeof(TimeSpan).AssemblyQualifiedName! },
+			new() { TypeName = "Interval64",    DataType = typeof(TimeSpan).AssemblyQualifiedName! },
 		];
 	}
 }

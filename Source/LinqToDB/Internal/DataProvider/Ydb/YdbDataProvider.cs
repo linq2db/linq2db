@@ -64,6 +64,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 			// datetime/datetimeoffset handling is a mess in provider
 			SetProviderField<DbDataReader, DateTimeOffset, DateTime>((r, i) => new DateTimeOffset(r.GetDateTime(i), default), dataTypeName: "Timestamp");
+			SetProviderField<DbDataReader, DateTimeOffset, DateTime>((r, i) => new DateTimeOffset(r.GetDateTime(i), default), dataTypeName: "Timestamp64");
+			SetProviderField<DbDataReader, DateTimeOffset, DateTime>((r, i) => new DateTimeOffset(r.GetDateTime(i), default), dataTypeName: "Datetime64");
 			// another bug in provider. For Yson it returns byte[] but reports String as a value type
 			SetProviderField<DbDataReader, byte[], string>((r, i) => (byte[])r.GetValue(i), dataTypeName: "Yson");
 			SetProviderField<DbDataReader, string, string>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i)), dataTypeName: "Yson");
@@ -369,7 +371,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				case DataType.DateTime2:
 				{
 					if (value is DateTimeOffset dto)
-						dataType = dataType.WithDataType(DataType.DateTimeOffset);
+						value = dto.UtcDateTime;
 				}
 
 				break;
