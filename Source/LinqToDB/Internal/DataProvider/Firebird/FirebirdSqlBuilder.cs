@@ -223,6 +223,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				case ConvertType.NameToQueryTableAlias :
 				case ConvertType.NameToQueryField      :
 				case ConvertType.NameToQueryTable      :
+				case ConvertType.NameToCteName         :
 				case ConvertType.NameToProcedure       :
 				case ConvertType.NameToPackage         :
 				case ConvertType.SequenceName          :

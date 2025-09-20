@@ -369,7 +369,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Sign([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Sign([DataSources(ProviderName.Ydb, ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

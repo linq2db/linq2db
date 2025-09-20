@@ -157,6 +157,22 @@ namespace LinqToDB.Internal.DataProvider
 			return count;
 		}
 
+		public int GetAsParameters(Func<DbParameter> parameterFactory, object?[] values)
+		{
+			var count = _columns.Count;
+			var obj   = Current;
+
+			for (var it = 0; it < count; ++it)
+			{
+				var parameter = parameterFactory();
+				var value     = _columns[it].GetProviderValue(obj);
+				_dataConnection.DataProvider.SetParameter(_dataConnection, parameter, string.Empty, _columnTypes[it], value);
+				values[it]    = parameter;
+			}
+
+			return count;
+		}
+
 		public override int FieldCount => _columns.Count;
 
 		public override long GetBytes(int ordinal, long dataOffset, byte[]? buffer, int bufferOffset, int length)

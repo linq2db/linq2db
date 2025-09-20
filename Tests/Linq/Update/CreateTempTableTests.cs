@@ -18,6 +18,7 @@ namespace Tests.xUpdate
 	{
 		sealed class IDTable
 		{
+			[PrimaryKey]
 			public int ID;
 		}
 
@@ -55,7 +56,8 @@ namespace Tests.xUpdate
 				using (var tmp = db.CreateTempTable(
 					"TempTable",
 					db.Parent.Select(p => new { ID = p.ParentID }),
-					tableOptions:TableOptions.CheckExistence))
+					tableOptions:TableOptions.CheckExistence,
+					setTable: ed => ed.Property(r => r.ID).IsPrimaryKey()))
 				{
 					var list =
 					(
@@ -447,7 +449,7 @@ namespace Tests.xUpdate
 		[Table]
 		sealed class TestTempTable
 		{
-			[Column] public int Id        { get; set; }
+			[PrimaryKey] public int Id        { get; set; }
 			[Column] public string? Value { get; set; }
 		}
 
@@ -501,7 +503,8 @@ namespace Tests.xUpdate
 					.HasTableName("TempTable")
 					.Property(p => p.Name)
 						.HasLength(20)
-						.IsNotNull(),
+						.IsNotNull()
+						.IsPrimaryKey(),
 				tableOptions:TableOptions.CheckExistence);
 
 			if (db is DataConnection dc)
@@ -530,7 +533,8 @@ namespace Tests.xUpdate
 				m => m
 					.Property(p => p.Name)
 						.HasLength(20)
-						.IsNotNull(),
+						.IsNotNull()
+						.IsPrimaryKey(),
 				tableOptions:TableOptions.CheckExistence);
 
 			if (db is DataConnection dc)
@@ -559,7 +563,8 @@ namespace Tests.xUpdate
 					.HasTableName("TempTable")
 					.Property(p => p.Name)
 						.HasLength(20)
-						.IsNotNull(),
+						.IsNotNull()
+						.IsPrimaryKey(),
 				tableOptions:TableOptions.CheckExistence);
 
 			if (db is DataConnection dc)
@@ -588,7 +593,8 @@ namespace Tests.xUpdate
 				m => m
 					.Property(p => p.Name)
 						.HasLength(20)
-						.IsNotNull(),
+						.IsNotNull()
+						.IsPrimaryKey(),
 				tableOptions:TableOptions.CheckExistence | TableOptions.IsTemporary);
 
 			if (db is DataConnection dc)

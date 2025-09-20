@@ -29,7 +29,7 @@ namespace Tests.UserTests
 				{
 					var count = db.Insert(new TestTable() { Id = 1, Name = "John", Age = value });
 
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(count, Is.GreaterThan(0));
 
 					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
@@ -47,7 +47,7 @@ namespace Tests.UserTests
 					r.Age = value;
 					count = db.Update(r);
 
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(count, Is.GreaterThan(0));
 					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 					Assert.That(r, Is.Not.Null);

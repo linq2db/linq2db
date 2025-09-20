@@ -317,13 +317,14 @@ namespace Tests.xUpdate
 		[Table]
 		public class SimpleBulkCopyTable
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 		}
 
 #if SUPPORTS_DATEONLY
 		[Table]
 		public class DateOnlyTable
 		{
+			[PrimaryKey, Identity] public int Id { get; set; }
 			[Column] public DateOnly Date { get; set; }
 		}
 #endif
@@ -331,7 +332,7 @@ namespace Tests.xUpdate
 		[Table]
 		public class IdentitySimpleBulkCopyTable
 		{
-			[Column, Identity] public int Id { get; set; }
+			[PrimaryKey, Identity] public int Id { get; set; }
 		}
 
 		[Test]
@@ -1160,7 +1161,7 @@ namespace Tests.xUpdate
 		[Table]
 		sealed class IdentityOnlyField
 		{
-			[Identity] public int Id { get; set; }
+			[PrimaryKey, Identity] public int Id { get; set; }
 		}
 
 		[Table]
@@ -1189,7 +1190,7 @@ namespace Tests.xUpdate
 			Assert.That(item.Id, Is.EqualTo(1));
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase])]
+		[ActiveIssue(Configurations = [ProviderName.Ydb, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
 		public void BulkCopySkipOnly([DataSources(false)] string context, [Values] BulkCopyType copyType)
 		{
@@ -1212,6 +1213,7 @@ namespace Tests.xUpdate
 		// add more test cases
 		sealed class MultipleRowsTable
 		{
+			[PrimaryKey]
 			public int Id { get; set; }
 
 			public decimal? DecimalValue1 { get; set; }

@@ -379,7 +379,7 @@ namespace Tests.Linq
 					db.GetTable<MyParent1>().Select(p => new { p.ParentID, Value = p.GetValue() }));
 		}
 
-		public class     Entity    { public int Id { get; set; } }
+		public class     Entity    { [PrimaryKey] public int Id { get; set; } }
 		public interface IDocument { int Id { get; set; } }
 		public class     Document : Entity, IDocument { }
 
@@ -782,6 +782,8 @@ namespace Tests.Linq
 
 			private int _field;
 
+			[PrimaryKey] public int Id;
+
 			[Column] public int Field => _field;
 
 			[NotColumn]
@@ -800,7 +802,7 @@ namespace Tests.Linq
 			using var tb = db.CreateLocalTable<StorageTable>();
 
 			// Insert + Select
-			db.Insert(new StorageTable() { TestAccess = 5 });
+			db.Insert(new StorageTable() { Id = 1, TestAccess = 5 });
 
 			var record = tb.Single();
 			Assert.That(record.TestAccess, Is.EqualTo(5));
@@ -1432,14 +1434,14 @@ namespace Tests.Linq
 		[Table("Issue2362Table")]
 		sealed class Issue2362Table
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			[Column] public bool Value { get; set; }
 		}
 
 		[Table("Issue2362Table")]
 		sealed class Issue2362Raw
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			[Column(DataType = DataType.Char, Length = 4)] public string? Value { get; set; }
 
 			public static readonly Issue2362Raw[] Data =
