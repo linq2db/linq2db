@@ -2729,14 +2729,14 @@ namespace LinqToDB.Internal.Linq.Builder
 				return sqlResult;
 			}
 
+			if (HandleValue(node, out var sqlValue))
+				return Visit(sqlValue);
+
 			if (_buildPurpose is BuildPurpose.Expression)
 				return base.VisitBinary(node);
 
 			if (HandleBinary(node, out var translated))
 				return translated; // Do not Visit again
-
-			if (HandleValue(node, out var sqlValue))
-				return Visit(sqlValue);
 
 			var exposed = Builder.ConvertSingleExpression(node);
 
@@ -5156,7 +5156,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public bool CanBeEvaluatedOnClient(Expression expression)
 			{
-				return Builder.CanBeEvaluatedOnClient(expression, false);
+				return Builder.CanBeEvaluatedOnClient(expression);
 			}
 
 			public bool CanBeEvaluated(Expression expression)
