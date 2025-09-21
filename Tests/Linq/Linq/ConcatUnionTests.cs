@@ -2283,7 +2283,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConcatCountTest([DataSources] string context)
+		public void ConcatCount_ShouldNotRemoveSingleColumn([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2299,7 +2299,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConcatUnionTest([DataSources] string context)
+		public void UnionCount_ShouldNotRemoveSingleColumn([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2315,7 +2315,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConcatCountTest2([DataSources] string context)
+		public void ConcatCountExt_ShouldNotRemoveSingleColumn([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
