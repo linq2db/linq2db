@@ -65,8 +65,9 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		//TODO: Move everything to SQLBuilder
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
-			var toType   = cast.ToType;
-			var argument = cast.Expression;
+			var toType       = cast.ToType;
+			var argument     = cast.Expression;
+			var argumentType = QueryHelper.GetDbDataType(argument, MappingSchema);
 
 			var isNull = argument is SqlValue sqlValue && sqlValue.Value == null;
 
@@ -101,7 +102,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 						break;
 
 					case TypeCode.DateTime :
-						if (argument.ElementType == QueryElementType.SqlParameter)
+						if (argument.ElementType == QueryElementType.SqlParameter && argumentType.Equals(toType))
 							break;
 
 						if (IsDateDataType(toType, "Date"))

@@ -159,8 +159,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		{
 			var ftype = cast.SystemType.ToUnderlying();
 
-			var toType   = cast.ToType;
-			var argument = cast.Expression;
+			var toType       = cast.ToType;
+			var argument     = cast.Expression;
+			var argumentType = QueryHelper.GetDbDataType(argument, MappingSchema);
 
 			if (ftype == typeof(DateTime) || ftype == typeof(DateTimeOffset)
 #if SUPPORTS_DATEONLY
@@ -168,9 +169,6 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 #endif
 			   )
 			{
-				if (argument.ElementType == QueryElementType.SqlParameter)
-					return argument;
-
 				if (IsTimeDataType(toType))
 				{
 					if (argument.SystemType == typeof(string))
@@ -189,7 +187,11 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 					return new SqlFunction(cast.Type, "TO_DATE", argument, new SqlValue("YYYY-MM-DD"));
 				}
-				else if (IsDateDataOffsetType(toType))
+
+				if (argument.ElementType == QueryElementType.SqlParameter && argumentType.Equals(toType))
+					return argument;
+
+				if (IsDateDataOffsetType(toType))
 				{
 					if (ftype == typeof(DateTimeOffset))
 						return argument;

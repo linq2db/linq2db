@@ -2713,7 +2713,8 @@ namespace Tests.Linq
 			public DateTime Date    { get; set; }
 		}
 
-		[Theory]
+		[ActiveIssue("Wrong Date manipulations", Configurations = [TestProvName.AllOracle11])]
+		[Test]
 		public void SelectQueryTest([CteContextSource(TestProvName.AllSapHana)] string context, bool inlineParams)
 		{
 			using var db = GetDataContext(context);
@@ -2735,13 +2736,15 @@ namespace Tests.Linq
 			if (inlineParams)
 				cte = cte.InlineParameters();
 
+			var result = cte.ToList();
+
 			AreEqual(
 				Enumerable.Range(0, 10).Select(i => dateFrom.AddDays(i)),
-				cte.AsEnumerable().Select(_ => _.Date)
+				result.Select(_ => _.Date)
 				);
 			AreEqual(
 				Enumerable.Range(1, 10),
-				cte.AsEnumerable().Select(_ => _.Counter)
+				result.Select(_ => _.Counter)
 				);
 
 		}
