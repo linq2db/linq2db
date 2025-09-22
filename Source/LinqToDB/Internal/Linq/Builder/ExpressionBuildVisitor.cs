@@ -2140,7 +2140,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					break;
 				}
 
-				case ExpressionType.TypeAs:
 				case ExpressionType.Convert:
 				case ExpressionType.ConvertChecked:
 				{

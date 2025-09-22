@@ -291,13 +291,15 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableTypeConstantDefininitionAsSql([DataSources] string context)
+		public void NullableTypeConstantDefininitionAsSqlThrows([DataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 
-			var one = db.SelectQuery(() => Sql.AsSql(1 as int?)).First();
-
-			Assert.That(one, Is.EqualTo(1 as int?));
+			Assert.Throws<LinqToDBException> (() =>
+				{
+					db.SelectQuery(() => Sql.AsSql(1 as int?)).First();
+				}, "The LINQ expression '(1 as int?)' could not be converted to SQL.")
+			;
 		}
 
 		[Test]
