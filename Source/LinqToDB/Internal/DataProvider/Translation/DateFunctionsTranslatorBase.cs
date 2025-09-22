@@ -71,7 +71,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		void RegisterDateTimeOffset()
 		{
-			Registration.RegisterMember(() => DateTimeOffset.Now, TranslateSqlCurrentTimestampUtc);
+			Registration.RegisterMember(() => DateTimeOffset.Now,      TranslateSqlCurrentTimestampUtc);
+			Registration.RegisterMember(() => DateTimeOffset.UtcNow,   TranslateSqlCurrentTimestampUtc);
 			Registration.RegisterMember(() => Sql.CurrentTimestampUtc, TranslateSqlCurrentTimestampUtc);
 
 			Registration.RegisterMember((DateTimeOffset dt) => dt.Year, (tc,        me, tf) => TranslateDateTimeOffsetMember(tc, me, tf, Sql.DateParts.Year));
@@ -679,7 +680,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			var translated = TranslateSqlCurrentTimestampUtc(translationContext, dbType, translationFlags);
 			if (translated == null)
-				return SqlErrorExpression.EnsureError(memberExpression);
+				return null;
 			return translationContext.CreatePlaceholder(translated, memberExpression);
 		}
 
