@@ -30,7 +30,7 @@ type FSharpEntityBindingInterceptor private () =
         if AttributesExtensions.HasAttribute<CLIMutableAttribute> objectType = true
             then false
         else
-            let mapping = objectType.GetAttribute<CompilationMappingAttribute>()
+            let mapping: CompilationMappingAttribute | null = objectType.GetAttribute<CompilationMappingAttribute>()
             match mapping with
             | null -> false
             | attr -> attr.SourceConstructFlags = SourceConstructFlags.RecordType
@@ -46,7 +46,7 @@ type FSharpEntityBindingInterceptor private () =
                 let mappings = Dictionary<int, MemberAccessor>()
                 for m in typeAccessor.Members do
                     let memberAttr = m.MemberInfo.GetAttribute<CompilationMappingAttribute> true
-                    match memberAttr with
+                    match memberAttr: CompilationMappingAttribute | null with
                     | null -> ()
                     | attr ->
                         if attr.SourceConstructFlags = SourceConstructFlags.Field

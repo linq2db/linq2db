@@ -119,6 +119,8 @@ csharp_prefer_simple_using_statement = false:silent
 # to enable see https://github.com/linq2db/linq2db/pull/4433
 #csharp_style_prefer_switch_expression = true:warning
 
+csharp_style_prefer_unbound_generic_type_in_nameof = false
+
 # to enable see https://github.com/linq2db/linq2db/pull/4433
 #dotnet_style_prefer_compound_assignment = true:warning
 
