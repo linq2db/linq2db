@@ -76,9 +76,10 @@ jobs:
             if %errorlevel% neq 0 exit
 
             IF %%f EQU net9.0 (
-                dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.STS.csproj -f %%f -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/%%f_x64
+                dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF9.csproj -f %%f -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/%%f_x64
             ) ELSE (
-                dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.csproj -f %%f -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/%%f_x64
+                dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF3.csproj -f %%f -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/%%f_x64
+                dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF8.csproj -f %%f -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/%%f_x64
             )
             if %errorlevel% neq 0 exit
         )
@@ -93,9 +94,10 @@ jobs:
             if %errorlevel% neq 0 exit
 
             IF %%f EQU net9.0 (
-                dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.STS.csproj -f %%f -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/%%f_x86
+                dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF9.csproj -f %%f -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/%%f_x86
             ) ELSE (
-                dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.csproj -f %%f -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/%%f_x86
+                dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF3.csproj -f %%f -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/%%f_x86
+                dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF8.csproj -f %%f -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/%%f_x86
             )
             if %errorlevel% neq 0 exit
         )
@@ -254,16 +256,23 @@ jobs:
 
   - task: PublishPipelineArtifact@1
     inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore/Release'
-      artifact: '$(artifact_linq2db_efcore_binaries)'
+      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.EF3/Release'
+      artifact: '$(artifact_linq2db_efcore_3_binaries)'
     displayName: Publish linq2db.EntityFrameworkCore build results
     condition: and(succeeded(), ${{ parameters.with_nugets }})
 
   - task: PublishPipelineArtifact@1
     inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.STS/Release'
-      artifact: '$(artifact_linq2db_efcore_sts_binaries)'
-    displayName: Publish linq2db.EntityFrameworkCore.STS build results
+      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.EF8/Release'
+      artifact: '$(artifact_linq2db_efcore_8_binaries)'
+    displayName: Publish linq2db.EntityFrameworkCore build results
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.EF9/Release'
+      artifact: '$(artifact_linq2db_efcore_9_binaries)'
+    displayName: Publish linq2db.EntityFrameworkCore build results
     condition: and(succeeded(), ${{ parameters.with_nugets }})
 
   - task: PublishPipelineArtifact@1

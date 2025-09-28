@@ -13,11 +13,11 @@
 		<NetPreLatestForNuget>8.0.0</NetPreLatestForNuget>
 		<NetLatestForNuget>9.0.0</NetLatestForNuget>
 		<!--latest version for .NET LATEST packages (not referenced from nuspec)-->
-		<NetLatest>9.0.8</NetLatest>
 		<NetPreLatest>8.0.19</NetPreLatest>
+		<NetLatest>9.0.8</NetLatest>
 		<!--EF 3.1 vesions for netfx support-->
-		<EF3Latest>3.1.32</EF3Latest>
 		<EF3LatestNuget>3.1.0</EF3LatestNuget>
+		<EF3Latest>3.1.32</EF3Latest>
 	</PropertyGroup>
 	
 	<ItemGroup Label="Build: Analyzers and Tools">
@@ -51,6 +51,7 @@
 
 		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="$(EF3LatestNuget)"            Condition="'$(TargetFramework)'=='netstandard2.0'" />
 		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="$(NetPreLatestForNuget)"      Condition="'$(TargetFramework)'=='net8.0'"         />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="$(NetLatestForNuget)"         Condition="'$(TargetFramework)'=='net9.0'"         />
 
 		<!-- pin abstractions packages to lowest supported runtime (.net 8 currently) : https://github.com/linq2db/linq2db/issues/3953 -->
 		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"              Version="$(NetPreLatestForNuget)"      Condition="'$(TargetFramework)'!='net9.0'" />

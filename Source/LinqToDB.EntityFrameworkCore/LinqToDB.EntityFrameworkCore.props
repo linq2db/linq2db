@@ -1,9 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project>
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.EntityFrameworkCore</AssemblyName>
 		<RootNamespace>LinqToDB.EntityFrameworkCore</RootNamespace>
-		<TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
 
 		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 
@@ -14,17 +13,7 @@
 		<!--EF1001: use of internal EF API-->
 		<NoWarn>EF1001</NoWarn>
 	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
-		<AssemblyVersion>$(EF3Version)</AssemblyVersion>
-		<DefineConstants>EF31;$(DefineConstants)</DefineConstants>
-	</PropertyGroup>
-
-	<PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
-		<AssemblyVersion>$(EF8Version)</AssemblyVersion>
-		<DefineConstants>EF8;$(DefineConstants)</DefineConstants>
-	</PropertyGroup>
-
+	
 	<ItemGroup>
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />

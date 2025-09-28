@@ -302,10 +302,15 @@
     <Project Path="Source/LinqToDB.Compat/LinqToDB.Compat.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
-    <Project Path="Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.csproj">
+    <Project Path="Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.EF3.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
-    <Project Path="Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.STS.csproj" />
+    <Project Path="Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.EF8.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
+    <Project Path="Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.EF9.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
     <Project Path="Source/LinqToDB.Extensions/LinqToDB.Extensions.csproj" />
     <Project Path="Source/LinqToDB.FSharp/LinqToDB.FSharp.fsproj" />
     <Project Path="Source/LinqToDB.LINQPad/LinqToDB.LINQPad.csproj">
@@ -358,10 +363,15 @@
     <Project Path="Tests/EntityFrameworkCore.FSharp/Tests.EntityFrameworkCore.FSharp.fsproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
-    <Project Path="Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.csproj">
+    <Project Path="Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF3.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
-    <Project Path="Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.STS.csproj" />
+    <Project Path="Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF8.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
+    <Project Path="Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF9.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
     <Project Path="Tests/FSharp/Tests.FSharp.fsproj" />
     <Project Path="Tests/Linq/Tests.csproj" />
     <Project Path="Tests/Model/Tests.Model.csproj" />
