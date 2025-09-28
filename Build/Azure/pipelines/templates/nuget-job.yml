@@ -109,14 +109,20 @@ jobs:
   - task: DownloadPipelineArtifact@2
     displayName: Download LinqToDB.EntityFrameworkCore files
     inputs:
-      artifactName: '$(artifact_linq2db_efcore_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore/Release'
+      artifactName: '$(artifact_linq2db_efcore_3_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.EF3/Release'
 
   - task: DownloadPipelineArtifact@2
-    displayName: Download LinqToDB.EntityFrameworkCore.STS files
+    displayName: Download LinqToDB.EntityFrameworkCore files
     inputs:
-      artifactName: '$(artifact_linq2db_efcore_sts_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.STS/Release'
+      artifactName: '$(artifact_linq2db_efcore_8_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.EF8/Release'
+
+  - task: DownloadPipelineArtifact@2
+    displayName: Download LinqToDB.EntityFrameworkCore files
+    inputs:
+      artifactName: '$(artifact_linq2db_efcore_9_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.EF9/Release'
 
   - task: DownloadPipelineArtifact@2
     displayName: Download test files (for t4 nugets)
