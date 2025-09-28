@@ -25,7 +25,6 @@
 		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.49"                       />
 		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                      Version="5.0.0-1.25277.114"            />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="5.0.0-1.25277.114"            />
-		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"                   Version="10.0.0-preview.25380.108"     />
 		<PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers"             Version="5.0.0-1.25277.114"            />
 		<PackageVersion Include="Microsoft.SourceLink.GitHub"                           Version="8.0.0"                        />
 		<PackageVersion Include="Lindhart.Analyser.MissingAwaitWarning"                 Version="3.1.0-beta"                   />
