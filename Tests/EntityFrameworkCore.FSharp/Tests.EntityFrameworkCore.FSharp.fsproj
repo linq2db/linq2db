@@ -2,6 +2,7 @@
 	<Import Project="..\linq2db.BasicTestProjects.props" />
 
 	<PropertyGroup>
+		<LangVersion>9</LangVersion>
 		<TargetFrameworks>net8.0</TargetFrameworks>
 		<WarningLevel>5</WarningLevel>
 		<DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
