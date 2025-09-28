@@ -2,7 +2,6 @@
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Model</AssemblyName>
-		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net9.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>

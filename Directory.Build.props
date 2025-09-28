@@ -14,7 +14,7 @@
 		<RepositoryType>git</RepositoryType>
 
 		<AppDesignerFolder>Properties</AppDesignerFolder>
-		<LangVersion>latest</LangVersion>
+		<LangVersion>13</LangVersion>
 		<Nullable>enable</Nullable>
 		<WarningLevel>9999</WarningLevel>
 		<ErrorReport>prompt</ErrorReport>
@@ -106,6 +106,10 @@
 	<ItemGroup Condition="'$(Language)'=='C#'">
 		<Compile Include="$(MSBuildThisFileDirectory)/Source/Shared/*.cs" LinkBase="Compatibility" />
 	</ItemGroup>
+
+	<PropertyGroup>
+		<TargetFrameworks>net462;netstandard2.0;net8.0;net9.0</TargetFrameworks>
+	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Testing'">
 		<TargetFrameworks>net9.0</TargetFrameworks>
