@@ -966,19 +966,19 @@ namespace LinqToDB.Data
 			}
 		}
 
-		Task<T[]> ReadAsArrayAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
+		async Task<T[]> ReadAsArrayAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
 		{
-			return new ReaderAsyncEnumerable<T>(this, rd).ToArrayAsync(cancellationToken: cancellationToken);
+			return await new ReaderAsyncEnumerable<T>(this, rd).ToArrayAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
 		}
 
-		Task<List<T>> ReadAsListAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
+		async Task<List<T>> ReadAsListAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
 		{
-			return new ReaderAsyncEnumerable<T>(this, rd).ToListAsync(cancellationToken: cancellationToken);
+			return await new ReaderAsyncEnumerable<T>(this, rd).ToListAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
 		}
 
-		Task<T?> ReadFirstOrDefaultAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
+		async Task<T?> ReadFirstOrDefaultAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
 		{
-			return new ReaderAsyncEnumerable<T>(this, rd).FirstOrDefaultAsync(cancellationToken: cancellationToken);
+			return await new ReaderAsyncEnumerable<T>(this, rd).FirstOrDefaultAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
 		}
 
 		async Task<T> ReadMultipleResultSetsAsync<T>(DbDataReader rd, CancellationToken cancellationToken)

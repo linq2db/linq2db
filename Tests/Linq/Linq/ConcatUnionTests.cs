@@ -804,7 +804,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query1 =
-				from p in db.Parent.LoadWith(p => p.Children)
+				from p in db.Parent.LoadWith(p => p.Children).AsQueryable()
 				where p.ParentID == 1
 				select p.Children.FirstOrDefault();
 
@@ -1972,7 +1972,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var res = db.Person.LoadWith(p => p.Patient).Concat(db.Person.LoadWith(p => p.Patient).Take(2)).ToArray();
+			var res = db.Person.LoadWith(p => p.Patient).Concat(db.Person.LoadWith(p => p.Patient).AsQueryable().Take(2)).ToArray();
 
 			Assert.That(res, Has.Length.EqualTo(6));
 			Assert.That(res.Where(r => r.ID == 2).Count(), Is.EqualTo(2));
@@ -1989,7 +1989,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var res = db.Person.LoadWith(p => p.Patient)
+			var res = db.Person.LoadWith(p => p.Patient).AsQueryable()
 				.Select(p => new Person()
 				{
 					ID         = p.ID,
@@ -2018,7 +2018,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var res = db.Person.LoadWith(p => p.Patient)
+			var res = db.Person.LoadWith(p => p.Patient).AsQueryable()
 				.Select(p => new Person()
 				{
 					ID         = p.ID,

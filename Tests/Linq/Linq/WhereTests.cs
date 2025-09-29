@@ -2366,6 +2366,7 @@ namespace Tests.Linq
 			{
 				var linkedContract = db.GetTable<LinkedContracts>()
 					.LoadWith(linked => linked.Ref)
+					.AsQueryable()
 					.Where(linked => linked.FK == 1)
 					.ToList();
 

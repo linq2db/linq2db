@@ -1342,10 +1342,10 @@ namespace Tests.Data
 				db.GetTable<Parent>().LoadWith(p => p.Children).ToList();
 				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
 
-				await db.GetTable<Person>().LoadWith(p => p.Patient).ToListAsync();
+				await db.GetTable<Person>().LoadWith(p => p.Patient).AsQueryable().ToListAsync();
 				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
 
-				await db.GetTable<Parent>().LoadWith(p => p.Children).ToListAsync();
+				await db.GetTable<Parent>().LoadWith(p => p.Children).AsQueryable().ToListAsync();
 				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
 
 				db.GetTable<Person>().LoadWith(p => p.Patient).FirstOrDefault();
@@ -1354,10 +1354,10 @@ namespace Tests.Data
 				db.GetTable<Parent>().LoadWith(p => p.Children).FirstOrDefault();
 				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
 
-				await db.GetTable<Person>().LoadWith(p => p.Patient).FirstOrDefaultAsync();
+				await db.GetTable<Person>().LoadWith(p => p.Patient).AsQueryable().FirstOrDefaultAsync();
 				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
 
-				await db.GetTable<Parent>().LoadWith(p => p.Children).FirstOrDefaultAsync();
+				await db.GetTable<Parent>().LoadWith(p => p.Children).AsQueryable().FirstOrDefaultAsync();
 				Assert.That(GetClosedCount(), Is.EqualTo(GetOpenedCount()));
 
 				await db.CloseAsync();
@@ -1403,14 +1403,14 @@ namespace Tests.Data
 					Assert.That(GetClosedCount(), Is.Zero);
 				}
 
-				await db.GetTable<Person>().LoadWith(p => p.Patient).ToListAsync();
+				await db.GetTable<Person>().LoadWith(p => p.Patient).AsQueryable().ToListAsync();
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(GetOpenedCount(), Is.EqualTo(1));
 					Assert.That(GetClosedCount(), Is.Zero);
 				}
 
-				await db.GetTable<Parent>().LoadWith(p => p.Children).ToListAsync();
+				await db.GetTable<Parent>().LoadWith(p => p.Children).AsQueryable().ToListAsync();
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(GetOpenedCount(), Is.EqualTo(1));
@@ -1431,14 +1431,14 @@ namespace Tests.Data
 					Assert.That(GetClosedCount(), Is.Zero);
 				}
 
-				await db.GetTable<Person>().LoadWith(p => p.Patient).FirstOrDefaultAsync();
+				await db.GetTable<Person>().LoadWith(p => p.Patient).AsQueryable().FirstOrDefaultAsync();
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(GetOpenedCount(), Is.EqualTo(1));
 					Assert.That(GetClosedCount(), Is.Zero);
 				}
 
-				await db.GetTable<Parent>().LoadWith(p => p.Children).FirstOrDefaultAsync();
+				await db.GetTable<Parent>().LoadWith(p => p.Children).AsQueryable().FirstOrDefaultAsync();
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(GetOpenedCount(), Is.EqualTo(1));

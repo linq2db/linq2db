@@ -29,7 +29,10 @@ namespace LinqToDB.Internal.Async
 		///     The task result contains a <see cref="List{T}" /> that contains elements from the input sequence.
 		/// </returns>
 		public static async Task<List<T>> ToListAsync<T>(
-			this IAsyncEnumerable<T> source,
+#if !NET10_0_OR_GREATER
+			this
+#endif
+			IAsyncEnumerable<T> source,
 			CancellationToken        cancellationToken = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -63,8 +66,11 @@ namespace LinqToDB.Internal.Async
 		///     The task result contains an array that contains elements from the input sequence.
 		/// </returns>
 		public static async Task<T[]> ToArrayAsync<T>(
-			this IAsyncEnumerable<T> source,
-			CancellationToken        cancellationToken = default)
+#if !NET10_0_OR_GREATER
+			this
+#endif
+			IAsyncEnumerable<T> source,
+			CancellationToken cancellationToken = default)
 		{
 			return (await source.ToListAsync(cancellationToken).ConfigureAwait(false)).ToArray();
 		}
@@ -86,8 +92,11 @@ namespace LinqToDB.Internal.Async
 		///     The task result contains a <see cref="List{T}" /> that contains elements from the input sequence.
 		/// </returns>
 		public static async Task<T?> FirstOrDefaultAsync<T>(
-			this IAsyncEnumerable<T> source,
-			CancellationToken        cancellationToken = default)
+#if !NET10_0_OR_GREATER
+			this
+#endif
+			IAsyncEnumerable<T> source,
+			CancellationToken cancellationToken = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
@@ -108,7 +117,12 @@ namespace LinqToDB.Internal.Async
 		/// <exception cref="ArgumentNullException">
 		/// <paramref name="source" /> is <see langword="null" />.</exception>
 		/// <exception cref="InvalidOperationException">The source sequence is empty.</exception>
-		public static async Task<TSource> FirstAsync<TSource>(this IAsyncEnumerable<TSource> source, CancellationToken token = default)
+		public static async Task<TSource> FirstAsync<TSource>(
+#if !NET10_0_OR_GREATER
+			this
+#endif
+			IAsyncEnumerable<TSource> source,
+			CancellationToken token = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
@@ -139,8 +153,11 @@ namespace LinqToDB.Internal.Async
 		/// <exception cref="InvalidOperationException"><paramref name="source" /> contains more than one element.</exception>
 		/// <exception cref="OperationCanceledException">If the <see cref="CancellationToken" /> is canceled.</exception>
 		public static async Task<TSource?> SingleOrDefaultAsync<TSource>(
-			this IAsyncEnumerable<TSource> source,
-			CancellationToken              cancellationToken = default)
+#if !NET10_0_OR_GREATER
+			this
+#endif
+			IAsyncEnumerable<TSource> source,
+			CancellationToken cancellationToken = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
@@ -182,7 +199,12 @@ namespace LinqToDB.Internal.Async
 		///     </para>
 		/// </exception>
 		/// <exception cref="OperationCanceledException">If the <see cref="CancellationToken" /> is canceled.</exception>
-		public static async Task<TSource> SingleAsync<TSource>(this IAsyncEnumerable<TSource> source, CancellationToken cancellationToken = default)
+		public static async Task<TSource> SingleAsync<TSource>(
+#if !NET10_0_OR_GREATER
+			this
+#endif
+			IAsyncEnumerable<TSource> source,
+			CancellationToken cancellationToken = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 

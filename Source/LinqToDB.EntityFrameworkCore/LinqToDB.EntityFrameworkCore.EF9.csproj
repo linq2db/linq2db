@@ -8,4 +8,8 @@
 		<DefineConstants>EF9;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<PackageReference Update="Microsoft.EntityFrameworkCore.Relational" VersionOverride="9.0.0" />
+	</ItemGroup>
+
 </Project>

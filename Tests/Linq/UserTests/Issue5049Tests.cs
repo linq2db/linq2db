@@ -71,7 +71,8 @@ namespace Tests.UserTests
 			using var persons     = db.CreateLocalTable(personsData);
 			using var personGrate = db.CreateLocalTable(personGrateData);
 
-			var query = db.GetTable<PersonWithAssociation>().LoadWith(p => p.GradeStats)
+			var query = db.GetTable<PersonWithAssociation>()
+				.LoadWith(p => p.GradeStats).AsQueryable()
 				.Where(p => p.GradeStats!.AverageGrade > 5)
 				.ToArray();
 

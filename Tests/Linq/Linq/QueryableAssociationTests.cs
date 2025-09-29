@@ -396,6 +396,7 @@ AS RETURN
 					.LoadWith(e => e.Other)
 					.LoadWith(e => e.Others)
 					.LoadWith(e => e.OthersFromSql)
+					.AsQueryable()
 					.Take(2);
 
 				var expectedQuery = entities.Take(2);

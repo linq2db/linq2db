@@ -937,7 +937,7 @@ namespace Tests.xUpdate
 						select new PatentAssessment
 						{
 							PatentId = pa.PatentId,
-							TechnicalReviewersText = t2.LoadWith(patr => patr.User)
+							TechnicalReviewersText = t2.LoadWith(patr => patr.User).AsQueryable()
 														.Where(patr => patr.PatentId == pa.PatentId)
 														.StringAggregate("; ", patr => patr.User.DisplayName)
 														.OrderBy(patr => patr.User.DisplayName)

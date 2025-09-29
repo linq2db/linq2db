@@ -163,7 +163,8 @@ namespace Tests.Linq
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
 			{
-				var query = from m in master.LoadWith(m => m.Details).LoadWith(m => m.DetailsQuery)
+				var query = 
+					from m in master.LoadWith(m => m.Details).LoadWith(m => m.DetailsQuery).AsQueryable()
 					where m.Id1 >= intParam
 					select m;
 
@@ -202,9 +203,10 @@ namespace Tests.Linq
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
 			{
-				var query = from m in master.LoadWith(m => m.Details).LoadWith(m => m.DetailsQuery)
-							where m.Id1 >= intParam
-							select m;
+				var query =
+					from m in master.LoadWith(m => m.Details).LoadWith(m => m.DetailsQuery).AsQueryable()
+					where m.Id1 >= intParam
+					select m;
 
 				var expectedQuery = from m in masterRecords
 									where m.Id1 >= intParam
@@ -384,11 +386,13 @@ FROM
 			using (var detail = db.CreateLocalTable(detailRecords))
 			using (var subDetail = db.CreateLocalTable(subDetailRecords))
 			{
-				var query = from m in master.LoadWith(m => m.Details).LoadWith(m => m.Details[0].SubDetails)
+				var query = 
+					from m in master.LoadWith(m => m.Details).LoadWith(m => m.Details[0].SubDetails).AsQueryable()
 					where m.Id1 >= intParam
 					select m;
 
-				var expectedQuery = from m in masterRecords
+				var expectedQuery = 
+					from m in masterRecords
 					where m.Id1 >= intParam
 					select new MasterClass
 					{
@@ -1045,10 +1049,9 @@ FROM
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
 			{
-				var result = master.LoadWith(x => x.Details).Select(x => InitData(x))
-					.ToArray();
-				var result2 = master.LoadWith(x => x.Details).Select(x => InitData(x)).Select(x => new { x = InitData(x)})
-					.ToArray();
+				var result = master.LoadWith(x => x.Details).AsQueryable().Select(x => InitData(x)).ToArray();
+
+				var result2 = master.LoadWith(x => x.Details).AsQueryable().Select(x => InitData(x)).Select(x => new { x = InitData(x)}).ToArray();
 
 				Assert.That(result, Has.Length.EqualTo(result2.Length));
 			}
@@ -1138,7 +1141,8 @@ FROM
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
 			{
-				var query = from m in master.LoadWith(m => m.Details)
+				var query = 
+					from m in master.LoadWith(m => m.Details).AsQueryable()
 					select new
 					{
 						m,
@@ -1160,7 +1164,8 @@ FROM
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
 			{
-				var query = from m in master.LoadWith(m => m.Details)
+				var query = 
+					from m in master.LoadWith(m => m.Details).AsQueryable()
 					select new
 					{
 						Sum = m.Details.Select(x => x.DetailId)
@@ -1191,7 +1196,8 @@ FROM
 			using (var master = db.CreateLocalTable(masterRecords))
 			using (var detail = db.CreateLocalTable(detailRecords))
 			{
-				var query = from m in master.LoadWith(m => m.Details)
+				var query = 
+					from m in master.LoadWith(m => m.Details).AsQueryable()
 					where m.Details.Count() > 1
 					select new
 					{
@@ -1706,7 +1712,7 @@ FROM
 			using var items = db.CreateLocalTable<Issue3806ItemTable>();
 
 			queries.Queries.Clear();
-			table.LoadWith(a => a.Items).Where(a => a.Id != 0).ToList();
+			table.LoadWith(a => a.Items).AsQueryable().Where(a => a.Id != 0).ToList();
 
 			Assert.That(queries.Queries, Has.Count.EqualTo(1));
 		}
@@ -1781,7 +1787,7 @@ FROM
 			{
 				options = db.Options;
 				await db.GetTable<Parent>()
-					.LoadWith(x => x.Children)
+					.LoadWith(x => x.Children).AsQueryable()
 					.FirstOrDefaultAsync(x => x.ParentID == 3);
 			}
 
@@ -1790,7 +1796,7 @@ FROM
 				await db.SetKeepConnectionAliveAsync(true);
 
 				await db.GetTable<Parent>()
-					.LoadWith(x => x.Children)
+					.LoadWith(x => x.Children).AsQueryable()
 					.FirstOrDefaultAsync(x => x.ParentID == 3);
 			}
 
@@ -1799,7 +1805,7 @@ FROM
 				await db.SetKeepConnectionAliveAsync(false);
 
 				await db.GetTable<Parent>()
-					.LoadWith(x => x.Children)
+					.LoadWith(x => x.Children).AsQueryable()
 					.FirstOrDefaultAsync(x => x.ParentID == 3);
 			}
 		}
@@ -1846,7 +1852,7 @@ FROM
 				using var _ = db.BeginTransaction();
 				options = db.Options;
 				await db.GetTable<Parent>()
-					.LoadWith(x => x.Children)
+					.LoadWith(x => x.Children).AsQueryable()
 					.FirstOrDefaultAsync(x => x.ParentID == 3);
 			}
 
@@ -1856,7 +1862,7 @@ FROM
 
 				using var _ = db.BeginTransaction();
 				await db.GetTable<Parent>()
-					.LoadWith(x => x.Children)
+					.LoadWith(x => x.Children).AsQueryable()
 					.FirstOrDefaultAsync(x => x.ParentID == 3);
 			}
 
@@ -1866,7 +1872,7 @@ FROM
 
 				using var _ = db.BeginTransaction();
 				await db.GetTable<Parent>()
-					.LoadWith(x => x.Children)
+					.LoadWith(x => x.Children).AsQueryable()
 					.FirstOrDefaultAsync(x => x.ParentID == 3);
 			}
 		}
@@ -3073,7 +3079,7 @@ FROM
 			using var db = GetDataConnection(context);
 
 			db.Person
-				.LoadWith(p => p.Patient)
+				.LoadWith(p => p.Patient).AsQueryable()
 				.Where(i => i.Patient!.PersonID != 0)
 				.ToList();
 
