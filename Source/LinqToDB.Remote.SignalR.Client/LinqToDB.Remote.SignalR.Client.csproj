@@ -16,6 +16,11 @@
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
 	</ItemGroup>
 
+	<ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+		<!-- NSJ 11.0.2 is a security vulnerability -->
+		<PackageReference Include="Newtonsoft.Json" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<AdditionalFiles Include="PublicAPI.*.txt" />
 	</ItemGroup>

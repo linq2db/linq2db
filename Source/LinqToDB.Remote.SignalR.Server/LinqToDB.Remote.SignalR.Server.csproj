@@ -15,8 +15,10 @@
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
 	</ItemGroup>
 
-	<ItemGroup Condition="$(TargetFramework) == 'net462' OR $(TargetFramework) == 'netstandard2.0'">
+	<ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Core" />
+		<!-- NSJ 11.0.2 is a security vulnerability -->
+		<PackageReference Include="Newtonsoft.Json" />
 	</ItemGroup>
 
 	<ItemGroup>
