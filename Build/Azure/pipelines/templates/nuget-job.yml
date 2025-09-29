@@ -141,6 +141,12 @@ jobs:
     displayName: 'Use latest .NET SDK'
     inputs:
       packageType: sdk
+      version: 9.x
+
+  - task: UseDotNet@2
+    displayName: 'Use latest .NET SDK'
+    inputs:
+      packageType: sdk
       version: 10.x
       includePreviewVersions: true
 
