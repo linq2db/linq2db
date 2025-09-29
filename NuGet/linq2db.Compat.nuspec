@@ -22,6 +22,10 @@
 				<dependency id="linq2db"                                   version="6.0.0"  />
 				<dependency id="System.Configuration.ConfigurationManager" version="9.0.0"  />
 			</group>
+			<group targetFramework="net10.0">
+				<dependency id="linq2db"                                   version="6.0.0"  />
+				<dependency id="System.Configuration.ConfigurationManager" version="10.0.0" />
+			</group>
 		</dependencies>
 	</metadata>
 
@@ -40,5 +44,8 @@
 		<file src="bin\LinqToDB.Compat\{0}\net9.0\linq2db.Compat.pdb"         target="lib\net9.0\"         />
 		<file src="bin\LinqToDB.Compat\{0}\net9.0\linq2db.Compat.xml"         target="lib\net9.0\"         />
 		<file src="bin\LinqToDB.Compat\{0}\net9.0\linq2db.Compat.dll"         target="lib\net9.0\"         />
+		<file src="bin\LinqToDB.Compat\{0}\net10.0\linq2db.Compat.pdb"        target="lib\net10.0\"        />
+		<file src="bin\LinqToDB.Compat\{0}\net10.0\linq2db.Compat.xml"        target="lib\net10.0\"        />
+		<file src="bin\LinqToDB.Compat\{0}\net10.0\linq2db.Compat.dll"        target="lib\net10.0\"        />
 	</files>
 </package>

@@ -22,6 +22,10 @@
 				<dependency id="linq2db.Tools"  version="6.0.0"  />
 				<dependency id="Humanizer.Core" version="2.14.1" />
 			</group>
+			<group targetFramework="net10.0">
+				<dependency id="linq2db.Tools"  version="6.0.0"  />
+				<dependency id="Humanizer.Core" version="2.14.1" />
+			</group>
 		</dependencies>
 	</metadata>
 
@@ -40,5 +44,8 @@
 		<file src="bin\LinqToDB.Scaffold\{0}\net9.0\linq2db.Scaffold.pdb"         target="lib\net9.0\"         />
 		<file src="bin\LinqToDB.Scaffold\{0}\net9.0\linq2db.Scaffold.xml"         target="lib\net9.0\"         />
 		<file src="bin\LinqToDB.Scaffold\{0}\net9.0\linq2db.Scaffold.dll"         target="lib\net9.0\"         />
+		<file src="bin\LinqToDB.Scaffold\{0}\net10.0\linq2db.Scaffold.pdb"        target="lib\net10.0\"        />
+		<file src="bin\LinqToDB.Scaffold\{0}\net10.0\linq2db.Scaffold.xml"        target="lib\net10.0\"        />
+		<file src="bin\LinqToDB.Scaffold\{0}\net10.0\linq2db.Scaffold.dll"        target="lib\net10.0\"        />
 	</files>
 </package>

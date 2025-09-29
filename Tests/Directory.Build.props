@@ -2,8 +2,8 @@
 	<Import Project="$(MSBuildThisFileDirectory)\..\Directory.Build.props" />
 
 	<PropertyGroup>
-		<TargetFrameworks>net462;net8.0;net9.0</TargetFrameworks>
-		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net9.0</TargetFrameworks>
+		<TargetFrameworks>net462;net8.0;net9.0;net10.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net10.0</TargetFrameworks>
 		<DefineConstants Condition=" $(DB2STUB) == 'True' ">$(DefineConstants);DB2STUBS</DefineConstants>
 	</PropertyGroup>
 
