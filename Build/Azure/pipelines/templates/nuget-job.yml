@@ -137,6 +137,19 @@ jobs:
       targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.LINQPad/Release/'
 
 #dotnet tool install -g dotnet-script
+  - task: UseDotNet@2
+    displayName: 'Use latest .NET SDK'
+    inputs:
+      packageType: sdk
+      version: 9.x
+
+  - task: UseDotNet@2
+    displayName: 'Use latest .NET SDK'
+    inputs:
+      packageType: sdk
+      version: 10.x
+      includePreviewVersions: true
+
   - task: DotNetCoreCLI@2
     displayName: Install dotnet-script tool
     inputs:
