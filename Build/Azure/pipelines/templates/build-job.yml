@@ -103,7 +103,7 @@ jobs:
         if %errorlevel% neq 0 exit
 
         REM publish main and ef.core tests for all TFMs for win-x86
-        dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -a x86 -o .build/publish/Tests/$(test_configuration)/%%f_x86
+        dotnet publish Tests/Linq/Tests.csproj -f net462 -c $(test_configuration) -a x86 -o .build/publish/Tests/$(test_configuration)/net462_x86
         if %errorlevel% neq 0 exit
     
         FOR %%f IN (net8.0 net9.0 net10.0) DO (
