@@ -348,6 +348,7 @@
     <Project Path="Source/LinqToDB.Compat/LinqToDB.Compat.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
+    <Project Path="Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.EF10.csproj" />
     <Project Path="Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.EF3.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
@@ -409,6 +410,7 @@
     <Project Path="Tests/EntityFrameworkCore.FSharp/Tests.EntityFrameworkCore.FSharp.fsproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
+    <Project Path="Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF10.csproj" />
     <Project Path="Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF3.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>

@@ -191,7 +191,9 @@ namespace Tests
 			TestProvName.AllFirebird,
 			TestProvName.AllSqlServer,
 			TestProvName.AllPostgreSQL,
+#if !NET10_0 // provider need update for v10
 			TestProvName.AllMySql,
+#endif
 			TestProvName.AllSapHana,
 			TestProvName.AllClickHouse
 		}.SplitAll()).ToList();

@@ -1,4 +1,4 @@
-﻿<Project>
+<Project>
 	<!--
 	When multiple versions of same nuget references, don't put it to unconditional ItemGroup
 	as while it works fine in Visual Studio in general there are still issues with tooling (dotnet publish, testing)
@@ -53,6 +53,7 @@
 		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="$(EF3LatestNuget)"            Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
 		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="$(Net8LatestForNuget)"        Condition="'$(TargetFramework)'=='net8.0'"         />
 		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="$(Net9LatestForNuget)"        Condition="'$(TargetFramework)'=='net9.0'"         />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="$(Net10LatestForNuget)"       Condition="'$(TargetFramework)'=='net10.0'"        />
 
 		<!-- pin abstractions packages to lowest supported runtime (.net 8 currently) : https://github.com/linq2db/linq2db/issues/3953 -->
 		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"              Version="$(Net8LatestForNuget)"        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))"  />
