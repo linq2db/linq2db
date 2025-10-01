@@ -46,7 +46,7 @@ if (!Directory.Exists(buildPath))
 
 string? IfExists(string config) => File.Exists(Path.Combine(buildPath, "..", "bin", "NuGet", config, "linq2db.dll")) ? config : null;
 
-var releasePath = IfExists("Azure") ?? IfExists("Release") ?? IfExists("Debug") ?? "Azure";
+var releasePath = IfExists("Release") ?? IfExists("Azure") ?? IfExists("Debug") ?? "Release";
 var binPath     = @"..\bin";
 var t4binPath   = @"..\bin\NuGet\" + releasePath;
 
