@@ -455,7 +455,6 @@ namespace LinqToDB
 #endif
 		}
 
-		[Function(ServerSideOnly = true, IsPredicate = true)]
 		public static bool Like(string? matchExpression, string? pattern, char? escapeCharacter)
 		{
 #if !NETFRAMEWORK
@@ -665,7 +664,6 @@ namespace LinqToDB
 			return str.PadRight(length.Value, paddingChar.Value);
 		}
 
-		[Function(PseudoFunctions.REPLACE, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Replace(string? str, string? oldValue, string? newValue)
 		{
 			if (str == null || oldValue == null || newValue == null) return null;
@@ -1143,42 +1141,15 @@ namespace LinqToDB
 
 		#region DateTime Functions
 
-		[Property(               "CURRENT_TIMESTAMP", CanBeNull = false)]
-		[Property(PN.Informix,   "CURRENT",           CanBeNull = false)]
-		[Property(PN.Access,     "Now",               CanBeNull = false)]
-		[Function(PN.ClickHouse, "now",               CanBeNull = false)]
 		public static DateTime GetDate()
 		{
 			return DateTime.Now;
 		}
 
-		[Property(               "CURRENT_TIMESTAMP", ServerSideOnly = true, CanBeNull = false)]
-		[Property(PN.Firebird,   "LOCALTIMESTAMP",    ServerSideOnly = true, CanBeNull = false)]
-		[Property(PN.Informix,   "CURRENT",           ServerSideOnly = true, CanBeNull = false)]
-		[Property(PN.Access,     "Now",               ServerSideOnly = true, CanBeNull = false)]
-		[Function(PN.SqlCe,      "GetDate",           ServerSideOnly = true, CanBeNull = false)]
-		[Function(PN.Sybase,     "GetDate",           ServerSideOnly = true, CanBeNull = false)]
-		[Function(PN.ClickHouse, "now",               ServerSideOnly = true, CanBeNull = false)]
 		public static DateTime CurrentTimestamp => throw new ServerSideOnlyException(nameof(CurrentTimestamp));
 
-		[Function  (PN.SqlServer , "SYSUTCDATETIME"                      , ServerSideOnly = true, CanBeNull = false)]
-		[Function  (PN.Sybase    , "GETUTCDATE"                          , ServerSideOnly = true, CanBeNull = false)]
-		[Expression(PN.SQLite    , "DATETIME('now')"                     , ServerSideOnly = true, CanBeNull = false)]
-		[Function  (PN.MySql     , "UTC_TIMESTAMP"                       , ServerSideOnly = true, CanBeNull = false)]
-		[Expression(PN.PostgreSQL, "timezone('UTC', now())"              , ServerSideOnly = true, CanBeNull = false)]
-		[Expression(PN.DB2       , "CURRENT TIMESTAMP - CURRENT TIMEZONE", ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Subtraction)]
-		[Expression(PN.Oracle    , "SYS_EXTRACT_UTC(SYSTIMESTAMP)"       , ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
-		[Property  (PN.SapHana   , "CURRENT_UTCTIMESTAMP"                , ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
-		[Expression(PN.Informix  , "datetime(1970-01-01 00:00:00) year to second + (dbinfo('utc_current')/86400)::int::char(9)::interval day(9) to day + (mod(dbinfo('utc_current'), 86400))::char(5)::interval second(5) to second", ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
-		[Expression(PN.ClickHouse, "now('UTC')"                          , ServerSideOnly = true, CanBeNull = false)]
 		public static DateTime CurrentTimestampUtc => DateTime.UtcNow;
 
-		[Property(               "CURRENT_TIMESTAMP", CanBeNull = false)]
-		[Property(PN.Informix,   "CURRENT",           CanBeNull = false)]
-		[Property(PN.Access,     "Now",               CanBeNull = false)]
-		[Function(PN.SqlCe,      "GetDate",           CanBeNull = false)]
-		[Function(PN.Sybase,     "GetDate",           CanBeNull = false)]
-		[Function(PN.ClickHouse, "now",               CanBeNull = false)]
 		public static DateTime CurrentTimestamp2 => DateTime.Now;
 
 		[Function(PN.SqlServer , "SYSDATETIMEOFFSET", ServerSideOnly = true, CanBeNull = false)]

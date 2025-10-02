@@ -147,7 +147,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (Body.NodeType == ExpressionType.TypeAs)
 				{
 					result = Builder.Project(this, path, null, 0, flags, Body, true);
-					return result;
+					if (result is not SqlErrorExpression)
+						return result;
 				}
 
 				result = Body;
