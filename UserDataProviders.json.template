@@ -123,7 +123,6 @@
 			//"SapHana.Native",
 
 			// ClickHouse
-			//"ClickHouse.Octonica",
 			//"ClickHouse.Driver",
 			//"ClickHouse.MySql",
 		]

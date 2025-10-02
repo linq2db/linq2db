@@ -12,8 +12,8 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class DeleteWithOutputTests : TestBase
 	{
-		private const string FeatureDeleteOutputMultipleWithExpressions = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
 		private const string FeatureDeleteOutputMultiple                = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureDeleteOutputMultipleWithExpressions = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
 		private const string FeatureDeleteOutputSingleWithExpressions   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
 		private const string FeatureDeleteOutputSingle                  = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
 		private const string FeatureDeleteOutputInto                    = $"{TestProvName.AllSqlServer}";
@@ -21,7 +21,7 @@ namespace Tests.xUpdate
 		[Table]
 		sealed class TableWithData
 		{
-			[Column]              public int     Id       { get; set; }
+			[PrimaryKey]          public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
 			[Column(Length = 50)] public string? ValueStr { get; set; }
 		}
@@ -29,7 +29,7 @@ namespace Tests.xUpdate
 		[Table(Schema = "TestSchema")]
 		sealed class TableWithDataAndSchema
 		{
-			[Column]              public int     Id       { get; set; }
+			[PrimaryKey]          public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
 			[Column(Length = 50)] public string? ValueStr { get; set; }
 		}
@@ -37,7 +37,7 @@ namespace Tests.xUpdate
 		[Table]
 		sealed class DestinationTable
 		{
-			[Column]              public int     Id       { get; set; }
+			[PrimaryKey]          public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
 			[Column(Length = 50)] public string? ValueStr { get; set; }
 		}

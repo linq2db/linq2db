@@ -17,7 +17,7 @@ namespace Tests.UserTests
 			{
 			}
 
-			[Column] public int Id            { get; set; }
+			[PrimaryKey] public int Id        { get; set; }
 			[Column] public int Number        { get; set; }
 			[Column] public int StatusBitmask { get; set; }
 
@@ -32,7 +32,7 @@ namespace Tests.UserTests
 			{
 			}
 
-			[Column] public int Id            { get; set; }
+			[PrimaryKey] public int Id        { get; set; }
 			[Column] public int Number        { get; set; }
 			[Column] public int StatusBitmask { get; set; }
 
@@ -55,7 +55,7 @@ namespace Tests.UserTests
 				Copy = true;
 			}
 
-			[Column] public int Id            { get; set; }
+			[PrimaryKey] public int Id            { get; set; }
 			[Column] public int Number        { get; set; }
 			[Column] public int StatusBitmask { get; set; }
 
@@ -72,7 +72,7 @@ namespace Tests.UserTests
 		[Table("i1084_student")]
 		sealed class Issue1084Student
 		{
-			[Column] public int     Id            { get; set; }
+			[PrimaryKey] public int     Id            { get; set; }
 			[Column] public string? Number        { get; set; }
 			[Column] public int     StatusBitmask { get; set; }
 

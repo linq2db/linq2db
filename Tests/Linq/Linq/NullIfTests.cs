@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -15,8 +16,8 @@ namespace Tests.Linq
 		{
 			var data = new[]
 			{
-				new Src {Int = 2, NullableInt = 2,    String = "abc", NullableString = "abc"},
-				new Src {Int = 3, NullableInt = null, String = "def", NullableString = null}
+				new Src {Id = 1, Int = 2, NullableInt = 2,    String = "abc", NullableString = "abc"},
+				new Src {Id = 2, Int = 3, NullableInt = null, String = "def", NullableString = null}
 			};
 
 			var src  = db.CreateLocalTable(data);
@@ -233,6 +234,7 @@ namespace Tests.Linq
 
 		sealed class Src
 		{
+			[PrimaryKey] public int Id { get; set; }
 			public int Int { get; set; }
 			public int? NullableInt { get; set; }
 			public string String { get; set; } = null!;

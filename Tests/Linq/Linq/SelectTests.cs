@@ -2161,6 +2161,8 @@ namespace Tests.Linq
 		[Table]
 		sealed class Issue4192TableNotNullable : IWithParent
 		{
+			[PrimaryKey] public int Id { get; set; }
+
 			[Column] public string? Name { get; set; }
 			[Column] public int ParentId { get; set; }
 
@@ -2170,6 +2172,8 @@ namespace Tests.Linq
 		[Table]
 		sealed class Issue4192TableNullable : IWithParent
 		{
+			[PrimaryKey] public int Id { get; set; }
+
 			[Column] public string? Name { get; set; }
 			[Column] public int? ParentId { get; set; }
 		}

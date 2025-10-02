@@ -37,7 +37,7 @@ namespace Tests.xUpdate
 		[Table]
 		sealed record TableWithData
 		{
-			[Column]              public int     Id       { get; set; }
+			[PrimaryKey]          public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
 			[Column(Length = 50)] public string? ValueStr { get; set; }
 		}
@@ -45,7 +45,7 @@ namespace Tests.xUpdate
 		[Table(Schema = "TestSchema")]
 		sealed record TableWithDataAndSchema
 		{
-			[Column]              public int     Id       { get; set; }
+			[PrimaryKey]          public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
 			[Column(Length = 50)] public string? ValueStr { get; set; }
 		}
@@ -53,7 +53,7 @@ namespace Tests.xUpdate
 		[Table]
 		sealed record DestinationTable
 		{
-			[Column]              public int     Id       { get; set; }
+			[PrimaryKey]          public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
 			[Column(Length = 50)] public string? ValueStr { get; set; }
 		}
@@ -394,7 +394,7 @@ namespace Tests.xUpdate
 					.Where(_ => _.s.Id == 3)
 					.UpdateWithOutput(
 						target,
-						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+						s => new DestinationTable { Value = s.s.Value, ValueStr = s.s.ValueStr, },
 						(source, deleted, inserted) => new
 						{
 							InsertedValue = inserted.Value,
@@ -1839,7 +1839,7 @@ namespace Tests.xUpdate
 				var output = source
 					.Where(s => s.Id > 3)
 					.UpdateWithOutput(
-						s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+						s => new TableWithData { Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
 						(deleted, inserted) => new { InsertedValue = inserted.Value, })
 					.ToArray();
 
@@ -1867,7 +1867,7 @@ namespace Tests.xUpdate
 				var output = source
 					.Where(s => s.Id == 3)
 					.UpdateWithOutput(
-						s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+						s => new TableWithData { Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
 						(deleted, inserted) => new { InsertedValue = inserted.Value, })
 					.ToArray();
 
@@ -1954,7 +1954,7 @@ namespace Tests.xUpdate
 					source
 						.Where(s => s.Id > 3)
 						.UpdateWithOutputAsync(
-							s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+							s => new TableWithData { Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
 							(deleted, inserted) => new { InsertedValue = inserted.Value, }));
 
 				AreEqual(
@@ -1982,7 +1982,7 @@ namespace Tests.xUpdate
 					source
 						.Where(s => s.Id == 3)
 						.UpdateWithOutputAsync(
-							s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+							s => new TableWithData { Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
 							(deleted, inserted) => new { InsertedValue = inserted.Value, }));
 
 				AreEqual(
@@ -3039,6 +3039,7 @@ namespace Tests.xUpdate
 		[Table]
 		sealed class Issue4193Person
 		{
+			[PrimaryKey] public int Id { get; set; }
 			[Column(CanBeNull = false)] public string Name { get; set; } = null!;
 			[Column] public int? EmployeeId { get; set; }
 
@@ -3073,7 +3074,7 @@ namespace Tests.xUpdate
 		public void Issue4193Test([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t1 = db.CreateLocalTable([new Issue4193Person() { EmployeeId = 1, Name = "foo" }]);
+			using var t1 = db.CreateLocalTable([new Issue4193Person() { Id = 1, EmployeeId = 1, Name = "foo" }]);
 			using var t2 = db.CreateLocalTable([new Issue4193Employee() { Id = 1, SalaryId = 1 }]);
 			using var t3 = db.CreateLocalTable([new Issue4193Salary { Id = 1, Amount = 10 }]);
 

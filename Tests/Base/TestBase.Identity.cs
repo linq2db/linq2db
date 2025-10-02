@@ -244,6 +244,11 @@ CREATE COLUMN TABLE ""AllTypes""
 						// default schema for this table changes to temp on windows (sqlite bug?)
 						sql = new[] { $"UPDATE main.sqlite_sequence SET seq = {lastValue} WHERE name = 'AllTypes'" };
 						break;
+					default:
+#pragma warning disable RS0030 // Do not use banned APIs
+						Console.WriteLine($"Unknown provider: {provider}");
+#pragma warning restore RS0030 // Do not use banned APIs
+						break;
 				}
 			}
 

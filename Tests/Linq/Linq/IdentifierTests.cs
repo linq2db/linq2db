@@ -19,6 +19,7 @@ namespace Tests.Linq
 		[Table("testparams")]
 		public sealed class Table
 		{
+			[PrimaryKey] public int Id { get; set; }
 			public Nested Component { get; set; } = null!;
 
 			public sealed class Nested

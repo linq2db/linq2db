@@ -6,7 +6,6 @@ using System.Runtime.CompilerServices;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Internal.Linq;
-using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -33,7 +32,6 @@ namespace Tests.Linq
 			public string? Value { get; set; }
 
 			public SomeOtherClass? AssociatedOne { get; set; }
-
 		}
 
 		[Table(Name = "sample_other_class")]
