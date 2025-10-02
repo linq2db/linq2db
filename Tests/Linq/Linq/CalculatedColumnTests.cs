@@ -64,7 +64,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		public void CalculatedColumnTest1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -84,7 +84,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		public void CalculatedColumnTest2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -102,7 +102,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		public void CalculatedColumnTest3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -129,7 +129,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		public void CalculatedColumnTest4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

@@ -103,6 +103,17 @@
 		NameToQueryTable,
 
 		/// <summary>
+		/// Provided name should be converted to CTE name.
+		/// For example:
+		///     Cte -> [Cte]
+		/// for the following query:
+		///     WITH [Cte] AS (....)
+		///     SELECT * FROM [Cte]
+		///                   ^ add  ^
+		/// </summary>
+		NameToCteName,
+
+		/// <summary>
 		/// Provided name should be converted to query table alias.
 		/// For example:
 		///     table1 -> [table1]

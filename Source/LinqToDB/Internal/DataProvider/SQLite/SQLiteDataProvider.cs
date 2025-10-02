@@ -255,6 +255,9 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 							dataType = dataType.WithDataType(DataType.Text);
 
 						break;
+					case (DataType.Binary, _) when Name is ProviderName.SQLiteClassic:
+						value = guid.ToByteArray();
+						break;
 					default:
 						if (Name == ProviderName.SQLiteMS)
 						{
