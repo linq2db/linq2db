@@ -335,6 +335,7 @@ namespace LinqToDB
 		[Expression("{0}", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static TimeSpan? DateToTime(DateTime? date)
 		{
+			// ???
 			return date == null ? null : new TimeSpan(date.Value.Ticks);
 		}
 
@@ -466,12 +467,12 @@ namespace LinqToDB
 		}
 
 		[CLSCompliant(false)]
-		[Function(                                     IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.DB2,        "Locate",             IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.MySql,      "Locate",             IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.SapHana,    "Locate",       1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.Firebird,   "Position",           IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.ClickHouse, "positionUTF8", 1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(                                      IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.DB2,        "Locate",              IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.MySql,      "Locate",              IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.SapHana,    "Locate",        1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.Firebird,   "Position",            IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.ClickHouse, "positionUTF8",  1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static int? CharIndex(string? substring, string? str)
 		{
 			if (str == null || substring == null) return null;
@@ -502,14 +503,14 @@ namespace LinqToDB
 			return substring.Length == 0 ? 0 : str.IndexOf(substring, index) + 1;
 		}
 
-		[Function(                                     IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.DB2,        "Locate",             IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.MySql,      "Locate",             IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(                                      IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.DB2,        "Locate",              IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.MySql,      "Locate",              IsNullable = IsNullableType.IfAnyParameterNullable)]
 #pragma warning disable CS3016 // Arrays as attribute arguments is not CLS-compliant
-		[Function(PN.SapHana,    "Locate",       1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.ClickHouse, "positionUTF8", 1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.SapHana,    "Locate",       1, 0,  IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.ClickHouse, "positionUTF8", 1, 0,  IsNullable = IsNullableType.IfAnyParameterNullable)]
 #pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
-		[Function(PN.Firebird,   "Position",           IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.Firebird,   "Position",            IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static int? CharIndex(char? value, string? str)
 		{
 			if (value == null || str == null) return null;
@@ -673,9 +674,9 @@ namespace LinqToDB
 			return str.Replace(oldValue, newValue);
 		}
 
-		[Function(                              IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.Sybase,     "Str_Replace", IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.ClickHouse, "replaceAll",  IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(                                      IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.Sybase,     "Str_Replace",         IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.ClickHouse, "replaceAll",          IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Replace(string? str, char? oldValue, char? newValue)
 		{
 			if (str == null || oldValue == null || newValue == null) return null;
@@ -1152,10 +1153,10 @@ namespace LinqToDB
 
 		public static DateTime CurrentTimestamp2 => DateTime.Now;
 
-		[Function(PN.SqlServer , "SYSDATETIMEOFFSET", ServerSideOnly = true, CanBeNull = false)]
-		[Function(PN.PostgreSQL, "now"              , ServerSideOnly = true, CanBeNull = false)]
-		[Property(PN.Oracle    , "SYSTIMESTAMP"     , ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
-		[Function(PN.ClickHouse, "now"              , ServerSideOnly = true, CanBeNull = false)]
+		[Function(PN.SqlServer , "SYSDATETIMEOFFSET"  , ServerSideOnly = true, CanBeNull = false)]
+		[Function(PN.PostgreSQL, "now"                , ServerSideOnly = true, CanBeNull = false)]
+		[Property(PN.Oracle    , "SYSTIMESTAMP"       , ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
+		[Function(PN.ClickHouse, "now"                , ServerSideOnly = true, CanBeNull = false)]
 		public static DateTimeOffset CurrentTzTimestamp => DateTimeOffset.Now;
 
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
