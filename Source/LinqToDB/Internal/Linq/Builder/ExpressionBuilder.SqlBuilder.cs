@@ -367,7 +367,37 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// </summary>
 		public bool CanBeEvaluatedOnClient(Expression expr)
 		{
-			return _optimizationContext.CanBeEvaluatedOnClient(expr);
+			var result = _optimizationContext.CanBeEvaluatedOnClient(expr);
+			if (result && HasTranslation(expr))
+				result = false;
+			return result;
+		}
+
+		Expression? _currentlyTestingForTranslation;
+
+		public bool HasTranslation(Expression expression)
+		{
+			expression = expression.Unwrap();
+
+			if (expression == _currentlyTestingForTranslation)
+				return false;
+
+			var saved = _currentlyTestingForTranslation;
+			_currentlyTestingForTranslation = expression;
+			try
+			{
+				if (_buildVisitor.TranslateMember(_buildVisitor.BuildContext, expression, out _))
+					return true;
+
+				if (expression is BinaryExpression binary)
+					return HasTranslation(binary.Left) || HasTranslation(binary.Right);
+
+				return false;
+			}
+			finally
+			{
+				_currentlyTestingForTranslation = saved;
+			}
 		}
 
 		#endregion

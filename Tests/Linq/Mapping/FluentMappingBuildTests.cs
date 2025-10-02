@@ -12,7 +12,7 @@ namespace Tests.Mapping
 	public class FluentMappingBuildTests : TestBase
 	{
 		[Test]
-		public void InsertOrUpdatePrimaryKeyTest([DataSources(TestProvName.AllClickHouse, TestProvName.AllOracle)] string context)
+		public void InsertOrUpdatePrimaryKeyTest([InsertOrUpdateDataSources(TestProvName.AllOracle)] string context)
 		{
 			using var db  = GetDataContext(context);
 

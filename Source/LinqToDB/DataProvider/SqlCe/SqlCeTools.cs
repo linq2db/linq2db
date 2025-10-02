@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	{
 		enum Fake { };
 
-		static readonly Lazy<IDataProvider> _sqlCeDataProvider = ProviderDetectorBase<Fake, Fake>.CreateDataProvider<SqlCeDataProvider>();
+		static readonly Lazy<IDataProvider> _sqlCeDataProvider = ProviderDetectorBase<Fake>.CreateDataProvider<SqlCeDataProvider>();
 
 		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{

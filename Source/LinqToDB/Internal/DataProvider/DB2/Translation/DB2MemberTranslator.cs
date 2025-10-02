@@ -259,6 +259,13 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 
 				return dateFunction;
 			}
+
+			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				// For CURRENT TIMEZONE there is no type
+				return factory.Sub(dbDataType, factory.Expression(dbDataType, "CURRENT TIMESTAMP"), factory.Expression(factory.GetDbDataType(typeof(int)), "CURRENT TIMEZONE"));
+			}
 		}
 
 		protected class DB2MathMemberTranslator : MathMemberTranslatorBase

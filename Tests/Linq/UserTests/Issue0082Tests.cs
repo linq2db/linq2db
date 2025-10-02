@@ -1,5 +1,7 @@
 ﻿using System.Linq;
 
+using LinqToDB;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -43,7 +45,8 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test2([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Test2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

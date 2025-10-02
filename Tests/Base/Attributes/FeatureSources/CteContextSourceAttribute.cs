@@ -6,7 +6,7 @@ using LinqToDB;
 namespace Tests
 {
 	[AttributeUsage(AttributeTargets.Parameter)]
-	public sealed class CteContextSourceAttribute : IncludeDataSourcesAttribute
+	public class CteContextSourceAttribute : IncludeDataSourcesAttribute
 	{
 		public static string[] CteSupportedProviders = new[]
 			{

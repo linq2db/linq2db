@@ -207,6 +207,12 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 
 				return resultExpression;
 			}
+
+			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.Function(dbDataType, "DATETIME", factory.Value("now"));
+			}
 		}
 
 		protected class StringMemberTranslator : StringMemberTranslatorBase

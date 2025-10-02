@@ -156,7 +156,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression4([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void MethodExpression4([DataSources] string context)
 		{
 			var n = 3;
 
@@ -180,7 +181,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression5([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context, [Values(1, 2) ]int n)
+		[RequiresCorrelatedSubquery]
+		public void MethodExpression5([DataSources(ProviderName.SqlCe)] string context, [Values(1, 2) ]int n)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -202,7 +204,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression6([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void MethodExpression6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -224,7 +227,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression7([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void MethodExpression7([DataSources(ProviderName.SqlCe)] string context)
 		{
 			var n = 2;
 
@@ -396,7 +400,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AssociationMethodExpression([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void AssociationMethodExpression([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -407,8 +412,9 @@ namespace Tests.Linq
 					select GrandChildren(p).Count());
 		}
 
+		[RequiresCorrelatedSubquery]
 		[Test]
-		public async Task AssociationMethodExpressionAsync([DataSources(TestProvName.AllClickHouse)] string context)
+		public async Task AssociationMethodExpressionAsync([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1035,7 +1041,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3472Test([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Issue3472Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			if (db is DataConnection)

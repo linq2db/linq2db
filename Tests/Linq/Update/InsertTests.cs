@@ -56,7 +56,7 @@ namespace Tests.xUpdate
 							BoolValue = true
 						});
 
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(
 							cnt, Is.EqualTo(Types.Select(_ => _.ID / 3).Distinct().Count()));
 				}
@@ -96,7 +96,7 @@ namespace Tests.xUpdate
 							.Value(t => t.BoolValue, t => true)
 						.Insert();
 
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(
 							cnt, Is.EqualTo(Types.Select(_ => _.ID / 3).Distinct().Count()));
 				}
@@ -124,7 +124,7 @@ namespace Tests.xUpdate
 							ParentID = 1,
 							ChildID  = id
 						});
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
@@ -152,7 +152,7 @@ namespace Tests.xUpdate
 								.Value(c => c.ParentID, () => 1)
 								.Value(c => c.ChildID,  () => id)
 							.Insert();
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
@@ -180,7 +180,7 @@ namespace Tests.xUpdate
 								.Value(c => c.ParentID, () => 1)
 								.Value(c => c.ChildID,  () => id)
 							.InsertAsync();
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(await db.Child.CountAsync(c => c.ChildID == id), Is.EqualTo(1));
@@ -210,7 +210,7 @@ namespace Tests.xUpdate
 								ParentID = c.ParentID,
 								ChildID  = id
 							});
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
@@ -240,7 +240,7 @@ namespace Tests.xUpdate
 								ParentID = c.ParentID,
 								ChildID  = id
 							});
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(await db.Child.CountAsync(c => c.ChildID == id), Is.EqualTo(1));
@@ -271,7 +271,7 @@ namespace Tests.xUpdate
 							ChildID  = id
 						})
 						.Insert(db.Child, c => c);
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
@@ -300,7 +300,7 @@ namespace Tests.xUpdate
 								.Value(c => c.ParentID, c  => c.ParentID)
 								.Value(c => c.ChildID,  () => id)
 							.Insert();
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
@@ -346,7 +346,7 @@ namespace Tests.xUpdate
 								.Value(c => c.ParentID, c  => c.ParentID)
 								.Value(c => c.ChildID,  () => id)
 							.InsertAsync();
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(await db.Child.CountAsync(c => c.ChildID == id), Is.EqualTo(1));
@@ -375,7 +375,7 @@ namespace Tests.xUpdate
 								.Value(c => c.ParentID, c => c.ParentID)
 								.Value(c => c.ChildID,  id)
 							.Insert();
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
@@ -402,7 +402,7 @@ namespace Tests.xUpdate
 								.Value(p => p.ParentID, c => c.ParentID + 1000)
 								.Value(p => p.Value1,   c => (int?)c.ChildID)
 							.Insert();
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Parent.Count(p => p.Value1 == 11), Is.EqualTo(1));
@@ -442,7 +442,7 @@ namespace Tests.xUpdate
 					.Value(p => p.ModifiedOn, c => Sql.CurrentTimestamp)
 					.Insert();
 
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(affected, Is.EqualTo(2));
 			}
 		}
@@ -463,7 +463,7 @@ namespace Tests.xUpdate
 							.Value(c => c.ChildID,  () => id)
 							.Value(c => c.ParentID, 1)
 						.Insert();
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
@@ -491,7 +491,7 @@ namespace Tests.xUpdate
 							.Value(c => c.ParentID, 1)
 							.Value(c => c.ChildID,  () => id)
 						.Insert();
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
@@ -524,7 +524,7 @@ namespace Tests.xUpdate
 							ParentID = p.ParentID,
 							ChildID  = p.ParentID,
 						});
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Child.Count(c => c.ParentID == id), Is.EqualTo(1));
@@ -703,7 +703,7 @@ namespace Tests.xUpdate
 							ParentID = 1001,
 							Value1   = p.Value1
 						});
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Parent4.Count(_ => _.ParentID == id && _.Value1 == p.Value1), Is.EqualTo(1));
@@ -730,7 +730,7 @@ namespace Tests.xUpdate
 							.Value(_ => _.ParentID, id)
 							.Value(_ => _.Value1,   TypeValue.Value1)
 						.Insert();
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Parent4.Count(_ => _.ParentID == id), Is.EqualTo(1));
@@ -757,7 +757,7 @@ namespace Tests.xUpdate
 							.Value(_ => _.ParentID, id)
 							.Value(_ => _.Value1,   () => TypeValue.Value1)
 						.Insert();
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Parent4.Count(_ => _.ParentID == id), Is.EqualTo(1));
@@ -780,7 +780,7 @@ namespace Tests.xUpdate
 						.Value(p => p.ParentID, 1001)
 						.Value(p => p.Value1,   (int?)null)
 					.Insert();
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 
 				Assert.That(db.Parent.Count(p => p.ParentID == 1001), Is.EqualTo(1));
@@ -2047,7 +2047,7 @@ namespace Tests.xUpdate
 				vi = vi.Value(x => x.ID, 123).Value(x => x.FirstName, "John");
 
 				var cnt = vi.Insert();
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 				Assert.That(table.Count(x => x.ID == 123 && x.FirstName == "John"), Is.EqualTo(1));
 			}

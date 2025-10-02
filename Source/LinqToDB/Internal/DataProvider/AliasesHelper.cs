@@ -237,6 +237,15 @@ namespace LinqToDB.Internal.DataProvider
 				return element;
 			}
 
+			protected override IQueryElement VisitSqlTable(SqlTable element)
+			{
+				base.VisitSqlTable(element);
+
+				_allAliases.Add(element.TableName.Name);
+
+				return element;
+			}
+
 			protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 			{
 				base.VisitSqlQuery(selectQuery);
