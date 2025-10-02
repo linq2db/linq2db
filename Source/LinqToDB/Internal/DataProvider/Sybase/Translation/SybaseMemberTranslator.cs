@@ -182,6 +182,11 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 				var factory = translationContext.ExpressionFactory;
 				return factory.Function(factory.GetDbDataType(typeof(DateTime)), "GetDate", ParametersNullabilityType.NotNullable);
 			}
+
+			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				return translationContext.ExpressionFactory.Function(dbDataType, "GETUTCDATE");
+			}
 		}
 
 		protected class SybaseMathMemberTranslator : MathMemberTranslatorBase

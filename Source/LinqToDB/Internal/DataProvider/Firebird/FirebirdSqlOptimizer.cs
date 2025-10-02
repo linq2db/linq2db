@@ -5,6 +5,10 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {
+	// TODO: implement recursive CTE outer joins optimization for firebird to generate "T1, T2 WHERE condition" to workaround this limitation:
+	// A recursive reference cannot participate in an outer join.
+	// (https://www.firebirdsql.org/refdocs/langrefupd21-select.html#langrefupd21-select-cte-recursive)
+	// e.g. see Issue3360_TypeByOtherQuery_AllProviders test: if it generate CROSS JOIN - query will fail
 	public class FirebirdSqlOptimizer : BasicSqlOptimizer
 	{
 		public FirebirdSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)

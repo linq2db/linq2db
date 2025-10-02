@@ -13,6 +13,8 @@ namespace Tests.xUpdate
 	public class DeleteWithOutputTests : TestBase
 	{
 		private const string FeatureDeleteOutputMultiple                = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureDeleteOutputMultipleWithExpressions = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureDeleteOutputSingleWithExpressions   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
 		private const string FeatureDeleteOutputSingle                  = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
 		private const string FeatureDeleteOutputInto                    = $"{TestProvName.AllSqlServer}";
 
@@ -140,7 +142,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DeleteWithOutputProjectionFromQueryTest([IncludeDataSources(true, FeatureDeleteOutputMultiple)] string context, [Values(100, 200)] int param)
+		public void DeleteWithOutputProjectionFromQueryTest([IncludeDataSources(true, FeatureDeleteOutputMultipleWithExpressions)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -172,7 +174,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DeleteWithOutputProjectionFromQueryTestSingleRecord([IncludeDataSources(true, FeatureDeleteOutputSingle)] string context, [Values(100, 200)] int param)
+		public void DeleteWithOutputProjectionFromQueryTestSingleRecord([IncludeDataSources(true, FeatureDeleteOutputSingleWithExpressions)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -206,7 +208,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task DeleteWithOutputProjectionFromQueryAsyncTest([IncludeDataSources(true, FeatureDeleteOutputMultiple)] string context, [Values(100, 200)] int param)
+		public async Task DeleteWithOutputProjectionFromQueryAsyncTest([IncludeDataSources(true, FeatureDeleteOutputMultipleWithExpressions)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -238,7 +240,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task DeleteWithOutputProjectionFromQueryAsyncTestSingleRecord([IncludeDataSources(true, FeatureDeleteOutputSingle)] string context, [Values(100, 200)] int param)
+		public async Task DeleteWithOutputProjectionFromQueryAsyncTestSingleRecord([IncludeDataSources(true, FeatureDeleteOutputSingleWithExpressions)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -270,7 +272,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DeleteWithOutputFromQueryTest([IncludeDataSources(true, FeatureDeleteOutputMultiple)] string context, [Values(100, 200)] int param)
+		public void DeleteWithOutputFromQueryTest([IncludeDataSources(true, FeatureDeleteOutputMultipleWithExpressions)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -305,7 +307,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DeleteWithOutputFromQueryTestSingleRecord([IncludeDataSources(true, FeatureDeleteOutputSingle)] string context, [Values(100, 200)] int param)
+		public void DeleteWithOutputFromQueryTestSingleRecord([IncludeDataSources(true, FeatureDeleteOutputSingleWithExpressions)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -340,7 +342,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task DeleteWithOutputFromQueryAsyncTest([IncludeDataSources(true, FeatureDeleteOutputMultiple)] string context, [Values(100, 200)] int param)
+		public async Task DeleteWithOutputFromQueryAsyncTest([IncludeDataSources(true, FeatureDeleteOutputMultipleWithExpressions)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -375,7 +377,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task DeleteWithOutputFromQueryAsyncTestSingleRecord([IncludeDataSources(true, FeatureDeleteOutputSingle)] string context, [Values(100, 200)] int param)
+		public async Task DeleteWithOutputFromQueryAsyncTestSingleRecord([IncludeDataSources(true, FeatureDeleteOutputSingleWithExpressions)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db = GetDataContext(context))
