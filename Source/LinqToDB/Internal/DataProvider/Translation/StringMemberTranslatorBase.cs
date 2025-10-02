@@ -139,7 +139,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (memberExpression.Expression == null)
 				return null;
 
-			if (translationFlags.HasFlag(TranslationFlags.Expression) && translationContext.CanBeEvaluatedOnClient(memberExpression))
+			if (translationContext.CanBeEvaluatedOnClient(memberExpression.Expression))
 				return null;
 
 			if (!translationContext.TranslateToSqlExpression(memberExpression.Expression, out var value))

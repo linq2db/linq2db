@@ -219,6 +219,12 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 
 				return dateFunc;
 			}
+
+			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.Function(dbDataType, "SYS_EXTRACT_UTC", factory.Fragment("SYSTIMESTAMP"));
+			}
 		}
 
 		protected class OracleMathMemberTranslator : MathMemberTranslatorBase
