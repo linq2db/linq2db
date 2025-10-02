@@ -2707,7 +2707,7 @@ namespace Tests.Linq
 
 		[ActiveIssue("Wrong Date manipulations", Configurations = [TestProvName.AllOracle11])]
 		[Test]
-		public void SelectQueryTest([CteContextSource(TestProvName.AllSapHana)] string context, bool inlineParams)
+		public void SelectQueryTest([RecursiveCteContextSource] string context, bool inlineParams)
 		{
 			using var db = GetDataContext(context);
 
