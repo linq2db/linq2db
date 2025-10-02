@@ -37,31 +37,19 @@ namespace LinqToDB.Internal.DataProvider
 			// set default flags values explicitly even for default values
 			SqlProviderFlags = new SqlProviderFlags()
 			{
-				IsParameterOrderDependent            = false,
 				AcceptsTakeAsParameter               = true,
-				AcceptsTakeAsParameterIfSkip         = false,
 				IsSkipSupported                      = true,
-				IsSkipSupportedIfTake                = false,
-				TakeHintsSupported                   = null,
 				IsSubQueryTakeSupported              = true,
 				IsDerivedTableTakeSupported          = true,
 				IsCorrelatedSubQueryTakeSupported    = true,
 				IsSupportsJoinWithoutCondition       = true,
 				IsSubQuerySkipSupported              = true,
 				IsSubQueryColumnSupported            = true,
-				IsSubQueryOrderBySupported           = false,
 				IsCountSubQuerySupported             = true,
-				IsIdentityParameterRequired          = false,
-				IsApplyJoinSupported                 = false,
 				IsInsertOrUpdateSupported            = true,
 				CanCombineParameters                 = true,
 				MaxInListValuesCount                 = int.MaxValue,
-				OutputDeleteUseSpecialTable          = false,
-				OutputInsertUseSpecialTable          = false,
-				OutputUpdateUseSpecialTables         = false,
 				IsCrossJoinSupported                 = true,
-				IsCommonTableExpressionsSupported    = false,
-				IsAllSetOperationsSupported          = false,
 				IsDistinctSetOperationsSupported     = true,
 				IsCountDistinctSupported             = true,
 				IsAggregationDistinctSupported       = true,
@@ -221,19 +209,19 @@ namespace LinqToDB.Internal.DataProvider
 			ReaderExpressions[new ReaderInfo { FieldType = fieldType, DataTypeName = dataTypeName }] = expr;
 		}
 
-		protected void SetProviderField<TP,T>(Expression<Func<TP,int,T>> expr)
+		protected void SetProviderField<TP,T>(Expression<Func<TP,int,T>> expr, string? dataTypeName = null)
 		{
-			ReaderExpressions[new ReaderInfo { ProviderFieldType = typeof(T) }] = expr;
+			ReaderExpressions[new ReaderInfo { ProviderFieldType = typeof(T), DataTypeName = dataTypeName }] = expr;
 		}
 
-		protected void SetProviderField<TP, T>(Type providerFieldType, Expression<Func<TP,int,T>> expr)
+		protected void SetProviderField<TP, T>(Type providerFieldType, Expression<Func<TP,int,T>> expr, string? dataTypeName = null)
 		{
-			ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = providerFieldType }] = expr;
+			ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = providerFieldType, DataTypeName = dataTypeName }] = expr;
 		}
 
-		protected void SetProviderField<TP,T,TS>(Expression<Func<TP,int,T>> expr)
+		protected void SetProviderField<TP,T,TS>(Expression<Func<TP,int,T>> expr, string? dataTypeName = null, Type? dataReaderType = null)
 		{
-			ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = typeof(TS) }] = expr;
+			ReaderExpressions[new ReaderInfo { ToType = typeof(T), ProviderFieldType = typeof(TS), DataTypeName = dataTypeName, DataReaderType = dataReaderType }] = expr;
 		}
 
 		protected void SetToType<TP,T,TF>(Expression<Func<TP,int,T>> expr)
@@ -276,6 +264,7 @@ namespace LinqToDB.Internal.DataProvider
 			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType, ProviderFieldType = providerType,                        DataTypeName = typeName }, out expr) ||
 			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType, ProviderFieldType = providerType                                                 }, out expr) ||
 			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                  ProviderFieldType = providerType                                                 }, out expr) ||
+			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                  ProviderFieldType = providerType,                        DataTypeName = typeName }, out expr) ||
 			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                  ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
 			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                  ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
 			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType,                                   FieldType = fieldType, DataTypeName = typeName }, out expr) ||
@@ -290,7 +279,8 @@ namespace LinqToDB.Internal.DataProvider
 			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType,                        DataTypeName = typeName }, out expr) ||
 			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType                                                 }, out expr) ||
 			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType                                                 }, out expr) ||
-				FindExpression(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType,                        DataTypeName = typeName }, out expr) ||
+			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
 			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
 			    FindExpression(new ReaderInfo { ToType = toType,                                   FieldType = fieldType, DataTypeName = typeName }, out expr) ||
 			    FindExpression(new ReaderInfo { ToType = toType,                                   FieldType = fieldType                          }, out expr) ||
