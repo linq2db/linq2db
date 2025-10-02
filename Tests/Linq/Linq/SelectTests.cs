@@ -2225,5 +2225,28 @@ namespace Tests.Linq
 				Assert.That(res.All(r => r.Gender == default), Is.True);
 			}
 		}
+
+		[Test]
+		public void SelectSimilarNames([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var parentId = Parent.First().ParentID;
+
+			// do not change names (!)
+			// SQLite fails between aliases [child] and [Child]
+			var parentsQry =
+					from child in db.Parent
+					from parent in db.Child.InnerJoin(_ => _.ParentID == child.ParentID)
+					where child.Value1 == parentId
+					select parent;
+
+			var parents =
+					from child in Parent
+					join parent in Child on child.ParentID equals parent.ParentID
+					where child.Value1 == parentId
+					select parent;
+
+			AreEqual(parentsQry, parents);
+		}
 	}
 }
