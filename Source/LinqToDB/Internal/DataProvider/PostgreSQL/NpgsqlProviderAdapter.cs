@@ -328,7 +328,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 							{
 								// v8 switched from int to byte for NpgsqlInet.Netmask
 								var netmaskType = typeof(byte);
-								var ctor = npgsqlInetType.GetConstructor(BindingFlags.ExactBinding | BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(IPAddress), netmaskType }, null);
+								var ctor = npgsqlInetType.GetConstructor(BindingFlags.ExactBinding | BindingFlags.Public | BindingFlags.Instance, new[] { typeof(IPAddress), netmaskType });
 								if (ctor == null)
 								{
 									netmaskType = typeof(int);

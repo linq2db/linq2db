@@ -228,9 +228,7 @@ namespace LinqToDB.Internal.Extensions
 		{
 			return type.GetConstructor(
 				BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
-				null,
-				Type.EmptyTypes,
-				null);
+				Type.EmptyTypes);
 		}
 
 		public static TypeCode GetTypeCodeEx(this Type type)
