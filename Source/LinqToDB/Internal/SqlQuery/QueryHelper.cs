@@ -1659,5 +1659,12 @@ namespace LinqToDB.Internal.SqlQuery
 
 			return false;
 		}
+
+		public static bool HasCteClauseReference(IQueryElement element, CteClause? clause)
+		{
+			if (clause == null)
+				return false;
+			return null != element.Find(clause, static (c, e) => e.ElementType == QueryElementType.SqlCteTable && ((SqlCteTable)e).Cte == c);
+		}
 	}
 }

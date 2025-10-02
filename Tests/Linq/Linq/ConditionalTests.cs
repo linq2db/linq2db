@@ -268,6 +268,5 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
-
 	}
 }
