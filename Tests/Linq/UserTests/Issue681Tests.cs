@@ -94,7 +94,7 @@ namespace Tests.UserTests
 
 		[Test]
 		public async Task TestInsertOrReplace(
-			[DataSources(TestProvName.AllClickHouse)] string context,
+			[InsertOrUpdateDataSources] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
 			[Values] bool withSchema)
