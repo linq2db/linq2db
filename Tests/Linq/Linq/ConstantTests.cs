@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 
+using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -269,5 +270,46 @@ namespace Tests.Linq
 			query2.GetCacheMissCount().ShouldBe(cacheMissCount);
 		}
 
+		[Test]
+		public void NullableTypeConstantDefininition([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var one = db.SelectQuery(() => 1 as int?).First();
+
+			Assert.That(one, Is.EqualTo(1 as int?));
+		}
+
+		[Test]
+		public void NullableTypeConstantDefininition2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var one = db.SelectQuery(() => (int?)1).First();
+
+			Assert.That(one, Is.EqualTo(1 as int?));
+		}
+
+		[Test]
+		public void NullableTypeConstantDefininitionAsSqlThrows([DataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Assert.Throws<LinqToDBException> (() =>
+				{
+					db.SelectQuery(() => Sql.AsSql(1 as int?)).First();
+				}, "The LINQ expression '(1 as int?)' could not be converted to SQL.")
+			;
+		}
+
+		[Test]
+		public void NullableTypeConstantDefininitionAsSql2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var one = db.SelectQuery(() => Sql.AsSql((int?)1)).First();
+
+			Assert.That(one, Is.EqualTo(1 as int?));
+		}
 	}
 }

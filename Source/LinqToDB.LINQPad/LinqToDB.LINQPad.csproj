@@ -105,7 +105,7 @@
 	</ItemGroup>
 
 	<Target Name="PostBuild1" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' != 'net472'">
-		<Exec Command="$(ProjectDir)..\..\NuGet\LINQPad\Pack.cmd $(TargetDir) lpx6" />
+		<Exec Command="&quot;$(ProjectDir)..\..\NuGet\LINQPad\Pack.cmd&quot; &quot;$(TargetDir)&quot; lpx6" />
 	</Target>
 
 	<Target Name="PostBuild2" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' == 'net472'">
@@ -119,7 +119,7 @@
 		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-x64\native\e_sqlite3.dll"   DestinationFiles="$(TargetDir)\runtimes\win-x64\native\e_sqlite3.dll" />
 		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-arm64\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\runtimes\win-arm64\native\e_sqlite3.dll" />
 
-		<Exec Command="$(ProjectDir)..\..\NuGet\LINQPad\Pack.cmd $(TargetDir) lpx" />
+		<Exec Command="&quot;$(ProjectDir)..\..\NuGet\LINQPad\Pack.cmd&quot; &quot;$(TargetDir)&quot; lpx" />
 	</Target>
 
 	<ItemGroup>
