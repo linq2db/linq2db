@@ -958,6 +958,30 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void UpdateSimilarNames([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
+			{
+				const int childId  = 10000;
+				const int parentId = 20000;
+
+				db.Parent.Insert(() => new Parent { ParentID = parentId, Value1 = parentId });
+				db.Child.Insert(() => new Child { ChildID = childId, ParentID = parentId });
+
+				// do not change names (!)
+				// SQLite fails between aliases [child] and [Child]
+				var parents =
+						from child in db.Parent
+						from parent in db.Child.InnerJoin(_ => _.ParentID == child.ParentID)
+						where child.Value1 == parentId
+						select parent;
+
+				Assert.That(parents.Set(x => x.ParentID, parentId).Update(), Is.EqualTo(1));
+			}
+		}
+
+		[Test]
 		public void AsUpdatableTest([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
