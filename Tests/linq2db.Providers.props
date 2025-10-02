@@ -11,7 +11,8 @@
 		<PackageReference Include="Devart.Data.Oracle" />
 		<PackageReference Include="MySql.Data"     Aliases="MySqlData" />
 		<PackageReference Include="MySqlConnector" Aliases="MySqlConnector" />
-		<PackageReference Include="System.Data.SQLite.Core" />
+		<PackageReference Include="System.Data.SQLite" />
+		<PackageReference Include="SourceGear.sqlite3" GeneratePathProperty="true" />
 		<PackageReference Include="Microsoft.Data.SqlClient" />
 		<PackageReference Include="System.Data.SqlClient" />
 		<PackageReference Include="AdoNetCore.AseClient" />
@@ -39,6 +40,7 @@
 		<Reference Include="Devart.Data">
 			<HintPath>$(MSBuildThisFileDirectory)\..\Redist\Devart\Devart.Data.dll</HintPath>
 		</Reference>-->
+
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">

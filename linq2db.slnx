@@ -259,6 +259,7 @@
     <File Path="Data/Setup Scripts/oracle19.cmd" />
     <File Path="Data/Setup Scripts/oracle21.cmd" />
     <File Path="Data/Setup Scripts/oracle23.cmd" />
+    <File Path="Data/Setup Scripts/pgsql-createdb.cmd" />
     <File Path="Data/Setup Scripts/pgsql10.cmd" />
     <File Path="Data/Setup Scripts/pgsql11.cmd" />
     <File Path="Data/Setup Scripts/pgsql12.cmd" />

@@ -766,10 +766,8 @@ namespace Tests.DataProvider
 				case ProviderName.SQLiteClassic:
 				case TestProvName.SQLiteClassicMiniProfilerMapped:
 				case TestProvName.SQLiteClassicMiniProfilerUnmapped:
-					expectedVersion = "3.46.1";
-					break;
 				case ProviderName.SQLiteMS:
-					expectedVersion = "3.46.1";
+					expectedVersion = "3.50.4";
 					break;
 				default:
 					throw new InvalidOperationException();
