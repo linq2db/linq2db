@@ -72,8 +72,8 @@ namespace Tests.Linq
 		{
 			public static DateOnlyTable[] Data = new[]
 			{
-				new DateOnlyTable() { Id = 1, Column = new DateOnly(1950, 1, 1), ColumnNullable = null },
-				new DateOnlyTable() { Id = 2, Column = new DateOnly(2020, 2, 29), ColumnNullable = new DateOnly(2200, 1, 1) },
+				new DateOnlyTable() { Id = 1, Column = new DateOnly(1980, 1, 1), ColumnNullable = null },
+				new DateOnlyTable() { Id = 2, Column = new DateOnly(2020, 2, 29), ColumnNullable = new DateOnly(2020, 1, 1) },
 			};
 		}
 
