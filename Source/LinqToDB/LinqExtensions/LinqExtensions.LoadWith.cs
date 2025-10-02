@@ -60,9 +60,12 @@ namespace LinqToDB
 			return newTable;
 		}
 
-		abstract class LoadWithQueryableBase<TEntity>(IQueryable<TEntity> query) : IExpressionQuery
+		abstract class LoadWithQueryableBase<TEntity>(IQueryable<TEntity> query) : IExpressionQuery, IAsyncEnumerable<TEntity>
 		{
 			public IQueryable<TEntity> Query { get; } = query;
+
+			IAsyncEnumerator<TEntity> IAsyncEnumerable<TEntity>.GetAsyncEnumerator(CancellationToken cancellationToken) =>
+				((IAsyncEnumerable<TEntity>)Query).GetAsyncEnumerator(cancellationToken);
 
 			Expression              IExpressionQuery.Expression                                   => Query.Expression;
 			IDataContext            IExpressionQuery.DataContext                                  => ((IExpressionQuery)Query.GetLinqToDBSource()).DataContext;
