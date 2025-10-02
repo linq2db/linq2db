@@ -166,8 +166,9 @@ namespace Tests.Linq
 					Where(p => p.Value1!.Value != 2));
 		}
 
+		[RequiresCorrelatedSubquery]
 		[Test]
-		public void Concat6([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void Concat6([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -2280,6 +2281,71 @@ namespace Tests.Linq
 			});
 
 			var q = query1.UnionAll(query2).ToList();
+		}
+
+		[Test]
+		public void ConcatCount_ShouldNotRemoveSingleColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q1 = db.Person.Select(_ => _.ID)
+				.Concat(db.Parent.Select(_ => _.ParentID))
+				.Count();
+
+			var q2 = Person.Select(_ => _.ID)
+				.Concat(Parent.Select(_ => _.ParentID))
+				.Count();
+
+			Assert.That(q1, Is.EqualTo(q2));
+		}
+
+		[Test]
+		public void UnionCount_ShouldNotRemoveSingleColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q1 = db.Person.Select(_ => _.ID)
+				.Union(db.Parent.Select(_ => _.ParentID))
+				.Count();
+
+			var q2 = Person.Select(_ => _.ID)
+				.Union(Parent.Select(_ => _.ParentID))
+				.Count();
+
+			Assert.That(q1, Is.EqualTo(q2));
+		}
+
+		[Test]
+		public void ConcatCountExt_ShouldNotRemoveSingleColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q1 = db.Person.Select(_ => _.ID)
+				.Concat(db.Parent.Select(_ => _.ParentID))
+				.Select(_ => _)
+				.CountExt(_ => _);
+
+			var q2 = Person.Select(_ => _.ID)
+				.Concat(Parent.Select(_ => _.ParentID))
+				.Count();
+
+			Assert.That(q1, Is.EqualTo(q2));
+		}
+
+		[Test]
+		public void ConcatSumTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q1 = db.Person.Select(_ => _.ID)
+				.Concat(db.Parent.Select(_ => _.ParentID))
+				.Sum();
+
+			var q2 = Person.Select(_ => _.ID)
+				.Concat(Parent.Select(_ => _.ParentID))
+				.Sum();
+
+			Assert.That(q1, Is.EqualTo(q2));
 		}
 
 		#region Issue 4220

@@ -38,7 +38,7 @@ namespace LinqToDB.Internal.SqlQuery
 					var e = Items[index];
 					writer.AppendElement(e);
 					if (index < Items.Count - 1)
-						writer.AppendLine();
+						writer.AppendLine(",");
 				}
 			}
 

@@ -50,6 +50,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryTable     :
+				case ConvertType.NameToCteName        :
 				case ConvertType.NameToQueryField     :
 				case ConvertType.NameToQueryParameter :
 				case ConvertType.NameToQueryTableAlias:

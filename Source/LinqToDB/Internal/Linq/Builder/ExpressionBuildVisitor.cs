@@ -5131,6 +5131,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					result |= TranslationFlags.Expression;
 			}
 
+			if (result == TranslationFlags.None)
+				result = TranslationFlags.Sql;
+
 			return result;
 		}
 

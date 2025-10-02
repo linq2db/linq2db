@@ -20,14 +20,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (element == null)
 				return null;
 
+			if (GetReplacement(element, out var replacement))
+				return replacement;
+
 			if (WithStack)
 			{
 				Stack ??= new List<IQueryElement>();
 				Stack.Add(element);
 			}
-
-			if (GetReplacement(element, out var replacement))
-				return replacement;
 
 			var newElement = base.Visit(element);
 

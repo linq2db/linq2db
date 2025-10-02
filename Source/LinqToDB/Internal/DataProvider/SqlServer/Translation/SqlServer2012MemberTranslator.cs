@@ -28,7 +28,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				second      ??= factory.Value(intDataType, 0);
 				millisecond ??= factory.Value(intDataType, 0);
 
-				var resultExpression = factory.Function(resulType, "DATETIMEFROMPARTS", year, month, day, hour, minute, second, millisecond);
+				var resultExpression = resulType.DataType == DataType.DateTime2
+					? factory.Function(resulType, "DATETIME2FROMPARTS", year, month, day, hour, minute, second, millisecond, factory.Value(intDataType, 3))
+					: factory.Function(resulType, "DATETIMEFROMPARTS",  year, month, day, hour, minute, second, millisecond);
 
 				return resultExpression;
 			}

@@ -41,6 +41,10 @@
 		/// </summary>
 		SameAsLastParameter,
 		/// <summary>
+		/// Expression could return NULL if first or second parameters of expression could contain NULL.
+		/// </summary>
+		SameAsFirstOrSecondParameter,
+		/// <summary>
 		/// Expression could return NULL if all parameters of expression could contain NULL.
 		/// </summary>
 		IfAllParametersNullable,
