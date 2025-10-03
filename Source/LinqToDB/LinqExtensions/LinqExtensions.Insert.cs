@@ -75,7 +75,7 @@ namespace LinqToDB
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
 		/// </remarks>
-		public static async Task<TTarget> InsertWithOutputAsync<TTarget>(
+		public static Task<TTarget> InsertWithOutputAsync<TTarget>(
 			                this ITable<TTarget>      target,
 			[InstantHandle] Expression<Func<TTarget>> setter,
 							CancellationToken         token = default)
@@ -92,10 +92,7 @@ namespace LinqToDB
 				query.Expression,
 				Expression.Quote(setter));
 
-			return await query.CreateQuery<TTarget>(expr)
-				.AsAsyncEnumerable()
-				.FirstAsync(token)
-				.ConfigureAwait(false);
+			return AsyncEnumerableExtensions.FirstAsync(query.CreateQuery<TTarget>(expr).AsAsyncEnumerable(), token);
 		}
 
 		/// <summary>
@@ -152,7 +149,7 @@ namespace LinqToDB
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
 		/// </remarks>
-		public static async Task<TTarget> InsertWithOutputAsync<TTarget>(
+		public static Task<TTarget> InsertWithOutputAsync<TTarget>(
 			           this ITable<TTarget>   target,
 			[InstantHandle] TTarget           obj,
 			                CancellationToken token = default)
@@ -169,10 +166,7 @@ namespace LinqToDB
 				query.Expression,
 				Expression.Constant(obj));
 
-			return await query.CreateQuery<TTarget>(expr)
-				.AsAsyncEnumerable()
-				.FirstAsync(token)
-				.ConfigureAwait(false);
+			return AsyncEnumerableExtensions.FirstAsync(query.CreateQuery<TTarget>(expr).AsAsyncEnumerable(), token);
 		}
 
 		/// <summary>
@@ -238,7 +232,7 @@ namespace LinqToDB
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
 		/// </remarks>
-		public static async Task<TOutput> InsertWithOutputAsync<TTarget,TOutput>(
+		public static Task<TOutput> InsertWithOutputAsync<TTarget,TOutput>(
 			                this ITable<TTarget>              target,
 			[InstantHandle] Expression<Func<TTarget>>         setter,
 			                Expression<Func<TTarget,TOutput>> outputExpression,
@@ -259,10 +253,7 @@ namespace LinqToDB
 				Expression.Quote(setter),
 				Expression.Quote(outputExpression));
 
-			return await query.CreateQuery<TOutput>(expr)
-				.AsAsyncEnumerable()
-				.FirstAsync(token)
-				.ConfigureAwait(false);
+			return AsyncEnumerableExtensions.FirstAsync(query.CreateQuery<TOutput>(expr).AsAsyncEnumerable(), token);
 		}
 
 		/// <summary>
@@ -536,16 +527,14 @@ namespace LinqToDB
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		public static async Task<TTarget[]> InsertWithOutputAsync<TSource, TTarget>(
+		public static Task<TTarget[]> InsertWithOutputAsync<TSource, TTarget>(
 							IQueryable<TSource> source,
 							ITable<TTarget> target,
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
 							CancellationToken token)
 			where TTarget : notnull
 		{
-			return await InsertWithOutputAsync(source, target, setter)
-				.ToArrayAsync(token)
-				.ConfigureAwait(false);
+			return AsyncEnumerableExtensions.ToArrayAsync(InsertWithOutputAsync(source, target, setter), token);
 		}
 
 		/// <summary>
@@ -671,7 +660,7 @@ namespace LinqToDB
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		public static async Task<TOutput[]> InsertWithOutputAsync<TSource, TTarget, TOutput>(
+		public static Task<TOutput[]> InsertWithOutputAsync<TSource, TTarget, TOutput>(
 							IQueryable<TSource> source,
 							ITable<TTarget> target,
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
@@ -679,9 +668,7 @@ namespace LinqToDB
 							CancellationToken token)
 			where TTarget : notnull
 		{
-			return await InsertWithOutputAsync(source, target, setter, outputExpression)
-				.ToArrayAsync(token)
-				.ConfigureAwait(false);
+			return AsyncEnumerableExtensions.ToArrayAsync(InsertWithOutputAsync(source, target, setter, outputExpression), token);
 		}
 
 		/// <summary>
@@ -919,7 +906,7 @@ namespace LinqToDB
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
 		/// </remarks>
-		public static async Task<TTarget> InsertWithOutputAsync<TSource,TTarget>(
+		public static Task<TTarget> InsertWithOutputAsync<TSource,TTarget>(
 			this ISelectInsertable<TSource,TTarget> source,
 			     CancellationToken                  token = default)
 		{
@@ -932,10 +919,7 @@ namespace LinqToDB
 				MethodHelper.GetMethodInfo(InsertWithOutput, source),
 				query.Expression);
 
-			return await query.CreateQuery<TTarget>(expr)
-				.AsAsyncEnumerable()
-				.FirstAsync(token)
-				.ConfigureAwait(false);
+			return AsyncEnumerableExtensions.FirstAsync(query.CreateQuery<TTarget>(expr).AsAsyncEnumerable(), token);
 		}
 
 		/// <summary>
@@ -1058,7 +1042,7 @@ namespace LinqToDB
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
 		/// </remarks>
-		public static async Task<T> InsertWithOutputAsync<T>(this IValueInsertable<T> source, CancellationToken token = default)
+		public static Task<T> InsertWithOutputAsync<T>(this IValueInsertable<T> source, CancellationToken token = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
@@ -1070,10 +1054,7 @@ namespace LinqToDB
 				MethodHelper.GetMethodInfo(InsertWithOutput, source),
 				currentSource.Expression);
 
-			return await currentSource.CreateQuery<T>(expr)
-				.AsAsyncEnumerable()
-				.FirstAsync(token)
-				.ConfigureAwait(false);
+			return AsyncEnumerableExtensions.FirstAsync(currentSource.CreateQuery<T>(expr).AsAsyncEnumerable(), token);
 		}
 
 		/// <summary>
@@ -1132,7 +1113,7 @@ namespace LinqToDB
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
 		/// </remarks>
-		public static async Task<TOutput> InsertWithOutputAsync<T, TOutput>(
+		public static Task<TOutput> InsertWithOutputAsync<T, TOutput>(
 			this IValueInsertable<T> source,
 			Expression<Func<T, TOutput>> outputExpression,
 			CancellationToken token = default)
@@ -1149,10 +1130,7 @@ namespace LinqToDB
 				currentSource.Expression,
 				Expression.Quote(outputExpression));
 
-			return await currentSource.CreateQuery<TOutput>(expr)
-				.AsAsyncEnumerable()
-				.FirstAsync(token)
-				.ConfigureAwait(false);
+			return AsyncEnumerableExtensions.FirstAsync(currentSource.CreateQuery<TOutput>(expr).AsAsyncEnumerable(), token);
 		}
 		#endregion
 

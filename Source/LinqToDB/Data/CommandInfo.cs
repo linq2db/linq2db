@@ -966,19 +966,19 @@ namespace LinqToDB.Data
 			}
 		}
 
-		async Task<T[]> ReadAsArrayAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
+		Task<T[]> ReadAsArrayAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
 		{
-			return await new ReaderAsyncEnumerable<T>(this, rd).ToArrayAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+			return AsyncEnumerableExtensions.ToArrayAsync(new ReaderAsyncEnumerable<T>(this, rd), cancellationToken: cancellationToken);
 		}
 
-		async Task<List<T>> ReadAsListAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
+		Task<List<T>> ReadAsListAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
 		{
-			return await new ReaderAsyncEnumerable<T>(this, rd).ToListAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+			return AsyncEnumerableExtensions.ToListAsync(new ReaderAsyncEnumerable<T>(this, rd), cancellationToken: cancellationToken);
 		}
 
-		async Task<T?> ReadFirstOrDefaultAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
+		Task<T?> ReadFirstOrDefaultAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
 		{
-			return await new ReaderAsyncEnumerable<T>(this, rd).FirstOrDefaultAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+			return AsyncEnumerableExtensions.FirstOrDefaultAsync(new ReaderAsyncEnumerable<T>(this, rd), cancellationToken: cancellationToken);
 		}
 
 		async Task<T> ReadMultipleResultSetsAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
@@ -1013,7 +1013,7 @@ namespace LinqToDB.Data
 					}
 
 					var genericMethod = valueMethodInfo.MakeGenericMethod(elementType);
-					var task          = genericMethod.InvokeExt<Task>(this, new object[] { rd, cancellationToken });
+					var task          = genericMethod.InvokeExt<Task<int>>(this, new object[] { rd, cancellationToken });
 
 					await task.ConfigureAwait(false);
 
