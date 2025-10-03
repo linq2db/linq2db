@@ -966,20 +966,25 @@ namespace LinqToDB.Data
 			}
 		}
 
-		Task<T[]> ReadAsArrayAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
+		Task<object?> ReadAsArrayAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
 		{
-			return AsyncEnumerableExtensions.ToArrayAsync(new ReaderAsyncEnumerable<T>(this, rd), cancellationToken: cancellationToken);
+			return AsyncEnumerableExtensions.ToArrayAsync(new ReaderAsyncEnumerable<T>(this, rd), cancellationToken: cancellationToken)
+				.ContinueWith(CastToObject, TaskScheduler.Default);
 		}
 
-		Task<List<T>> ReadAsListAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
+		Task<object?> ReadAsListAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
 		{
-			return AsyncEnumerableExtensions.ToListAsync(new ReaderAsyncEnumerable<T>(this, rd), cancellationToken: cancellationToken);
+			return AsyncEnumerableExtensions.ToListAsync(new ReaderAsyncEnumerable<T>(this, rd), cancellationToken: cancellationToken)
+				.ContinueWith(CastToObject, TaskScheduler.Default);
 		}
 
-		Task<T?> ReadFirstOrDefaultAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
+		Task<object?> ReadFirstOrDefaultAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
 		{
-			return AsyncEnumerableExtensions.FirstOrDefaultAsync(new ReaderAsyncEnumerable<T>(this, rd), cancellationToken: cancellationToken);
+			return AsyncEnumerableExtensions.FirstOrDefaultAsync(new ReaderAsyncEnumerable<T>(this, rd), cancellationToken: cancellationToken)
+				.ContinueWith(CastToObject, TaskScheduler.Default);
 		}
+
+		static object? CastToObject<T>(T value) => value;
 
 		async Task<T> ReadMultipleResultSetsAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
 			where T : class
@@ -1013,11 +1018,9 @@ namespace LinqToDB.Data
 					}
 
 					var genericMethod = valueMethodInfo.MakeGenericMethod(elementType);
-					var task          = genericMethod.InvokeExt<Task<int>>(this, new object[] { rd, cancellationToken });
+					var task          = genericMethod.InvokeExt<Task<object?>>(this, new object[] { rd, cancellationToken });
 
-					await task.ConfigureAwait(false);
-
-					var value = task.GetType().GetProperty(nameof(Task<int>.Result))!.GetValue(task);
+					var value = await task.ConfigureAwait(false);
 
 					member.SetValue(result, value);
 				}
