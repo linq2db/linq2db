@@ -968,17 +968,17 @@ namespace LinqToDB.Data
 
 		Task<T[]> ReadAsArrayAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
 		{
-			return new ReaderAsyncEnumerable<T>(this, rd).ToArrayAsync(cancellationToken: cancellationToken);
+			return AsyncEnumerableExtensions.ToArrayAsync(new ReaderAsyncEnumerable<T>(this, rd), cancellationToken: cancellationToken);
 		}
 
 		Task<List<T>> ReadAsListAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
 		{
-			return new ReaderAsyncEnumerable<T>(this, rd).ToListAsync(cancellationToken: cancellationToken);
+			return AsyncEnumerableExtensions.ToListAsync(new ReaderAsyncEnumerable<T>(this, rd), cancellationToken: cancellationToken);
 		}
 
 		Task<T?> ReadFirstOrDefaultAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
 		{
-			return new ReaderAsyncEnumerable<T>(this, rd).FirstOrDefaultAsync(cancellationToken: cancellationToken);
+			return AsyncEnumerableExtensions.FirstOrDefaultAsync(new ReaderAsyncEnumerable<T>(this, rd), cancellationToken: cancellationToken);
 		}
 
 		async Task<T> ReadMultipleResultSetsAsync<T>(DbDataReader rd, CancellationToken cancellationToken)

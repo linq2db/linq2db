@@ -730,8 +730,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					public async ValueTask<bool> MoveNextAsync()
 					{
-						_grouped ??= (await _elements.ToListAsync(_cancellationToken)
-								.ConfigureAwait(false))
+						_grouped ??= (await AsyncEnumerableExtensions.ToListAsync(_elements, _cancellationToken).ConfigureAwait(false))
 							.GroupBy(_groupingKey)
 							.GetEnumerator();
 

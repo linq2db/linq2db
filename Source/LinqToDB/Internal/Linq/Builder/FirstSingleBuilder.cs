@@ -17,10 +17,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		nameof(LinqInternalExtensions.AssociationRecord),
 		nameof(LinqInternalExtensions.AssociationOptionalRecord))]
 	[BuildsMethodCall(
-		nameof(AsyncEnumerableExtensions.FirstAsync), 
-		nameof(AsyncEnumerableExtensions.FirstOrDefaultAsync), 
-		nameof(AsyncEnumerableExtensions.SingleAsync), 
-		nameof(AsyncEnumerableExtensions.SingleOrDefaultAsync), CanBuildName = nameof(CanBuildAsyncMethod))]
+		nameof(AsyncExtensions.FirstAsync), 
+		nameof(AsyncExtensions.FirstOrDefaultAsync), 
+		nameof(AsyncExtensions.SingleAsync), 
+		nameof(AsyncExtensions.SingleOrDefaultAsync),
+		CanBuildName = nameof(CanBuildAsyncMethod))]
 	sealed class FirstSingleBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
@@ -44,13 +45,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			return methodName switch
 			{
 				nameof(Queryable.First)                                  => MethodKind.First,
-				nameof(AsyncEnumerableExtensions.FirstAsync)             => MethodKind.First,
+				nameof(AsyncExtensions.FirstAsync)                       => MethodKind.First,
 				nameof(Queryable.FirstOrDefault)                         => MethodKind.FirstOrDefault,
-				nameof(AsyncEnumerableExtensions.FirstOrDefaultAsync)    => MethodKind.FirstOrDefault,
+				nameof(AsyncExtensions.FirstOrDefaultAsync)              => MethodKind.FirstOrDefault,
 				nameof(Queryable.Single)                                 => MethodKind.Single,
-				nameof(AsyncEnumerableExtensions.SingleAsync)            => MethodKind.Single,
+				nameof(AsyncExtensions.SingleAsync)                      => MethodKind.Single,
 				nameof(Queryable.SingleOrDefault)                        => MethodKind.SingleOrDefault,
-				nameof(AsyncEnumerableExtensions.SingleOrDefaultAsync)   => MethodKind.SingleOrDefault,
+				nameof(AsyncExtensions.SingleOrDefaultAsync)             => MethodKind.SingleOrDefault,
 				nameof(LinqInternalExtensions.AssociationRecord)         => MethodKind.AssociationRecord,
 				nameof(LinqInternalExtensions.AssociationOptionalRecord) => MethodKind.AssociationOptionalRecord,
 				_ => throw new ArgumentOutOfRangeException(nameof(methodName), methodName, "Not supported method.")
@@ -217,8 +218,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					query.GetResultEnumerable(db, expr, ps, preambles).First();
 
 				query.GetElementAsync = query.GetElementAsync = async (db, expr, ps, preambles, token) =>
-					await query.GetResultEnumerable(db, expr, ps, preambles)
-						.FirstAsync(token).ConfigureAwait(false);
+					await AsyncEnumerableExtensions.FirstAsync(query.GetResultEnumerable(db, expr, ps, preambles), token).ConfigureAwait(false);
 			}
 
 			static void GetFirstOrDefaultElement<T>(Query<T> query)
@@ -226,9 +226,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				query.GetElement = (db, expr, ps, preambles) =>
 					query.GetResultEnumerable(db, expr, ps, preambles).FirstOrDefault();
 
-				query.GetElementAsync = query.GetElementAsync = async (db, expr, ps, preambles, token) =>
-					await query.GetResultEnumerable(db, expr, ps, preambles)
-						.FirstOrDefaultAsync(token).ConfigureAwait(false);
+				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
+					await AsyncEnumerableExtensions.FirstOrDefaultAsync(query.GetResultEnumerable(db, expr, ps, preambles), token).ConfigureAwait(false);
 			}
 
 			static void GetSingleElement<T>(Query<T> query)
@@ -237,8 +236,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					query.GetResultEnumerable(db, expr, ps, preambles).Single();
 
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
-					await query.GetResultEnumerable(db, expr, ps, preambles)
-						.SingleAsync(token).ConfigureAwait(false);
+					await AsyncEnumerableExtensions.SingleAsync(query.GetResultEnumerable(db, expr, ps, preambles), token).ConfigureAwait(false);
 			}
 
 			static void GetSingleOrDefaultElement<T>(Query<T> query)
@@ -247,8 +245,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					query.GetResultEnumerable(db, expr, ps, preambles).SingleOrDefault();
 
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
-					await query.GetResultEnumerable(db, expr, ps, preambles)
-						.SingleOrDefaultAsync(token).ConfigureAwait(false);
+					await AsyncEnumerableExtensions.SingleOrDefaultAsync(query.GetResultEnumerable(db, expr, ps, preambles), token).ConfigureAwait(false);
 			}
 
 			bool _isJoinCreated;
