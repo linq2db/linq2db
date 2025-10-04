@@ -984,7 +984,7 @@ namespace LinqToDB.Data
 				.ContinueWith(CastToObject, TaskScheduler.Default);
 		}
 
-		static object? CastToObject<T>(T value) => value;
+		static object? CastToObject<T>(Task<T> value) => value.Result;
 
 		async Task<T> ReadMultipleResultSetsAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
 			where T : class
