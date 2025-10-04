@@ -26,7 +26,28 @@ steps:
     PROCESSOR_ARCHITECTURE: x86
 
 - task: UseDotNet@2
-  displayName: 'Use latest .NET SDK'
+  displayName: 'Install .NET 10 (x86)'
+  inputs:
+    packageType: sdk
+    version: 10.x
+  condition: and(variables.title, eq(variables.net100, 'true'), eq(variables.x86, 'true'), succeeded())
+  env:
+    PROCESSOR_ARCHITECTURE: x86
+
+- task: UseDotNet@2
+  displayName: 'Install .NET 8 (x64)'
+  inputs:
+    packageType: sdk
+    version: 8.x
+
+- task: UseDotNet@2
+  displayName: 'Install .NET 9 (x64)'
+  inputs:
+    packageType: sdk
+    version: 9.x
+
+- task: UseDotNet@2
+  displayName: 'Install .NET 10 (x64)'
   inputs:
     packageType: sdk
     version: 10.x
