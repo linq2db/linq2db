@@ -50,9 +50,10 @@ namespace Tests.UserTests
 			using (db.CreateLocalTable<Issue1965Person>())
 			using (db.CreateLocalTable<Chipcard>())
 			{
-				var q = db.GetTable<Chipcard>().LoadWith(c => c.PersonData);
+				var q = db.GetTable<Chipcard>().LoadWith(c => c.PersonData).AsQueryable();
 	
-				var result = q.Where(ka => ka.PersonData != null).ToList();			}
+				var result = q.Where(ka => ka.PersonData != null).ToList();
+			}
 		}
 	}
 }

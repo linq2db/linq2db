@@ -283,6 +283,7 @@ namespace Tests.UserTests
 					.LoadWith(i => i.TypeAMeasures.First().PreviousSource)
 					.LoadWith(i => i.TypeBMeasures)
 					.LoadWith(i => i.PriceList)
+					.AsQueryable()
 					.Where(f => f.Id == 1);
 
 			query.ToArray();

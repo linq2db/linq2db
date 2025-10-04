@@ -80,7 +80,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query =
-				from p in db.Parent.LoadWith(p => p.Children)
+				from p in db.Parent.LoadWith(p => p.Children).AsQueryable()
 				from c in p.Children.DefaultIfEmpty(new Child { ChildID = -100 })
 				select new { Parent = p.ParentID, Child = c }
 				into s

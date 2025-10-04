@@ -203,7 +203,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query =
-				from p in db.Parent.LoadWith(p => p.Children)
+				from p in db.Parent.LoadWith(p => p.Children).AsQueryable()
 				select p.ParentID == 2
 					// this must be promoted to outer join
 					? p.Children.OrderBy(c => c.ChildID).First()
@@ -234,7 +234,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query =
-				from p in db.Parent.LoadWith(p => p.Children)
+				from p in db.Parent.LoadWith(p => p.Children).AsQueryable()
 				select new
 				{
 					Value = (p.ParentID % 2 == 0)
@@ -253,7 +253,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query =
-				from p in db.Parent.LoadWith(p => p.Children)
+				from p in db.Parent.LoadWith(p => p.Children).AsQueryable()
 				select new
 				{
 					Value = (p.ParentID % 2 == 0)

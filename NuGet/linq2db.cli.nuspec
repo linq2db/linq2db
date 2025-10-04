@@ -10,10 +10,12 @@
 		</packageTypes>
 	</metadata>
 	<files>
-		<file src="bin\LinqToDB.CLI\{0}\net8.0\**\*" target="tools\net8.0\any\" />
-		<file src="NuGet\CLI\DotnetToolSettings.xml" target="tools\net8.0\any\" />
-		<file src="bin\LinqToDB.CLI\{0}\net9.0\**\*" target="tools\net9.0\any\" />
-		<file src="NuGet\CLI\DotnetToolSettings.xml" target="tools\net9.0\any\" />
-		<file src="NuGet\CLI\README.md"              target="README.md"         />
+		<file src="bin\LinqToDB.CLI\{0}\net8.0\**\*"  target="tools\net8.0\any\"  />
+		<file src="NuGet\CLI\DotnetToolSettings.xml"  target="tools\net8.0\any\"  />
+		<file src="bin\LinqToDB.CLI\{0}\net9.0\**\*"  target="tools\net9.0\any\"  />
+		<file src="NuGet\CLI\DotnetToolSettings.xml"  target="tools\net9.0\any\"  />
+		<file src="bin\LinqToDB.CLI\{0}\net10.0\**\*" target="tools\net10.0\any\" />
+		<file src="NuGet\CLI\DotnetToolSettings.xml"  target="tools\net10.0\any\" />
+		<file src="NuGet\CLI\README.md"               target="README.md"          />
 	</files>
 </package>

@@ -60,19 +60,12 @@ namespace LinqToDB
 			return newTable;
 		}
 
-		abstract class LoadWithQueryableBase<TEntity> : IExpressionQuery
+		abstract class LoadWithQueryableBase<TEntity>(IQueryable<TEntity> query) : IExpressionQuery, IAsyncEnumerable<TEntity>
 		{
-			protected LoadWithQueryableBase(IQueryable<TEntity> query)
-			{
-				Query = query;
-			}
+			public IQueryable<TEntity> Query { get; } = query;
 
-			//IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQuery() => (_query as IExpressionQuery)?.GetSqlQuery() ?? Array.Empty<QuerySql>();
-			//public IDataContext DataContext => ;
-			//public Type ElementType => _query.ElementType;
-			//public IQueryProvider Provider => _query.Provider;
-
-			public IQueryable<TEntity> Query { get; }
+			IAsyncEnumerator<TEntity> IAsyncEnumerable<TEntity>.GetAsyncEnumerator(CancellationToken cancellationToken) =>
+				((IAsyncEnumerable<TEntity>)Query).GetAsyncEnumerator(cancellationToken);
 
 			Expression              IExpressionQuery.Expression                                   => Query.Expression;
 			IDataContext            IExpressionQuery.DataContext                                  => ((IExpressionQuery)Query.GetLinqToDBSource()).DataContext;
@@ -89,9 +82,6 @@ namespace LinqToDB
 			Type           IQueryable.ElementType => Query.ElementType;
 			Expression     IQueryable.Expression  => Query.Expression;
 			IQueryProvider IQueryable.Provider    => Query.Provider;
-
-			IAsyncEnumerator<TEntity> IAsyncEnumerable<TEntity>.GetAsyncEnumerator(CancellationToken cancellationToken) =>
-				((IAsyncEnumerable<TEntity>)Query).GetAsyncEnumerator(cancellationToken);
 
 			IEnumerator<TEntity> IEnumerable<TEntity>.GetEnumerator() => Query.GetEnumerator();
 

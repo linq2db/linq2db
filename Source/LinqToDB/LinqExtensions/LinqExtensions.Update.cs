@@ -124,9 +124,7 @@ namespace LinqToDB
 							CancellationToken token)
 			where TTarget : class
 		{
-			return source
-				.UpdateWithOutputAsync(target, setter)
-				.ToArrayAsync(token);
+			return AsyncEnumerableExtensions.ToArrayAsync(source.UpdateWithOutputAsync(target, setter), token);
 		}
 
 		/// <summary>
@@ -256,9 +254,7 @@ namespace LinqToDB
 							CancellationToken token)
 			where TTarget : class
 		{
-			return source
-				.UpdateWithOutputAsync(target, setter, outputExpression)
-				.ToArrayAsync(token);
+			return AsyncEnumerableExtensions.ToArrayAsync(source.UpdateWithOutputAsync(target, setter, outputExpression), token);
 		}
 
 		/// <summary>
@@ -548,9 +544,7 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
 							CancellationToken token)
 		{
-			return source
-				.UpdateWithOutputAsync(target, setter)
-				.ToArrayAsync(token);
+			return AsyncEnumerableExtensions.ToArrayAsync(source.UpdateWithOutputAsync(target, setter), token);
 		}
 
 		/// <summary>
@@ -677,9 +671,7 @@ namespace LinqToDB
 							Expression<Func<TSource, TTarget, TTarget, TOutput>> outputExpression,
 							CancellationToken token)
 		{
-			return source
-				.UpdateWithOutputAsync(target, setter, outputExpression)
-				.ToArrayAsync(token);
+			return AsyncEnumerableExtensions.ToArrayAsync(source.UpdateWithOutputAsync(target, setter, outputExpression), token);
 		}
 
 		/// <summary>
@@ -953,9 +945,7 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T, T>> setter,
 							CancellationToken token)
 		{
-			return source
-				.UpdateWithOutputAsync(setter)
-				.ToArrayAsync(token);
+			return AsyncEnumerableExtensions.ToArrayAsync(source.UpdateWithOutputAsync(setter), token);
 		}
 
 		/// <summary>
@@ -1069,9 +1059,7 @@ namespace LinqToDB
 							Expression<Func<T, T, TOutput>> outputExpression,
 							CancellationToken token)
 		{
-			return source
-				.UpdateWithOutputAsync(setter, outputExpression)
-				.ToArrayAsync(token);
+			return AsyncEnumerableExtensions.ToArrayAsync(source.UpdateWithOutputAsync(setter, outputExpression), token);
 		}
 
 		/// <summary>
@@ -1318,7 +1306,7 @@ namespace LinqToDB
 					        IUpdatable<T> source,
 							CancellationToken token)
 		{
-			return source.UpdateWithOutputAsync().ToArrayAsync(token);
+			return AsyncEnumerableExtensions.ToArrayAsync(source.UpdateWithOutputAsync(), token);
 		}
 
 		/// <summary>
@@ -1424,9 +1412,7 @@ namespace LinqToDB
 							Expression<Func<T, T, TOutput>> outputExpression,
 							CancellationToken token)
 		{
-			return source
-				.UpdateWithOutputAsync(outputExpression)
-				.ToArrayAsync(token);
+			return AsyncEnumerableExtensions.ToArrayAsync(source.UpdateWithOutputAsync(outputExpression), token);
 		}
 
 		/// <summary>

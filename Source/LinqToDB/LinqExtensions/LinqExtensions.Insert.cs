@@ -92,9 +92,7 @@ namespace LinqToDB
 				query.Expression,
 				Expression.Quote(setter));
 
-			return query.CreateQuery<TTarget>(expr)
-				.AsAsyncEnumerable()
-				.FirstAsync(token);
+			return AsyncEnumerableExtensions.FirstAsync(query.CreateQuery<TTarget>(expr).AsAsyncEnumerable(), token);
 		}
 
 		/// <summary>
@@ -168,9 +166,7 @@ namespace LinqToDB
 				query.Expression,
 				Expression.Constant(obj));
 
-			return query.CreateQuery<TTarget>(expr)
-				.AsAsyncEnumerable()
-				.FirstAsync(token);
+			return AsyncEnumerableExtensions.FirstAsync(query.CreateQuery<TTarget>(expr).AsAsyncEnumerable(), token);
 		}
 
 		/// <summary>
@@ -257,9 +253,7 @@ namespace LinqToDB
 				Expression.Quote(setter),
 				Expression.Quote(outputExpression));
 
-			return query.CreateQuery<TOutput>(expr)
-				.AsAsyncEnumerable()
-				.FirstAsync(token);
+			return AsyncEnumerableExtensions.FirstAsync(query.CreateQuery<TOutput>(expr).AsAsyncEnumerable(), token);
 		}
 
 		/// <summary>
@@ -540,8 +534,7 @@ namespace LinqToDB
 							CancellationToken token)
 			where TTarget : notnull
 		{
-			return InsertWithOutputAsync(source, target, setter)
-				.ToArrayAsync(token);
+			return AsyncEnumerableExtensions.ToArrayAsync(InsertWithOutputAsync(source, target, setter), token);
 		}
 
 		/// <summary>
@@ -675,8 +668,7 @@ namespace LinqToDB
 							CancellationToken token)
 			where TTarget : notnull
 		{
-			return InsertWithOutputAsync(source, target, setter, outputExpression)
-				.ToArrayAsync(token);
+			return AsyncEnumerableExtensions.ToArrayAsync(InsertWithOutputAsync(source, target, setter, outputExpression), token);
 		}
 
 		/// <summary>
@@ -927,9 +919,7 @@ namespace LinqToDB
 				MethodHelper.GetMethodInfo(InsertWithOutput, source),
 				query.Expression);
 
-			return query.CreateQuery<TTarget>(expr)
-				.AsAsyncEnumerable()
-				.FirstAsync(token);
+			return AsyncEnumerableExtensions.FirstAsync(query.CreateQuery<TTarget>(expr).AsAsyncEnumerable(), token);
 		}
 
 		/// <summary>
@@ -1064,9 +1054,7 @@ namespace LinqToDB
 				MethodHelper.GetMethodInfo(InsertWithOutput, source),
 				currentSource.Expression);
 
-			return currentSource.CreateQuery<T>(expr)
-				.AsAsyncEnumerable()
-				.FirstAsync(token);
+			return AsyncEnumerableExtensions.FirstAsync(currentSource.CreateQuery<T>(expr).AsAsyncEnumerable(), token);
 		}
 
 		/// <summary>
@@ -1125,7 +1113,10 @@ namespace LinqToDB
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
 		/// </remarks>
-		public static Task<TOutput> InsertWithOutputAsync<T, TOutput>(this IValueInsertable<T> source, Expression<Func<T, TOutput>> outputExpression, CancellationToken token = default)
+		public static Task<TOutput> InsertWithOutputAsync<T, TOutput>(
+			this IValueInsertable<T> source,
+			Expression<Func<T, TOutput>> outputExpression,
+			CancellationToken token = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
@@ -1139,9 +1130,7 @@ namespace LinqToDB
 				currentSource.Expression,
 				Expression.Quote(outputExpression));
 
-			return currentSource.CreateQuery<TOutput>(expr)
-				.AsAsyncEnumerable()
-				.FirstAsync(token);
+			return AsyncEnumerableExtensions.FirstAsync(currentSource.CreateQuery<TOutput>(expr).AsAsyncEnumerable(), token);
 		}
 		#endregion
 

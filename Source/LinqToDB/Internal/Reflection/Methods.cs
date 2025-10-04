@@ -360,7 +360,7 @@ namespace LinqToDB.Internal.Reflection
 
 			public static class Tools
 			{
-				public static readonly MethodInfo CreateEmptyQuery  = MemberHelper.MethodOfGeneric(() => Internal.Common.Tools.CreateEmptyQuery<int>());
+				public static readonly MethodInfo CreateEmptyQuery  = MemberHelper.MethodOfGeneric(() => Common.Tools.CreateEmptyQuery<int>());
 			}
 
 			public static class ColumnReader
@@ -379,7 +379,7 @@ namespace LinqToDB.Internal.Reflection
 
 			internal static class Exceptions
 			{
-				public static readonly MethodInfo DefaultInheritanceMappingException = MemberHelper.MethodOf(() => Internal.Linq.Exceptions.DefaultInheritanceMappingException(null!, null!));
+				public static readonly MethodInfo DefaultInheritanceMappingException = MemberHelper.MethodOf(() => Linq.Exceptions.DefaultInheritanceMappingException(null!, null!));
 			}
 
 			internal static class Sql

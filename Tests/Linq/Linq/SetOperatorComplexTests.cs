@@ -199,12 +199,12 @@ namespace Tests.Linq
 			var authorTable = db.GetTable<Author>();
 
 			var query1 = 
-				from a in authorTable.LoadWith(a => a.Books)
+				from a in authorTable.LoadWith(a => a.Books).AsQueryable()
 				from b in a.Books.OfType<Roman>()
 				select (Book)b;
 
 			var query2 = 
-				from a in authorTable.LoadWith(a => a.Books)
+				from a in authorTable.LoadWith(a => a.Books).AsQueryable()
 				from b in a.Books.OfType<Novel>()
 				select b;
 
@@ -222,12 +222,12 @@ namespace Tests.Linq
 			var authorTable = db.GetTable<Author>();
 
 			var query1 = 
-				from a in authorTable.LoadWith(a => a.Books)
+				from a in authorTable.LoadWith(a => a.Books).AsQueryable()
 				from b in a.Books.OfType<Roman>()
 				select (Book)b;
 
 			var query2 = 
-				from a in authorTable.LoadWith(a => a.Books)
+				from a in authorTable.LoadWith(a => a.Books).AsQueryable()
 				from b in a.Books.OfType<Novel>()
 				select b;
 
@@ -245,12 +245,12 @@ namespace Tests.Linq
 			var authorTable = db.GetTable<Author>();
 
 			var query1 =
-				from a in authorTable.LoadWith(a => a.Books)
+				from a in authorTable.LoadWith(a => a.Books).AsQueryable()
 				from b in a.Books.OfType<Roman>()
 				select (Book)b;
 
 			var query2 =
-				from a in authorTable.LoadWith(a => a.Books)
+				from a in authorTable.LoadWith(a => a.Books).AsQueryable()
 				from b in a.Books.OfType<Novel>()
 				select b;
 
@@ -268,12 +268,12 @@ namespace Tests.Linq
 			var authorTable = db.GetTable<Author>();
 
 			var query1 = 
-				from a in authorTable.LoadWith(a => a.Books)
+				from a in authorTable.LoadWith(a => a.Books).AsQueryable()
 				from b in a.Books.OfType<Roman>()
 				select (Book)b;
 
 			var query2 = 
-				from a in authorTable.LoadWith(a => a.Books)
+				from a in authorTable.LoadWith(a => a.Books).AsQueryable()
 				from b in a.Books.OfType<Novel>()
 				select b;
 
@@ -291,7 +291,7 @@ namespace Tests.Linq
 			var authorTable = db.GetTable<Author>();
 
 			var query1 = 
-				from a in authorTable.LoadWith(a => a.Books)
+				from a in authorTable.LoadWith(a => a.Books).AsQueryable()
 				from b in a.Books.OfType<Roman>()
 				select new
 				{
@@ -300,7 +300,7 @@ namespace Tests.Linq
 				};
 
 			var query2 = 
-				from a in authorTable.LoadWith(a => a.Books)
+				from a in authorTable.LoadWith(a => a.Books).AsQueryable()
 				from b in a.Books.OfType<Novel>()
 				select new
 				{
@@ -343,7 +343,7 @@ namespace Tests.Linq
 			var authorTable = db.GetTable<Author>();
 
 			var query1 = 
-				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors).AsQueryable()
 				from b in a.Books.OfType<Roman>()
 				select new
 				{
@@ -353,7 +353,7 @@ namespace Tests.Linq
 				};
 
 			var query2 = 
-				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors).AsQueryable()
 				from b in a.Books.OfType<Novel>()
 				select new
 				{
@@ -376,7 +376,7 @@ namespace Tests.Linq
 			var authorTable = db.GetTable<Author>();
 
 			var query1 = 
-				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors).AsQueryable()
 				from b in a.Books.OfType<Roman>()
 				select new
 				{
@@ -386,7 +386,7 @@ namespace Tests.Linq
 				};
 
 			var query2 = 
-				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors).AsQueryable()
 				from b in a.Books.OfType<Novel>()
 				select new
 				{
@@ -409,7 +409,7 @@ namespace Tests.Linq
 			var authorTable = db.GetTable<Author>();
 
 			var query1 = 
-				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors).AsQueryable()
 				from b in a.Books.OfType<Roman>()
 				select new
 				{
@@ -419,7 +419,7 @@ namespace Tests.Linq
 				};
 
 			var query2 = 
-				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors).AsQueryable()
 				from b in a.Books.OfType<Novel>()
 				select new
 				{
@@ -442,7 +442,7 @@ namespace Tests.Linq
 			var authorTable = db.GetTable<Author>();
 
 			var query1 = 
-				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors).AsQueryable()
 				from b in a.Books.OfType<Roman>()
 				select 
 					new Dictionary<string, string>{
@@ -451,7 +451,7 @@ namespace Tests.Linq
 					};
 
 			var query2 = 
-				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors).AsQueryable()
 				from b in a.Books.OfType<Novel>()
 			select 
 				new Dictionary<string, string>{
@@ -535,7 +535,7 @@ namespace Tests.Linq
 			var authorTable = db.GetTable<Author>();
 
 			var query1 =
-				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors).AsQueryable()
 				from b in a.Books.OfType<Roman>()
 				select new ByBookTypeResult
 				{
@@ -544,7 +544,7 @@ namespace Tests.Linq
 				};
 
 			var query2 = 
-				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors).AsQueryable()
 				from b in a.Books.OfType<Novel>()
 				select new ByBookTypeResult
 				{
@@ -563,7 +563,7 @@ namespace Tests.Linq
 			using var db       = GetDataContext(context);
 			using var disposal = InitTestData(db);
 
-			var books = db.GetTable<Book>().LoadWith(b => b.Authors);
+			var books = db.GetTable<Book>().LoadWith(b => b.Authors).AsQueryable();
 
 			var query1 =
 				from b in books.OfType<Roman>()
@@ -595,7 +595,7 @@ namespace Tests.Linq
 			var authorTable = db.GetTable<Author>();
 
 			var query1 =
-				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors).AsQueryable()
 				select new 
 				{
 					AuthorName = a.AuthorName, 
@@ -603,7 +603,7 @@ namespace Tests.Linq
 				};
 
 			var query2 = 
-				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors).AsQueryable()
 				from b in a.Books.OfType<Novel>()
 				select new 
 				{

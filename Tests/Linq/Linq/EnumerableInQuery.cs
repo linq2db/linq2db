@@ -178,7 +178,7 @@ namespace Tests.Linq
 			using var stylesTable = db.CreateLocalTable(styles);
 
 			var query =
-				from item in itemsTable.LoadWith(it => it.Color).LoadWith(it => it.Style)
+				from item in itemsTable.LoadWith(it => it.Color).LoadWith(it => it.Style).AsQueryable()
 				from it in new[]
 				{
 					new {ColorName = (string?)(item.Color!.Name), StyleName = item.Style!.Name },
@@ -207,7 +207,7 @@ namespace Tests.Linq
 			using var stylesTable = db.CreateLocalTable(styles);
 
 			var query =
-				from item in itemsTable.LoadWith(it => it.Color).LoadWith(it => it.Style)
+				from item in itemsTable.LoadWith(it => it.Color).LoadWith(it => it.Style).AsQueryable()
 				from it in new[]
 				{
 					new {ColorName = (string?)(item.Color!.Name), StyleName = item.Style!.Name, Count = itemsTable.Count() },
@@ -245,7 +245,7 @@ namespace Tests.Linq
 			using var stylesTable = db.CreateLocalTable(styles);
 
 			var query =
-				from item in itemsTable.LoadWith(it => it.Color).LoadWith(it => it.Style)
+				from item in itemsTable.LoadWith(it => it.Color).LoadWith(it => it.Style).AsQueryable()
 				from it in new[]
 				{
 					new IntermediateProjection

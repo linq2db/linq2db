@@ -60,7 +60,7 @@ namespace Tests.UserTests
 				var interceptor = new CountCommandsInterceptor();
 				db.AddInterceptor(interceptor);
 				//Below line makes same join queries twice
-				var query = db.GetTable<Order>().LoadWith(o => o.Details).Where(o => o.OrderId == 1);
+				var query = db.GetTable<Order>().LoadWith(o => o.Details).AsQueryable().Where(o => o.OrderId == 1);
 				var order = query.FirstOrDefault();
 
 				Assert.That(interceptor.Count, Is.EqualTo(2));

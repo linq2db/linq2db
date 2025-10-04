@@ -88,8 +88,9 @@ namespace Tests.UserTests
 			using (db.CreateLocalTable<StatusData>())
 			using (db.CreateLocalTable<Cash>())
 			{
-				var q = from n in db.GetTable<Detail>()
-						.LoadWith(n => n.Status)
+				var q = 
+					from n in db.GetTable<Detail>()
+						.LoadWith(n => n.Status).AsQueryable()
 					where n.StatusType == 2
 					select n;
 				Assert.DoesNotThrow(() => _ = q.ToList());

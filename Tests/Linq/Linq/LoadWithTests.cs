@@ -27,7 +27,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from t in db.Child.LoadWith(p => p.Parent)
+					from t in db.Child.LoadWith(p => p.Parent).AsQueryable()
 					select t;
 
 				var ch = q.First();
@@ -57,7 +57,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from t in db.GrandChild.LoadWith(p => p.Child!.Parent)
+					from t in db.GrandChild.LoadWith(p => p.Child!.Parent).AsQueryable()
 					select t;
 
 				var ch = q.First();
@@ -108,7 +108,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context, ms))
 			{
 				var q =
-					from p in db.Parent.LoadWith(p => p.Children3)
+					from p in db.Parent.LoadWith(p => p.Children3).AsQueryable()
 					select new
 					{
 						p.GrandChildren.Count,
@@ -164,7 +164,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context, ms))
 			{
 				var q =
-					from p in db.Parent.LoadWith(p => p.Children3)
+					from p in db.Parent.LoadWith(p => p.Children3).AsQueryable()
 					select new
 					{
 						p.GrandChildren.Count,
@@ -184,7 +184,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in db.Parent.LoadWith(p => p.Children.First().GrandChildren[0].Child!.Parent)
+					from p in db.Parent.LoadWith(p => p.Children.First().GrandChildren[0].Child!.Parent).AsQueryable()
 					select new
 					{
 						p.GrandChildren.Count,
@@ -206,7 +206,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in db.Child.LoadWith(p => p.GrandChildren2[0].Child!.Parent)
+					from p in db.Child.LoadWith(p => p.GrandChildren2[0].Child!.Parent).AsQueryable()
 					select new
 					{
 						p.GrandChildren.Count,
@@ -227,7 +227,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in db.Child.LoadWith(p => p.GrandChildren2[0].Child!.Parent)
+					from p in db.Child.LoadWith(p => p.GrandChildren2[0].Child!.Parent).AsQueryable()
 					select new
 					{
 						p.GrandChildren.Count,
@@ -248,7 +248,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in db.GrandChild.LoadWith(p => p.Child!.GrandChildren[0].Child!.Parent)
+					from p in db.GrandChild.LoadWith(p => p.Child!.GrandChildren[0].Child!.Parent).AsQueryable()
 					select p;
 
 				var ch = q.SelectMany(p => p.Child!.GrandChildren).FirstOrDefault()!;
@@ -265,7 +265,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in db.GrandChild.LoadWith(p => p.Child!.GrandChildren)
+					from p in db.GrandChild.LoadWith(p => p.Child!.GrandChildren).AsQueryable()
 					select p;
 
 				var ch = q.SelectMany(p => p.Child!.GrandChildren).FirstOrDefault()!;
@@ -282,7 +282,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in db.Parent.LoadWith(p => p.Children)
+					from p in db.Parent.LoadWith(p => p.Children).AsQueryable()
 					where p.ParentID < 2
 					select p;
 
@@ -299,7 +299,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q =
-					from p in db.Parent.LoadWith(p => p.Children).LoadWith(p => p.GrandChildren)
+					from p in db.Parent.LoadWith(p => p.Children).LoadWith(p => p.GrandChildren).AsQueryable()
 					where p.ParentID < 2
 					select p;
 
@@ -323,12 +323,12 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q1 =
-					(from p in db.Parent.LoadWith(p => p.Children[0].Parent!.Children)
+					from p in db.Parent.LoadWith(p => p.Children[0].Parent!.Children).AsQueryable()
 					where p.ParentID < 2
 					select new
 					{
 						p,
-					});
+					};
 
 				var result = q1.FirstOrDefault()!;
 
@@ -599,7 +599,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(testData.Item5))
 			{
 				var filterQuery =
-					from m2 in db.GetTable<MainItem2>().LoadWith(m2 => m2.MainItem)
+					from m2 in db.GetTable<MainItem2>().LoadWith(m2 => m2.MainItem).AsQueryable()
 					where m2.MainItem != null && m2.MainItem!.SubItems1.Count() > 1
 					select m2;
 
