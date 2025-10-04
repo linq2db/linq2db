@@ -543,7 +543,27 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				default:
 				{
-					if (expr is BinaryExpression binary)
+					if (expr is UnaryExpression unary)
+					{
+						var l = LinqToDB.Linq.Expressions.ConvertUnary(MappingSchema, unary);
+						if (l != null)
+						{
+							var body = l.Body.Unwrap();
+							var newExpr = body.Transform((l, unary), static (context, wpi) =>
+							{
+								if (wpi.NodeType == ExpressionType.Parameter)
+								{
+									if (context.l.Parameters[0] == wpi)
+										return context.unary.Operand;
+								}
+
+								return wpi;
+							});
+
+							return PreferServerSide(newExpr, enforceServerSide);
+						}
+					}
+					else if (expr is BinaryExpression binary)
 					{
 						var l = LinqToDB.Linq.Expressions.ConvertBinary(MappingSchema, binary);
 						if (l != null)
