@@ -1718,7 +1718,6 @@ namespace LinqToDB.Data
 		/// </summary>
 		public bool InlineParameters { get; set; }
 
-		private List<string>? _queryHints;
 		/// <summary>
 		/// Gets list of query hints (writable collection), that will be used for all queries, executed through current connection.
 		/// </summary>
@@ -1728,11 +1727,10 @@ namespace LinqToDB.Data
 			{
 				CheckAndThrowOnDisposed();
 
-				return _queryHints ??= new();
+				return field ??= new();
 			}
 		}
 
-		private List<string>? _nextQueryHints;
 		/// <summary>
 		/// Gets list of query hints (writable collection), that will be used only for next query, executed through current connection.
 		/// </summary>
@@ -1742,7 +1740,7 @@ namespace LinqToDB.Data
 			{
 				CheckAndThrowOnDisposed();
 
-				return _nextQueryHints ??= new();
+				return field ??= new();
 			}
 		}
 

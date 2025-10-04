@@ -111,15 +111,13 @@ namespace LinqToDB.Mapping
 	[PublicAPI]
 	public static class DefaultValue<T>
 	{
-		static T _value = DefaultValue.GetValue<T>();
-
 		/// <summary>
 		/// Gets or sets default value for specific type.
 		/// </summary>
 		public static T Value
 		{
-			get => _value;
-			set => DefaultValue.SetValue(_value = value);
-		}
+			get;
+			set => DefaultValue.SetValue(field = value);
+		} = DefaultValue.GetValue<T>();
 	}
 }
