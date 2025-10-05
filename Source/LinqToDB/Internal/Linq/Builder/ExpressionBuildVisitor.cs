@@ -759,45 +759,42 @@ namespace LinqToDB.Internal.Linq.Builder
 				return newNode;
 			}
 
-			if (node.Method.Name == nameof(Sql.Alias) && node.Method.DeclaringType == typeof(Sql))
+			if (node.Method.DeclaringType == typeof(Sql))
 			{
-				using var saveAlias = UsingAlias(Builder.EvaluateExpression<string>(node.Arguments[1]));
-
-				var translated = Visit(node.Arguments[0]);
-
-				translated = RegisterTranslatedSql(translated, node);
-
-				return translated;
-			}
-
-			if (IsSqlOrExpression() && node.Method.Name == nameof(Sql.Parameter) && node.Method.DeclaringType == typeof(Sql))
-			{
-				using var saveFlags = UsingBuildFlags(BuildFlags.ForceParameter);
-
-				var translated = Visit(node.Arguments[0]);
-
-				translated = RegisterTranslatedSql(translated, node);
-
-				return translated;
-			}
-
-			if (IsSqlOrExpression() && node.Method.Name == nameof(Sql.Constant) && node.Method.DeclaringType == typeof(Sql))
-			{
-				using var saveFlags = UsingBuildFlags(BuildFlags.ForceParameter);
-
-				if (HandleValue(node.Arguments[0], out var translated))
+				switch (node.Method.Name)
 				{
-					if (translated is SqlPlaceholderExpression { Sql: SqlParameter sqlParameter })
+					case nameof(Sql.Alias):
 					{
-						sqlParameter.IsQueryParameter = false;
+						using var saveAlias = UsingAlias(Builder.EvaluateExpression<string>(node.Arguments[1]));
+						var translated = Visit(node.Arguments[0]);
+						return RegisterTranslatedSql(translated, node);
 					}
 
-					translated = RegisterTranslatedSql(translated, node);
+					case nameof(Sql.Parameter) when IsSqlOrExpression():
+					{
+						using var saveFlags = UsingBuildFlags(BuildFlags.ForceParameter);
+						var translated = Visit(node.Arguments[0]);
+						return RegisterTranslatedSql(translated, node);
+					}
 
-					return translated;
+					case nameof(Sql.Constant) when IsSqlOrExpression():
+					{
+						using var saveFlags = UsingBuildFlags(BuildFlags.ForceParameter);
+
+						if (HandleValue(node.Arguments[0], out var translated))
+						{
+							if (translated is SqlPlaceholderExpression { Sql: SqlParameter sqlParameter })
+							{
+								sqlParameter.IsQueryParameter = false;
+							}
+
+							translated = RegisterTranslatedSql(translated, node);
+							return translated;
+						}
+
+						return node;
+					}
 				}
-
-				return node;
 			}
 
 			if (Builder.IsAssociation(node, out _))
@@ -3304,7 +3301,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			ISqlPredicate? predicate = null;
 
-			if (node.Method.Name == "Equals" && node.Object != null && node.Arguments.Count == 1)
+			if (node is { Method.Name: "Equals", Object: { }, Arguments.Count: 1 })
 				return ConvertCompareExpression(ExpressionType.Equal, node.Object, node.Arguments[0]);
 
 			var saveFlags = _buildFlags;
@@ -3315,9 +3312,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				switch (node.Method.Name)
 				{
-					case "Contains"  : predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.Contains,   IsCaseSensitive(node)); break;
-					case "StartsWith": predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.StartsWith, IsCaseSensitive(node)); break;
-					case "EndsWith"  : predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.EndsWith,   IsCaseSensitive(node)); break;
+					case nameof(string.Contains)  : predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.Contains,   IsCaseSensitive(node)); break;
+					case nameof(string.StartsWith): predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.StartsWith, IsCaseSensitive(node)); break;
+					case nameof(string.EndsWith)  : predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.EndsWith,   IsCaseSensitive(node)); break;
 				}
 			}
 			else if (node.Method.Name == "Contains")
@@ -3330,6 +3327,25 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					predicate = ConvertInPredicate(node);
 				}
+#if NET8_0_OR_GREATER
+				if (node.Method.DeclaringType == typeof(MemoryExtensions)
+					&& node is { Arguments: [MethodCallExpression { Method.Name: "op_Implicit", Type.Name: "ReadOnlySpan`1", Arguments: [{ } spanSource] }, _, ..] }
+					&& Builder.CanBeEvaluatedOnClient(node.Arguments[0]))
+				{
+					var containsMethod = ExpressionBuilder.EnumerableMethods
+						.First(m => m.Name == "Contains" && m.GetParameters().Length == node.Arguments.Count)
+						.MakeGenericMethod(node.Arguments[1].Type);
+
+					var expr = Expression.Call(
+						containsMethod,
+						node.Arguments.Count == 2
+							? [spanSource, node.Arguments[1]]
+							: [spanSource, node.Arguments[1], node.Arguments[2]]
+					);
+
+					predicate = ConvertInPredicate(expr);
+				}
+#endif
 			}
 			else if (node.Method.Name == "ContainsValue" && typeof(Dictionary<,>).IsSameOrParentOf(node.Method.DeclaringType!))
 			{
