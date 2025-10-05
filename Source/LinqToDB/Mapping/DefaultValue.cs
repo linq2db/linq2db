@@ -47,26 +47,19 @@ namespace LinqToDB.Mapping
 		/// <returns>Default value for specific type.</returns>
 		public static object? GetValue(Type type, MappingSchema? mappingSchema = null)
 		{
-			if (type == null) throw new ArgumentNullException(nameof(type));
-
-			var ms = mappingSchema ?? MappingSchema.Default;
+			if (type == null)
+				throw new ArgumentNullException(nameof(type));
 
 			if (_values.TryGetValue(type, out var value))
 				return value;
 
 			if (type.IsEnum)
 			{
+				var ms = mappingSchema ?? MappingSchema.Default;
 				var mapValues = ms.GetMapValues(type);
 
 				if (mapValues != null)
-				{
-					var fields =
-						from f in mapValues
-						where f.MapValues.Any(a => a.Value == null)
-						select f.OrigValue;
-
-					value = fields.FirstOrDefault();
-				}
+					value = mapValues.FirstOrDefault(f => f.MapValues.Any(a => a.Value == null))?.OrigValue;
 			}
 
 			if (value == null && !type.IsNullableType())
