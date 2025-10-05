@@ -1,4 +1,8 @@
 <Project>
+	<PropertyGroup>
+		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+	</PropertyGroup>
+
 	<!--
 	When multiple versions of same nuget references, don't put it to unconditional ItemGroup
 	as while it works fine in Visual Studio in general there are still issues with tooling (dotnet publish, testing)
@@ -23,7 +27,7 @@
 	</PropertyGroup>
 	
 	<ItemGroup Label="Build: Analyzers and Tools">
-		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.212"                      />
+		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.223"                      />
 		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.49"                       />
 		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                      Version="5.0.0-1.25277.114"            />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="5.0.0-1.25277.114"            />

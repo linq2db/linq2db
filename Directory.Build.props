@@ -38,8 +38,6 @@
 		<GenerateAssemblyFileVersionAttribute>true</GenerateAssemblyFileVersionAttribute>
 		<GenerateNeutralResourcesLanguageAttribute>false</GenerateNeutralResourcesLanguageAttribute>
 
-		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-
 		<!--required for SkipLocalInit-->
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
