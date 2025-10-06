@@ -168,15 +168,19 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				if (!_disableOrderBy)
 				{
-					/*if (selectQuery.OrderBy.IsEmpty && ExtractOrderBy(selectQuery, out var orderBy))
+					if (selectQuery.OrderBy.IsEmpty && ExtractOrderBy(selectQuery, out var orderBy))
 					{
 						// we can preserve order in simple cases
-						selectQuery.OrderBy.Items.AddRange(orderBy.Items);
+						foreach(var item in orderBy.Items)
+						{
+							selectQuery.OrderBy.Items.Add(item.Clone());
+						}
+
 						orderBy.Items.Clear();
 
 						_optimized          = true;
 						_needsNestingUpdate = true;
-					}*/
+					}
 				}
 
 				Visit(selectQuery.From);
