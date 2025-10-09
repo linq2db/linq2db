@@ -79,7 +79,7 @@ namespace LinqToDB
 			IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options) => ((IExpressionQuery)Query.GetLinqToDBSource()).GetSqlQueries(options);
 		}
 
-		sealed class LoadWithQueryable<TEntity, TProperty> : LoadWithQueryableBase<TEntity>, ILoadWithQueryable<TEntity, TProperty>
+		sealed class LoadWithQueryable<TEntity, TProperty> : LoadWithQueryableBase<TEntity>, ILoadWithQueryable<TEntity, TProperty>, IAsyncEnumerable<TEntity>
 		{
 			public LoadWithQueryable(IQueryable<TEntity> query)
 				: base(query)
