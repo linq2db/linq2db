@@ -67,11 +67,6 @@ namespace LinqToDB
 				Query = query;
 			}
 
-			//IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQuery() => (_query as IExpressionQuery)?.GetSqlQuery() ?? Array.Empty<QuerySql>();
-			//public IDataContext DataContext => ;
-			//public Type ElementType => _query.ElementType;
-			//public IQueryProvider Provider => _query.Provider;
-
 			public IQueryable<TEntity> Query { get; }
 
 			Expression              IExpressionQuery.Expression                                   => Query.Expression;
