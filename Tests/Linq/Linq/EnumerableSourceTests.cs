@@ -695,10 +695,10 @@ namespace Tests.Linq
 					select r;
 
 				var cnt = table.Insert(queryToInsert);
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(2));
 				cnt = table.Insert(queryToInsert);
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.Zero);
 
 				if (iteration > 1)

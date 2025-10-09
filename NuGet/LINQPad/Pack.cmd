@@ -1,39 +1,62 @@
-ECHO ON
-ECHO Packing %2
+@echo on
+setlocal
 
-SET RELDIR=%1..\..\..\..\lpx
-SET RESDIR=%1..\..\..\..\..\NuGet\LINQPad
+REM %~1 = TargetDir (always ends with a backslash \), %~2 = extension (lpx | lpx6)
+set "OUTDIR=%~1"
+set "EXT=%~2"
 
-DEL %RELDIR%\linq2db.LINQPad.%2
-DEL %RELDIR%\linq2db.LINQPad.%2.zip
+echo Packing %EXT%
+REM .build\bin\LinqToDB.LINQPad\Debug\TFM\..\..\..\..\lpx -> .build\lpx
+set "RELDIR=%OUTDIR%..\..\..\..\lpx"
+set "RESDIR=%OUTDIR%..\..\..\..\..\NuGet\LINQPad"
 
-REM LINQPad 5 driver archive generation
-IF %2 EQU lpx (
-	REM remove resource satellite assemblies
-	RD /S /Q %1cs
-	RD /S /Q %1de
-	RD /S /Q %1es
-	RD /S /Q %1fr
-	RD /S /Q %1it
-	RD /S /Q %1ja
-	RD /S /Q %1ko
-	RD /S /Q %1pl
-	RD /S /Q %1pt
-	RD /S /Q %1pt-BR
-	RD /S /Q %1ru
-	RD /S /Q %1tr
-	RD /S /Q %1zh-Hans
-	RD /S /Q %1zh-Hant
+if not exist "%RELDIR%" mkdir "%RELDIR%"
 
-	REM remove not needed files
-	DEL /Q %1linq2db*.xml
-	DEL /Q %1*.pdb
+REM Clean previous artifacts, but don't fail if they don't exist
+if exist "%RELDIR%\linq2db.LINQPad.%EXT%" del /q "%RELDIR%\linq2db.LINQPad.%EXT%"
+if exist "%RELDIR%\linq2db.LINQPad.%EXT%.zip" del /q "%RELDIR%\linq2db.LINQPad.%EXT%.zip"
 
-	"C:\Program Files\7-Zip\7z.exe" -r a %RELDIR%\linq2db.LINQPad.%2.zip %1*.* %RESDIR%\Connection.png %RESDIR%\FailedConnection.png %RESDIR%\header.xml
+REM For LP5 remove satellite folders and extra files
+if /i "%EXT%"=="lpx" (
+  for %%L in (cs,de,es,fr,it,ja,ko,pl,pt,pt-BR,ru,tr,zh-Hans,zh-Hant) do (
+    if exist "%OUTDIR%%%L" rd /s /q "%OUTDIR%%%L"
+  )
+  del /q "%OUTDIR%linq2db*.xml" 2>nul
+  del /q "%OUTDIR%*.pdb"        2>nul
 )
 
-REM LINQPad 7 driver archive generation
-IF %2 EQU lpx6 ("C:\Program Files\7-Zip\7z.exe" a %RELDIR%\linq2db.LINQPad.%2.zip %1linq2db.LINQPad.dll %RESDIR%\Connection.png %RESDIR%\FailedConnection.png %1linq2db.LINQPad.deps.json)
+REM Look for 7z; if not found, fall back to PowerShell Compress-Archive
+set "SEVENZ=%ProgramFiles%\7-Zip\7z.exe"
+if not exist "%SEVENZ%" set "SEVENZ=%ProgramW6432%\7-Zip\7z.exe"
+if not exist "%SEVENZ%" set "SEVENZ=%ProgramFiles(x86)%\7-Zip\7z.exe"
 
-REN %RELDIR%\linq2db.LINQPad.%2.zip linq2db.LINQPad.%2
+if /i "%EXT%"=="lpx" (
+  if exist "%SEVENZ%" (
+    "%SEVENZ%" -r a "%RELDIR%\linq2db.LINQPad.%EXT%.zip" ^
+      "%OUTDIR%*.*" ^
+      "%RESDIR%\Connection.png" "%RESDIR%\FailedConnection.png" "%RESDIR%\header.xml"
+  ) else (
+    powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+      "Compress-Archive -Path '%OUTDIR%*.*','%RESDIR%\Connection.png','%RESDIR%\FailedConnection.png','%RESDIR%\header.xml' -DestinationPath '%RELDIR%\linq2db.LINQPad.%EXT%.zip' -Force"
+  )
+) else (
+  if exist "%SEVENZ%" (
+    "%SEVENZ%" a "%RELDIR%\linq2db.LINQPad.%EXT%.zip" ^
+      "%OUTDIR%linq2db.LINQPad.dll" "%RESDIR%\Connection.png" "%RESDIR%\FailedConnection.png" "%OUTDIR%linq2db.LINQPad.deps.json"
+  ) else (
+    powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+      "Compress-Archive -Path '%OUTDIR%linq2db.LINQPad.dll','%RESDIR%\Connection.png','%RESDIR%\FailedConnection.png','%OUTDIR%linq2db.LINQPad.deps.json' -DestinationPath '%RELDIR%\linq2db.LINQPad.%EXT%.zip' -Force"
+  )
+)
 
+if not exist "%RELDIR%\linq2db.LINQPad.%EXT%.zip" (
+  echo [ERROR] Archive was not created. Check that input files exist and 7-Zip/PowerShell are available.
+  exit /b 1
+)
+
+pushd "%RELDIR%"
+ren "linq2db.LINQPad.%EXT%.zip" "linq2db.LINQPad.%EXT%"
+popd
+
+echo Packed -> "%RELDIR%\linq2db.LINQPad.%EXT%"
+endlocal

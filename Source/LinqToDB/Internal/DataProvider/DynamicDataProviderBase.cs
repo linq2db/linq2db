@@ -64,17 +64,17 @@ namespace LinqToDB.Internal.DataProvider
 			return true;
 		}
 
-		protected void SetProviderField<TField>(string methodName, Type? dataReaderType = null)
+		protected void SetProviderField<TField>(string methodName, Type? dataReaderType = null, string? dataTypeName = null)
 		{
-			SetProviderField(typeof(TField), methodName, dataReaderType);
+			SetProviderField(typeof(TField), methodName, dataReaderType, dataTypeName);
 		}
 
-		protected void SetProviderField(Type fieldType, string methodName, Type? dataReaderType = null)
+		protected void SetProviderField(Type fieldType, string methodName, Type? dataReaderType = null, string? dataTypeName = null)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
 			var indexParameter      = Expression.Parameter(typeof(int), "i");
 
-			ReaderExpressions[new ReaderInfo { ProviderFieldType = fieldType, DataReaderType = dataReaderType }] =
+			ReaderExpressions[new ReaderInfo { ProviderFieldType = fieldType, DataReaderType = dataReaderType, DataTypeName = dataTypeName }] =
 				Expression.Lambda(
 					Expression.Call(dataReaderParameter, methodName, null, indexParameter),
 					dataReaderParameter,
@@ -128,7 +128,7 @@ namespace LinqToDB.Internal.DataProvider
 			return true;
 		}
 
-		protected bool SetGetFieldValueReader(Type toType, Type fieldType, Type? dataReaderType = null, string? typeName = null)
+		protected bool SetGetFieldValueReader(Type toType, Type? fieldType = null, Type? dataReaderType = null, string? typeName = null)
 		{
 			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
 			var indexParameter      = Expression.Parameter(typeof(int), "i");
@@ -136,6 +136,19 @@ namespace LinqToDB.Internal.DataProvider
 			var methodCall = Expression.Call(dataReaderParameter, nameof(DbDataReader.GetFieldValue), new[] { toType }, indexParameter);
 
 			ReaderExpressions[new ReaderInfo { ToType = toType, ProviderFieldType = fieldType, DataReaderType = dataReaderType, DataTypeName = typeName }] =
+				Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
+
+			return true;
+		}
+
+		protected bool SetGetFieldValueReader<TTo>(Type? fieldType = null, Type? dataReaderType = null, string? typeName = null)
+		{
+			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
+			var indexParameter      = Expression.Parameter(typeof(int), "i");
+
+			var methodCall = Expression.Call(dataReaderParameter, nameof(DbDataReader.GetFieldValue), new[] { typeof(TTo) }, indexParameter);
+
+			ReaderExpressions[new ReaderInfo { ToType = typeof(TTo), ProviderFieldType = fieldType, DataReaderType = dataReaderType, DataTypeName = typeName }] =
 				Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
 
 			return true;
