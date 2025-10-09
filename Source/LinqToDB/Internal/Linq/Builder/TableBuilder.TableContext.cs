@@ -269,7 +269,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (flags.IsSqlOrExpression() && !me.IsAssociation(MappingSchema))
 					{
-						Expression fullEntity = Builder.BuildFullEntityExpression(MappingSchema, new ContextRefExpression(ElementType, this), ElementType, flags);
+						Expression fullEntity = Builder.BuildFullEntityExpression(MappingSchema, new ContextRefExpression(ElementType, this), ElementType, ProjectFlags.SQL);
 
 						var projected = Builder.Project(this, path, null, -1, flags, fullEntity, true);
 
