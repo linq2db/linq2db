@@ -27,7 +27,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 	///		It may change or be removed without further notice.
 	/// </summary>
 	/// <typeparam name="T">Type of query element.</typeparam>
-	public class LinqToDBForEFQueryProvider<T> : IAsyncQueryProvider, IQueryProviderAsync, IQueryable<T>, IAsyncEnumerable<T>, IExpressionQuery
+	public class LinqToDBForEFQueryProvider<T> : IAsyncQueryProvider, IQueryProviderAsync, IQueryable<T>, IExpressionQuery
 	{
 		/// <summary>
 		/// Creates instance of adapter.
