@@ -707,7 +707,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		sealed class CteCollectorVisitor : SqlQueryVisitor
 		{
-			public class CteDependencyHolder
+			public sealed class CteDependencyHolder
 			{
 				public CteClause           CteClause { get; }
 				public HashSet<CteClause>? DependsOn { get; private set; }
