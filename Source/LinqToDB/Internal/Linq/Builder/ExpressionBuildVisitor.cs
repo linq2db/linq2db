@@ -3348,9 +3348,10 @@ namespace LinqToDB.Internal.Linq.Builder
 							..
 						]
 					}
-					&& Builder.CanBeEvaluatedOnClient(node.Arguments[0])
 				):
 				{
+					spanSource = spanSource.UnwrapConvertToSelf();
+
 					var containsMethod = ExpressionBuilder.EnumerableMethods
 						.First(m => m.Name is "Contains" && m.GetParameters().Length == node.Arguments.Count)
 						.MakeGenericMethod(node.Method.GetGenericArguments()[0]);
