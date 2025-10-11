@@ -148,6 +148,10 @@ steps:
   displayName: 'Tests (.NET 10): $(title)'
   retryCountOnTaskFailure: 2
 
+- script: dotnet test ./net10.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net10.0 -l trx $(extra) --blame-hang-timeout 5m
+  condition: and(variables.title, eq(variables.net100, 'true'), succeeded())
+  displayName: 'EF.Core Tests (.NET 10): $(title)'
+
 - task: PublishTestResults@2
   condition: and(variables.title, succeededOrFailed())
   inputs:

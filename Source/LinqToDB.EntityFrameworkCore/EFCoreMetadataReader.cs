@@ -67,19 +67,19 @@ namespace LinqToDB.EntityFrameworkCore
 
 		public EFCoreMetadataReader(IModel? model, IInfrastructure<IServiceProvider>? accessor)
 		{
-			_model    = model;
+			_model = model;
 
 			if (accessor != null)
 			{
-				_dependencies           = accessor.GetService<RelationalSqlTranslatingExpressionVisitorDependencies>();
-				_mappingSource          = accessor.GetService<IRelationalTypeMappingSource>();
+				_dependencies = accessor.GetService<RelationalSqlTranslatingExpressionVisitorDependencies>();
+				_mappingSource = accessor.GetService<IRelationalTypeMappingSource>();
 				_valueConverterSelector = accessor.GetService<IValueConverterSelector>();
 #if EF31
 				_annotationProvider     = accessor.GetService<IMigrationsAnnotationProvider>();
 #else
-				_annotationProvider     = accessor.GetService<IRelationalAnnotationProvider>();
-				_logger                 = accessor.GetService<IDiagnosticsLogger<DbLoggerCategory.Query>>();
-				_databaseDependencies   = accessor.GetService<DatabaseDependencies>();
+				_annotationProvider = accessor.GetService<IRelationalAnnotationProvider>();
+				_logger = accessor.GetService<IDiagnosticsLogger<DbLoggerCategory.Query>>();
+				_databaseDependencies = accessor.GetService<DatabaseDependencies>();
 #endif
 			}
 
@@ -108,8 +108,18 @@ namespace LinqToDB.EntityFrameworkCore
 #endif
 
 				// QueryFilterAttribute
-				var filter = et.GetQueryFilter();
-				if (filter != null)
+#if EF10
+				foreach (var queryFilter in et.GetDeclaredQueryFilters())
+				{
+					if (queryFilter is { Expression: { } filter })
+						TransformFilter(filter);
+				}
+#else
+				if (et.GetQueryFilter() is { } filter)
+					TransformFilter(filter);
+#endif
+
+				void TransformFilter(LambdaExpression filter)
 				{
 					var dcParam     = Expression.Parameter(typeof(IDataContext), "dc");
 					var contextProp = Expression.Property(Expression.Convert(dcParam, typeof(LinqToDBForEFToolsDataConnection)), "Context");
@@ -190,9 +200,9 @@ namespace LinqToDB.EntityFrameworkCore
 				return false;
 
 			if (memberInfo.DeclaringType?.IsAssignableFrom(property.DeclaringType) == true
-			    && memberInfo.Name == property.Name
-			    && memberInfo.MemberType == property.MemberType
-			    && memberInfo.GetMemberType() == property.GetMemberType())
+				&& memberInfo.Name == property.Name
+				&& memberInfo.MemberType == property.MemberType
+				&& memberInfo.GetMemberType() == property.GetMemberType())
 			{
 				return true;
 			}
@@ -209,34 +219,34 @@ namespace LinqToDB.EntityFrameworkCore
 		{
 			return dbType switch
 			{
-				DbType.AnsiString            => DataType.VarChar,
+				DbType.AnsiString => DataType.VarChar,
 				DbType.AnsiStringFixedLength => DataType.VarChar,
-				DbType.Binary                => DataType.Binary,
-				DbType.Boolean               => DataType.Boolean,
-				DbType.Byte                  => DataType.Byte,
-				DbType.Currency              => DataType.Money,
-				DbType.Date                  => DataType.Date,
-				DbType.DateTime              => DataType.DateTime,
-				DbType.DateTime2             => DataType.DateTime2,
-				DbType.DateTimeOffset        => DataType.DateTimeOffset,
-				DbType.Decimal               => DataType.Decimal,
-				DbType.Double                => DataType.Double,
-				DbType.Guid                  => DataType.Guid,
-				DbType.Int16                 => DataType.Int16,
-				DbType.Int32                 => DataType.Int32,
-				DbType.Int64                 => DataType.Int64,
-				DbType.Object                => DataType.Undefined,
-				DbType.SByte                 => DataType.SByte,
-				DbType.Single                => DataType.Single,
-				DbType.String                => DataType.NVarChar,
-				DbType.StringFixedLength     => DataType.NVarChar,
-				DbType.Time                  => DataType.Time,
-				DbType.UInt16                => DataType.UInt16,
-				DbType.UInt32                => DataType.UInt32,
-				DbType.UInt64                => DataType.UInt64,
-				DbType.VarNumeric            => DataType.VarNumeric,
-				DbType.Xml                   => DataType.Xml,
-				_                            => DataType.Undefined
+				DbType.Binary => DataType.Binary,
+				DbType.Boolean => DataType.Boolean,
+				DbType.Byte => DataType.Byte,
+				DbType.Currency => DataType.Money,
+				DbType.Date => DataType.Date,
+				DbType.DateTime => DataType.DateTime,
+				DbType.DateTime2 => DataType.DateTime2,
+				DbType.DateTimeOffset => DataType.DateTimeOffset,
+				DbType.Decimal => DataType.Decimal,
+				DbType.Double => DataType.Double,
+				DbType.Guid => DataType.Guid,
+				DbType.Int16 => DataType.Int16,
+				DbType.Int32 => DataType.Int32,
+				DbType.Int64 => DataType.Int64,
+				DbType.Object => DataType.Undefined,
+				DbType.SByte => DataType.SByte,
+				DbType.Single => DataType.Single,
+				DbType.String => DataType.NVarChar,
+				DbType.StringFixedLength => DataType.NVarChar,
+				DbType.Time => DataType.Time,
+				DbType.UInt16 => DataType.UInt16,
+				DbType.UInt32 => DataType.UInt32,
+				DbType.UInt64 => DataType.UInt64,
+				DbType.VarNumeric => DataType.VarNumeric,
+				DbType.Xml => DataType.Xml,
+				_ => DataType.Undefined
 			};
 		}
 
@@ -257,7 +267,7 @@ namespace LinqToDB.EntityFrameworkCore
 				// ColumnAttribute
 				if (prop != null)
 				{
-					hasColumn         = true;
+					hasColumn = true;
 #if EF31
 					var discriminator = et.GetDiscriminatorProperty();
 #else
@@ -414,8 +424,8 @@ namespace LinqToDB.EntityFrameworkCore
 							var otherKey = string.Join(",", fk.Properties.Select(static p => p.Name));
 							(result ??= new()).Add(new AssociationAttribute()
 							{
-								ThisKey   = thisKey,
-								OtherKey  = otherKey,
+								ThisKey = thisKey,
+								OtherKey = otherKey,
 #if !EF31
 								CanBeNull = !fk.IsRequiredDependent,
 #else
@@ -430,8 +440,8 @@ namespace LinqToDB.EntityFrameworkCore
 							var otherKey = string.Join(",", fk.PrincipalKey.Properties.Select(static p => p.Name));
 							(result ??= new()).Add(new AssociationAttribute()
 							{
-								ThisKey   = thisKey,
-								OtherKey  = otherKey,
+								ThisKey = thisKey,
+								OtherKey = otherKey,
 								CanBeNull = !fk.IsRequired
 							});
 						}
@@ -481,7 +491,7 @@ namespace LinqToDB.EntityFrameworkCore
 				if (func != null)
 					(result ??= new()).Add(new Sql.FunctionAttribute()
 					{
-						Name           = func.Name,
+						Name = func.Name,
 						ServerSideOnly = true
 					});
 
@@ -489,7 +499,7 @@ namespace LinqToDB.EntityFrameworkCore
 				if (functionAttribute != null)
 					(result ??= new()).Add(new Sql.FunctionAttribute()
 					{
-						Name           = functionAttribute.Name,
+						Name = functionAttribute.Name,
 						ServerSideOnly = true,
 					});
 			}
@@ -504,13 +514,13 @@ namespace LinqToDB.EntityFrameworkCore
 				LambdaExpression convertFromProviderExpression, bool handlesNulls)
 			{
 				FromProviderExpression = convertFromProviderExpression;
-				ToProviderExpression   = convertToProviderExpression;
-				HandlesNulls           = handlesNulls;
+				ToProviderExpression = convertToProviderExpression;
+				HandlesNulls = handlesNulls;
 			}
 
-			public bool             HandlesNulls           { get; }
+			public bool HandlesNulls { get; }
 			public LambdaExpression FromProviderExpression { get; }
-			public LambdaExpression ToProviderExpression   { get; }
+			public LambdaExpression ToProviderExpression { get; }
 		}
 
 		sealed class SqlTransparentExpression : EfSqlExpression
@@ -564,7 +574,7 @@ namespace LinqToDB.EntityFrameworkCore
 				if (obj is null) return false;
 				if (ReferenceEquals(this, obj)) return true;
 				if (obj.GetType() != GetType()) return false;
-				return Equals((SqlTransparentExpression) obj);
+				return Equals((SqlTransparentExpression)obj);
 			}
 
 			public override int GetHashCode()
@@ -579,7 +589,7 @@ namespace LinqToDB.EntityFrameworkCore
 			return entityType.GetTableName() switch
 			{
 				not null => StoreObjectIdentifier.Create(entityType, StoreObjectType.Table),
-				null     => StoreObjectIdentifier.Create(entityType, StoreObjectType.View),
+				null => StoreObjectIdentifier.Create(entityType, StoreObjectType.View),
 			};
 		}
 #endif
@@ -589,7 +599,7 @@ namespace LinqToDB.EntityFrameworkCore
 			if (_dependencies == null || _model == null)
 				return null;
 
-			methodInfo = (MethodInfo?) type.GetMemberEx(methodInfo) ?? methodInfo;
+			methodInfo = (MethodInfo?)type.GetMemberEx(methodInfo) ?? methodInfo;
 
 			var found = _calculatedExtensions.GetOrAdd(methodInfo, static (mi, ctx) =>
 			{
@@ -695,7 +705,7 @@ namespace LinqToDB.EntityFrameworkCore
 						if (param is SqlTransparentExpression transparent)
 						{
 							if (transparent.Expression is ConstantExpression &&
-							    expr is SqlConstantExpression)
+								expr is SqlConstantExpression)
 							{
 								//found = sqlConstantExpr.Value.Equals(constantExpr.Value);
 								found = true;
@@ -770,11 +780,11 @@ namespace LinqToDB.EntityFrameworkCore
 					{
 						"Contains"
 							when left.Type.Name == "NpgsqlInetTypeMapping" ||
-							     left.Type.Name == "NpgsqlCidrTypeMapping"
+								 left.Type.Name == "NpgsqlCidrTypeMapping"
 							=> ">>",
 						"ContainedBy"
 							when left.Type.Name == "NpgsqlInetTypeMapping" ||
-							     left.Type.Name == "NpgsqlCidrTypeMapping"
+								 left.Type.Name == "NpgsqlCidrTypeMapping"
 							=> "<<",
 						"Contains"                      => "@>",
 						"ContainedBy"                   => "<@",
@@ -822,7 +832,7 @@ namespace LinqToDB.EntityFrameworkCore
 			var converted = UnwrapConverted(newExpression);
 			var expressionText = PrepareExpressionText(converted);
 			var result = new Sql.ExpressionAttribute(expressionText)
-				{ ServerSideOnly = true, IsPredicate = memberInfo.GetMemberType() == typeof(bool) };
+			{ ServerSideOnly = true, IsPredicate = memberInfo.GetMemberType() == typeof(bool) };
 
 			if (converted is SqlFunctionExpression or SqlFragmentExpression)
 				result.Precedence = Precedence.Primary;
@@ -835,7 +845,7 @@ namespace LinqToDB.EntityFrameworkCore
 			if (expr is SqlFunctionExpression func)
 			{
 				if (string.Equals(func.Name, "COALESCE", StringComparison.InvariantCultureIgnoreCase) &&
-				    func.Arguments?.Count == 2 && func.Arguments[1].NodeType == ExpressionType.Extension)
+					func.Arguments?.Count == 2 && func.Arguments[1].NodeType == ExpressionType.Extension)
 					return UnwrapConverted(func.Arguments[0]);
 			}
 

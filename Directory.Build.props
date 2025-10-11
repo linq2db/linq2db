@@ -4,6 +4,7 @@
 		<EF3Version>3.0.0.0</EF3Version>
 		<EF8Version>8.0.0.0</EF8Version>
 		<EF9Version>9.0.0.0</EF9Version>
+		<EF10Version>10.0.0.0</EF10Version>
 
 		<Configurations>Testing;Debug;Release;Azure</Configurations>
 

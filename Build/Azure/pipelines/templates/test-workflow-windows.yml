@@ -306,6 +306,14 @@ steps:
   condition: and(eq(variables.net100, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
   retryCountOnTaskFailure: 2
 
+- script: dotnet test net10.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net10.0 -l trx --blame-hang-timeout 5m
+  displayName: 'EF.Core Tests (.NET 10 x64): $(title)'
+  condition: and(eq(variables.net100, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
+
+- script: dotnet test net10.0/efcore/x86/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net10.0 -l trx --blame-hang-timeout 5m
+  displayName: 'EF.Core Tests (.NET 10 x86): $(title)'
+  condition: and(eq(variables.net100, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
+
 - task: PublishTestResults@2
   condition: and(variables.title, succeededOrFailed())
   inputs:

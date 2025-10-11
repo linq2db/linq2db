@@ -25,6 +25,7 @@ variables:
   artifact_linq2db_efcore_3_binaries: 'linq2db_efcore_3_binaries'
   artifact_linq2db_efcore_8_binaries: 'linq2db_efcore_8_binaries'
   artifact_linq2db_efcore_9_binaries: 'linq2db_efcore_9_binaries'
+  artifact_linq2db_efcore_10_binaries: 'linq2db_efcore_10_binaries'
   artifact_linq2db_linqpad_binaries: 'linq2db_linqpad_binaries'
   artifact_linq2db_linqpad_lpx: 'linq2db_linqpad_lpx'
   artifact_t4_binaries: 't4_binaries'
@@ -34,13 +35,16 @@ variables:
   ef3AssemblyVersion: 3.28.0
   ef8AssemblyVersion: 8.2.0
   ef9AssemblyVersion: 9.1.0
+  ef10AssemblyVersion: 10.0.0
   ${{ if eq(variables['Build.SourceBranchName'], 'release') }}:
     packageVersion: 6.0.0
     ef3PackageVersion: 3.28.0
     ef8PackageVersion: 8.2.0
     ef9PackageVersion: 9.1.0
+    ef10PackageVersion: 10.0.0
   ${{ if ne(variables['Build.SourceBranchName'], 'release') }}:
     packageVersion: 6.0.0
     ef3PackageVersion: 3.28.0
     ef8PackageVersion: 8.2.0
     ef9PackageVersion: 9.1.0
+    ef10PackageVersion: 10.0.0
