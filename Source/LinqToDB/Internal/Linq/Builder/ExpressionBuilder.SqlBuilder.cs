@@ -56,7 +56,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (!enforceHaving)
 			{
-				if (buildSequence is not SubQueryContext subQuery || subQuery.NeedsSubqueryForComparison)
+				if (buildSequence is not SubQueryContext { NeedsSubqueryForComparison: false } subQuery)
 				{
 					buildSequence = new SubQueryContext(sequence);
 				}

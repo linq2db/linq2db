@@ -606,8 +606,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public sealed class UpdateContext : PassThroughContext
 		{
-			ITableContext? _targetTable;
-
 			public UpdateContext(IBuildContext querySequence, UpdateTypeEnum updateType, SqlUpdateStatement updateStatement, bool createColumns)
 				: base(querySequence, querySequence.SelectQuery)
 			{
@@ -624,12 +622,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public ITableContext? TargetTable
 			{
-				get => _targetTable;
+				get;
 				set
 				{
-					_targetTable = value;
+					field = value;
 
-					UpdateStatement.Update.Table = _targetTable?.SqlTable;
+					UpdateStatement.Update.Table = value?.SqlTable;
 				}
 			}
 

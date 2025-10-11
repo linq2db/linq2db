@@ -7,9 +7,9 @@ namespace LinqToDB.Internal.SqlQuery
 	{
 		public SqlBinaryExpression(DbDataType dbDataType, ISqlExpression expr1, string operation, ISqlExpression expr2, int precedence = LinqToDB.SqlQuery.Precedence.Unknown)
 		{
-			_expr1     = expr1     ?? throw new ArgumentNullException(nameof(expr1));
+			Expr1      = expr1     ?? throw new ArgumentNullException(nameof(expr1));
 			Operation  = operation ?? throw new ArgumentNullException(nameof(operation));
-			_expr2     = expr2     ?? throw new ArgumentNullException(nameof(expr2));
+			Expr2      = expr2     ?? throw new ArgumentNullException(nameof(expr2));
 			Type       = dbDataType;
 			Precedence = precedence;
 		}
@@ -19,28 +19,24 @@ namespace LinqToDB.Internal.SqlQuery
 		{
 		}
 
-		private ISqlExpression _expr1;
-
 		public ISqlExpression Expr1
 		{
-			get => _expr1;
+			get;
 			internal set
 			{
-				_expr1    = value;
+				field    = value;
 				_hashCode = null;
 			}
 		}
 
 		public string         Operation  { get; }
 
-		private ISqlExpression _expr2;
-
 		public ISqlExpression Expr2
 		{
-			get => _expr2;
+			get;
 			internal set
 			{
-				_expr2    = value;
+				field = value;
 				_hashCode = null;
 			}
 		}

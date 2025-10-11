@@ -103,8 +103,7 @@ namespace LinqToDB
 			IQueryable<TSource> source,
 			CancellationToken token)
 		{
-			return DeleteWithOutputAsync(source)
-				.ToArrayAsync(token);
+			return AsyncEnumerableExtensions.ToArrayAsync(DeleteWithOutputAsync(source), token);
 		}
 
 		/// <summary>
@@ -209,8 +208,7 @@ namespace LinqToDB
 			Expression<Func<TSource, TOutput>> outputExpression,
 			CancellationToken token)
 		{
-			return DeleteWithOutputAsync(source, outputExpression)
-				.ToArrayAsync(token);
+			return AsyncEnumerableExtensions.ToArrayAsync(DeleteWithOutputAsync(source, outputExpression), token);
 		}
 
 		/// <summary>

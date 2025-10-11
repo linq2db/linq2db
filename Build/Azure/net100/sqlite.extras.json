@@ -1,0 +1,8 @@
+﻿{
+	"NET100.Azure": {
+		"Providers": [
+			"SQLite.Classic.MPU",
+			"SQLite.Classic.MPM"
+		]
+	}
+}

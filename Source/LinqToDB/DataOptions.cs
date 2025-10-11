@@ -22,17 +22,17 @@ namespace LinqToDB
 
 		public DataOptions(ConnectionOptions connectionOptions)
 		{
-			_connectionOptions = connectionOptions;
+			ConnectionOptions = connectionOptions;
 		}
 
 		DataOptions(DataOptions options) : base(options)
 		{
-			_linqOptions        = options._linqOptions;
-			_retryPolicyOptions = options._retryPolicyOptions;
-			_connectionOptions  = options._connectionOptions;
-			_dataContextOptions = options._dataContextOptions;
-			_bulkCopyOptions    = options._bulkCopyOptions;
-			_sqlOptions         = options._sqlOptions;
+			LinqOptions        = options.LinqOptions;
+			RetryPolicyOptions = options.RetryPolicyOptions;
+			ConnectionOptions  = options.ConnectionOptions;
+			DataContextOptions = options.DataContextOptions;
+			BulkCopyOptions    = options.BulkCopyOptions;
+			SqlOptions         = options.SqlOptions;
 		}
 
 		protected override DataOptions Clone()
@@ -50,29 +50,22 @@ namespace LinqToDB
 		{
 			switch (options)
 			{
-				case LinqOptions        lo  : return ReferenceEquals(_linqOptions,        lo)  ? this : new(this) { _linqOptions        = lo  };
-				case ConnectionOptions  co  : return ReferenceEquals(_connectionOptions,  co)  ? this : new(this) { _connectionOptions  = co  };
-				case DataContextOptions dco : return ReferenceEquals(_dataContextOptions, dco) ? this : new(this) { _dataContextOptions = dco };
-				case SqlOptions         so  : return ReferenceEquals(_sqlOptions,         so)  ? this : new(this) { _sqlOptions         = so  };
-				case BulkCopyOptions    bco : return ReferenceEquals(_bulkCopyOptions,    bco) ? this : new(this) { _bulkCopyOptions    = bco };
-				case RetryPolicyOptions rp  : return ReferenceEquals(_retryPolicyOptions, rp)  ? this : new(this) { _retryPolicyOptions = rp  };
+				case LinqOptions        lo  : return ReferenceEquals(LinqOptions,        lo)  ? this : new(this) { LinqOptions        = lo  };
+				case ConnectionOptions  co  : return ReferenceEquals(ConnectionOptions,  co)  ? this : new(this) { ConnectionOptions  = co  };
+				case DataContextOptions dco : return ReferenceEquals(DataContextOptions, dco) ? this : new(this) { DataContextOptions = dco };
+				case SqlOptions         so  : return ReferenceEquals(SqlOptions,         so)  ? this : new(this) { SqlOptions         = so  };
+				case BulkCopyOptions    bco : return ReferenceEquals(BulkCopyOptions,    bco) ? this : new(this) { BulkCopyOptions    = bco };
+				case RetryPolicyOptions rp  : return ReferenceEquals(RetryPolicyOptions, rp)  ? this : new(this) { RetryPolicyOptions = rp  };
 				default                     : return base.WithOptions(options);
 			}
 		}
 
-		LinqOptions?        _linqOptions;
-		RetryPolicyOptions? _retryPolicyOptions;
-		ConnectionOptions?  _connectionOptions;
-		DataContextOptions? _dataContextOptions;
-		BulkCopyOptions?    _bulkCopyOptions;
-		SqlOptions?         _sqlOptions;
-
-		public LinqOptions        LinqOptions        => _linqOptions        ??= LinqOptions.       Default;
-		public RetryPolicyOptions RetryPolicyOptions => _retryPolicyOptions ??= RetryPolicyOptions.Default;
-		public ConnectionOptions  ConnectionOptions  => _connectionOptions  ??= ConnectionOptions. Default;
-		public DataContextOptions DataContextOptions => _dataContextOptions ??= DataContextOptions.Default;
-		public BulkCopyOptions    BulkCopyOptions    => _bulkCopyOptions    ??= BulkCopyOptions.   Default;
-		public SqlOptions         SqlOptions         => _sqlOptions         ??= SqlOptions.        Default;
+		public LinqOptions        LinqOptions        { get => field ??= LinqOptions.       Default; private set; }
+		public RetryPolicyOptions RetryPolicyOptions { get => field ??= RetryPolicyOptions.Default; private set; }
+		public ConnectionOptions  ConnectionOptions  { get => field ??= ConnectionOptions. Default; private set; }
+		public DataContextOptions DataContextOptions { get => field ??= DataContextOptions.Default; private set; }
+		public BulkCopyOptions    BulkCopyOptions    { get => field ??= BulkCopyOptions.   Default; private set; }
+		public SqlOptions         SqlOptions         { get => field ??= SqlOptions.        Default; private set; }
 
 		public override IEnumerable<IOptionSet> OptionSets
 		{
@@ -83,11 +76,11 @@ namespace LinqToDB
 				yield return ConnectionOptions;
 				yield return SqlOptions;
 
-				if (_dataContextOptions != null)
-					yield return _dataContextOptions;
+				if (DataContextOptions != null)
+					yield return DataContextOptions;
 
-				if (_bulkCopyOptions != null)
-					yield return _bulkCopyOptions;
+				if (BulkCopyOptions != null)
+					yield return BulkCopyOptions;
 
 				foreach (var item in base.OptionSets)
 					yield return item;
@@ -115,7 +108,7 @@ namespace LinqToDB
 			((IApplicable<DataConnection>)ConnectionOptions). Apply(dataConnection);
 			((IApplicable<DataConnection>)RetryPolicyOptions).Apply(dataConnection);
 
-			if (_dataContextOptions is IApplicable<DataConnection> a)
+			if (DataContextOptions is IApplicable<DataConnection> a)
 				a.Apply(dataConnection);
 
 			base.Apply(dataConnection);
@@ -131,15 +124,15 @@ namespace LinqToDB
 			if (!ReferenceEquals(RetryPolicyOptions, previousOptions.RetryPolicyOptions))
 				Add(((IReapplicable<DataConnection>)RetryPolicyOptions).Apply(dataConnection, previousOptions.RetryPolicyOptions));
 
-			if (!ReferenceEquals(_dataContextOptions, previousOptions._dataContextOptions))
+			if (!ReferenceEquals(DataContextOptions, previousOptions.DataContextOptions))
 			{
-				if (_dataContextOptions is IReapplicable<DataConnection> a)
+				if (DataContextOptions is IReapplicable<DataConnection> a)
 				{
-					Add(a.Apply(dataConnection, previousOptions._dataContextOptions));
+					Add(a.Apply(dataConnection, previousOptions.DataContextOptions));
 				}
-				else if (previousOptions._dataContextOptions is not null)
+				else if (previousOptions.DataContextOptions is not null)
 				{
-					Add(((IReapplicable<DataConnection>)DataContextOptions.Default).Apply(dataConnection, previousOptions._dataContextOptions));
+					Add(((IReapplicable<DataConnection>)DataContextOptions.Default).Apply(dataConnection, previousOptions.DataContextOptions));
 				}
 			}
 
@@ -157,7 +150,7 @@ namespace LinqToDB
 		{
 			((IApplicable<DataContext>)ConnectionOptions).Apply(dataContext);
 
-			if (_dataContextOptions is IApplicable<DataContext> a)
+			if (DataContextOptions is IApplicable<DataContext> a)
 				a.Apply(dataContext);
 
 			base.Apply(dataContext);
@@ -170,15 +163,15 @@ namespace LinqToDB
 			if (!ReferenceEquals(ConnectionOptions, previousOptions.ConnectionOptions))
 				Add(((IReapplicable<DataContext>)ConnectionOptions). Apply(dataContext, previousOptions.ConnectionOptions));
 
-			if (!ReferenceEquals(_dataContextOptions, previousOptions._dataContextOptions))
+			if (!ReferenceEquals(DataContextOptions, previousOptions.DataContextOptions))
 			{
-				if (_dataContextOptions is IReapplicable<DataContext> a)
+				if (DataContextOptions is IReapplicable<DataContext> a)
 				{
-					Add(a.Apply(dataContext, previousOptions._dataContextOptions));
+					Add(a.Apply(dataContext, previousOptions.DataContextOptions));
 				}
-				else if (previousOptions._dataContextOptions is not null)
+				else if (previousOptions.DataContextOptions is not null)
 				{
-					Add(((IReapplicable<DataContext>)DataContextOptions.Default).Apply(dataContext, previousOptions._dataContextOptions));
+					Add(((IReapplicable<DataContext>)DataContextOptions.Default).Apply(dataContext, previousOptions.DataContextOptions));
 				}
 			}
 
@@ -196,7 +189,7 @@ namespace LinqToDB
 		{
 			((IApplicable<RemoteDataContextBase>)ConnectionOptions).Apply(dataContext);
 
-			if (_dataContextOptions is IApplicable<RemoteDataContextBase> a)
+			if (DataContextOptions is IApplicable<RemoteDataContextBase> a)
 				a.Apply(dataContext);
 
 			base.Apply(dataContext);
@@ -209,15 +202,15 @@ namespace LinqToDB
 			if (!ReferenceEquals(ConnectionOptions, previousOptions.ConnectionOptions))
 				Add(((IReapplicable<RemoteDataContextBase>)ConnectionOptions). Apply(dataContext, previousOptions.ConnectionOptions));
 
-			if (!ReferenceEquals(_dataContextOptions, previousOptions._dataContextOptions))
+			if (!ReferenceEquals(DataContextOptions, previousOptions.DataContextOptions))
 			{
-				if (_dataContextOptions is IReapplicable<RemoteDataContextBase> a)
+				if (DataContextOptions is IReapplicable<RemoteDataContextBase> a)
 				{
-					Add(a.Apply(dataContext, previousOptions._dataContextOptions));
+					Add(a.Apply(dataContext, previousOptions.DataContextOptions));
 				}
-				else if (previousOptions._dataContextOptions is not null)
+				else if (previousOptions.DataContextOptions is not null)
 				{
-					Add(((IReapplicable<RemoteDataContextBase>)DataContextOptions.Default).Apply(dataContext, previousOptions._dataContextOptions));
+					Add(((IReapplicable<RemoteDataContextBase>)DataContextOptions.Default).Apply(dataContext, previousOptions.DataContextOptions));
 				}
 			}
 

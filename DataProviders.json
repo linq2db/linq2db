@@ -1,4 +1,4 @@
-﻿//
+//
 // This file defines data providers and connection strings used by default for all users.
 // Copy this file as UserDataProviders.json and specify providers and connection strings you need to work on.
 // UserDataProviders.json is in .gitignore and it is not committed to the repository.
@@ -36,6 +36,11 @@
 		"DefaultConfiguration": "SQLite.MS"
 	},
 
+	"NET100": {
+		"BasedOn": "LocalConnectionStrings",
+		"DefaultConfiguration": "SQLite.MS"
+	},
+
 	"NETFX.Azure": {
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
@@ -54,18 +59,24 @@
 		"TraceLevel": "Info"
 	},
 
-	"CommonConnectionStrings" : {
-		"Connections"               : {
-			"Access.Ace.OleDb"      : {                                      "ConnectionString": "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Persist Security Info=True"                              },
-			"Access.Ace.OleDb.Data" : {                                      "ConnectionString": "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=Database\\Data\\TestData.mdb;Locale Identifier=1033;Persist Security Info=True"                        },
-			"Access.Ace.Odbc"       : {                                      "ConnectionString": "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\TestData.ODBC.mdb;ExtendedAnsiSQL=1"                                                 },
-			"Access.Ace.Odbc.Data"  : {                                      "ConnectionString": "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\TestData.ODBC.mdb;ExtendedAnsiSQL=1"                                                 },
-			"Access.Jet.OleDb"      : {                                      "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True"       },
-			"Access.Jet.OleDb.Data" : {                                      "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\Data\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
-			"Access.Jet.Odbc"       : {                                      "ConnectionString": "Driver={Microsoft Access Driver (*.mdb)};Dbq=Database\\TestData.ODBC.mdb;ExtendedAnsiSQL=1;"                                                         },
-			"Access.Jet.Odbc.Data"  : {                                      "ConnectionString": "Driver={Microsoft Access Driver (*.mdb)};Dbq=Database\\TestData.ODBC.mdb;ExtendedAnsiSQL=1;"                                                         },
-			"SqlCe"                 : {                                      "ConnectionString": "Data Source=Database\\TestData.sdf"                                                                                                                  },
-			"SqlCe.Data"            : {                                      "ConnectionString": "Data Source=Database\\Data\\TestData.sdf"                                                                                                            },
+	"NET100.Azure": {
+		"BasedOn": "AzureConnectionStrings",
+		"DefaultConfiguration": "SQLite.MS",
+		"TraceLevel": "Info"
+	},
+
+	"CommonConnectionStrings": {
+		"Connections": {
+			"Access.Ace.OleDb": { "ConnectionString": "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Persist Security Info=True" },
+			"Access.Ace.OleDb.Data": { "ConnectionString": "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=Database\\Data\\TestData.mdb;Locale Identifier=1033;Persist Security Info=True" },
+			"Access.Ace.Odbc": { "ConnectionString": "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\TestData.ODBC.mdb;ExtendedAnsiSQL=1" },
+			"Access.Ace.Odbc.Data": { "ConnectionString": "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\TestData.ODBC.mdb;ExtendedAnsiSQL=1" },
+			"Access.Jet.OleDb": { "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
+			"Access.Jet.OleDb.Data": { "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\Data\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
+			"Access.Jet.Odbc": { "ConnectionString": "Driver={Microsoft Access Driver (*.mdb)};Dbq=Database\\TestData.ODBC.mdb;ExtendedAnsiSQL=1;" },
+			"Access.Jet.Odbc.Data": { "ConnectionString": "Driver={Microsoft Access Driver (*.mdb)};Dbq=Database\\TestData.ODBC.mdb;ExtendedAnsiSQL=1;" },
+			"SqlCe": { "ConnectionString": "Data Source=Database\\TestData.sdf" },
+			"SqlCe.Data": { "ConnectionString": "Data Source=Database\\Data\\TestData.sdf" },
 			"SQLite.Classic"        : { "Provider": "SQLite",                "ConnectionString": "Data Source=Database/TestData.sqlite"                                                                                                                },
 			"SQLite.Classic.MPU"    : { "Provider": "SQLite.Classic.MPU",    "ConnectionString": "Data Source=Database/TestData.MiniProfiler.Unmapped.sqlite"                                                                                          },
 			"SQLite.Classic.MPM"    : { "Provider": "SQLite.Classic.MPM",    "ConnectionString": "Data Source=Database/TestData.MiniProfiler.Mapped.sqlite"                                                                                            },
@@ -85,12 +96,12 @@
 			"ClickHouse.Driver"         : { "Provider": "ClickHouse.Driver",                "ConnectionString": "Host=localhost;Port=8123;Database=testdb2;Username=testuser;Password=testuser;UseSession=true"                                                                       },
 			"ClickHouse.MySql"          : { "Provider": "MySqlConnector",                   "ConnectionString": "Host=localhost;Port=9004;Database=testdb3;Username=testuser;Password=testuser;Pooling=false;"                                                                        },
 			"DB2"                       : { "Provider": "IBM.Data.DB2",                     "ConnectionString": "Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!"                                                                                                 },
-			"Firebird.2.5"              : {                                                 "ConnectionString": "DataSource=localhost;Port=3025;Database=/firebird/data/testdb25.fdb;User Id=sysdba;Password=masterkey;charset=UTF8"                                                  },
-			"Firebird.3"                : {                                                 "ConnectionString": "DataSource=localhost;Port=3030;Database=/firebird/data/testdb30.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled"                               },
-			"Firebird.4"                : {                                                 "ConnectionString": "DataSource=localhost;Port=3040;Database=/firebird/data/testdb40.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled"                               },
-			"Firebird.5"                : {                                                 "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb50.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled"                               },
+			"Firebird.2.5": { "ConnectionString": "DataSource=localhost;Port=3025;Database=/firebird/data/testdb25.fdb;User Id=sysdba;Password=masterkey;charset=UTF8" },
+			"Firebird.3": { "ConnectionString": "DataSource=localhost;Port=3030;Database=/firebird/data/testdb30.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled" },
+			"Firebird.4": { "ConnectionString": "DataSource=localhost;Port=3040;Database=/firebird/data/testdb40.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled" },
+			"Firebird.5": { "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb50.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled" },
 			"Informix"                  : { "Provider": "IBM.Data.Informix",                "ConnectionString": "Host=DBHost;Service=9088;Server=ol_informix1170;Protocol=onsoctcp;Database=TestData;UID=informix;PWD=TestPassword;"                                                  },
-			"Informix.DB2"              : {                                                 "ConnectionString": "Server=localhost:9189;Database=testdatadb2;userid=informix;password=in4mix"                                                                                          },
+			"Informix.DB2": { "ConnectionString": "Server=localhost:9189;Database=testdatadb2;userid=informix;password=in4mix" },
 			"MySql.5.7"                 : { "Provider": "MySql.Data",                       "ConnectionString": "Server=localhost;Port=3307;Database=testdata;Uid=root;Pwd=root;charset=utf8mb4;Allow User Variables=True;SslMode=None;"                                                 },
 			"MySqlConnector.5.7"        : { "Provider": "MySqlConnector",                   "ConnectionString": "Server=localhost;Port=3307;Database=testdataconnector;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=None;AllowLoadLocalInfile=true;"              },
 			"MySql.8.0"                 : { "Provider": "MySql.Data.MySqlClient",           "ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8mb4;Allow User Variables=True;"                                                              },
@@ -159,10 +170,10 @@
 			"PostgreSQL.16"             : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                                      },
 			"PostgreSQL.17"             : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                                      },
 			"PostgreSQL.18"             : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                                      },
-			"Firebird.2.5"              : {                                                "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8"                                                    },
-			"Firebird.3"                : {                                                "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled"                                 },
-			"Firebird.4"                : {                                                "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled"                                 },
-			"Firebird.5"                : {                                                "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled"                                 },
+			"Firebird.2.5": { "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8" },
+			"Firebird.3": { "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled" },
+			"Firebird.4": { "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled" },
+			"Firebird.5": { "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled" },
 			"SqlServer.2005"            : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;Encrypt=false"                                                                                    },
 			"SqlServer.2005.MS"         : { "Provider": "Microsoft.Data.SqlClient",        "ConnectionString": "Server=localhost;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=false"                                                                                  },
 			"SqlServer.2008"            : { "Provider": "System.Data.SqlClient",           "ConnectionString": "Server=localhost;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"                                                         },
@@ -195,7 +206,7 @@
 			"Oracle.21.Managed"         : { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=system;Password=oracle;"                       },
 			"Oracle.23.Managed"         : { "Provider": "Oracle.ManagedDataAccess.Client", "ConnectionString": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=FREE)));User Id=system;Password=oracle;"                     },
 			"Informix"                  : { "Provider": "Informix",                        "ConnectionString": "Server=localhost:9089;Database=testdb;userid=informix;password=in4mix"                                                                                               },
-			"Informix.DB2"              : {                                                "ConnectionString": "Server=localhost:9089;Database=testdb;userid=informix;password=in4mix"                                                                                               },
+			"Informix.DB2": { "ConnectionString": "Server=localhost:9089;Database=testdb;userid=informix;password=in4mix" },
 			"DB2"                       : { "Provider": "IBM.Data.DB2.Core",               "ConnectionString": "Server=localhost:50000;Database=testdb;UID=db2inst1;PWD=Password12!"                                                                                                 },
 			"SapHana.Odbc"              : { "Provider": "SapHana.Odbc",                    "ConnectionString": "<SET BY SCRIPT>"                                                                                                                                                     },
 			"ClickHouse.Octonica"       : { "Provider": "Octonica.ClickHouseClient",       "ConnectionString": "Host=localhost;Port=9000;Database=testdb1;User=testuser;Password=testuser"                                                                                           },
@@ -335,7 +346,7 @@
 			"SQLite.MS"
 		],
 		"Connections": {
-			"Access.Jet.OleDb" : {                          "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
+			"Access.Jet.OleDb": { "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
 			"SQLite.Classic"   : { "Provider": "SQLite",    "ConnectionString": "Data Source=Database\\TestData.sqlite"                                                                                                         },
 			"SQLite.MS"        : { "Provider": "SQLite.MS", "ConnectionString": "Data Source=Database\\TestData..MS.sqlite"                                                                                                     }
 		}
@@ -350,7 +361,7 @@
 			"SqlServer.2014"
 		],
 		"Connections": {
-			"Access.Jet.OleDb" : {                                      "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
+			"Access.Jet.OleDb": { "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
 			"SQLite.Classic"   : { "Provider": "SQLite",                "ConnectionString": "Data Source=Database\\TestData.sqlite"                                                                                                         },
 			"SQLite.MS"        : { "Provider": "SQLite.MS",             "ConnectionString": "Data Source=Database\\TestData..MS.sqlite"                                                                                                     },
 			"SqlServer.2014"   : { "Provider": "System.Data.SqlClient", "ConnectionString": "Server=DBHost\\SQLSERVER2014;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"                      }

@@ -9,15 +9,11 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public SqlOutputClause? Output { get; set; }
 
-		private SqlUpdateClause? _update;
-
 		public SqlUpdateClause Update
 		{
-			get => _update ??= new SqlUpdateClause();
-			set => _update = value;
+			get => field ??= new();
+			set;
 		}
-
-		internal bool HasUpdate => _update != null;
 
 		public SqlUpdateStatement(SelectQuery? selectQuery) : base(selectQuery)
 		{
@@ -89,7 +85,7 @@ namespace LinqToDB.Internal.SqlQuery
 			return HashCode.Combine(
 				base.GetElementHashCode(),
 				Output?.GetElementHashCode(),
-				_update?.GetElementHashCode()
+				Update?.GetElementHashCode()
 			);
 		}
 	}

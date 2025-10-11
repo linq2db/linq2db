@@ -122,8 +122,7 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		#region ISqlTableSource
-		private SqlField? _all;
-		SqlField ISqlTableSource.All => _all ??= SqlField.All(this);
+		SqlField ISqlTableSource.All => field ??= SqlField.All(this);
 
 		public int SourceID { get; }
 

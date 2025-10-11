@@ -126,10 +126,7 @@ namespace LinqToDB.Internal.Conversion
 
 		static void Set(ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>> expressions, DbDataType from, DbDataType to, LambdaInfo expr)
 		{
-			if (!expressions.TryGetValue(from, out var dic))
-				expressions[from] = dic = new ();
-
-			dic[to] = expr;
+			(expressions.GetOrAdd(from, _ => new()))[to] = expr;
 		}
 
 		public LambdaInfo? Get(DbDataType from, DbDataType to, ConversionType conversionType)

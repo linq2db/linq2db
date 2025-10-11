@@ -99,8 +99,8 @@ namespace LinqToDB.Internal.Expressions
 
 			switch (ex.NodeType)
 			{
-				case ExpressionType.ConvertChecked :
-				case ExpressionType.Convert        :
+				case ExpressionType.ConvertChecked:
+				case ExpressionType.Convert:
 				{
 					var unaryExpression = (UnaryExpression)ex;
 					if (unaryExpression.Method == null)
@@ -111,6 +111,31 @@ namespace LinqToDB.Internal.Expressions
 					when ex is SqlAdjustTypeExpression adjustType:
 				{
 					return adjustType.Expression.Unwrap();
+				}
+			}
+
+			return ex;
+		}
+
+		[return: NotNullIfNotNull(nameof(ex))]
+		public static Expression? UnwrapConvertToSelf(this Expression? ex)
+		{
+			if (ex == null)
+				return null;
+
+			switch (ex.NodeType)
+			{
+				case ExpressionType.ConvertChecked:
+				case ExpressionType.Convert:
+				{
+					var unaryExpression = (UnaryExpression)ex;
+					if (unaryExpression.Method == null
+						&& unaryExpression.Type.IsSameOrParentOf(unaryExpression.Operand.Type))
+					{
+						return unaryExpression.Operand.UnwrapConvertToSelf();
+					}
+
+					break;
 				}
 			}
 

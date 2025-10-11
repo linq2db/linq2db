@@ -46,11 +46,15 @@ namespace LinqToDB.Benchmarks.Queries
 				}
 			};
 
-			_compiled = CompiledQuery.Compile((Db db) => from soh in db.SalesOrderHeaders
-														 .LoadWith(x => x.SalesOrderDetails)
-														 .LoadWith(x => x.Customer)
-														 where soh.SalesOrderID > 50000 && soh.SalesOrderID <= 51000
-														 select soh);
+			_compiled = CompiledQuery.Compile(
+				(Db db) => 
+					from soh in db.SalesOrderHeaders
+						.LoadWith(x => x.SalesOrderDetails)
+						.LoadWith(x => x.Customer)
+						.AsQueryable()
+					where soh.SalesOrderID > 50000 && soh.SalesOrderID <= 51000
+					select soh
+			);
 		}
 
 		[GlobalCleanup]
@@ -63,12 +67,15 @@ namespace LinqToDB.Benchmarks.Queries
 		{
 			using (var db = new Db(_provider, _results))
 			{
-				return (from soh in db.SalesOrderHeaders
-							   .LoadWith(x => x.SalesOrderDetails)
-							   .LoadWith(x => x.Customer)
-						where soh.SalesOrderID > 50000 && soh.SalesOrderID <= 51000
-						select soh)
-							 .ToList();
+				return (
+					from soh in db.SalesOrderHeaders
+						.LoadWith(x => x.SalesOrderDetails)
+						.LoadWith(x => x.Customer)
+						.AsQueryable()
+					where soh.SalesOrderID > 50000 && soh.SalesOrderID <= 51000
+					select soh
+				)
+					.ToList();
 			}
 		}
 
@@ -77,11 +84,14 @@ namespace LinqToDB.Benchmarks.Queries
 		{
 			using (var db = new Db(_provider, _results))
 			{
-				return await (from soh in db.SalesOrderHeaders
-								.LoadWith(x => x.SalesOrderDetails)
-								.LoadWith(x => x.Customer)
-							  where soh.SalesOrderID > 50000 && soh.SalesOrderID <= 51000
-							  select soh)
+				return await (
+					from soh in db.SalesOrderHeaders
+						.LoadWith(x => x.SalesOrderDetails)
+						.LoadWith(x => x.Customer)
+						.AsQueryable()
+					where soh.SalesOrderID > 50000 && soh.SalesOrderID <= 51000
+					select soh
+				)
 					.ToListAsync();
 			}
 		}

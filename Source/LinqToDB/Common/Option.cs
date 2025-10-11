@@ -10,19 +10,16 @@ namespace LinqToDB.Common
 	/// <typeparam name="T">Value type.</typeparam>
 	public readonly struct Option<T>
 	{
-		private readonly bool _hasValue;
-		private readonly T    _value;
-
 		private Option(T value)
 		{
-			_hasValue = true;
-			_value    = value;
+			HasValue = true;
+			Value    = value;
 		}
 
 		/// <summary>
 		/// Returns <c>true</c> if current option stores some value instead of <see cref="None"/>.
 		/// </summary>
-		public bool HasValue => _hasValue;
+		public bool HasValue { get; }
 
 		/// <summary>
 		/// Gets value, stored in option.
@@ -30,7 +27,7 @@ namespace LinqToDB.Common
 		public T Value
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _hasValue ? _value : throw new InvalidOperationException($"{nameof(Option<int>)}.{nameof(Value)} not set");
+			get => HasValue ? field : throw new InvalidOperationException($"{nameof(Option<int>)}.{nameof(Value)} not set");
 		}
 
 		/// <summary>
