@@ -47,7 +47,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var id = new Id<SubDivision, long>?(0L.AsId<SubDivision>());
 			var result2 = ctx.Subdivisions.ToLinqToDB().Where(s => s.Id == id).ToArray();
 
-			var ids = new[] {1L.AsId<SubDivision>(), 2L.AsId<SubDivision>(),};
+			// TODO: Undo and fix properly
+			var ids = new[] {1L.AsId<SubDivision>(), 2L.AsId<SubDivision>(),}.ToList();
 			_ = ctx.Subdivisions.ToLinqToDB().Where(s => ids.Contains(s.Id)).ToArray();
 
 			_ = ctx.Subdivisions.ToLinqToDB().ToArray();
