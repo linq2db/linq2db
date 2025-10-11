@@ -23,7 +23,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				_               => PostgreSQLVersion.AutoDetect,
 			};
 
-			return PostgreSQLTools.GetDataProvider();
+			return PostgreSQLTools.GetDataProvider(version);
 		}
 	}
 }
