@@ -30,6 +30,7 @@ steps:
   inputs:
     packageType: sdk
     version: 10.x
+    includePreviewVersions: true
   condition: and(variables.title, eq(variables.net100, 'true'), eq(variables.x86, 'true'), succeeded())
   env:
     PROCESSOR_ARCHITECTURE: x86

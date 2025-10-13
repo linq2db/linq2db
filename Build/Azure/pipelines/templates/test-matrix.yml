@@ -199,7 +199,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net80: true
           enable_fw_net90: true
-          enable_fw_net100: true
+          enable_fw_net100: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]'))) }}:
@@ -218,7 +218,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net80: true
           enable_fw_net90: true
-          enable_fw_net100: true
+          enable_fw_net100: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]'))) }}:
@@ -237,7 +237,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net80: true
           enable_fw_net90: true
-          enable_fw_net100: true
+          enable_fw_net100: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]'))) }}:
