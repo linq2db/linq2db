@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 
 using LinqToDB.Common;
+using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.SqlQuery
 {

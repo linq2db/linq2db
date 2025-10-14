@@ -4,14 +4,14 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -465,7 +465,7 @@ namespace Tests.Linq
 
 			void execute(string context, bool inline)
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					db.InlineParameters = inline;
 					var skip = 2;
@@ -489,7 +489,7 @@ namespace Tests.Linq
 
 			void execute(string context, bool inline)
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					db.InlineParameters = inline;
 					var skip = 2;
@@ -513,7 +513,7 @@ namespace Tests.Linq
 
 			void execute(string context, bool inline)
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					db.InlineParameters = inline;
 					var skip1 = 1;

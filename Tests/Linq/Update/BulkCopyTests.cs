@@ -3,16 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.Informix;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.DataProvider.Informix;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.DataProvider;
 using Tests.Model;
@@ -284,7 +284,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void ReuseOptionTest([DataSources(false, ProviderName.DB2)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
 			using (db.BeginTransaction())
 			{
@@ -320,13 +320,13 @@ namespace Tests.xUpdate
 			[Column] public int Id { get; set; }
 		}
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 		[Table]
 		public class DateOnlyTable
 		{
 			[Column] public DateOnly Date { get; set; }
 		}
-#endif		
+#endif
 
 		[Table]
 		public class IdentitySimpleBulkCopyTable
@@ -410,7 +410,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 		[Test]
 		public void BulkCopyDateOnly(
 			[DataSources(false)] string context,
@@ -502,12 +502,12 @@ namespace Tests.xUpdate
 
 			((IDataContext)db).Close();
 			// TODO: uncomment after DataConnectionExtensions refactored to work with IDataContext
-			//MySqlTestUtils.EnableNativeBulk(db.GetDataConnection(), context);
+			//MySqlTestUtils.EnableNativeBulk(db.GetDataContext(), context);
 			db.CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 			db.DataProvider.BulkCopy(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } });
 
-			if (context.IsAnyOf(ProviderName.ClickHouseClient) && copyType is BulkCopyType.ProviderSpecific)
+			if (context.IsAnyOf(ProviderName.ClickHouseDriver) && copyType is BulkCopyType.ProviderSpecific)
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -542,7 +542,7 @@ namespace Tests.xUpdate
 
 			((IDataContext)db).Close();
 			// TODO: uncomment after DataConnectionExtensions refactored to work with IDataContext
-			//MySqlTestUtils.EnableNativeBulk(db.GetDataConnection(), context);
+			//MySqlTestUtils.EnableNativeBulk(db.GetDataContext(), context);
 			db.CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } }, default);
@@ -583,7 +583,7 @@ namespace Tests.xUpdate
 
 			((IDataContext)db).Close();
 			// TODO: uncomment after DataConnectionExtensions refactored to work with IDataContext
-			//MySqlTestUtils.EnableNativeBulk(db.GetDataConnection(), context);
+			//MySqlTestUtils.EnableNativeBulk(db.GetDataContext(), context);
 			db.CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, AsyncEnumerableData(2, 1), default);
@@ -629,7 +629,7 @@ namespace Tests.xUpdate
 
 			db.DataProvider.BulkCopy(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } });
 
-			if (context.IsAnyOf(ProviderName.ClickHouseClient) && copyType is BulkCopyType.ProviderSpecific)
+			if (context.IsAnyOf(ProviderName.ClickHouseDriver) && copyType is BulkCopyType.ProviderSpecific)
 			{
 				using (Assert.EnterMultipleScope())
 				{

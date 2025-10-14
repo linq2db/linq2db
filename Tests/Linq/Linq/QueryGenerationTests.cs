@@ -1,18 +1,15 @@
 ﻿using System;
 using System.Linq;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Linq;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
 using Tests.Model;
-
 using Tests.xUpdate;
 
 using static Tests.xUpdate.MergeTests;
@@ -52,7 +49,7 @@ namespace Tests.Linq
 
 			var toString = query.Where(r => r.ID == 1).ToString();
 
-			Assert.That(toString, Is.EqualTo("LinqToDB.Linq.ExpressionQueryImpl`1[Tests.Model.Person]"));
+			Assert.That(toString, Is.EqualTo("LinqToDB.Internal.Linq.ExpressionQueryImpl`1[Tests.Model.Person]"));
 		}
 
 		[Test]
@@ -64,7 +61,7 @@ namespace Tests.Linq
 
 			var command = query.ToSqlQuery();
 
-			using var dc = GetDataConnection(context.StripRemote());
+			using var dc = GetDataContext(context.StripRemote());
 			var bySql = dc.Query<Person>(command.Sql).ToArray();
 			var expected = query.ToArray();
 			using (Assert.EnterMultipleScope())
@@ -85,7 +82,7 @@ namespace Tests.Linq
 
 			var command = query.ToSqlQuery();
 
-			using var dc = GetDataConnection(context.StripRemote());
+			using var dc = GetDataContext(context.StripRemote());
 			var person = dc.Query<Person>(command.Sql).ToArray();
 			var expected = query.Single();
 
@@ -114,7 +111,7 @@ namespace Tests.Linq
 
 			var command = query.ToSqlQuery(new () { InlineParameters = inlineParameters });
 
-			using var dc = GetDataConnection(context.StripRemote());
+			using var dc = GetDataContext(context.StripRemote());
 
 			var person = dc.Query<Person>(command.Sql, command.Parameters).ToArray();
 			var expected = query.Single();
@@ -148,7 +145,7 @@ namespace Tests.Linq
 
 			var command = query.ToSqlQuery(new () { InlineParameters = inlineParameters });
 
-			using var dc = GetDataConnection(context.StripRemote());
+			using var dc = GetDataContext(context.StripRemote());
 
 			var person = dc.Query<Person>(command.Sql, command.Parameters).ToArray();
 			var expected = query.Single();
@@ -183,7 +180,7 @@ namespace Tests.Linq
 
 			var command = query.ToSqlQuery();
 
-			using var dc = GetDataConnection(context.StripRemote());
+			using var dc = GetDataContext(context.StripRemote());
 
 			var person = dc.Query<Person>(command.Sql).ToArray();
 			var expected = query.Single();
@@ -213,7 +210,7 @@ namespace Tests.Linq
 
 			var command = query.ToSqlQuery(new () { InlineParameters = inlineParameters });
 
-			using var dc = GetDataConnection(context.StripRemote());
+			using var dc = GetDataContext(context.StripRemote());
 
 			var parent = dc.Query<Parent>(command.Sql, command.Parameters).ToArray();
 			var expected = db.Person.Where(p => p.ID == id).Single();
@@ -238,7 +235,7 @@ namespace Tests.Linq
 
 			var command = query.ToSqlQuery(new () { InlineParameters = inlineParameters });
 
-			using var dc = GetDataConnection(context.StripRemote());
+			using var dc = GetDataContext(context.StripRemote());
 			dc.Insert(new TableWithIdentity() { Value = 1 });
 			dc.Execute(command.Sql, command.Parameters);
 
@@ -266,7 +263,7 @@ namespace Tests.Linq
 
 			var command = query.ToSqlQuery(new () { InlineParameters = inlineParameters });
 
-			using var dc = GetDataConnection(context.StripRemote());
+			using var dc = GetDataContext(context.StripRemote());
 			dc.Insert(new TableWithIdentity() { Value = 1 });
 			dc.Execute(command.Sql, command.Parameters);
 
@@ -290,7 +287,7 @@ namespace Tests.Linq
 
 			var command = query.ToSqlQuery(new () { InlineParameters = inlineParameters });
 
-			using var dc = GetDataConnection(context.StripRemote());
+			using var dc = GetDataContext(context.StripRemote());
 
 			dc.Execute(command.Sql, command.Parameters);
 
@@ -318,7 +315,7 @@ namespace Tests.Linq
 
 			var command = query.ToSqlQuery(new () { InlineParameters = inlineParameters });
 
-			using var dc = GetDataConnection(context.StripRemote());
+			using var dc = GetDataContext(context.StripRemote());
 
 			dc.Execute(command.Sql, command.Parameters);
 
@@ -343,7 +340,7 @@ namespace Tests.Linq
 
 			var command = query.ToSqlQuery(new () { InlineParameters = inlineParameters });
 
-			using var dc = GetDataConnection(context.StripRemote());
+			using var dc = GetDataContext(context.StripRemote());
 			dc.Insert(new TableWithIdentitySource() { Value = 1 });
 
 			dc.Execute(command.Sql, command.Parameters);
@@ -376,7 +373,7 @@ namespace Tests.Linq
 
 			var command = query.ToSqlQuery(new () { InlineParameters = inlineParameters });
 
-			using var dc = GetDataConnection(context.StripRemote());
+			using var dc = GetDataContext(context.StripRemote());
 			dc.Insert(new TableWithIdentitySource() { Value = 1 });
 
 			dc.Execute(command.Sql, command.Parameters);
@@ -402,7 +399,7 @@ namespace Tests.Linq
 
 			var command = query.ToSqlQuery();
 
-			using var dc = GetDataConnection(context.StripRemote());
+			using var dc = GetDataContext(context.StripRemote());
 			var parent = dc.Query<Parent>(command.Sql).ToArray();
 			var expected = query.Single();
 
@@ -440,7 +437,7 @@ namespace Tests.Linq
 
 			var command = query.ToSqlQuery();
 
-			using var dc = GetDataConnection(context.StripRemote());
+			using var dc = GetDataContext(context.StripRemote());
 			var count = dc.Execute(command.Sql);
 			using (Assert.EnterMultipleScope())
 			{
@@ -480,7 +477,7 @@ namespace Tests.Linq
 
 			var command = query.ToSqlQuery(new SqlGenerationOptions() { MultiInsertMode = MultiInsertType.All });
 
-			using var dc = GetDataConnection(context.StripRemote());
+			using var dc = GetDataContext(context.StripRemote());
 			var count = dc.Execute(command.Sql);
 			using (Assert.EnterMultipleScope())
 			{
@@ -521,7 +518,7 @@ namespace Tests.Linq
 
 			var command = query.ToSqlQuery(new SqlGenerationOptions() { MultiInsertMode = MultiInsertType.First });
 
-			using var dc = GetDataConnection(context.StripRemote());
+			using var dc = GetDataContext(context.StripRemote());
 			var count = dc.Execute(command.Sql);
 			using (Assert.EnterMultipleScope())
 			{
@@ -553,7 +550,7 @@ namespace Tests.Linq
 
 			var command = query.ToSqlQuery();
 
-			using var dc = GetDataConnection(context.StripRemote());
+			using var dc = GetDataContext(context.StripRemote());
 			var count = dc.Execute(command.Sql);
 			using (Assert.EnterMultipleScope())
 			{
@@ -577,7 +574,7 @@ namespace Tests.Linq
 
 			var command = query.ToSqlQuery();
 
-			using var dc = GetDataConnection(context.StripRemote());
+			using var dc = GetDataContext(context.StripRemote());
 			var count = dc.Execute(command.Sql);
 			using (Assert.EnterMultipleScope())
 			{
@@ -601,7 +598,7 @@ namespace Tests.Linq
 
 			var command = query.ToSqlQuery();
 
-			using var dc = GetDataConnection(context.StripRemote());
+			using var dc = GetDataContext(context.StripRemote());
 			var count = dc.Execute(command.Sql);
 			using (Assert.EnterMultipleScope())
 			{

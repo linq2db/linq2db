@@ -6,6 +6,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Internal.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 
 using Microsoft.SqlServer.Types;
@@ -513,7 +514,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 		[Test]
 		public void TestLiteralsAndParameters_DateOnly([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{

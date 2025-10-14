@@ -10,7 +10,7 @@
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="System.Data.Odbc" />
 		<PackageReference Include="MySqlConnector" />
-		<PackageReference Include="ClickHouse.Client" />
+		<PackageReference Include="ClickHouse.Driver" />
 		<PackageReference Include="AdoNetCore.AseClient" />
 		<PackageReference Include="Humanizer.Core" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
@@ -38,6 +38,7 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Include="empty/empty.csproj" />
+		<None Include="empty/Directory.Build.props" />
 
 		<Reference Include="Sap.Data.Hana.v4.5">
 			<HintPath>$(SolutionDir)\Redist\SapHana\v4.5\Sap.Data.Hana.v4.5.dll</HintPath>

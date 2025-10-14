@@ -1,22 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Common;
-using LinqToDB.Expressions;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	public interface IPostgreSQLExtensions
-	{
-	}
-
 	public static class PostgreSQLExtensions
 	{
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "ext is an extension point")]
 		public static IPostgreSQLExtensions? PostgreSQL(this Sql.ISqlExtension? ext) => null;
 
 		#region Analytic Functions
@@ -31,10 +28,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					case Sql.AggregateModifier.None :
 						break;
 					case Sql.AggregateModifier.Distinct :
-						builder.AddExpression("modifier", "DISTINCT");
+						builder.AddFragment("modifier", "DISTINCT");
 						break;
 					case Sql.AggregateModifier.All :
-						builder.AddExpression("modifier", "ALL");
+						builder.AddFragment("modifier", "ALL");
 						break;
 					default :
 						throw new InvalidOperationException($"Unexpected modifier: {modifier}");

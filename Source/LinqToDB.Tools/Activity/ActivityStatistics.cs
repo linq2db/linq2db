@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 
+using LinqToDB.Metrics;
+
 namespace LinqToDB.Tools.Activity
 {
 	/// <summary>
@@ -507,17 +509,23 @@ namespace LinqToDB.Tools.Activity
 		static StatActivity OnTraceInternal;
 		static StatActivity Materialization;
 
+#pragma warning disable IDE0052 // Remove unread private members
 		static StatActivitySum ExecuteTotal;
 		static StatActivitySum ExecuteAdo;
+#pragma warning restore IDE0052 // Remove unread private members
 		static StatActivitySum Total;
 
+#pragma warning disable IDE0052 // Remove unread private members
 		static StatActivitySum Interceptors;
+#pragma warning restore IDE0052 // Remove unread private members
 		static StatActivitySum CommandInterceptor;
 		static StatActivitySum ConnectionInterceptor;
 		static StatActivitySum DataContextInterceptor;
 		static StatActivitySum EntityServiceInterceptor;
 		static StatActivitySum UnwrapDataObjectInterceptor;
+#pragma warning disable IDE0052 // Remove unread private members
 		static StatActivitySum ExceptionInterceptor;
+#pragma warning restore IDE0052 // Remove unread private members
 
 		static IStatActivity[] All;
 	}

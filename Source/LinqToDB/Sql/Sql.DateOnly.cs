@@ -1,9 +1,8 @@
-﻿#if NET8_0_OR_GREATER
+﻿#if SUPPORTS_DATEONLY
 using System;
 using System.Globalization;
 
-using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
+using LinqToDB.Mapping;
 
 using PN = LinqToDB.ProviderName;
 

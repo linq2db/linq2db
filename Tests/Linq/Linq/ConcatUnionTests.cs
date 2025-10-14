@@ -3,13 +3,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -165,8 +166,9 @@ namespace Tests.Linq
 					Where(p => p.Value1!.Value != 2));
 		}
 
+		[RequiresCorrelatedSubquery]
 		[Test]
-		public void Concat6([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void Concat6([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1402,15 +1404,15 @@ namespace Tests.Linq
 		[Table]
 		public class Issue3323Table
 		{
-			[PrimaryKey                      ] public int     Id       { get; set; }
-			[Column(SkipOnEntityFetch = true)] public string? FistName { get; set; }
-			[Column(SkipOnEntityFetch = true)] public string? LastName { get; set; }
-			[Column(CanBeNull = false)       ] public string  Text     { get; set; } = null!;
+			[PrimaryKey                      ] public int     Id        { get; set; }
+			[Column(SkipOnEntityFetch = true)] public string? FirstName { get; set; }
+			[Column(SkipOnEntityFetch = true)] public string? LastName  { get; set; }
+			[Column(CanBeNull = false)       ] public string  Text      { get; set; } = null!;
 
 			[ExpressionMethod(nameof(FullNameExpr), IsColumn = true)]
 			public string FullName { get; set; } = null!;
 
-			private static Expression<Func<Issue3323Table, string>> FullNameExpr() => entity => entity.FistName + " " + entity.LastName;
+			private static Expression<Func<Issue3323Table, string>> FullNameExpr() => entity => entity.FirstName + " " + entity.LastName;
 		}
 
 		[Test(Description = "calculated column in set select")]
@@ -1420,10 +1422,10 @@ namespace Tests.Linq
 			using var tb = db.CreateLocalTable<Issue3323Table>();
 			tb.Insert(() => new Issue3323Table()
 			{
-				Id       = 1,
-				FistName = "one",
-				LastName = "two",
-				Text     = "text"
+				Id        = 1,
+				FirstName = "one",
+				LastName  = "two",
+				Text      = "text"
 			});
 
 			var res = tb.Concat(tb).ToArray();
@@ -1443,10 +1445,10 @@ namespace Tests.Linq
 			using var tb = db.CreateLocalTable<Issue3323Table>();
 			tb.Insert(() => new Issue3323Table()
 			{
-				Id       = 1,
-				FistName = "one",
-				LastName = "two",
-				Text     = "text"
+				Id        = 1,
+				FirstName = "one",
+				LastName  = "two",
+				Text      = "text"
 			});
 
 			var query1 = tb.Select(r => new { r.Id, Text = r.FullName });
@@ -2279,6 +2281,71 @@ namespace Tests.Linq
 			});
 
 			var q = query1.UnionAll(query2).ToList();
+		}
+
+		[Test]
+		public void ConcatCount_ShouldNotRemoveSingleColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q1 = db.Person.Select(_ => _.ID)
+				.Concat(db.Parent.Select(_ => _.ParentID))
+				.Count();
+
+			var q2 = Person.Select(_ => _.ID)
+				.Concat(Parent.Select(_ => _.ParentID))
+				.Count();
+
+			Assert.That(q1, Is.EqualTo(q2));
+		}
+
+		[Test]
+		public void UnionCount_ShouldNotRemoveSingleColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q1 = db.Person.Select(_ => _.ID)
+				.Union(db.Parent.Select(_ => _.ParentID))
+				.Count();
+
+			var q2 = Person.Select(_ => _.ID)
+				.Union(Parent.Select(_ => _.ParentID))
+				.Count();
+
+			Assert.That(q1, Is.EqualTo(q2));
+		}
+
+		[Test]
+		public void ConcatCountExt_ShouldNotRemoveSingleColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q1 = db.Person.Select(_ => _.ID)
+				.Concat(db.Parent.Select(_ => _.ParentID))
+				.Select(_ => _)
+				.CountExt(_ => _);
+
+			var q2 = Person.Select(_ => _.ID)
+				.Concat(Parent.Select(_ => _.ParentID))
+				.Count();
+
+			Assert.That(q1, Is.EqualTo(q2));
+		}
+
+		[Test]
+		public void ConcatSumTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q1 = db.Person.Select(_ => _.ID)
+				.Concat(db.Parent.Select(_ => _.ParentID))
+				.Sum();
+
+			var q2 = Person.Select(_ => _.ID)
+				.Concat(Parent.Select(_ => _.ParentID))
+				.Sum();
+
+			Assert.That(q1, Is.EqualTo(q2));
 		}
 
 		#region Issue 4220

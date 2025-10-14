@@ -4,8 +4,9 @@ using System.Linq.Expressions;
 using JetBrains.Annotations;
 
 using LinqToDB.Expressions;
-using LinqToDB.Linq.Builder;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.SqlQuery;
 
 // ReSharper disable CheckNamespace
 
@@ -102,7 +103,11 @@ namespace LinqToDB
 				if (error != null)
 					return SqlErrorExpression.EnsureError(error, expression.Type);
 
-				var function = new SqlFunction(expression.Type, expressionStr!, IsAggregate, IsPure, Precedence,
+				var function = new SqlFunction(dataContext.MappingSchema.GetDbDataType(expression.Type), expressionStr!,
+					(IsAggregate      ? SqlFlags.IsAggregate      : SqlFlags.None) |
+					(IsPure           ? SqlFlags.IsPure           : SqlFlags.None) |
+					(IsPredicate      ? SqlFlags.IsPredicate      : SqlFlags.None) |
+					(IsWindowFunction ? SqlFlags.IsWindowFunction : SqlFlags.None),
 					ToParametersNullabilityType(IsNullable), СonfiguredCanBeNull, parameters!);
 
 				return ExpressionBuilder.CreatePlaceholder(query, function, expression);

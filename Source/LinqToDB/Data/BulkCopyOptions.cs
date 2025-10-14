@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using LinqToDB.Common;
-using LinqToDB.Common.Internal;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Options;
 
 namespace LinqToDB.Data
 {
@@ -12,9 +12,19 @@ namespace LinqToDB.Data
 	/// </param>
 	/// <param name="BulkCopyTimeout">
 	/// Number of seconds for the operation to complete before it times out.
+	/// For native bulk copy this option works only for providers that support it:
+	/// <list type="bullet">
+	/// <item>DB2</item>
+	/// <item>Informix</item>
+	/// <item>MySql/MariaDB using MySqlConnector provider</item>
+	/// <item>Oracle</item>
+	/// <item>SAP HANA</item>
+	/// <item>SQL Server</item>
+	/// <item>SAP/Sybase ASE</item>
+	/// </list>
 	/// </param>
 	/// <param name="BulkCopyType">
-	/// Default bulk copy mode, used by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>
+	/// Default bulk copy mode, used by <see cref="DataContextExtensions.BulkCopy{T}(IDataContext, IEnumerable{T})"/>
 	/// methods, if mode is not specified explicitly.
 	/// </param>
 	/// <param name="CheckConstraints">
@@ -98,22 +108,22 @@ namespace LinqToDB.Data
 	/// This callback will not be used if <see cref="NotifyAfter"/> set to 0.
 	/// </param>
 	/// <param name="UseParameters">
-	/// Gets or sets whether to Always use Parameters for MultipleRowsCopy. Default is false.
-	/// If True, provider's override for <see cref="DataProvider.BasicBulkCopy.MaxParameters"/> will be used to determine the maximum number of rows per insert,
+	/// Gets or sets whether to always use Parameters for MultipleRowsCopy. Default is false.
+	/// If True, provider-specific parameter limit per batch will be used to determine the maximum number of rows per insert,
 	/// Unless overridden by <see cref="MaxParametersForBatch"/>.
 	/// </param>
 	/// <param name="MaxParametersForBatch">
-	/// If set, will override the Maximum parameters per batch statement from <see cref="DataProvider.BasicBulkCopy.MaxParameters"/>.
+	/// If set, will set the maximum parameters per batch statement. Also see <see cref="UseParameters"/>.
 	/// </param>
 	/// <param name="MaxDegreeOfParallelism">
-	/// Implemented only by ClickHouse.Client provider. Defines number of connections, used for parallel insert in <see cref="BulkCopyType.ProviderSpecific"/> mode.
+	/// Implemented only by ClickHouse.Driver provider. Defines number of connections, used for parallel insert in <see cref="BulkCopyType.ProviderSpecific"/> mode.
 	/// </param>
 	/// <param name="WithoutSession">
-	/// Implemented only by ClickHouse.Client provider. When set, provider-specific bulk copy will use session-less connection even if called over connection with session.
+	/// Implemented only by ClickHouse.Driver provider. When set, provider-specific bulk copy will use session-less connection even if called over connection with session.
 	/// Note that session-less connections cannot be used with session-bound functionality like temporary tables.
 	/// </param>
 	/// <summary>
-	/// Defines behavior of <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, BulkCopyOptions, IEnumerable{T})"/> method.
+	/// Defines behavior of <see cref="DataContextExtensions.BulkCopy{T}(IDataContext, BulkCopyOptions, IEnumerable{T})"/> method.
 	/// </summary>
 	public sealed record BulkCopyOptions
 	(

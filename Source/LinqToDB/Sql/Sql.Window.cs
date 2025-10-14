@@ -5,7 +5,8 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Expressions.Internal;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Linq;
 
 namespace LinqToDB
 {
@@ -497,17 +498,17 @@ namespace LinqToDB
 				select new
 				{
 					t.Id,
-					RNPO = Sql.Window.RowNumber(w => w.PartitionBy(t.Name).OrderBy(t.Id)),
-					RNO2 = Sql.Window.RowNumber(w => w
+					RNPO = Window.RowNumber(w => w.PartitionBy(t.Name).OrderBy(t.Id)),
+					RNO2 = Window.RowNumber(w => w
 						.OrderByDesc(t.Id)
 						.ThenBy(t.Name)),
-					RN01 = Sql.Window.RowNumber(w => w.OrderBy(t.Id)),
+					RN01 = Window.RowNumber(w => w.OrderBy(t.Id)),
 
-					Sum      = Sql.Window.Sum(t.Id, w => w.PartitionBy(t.Name).OrderBy(t.Id).ThenBy(t.Name)),
+					Sum      = Window.Sum(t.Id, w => w.PartitionBy(t.Name).OrderBy(t.Id).ThenBy(t.Name)),
 
-					CountP    = Sql.Window.Count(w => w.PartitionBy(t.Name)),
-					CountPArg = Sql.Window.Count(w => w.Argument(t.Id).PartitionBy(t.Name)),
-					CountArg = Sql.Window.Count(w => w.Argument(AggregateModifier.Distinct, t.Id).PartitionBy(t.Name).OrderBy(t.Id).ThenBy(t.Name)),
+					CountP    = Window.Count(w => w.PartitionBy(t.Name)),
+					CountPArg = Window.Count(w => w.Argument(t.Id).PartitionBy(t.Name)),
+					CountArg = Window.Count(w => w.Argument(AggregateModifier.Distinct, t.Id).PartitionBy(t.Name).OrderBy(t.Id).ThenBy(t.Name)),
 				};
 
 			var groupQuery =

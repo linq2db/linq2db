@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Linq;
 
-using Shouldly;
-
 using LinqToDB;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
-using LinqToDB.Tools;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -274,10 +275,7 @@ namespace Tests.Linq
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					return ((Prev != null ? Prev.GetHashCode() : 0) * 397) ^ (Field != null ? Field.GetHashCode() : 0);
-				}
+				return HashCode.Combine(Prev, Field);
 			}
 		}
 
@@ -646,7 +644,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Sum3([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Sum3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -847,7 +846,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllFirebirdLess4, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllOracle11, TestProvName.AllMariaDB, TestProvName.AllDB2, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void CountInGroup([DataSources] string context)
 		{
@@ -1325,7 +1324,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		public void GroupByAggregate1([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1340,7 +1339,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		public void GroupByAggregate11([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1357,7 +1356,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		public void GroupByAggregate12([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -3814,6 +3813,53 @@ namespace Tests.Linq
 				{
 					gr.First().Value,
 				});
+		}
+
+		static class Issue5070
+		{
+			public sealed class CustomerPrice
+			{
+				public int CustomerId { get; set; }
+				public int FinalCustomerId { get; set; }
+				public bool IsActive { get; set; }
+				public decimal Price { get; set; }
+			}
+
+			public sealed class Inventory
+			{
+				public int CustomerId { get; set; }
+				public decimal Volume { get; set; }
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5070")]
+		public void Issue5070Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Issue5070.CustomerPrice>();
+			using var t2 = db.CreateLocalTable<Issue5070.Inventory>();
+
+			var forceInactive = true;
+
+			var query = t2
+				.InnerJoin(
+					t1,
+					(v, p) => v.CustomerId == p.CustomerId,
+					(v, p) => new
+					{
+						FinalCustomerId = Sql.NullIf(p.FinalCustomerId, 0) ?? p.CustomerId,
+						IsActive = forceInactive ? false : p.IsActive,
+						Amount = v.Volume * p.Price
+					})
+				.GroupBy(t => new { t.FinalCustomerId, t.IsActive })
+				.Select(t => new
+				{
+					t.Key.FinalCustomerId,
+					t.Key.IsActive,
+					Amount = t.Sum(x => x.Amount)
+				});
+
+			query.ToArray();
 		}
 	}
 }

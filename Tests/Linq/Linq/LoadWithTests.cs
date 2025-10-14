@@ -8,10 +8,11 @@ using System.Transactions;
 
 using LinqToDB;
 using LinqToDB.Async;
-using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -98,7 +99,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith3([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void LoadWith3([DataSources] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetConvertExpression<IEnumerable<Child>, ImmutableList<Child>>(t => ImmutableList.Create(t.ToArray()));
@@ -120,7 +122,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWithAsTable3([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void LoadWithAsTable3([DataSources] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -152,7 +155,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith4([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void LoadWith4([DataSources] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetGenericConvertProvider(typeof(EnumerableToImmutableListConvertProvider<>));
@@ -174,7 +178,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith5([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void LoadWith5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -195,7 +200,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith6([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void LoadWith6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -813,6 +819,45 @@ namespace Tests.Linq
 					Assert.That(result[0].ActiveChildren, Has.Count.EqualTo(2));
 				}
 			}
+		}
+
+		[Table(Name = "PeopleForLoadWith")]
+		public sealed class PersonX
+		{
+			[Column, PrimaryKey]
+			public int Id { get; set; }
+
+			[Column]
+			public string? Name { get; set; }
+
+			[Column]
+			public int? ParentId { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(ParentId))]
+			public PersonX[]? Children { get; set; }
+		}
+
+		[Test]
+		public void LoadWithChainedAfterFilter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var data = new[]
+			{
+				new PersonX { Id = 1, Name = "Grandparent" }, 
+				new PersonX { Id = 2, Name = "Parent", ParentId = 1 },
+				new PersonX { Id = 3, Name = "Child",  ParentId = 2 }
+			};
+
+			using var db      = GetDataContext(context);
+			using var parents = db.CreateLocalTable(data);
+
+			var singleItem = parents
+				.Where(p => p.Children!.Any(c => c.ParentId != null))
+				.LoadWith(p => p.Children, children => children.LoadWith(child => child.Children))
+				.First();
+
+			singleItem.Children.ShouldHaveSingleItem();
+			singleItem.Children[0].Children.ShouldHaveSingleItem();
+			singleItem.Children![0].Children![0].Children.ShouldBeNull();
 		}
 
 		sealed class TestEntity

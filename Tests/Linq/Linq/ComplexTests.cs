@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text.Json;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -529,6 +530,8 @@ namespace Tests.Linq
 		[Column("user_name", "Name")]
 		public class User
 		{
+			[PrimaryKey] public int Id { get; set; }
+
 			public string? Name;
 
 			[Column("street", ".Street")]
@@ -539,6 +542,7 @@ namespace Tests.Linq
 			{
 				new User()
 				{
+					Id = 1,
 					Name = "Freddy",
 					Residence = new Address()
 					{
@@ -646,6 +650,8 @@ namespace Tests.Linq
 		[Column("user_name", "Name")]
 		class UserStruct
 		{
+			[PrimaryKey] public int Id { get; set; }
+
 			public string? Name;
 
 			[Column("street", ".Street")]
@@ -656,6 +662,7 @@ namespace Tests.Linq
 			{
 				new UserStruct()
 				{
+					Id = 1,
 					Name = "Freddy",
 					Residence = new AddressStruct()
 					{
@@ -788,6 +795,250 @@ namespace Tests.Linq
 			public int? ParentId { get; set; }
 			public Issue4139Table? Parent { get; set; }
 		}
+		#endregion
+
+		#region Record Constructors
+		static class RecordTests
+		{
+			public sealed class Table
+			{
+				[PrimaryKey]
+				public int Id { get; set; }
+
+				public Struct Struct { get; set; }
+
+				public Class Class { get; set; } = null!;
+			}
+
+			public struct Struct
+			{
+				public int Value1 { get; set; }
+				public int Value2 { get; set; }
+			}
+
+			public sealed class Class
+			{
+				public int Value1 { get; set; }
+				public int Value2 { get; set; }
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5056")]
+		public void ChildRecordTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool asScalars, [Values] bool useInit)
+		{
+			if (!asScalars && !useInit)
+				Assert.Inconclusive("Unsupported case");
+
+			var ms = new MappingSchema();
+
+			if (asScalars)
+			{
+				ms.AddScalarType(typeof(RecordTests.Struct), DataType.Int32);
+				ms.AddScalarType(typeof(RecordTests.Class), DataType.Int32);
+
+				ms.SetConverter<RecordTests.Struct, DataParameter>(p => new DataParameter(null, p.Value1 + p.Value2));
+				ms.SetConverter<RecordTests.Class, DataParameter>(p => new DataParameter(null, p.Value1 - p.Value2));
+
+				// use long as sqlite returns integers as Int64 values
+				ms.SetConverter<long, RecordTests.Struct>(v => new RecordTests.Struct() { Value1 = (int)v + 4, Value2 = (int)v - 5 });
+				ms.SetConverter<long, RecordTests.Class>(v => new RecordTests.Class() { Value1 = (int)v - 3, Value2 = (int)v + 2 });
+
+				// remote context serialization
+				if (context.IsRemote())
+				{
+					ms.SetConverter<string, RecordTests.Struct>(v => new RecordTests.Struct() { Value1 = int.Parse(v.Split(':')[0]), Value2 = int.Parse(v.Split(':')[1]) });
+					ms.SetConverter<string, RecordTests.Class>(v => new RecordTests.Class() { Value1 = int.Parse(v.Split(':')[0]), Value2 = int.Parse(v.Split(':')[1]) });
+					ms.SetConverter<RecordTests.Struct, string>(v => $"{v.Value1}:{v.Value2}");
+					ms.SetConverter<RecordTests.Class, string>(v => $"{v.Value1}:{v.Value2}");
+				}
+			}
+			else
+			{
+				new FluentMappingBuilder(ms)
+					.Entity<RecordTests.Table>()
+						.Property(e => e.Struct.Value1).HasColumnName("struct_value1")
+						.Property(e => e.Struct.Value2).HasColumnName("struct_value2")
+						.Property(e => e.Class.Value1).HasColumnName("class_value1")
+						.Property(e => e.Class.Value2).HasColumnName("class_value2")
+					.Build()
+					;
+			}
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<RecordTests.Table>();
+
+			if (useInit)
+			{
+				tb.Insert(() => new RecordTests.Table()
+				{
+					Id = 1,
+					Struct = new RecordTests.Struct()
+					{
+						Value1 = 5,
+						Value2 = 8
+					},
+					Class = new RecordTests.Class()
+					{
+						Value1 = -4,
+						Value2 = -12
+					}
+				});
+			}
+			else
+			{
+				var structValue = new RecordTests.Struct()
+				{
+					Value1 = 5,
+					Value2 = 8
+				};
+				var classValue = new RecordTests.Class()
+				{
+					Value1 = -4,
+					Value2 = -12
+				};
+
+				tb.Insert(() => new RecordTests.Table()
+				{
+					Id = 1,
+					Struct = structValue,
+					Class = classValue
+				});
+			}
+
+			var record = tb.Single();
+			Assert.That(record.Class, Is.Not.Null);
+
+			if (asScalars)
+			{
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(record.Struct.Value1, Is.EqualTo(17));
+					Assert.That(record.Struct.Value2, Is.EqualTo(8));
+					Assert.That(record.Class.Value1, Is.EqualTo(5));
+					Assert.That(record.Class.Value2, Is.EqualTo(10));
+				}
+			}
+			else
+			{
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(record.Struct.Value1, Is.EqualTo(5));
+					Assert.That(record.Struct.Value2, Is.EqualTo(8));
+					Assert.That(record.Class.Value1, Is.EqualTo(-4));
+					Assert.That(record.Class.Value2, Is.EqualTo(-12));
+				}
+			}
+
+			if (useInit)
+			{
+				tb.Update(r => new RecordTests.Table()
+				{
+					Id = 1,
+					Struct = new RecordTests.Struct()
+					{
+						Value1 = 12,
+						Value2 = -11
+					},
+					Class = new RecordTests.Class()
+					{
+						Value1 = -3,
+						Value2 = 5
+					}
+				});
+			}
+			else
+			{
+				var structValue = new RecordTests.Struct()
+				{
+					Value1 = 12,
+					Value2 = -11
+				};
+				var classValue = new RecordTests.Class()
+				{
+					Value1 = -3,
+					Value2 = 5
+				};
+
+				tb.Update(r => new RecordTests.Table()
+				{
+					Id = 1,
+					Struct = structValue,
+					Class = classValue
+				});
+			}
+
+			record = tb.Single();
+
+			if (asScalars)
+			{
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(record.Struct.Value1, Is.EqualTo(5));
+					Assert.That(record.Struct.Value2, Is.EqualTo(-4));
+					Assert.That(record.Class.Value1, Is.EqualTo(-11));
+					Assert.That(record.Class.Value2, Is.EqualTo(-6));
+				}
+			}
+			else
+			{
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(record.Struct.Value1, Is.EqualTo(12));
+					Assert.That(record.Struct.Value2, Is.EqualTo(-11));
+					Assert.That(record.Class.Value1, Is.EqualTo(-3));
+					Assert.That(record.Class.Value2, Is.EqualTo(5));
+				}
+			}
+		}
+		#endregion
+
+		#region Issue 5056
+		static class Issue5056
+		{
+			public sealed class Table
+			{
+				[PrimaryKey]
+				public required int Id { get; init; }
+
+				[ValueConverter(ConverterType = typeof(ComplexTypeConverter))]
+				[Column(DataType = DataType.NVarChar)]
+				public required ComplexType ComplexType { get; init; }
+			}
+
+			[ScalarType]
+			public sealed class ComplexType
+			{
+				public required int Id { get; init; }
+			}
+
+			sealed class ComplexTypeConverter() : ValueConverter<ComplexType, string>(
+				obj => JsonSerializer.Serialize(obj, JsonSerializerOptions.Default),
+				json => JsonSerializer.Deserialize<ComplexType>(json, JsonSerializerOptions.Default)!,
+				false)
+			{
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5056")]
+		public void Issue5056Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue5056.Table>();
+
+			tb.Insert(() => new Issue5056.Table()
+			{
+				Id = 1,
+				ComplexType = new Issue5056.ComplexType()
+				{
+					Id = 2,
+				}
+			});
+
+			var inserted = tb.Single();
+
+			Assert.That(inserted.ComplexType.Id, Is.EqualTo(2));
+		}
+
 		#endregion
 	}
 }

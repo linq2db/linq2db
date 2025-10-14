@@ -5,9 +5,9 @@ using System.Globalization;
 using System.Linq;
 
 using LinqToDB.CodeModel;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Metadata;
 using LinqToDB.Scaffold;
-using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataModel
@@ -64,12 +64,13 @@ namespace LinqToDB.DataModel
 			_constructors            = _dataContextClass.Constructors();
 			_partialMethods          = _dataContextClass.Methods(true);
 
-			// TODO: linq2db refactoring
-			// check wether custom data context is inherited from DataConnection
-			var contextIsDataConnection   = _model.DataContext.Class.BaseType != null && _languageProvider.TypeEqualityComparerWithoutNRT.Equals(_model.DataContext.Class.BaseType, WellKnownTypes.LinqToDB.Data.DataConnection);
-			// currently stored procedures API requires DataConnection-based context
-			// so we cannot use generated data context type for parameter if it is not inherited from DataConnection
-			_procedureContextParameterType = contextIsDataConnection ? _dataContextClass.Type.Type : WellKnownTypes.LinqToDB.Data.DataConnection;
+			// check wether custom data context is inherited from DataConnection or DataContext
+			var contextIsDataConnection    = _model.DataContext.Class.BaseType != null
+				&& (_languageProvider.TypeEqualityComparerWithoutNRT.Equals(_model.DataContext.Class.BaseType, WellKnownTypes.LinqToDB.Data.DataConnection)
+					|| _languageProvider.TypeEqualityComparerWithoutNRT.Equals(_model.DataContext.Class.BaseType, WellKnownTypes.LinqToDB.DataContext));
+			// currently stored procedures API requires DataConnection-based or DataContext-based context
+			// so we cannot use generated data context type for parameter if it is not inherited from those typed
+			_procedureContextParameterType = contextIsDataConnection ? _dataContextClass.Type.Type : WellKnownTypes.LinqToDB.IDataContext;
 		}
 
 		ILanguageProvider     IDataModelGenerationContext.LanguageProvider              => _languageProvider;

@@ -464,7 +464,7 @@ namespace Tests.Linq
 				});
 
 				var cnt = db.GetTable<TestTable1>().Delete(r => r.Id == RID && r.TestField == TestEnum1.Value2);
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 			}
 		}
@@ -482,7 +482,7 @@ namespace Tests.Linq
 				});
 
 				var cnt = db.GetTable<TestTable2>().Delete(r => r.Id == RID && r.TestField == TestEnum21.Value2);
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 			}
 		}
@@ -500,7 +500,7 @@ namespace Tests.Linq
 				});
 
 				var cnt = db.GetTable<NullableTestTable1>().Delete(r => r.Id == RID && r.TestField == TestEnum1.Value2);
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 			}
 		}
@@ -518,7 +518,7 @@ namespace Tests.Linq
 				});
 
 				var cnt = db.GetTable<NullableTestTable2>().Delete(r => r.Id == RID && r.TestField == TestEnum21.Value2);
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 			}
 		}
@@ -877,7 +877,7 @@ namespace Tests.Linq
 					})
 					.Insert(db.GetTable<TestTable1>(), r => r);
 
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(result, Is.EqualTo(1));
 				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL1).Count(), Is.EqualTo(1));
 			}
@@ -906,7 +906,7 @@ namespace Tests.Linq
 					})
 					.Insert(db.GetTable<TestTable2>(), r => r);
 
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(result, Is.EqualTo(1));
 				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL1).Count(), Is.EqualTo(1));
 			}
@@ -935,7 +935,7 @@ namespace Tests.Linq
 					})
 					.Insert(db.GetTable<NullableTestTable1>(), r => r);
 
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(result, Is.EqualTo(1));
 				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL1).Count(), Is.EqualTo(1));
 			}
@@ -964,7 +964,7 @@ namespace Tests.Linq
 					})
 					.Insert(db.GetTable<NullableTestTable2>(), r => r);
 
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(result, Is.EqualTo(1));
 				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL1).Count(), Is.EqualTo(1));
 			}
@@ -983,7 +983,7 @@ namespace Tests.Linq
 				});
 
 				var cnt = db.GetTable<TestTable1>().Delete(r => r.Id == RID && r.TestField.Equals(TestEnum1.Value2));
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 			}
 		}
@@ -1001,7 +1001,7 @@ namespace Tests.Linq
 				});
 
 				var cnt = db.GetTable<TestTable2>().Delete(r => r.Id == RID && r.TestField.Equals(TestEnum21.Value2));
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 			}
 		}
@@ -1020,7 +1020,7 @@ namespace Tests.Linq
 
 				var cnt = db.GetTable<NullableTestTable1>().Delete(r => r.Id == RID && r.TestField.Equals(TestEnum1.Value2));
 
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 			}
 		}
@@ -1039,7 +1039,7 @@ namespace Tests.Linq
 
 				var cnt = db.GetTable<NullableTestTable2>().Delete(r => r.Id == RID && r.TestField.Equals(TestEnum21.Value2));
 
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 			}
 		}
@@ -2299,5 +2299,69 @@ namespace Tests.Linq
 				Assert.That(count, Is.EqualTo(1));
 			}
 		}
+
+		#region Issue 5012
+
+		sealed class Issue5012
+		{
+			public enum TestStatus
+			{
+				Outstanding = 0,
+				Completed   = 1,
+			}
+
+			[Table]
+			public sealed class Test
+			{
+				[Column] public TestStatus Status { get; set; }
+
+				public static readonly Test[] Data =
+				[
+					new () { Status = TestStatus.Outstanding }
+				];
+			}
+
+			public static class Ext
+			{
+				public static string GetStrValue(Enum e)
+				{
+					return e.ToString();
+				}
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5012")]
+		public void Issue5012Test1([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db  = GetDataContext(context);
+			using var tb  = db.CreateLocalTable(Issue5012.Test.Data);
+
+			_ = tb
+				.Select(i => new
+				{
+					Status = Issue5012.Ext.GetStrValue(i.Status == Issue5012.TestStatus.Completed
+					? Issue5012.TestStatus.Completed
+					: Issue5012.TestStatus.Outstanding)
+				})
+				.ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5012")]
+		public void Issue5012Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db  = GetDataContext(context);
+			using var tb  = db.CreateLocalTable(Issue5012.Test.Data);
+
+			_ = tb
+				.Select(i => new
+				{
+					Status = Issue5012.Ext.GetStrValue((Issue5012.TestStatus)(i.Status == Issue5012.TestStatus.Completed
+					? Issue5012.TestStatus.Completed
+					: Issue5012.TestStatus.Outstanding))
+				})
+				.ToList();
+		}
+
+		#endregion
 	}
 }

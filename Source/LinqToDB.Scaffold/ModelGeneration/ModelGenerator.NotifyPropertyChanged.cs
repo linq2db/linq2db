@@ -1,18 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace LinqToDB.Tools.ModelGeneration
 {
-	/// <summary>
-	/// For internal use.
-	/// </summary>
-	public interface INotifyingPropertyProperty : IProperty
-	{
-		bool         IsNotifying { get; set; }
-		List<string> Dependents  { get; set; }
-	}
-
 	/// <summary>
 	/// For internal use.
 	/// </summary>

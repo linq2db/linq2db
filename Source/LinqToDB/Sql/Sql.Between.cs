@@ -1,12 +1,11 @@
 ﻿using System;
 
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB
 {
 	partial class Sql
 	{
-
 		[Extension("", "", PreferServerSide = true, IsPredicate = true, BuilderType = typeof(BetweenBuilder))]
 		public static bool Between<T>(this T value, T low, T high)
 			where T : IComparable

@@ -4,8 +4,8 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -17,7 +17,8 @@ namespace Tests.Linq
 	public class SubQueryTests : TestBase
 	{
 		[Test]
-		public void Test1([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Test1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -30,7 +31,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test2([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Test2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -73,7 +75,8 @@ namespace Tests.Linq
 		static int _testValue = 3;
 
 		[Test]
-		public void Test5([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Test5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -110,7 +113,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test6([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Test6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -150,7 +154,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test7([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Test7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -279,7 +284,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubSub1([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void SubSub1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -314,9 +320,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[RequiresCorrelatedSubquery]
 		public void SubSub2([DataSources(
 			TestProvName.AllAccess,
-			TestProvName.AllClickHouse,
 			ProviderName.DB2,
 			TestProvName.AllOracle,
 			TestProvName.AllSybase,
@@ -407,7 +413,8 @@ namespace Tests.Linq
 		//}
 
 		[Test]
-		public void SubSub21([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void SubSub21([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -450,7 +457,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubSub211([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void SubSub211([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -495,7 +503,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubSub212([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void SubSub212([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -538,9 +547,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[RequiresCorrelatedSubquery]
 		public void SubSub22([DataSources(
 			ProviderName.SqlCe, ProviderName.DB2,
-			TestProvName.AllClickHouse,
 			TestProvName.AllOracle, TestProvName.AllSapHana)]
 			string context)
 		{
@@ -587,7 +596,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Count1([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Count1([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -637,7 +647,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Count3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Count3([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -966,8 +977,9 @@ namespace Tests.Linq
 			public IEnumerable<Review> Reviews { get; set; } = null!;
 		}
 
+		[RequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4458")]
-		public void Issue4458Test1([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Issue4458Test1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable(Issue4458Item.Data);
@@ -997,8 +1009,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[RequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4458")]
-		public void Issue4458Test2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Issue4458Test2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable(Issue4458Item.Data);

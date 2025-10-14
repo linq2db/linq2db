@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -400,7 +400,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllClickHouse], ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		[Test]
 		public void OrderBySubQuery([DataSources] string context)
 		{

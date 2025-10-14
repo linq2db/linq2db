@@ -1,8 +1,9 @@
 ﻿using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Mapping;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 

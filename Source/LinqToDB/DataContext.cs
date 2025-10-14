@@ -9,14 +9,14 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
-using LinqToDB.Infrastructure;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Infrastructure;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
-using LinqToDB.Tools;
+using LinqToDB.Metrics;
 
 namespace LinqToDB
 {
@@ -180,7 +180,13 @@ namespace LinqToDB
 		/// <summary>
 		/// Gets or sets trace handler, used for data connection instance.
 		/// </summary>
-		public Action<TraceInfo>? OnTraceConnection { get; set; }
+		public Action<TraceInfo>? OnTraceConnection
+		{
+			get;
+			// TODO: Make private in v7 and remove obsoletion warning ignores from callers
+			[Obsolete("This API scheduled for removal in v7. Use DataOptions's UseTracing API"), EditorBrowsable(EditorBrowsableState.Never)]
+			set;
+		}
 
 		private bool _keepConnectionAlive;
 		/// <summary>
@@ -211,7 +217,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Sets connection management behavior to specify if context should dispose underlying connection after use or not.
 		/// </summary>
-		public Task SetKeepConnectionAliveAsync(bool keepAlive)
+		public ValueTask SetKeepConnectionAliveAsync(bool keepAlive)
 		{
 			AssertDisposed();
 
@@ -220,7 +226,7 @@ namespace LinqToDB
 			if (keepAlive == false)
 				return ReleaseQueryAsync();
 
-			return Task.CompletedTask;
+			return default;
 		}
 
 		// TODO: Remove in v7
@@ -292,7 +298,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Counts number of locks, put on underlying connection. Connection will not be released while counter is not zero.
 		/// </summary>
-		internal int LockDbManagerCounter;
+		private int _lockDbManagerCounter;
 
 		private int? _commandTimeout;
 
@@ -311,11 +317,7 @@ namespace LinqToDB
 
 				if (value < 0)
 				{
-#if NET8_0_OR_GREATER
 					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout or ResetCommandTimeoutAsync methods instead.");
-#else
-					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout method instead.");
-#endif
 				}
 				else
 				{
@@ -342,7 +344,6 @@ namespace LinqToDB
 #pragma warning restore CS0618 // Type or member is obsolete
 		}
 
-#if NET8_0_OR_GREATER
 		/// <summary>
 		/// Sets command timeout to default connection value.
 		/// Note that default provider/connection timeout is not the same value as timeout value you can specify upon context configuration.
@@ -355,7 +356,6 @@ namespace LinqToDB
 			return _dataConnection?.ResetCommandTimeoutAsync() ?? default;
 #pragma warning restore CS0618 // Type or member is obsolete
 		}
-#endif
 
 		/// <summary>
 		/// Underlying active database connection.
@@ -423,7 +423,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// For active underlying connection, updates information about last executed query <see cref="LastQuery"/> and
-		/// releases connection, if it is not locked (<see cref="LockDbManagerCounter"/>)
+		/// releases connection, if it is not locked (<see cref="_lockDbManagerCounter"/>)
 		/// and <see cref="KeepConnectionAlive"/> is <c>false</c>.
 		/// </summary>
 		internal void ReleaseQuery()
@@ -436,7 +436,7 @@ namespace LinqToDB
 				LastQuery = _dataConnection.LastQuery;
 #pragma warning restore CS0618 // Type or member is obsolete
 
-				if (LockDbManagerCounter == 0 && KeepConnectionAlive == false)
+				if (_lockDbManagerCounter == 0 && KeepConnectionAlive == false)
 				{
 					if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new()).AddRange(_dataConnection.QueryHints);
 					if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new()).AddRange(_dataConnection.NextQueryHints);
@@ -450,10 +450,10 @@ namespace LinqToDB
 
 		/// <summary>
 		/// For active underlying connection, updates information about last executed query <see cref="LastQuery"/> and
-		/// releases connection, if it is not locked (<see cref="LockDbManagerCounter"/>)
+		/// releases connection, if it is not locked (<see cref="_lockDbManagerCounter"/>)
 		/// and <see cref="KeepConnectionAlive"/> is <c>false</c>.
 		/// </summary>
-		internal async Task ReleaseQueryAsync()
+		internal async ValueTask ReleaseQueryAsync()
 		{
 			AssertDisposed();
 
@@ -463,7 +463,7 @@ namespace LinqToDB
 				LastQuery = _dataConnection.LastQuery;
 #pragma warning restore CS0618 // Type or member is obsolete
 
-				if (LockDbManagerCounter == 0 && KeepConnectionAlive == false)
+				if (_lockDbManagerCounter == 0 && KeepConnectionAlive == false)
 				{
 					if (_dataConnection.QueryHints.    Count > 0) QueryHints.    AddRange(_queryHints!);
 					if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints!);
@@ -566,10 +566,11 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Starts new transaction for current context with specified isolation level.
-		/// If connection already has transaction, it will be rolled back.
+		/// If connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <param name="level">Transaction isolation level.</param>
 		/// <returns>Database transaction object.</returns>
+		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
 		public virtual DataContextTransaction BeginTransaction(IsolationLevel level)
 		{
 			AssertDisposed();
@@ -583,9 +584,10 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Starts new transaction for current context with default isolation level.
-		/// If connection already has transaction, it will be rolled back.
+		/// If connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <returns>Database transaction object.</returns>
+		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
 		public virtual DataContextTransaction BeginTransaction()
 		{
 			AssertDisposed();
@@ -599,11 +601,12 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Starts new transaction asynchronously for current context with specified isolation level.
-		/// If connection already has transaction, it will be rolled back.
+		/// If connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <param name="level">Transaction isolation level.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
+		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
 		public virtual async Task<DataContextTransaction> BeginTransactionAsync(IsolationLevel level, CancellationToken cancellationToken = default)
 		{
 			AssertDisposed();
@@ -617,10 +620,11 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Starts new transaction asynchronously for current context with default isolation level.
-		/// If connection already has transaction, it will be rolled back.
+		/// If connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
+		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
 		public virtual async Task<DataContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
 		{
 			AssertDisposed();
@@ -677,7 +681,7 @@ namespace LinqToDB
 				return _queryRunner!.ExecuteScalar();
 			}
 
-			public DataReaderWrapper ExecuteReader()
+			public IDataReaderAsync ExecuteReader()
 			{
 				return _queryRunner!.ExecuteReader();
 			}
@@ -789,16 +793,16 @@ namespace LinqToDB
 				// For ConnectionOptions we reapply only mapping schema and connection interceptor.
 				// Connection string, configuration, data provider, etc. are not reapplyable.
 				//
-				if (options.ConfigurationString       != previousOptions?.ConfigurationString)       throw new LinqToDBException($"Option '{options.ConfigurationString} cannot be changed for context dynamically.");
-				if (options.ConnectionString          != previousOptions?.ConnectionString)          throw new LinqToDBException($"Option '{options.ConnectionString} cannot be changed for context dynamically.");
-				if (options.ProviderName              != previousOptions?.ProviderName)              throw new LinqToDBException($"Option '{options.ProviderName} cannot be changed for context dynamically.");
-				if (options.DbConnection              != previousOptions?.DbConnection)              throw new LinqToDBException($"Option '{options.DbConnection} cannot be changed for context dynamically.");
-				if (options.DbTransaction             != previousOptions?.DbTransaction)             throw new LinqToDBException($"Option '{options.DbTransaction} cannot be changed for context dynamically.");
-				if (options.DisposeConnection         != previousOptions?.DisposeConnection)         throw new LinqToDBException($"Option '{options.DisposeConnection} cannot be changed for context dynamically.");
-				if (options.DataProvider              != previousOptions?.DataProvider)              throw new LinqToDBException($"Option '{options.DataProvider} cannot be changed for context dynamically.");
-				if (options.ConnectionFactory         != previousOptions?.ConnectionFactory)         throw new LinqToDBException($"Option '{options.ConnectionFactory} cannot be changed for context dynamically.");
-				if (options.DataProviderFactory       != previousOptions?.DataProviderFactory)       throw new LinqToDBException($"Option '{options.DataProviderFactory} cannot be changed for context dynamically.");
-				if (options.OnEntityDescriptorCreated != previousOptions?.OnEntityDescriptorCreated) throw new LinqToDBException($"Option '{options.OnEntityDescriptorCreated} cannot be changed for context dynamically.");
+				if (options.ConfigurationString       != previousOptions?.ConfigurationString)       throw new LinqToDBException($"Option '{nameof(ConnectionOptions.ConfigurationString)} cannot be changed for context dynamically.");
+				if (options.ConnectionString          != previousOptions?.ConnectionString)          throw new LinqToDBException($"Option '{nameof(ConnectionOptions.ConnectionString)} cannot be changed for context dynamically.");
+				if (options.ProviderName              != previousOptions?.ProviderName)              throw new LinqToDBException($"Option '{nameof(ConnectionOptions.ProviderName)} cannot be changed for context dynamically.");
+				if (options.DbConnection              != previousOptions?.DbConnection)              throw new LinqToDBException($"Option '{nameof(ConnectionOptions.DbConnection)} cannot be changed for context dynamically.");
+				if (options.DbTransaction             != previousOptions?.DbTransaction)             throw new LinqToDBException($"Option '{nameof(ConnectionOptions.DbTransaction)} cannot be changed for context dynamically.");
+				if (options.DisposeConnection         != previousOptions?.DisposeConnection)         throw new LinqToDBException($"Option '{nameof(ConnectionOptions.DisposeConnection)} cannot be changed for context dynamically.");
+				if (options.DataProvider              != previousOptions?.DataProvider)              throw new LinqToDBException($"Option '{nameof(ConnectionOptions.DataProvider)} cannot be changed for context dynamically.");
+				if (options.ConnectionFactory         != previousOptions?.ConnectionFactory)         throw new LinqToDBException($"Option '{nameof(ConnectionOptions.ConnectionFactory)} cannot be changed for context dynamically.");
+				if (options.DataProviderFactory       != previousOptions?.DataProviderFactory)       throw new LinqToDBException($"Option '{nameof(ConnectionOptions.DataProviderFactory)} cannot be changed for context dynamically.");
+				if (options.OnEntityDescriptorCreated != previousOptions?.OnEntityDescriptorCreated) throw new LinqToDBException($"Option '{nameof(ConnectionOptions.OnEntityDescriptorCreated)} cannot be changed for context dynamically.");
 
 				Action? action = null;
 
@@ -946,6 +950,34 @@ namespace LinqToDB
 				((IDataContext)this).SetMappingSchema(oldSchema);
 				_configurationID = configurationID;
 			});
+		}
+
+		/// <summary>
+		/// Increases connection lock counter on call and decrease on dispose.
+		/// </summary>
+		internal ConnectionLockScope AcquireLock() => new (this);
+
+		internal readonly struct ConnectionLockScope : IDisposable, IAsyncDisposable
+		{
+			private readonly DataContext _context;
+
+			public ConnectionLockScope(DataContext context)
+			{
+				_context = context;
+				_context._lockDbManagerCounter++;
+			}
+
+			public void Dispose()
+			{
+				_context._lockDbManagerCounter--;
+				_context.ReleaseQuery();
+			}
+
+			public ValueTask DisposeAsync()
+			{
+				_context._lockDbManagerCounter--;
+				return _context.ReleaseQueryAsync();
+			}
 		}
 	}
 }

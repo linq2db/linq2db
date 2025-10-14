@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Data;
+using LinqToDB.Internal.Async;
 
 using NUnit.Framework;
 
@@ -80,7 +81,7 @@ namespace Tests.Linq
 
 		async Task TestExecute1Impl(string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				conn.InlineParameters = true;
 
@@ -99,7 +100,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestExecute2([DataSources(false)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				conn.InlineParameters = true;
 
@@ -123,7 +124,7 @@ namespace Tests.Linq
 
 		async Task TestQueryToArrayImpl(string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				conn.InlineParameters = true;
 
@@ -150,7 +151,7 @@ namespace Tests.Linq
 
 		async Task TestQueryToAsyncEnumerableImpl(string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				conn.InlineParameters = true;
 

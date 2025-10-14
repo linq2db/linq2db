@@ -15,15 +15,15 @@ namespace Cli.NewCliFeatures.SQLite
 	[Table("Patient")]
 	public class Patient
 	{
-		[Column("PersonID" , IsPrimaryKey = true )] public long   PersonId  { get; internal set; } // integer
-		[Column("Diagnosis", CanBeNull    = false)] public string Diagnosis { get; internal set; } = null!; // nvarchar(256)
+		[Column("PersonID" , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long   PersonId  { get; internal set; } // INTEGER
+		[Column("Diagnosis", CanBeNull    = false                                                             )] public string Diagnosis { get; internal set; } = null!; // nvarchar(256)
 
 		#region Associations
 		/// <summary>
-		/// FK_Patient_0_0
+		/// FK_Patient_0
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Person.PersonId))]
-		public Person FkPatient00 { get; set; } = null!;
+		public Person FkPatient0 { get; set; } = null!;
 		#endregion
 	}
 }

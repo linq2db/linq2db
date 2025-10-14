@@ -13,10 +13,6 @@
 		<Product>$(Title)</Product>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Testing'">
-		<DefineConstants>OVERRIDETOSTRING;$(DefineConstants)</DefineConstants>
-	</PropertyGroup>
-
 	<PropertyGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Testing' OR '$(Configuration)'=='Azure'">
 		<!--bugchecks to run in debug and during CI tests to discover potential issues-->
 		<DefineConstants>BUGCHECK;$(DefineConstants)</DefineConstants>
@@ -28,10 +24,7 @@
 
 		<ProjectReference Include="../CodeGenerators/CodeGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetTargetFramework="TargetFramework=netstandard2.0" />
 
-		<EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
-		<EmbeddedResource Include="SqlQuery\ReservedWordsOracle.txt" />
-		<EmbeddedResource Include="SqlQuery\ReservedWordsFirebird.txt" />
-		<EmbeddedResource Include="SqlQuery\ReservedWordsPostgres.txt" />
+		<EmbeddedResource Include="Resources\*.txt" />
 
 		<None Update="DataProvider\ClickHouse\ClickHouseHints.tt">
 			<LastGenOutput>ClickHouseHints.generated.cs</LastGenOutput>
@@ -59,16 +52,16 @@
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 		</Compile>
-
-		<None Update="Sql\Sql.Row.tt">
-		  <LastGenOutput>Sql.Row.generated.cs</LastGenOutput>
-		  <Generator>TextTemplatingFileGenerator</Generator>
-		</None>
 		<Compile Update="Sql\Sql.Row.generated.cs">
 		  <DesignTime>True</DesignTime>
 		  <AutoGen>True</AutoGen>
 		  <DependentUpon>Sql.Row.tt</DependentUpon>
 		</Compile>
+
+		<None Update="Sql\Sql.Row.tt">
+		  <LastGenOutput>Sql.Row.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
 
 		<None Update="DataProvider\PostgreSQL\PostgreSQLHints.tt">
 			<LastGenOutput>PostgreSQLHints.generated.cs</LastGenOutput>
@@ -115,11 +108,11 @@
 			<LastGenOutput>AsyncExtensions.generated.cs</LastGenOutput>
 		</None>
 
-		<None Update="Common\Internal\MutableTuple.tt">
+		<None Update="Internal\Common\MutableTuple.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>MutableTuple.generated.cs</LastGenOutput>
 		</None>
-		<Compile Update="Common\Internal\MutableTuple.generated.cs">
+		<Compile Update="Internal\Common\MutableTuple.generated.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 			<DependentUpon>MutableTuple.tt</DependentUpon>
@@ -152,5 +145,4 @@
 		<AdditionalFiles Include="PublicAPI/PublicAPI.*.txt" />
 		<AdditionalFiles Include="PublicAPI/$(TargetFramework)/PublicAPI.*.txt" />
 	</ItemGroup>
-
 </Project>

@@ -24,6 +24,8 @@ variables:
   artifact_linq2db_fsharp_binaries: 'linq2db_fsharp_binaries'
   artifact_linq2db_efcore_binaries: 'linq2db_efcore_binaries'
   artifact_linq2db_efcore_sts_binaries: 'linq2db_efcore_sts_binaries'
+  artifact_linq2db_linqpad_binaries: 'linq2db_linqpad_binaries'
+  artifact_linq2db_linqpad_lpx: 'linq2db_linqpad_lpx'
   artifact_t4_binaries: 't4_binaries'
   artifact_test_binaries: 'test_binaries'
 # nuget/assembly versions
@@ -32,10 +34,10 @@ variables:
   ef8AssemblyVersion: 8.2.0
   ef9AssemblyVersion: 9.1.0
   ${{ if eq(variables['Build.SourceBranchName'], 'release') }}:
-    packageVersion: 6.0.0-preview.4
-    ef3PackageVersion: 3.28.0-preview.4
-    ef8PackageVersion: 8.2.0-preview.4
-    ef9PackageVersion: 9.1.0-preview.4
+    packageVersion: 6.0.0
+    ef3PackageVersion: 3.28.0
+    ef8PackageVersion: 8.2.0
+    ef9PackageVersion: 9.1.0
   ${{ if ne(variables['Build.SourceBranchName'], 'release') }}:
     packageVersion: 6.0.0
     ef3PackageVersion: 3.28.0

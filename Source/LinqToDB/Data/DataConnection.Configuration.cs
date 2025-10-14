@@ -5,11 +5,11 @@ using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
-using LinqToDB.Async;
-using LinqToDB.Common.Internal;
 using LinqToDB.Configuration;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider;
+using LinqToDB.Internal.Async;
+using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Data
 {
@@ -754,7 +754,7 @@ namespace LinqToDB.Data
 #pragma warning restore CS0618 // Type or member is obsolete
 			}
 
-			public static Action? Reapply(DataConnection dataConnection, RetryPolicyOptions options, RetryPolicyOptions? previousOptions)
+			public static Action? Reapply(DataConnection dataConnection, RetryPolicyOptions options)
 			{
 				var retryPolicy = dataConnection.RetryPolicy;
 
@@ -835,7 +835,7 @@ namespace LinqToDB.Data
 #pragma warning restore CS0618 // Type or member is obsolete
 			}
 
-			public static Action Reapply(DataConnection dataConnection, QueryTraceOptions options, QueryTraceOptions? previousOptions)
+			public static Action Reapply(DataConnection dataConnection, QueryTraceOptions options)
 			{
 				var onTraceConnection        = dataConnection.OnTraceConnection;
 				var writeTraceLineConnection = dataConnection.WriteTraceLineConnection;

@@ -16,15 +16,15 @@ namespace Cli.NewCliFeatures.SQLite
 	[Table("LinqDataTypes")]
 	public class LinqDataType
 	{
-		[Column("ID"            )] public int?      Id             { get; internal set; } // int
-		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; internal set; } // decimal
+		[Column("ID"            )] public int?      Id             { get; internal set; } // INT
+		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; internal set; } // decimal(10,4)
 		[Column("DateTimeValue" )] public DateTime? DateTimeValue  { get; internal set; } // datetime
 		[Column("DateTimeValue2")] public DateTime? DateTimeValue2 { get; internal set; } // datetime2
 		[Column("BoolValue"     )] public bool?     BoolValue      { get; internal set; } // boolean
 		[Column("GuidValue"     )] public Guid?     GuidValue      { get; internal set; } // uniqueidentifier
-		[Column("BinaryValue"   )] public byte[]?   BinaryValue    { get; internal set; } // binary
+		[Column("BinaryValue"   )] public byte[]?   BinaryValue    { get; internal set; } // binary(5000)
 		[Column("SmallIntValue" )] public short?    SmallIntValue  { get; internal set; } // smallint
-		[Column("IntValue"      )] public int?      IntValue       { get; internal set; } // int
+		[Column("IntValue"      )] public int?      IntValue       { get; internal set; } // INT
 		[Column("BigIntValue"   )] public long?     BigIntValue    { get; internal set; } // bigint
 		[Column("StringValue"   )] public string?   StringValue    { get; internal set; } // nvarchar(50)
 	}

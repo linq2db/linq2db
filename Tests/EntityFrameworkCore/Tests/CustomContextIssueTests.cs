@@ -5,8 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB.Data;
-using LinqToDB.DataProvider.PostgreSQL;
-using LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel;
 using LinqToDB.Interceptors;
 
 using Microsoft.EntityFrameworkCore;
@@ -371,7 +369,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				new(1, "TempTable", Issue4940DBStatus.Open, Issue4940DBStatus.Open),
 				new(2, "TempTable", Issue4940DBStatus.Closed, null)
 			};
-			var tempTable = db.CreateTempTable(notMappedEntitiesForTempTable);//check valid sql for temp table and insert without parameters
+			using var tempTable = db.CreateTempTable(notMappedEntitiesForTempTable);//check valid sql for temp table and insert without parameters
 
 			var notMappedEntityForInsert = new Issue4940RecordNotMapped(3, "Insert", Issue4940DBStatus.Open, null);
 			db.Insert(notMappedEntityForInsert, tableName: tempTable.TableName, tableOptions: tempTable.TableOptions); //check enum as parameter
@@ -440,7 +438,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				new(1, "TempTable", Issue4940DBStatus.Open, Issue4940DBStatus.Closed),
 				new(2, "TempTable", Issue4940DBStatus.Closed, null)
 			};
-			var tempTable = db.CreateTempTable(entitiesForTempTable, tableName: "issue_4940_temp_table");
+			using var tempTable = db.CreateTempTable(entitiesForTempTable, tableName: "issue_4940_temp_table");
 			
 			var entitiesForInsert = new List<Issue4940RecordDb>
 			{

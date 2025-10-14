@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 using PN = LinqToDB.ProviderName;
@@ -54,6 +57,7 @@ namespace LinqToDB
 			}
 		}
 
+		[Extension(PN.SqlServer2025, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.SqlServer2022, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.SqlServer2019, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.SqlServer2017, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
@@ -85,6 +89,7 @@ namespace LinqToDB
 			return new AggregateFunctionNotOrderedImpl<string?, string>(query);
 		}
 
+		[Extension(PN.SqlServer2025, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.SqlServer2022, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.SqlServer2019, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.SqlServer2017, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
@@ -105,6 +110,7 @@ namespace LinqToDB
 			[ExprParameter]      Func<T, string?> selector)
 			=> throw new ServerSideOnlyException(nameof(StringAggregate));
 
+		[Extension(PN.SqlServer2025, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.SqlServer2022, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.SqlServer2019, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.SqlServer2017, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
@@ -137,6 +143,7 @@ namespace LinqToDB
 			return new AggregateFunctionNotOrderedImpl<T, string>(query);
 		}
 
+		[Extension(PN.SqlServer2025, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.SqlServer2022, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.SqlServer2019, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.SqlServer2017, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
@@ -162,9 +169,9 @@ namespace LinqToDB
 
 		sealed class CommonConcatWsArgumentsBuilder : IExtensionCallBuilder
 		{
-			static SqlExpression IsNullExpression(string isNullFormat, ISqlExpression value)
+			static SqlExpression IsNullExpression(MappingSchema mappingSchema, string isNullFormat, ISqlExpression value)
 			{
-				return new SqlExpression(typeof(string), isNullFormat, value);
+				return new SqlExpression(mappingSchema.GetDbDataType(typeof(string)), isNullFormat, value);
 			}
 
 			public void Build(ISqExtensionBuilder builder)
@@ -172,11 +179,11 @@ namespace LinqToDB
 				var arguments = (NewArrayExpression)builder.Arguments[1];
 				if (arguments.Expressions.Count == 0 && builder.BuilderValue != null)
 				{
-					builder.ResultExpression = new SqlExpression(typeof(string), "''");
+					builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), "''");
 				}
 				else if (arguments.Expressions.Count == 1 && builder.BuilderValue != null)
 				{
-					builder.ResultExpression = IsNullExpression((string)builder.BuilderValue, builder.ConvertExpressionToSql(arguments.Expressions[0])!);
+					builder.ResultExpression = IsNullExpression(builder.Mapping, (string)builder.BuilderValue, builder.ConvertExpressionToSql(arguments.Expressions[0])!);
 				}
 				else
 				{
@@ -191,9 +198,9 @@ namespace LinqToDB
 
 		abstract class BaseEmulationConcatWsBuilder : IExtensionCallBuilder
 		{
-			protected abstract SqlExpression IsNullExpression(ISqlExpression value);
-			protected abstract SqlExpression StringConcatExpression(ISqlExpression value1, ISqlExpression value2);
-			protected abstract SqlExpression TruncateExpression(ISqlExpression value, ISqlExpression separator);
+			protected abstract SqlExpression IsNullExpression(MappingSchema mappingSchema, ISqlExpression value);
+			protected abstract SqlExpression StringConcatExpression(MappingSchema mappingSchema, ISqlExpression value1, ISqlExpression value2);
+			protected abstract SqlExpression TruncateExpression(MappingSchema mappingSchema, ISqlExpression value, ISqlExpression separator);
 
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -201,62 +208,62 @@ namespace LinqToDB
 				var arguments = (NewArrayExpression)builder.Arguments[1];
 				if (arguments.Expressions.Count == 0)
 				{
-					builder.ResultExpression = new SqlExpression(typeof(string), "''");
+					builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), "''");
 				}
 				else if (arguments.Expressions.Count == 1)
 				{
-					builder.ResultExpression = IsNullExpression(builder.ConvertExpressionToSql(arguments.Expressions[0])!);
+					builder.ResultExpression = IsNullExpression(builder.Mapping, builder.ConvertExpressionToSql(arguments.Expressions[0])!);
 				}
 				else
 				{
 					var items = arguments.Expressions.Select(e =>
-						IsNullExpression(StringConcatExpression(separator, builder.ConvertExpressionToSql(e)!))
+						IsNullExpression(builder.Mapping, StringConcatExpression(builder.Mapping, separator, builder.ConvertExpressionToSql(e)!))
 					);
 
 					var concatenation =
-						items.Aggregate(StringConcatExpression);
+						items.Aggregate((v1, v2) => StringConcatExpression(builder.Mapping, v1, v2));
 
-					builder.ResultExpression = TruncateExpression(concatenation, separator);
+					builder.ResultExpression = TruncateExpression(builder.Mapping, concatenation, separator);
 				}
 			}
 		}
 
 		sealed class OldSqlServerConcatWsBuilder : BaseEmulationConcatWsBuilder
 		{
-			protected override SqlExpression IsNullExpression(ISqlExpression value)
+			protected override SqlExpression IsNullExpression(MappingSchema mappingSchema, ISqlExpression value)
 			{
-				return new SqlExpression(typeof(string), "ISNULL({0}, '')", Precedence.Primary, value);
+				return new SqlExpression(mappingSchema.GetDbDataType(typeof(string)), "ISNULL({0}, '')", Precedence.Primary, value);
 			}
 
-			protected override SqlExpression StringConcatExpression(ISqlExpression value1, ISqlExpression value2)
+			protected override SqlExpression StringConcatExpression(MappingSchema mappingSchema, ISqlExpression value1, ISqlExpression value2)
 			{
-				return new SqlExpression(typeof(string), "{0} + {1}", value1, value2);
+				return new SqlExpression(mappingSchema.GetDbDataType(typeof(string)), "{0} + {1}", value1, value2);
 			}
 
-			protected override SqlExpression TruncateExpression(ISqlExpression value, ISqlExpression separator)
+			protected override SqlExpression TruncateExpression(MappingSchema mappingSchema, ISqlExpression value, ISqlExpression separator)
 			{
 				// you can read more about this gore code here:
 				// https://stackoverflow.com/questions/2025585
-				return new SqlExpression(typeof(string), "SUBSTRING({0}, LEN(CONVERT(NVARCHAR(MAX), {1}) + N'!'), 8000)",
+				return new SqlExpression(mappingSchema.GetDbDataType(typeof(string)), "SUBSTRING({0}, LEN(CONVERT(NVARCHAR(MAX), {1}) + N'!'), 8000)",
 					Precedence.Primary, value, separator);
 			}
 		}
 
 		sealed class SqliteConcatWsBuilder : BaseEmulationConcatWsBuilder
 		{
-			protected override SqlExpression IsNullExpression(ISqlExpression value)
+			protected override SqlExpression IsNullExpression(MappingSchema mappingSchema, ISqlExpression value)
 			{
-				return new SqlExpression(typeof(string), "IFNULL({0}, '')", Precedence.Primary, value);
+				return new SqlExpression(mappingSchema.GetDbDataType(typeof(string)), "IFNULL({0}, '')", Precedence.Primary, value);
 			}
 
-			protected override SqlExpression StringConcatExpression(ISqlExpression value1, ISqlExpression value2)
+			protected override SqlExpression StringConcatExpression(MappingSchema mappingSchema, ISqlExpression value1, ISqlExpression value2)
 			{
-				return new SqlExpression(typeof(string), "{0} || {1}", value1, value2);
+				return new SqlExpression(mappingSchema.GetDbDataType(typeof(string)), "{0} || {1}", value1, value2);
 			}
 
-			protected override SqlExpression TruncateExpression(ISqlExpression value, ISqlExpression separator)
+			protected override SqlExpression TruncateExpression(MappingSchema mappingSchema, ISqlExpression value, ISqlExpression separator)
 			{
-				return new SqlExpression(typeof(string), "SUBSTR({0}, LENGTH({1}) + 1)",
+				return new SqlExpression(mappingSchema.GetDbDataType(typeof(string)), "SUBSTR({0}, LENGTH({1}) + 1)",
 					Precedence.Primary, value, separator);
 			}
 		}
@@ -267,6 +274,7 @@ namespace LinqToDB
 		/// <param name="separator">The string to use as a separator. <paramref name="separator" /> is included in the returned string only if <paramref name="arguments" /> has more than one element.</param>
 		/// <param name="arguments">A collection that contains the strings to concatenate.</param>
 		/// <returns></returns>
+		[Extension(PN.SqlServer2025, "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = "ISNULL({0}, '')", IsAggregate = true)]
 		[Extension(PN.SqlServer2022, "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = "ISNULL({0}, '')", IsAggregate = true)]
 		[Extension(PN.SqlServer2019, "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = "ISNULL({0}, '')", IsAggregate = true)]
 		[Extension(PN.SqlServer2017, "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = "ISNULL({0}, '')", IsAggregate = true)]

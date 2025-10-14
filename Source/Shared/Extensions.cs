@@ -1,45 +1,134 @@
-﻿#if NETFRAMEWORK || NETSTANDARD2_0
+﻿#pragma warning disable MA0047 // Declare types in namespaces
+#pragma warning disable MA0048 // File name must match type name
 
-namespace System
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Text;
+
+#if NETFRAMEWORK || NETSTANDARD2_0
+
+using System;
+using System.Data.Common;
+using System.Reflection;
+using System.Threading.Tasks;
+
+internal static class StringBuilderExtensions
 {
-	internal static class StringExtensions
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static StringBuilder Append(
+		this StringBuilder sb,
+		IFormatProvider? provider,
+		FormattableString formattableString)
 	{
-		public static bool Contains(this string str, string value, StringComparison comparisonType) => str.IndexOf(value, comparisonType) != -1;
+		sb.Append(formattableString.ToString(provider));
+		return sb;
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static StringBuilder AppendBuilder(this StringBuilder sb, StringBuilder? stringBuilder)
+	{
+		if (stringBuilder?.Length > 0)
+			sb.Append(stringBuilder.ToString());
+		return sb;
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static StringBuilder AppendLine(
+		this StringBuilder sb,
+		IFormatProvider? provider,
+		FormattableString formattableString)
+	{
+		sb.AppendLine(formattableString.ToString(provider));
+		return sb;
+	}
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static StringBuilder AppendJoinStrings(this StringBuilder sb, string? separator, IEnumerable<string> values)
+	{
+		return sb.Append(string.Join(separator, values));
 	}
 }
 
-namespace System.Collections.Concurrent
+internal static class CharExtensions
 {
-	internal static class ConcurrentDictionaryExtensions
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsAsciiDigit(this char chr) => chr is (>= '0' and <= '9');
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsAsciiLetter(this char chr) => chr is >= 'a' and <= 'z' || chr is >= 'A' and <= 'Z';
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsAsciiLetterOrDigit(this char chr) => IsAsciiLetter(chr) || IsAsciiDigit(chr);
+}
+
+internal static class DictionaryExtensions
+{
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool TryAdd<TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey key, TValue value)
 	{
-		public static TValue GetOrAdd<TKey, TValue, TArg>(this ConcurrentDictionary<TKey, TValue> dictionary, TKey key, Func<TKey, TArg, TValue> valueFactory, TArg factoryArgument)
+		if (!dict.ContainsKey(key))
 		{
-			return dictionary.GetOrAdd(key, key => valueFactory(key, factoryArgument));
+			dict.Add(key, value);
+			return true;
 		}
+
+		return false;
 	}
 }
 
-namespace System.Text
+internal static class AdoAsyncDispose
 {
-	internal static class StringBuilderExtensions
-	{
-		public static StringBuilder Append(
-			this StringBuilder sb,
-			IFormatProvider? provider,
-			FormattableString formattableString)
-		{
-			sb.Append(formattableString.ToString(provider));
-			return sb;
-		}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static ValueTask DisposeAsync(this DbCommand command) => TryDisposeAsync(command);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static ValueTask DisposeAsync(this DbDataReader dataReader) => TryDisposeAsync(dataReader);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static ValueTask DisposeAsync(this DbConnection connection) => TryDisposeAsync(connection);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static ValueTask DisposeAsync(this DbTransaction transaction) => TryDisposeAsync(transaction);
 
-		public static StringBuilder AppendLine(
-			this StringBuilder sb,
-			IFormatProvider? provider,
-			FormattableString formattableString)
-		{
-			sb.AppendLine(formattableString.ToString(provider));
-			return sb;
-		}
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	static ValueTask TryDisposeAsync(IDisposable disposable)
+	{
+		if (disposable is IAsyncDisposable asyncDisposable)
+			return asyncDisposable.DisposeAsync();
+
+		disposable.Dispose();
+		return default;
 	}
 }
+
+internal static class TypeExtensions
+{
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static ConstructorInfo? GetConstructor(this Type type, BindingFlags bindingAttr, Type[] types)
+	{
+		return type.GetConstructor(bindingAttr, null, types, null);
+	}
+}
+
+#else
+
+internal static class CharExtensions
+{
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsAsciiDigit(this char chr) => char.IsAsciiDigit(chr);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsAsciiLetter(this char chr) => char.IsAsciiLetter(chr);
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsAsciiLetterOrDigit(this char chr) => char.IsAsciiLetterOrDigit(chr);
+}
+
+internal static class StringBuilderExtensions
+{
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static StringBuilder AppendBuilder(this StringBuilder sb, StringBuilder? stringBuilder) => sb.Append(stringBuilder);
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static StringBuilder AppendJoinStrings(this StringBuilder sb, string? separator, IEnumerable<string> values)
+	{
+#pragma warning disable RS0030 // Do not use banned APIs
+		return sb.AppendJoin<string>(separator, values);
+#pragma warning restore RS0030 // Do not use banned APIs
+	}
+}
+
 #endif

@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
@@ -548,7 +549,7 @@ namespace Tests.xUpdate
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
 		public void Issue2815Test1([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<Issue2815Table1>();
 			using var t2 = db.CreateLocalTable<Issue2815Table2>();
 			using var t3 = db.CreateLocalTable<Issue2815Table3>();
@@ -578,7 +579,7 @@ namespace Tests.xUpdate
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
 		public void Issue2815Test2([DataSources(false, ProviderName.SqlCe, TestProvName.AllAccess)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable(Issue2815Table1.Data);
 			using var t2 = db.CreateLocalTable(Issue2815Table2.Data);
 			using var t3 = db.CreateLocalTable(Issue2815Table3.Data);

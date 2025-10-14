@@ -7,22 +7,26 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Numerics;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
 
 using JetBrains.Annotations;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
-using LinqToDB.Common.Internal.Cache;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
-using LinqToDB.Expressions.ExpressionVisitors;
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Cache;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Conversion;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Expressions.ExpressionVisitors;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Metadata;
-using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Mapping
@@ -179,7 +183,7 @@ namespace LinqToDB.Mapping
 			(_cache, _firstOnlyCache) = CreateAttributeCaches();
 		}
 
-		Lock _syncRoot = new();
+		readonly Lock _syncRoot = new();
 		internal readonly MappingSchemaInfo[] Schemas;
 		readonly TransformVisitor<MappingSchema> _reduceDefaultValueTransformer;
 
@@ -367,7 +371,7 @@ namespace LinqToDB.Mapping
 		public bool InitGenericConvertProvider(params Type[] types)
 		{
 			foreach (var schema in Schemas)
-				if (schema.InitGenericConvertProvider(types, this))
+				if (schema.InitGenericConvertProvider(types))
 					return true;
 
 			return false;
@@ -1410,8 +1414,11 @@ namespace LinqToDB.Mapping
 				AddScalarType(typeof(DateTime),        DataType.DateTime2);
 				AddScalarType(typeof(DateTimeOffset),  DataType.DateTimeOffset);
 				AddScalarType(typeof(TimeSpan),        DataType.Time);
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 				AddScalarType(typeof(DateOnly),        DataType.Date);
+				AddScalarType(typeof(TimeOnly),        DataType.Time);
+				AddScalarType(typeof(Int128),          DataType.Int128);
+				AddScalarType(typeof(UInt128),         DataType.UInt128);
 #endif
 				AddScalarType(typeof(byte[]),          DataType.VarBinary);
 				AddScalarType(typeof(Binary),          DataType.VarBinary);
@@ -1431,13 +1438,14 @@ namespace LinqToDB.Mapping
 				AddScalarType(typeof(float),           DataType.Single);
 				AddScalarType(typeof(double),          DataType.Double);
 
+				AddScalarType(typeof(BigInteger),      DataType.Decimal);
 				AddScalarType(typeof(BitArray),        DataType.BitArray);
 
 				SetConverter<DBNull, object?>(static _ => null);
 
 				// explicitly specify old ToString client-side conversions for some types after we added support for ToString(InvariantCulture) to conversion generators
 				SetConverter<DateTime, string>(static v => v.ToString("yyyy-MM-dd hh:mm:ss", DateTimeFormatInfo.InvariantInfo));
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 				SetConverter<DateOnly, string>(static v => v.ToString("yyyy-MM-dd", DateTimeFormatInfo.InvariantInfo));
 #endif
 
@@ -1475,6 +1483,8 @@ namespace LinqToDB.Mapping
 		/// <returns><c>true</c>, if type mapped to scalar database type.</returns>
 		public bool IsScalarType(Type type)
 		{
+			type = type.UnwrapNullableType();
+
 			foreach (var info in Schemas)
 			{
 				var o = info.GetScalarType(type);
@@ -1491,10 +1501,10 @@ namespace LinqToDB.Mapping
 			}
 			else
 			{
-				type = type.ToNullableUnderlying();
-
+#pragma warning disable CS0618 // Type or member is obsolete
 				if (type.IsEnum || type.IsPrimitive || (Common.Configuration.IsStructIsScalarType && type.IsValueType))
 					ret = true;
+#pragma warning restore CS0618 // Type or member is obsolete
 			}
 
 			return ret;

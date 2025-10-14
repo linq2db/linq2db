@@ -7,8 +7,8 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Common;
-using LinqToDB.Expressions.Internal;
-using LinqToDB.Expressions.Types;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Expressions.Types;
 
 using NUnit.Framework;
 
@@ -183,7 +183,7 @@ namespace Tests.TypeMapping
 				return expression.Type == typeof(string);
 			}
 
-			Expression ICustomMapper.Map(Expression expression)
+			Expression ICustomMapper.Map(TypeMapper mapper, Expression expression)
 			{
 				return Expression.Property(expression, "Length");
 			}
@@ -540,7 +540,7 @@ namespace Tests.TypeMapping
 				var pToken    = Expression.Parameter(typeof(CancellationToken));
 
 				var asyncCall = Expression.Lambda<Func<Dynamic.ISampleClass, CancellationToken, Task<SampleClass>>>(
-					typeMapper.MapExpression((Dynamic.ISampleClass instance, CancellationToken cancellationToken) => typeMapper.WrapTask<SampleClass>(((SampleClass)(object)instance).GetSelfAsync(cancellationToken), typeof(Dynamic.SampleClass), cancellationToken), pInstance, pToken),
+					typeMapper.MapExpression((Dynamic.ISampleClass instance, CancellationToken cancellationToken) => typeMapper.WrapTask<SampleClass>(((SampleClass)(object)instance).GetSelfAsync(cancellationToken)), pInstance, pToken),
 					pInstance, pToken);
 
 				var instance = await asyncCall.CompileExpression()(new Dynamic.SampleClass(55, 77) {StrValue = "Str"}, default);
@@ -789,7 +789,7 @@ namespace Tests.TypeMapping
 			{
 				var taskExpression = Expression.Constant(new ValueTask<long>());
 				var mapper         = new ValueTaskToTaskMapper();
-				var result         = ((ICustomMapper)mapper).Map(taskExpression);
+				var result         = ((ICustomMapper)mapper).Map(null!, taskExpression);
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.Type, Is.EqualTo(typeof(Task<long>)));
@@ -802,7 +802,7 @@ namespace Tests.TypeMapping
 			{
 				var taskExpression = Expression.Constant(new ValueTask());
 				var mapper         = new ValueTaskToTaskMapper();
-				var result         = ((ICustomMapper)mapper).Map(taskExpression);
+				var result         = ((ICustomMapper)mapper).Map(null!, taskExpression);
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(result.Type, Is.EqualTo(typeof(Task)));

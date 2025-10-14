@@ -4,9 +4,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Expressions.Internal;
-using LinqToDB.Extensions;
-using LinqToDB.Mapping;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Reflection;
 
 namespace LinqToDB.Expressions
@@ -22,8 +22,8 @@ namespace LinqToDB.Expressions
 				MemberInfo = memberInfo;
 			}
 
-			public Type?      Type;
-			public MemberInfo MemberInfo;
+			public readonly Type?      Type;
+			public          MemberInfo MemberInfo;
 
 			public readonly bool Equals(MemberInfoWithType other)
 			{
@@ -37,10 +37,7 @@ namespace LinqToDB.Expressions
 
 			public readonly override int GetHashCode()
 			{
-				unchecked
-				{
-					return ((Type != null ? Type.GetHashCode() : 0) * 397) ^ (MemberInfo?.GetHashCode() ?? 0);
-				}
+				return HashCode.Combine(Type, MemberInfo);
 			}
 		}
 

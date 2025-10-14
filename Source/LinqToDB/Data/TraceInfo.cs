@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Common.Internal;
+using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Data
 {
@@ -66,7 +66,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Gets or sets the number of rows affected by the command
-		/// or the number of rows produced by the <see cref="DataReader"/>.
+		/// or the number of rows produced by the <see cref="DbDataReader"/>.
 		/// </summary>
 		public int? RecordsAffected { get; set; }
 

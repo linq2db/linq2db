@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 
-using LinqToDB.Common;
-using LinqToDB.Common.Internal;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Options;
 
 namespace LinqToDB.Data
 {
@@ -71,7 +71,7 @@ namespace LinqToDB.Data
 		{
 			return ((IConfigurationID)this).ConfigurationID == previousObject?.ConfigurationID
 				? null
-				: DataConnection.ConfigurationApplier.Reapply(obj, this, (QueryTraceOptions?)previousObject);
+				: DataConnection.ConfigurationApplier.Reapply(obj, this);
 		}
 
 		#region Default Options

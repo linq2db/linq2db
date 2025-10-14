@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -22,7 +20,7 @@ namespace Tests.UserTests
 		{
 			// prep tables
 			{
-				using var db = GetDataConnection(context);
+				using var db = GetDataContext(context);
 				// drop tables if they already exist
 				db.GetTable<MediaItemToMediaItemCategory>().Drop(false);
 				db.GetTable<MediaItemUserShare>().Drop(false);
@@ -37,7 +35,7 @@ namespace Tests.UserTests
 			{
 				// test 1
 				{
-					using var db = GetDataConnection(context);
+					using var db = GetDataContext(context);
 
 					var now = TestData.DateTime;
 					var userId = TestData.Guid1;
@@ -49,7 +47,7 @@ namespace Tests.UserTests
 
 				// test 2 (same query; should also work properly)
 				{
-					using var db = GetDataConnection(context);
+					using var db = GetDataContext(context);
 
 					var now = TestData.DateTime3;
 					var userId = TestData.Guid2;
@@ -62,7 +60,7 @@ namespace Tests.UserTests
 			finally
 			{
 				// drop tables
-				using var db = GetDataConnection(context);
+				using var db = GetDataContext(context);
 				db.GetTable<MediaItemToMediaItemCategory>().Drop(false);
 				db.GetTable<MediaItemUserShare>().Drop(false);
 				db.GetTable<MediaItem>().Drop(false);
@@ -77,7 +75,7 @@ namespace Tests.UserTests
 				};
 			}
 
-			static IQueryable<MediaItem> GetQuery(DataConnection context, Guid userId, DateTime now)
+			static IQueryable<MediaItem> GetQuery(IDataContext context, Guid userId, DateTime now)
 			{
 				return context.GetTable<MediaItem>()
 					.Where(x =>

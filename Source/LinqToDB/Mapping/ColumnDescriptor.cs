@@ -6,8 +6,9 @@ using System.Reflection;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.SqlQuery;
 
@@ -62,7 +63,7 @@ namespace LinqToDB.Mapping
 			DbType            = columnAttribute != null ? columnAttribute.DbType   : dataType.Type.DbType;
 			CreateFormat      = columnAttribute?.CreateFormat;
 
-			if (columnAttribute == null || (columnAttribute.DataType == DataType.Undefined || columnAttribute.DataType == dataType.Type.DataType))
+			if (columnAttribute == null || columnAttribute.DataType == DataType.Undefined || columnAttribute.DataType == dataType.Type.DataType)
 			{
 				Length    = columnAttribute?.HasLength()    != true ? dataType.Type.Length    : columnAttribute.Length;
 				Precision = columnAttribute?.HasPrecision() != true ? dataType.Type.Precision : columnAttribute.Precision;
@@ -668,11 +669,32 @@ namespace LinqToDB.Mapping
 			if (valueConverter != null)
 			{
 				var toProvider = valueConverter.ToProviderExpression;
-				if (toProvider.Parameters[0].Type.IsAssignableFrom(getterExpr.Type))
+				var assignable = toProvider.Parameters[0].Type.IsAssignableFrom(getterExpr.Type);
+				if (assignable
+					|| toProvider.Parameters[0].Type.IsAssignableFrom(getterExpr.Type.UnwrapNullableType()))
 				{
 					if (!valueConverter.HandlesNulls)
+					{
 						toProvider = mappingSchema.AddNullCheck(toProvider);
-					getterExpr = InternalExtensions.ApplyLambdaToExpression(toProvider, getterExpr);
+					}
+
+					if (!assignable)
+					{
+						var variable = Expression.Variable(getterExpr.Type);
+						var assign   = Expression.Assign(variable, getterExpr);
+
+						getterExpr = Expression.Block(
+							new[] { variable },
+							assign,
+							Expression.Condition(
+								ExpressionHelper.Property(variable, nameof(Nullable<int>.HasValue)),
+								InternalExtensions.ApplyLambdaToExpression(toProvider, ExpressionHelper.Property(variable, nameof(Nullable<int>.Value))),
+								new DefaultValueExpression(mappingSchema, toProvider.ReturnType)));
+					}
+					else
+					{
+						getterExpr = InternalExtensions.ApplyLambdaToExpression(toProvider, getterExpr);
+					}
 				}
 			}
 

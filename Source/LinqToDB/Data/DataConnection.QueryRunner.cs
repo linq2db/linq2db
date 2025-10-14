@@ -8,14 +8,14 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Common.Internal;
-using LinqToDB.DataProvider;
-using LinqToDB.Extensions;
-using LinqToDB.Infrastructure;
-using LinqToDB.Linq;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
-using LinqToDB.Tools;
+using LinqToDB.Internal;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.Infrastructure;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Metrics;
 
 namespace LinqToDB.Data
 {
@@ -40,13 +40,11 @@ namespace LinqToDB.Data
 				: base(query, queryNumber, dataConnection, parametersContext, expressions, parameters, preambles)
 			{
 				_dataConnection    = dataConnection;
-				_parametersContext = parametersContext;
 				_executionScope    = _dataConnection.DataProvider.ExecuteScope(_dataConnection);
 			}
 
 			readonly IExecutionScope? _executionScope;
 			readonly DataConnection   _dataConnection;
-			readonly IDataContext     _parametersContext;
 			readonly DateTime         _startedOn = DateTime.UtcNow;
 			readonly Stopwatch        _stopwatch = Stopwatch.StartNew();
 
@@ -331,11 +329,14 @@ namespace LinqToDB.Data
 
 				if (dbDataType.DataType == DataType.Undefined)
 				{
-					dbDataType = dbDataType.WithDataType(
-						dataConnection.MappingSchema.GetDbDataType(
-							dbDataType.SystemType == typeof(object) && paramValue != null
-								? paramValue.GetType()
-								: dbDataType.SystemType).DataType);
+					var newDataType = dbDataType.SystemType != typeof(object)
+							? dataConnection.MappingSchema.GetDbDataType(dbDataType.SystemType).DataType
+							: DataType.Undefined;
+
+					if (newDataType == DataType.Undefined && paramValue != null)
+						newDataType = dataConnection.MappingSchema.GetDbDataType(paramValue.GetType()).DataType;
+
+					dbDataType = dbDataType.WithDataType(newDataType);
 				}
 
 				dataConnection.DataProvider.SetParameter(dataConnection, p, parameter.Name!, dbDataType, paramValue);
@@ -647,42 +648,37 @@ namespace LinqToDB.Data
 				return dataConnection.ExecuteDataReader(CommandBehavior.Default);
 			}
 
-			public override DataReaderWrapper ExecuteReader()
+			public override IDataReaderAsync ExecuteReader()
 			{
 				SetCommand(false);
 
 				InitFirstCommand(_dataConnection, _executionQuery!);
 
-				return _dataConnection.ExecuteDataReader(CommandBehavior.Default);
+				var dataReader = _dataConnection.ExecuteDataReader(CommandBehavior.Default);
+
+				return new DataReaderAsync(dataReader);
 			}
 
 			#endregion
 
 			sealed class DataReaderAsync : IDataReaderAsync
 			{
+				readonly DataReaderWrapper _dataReader;
+
 				public DataReaderAsync(DataReaderWrapper dataReader)
 				{
 					_dataReader = dataReader;
 				}
 
-				readonly DataReaderWrapper _dataReader;
+				DbDataReader IDataReaderAsync.DataReader => _dataReader.DataReader!;
 
-				public DbDataReader DataReader => _dataReader.DataReader!;
+				bool IDataReaderAsync.Read() => _dataReader.DataReader!.Read();
 
-				public Task<bool> ReadAsync(CancellationToken cancellationToken)
-				{
-					return _dataReader.DataReader!.ReadAsync(cancellationToken);
-				}
+				Task<bool> IDataReaderAsync.ReadAsync(CancellationToken cancellationToken) => _dataReader.DataReader!.ReadAsync(cancellationToken);
 
-				public void Dispose()
-				{
-					_dataReader.Dispose();
-				}
+				void IDisposable.Dispose() => _dataReader.Dispose();
 
-				public ValueTask DisposeAsync()
-				{
-					 return _dataReader.DisposeAsync();
-				}
+				ValueTask IAsyncDisposable.DisposeAsync() => _dataReader.DisposeAsync();
 			}
 
 			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)

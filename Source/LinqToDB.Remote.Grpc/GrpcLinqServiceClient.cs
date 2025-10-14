@@ -24,57 +24,6 @@ namespace LinqToDB.Remote.Grpc
 			_client  = channel.CreateGrpcService<IGrpcLinqService>();
 		}
 
-		LinqServiceInfo ILinqService.GetInfo(string? configuration)
-		{
-			return _client.GetInfo(
-				new GrpcConfiguration()
-				{
-					Configuration = configuration
-				});
-		}
-
-		int ILinqService.ExecuteNonQuery(string? configuration, string queryData)
-		{
-			return _client.ExecuteNonQuery(
-				new GrpcConfigurationQuery()
-				{
-					Configuration = configuration,
-					QueryData     = queryData
-				});
-		}
-
-		string? ILinqService.ExecuteScalar(string? configuration, string queryData)
-		{
-			return _client.ExecuteScalar(
-				new GrpcConfigurationQuery()
-				{
-					Configuration = configuration,
-					QueryData     = queryData
-				});
-		}
-
-		string ILinqService.ExecuteReader(string? configuration, string queryData)
-		{
-			var ret = _client.ExecuteReader(
-				new GrpcConfigurationQuery()
-				{
-					Configuration = configuration,
-					QueryData     = queryData
-				}).Value;
-
-			return ret ?? throw new LinqToDBException("Return value is not allowed to be null");
-		}
-
-		int ILinqService.ExecuteBatch(string? configuration, string queryData)
-		{
-			return _client.ExecuteBatch(
-				new GrpcConfigurationQuery()
-				{
-					Configuration = configuration,
-					QueryData     = queryData
-				}).Value;
-		}
-
 		Task<LinqServiceInfo> ILinqService.GetInfoAsync(string? configuration, CancellationToken cancellationToken)
 		{
 			return _client.GetInfoAsync(

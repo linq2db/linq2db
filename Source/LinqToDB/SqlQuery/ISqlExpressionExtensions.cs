@@ -1,5 +1,7 @@
 ﻿using System;
 
+using LinqToDB.Internal.SqlQuery;
+
 namespace LinqToDB.SqlQuery
 {
 	public static class ISqlExpressionExtensions

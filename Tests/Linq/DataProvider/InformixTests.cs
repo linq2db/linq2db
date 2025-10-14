@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.Informix;
 using LinqToDB.Mapping;
 
 #if NETFRAMEWORK
@@ -16,6 +15,8 @@ using IBM.Data.Informix;
 using NUnit.Framework;
 
 using Tests.Model;
+
+using LinqToDB.Internal.DataProvider.Informix;
 
 namespace Tests.DataProvider
 {
@@ -94,7 +95,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					try
 					{
@@ -125,7 +126,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					try
 					{
@@ -232,7 +233,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyLinqTypesMultipleRows([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				try
 				{
@@ -268,7 +269,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task BulkCopyLinqTypesMultipleRowsAsync([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				try
 				{
@@ -304,7 +305,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyLinqTypesProviderSpecific([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				try
 				{
@@ -340,7 +341,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task BulkCopyLinqTypesProviderSpecificAsync([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				try
 				{
@@ -495,7 +496,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void CreateAllTypes([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var ms = new MappingSchema();
 

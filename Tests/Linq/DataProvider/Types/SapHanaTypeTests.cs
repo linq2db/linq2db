@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Common;
 
 using NUnit.Framework;
 
@@ -105,7 +104,7 @@ namespace Tests.DataProvider
 			var precisions = new int[] { 1, 2, 10, 17, 20, 28, 29, 30, 37, 38 };
 			foreach (var p in precisions)
 			{
-				var skipBasicTypes = p >= 29 && context.IsAnyOf(ProviderName.ClickHouseClient);
+				var skipBasicTypes = p >= 29 && context.IsAnyOf(ProviderName.ClickHouseDriver);
 
 				for (var s = 0; s <= p; s++)
 				{

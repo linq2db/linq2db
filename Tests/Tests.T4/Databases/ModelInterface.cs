@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -39,7 +38,7 @@ namespace ModelInterfaceDataContext
 		public ITestDataDB Model { get; }
 	}
 
-#if !NET462
+#if !NETFRAMEWORK
 
 	class Test
 	{

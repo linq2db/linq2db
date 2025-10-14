@@ -6,22 +6,20 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Globalization;
 using System.Threading;
-#if NETFRAMEWORK || NETSTANDARD2_0
-using System.Text;
-#endif
 
 using JetBrains.Annotations;
 
-using LinqToDB.Async;
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider;
 using LinqToDB.Expressions;
-using LinqToDB.Infrastructure;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Async;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Infrastructure;
+using LinqToDB.Internal.Interceptors;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
+using LinqToDB.Metrics;
 
 namespace LinqToDB.Data
 {
@@ -983,7 +981,6 @@ namespace LinqToDB.Data
 		}
 
 		private int? _commandTimeout;
-#if NET8_0_OR_GREATER
 		/// <summary>
 		/// Gets or sets command execution timeout in seconds.
 		/// Supported values:
@@ -994,18 +991,6 @@ namespace LinqToDB.Data
 		/// <item> negative value on property set : throws <see cref="InvalidOperationException"/> exception. To reset timeout to provider/connection defaults use <see cref="ResetCommandTimeout"/> or <see cref="ResetCommandTimeoutAsync"/> methods</item>
 		/// </list>
 		/// </summary>
-#else
-		/// <summary>
-		/// Gets or sets command execution timeout in seconds.
-		/// Supported values:
-		/// <list type="bullet">
-		/// <item>0 : infinite timeout</item>
-		/// <item> &gt; 0 : command timeout in seconds</item>
-		/// <item> -1 on property get : default provider/connection command timeout value used (not controlled by Linq To DB)</item>
-		/// <item> negative value on property set : throws <see cref="InvalidOperationException"/> exception. To reset timeout to provider/connection defaults use <see cref="ResetCommandTimeout"/> method</item>
-		/// </list>
-		/// </summary>
-#endif
 		public int   CommandTimeout
 		{
 			get => _commandTimeout ?? -1;
@@ -1015,11 +1000,7 @@ namespace LinqToDB.Data
 
 				if (value < 0)
 				{
-#if NET8_0_OR_GREATER
 					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout or ResetCommandTimeoutAsync methods instead.");
-#else
-					throw new ArgumentOutOfRangeException(nameof(value), "Timeout value cannot be negative. To reset command timeout use ResetCommandTimeout method instead.");
-#endif
 				}
 
 				if (_commandTimeout != value)
@@ -1071,8 +1052,6 @@ namespace LinqToDB.Data
 		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public void DisposeCommand()
 		{
-			CheckAndThrowOnDisposed();
-
 			if (_command != null)
 			{
 				DataProvider.DisposeCommand(_command);
@@ -1500,6 +1479,7 @@ namespace LinqToDB.Data
 		/// If connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <returns>Database transaction object.</returns>
+		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
 		public virtual DataConnectionTransaction BeginTransaction()
 		{
 			CheckAndThrowOnDisposed();
@@ -1540,6 +1520,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="isolationLevel">Transaction isolation level.</param>
 		/// <returns>Database transaction object.</returns>
+		/// <exception cref="InvalidOperationException">Thrown when connection already has a transaction.</exception>
 		public virtual DataConnectionTransaction BeginTransaction(IsolationLevel isolationLevel)
 		{
 			CheckAndThrowOnDisposed();

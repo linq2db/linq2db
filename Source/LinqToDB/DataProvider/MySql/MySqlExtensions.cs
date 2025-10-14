@@ -1,15 +1,13 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
-using LinqToDB.Expressions;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	public interface IMySqlExtensions
-	{
-	}
-
 	public static class MySqlExtensions
 	{
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "ext is an extension point")]
 		public static IMySqlExtensions? MySql(this Sql.ISqlExtension? ext) => null;
 
 		#region FTS
@@ -25,11 +23,11 @@ namespace LinqToDB.DataProvider.MySql
 						// default modifier, no need to add it to SQL
 						break;
 					case MatchModifier.Boolean:
-						builder.AddExpression("modifier", " IN BOOLEAN MODE");
+						builder.AddFragment("modifier", " IN BOOLEAN MODE");
 						break;
 					case MatchModifier.WithQueryExpansion:
 						// use short form without 'IN NATURAL LANGUAGE MODE' prefix
-						builder.AddExpression("modifier", " WITH QUERY EXPANSION");
+						builder.AddFragment("modifier", " WITH QUERY EXPANSION");
 						break;
 					default:
 						throw new InvalidOperationException($"Unexpected modifier: {modifier}");

@@ -1,16 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common;
 using LinqToDB.Expressions;
-using LinqToDB.Expressions.ExpressionVisitors;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Expressions.ExpressionVisitors;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 using PN = LinqToDB.ProviderName;
@@ -158,34 +161,27 @@ namespace LinqToDB
 		/// <param name="obj"></param>
 		/// <param name="alias"></param>
 		/// <returns></returns>
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used by builder")]
 		internal static T Alias<T>(T obj, [SqlQueryDependent] string alias)
 		{
 			return obj;
 		}
 
-		[Expression("NULLIF({0}, {1})", PreferServerSide = true)]
-		[Expression(PN.Access, "IIF({0} = {1}, null, {0})", PreferServerSide = false)]
-		[Expression(PN.SqlCe,  "CASE WHEN {0} = {1} THEN NULL ELSE {0} END", PreferServerSide = false)]
 		public static T? NullIf<T>(T? value, T? compareTo) where T : class
 		{
 			return value != null && compareTo != null && EqualityComparer<T>.Default.Equals(value, compareTo) ? null : value;
 		}
 
-		[Expression("NULLIF({0}, {1})", PreferServerSide = true)]
-		[Expression(PN.Access, "IIF({0} = {1}, null, {0})", PreferServerSide = false)]
-		[Expression(PN.SqlCe,  "CASE WHEN {0} = {1} THEN NULL ELSE {0} END", PreferServerSide = false)]
 		public static T? NullIf<T>(T? value, T compareTo) where T : struct
 		{
 			return value.HasValue && EqualityComparer<T>.Default.Equals(value.Value, compareTo) ? null : value;
 		}
 
-		[Expression("NULLIF({0}, {1})", PreferServerSide = true)]
-		[Expression(PN.Access, "IIF({0} = {1}, null, {0})", PreferServerSide = false)]
-		[Expression(PN.SqlCe,  "CASE WHEN {0} = {1} THEN NULL ELSE {0} END", PreferServerSide = false)]
 		public static T? NullIf<T>(T? value, T? compareTo) where T : struct
 		{
 			return value.HasValue && compareTo.HasValue && EqualityComparer<T>.Default.Equals(value.Value, compareTo.Value) ? null : value;
 		}
+
 		#endregion
 
 		#region NoConvert
@@ -279,6 +275,7 @@ namespace LinqToDB
 
 		[CLSCompliant(false)]
 		[Extension("", BuilderType = typeof(ConvertBuilder))]
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used to specify generic parameter")]
 		public static TTo Convert<TTo,TFrom>(TTo to, TFrom from)
 		{
 			return Common.ConvertTo<TTo>.From(from);
@@ -286,6 +283,7 @@ namespace LinqToDB
 
 		[CLSCompliant(false)]
 		[Function(PseudoFunctions.CONVERT_FORMAT, 0, 3, 1, 2, ServerSideOnly = true, IsNullable = IsNullableType.SameAsSecondParameter)]
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used by builder or to specify generic parameter")]
 		public static TTo Convert<TTo, TFrom>(TTo to, TFrom from, int format)
 		{
 			return Common.ConvertTo<TTo>.From(from);
@@ -337,6 +335,7 @@ namespace LinqToDB
 		[Expression("{0}", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static TimeSpan? DateToTime(DateTime? date)
 		{
+			// ???
 			return date == null ? null : new TimeSpan(date.Value.Ticks);
 		}
 
@@ -457,7 +456,6 @@ namespace LinqToDB
 #endif
 		}
 
-		[Function(ServerSideOnly = true, IsPredicate = true)]
 		public static bool Like(string? matchExpression, string? pattern, char? escapeCharacter)
 		{
 #if !NETFRAMEWORK
@@ -469,12 +467,12 @@ namespace LinqToDB
 		}
 
 		[CLSCompliant(false)]
-		[Function(                                     IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.DB2,        "Locate",             IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.MySql,      "Locate",             IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.SapHana,    "Locate",       1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.Firebird,   "Position",           IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.ClickHouse, "positionUTF8", 1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(                                      IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.DB2,        "Locate",              IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.MySql,      "Locate",              IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.SapHana,    "Locate",        1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.Firebird,   "Position",            IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.ClickHouse, "positionUTF8",  1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static int? CharIndex(string? substring, string? str)
 		{
 			if (str == null || substring == null) return null;
@@ -505,14 +503,14 @@ namespace LinqToDB
 			return substring.Length == 0 ? 0 : str.IndexOf(substring, index) + 1;
 		}
 
-		[Function(                                     IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.DB2,        "Locate",             IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.MySql,      "Locate",             IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(                                      IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.DB2,        "Locate",              IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.MySql,      "Locate",              IsNullable = IsNullableType.IfAnyParameterNullable)]
 #pragma warning disable CS3016 // Arrays as attribute arguments is not CLS-compliant
-		[Function(PN.SapHana,    "Locate",       1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.ClickHouse, "positionUTF8", 1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.SapHana,    "Locate",       1, 0,  IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.ClickHouse, "positionUTF8", 1, 0,  IsNullable = IsNullableType.IfAnyParameterNullable)]
 #pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
-		[Function(PN.Firebird,   "Position",           IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.Firebird,   "Position",            IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static int? CharIndex(char? value, string? str)
 		{
 			if (value == null || str == null) return null;
@@ -574,7 +572,7 @@ namespace LinqToDB
 
 				lengthExpr = new SqlBinaryExpression(lengthExpr.SystemType!, new SqlValue(-1), "*", lengthExpr, Precedence.Multiplicative);
 
-				builder.ResultExpression = new SqlFunction(stringExpr.SystemType!, "substr", false, true, stringExpr, lengthExpr);
+				builder.ResultExpression = new SqlFunction(QueryHelper.GetDbDataType(stringExpr, builder.Mapping), "substr", canBeNull: true, stringExpr, lengthExpr);
 			}
 		}
 
@@ -594,11 +592,11 @@ namespace LinqToDB
 				// SUBSTRING(someStr, LEN(someStr) - (len - 1), len)
 
 				var startExpr = new SqlBinaryExpression(lengthExpr.SystemType!,
-					new SqlFunction(lengthExpr.SystemType!, "LEN", stringExpr), "-",
+					new SqlFunction(QueryHelper.GetDbDataType(lengthExpr, builder.Mapping), "LEN", stringExpr), "-",
 					new SqlBinaryExpression(lengthExpr.SystemType!, lengthExpr, "-", new SqlValue(1), Precedence.Subtraction),
 					Precedence.Subtraction);
 
-				builder.ResultExpression = new SqlFunction(stringExpr.SystemType!, "SUBSTRING", false, true, stringExpr, startExpr, lengthExpr);
+				builder.ResultExpression = new SqlFunction(QueryHelper.GetDbDataType(stringExpr, builder.Mapping), "SUBSTRING", canBeNull: true, stringExpr, startExpr, lengthExpr);
 			}
 		}
 
@@ -667,7 +665,6 @@ namespace LinqToDB
 			return str.PadRight(length.Value, paddingChar.Value);
 		}
 
-		[Function(PseudoFunctions.REPLACE, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Replace(string? str, string? oldValue, string? newValue)
 		{
 			if (str == null || oldValue == null || newValue == null) return null;
@@ -677,9 +674,9 @@ namespace LinqToDB
 			return str.Replace(oldValue, newValue);
 		}
 
-		[Function(                              IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.Sybase,     "Str_Replace", IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.ClickHouse, "replaceAll",  IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(                                      IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.Sybase,     "Str_Replace",         IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.ClickHouse, "replaceAll",          IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Replace(string? str, char? oldValue, char? newValue)
 		{
 			if (str == null || oldValue == null || newValue == null) return null;
@@ -718,6 +715,7 @@ namespace LinqToDB
 		[Extension(PN.SqlServer2017, typeof(IsNullOrWhiteSpaceSqlServer2017Builder),               IsPredicate = true)]
 		[Extension(PN.SqlServer2019, typeof(IsNullOrWhiteSpaceSqlServer2017Builder),               IsPredicate = true)]
 		[Extension(PN.SqlServer2022, typeof(IsNullOrWhiteSpaceSqlServer2017Builder),               IsPredicate = true)]
+		[Extension(PN.SqlServer2025, typeof(IsNullOrWhiteSpaceSqlServer2017Builder),               IsPredicate = true)]
 		[Extension(PN.Access,        typeof(IsNullOrWhiteSpaceAccessBuilder),                      IsPredicate = true)]
 		[Extension(PN.Sybase,        typeof(IsNullOrWhiteSpaceSybaseBuilder),                      IsPredicate = true)]
 		[Extension(PN.MySql,         typeof(IsNullOrWhiteSpaceMySqlBuilder),                       IsPredicate = true)]
@@ -735,7 +733,7 @@ namespace LinqToDB
 
 				var predicate = new SqlPredicate.ExprExpr(
 						new SqlExpression(
-							typeof(string),
+							builder.Mapping.GetDbDataType(typeof(string)),
 							"REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE({0}, '\x09', ''), '\x0a', ''), '\x0b', ''), '\x0c', ''), '\x0d', ''), '\x20', ''), '\x85', ''), '\xa0', ''), '\x1680', ''), '\x2000', ''), '\x2001', ''), '\x2002', ''), '\x2003', ''), '\x2004', ''), '\x2005', ''), '\x2006', ''), '\x2007', ''), '\x2008', ''), '\x2009', ''), '\x200a', ''), '\x2028', ''), '\x2029', ''), '\x205f', ''), '\x3000', '')",
 							str),
 						SqlPredicate.Operator.Equal,
@@ -761,12 +759,11 @@ namespace LinqToDB
 				const string whiteSpaces = $"%[^{WHITESPACES}]%";
 				var predicate = new SqlPredicate.Expr(
 					new SqlExpression(
-						typeof(bool),
+						builder.Mapping.GetDbDataType(typeof(bool)),
 						"{0} SIMILAR TO {1}",
 						Precedence.Comparison,
 						SqlFlags.IsPredicate,
 						ParametersNullabilityType.NotNullable,
-						null,
 						str,
 						new SqlValue(typeof(string), whiteSpaces)))
 					.MakeNot();
@@ -790,12 +787,11 @@ namespace LinqToDB
 				var whiteSpaces = $"[^{WHITESPACES}]";
 				var condition = new SqlPredicate.Expr(
 					new SqlExpression(
-						typeof(bool),
+						builder.Mapping.GetDbDataType(typeof(bool)),
 						"{0} RLIKE {1}",
 						Precedence.Comparison,
 						SqlFlags.IsPredicate,
 						ParametersNullabilityType.NotNullable,
-						null,
 						str,
 						new SqlValue(typeof(string), whiteSpaces)))
 					.MakeNot();
@@ -864,7 +860,7 @@ namespace LinqToDB
 				var str = builder.GetExpression("str")!;
 
 				var predicate = new SqlPredicate.ExprExpr(
-						new SqlFunction(typeof(string), "LTRIM", str),
+						new SqlFunction(builder.Mapping.GetDbDataType(typeof(string)), "LTRIM", str),
 						SqlPredicate.Operator.Equal,
 						new SqlValue(typeof(string), string.Empty), unknownAsValue: null);
 
@@ -886,7 +882,7 @@ namespace LinqToDB
 				var str = builder.GetExpression("str")!;
 
 				var predicate = new SqlPredicate.ExprExpr(
-						new SqlExpression(typeof(string), "TRIM({1} FROM {0})", str, new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), WHITESPACES)),
+						new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), "TRIM({1} FROM {0})", str, new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), WHITESPACES)),
 						SqlPredicate.Operator.Equal,
 						new SqlValue(typeof(string), string.Empty), unknownAsValue: null);
 
@@ -907,7 +903,7 @@ namespace LinqToDB
 			{
 				var str = builder.GetExpression("str")!;
 
-				var predicate = new SqlPredicate.IsNull(new SqlFunction(typeof(string), "LTRIM", ParametersNullabilityType.Nullable, str, new SqlValue(typeof(string), WHITESPACES)), false);
+				var predicate = new SqlPredicate.IsNull(new SqlFunction(builder.Mapping.GetDbDataType(typeof(string)), "LTRIM", ParametersNullabilityType.Nullable, str, new SqlValue(typeof(string), WHITESPACES)), false);
 
 				var nullability = new NullabilityContext(builder.Query);
 				if (str.CanBeNullable(nullability))
@@ -927,7 +923,7 @@ namespace LinqToDB
 				var str = builder.GetExpression("str")!;
 
 				var predicate = new SqlPredicate.ExprExpr(
-						new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), ASCII_WHITESPACES)),
+						new SqlFunction(builder.Mapping.GetDbDataType(typeof(string)), "LTRIM", str, new SqlValue(typeof(string), ASCII_WHITESPACES)),
 						SqlPredicate.Operator.Equal,
 						new SqlValue(typeof(string), string.Empty), unknownAsValue: null);
 
@@ -949,7 +945,7 @@ namespace LinqToDB
 				var str = builder.GetExpression("str")!;
 
 				var predicate = new SqlPredicate.ExprExpr(
-						new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES)),
+						new SqlFunction(builder.Mapping.GetDbDataType(typeof(string)), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES)),
 						SqlPredicate.Operator.Equal,
 						new SqlValue(typeof(string), string.Empty), unknownAsValue: null);
 
@@ -1101,13 +1097,13 @@ namespace LinqToDB
 		}
 
 		[Concat]
-		public static string Concat(params object[] args)
+		public static string? Concat(params object?[] args)
 		{
 			return string.Concat(args);
 		}
 
 		[Concat]
-		public static string Concat(params string[] args)
+		public static string? Concat(params string?[] args)
 		{
 			return string.Concat(args);
 		}
@@ -1146,48 +1142,21 @@ namespace LinqToDB
 
 		#region DateTime Functions
 
-		[Property(               "CURRENT_TIMESTAMP", CanBeNull = false)]
-		[Property(PN.Informix,   "CURRENT",           CanBeNull = false)]
-		[Property(PN.Access,     "Now",               CanBeNull = false)]
-		[Function(PN.ClickHouse, "now",               CanBeNull = false)]
 		public static DateTime GetDate()
 		{
 			return DateTime.Now;
 		}
 
-		[Property(               "CURRENT_TIMESTAMP", ServerSideOnly = true, CanBeNull = false)]
-		[Property(PN.Firebird,   "LOCALTIMESTAMP",    ServerSideOnly = true, CanBeNull = false)]
-		[Property(PN.Informix,   "CURRENT",           ServerSideOnly = true, CanBeNull = false)]
-		[Property(PN.Access,     "Now",               ServerSideOnly = true, CanBeNull = false)]
-		[Function(PN.SqlCe,      "GetDate",           ServerSideOnly = true, CanBeNull = false)]
-		[Function(PN.Sybase,     "GetDate",           ServerSideOnly = true, CanBeNull = false)]
-		[Function(PN.ClickHouse, "now",               ServerSideOnly = true, CanBeNull = false)]
 		public static DateTime CurrentTimestamp => throw new ServerSideOnlyException(nameof(CurrentTimestamp));
 
-		[Function  (PN.SqlServer , "SYSUTCDATETIME"                      , ServerSideOnly = true, CanBeNull = false)]
-		[Function  (PN.Sybase    , "GETUTCDATE"                          , ServerSideOnly = true, CanBeNull = false)]
-		[Expression(PN.SQLite    , "DATETIME('now')"                     , ServerSideOnly = true, CanBeNull = false)]
-		[Function  (PN.MySql     , "UTC_TIMESTAMP"                       , ServerSideOnly = true, CanBeNull = false)]
-		[Expression(PN.PostgreSQL, "timezone('UTC', now())"              , ServerSideOnly = true, CanBeNull = false)]
-		[Expression(PN.DB2       , "CURRENT TIMESTAMP - CURRENT TIMEZONE", ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Subtraction)]
-		[Expression(PN.Oracle    , "SYS_EXTRACT_UTC(SYSTIMESTAMP)"       , ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
-		[Property  (PN.SapHana   , "CURRENT_UTCTIMESTAMP"                , ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
-		[Expression(PN.Informix  , "datetime(1970-01-01 00:00:00) year to second + (dbinfo('utc_current')/86400)::int::char(9)::interval day(9) to day + (mod(dbinfo('utc_current'), 86400))::char(5)::interval second(5) to second", ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
-		[Expression(PN.ClickHouse, "now('UTC')"                          , ServerSideOnly = true, CanBeNull = false)]
 		public static DateTime CurrentTimestampUtc => DateTime.UtcNow;
 
-		[Property(               "CURRENT_TIMESTAMP", CanBeNull = false)]
-		[Property(PN.Informix,   "CURRENT",           CanBeNull = false)]
-		[Property(PN.Access,     "Now",               CanBeNull = false)]
-		[Function(PN.SqlCe,      "GetDate",           CanBeNull = false)]
-		[Function(PN.Sybase,     "GetDate",           CanBeNull = false)]
-		[Function(PN.ClickHouse, "now",               CanBeNull = false)]
 		public static DateTime CurrentTimestamp2 => DateTime.Now;
 
-		[Function(PN.SqlServer , "SYSDATETIMEOFFSET", ServerSideOnly = true, CanBeNull = false)]
-		[Function(PN.PostgreSQL, "now"              , ServerSideOnly = true, CanBeNull = false)]
-		[Property(PN.Oracle    , "SYSTIMESTAMP"     , ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
-		[Function(PN.ClickHouse, "now"              , ServerSideOnly = true, CanBeNull = false)]
+		[Function(PN.SqlServer , "SYSDATETIMEOFFSET"  , ServerSideOnly = true, CanBeNull = false)]
+		[Function(PN.PostgreSQL, "now"                , ServerSideOnly = true, CanBeNull = false)]
+		[Property(PN.Oracle    , "SYSTIMESTAMP"       , ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
+		[Function(PN.ClickHouse, "now"                , ServerSideOnly = true, CanBeNull = false)]
 		public static DateTimeOffset CurrentTzTimestamp => DateTimeOffset.Now;
 
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
@@ -1218,7 +1187,7 @@ namespace LinqToDB
 		[Property(PN.ClickHouse, "1", CanBeNull = false)]
 		public static int DateFirst => 7;
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 		public static DateOnly? MakeDateOnly(int? year, int? month, int? day)
 		{
 			return year == null || month == null || day == null ?
@@ -1441,6 +1410,9 @@ namespace LinqToDB
 		/// <summary>
 		/// Returns last identity value (current value) for specific table.
 		/// </summary>
+		/// <remarks>
+		/// Note that for SQL Server this function will return start value if no values were generated yet.
+		/// </remarks>
 		[Function  (PN.SqlServer    , "IDENT_CURRENT", ServerSideOnly = true, CanBeNull = true)]
 		[Expression(                  "NULL"         , ServerSideOnly = true, CanBeNull = true)]
 		internal static object? CurrentIdentity(string tableName) => throw new ServerSideOnlyException(nameof(CurrentIdentity));

@@ -10,13 +10,13 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
-using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
-using LinqToDB.Infrastructure;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.Infrastructure;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
-using LinqToDB.SqlProvider;
 
 using NUnit.Framework;
 
@@ -241,7 +241,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task CalledWithCorrectNames([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context, o => o.UseDataProvider(new WrapperProvider(GetDataProvider(context), (normalizerBase) => new ValidateOriginalNameNormalizer(normalizerBase))));
+			using var db = GetDataContext(context, o => o.UseDataProvider(new WrapperProvider(GetDataProvider(context), (normalizerBase) => new ValidateOriginalNameNormalizer(normalizerBase))));
 
 			await using var dbTable1 = db.CreateLocalTable<Table1>("table1");
 			await using var dbTable2 = db.CreateLocalTable<Table2>("table2");
@@ -273,7 +273,7 @@ namespace Tests.DataProvider
 		{
 			string? lastSql = null;
 
-			using var db = GetDataConnection(context, o => o.UseTracing(info =>
+			using var db = GetDataContext(context, o => o.UseTracing(info =>
 			{
 				if (info.TraceInfoStep == TraceInfoStep.BeforeExecute)
 				{
@@ -363,9 +363,7 @@ namespace Tests.DataProvider
 			public DbConnection CreateConnection(string connectionString) => _baseProvider.CreateConnection(connectionString);
 			public ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions) => _baseProvider.CreateSqlBuilder(mappingSchema, dataOptions);
 			public void DisposeCommand(DbCommand command) => _baseProvider.DisposeCommand(command);
-#if NET8_0_OR_GREATER
 			public ValueTask DisposeCommandAsync(DbCommand command) => _baseProvider.DisposeCommandAsync(command);
-#endif
 			public IExecutionScope? ExecuteScope(DataConnection dataConnection) => _baseProvider.ExecuteScope(dataConnection);
 			public CommandBehavior GetCommandBehavior(CommandBehavior commandBehavior) => _baseProvider.GetCommandBehavior(commandBehavior);
 			// TODO: Remove in v7

@@ -41,6 +41,8 @@
 			//"SqlServer.2019.MS",
 			//"SqlServer.2022",
 			//"SqlServer.2022.MS",
+			//"SqlServer.2025",
+			//"SqlServer.2025.MS",
 			//"SqlServer.SA",
 			//"SqlServer.SA.MS",
 			//"SqlServer.Contained",
@@ -122,7 +124,7 @@
 
 			// ClickHouse
 			//"ClickHouse.Octonica",
-			//"ClickHouse.Client",
+			//"ClickHouse.Driver",
 			//"ClickHouse.MySql",
 		]
 	},
@@ -170,6 +172,8 @@
 			//"SqlServer.2019.MS",
 			//"SqlServer.2022",
 			//"SqlServer.2022.MS",
+			//"SqlServer.2025",
+			//"SqlServer.2025.MS",
 			//"SqlServer.SA",
 			//"SqlServer.SA.MS",
 			//"SqlServer.Contained",
@@ -243,7 +247,7 @@
 
 			// ClickHouse
 			//"ClickHouse.Octonica",
-			//"ClickHouse.Client",
+			//"ClickHouse.Driver",
 			//"ClickHouse.MySql",
 		]
 	},
@@ -291,6 +295,8 @@
 			//"SqlServer.2019.MS",
 			//"SqlServer.2022",
 			//"SqlServer.2022.MS",
+			//"SqlServer.2025",
+			//"SqlServer.2025.MS",
 			//"SqlServer.SA",
 			//"SqlServer.SA.MS",
 			//"SqlServer.Contained",
@@ -364,7 +370,7 @@
 
 			// ClickHouse
 			//"ClickHouse.Octonica",
-			//"ClickHouse.Client",
+			//"ClickHouse.Driver",
 			//"ClickHouse.MySql",
 		]
 	},
@@ -441,6 +447,14 @@
 			"SqlServer.2022.MS": {
 				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "Server=localhost,1422;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
+			},
+			"SqlServer.2025": {
+				"Provider": "System.Data.SqlClient",
+				"ConnectionString": "Server=localhost,1425;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
+			},
+			"SqlServer.2025.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
+				"ConnectionString": "Server=localhost,1425;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.SA": {
 				"Provider": "System.Data.SqlClient",
@@ -695,8 +709,8 @@
 				"Provider": "Octonica.ClickHouseClient",
 				"ConnectionString": "Host=localhost;Port=9000;Database=testdb1;User=testuser;Password=testuser"
 			},
-			"ClickHouse.Client": {
-				"Provider": "ClickHouse.Client",
+			"ClickHouse.Driver": {
+				"Provider": "ClickHouse.Driver",
 				"ConnectionString": "Host=localhost;Port=8123;Database=testdb2;Username=testuser;Password=testuser;UseSession=true"
 			},
 			"ClickHouse.MySql": {

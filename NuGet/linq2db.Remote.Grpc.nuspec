@@ -8,27 +8,27 @@
 		<dependencies>
 			<group targetFramework="net462">
 				<dependency id="linq2db"           version="6.0.0"  />
-				<dependency id="Grpc.Net.Client"   version="2.67.0" />
+				<dependency id="Grpc.Net.Client"   version="2.71.0" />
 				<dependency id="protobuf-net.Grpc" version="1.2.2"  />
-				<dependency id="protobuf-net"      version="3.2.52" />
+				<dependency id="protobuf-net"      version="3.2.56" />
 			</group>
 			<group targetFramework="netstandard2.0">
 				<dependency id="linq2db"           version="6.0.0"  />
-				<dependency id="Grpc.Net.Client"   version="2.67.0" />
+				<dependency id="Grpc.Net.Client"   version="2.71.0" />
 				<dependency id="protobuf-net.Grpc" version="1.2.2"  />
-				<dependency id="protobuf-net"      version="3.2.52" />
+				<dependency id="protobuf-net"      version="3.2.56" />
 			</group>
 			<group targetFramework="net8.0">
 				<dependency id="linq2db"           version="6.0.0"  />
-				<dependency id="Grpc.Net.Client"   version="2.67.0" />
+				<dependency id="Grpc.Net.Client"   version="2.71.0" />
 				<dependency id="protobuf-net.Grpc" version="1.2.2"  />
-				<dependency id="protobuf-net"      version="3.2.52" />
+				<dependency id="protobuf-net"      version="3.2.56" />
 			</group>
 			<group targetFramework="net9.0">
 				<dependency id="linq2db"           version="6.0.0"  />
-				<dependency id="Grpc.Net.Client"   version="2.67.0" />
+				<dependency id="Grpc.Net.Client"   version="2.71.0" />
 				<dependency id="protobuf-net.Grpc" version="1.2.2"  />
-				<dependency id="protobuf-net"      version="3.2.52" />
+				<dependency id="protobuf-net"      version="3.2.56" />
 			</group>
 		</dependencies>
 	</metadata>

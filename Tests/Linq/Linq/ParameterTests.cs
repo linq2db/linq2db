@@ -4,14 +4,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -75,8 +75,8 @@ namespace Tests.Linq
 				{
 					Assert.That(query.GetStatement().CollectParameters(), Has.Length.EqualTo(1));
 					Assert.That(queryInlined.GetStatement().CollectParameters(), Is.Empty);
+				}
 			}
-		}
 		}
 
 		[Test]
@@ -95,8 +95,8 @@ namespace Tests.Linq
 				{
 					Assert.That(query.GetStatement().CollectParameters(), Has.Length.EqualTo(3));
 					Assert.That(queryInlined.GetStatement().CollectParameters(), Is.Empty);
+				}
 			}
-		}
 		}
 
 		[ActiveIssue(
@@ -219,7 +219,7 @@ namespace Tests.Linq
 		[Test]
 		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var p   = 123.456m;
 				db.GetTable<AllTypes>().Where(t => t.DecimalDataType == p).ToArray();
@@ -234,7 +234,7 @@ namespace Tests.Linq
 		[Test]
 		public void ExposeSqlBinaryParameter([DataSources(false, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllInformix, TestProvName.AllFirebird, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var p   = new byte[] { 0, 1, 2 };
 				db.GetTable<AllTypes>().Where(t => t.BinaryDataType == p).ToArray();
@@ -592,7 +592,7 @@ namespace Tests.Linq
 					query.GetCacheMissCount().ShouldBe(cacheMiss);
 
 				var parameters = new List<SqlParameter>();
-				QueryHelper.CollectParameters(query.GetSelectQuery(), parameters);
+				query.GetSelectQuery().CollectParameters(parameters);
 				parameters.Distinct().Count().ShouldBe(2);
 			}
 
@@ -615,7 +615,7 @@ namespace Tests.Linq
 					query.GetCacheMissCount().ShouldBe(cacheMiss);
 
 				var parameters = new List<SqlParameter>();
-				QueryHelper.CollectParameters(query.GetSelectQuery(), parameters);
+				query.GetSelectQuery().CollectParameters(parameters);
 				parameters.Distinct().Count().ShouldBe(2);
 			}
 		}
@@ -1337,7 +1337,7 @@ namespace Tests.Linq
 		public void TestIQueryableParameterEvaluation([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// cached queries affect cnt values due to extra comparisons in cache
-			LinqToDB.Linq.Query.ClearCaches();
+			LinqToDB.Internal.Linq.Query.ClearCaches();
 
 			using (var db = GetDataContext(context))
 			{
@@ -1435,7 +1435,7 @@ namespace Tests.Linq
 					Assert.That(_cnt1, Is.EqualTo(1));
 					Assert.That(_cnt2, Is.EqualTo(1));
 					Assert.That(_cnt3, Is.EqualTo(1));
-			}
+				}
 			}
 
 			List<Person> Query(ITestDataContext db)
@@ -1672,7 +1672,7 @@ namespace Tests.Linq
 				{
 					Assert.That(persons.All(p => p.ID != _param), Is.True);
 					Assert.That(_cnt, Is.EqualTo(1));
-			}
+				}
 			}
 
 			List<Person> Query(ITestDataContext db)
@@ -1739,7 +1739,7 @@ namespace Tests.Linq
 				Assert.That(query1.ToSqlQuery().Parameters, Has.Count.EqualTo(2));
 		}
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_DATEONLY
 		[Table]
 		public sealed class Issue4371Table2
 		{
@@ -1956,7 +1956,7 @@ namespace Tests.Linq
 				if (iteration > 1)
 				{
 					Assert.That(tb.GetCacheMissCount(), Is.EqualTo(cacheMissCount));
-		}
+				}
 
 				var record = tb.Single();
 				using (Assert.EnterMultipleScope())
@@ -1966,8 +1966,8 @@ namespace Tests.Linq
 					Assert.That(record.Value3, Is.EqualTo(f3.Value));
 					Assert.That(record.Value4, Is.EqualTo(f4.Value));
 					Assert.That(record.Value5, Is.EqualTo(f5.Value));
-	}
-}
+				}
+			}
 		}
 
 		readonly struct Wrap<TValue>
@@ -1988,6 +1988,19 @@ namespace Tests.Linq
 			var valueGetter = () => 1;
 
 			AssertQuery(db.Parent.Where(r => r.ParentID == valueGetter()));
+		}
+
+		[Test]
+		public void LambdaBodyInQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Expression<Func<Parent, int>> valueGetter = p => p.ParentID;
+
+			var query = db.Parent
+				.Select(p => (valueGetter.Body as MemberExpression)!.Member.Name);
+
+			AssertQuery(query);
 		}
 
 		sealed class Issue4963Table

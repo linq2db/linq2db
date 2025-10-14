@@ -1,0 +1,49 @@
+﻿<UserControl
+	x:Class         = "LinqToDB.LINQPad.UI.AboutTab"
+	x:ClassModifier = "internal"
+	xmlns           = "http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x         = "http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d         = "http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc        = "http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:us        = "clr-namespace:LinqToDB.LINQPad.UI"
+	mc:Ignorable    = "d"
+	d:DataContext   = "{d:DesignInstance us:AboutModel, IsDesignTimeCreatable=true}"
+	>
+
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="100" />
+			<RowDefinition />
+		</Grid.RowDefinitions>
+
+		<Grid Grid.Row="0">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition />
+				<ColumnDefinition Width="80" />
+			</Grid.ColumnDefinitions>
+
+			<StackPanel Grid.Column="0">
+				<Label Margin="0 20 0 0" HorizontalAlignment="Center" Content="{Binding Project}" />
+				<Label HorizontalAlignment="Center" Content="{Binding Copyright}" />
+			</StackPanel>
+
+			<Image Grid.Column="1" Margin="0 15" HorizontalAlignment="Center" VerticalAlignment="Top" Source="{Binding Logo}" StretchDirection="DownOnly" />
+		</Grid>
+
+		<StackPanel Grid.Row="1">
+			<Label Margin="0 50 0 0" HorizontalAlignment="Center">Source code:</Label>
+			<TextBlock HorizontalAlignment="Center">
+				<Hyperlink NavigateUri="{Binding RepositoryUri}" RequestNavigate="Url_Click">
+					<TextBlock Text="{Binding RepositoryUri}"/>
+				</Hyperlink>
+			</TextBlock>
+
+			<Label Margin="0 20 0 0" HorizontalAlignment="Center">For issue reports/feature requests:</Label>
+			<TextBlock HorizontalAlignment="Center">
+				<Hyperlink NavigateUri="{Binding ReportsUri}" RequestNavigate="Url_Click">
+					<TextBlock Text="{Binding ReportsUri}"/>
+				</Hyperlink>
+			</TextBlock>
+		</StackPanel>
+	</Grid>
+</UserControl>

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Linq;
+using LinqToDB.Internal.Linq;
 
 namespace LinqToDB.Async
 {
@@ -22,7 +22,7 @@ namespace LinqToDB.Async
 		{
 			var list = new List<T>();
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_ENSURE_CAPACITY
 			if (source.TryGetNonEnumeratedCount(out var count))
 				list.EnsureCapacity(count);
 #endif
@@ -40,7 +40,7 @@ namespace LinqToDB.Async
 		{
 			var list = new List<T>();
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_ENSURE_CAPACITY
 			if (source.TryGetNonEnumeratedCount(out var count))
 				list.EnsureCapacity(count);
 #endif
@@ -63,7 +63,7 @@ namespace LinqToDB.Async
 		{
 			var dictionary = new Dictionary<TKey, TSource>(comparer);
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_ENSURE_CAPACITY
 			if (source.TryGetNonEnumeratedCount(out var count))
 				dictionary.EnsureCapacity(count);
 #endif
@@ -87,7 +87,7 @@ namespace LinqToDB.Async
 		{
 			var dictionary = new Dictionary<TKey, TElement>(comparer);
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_ENSURE_CAPACITY
 			if (source.TryGetNonEnumeratedCount(out var count))
 				dictionary.EnsureCapacity(count);
 #endif
@@ -110,7 +110,7 @@ namespace LinqToDB.Async
 		{
 			var lookup = new Lookup<TKey,TSource>(comparer);
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_ENSURE_CAPACITY
 			if (source.TryGetNonEnumeratedCount(out var count))
 				lookup.EnsureCapacity(count);
 #endif
@@ -134,7 +134,7 @@ namespace LinqToDB.Async
 		{
 			var lookup = new Lookup<TKey,TElement>(comparer);
 
-#if NET8_0_OR_GREATER
+#if SUPPORTS_ENSURE_CAPACITY
 			if (source.TryGetNonEnumeratedCount(out var count))
 				lookup.EnsureCapacity(count);
 #endif

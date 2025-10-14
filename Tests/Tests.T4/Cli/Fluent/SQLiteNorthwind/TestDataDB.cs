@@ -141,17 +141,9 @@ namespace Cli.Fluent.SQLiteNorthwind
 					.Member(e => e.TitleOfCourtesy)
 						.HasAttribute(new ColumnAttribute("TitleOfCourtesy"))
 					.Member(e => e.BirthDate)
-						.HasAttribute(new ColumnAttribute("BirthDate")
-						{
-							SkipOnInsert = true,
-							SkipOnUpdate = true
-						})
+						.HasAttribute(new ColumnAttribute("BirthDate"))
 					.Member(e => e.HireDate)
-						.HasAttribute(new ColumnAttribute("HireDate")
-						{
-							SkipOnInsert = true,
-							SkipOnUpdate = true
-						})
+						.HasAttribute(new ColumnAttribute("HireDate"))
 					.Member(e => e.Address)
 						.HasAttribute(new ColumnAttribute("Address"))
 					.Member(e => e.City)
@@ -210,23 +202,11 @@ namespace Cli.Fluent.SQLiteNorthwind
 					.Member(e => e.EmployeeId)
 						.HasAttribute(new ColumnAttribute("EmployeeID"))
 					.Member(e => e.OrderDate)
-						.HasAttribute(new ColumnAttribute("OrderDate")
-						{
-							SkipOnInsert = true,
-							SkipOnUpdate = true
-						})
+						.HasAttribute(new ColumnAttribute("OrderDate"))
 					.Member(e => e.RequiredDate)
-						.HasAttribute(new ColumnAttribute("RequiredDate")
-						{
-							SkipOnInsert = true,
-							SkipOnUpdate = true
-						})
+						.HasAttribute(new ColumnAttribute("RequiredDate"))
 					.Member(e => e.ShippedDate)
-						.HasAttribute(new ColumnAttribute("ShippedDate")
-						{
-							SkipOnInsert = true,
-							SkipOnUpdate = true
-						})
+						.HasAttribute(new ColumnAttribute("ShippedDate"))
 					.Member(e => e.ShipVia)
 						.HasAttribute(new ColumnAttribute("ShipVia"))
 					.Member(e => e.Freight)
@@ -470,23 +450,11 @@ namespace Cli.Fluent.SQLiteNorthwind
 					.Member(e => e.EmployeeId)
 						.HasAttribute(new ColumnAttribute("EmployeeID"))
 					.Member(e => e.OrderDate)
-						.HasAttribute(new ColumnAttribute("OrderDate")
-						{
-							SkipOnInsert = true,
-							SkipOnUpdate = true
-						})
+						.HasAttribute(new ColumnAttribute("OrderDate"))
 					.Member(e => e.RequiredDate)
-						.HasAttribute(new ColumnAttribute("RequiredDate")
-						{
-							SkipOnInsert = true,
-							SkipOnUpdate = true
-						})
+						.HasAttribute(new ColumnAttribute("RequiredDate"))
 					.Member(e => e.ShippedDate)
-						.HasAttribute(new ColumnAttribute("ShippedDate")
-						{
-							SkipOnInsert = true,
-							SkipOnUpdate = true
-						})
+						.HasAttribute(new ColumnAttribute("ShippedDate"))
 					.Member(e => e.ShipVia)
 						.HasAttribute(new ColumnAttribute("ShipVia"))
 					.Member(e => e.Freight)
@@ -563,11 +531,7 @@ namespace Cli.Fluent.SQLiteNorthwind
 						IsView = true
 					})
 					.Member(e => e.ShippedDate)
-						.HasAttribute(new ColumnAttribute("ShippedDate")
-						{
-							SkipOnInsert = true,
-							SkipOnUpdate = true
-						})
+						.HasAttribute(new ColumnAttribute("ShippedDate"))
 					.Member(e => e.OrderId)
 						.HasAttribute(new ColumnAttribute("OrderID"))
 					.Member(e => e.Subtotal)
@@ -580,11 +544,7 @@ namespace Cli.Fluent.SQLiteNorthwind
 						IsView = true
 					})
 					.Member(e => e.ShippedDate)
-						.HasAttribute(new ColumnAttribute("ShippedDate")
-						{
-							SkipOnInsert = true,
-							SkipOnUpdate = true
-						})
+						.HasAttribute(new ColumnAttribute("ShippedDate"))
 					.Member(e => e.OrderId)
 						.HasAttribute(new ColumnAttribute("OrderID"))
 					.Member(e => e.Subtotal)

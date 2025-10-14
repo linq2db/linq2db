@@ -10,9 +10,14 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider.Firebird;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -466,8 +471,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[RequiresCorrelatedSubquery]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		public void GroupJoin54([DataSources(TestProvName.AllClickHouse)] string context)
+		public void GroupJoin54([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -582,111 +588,66 @@ namespace Tests.Linq
 		[Test]
 		public void GroupJoin9([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					Parent
-						.GroupJoin(
-							Parent,
-							x => new { Id = x.ParentID },
-							y => new { Id = y.ParentID },
-							(xid, yid) => new { xid, yid }
-						)
-						.SelectMany(
-							y => y.yid.DefaultIfEmpty(),
-							(x1, y) => new { x1.xid, y }
-						)
-						.GroupJoin(
-							Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
-							(x2, y) => new { x2.xid, x2.y, h = y }
-						)
-						.SelectMany(
-							a => a.h.DefaultIfEmpty(),
-							(x3, a) => new { x3.xid, x3.y, a }
-						)
-						.GroupJoin(
-							Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
-							(x4, y) => new { x4.xid, x4.y, x4.a, p = y }
-						)
-						.SelectMany(
-							z => z.p.DefaultIfEmpty(),
-							(x5, z) => new { x5.xid, z, x5.y, x5.a }
-						)
-						.GroupJoin(
-							Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.Value1 ?? 1 },
-							(x6, y) => new { x6.xid, xy = x6.y, x6.a, x6.z, y }
-						)
-						.SelectMany(
-							z => z.y.DefaultIfEmpty(),
-							(x7, z) => new { x7.xid, z, x7.xy, x7.a, xz = x7.z }
-						)
-						.GroupJoin(
-							Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
-							(x8, y) => new { x8.xid, x8.z, x8.xy, x8.a, x8.xz, y }
-						)
-						.SelectMany(
-							a => a.y.DefaultIfEmpty(),
-							(x9, a) => new { x9.xid, x9.z, x9.xy, xa = x9.a, x9.xz, a }
-						),
-					db.Parent
-						.GroupJoin(
-							db.Parent,
-							x => new { Id = x.ParentID },
-							y => new { Id = y.ParentID },
-							(xid, yid) => new { xid, yid }
-						)
-						.SelectMany(
-							y => y.yid.DefaultIfEmpty(),
-							(x1, y) => new { x1.xid, y }
-						)
-						.GroupJoin(
-							db.Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
-							(x2, y) => new { x2.xid, x2.y, h = y }
-						)
-						.SelectMany(
-							a => a.h.DefaultIfEmpty(),
-							(x3, a) => new { x3.xid, x3.y, a }
-						)
-						.GroupJoin(
-							db.Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
-							(x4, y) => new { x4.xid, x4.y, x4.a, p = y }
-						)
-						.SelectMany(
-							z => z.p.DefaultIfEmpty(),
-							(x5, z) => new { x5.xid, z, x5.y, x5.a }
-						)
-						.GroupJoin(
-							db.Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.Value1 ?? 1 },
-							(x6, y) => new { x6.xid, xy = x6.y, x6.a, x6.z, y }
-						)
-						.SelectMany(
-							z => z.y.DefaultIfEmpty(),
-							(x7, z) => new { x7.xid, z, x7.xy, x7.a, xz = x7.z }
-						)
-						.GroupJoin(
-							db.Parent,
-							x => new { Id = x.xid.ParentID },
-							y => new { Id = y.ParentID     },
-							(x8, y) => new { x8.xid, x8.z, x8.xy, x8.a, x8.xz, y }
-						)
-						.SelectMany(
-							a => a.y.DefaultIfEmpty(),
-							(x9, a) => new { x9.xid, x9.z, x9.xy, xa = x9.a, x9.xz, a }
-						)
-					);
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.GroupJoin(
+					db.Parent,
+					x => new { Id = x.ParentID },
+					y => new { Id = y.ParentID },
+					(xid, yid) => new { xid, yid }
+				)
+				.SelectMany(
+					y => y.yid.DefaultIfEmpty(),
+					(x1, y) => new { x1.xid, y }
+				)
+				.GroupJoin(
+					db.Parent,
+					x => new { Id = x.xid.ParentID },
+					y => new { Id = y.ParentID     },
+					(x2, y) => new { x2.xid, x2.y, h = y }
+				)
+				.SelectMany(
+					a => a.h.DefaultIfEmpty(),
+					(x3, a) => new { x3.xid, x3.y, a }
+				)
+				.GroupJoin(
+					db.Parent,
+					x => new { Id = x.xid.ParentID },
+					y => new { Id = y.ParentID     },
+					(x4, y) => new { x4.xid, x4.y, x4.a, p = y }
+				)
+				.SelectMany(
+					z => z.p.DefaultIfEmpty(),
+					(x5, z) => new { x5.xid, z, x5.y, x5.a }
+				)
+				.GroupJoin(
+					db.Parent,
+					x => new { Id = x.xid.ParentID },
+					y => new { Id = y.Value1 ?? 1 },
+					(x6, y) => new { x6.xid, xy = x6.y, x6.a, x6.z, y }
+				)
+				.SelectMany(
+					z => z.y.DefaultIfEmpty(),
+					(x7, z) => new { x7.xid, z, x7.xy, x7.a, xz = x7.z }
+				)
+				.GroupJoin(
+					db.Parent,
+					x => new { Id = x.xid.ParentID },
+					y => new { Id = y.ParentID     },
+					(x8, y) => new { x8.xid, x8.z, x8.xy, x8.a, x8.xz, y }
+				)
+				.SelectMany(
+					a => a.y.DefaultIfEmpty(),
+					(x9, a) => new { x9.xid, x9.z, x9.xy, xa = x9.a, x9.xz, a }
+				);
+
+			var sql = query.ToSqlQuery().Sql;
+
+			// Result SQL should not contain JOINs with subqueries
+			sql.ShouldContain("SELECT", Exactly.Once());
+
+			AssertQuery(query);
 		}
 
 		[Test]
@@ -823,6 +784,57 @@ namespace Tests.Linq
 							(x4, y4) => new { x4.Parent, Child = x4.Child.FirstOrDefault() })
 						.Where(x5 => x5.Parent.ParentID == 1 && x5.Parent.Value1 != null)
 						.OrderBy(x6 => x6.Parent.ParentID));
+		}
+
+		[Test]
+		public void LeftJoinRemoval([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = 
+				from p in db.Parent
+				from ch in db.Child.Where(ch => p.ParentID == ch.ParentID).DefaultIfEmpty()
+				from ch1 in db.Child.Where(ch1 => ch.ChildID == ch1.ChildID)
+				select ch1;
+
+			var ts = query.GetTableSource();
+
+			ts.Joins.ShouldAllBe(j => j.JoinType == JoinType.Inner);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void LeftJoinSubqueryDoNotOptimize([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q1 =
+				from p in db.Person
+				select new
+				{
+					p.ID,
+					MiddleName = p.MiddleName ?? "default1",
+				};
+
+			var q2 =
+				from p in db.Person
+				join m in q1 on p.ID equals m.ID + 1 into lj1
+				from m in lj1.DefaultIfEmpty()
+				select new
+				{
+					p.ID,
+					MiddleName = Sql.AsSql(m.MiddleName ?? "default2"),
+				};
+
+			var sql = q2.ToSqlQuery().Sql;
+
+			sql.ShouldContain("default1");
+			sql.ShouldContain("default2");
+
+			sql.ShouldContain("SELECT", Exactly.Twice());
+
+			AssertQuery(q2);
 		}
 
 		[Table("Child")]
@@ -1193,7 +1205,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinSubQuerySum([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void JoinSubQuerySum([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -3329,7 +3342,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllFirebirdLess4, TestProvName.AllInformix, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllClickHouse], ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3311")]
 		public void Issue3311Test3([DataSources] string context)
 		{
@@ -3407,7 +3420,7 @@ namespace Tests.Linq
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(isNullCount, Is.EqualTo(compareNulls == CompareNulls.LikeSql ? 0 : 2));
-				Assert.That(db.LastQuery, Does.Contain(321));
+				Assert.That(db.LastQuery, Does.Contain("321"));
 			}
 		}
 
@@ -3500,7 +3513,7 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			if (db is DataConnection { DataProvider: FirebirdDataProvider})
+			if (db is DataConnection { DataProvider: FirebirdDataProvider })
 				FirebirdTools.ClearAllPools();
 		}
 	}

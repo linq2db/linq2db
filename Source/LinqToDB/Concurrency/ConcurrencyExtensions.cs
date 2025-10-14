@@ -4,11 +4,12 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Common.Internal;
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Reflection;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using LinqToDB.Reflection;
 
 namespace LinqToDB.Concurrency
 {
@@ -106,16 +107,6 @@ namespace LinqToDB.Concurrency
 			}
 
 			return updatable;
-		}
-
-		private static IQueryable<T> MakeDeleteConcurrent<T>(IQueryable<T> source, IDataContext dc, T obj)
-			where T : class
-		{
-			var objType = typeof(T);
-			var ed      = dc.MappingSchema.GetEntityDescriptor(objType, dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
-			var query   = MakeConcurrentFilter(source, obj, objType, ed);
-
-			return query;
 		}
 
 		/// <summary>

@@ -13,6 +13,8 @@ namespace LinqToDB
 	[PublicAPI]
 	public class DataContextTransaction : IDisposable, IAsyncDisposable
 	{
+		private DataContext.ConnectionLockScope _contextLock;
+
 		/// <summary>
 		/// Creates new transaction wrapper.
 		/// </summary>
@@ -31,8 +33,9 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Start new transaction with default isolation level.
-		/// If underlying connection already has transaction, it will be rolled back.
+		/// If underlying connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
+		/// <exception cref="InvalidOperationException">Thrown when underlying connection already has a transaction.</exception>
 		public void BeginTransaction()
 		{
 			var db = DataContext.GetDataConnection();
@@ -40,16 +43,17 @@ namespace LinqToDB
 			db.BeginTransaction();
 
 			if (_transactionCounter == 0)
-				DataContext.LockDbManagerCounter++;
+				_contextLock = DataContext.AcquireLock();
 
 			_transactionCounter++;
 		}
 
 		/// <summary>
 		/// Start new transaction with specified isolation level.
-		/// If underlying connection already has transaction, it will be rolled back.
+		/// If underlying connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <param name="level">Transaction isolation level.</param>
+		/// <exception cref="InvalidOperationException">Thrown when underlying connection already has a transaction.</exception>
 		public void BeginTransaction(IsolationLevel level)
 		{
 			var db = DataContext.GetDataConnection();
@@ -57,16 +61,17 @@ namespace LinqToDB
 			db.BeginTransaction(level);
 
 			if (_transactionCounter == 0)
-				DataContext.LockDbManagerCounter++;
+				_contextLock = DataContext.AcquireLock();
 
 			_transactionCounter++;
 		}
 
 		/// <summary>
 		/// Start new transaction asynchronously with default isolation level.
-		/// If underlying connection already has transaction, it will be rolled back.
+		/// If underlying connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <exception cref="InvalidOperationException">Thrown when underlying connection already has a transaction.</exception>
 		public async Task BeginTransactionAsync(CancellationToken cancellationToken = default)
 		{
 			var db = DataContext.GetDataConnection();
@@ -74,17 +79,18 @@ namespace LinqToDB
 			await db.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
 
 			if (_transactionCounter == 0)
-				DataContext.LockDbManagerCounter++;
+				_contextLock = DataContext.AcquireLock();
 
 			_transactionCounter++;
 		}
 
 		/// <summary>
 		/// Start new transaction asynchronously with specified isolation level.
-		/// If underlying connection already has transaction, it will be rolled back.
+		/// If underlying connection already has transaction, it will throw <see cref="InvalidOperationException"/>.
 		/// </summary>
 		/// <param name="level">Transaction isolation level.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <exception cref="InvalidOperationException">Thrown when underlying connection already has a transaction.</exception>
 		public async Task BeginTransactionAsync(IsolationLevel level, CancellationToken cancellationToken = default)
 		{
 			var db = DataContext.GetDataConnection();
@@ -92,7 +98,7 @@ namespace LinqToDB
 			await db.BeginTransactionAsync(level, cancellationToken).ConfigureAwait(false);
 
 			if (_transactionCounter == 0)
-				DataContext.LockDbManagerCounter++;
+				_contextLock = DataContext.AcquireLock();
 
 			_transactionCounter++;
 		}
@@ -112,8 +118,7 @@ namespace LinqToDB
 
 				if (_transactionCounter == 0)
 				{
-					DataContext.LockDbManagerCounter--;
-					DataContext.ReleaseQuery();
+					_contextLock!.Dispose();
 				}
 			}
 		}
@@ -133,8 +138,7 @@ namespace LinqToDB
 
 				if (_transactionCounter == 0)
 				{
-					DataContext.LockDbManagerCounter--;
-					DataContext.ReleaseQuery();
+					_contextLock!.Dispose();
 				}
 			}
 		}
@@ -157,8 +161,7 @@ namespace LinqToDB
 
 				if (_transactionCounter == 0)
 				{
-					DataContext.LockDbManagerCounter--;
-					await DataContext.ReleaseQueryAsync().ConfigureAwait(false);
+					await _contextLock!.DisposeAsync().ConfigureAwait(false);
 				}
 			}
 		}
@@ -181,8 +184,7 @@ namespace LinqToDB
 
 				if (_transactionCounter == 0)
 				{
-					DataContext.LockDbManagerCounter--;
-					await DataContext.ReleaseQueryAsync().ConfigureAwait(false);
+					await _contextLock!.DisposeAsync().ConfigureAwait(false);
 				}
 			}
 		}
@@ -200,8 +202,7 @@ namespace LinqToDB
 
 				_transactionCounter = 0;
 
-				DataContext.LockDbManagerCounter--;
-				DataContext.ReleaseQuery();
+				_contextLock!.Dispose();
 			}
 		}
 
@@ -216,8 +217,7 @@ namespace LinqToDB
 
 				_transactionCounter = 0;
 
-				DataContext.LockDbManagerCounter--;
-				await DataContext.ReleaseQueryAsync().ConfigureAwait(false);
+				await _contextLock!.DisposeAsync().ConfigureAwait(false);
 			}
 		}
 	}

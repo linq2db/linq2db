@@ -55,11 +55,11 @@ namespace Tests.UserTests
 			var ed4 = ms.GetEntityDescriptor(typeof(AttributeBase));
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(ed2.Name.Name, Is.EqualTo(ed1.Name.Name));
-				Assert.That(ed4.Name.Name, Is.EqualTo(ed3.Name.Name));
+				Assert.That(ed2.TableName, Is.EqualTo(ed1.TableName));
+				Assert.That(ed4.TableName, Is.EqualTo(ed3.TableName));
 			}
 
-			Assert.That(ed4.Name.Name, Is.EqualTo(ed1.Name.Name));
+			Assert.That(ed4.TableName, Is.EqualTo(ed1.TableName));
 		}
 
 		[Test]
@@ -71,7 +71,7 @@ namespace Tests.UserTests
 			using (db.CreateLocalTable<FluentBase>())
 			{
 				var res = db.Insert<FluentBase>(new FluentDerived { Id = 1 });
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(res, Is.EqualTo(1));
 			}
 		}
@@ -85,7 +85,7 @@ namespace Tests.UserTests
 			using (db.CreateLocalTable<AttributeBase>())
 			{
 				var res = db.Insert<AttributeBase>(new AttributeDerived { Id = 1 });
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(res, Is.EqualTo(1));
 			}
 		}

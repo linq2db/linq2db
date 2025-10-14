@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -22,7 +22,8 @@ namespace Tests.Linq
 		// https://github.com/linq2db/linq2db/issues/38
 		//
 		[Test]
-		public void Issue38Test([DataSources(false, TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Issue38Test([DataSources(false)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -93,7 +94,8 @@ namespace Tests.Linq
 		// https://github.com/linq2db/linq2db/issues/67
 		//
 		[Test]
-		public void Issue67Test([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Issue67Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -111,8 +113,9 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test()]
-		public void Issue75Test([DataSources(TestProvName.AllClickHouse)] string context)
+		[Test]
+		[RequiresCorrelatedSubquery]
+		public void Issue75Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -687,7 +690,7 @@ namespace Tests.Linq
 							intDataType = _
 						});
 
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(rows, Is.EqualTo(isNull ? 0 : 1));
 			}
 		}

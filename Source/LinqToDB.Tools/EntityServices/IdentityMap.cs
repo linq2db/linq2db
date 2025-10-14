@@ -6,8 +6,8 @@ using System.Linq;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common.Internal;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Tools.EntityServices
 {

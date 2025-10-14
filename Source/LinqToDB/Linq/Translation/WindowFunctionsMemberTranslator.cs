@@ -6,7 +6,9 @@ using System.Linq.Expressions;
 
 using LinqToDB.Common;
 using LinqToDB.Expressions;
-using LinqToDB.Expressions.Internal;
+using LinqToDB.Internal.DataProvider.Translation;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Translation

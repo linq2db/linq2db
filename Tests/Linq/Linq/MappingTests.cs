@@ -11,7 +11,7 @@ using System.ServiceModel;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -401,7 +401,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue171Test([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
 			db.GetTable<Table171>()
 				.Where (t => t.Gender == Gender.Male)
 				.Select(t => new { value = (int)t.Gender })
@@ -884,9 +884,9 @@ namespace Tests.Linq
 
 		#region Issue 3117
 
-		[ActiveIssue]
+		[ActiveIssue(Configurations = [TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllMySqlConnector, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSQLite])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
-		public void Issue3117Test1([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue3117Test1([DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetGenericConvertProvider(typeof(IdConverter<>));
@@ -904,9 +904,9 @@ namespace Tests.Linq
 			user = db.GetTable<User>().FirstOrDefault(u => userIds.Contains(u.Id));
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(Configurations = [TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllMySqlConnector, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSQLite])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
-		public void Issue3117Test2([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue3117Test2([DataSources(false, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetDataType(typeof(Id<User>), DataType.Int32);
@@ -1168,6 +1168,79 @@ namespace Tests.Linq
 			Assert.That(() => db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count(), Throws.TypeOf<InvalidCastException>());
 		}
 
+		#region Issue 5057
+
+		static class Issue5057
+		{
+			[Table]
+			public sealed class Tender
+			{
+				[Column] public TenderId Id { get; set; }
+				[Column] public string? Name { get; set; }
+
+				public static readonly Tender[] Data =
+				[
+					new() { Id = TenderId.From(TestData.Guid1), Name = "Name 1" },
+					new() { Id = TenderId.From(TestData.Guid2), Name = "Name 2" },
+					new() { Id = TenderId.From(TestData.Guid3), Name = "Name 3" },
+				];
+			}
+
+#pragma warning disable CS0660 // Type defines operator == or operator != but does not override Object.Equals(object o)
+#pragma warning disable CS0661 // Type defines operator == or operator != but does not override Object.GetHashCode()
+			[ScalarType]
+			public struct TenderId
+#pragma warning restore CS0661 // Type defines operator == or operator != but does not override Object.GetHashCode()
+#pragma warning restore CS0660 // Type defines operator == or operator != but does not override Object.Equals(object o)
+			{
+				public Guid Value { get; set; }
+				public static TenderId From(Guid value) => new TenderId { Value = value };
+				public static TenderId? From(Guid? value) => value.HasValue ? new TenderId { Value = value.Value } : null;
+
+				public static bool operator ==(TenderId a, TenderId b) => a.Value == b.Value;
+				public static bool operator !=(TenderId a, TenderId b) => !(a == b);
+				public static bool operator ==(TenderId a, Guid b) => a.Value == b;
+				public static bool operator !=(TenderId a, Guid b) => !(a == b);
+				public static bool operator ==(Guid a, TenderId b) => a == b.Value;
+				public static bool operator !=(Guid a, TenderId b) => !(a == b);
+
+				public static MappingSchema GetMappings()
+				{
+					var ms = new MappingSchema();
+
+					ms.SetConverter<TenderId, Guid>(id => id.Value);
+					ms.SetConverter<TenderId, Guid?>(id => id.Value);
+					ms.SetConverter<TenderId?, Guid>(id => id?.Value ?? default);
+					ms.SetConverter<TenderId?, Guid?>(id => id?.Value);
+					ms.SetConverter<Guid, TenderId>(From);
+					ms.SetConverter<Guid, TenderId?>(g => From(g));
+					ms.SetConverter<Guid?, TenderId>(g => g == null ? default : From((Guid)g));
+					ms.SetConverter<Guid?, TenderId?>(From);
+
+					ms.SetConverter<TenderId, LinqToDB.Data.DataParameter>(id => new LinqToDB.Data.DataParameter { DataType = DataType.Guid, Value = id.Value });
+					ms.SetConverter<TenderId?, LinqToDB.Data.DataParameter>(id => new LinqToDB.Data.DataParameter { DataType = DataType.Guid, Value = id?.Value });
+					// sqlite.ms returns byte[]
+					ms.SetConverter<byte[], TenderId>(raw => From(new Guid(raw)));
+
+					return ms;
+				}
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5057")]
+		public void Issue5057Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, Issue5057.TenderId.GetMappings());
+			using var tb = db.CreateLocalTable(Issue5057.Tender.Data);
+
+			var ids = new List<Issue5057.TenderId> { Issue5057.Tender.Data[0].Id, Issue5057.Tender.Data[2].Id };
+
+			var result = tb
+				.Where(i => ids.Any(id => id == i.Id))
+				.FirstOrDefault();
+		}
+		#endregion
+
 		#region issue 4798
 
 #pragma warning disable CS0660 // Type defines operator == or operator != but does not override Object.Equals(object o)
@@ -1236,7 +1309,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4437")]
 		public void Issue4437Test1([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(new Issue4437Record[] { new("value") });
 
 			var result = db.GetTable<Issue4437Record>().ToArray();
@@ -1249,7 +1322,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4437")]
 		public void Issue4437Test2([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(new Issue4437Record[] { new("value") });
 
 			var result = db.Query<Issue4437Record>("select some_column from test4437").ToArray();
@@ -1261,7 +1334,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4437")]
 		public void Issue4437Test3([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(new Issue4437Record[] { new("value") });
 
 			var result = db.Query<Issue4437Record>("select some_column as SomeColumn from test4437").ToArray();
@@ -1322,84 +1395,18 @@ namespace Tests.Linq
 		#region Issue 2362
 		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2362")]
-		public void Issue2362Test1([DataSources] string context, [Values] bool value)
-		{
-			var fb = new FluentMappingBuilder()
-				.Entity<Issue2362Table>()
-					.Property(p => p.Value)
-					.HasConversion(
-						cs => cs ? "+" : "",
-						db => db == "+");
-
-			using var db = GetDataContext(context, fb.Build().MappingSchema);
-			using var tb = db.CreateLocalTable(Issue2362Raw.Data);
-
-			var res = db.GetTable<Issue2362Table>().Where(r => r.Value == value).OrderBy(r => r.Id).ToArray();
-
-			if (value)
-			{
-				Assert.That(res, Has.Length.EqualTo(1));
-				Assert.That(res[0].Value, Is.True);
-			}
-			else
-			{
-				Assert.That(res, Has.Length.EqualTo(3));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res[0].Value, Is.False);
-					Assert.That(res[1].Value, Is.False);
-					Assert.That(res[2].Value, Is.False);
-				}
-			}
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/2362")]
-		public void Issue2362Test2([DataSources] string context, [Values] bool value)
+		public void Issue2362Test([DataSources] string context, [Values] bool value)
 		{
 			var fb = new FluentMappingBuilder()
 				.Entity<Issue2362Table>()
 					.Property(p => p.Value)
 					.IsNullable()
-					.HasConversion(
-						cs => cs ? "+" : "",
-						db => db == "+");
-
-			using var db = GetDataContext(context, fb.Build().MappingSchema);
-			using var tb = db.CreateLocalTable(Issue2362Raw.Data);
-
-			var res = db.GetTable<Issue2362Table>().Where(r => r.Value == value).OrderBy(r => r.Id).ToArray();
-
-			if (value)
-			{
-				Assert.That(res, Has.Length.EqualTo(1));
-				Assert.That(res[0].Value, Is.True);
-			}
-			else
-			{
-				Assert.That(res, Has.Length.EqualTo(3));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res[0].Value, Is.False);
-					Assert.That(res[1].Value, Is.False);
-					Assert.That(res[2].Value, Is.False);
-				}
-			}
-		}
-
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/2362")]
-		public void Issue2362Test3([DataSources] string context, [Values] bool value)
-		{
-			var fb = new FluentMappingBuilder()
-				.Entity<Issue2362Table>()
-					.Property(p => p.Value)
-					.IsNullable()
-					.HasDataType(DataType.Char)
+					.HasDataType(DataType.VarChar)
 					.HasLength(4)
 					.HasConversion(
 						cs => cs ? "+" : "",
-						db => db == "+");
+						db => db == "+",
+						true);
 
 			using var db = GetDataContext(context, fb.Build().MappingSchema);
 			using var tb = db.CreateLocalTable(Issue2362Raw.Data);
@@ -1413,12 +1420,11 @@ namespace Tests.Linq
 			}
 			else
 			{
-				Assert.That(res, Has.Length.EqualTo(3));
+				Assert.That(res, Has.Length.EqualTo(2));
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(res[0].Value, Is.False);
 					Assert.That(res[1].Value, Is.False);
-					Assert.That(res[2].Value, Is.False);
 				}
 			}
 		}
@@ -1440,8 +1446,7 @@ namespace Tests.Linq
 			[
 				new Issue2362Raw() { Id = 1, Value = null },
 				new Issue2362Raw() { Id = 2, Value = "+" },
-				new Issue2362Raw() { Id = 3, Value = "    " },
-				new Issue2362Raw() { Id = 4, Value = "" },
+				new Issue2362Raw() { Id = 3, Value = "" },
 			];
 		}
 		#endregion
@@ -1467,5 +1472,276 @@ namespace Tests.Linq
 
 			query.ToArray();
 		}
+
+		#region Issue 4955
+
+		record MappingTypingByConstant<T>(int Id, T Value);
+
+		[ActiveIssue("CAST to BIGINT doesn't work in MariaDB and MySQL 5.7", Configurations = [TestProvName.AllMariaDB, TestProvName.AllMySql57], SkipForLinqService = true)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		public void MappingTypingByConstant_FromEnumerable_Int64([DataSources(TestProvName.AllAccess)] string context, [Values(null, 1L)] long? first)
+		{
+			using var db = GetDataContext(context);
+
+			Query.ClearCaches();
+			Test(first);
+			Test(2147483648L);
+
+			void Test(long? value)
+			{
+				var res = db.Person
+					.InnerJoin(
+						new MappingTypingByConstant<long?>[] { new(1, value) }.AsQueryable(),
+						(entity, arg) => entity.ID == arg.Id,
+						(entity, arg) => new { arg.Id, arg.Value })
+					.ToArray();
+
+				Assert.That(res, Has.Length.EqualTo(1));
+				Assert.That(res[0].Value, Is.EqualTo(value));
+			}
+		}
+
+		[ActiveIssue("CAST to BIGINT doesn't work in MariaDB", Configuration = TestProvName.AllMariaDB, SkipForLinqService = true)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		public void MappingTypingByConstant_FromQuery_Int64([DataSources(TestProvName.AllAccess)] string context, [Values] bool inline, [Values(null, 1L)] long? first)
+		{
+			using var db = GetDataContext(context);
+			db.InlineParameters = inline;
+
+			var value = first;
+			var query = db.Person.Select(r => new { Id = r.ID, Value = Sql.AsSql(value) }).AsSubQuery();
+			query.ClearCache();
+
+			var res = query.ToArray();
+			Assert.That(res, Has.Length.EqualTo(4));
+			Assert.That(res[0].Value, Is.EqualTo(value));
+
+			value = 2147483648L;
+
+			res = query.ToArray();
+			Assert.That(res, Has.Length.EqualTo(4));
+			Assert.That(res[0].Value, Is.EqualTo(value));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		public void MappingTypingByConstant_FromEnumerable_UInt64([DataSources(TestProvName.AllAccess)] string context, [Values(null, 1ul)] ulong? first)
+		{
+			using var db = GetDataContext(context);
+
+			Query.ClearCaches();
+			Test(first);
+			Test(2147483648ul);
+
+			void Test(ulong? value)
+			{
+				var res = db.Person
+					.InnerJoin(
+						new MappingTypingByConstant<ulong?>[] { new(1, Sql.AsSql(value)) }.AsQueryable(),
+						(entity, arg) => entity.ID == arg.Id,
+						(entity, arg) => new { arg.Id, arg.Value })
+					.ToArray();
+
+				Assert.That(res, Has.Length.EqualTo(1));
+				Assert.That(res[0].Value, Is.EqualTo(value));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		public void MappingTypingByConstant_FromQuery_UInt64([DataSources(TestProvName.AllAccess)] string context, [Values] bool inline, [Values(null, 1ul)] ulong? first)
+		{
+			using var db = GetDataContext(context);
+			db.InlineParameters = inline;
+
+			var value = first;
+			var query = db.Person.Select(r => new { Id = r.ID, Value = Sql.AsSql(value) }).AsSubQuery();
+			query.ClearCache();
+
+			var res = query.ToArray();
+			Assert.That(res, Has.Length.EqualTo(4));
+			Assert.That(res[0].Value, Is.EqualTo(value));
+
+			value = 2147483648ul;
+
+			res = query.ToArray();
+			Assert.That(res, Has.Length.EqualTo(4));
+			Assert.That(res[0].Value, Is.EqualTo(value));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		public void MappingTypingByConstant_FromEnumerable_UInt32([DataSources(TestProvName.AllAccess)] string context, [Values(null, 1u)] uint? first)
+		{
+			using var db = GetDataContext(context);
+
+			Query.ClearCaches();
+			Test(first);
+			Test(2147483648u);
+
+			void Test(uint? value)
+			{
+				var res = db.Person
+					.InnerJoin(
+						new MappingTypingByConstant<uint?>[] { new(1, value) }.AsQueryable(),
+						(entity, arg) => entity.ID == arg.Id,
+						(entity, arg) => new { arg.Id, arg.Value })
+					.ToArray();
+
+				Assert.That(res, Has.Length.EqualTo(1));
+				Assert.That(res[0].Value, Is.EqualTo(value));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		public void MappingTypingByConstant_FromQuery_UInt32([DataSources(TestProvName.AllAccess)] string context, [Values] bool inline, [Values(null, 1u)] uint? first)
+		{
+			using var db = GetDataContext(context);
+			db.InlineParameters = inline;
+
+			var value = first;
+			var query = db.Person.Select(r => new { Id = r.ID, Value = Sql.AsSql(value) }).AsSubQuery();
+			query.ClearCache();
+
+			var res = query.ToArray();
+			Assert.That(res, Has.Length.EqualTo(4));
+			Assert.That(res[0].Value, Is.EqualTo(value));
+
+			value = 2147483648u;
+
+			res = query.ToArray();
+			Assert.That(res, Has.Length.EqualTo(4));
+			Assert.That(res[0].Value, Is.EqualTo(value));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		public void MappingTypingByConstant_FromEnumerable_Decimal([DataSources(TestProvName.AllAccess)] string context, [Values] bool isNull)
+		{
+			using var db = GetDataContext(context);
+
+			Query.ClearCaches();
+			Test(isNull ? (decimal?)null : 1m);
+			Test(2147483648.123m);
+
+			void Test(decimal? value)
+			{
+				var res = db.Person
+					.InnerJoin(
+						new MappingTypingByConstant<decimal?>[] { new(1, value) }.AsQueryable(),
+						(entity, arg) => entity.ID == arg.Id,
+						(entity, arg) => new { arg.Id, arg.Value })
+					.ToArray();
+
+				Assert.That(res, Has.Length.EqualTo(1));
+				Assert.That(res[0].Value, Is.EqualTo(value));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		public void MappingTypingByConstant_FromQuery_Decimal([DataSources(TestProvName.AllAccess)] string context, [Values] bool inline, [Values] bool isNull)
+		{
+			using var db = GetDataContext(context);
+			db.InlineParameters = inline;
+
+			var value = isNull ? (decimal?)null : 1m;
+			var query = db.Person.Select(r => new { Id = r.ID, Value = Sql.AsSql(value) }).AsSubQuery();
+			query.ClearCache();
+
+			var res = query.ToArray();
+			Assert.That(res, Has.Length.EqualTo(4));
+			Assert.That(res[0].Value, Is.EqualTo(value));
+
+			value = 2147483648.123m;
+
+			res = query.ToArray();
+			Assert.That(res, Has.Length.EqualTo(4));
+			Assert.That(res[0].Value, Is.EqualTo(value));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		public void MappingTypingByConstant_FromEnumerable_Double([DataSources(TestProvName.AllAccess)] string context, [Values(null, 0D)] double? first)
+		{
+			using var db = GetDataContext(context);
+
+			Query.ClearCaches();
+			Test(first);
+			Test(3147483648D);
+
+			void Test(double? value)
+			{
+				var res = db.Person
+					.InnerJoin(
+						new MappingTypingByConstant<double?>[] { new(1, value) }.AsQueryable(),
+						(entity, arg) => entity.ID == arg.Id,
+						(entity, arg) => new { arg.Id, arg.Value })
+					.ToArray();
+
+				Assert.That(res, Has.Length.EqualTo(1));
+				Assert.That(res[0].Value, Is.EqualTo(value));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		public void MappingTypingByConstant_FromQuery_Double([DataSources] string context, [Values] bool inline, [Values(null, 0D)] double? first)
+		{
+			using var db = GetDataContext(context);
+			db.InlineParameters = inline;
+
+			var value = first;
+			var query = db.Person.Select(r => new { Id = r.ID, Value = Sql.AsSql(value) }).AsSubQuery();
+			query.ClearCache();
+
+			var res = query.ToArray();
+			Assert.That(res, Has.Length.EqualTo(4));
+			Assert.That(res[0].Value, Is.EqualTo(value));
+
+			value = 3147483648D;
+
+			res = query.ToArray();
+			Assert.That(res, Has.Length.EqualTo(4));
+			Assert.That(res[0].Value, Is.EqualTo(value));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		public void MappingTypingByConstant_FromEnumerable_Float([DataSources(TestProvName.AllAccess)] string context, [Values(null, 0F)] float? first)
+		{
+			using var db = GetDataContext(context);
+
+			Query.ClearCaches();
+			Test(first);
+			Test(3147483648F);
+
+			void Test(float? value)
+			{
+				var res = db.Person
+					.InnerJoin(
+						new MappingTypingByConstant<float?>[] { new(1, value) }.AsQueryable(),
+						(entity, arg) => entity.ID == arg.Id,
+						(entity, arg) => new { arg.Id, arg.Value })
+					.ToArray();
+
+				Assert.That(res, Has.Length.EqualTo(1));
+				Assert.That(res[0].Value, Is.EqualTo(value));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
+		public void MappingTypingByConstant_FromQuery_Float([DataSources] string context, [Values] bool inline, [Values(null, 0F)] float? first)
+		{
+			using var db = GetDataContext(context);
+			db.InlineParameters = inline;
+
+			var value = first;
+			var query = db.Person.Select(r => new { Id = r.ID, Value = Sql.AsSql(value) }).AsSubQuery();
+			query.ClearCache();
+
+			var res = query.ToArray();
+			Assert.That(res, Has.Length.EqualTo(4));
+			Assert.That(res[0].Value, Is.EqualTo(value));
+
+			value = 3147483648F;
+
+			res = query.ToArray();
+			Assert.That(res, Has.Length.EqualTo(4));
+			Assert.That(res[0].Value, Is.EqualTo(value));
+		}
+		#endregion
 	}
 }

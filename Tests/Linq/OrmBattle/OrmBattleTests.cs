@@ -986,10 +986,9 @@ namespace Tests.OrmBattle
 			Assert.That(list, Has.Count.EqualTo(expected.Count()));
 		}
 
-		[Test, ActiveIssue(573)]
+		[Test]
 		public void TypeCastIsChildConditionalTest([NorthwindDataContext] string context)
 		{
-			//TODO: sdanyliv: strange test for me
 			using var db = Setup(context);
 			var result = db.Product
 				.Select(x => x is DiscontinuedProduct

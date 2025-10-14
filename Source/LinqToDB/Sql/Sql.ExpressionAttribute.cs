@@ -8,11 +8,13 @@ using System.Text.RegularExpressions;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common.Internal;
 using LinqToDB.Expressions;
-using LinqToDB.Expressions.ExpressionVisitors;
 using LinqToDB.Extensions;
-using LinqToDB.Linq.Builder;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Expressions.ExpressionVisitors;
+using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -235,7 +237,7 @@ namespace LinqToDB
 				return str;
 			}
 
-			public static readonly SqlExpression UnknownExpression = new ("!!!");
+			static readonly ISqlExpression UnknownExpression = new SqlFragment("!!!");
 
 			public static void PrepareParameterValues<TContext>(
 				TContext                                                              context,
@@ -552,7 +554,7 @@ namespace LinqToDB
 				if (error != null)
 					return SqlErrorExpression.EnsureError(error, expression.Type);
 
-				var sqlExpression = new SqlExpression(expression.Type, expressionStr!, Precedence,
+				var sqlExpression = new SqlExpression(dataContext.MappingSchema.GetDbDataType(expression.Type), expressionStr!, Precedence,
 					(IsAggregate      ? SqlFlags.IsAggregate      : SqlFlags.None) |
 					(IsPure           ? SqlFlags.IsPure           : SqlFlags.None) |
 					(IsPredicate      ? SqlFlags.IsPredicate      : SqlFlags.None) |

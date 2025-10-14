@@ -1,19 +1,21 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 using LinqToDB.Data;
-using LinqToDB.SqlProvider;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	public interface ISQLiteExtensions
-	{
-	}
-
 	public static class SQLiteExtensions
 	{
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "ext is an extension point")]
 		public static ISQLiteExtensions? SQLite(this Sql.ISqlExtension? ext) => null;
 
 		#region FTS
@@ -392,12 +394,28 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table) VALUES('optimize')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
-		public static void FTS3Optimize<TEntity>(this DataConnection dc, ITable<TEntity> table)
+		public static void FTS3Optimize<TEntity>(this IDataContext dc, ITable<TEntity> table)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('optimize')");
+		}
+
+		/// <summary>
+		/// Executes FTS3/FTS4 'optimize' command for specific table.
+		/// Example: "INSERT INTO table(table) VALUES('optimize')".
+		/// </summary>
+		/// <typeparam name="TEntity">Table mapping class.</typeparam>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
+		/// <param name="table">FTS table.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Returns task.</returns>
+		public static async Task FTS3OptimizeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, CancellationToken cancellationToken = default)
+			where TEntity : class
+		{
+			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('optimize')", cancellationToken)
+				.ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -405,12 +423,28 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table) VALUES('rebuild')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
-		public static void FTS3Rebuild<TEntity>(this DataConnection dc, ITable<TEntity> table)
+		public static void FTS3Rebuild<TEntity>(this IDataContext dc, ITable<TEntity> table)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('rebuild')");
+		}
+
+		/// <summary>
+		/// Executes FTS3/FTS4 'rebuild' command for specific table.
+		/// Example: "INSERT INTO table(table) VALUES('rebuild')".
+		/// </summary>
+		/// <typeparam name="TEntity">Table mapping class.</typeparam>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
+		/// <param name="table">FTS table.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Returns task.</returns>
+		public static async Task FTS3RebuildAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, CancellationToken cancellationToken = default)
+			where TEntity : class
+		{
+			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('rebuild')", cancellationToken)
+				.ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -418,12 +452,28 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table) VALUES('integrity-check')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
-		public static void FTS3IntegrityCheck<TEntity>(this DataConnection dc, ITable<TEntity> table)
+		public static void FTS3IntegrityCheck<TEntity>(this IDataContext dc, ITable<TEntity> table)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('integrity-check')");
+		}
+
+		/// <summary>
+		/// Executes FTS3/FTS4 'integrity-check' command for specific table.
+		/// Example: "INSERT INTO table(table) VALUES('integrity-check')".
+		/// </summary>
+		/// <typeparam name="TEntity">Table mapping class.</typeparam>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
+		/// <param name="table">FTS table.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Returns task.</returns>
+		public static async Task FTS3IntegrityCheckAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, CancellationToken cancellationToken = default)
+			where TEntity : class
+		{
+			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('integrity-check')", cancellationToken)
+				.ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -431,14 +481,32 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table) VALUES('merge=blocks,segments')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="blocks">Blocks command parameter.</param>
 		/// <param name="segments">Segments command parameter.</param>
-		public static void FTS3Merge<TEntity>(this DataConnection dc, ITable<TEntity> table, int blocks, int segments)
+		public static void FTS3Merge<TEntity>(this IDataContext dc, ITable<TEntity> table, int blocks, int segments)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('merge={blocks.ToString(NumberFormatInfo.InvariantInfo)},{segments.ToString(NumberFormatInfo.InvariantInfo)}')");
+		}
+
+		/// <summary>
+		/// Executes FTS3/FTS4 'merge' command for specific table.
+		/// Example: "INSERT INTO table(table) VALUES('merge=blocks,segments')".
+		/// </summary>
+		/// <typeparam name="TEntity">Table mapping class.</typeparam>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
+		/// <param name="table">FTS table.</param>
+		/// <param name="blocks">Blocks command parameter.</param>
+		/// <param name="segments">Segments command parameter.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Returns task.</returns>
+		public static async Task FTS3MergeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, int blocks, int segments, CancellationToken cancellationToken = default)
+			where TEntity : class
+		{
+			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('merge={blocks.ToString(NumberFormatInfo.InvariantInfo)},{segments.ToString(NumberFormatInfo.InvariantInfo)}')", cancellationToken)
+				.ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -446,13 +514,30 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table) VALUES('automerge=segments')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="segments">Segments command parameter.</param>
-		public static void FTS3AutoMerge<TEntity>(this DataConnection dc, ITable<TEntity> table, int segments)
+		public static void FTS3AutoMerge<TEntity>(this IDataContext dc, ITable<TEntity> table, int segments)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('automerge={segments.ToString(NumberFormatInfo.InvariantInfo)}')");
+		}
+
+		/// <summary>
+		/// Executes FTS3/FTS4 'automerge' command for specific table.
+		/// Example: "INSERT INTO table(table) VALUES('automerge=segments')".
+		/// </summary>
+		/// <typeparam name="TEntity">Table mapping class.</typeparam>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
+		/// <param name="table">FTS table.</param>
+		/// <param name="segments">Segments command parameter.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Returns task.</returns>
+		public static async Task FTS3AutoMergeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, int segments, CancellationToken cancellationToken = default)
+			where TEntity : class
+		{
+			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('automerge={segments.ToString(NumberFormatInfo.InvariantInfo)}')", cancellationToken)
+				.ConfigureAwait(false);
 		}
 		#endregion
 
@@ -462,13 +547,30 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table, rank) VALUES('automerge', value)".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="value">Command parameter.</param>
-		public static void FTS5AutoMerge<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
+		public static void FTS5AutoMerge<TEntity>(this IDataContext dc, ITable<TEntity> table, int value)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('automerge', {value.ToString(NumberFormatInfo.InvariantInfo)})");
+		}
+
+		/// <summary>
+		/// Executes FTS5 'automerge' command for specific table.
+		/// Example: "INSERT INTO table(table, rank) VALUES('automerge', value)".
+		/// </summary>
+		/// <typeparam name="TEntity">Table mapping class.</typeparam>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
+		/// <param name="table">FTS table.</param>
+		/// <param name="value">Command parameter.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Returns task.</returns>
+		public static async Task FTS5AutoMergeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, int value, CancellationToken cancellationToken = default)
+			where TEntity : class
+		{
+			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('automerge', {value.ToString(NumberFormatInfo.InvariantInfo)})", cancellationToken)
+				.ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -476,13 +578,30 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table, rank) VALUES('crisismerge', value)".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="value">Command parameter.</param>
-		public static void FTS5CrisisMerge<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
+		public static void FTS5CrisisMerge<TEntity>(this IDataContext dc, ITable<TEntity> table, int value)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('crisismerge', {value.ToString(NumberFormatInfo.InvariantInfo)})");
+		}
+
+		/// <summary>
+		/// Executes FTS5 'crisismerge' command for specific table.
+		/// Example: "INSERT INTO table(table, rank) VALUES('crisismerge', value)".
+		/// </summary>
+		/// <typeparam name="TEntity">Table mapping class.</typeparam>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
+		/// <param name="table">FTS table.</param>
+		/// <param name="value">Command parameter.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Returns task.</returns>
+		public static async Task FTS5CrisisMergeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, int value, CancellationToken cancellationToken = default)
+			where TEntity : class
+		{
+			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('crisismerge', {value.ToString(NumberFormatInfo.InvariantInfo)})", cancellationToken)
+				.ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -490,11 +609,11 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table, rowid, col1, col2) VALUES('delete', rowid, 'col1_value', 'col2_value')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="rowid">Record rowid value.</param>
 		/// <param name="record">Current record entity.</param>
-		public static void FTS5Delete<TEntity>(this DataConnection dc, ITable<TEntity> table, int rowid, TEntity record)
+		public static void FTS5Delete<TEntity>(this IDataContext dc, ITable<TEntity> table, int rowid, TEntity record)
 			where TEntity : class
 		{
 			var ed = dc.MappingSchema.GetEntityDescriptor(typeof(TEntity), dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
@@ -503,7 +622,7 @@ namespace LinqToDB.DataProvider.SQLite
 			var parameterTokens = new string[ed.Columns.Count];
 			var parameters = new DataParameter[ed.Columns.Count];
 
-			var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options);
+			var sqlBuilder = dc.GetDataProvider().CreateSqlBuilder(dc.MappingSchema, dc.Options);
 
 			for (var i = 0; i < ed.Columns.Count; i++)
 			{
@@ -516,16 +635,65 @@ namespace LinqToDB.DataProvider.SQLite
 		}
 
 		/// <summary>
+		/// Executes FTS5 'delete' command for specific table.
+		/// Example: "INSERT INTO table(table, rowid, col1, col2) VALUES('delete', rowid, 'col1_value', 'col2_value')".
+		/// </summary>
+		/// <typeparam name="TEntity">Table mapping class.</typeparam>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
+		/// <param name="table">FTS table.</param>
+		/// <param name="rowid">Record rowid value.</param>
+		/// <param name="record">Current record entity.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Returns task.</returns>
+		public static async Task FTS5DeleteAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, int rowid, TEntity record, CancellationToken cancellationToken = default)
+			where TEntity : class
+		{
+			var ed = dc.MappingSchema.GetEntityDescriptor(typeof(TEntity), dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
+
+			var columns = new string[ed.Columns.Count];
+			var parameterTokens = new string[ed.Columns.Count];
+			var parameters = new DataParameter[ed.Columns.Count];
+
+			var sqlBuilder = dc.GetDataProvider().CreateSqlBuilder(dc.MappingSchema, dc.Options);
+
+			for (var i = 0; i < ed.Columns.Count; i++)
+			{
+				columns[i] = sqlBuilder.ConvertInline(ed.Columns[i].ColumnName, ConvertType.NameToQueryField);
+				parameterTokens[i] = FormattableString.Invariant($"@p{i}");
+				parameters[i] = DataParameter.VarChar(FormattableString.Invariant($"@p{i}"), (string)ed.Columns[i].GetProviderValue(record)!);
+			}
+
+			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rowid, {string.Join(", ", columns)}) VALUES('delete', {rowid.ToString(NumberFormatInfo.InvariantInfo)}, {string.Join(", ", parameterTokens)})", parameters, cancellationToken)
+				.ConfigureAwait(false);
+		}
+
+		/// <summary>
 		/// Executes FTS5 'delete-all' command for specific table.
 		/// Example: "INSERT INTO table(table) VALUES('delete-all')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
-		public static void FTS5DeleteAll<TEntity>(this DataConnection dc, ITable<TEntity> table)
+		public static void FTS5DeleteAll<TEntity>(this IDataContext dc, ITable<TEntity> table)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('delete-all')");
+		}
+
+		/// <summary>
+		/// Executes FTS5 'delete-all' command for specific table.
+		/// Example: "INSERT INTO table(table) VALUES('delete-all')".
+		/// </summary>
+		/// <typeparam name="TEntity">Table mapping class.</typeparam>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
+		/// <param name="table">FTS table.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Returns task.</returns>
+		public static async Task FTS5DeleteAllAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, CancellationToken cancellationToken = default)
+			where TEntity : class
+		{
+			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('delete-all')", cancellationToken)
+				.ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -533,12 +701,28 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table) VALUES('integrity-check')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
-		public static void FTS5IntegrityCheck<TEntity>(this DataConnection dc, ITable<TEntity> table)
+		public static void FTS5IntegrityCheck<TEntity>(this IDataContext dc, ITable<TEntity> table)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('integrity-check')");
+		}
+
+		/// <summary>
+		/// Executes FTS5 'integrity-check' command for specific table.
+		/// Example: "INSERT INTO table(table) VALUES('integrity-check')".
+		/// </summary>
+		/// <typeparam name="TEntity">Table mapping class.</typeparam>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
+		/// <param name="table">FTS table.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Returns task.</returns>
+		public static async Task FTS5IntegrityCheckAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, CancellationToken cancellationToken = default)
+			where TEntity : class
+		{
+			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('integrity-check')", cancellationToken)
+				.ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -546,13 +730,30 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table, rank) VALUES('merge', value)".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="value">Command parameter.</param>
-		public static void FTS5Merge<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
+		public static void FTS5Merge<TEntity>(this IDataContext dc, ITable<TEntity> table, int value)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('merge', {value.ToString(NumberFormatInfo.InvariantInfo)})");
+		}
+
+		/// <summary>
+		/// Executes FTS5 'merge' command for specific table.
+		/// Example: "INSERT INTO table(table, rank) VALUES('merge', value)".
+		/// </summary>
+		/// <typeparam name="TEntity">Table mapping class.</typeparam>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
+		/// <param name="table">FTS table.</param>
+		/// <param name="value">Command parameter.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Returns task.</returns>
+		public static async Task FTS5MergeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, int value, CancellationToken cancellationToken = default)
+			where TEntity : class
+		{
+			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('merge', {value.ToString(NumberFormatInfo.InvariantInfo)})", cancellationToken)
+			.ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -560,12 +761,28 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table) VALUES('optimize')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
-		public static void FTS5Optimize<TEntity>(this DataConnection dc, ITable<TEntity> table)
+		public static void FTS5Optimize<TEntity>(this IDataContext dc, ITable<TEntity> table)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('optimize')");
+		}
+
+		/// <summary>
+		/// Executes FTS5 'optimize' command for specific table.
+		/// Example: "INSERT INTO table(table) VALUES('optimize')".
+		/// </summary>
+		/// <typeparam name="TEntity">Table mapping class.</typeparam>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
+		/// <param name="table">FTS table.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Returns task.</returns>
+		public static async Task FTS5OptimizeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, CancellationToken cancellationToken = default)
+			where TEntity : class
+		{
+			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('optimize')", cancellationToken)
+				.ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -573,13 +790,30 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table, rank) VALUES('pgsz', value)".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="value">Command parameter.</param>
-		public static void FTS5Pgsz<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
+		public static void FTS5Pgsz<TEntity>(this IDataContext dc, ITable<TEntity> table, int value)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('pgsz', {value.ToString(NumberFormatInfo.InvariantInfo)})");
+		}
+
+		/// <summary>
+		/// Executes FTS5 'pgsz' command for specific table.
+		/// Example: "INSERT INTO table(table, rank) VALUES('pgsz', value)".
+		/// </summary>
+		/// <typeparam name="TEntity">Table mapping class.</typeparam>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
+		/// <param name="table">FTS table.</param>
+		/// <param name="value">Command parameter.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Returns task.</returns>
+		public static async Task FTS5PgszAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, int value, CancellationToken cancellationToken = default)
+			where TEntity : class
+		{
+			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('pgsz', {value.ToString(NumberFormatInfo.InvariantInfo)})", cancellationToken)
+				.ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -587,13 +821,30 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table, rank) VALUES('rank', 'function')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="function">Rank function.</param>
-		public static void FTS5Rank<TEntity>(this DataConnection dc, ITable<TEntity> table, string function)
+		public static void FTS5Rank<TEntity>(this IDataContext dc, ITable<TEntity> table, string function)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('rank', @rank)", DataParameter.VarChar("@rank", function));
+		}
+
+		/// <summary>
+		/// Executes FTS5 'rank' command for specific table.
+		/// Example: "INSERT INTO table(table, rank) VALUES('rank', 'function')".
+		/// </summary>
+		/// <typeparam name="TEntity">Table mapping class.</typeparam>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
+		/// <param name="table">FTS table.</param>
+		/// <param name="function">Rank function.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Returns task.</returns>
+		public static async Task FTS5RankAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, string function, CancellationToken cancellationToken = default)
+			where TEntity : class
+		{
+			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('rank', @rank)", DataParameter.VarChar("@rank", function), cancellationToken)
+				.ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -601,12 +852,28 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table) VALUES('rebuild')".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
-		public static void FTS5Rebuild<TEntity>(this DataConnection dc, ITable<TEntity> table)
+		public static void FTS5Rebuild<TEntity>(this IDataContext dc, ITable<TEntity> table)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('rebuild')");
+		}
+
+		/// <summary>
+		/// Executes FTS5 'rebuild' command for specific table.
+		/// Example: "INSERT INTO table(table) VALUES('rebuild')".
+		/// </summary>
+		/// <typeparam name="TEntity">Table mapping class.</typeparam>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
+		/// <param name="table">FTS table.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Returns task.</returns>
+		public static async Task FTS5RebuildAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, CancellationToken cancellationToken = default)
+			where TEntity : class
+		{
+			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('rebuild')", cancellationToken)
+				.ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -614,15 +881,34 @@ namespace LinqToDB.DataProvider.SQLite
 		/// Example: "INSERT INTO table(table, rank) VALUES('usermerge', value)".
 		/// </summary>
 		/// <typeparam name="TEntity">Table mapping class.</typeparam>
-		/// <param name="dc"><see cref="DataConnection"/> instance.</param>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
 		/// <param name="table">FTS table.</param>
 		/// <param name="value">Command parameter.</param>
-		public static void FTS5UserMerge<TEntity>(this DataConnection dc, ITable<TEntity> table, int value)
+		public static void FTS5UserMerge<TEntity>(this IDataContext dc, ITable<TEntity> table, int value)
 			where TEntity : class
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('usermerge', {value.ToString(NumberFormatInfo.InvariantInfo)})");
 		}
+
+		/// <summary>
+		/// Executes FTS5 'usermerge' command for specific table.
+		/// Example: "INSERT INTO table(table, rank) VALUES('usermerge', value)".
+		/// </summary>
+		/// <typeparam name="TEntity">Table mapping class.</typeparam>
+		/// <param name="dc"><see cref="IDataContext"/> instance.</param>
+		/// <param name="table">FTS table.</param>
+		/// <param name="value">Command parameter.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Returns task.</returns>
+		public static async Task FTS5UserMergeAsync<TEntity>(this IDataContext dc, ITable<TEntity> table, int value, CancellationToken cancellationToken = default)
+			where TEntity : class
+		{
+			await dc.ExecuteAsync($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('usermerge', {value.ToString(NumberFormatInfo.InvariantInfo)})", cancellationToken)
+				.ConfigureAwait(false);
+		}
+
 		#endregion
+
 		#endregion
 	}
 }

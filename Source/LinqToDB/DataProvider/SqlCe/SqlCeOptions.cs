@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
 
-using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.Options;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
 	/// <param name="BulkCopyType">
-	/// Default bulk copy mode, used for SqlCe by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>
+	/// Default bulk copy mode, used for SqlCe by <see cref="DataContextExtensions.BulkCopy{T}(IDataContext, IEnumerable{T})"/>
 	/// methods, if mode is not specified explicitly.
 	/// Default value: <see cref="BulkCopyType.MultipleRows"/>.
 	/// </param>

@@ -7,11 +7,11 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.DataProvider
 {
@@ -41,9 +41,8 @@ namespace LinqToDB.DataProvider
 		/// <returns>Initialized command instance.</returns>
 		DbCommand          InitCommand           (DataConnection dataConnection, DbCommand command, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters);
 		void               DisposeCommand        (DbCommand command);
-#if NET8_0_OR_GREATER
 		ValueTask          DisposeCommandAsync   (DbCommand command);
-#endif
+
 		// TODO: Remove in v7
 		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
 		object?            GetConnectionInfo     (DataConnection dataConnection, string parameterName);

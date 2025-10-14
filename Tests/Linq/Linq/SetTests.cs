@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Async;
-using LinqToDB.Tools;
+using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
@@ -120,7 +118,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		public void Contains701([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using AdoNetCore.AseClient;
-
 using LinqToDB;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -512,7 +510,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Sum2([DataSources(TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void Sum2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

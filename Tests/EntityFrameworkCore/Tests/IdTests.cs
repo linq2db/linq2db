@@ -2,15 +2,15 @@
 using System.Diagnostics;
 using System.Linq;
 
-using Shouldly;
-
-using LinqToDB.Common.Logging;
 using LinqToDB.EntityFrameworkCore.Tests.Models.Shared;
+using LinqToDB.Internal.Logging;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests;
 

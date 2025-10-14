@@ -4,22 +4,17 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Tools.Mapper;
 
 namespace LinqToDB.Tools.EntityServices
 {
-	interface IEntityMap
-	{
-		void        MapEntity(EntityCreatedEventArgs args);
-		IEnumerable GetEntities();
-	}
-
 	public class EntityMap<T> : IEntityMap
 		where T : class
 	{

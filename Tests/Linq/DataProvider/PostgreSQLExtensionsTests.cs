@@ -3,7 +3,6 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Mapping;
@@ -304,7 +303,7 @@ namespace Tests.DataProvider
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4562")]
 		public void Issue4562Test([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue4562Table>();
 
 			// arrays support missing now

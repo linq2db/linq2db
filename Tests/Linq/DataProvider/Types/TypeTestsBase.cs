@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
@@ -154,10 +153,13 @@ namespace Tests.DataProvider
 
 			var options = GetDefaultBulkCopyOptions(context);
 
+			if (testParameters == false)
+				db.InlineParameters = true;
+
 			// test bulk copy modes
 			if (testBulkCopyType?.Invoke(BulkCopyType.RowByRow) != false)
 			{
-				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.RowByRow };
+				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.RowByRow, UseParameters = testParameters != false };
 				table.Delete();
 				db.BulkCopy(options, data);
 				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue);
@@ -165,7 +167,7 @@ namespace Tests.DataProvider
 
 			if (testBulkCopyType?.Invoke(BulkCopyType.MultipleRows) != false)
 			{
-				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
+				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows, UseParameters = testParameters != false };
 				table.Delete();
 				db.BulkCopy(options, data);
 				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue);
@@ -173,13 +175,13 @@ namespace Tests.DataProvider
 
 			if (testBulkCopyType?.Invoke(BulkCopyType.ProviderSpecific) != false)
 			{
-				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.ProviderSpecific };
+				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.ProviderSpecific, UseParameters = testParameters != false };
 				table.Delete();
 				db.BulkCopy(options, data);
 				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue);
 
 				// test async provider-specific bulk copy as it often has own implementation
-				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.ProviderSpecific };
+				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.ProviderSpecific, UseParameters = testParameters != false };
 				await table.DeleteAsync();
 				await db.BulkCopyAsync(options, data);
 				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue);

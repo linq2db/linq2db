@@ -1,6 +1,4 @@
-﻿using System;
-
-#if NET462
+﻿#if NETFRAMEWORK
 using System.Windows.Media;
 #endif
 
@@ -9,7 +7,7 @@ namespace Tests.T4.Wpf
 	/// <summary />
 	partial class ViewModel
 	{
-#if NET462
+#if NETFRAMEWORK
 		static readonly Brush _normalBrushes   = new SolidColorBrush(Colors.Black);
 		static readonly Brush _negativeBrushes = new SolidColorBrush(Colors.Red);
 

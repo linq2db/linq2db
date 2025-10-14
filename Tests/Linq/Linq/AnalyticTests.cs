@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using Newtonsoft.Json.Linq;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -1550,7 +1551,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("ClickHouse works unstable", Configuration =TestProvName.AllClickHouse)]
 		[Test]
 		public void Issue1732LastValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1575,19 +1575,19 @@ namespace Tests.Linq
 
 					};
 
-				var res = q.ToArray();
+				var res = q.ToArray().OrderBy(r => r.Id).ToArray();
 
 				Assert.That(res, Has.Length.EqualTo(4));
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(res[0].Id, Is.EqualTo(5));
-					Assert.That(res[0].PreviousId, Is.EqualTo(5));
-					Assert.That(res[1].Id, Is.EqualTo(6));
-					Assert.That(res[1].PreviousId, Is.EqualTo(6));
-					Assert.That(res[2].Id, Is.Null);
-					Assert.That(res[2].PreviousId, Is.Null);
-					Assert.That(res[3].Id, Is.Null);
-					Assert.That(res[3].PreviousId, Is.Null);
+					Assert.That(res[0].Id, Is.Null);
+					Assert.That(res[0].PreviousId, Is.Null);
+					Assert.That(res[1].Id, Is.Null);
+					Assert.That(res[1].PreviousId, Is.Null);
+					Assert.That(res[2].Id, Is.EqualTo(5));
+					Assert.That(res[2].PreviousId, Is.EqualTo(5));
+					Assert.That(res[3].Id, Is.EqualTo(6));
+					Assert.That(res[3].PreviousId, Is.EqualTo(6));
 				}
 			}
 		}
@@ -1716,7 +1716,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllSapHana])]
+		[ActiveIssue(Configurations = [TestProvName.AllSqlServer, TestProvName.AllOracle21Minus, TestProvName.AllSapHana])]
 		[Test]
 		public void Issue2842Test1([DataSources(
 			TestProvName.AllAccess,
@@ -1997,9 +1997,7 @@ namespace Tests.Linq
 		// - all other unmapped methods should throw
 		// - empty resulting sequence should return default(T)
 		// This will require additional asserts for results and tests to ensure expected behavior
-		[ActiveIssue(Configurations = [ProviderName.SqlCe, TestProvName.AllSqlServer2016Minus])]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllFirebirdLess4, TestProvName.AllInformix, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllOracle11, TestProvName.AllSQLite, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_GroupGuard)]
+		[ActiveIssue(Configurations = [ProviderName.SqlCe, TestProvName.AllSqlServer2016Minus, TestProvName.AllAccess, TestProvName.AllInformix, TestProvName.AllSybase])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4626")]
 		public void EmptySequenceTest([DataSources] string context)
 		{

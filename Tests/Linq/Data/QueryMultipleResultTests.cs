@@ -26,7 +26,7 @@ namespace Tests.Data
 		[Test]
 		public void TestQueryMulti([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var res = db.QueryMultiple<MultipleResultExample>(
 					"select * from Person;" +
@@ -49,7 +49,7 @@ namespace Tests.Data
 		[Test]
 		public async Task TestQueryMultiAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var res = await db.QueryMultipleAsync<MultipleResultExample>(
 					"select * from Person;" +
@@ -80,7 +80,7 @@ namespace Tests.Data
 		[Test]
 		public void TestQueryMultiWithoutAttributes([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var res = db.QueryMultiple<MultipleResultExampleWithoutAttributes>(
 					"select * from Person;" +
@@ -103,7 +103,7 @@ namespace Tests.Data
 		[Test]
 		public async Task TestQueryMultiWithoutAttributesAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var res = await db.QueryMultipleAsync<MultipleResultExampleWithoutAttributes>(
 					"select * from Person;" +
@@ -136,9 +136,9 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestSearchStoredProdecure([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestSearchStoredProcedure([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var res = db.QueryProcMultiple<ProcedureMultipleResultExample>(
 					"PersonSearch",
@@ -161,9 +161,9 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestSearchStoredProdecureWithAnonymParameter([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestSearchStoredProcedureWithAnonymParameter([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var res = db.QueryProcMultiple<ProcedureMultipleResultExample>(
 					"PersonSearch",
@@ -186,9 +186,9 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TestSearchStoredProdecureAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task TestSearchStoredProcedureAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var res = await db.QueryProcMultipleAsync<ProcedureMultipleResultExample>(
 					"PersonSearch",
@@ -211,13 +211,12 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TestSearchStoredProdecureWithTokenAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task TestSearchStoredProcedureWithTokenAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var res = await db.QueryProcMultipleAsync<ProcedureMultipleResultExample>(
 					"PersonSearch",
-					CancellationToken.None,
 					new { nameFilter = "Jane" }
 				);
 				using (Assert.EnterMultipleScope())
@@ -237,9 +236,9 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestSearchStoredProdecure2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestSearchStoredProcedure2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var res = db.QueryProcMultiple<ProcedureMultipleResultExample>(
 					"PersonSearch",
@@ -262,9 +261,9 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TestSearchStoredProdecure2Async([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task TestSearchStoredProcedure2Async([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var res = await db.QueryProcMultipleAsync<ProcedureMultipleResultExample>(
 					"PersonSearch",
@@ -299,9 +298,9 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestSearchStoredProdecureWithoutAttributes([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestSearchStoredProcedureWithoutAttributes([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var res = db.QueryProcMultiple<ProcedureMultipleResultExampleWithoutAttributes>(
 					"PersonSearch",
@@ -324,9 +323,9 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task TestSearchStoredProdecureWithoutAttributesAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task TestSearchStoredProcedureWithoutAttributesAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var res = await db.QueryProcMultipleAsync<ProcedureMultipleResultExampleWithoutAttributes>(
 					"PersonSearch",
@@ -379,7 +378,7 @@ namespace Tests.Data
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4728")]
 		public async Task Issue4728Test([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 
 			var dataset = await db.QueryMultipleAsync<MultipleResultDeletion>(@"
 select 1, 1 from INFORMATION_SCHEMA.TABLES where 1 = 0;

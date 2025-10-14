@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
@@ -177,17 +176,7 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void MergeTest([DataSources([
-			TestProvName.AllAccess,
-			TestProvName.AllClickHouse,
-			TestProvName.AllMariaDB,
-			TestProvName.AllMySql,
-			TestProvName.AllPostgreSQL,
-			ProviderName.SqlCe,
-			TestProvName.AllSQLite,
-			TestProvName.AllSqlServer2005,
-			])] string context,
-			[Values] bool inlineParameters)
+		public void MergeTest([MergeDataContextSource] string context, [Values] bool inlineParameters)
 		{
 			using var db = GetDataContext(context, _trimMappingSchema);
 

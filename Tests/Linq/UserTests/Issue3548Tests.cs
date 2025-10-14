@@ -2,8 +2,6 @@
 using System.Linq;
 using System.Linq.Expressions;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
@@ -108,7 +106,7 @@ namespace Tests.UserTests
 			}
 			finally
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					try
 					{

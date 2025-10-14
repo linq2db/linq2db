@@ -4,7 +4,6 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
@@ -18,10 +17,12 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class InsertWithOutputTests : TestBase
 	{
-		private const string FeatureInsertOutputSingle     = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
-		private const string FeatureInsertOutputMultiple   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
-		private const string FeatureInsertOutputWithSchema = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllSQLite}";
-		private const string FeatureInsertOutputInto       = $"{TestProvName.AllSqlServer}";
+		private const string FeatureInsertOutputSingleWithExpressions   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureInsertOutputSingle                  = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureInsertOutputMultipleWithExpressions = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureInsertOutputMultiple                = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureInsertOutputWithSchema              = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllSQLite}";
+		private const string FeatureInsertOutputInto                    = $"{TestProvName.AllSqlServer}";
 
 		[Table]
 		sealed class TableWithData
@@ -55,7 +56,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithOutputProjectionFromQueryTest([IncludeDataSources(true, FeatureInsertOutputMultiple)] string context, [Values(100, 200)] int param)
+		public void InsertWithOutputProjectionFromQueryTest([IncludeDataSources(true, FeatureInsertOutputMultipleWithExpressions)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -210,7 +211,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithOutputTest3([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(100, 200)] int param)
+		public void InsertWithOutputTest3([IncludeDataSources(true, FeatureInsertOutputSingleWithExpressions)] string context, [Values(100, 200)] int param)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -249,7 +250,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithOutputTest4([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(100, 200)] int param)
+		public void InsertWithOutputTest4([IncludeDataSources(true, FeatureInsertOutputSingleWithExpressions)] string context, [Values(100, 200)] int param)
 		{
 			using (var db = GetDataContext(context))
 			{

@@ -719,15 +719,30 @@ namespace Tests.Linq
 		[Sql.Function("CONTAINS", ServerSideOnly = true, CanBeNull = false, InlineParameters = false, PreferServerSide = true, IsPredicate = true)]
 		static bool FtxContains(string columnOrColumns, string search) => throw new InvalidOperationException();
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4933")]
 		public void IssueFunctionPredicate([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using var db = new NorthwindDB(context);
 
-			_ = db.Product.Where(p => FtxContains(p.ProductName, "some")).ToArray();
+			_ = db.Category.Where(p => FtxContains(p.CategoryName, "some")).ToArray();
 
 			Assert.That(db.LastQuery, Does.Not.Contain(" = "));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5090")]
+		public void Test_Coalesce([DataSources(false, TestProvName.AllSybase)] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(BooleanTable.Data);
+
+			db.InlineParameters = inline;
+
+			var True = true;
+			var False = false;
+
+			AssertQuery(tb.Where(r => r.BooleanN ?? True));
+			AssertQuery(tb.Where(r => r.BooleanN ?? False));
+			AssertQuery(tb.Where(r => r.BooleanN ?? (r.Id % 2 == 1)));
 		}
 	}
 }

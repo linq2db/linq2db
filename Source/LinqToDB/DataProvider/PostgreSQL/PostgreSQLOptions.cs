@@ -1,20 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.Options;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	/// <param name="BulkCopyType">
-	/// Default bulk copy mode, used for PostgreSQL by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>
+	/// Default bulk copy mode, used for PostgreSQL by <see cref="DataContextExtensions.BulkCopy{T}(IDataContext, IEnumerable{T})"/>
 	/// methods, if mode is not specified explicitly.
 	/// Default value: <see cref="BulkCopyType.MultipleRows"/>.
 	/// </param>
 	/// <param name="NormalizeTimestampData">
 	/// Enables normalization of <see cref="DateTime"/> and <see cref="DateTimeOffset"/> data, passed to query
-	/// as parameter or passed to <see cref="DataConnectionExtensions.BulkCopy{T}(ITable{T}, IEnumerable{T})"/> APIs,
+	/// as parameter or passed to <see cref="DataContextExtensions.BulkCopy{T}(ITable{T}, IEnumerable{T})"/> APIs,
 	/// to comform with Npgsql 6 requerements:
 	/// <list type="bullet">
 	/// <item>convert <see cref="DateTimeOffset"/> value to UTC value with zero <see cref="DateTimeOffset.Offset"/></item>

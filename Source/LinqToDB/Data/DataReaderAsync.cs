@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,7 +14,7 @@ namespace LinqToDB.Data
 	{
 		internal DataReaderWrapper? ReaderWrapper     { get; private set; }
 		public   DbDataReader?      Reader            => ReaderWrapper?.DataReader;
-		public   CommandInfo?       CommandInfo       { get; }
+		public   CommandInfo        CommandInfo       { get; }
 		internal int                ReadNumber        { get; set; }
 		internal CancellationToken  CancellationToken { get; set; }
 		private  DateTime           StartedOn         { get; }      = DateTime.UtcNow;
@@ -28,9 +30,11 @@ namespace LinqToDB.Data
 		{
 			if (ReaderWrapper != null)
 			{
-				if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
+				var dataConnection = CommandInfo.GetDataConnection();
+
+				if (dataConnection.TraceSwitchConnection.TraceInfo == true)
 				{
-					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, false)
+					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, false)
 					{
 						TraceLevel      = TraceLevel.Info,
 						Command         = ReaderWrapper.Command,
@@ -43,15 +47,19 @@ namespace LinqToDB.Data
 				ReaderWrapper.Dispose();
 				ReaderWrapper = null;
 			}
+
+			CommandInfo.TryGetDataContext()?.ReleaseQuery();
 		}
 
 		public async ValueTask DisposeAsync()
 		{
 			if (ReaderWrapper != null)
 			{
-				if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
+				var dataConnection = CommandInfo.GetDataConnection();
+
+				if (dataConnection.TraceSwitchConnection.TraceInfo == true)
 				{
-					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, true)
+					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, true)
 					{
 						TraceLevel      = TraceLevel.Info,
 						Command         = ReaderWrapper.Command,
@@ -64,9 +72,19 @@ namespace LinqToDB.Data
 				await ReaderWrapper.DisposeAsync().ConfigureAwait(false);
 				ReaderWrapper = null;
 			}
+
+			var dctx = CommandInfo.TryGetDataContext();
+			if (dctx != null)
+				await dctx.ReleaseQueryAsync().ConfigureAwait(false);
 		}
 
 		#region Query with object reader
+
+		public IEnumerable<T> Query<T>(Func<DbDataReader, T> objectReader)
+		{
+			while (Reader!.Read())
+				yield return objectReader(Reader);
+		}
 
 		public Task<List<T>> QueryToListAsync<T>(Func<DbDataReader, T> objectReader)
 		{
@@ -118,6 +136,17 @@ namespace LinqToDB.Data
 
 		#region Query
 
+		public IEnumerable<T> Query<T>()
+		{
+			if (ReadNumber != 0)
+				if (!Reader!.NextResult())
+					return Enumerable.Empty<T>();
+
+			ReadNumber++;
+
+			return CommandInfo!.ExecuteQuery<T>(Reader!, FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}"));
+		}
+
 		public Task<List<T>> QueryToListAsync<T>()
 		{
 			return QueryToListAsync<T>(CancellationToken.None);
@@ -155,7 +184,7 @@ namespace LinqToDB.Data
 
 			ReadNumber++;
 
-			await CommandInfo!.ExecuteQueryAsync(Reader!, FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}"), action, cancellationToken).ConfigureAwait(false);
+			await CommandInfo.ExecuteQueryAsync(Reader!, FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}"), action, cancellationToken).ConfigureAwait(false);
 		}
 
 		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>()
@@ -172,7 +201,7 @@ namespace LinqToDB.Data
 
 				ReadNumber++;
 
-				await foreach (var element in CommandInfo!.ExecuteQueryAsync<T>(Reader!, FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}"))
+				await foreach (var element in CommandInfo.ExecuteQueryAsync<T>(Reader!, FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}"))
 						.WithCancellation(cancellationToken)
 						.ConfigureAwait(false))
 				{
@@ -184,6 +213,12 @@ namespace LinqToDB.Data
 		#endregion
 
 		#region Query with template
+
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
+		public IEnumerable<T> Query<T>(T template)
+		{
+			return Query<T>();
+		}
 
 		public Task<List<T>> QueryToListAsync<T>(T template)
 		{
@@ -214,19 +249,35 @@ namespace LinqToDB.Data
 			return QueryForEachAsync(template, action, CancellationToken.None);
 		}
 
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
 		public Task QueryForEachAsync<T>(T template, Action<T> action, CancellationToken cancellationToken)
 		{
 			return QueryForEachAsync(action, cancellationToken);
 		}
 
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "template param used to provide T generic argument")]
 		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(T template)
 		{
 			return QueryToAsyncEnumerable<T>();
 		}
-		
+
 		#endregion
 
 		#region Execute scalar
+
+		[return: MaybeNull]
+		public T Execute<T>()
+		{
+			if (ReadNumber != 0)
+				if (!Reader!.NextResult())
+					return default(T);
+
+			ReadNumber++;
+
+			var sql = FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}");
+
+			return CommandInfo.ExecuteScalar<T>(Reader!, sql);
+		}
 
 		public Task<T> ExecuteForEachAsync<T>()
 		{
@@ -241,7 +292,7 @@ namespace LinqToDB.Data
 
 			ReadNumber++;
 
-			var sql = FormattableString.Invariant($"{CommandInfo!.CommandText}$$${ReadNumber}");
+			var sql = FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}");
 
 			return await CommandInfo.ExecuteScalarAsync<T>(Reader!, sql, cancellationToken).ConfigureAwait(false);
 		}

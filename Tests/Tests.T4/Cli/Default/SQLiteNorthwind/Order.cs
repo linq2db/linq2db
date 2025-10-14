@@ -16,19 +16,19 @@ namespace Cli.Default.SQLiteNorthwind
 	[Table("Orders")]
 	public class Order
 	{
-		[Column("OrderID"       , IsPrimaryKey = true                     )] public int       OrderId        { get; set; } // int
-		[Column("CustomerID"                                              )] public string?   CustomerId     { get; set; } // varchar(5)
-		[Column("EmployeeID"                                              )] public int?      EmployeeId     { get; set; } // int
-		[Column("OrderDate"     , SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? OrderDate      { get; set; } // timestamp
-		[Column("RequiredDate"  , SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? RequiredDate   { get; set; } // timestamp
-		[Column("ShippedDate"   , SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? ShippedDate    { get; set; } // timestamp
-		[Column("ShipVia"                                                 )] public int?      ShipVia        { get; set; } // int
-		[Column("Freight"                                                 )] public double?   Freight        { get; set; } // float
-		[Column("ShipName"                                                )] public string?   ShipName       { get; set; } // varchar(40)
-		[Column("ShipAddress"                                             )] public string?   ShipAddress    { get; set; } // varchar(60)
-		[Column("ShipCity"                                                )] public string?   ShipCity       { get; set; } // varchar(15)
-		[Column("ShipRegion"                                              )] public string?   ShipRegion     { get; set; } // varchar(15)
-		[Column("ShipPostalCode"                                          )] public string?   ShipPostalCode { get; set; } // varchar(10)
-		[Column("ShipCountry"                                             )] public string?   ShipCountry    { get; set; } // varchar(15)
+		[Column("OrderID"       , IsPrimaryKey = true)] public int       OrderId        { get; set; } // INT
+		[Column("CustomerID"                         )] public string?   CustomerId     { get; set; } // varchar(5)
+		[Column("EmployeeID"                         )] public int?      EmployeeId     { get; set; } // INT
+		[Column("OrderDate"                          )] public DateTime? OrderDate      { get; set; } // timestamp
+		[Column("RequiredDate"                       )] public DateTime? RequiredDate   { get; set; } // timestamp
+		[Column("ShippedDate"                        )] public DateTime? ShippedDate    { get; set; } // timestamp
+		[Column("ShipVia"                            )] public int?      ShipVia        { get; set; } // INT
+		[Column("Freight"                            )] public double?   Freight        { get; set; } // float(26)
+		[Column("ShipName"                           )] public string?   ShipName       { get; set; } // varchar(40)
+		[Column("ShipAddress"                        )] public string?   ShipAddress    { get; set; } // varchar(60)
+		[Column("ShipCity"                           )] public string?   ShipCity       { get; set; } // varchar(15)
+		[Column("ShipRegion"                         )] public string?   ShipRegion     { get; set; } // varchar(15)
+		[Column("ShipPostalCode"                     )] public string?   ShipPostalCode { get; set; } // varchar(10)
+		[Column("ShipCountry"                        )] public string?   ShipCountry    { get; set; } // varchar(15)
 	}
 }

@@ -4,14 +4,13 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -373,7 +372,7 @@ namespace Tests.Linq
 		public record Issue4674StockItem(string TenantId, string Code, string Description);
 		public record Issue4674StockRoomItem(string TenantId, string StockroomCode, string ItemCode, decimal Quantity);
 
-		static IQueryable<T2> Issue4674JoinTable<T2>(DataConnection db, Expression<Func<T2, bool>> joinExpression)
+		static IQueryable<T2> Issue4674JoinTable<T2>(IDataContext db, Expression<Func<T2, bool>> joinExpression)
 		  where T2 : class
 		{
 			return db.GetTable<T2>().Where(joinExpression);
@@ -382,7 +381,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/discussions/4674")]
 		public void Issue4674Test([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<Issue4674StockItem>();
 			using var t2 = db.CreateLocalTable<Issue4674StockRoomItem>();
 

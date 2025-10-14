@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using Shouldly;
-
 using LinqToDB;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.Linq
 {
@@ -63,7 +64,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		public void CalculatedColumnTest1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -83,7 +84,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		public void CalculatedColumnTest2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -101,7 +102,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		public void CalculatedColumnTest3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -128,7 +129,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		public void CalculatedColumnTest4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -199,6 +200,99 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				_ = db.GetTable<CustomPerson2>().ToArray();
+			}
+		}
+
+		sealed class InterpolatedStringTable
+		{
+			public int     Id     { get; set; }
+			public string? StrVal { get; set; }
+			public int     IntVal { get; set; }
+
+			[ExpressionMethod(nameof(Expr1Impl))]
+			public string? SimpleExpression { get; set; }
+
+			private static Expression<Func<InterpolatedStringTable, IDataContext, string?>> Expr1Impl() =>
+				(e, ctx) => !string.IsNullOrEmpty(e.StrVal) ? e.StrVal : e.IntVal.ToString();
+
+			[ExpressionMethod(nameof(Expr2Impl))]
+			public string? InterpolatedExpression { get; set; }
+
+			private static Expression<Func<InterpolatedStringTable, IDataContext, string?>> Expr2Impl() =>
+				(e, ctx) => $"{(!string.IsNullOrEmpty(e.StrVal) ? e.StrVal : e.IntVal.ToString())}";
+
+			public static readonly InterpolatedStringTable[] Data =
+			[
+				new () { Id = 1, StrVal = null,     IntVal = 11 },
+				new () { Id = 2, StrVal = "",       IntVal = 12 },
+				new () { Id = 3, StrVal = "Value3", IntVal = 13 },
+			];
+		}
+
+		[Test]
+		public void TestInterpolatedStringAsExpression([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(InterpolatedStringTable.Data);
+
+			var res = tb.OrderBy(r => r.Id).ToArray();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(res[0].SimpleExpression, Is.EqualTo("11"));
+				Assert.That(res[1].SimpleExpression, Is.EqualTo("12"));
+				Assert.That(res[2].SimpleExpression, Is.EqualTo("Value3"));
+
+				Assert.That(res[0].InterpolatedExpression, Is.EqualTo("11"));
+				Assert.That(res[1].InterpolatedExpression, Is.EqualTo("12"));
+				Assert.That(res[2].InterpolatedExpression, Is.EqualTo("Value3"));
+			}
+		}
+
+		[Test]
+		public void TestInterpolatedStringAsExpression_ComplexQuery([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(InterpolatedStringTable.Data);
+
+			var res = tb
+				.OrderBy(x => x.SimpleExpression)
+				.Select(x => new
+				{
+					x.Id,
+					x.SimpleExpression,
+					x.InterpolatedExpression
+				}).ToArray();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(res[0].SimpleExpression, Is.EqualTo("11"));
+				Assert.That(res[1].SimpleExpression, Is.EqualTo("12"));
+				Assert.That(res[2].SimpleExpression, Is.EqualTo("Value3"));
+
+				Assert.That(res[0].InterpolatedExpression, Is.EqualTo("11"));
+				Assert.That(res[1].InterpolatedExpression, Is.EqualTo("12"));
+				Assert.That(res[2].InterpolatedExpression, Is.EqualTo("Value3"));
+			}
+
+			res = tb
+				.OrderBy(x => x.InterpolatedExpression)
+				.Select(x => new
+				{
+					x.Id,
+					x.SimpleExpression,
+					x.InterpolatedExpression
+				}).ToArray();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(res[0].SimpleExpression, Is.EqualTo("11"));
+				Assert.That(res[1].SimpleExpression, Is.EqualTo("12"));
+				Assert.That(res[2].SimpleExpression, Is.EqualTo("Value3"));
+
+				Assert.That(res[0].InterpolatedExpression, Is.EqualTo("11"));
+				Assert.That(res[1].InterpolatedExpression, Is.EqualTo("12"));
+				Assert.That(res[2].InterpolatedExpression, Is.EqualTo("Value3"));
 			}
 		}
 	}

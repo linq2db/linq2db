@@ -13,8 +13,6 @@ using NUnit.Framework;
 
 using Tests.Model;
 
-using static Tests.xUpdate.MergeTests;
-
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -965,7 +963,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4460")]
 		public void Issue4460Test_MustInsertAllFields([DataSources(false)] string context, [Values] BulkCopyType copyType)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue4460Base>();
 
 			var items = new Issue4460Base[]
@@ -1079,7 +1077,6 @@ namespace Tests.Linq
 			Assert.That(record.Age, Is.EqualTo(10));
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4460")]
 		public void Issue4460Test_InterfaceFilter([DataSources] string context)
 		{
@@ -2161,7 +2158,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestInheritanceInsert([DataSources(false)] string context, [Values] BulkCopyType bcType)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var _ = db.CreateLocalTable<BaseClass>();
 
 			db.BulkCopy(new BulkCopyOptions() { BulkCopyType = bcType }, BaseClass.Data);

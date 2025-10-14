@@ -16,25 +16,25 @@ namespace Cli.NewCliFeatures.SQLite
 	[Table("TestMerge2")]
 	public class TestMerge2
 	{
-		[Column("Id"             )] public long      Id              { get; internal set; } // integer
-		[Column("Field1"         )] public long?     Field1          { get; internal set; } // integer
-		[Column("Field2"         )] public long?     Field2          { get; internal set; } // integer
-		[Column("Field3"         )] public long?     Field3          { get; internal set; } // integer
-		[Column("Field4"         )] public long?     Field4          { get; internal set; } // integer
-		[Column("Field5"         )] public long?     Field5          { get; internal set; } // integer
-		[Column("FieldInt64"     )] public long?     FieldInt64      { get; internal set; } // bigint
-		[Column("FieldBoolean"   )] public bool?     FieldBoolean    { get; internal set; } // bit
-		[Column("FieldString"    )] public string?   FieldString     { get; internal set; } // varchar(20)
-		[Column("FieldNString"   )] public string?   FieldNString    { get; internal set; } // nvarchar(20)
-		[Column("FieldChar"      )] public char?     FieldChar       { get; internal set; } // char(1)
-		[Column("FieldNChar"     )] public char?     FieldNChar      { get; internal set; } // char(1)
-		[Column("FieldFloat"     )] public double?   FieldFloat      { get; internal set; } // float
-		[Column("FieldDouble"    )] public double?   FieldDouble     { get; internal set; } // float
-		[Column("FieldDateTime"  )] public DateTime? FieldDateTime   { get; internal set; } // datetime
-		[Column("FieldBinary"    )] public byte[]?   FieldBinary     { get; internal set; } // varbinary
-		[Column("FieldGuid"      )] public Guid?     FieldGuid       { get; internal set; } // uniqueidentifier
-		[Column("FieldDate"      )] public DateTime? FieldDate       { get; internal set; } // date
-		[Column("FieldEnumString")] public string?   FieldEnumString { get; internal set; } // varchar(20)
-		[Column("FieldEnumNumber")] public int?      FieldEnumNumber { get; internal set; } // int
+		[Column("Id"             )] public long      Id              { get; internal set; } // INTEGER
+		[Column("Field1"         )] public long?     Field1          { get; internal set; } // INTEGER
+		[Column("Field2"         )] public long?     Field2          { get; internal set; } // INTEGER
+		[Column("Field3"         )] public long?     Field3          { get; internal set; } // INTEGER
+		[Column("Field4"         )] public long?     Field4          { get; internal set; } // INTEGER
+		[Column("Field5"         )] public long?     Field5          { get; internal set; } // INTEGER
+		[Column("FieldInt64"     )] public long?     FieldInt64      { get; internal set; } // BIGINT
+		[Column("FieldBoolean"   )] public bool?     FieldBoolean    { get; internal set; } // BIT
+		[Column("FieldString"    )] public string?   FieldString     { get; internal set; } // VARCHAR(20)
+		[Column("FieldNString"   )] public string?   FieldNString    { get; internal set; } // NVARCHAR(20)
+		[Column("FieldChar"      )] public char?     FieldChar       { get; internal set; } // CHAR(1)
+		[Column("FieldNChar"     )] public char?     FieldNChar      { get; internal set; } // NCHAR(1)
+		[Column("FieldFloat"     )] public double?   FieldFloat      { get; internal set; } // FLOAT(24)
+		[Column("FieldDouble"    )] public double?   FieldDouble     { get; internal set; } // FLOAT(53)
+		[Column("FieldDateTime"  )] public DateTime? FieldDateTime   { get; internal set; } // DATETIME
+		[Column("FieldBinary"    )] public byte[]?   FieldBinary     { get; internal set; } // VARBINARY(20)
+		[Column("FieldGuid"      )] public Guid?     FieldGuid       { get; internal set; } // UNIQUEIDENTIFIER
+		[Column("FieldDate"      )] public DateTime? FieldDate       { get; internal set; } // DATE
+		[Column("FieldEnumString")] public string?   FieldEnumString { get; internal set; } // VARCHAR(20)
+		[Column("FieldEnumNumber")] public int?      FieldEnumNumber { get; internal set; } // INT
 	}
 }

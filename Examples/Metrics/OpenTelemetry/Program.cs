@@ -7,7 +7,7 @@ using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
+using LinqToDB.Metrics;
 
 using OpenTelemetry;
 using OpenTelemetry.Resources;

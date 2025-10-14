@@ -8,11 +8,13 @@ using JetBrains.Annotations;
 
 using LinqToDB.Async;
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
-using LinqToDB.Linq;
-using LinqToDB.Linq.Builder;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Linq.Builder;
 
 namespace LinqToDB
 {

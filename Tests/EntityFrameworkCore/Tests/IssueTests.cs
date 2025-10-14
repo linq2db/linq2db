@@ -4,8 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-using Shouldly;
-
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel;
@@ -326,7 +324,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			Assert.That(result, Is.EqualTo(1));
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4625")]
 		public void Issue4625TestWithConverter([EFDataSources] string provider)
 		{
@@ -343,7 +340,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4626")]
-		public void Issue4626Test1([EFDataSources(TestProvName.AllSQLite, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllSqlServer2022Minus, TestProvName.AllPostgreSQL15Minus)] string provider)
+		public void Issue4626Test1([EFDataSources(TestProvName.AllSQLite, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL15Minus)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 

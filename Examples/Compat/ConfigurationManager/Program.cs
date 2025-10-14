@@ -3,8 +3,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 
 using LinqToDB;
-using LinqToDB.Data;
 using LinqToDB.Configuration;
+using LinqToDB.Data;
 
 // Define a model
 public class Person

@@ -4,6 +4,7 @@ using System.Data.SqlTypes;
 using System.Globalization;
 
 using LinqToDB.Common;
+using LinqToDB.Internal.Conversion;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;

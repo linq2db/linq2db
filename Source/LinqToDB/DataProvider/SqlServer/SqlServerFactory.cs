@@ -3,6 +3,8 @@
 using JetBrains.Annotations;
 
 using LinqToDB.Configuration;
+using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.DataProvider.SqlServer;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -28,6 +30,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				"2017" => SqlServerVersion.v2017,
 				"2019" => SqlServerVersion.v2019,
 				"2022" => SqlServerVersion.v2022,
+				"2025" => SqlServerVersion.v2025,
 				_      => SqlServerVersion.AutoDetect,
 			};
 

@@ -3,13 +3,13 @@ using System.Data;
 using System.Data.Linq;
 using System.Linq;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 namespace Tests.UserTests
 {
@@ -31,7 +31,7 @@ namespace Tests.UserTests
 		[Test]
 		public void Test1([IncludeDataSources(ProviderName.SQLiteMS)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var commandInterceptor = new SaveCommandInterceptor();
 				db.AddInterceptor(commandInterceptor);
@@ -53,7 +53,7 @@ namespace Tests.UserTests
 		[Test]
 		public void Test2([IncludeDataSources(ProviderName.SQLiteMS)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var commandInterceptor = new SaveCommandInterceptor();
 				db.AddInterceptor(commandInterceptor);

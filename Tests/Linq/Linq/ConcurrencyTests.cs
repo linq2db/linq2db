@@ -3,8 +3,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Concurrency;
 using LinqToDB.Mapping;
@@ -40,7 +38,7 @@ namespace Tests.Linq
 		public void TestAutoIncrement([DataSources] string context)
 		{
 			// lack of rowcount support by clickhouse makes this API useless with ClickHouse
-			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var skipCnt = !context.SupportsRowcount();
 			var ms      = new MappingSchema();
 
 			new FluentMappingBuilder(ms)
@@ -79,14 +77,14 @@ namespace Tests.Linq
 			record.Stamp--;
 			record.Value = "value 3";
 			cnt = db.UpdateOptimistic(record);
-			Assert.That(cnt, Is.Zero);
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Stamp++;
 			record.Value = "value 2";
 			AssertData(record);
 			record.Stamp--;
 
 			cnt = db.DeleteOptimistic(record);
-			Assert.That(cnt, Is.Zero);
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Stamp++;
 			AssertData(record);
 
@@ -111,7 +109,7 @@ namespace Tests.Linq
 		[Test]
 		public async ValueTask TestAutoIncrementAsync([DataSources] string context)
 		{
-			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var skipCnt = !context.SupportsRowcount();
 			var ms      = new MappingSchema();
 
 			new FluentMappingBuilder(ms)
@@ -150,14 +148,14 @@ namespace Tests.Linq
 			record.Stamp--;
 			record.Value = "value 3";
 			cnt = await db.UpdateOptimisticAsync(record);
-			Assert.That(cnt, Is.Zero);
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Stamp++;
 			record.Value = "value 2";
 			AssertData(record);
 			record.Stamp--;
 
 			cnt = await db.DeleteOptimisticAsync(record);
-			Assert.That(cnt, Is.Zero);
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Stamp++;
 			AssertData(record);
 
@@ -182,7 +180,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestFiltered([DataSources] string context)
 		{
-			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var skipCnt = !context.SupportsRowcount();
 			var ms      = new MappingSchema();
 
 			new FluentMappingBuilder(ms)
@@ -243,7 +241,7 @@ namespace Tests.Linq
 		[Test]
 		public async ValueTask TestFilteredAsync([DataSources] string context)
 		{
-			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var skipCnt = !context.SupportsRowcount();
 			var ms      = new MappingSchema();
 
 			new FluentMappingBuilder(ms)
@@ -304,7 +302,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestGuid([DataSources] string context)
 		{
-			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var skipCnt = !context.SupportsRowcount();
 			var ms      = new MappingSchema();
 
 			new FluentMappingBuilder(ms)
@@ -343,14 +341,14 @@ namespace Tests.Linq
 			record.Value = "value 3";
 			record.Stamp = Guid.NewGuid();
 			cnt = db.UpdateOptimistic(record);
-			Assert.That(cnt, Is.Zero);
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp = Guid.NewGuid();
 
 			cnt = db.DeleteOptimistic(record);
-			Assert.That(cnt, Is.Zero);
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
@@ -381,7 +379,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestGuidString([DataSources] string context)
 		{
-			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var skipCnt = !context.SupportsRowcount();
 			var ms      = new MappingSchema();
 
 			new FluentMappingBuilder(ms)
@@ -421,14 +419,14 @@ namespace Tests.Linq
 			record.Value = "value 3";
 			record.Stamp = Guid.NewGuid().ToString();
 			cnt = db.UpdateOptimistic(record);
-			Assert.That(cnt, Is.Zero);
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp = Guid.NewGuid().ToString();
 
 			cnt = db.DeleteOptimistic(record);
-			Assert.That(cnt, Is.Zero);
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
@@ -458,11 +456,11 @@ namespace Tests.Linq
 
 		// https://github.com/DarkWanderer/ClickHouse.Client/issues/138
 		// https://github.com/ClickHouse/ClickHouse/issues/38790
-		[ActiveIssue(Configurations = new[] { ProviderName.ClickHouseClient, ProviderName.ClickHouseMySql })]
+		[ActiveIssue(Configurations = new[] { ProviderName.ClickHouseDriver, ProviderName.ClickHouseMySql })]
 		[Test]
 		public void TestGuidBinary([DataSources(TestProvName.AllInformix)] string context)
 		{
-			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var skipCnt = !context.SupportsRowcount();
 			var ms      = new MappingSchema();
 
 			new FluentMappingBuilder(ms)
@@ -503,14 +501,14 @@ namespace Tests.Linq
 			record.Value = "value 3";
 			record.Stamp = TestData.Guid2.ToByteArray();
 			cnt = db.UpdateOptimistic(record);
-			Assert.That(cnt, Is.Zero);
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp = TestData.Guid3.ToByteArray();
 
 			cnt = db.DeleteOptimistic(record);
-			Assert.That(cnt, Is.Zero);
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
@@ -541,7 +539,7 @@ namespace Tests.Linq
 		[Test]
 		public async ValueTask TestTestGuidAsync([DataSources] string context)
 		{
-			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var skipCnt = !context.SupportsRowcount();
 			var ms      = new MappingSchema();
 
 			new FluentMappingBuilder(ms)
@@ -580,14 +578,14 @@ namespace Tests.Linq
 			record.Value = "value 3";
 			record.Stamp = Guid.NewGuid();
 			cnt = await db.UpdateOptimisticAsync(record);
-			Assert.That(cnt, Is.Zero);
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp = Guid.NewGuid();
 
 			cnt = await db.DeleteOptimisticAsync(record);
-			Assert.That(cnt, Is.Zero);
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
@@ -618,7 +616,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestCustomStrategy([DataSources] string context)
 		{
-			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var skipCnt = !context.SupportsRowcount();
 			var ms      = new MappingSchema();
 
 			new FluentMappingBuilder(ms)
@@ -657,14 +655,14 @@ namespace Tests.Linq
 			record.Value = "value 3";
 			record.Stamp = "unknown-value";
 			cnt = db.UpdateOptimistic(record);
-			Assert.That(cnt, Is.Zero);
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp = "unknown-value";
 
 			cnt = db.DeleteOptimistic(record);
-			Assert.That(cnt, Is.Zero);
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
@@ -695,7 +693,7 @@ namespace Tests.Linq
 		[Test]
 		public async ValueTask TestCustomStrategyAsync([DataSources] string context)
 		{
-			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var skipCnt = !context.SupportsRowcount();
 			var ms      = new MappingSchema();
 
 			new FluentMappingBuilder(ms)
@@ -734,14 +732,14 @@ namespace Tests.Linq
 			record.Value = "value 3";
 			record.Stamp = "unknown-value";
 			cnt = await db.UpdateOptimisticAsync(record);
-			Assert.That(cnt, Is.Zero);
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp = "unknown-value";
 
 			cnt = await db.DeleteOptimisticAsync(record);
-			Assert.That(cnt, Is.Zero);
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
@@ -772,7 +770,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestDbStrategy([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
-			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var skipCnt = !context.SupportsRowcount();
 			var ms      = new MappingSchema();
 
 			new FluentMappingBuilder(ms)
@@ -812,14 +810,14 @@ namespace Tests.Linq
 			record.Value = "value 3";
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
 			cnt = db.UpdateOptimistic(record);
-			Assert.That(cnt, Is.Zero);
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
 
 			cnt = db.DeleteOptimistic(record);
-			Assert.That(cnt, Is.Zero);
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
@@ -850,7 +848,7 @@ namespace Tests.Linq
 		[Test]
 		public async ValueTask TestDbStrategyAsync([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
-			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var skipCnt = !context.SupportsRowcount();
 			var ms      = new MappingSchema();
 
 			new FluentMappingBuilder(ms)
@@ -890,14 +888,14 @@ namespace Tests.Linq
 			record.Value = "value 3";
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
 			cnt = await db.UpdateOptimisticAsync(record);
-			Assert.That(cnt, Is.Zero);
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
 
 			cnt = await db.DeleteOptimisticAsync(record);
-			Assert.That(cnt, Is.Zero);
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
@@ -928,7 +926,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestFilterExtension([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
-			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var skipCnt = !context.SupportsRowcount();
 			var ms      = new MappingSchema();
 
 			new FluentMappingBuilder(ms)
@@ -968,14 +966,14 @@ namespace Tests.Linq
 			record.Value = "value 3";
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
 			cnt = t.WhereKeyOptimistic(record).Update(r => new ConcurrencyTable<byte[]>() { Value = record.Value });
-			Assert.That(cnt, Is.Zero);
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
 
 			cnt = t.WhereKeyOptimistic(record).Delete();
-			Assert.That(cnt, Is.Zero);
+			if (!skipCnt) Assert.That(cnt, Is.Zero);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 

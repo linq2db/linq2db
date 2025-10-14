@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB;
+
 namespace Tests
 {
 	public static class ProviderNameHelpers
@@ -21,6 +23,14 @@ namespace Tests
 			}
 
 			return false;
+		}
+
+		/// <summary>
+		/// Provider returns number of affected records from Execute methods
+		/// </summary>
+		public static bool SupportsRowcount(this string context)
+		{
+			return !context.IsAnyOf(TestProvName.AllClickHouse);
 		}
 
 		public static bool IsUseParameters(this string context)

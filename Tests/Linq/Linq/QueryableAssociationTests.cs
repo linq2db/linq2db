@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -73,13 +74,11 @@ namespace Tests.Linq
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					var hashCode = Id;
-					hashCode = (hashCode * 397) ^ (OwnerStr != null ? OwnerStr.GetHashCode() : 0);
-					hashCode = (hashCode * 397) ^ (Other != null ? Other.GetHashCode() : 0);
-					return hashCode;
-				}
+				return HashCode.Combine(
+					Id,
+					OwnerStr,
+					Other
+				);
 			}
 
 			#endregion
@@ -108,10 +107,7 @@ namespace Tests.Linq
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					return (Id * 397) ^ (StrValue != null ? StrValue.GetHashCode() : 0);
-				}
+				return HashCode.Combine(Id, StrValue);
 			}
 		}
 

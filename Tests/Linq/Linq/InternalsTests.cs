@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;

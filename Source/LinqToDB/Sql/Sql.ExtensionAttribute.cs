@@ -7,128 +7,18 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
 
-using JetBrains.Annotations;
-
-using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Expressions;
-using LinqToDB.Expressions.Internal;
 using LinqToDB.Extensions;
-using LinqToDB.Linq.Builder;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB
 {
-	public enum ExprParameterKind
-	{
-		Default,
-		Sequence,
-		Values
-	}
-
-	[AttributeUsage(AttributeTargets.Parameter)]
-	[MeansImplicitUse]
-	public class ExprParameterAttribute : Attribute
-	{
-		public string?           Name              { get; set; }
-		public ExprParameterKind ParameterKind     { get; set; }
-		public bool              DoNotParameterize { get; set; }
-
-		public ExprParameterAttribute(string name)
-		{
-			Name = name;
-		}
-
-		public ExprParameterAttribute()
-		{
-		}
-	}
-
-	public static class ExtensionBuilderExtensions
-	{
-		public static Sql.SqlExtensionParam AddParameter(this Sql.ISqExtensionBuilder builder, string name, string value)
-		{
-			return builder.AddParameter(name, new SqlValue(value));
-		}
-
-		public static Sql.SqlExtensionParam AddExpression(this Sql.ISqExtensionBuilder builder, string name, string expr)
-		{
-			return builder.AddParameter(name, new SqlExpression(expr, Precedence.Primary));
-		}
-
-		public static ISqlExpression Add(this Sql.ISqExtensionBuilder builder, ISqlExpression left, ISqlExpression right, Type type)
-		{
-			return new SqlBinaryExpression(type, left, "+", right, Precedence.Additive);
-		}
-		public static ISqlExpression Add<T>(this Sql.ISqExtensionBuilder builder, ISqlExpression left, ISqlExpression right)
-		{
-			return builder.Add(left, right, typeof(T));
-		}
-
-		public static ISqlExpression Add(this Sql.ISqExtensionBuilder builder, ISqlExpression left, int value)
-		{
-			return builder.Add<int>(left, new SqlValue(value));
-		}
-
-		public static ISqlExpression Inc(this Sql.ISqExtensionBuilder builder, ISqlExpression expr)
-		{
-			return builder.Add(expr, 1);
-		}
-
-		public static ISqlExpression Sub(this Sql.ISqExtensionBuilder builder, ISqlExpression left, ISqlExpression right, Type type)
-		{
-			return new SqlBinaryExpression(type, left, "-", right, Precedence.Subtraction);
-		}
-
-		public static ISqlExpression Sub<T>(this Sql.ISqExtensionBuilder builder, ISqlExpression left, ISqlExpression right)
-		{
-			return builder.Sub(left, right, typeof(T));
-		}
-
-		public static ISqlExpression Sub(this Sql.ISqExtensionBuilder builder, ISqlExpression left, int value)
-		{
-			return builder.Sub<int>(left, new SqlValue(value));
-		}
-
-		public static ISqlExpression Dec(this Sql.ISqExtensionBuilder builder, ISqlExpression expr)
-		{
-			return builder.Sub(expr, 1);
-		}
-
-		public static ISqlExpression Mul(this Sql.ISqExtensionBuilder builder, ISqlExpression left, ISqlExpression right, Type type)
-		{
-			return new SqlBinaryExpression(type, left, "*", right, Precedence.Multiplicative);
-		}
-
-		public static ISqlExpression Mul<T>(this Sql.ISqExtensionBuilder builder, ISqlExpression left, ISqlExpression right)
-		{
-			return builder.Mul(left, right, typeof(T));
-		}
-
-		public static ISqlExpression Mul(this Sql.ISqExtensionBuilder builder, ISqlExpression expr1, int value)
-		{
-			return builder.Mul<int>(expr1, new SqlValue(value));
-		}
-
-		public static ISqlExpression Div(this Sql.ISqExtensionBuilder builder, ISqlExpression expr1, ISqlExpression expr2, Type type)
-		{
-			return new SqlBinaryExpression(type, expr1, "/", expr2, Precedence.Multiplicative);
-		}
-
-		public static ISqlExpression Div<T>(this Sql.ISqExtensionBuilder builder, ISqlExpression expr1, ISqlExpression expr2)
-		{
-			return builder.Div(expr1, expr2, typeof(T));
-		}
-
-		public static ISqlExpression Div(this Sql.ISqExtensionBuilder builder, ISqlExpression expr1, int value)
-		{
-			return builder.Div<int>(expr1, new SqlValue(value));
-		}
-	}
-
 	public partial class Sql
 	{
 		public interface ISqlExtension { }
@@ -208,7 +98,6 @@ namespace LinqToDB
 				Expr             = expr;
 				Precedence       = precedence;
 				ChainPrecedence  = chainPrecedence;
-				IsPredicate      = isPredicate;
 				IsNullable       = isNullable;
 				CanBeNull        = canBeNull;
 				NamedParameters  = parameters.ToLookup(static p => p.Name ?? string.Empty).ToDictionary(static p => p.Key, static p => p.ToList());
@@ -216,12 +105,12 @@ namespace LinqToDB
 				if (isAggregate)      Flags |= SqlFlags.IsAggregate;
 				if (isWindowFunction) Flags |= SqlFlags.IsWindowFunction;
 				if (isPure)           Flags |= SqlFlags.IsPure;
+				if (isPredicate)      Flags |= SqlFlags.IsPredicate;
 			}
 
 			public Type?          SystemType       { get; set; }
 			public string         Expr             { get; set; }
 			public int            Precedence       { get; set; }
-			public bool           IsPredicate      { get; set; }
 			public IsNullableType IsNullable       { get; set; }
 			public bool?          CanBeNull        { get; set; }
 
@@ -230,6 +119,7 @@ namespace LinqToDB
 			public bool IsAggregate      => (Flags & SqlFlags.IsAggregate)      != 0;
 			public bool IsWindowFunction => (Flags & SqlFlags.IsWindowFunction) != 0;
 			public bool IsPure           => (Flags & SqlFlags.IsPure)           != 0;
+			public bool IsPredicate      => (Flags & SqlFlags.IsPredicate)      != 0;
 
 			public SqlExtensionParam AddParameter(string name, ISqlExpression sqlExpression)
 			{
@@ -277,7 +167,7 @@ namespace LinqToDB
 				Name       = name;
 				Expression = expression;
 #if DEBUG
-				_paramNumber = Interlocked.Add(ref _paramCounter, 1);
+				_paramNumber = System.Threading.Interlocked.Add(ref _paramCounter, 1);
 #endif
 			}
 
@@ -286,7 +176,7 @@ namespace LinqToDB
 				Name      = name;
 				Extension = extension;
 #if DEBUG
-				_paramNumber = Interlocked.Add(ref _paramCounter, 1);
+				_paramNumber = System.Threading.Interlocked.Add(ref _paramCounter, 1);
 #endif
 			}
 
@@ -467,7 +357,7 @@ namespace LinqToDB
 
 				public ISqlExpression? ConvertToSqlExpression(int precedence)
 				{
-					var converted = BuildSqlExpression(Query, Extension, Extension.SystemType!, precedence,
+					var converted = BuildSqlExpression(Mapping, Query, Extension, Extension.SystemType!, precedence,
 						(Extension.IsAggregate      ? SqlFlags.IsAggregate      : SqlFlags.None) |
 						(Extension.IsPure           ? SqlFlags.IsPure           : SqlFlags.None) |
 						(Extension.IsPredicate      ? SqlFlags.IsPredicate      : SqlFlags.None) |
@@ -774,12 +664,7 @@ namespace LinqToDB
 										foreach (var pair
 										         in TypeHelper.EnumTypeRemapping(elementType, argElementType, templateGenericArguments))
 										{
-#if NET8_0_OR_GREATER
 											descriptorMapping.TryAdd(pair.Item1, descriptor);
-#else
-											if (!descriptorMapping.ContainsKey(pair.Item1))
-												descriptorMapping.Add(pair.Item1, descriptor);
-#endif
 										}
 									}
 								}
@@ -866,13 +751,9 @@ namespace LinqToDB
 				return result;
 			}
 
-			static IEnumerable<Expression> ExtractArray(Expression expression)
-			{
-				var array = (NewArrayExpression) expression;
-				return array.Expressions;
-			}
-
-			public static Expression BuildSqlExpression(SelectQuery query, SqlExtension root, Type systemType, int precedence,
+			public static Expression BuildSqlExpression(
+				MappingSchema mappingSchema,
+				SelectQuery query, SqlExtension root, Type systemType, int precedence,
 				SqlFlags flags, bool? canBeNull, IsNullableType isNullable)
 			{
 				var resolvedParams = new Dictionary<SqlExtensionParam, string?>();
@@ -945,7 +826,7 @@ namespace LinqToDB
 				if (error != null)
 					return error;
 
-				var sqlExpression = new SqlExpression(systemType, expr, precedence, flags,
+				var sqlExpression = new SqlExpression(mappingSchema.GetDbDataType(systemType), expr, precedence, flags,
 					ToParametersNullabilityType(isNullable), canBeNull, newParams.ToArray());
 
 				// Placeholder path will be set later
@@ -1052,7 +933,7 @@ namespace LinqToDB
 				}
 
 				//TODO: Precedence calculation
-				var res = BuildSqlExpression(query, mainExtension, mainExtension.SystemType,
+				var res = BuildSqlExpression(dataContext.MappingSchema, query, mainExtension, mainExtension.SystemType,
 					mainExtension.Precedence,
 					(isAggregate  ? SqlFlags.IsAggregate      : SqlFlags.None) |
 					(isPure       ? SqlFlags.IsPure           : SqlFlags.None) |

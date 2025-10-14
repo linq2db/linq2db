@@ -15,9 +15,9 @@ namespace Cli.NewCliFeatures.SQLite
 	[Table("InheritanceChild")]
 	public class InheritanceChild
 	{
-		[Column("InheritanceChildId" )] public long    InheritanceChildId  { get; internal set; } // integer
-		[Column("InheritanceParentId")] public long    InheritanceParentId { get; internal set; } // integer
-		[Column("TypeDiscriminator"  )] public long?   TypeDiscriminator   { get; internal set; } // integer
+		[Column("InheritanceChildId" )] public long    InheritanceChildId  { get; internal set; } // INTEGER
+		[Column("InheritanceParentId")] public long    InheritanceParentId { get; internal set; } // INTEGER
+		[Column("TypeDiscriminator"  )] public long?   TypeDiscriminator   { get; internal set; } // INTEGER
 		[Column("Name"               )] public string? Name                { get; internal set; } // nvarchar(50)
 	}
 }

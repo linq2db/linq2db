@@ -261,7 +261,7 @@ namespace Tests.Data
 		[Test]
 		public void DataConnection_ExecuteNonQuery([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var interceptor = new TestCommandInterceptor();
 				db.AddInterceptor(interceptor);
@@ -295,7 +295,7 @@ namespace Tests.Data
 		[Test]
 		public async Task DataConnection_ExecuteNonQueryAsync([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			await using (var db = GetDataConnection(context))
+			await using (var db = GetDataContext(context))
 			{
 				var interceptor = new TestCommandInterceptor();
 				db.AddInterceptor(interceptor);
@@ -329,7 +329,7 @@ namespace Tests.Data
 		[Test]
 		public void DataConnection_ExecuteScalar([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (var table = db.CreateTempTable<InterceptorsTestsTable>())
 			{
 				var interceptor = new TestCommandInterceptor();
@@ -363,7 +363,7 @@ namespace Tests.Data
 		[Test]
 		public async Task DataConnection_ExecuteScalarAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			await using (var db = GetDataConnection(context))
+			await using (var db = GetDataContext(context))
 			await using (var table = await db.CreateTempTableAsync<InterceptorsTestsTable>())
 			{
 				var interceptor = new TestCommandInterceptor();
@@ -397,7 +397,7 @@ namespace Tests.Data
 		[Test]
 		public void DataConnection_ExecuteReader([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var interceptor = new TestCommandInterceptor();
 				db.AddInterceptor(interceptor);
@@ -429,7 +429,7 @@ namespace Tests.Data
 		[Test]
 		public async Task DataConnection_ExecuteReaderAsync([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			await using (var db = GetDataConnection(context))
+			await using (var db = GetDataContext(context))
 			{
 				var interceptor = new TestCommandInterceptor();
 				db.AddInterceptor(interceptor);
@@ -684,13 +684,8 @@ namespace Tests.Data
 			await db.Person.ToListAsync();
 			using (Assert.EnterMultipleScope())
 			{
-#if NETFRAMEWORK
-				Assert.That(interceptor.BeforeReaderDisposeTriggered, Is.True);
-				Assert.That(interceptor.BeforeReaderDisposeAsyncTriggered, Is.False);
-#else
 				Assert.That(interceptor.BeforeReaderDisposeTriggered, Is.False);
 				Assert.That(interceptor.BeforeReaderDisposeAsyncTriggered, Is.True);
-#endif
 			}
 		}
 
@@ -714,13 +709,8 @@ namespace Tests.Data
 			await db.GetTable<Person>().ToListAsync();
 			using (Assert.EnterMultipleScope())
 			{
-#if NETFRAMEWORK
-				Assert.That(interceptor.BeforeReaderDisposeTriggered, Is.True);
-				Assert.That(interceptor.BeforeReaderDisposeAsyncTriggered, Is.False);
-#else
 				Assert.That(interceptor.BeforeReaderDisposeTriggered, Is.False);
 				Assert.That(interceptor.BeforeReaderDisposeAsyncTriggered, Is.True);
-#endif
 			}
 		}
 
@@ -734,7 +724,7 @@ namespace Tests.Data
 		[Test]
 		public void ConnectionOpenOnDataConnectionTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var interceptor = new TestConnectionInterceptor();
 				db.AddInterceptor(interceptor);
@@ -783,7 +773,7 @@ namespace Tests.Data
 		[Test]
 		public async Task ConnectionOpenAsyncOnDataConnectionTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var interceptor = new TestConnectionInterceptor();
 				db.AddInterceptor(interceptor);

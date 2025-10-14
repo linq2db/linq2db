@@ -115,7 +115,7 @@ namespace Tests.Mapping
 				var ed = ms.GetEntityDescriptor(typeof(MyClass));
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(ed.Name.Name, Is.EqualTo("newname"));
+					Assert.That(ed.TableName, Is.EqualTo("newname"));
 					Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("id1"));
 				}
 			}
@@ -136,12 +136,12 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed.Name.Name, Is.EqualTo("NewName"));
+			Assert.That(ed.TableName, Is.EqualTo("NewName"));
 
 			var ms2 = new MappingSchema();
 			var ed2 = ms2.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed2.Name.Name, Is.EqualTo("MyClass"));
+			Assert.That(ed2.TableName, Is.EqualTo("MyClass"));
 		}
 
 		[Test]
@@ -154,7 +154,7 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed.Name.Name, Is.EqualTo("MyClass"));
+			Assert.That(ed.TableName, Is.EqualTo("MyClass"));
 		}
 
 		[Test]
@@ -251,8 +251,8 @@ namespace Tests.Mapping
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(ed.Name.Name, Is.EqualTo("Table"));
-				Assert.That(ed.Name.Schema, Is.EqualTo("Schema"));
+				Assert.That(ed.TableName,  Is.EqualTo("Table"));
+				Assert.That(ed.SchemaName, Is.EqualTo("Schema"));
 			}
 		}
 
@@ -456,13 +456,13 @@ namespace Tests.Mapping
 
 			var od1 = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(od1.Name.Name, Is.EqualTo("Name1"));
+			Assert.That(od1.TableName, Is.EqualTo("Name1"));
 
 			b.Entity<MyClass>().HasTableName("Name2").Build();
 
 			var od2 = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(od2.Name.Name, Is.EqualTo("Name2"));
+			Assert.That(od2.TableName, Is.EqualTo("Name2"));
 		}
 
 		[Test]
@@ -551,7 +551,7 @@ namespace Tests.Mapping
 			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass4));
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(ed.Name.Name, Is.EqualTo(nameof(IInterfaceBase)));
+				Assert.That(ed.TableName, Is.EqualTo(nameof(IInterfaceBase)));
 
 				Assert.That(ed[nameof(MyInheritedClass4.IntValue)]!.SkipOnUpdate, Is.True);
 				Assert.That(ed[nameof(MyInheritedClass4.StringValue)]!.SkipOnInsert, Is.True);
@@ -759,7 +759,7 @@ namespace Tests.Mapping
 				.UseSequence("sequencetestseq")
 				.Build();
 
-			using var db = GetDataConnection(context, ms);
+			using var db = GetDataContext(context, ms);
 			var records = Enumerable.Range(1, 10).Select(x => new SequenceTable()).ToArray();
 
 			records.RetrieveIdentity(db, true);
@@ -779,7 +779,7 @@ namespace Tests.Mapping
 				.HasAttribute(new SequenceNameAttribute("sequencetestseq"))
 				.Build();
 
-			using var db = GetDataConnection(context, ms);
+			using var db = GetDataContext(context, ms);
 			var records = Enumerable.Range(1, 10).Select(x => new SequenceTable()).ToArray();
 
 			records.RetrieveIdentity(db, true);

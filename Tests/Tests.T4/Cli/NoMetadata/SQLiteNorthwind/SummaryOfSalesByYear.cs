@@ -15,7 +15,7 @@ namespace Cli.NoMetadata.SQLiteNorthwind
 	public class SummaryOfSalesByYear
 	{
 		public DateTime? ShippedDate { get; set; } // timestamp
-		public int       OrderId     { get; set; } // int
-		public object?   Subtotal    { get; set; } // NUMERIC
+		public int       OrderId     { get; set; } // INT
+		public double?   Subtotal    { get; set; } // REAL
 	}
 }

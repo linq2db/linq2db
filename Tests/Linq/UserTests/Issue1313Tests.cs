@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Extensions;
+using LinqToDB.Internal.Extensions;
 
 using NUnit.Framework;
 
@@ -106,7 +106,7 @@ namespace Tests.UserTests
 		[Test]
 		public void TestQuery([DataSources(false)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				using (var table = db.CreateLocalTable<ValueItem>())
 				{

@@ -7,6 +7,7 @@ using System.Text.Json;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.DataProvider.Firebird;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 
@@ -687,7 +688,7 @@ namespace Tests.Linq
 					)
 					.ToDictionary(f => f.Id);
 
-			using var db = GetDataConnection(context, ms);
+			using var db = GetDataContext(context, ms);
 			using var tb = db.CreateLocalTable(testData.Values);
 
 			var testRows = db.GetTable<TestJsonRead>().ToArray();
@@ -738,7 +739,7 @@ namespace Tests.Linq
 					)
 					.ToDictionary(f => f.Id);
 
-			using var db = GetDataConnection(context, ms);
+			using var db = GetDataContext(context, ms);
 			using var tb = db.CreateLocalTable(testData.Values);
 
 			var testRows = db.GetTable<TestJsonRead>().ToArray();
@@ -871,7 +872,7 @@ namespace Tests.Linq
 
 		sealed class Issue4770Person
 		{
-			public long Id { get; set; }
+			public int Id { get; set; }
 			public Issue4770Address? Address { get; set; }
 			public string ?TestPostcode { get; set; }
 		}

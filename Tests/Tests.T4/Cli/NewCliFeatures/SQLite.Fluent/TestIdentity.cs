@@ -13,6 +13,6 @@ namespace Cli.NewCliFeatures.FluentSQLite
 {
 	public class TestIdentity
 	{
-		public long Id { get; set; } // integer
+		public long Id { get; set; } // INTEGER
 	}
 }

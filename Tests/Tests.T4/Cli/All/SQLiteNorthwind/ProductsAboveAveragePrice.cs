@@ -16,7 +16,7 @@ namespace Cli.All.SQLiteNorthwind
 	[Table("Products Above Average Price", IsView = true)]
 	public class ProductsAboveAveragePrice
 	{
-		[Column("ProductName", CanBeNull = false          , DataType = DataType.VarChar, DbType = "varchar(40)", Length    = 40, Precision = 0, Scale = 0)] public string  ProductName { get; set; } = null!; // varchar(40)
-		[Column("UnitPrice"  , DataType  = DataType.Double, DbType   = "float"         , Length = 8            , Precision = 26, Scale     = 0           )] public double? UnitPrice   { get; set; } // float
+		[Column("ProductName", CanBeNull = false          , DataType = DataType.NVarChar, DbType = "varchar(40)", Length = 40)] public string  ProductName { get; set; } = null!; // varchar(40)
+		[Column("UnitPrice"  , DataType  = DataType.Double, DbType   = "float(26)"                                           )] public double? UnitPrice   { get; set; } // float(26)
 	}
 }

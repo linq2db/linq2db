@@ -8,10 +8,12 @@ using System.Reflection;
 using Microsoft.SqlServer.Server;
 #endif
 
+using LinqToDB;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
-using LinqToDB.Common.Internal;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -32,8 +34,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			new SystemDataSqlServerAttributeReader(typeof(SqlMethodAttribute), typeof(SqlUserDefinedTypeAttribute))
 #else
 			TryCreate(
-			"Microsoft.SqlServer.Server.SqlMethodAttribute, System.Data.SqlClient",
-			"Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute, System.Data.SqlClient")
+				"Microsoft.SqlServer.Server.SqlMethodAttribute, System.Data.SqlClient",
+				"Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute, System.Data.SqlClient")
 #endif
 			;
 
@@ -120,15 +122,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (memberInfo.IsMethodEx() || memberInfo.IsPropertyEx())
 			{
 				result = _cache.GetOrAdd(
-					(memberInfo, _sqlMethodAttribute),
-#if NETFRAMEWORK || NETSTANDARD2_0
-					key =>
-					{
-						var nameGetter = _methodNameGetter;
-#else
+					(memberInfo, attributeType: _sqlMethodAttribute),
 					static (key, nameGetter) =>
 					{
-#endif
 						if (key.memberInfo.IsMethodEx())
 						{
 							var attr = FindAttribute(key.memberInfo, key.attributeType);
@@ -182,23 +178,13 @@ namespace LinqToDB.DataProvider.SqlServer
 						}
 
 						return [];
-#if NETFRAMEWORK || NETSTANDARD2_0
-					});
-#else
 					}, _methodNameGetter);
-#endif
 			}
 
 			var res = _cache.GetOrAdd(
-				(memberInfo, _sqlUserDefinedTypeAttribute),
-#if NETFRAMEWORK || NETSTANDARD2_0
-				key =>
-				{
-					var nameGetter = _typeNameGetter;
-#else
+				(memberInfo, attributeType: _sqlUserDefinedTypeAttribute),
 				static (key, nameGetter) =>
 				{
-#endif
 					var c = FindAttribute(key.memberInfo.GetMemberType(), key.attributeType);
 
 					if (c != null)
@@ -214,11 +200,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					}
 
 					return [];
-#if NETFRAMEWORK || NETSTANDARD2_0
-				});
-#else
 				}, _typeNameGetter);
-#endif
 
 			result = result == null || result.Length == 0
 				? res

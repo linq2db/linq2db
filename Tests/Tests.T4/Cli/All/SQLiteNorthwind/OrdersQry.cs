@@ -17,25 +17,25 @@ namespace Cli.All.SQLiteNorthwind
 	[Table("Orders Qry", IsView = true)]
 	public class OrdersQry
 	{
-		[Column("OrderID"       , DataType  = DataType.Int32    , DbType   = "int"           , Length = 4            , Precision = 10, Scale     = 0                                          )] public int       OrderId        { get; set; } // int
-		[Column("CustomerID"    , DataType  = DataType.VarChar  , DbType   = "varchar(5)"    , Length = 5            , Precision = 0 , Scale     = 0                                          )] public string?   CustomerId     { get; set; } // varchar(5)
-		[Column("EmployeeID"    , DataType  = DataType.Int32    , DbType   = "int"           , Length = 4            , Precision = 10, Scale     = 0                                          )] public int?      EmployeeId     { get; set; } // int
-		[Column("OrderDate"     , DataType  = DataType.Timestamp, DbType   = "timestamp"     , Length = 8            , Precision = 0 , Scale     = 0, SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? OrderDate      { get; set; } // timestamp
-		[Column("RequiredDate"  , DataType  = DataType.Timestamp, DbType   = "timestamp"     , Length = 8            , Precision = 0 , Scale     = 0, SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? RequiredDate   { get; set; } // timestamp
-		[Column("ShippedDate"   , DataType  = DataType.Timestamp, DbType   = "timestamp"     , Length = 8            , Precision = 0 , Scale     = 0, SkipOnInsert = true, SkipOnUpdate = true)] public DateTime? ShippedDate    { get; set; } // timestamp
-		[Column("ShipVia"       , DataType  = DataType.Int32    , DbType   = "int"           , Length = 4            , Precision = 10, Scale     = 0                                          )] public int?      ShipVia        { get; set; } // int
-		[Column("Freight"       , DataType  = DataType.Double   , DbType   = "float"         , Length = 8            , Precision = 26, Scale     = 0                                          )] public double?   Freight        { get; set; } // float
-		[Column("ShipName"      , DataType  = DataType.VarChar  , DbType   = "varchar(40)"   , Length = 40           , Precision = 0 , Scale     = 0                                          )] public string?   ShipName       { get; set; } // varchar(40)
-		[Column("ShipAddress"   , DataType  = DataType.VarChar  , DbType   = "varchar(60)"   , Length = 60           , Precision = 0 , Scale     = 0                                          )] public string?   ShipAddress    { get; set; } // varchar(60)
-		[Column("ShipCity"      , DataType  = DataType.VarChar  , DbType   = "varchar(15)"   , Length = 15           , Precision = 0 , Scale     = 0                                          )] public string?   ShipCity       { get; set; } // varchar(15)
-		[Column("ShipRegion"    , DataType  = DataType.VarChar  , DbType   = "varchar(15)"   , Length = 15           , Precision = 0 , Scale     = 0                                          )] public string?   ShipRegion     { get; set; } // varchar(15)
-		[Column("ShipPostalCode", DataType  = DataType.VarChar  , DbType   = "varchar(10)"   , Length = 10           , Precision = 0 , Scale     = 0                                          )] public string?   ShipPostalCode { get; set; } // varchar(10)
-		[Column("ShipCountry"   , DataType  = DataType.VarChar  , DbType   = "varchar(15)"   , Length = 15           , Precision = 0 , Scale     = 0                                          )] public string?   ShipCountry    { get; set; } // varchar(15)
-		[Column("CompanyName"   , CanBeNull = false             , DataType = DataType.VarChar, DbType = "varchar(40)", Length    = 40, Precision = 0, Scale        = 0                        )] public string    CompanyName    { get; set; } = null!; // varchar(40)
-		[Column("Address"       , DataType  = DataType.VarChar  , DbType   = "varchar(60)"   , Length = 60           , Precision = 0 , Scale     = 0                                          )] public string?   Address        { get; set; } // varchar(60)
-		[Column("City"          , DataType  = DataType.VarChar  , DbType   = "varchar(15)"   , Length = 15           , Precision = 0 , Scale     = 0                                          )] public string?   City           { get; set; } // varchar(15)
-		[Column("Region"        , DataType  = DataType.VarChar  , DbType   = "varchar(15)"   , Length = 15           , Precision = 0 , Scale     = 0                                          )] public string?   Region         { get; set; } // varchar(15)
-		[Column("PostalCode"    , DataType  = DataType.VarChar  , DbType   = "varchar(10)"   , Length = 10           , Precision = 0 , Scale     = 0                                          )] public string?   PostalCode     { get; set; } // varchar(10)
-		[Column("Country"       , DataType  = DataType.VarChar  , DbType   = "varchar(15)"   , Length = 15           , Precision = 0 , Scale     = 0                                          )] public string?   Country        { get; set; } // varchar(15)
+		[Column("OrderID"       , DataType  = DataType.Int32    , DbType   = "INT"                                                 )] public int       OrderId        { get; set; } // INT
+		[Column("CustomerID"    , DataType  = DataType.NVarChar , DbType   = "varchar(5)"     , Length = 5                         )] public string?   CustomerId     { get; set; } // varchar(5)
+		[Column("EmployeeID"    , DataType  = DataType.Int32    , DbType   = "INT"                                                 )] public int?      EmployeeId     { get; set; } // INT
+		[Column("OrderDate"     , DataType  = DataType.DateTime2, DbType   = "timestamp"                                           )] public DateTime? OrderDate      { get; set; } // timestamp
+		[Column("RequiredDate"  , DataType  = DataType.DateTime2, DbType   = "timestamp"                                           )] public DateTime? RequiredDate   { get; set; } // timestamp
+		[Column("ShippedDate"   , DataType  = DataType.DateTime2, DbType   = "timestamp"                                           )] public DateTime? ShippedDate    { get; set; } // timestamp
+		[Column("ShipVia"       , DataType  = DataType.Int32    , DbType   = "INT"                                                 )] public int?      ShipVia        { get; set; } // INT
+		[Column("Freight"       , DataType  = DataType.Double   , DbType   = "float(26)"                                           )] public double?   Freight        { get; set; } // float(26)
+		[Column("ShipName"      , DataType  = DataType.NVarChar , DbType   = "varchar(40)"    , Length = 40                        )] public string?   ShipName       { get; set; } // varchar(40)
+		[Column("ShipAddress"   , DataType  = DataType.NVarChar , DbType   = "varchar(60)"    , Length = 60                        )] public string?   ShipAddress    { get; set; } // varchar(60)
+		[Column("ShipCity"      , DataType  = DataType.NVarChar , DbType   = "varchar(15)"    , Length = 15                        )] public string?   ShipCity       { get; set; } // varchar(15)
+		[Column("ShipRegion"    , DataType  = DataType.NVarChar , DbType   = "varchar(15)"    , Length = 15                        )] public string?   ShipRegion     { get; set; } // varchar(15)
+		[Column("ShipPostalCode", DataType  = DataType.NVarChar , DbType   = "varchar(10)"    , Length = 10                        )] public string?   ShipPostalCode { get; set; } // varchar(10)
+		[Column("ShipCountry"   , DataType  = DataType.NVarChar , DbType   = "varchar(15)"    , Length = 15                        )] public string?   ShipCountry    { get; set; } // varchar(15)
+		[Column("CompanyName"   , CanBeNull = false             , DataType = DataType.NVarChar, DbType = "varchar(40)", Length = 40)] public string    CompanyName    { get; set; } = null!; // varchar(40)
+		[Column("Address"       , DataType  = DataType.NVarChar , DbType   = "varchar(60)"    , Length = 60                        )] public string?   Address        { get; set; } // varchar(60)
+		[Column("City"          , DataType  = DataType.NVarChar , DbType   = "varchar(15)"    , Length = 15                        )] public string?   City           { get; set; } // varchar(15)
+		[Column("Region"        , DataType  = DataType.NVarChar , DbType   = "varchar(15)"    , Length = 15                        )] public string?   Region         { get; set; } // varchar(15)
+		[Column("PostalCode"    , DataType  = DataType.NVarChar , DbType   = "varchar(10)"    , Length = 10                        )] public string?   PostalCode     { get; set; } // varchar(10)
+		[Column("Country"       , DataType  = DataType.NVarChar , DbType   = "varchar(15)"    , Length = 15                        )] public string?   Country        { get; set; } // varchar(15)
 	}
 }

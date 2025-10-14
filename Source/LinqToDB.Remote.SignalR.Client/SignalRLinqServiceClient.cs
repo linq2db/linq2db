@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 namespace LinqToDB.Remote.SignalR
 {
+	[SuppressMessage("Design", "MA0048:File name must match type name")]
 	sealed class Container<T>(T @object)
 	{
 		public T Object { get; } = @object;
@@ -24,31 +26,6 @@ namespace LinqToDB.Remote.SignalR
 		public SignalRLinqServiceClient(HubConnection hubConnection)
 		{
 			_hubConnection = hubConnection;
-		}
-
-		LinqServiceInfo ILinqService.GetInfo(string? configuration)
-		{
-			return _hubConnection.InvokeAsync<LinqServiceInfo>(nameof(ILinqService.GetInfoAsync), configuration, cancellationToken : default).Result;
-		}
-
-		int ILinqService.ExecuteNonQuery(string? configuration, string queryData)
-		{
-			return _hubConnection.InvokeAsync<int>(nameof(ILinqService.ExecuteNonQueryAsync), configuration, queryData, cancellationToken : default).Result;
-		}
-
-		string? ILinqService.ExecuteScalar(string? configuration, string queryData)
-		{
-			return _hubConnection.InvokeAsync<string?>(nameof(ILinqService.ExecuteScalarAsync), configuration, queryData, cancellationToken : default).Result;
-		}
-
-		string ILinqService.ExecuteReader(string? configuration, string queryData)
-		{
-			return _hubConnection.InvokeAsync<string>(nameof(ILinqService.ExecuteReaderAsync), configuration, queryData, cancellationToken: default).Result;
-		}
-
-		int ILinqService.ExecuteBatch(string? configuration, string queryData)
-		{
-			return _hubConnection.InvokeAsync<int>(nameof(ILinqService.ExecuteBatchAsync), configuration, queryData, cancellationToken: default).Result;
 		}
 
 		Task<LinqServiceInfo> ILinqService.GetInfoAsync(string? configuration, CancellationToken cancellationToken)

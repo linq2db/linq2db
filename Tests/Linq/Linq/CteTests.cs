@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using Shouldly;
-
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
 
 using NUnit.Framework;
+
+using Shouldly;
 
 using Tests.Model;
 
@@ -457,10 +457,7 @@ namespace Tests.Linq
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					return (ChildID * 397) ^ ParentID;
-				}
+				return HashCode.Combine(ChildID, ParentID);
 			}
 
 			public int ChildID  { get; set; }
@@ -509,7 +506,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, TestProvName.AllInformix])]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, ProviderName.InformixDB2])]
 		[Test]
 		public void TestInsert([CteContextSource(true, ProviderName.DB2)] string context)
 		{
@@ -544,7 +541,7 @@ namespace Tests.Linq
 		}
 
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
-		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, TestProvName.AllInformix])]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, ProviderName.InformixDB2])]
 		[Test]
 		public void TestDelete([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllMariaDB, TestProvName.AllClickHouse)] string context)
 		{
@@ -565,7 +562,7 @@ namespace Tests.Linq
 		}
 
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
-		[ActiveIssue(3015, Configurations = [TestProvName.AllOracle, TestProvName.AllSapHana, TestProvName.AllInformix], Details = "Oracle needs special syntax for CTE + UPDATE")]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllOracle, TestProvName.AllSapHana, ProviderName.InformixDB2], Details = "Oracle needs special syntax for CTE + UPDATE")]
 		[Test]
 		public void TestUpdate(
 			[CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllClickHouse, TestProvName.AllOracle, TestProvName.AllMariaDB)]
@@ -600,7 +597,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RecursiveTest([CteContextSource(true, ProviderName.DB2, TestProvName.AllSapHana, TestProvName.AllInformix)] string context)
+		public void RecursiveTest([RecursiveCteContextSource(true, ProviderName.DB2, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -720,9 +717,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void RecursiveTest2([CteContextSource(true, ProviderName.DB2)] string context)
+		public void RecursiveTest2([RecursiveCteContextSource(true, ProviderName.DB2)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
 
@@ -738,9 +734,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void TestDoubleRecursion([CteContextSource(true, ProviderName.DB2)] string context)
+		public void TestDoubleRecursion([RecursiveCteContextSource(true, ProviderName.DB2)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
 
@@ -764,9 +759,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void RecursiveCount([CteContextSource(true, ProviderName.DB2)] string context)
+		public void RecursiveCount([RecursiveCteContextSource(true, ProviderName.DB2)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
 
@@ -780,9 +774,9 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, TestProvName.AllInformix])]
+		[ActiveIssue(3015, Configurations = [ProviderName.InformixDB2])]
 		[Test]
-		public void RecursiveInsertInto([CteContextSource(true, ProviderName.DB2)] string context)
+		public void RecursiveInsertInto([RecursiveCteContextSource(true, ProviderName.DB2)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
 
@@ -801,7 +795,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RecursiveDeepNesting([CteContextSource(true, TestProvName.AllDB2, TestProvName.AllSapHana)] string context)
+		public void RecursiveDeepNesting([RecursiveCteContextSource(true, TestProvName.AllDB2)] string context)
 		{
 			using (var db   = GetDataContext(context))
 			using (var tree = db.CreateLocalTable<HierarchyTree>())
@@ -867,10 +861,7 @@ namespace Tests.Linq
 
 			public override int GetHashCode()
 			{
-				unchecked
-				{
-					return ((Child != null ? Child.GetHashCode() : 0) * 397) ^ (Parent != null ? Parent.GetHashCode() : 0);
-				}
+				return HashCode.Combine(Child, Parent);
 			}
 		}
 
@@ -978,9 +969,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void TestRecursiveScalar([CteContextSource] string context)
+		public void TestRecursiveScalar([RecursiveCteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1176,9 +1166,8 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "Test that we generate plain UNION without sub-queries (or query will be invalid)")]
-		public void Issue3359_MultipleSets([CteContextSource(
+		public void Issue3359_MultipleSets([RecursiveCteContextSource(
 			TestProvName.AllInformix,
-			TestProvName.AllSapHana,
 			TestProvName.AllOracle, // too many unions (ORA-32041: UNION ALL operation in recursive WITH clause must have only two branches)
 			TestProvName.AllPostgreSQL, // too many joins? (42P19: recursive reference to query "cte" must not appear within its non-recursive term)
 			ProviderName.DB2 // joins (SQL0345N  The fullselect of the recursive common table expression "cte" must be the UNION of two or more fullselects and cannot include column functions, GROUP BY clause, HAVING clause, ORDER BY clause, or an explicit join including an ON clause.)
@@ -1232,9 +1221,8 @@ namespace Tests.Linq
 			public string LastName  { get; }
 		}
 
-		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana)]
 		[Test(Description = "record type support")]
-		public void Issue3357_RecordClass([CteContextSource] string context)
+		public void Issue3357_RecordClass([RecursiveCteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1253,9 +1241,8 @@ namespace Tests.Linq
 				query.ToArray());
 		}
 
-		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana)]
 		[Test(Description = "record type support")]
-		public void Issue3357_RecordLikeClass([CteContextSource] string context)
+		public void Issue3357_RecordLikeClass([RecursiveCteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1335,7 +1322,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
-		public void Issue3360_TypeByOtherQuery_AllProviders([CteContextSource(ProviderName.DB2, TestProvName.AllSapHana)] string context)
+		public void Issue3360_TypeByOtherQuery_AllProviders([RecursiveCteContextSource(ProviderName.DB2)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue3360Table>();
@@ -1402,7 +1389,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
-		public void Issue3360_TypeStringEnum_AllProviders([CteContextSource(ProviderName.DB2, TestProvName.AllSapHana)] string context)
+		public void Issue3360_TypeStringEnum_AllProviders([RecursiveCteContextSource(ProviderName.DB2)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue3360WithEnum>();
@@ -1465,7 +1452,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
-		public void Issue3360_TypeByProjectionProperty_AllProviders([CteContextSource(ProviderName.DB2, TestProvName.AllSapHana)] string context)
+		public void Issue3360_TypeByProjectionProperty_AllProviders([RecursiveCteContextSource(ProviderName.DB2)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue3360Table>();
@@ -1516,7 +1503,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(Configurations = [TestProvName.AllSqlServer])]
 		[Test(Description = "Test CTE columns typing")]
-		public void Issue3360_NullGuidInAnchor([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllSapHana)] string context)
+		public void Issue3360_NullGuidInAnchor([RecursiveCteContextSource(TestProvName.AllFirebird, ProviderName.DB2)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue3360NullInAnchor>();
@@ -1536,7 +1523,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(Configurations = [TestProvName.AllSqlServer])]
 		[Test(Description = "Test CTE columns typing")]
-		public void Issue3360_NullEnumInAnchor([CteContextSource(ProviderName.DB2, TestProvName.AllSapHana)] string context)
+		public void Issue3360_NullEnumInAnchor([RecursiveCteContextSource(ProviderName.DB2)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue3360NullInAnchor>();
@@ -1600,6 +1587,36 @@ namespace Tests.Linq
 			;
 
 			query.ToArray();
+		}
+
+		[ActiveIssue]
+		[Test]
+		public void Issue3360_TypedNullEnumInAnchor2([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			using var tb = db.CreateLocalTable<Issue3360NullInAnchor>();
+
+			var query = from node in db.GetCte<Issue3360_TypedNullEnumInAnchorProjection>(
+				cte =>
+				{
+					return db.GetTable<Issue3360NullInAnchor>().Select(p => new Issue3360_TypedNullEnumInAnchorProjection(p.Id, VarChar<StrEnum?>(null, 50)))
+						.Concat(
+						from p in db.GetTable<Issue3360NullInAnchor>()
+						join parent in cte on p.Id equals parent.Id + 1
+						select new Issue3360_TypedNullEnumInAnchorProjection(p.Id, StrEnum.One))
+						.Concat(
+						from p in db.GetTable<Issue3360NullInAnchor>()
+						select new Issue3360_TypedNullEnumInAnchorProjection(p.Id, p.Enum1))
+						.Concat(
+						from p in db.GetTable<Issue3360NullInAnchor>()
+						select new Issue3360_TypedNullEnumInAnchorProjection(p.Id, null));
+				})
+						select new Issue3360_TypedNullEnumInAnchorProjection(node.Id, node.Value);
+
+			query.ToArray();
+
+			Assert.That(db.LastQuery!.ToUpper(), Does.Not.Contain("SQL_VARIANT"));
 		}
 
 		#region InvalidColumnIndexMapping issue
@@ -1703,9 +1720,9 @@ namespace Tests.Linq
 
 		private record Issue3360NullsRecord(int Id, byte? Byte, byte? ByteN, Guid? Guid, Guid? GuidN, InvalidColumnIndexMappingEnum1? Enum, InvalidColumnIndexMappingEnum2? EnumN, bool? Bool, bool? BoolN);
 
-		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllMySql, TestProvName.AllSqlServer, TestProvName.AllSapHana])]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllMySql, TestProvName.AllSqlServer])]
 		[Test(Description = "null literals in anchor query (for known problematic types)")]
-		public void Issue3360_NullsInAnchor([CteContextSource] string context)
+		public void Issue3360_NullsInAnchor([RecursiveCteContextSource] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Issue3360Table1.Items);
@@ -1749,9 +1766,9 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllMySql, TestProvName.AllSqlServer, TestProvName.AllSapHana])]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllMySql, TestProvName.AllSqlServer])]
 		[Test(Description = "double columns in anchor query")]
-		public void Issue3360_DoubleColumnSelection([CteContextSource] string context)
+		public void Issue3360_DoubleColumnSelection([RecursiveCteContextSource] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Issue3360Table1.Items);
@@ -1797,7 +1814,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
 		[Test(Description = "literals in anchor query")]
-		public void Issue3360_LiteralsInAnchor([CteContextSource(TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
+		public void Issue3360_LiteralsInAnchor([RecursiveCteContextSource(TestProvName.AllInformix)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Issue3360Table1.Items);
@@ -1870,7 +1887,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllSqlServer])]
 		[Test(Description = "Test that other providers work")]
-		public void Issue2451_ComplexColumn_All([CteContextSource(ProviderName.DB2, TestProvName.AllSapHana)] string context)
+		public void Issue2451_ComplexColumn_All([RecursiveCteContextSource(ProviderName.DB2)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1926,9 +1943,8 @@ namespace Tests.Linq
 			public TestFolder? Parent { get; set; }
 		}
 
-		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana)]
 		[Test(Description = "Recursive common table expression 'CTE' does not contain a top-level UNION ALL operator.")]
-		public void Issue2264([CteContextSource] string context)
+		public void Issue2264([RecursiveCteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TestFolder>();
@@ -1961,7 +1977,7 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, TestProvName.AllInformix])]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, ProviderName.InformixDB2])]
 		[Test]
 		public void Issue3945([CteContextSource] string context)
 		{
@@ -2153,7 +2169,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4366")]
-		public void Issue4366Test1([CteContextSource(TestProvName.AllSapHana)] string context)
+		public void Issue4366Test1([RecursiveCteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Dto>();
@@ -2181,7 +2197,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4366")]
-		public void Issue4366Test2([CteContextSource(TestProvName.AllSapHana)] string context)
+		public void Issue4366Test2([RecursiveCteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Dto>();
@@ -2243,7 +2259,7 @@ namespace Tests.Linq
 		// CH: probably this https://github.com/ClickHouse/ClickHouse/issues/64794
 		[ActiveIssue(Details = "Investigate expected SQL", Configuration = TestProvName.AllClickHouse)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4012")]
-		public void Issue4012Test([CteContextSource(TestProvName.AllSapHana)] string context)
+		public void Issue4012Test([RecursiveCteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2337,7 +2353,7 @@ namespace Tests.Linq
 			[Column(Precision = 10, Scale = 0)] public decimal StockOnHand { get; set; }
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4717")]
 		public void Issue4717Test([CteContextSource] string context)
 		{
@@ -2539,7 +2555,7 @@ namespace Tests.Linq
 		sealed record SequenceBuildFailedRecord(int Id);
 
 		[Test]
-		public void Issue_SequenceBuildFailed_1([CteContextSource(TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
+		public void Issue_SequenceBuildFailed_1([RecursiveCteContextSource(TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2579,6 +2595,150 @@ namespace Tests.Linq
 				};
 
 			var result = query.ToArray();
+		}
+
+		sealed class Issue4968Menu
+		{
+			[PrimaryKey] public int Id { get; set; }
+		}
+
+		sealed class Issue4968Item
+		{
+			[PrimaryKey] public int Id { get; set; }
+			public int MenuId { get; set; }
+			public int? ParentItemId { get; set; }
+		}
+
+		sealed class Issue4968Projection
+		{ 
+			public int Id1 { get; set; }
+			public int? Id2 { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4968")]
+		public void Issue4968Test_Tuple_Select([RecursiveCteContextSource(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tm = db.CreateLocalTable<Issue4968Menu>();
+			using var ti = db.CreateLocalTable<Issue4968Item>();
+
+			var menuId = 1;
+
+			var cte = db.GetCte<Tuple<int, int?>>(
+				cteQueryable => ti
+					.Where(item => item.MenuId == menuId)
+					.Select(item => Tuple.Create(item.Id, item.ParentItemId))
+					.UnionAll(ti.InnerJoin(
+						cteQueryable,
+						(item, cte) => item.ParentItemId == cte.Item1,
+						(item, cte) => Tuple.Create(item.Id, item.ParentItemId))));
+
+			ti.Where(i => cte.Any(t => t.Item1 == i.Id)).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4968")]
+		public void Issue4968Test_Tuple_Delete([RecursiveCteContextSource(TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySqlWithCTE, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tm = db.CreateLocalTable<Issue4968Menu>();
+			using var ti = db.CreateLocalTable<Issue4968Item>();
+
+			var menuId = 1;
+
+			var cte = db.GetCte<Tuple<int, int?>>(
+				cteQueryable => ti
+					.Where(item => item.MenuId == menuId)
+					.Select(item => Tuple.Create(item.Id, item.ParentItemId))
+					.UnionAll(ti.InnerJoin(
+						cteQueryable,
+						(item, cte) => item.ParentItemId == cte.Item1,
+						(item, cte) => Tuple.Create(item.Id, item.ParentItemId))));
+
+			ti.Where(i => cte.Any(tuple => tuple.Item1 == i.Id)).Delete();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4968")]
+		public void Issue4968Test_Class_Select([RecursiveCteContextSource(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tm = db.CreateLocalTable<Issue4968Menu>();
+			using var ti = db.CreateLocalTable<Issue4968Item>();
+
+			var menuId = 1;
+
+			var cte = db.GetCte<Issue4968Projection>(
+				cteQueryable => ti
+					.Where(item => item.MenuId == menuId)
+					.Select(item => new Issue4968Projection() {Id1 = item.Id, Id2 = item.ParentItemId })
+					.UnionAll(ti.InnerJoin(
+						cteQueryable,
+						(item, cte) => item.ParentItemId == cte.Id1,
+						(item, cte) => new Issue4968Projection() {Id1 = item.Id, Id2 = item.ParentItemId })));
+
+			ti.Where(i => cte.Any(t => t.Id1 == i.Id)).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4968")]
+		public void Issue4968Test_Class_Delete([RecursiveCteContextSource(TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySqlWithCTE, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tm = db.CreateLocalTable<Issue4968Menu>();
+			using var ti = db.CreateLocalTable<Issue4968Item>();
+
+			var menuId = 1;
+
+			var cte = db.GetCte<Issue4968Projection>(
+				cteQueryable => ti
+					.Where(item => item.MenuId == menuId)
+					.Select(item => new Issue4968Projection() {Id1 = item.Id, Id2 = item.ParentItemId })
+					.UnionAll(ti.InnerJoin(
+						cteQueryable,
+						(item, cte) => item.ParentItemId == cte.Id1,
+						(item, cte) => new Issue4968Projection() {Id1 = item.Id, Id2 = item.ParentItemId })));
+
+			ti.Where(i => cte.Any(tuple => tuple.Id1 == i.Id)).Delete();
+		}
+
+		public class DateRangeHelper
+		{
+			public int      Counter { get; set; }
+			public DateTime Date    { get; set; }
+		}
+
+		[ActiveIssue("Wrong Date manipulations", Configurations = [TestProvName.AllOracle11])]
+		[Test]
+		public void SelectQueryTest([RecursiveCteContextSource] string context, bool inlineParams)
+		{
+			using var db = GetDataContext(context);
+
+			var dateFrom = TestData.DateTime.Date;
+			var dateTo   = dateFrom.AddDays(10);
+
+			var cte = db.GetCte<DateRangeHelper>(
+				x =>
+				   db
+					   .SelectQuery(() => new DateRangeHelper { Counter = 1, Date = dateFrom.Date })
+					   .Concat
+					   (
+						   x
+							   .Select(_ => new DateRangeHelper { Counter = _.Counter + 1, Date = _.Date.AddDays(1) })
+							   .Where(_ => _.Date < dateTo)
+					   ));
+
+			if (inlineParams)
+				cte = cte.InlineParameters();
+
+			var result = cte.ToList();
+
+			AreEqual(
+				Enumerable.Range(0, 10).Select(i => dateFrom.AddDays(i)),
+				result.Select(_ => _.Date)
+				);
+			AreEqual(
+				Enumerable.Range(1, 10),
+				result.Select(_ => _.Counter)
+				);
+
 		}
 	}
 }

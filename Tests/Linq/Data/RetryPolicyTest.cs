@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider.SqlServer;
@@ -108,7 +109,7 @@ namespace Tests.Data
 			var ret = new Retry();
 			Assert.Throws<TestException>(() =>
 			{
-				using (var db = GetDataConnection(context, o => o.UseRetryPolicy(ret)))
+				using (var db = GetDataContext(context, o => o.UseRetryPolicy(ret)))
 				{
 					// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
 					db.GetTable<FakeClass>().ToList();
@@ -124,7 +125,7 @@ namespace Tests.Data
 			var ret = new Retry();
 			Assert.Throws<TestException>(() =>
 			{
-				using (var db = GetDataConnection(context, o => o.UseRetryPolicy(ret)))
+				using (var db = GetDataContext(context, o => o.UseRetryPolicy(ret)))
 				{
 					// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
 					db.GetTable<FakeClass>().ToList();
@@ -148,7 +149,7 @@ namespace Tests.Data
 		[Test]
 		public async Task ExecuteAsyncOption([IncludeDataSources(TestProvName.AllSqlServer2008)] string context)
 		{
-			using (var db = GetDataConnection(context, o => o.UseRetryPolicy(new SqlServerRetryPolicy())))
+			using (var db = GetDataContext(context, o => o.UseRetryPolicy(new SqlServerRetryPolicy())))
 			{
 				var i = await db.ExecuteAsync("SELECT 1");
 
@@ -163,7 +164,7 @@ namespace Tests.Data
 
 			try
 			{
-				using (var db = GetDataConnection(context, o => o.UseRetryPolicy(ret)))
+				using (var db = GetDataContext(context, o => o.UseRetryPolicy(ret)))
 				{
 					var r = db.GetTable<FakeClass>().ToListAsync();
 					r.Wait();
@@ -182,7 +183,7 @@ namespace Tests.Data
 		{
 			try
 			{
-				using (var db = GetDataConnection(context, o => o.UseFactory(connection => new DummyRetryPolicy())))
+				using (var db = GetDataContext(context, o => o.UseFactory(connection => new DummyRetryPolicy())))
 				using (db.CreateLocalTable<MyEntity>())
 				{
 					Assert.Fail("Exception expected");
@@ -199,7 +200,7 @@ namespace Tests.Data
 		{
 			try
 			{
-				using (var db = GetDataConnection(context, o => o.UseRetryPolicy(new DummyRetryPolicy())))
+				using (var db = GetDataContext(context, o => o.UseRetryPolicy(new DummyRetryPolicy())))
 				using (db.CreateLocalTable<MyEntity>())
 				{
 					Assert.Fail("Exception expected");
@@ -240,7 +241,7 @@ namespace Tests.Data
 				var connection = db1.OpenDbConnection();
 				try
 				{
-					using (var db = GetDataConnection(context,
+					using (var db = GetDataContext(context,
 						o => o
 							.UseConnection(db1.DataProvider, connection)
 							.UseRetryPolicy(new DummyRetryPolicy())))
@@ -318,5 +319,35 @@ namespace Tests.Data
 		}
 
 		#endregion
+
+		sealed class TestDelayRetryPolicy(double expBase) : RetryPolicyBase(
+			10,
+			Configuration.RetryPolicy.DefaultMaxDelay,
+			Configuration.RetryPolicy.DefaultRandomFactor,
+			expBase,
+			Configuration.RetryPolicy.DefaultCoefficient)
+		{
+			protected override bool ShouldRetryOn(Exception exception) => exception is InvalidOperationException;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4913")]
+		public void GetNextDelay_Invalid_ExpBase()
+		{
+			Assert.That(() =>
+			{
+				IRetryPolicy policy = new TestDelayRetryPolicy(0.999);
+				policy.Execute(() => throw new InvalidOperationException());
+			}, Throws.InstanceOf<ArgumentOutOfRangeException>().With.Property(nameof(ArgumentOutOfRangeException.ParamName)).EqualTo("exponentialBase"));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4913")]
+		public void GetNextDelay_MinAllowed_ExpBase()
+		{
+			Assert.That(() =>
+			{
+				IRetryPolicy policy = new TestDelayRetryPolicy(1.0);
+				policy.Execute(() => throw new InvalidOperationException());
+			}, Throws.InstanceOf<InvalidOperationException>());
+		}
 	}
 }
