@@ -25,7 +25,7 @@ namespace Tests.Linq
 		[Table(Name = "sample_class")]
 		sealed class SampleClass
 		{
-			[Column("id")]
+			[Column("id"), PrimaryKey]
 			public int Id    { get; set; }
 
 			[Column("value", Length = 50)]
