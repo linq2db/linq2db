@@ -74,7 +74,9 @@ namespace Tests
 			if (_context == null)
 				return;
 
-#if NET472
+#if NET462
+			var target = "net462";
+#elif NET472
 			var target = "net472";
 #elif NETCOREAPP3_1
 			var target = "core31";
@@ -82,6 +84,8 @@ namespace Tests
 			var target = "net60";
 #elif NET7_0
 			var target = "net70";
+#elif NET8_0
+			var target = "net80";
 #else
 #error "Build Target must be specified here."
 #endif

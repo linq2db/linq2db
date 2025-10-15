@@ -7,9 +7,9 @@
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.remote.grpc.xml</DocumentationFile>
 
 		<!--published targets-->
-		<TargetFrameworks>netstandard2.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
 		<!--add test-only targets separately for better visibility-->
-		<TargetFrameworks>$(TargetFrameworks);net472;netcoreapp3.1;net6.0</TargetFrameworks>
+		<TargetFrameworks>$(TargetFrameworks);net472</TargetFrameworks>
 		<IsAotCompatible Condition="$(TargetFramework) == 'net7.0'">true</IsAotCompatible>
 	</PropertyGroup>
 

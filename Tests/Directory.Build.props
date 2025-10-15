@@ -3,7 +3,7 @@
 
 	<PropertyGroup>
 		<!--net472 must be last. I know it doesn't make any sense, but it helps VS to discover .net core tests-->
-		<TargetFrameworks>netcoreapp3.1;net6.0;net7.0;net472</TargetFrameworks>
+		<TargetFrameworks>net8.0;net472</TargetFrameworks>
 		<Configurations>Debug;Release;Azure</Configurations>
 		<DefineConstants>$(DefineConstants)</DefineConstants>
 		<DefineConstants Condition="$(X86) != ''">$(DefineConstants);X86</DefineConstants>

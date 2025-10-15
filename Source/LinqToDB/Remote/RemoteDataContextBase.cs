@@ -274,7 +274,7 @@ namespace LinqToDB.Remote
 				{
 					var key = Tuple.Create(SqlProviderType, MappingSchema, SqlOptimizerType, ((IDataContext)this).SqlProviderFlags, Options);
 
-#if NET45 || NET46 || NETSTANDARD2_0
+#if NET45 || NET46 || NET462 || NETSTANDARD2_0
 					_createSqlProvider = _sqlBuilders.GetOrAdd(
 						key,
 						key =>
@@ -308,7 +308,7 @@ namespace LinqToDB.Remote
 								}))
 							.CompileExpression();
 					}
-#if NET45 || NET46 || NETSTANDARD2_0
+#if NET45 || NET46 || NET462 || NETSTANDARD2_0
 					);
 #else
 					, (MappingSchema, GetSqlOptimizer(Options)));

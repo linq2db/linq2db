@@ -24,7 +24,7 @@ namespace Tests.Mapping
 			[PrimaryKey]
 			public int     ID   { get; set; }
 			[Column(Length = 50)]
-			public string? Data { get; set; }
+			public required string Data { get; set; }
 		}
 
 		[Test]
