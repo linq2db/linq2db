@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
@@ -28,8 +29,6 @@ using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.Metrics;
-
-using static LinqToDB.Internal.Linq.ReflectionHelper;
 
 namespace LinqToDB.Remote
 {
@@ -122,11 +121,14 @@ namespace LinqToDB.Remote
 			}
 
 			static readonly string _sqlServerMappingSchemaNamespaceName = typeof(Internal.DataProvider.SqlServer.SqlServerMappingSchema).Namespace!;
+			static readonly string _firebirdMappingSchemaNamespaceName  = typeof(Internal.DataProvider.Firebird.FirebirdMappingSchema).  Namespace!;
+			static readonly string _oracleMappingSchemaNamespaceName    = typeof(Internal.DataProvider.Oracle.OracleMappingSchema).      Namespace!;
 
 			static MappingSchema GetMappingSchema(Type type)
 			{
-				if (type.Namespace == _sqlServerMappingSchemaNamespaceName)
-					return Internal.DataProvider.SqlServer.SqlServerMappingSchema.GetRemoteMappingSchema(type);
+				if (type.Namespace == _sqlServerMappingSchemaNamespaceName) return Internal.DataProvider.SqlServer.SqlServerMappingSchema.GetRemoteMappingSchema(type);
+				if (type.Namespace == _firebirdMappingSchemaNamespaceName)  return Internal.DataProvider.Firebird. FirebirdMappingSchema. GetRemoteMappingSchema(type);
+				if (type.Namespace == _oracleMappingSchemaNamespaceName)    return Internal.DataProvider.Oracle.   OracleMappingSchema.   GetRemoteMappingSchema(type);
 
 				return ActivatorExt.CreateInstance<MappingSchema>(type);
 			}

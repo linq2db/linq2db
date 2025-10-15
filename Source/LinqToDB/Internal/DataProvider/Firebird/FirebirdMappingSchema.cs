@@ -259,5 +259,22 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		public sealed class Firebird5MappingSchema() : LockedMappingSchema(ProviderName.Firebird5, FirebirdProviderAdapter.Instance.MappingSchema, Instance)
 		{
 		}
+
+		sealed class FirebirdRemoteMappingSchema(string configuration) : LockedMappingSchema(configuration, Instance);
+
+		static readonly FirebirdRemoteMappingSchema _firebird2SMappingSchema = new (ProviderName.Firebird25);
+		static readonly FirebirdRemoteMappingSchema _firebird3MappingSchema  = new (ProviderName.Firebird3);
+		static readonly FirebirdRemoteMappingSchema _firebird4MappingSchema  = new (ProviderName.Firebird4);
+		static readonly FirebirdRemoteMappingSchema _firebird5MappingSchema  = new (ProviderName.Firebird5);
+
+		internal static MappingSchema GetRemoteMappingSchema(Type type)
+		{
+			if (type == typeof(Firebird25MappingSchema)) return _firebird2SMappingSchema;
+			if (type == typeof(Firebird3MappingSchema))  return _firebird3MappingSchema;
+			if (type == typeof(Firebird4MappingSchema))  return _firebird4MappingSchema;
+			if (type == typeof(Firebird5MappingSchema))  return _firebird5MappingSchema;
+
+			throw new InvalidOperationException();
+		}
 	}
 }

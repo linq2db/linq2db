@@ -9,6 +9,7 @@ using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Mapping;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
@@ -257,6 +258,27 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			public Devart11MappingSchema() : base(ProviderName.Oracle11Devart, OracleProviderAdapter.GetInstance(OracleProvider.Devart).MappingSchema, Instance)
 			{
 			}
+		}
+
+		sealed class OracleRemoteMappingSchema(string configuration) : LockedMappingSchema(configuration, Instance);
+
+		static readonly OracleRemoteMappingSchema _oracleNativeMappingSchema    = new (ProviderName.OracleNative);
+		static readonly OracleRemoteMappingSchema _oracleManagedMappingSchema   = new (ProviderName.OracleManaged);
+		static readonly OracleRemoteMappingSchema _oracleDevartMappingSchema    = new (ProviderName.OracleDevart);
+		static readonly OracleRemoteMappingSchema _oracleNative11MappingSchema  = new (ProviderName.Oracle11Native);
+		static readonly OracleRemoteMappingSchema _oracleManaged11MappingSchema = new (ProviderName.Oracle11Managed);
+		static readonly OracleRemoteMappingSchema _oracleDevart11MappingSchema  = new (ProviderName.Oracle11Devart);
+
+		internal static MappingSchema GetRemoteMappingSchema(Type type)
+		{
+			if (type == typeof(NativeMappingSchema))    return _oracleNativeMappingSchema;
+			if (type == typeof(ManagedMappingSchema))   return _oracleManagedMappingSchema;
+			if (type == typeof(DevartMappingSchema))    return _oracleDevartMappingSchema;
+			if (type == typeof(Native11MappingSchema))  return _oracleNative11MappingSchema;
+			if (type == typeof(Managed11MappingSchema)) return _oracleManaged11MappingSchema;
+			if (type == typeof(Devart11MappingSchema))  return _oracleDevart11MappingSchema;
+
+			throw new InvalidOperationException();
 		}
 	}
 }
