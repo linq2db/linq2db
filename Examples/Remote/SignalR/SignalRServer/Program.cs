@@ -12,7 +12,7 @@ using LinqToDB.Remote.SignalR;
 
 namespace SignalRServer
 {
-	public class Program
+	static class Program
 	{
 		public static void Main(string[] args)
 		{
@@ -26,7 +26,8 @@ namespace SignalRServer
 			//
 			DataOptions? options = null;
 			builder.Services.AddLinqToDBContext<IDemoDataModel>(provider => new DemoDB(options ??= new DataOptions()
-				.UseSQLite("Data Source=:memory:;Mode=Memory;Cache=Shared")
+				//.UseSQLite("Data Source=:memory:;Mode=Memory;Cache=Shared")
+				.UseSqlServer("Server=localhost;Database=DemoData;Integrated Security=SSPI;TrustServerCertificate=true")
 				.UseDefaultLogging(provider)),
 				ServiceLifetime.Transient);
 
@@ -77,7 +78,7 @@ namespace SignalRServer
 		{
 			var db = services.GetRequiredService<IDemoDataModel>();
 
-			db.CreateTable<WeatherForecast>();
+			db.CreateTable<WeatherForecast>(tableOptions : TableOptions.CreateIfNotExists);
 
 			var startDate = DateOnly.FromDateTime(DateTime.Now);
 			var summaries = new[] { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching" };
@@ -91,7 +92,7 @@ namespace SignalRServer
 				})
 				.ToArray();
 
-			db.Model.WeatherForecasts.BulkCopy(forecasts);
+			db.Model.WeatherForecasts.Merge(forecasts);
 		}
 	}
 }

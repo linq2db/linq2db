@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Common;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
@@ -29,6 +28,8 @@ using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.Metrics;
+
+using static LinqToDB.Internal.Linq.ReflectionHelper;
 
 namespace LinqToDB.Remote
 {
@@ -116,8 +117,18 @@ namespace LinqToDB.Remote
 					static entry =>
 					{
 						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-						return new RemoteMappingSchema(entry.Key.contextIDPrefix, ActivatorExt.CreateInstance<MappingSchema>(entry.Key.mappingSchemaType));
+						return new RemoteMappingSchema(entry.Key.contextIDPrefix, GetMappingSchema(entry.Key.mappingSchemaType));
 					});
+			}
+
+			static readonly string _sqlServerMappingSchemaNamespaceName = typeof(Internal.DataProvider.SqlServer.SqlServerMappingSchema).Namespace!;
+
+			static MappingSchema GetMappingSchema(Type type)
+			{
+				if (type.Namespace == _sqlServerMappingSchemaNamespaceName)
+					return Internal.DataProvider.SqlServer.SqlServerMappingSchema.GetRemoteMappingSchema(type);
+
+				return ActivatorExt.CreateInstance<MappingSchema>(type);
 			}
 
 			private RemoteMappingSchema(string configuration, MappingSchema mappingSchema)
@@ -475,7 +486,7 @@ namespace LinqToDB.Remote
 		}
 
 		public void CommitBatch() => SafeAwaiter.Run(CommitBatchAsync);
-		
+
 		public async Task CommitBatchAsync(CancellationToken cancellationToken = default)
 		{
 			ThrowOnDisposed();

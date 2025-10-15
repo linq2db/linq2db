@@ -9,6 +9,8 @@
 		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.SignalR.Server\LinqToDB.Remote.SignalR.Server.csproj" />
 		<ProjectReference Include="..\SignalRClient\SignalRClient.csproj" />
 
+		<PackageReference Include="Microsoft.Data.SqlClient" />
+
 		<PackageReference Include="Microsoft.Data.Sqlite" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
 	</ItemGroup>
