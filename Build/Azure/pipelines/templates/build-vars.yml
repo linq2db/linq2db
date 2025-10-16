@@ -1,12 +1,12 @@
 variables:
 # also check hardcoded branch names in pipeline triggers and nuget-vars.yml
-  master_branch: master
-  release_branch: release
-  baselines_master: master
+  master_branch: v5.4.1
+  release_branch: release-v5.4.1.9
+  baselines_master: v5.4.1
   solution: 'linq2db.sln'
   build_configuration: 'Azure'
-  assemblyVersion: 5.4.2
+  assemblyVersion: 5.4.1.9
   ${{ if eq(variables['Build.SourceBranchName'], 'release') }}:
-    packageVersion: 5.4.2
+    packageVersion: 5.4.1.9
   ${{ if ne(variables['Build.SourceBranchName'], 'release') }}:
-    packageVersion: 5.4.2
+    packageVersion: 5.4.1.9
