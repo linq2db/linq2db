@@ -154,8 +154,7 @@ jobs:
             extra: ${{ test_config.extra }}
             netfx: ${{ test_config.enable_fw_net472 }}
             netcore31: ${{ test_config.enable_fw_netcore31 }}
-            net60: ${{ test_config.enable_fw_net60 }}
-            net70: ${{ test_config.enable_fw_net70 }}
+            net80: ${{ test_config.enable_fw_net80 }}
             x86: ${{ test_config.x86 }}
 
   steps:
@@ -187,8 +186,7 @@ jobs:
             docker_login: ${{ test_config.docker_login }}
             extra: ${{ test_config.extra }}
             netcore31: ${{ test_config.enable_fw_netcore31 }}
-            net60: ${{ test_config.enable_fw_net60 }}
-            net70: ${{ test_config.enable_fw_net70 }}
+            net80: ${{ test_config.enable_fw_net80 }}
 
   steps:
   - template: test-workflow-linux.yml
@@ -220,8 +218,7 @@ jobs:
             docker_login: ${{ test_config.docker_login }}
             extra: ${{ test_config.extra }}
             netcore31: ${{ test_config.enable_fw_netcore31 }}
-            net60: ${{ test_config.enable_fw_net60 }}
-            net70: ${{ test_config.enable_fw_net70 }}
+            net80: ${{ test_config.enable_fw_net80 }}
 
   steps:
   - template: test-workflow-macos.yml

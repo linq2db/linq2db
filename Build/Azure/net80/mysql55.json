@@ -1,0 +1,9 @@
+﻿{
+	"NET80.Azure": {
+		"Providers": [
+			// MySql 5.5
+			"MySql55",
+			"MySql55Connector"
+		]
+	}
+}

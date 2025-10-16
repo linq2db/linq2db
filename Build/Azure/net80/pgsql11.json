@@ -1,0 +1,8 @@
+﻿{
+	"NET80.Azure": {
+		"Providers": [
+			// posgresql 11
+			"PostgreSQL.11"
+		]
+	}
+}

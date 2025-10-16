@@ -119,8 +119,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\linq2db.Sybase.nuspec = NuGet\linq2db.Sybase.nuspec
 		NuGet\linq2db.t4models.nuspec = NuGet\linq2db.t4models.nuspec
 		NuGet\linq2db.Tools.nuspec = NuGet\linq2db.Tools.nuspec
-		NuGet\PackLocal.cmd = NuGet\PackLocal.cmd
 		NuGet\Pack.cmd = NuGet\Pack.cmd
+		NuGet\PackLocal.cmd = NuGet\PackLocal.cmd
 		NuGet\README.AspNet.md = NuGet\README.AspNet.md
 		NuGet\README.linq2db.md = NuGet\README.linq2db.md
 		NuGet\README.Remote.Grpc.md = NuGet\README.Remote.Grpc.md
@@ -286,8 +286,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{49A37E5A-A8A3-4C89-B11C-D700A9F52BAA}"
 	ProjectSection(SolutionItems) = preProject
 		Build\Azure\scripts\access.ace.ps1 = Build\Azure\scripts\access.ace.ps1
-		Build\Azure\scripts\clickhouse.sh = Build\Azure\scripts\clickhouse.sh
 		Build\Azure\scripts\access.ace.x64.ps1 = Build\Azure\scripts\access.ace.x64.ps1
+		Build\Azure\scripts\clickhouse.sh = Build\Azure\scripts\clickhouse.sh
 		Build\Azure\scripts\db2.provider.sh = Build\Azure\scripts\db2.provider.sh
 		Build\Azure\scripts\db2.sh = Build\Azure\scripts\db2.sh
 		Build\Azure\scripts\firebird25.sh = Build\Azure\scripts\firebird25.sh
@@ -526,6 +526,50 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net70", "net70", "{1ED95A47
 		Build\Azure\net70\sybase.json = Build\Azure\net70\sybase.json
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net80", "net80", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+	ProjectSection(SolutionItems) = preProject
+		Build\Azure\net80\access.ace.json = Build\Azure\net80\access.ace.json
+		Build\Azure\net80\access.ace.x64.json = Build\Azure\net80\access.ace.x64.json
+		Build\Azure\net80\access.mdb.json = Build\Azure\net80\access.mdb.json
+		Build\Azure\net80\clickhouse.json = Build\Azure\net80\clickhouse.json
+		Build\Azure\net80\db2.json = Build\Azure\net80\db2.json
+		Build\Azure\net80\firebird25.json = Build\Azure\net80\firebird25.json
+		Build\Azure\net80\firebird3.json = Build\Azure\net80\firebird3.json
+		Build\Azure\net80\firebird4.json = Build\Azure\net80\firebird4.json
+		Build\Azure\net80\hana2.json = Build\Azure\net80\hana2.json
+		Build\Azure\net80\informix.json = Build\Azure\net80\informix.json
+		Build\Azure\net80\mariadb.json = Build\Azure\net80\mariadb.json
+		Build\Azure\net80\mysql.json = Build\Azure\net80\mysql.json
+		Build\Azure\net80\mysql55.json = Build\Azure\net80\mysql55.json
+		Build\Azure\net80\oracle11.json = Build\Azure\net80\oracle11.json
+		Build\Azure\net80\oracle12.json = Build\Azure\net80\oracle12.json
+		Build\Azure\net80\oracle18.json = Build\Azure\net80\oracle18.json
+		Build\Azure\net80\oracle19.json = Build\Azure\net80\oracle19.json
+		Build\Azure\net80\oracle21.json = Build\Azure\net80\oracle21.json
+		Build\Azure\net80\oracle23.json = Build\Azure\net80\oracle23.json
+		Build\Azure\net80\pgsql11.json = Build\Azure\net80\pgsql11.json
+		Build\Azure\net80\pgsql12.json = Build\Azure\net80\pgsql12.json
+		Build\Azure\net80\pgsql13.json = Build\Azure\net80\pgsql13.json
+		Build\Azure\net80\pgsql14.json = Build\Azure\net80\pgsql14.json
+		Build\Azure\net80\pgsql15.json = Build\Azure\net80\pgsql15.json
+		Build\Azure\net80\pgsql16.json = Build\Azure\net80\pgsql16.json
+		Build\Azure\net80\sqlce.json = Build\Azure\net80\sqlce.json
+		Build\Azure\net80\sqlite.extras.json = Build\Azure\net80\sqlite.extras.json
+		Build\Azure\net80\sqlite.json = Build\Azure\net80\sqlite.json
+		Build\Azure\net80\sqlserver.2005.json = Build\Azure\net80\sqlserver.2005.json
+		Build\Azure\net80\sqlserver.2008.json = Build\Azure\net80\sqlserver.2008.json
+		Build\Azure\net80\sqlserver.2012.json = Build\Azure\net80\sqlserver.2012.json
+		Build\Azure\net80\sqlserver.2014.json = Build\Azure\net80\sqlserver.2014.json
+		Build\Azure\net80\sqlserver.2016.json = Build\Azure\net80\sqlserver.2016.json
+		Build\Azure\net80\sqlserver.2017.json = Build\Azure\net80\sqlserver.2017.json
+		Build\Azure\net80\sqlserver.2019.json = Build\Azure\net80\sqlserver.2019.json
+		Build\Azure\net80\sqlserver.2022.json = Build\Azure\net80\sqlserver.2022.json
+		Build\Azure\net80\sqlserver.2022.metrics.json = Build\Azure\net80\sqlserver.2022.metrics.json
+		Build\Azure\net80\sqlserver.extras.json = Build\Azure\net80\sqlserver.extras.json
+		Build\Azure\net80\sqlserver.fts.2019.json = Build\Azure\net80\sqlserver.fts.2019.json
+		Build\Azure\net80\sybase.json = Build\Azure\net80\sybase.json
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Azure|Any CPU = Azure|Any CPU
@@ -663,6 +707,7 @@ Global
 		{6152B55A-E7B0-4E7A-8E26-922FD91C6A95} = {3A081B6E-D3B3-433F-A3CA-EE29CD24C324}
 		{6CB875B4-1799-4760-A734-091F34888A60} = {885042E3-18EA-4927-B1CF-5E0E3DBD1C00}
 		{1ED95A47-B11F-4EA1-8916-B7BD2951417B} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
+		{02EA681E-C7D8-13C7-8484-4AC65E1B71E8} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}
