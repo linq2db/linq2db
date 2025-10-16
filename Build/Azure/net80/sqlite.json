@@ -1,0 +1,14 @@
+﻿{
+	"NET80.Azure": {
+		"Providers": [
+			// not sqlite, but should go somewhere
+			"TestNoopProvider",
+			// System.Data.SQLite
+			"SQLite.Classic",
+			"Northwind.SQLite",
+			// Microsoft.Data.SQLite
+			"SQLite.MS",
+			"Northwind.SQLite.MS"
+		]
+	}
+}

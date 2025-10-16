@@ -1,0 +1,8 @@
+﻿{
+	"NET80.Azure": {
+		"Providers": [
+			"SqlServer.2022",
+			"SqlServer.2022.MS"
+		]
+	}
+}

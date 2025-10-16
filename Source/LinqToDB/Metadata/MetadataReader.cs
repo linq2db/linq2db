@@ -79,7 +79,7 @@ namespace LinqToDB.Metadata
 		public MemberInfo[] GetDynamicColumns(Type type)
 		{
 			return _dynamicColumns.GetOrAdd(type,
-#if NET45 || NET46 || NETSTANDARD2_0
+#if NET45 || NET46 || NET462 || NETSTANDARD2_0
 			type =>
 			{
 				if (_readers.Length == 0)

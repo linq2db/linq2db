@@ -8,20 +8,11 @@ steps:
 # so we need to install only x86 versions
 
 - task: UseDotNet@2
-  displayName: 'Install .NET 6 (x86)'
+  displayName: 'Install .NET 8 (x86)'
   inputs:
     packageType: sdk
-    version: 6.x
-  condition: and(variables.title, eq(variables.net60, 'true'), eq(variables.x86, 'true'), succeeded())
-  env:
-    PROCESSOR_ARCHITECTURE: x86
-
-- task: UseDotNet@2
-  displayName: 'Install .NET 7 (x86)'
-  inputs:
-    packageType: sdk
-    version: 7.x
-  condition: and(variables.title, eq(variables.net70, 'true'), eq(variables.x86, 'true'), succeeded())
+    version: 8.x
+  condition: and(variables.title, eq(variables.net80, 'true'), eq(variables.x86, 'true'), succeeded())
   env:
     PROCESSOR_ARCHITECTURE: x86
 
@@ -71,27 +62,15 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: 'copy $(System.DefaultWorkingDirectory)\configs\net60\$(config).json $(System.DefaultWorkingDirectory)\net60\UserDataProviders.json'
+    script: 'copy $(System.DefaultWorkingDirectory)\configs\net80\$(config).json $(System.DefaultWorkingDirectory)\net80\UserDataProviders.json'
   displayName: Copy test config
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net60, 'true'), succeeded())
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net80, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
-    script: 'copy $(System.DefaultWorkingDirectory)\configs\net60\$(config).json $(System.DefaultWorkingDirectory)\net60x86\UserDataProviders.json'
+    script: 'copy $(System.DefaultWorkingDirectory)\configs\net80\$(config).json $(System.DefaultWorkingDirectory)\net80x86\UserDataProviders.json'
   displayName: Copy test config
-  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net60, 'true'), succeeded())
-
-- task: CmdLine@2
-  inputs:
-    script: 'copy $(System.DefaultWorkingDirectory)\configs\net70\$(config).json $(System.DefaultWorkingDirectory)\net70\UserDataProviders.json'
-  displayName: Copy .NET 7 x64 test config
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net70, 'true'), succeeded())
-
-- task: CmdLine@2
-  inputs:
-    script: 'copy $(System.DefaultWorkingDirectory)\configs\net70\$(config).json $(System.DefaultWorkingDirectory)\net70x86\UserDataProviders.json'
-  displayName: Copy .NET 7 x86 test config
-  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net70, 'true'), succeeded())
+  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net80, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
@@ -182,74 +161,38 @@ steps:
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)\scripts\$(script_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)\net60'
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net60, 'true'), variables.script_local, succeeded())
+    workingDirectory: '$(System.DefaultWorkingDirectory)\net80'
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net80, 'true'), variables.script_local, succeeded())
   displayName: Setup tests
 
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)\scripts\$(script_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)\net60x86'
-  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net60, 'true'), variables.script_local, succeeded())
+    workingDirectory: '$(System.DefaultWorkingDirectory)\net80x86'
+  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net80, 'true'), variables.script_local, succeeded())
   displayName: Setup tests
 
 - task: PowerShell@2
   inputs:
     filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)\net60'
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net60, 'true'), variables.psscript_local, succeeded())
+    workingDirectory: '$(System.DefaultWorkingDirectory)\net80'
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net80, 'true'), variables.psscript_local, succeeded())
   displayName: Setup tests
 
 - task: PowerShell@2
   inputs:
     filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)\net60x86'
-  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net60, 'true'), variables.psscript_local, succeeded())
+    workingDirectory: '$(System.DefaultWorkingDirectory)\net80x86'
+  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net80, 'true'), variables.psscript_local, succeeded())
   displayName: Setup tests
 
-- script: dotnet test net60\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx
-  displayName: 'Tests (NET60): $(title)'
-  condition: and(eq(variables.net60, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
+- script: dotnet test net80\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx
+  displayName: 'Tests (NET80): $(title)'
+  condition: and(eq(variables.net80, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
 
-- script: dotnet test net60x86\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx
-  displayName: 'Tests (NET60 x86): $(title)'
-  condition: and(eq(variables.net60, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
-
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)\scripts\$(script_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)\net70'
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net70, 'true'), variables.script_local, succeeded())
-  displayName: Setup .NET 7 x64 tests
-
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)\scripts\$(script_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)\net70x86'
-  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net70, 'true'), variables.script_local, succeeded())
-  displayName: Setup .NET 7 x86 tests
-
-- task: PowerShell@2
-  inputs:
-    filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)\net70'
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net70, 'true'), variables.psscript_local, succeeded())
-  displayName: Setup .NET 7 x64 tests
-
-- task: PowerShell@2
-  inputs:
-    filePath: '$(System.DefaultWorkingDirectory)\scripts\$(psscript_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)\net70x86'
-  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net70, 'true'), variables.psscript_local, succeeded())
-  displayName: Setup .NET 7 x86 tests
-
-- script: dotnet test net70\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net70 -l trx
-  displayName: 'Tests (.NET 7 x64): $(title)'
-  condition: and(eq(variables.net70, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
-
-- script: dotnet test net70x86\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net70 -l trx
-  displayName: 'Tests (.NET 7 x86): $(title)'
-  condition: and(eq(variables.net70, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
+- script: dotnet test net80x86\linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx
+  displayName: 'Tests (NET80 x86): $(title)'
+  condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
 
 - task: PublishTestResults@2
   condition: and(variables.title, succeededOrFailed())

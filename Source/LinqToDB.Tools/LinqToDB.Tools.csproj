@@ -7,9 +7,9 @@
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.Tools.xml</DocumentationFile>
 
 		<!--published targets-->
-		<TargetFrameworks>net45;net46;netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>net462;netstandard2.0</TargetFrameworks>
 		<!--add test-only targets separately for better visibility-->
-		<TargetFrameworks>$(TargetFrameworks);net472;netcoreapp3.1;net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>$(TargetFrameworks);net472;net8.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' ">
@@ -17,6 +17,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Remove="$(MSBuildThisFileDirectory)..\Shared\ValueTuple.cs" />
+
 		<Compile Include="..\LinqToDB\Compatibility\System\Threading\AsyncLocal.cs" Link="AsyncLocal.cs" />
 	</ItemGroup>
 
@@ -36,6 +38,5 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>Schemas.tt</DependentUpon>
 		</Compile>
-
 	</ItemGroup>
 </Project>

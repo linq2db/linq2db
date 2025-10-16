@@ -29,17 +29,10 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: 'cp $(System.DefaultWorkingDirectory)/configs/net60/$(config).json net60/UserDataProviders.json'
+    script: 'cp $(System.DefaultWorkingDirectory)/configs/net80/$(config).json net80/UserDataProviders.json'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Copy .NET 6 test config
-  condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
-
-- task: CmdLine@2
-  inputs:
-    script: 'cp $(System.DefaultWorkingDirectory)/configs/net70/$(config).json net70/UserDataProviders.json'
-    workingDirectory: '$(System.DefaultWorkingDirectory)'
-  displayName: Copy .NET 7 test config
-  condition: and(variables.title, eq(variables.net70, 'true'), succeeded())
+  condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
@@ -76,24 +69,13 @@ steps:
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net60'
-  condition: and(variables.title, variables.script_local, eq(variables.net60, 'true'), succeeded())
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net80'
+  condition: and(variables.title, variables.script_local, eq(variables.net80, 'true'), succeeded())
   displayName: Setup tests
 
-- script: dotnet test ./net60/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra)
-  condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
-  displayName: 'Tests (NET60): $(title)'
-
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net70'
-  condition: and(variables.title, variables.script_local, eq(variables.net70, 'true'), succeeded())
-  displayName: Setup .NET 7 tests
-
-- script: dotnet test ./net70/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net70 -l trx $(extra)
-  condition: and(variables.title, eq(variables.net70, 'true'), succeeded())
-  displayName: 'Tests (.NET 7): $(title)'
+- script: dotnet test ./net80/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra)
+  condition: and(variables.title, eq(variables.net8, 'true'), succeeded())
+  displayName: 'Tests (NET80): $(title)'
 
 - task: PublishTestResults@2
   condition: and(variables.title, succeededOrFailed())

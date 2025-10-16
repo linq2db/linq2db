@@ -1,0 +1,9 @@
+﻿{
+	"NET80.Azure": {
+		"Providers": [
+			"ClickHouse.Octonica",
+			"ClickHouse.Client",
+			"ClickHouse.MySql"
+		]
+	}
+}

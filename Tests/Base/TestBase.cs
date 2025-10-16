@@ -300,6 +300,10 @@ namespace Tests
 			return "NET60";
 #elif NET7_0
 			return "NET70";
+#elif NET8_0
+			return "NET70";
+#elif NET462
+			return "NET472";
 #elif NET472
 			return "NET472";
 #else

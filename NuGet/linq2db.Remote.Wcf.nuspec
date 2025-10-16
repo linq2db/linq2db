@@ -10,7 +10,7 @@
 		</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<group targetFramework="net45">
+			<group targetFramework="net462">
 				<dependency id="linq2db" version="5.0.0" />
 			</group>
 		</dependencies>
@@ -19,8 +19,8 @@
 	<files>
 		<file src="..\Nuget\README.Remote.Wcf.md"                                          target="README.md"  />
 
-		<file src="..\Source\LinqToDB.Remote.Wcf\bin\Release\net45\linq2db.Remote.Wcf.pdb" target="lib\net45\" />
-		<file src="..\Source\LinqToDB.Remote.Wcf\bin\Release\net45\linq2db.Remote.Wcf.xml" target="lib\net45\" />
-		<file src="..\Source\LinqToDB.Remote.Wcf\bin\Release\net45\linq2db.Remote.Wcf.dll" target="lib\net45\" />
+		<file src="..\Source\LinqToDB.Remote.Wcf\bin\Release\net462\linq2db.Remote.Wcf.pdb" target="lib\net462\" />
+		<file src="..\Source\LinqToDB.Remote.Wcf\bin\Release\net462\linq2db.Remote.Wcf.xml" target="lib\net462\" />
+		<file src="..\Source\LinqToDB.Remote.Wcf\bin\Release\net462\linq2db.Remote.Wcf.dll" target="lib\net462\" />
 	</files>
 </package>

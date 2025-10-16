@@ -13,17 +13,21 @@
 		<tags>linq linq2db Npgsql PostgreSQL LinqToDB ORM database DB SQL</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<group targetFramework="net45">
+			<group targetFramework="net462">
 				<dependency id="linq2db" version="5.0.0"  />
-				<dependency id="Npgsql"  version="4.0.13" />
+				<dependency id="Npgsql"  version="4.1.14" />
 			</group>
-			<group targetFramework="net461">
+			<group targetFramework="net472">
 				<dependency id="linq2db" version="5.0.0"  />
-				<dependency id="Npgsql"  version="4.1.12" />
+				<dependency id="Npgsql"  version="8.0.8" />
 			</group>
 			<group targetFramework="netstandard2.0">
 				<dependency id="linq2db" version="5.0.0"  />
-				<dependency id="Npgsql"  version="7.0.6"  />
+				<dependency id="Npgsql"  version="8.0.8"  />
+			</group>
+			<group targetFramework="net8.0">
+				<dependency id="linq2db" version="5.0.0"  />
+				<dependency id="Npgsql"  version="9.0.4"  />
 			</group>
 		</dependencies>
 		<contentFiles>
@@ -33,7 +37,7 @@
 	<files>
 		<file src="..\Nuget\README.T4.md"                                                        target="README.md"                                                                                          />
 
-		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                             target="tools"                                                                                              />
+		<file src="..\Source\LinqToDB\bin\Release\net462\linq2db.dll"                            target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                                 target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\Npgsql.dll"                                    target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\System.Threading.Tasks.Extensions.dll"         target="tools"                                                                                              />

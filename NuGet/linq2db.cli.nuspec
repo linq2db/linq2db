@@ -12,12 +12,6 @@
 		</packageTypes>
 	</metadata>
 	<files>
-		<file src="..\Source\LinqToDB.CLI\bin\Release\netcoreapp3.1\**\*" target="tools\netcoreapp3.1\any\" />
-		<file src="..\NuGet\CLI\DotnetToolSettings.xml"                   target="tools\netcoreapp3.1\any\" />
-		<file src="..\Source\LinqToDB.CLI\bin\Release\net6.0\**\*"        target="tools\net6.0\any\"        />
-		<file src="..\NuGet\CLI\DotnetToolSettings.xml"                   target="tools\net6.0\any\"        />
-		<file src="..\Source\LinqToDB.CLI\bin\Release\net7.0\**\*"        target="tools\net7.0\any\"        />
-		<file src="..\NuGet\CLI\DotnetToolSettings.xml"                   target="tools\net7.0\any\"        />
 		<file src="..\Source\LinqToDB.CLI\bin\Release\net8.0\**\*"        target="tools\net8.0\any\"        />
 		<file src="..\NuGet\CLI\DotnetToolSettings.xml"                   target="tools\net8.0\any\"        />
 		<file src="..\NuGet\CLI\README.md"                                target="README.md"                />

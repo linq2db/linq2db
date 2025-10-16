@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.Serialization;
 
 namespace LinqToDB
@@ -64,6 +64,7 @@ namespace LinqToDB
 		{
 		}
 
+#if !NET8_0_OR_GREATER
 		/// <summary>
 		/// Initializes a new instance of the <see cref="LinqToDBException"/> class
 		/// with serialized data.
@@ -77,5 +78,6 @@ namespace LinqToDB
 			: base(info, context)
 		{
 		}
+#endif
 	}
 }

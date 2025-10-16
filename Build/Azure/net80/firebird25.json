@@ -1,0 +1,8 @@
+﻿{
+	"NET80.Azure": {
+		"Providers": [
+			// Firebird 2.5
+			"Firebird"
+		]
+	}
+}

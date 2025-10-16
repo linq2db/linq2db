@@ -13,7 +13,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue3475Tests : TestBase
 	{
-		internal sealed class LinqToDBDynamicLinqCustomTypeProvider : DefaultDynamicLinqCustomTypeProvider
+		internal sealed class LinqToDBDynamicLinqCustomTypeProvider() : DefaultDynamicLinqCustomTypeProvider(ParsingConfig.Default)
 		{
 			public override HashSet<Type> GetCustomTypes()
 			{
@@ -44,7 +44,7 @@ namespace Tests.UserTests
 			{
 				var query1 = db.GetTable<NumberLikeTestTable>().Select(x => new NumberLikeTestObj() { Obj = x }).Where(x => Sql.Like(x!.Obj!.IntNProp!.ToString(), "1%")).Take(50);
 				var query2 = db.GetTable<NumberLikeTestTable>().Select(x => new NumberLikeTestObj() { Obj = x }).Where("((Sql.Like(it.Obj.IntNProp.ToString(),@0)))", new object[]{ "1%" }).Take(50);
-				
+
 				var res1 = query1.ToList();
 				var res2 = query2.ToList();
 			}

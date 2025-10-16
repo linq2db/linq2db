@@ -14,7 +14,7 @@
 		<readme>README.md</readme>
 		<dependencies>
 			<dependency id="linq2db"                  version="5.0.0" />
-			<dependency id="Microsoft.Data.SqlClient" version="5.1.1" />
+			<dependency id="Microsoft.Data.SqlClient" version="6.1.2" />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />
@@ -23,7 +23,7 @@
 	<files>
 		<file src="..\Nuget\README.T4.md"                                            target="README.md"                                                                                          />
 
-		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                 target="tools"                                                                                              />
+		<file src="..\Source\LinqToDB\bin\Release\net462\linq2db.dll"                target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                     target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.SqlServer.Types.dll"     target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll" target="tools"                                                                                              />
