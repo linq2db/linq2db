@@ -122,14 +122,30 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinAggregateExecute([IncludeDataSources(true, TestProvName.PostgreSQL16)] string context)
+		public void JoinAggregateExecuteNullable([IncludeDataSources(true, TestProvName.PostgreSQL16)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
 			var allAggregated = table.AggregateExecute(e => string.Join(", ", e.OrderBy(x => x.NotNullableValue).Select(x => x.NullableValue)));
- 		}
+			var expected      = string.Join(", ", data.OrderBy(x => x.NotNullableValue).Select(x => x.NullableValue));
+
+			Assert.That(allAggregated, Is.EqualTo(expected));
+		}
+
+		[Test]
+		public void JoinAggregateExecuteNullableOnlyNotNull([IncludeDataSources(true, TestProvName.PostgreSQL16)] string context)
+		{
+			var       data  = SampleClass.GenerateDataUniquerId();
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var allAggregated = table.AggregateExecute(e => string.Join(", ", e.OrderBy(x => x.NotNullableValue).Where(e => e.NullableValue != null).Select(x => x.NullableValue)));
+			var expected      = string.Join(", ", data.OrderBy(x => x.NotNullableValue).Where(e => e.NullableValue != null).Select(x => x.NullableValue));
+
+			Assert.That(allAggregated, Is.EqualTo(expected));
+		}
 
 	}
 }
