@@ -10,11 +10,7 @@
 		</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<group targetFramework="net45" >
-				<dependency id="linq2db"        version="5.0.0"  />
-				<dependency id="Humanizer.Core" version="2.14.1" />
-			</group>
-			<group targetFramework="net46" >
+			<group targetFramework="net462" >
 				<dependency id="linq2db"        version="5.0.0"  />
 				<dependency id="Humanizer.Core" version="2.14.1" />
 			</group>
@@ -28,12 +24,9 @@
 	<files>
 		<file src="..\Nuget\README.Tools.md"                                              target="README.md"           />
 
-		<file src="..\Source\LinqToDB.Tools\bin\Release\net45\linq2db.Tools.pdb"          target="lib\net45\"          />
-		<file src="..\Source\LinqToDB.Tools\bin\Release\net45\linq2db.Tools.xml"          target="lib\net45\"          />
-		<file src="..\Source\LinqToDB.Tools\bin\Release\net45\linq2db.Tools.dll"          target="lib\net45\"          />
-		<file src="..\Source\LinqToDB.Tools\bin\Release\net46\linq2db.Tools.pdb"          target="lib\net46\"          />
-		<file src="..\Source\LinqToDB.Tools\bin\Release\net46\linq2db.Tools.xml"          target="lib\net46\"          />
-		<file src="..\Source\LinqToDB.Tools\bin\Release\net46\linq2db.Tools.dll"          target="lib\net46\"          />
+		<file src="..\Source\LinqToDB.Tools\bin\Release\net462\linq2db.Tools.pdb"         target="lib\net462\"         />
+		<file src="..\Source\LinqToDB.Tools\bin\Release\net462\linq2db.Tools.xml"         target="lib\net462\"         />
+		<file src="..\Source\LinqToDB.Tools\bin\Release\net462\linq2db.Tools.dll"         target="lib\net462\"         />
 		<file src="..\Source\LinqToDB.Tools\bin\Release\netstandard2.0\linq2db.Tools.pdb" target="lib\netstandard2.0\" />
 		<file src="..\Source\LinqToDB.Tools\bin\Release\netstandard2.0\linq2db.Tools.xml" target="lib\netstandard2.0\" />
 		<file src="..\Source\LinqToDB.Tools\bin\Release\netstandard2.0\linq2db.Tools.dll" target="lib\netstandard2.0\" />

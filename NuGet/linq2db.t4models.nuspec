@@ -20,7 +20,7 @@
 	<files>
 		<file src="..\Nuget\README.T4.md"                                                  target="README.md"                                                    />
 
-		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                       target="tools"                                                        />
+		<file src="..\Source\LinqToDB\bin\Release\net462\linq2db.dll"                      target="tools"                                                        />
 		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                           target="tools"                                                        />
 		<file src="..\Tests\Linq\bin\Azure\net472\Npgsql.dll"                              target="tools"                                                        />
 		<file src="..\Tests\Linq\bin\Azure\net472\MySqlConnector.dll"                      target="tools"                                                        />

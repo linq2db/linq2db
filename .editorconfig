@@ -161,6 +161,7 @@ dotnet_diagnostic.CA2215.severity = error # CA2215: Dispose methods should call 
 dotnet_diagnostic.CA2231.severity = none # CA2231: Overload operator equals on overriding ValueType.Equals
 # disabled, as NETFX doesn't have string.Contains overloads with comparison type
 dotnet_diagnostic.CA2249.severity = none # CA2249: Consider using String.Contains instead of String.IndexOf
+dotnet_diagnostic.CA2263.severity = none # CA2263: Prefer generic overloads of Enum.Parse and Enum.TryParse
 dotnet_diagnostic.CA3075.severity = error # CA3075: Insecure DTD Processing
 # very slow (https://github.com/dotnet/roslyn-analyzers/issues/4754)
 # also we don't have code that could be targeted by it
@@ -211,6 +212,7 @@ dotnet_diagnostic.CA1510.severity = none # CA1510: use throw helpers
 dotnet_diagnostic.CA1511.severity = none # CA1511: use throw helpers
 dotnet_diagnostic.CA1512.severity = none # CA1512: use throw helpers
 dotnet_diagnostic.CA1513.severity = none # CA1513: use throw helpers
+dotnet_diagnostic.CA1514.severity = none # CA1514: ArgumentException should provide parameter name
 dotnet_diagnostic.CA1864.severity = none # CA1864: Prefer the 'IDictionary.TryAdd(TKey, TValue)' method
 dotnet_diagnostic.CA1866.severity = none # CA1866: Use 'string.Method(char)' instead of 'string.Method(string)' for string with single char
 dotnet_diagnostic.CA1700.severity = none # CA1700: Do not name enum values 'Reserved'
@@ -353,6 +355,7 @@ dotnet_diagnostic.IDE0083.severity = none # IDE0083: Use pattern matching (not o
 dotnet_diagnostic.IDE0090.severity = none # IDE0090: new expression can be simplified
 dotnet_diagnostic.IDE0100.severity = none # IDE0100: remove redundant equality
 dotnet_diagnostic.IDE0120.severity = none # IDE0120: Simplify LINQ expression
+dotnet_diagnostic.IDE0121.severity = none # IDE0121: Use pattern matching instead of 'is' with cast
 dotnet_diagnostic.IDE0130.severity = none # IDE0130: Namespace does not match folder structure
 dotnet_diagnostic.IDE0150.severity = none # IDE0150: null check can be clarified
 dotnet_diagnostic.IDE0210.severity = none # IDE0210: convert to lol-level statements
@@ -364,6 +367,8 @@ dotnet_diagnostic.IDE0290.severity = none # IDE0290: Use primary constructor
 dotnet_diagnostic.IDE0300.severity = none # IDE0300: Collection initialization can be simplified
 dotnet_diagnostic.IDE0301.severity = none # IDE0301: Collection initialization can be simplified
 dotnet_diagnostic.IDE0305.severity = none # IDE0305: Collection initialization can be simplified
+dotnet_diagnostic.IDE0306.severity = none # IDE0306: Simplify conditional expression
+dotnet_diagnostic.IDE0350.severity = none # IDE0350: Use block-scoped namespace
 dotnet_diagnostic.IDE1006.severity = none # IDE1006: Naming rule violation
 
 dotnet_diagnostic.CS1998.severity = error # CS1998: Async method lacks 'await' operators and will run synchronously
@@ -680,3 +685,6 @@ dotnet_diagnostic.MA0151.severity = none
 dotnet_diagnostic.MA0152.severity = none
 # MA0153: Do not log symbols decorated with DataClassificationAttribute directly
 dotnet_diagnostic.MA0153.severity = none
+dotnet_diagnostic.CA1863.severity = none
+dotnet_diagnostic.CA2208.severity = none
+

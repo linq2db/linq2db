@@ -5,7 +5,7 @@
 <#@ include file="..\..\..\..\LinqToDB.Templates\PluralizationService.ttinclude" once="true" #>
 <#@ assembly name="System.Xml" #>
 <#@ assembly name="System.Xml.Linq" #>
-<#@ assembly name="$(SolutionDir)\Source\LinqToDB\bin\Debug\net46\linq2db.dll" #>
+<#@ assembly name="$(SolutionDir)\Source\LinqToDB\bin\Debug\net462\linq2db.dll" #>
 <#@ import namespace="System.IO" #>
 <#@ import namespace="System.Xml.Linq" #>
 <#@ import namespace="LinqToDB" #>

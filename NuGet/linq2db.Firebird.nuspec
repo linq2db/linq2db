@@ -13,17 +13,13 @@
 		<tags>linq linq2db Firebird LinqToDB ORM database DB SQL</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<group targetFramework="net45">
-				<dependency id="linq2db" version="5.0.0"                          />
-				<dependency id="FirebirdSql.Data.FirebirdClient" version="5.12.1" />
-			</group>
-			<group targetFramework="net452">
+			<group targetFramework="net462">
 				<dependency id="linq2db" version="5.0.0"                          />
 				<dependency id="FirebirdSql.Data.FirebirdClient" version="7.10.1" />
 			</group>
 			<group targetFramework="netstandard2.0">
 				<dependency id="linq2db" version="5.0.0"                          />
-				<dependency id="FirebirdSql.Data.FirebirdClient" version="9.1.1"  />
+				<dependency id="FirebirdSql.Data.FirebirdClient" version="10.3.3"  />
 			</group>
 		</dependencies>
 		<contentFiles>
@@ -33,7 +29,7 @@
 	<files>
 		<file src="..\Nuget\README.T4.md"                                              target="README.md"                                                                                          />
 
-		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                   target="tools"                                                                                              />
+		<file src="..\Source\LinqToDB\bin\Release\net462\linq2db.dll"                  target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                       target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\FirebirdSql.Data.FirebirdClient.dll" target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll"   target="tools"                                                                                              />

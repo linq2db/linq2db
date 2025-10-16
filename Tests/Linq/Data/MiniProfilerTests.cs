@@ -48,6 +48,8 @@ using MySqlDataDateTime        = MySqlData::MySql.Data.Types.MySqlDateTime;
 using MySqlDataDecimal         = MySqlData::MySql.Data.Types.MySqlDecimal;
 using MySqlDataMySqlConnection = MySqlData::MySql.Data.MySqlClient.MySqlConnection;
 
+#pragma warning disable CS0618 // Type or member is obsolete
+
 namespace Tests.Data
 {
 	[TestFixture]

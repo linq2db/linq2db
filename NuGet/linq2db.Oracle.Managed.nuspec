@@ -14,21 +14,25 @@
 		<tags>linq linq2db Oracle LinqToDB ORM database DB SQL</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<group targetFramework="net45">
-				<dependency id="linq2db"                       version="5.0.0"    />
-				<dependency id="Oracle.ManagedDataAccess"      version="19.20.0"  />
-			</group>
 			<group targetFramework="net462">
 				<dependency id="linq2db"                       version="5.0.0"    />
-				<dependency id="Oracle.ManagedDataAccess"      version="21.11.0"  />
+				<dependency id="Oracle.ManagedDataAccess"      version="21.20.0"  />
+			</group>
+			<group targetFramework="net472">
+				<dependency id="linq2db"                       version="5.0.0"    />
+				<dependency id="Oracle.ManagedDataAccess"      version="23.26.0"  />
 			</group>
 			<group targetFramework="netstandard2.0">
 				<dependency id="linq2db"                       version="5.0.0"    />
-				<dependency id="Oracle.ManagedDataAccess.Core" version="2.19.200" />
+				<dependency id="Oracle.ManagedDataAccess.Core" version="2.19.290" />
 			</group>
 			<group targetFramework="netstandard2.1">
 				<dependency id="linq2db"                       version="5.0.0"    />
-				<dependency id="Oracle.ManagedDataAccess.Core" version="3.21.110" />
+				<dependency id="Oracle.ManagedDataAccess.Core" version="23.26.0" />
+			</group>
+			<group targetFramework="net8.0">
+				<dependency id="linq2db"                       version="5.0.0"    />
+				<dependency id="Oracle.ManagedDataAccess.Core" version="23.26.0" />
 			</group>
 		</dependencies>
 		<contentFiles>
@@ -38,7 +42,7 @@
 	<files>
 		<file src="..\Nuget\README.T4.md"                                            target="README.md"                                                                                          />
 
-		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                 target="tools"                                                                                              />
+		<file src="..\Source\LinqToDB\bin\Release\net462\linq2db.dll"                target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                     target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\Oracle.ManagedDataAccess.dll"      target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll" target="tools"                                                                                              />

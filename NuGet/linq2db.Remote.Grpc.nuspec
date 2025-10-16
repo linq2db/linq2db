@@ -12,8 +12,8 @@
 		<dependencies>
 			<group targetFramework="netstandard2.0">
 				<dependency id="linq2db"           version="5.0.0"  />
-				<dependency id="Grpc.Net.Client"   version="2.57.0" />
-				<dependency id="protobuf-net.Grpc" version="1.1.1"  />
+				<dependency id="Grpc.Net.Client"   version="2.71.0" />
+				<dependency id="protobuf-net.Grpc" version="1.2.2"  />
 			</group>
 		</dependencies>
 	</metadata>

@@ -15,6 +15,8 @@ using Tests.Model;
 using SqlDataRecordMS = Microsoft.Data.SqlClient.Server.SqlDataRecord;
 using SqlMetaDataMS   = Microsoft.Data.SqlClient.Server.SqlMetaData;
 
+#pragma warning disable CS0618 // Type or member is obsolete
+
 namespace Tests.DataProvider
 {
 	public partial class SqlServerTypesTests
@@ -292,7 +294,7 @@ namespace Tests.DataProvider
 		{
 			public int[]? Ints { get; set; }
 		}
-		
+
 		[Test]
 		public void TVPCachingIssue(
 			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
@@ -306,7 +308,7 @@ namespace Tests.DataProvider
 
 					table.Columns.Add("Id", typeof(int));
 					table.Columns.Add("Name", typeof(string));
-				
+
 					foreach (var value in values)
 						table.Rows.Add(value, "_");
 
@@ -333,25 +335,25 @@ namespace Tests.DataProvider
 						var ints1 = r1[i].Ints!;
 						var ints2 = r2[i].Ints!;
 						Assert.AreEqual(ints1.Length, ints2.Length);
-					
+
 						for (var j = 0; j < ints1.Length; j++)
 							Assert.AreEqual(ints1[j], ints2[j]);
 					}
 				}
-				
+
 				Result[] res1;
 				Result[] res2;
-				
+
 				// workaround
 				using (NoLinqCache.Scope())
 				{
 					res1 = GetResult(1, 2);
-					res2 = GetResult(2, 3); 
+					res2 = GetResult(2, 3);
 				}
-				
+
 				var res3 = GetResult(1, 2);
 				var res4 = GetResult(2, 3);
-				
+
 				AssertResult(res1, res3); // pass
 				AssertResult(res2, res4); // fail
 			}
