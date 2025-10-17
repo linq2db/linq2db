@@ -113,7 +113,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var current = methodsChain.UnwrapConvert();
 
-			ContextRefExpression? contextRef = null;
+			ContextRefExpression? contextRef         = null;
+			NewArrayExpression?   newArrayExpression = null;
 
 			var orderDefined = false;
 
@@ -132,9 +133,15 @@ namespace LinqToDB.Internal.Linq.Builder
 					continue;
 				}
 
+				if (current is NewArrayExpression newArray)
+				{
+					newArrayExpression = (NewArrayExpression?)BuildTraverseExpression(newArray);
+					break;
+				}
+
 				if (current is MethodCallExpression methodCall)
 				{
-					if (methodCall.IsQueryable(nameof(Queryable.AsQueryable)))
+					if (methodCall.IsQueryable(nameof(Queryable.AsQueryable)) || methodCall.IsQueryable(nameof(Enumerable.AsEnumerable)))
 					{
 						current = methodCall.Arguments[0];
 						continue;

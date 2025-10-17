@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -30,6 +31,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod(() => "".PadLeft(0, ' '), TranslateStringPadLeft);
 
 			Registration.RegisterMethod(() => string.Join(",", Enumerable.Empty<string>()), TranslateStringAggregate);
+			Registration.RegisterMethod(() => string.Join(",", Array.Empty<string>()), TranslateStringAggregate);
 		}
 
 		protected virtual Expression? TranslateLike(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)

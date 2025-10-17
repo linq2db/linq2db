@@ -147,5 +147,19 @@ namespace Tests.Linq
 			Assert.That(allAggregated, Is.EqualTo(expected));
 		}
 
+		[Test]
+		public void JoinAggregateArray([IncludeDataSources(true, TestProvName.PostgreSQL16)] string context)
+		{
+			var       data  = SampleClass.GenerateDataUniquerId();
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query = 
+				from t in table
+				select Sql.AsSql(string.Join(", ", new [] {t.NullableValue, t.NotNullableValue, t.VarcharValue, t.NVarcharValue}));
+
+			AssertQuery(query);
+		}
+
 	}
 }
