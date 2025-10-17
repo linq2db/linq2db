@@ -268,60 +268,55 @@ namespace LinqToDB.Remote
 			}
 		}
 
-		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= MappingSchema.CombineSchemas(Internal.Remote.SerializationMappingSchema.Instance, MappingSchema);
+		internal MappingSchema SerializationMappingSchema => _serializationMappingSchema ??= MappingSchema.CombineSchemas(Internal.Remote.SerializationMappingSchema.Instance, MappingSchema);
 
-		public  bool InlineParameters { get; set; }
-		public  bool CloseAfterUse    { get; set; }
+		public bool InlineParameters { get; set; }
+		public bool CloseAfterUse    { get; set; }
 
-		private List<string>? _queryHints;
-		public  List<string>  QueryHints => _queryHints ??= new();
+		public List<string> QueryHints => field ??= new();
+		public List<string> NextQueryHints => field ??= new();
 
-		private List<string>? _nextQueryHints;
-		public  List<string>   NextQueryHints => _nextQueryHints ??= new();
-
-		private           Type? _sqlProviderType;
-		protected virtual Type   SqlProviderType
+		protected virtual Type SqlProviderType
 		{
 			get
 			{
 				ThrowOnDisposed();
 
-				if (_sqlProviderType == null)
+				if (field == null)
 				{
 					var type = GetConfigurationInfoForPublicApi().LinqServiceInfo.SqlBuilderType;
-					_sqlProviderType = Type.GetType(type)!;
+					field = Type.GetType(type)!;
 				}
 
-				return _sqlProviderType;
+				return field;
 			}
 
 			set
 			{
 				ThrowOnDisposed();
 
-				_sqlProviderType = value;
+				field = value;
 			}
 		}
 
-		private           Type? _sqlOptimizerType;
-		protected virtual Type   SqlOptimizerType
+		protected virtual Type SqlOptimizerType
 		{
 			get
 			{
-				if (_sqlOptimizerType == null)
+				if (field == null)
 				{
 					var type = GetConfigurationInfoForPublicApi().LinqServiceInfo.SqlOptimizerType;
-					_sqlOptimizerType = Type.GetType(type)!;
+					field = Type.GetType(type)!;
 				}
 
-				return _sqlOptimizerType;
+				return field;
 			}
 
 			set
 			{
 				ThrowOnDisposed();
 
-				_sqlOptimizerType = value;
+				field = value;
 			}
 		}
 
@@ -395,28 +390,29 @@ namespace LinqToDB.Remote
 					_createSqlBuilder = _sqlBuilders.GetOrAdd(
 						key,
 						static (key, args) =>
-					{
-						return Expression.Lambda<Func<ISqlBuilder>>(
-							Expression.New(
-								key.Item1.GetConstructor(new[]
-								{
-									typeof(IDataProvider),
-									typeof(MappingSchema),
-									typeof(DataOptions),
-									typeof(ISqlOptimizer),
-									typeof(SqlProviderFlags)
-								}) ?? throw new InvalidOperationException($"Constructor for type '{key.Item1.Name}' not found."),
-								new Expression[]
-								{
-									Expression.Constant(null, typeof(IDataProvider)),
-									Expression.Constant(args.mappingSchema, typeof(MappingSchema)),
-									Expression.Constant(key.Item5),
-									Expression.Constant(args.sqlOptimizer),
-									Expression.Constant(key.Item4)
-								}))
-							.CompileExpression();
-					}
-					, (mappingSchema: MappingSchema, sqlOptimizer: ((IDataContext)this).GetSqlOptimizer(Options)));
+						{
+							return Expression.Lambda<Func<ISqlBuilder>>(
+								Expression.New(
+									key.Item1.GetConstructor(new[]
+									{
+										typeof(IDataProvider),
+										typeof(MappingSchema),
+										typeof(DataOptions),
+										typeof(ISqlOptimizer),
+										typeof(SqlProviderFlags)
+									}) ?? throw new InvalidOperationException($"Constructor for type '{key.Item1.Name}' not found."),
+									new Expression[]
+									{
+										Expression.Constant(null, typeof(IDataProvider)),
+										Expression.Constant(args.mappingSchema, typeof(MappingSchema)),
+										Expression.Constant(key.Item5),
+										Expression.Constant(args.sqlOptimizer),
+										Expression.Constant(key.Item4)
+									}))
+								.CompileExpression();
+						},
+						(mappingSchema: MappingSchema, sqlOptimizer: ((IDataContext)this).GetSqlOptimizer(Options))
+					);
 				}
 
 				return _createSqlBuilder;
