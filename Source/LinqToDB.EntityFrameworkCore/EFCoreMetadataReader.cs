@@ -594,6 +594,29 @@ namespace LinqToDB.EntityFrameworkCore
 		}
 #endif
 
+		private static bool HasSpanTypes(MethodInfo methodInfo)
+		{
+			if (IsSpan(methodInfo.ReturnType))
+				return true;
+
+			foreach (var parameter in methodInfo.GetParameters())
+			{
+				if (IsSpan(parameter.ParameterType))
+					return true;
+			}
+
+			return false;
+		}
+
+		private static bool IsSpan(Type type)
+		{
+			if (!type.IsGenericType)
+				return false;
+
+			var definition = type.GetGenericTypeDefinition();
+			return definition == typeof(ReadOnlySpan<>) || definition == typeof(Span<>);
+		}
+
 		private Sql.ExpressionAttribute? GetDbFunctionFromMethodCall(Type type, MethodInfo methodInfo)
 		{
 			if (_dependencies == null || _model == null)
@@ -601,56 +624,61 @@ namespace LinqToDB.EntityFrameworkCore
 
 			methodInfo = (MethodInfo?)type.GetMemberEx(methodInfo) ?? methodInfo;
 
-			var found = _calculatedExtensions.GetOrAdd(methodInfo, static (mi, ctx) =>
-			{
-				Sql.ExpressionAttribute? result = null;
-
-				if (!ctx.methodInfo.IsGenericMethodDefinition && !mi.HasAttribute<Sql.ExpressionAttribute>())
+			var found = _calculatedExtensions.GetOrAdd(
+				methodInfo,
+				static (mi, ctx) =>
 				{
-					var value = Expression.Constant(DefaultValue.GetValue(ctx.type), ctx.type);
+					if (HasSpanTypes(ctx.methodInfo))
+						return null;
 
-					var objExpr = new SqlTransparentExpression(value, ctx.this_._mappingSource?.FindMapping(ctx.type));
-					var parameterInfos = ctx.methodInfo.GetParameters();
-					var parametersArray = new EfSqlExpression[parameterInfos.Length];
-					for (var i = 0; i < parameterInfos.Length; i++)
+					if (!ctx.methodInfo.IsGenericMethodDefinition && !mi.HasAttribute<Sql.ExpressionAttribute>())
 					{
-						var p = parameterInfos[i];
+						var value = Expression.Constant(DefaultValue.GetValue(ctx.type), ctx.type);
 
-						parametersArray[i] = new SqlTransparentExpression(
-							Expression.Constant(DefaultValue.GetValue(p.ParameterType), p.ParameterType),
-							ctx.this_._mappingSource?.FindMapping(p.ParameterType));
-					}
-
-#if !EF31
-					// https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/issues/1801
-					if (ctx.this_._dependencies!.MethodCallTranslatorProvider.GetType().Name == "MySqlMethodCallTranslatorProvider")
-					{
-						var contextProperty = ctx.this_._dependencies!.MethodCallTranslatorProvider.GetType().GetProperty("QueryCompilationContext")
-						?? throw new InvalidOperationException("MySqlMethodCallTranslatorProvider.QueryCompilationContext property not found");
-
-						if (contextProperty.GetValue(ctx.this_._dependencies!.MethodCallTranslatorProvider) == null)
+						var objExpr = new SqlTransparentExpression(value, ctx.this_._mappingSource?.FindMapping(ctx.type));
+						var parameterInfos = ctx.methodInfo.GetParameters();
+						var parametersArray = new EfSqlExpression[parameterInfos.Length];
+						for (var i = 0; i < parameterInfos.Length; i++)
 						{
-							contextProperty.SetValue(ctx.this_._dependencies!.MethodCallTranslatorProvider, ctx.this_._databaseDependencies!.QueryCompilationContextFactory.Create(false));
+							var p = parameterInfos[i];
+
+							parametersArray[i] = new SqlTransparentExpression(
+								Expression.Constant(DefaultValue.GetValue(p.ParameterType), p.ParameterType),
+								ctx.this_._mappingSource?.FindMapping(p.ParameterType));
+						}
+
+	#if !EF31
+						// https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/issues/1801
+						if (ctx.this_._dependencies!.MethodCallTranslatorProvider.GetType().Name == "MySqlMethodCallTranslatorProvider")
+						{
+							var contextProperty = ctx.this_._dependencies!.MethodCallTranslatorProvider.GetType().GetProperty("QueryCompilationContext")
+							?? throw new InvalidOperationException("MySqlMethodCallTranslatorProvider.QueryCompilationContext property not found");
+
+							if (contextProperty.GetValue(ctx.this_._dependencies!.MethodCallTranslatorProvider) == null)
+							{
+								contextProperty.SetValue(ctx.this_._dependencies!.MethodCallTranslatorProvider, ctx.this_._databaseDependencies!.QueryCompilationContextFactory.Create(false));
+							}
+						}
+	#endif
+
+	#if !EF31
+						var newExpression = ctx.this_._dependencies!.MethodCallTranslatorProvider.Translate(ctx.this_._model!, objExpr, ctx.methodInfo, parametersArray, ctx.this_._logger!);
+	#else
+						var newExpression = ctx.this_._dependencies!.MethodCallTranslatorProvider.Translate(ctx.this_._model!, objExpr, ctx.methodInfo, parametersArray);
+	#endif
+						if (newExpression != null)
+						{
+							if (!ctx.methodInfo.IsStatic)
+								parametersArray = new EfSqlExpression[] { objExpr }.Concat(parametersArray).ToArray();
+
+							return ConvertToExpressionAttribute(ctx.methodInfo, newExpression, parametersArray);
 						}
 					}
-#endif
 
-#if !EF31
-					var newExpression = ctx.this_._dependencies!.MethodCallTranslatorProvider.Translate(ctx.this_._model!, objExpr, ctx.methodInfo, parametersArray, ctx.this_._logger!);
-#else
-					var newExpression = ctx.this_._dependencies!.MethodCallTranslatorProvider.Translate(ctx.this_._model!, objExpr, ctx.methodInfo, parametersArray);
-#endif
-					if (newExpression != null)
-					{
-						if (!ctx.methodInfo.IsStatic)
-							parametersArray = new EfSqlExpression[] { objExpr }.Concat(parametersArray).ToArray();
-
-						result = ConvertToExpressionAttribute(ctx.methodInfo, newExpression, parametersArray);
-					}
-				}
-
-				return result;
-			}, (methodInfo, type, this_: this));
+					return null;
+				},
+				(methodInfo, type, this_: this)
+			);
 
 			return found;
 		}
