@@ -34,22 +34,21 @@ namespace LinqToDB.Internal.Conversion
 			public readonly Delegate?        Delegate;
 			public readonly bool             IsSchemaSpecific;
 
-			private Func<object?, DataParameter>? _convertValueToParameter;
-			public  Func<object?, DataParameter>   ConvertValueToParameter
+			public Func<object?, DataParameter> ConvertValueToParameter
 			{
 				get
 				{
-					if (_convertValueToParameter == null)
+					return field ??= BuildField();
+
+					Func<object?, DataParameter> BuildField()
 					{
 						var type = Lambda.Parameters[0].Type;
 						var parameterExpression = Expression.Parameter(typeof(object));
 						var lambdaExpression = Expression.Lambda<Func<object?, DataParameter>>(
 							Expression.Invoke(Lambda, Expression.Convert(parameterExpression, type)), parameterExpression);
 						var convertFunc = lambdaExpression.CompileExpression();
-						_convertValueToParameter = convertFunc;
+						return convertFunc;
 					}
-
-					return _convertValueToParameter;
 				}
 			}
 

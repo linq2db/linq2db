@@ -1349,28 +1349,16 @@ namespace LinqToDB.Mapping
 			Schemas[0].ResetID();
 		}
 
-		private string[]? _configurationList;
 		/// <summary>
 		/// Gets configurations, associated with current mapping schema.
 		/// </summary>
-		public  string[]   ConfigurationList
+		public string[] ConfigurationList
 		{
-			get
-			{
-				if (_configurationList == null)
-				{
-					var hash = new HashSet<string>();
-					var list = new List<string>();
-
-					foreach (var s in Schemas)
-						if (!string.IsNullOrEmpty(s.Configuration) && hash.Add(s.Configuration))
-							list.Add(s.Configuration);
-
-					_configurationList = list.ToArray();
-				}
-
-				return _configurationList;
-			}
+			get => field ??= Schemas
+				.Select(s => s.Configuration)
+				.Where(s => s is { })
+				.Distinct()
+				.ToArray();
 		}
 
 		public string DisplayID
@@ -1762,8 +1750,6 @@ namespace LinqToDB.Mapping
 
 		#region Options
 
-		StringComparer? _columnNameComparer;
-
 		/// <summary>
 		/// Gets or sets column name comparison rules for comparison of column names in mapping with column name,
 		///  returned by provider's data reader.
@@ -1772,26 +1758,19 @@ namespace LinqToDB.Mapping
 		{
 			get
 			{
-				if (_columnNameComparer == null)
+				return field ??= Schemas switch
 				{
-					if (Schemas[0].ColumnNameComparer != null)
-						_columnNameComparer = Schemas[0].ColumnNameComparer;
-					else
-					{
-						_columnNameComparer = Schemas
-							.Select        (static s => s.ColumnNameComparer)
-							.FirstOrDefault(static s => s != null)
-							??
-							StringComparer.Ordinal;
-					}
-				}
-
-				return _columnNameComparer!;
+					[{ ColumnNameComparer: { } comparer }, ..] => comparer,
+					_ => Schemas
+						.Select(static s => s.ColumnNameComparer)
+						.FirstOrDefault(static s => s != null)
+						?? StringComparer.Ordinal
+				};
 			}
 
 			set
 			{
-				Schemas[0].ColumnNameComparer = _columnNameComparer = value;
+				Schemas[0].ColumnNameComparer = field = value;
 				_configurationID = null;
 			}
 		}

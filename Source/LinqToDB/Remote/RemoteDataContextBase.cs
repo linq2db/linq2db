@@ -70,8 +70,7 @@ namespace LinqToDB.Remote
 			serviceProvider.AddService(GetConfigurationInfoForPublicApi().MemberTranslator);
 		}
 
-		SimpleServiceProvider? _serviceProvider;
-		readonly Lock          _guard = new();
+		readonly Lock _guard = new();
 
 		IServiceProvider IInfrastructure<IServiceProvider>.Instance
 		{
@@ -79,20 +78,20 @@ namespace LinqToDB.Remote
 			{
 				ThrowOnDisposed();
 
-				if (_serviceProvider == null)
+				if (field == null)
 				{
 					lock (_guard)
 					{
-						if (_serviceProvider == null)
+						if (field == null)
 						{
 							var serviceProvider = new SimpleServiceProvider();
 							InitServiceProvider(serviceProvider);
-							_serviceProvider = serviceProvider;
+							field = serviceProvider;
 						}
 					}
 				}
 
-				return _serviceProvider;
+				return field;
 			}
 		}
 
@@ -375,19 +374,17 @@ namespace LinqToDB.Remote
 
 		static readonly ConcurrentDictionary<Tuple<Type,MappingSchema,Type,SqlProviderFlags,DataOptions>,Func<ISqlBuilder>> _sqlBuilders = new ();
 
-		Func<ISqlBuilder>? _createSqlBuilder;
-
 		Func<ISqlBuilder> IDataContext.CreateSqlBuilder
 		{
 			get
 			{
 				ThrowOnDisposed();
 
-				if (_createSqlBuilder == null)
+				if (field == null)
 				{
 					var key = Tuple.Create(SqlProviderType, MappingSchema, SqlOptimizerType, ((IDataContext)this).SqlProviderFlags, Options);
 
-					_createSqlBuilder = _sqlBuilders.GetOrAdd(
+					field = _sqlBuilders.GetOrAdd(
 						key,
 						static (key, args) =>
 						{
@@ -415,13 +412,11 @@ namespace LinqToDB.Remote
 					);
 				}
 
-				return _createSqlBuilder;
+				return field;
 			}
 		}
 
 		static readonly ConcurrentDictionary<Tuple<Type,SqlProviderFlags>,Func<DataOptions,ISqlOptimizer>> _sqlOptimizers = new ();
-
-		Func<DataOptions,ISqlOptimizer>? _getSqlOptimizer;
 
 		Func<DataOptions,ISqlOptimizer> IDataContext.GetSqlOptimizer
 		{
@@ -429,11 +424,11 @@ namespace LinqToDB.Remote
 			{
 				ThrowOnDisposed();
 
-				if (_getSqlOptimizer == null)
+				if (field == null)
 				{
 					var key = Tuple.Create(SqlOptimizerType, ((IDataContext)this).SqlProviderFlags);
 
-					_getSqlOptimizer = _sqlOptimizers.GetOrAdd(key, static key =>
+					field = _sqlOptimizers.GetOrAdd(key, static key =>
 					{
 						var p = Expression.Parameter(typeof(DataOptions));
 						var c = key.Item1.GetConstructor(new[] {typeof(SqlProviderFlags)});
@@ -454,7 +449,7 @@ namespace LinqToDB.Remote
 					});
 				}
 
-				return _getSqlOptimizer;
+				return field;
 			}
 		}
 

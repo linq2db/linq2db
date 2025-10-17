@@ -31,7 +31,6 @@ namespace LinqToDB.Internal.Linq.Builder
 		public   ExpressionBuilder Builder { get; }
 		BuildPurpose               _buildPurpose;
 		BuildFlags                 _buildFlags;
-		IBuildContext?             _buildContext;
 		ColumnDescriptor?          _columnDescriptor;
 		string?                    _alias;
 		Stack<Expression>          _disableSubqueries = new();
@@ -42,12 +41,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public IBuildContext? BuildContext
 		{
-			get => _buildContext;
+			get;
 			private set
 			{
-				if (ReferenceEquals(_buildContext, value))
+				if (ReferenceEquals(field, value))
 					return;
-				_buildContext       = value;
+
+				field               = value;
 				_nullabilityContext = null;
 			}
 		}
@@ -2233,7 +2233,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override Expression VisitDefaultValueExpression(DefaultValueExpression node)
 		{
-			if (_buildPurpose is BuildPurpose.Sql && _buildContext is not null)
+			if (_buildPurpose is BuildPurpose.Sql && BuildContext is not null)
 			{
 				if (node.IsNull)
 				{
@@ -3241,7 +3241,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public bool BuildSearchCondition(IBuildContext? context, Expression expression, SqlSearchCondition searchCondition, [NotNullWhen(false)] out SqlErrorExpression? error)
 		{
-			using var saveContext = UsingBuildContext(context ?? _buildContext);
+			using var saveContext = UsingBuildContext(context ?? BuildContext);
 			using var savePurpose = UsingBuildPurpose(BuildPurpose.Sql);
 
 			var result = Visit(expression);
@@ -5357,7 +5357,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		NullabilityContext GetNullabilityContext()
 		{
-			_nullabilityContext ??= NullabilityContext.GetContext(_buildContext?.SelectQuery);
+			_nullabilityContext ??= NullabilityContext.GetContext(BuildContext?.SelectQuery);
 			return _nullabilityContext;
 		}
 
