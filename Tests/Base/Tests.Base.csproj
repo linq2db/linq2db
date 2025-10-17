@@ -27,6 +27,7 @@
 		<PackageReference Include="MiniProfiler.Shared" />
 		<PackageReference Include="System.Text.Json" />
 		<PackageReference Include="Microsoft.AspNetCore" />
+		<PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Core" />
 		<PackageReference Include="Microsoft.AspNetCore.SignalR" />
 	</ItemGroup>
 

@@ -16,12 +16,12 @@
 		<!--initial version for .NET LATEST packages, referenced from nuspec-->
 		<Net8LatestForNuget>8.0.0</Net8LatestForNuget>
 		<Net9LatestForNuget>9.0.0</Net9LatestForNuget>
-		<Net10LatestForNuget>10.0.0-rc.1.25451.107</Net10LatestForNuget>
+		<Net10LatestForNuget>10.0.0-rc.2.25502.107</Net10LatestForNuget>
 		<!--latest version for .NET LATEST packages (not referenced from nuspec)-->
 		<Net8Latest>8.0.19</Net8Latest>
 		<Net9Latest>9.0.8</Net9Latest>
-		<Net10Latest>10.0.0-rc.1.25451.107</Net10Latest>
-		<!--EF 3.1 vesions for netfx support-->
+		<Net10Latest>10.0.0-rc.2.25502.107</Net10Latest>
+		<!--EF 3.1 versions for netfx support-->
 		<EF3LatestNuget>3.1.0</EF3LatestNuget>
 		<EF3Latest>3.1.32</EF3Latest>
 	</PropertyGroup>
@@ -154,7 +154,7 @@
 		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="3.1.18"                       Condition="'$(TargetFramework)'=='net462'"  />
 		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="8.0.11"                       Condition="'$(TargetFramework)'=='net8.0'"  />
 		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="9.0.4"                        Condition="'$(TargetFramework)'=='net9.0'"  />
-		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="10.0.0-rc.1"                  Condition="'$(TargetFramework)'=='net10.0'" />
+		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="10.0.0-rc.2"                  Condition="'$(TargetFramework)'=='net10.0'" />
 		<PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite"                  Version="$(EF3Latest)"                 Condition="'$(TargetFramework)'=='net462'"  />
 		<PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite"                  Version="$(Net8Latest)"                Condition="'$(TargetFramework)'=='net8.0'"  />
 		<PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite"                  Version="$(Net9Latest)"                Condition="'$(TargetFramework)'=='net9.0'"  />
@@ -169,8 +169,9 @@
 		<PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory"                Version="$(Net10Latest)"               Condition="'$(TargetFramework)'=='net10.0'" />
 
 		<PackageVersion Include="System.Text.Json"                                      Version="$(Net9Latest)"                Condition="'$(TargetFramework)'=='net462'" />
-		<PackageVersion Include="Microsoft.AspNetCore.SignalR"                          Version="1.2.0"                        Condition="'$(TargetFramework)'=='net462'" />
 		<PackageVersion Include="Microsoft.AspNetCore"                                  Version="2.3.0"                        Condition="'$(TargetFramework)'=='net462'" />
+		<PackageVersion Include="Microsoft.AspNetCore.Server.Kestrel.Core"              Version="2.3.6"                        Condition="'$(TargetFramework)'=='net462'" />
+		<PackageVersion Include="Microsoft.AspNetCore.SignalR"                          Version="1.2.0"                        Condition="'$(TargetFramework)'=='net462'" />
 	</ItemGroup>
 
 	<ItemGroup Label="Benchmarks">
@@ -179,7 +180,7 @@
 	</ItemGroup>
 
 	<ItemGroup Label="Examples">
-		<PackageVersion Include="linq2db.t4models"                                      Version="6.0.0-rc.2"                   />
+		<PackageVersion Include="linq2db.t4models"                                      Version="6.0.0-rc.3"                   />
 		<PackageVersion Include="Microsoft.Extensions.ObjectPool"                       Version="$(Net9Latest)"                />
 		<PackageVersion Include="OpenTelemetry"                                         Version="1.12.0"                       />
 		<PackageVersion Include="OpenTelemetry.Exporter.Console"                        Version="1.12.0"                       />
@@ -196,7 +197,7 @@
 
 	<ItemGroup Label="Security Vulnerabilities">
 		<PackageVersion Include="System.Private.Uri"                                    Version="4.3.2"                        />
-		<PackageVersion Include="Newtonsoft.Json"                                       Version="13.0.1"                       />
+		<PackageVersion Include="Newtonsoft.Json"                                       Version="13.0.4"                       />
 	</ItemGroup>
 
 </Project>
