@@ -19,6 +19,8 @@ namespace LinqToDB.Internal.SqlProvider
 {
 	public abstract class BasicSqlOptimizer : ISqlOptimizer
 	{
+		static readonly ObjectPool<CteCollectorVisitor> _cteCollectorVisitorPool = new ObjectPool<CteCollectorVisitor>(() => new CteCollectorVisitor(), v => v.Cleanup(), 100);
+
 		#region Init
 
 		protected BasicSqlOptimizer(SqlProviderFlags sqlProviderFlags)
@@ -703,98 +705,130 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 		}
 
-		static void RegisterDependency(CteClause cteClause, Dictionary<CteClause, HashSet<CteClause>> foundCte)
+		sealed class CteCollectorVisitor : SqlQueryVisitor
 		{
-			if (foundCte.ContainsKey(cteClause))
-				return;
-
-			var dependsOn = new HashSet<CteClause>();
-			cteClause.Body!.Visit(dependsOn, static (dependsOn, ce) =>
+			public sealed class CteDependencyHolder
 			{
-				if (ce.ElementType == QueryElementType.SqlCteTable)
+				public CteClause           CteClause { get; }
+				public HashSet<CteClause>? DependsOn { get; private set; }
+
+				public CteDependencyHolder(CteClause cteClause)
 				{
-					var subCte = ((SqlCteTable)ce).Cte!;
-					dependsOn.Add(subCte);
+					CteClause = cteClause;
 				}
 
-			});
+				public bool AddDependency(CteClause cteClause)
+				{
+					if (ReferenceEquals(CteClause, cteClause))
+					{
+						CteClause.IsRecursive = true;
+						return false;
+					}
 
-			foundCte.Add(cteClause, dependsOn);
+					DependsOn ??= new HashSet<CteClause>();
+					DependsOn.Add(cteClause);
 
-			foreach (var clause in dependsOn)
+					return true;
+				}
+			}
+
+			Dictionary<CteClause, CteDependencyHolder>? _foundCtes;
+			Stack<CteDependencyHolder>?                  _currentCteStack;
+
+			public CteCollectorVisitor() : base(VisitMode.ReadOnly, null)
 			{
-				RegisterDependency(clause, foundCte);
+			}
+
+			public IDictionary<CteClause, CteDependencyHolder>? FindCtes(SqlStatement statement)
+			{
+				_foundCtes       = null;
+				_currentCteStack = null;
+				Visit(statement);
+				return _foundCtes;
+			}
+
+			public override void Cleanup()
+			{
+				base.Cleanup();
+
+				_foundCtes       = null;
+				_currentCteStack = null;
+			}
+
+			protected override IQueryElement VisitSqlWithClause(SqlWithClause element)
+			{
+				return element;
+			}
+
+			protected override IQueryElement VisitSqlCteTable(SqlCteTable element)
+			{
+				var cteClause = element.Cte;
+
+				CteDependencyHolder? holder    = null;
+
+				if (cteClause != null)
+				{
+					_foundCtes ??= new();
+					if (!_foundCtes.TryGetValue(cteClause, out holder))
+					{
+						cteClause.IsRecursive = false;
+						holder                = new CteDependencyHolder(cteClause);
+						_foundCtes.Add(cteClause, holder);
+					}
+				}
+
+				_currentCteStack ??= new Stack<CteDependencyHolder>();
+				if (holder != null)
+				{
+					foreach (var h in _currentCteStack)
+					{
+						// recursion found
+						if (!h.AddDependency(holder.CteClause))
+							return element;
+					}
+
+					_currentCteStack.Push(holder);
+				}
+
+				Visit(cteClause?.Body);
+
+				if (holder != null)
+					_currentCteStack.Pop();
+
+				return element;
 			}
 		}
 
-		void FinalizeCte(SqlStatement statement)
+		protected void FinalizeCte(SqlStatement statement)
 		{
-			if (statement is SqlStatementWithQueryBase select)
+			if (statement is not SqlStatementWithQueryBase select)
+				return;
+
+			IDictionary<CteClause, CteCollectorVisitor.CteDependencyHolder>? foundCtes;
+
+			using (var cteCollector = _cteCollectorVisitorPool.Allocate())
 			{
-				// one-field class is cheaper than dictionary instance
-				var cteHolder = new WritableContext<Dictionary<CteClause, HashSet<CteClause>>?>();
+				foundCtes = cteCollector.Value.FindCtes(statement);
+			}
 
-				if (select is SqlMergeStatement merge)
-				{
-					merge.Target.Visit(cteHolder, static (foundCte, e) =>
-						{
-							if (e.ElementType == QueryElementType.SqlCteTable)
-							{
-								var cte = ((SqlCteTable)e).Cte!;
-								RegisterDependency(cte, foundCte.WriteableValue ??= new());
-							}
-						}
-					);
-					merge.Source.Visit(cteHolder, static (foundCte, e) =>
-						{
-							if (e.ElementType == QueryElementType.SqlCteTable)
-							{
-								var cte = ((SqlCteTable)e).Cte!;
-								RegisterDependency(cte, foundCte.WriteableValue ??= new());
-							}
-						}
-					);
-				}
-				else
-				{
-					select.SelectQuery.Visit(cteHolder, static (foundCte, e) =>
-						{
-							if (e.ElementType == QueryElementType.SqlCteTable)
-							{
-								var cte = ((SqlCteTable)e).Cte!;
-								RegisterDependency(cte, foundCte.WriteableValue ??= new());
-							}
-						}
-					);
-				}
+			if (foundCtes == null)
+			{
+				select.With = null;
+			}
+			else
+			{
+				// TODO: Ideally if there is no recursive CTEs we can convert them to SubQueries
+				if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
+					throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");
 
-				if (cteHolder.WriteableValue == null || cteHolder.WriteableValue.Count == 0)
-					select.With = null;
-				else
-				{
-					// TODO: Ideally if there is no recursive CTEs we can convert them to SubQueries
-					if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
-						throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");
+				var ordered = TopoSorting.TopoSort(foundCtes.Keys, foundCtes, static (ctes, cteClause) => (ctes.TryGetValue(cteClause, out var h) ? h.DependsOn ?? [] : []))
+					.ToList();
 
-					// basic detection of non-recursive CTEs
-					// for more complex cases we will need dependency cycles detection
-					foreach (var kvp in cteHolder.WriteableValue)
-					{
-						if (kvp.Value.Count == 0)
-							kvp.Key.IsRecursive = false;
+				Utils.MakeUniqueNames(ordered, null, static (n, a) => !ReservedWords.IsReserved(n), static c => c.Name, static (c, n, a) => c.Name = n,
+					static c => string.IsNullOrEmpty(c.Name) ? "CTE_1" : c.Name, StringComparer.OrdinalIgnoreCase);
 
-						// remove self-reference for topo-sort
-						kvp.Value.Remove(kvp.Key);
-					}
-
-					var ordered = TopoSorting.TopoSort(cteHolder.WriteableValue.Keys, cteHolder, static (cteHolder, i) => cteHolder.WriteableValue![i]).ToList();
-
-					Utils.MakeUniqueNames(ordered, null, static (n, a) => !ReservedWords.IsReserved(n), static c => c.Name, static (c, n, a) => c.Name = n,
-						static c => string.IsNullOrEmpty(c.Name) ? "CTE_1" : c.Name, StringComparer.OrdinalIgnoreCase);
-
-					select.With = new SqlWithClause();
-					select.With.Clauses.AddRange(ordered);
-				}
+				select.With = new SqlWithClause();
+				select.With.Clauses.AddRange(ordered);
 			}
 		}
 
