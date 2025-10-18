@@ -24,6 +24,8 @@ using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
+using static LinqToDB.Linq.Translation.ITranslationContext;
+
 namespace LinqToDB.Internal.Linq.Builder
 {
 	sealed class ExpressionBuildVisitor : ExpressionVisitorBase
@@ -5240,13 +5242,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			public Expression? BuildAggregationFunction(
-				Expression                                                                      methodsChain,
-				Expression                                                                      functionExpression,
-				ITranslationContext.AllowedAggregationOperators                                 allowedOperations,
-				Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)> functionFactory
+				Expression                                                                       methodsChain,
+				Expression                                                                       functionExpression,
+				AllowedAggregationOperators                                                      allowedOperations,
+				Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)>  functionFactory,
+				Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)>? plainFunctionFactory   = null,
+				AllowedAggregationOperators                                                      allowedPlainOperations = AllowedAggregationOperators.None
 			)
 			{
-				return Builder.BuildAggregationFunction(methodsChain, functionExpression, allowedOperations, functionFactory);
+				return Builder.BuildAggregationFunction(methodsChain, functionExpression, allowedOperations, functionFactory, plainFunctionFactory, allowedPlainOperations);
 			}
 
 			public bool CanBeEvaluatedOnClient(Expression expression)

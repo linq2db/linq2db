@@ -17,9 +17,10 @@ namespace LinqToDB.Linq.Translation
 	{
 		public Expression?                              FilterExpression { get; }
 		public Expression?                              ValueExpression  { get; }
+		public Expression[]?                            Items            { get; }
 		public ITranslationContext.OrderByInformation[] OrderBy          { get; }
 		public bool                                     IsDistinct       { get; }
-		public bool                                     IsGroupBy        { get;  }
+		public bool                                     IsGroupBy        { get; }
 
 		public bool      TranslateLambdaExpression(LambdaExpression lambdaExpression, [NotNullWhen(true)] out ISqlExpression? sql, out SqlErrorExpression? error);
 		LambdaExpression SimplifyEntityLambda(LambdaExpression      lambda,           int                                     parameterIndex);
@@ -63,10 +64,12 @@ namespace LinqToDB.Linq.Translation
 		object? Evaluate(Expression           expression);
 		bool    TryEvaluate(ISqlExpression    expression, out object? result);
 
-		public Expression? BuildAggregationFunction(Expression                              methodsChain,
-			Expression                                                                      functionExpression,
-			AllowedAggregationOperators                                                     allowedOperations,
-			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)> functionFactory);
+		public Expression? BuildAggregationFunction(Expression                               methodsChain,
+			Expression                                                                       functionExpression,
+			AllowedAggregationOperators                                                      allowedOperations,
+			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)>  functionFactory,
+			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)>? plainFunctionFactory   = null,
+			AllowedAggregationOperators                                                      allowedPlainOperations = AllowedAggregationOperators.None);
 
 		/// <summary>
 		/// Forces expression cache to compare expressions by value, not by reference.

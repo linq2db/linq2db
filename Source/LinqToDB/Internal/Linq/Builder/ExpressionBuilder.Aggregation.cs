@@ -19,13 +19,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		class AggregationContext : IAggregationContext
 		{
-			public ContextRefExpression?                    RootContext        { get; set; }
-			public Expression?                              FilterExpression   { get; set; }
-			public Expression?                              ValueExpression    { get; set; }
-			public ITranslationContext.OrderByInformation[] OrderBy            { get; set; } = [];
-			public bool                                     IsDistinct         { get; set; }
-			public bool                                     IsGroupBy          { get; set; }
-			public ContextRefExpression?                    SqlContext         { get; set; }
+			public ContextRefExpression?                    RootContext      { get; set; }
+			public Expression?                              FilterExpression { get; set; }
+			public Expression?                              ValueExpression  { get; set; }
+			public Expression[]?                            Items            { get; set; }
+			public ITranslationContext.OrderByInformation[] OrderBy          { get; set; } = [];
+			public bool                                     IsDistinct       { get; set; }
+			public bool                                     IsGroupBy        { get; set; }
+			public ContextRefExpression?                    SqlContext       { get; set; }
 
 			public bool TranslateExpression(Expression expression, [NotNullWhen(true)] out ISqlExpression? sql, out SqlErrorExpression? error)
 			{
@@ -95,12 +96,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		public Expression? BuildAggregationFunction(
-			Expression                                                                      methodsChain,
-			Expression                                                                      functionExpression,
-			ITranslationContext.AllowedAggregationOperators                                 allowedOperations,
-			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)> functionFactory
-		)
+		public Expression? BuildAggregationFunction(Expression                               methodsChain,
+			Expression                                                                       functionExpression,
+			ITranslationContext.AllowedAggregationOperators                                  allowedOperations,
+			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)>  functionFactory,
+			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)>? plainFunctionFactory,
+			ITranslationContext.AllowedAggregationOperators                                  allowedPlainOperations)
 		{
 			Expression?                                   filterExpression = null;
 			Expression?                                   buildRoot        = null;
@@ -135,6 +136,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (current is NewArrayExpression newArray)
 				{
+					if (plainFunctionFactory == null)
+						break;
+
 					newArrayExpression = (NewArrayExpression?)BuildTraverseExpression(newArray);
 					break;
 				}
@@ -168,7 +172,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				break;
 			}
 
-			var currentRef = contextRef;
+			var currentRef    = contextRef;
+			var arrayElements = newArrayExpression?.Expressions.ToArray();
 			buildRoot = current;
 
 			if (chain != null)
@@ -186,7 +191,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							break;
 						}
 
-						if (!allowedOperations.HasFlag(ITranslationContext.AllowedAggregationOperators.Distinct))
+						if (!IsAllowedOperation(ITranslationContext.AllowedAggregationOperators.Distinct))
 						{
 							buildRoot = method;
 							break;
@@ -216,7 +221,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 					else if (method.IsQueryable(nameof(Queryable.Where)))
 					{
-						if (!allowedOperations.HasFlag(ITranslationContext.AllowedAggregationOperators.Filter))
+						if (!IsAllowedOperation(ITranslationContext.AllowedAggregationOperators.Filter))
 						{
 							buildRoot = method;
 							break;
@@ -236,7 +241,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 					else if (method.IsQueryable(_orderByNames))
 					{
-						if (!allowedOperations.HasFlag(ITranslationContext.AllowedAggregationOperators.OrderBy))
+						if (!IsAllowedOperation(ITranslationContext.AllowedAggregationOperators.OrderBy))
 						{
 							buildRoot = method;
 							break;
@@ -268,15 +273,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			var sqlContext = currentRef;
 			var rootRef    = sqlContext;
 
-			if (sqlContext == null)
-			{
-				throw new NotImplementedException($"Cannot build aggregation function for expression '{methodsChain}' without context reference.");
-			}
-
 			if (contextRef?.BuildContext is GroupByBuilder.GroupByContext groupByCtx)
 			{
-				isGroupBy      = true;
-				sqlContext     = SequenceHelper.CreateRef(groupByCtx.SubQuery);
+				isGroupBy  = true;
+				sqlContext = SequenceHelper.CreateRef(groupByCtx.SubQuery);
 			}
 
 			valueExpression = currentRef;
@@ -287,19 +287,43 @@ namespace LinqToDB.Internal.Linq.Builder
 				SqlContext       = sqlContext,
 				FilterExpression = filterExpression,
 				ValueExpression  = valueExpression,
+				Items            = arrayElements,
 				OrderBy          = orderBy?.ToArray() ?? [],
 				IsDistinct       = isDistinct,
 				IsGroupBy        = isGroupBy
 			};
 
-			var result = functionFactory(aggregationInfo);
-
-			if (result.sqlExpr != null)
+			if (sqlContext != null)
 			{
-				return CreatePlaceholder(sqlContext.BuildContext, result.sqlExpr, functionExpression, functionExpression.Type);
+				var result = functionFactory(aggregationInfo);
+				if (result.sqlExpr != null)
+				{
+					return CreatePlaceholder(sqlContext.BuildContext, result.sqlExpr, functionExpression, functionExpression.Type);
+				}
+
+				return result.error;
 			}
 
-			return result.error;
+			if (plainFunctionFactory != null)
+			{
+				var result = plainFunctionFactory(aggregationInfo);
+				if (result.sqlExpr != null)
+				{
+					return CreatePlaceholder(_buildVisitor.BuildContext, result.sqlExpr, functionExpression, functionExpression.Type);
+				}
+
+				return result.error;
+			}
+
+			return null;
+
+			bool IsAllowedOperation(ITranslationContext.AllowedAggregationOperators operation)
+			{
+				if (arrayElements != null)
+					return allowedPlainOperations.HasFlag(operation);
+
+				return allowedOperations.HasFlag(operation);
+			}
 		}
 	}
 }
