@@ -1356,7 +1356,7 @@ namespace LinqToDB.Mapping
 		{
 			get => field ??= Schemas
 				.Select(s => s.Configuration)
-				.Where(s => s is { })
+				.Where(s => !string.IsNullOrEmpty(s))
 				.Distinct()
 				.ToArray();
 		}
