@@ -103,6 +103,25 @@ namespace LinqToDB.Internal.Linq.Builder
 			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)>? plainFunctionFactory,
 			ITranslationContext.AllowedAggregationOperators                                  allowedPlainOperations)
 		{
+			if (plainFunctionFactory != null)
+			{
+				var result = BuildAggregationFunctionStep(true, methodsChain, functionExpression, allowedOperations, functionFactory, plainFunctionFactory, allowedPlainOperations);
+				if (result != null)
+					return result;
+			}
+			
+			var commonResult = BuildAggregationFunctionStep(false, methodsChain, functionExpression, allowedOperations, functionFactory, plainFunctionFactory, allowedPlainOperations);
+			return commonResult;
+		}
+
+		private Expression? BuildAggregationFunctionStep(bool                                 allowPlainMode, 
+			Expression                                                                       methodsChain,
+			Expression                                                                       functionExpression,
+			ITranslationContext.AllowedAggregationOperators                                  allowedOperations,
+			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)>  functionFactory,
+			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)>? plainFunctionFactory,
+			ITranslationContext.AllowedAggregationOperators                                  allowedPlainOperations)
+		{
 			Expression?                                   filterExpression = null;
 			Expression?                                   buildRoot        = null;
 			Expression?                                   valueExpression  = null;
@@ -136,8 +155,17 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (current is NewArrayExpression newArray)
 				{
-					if (plainFunctionFactory == null)
+					if (!allowPlainMode)
+					{
+						var buildResult = TryBuildSequence(new BuildInfo(_buildVisitor.BuildContext, newArray, new SelectQuery()));
+						if (buildResult.BuildContext == null)
+						{
+							return null;
+						}
+						
+						contextRef = SequenceHelper.CreateRef(buildResult.BuildContext);
 						break;
+					}
 
 					newArrayExpression = (NewArrayExpression?)BuildTraverseExpression(newArray);
 					break;
@@ -279,6 +307,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				sqlContext = SequenceHelper.CreateRef(groupByCtx.SubQuery);
 			}
 
+			if (sqlContext == null && arrayElements != null && _buildVisitor.BuildContext != null)
+			{
+				sqlContext =  SequenceHelper.CreateRef(_buildVisitor.BuildContext);
+			}
+
 			valueExpression = currentRef;
 
 			var aggregationInfo = new AggregationContext
@@ -295,24 +328,26 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (sqlContext != null)
 			{
-				var result = functionFactory(aggregationInfo);
-				if (result.sqlExpr != null)
+				if (!allowPlainMode || plainFunctionFactory == null)
 				{
-					return CreatePlaceholder(sqlContext.BuildContext, result.sqlExpr, functionExpression, functionExpression.Type);
+					var result = functionFactory(aggregationInfo);
+					if (result.sqlExpr != null)
+					{
+						return CreatePlaceholder(sqlContext.BuildContext, result.sqlExpr, functionExpression, functionExpression.Type);
+					}
+
+					return result.error;
 				}
-
-				return result.error;
-			}
-
-			if (plainFunctionFactory != null)
-			{
-				var result = plainFunctionFactory(aggregationInfo);
-				if (result.sqlExpr != null)
+				else
 				{
-					return CreatePlaceholder(_buildVisitor.BuildContext, result.sqlExpr, functionExpression, functionExpression.Type);
-				}
+					var result = plainFunctionFactory(aggregationInfo);
+					if (result.sqlExpr != null)
+					{
+						return CreatePlaceholder(sqlContext.BuildContext, result.sqlExpr, functionExpression, functionExpression.Type);
+					}
 
-				return result.error;
+					return result.error;
+				}
 			}
 
 			return null;

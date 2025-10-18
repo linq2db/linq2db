@@ -261,6 +261,32 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					var coalesce = factory.Coalesce(function, factory.Value(stringDataType, string.Empty));
 
 					return (coalesce, null);
+				},
+				plainFunctionFactory: info =>
+				{
+					if (info.Items == null)
+						return (null, null);
+
+					var translatedItems = new ISqlExpression[info.Items.Length];
+					var factory         = translationContext.ExpressionFactory;
+
+					for (var i = 0; i < info.Items.Length; i++)
+					{
+						if (!info.TranslateExpression(info.Items[i], out var itemExpr, out var itemError))
+							return (null, itemError);
+						translatedItems[i] = factory.Coalesce(itemExpr, factory.Value(factory.GetDbDataType(itemExpr), ""));
+					}
+
+					if (!info.TranslateExpression(methodCall.Arguments[0], out var separator, out var error))
+						return (null, error);
+
+					var stringDataType = factory.GetDbDataType(translatedItems[0]);
+
+					var function = factory.Function(stringDataType, "CONCAT_WS",
+						parametersNullability: ParametersNullabilityType.IfAllParametersNullable,
+						[separator, ..translatedItems]);
+
+					return (function, error);
 				});
 
 			return result;
