@@ -2028,24 +2028,6 @@ namespace LinqToDB.Internal.SqlProvider
 							_ => null
 						},
 
-					(SqlBinaryExpression binary, var op, var v) when CanBeEvaluateNoParameters(v) =>
-
-						// binary < v
-						binary switch
-						{
-							// e + some < v ===> some < v - e
-							(var e, "+", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, v, "-", e), null),
-							// e - some < v ===>  e - v < some
-							(var e, "-", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, e, "-", v), op, some, null),
-
-							// some + e < v ===> some < v - e
-							(var some, "+", var e) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, v, "-", e), null),
-							// some - e < v ===> some < v + e
-							(var some, "-", var e) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, v, "+", e), null),
-
-							_ => null
-						},
-
 					(var v, var op, SqlBinaryExpression binary) when CanBeEvaluateNoParameters(v) =>
 
 						// v < binary
