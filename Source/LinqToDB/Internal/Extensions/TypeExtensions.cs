@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Internal.Extensions
@@ -34,19 +35,6 @@ namespace LinqToDB.Internal.Extensions
 			       || type == typeof(char);
 		}
 
-		internal static bool IsNumericType(this Type? type)
-		{
-			if (type == null)
-				return false;
-
-			type = type.UnwrapNullableType();
-
-			return type.IsInteger()
-			       || type == typeof(decimal)
-			       || type == typeof(float)
-			       || type == typeof(double);
-		}
-
 		internal static bool IsSignedInteger(this Type type)
 		{
 			return type    == typeof(int)
@@ -63,6 +51,19 @@ namespace LinqToDB.Internal.Extensions
 			        || type == typeof(double)
 			        || type == typeof(float)
 			       );
+		}
+
+		extension(Type type)
+		{
+			public bool IsStringType => type == typeof(string);
+
+			public bool IsEnumerableType => type == typeof(Enumerable);
+
+			public bool IsQueryableType => type == typeof(Queryable);
+
+	#if NET8_0_OR_GREATER
+			public bool IsMemoryExtensionsType => type == typeof(MemoryExtensions);
+	#endif
 		}
 	}
 }

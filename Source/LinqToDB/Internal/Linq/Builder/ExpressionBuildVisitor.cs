@@ -3308,47 +3308,46 @@ namespace LinqToDB.Internal.Linq.Builder
 			_buildFlags |= BuildFlags.ForKeys;
 			_buildFlags &= ~BuildFlags.ForMemberRoot;
 
-			switch (node.Method.Name)
+			switch (node)
 			{
-				case nameof(string.Contains) when node.Method.DeclaringType == typeof(string):
+				case { Method: { DeclaringType.IsStringType: true, Name: nameof(string.Contains) } }:
 					predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.Contains, IsCaseSensitive(node));
 					break;
-				case nameof(string.StartsWith) when node.Method.DeclaringType == typeof(string):
+
+				case { Method: { DeclaringType.IsStringType: true, Name: nameof(string.StartsWith) } }:
 					predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.StartsWith, IsCaseSensitive(node));
 					break;
 
-				case nameof(string.EndsWith) when node.Method.DeclaringType == typeof(string):
+				case { Method: { DeclaringType.IsStringType: true, Name: nameof(string.EndsWith) } }:
 					predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.EndsWith, IsCaseSensitive(node));
 					break;
 
-				case "Contains" when (
-						node.Method.DeclaringType == typeof(Enumerable) ||
-						(node.Method.DeclaringType == typeof(Queryable) && node.Arguments.Count == 2 && Builder.CanBeEvaluatedOnClient(node.Arguments[0])) ||
-						typeof(IList).IsSameOrParentOf(node.Method.DeclaringType!) ||
-						typeof(ICollection<>).IsSameOrParentOf(node.Method.DeclaringType!) ||
-						typeof(IReadOnlyCollection<>).IsSameOrParentOf(node.Method.DeclaringType!)
-					):
+				case { Method: { DeclaringType: { } type, Name: nameof(Enumerable.Contains) } } when (
+					type == typeof(Enumerable) ||
+					(type == typeof(Queryable) && node.Arguments.Count == 2 && Builder.CanBeEvaluatedOnClient(node.Arguments[0])) ||
+					typeof(IList).IsSameOrParentOf(type) ||
+					typeof(ICollection<>).IsSameOrParentOf(type) ||
+					typeof(IReadOnlyCollection<>).IsSameOrParentOf(type)
+				):
 					predicate = ConvertInPredicate(node);
 					break;
 
 #if NET8_0_OR_GREATER
-				case "Contains" when (
-					node.Method.DeclaringType == typeof(MemoryExtensions)
-					&& node is
-					{
-						Arguments:
-						[
-							MethodCallExpression
-							{
-								Method.Name: "op_Implicit",
-								Type.Name: "ReadOnlySpan`1" or "Span`1",
-								Arguments: [{ } spanSource],
-							},
-							_,
-							..
-						]
-					}
-				):
+				case 
+				{
+					Method: { DeclaringType.IsMemoryExtensionsType: true, Name: nameof(MemoryExtensions.Contains) },
+					Arguments:
+					[
+						MethodCallExpression
+						{
+							Method.Name: "op_Implicit",
+							Type.Name: "ReadOnlySpan`1" or "Span`1",
+							Arguments: [{ } spanSource],
+						},
+						_,
+						..
+					]
+				}:
 				{
 					spanSource = spanSource.UnwrapConvertToSelf();
 
@@ -3370,7 +3369,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 #endif
 
-				case "ContainsValue" when typeof(Dictionary<,>).IsSameOrParentOf(node.Method.DeclaringType!):
+				case { Method: { DeclaringType: { } type, Name: nameof(Dictionary<,>.ContainsValue) } } when 
+					typeof(Dictionary<,>).IsSameOrParentOf(type):
 				{
 					var args = node.Method.DeclaringType!.GetGenericArguments(typeof(Dictionary<,>))!;
 					var minf = ExpressionBuilder.EnumerableMethods["Contains"]
@@ -3387,13 +3387,15 @@ namespace LinqToDB.Internal.Linq.Builder
 					break;
 				}
 
-				case "ContainsKey" when (
-					typeof(IDictionary<,>).IsSameOrParentOf(node.Method.DeclaringType!) ||
-					typeof(IReadOnlyDictionary<,>).IsSameOrParentOf(node.Method.DeclaringType!)
+				case { Method: { DeclaringType: { } type, Name: nameof(IDictionary<,>.ContainsKey) } } when (
+					typeof(IDictionary<,>).IsSameOrParentOf(type) ||
+					typeof(IReadOnlyDictionary<,>).IsSameOrParentOf(type)
 				):
 				{
-					var type = typeof(IDictionary<,>).IsSameOrParentOf(node.Method.DeclaringType!) ? typeof(IDictionary<,>) : typeof(IReadOnlyDictionary<,>);
-					var args = node.Method.DeclaringType!.GetGenericArguments(type)!;
+					var args = node.Method.DeclaringType!.GetGenericArguments(
+						typeof(IDictionary<,>).IsSameOrParentOf(type) ? typeof(IDictionary<,>) : typeof(IReadOnlyDictionary<,>)
+					)!;
+
 					var minf = ExpressionBuilder.EnumerableMethods["Contains"]
 						.First(static m => m.GetParameters().Length == 2)
 						.MakeGenericMethod(args[1]);
