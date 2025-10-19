@@ -3322,14 +3322,21 @@ namespace LinqToDB.Internal.Linq.Builder
 					predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.EndsWith, IsCaseSensitive(node));
 					break;
 
+				// static Contains(this src, item) extension methods
 				case { Method: { DeclaringType: { } type, Name: nameof(Enumerable.Contains) } } when (
 					type == typeof(Enumerable) ||
-					(type == typeof(Queryable) && node.Arguments.Count == 2 && Builder.CanBeEvaluatedOnClient(node.Arguments[0])) ||
+					(type == typeof(Queryable) && node.Arguments.Count == 2 && Builder.CanBeEvaluatedOnClient(node.Arguments[0]))):
+					predicate = ConvertInPredicate(node.Arguments[1], node.Arguments[0]);
+					break;
+
+				// src.Contains(item) instance methods
+				case { Method: { DeclaringType: { } type, Name: nameof(IList.Contains) } } when (
 					typeof(IList).IsSameOrParentOf(type) ||
 					typeof(ICollection<>).IsSameOrParentOf(type) ||
+					// IReadOnlyCollection<> doesn't declare Contains(), but derived (readonly) collection classes could.
 					typeof(IReadOnlyCollection<>).IsSameOrParentOf(type)
 				):
-					predicate = ConvertInPredicate(node);
+					predicate = ConvertInPredicate(node.Arguments[0], node.Object!);
 					break;
 
 #if NET8_0_OR_GREATER
@@ -3342,73 +3349,28 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							Method.Name: "op_Implicit",
 							Type.Name: "ReadOnlySpan`1" or "Span`1",
-							Arguments: [{ } spanSource],
+							Arguments: [var spanSource],
 						},
-						_,
+						var needle,
 						..
 					]
 				}:
-				{
-					spanSource = spanSource.UnwrapConvertToSelf();
-
-					var containsMethod = ExpressionBuilder.EnumerableMethods["Contains"]
-						.First(m => m.GetParameters().Length == node.Arguments.Count)
-						.MakeGenericMethod(node.Method.GetGenericArguments()[0]);
-
-					var expr = Expression.Call(
-						containsMethod,
-						node.Arguments.Count switch
-						{
-							2 => [spanSource, node.Arguments[1]],
-							_ => [spanSource, node.Arguments[1], node.Arguments[2]],
-						}
-					);
-
-					predicate = ConvertInPredicate(expr);
+					predicate = ConvertInPredicate(needle, spanSource!.UnwrapConvertToSelf());
 					break;
-				}
 #endif
 
-				case { Method: { DeclaringType: { } type, Name: nameof(Dictionary<,>.ContainsValue) } } when 
-					typeof(Dictionary<,>).IsSameOrParentOf(type):
-				{
-					var args = node.Method.DeclaringType!.GetGenericArguments(typeof(Dictionary<,>))!;
-					var minf = ExpressionBuilder.EnumerableMethods["Contains"]
-						.First(static m => m.GetParameters().Length == 2)
-						.MakeGenericMethod(args[1]);
-
-					var expr = Expression.Call(
-						minf,
-						ExpressionHelper.PropertyOrField(node.Object!, "Values"),
-						node.Arguments[0]
-					);
-
-					predicate = ConvertInPredicate(expr);
+				case { Method: { DeclaringType: { } type, Name: nameof(Dictionary<,>.ContainsValue) } }
+				when typeof(Dictionary<,>).IsSameOrParentOf(type):
+					predicate = ConvertInPredicate(node.Arguments[0], ExpressionHelper.PropertyOrField(node.Object!, "Values"));
 					break;
-				}
 
-				case { Method: { DeclaringType: { } type, Name: nameof(IDictionary<,>.ContainsKey) } } when (
+				case { Method: { DeclaringType: { } type, Name: nameof(IDictionary<,>.ContainsKey) } }
+				when (
 					typeof(IDictionary<,>).IsSameOrParentOf(type) ||
 					typeof(IReadOnlyDictionary<,>).IsSameOrParentOf(type)
 				):
-				{
-					var args = node.Method.DeclaringType!.GetGenericArguments(
-						typeof(IDictionary<,>).IsSameOrParentOf(type) ? typeof(IDictionary<,>) : typeof(IReadOnlyDictionary<,>)
-					)!;
-
-					var minf = ExpressionBuilder.EnumerableMethods["Contains"]
-						.First(static m => m.GetParameters().Length == 2)
-						.MakeGenericMethod(args[1]);
-
-					var expr = Expression.Call(
-						minf,
-						ExpressionHelper.PropertyOrField(node.Object!, "Keys"),
-						node.Arguments[0]
-					);
-
-					predicate = ConvertInPredicate(expr);
+					predicate = ConvertInPredicate(node.Arguments[0], ExpressionHelper.PropertyOrField(node.Object!, "Keys"));
 					break;
-				}
 			}
 
 			_buildFlags = saveFlags;
@@ -4796,13 +4758,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		private ISqlPredicate? ConvertInPredicate(MethodCallExpression expression)
+		private ISqlPredicate? ConvertInPredicate(Expression arg, Expression arr)
 		{
-			var e        = expression;
-			var argIndex = e.Object != null ? 0 : 1;
-			var arr      = e.Object ?? e.Arguments[0];
-			var arg      = e.Arguments[argIndex];
-
 			ISqlExpression? expr = null;
 
 			var saveFlags            = _buildFlags;
