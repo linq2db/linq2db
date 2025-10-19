@@ -3339,11 +3339,11 @@ namespace LinqToDB.Internal.Linq.Builder
 						Arguments:
 						[
 							MethodCallExpression
-						{
-							Method.Name: "op_Implicit",
-							Type.Name: "ReadOnlySpan`1" or "Span`1",
-							Arguments: [{ } spanSource],
-						},
+							{
+								Method.Name: "op_Implicit",
+								Type.Name: "ReadOnlySpan`1" or "Span`1",
+								Arguments: [{ } spanSource],
+							},
 							_,
 							..
 						]
@@ -3352,8 +3352,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					spanSource = spanSource.UnwrapConvertToSelf();
 
-					var containsMethod = ExpressionBuilder.EnumerableMethods
-						.First(m => m.Name is "Contains" && m.GetParameters().Length == node.Arguments.Count)
+					var containsMethod = ExpressionBuilder.EnumerableMethods["Contains"]
+						.First(m => m.GetParameters().Length == node.Arguments.Count)
 						.MakeGenericMethod(node.Method.GetGenericArguments()[0]);
 
 					var expr = Expression.Call(
@@ -3373,8 +3373,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				case "ContainsValue" when typeof(Dictionary<,>).IsSameOrParentOf(node.Method.DeclaringType!):
 				{
 					var args = node.Method.DeclaringType!.GetGenericArguments(typeof(Dictionary<,>))!;
-					var minf = ExpressionBuilder.EnumerableMethods
-						.First(static m => m.Name == "Contains" && m.GetParameters().Length == 2)
+					var minf = ExpressionBuilder.EnumerableMethods["Contains"]
+						.First(static m => m.GetParameters().Length == 2)
 						.MakeGenericMethod(args[1]);
 
 					var expr = Expression.Call(
@@ -3394,14 +3394,15 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					var type = typeof(IDictionary<,>).IsSameOrParentOf(node.Method.DeclaringType!) ? typeof(IDictionary<,>) : typeof(IReadOnlyDictionary<,>);
 					var args = node.Method.DeclaringType!.GetGenericArguments(type)!;
-					var minf = ExpressionBuilder.EnumerableMethods
-									.First(static m => m.Name == "Contains" && m.GetParameters().Length == 2)
-									.MakeGenericMethod(args[0]);
+					var minf = ExpressionBuilder.EnumerableMethods["Contains"]
+						.First(static m => m.GetParameters().Length == 2)
+						.MakeGenericMethod(args[1]);
 
 					var expr = Expression.Call(
-									minf,
-									ExpressionHelper.PropertyOrField(node.Object!, "Keys"),
-									node.Arguments[0]);
+						minf,
+						ExpressionHelper.PropertyOrField(node.Object!, "Keys"),
+						node.Arguments[0]
+					);
 
 					predicate = ConvertInPredicate(expr);
 					break;

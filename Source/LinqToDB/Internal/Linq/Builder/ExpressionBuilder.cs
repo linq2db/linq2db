@@ -432,7 +432,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#region OptimizeExpression
 
-		public static readonly MethodInfo[] EnumerableMethods      = typeof(Enumerable     ).GetMethods();
+		public static readonly ILookup<string, MethodInfo> EnumerableMethods = 
+			typeof(Enumerable).GetMethods().ToLookup(m => m.Name);
 
 		#endregion
 
