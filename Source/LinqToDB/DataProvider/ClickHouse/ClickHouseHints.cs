@@ -271,21 +271,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 			return table => TablesInScopeHint(table, Table.Final);
 		}
 
-		/// <summary>
-		/// Adds <b>FINAL</b> modifier to FROM Clause of all the tables in the method scope.
-		/// </summary>
-		[ExpressionMethod(ProviderName.ClickHouse, nameof(FinalQueryHintImpl))]
-		public static IClickHouseSpecificQueryable<TSource> FinalHint<TSource>(this IClickHouseSpecificQueryable<TSource> table)
-			where TSource : notnull
-		{
-			return SubQueryHint(table, Table.Final);
-		}
-		static Expression<Func<IClickHouseSpecificQueryable<TSource>,IClickHouseSpecificQueryable<TSource>>> FinalQueryHintImpl<TSource>()
-			where TSource : notnull
-		{
-			return table => SubQueryHint(table, Table.Final);
-		}
-
 		[ExpressionMethod(ProviderName.ClickHouse, nameof(SettingsHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> SettingsHint<TSource>(this IClickHouseSpecificQueryable<TSource> query, string hintFormat, params object?[] hintParameters)
 			where TSource : notnull
