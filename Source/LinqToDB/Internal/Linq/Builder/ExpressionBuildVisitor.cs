@@ -3325,7 +3325,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				// static Contains(this src, item) extension methods
 				case { Method: { DeclaringType: { } type, Name: nameof(Enumerable.Contains) } } when (
 					type == typeof(Enumerable) ||
-					(type == typeof(Queryable) && node.Arguments.Count == 2 && Builder.CanBeEvaluatedOnClient(node.Arguments[0]))):
+					(type == typeof(Queryable) && node.Arguments.Count == 2 && Builder.CanBeEvaluatedOnClient(node.Arguments[0]))
+				):
 					predicate = ConvertInPredicate(node.Arguments[1], node.Arguments[0]);
 					break;
 
@@ -3351,21 +3352,21 @@ namespace LinqToDB.Internal.Linq.Builder
 							Type.Name: "ReadOnlySpan`1" or "Span`1",
 							Arguments: [var spanSource],
 						},
-						var needle,
+						var value,
 						..
 					]
 				}:
-					predicate = ConvertInPredicate(needle, spanSource!.UnwrapConvertToSelf());
+					predicate = ConvertInPredicate(value, spanSource!.UnwrapConvertToSelf());
 					break;
 #endif
 
-				case { Method: { DeclaringType: { } type, Name: nameof(Dictionary<,>.ContainsValue) } }
-				when typeof(Dictionary<,>).IsSameOrParentOf(type):
+				case { Method: { DeclaringType: { } type, Name: nameof(Dictionary<,>.ContainsValue) } } when (
+					typeof(Dictionary<,>).IsSameOrParentOf(type)
+				):
 					predicate = ConvertInPredicate(node.Arguments[0], ExpressionHelper.PropertyOrField(node.Object!, "Values"));
 					break;
 
-				case { Method: { DeclaringType: { } type, Name: nameof(IDictionary<,>.ContainsKey) } }
-				when (
+				case { Method: { DeclaringType: { } type, Name: nameof(IDictionary<,>.ContainsKey) } } when (
 					typeof(IDictionary<,>).IsSameOrParentOf(type) ||
 					typeof(IReadOnlyDictionary<,>).IsSameOrParentOf(type)
 				):
@@ -4758,7 +4759,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		private ISqlPredicate? ConvertInPredicate(Expression arg, Expression arr)
+		private ISqlPredicate? ConvertInPredicate(Expression value, Expression arr)
 		{
 			ISqlExpression? expr = null;
 
@@ -4769,7 +4770,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				_buildFlags |= BuildFlags.ForKeys;
 
-				var builtExpr = Visit(arg);
+				var builtExpr = Visit(value);
 
 				_buildFlags = saveFlags;
 
