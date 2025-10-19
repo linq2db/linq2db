@@ -216,7 +216,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				Expression result = Placeholder;
 
-				if (!_returnType.IsNullableType() && flags.IsExpression())
+				if (!_returnType.IsNullableOrReferenceType() && flags.IsExpression())
 				{
 					result = Expression.Block(
 						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)),

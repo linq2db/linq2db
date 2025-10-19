@@ -70,7 +70,7 @@ namespace LinqToDB.Internal.Common
 			}
 
 			var unwrappedType = type.UnwrapNullableType();
-			if (unwrappedType.IsInteger()
+			if (unwrappedType.IsIntegerType
 				|| unwrappedType == typeof(string)
 				|| unwrappedType == typeof(Guid)
 				|| unwrappedType == typeof(bool)

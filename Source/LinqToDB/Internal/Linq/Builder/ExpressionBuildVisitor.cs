@@ -1761,7 +1761,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var notNullPath = notNull.Path;
 
-			if (notNullPath.Type.IsValueType && !notNullPath.Type.IsNullable())
+			if (!notNullPath.Type.IsNullableOrReferenceType())
 			{
 				notNullPath = Expression.Convert(notNullPath, typeof(Nullable<>).MakeGenericType(notNullPath.Type));
 			}
@@ -2096,7 +2096,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							var predicate = placeholder.Sql as ISqlPredicate;
 							if (predicate is null)
 							{
-								var withNull = !node.Operand.Type.IsNullable();
+								var withNull = !node.Operand.Type.IsNullableType;
 
 								predicate = ConvertExpressionToPredicate(
 									placeholder.Sql,
@@ -3016,7 +3016,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var left  = node.Left;
 			var right = node.Right;
 
-			var shouldCheckColumn = node.Left.Type.ToNullableUnderlying() == node.Right.Type.ToNullableUnderlying();
+			var shouldCheckColumn = node.Left.Type.UnwrapNullableType() == node.Right.Type.UnwrapNullableType();
 
 			if (shouldCheckColumn)
 			{
@@ -3063,7 +3063,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					// do nothing
 				}
-				else if (left.Type.ToNullableUnderlying() != right.Type.ToNullableUnderlying())
+				else if (left.Type.UnwrapNullableType() != right.Type.UnwrapNullableType())
 					columnDescriptor = null;
 			}
 
@@ -4445,7 +4445,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 				// here underlying type used
 				// (int?)enum? op (int?)enum
-				else if (op1conv.Operand.Type.IsNullable() && Nullable.GetUnderlyingType(op1conv.Operand.Type)!.IsEnum
+				else if (op1conv.Operand.Type.IsNullableType && Nullable.GetUnderlyingType(op1conv.Operand.Type)!.IsEnum
 					&& op2.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked
 					&& op2 is UnaryExpression op2conv2
 					&& op2conv2.Operand.NodeType == ExpressionType.Constant
@@ -4545,7 +4545,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var type = operand.Type;
 
-			if (!type.ToNullableUnderlying().IsEnum)
+			if (!type.UnwrapNullableType().IsEnum)
 				return null;
 
 			var dic = new Dictionary<object, object?>();
@@ -5252,7 +5252,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				throw new InvalidOperationException();
 
 			var placeholderType = sqlPlaceholder.Type;
-			if (placeholderType.IsNullable())
+			if (placeholderType.IsNullableType)
 				placeholderType = placeholderType.UnwrapNullableType();
 
 			if (sqlPlaceholder.SelectQuery == null)

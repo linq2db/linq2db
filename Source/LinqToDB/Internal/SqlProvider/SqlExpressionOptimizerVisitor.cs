@@ -2003,8 +2003,8 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!_nullabilityContext.IsEmpty                       &&
 			    !exprExpr.Expr1.CanBeNullable(_nullabilityContext) &&
 			    !exprExpr.Expr2.CanBeNullable(_nullabilityContext) &&
-			    exprExpr.Expr1.SystemType.IsSignedType()           &&
-			    exprExpr.Expr2.SystemType.IsSignedType())
+			    exprExpr.Expr1.SystemType!.IsSignedNumberType      &&
+			    exprExpr.Expr2.SystemType!.IsSignedNumberType)
 			{
 				var unwrapped = (left, exprExpr.Operator, right);
 

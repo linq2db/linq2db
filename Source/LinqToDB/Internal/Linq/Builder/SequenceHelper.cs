@@ -929,7 +929,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public static Expression MakeNotNullCondition(Expression expr)
 		{
-			if (expr.Type.IsValueType && !expr.Type.IsNullable())
+			if (expr.Type.IsValueType && !expr.Type.IsNullableType)
 			{
 				if (expr is SqlPlaceholderExpression placeholder)
 					expr = placeholder.MakeNullable();

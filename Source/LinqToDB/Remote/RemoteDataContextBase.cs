@@ -346,7 +346,7 @@ namespace LinqToDB.Remote
 
 		static MethodInfo GetReaderMethodInfo(Type type)
 		{
-			switch (type.ToNullableUnderlying().GetTypeCodeEx())
+			switch (type.UnwrapNullableType().TypeCode)
 			{
 				case TypeCode.Boolean  : return MemberHelper.MethodOf<DbDataReader>(r => r.GetBoolean (0));
 				case TypeCode.Byte     : return MemberHelper.MethodOf<DbDataReader>(r => r.GetByte    (0));

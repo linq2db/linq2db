@@ -1670,94 +1670,96 @@ namespace LinqToDB.Data
 				(type: parameters.GetType(), ((IConfigurationID)dataConnection).ConfigurationID),
 				dataConnection,
 				static (o, dataConnection) =>
-			{
-				o.SlidingExpiration = dataConnection.Options.LinqOptions.CacheSlidingExpirationOrDefault;
+				{
+					o.SlidingExpiration = dataConnection.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 
-				var type = o.Key.type;
-				var td   = dataConnection.MappingSchema.GetEntityDescriptor(type, dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
-				var p    = Expression.Parameter(typeof(object), "p");
-				var obj  = Expression.Parameter(type,           "obj");
+					var type = o.Key.type;
+					var td   = dataConnection.MappingSchema.GetEntityDescriptor(type, dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
+					var p    = Expression.Parameter(typeof(object), "p");
+					var obj  = Expression.Parameter(type,           "obj");
 
-				var expr = Expression.Lambda<Func<object,DataParameter[]>>(
-					Expression.Block(
-						new[] { obj },
-						new Expression[]
-						{
-							Expression.Assign(obj, Expression.Convert(p, type)),
-							Expression.NewArrayInit(
-								typeof(DataParameter),
-								td.Columns.Select(column =>
-								{
-									if (column.MemberType == typeof(DataParameter))
-									{
-										var pobj = Expression.Parameter(typeof(DataParameter));
-
-										return Expression.Block(
-											new[] { pobj },
-											new Expression[]
+					var expr = Expression.Lambda<Func<object, DataParameter[]>>(
+						Expression.Block(
+							[obj],
+							[
+								Expression.Assign(obj, Expression.Convert(p, type)),
+								Expression.NewArrayInit(
+									typeof(DataParameter),
+									td.Columns.Select(
+										column =>
+										{
+											if (column.MemberType == typeof(DataParameter))
 											{
-												Expression.Assign(pobj, ExpressionHelper.PropertyOrField(obj, column.MemberName)),
-												Expression.MemberInit(
-													Expression.New(typeof(DataParameter)),
-													Expression.Bind(
-														_dataParameterName,
-														Expression.Coalesce(
-															Expression.MakeMemberAccess(pobj, _dataParameterName),
-															Expression.Constant(column.ColumnName))),
-													Expression.Bind(
-														_dataParameterDbDataType,
-														Expression.MakeMemberAccess(pobj, _dataParameterDbDataType)),
-													Expression.Bind(
-														_dataParameterValue,
-														Expression.Convert(
-															Expression.MakeMemberAccess(pobj, _dataParameterValue),
-															typeof(object))))
-											});
-									}
+												var pobj = Expression.Parameter(typeof(DataParameter));
 
-									var memberType  = column.MemberType.ToNullableUnderlying();
-									var valueGetter = ExpressionHelper.PropertyOrField(obj, column.MemberName) as Expression;
-									var mapper      = dataConnection.MappingSchema.GetConvertExpression(memberType, typeof(DataParameter), createDefault : false);
+												return Expression.Block(
+													new[] { pobj },
+													new Expression[]
+													{
+														Expression.Assign(pobj, ExpressionHelper.PropertyOrField(obj, column.MemberName)),
+														Expression.MemberInit(
+															Expression.New(typeof(DataParameter)),
+															Expression.Bind(
+																_dataParameterName,
+																Expression.Coalesce(
+																	Expression.MakeMemberAccess(pobj, _dataParameterName),
+																	Expression.Constant(column.ColumnName))),
+															Expression.Bind(
+																_dataParameterDbDataType,
+																Expression.MakeMemberAccess(pobj, _dataParameterDbDataType)),
+															Expression.Bind(
+																_dataParameterValue,
+																Expression.Convert(
+																	Expression.MakeMemberAccess(pobj, _dataParameterValue),
+																	typeof(object))))
+													});
+											}
 
-									if (mapper != null)
-									{
-										return Expression.Call(
-											MemberHelper.MethodOf(() => PrepareDataParameter(null!, null!)),
-											mapper.GetBody(valueGetter),
-											Expression.Constant(column.ColumnName));
-									}
+											var memberType  = column.MemberType.UnwrappedNullableType;
+											var valueGetter = ExpressionHelper.PropertyOrField(obj, column.MemberName) as Expression;
+											var mapper      = dataConnection.MappingSchema.GetConvertExpression(memberType, typeof(DataParameter), createDefault : false);
 
-									if (memberType.IsEnum)
-									{
-										var mapType  = ConvertBuilder.GetDefaultMappingFromEnumType(dataConnection.MappingSchema, memberType)!;
-										var convExpr = dataConnection.MappingSchema.GetConvertExpression(column.MemberType, mapType)!;
+											if (mapper != null)
+											{
+												return Expression.Call(
+													MemberHelper.MethodOf(() => PrepareDataParameter(null!, null!)),
+													mapper.GetBody(valueGetter),
+													Expression.Constant(column.ColumnName));
+											}
 
-										memberType  = mapType;
-										valueGetter = convExpr.GetBody(valueGetter);
-									}
+											if (memberType.IsEnum)
+											{
+												var mapType  = ConvertBuilder.GetDefaultMappingFromEnumType(dataConnection.MappingSchema, memberType)!;
+												var convExpr = dataConnection.MappingSchema.GetConvertExpression(column.MemberType, mapType)!;
 
-									var columnDbDataType = new DbDataType(memberType, column.DataType, column.DbType, column.Length, column.Precision, column.Scale);
-									if (columnDbDataType.DataType == DataType.Undefined)
-										columnDbDataType = columnDbDataType.WithDataType(dataConnection.MappingSchema.GetDataType(memberType).Type.DataType);
+												memberType  = mapType;
+												valueGetter = convExpr.GetBody(valueGetter);
+											}
 
-									return (Expression)Expression.MemberInit(
-										Expression.New(typeof(DataParameter)),
-										Expression.Bind(
-											_dataParameterName,
-											Expression.Constant(column.ColumnName)),
-										Expression.Bind(
-											_dataParameterDbDataType,
-											Expression.Constant(columnDbDataType, typeof(DbDataType))),
-										Expression.Bind(
-											_dataParameterValue,
-											Expression.Convert(valueGetter, typeof(object))));
-								}))
-						}
-					),
-					p);
+											var columnDbDataType = new DbDataType(memberType, column.DataType, column.DbType, column.Length, column.Precision, column.Scale);
+											if (columnDbDataType.DataType == DataType.Undefined)
+												columnDbDataType = columnDbDataType.WithDataType(dataConnection.MappingSchema.GetDataType(memberType).Type.DataType);
 
-				return expr.CompileExpression();
-			});
+											return (Expression)Expression.MemberInit(
+												Expression.New(typeof(DataParameter)),
+												Expression.Bind(
+													_dataParameterName,
+													Expression.Constant(column.ColumnName)),
+												Expression.Bind(
+													_dataParameterDbDataType,
+													Expression.Constant(columnDbDataType, typeof(DbDataType))),
+												Expression.Bind(
+													_dataParameterValue,
+													Expression.Convert(valueGetter, typeof(object))));
+										}
+									)
+								)
+							]
+						),
+						p);
+
+					return expr.CompileExpression();
+				});
 
 			return func(parameters);
 		}

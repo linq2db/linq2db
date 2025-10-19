@@ -335,7 +335,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			static Expression MakeNullCondition(SqlPathExpression path, bool isNotNull)
 			{
-				if (!path.Type.IsNullableType())
+				if (!path.Type.IsNullableOrReferenceType())
 				{
 					path = path.WithType(path.Type.AsNullable());
 				}

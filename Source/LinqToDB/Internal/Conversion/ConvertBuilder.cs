@@ -48,7 +48,7 @@ namespace LinqToDB.Internal.Conversion
 
 		static Expression? GetValueOrDefault(Type from, Type to, Expression p)
 		{
-			if (!from.IsNullable() || to != from.UnwrapNullableType())
+			if (!from.IsNullableType || to != from.UnwrapNullableType())
 				return null;
 
 			var mi = from.GetMethod("GetValueOrDefault", BindingFlags.Instance | BindingFlags.Public, null, [], null);
@@ -87,7 +87,7 @@ namespace LinqToDB.Internal.Conversion
 				Type oppt = op.GetParameters()[0].ParameterType;
 				Type pt   = p.Type;
 
-				if (oppt.IsNullable() && !pt.IsNullable())
+				if (oppt.IsNullableType && !pt.IsNullableType)
 					p = GetCtor(pt, oppt, p)!;
 
 				return Expression.Convert(p, to, op);
@@ -102,7 +102,7 @@ namespace LinqToDB.Internal.Conversion
 				Type oppt = op.GetParameters()[0].ParameterType;
 				Type pt   = p.Type;
 
-				if (oppt.IsNullable() && !pt.IsNullable())
+				if (oppt.IsNullableType && !pt.IsNullableType)
 					p = GetCtor(pt, oppt, p)!;
 
 				return Expression.Convert(p, to, op);
@@ -116,23 +116,20 @@ namespace LinqToDB.Internal.Conversion
 			if (type.IsEnum)
 				return false;
 
-			switch (type.GetTypeCodeEx())
-			{
-				case TypeCode.Boolean :
-				case TypeCode.Byte    :
-				case TypeCode.SByte   :
-				case TypeCode.Int16   :
-				case TypeCode.Int32   :
-				case TypeCode.Int64   :
-				case TypeCode.UInt16  :
-				case TypeCode.UInt32  :
-				case TypeCode.UInt64  :
-				case TypeCode.Single  :
-				case TypeCode.Double  :
-				case TypeCode.Decimal :
-				case TypeCode.Char    : return true;
-				default               : return false;
-			}
+			return type.TypeCode
+				is TypeCode.Boolean
+				or TypeCode.Byte    
+				or TypeCode.SByte   
+				or TypeCode.Int16   
+				or TypeCode.Int32   
+				or TypeCode.Int64   
+				or TypeCode.UInt16  
+				or TypeCode.UInt32  
+				or TypeCode.UInt64  
+				or TypeCode.Single  
+				or TypeCode.Double  
+				or TypeCode.Decimal 
+				or TypeCode.Char;
 		}
 
 		static Expression? GetConversion(Type from, Type to, Expression p)
@@ -180,7 +177,7 @@ namespace LinqToDB.Internal.Conversion
 
 		static Expression? GetToStringInvariant(Type from, Type to, Expression p)
 		{
-			if (to == typeof(string) && !from.IsNullable())
+			if (to == typeof(string) && !from.IsNullableType)
 			{
 				var mi = from.GetMethodEx("ToString", ToStringInvariantArgTypes);
 				return mi != null ? Expression.Call(p, mi, Expression.Property(null, typeof(CultureInfo), nameof(CultureInfo.InvariantCulture))) : null;
@@ -191,7 +188,7 @@ namespace LinqToDB.Internal.Conversion
 
 		static Expression? GetToString(Type from, Type to, Expression p)
 		{
-			if (to == typeof(string) && !from.IsNullable())
+			if (to == typeof(string) && !from.IsNullableType)
 			{
 				var mi = from.GetMethodEx("ToString", []);
 				return mi != null ? Expression.Call(p, mi) : null;
@@ -268,8 +265,8 @@ namespace LinqToDB.Internal.Conversion
 
 				var fromType = from;
 
-				if (fromType.IsNullable())
-					fromType = fromType.ToNullableUnderlying();
+				if (fromType.IsNullableType)
+					fromType = fromType.UnwrapNullableType();
 
 				var fromTypeFields = toFields
 					.Select(f => new { f.OrigValue, attrs = f.MapValues.Where(a => a.Value == null || a.Value.GetType() == fromType).ToList() })
@@ -359,8 +356,8 @@ namespace LinqToDB.Internal.Conversion
 
 				{
 					var valueType = to;
-					if (valueType.IsNullable())
-						valueType = valueType.ToNullableUnderlying();
+					if (valueType.IsNullableType)
+						valueType = valueType.UnwrapNullableType();
 
 					var toTypeFields = fromFields
 						.Select(f => new { f.Field, Attrs = f.Attrs
@@ -588,14 +585,14 @@ namespace LinqToDB.Internal.Conversion
 
 			var ex =
 				GetConverter     (mappingSchema, p, from, to) ??
-				ConvertUnderlying(mappingSchema, p, from, from.ToNullableUnderlying(), to, to.ToNullableUnderlying()) ??
-				ConvertUnderlying(mappingSchema, p, from, from.ToUnderlying(),         to, to.ToUnderlying());
+				ConvertUnderlying(mappingSchema, p, from, from.UnwrapNullableType(), to, to.UnwrapNullableType()) ??
+				ConvertUnderlying(mappingSchema, p, from, from.ToUnderlying(),       to, to.ToUnderlying());
 
 			if (ex != null)
 			{
 				ne = Expression.Lambda(ex.Item1, p);
 
-				if (from.IsNullable())
+				if (from.IsNullableType)
 					ex = Tuple.Create(
 						Expression.Condition(ExpressionHelper.Property(p, nameof(Nullable<int>.HasValue)), ex.Item1, new DefaultValueExpression(mappingSchema, to)) as Expression,
 						ex.Item2);
@@ -608,9 +605,9 @@ namespace LinqToDB.Internal.Conversion
 			if (ex != null)
 				return Tuple.Create(Expression.Lambda(ex.Item1, p), ne, ex.Item2);
 
-			if (to.IsNullable())
+			if (to.IsNullableType)
 			{
-				var uto = to.ToNullableUnderlying();
+				var uto = to.UnwrapNullableType();
 
 				var defex = Expression.Call(DefaultConverter,
 					Expression.Convert(p, typeof(object)),
@@ -640,7 +637,7 @@ namespace LinqToDB.Internal.Conversion
 
 		public static Type? GetDefaultMappingFromEnumType(MappingSchema mappingSchema, Type enumType)
 		{
-			var type = enumType.ToNullableUnderlying();
+			var type = enumType.UnwrapNullableType();
 
 			if (!type.IsEnum)
 				return null;
@@ -711,7 +708,7 @@ namespace LinqToDB.Internal.Conversion
 					?? mappingSchema.GetDefaultFromEnumType(typeof(Enum))
 					?? Enum.GetUnderlyingType(type);
 
-			if ((enumType.IsNullable() || hasNullValue) && !defaultType.IsNullableType())
+			if ((enumType.IsNullableType || hasNullValue) && !defaultType.IsNullableOrReferenceType())
 				defaultType = defaultType.AsNullable();
 
 			return defaultType;

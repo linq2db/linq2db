@@ -659,12 +659,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (
 					_aggregationType != AggregationType.Sum
 					&& _aggregationType != AggregationType.Count
-					&& !expression.Type.IsNullableType()
-					)
+					&& !expression.Type.IsNullableOrReferenceType()
+				)
 				{
 					var checkExpression = expression;
 
-					if (expression.Type.IsValueType && !expression.Type.IsNullable())
+					if (!expression.Type.IsNullableOrReferenceType())
 					{
 						checkExpression = Expression.Convert(expression, expression.Type.AsNullable());
 					}

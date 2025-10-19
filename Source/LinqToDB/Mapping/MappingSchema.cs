@@ -333,7 +333,7 @@ namespace LinqToDB.Mapping
 				}
 			}
 
-			return type.IsNullableType();
+			return type.IsNullableOrReferenceType();
 		}
 
 		/// <summary>
@@ -748,7 +748,7 @@ namespace LinqToDB.Mapping
 		{
 			var p = expr.Parameters[0];
 
-			if (p.Type.IsNullable())
+			if (p.Type.IsNullableType)
 			{
 				expr = Expression.Lambda(
 					Expression.Condition(
@@ -775,14 +775,14 @@ namespace LinqToDB.Mapping
 			var param = Expression.Parameter(fromType, "v");
 			var body  = (Expression)param;
 
-			if (fromType.IsNullable())
+			if (fromType.IsNullableType)
 			{
 				body = Expression.Condition(
 					ExpressionHelper.Property(param, nameof(Nullable<int>.HasValue)),
 					Expression.Convert(body, type),
 					new DefaultValueExpression(this, type));
 			}
-			else if (type.IsNullable())
+			else if (type.IsNullableType)
 			{
 				body = Expression.Convert(param, type);
 			}
@@ -889,8 +889,8 @@ namespace LinqToDB.Mapping
 
 			if (create)
 			{
-				var ufrom = from.SystemType.ToNullableUnderlying();
-				var uto   = to.SystemType.  ToNullableUnderlying();
+				var ufrom = from.SystemType.UnwrapNullableType();
+				var uto   = to.SystemType.  UnwrapNullableType();
 
 				LambdaExpression? ex;
 				bool              ss = false;
@@ -1640,7 +1640,7 @@ namespace LinqToDB.Mapping
 			canBeNull   = false;
 			int? length = null;
 
-			var underlyingType = type.ToNullableUnderlying();
+			var underlyingType = type.UnwrapNullableType();
 
 			if (underlyingType.IsEnum)
 			{
@@ -1723,27 +1723,31 @@ namespace LinqToDB.Mapping
 		{
 			if (type == null) throw new ArgumentNullException(nameof(type));
 
-			return (_mapValues ??= new ConcurrentDictionary<Type, MapValue[]?>()).GetOrAdd(type, type =>
-			{
-				var underlyingType = type.ToNullableUnderlying();
+			return (_mapValues ??= new ConcurrentDictionary<Type, MapValue[]?>())
+				.GetOrAdd(
+					type,
+					type =>
+					{
+						var underlyingType = type.UnwrappedNullableType;
 
-				if (underlyingType.IsEnum)
-				{
-					List<MapValue>? fields = null;
-
-					foreach (var f in underlyingType.GetFields())
-						if ((f.Attributes & EnumField) == EnumField)
+						if (underlyingType.IsEnum)
 						{
-							var attrs = GetAttributes<MapValueAttribute>(underlyingType, f);
-							(fields ??= new()).Add(new MapValue(Enum.Parse(underlyingType, f.Name, false), attrs));
+							List<MapValue>? fields = null;
+
+							foreach (var f in underlyingType.GetFields())
+								if ((f.Attributes & EnumField) == EnumField)
+								{
+									var attrs = GetAttributes<MapValueAttribute>(underlyingType, f);
+									(fields ??= new()).Add(new MapValue(Enum.Parse(underlyingType, f.Name, false), attrs));
+								}
+
+							if (fields?.Any(f => f.MapValues.Length > 0) == true)
+								return fields.ToArray();
 						}
 
-					if (fields?.Any(static f => f.MapValues.Length > 0) == true)
-						return fields.ToArray();
-				}
-
-				return null;
-			});
+						return null;
+					}
+				);
 		}
 
 		#endregion

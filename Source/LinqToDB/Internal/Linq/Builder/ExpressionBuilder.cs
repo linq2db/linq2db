@@ -482,9 +482,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		public static BinaryExpression Equal(MappingSchema mappingSchema, Expression left, Expression right)
 		{
 			var leftType  = left.Type;
-			leftType = leftType.ToNullableUnderlying();
+			leftType = leftType.UnwrapNullableType();
 			var rightType = right.Type;
-			rightType = rightType.ToNullableUnderlying();
+			rightType = rightType.UnwrapNullableType();
 
 			if (leftType != rightType)
 			{
@@ -513,7 +513,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (left.Type != right.Type)
 			{
-				if (left.Type.IsNullable())
+				if (left.Type.IsNullableType)
 					right = Expression.Convert(right, left.Type);
 				else
 					left = Expression.Convert(left, right.Type);

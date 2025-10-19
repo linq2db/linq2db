@@ -452,7 +452,7 @@ namespace LinqToDB.Mapping
 				}
 				else
 				{
-					var enumType = systemType.ToNullableUnderlying();
+					var enumType = systemType.UnwrapNullableType();
 					if (enumType.IsEnum)
 					{
 						var type = Converter.GetDefaultMappingFromEnumType(MappingSchema, dbDataType.SystemType);
@@ -474,16 +474,16 @@ namespace LinqToDB.Mapping
 		{
 			DbDataType dbDataType = default;
 
-			if (systemType.ToNullableUnderlying().IsEnum)
+			if (systemType.UnwrapNullableType().IsEnum)
 			{
 				var enumType = mappingSchema.GetDefaultFromEnumType(systemType);
 
 				if (enumType != null)
 					dbDataType = mappingSchema.GetDataType(enumType).Type;
 
-				if (dbDataType.DataType == DataType.Undefined && systemType.IsNullable())
+				if (dbDataType.DataType == DataType.Undefined && systemType.IsNullableType)
 				{
-					enumType = mappingSchema.GetDefaultFromEnumType(systemType.ToNullableUnderlying());
+					enumType = mappingSchema.GetDefaultFromEnumType(systemType.UnwrapNullableType());
 
 					if (enumType != null)
 						dbDataType = mappingSchema.GetDataType(enumType).Type;
@@ -713,9 +713,9 @@ namespace LinqToDB.Mapping
 				else
 				{
 					// For DataType.Enum we do not provide any additional conversion
-					if (valueConverter == null && includingEnum && dbDataType.DataType != DataType.Enum && getterExpr.Type.ToNullableUnderlying().IsEnum)
+					if (valueConverter == null && includingEnum && dbDataType.DataType != DataType.Enum && getterExpr.Type.UnwrapNullableType().IsEnum)
 					{
-						var type = dbDataType.SystemType != typeof(object) && !dbDataType.SystemType.ToNullableUnderlying().IsEnum
+						var type = dbDataType.SystemType != typeof(object) && !dbDataType.SystemType.UnwrapNullableType().IsEnum
 							? dbDataType.SystemType
 							: Converter.GetDefaultMappingFromEnumType(mappingSchema, getterExpr.Type);
 

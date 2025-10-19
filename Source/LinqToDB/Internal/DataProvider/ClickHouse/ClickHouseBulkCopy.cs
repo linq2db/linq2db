@@ -186,7 +186,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				// other types handled in provider's SetParameter method
 				if (columnTypes[i].DataType == DataType.VarBinary && columns[i].MemberType == typeof(byte[]))
 					bc.ConfigureColumn(i, _provider.Adapter.OctonicaColumnSettings!(typeof(byte[])));
-				else if (columnTypes[i].DataType is DataType.Char or DataType.NChar && (columns[i].MemberType == typeof(string) || columns[i].MemberType.ToNullableUnderlying().IsEnum))
+				else if (columnTypes[i].DataType is DataType.Char or DataType.NChar && (columns[i].MemberType == typeof(string) || columns[i].MemberType.UnwrapNullableType().IsEnum))
 					bc.ConfigureColumn(i, _provider.Adapter.OctonicaColumnSettings!(typeof(string)));
 			}
 
@@ -298,7 +298,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					// other types handled in provider's SetParameter method
 					if (columnTypes[i].DataType == DataType.VarBinary && columns[i].MemberType == typeof(byte[]))
 						bc.ConfigureColumn(i, _provider.Adapter.OctonicaColumnSettings!(typeof(byte[])));
-					else if (columnTypes[i].DataType is DataType.Char or DataType.NChar && (columns[i].MemberType == typeof(string) || columns[i].MemberType.ToNullableUnderlying().IsEnum))
+					else if (columnTypes[i].DataType is DataType.Char or DataType.NChar && (columns[i].MemberType == typeof(string) || columns[i].MemberType.UnwrapNullableType().IsEnum))
 						bc.ConfigureColumn(i, _provider.Adapter.OctonicaColumnSettings!(typeof(string)));
 				}
 
@@ -412,7 +412,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					// other types handled in provider's SetParameter method
 					if (columnTypes[i].DataType == DataType.VarBinary && columns[i].MemberType == typeof(byte[]))
 						bc.ConfigureColumn(i, _provider.Adapter.OctonicaColumnSettings!(typeof(byte[])));
-					else if (columnTypes[i].DataType is DataType.Char or DataType.NChar && (columns[i].MemberType == typeof(string) || columns[i].MemberType.ToNullableUnderlying().IsEnum))
+					else if (columnTypes[i].DataType is DataType.Char or DataType.NChar && (columns[i].MemberType == typeof(string) || columns[i].MemberType.UnwrapNullableType().IsEnum))
 						bc.ConfigureColumn(i, _provider.Adapter.OctonicaColumnSettings!(typeof(string)));
 				}
 

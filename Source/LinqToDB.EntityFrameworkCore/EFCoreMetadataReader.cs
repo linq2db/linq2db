@@ -315,7 +315,7 @@ namespace LinqToDB.EntityFrameworkCore
 							if (primaryKey is { Properties.Count: 1 }
 								&& primaryKey.Properties[0] == prop
 								&& prop.ValueGenerated == ValueGenerated.OnAdd
-								&& prop.ClrType.IsInteger()
+								&& prop.ClrType.IsIntegerType
 								&& prop.FindTypeMapping()?.Converter == null)
 							{
 								isIdentity = true;

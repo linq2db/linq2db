@@ -553,14 +553,14 @@ namespace LinqToDB.Internal.Linq.Builder
 					var valueType = columnDescriptor?.GetDbDataType(true).SystemType
 					                ?? placeholder.Type;
 
-					var canBeNull = nullability.CanBeNull(placeholder.Sql) || placeholder.Type.IsNullable();
+					var canBeNull = nullability.CanBeNull(placeholder.Sql) || placeholder.Type.IsNullableType;
 
-					if (canBeNull && valueType != placeholder.Type && valueType.IsValueType && !valueType.IsNullable())
+					if (canBeNull && valueType != placeholder.Type && !valueType.IsNullableOrReferenceType())
 					{
 						valueType = valueType.AsNullable();
 					}
 
-					if (placeholder.Type != valueType && valueType.IsNullable() && placeholder.Type == valueType.ToNullableUnderlying())
+					if (placeholder.Type != valueType && valueType.IsNullableType && placeholder.Type == valueType.UnwrapNullableType())
 					{
 						// let ConvertFromDataReaderExpression handle default value
 						valueType = placeholder.Type;

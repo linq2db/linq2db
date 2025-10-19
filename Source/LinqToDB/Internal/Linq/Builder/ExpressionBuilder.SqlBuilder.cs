@@ -856,7 +856,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			bool IsAcceptableType(Type type)
 			{
 				if (!forSearch)
-					return type.IsNullableType();
+					return type.IsNullableOrReferenceType();
 
 				if (MappingSchema.IsCollectionType(type))
 					return true;
@@ -1813,7 +1813,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public Expression ParseGenericConstructor(Expression createExpression, ProjectFlags flags, ColumnDescriptor? columnDescriptor)
 		{
-			if (createExpression.Type.IsNullable())
+			if (createExpression.Type.IsNullableType)
 				return createExpression;
 
 			if (MappingSchema.IsScalarType(createExpression.Type))
