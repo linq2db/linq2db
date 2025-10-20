@@ -5160,7 +5160,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return Builder.BuildSqlExpression(CurrentContext, expression, buildPurpose, BuildFlags.None, alias: CurrentAlias);
 			}
 
-			public bool TranslateExpression(Expression expression, [NotNullWhen(true)] out ISqlExpression? sql, out SqlErrorExpression? error)
+			public bool TranslateExpression(Expression expression, [NotNullWhen(true)] out ISqlExpression? sql, [NotNullWhen(false)] out SqlErrorExpression? error)
 			{
 				var translated = Translate(expression, TranslationFlags.Sql);
 				if (translated is SqlPlaceholderExpression placeholder)

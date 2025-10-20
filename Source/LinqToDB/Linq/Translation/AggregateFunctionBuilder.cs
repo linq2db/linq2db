@@ -1,32 +1,36 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq.Translation
 {
 	/// <summary>
 	///     Fluent builder to configure aggregate/"plain" aggregation translation using existing BuildAggregationFunction
 	///     pipeline.
-	///     Translates configured argument indexes and exposes only SQL-ready expressions to the combine callbacks.
 	/// </summary>
 	public sealed class AggregateFunctionBuilder
 	{
 		readonly ModeConfig _aggregate = new();
 		readonly ModeConfig _plain     = new();
 
-		public AggregateFunctionBuilder ConfigureAggregate(Action<ModeConfig> cfg)
+		public AggregateFunctionBuilder ConfigureAggregate(Action<AggregateModeBuilder> configAction)
 		{
-			cfg(_aggregate);
+			configAction(new AggregateModeBuilder(_aggregate));
 			return this;
 		}
 
-		public AggregateFunctionBuilder ConfigurePlain(Action<ModeConfig> cfg)
+		public AggregateFunctionBuilder ConfigurePlain(Action<AggregateModeBuilder> configAction)
 		{
-			cfg(_plain);
+			configAction(new AggregateModeBuilder(_plain));
 			return this;
 		}
 
@@ -46,13 +50,11 @@ namespace LinqToDB.Linq.Translation
 				}
 			}
 
-			var result = ctx.BuildAggregationFunction(
+			return ctx.BuildAggregationFunction(
 				sequenceExpr,
 				functionCall,
 				_aggregate.ToAllowedOps(),
 				agg => Combine(ctx, agg, functionCall, _aggregate, false));
-
-			return result;
 		}
 
 		private (ISqlExpression? sql, SqlErrorExpression? error) Combine(
@@ -64,9 +66,8 @@ namespace LinqToDB.Linq.Translation
 		{
 			var factory = ctx.ExpressionFactory;
 
-			// translate configured call arguments
 			var translatedArgs = new ISqlExpression?[config.ArgumentIndexes.Length];
-			for (int i = 0; i < config.ArgumentIndexes.Length; i++)
+			for (var i = 0; i < config.ArgumentIndexes.Length; i++)
 			{
 				var argIndex = config.ArgumentIndexes[i];
 				if (argIndex < 0 || argIndex >= functionCall.Arguments.Count)
@@ -77,7 +78,7 @@ namespace LinqToDB.Linq.Translation
 				var argExpr = functionCall.Arguments[argIndex];
 				if (!raw.TranslateExpression(argExpr, out var argSql, out var argErr))
 				{
-					return (null, argErr ?? ctx.CreateErrorExpression(argExpr, type: functionCall.Type));
+					return (null, argErr);
 				}
 
 				translatedArgs[i] = argSql!;
@@ -92,16 +93,16 @@ namespace LinqToDB.Linq.Translation
 				}
 			}
 
-			ISqlExpression[] itemsSql = Array.Empty<ISqlExpression>();
+			var itemsSql = Array.Empty<ISqlExpression>();
 			if (plainMode && raw.Items != null)
 			{
 				itemsSql = new ISqlExpression[raw.Items.Length];
-				for (int i = 0; i < raw.Items.Length; i++)
+				for (var i = 0; i < raw.Items.Length; i++)
 				{
 					var itemExpr = raw.Items[i];
 					if (!raw.TranslateExpression(itemExpr, out var itemSql, out var itemErr))
 					{
-						return (null, itemErr ?? ctx.CreateErrorExpression(itemExpr, type : functionCall.Type));
+						return (null, itemErr);
 					}
 
 					itemsSql[i] = itemSql!;
@@ -109,54 +110,87 @@ namespace LinqToDB.Linq.Translation
 			}
 
 			var orderSql = new (ISqlExpression expr, bool desc, Sql.NullsPosition nulls)[raw.OrderBy.Length];
-			for (int i = 0; i < raw.OrderBy.Length; i++)
+			for (var i = 0; i < raw.OrderBy.Length; i++)
 			{
 				var obInfo = raw.OrderBy[i];
 				if (!raw.TranslateExpression(obInfo.Expr, out var obSql, out var obErr))
 				{
-					return (null, obErr ?? ctx.CreateErrorExpression(obInfo.Expr, type : functionCall.Type));
+					return (null, obErr);
 				}
 
 				orderSql[i] = (obSql!, obInfo.IsDescending, obInfo.Nulls);
 			}
 
-			SqlSearchCondition? filterSql = null;
-			if (raw.FilterExpression != null)
+			SqlSearchCondition? filterSql         = null;
+			List<Expression>?   filterExpressions = null;
+			var                 isNullFiltered    = false;
+
+			if (raw.FilterExpressions != null)
 			{
-				if (!raw.TranslateExpression(raw.FilterExpression, out var filterExprSql, out var fErr))
+				if (raw is { Items: not null, ValueParameter: not null })
 				{
-					return (null, fErr ?? ctx.CreateErrorExpression(raw.FilterExpression, type : functionCall.Type));
-				}
+					filterExpressions = new List<Expression>(raw.FilterExpressions.Length);
+					filterExpressions.AddRange(raw.FilterExpressions);
+					var alreadySpottedNullCheck = false;
 
-				filterSql = filterExprSql as SqlSearchCondition ?? new SqlSearchCondition().Add(new SqlPredicate.Expr(filterExprSql!));
-			}
-
-			var IsNullFiltered = false;
-
-			if (filterSql != null && valueSql != null)
-			{
-				// handle NotNullCheck mode
-				if (config.AllowNotNullCheckMode.HasValue)
-				{
-					var removeFromFilter = config.AllowNotNullCheckMode.Value;
-
-					if (filterSql is { IsAnd: true })
+					if (config.AllowNotNullCheckMode != null)
 					{
-						var isNotNull = filterSql.Predicates.FirstOrDefault(p => p is SqlPredicate.IsNull { IsNot: true } isNull && isNull.Expr1.Equals(valueSql));
-						if (isNotNull != null)
+						for (int i = 0; i < filterExpressions.Count; i++)
 						{
-							IsNullFiltered = true;
-							if (removeFromFilter)
+							var expr = filterExpressions[i];
+							if (expr.NodeType != ExpressionType.Equal)
 							{
-								filterSql.Predicates.Remove(isNotNull);
-								if (filterSql.Predicates.Count == 0)
+								var binary = (BinaryExpression)expr;
+								
+								if (binary.Left == raw.ValueParameter && binary.Right.IsNullValue() || binary.Right == raw.ValueParameter && binary.Left.IsNullValue())
 								{
-									filterSql = null;
+									if (alreadySpottedNullCheck || config.AllowNotNullCheckMode == true)
+									{
+										filterExpressions.RemoveAt(i);
+										isNullFiltered = true;
+
+										i++;
+									}
+
+									alreadySpottedNullCheck = true;
 								}
 							}
 						}
+
+						if (filterExpressions.Count == 0)
+						{
+							filterExpressions = null;
+						}
+					}
+				}
+				else
+				{
+					var filterCondition = raw.FilterExpressions.Aggregate(Expression.AndAlso);
+
+					if (!raw.TranslateExpression(filterCondition, out var filterExprSql, out var fErr))
+					{
+						return (null, fErr ?? ctx.CreateErrorExpression(filterCondition, type: functionCall.Type));
 					}
 
+					filterSql = filterExprSql as SqlSearchCondition ?? new SqlSearchCondition().Add(new SqlPredicate.Expr(filterExprSql!));
+				}
+
+			}
+
+			if (filterSql != null && valueSql != null && config.AllowNotNullCheckMode.HasValue && filterSql is { IsAnd: true })
+			{
+				var isNotNull = filterSql.Predicates.FirstOrDefault(p => p is SqlPredicate.IsNull { IsNot: true } isNull && isNull.Expr1.Equals(valueSql));
+				if (isNotNull != null)
+				{
+					isNullFiltered = true;
+					if (config.AllowNotNullCheckMode.Value)
+					{
+						filterSql.Predicates.Remove(isNotNull);
+						if (filterSql.Predicates.Count == 0)
+						{
+							filterSql = null;
+						}
+					}
 				}
 			}
 
@@ -165,14 +199,18 @@ namespace LinqToDB.Linq.Translation
 				valueSql,
 				itemsSql,
 				filterSql,
+				raw.SelectQuery,
+				filterExpressions,
+				raw.ValueParameter,
 				orderSql,
 				translatedArgs,
 				raw.IsDistinct,
-				IsNullFiltered,
-				plainMode);
+				isNullFiltered,
+				plainMode
+			);
 
-			var composer = new AggregateComposer(factory);
-			var buildErr = config.BuildAction?.Invoke(info, composer);
+			var composer = new AggregateComposer(factory, info, raw);
+			var buildErr = config.BuildAction?.Invoke(composer);
 			if (buildErr != null)
 			{
 				return (null, buildErr);
@@ -186,50 +224,15 @@ namespace LinqToDB.Linq.Translation
 			return (composer.Result, null);
 		}
 
+		/// <summary>Configuration data container.</summary>
 		public sealed class ModeConfig
 		{
-			internal bool                                                              AllowDistinctFlag;
-			internal bool                                                              AllowFilterFlag;
-			internal bool?                                                             AllowNotNullCheckMode;
-			internal bool                                                              AllowOrderByFlag;
-			internal int[]                                                             ArgumentIndexes = Array.Empty<int>();
-			internal Func<AggregateBuildInfo, AggregateComposer, SqlErrorExpression?>? BuildAction;
-
-			public ModeConfig AllowOrderBy()
-			{
-				AllowOrderByFlag = true;
-				return this;
-			}
-
-			public ModeConfig AllowFilter()
-			{
-				AllowFilterFlag = true;
-				return this;
-			}
-
-			public ModeConfig AllowDistinct()
-			{
-				AllowDistinctFlag = true;
-				return this;
-			}
-
-			public ModeConfig AllowNotNullCheck(bool removeFromFilter)
-			{
-				AllowNotNullCheckMode = removeFromFilter;
-				return this;
-			}
-
-			public ModeConfig TranslateArguments(params int[] indexes)
-			{
-				ArgumentIndexes = indexes ?? Array.Empty<int>();
-				return this;
-			}
-
-			public ModeConfig OnBuildFunction(Func<AggregateBuildInfo, AggregateComposer, SqlErrorExpression?> build)
-			{
-				BuildAction = build;
-				return this;
-			}
+			internal bool                                          AllowDistinctFlag;
+			internal bool                                          AllowFilterFlag;
+			internal bool?                                         AllowNotNullCheckMode;
+			internal bool                                          AllowOrderByFlag;
+			internal int[]                                         ArgumentIndexes = Array.Empty<int>();
+			internal Func<AggregateComposer, SqlErrorExpression?>? BuildAction;
 
 			internal ITranslationContext.AllowedAggregationOperators ToAllowedOps()
 			{
@@ -253,11 +256,57 @@ namespace LinqToDB.Linq.Translation
 			}
 		}
 
+		/// <summary>Fluent builder for mode configuration.</summary>
+		public sealed class AggregateModeBuilder
+		{
+			readonly ModeConfig _config;
+			internal AggregateModeBuilder(ModeConfig config) => _config = config;
+
+			public AggregateModeBuilder AllowOrderBy()
+			{
+				_config.AllowOrderByFlag = true;
+				return this;
+			}
+
+			public AggregateModeBuilder AllowFilter()
+			{
+				_config.AllowFilterFlag = true;
+				return this;
+			}
+
+			public AggregateModeBuilder AllowDistinct()
+			{
+				_config.AllowDistinctFlag = true;
+				return this;
+			}
+
+			public AggregateModeBuilder AllowNotNullCheck(bool removeFromFilter)
+			{
+				_config.AllowNotNullCheckMode = removeFromFilter;
+				return this;
+			}
+
+			public AggregateModeBuilder TranslateArguments(params int[] indexes)
+			{
+				_config.ArgumentIndexes = indexes;
+				return this;
+			}
+
+			public AggregateModeBuilder OnBuildFunction(Func<AggregateComposer, SqlErrorExpression?> build)
+			{
+				_config.BuildAction = build;
+				return this;
+			}
+		}
+
 		public sealed record AggregateBuildInfo(
 			ISqlExpressionFactory                                       Factory,
 			ISqlExpression?                                             Value,
 			ISqlExpression[]                                            Values,
 			SqlSearchCondition?                                         FilterCondition,
+			SelectQuery?                                                SelectQuery,
+			IReadOnlyList<Expression>?                                  FilterExpressions,
+			ParameterExpression?                                        ValueParameter,
 			(ISqlExpression expr, bool desc, Sql.NullsPosition nulls)[] OrderBySql,
 			ISqlExpression?[]                                           Arguments,
 			bool                                                        IsDistinct,
@@ -269,11 +318,74 @@ namespace LinqToDB.Linq.Translation
 
 		public sealed class AggregateComposer
 		{
-			public AggregateComposer(ISqlExpressionFactory factory) => Factory = factory;
-			public ISqlExpression?       Result  { get; private set; }
-			public ISqlExpressionFactory Factory { get; }
+			public AggregateComposer(ISqlExpressionFactory factory, AggregateBuildInfo buildInfo, ISqlExpressionTranslator translator)
+			{
+				Factory    = factory;
+				BuildInfo  = buildInfo;
+				Translator = translator;
+			}
 
-			public void SetResult(ISqlExpression sql) => Result = sql;
+			public ISqlExpression?          Result                        { get; private set; }
+			public ISqlExpressionFactory    Factory                       { get; }
+			public AggregateBuildInfo       BuildInfo                     { get; }
+			public ISqlExpressionTranslator Translator                    { get; }
+			public void                     SetResult(ISqlExpression sql) => Result = sql;
+
+			public bool GetFilteredToNullValues([NotNullWhen(true)] out IEnumerable<ISqlExpression>? values, [NotNullWhen(false)] out SqlErrorExpression? error)
+			{
+				return GetFilteredValues((expression, predicate) => Factory.Condition(predicate, expression, Factory.Null(Factory.GetDbDataType(expression))), out values, out error); 
+			}
+
+			private bool GetFilteredValues(Func<ISqlExpression, ISqlPredicate, ISqlExpression> decorator, [NotNullWhen(true)] out IEnumerable<ISqlExpression>? values, [NotNullWhen(false)] out SqlErrorExpression? error)
+			{
+				values = null;
+				error  = null;
+
+				if (BuildInfo.ValueParameter == null)
+				{
+					throw new InvalidOperationException("Parameter expression is required for filtering.");
+				}
+
+				if (BuildInfo.Values.Length == 0)
+				{
+					error = new SqlErrorExpression("No translated array values", typeof(void));
+					return false;
+				}
+
+				if (BuildInfo.FilterExpressions == null || BuildInfo.FilterExpressions.Count == 0)
+				{
+					values = BuildInfo.Values;
+					return true;
+				}
+
+				var resultValues = new List<ISqlExpression>(BuildInfo.Values.Length);
+
+				foreach (var val in BuildInfo.Values)
+				{
+					SqlSearchCondition searchCondition = new();
+
+					foreach (var filterExpr in BuildInfo.FilterExpressions)
+					{
+						var placeholder  = new SqlPlaceholderExpression(BuildInfo.SelectQuery, val, filterExpr, convertType: BuildInfo.ValueParameter.Type);
+						var replacedExpr = filterExpr.Replace(BuildInfo.ValueParameter, placeholder);
+
+						if (!Translator.TranslateExpression(replacedExpr, out var filterSql, out var filterErr))
+						{
+							error = filterErr;
+							return false;
+						}
+
+						searchCondition.Predicates.Add((ISqlPredicate)filterSql);
+					}
+
+					var decoratedValue = decorator(val, searchCondition);
+					resultValues.Add(decoratedValue);
+				}
+
+				values = resultValues;
+				return true;
+			}
+
 		}
 	}
 }

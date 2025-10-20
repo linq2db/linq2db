@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Expressions;
@@ -8,24 +7,6 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq.Translation
 {
-	public interface ISqlExpressionTranslator
-	{
-		public bool TranslateExpression(Expression expression, [NotNullWhen(true)] out ISqlExpression? sql, out SqlErrorExpression? error);
-	}
-
-	public interface IAggregationContext : ISqlExpressionTranslator
-	{
-		public Expression?                              FilterExpression { get; }
-		public Expression?                              ValueExpression  { get; }
-		public Expression[]?                            Items            { get; }
-		public ITranslationContext.OrderByInformation[] OrderBy          { get; }
-		public bool                                     IsDistinct       { get; }
-		public bool                                     IsGroupBy        { get; }
-
-		public bool      TranslateLambdaExpression(LambdaExpression lambdaExpression, [NotNullWhen(true)] out ISqlExpression? sql, out SqlErrorExpression? error);
-		LambdaExpression SimplifyEntityLambda(LambdaExpression      lambda,           int                                     parameterIndex);
-	}
-
 	public interface ITranslationContext : ISqlExpressionTranslator
 	{
 		[Flags]

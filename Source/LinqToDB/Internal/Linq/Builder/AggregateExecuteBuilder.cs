@@ -51,7 +51,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (buildResult.BuildContext == null)
 					return buildResult;
 
-				sequence = buildResult.BuildContext;
+				sequence = new SubQueryContext(buildResult.BuildContext);
 				sequence = new AggregateRootContext(sequence, sequenceExpression);
 				placeholderSequence = sequence;
 			}
@@ -94,7 +94,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (flags.IsAggregationRoot() || flags.IsRoot() || flags.IsTraverse())
+				if (flags.IsAggregationRoot() || flags.IsRoot() || flags.IsTraverse() || flags.IsSubquery())
 					return path;
 
 				return base.MakeExpression(path, flags);

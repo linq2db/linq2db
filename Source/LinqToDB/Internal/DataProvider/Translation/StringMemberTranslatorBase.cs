@@ -30,8 +30,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod(() => "".PadLeft(0), TranslateStringPadLeft);
 			Registration.RegisterMethod(() => "".PadLeft(0, ' '), TranslateStringPadLeft);
 
-			Registration.RegisterMethod(() => string.Join(",", Enumerable.Empty<string>()), TranslateStringAggregate);
-			Registration.RegisterMethod(() => string.Join(",", Array.Empty<string>()), TranslateStringAggregate);
+			Registration.RegisterMethod(() => string.Join(",", Enumerable.Empty<string>()), TranslateStringJoin);
+			Registration.RegisterMethod(() => string.Join(",", Array.Empty<string>()), TranslateStringJoin);
 		}
 
 		protected virtual Expression? TranslateLike(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
@@ -159,8 +159,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return translationContext.CreatePlaceholder(translated, memberExpression);
 		}
 
-		// New builder-based implementation
-		Expression? TranslateStringAggregate(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			var builder = new AggregateFunctionBuilder()
 				.ConfigureAggregate(c => c
@@ -168,8 +167,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					.AllowFilter()
 					.AllowNotNullCheck(true)
 					.TranslateArguments(0)
-					.OnBuildFunction((info, composer) =>
+					.OnBuildFunction(composer =>
 					{
+						var info = composer.BuildInfo;
 						if (info.Value == null || info.Argument(0) == null)
 						{
 							return null;
@@ -223,8 +223,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					.TranslateArguments(0)
 					.AllowFilter()
 					.AllowNotNullCheck(true)
-					.OnBuildFunction((info, composer) =>
+					.OnBuildFunction(composer =>
 					{
+						var info = composer.BuildInfo;
 						if (info.Values.Length == 0 || info.Argument(0) == null)
 						{
 							composer.SetResult(info.Factory.Value(info.Factory.GetDbDataType(typeof(string)), string.Empty));
@@ -234,9 +235,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						var factory   = info.Factory;
 						var separator = info.Argument(0)!;
 						var dataType  = factory.GetDbDataType(info.Values[0]);
+						
+						if (!composer.GetFilteredToNullValues(out IEnumerable<ISqlExpression>? values, out var error))
+						{
+							return error;
+						}
+
 						var items = info.IsNullFiltered
-								? info.Values
-								: info.Values.Select(i => factory.Coalesce(i, factory.Value(factory.GetDbDataType(i), ""))).ToArray();
+							? values
+							: values.Select(i => factory.Coalesce(i, factory.Value(factory.GetDbDataType(i), ""))).ToArray();
 
 						var function  = factory.Function(dataType, "CONCAT_WS",
 							parametersNullability: ParametersNullabilityType.IfAllParametersNullable,
@@ -247,202 +254,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					}));
 
 			return builder.Build(translationContext, methodCall.Arguments[1], methodCall);
-		}
-
-		/*
-		// Legacy implementation renamed
-		Expression? TranslateStringAggregateOld(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-		{
-			var result = translationContext.BuildAggregationFunction(methodCall.Arguments[1], methodCall, ITranslationContext.AllowedAggregationOperators.Filter | ITranslationContext.AllowedAggregationOperators.OrderBy,
-				(info) =>
-				{
-					if (info.ValueExpression == null)
-						return (null, null);
-
-					if (!info.TranslateExpression(info.ValueExpression, out var translatedValue, out var error))
-						return (null, error);
-
-					if (!info.TranslateExpression(methodCall.Arguments[0], out var separator, out error))
-						return (null, error);
-
-					ISqlExpression? suffix = null;
-					SqlSearchCondition? filterCondition = null;
-					bool IsNullFiltered = false;
-
-					var factory = translationContext.ExpressionFactory;
-
-					var stringDataType = factory.GetDbDataType(translatedValue);
-
-					if (info.OrderBy.Length > 0)
-					{
-						using var sb = Pools.StringBuilder.Allocate();
-
-						var arguments = new ISqlExpression[info.OrderBy.Length];
-
-						sb.Value.Append("ORDER BY ");
-
-						for (var i = 0; i < info.OrderBy.Length; i++)
-						{
-							if (!info.TranslateExpression(info.OrderBy[i].Expr, out var argument, out error))
-							{
-								return (null, error);
-							}
-
-							arguments[i] = argument;
-
-							if (i > 0)
-								sb.Value.Append(", ");
-							sb.Value.Append('{').Append(i).Append('}');
-							if (info.OrderBy[i].IsDescending)
-								sb.Value.Append(" DESC");
-
-							if (info.OrderBy[i].Nulls != Sql.NullsPosition.None)
-							{
-								sb.Value.Append(" NULLS ");
-								sb.Value.Append(info.OrderBy[i].Nulls == Sql.NullsPosition.First ? "FIRST" : "LAST");
-							}
-						}
-
-						suffix = factory.Fragment(stringDataType, sb.Value.ToString(), arguments);
-					}
-
-					if (info.FilterExpression != null)
-					{
-						if (!info.TranslateExpression(info.FilterExpression, out var filterExpr, out error))
-						{
-							return (null, error);
-						}
-
-						filterCondition = filterExpr as SqlSearchCondition;
-
-						if (filterCondition is { IsAnd: true })
-						{
-							var isNotNull = filterCondition.Predicates.FirstOrDefault(p => p is SqlPredicate.IsNull { IsNot: true } isNull && isNull.Expr1.Equals(translatedValue));
-							if (isNotNull != null)
-							{
-								IsNullFiltered = true;
-								filterCondition.Predicates.Remove(isNotNull);
-								if (filterCondition.Predicates.Count == 0)
-								{
-									filterCondition = null;
-								}
-							}
-						}
-					}
-
-					if (!IsNullFiltered)
-					{
-						// string.Join(", ", ["1", null, "3"]]) generates "1, , 3" , so we need to coalesce nulls to empty strings
-						translatedValue = factory.Coalesce(translatedValue, factory.Value(stringDataType, string.Empty));
-					}
-
-					if (filterCondition != null && !filterCondition.IsTrue())
-					{
-						var caseExpr = factory.Condition(
-							filterCondition,
-							translatedValue,
-							factory.Null(stringDataType));
-
-						translatedValue = caseExpr;
-					}
-
-					var function = factory.WindowFunction(stringDataType, "STRING_AGG",
-						[new SqlFunctionArgument(translatedValue), new SqlFunctionArgument(separator, suffix : suffix)],
-						[true, true], isAggregate: true);
-
-					var coalesce = factory.Coalesce(function, factory.Value(stringDataType, string.Empty));
-
-					return (coalesce, null);
-				},
-				plainFunctionFactory: info =>
-				{
-					if (info.Items == null)
-						return (null, null);
-
-					var translatedItems = new ISqlExpression[info.Items.Length];
-					var factory         = translationContext.ExpressionFactory;
-
-					for (var i = 0; i < info.Items.Length; i++)
-					{
-						if (!info.TranslateExpression(info.Items[i], out var itemExpr, out var itemError))
-							return (null, itemError);
-						translatedItems[i] = factory.Coalesce(itemExpr, factory.Value(factory.GetDbDataType(itemExpr), ""));
-					}
-
-					if (!info.TranslateExpression(methodCall.Arguments[0], out var separator, out var error))
-						return (null, error);
-
-					var stringDataType = factory.GetDbDataType(translatedItems[0]);
-
-					var function = factory.Function(stringDataType, "CONCAT_WS",
-						parametersNullability: ParametersNullabilityType.IfAllParametersNullable,
-						[separator, ..translatedItems]);
-
-					return (function, error);
-				});
-
-			return result;
-		}
-		*/
-
-		Expression? TranslateStringAggregateOld2(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-		{
-			if (!translationContext.GetAggregationInfo(methodCall.Arguments[1],
-				    TranslationContextExtensions.AllowedAggregationOperators.Filter | TranslationContextExtensions.AllowedAggregationOperators.OrderBy, out var info))
-				{ return null; }
-
-
-			if (!info.TranslateValue(translationContext, out var translatedValue, out var error))
-				return error;
-
-			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var separator))
-				return translationContext.CreateErrorExpression(methodCall.Arguments[0], type: methodCall.Type);
-
-			var factory = translationContext.ExpressionFactory;
-
-			var stringDataType = factory.GetDbDataType(translatedValue);
-
-			if (info.OrderBy.Length > 0)
-			{
-				using var sb = Pools.StringBuilder.Allocate();
-
-				var arguments = new ISqlExpression[info.OrderBy.Length + 1];
-				arguments[0] = separator;
-
-				sb.Value.Append("{0} ORDER BY ");
-
-				for (var i = 0; i < info.OrderBy.Length; i++)
-				{
-					if (!translationContext.TranslateToSqlExpression(info.OrderBy[i].Expr, out var argument))
-					{
-						return translationContext.CreateErrorExpression(info.OrderBy[i].Expr, type: methodCall.Type);
-					}
-
-					arguments[i + 1] = argument;
-
-					if (i > 0)
-						sb.Value.Append(", ");
-					sb.Value.Append('{').Append(i + 1).Append('}');
-					if (info.OrderBy[i].IsDescending)
-						sb.Value.Append(" DESC");
-
-					if (info.OrderBy[i].Nulls != Sql.NullsPosition.None)
-					{
-						sb.Value.Append(" NULLS ");
-						sb.Value.Append(info.OrderBy[i].Nulls == Sql.NullsPosition.First ? "FIRST" : "LAST");
-					}
-				}
-
-				separator = factory.Fragment(stringDataType, sb.Value.ToString(), arguments);
-			}
-
-			var function = factory.WindowFunction(stringDataType, "STRING_AGG", [new SqlFunctionArgument(translatedValue), new SqlFunctionArgument(separator)], [true, true]);
-
-			var coalesce = factory.Coalesce(function, factory.Value(stringDataType, string.Empty));
-
-			var placeholder = info.CreatePlaceholder(translationContext, coalesce, methodCall);
-
-			return placeholder;
 		}
 
 		public virtual ISqlExpression? TranslateReplace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression oldValue, ISqlExpression newValue)

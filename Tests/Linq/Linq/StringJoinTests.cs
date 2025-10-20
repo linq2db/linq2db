@@ -68,6 +68,29 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void JoinWithGroupingAndUnsupportedMethod([IncludeDataSources(true, TestProvName.PostgreSQL16)] string context)
+		{
+			var       data  = SampleClass.GenerateDataUniquerId();
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query = from t in table
+				group t by t.Id
+				into g
+				select new
+				{
+					Id          = g.Key, 
+					Nullable    = string.Join(", ", g.OrderBy(x => x.NotNullableValue).Select(x => x.NullableValue).Take(2)),
+					NotNullable = string.Join(", ", g.OrderBy(x => x.NotNullableValue).Select(x => x.NotNullableValue).Take(2)),
+				}
+				into s
+				orderby s.Id
+				select s;
+
+			AssertQuery(query);
+		}
+
+		[Test]
 		public void JoinWithGroupingOrdered([IncludeDataSources(true, TestProvName.PostgreSQL16)] string context)
 		{
 			var       data  = SampleClass.GenerateDataNotUniquerId();
@@ -171,6 +194,20 @@ namespace Tests.Linq
 			var query =
 				from t in table
 				select Sql.AsSql(string.Join(", ", new [] {t.NullableValue, t.NotNullableValue, t.VarcharValue, t.NVarcharValue}.Where(x => x != null)));
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void JoinAggregateArrayNotNullAndFilter([IncludeDataSources(true, TestProvName.PostgreSQL16)] string context)
+		{
+			var       data  = SampleClass.GenerateDataUniquerId();
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				select Sql.AsSql(string.Join(", ", new[] { t.NullableValue, t.NotNullableValue, t.VarcharValue, t.NVarcharValue }.Where(x => x != null).Where(x => x!.Contains("A"))));
 
 			AssertQuery(query);
 		}

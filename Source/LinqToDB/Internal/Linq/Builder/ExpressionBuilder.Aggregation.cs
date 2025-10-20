@@ -5,7 +5,10 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
@@ -19,23 +22,27 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		class AggregationContext : IAggregationContext
 		{
-			public ContextRefExpression?                    RootContext      { get; set; }
-			public ParameterExpression?                     ValueParameter   { get; set; }
-			public Expression?                              FilterExpression { get; set; }
-			public Expression?                              ValueExpression  { get; set; }
-			public Expression[]?                            Items            { get; set; }
-			public ITranslationContext.OrderByInformation[] OrderBy          { get; set; } = [];
-			public bool                                     IsDistinct       { get; set; }
-			public bool                                     IsGroupBy        { get; set; }
-			public ContextRefExpression?                    SqlContext       { get; set; }
+			public ContextRefExpression?                    RootContext         { get; set; }
+			public ParameterExpression?                     ValueParameter      { get; set; }
+			public Expression[]?                            FilterExpressions    { get; set; }
+			public Expression?                              ValueExpression     { get; set; }
+			public Expression[]?                            Items               { get; set; }
+			public ITranslationContext.OrderByInformation[] OrderBy             { get; set; } = [];
+			public bool                                     IsDistinct          { get; set; }
+			public bool                                     IsGroupBy           { get; set; }
+			public ContextRefExpression?                    SqlContext          { get; set; }
+			public SelectQuery?                             SelectQuery         => SqlContext?.BuildContext.SelectQuery;
 
-			public bool TranslateExpression(Expression expression, [NotNullWhen(true)] out ISqlExpression? sql, out SqlErrorExpression? error)
+			public bool TranslateExpression(Expression expression, [NotNullWhen(true)] out ISqlExpression? sql, [NotNullWhen(false)] out SqlErrorExpression? error)
 			{
 				error = null;
 				sql = null;
 
 				if (SqlContext == null)
+				{
+					error = SqlErrorExpression.EnsureError(expression);
 					return false;
+				}
 
 				var builder = SqlContext.BuildContext.Builder;
 
@@ -84,12 +91,15 @@ namespace LinqToDB.Internal.Linq.Builder
 				return Expression.Lambda(newBody, newParameters);
 			}
 
-			public bool TranslateLambdaExpression(LambdaExpression lambdaExpression, [NotNullWhen(true)] out ISqlExpression? sql, out SqlErrorExpression? error)
+			public bool TranslateLambdaExpression(LambdaExpression lambdaExpression, [NotNullWhen(true)] out ISqlExpression? sql, [NotNullWhen(false)] out SqlErrorExpression? error)
 			{
 				error = null;
 				sql = null;
 				if (RootContext == null)
+				{
+					error = SqlErrorExpression.EnsureError(lambdaExpression);
 					return false;
+				}
 
 				var newLambda = SimplifyEntityLambda(lambdaExpression, 0);
 
@@ -106,7 +116,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (_buildVisitor.BuildContext == null)
 				return null;
 
-			Expression?                                   filterExpression = null;
+			List<Expression>?                             filterExpression = null;
 			List<ITranslationContext.OrderByInformation>? orderBy          = null;
 			bool                                          isDistinct       = false;
 			bool                                          isGroupBy        = false;
@@ -208,10 +218,8 @@ namespace LinqToDB.Internal.Linq.Builder
 						var        lambda = method.Arguments[1].UnwrapLambda();
 						var filter = lambda.GetBody(currentValueExpression);
 
-						if (filterExpression == null)
-							filterExpression = filter;
-						else
-							filterExpression = Expression.AndAlso(filterExpression, filter);
+						filterExpression ??= new List<Expression>();
+						filterExpression.Add(filter);
 					}
 					else if (method.IsQueryable(_orderByNames))
 					{
@@ -245,15 +253,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var aggregationInfo = new AggregationContext
 			{
-				RootContext      = rootContext,
-				SqlContext       = rootContext,
-				FilterExpression = filterExpression,
-				ValueParameter   = valueParameter,
-				ValueExpression  = null,
-				Items            = arrayElements,
-				OrderBy          = orderBy?.ToArray() ?? [],
-				IsDistinct       = isDistinct,
-				IsGroupBy        = isGroupBy
+				RootContext         = rootContext,
+				SqlContext          = rootContext,
+				FilterExpressions    = filterExpression?.ToArray(),
+				ValueParameter      = valueParameter,
+				ValueExpression     = null,
+				Items               = arrayElements,
+				OrderBy             = orderBy?.ToArray() ?? [],
+				IsDistinct          = isDistinct,
+				IsGroupBy           = isGroupBy
 			};
 
 			if (sqlContext != null)
@@ -275,13 +283,42 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
+		public static Expression BuildAggregateExecuteExpression(MethodCallExpression methodCall, Expression sequenceExpression)
+		{
+			if (methodCall == null) throw new ArgumentNullException(nameof(methodCall));
+
+			var argIndex = methodCall.Arguments.IndexOf(sequenceExpression);
+			if (argIndex < 0)
+				throw new ArgumentException("The provided sequence expression is not an argument of the method call.", nameof(sequenceExpression));
+
+			var elementType = TypeHelper.GetEnumerableElementType(methodCall.Arguments[argIndex].Type);
+			var sourceParam = Expression.Parameter(typeof(IEnumerable<>).MakeGenericType(elementType), "source");
+			var resultType  = methodCall.Type;
+
+			var aggregationBody = Expression.Call(methodCall.Method.DeclaringType!, methodCall.Method.Name, methodCall.Method.IsGenericMethod ? [elementType, resultType] : [],
+				[..methodCall.Arguments.Take(argIndex).Select(a => a.Unwrap()), sourceParam, ..methodCall.Arguments.Skip(argIndex + 1).Select(a => a.Unwrap())]
+			);
+
+			var aggregationLambda = Expression.Lambda(aggregationBody, sourceParam);
+
+			var sequenceArgument = sequenceExpression;
+			if (!typeof(IQueryable<>).IsSameOrParentOf(sequenceArgument.Type))
+				sequenceArgument = Expression.Call(Methods.Queryable.AsQueryable.MakeGenericMethod(elementType), sequenceArgument);
+
+			var method            = typeof(LinqExtensions).GetMethod(nameof(LinqExtensions.AggregateExecute));
+			var genericMethod     = method!.MakeGenericMethod([elementType, resultType]);
+			var executeExpression = Expression.Call(genericMethod, sequenceArgument, aggregationLambda);
+
+			return executeExpression;
+		}
+
 		public Expression? BuildAggregationFunction( 
-			Expression                                                                       methodsChain,
+			Expression                                                                       sequenceExpression,
 			Expression                                                                       functionExpression,
 			ITranslationContext.AllowedAggregationOperators                                  allowedOperations,
 			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)>  functionFactory)
 		{
-			Expression?                                   filterExpression = null;
+			List<Expression>?                             filterExpression = null;
 			Expression?                                   buildRoot        = null;
 			Expression?                                   valueExpression  = null;
 			List<ITranslationContext.OrderByInformation>? orderBy          = null;
@@ -290,7 +327,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			List<MethodCallExpression>? chain = null;
 
-			var current = methodsChain.UnwrapConvert();
+			var current = sequenceExpression.UnwrapConvert();
 
 			ContextRefExpression? contextRef         = null;
 
@@ -342,11 +379,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (contextRef == null)
 			{
-				var buildResult = TryBuildSequence(new BuildInfo(_buildVisitor.BuildContext, methodsChain, new SelectQuery()));
-				if (buildResult.BuildContext == null)
-					return buildResult.ErrorExpression;
+				var aggregation = BuildAggregateExecuteExpression((MethodCallExpression)functionExpression, sequenceExpression);
 
-				contextRef = SequenceHelper.CreateRef(buildResult.BuildContext);
+				var translatedWithoutChain = BuildSqlExpression(_buildVisitor.BuildContext, aggregation, BuildPurpose.Sql, BuildFlags.None);
+
+				return translatedWithoutChain;
 			}
 
 			var currentRef = contextRef;
@@ -400,10 +437,8 @@ namespace LinqToDB.Internal.Linq.Builder
 						}
 
 						var filter = SequenceHelper.PrepareBody(method.Arguments[1].UnwrapLambda(), currentRef.BuildContext);
-						if (filterExpression == null)
-							filterExpression = filter;
-						else
-							filterExpression = Expression.AndAlso(filterExpression, filter);
+						filterExpression ??= new List<Expression>();
+						filterExpression.Add(filter);
 					}
 					else if (method.IsQueryable(_orderByNames))
 					{
@@ -444,15 +479,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var aggregationInfo = new AggregationContext
 			{
-				RootContext      = rootRef,
-				SqlContext       = sqlContext,
-				FilterExpression = filterExpression,
-				ValueParameter   = null,
-				ValueExpression  = valueExpression,
-				Items            = null,
-				OrderBy          = orderBy?.ToArray() ?? [],
-				IsDistinct       = isDistinct,
-				IsGroupBy        = isGroupBy
+				RootContext       = rootRef,
+				SqlContext        = sqlContext,
+				FilterExpressions = filterExpression?.ToArray(),
+				ValueParameter    = null,
+				ValueExpression   = valueExpression,
+				Items             = null,
+				OrderBy           = orderBy?.ToArray() ?? [],
+				IsDistinct        = isDistinct,
+				IsGroupBy         = isGroupBy
 			};
 
 			var result = functionFactory(aggregationInfo);
