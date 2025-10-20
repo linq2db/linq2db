@@ -64,12 +64,19 @@ namespace LinqToDB.Linq.Translation
 		object? Evaluate(Expression           expression);
 		bool    TryEvaluate(ISqlExpression    expression, out object? result);
 
-		public Expression? BuildAggregationFunction(Expression                               methodsChain,
-			Expression                                                                       functionExpression,
-			AllowedAggregationOperators                                                      allowedOperations,
-			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)>  functionFactory,
-			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)>? plainFunctionFactory   = null,
-			AllowedAggregationOperators                                                      allowedPlainOperations = AllowedAggregationOperators.None);
+		Expression? BuildArrayAggregationFunction(
+			Expression                                                                      methodsChain,
+			Expression                                                                      functionExpression,
+			AllowedAggregationOperators                                                     allowedOperations,
+			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)> functionFactory
+		);
+
+		Expression? BuildAggregationFunction(
+			Expression                                                                      methodsChain,
+			Expression                                                                      functionExpression,
+			AllowedAggregationOperators                                                     allowedOperations,
+			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)> functionFactory
+		);
 
 		/// <summary>
 		/// Forces expression cache to compare expressions by value, not by reference.

@@ -5241,16 +5241,24 @@ namespace LinqToDB.Internal.Linq.Builder
 				throw new InvalidOperationException("Invalid enumerable context");
 			}
 
+			public Expression? BuildArrayAggregationFunction(
+				Expression                                                                       methodsChain,
+				Expression                                                                       functionExpression,
+				AllowedAggregationOperators                                                      allowedOperations,
+				Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)>  functionFactory
+				)
+			{
+				return Builder.BuildArrayAggregationFunction(methodsChain, functionExpression, allowedOperations, functionFactory);
+			}
+
 			public Expression? BuildAggregationFunction(
 				Expression                                                                       methodsChain,
 				Expression                                                                       functionExpression,
 				AllowedAggregationOperators                                                      allowedOperations,
-				Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)>  functionFactory,
-				Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)>? plainFunctionFactory   = null,
-				AllowedAggregationOperators                                                      allowedPlainOperations = AllowedAggregationOperators.None
-			)
+				Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)>  functionFactory
+				)
 			{
-				return Builder.BuildAggregationFunction(methodsChain, functionExpression, allowedOperations, functionFactory, plainFunctionFactory, allowedPlainOperations);
+				return Builder.BuildAggregationFunction(methodsChain, functionExpression, allowedOperations, functionFactory);
 			}
 
 			public bool CanBeEvaluatedOnClient(Expression expression)

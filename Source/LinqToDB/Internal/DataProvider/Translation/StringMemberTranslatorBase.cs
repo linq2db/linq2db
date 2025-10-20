@@ -159,7 +159,99 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return translationContext.CreatePlaceholder(translated, memberExpression);
 		}
 
+		// New builder-based implementation
 		Expression? TranslateStringAggregate(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var builder = new AggregateFunctionBuilder()
+				.ConfigureAggregate(c => c
+					.AllowOrderBy()
+					.AllowFilter()
+					.AllowNotNullCheck(true)
+					.TranslateArguments(0)
+					.OnBuildFunction((info, composer) =>
+					{
+						if (info.Value == null || info.Argument(0) == null)
+						{
+							return null;
+						}
+
+						var factory   = info.Factory;
+						var separator = info.Argument(0)!;
+						var valueType = factory.GetDbDataType(info.Value);
+						
+						var value     = info.Value;
+						if (!info.IsNullFiltered)
+							value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
+
+						ISqlExpression? suffix = null;
+						if (info.OrderBySql.Length > 0)
+						{
+							using var sb   = Pools.StringBuilder.Allocate();
+
+							var args = info.OrderBySql.Select(o => o.expr).ToArray();
+
+							sb.Value.Append("ORDER BY ");
+							for (int i = 0; i < info.OrderBySql.Length; i++)
+							{
+								if (i > 0) sb.Value.Append(", ");
+								sb.Value.Append('{').Append(i).Append('}');
+								if (info.OrderBySql[i].desc) sb.Value.Append(" DESC");
+								if (info.OrderBySql[i].nulls != Sql.NullsPosition.None)
+								{
+									sb.Value.Append(" NULLS ");
+									sb.Value.Append(info.OrderBySql[i].nulls == Sql.NullsPosition.First ? "FIRST" : "LAST");
+								}
+							}
+
+							suffix = factory.Fragment(valueType, sb.Value.ToString(), args);
+						}
+
+						if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
+						{
+							value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
+						}
+
+						var fn = factory.WindowFunction(valueType, "STRING_AGG",
+							[new SqlFunctionArgument(value), new SqlFunctionArgument(separator, suffix: suffix)],
+							[true, true],
+							isAggregate: true);
+
+						composer.SetResult(factory.Coalesce(fn, factory.Value(valueType, string.Empty)));
+						return null;
+					}))
+				.ConfigurePlain(c => c
+					.TranslateArguments(0)
+					.AllowFilter()
+					.AllowNotNullCheck(true)
+					.OnBuildFunction((info, composer) =>
+					{
+						if (info.Values.Length == 0 || info.Argument(0) == null)
+						{
+							composer.SetResult(info.Factory.Value(info.Factory.GetDbDataType(typeof(string)), string.Empty));
+							return null;
+						}
+
+						var factory   = info.Factory;
+						var separator = info.Argument(0)!;
+						var dataType  = factory.GetDbDataType(info.Values[0]);
+						var items = info.IsNullFiltered
+								? info.Values
+								: info.Values.Select(i => factory.Coalesce(i, factory.Value(factory.GetDbDataType(i), ""))).ToArray();
+
+						var function  = factory.Function(dataType, "CONCAT_WS",
+							parametersNullability: ParametersNullabilityType.IfAllParametersNullable,
+							[separator, ..items]);
+
+						composer.SetResult(function);
+						return null;
+					}));
+
+			return builder.Build(translationContext, methodCall.Arguments[1], methodCall);
+		}
+
+		/*
+		// Legacy implementation renamed
+		Expression? TranslateStringAggregateOld(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			var result = translationContext.BuildAggregationFunction(methodCall.Arguments[1], methodCall, ITranslationContext.AllowedAggregationOperators.Filter | ITranslationContext.AllowedAggregationOperators.OrderBy,
 				(info) =>
@@ -291,8 +383,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			return result;
 		}
+		*/
 
-		Expression? TranslateStringAggregateOld(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		Expression? TranslateStringAggregateOld2(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			if (!translationContext.GetAggregationInfo(methodCall.Arguments[1],
 				    TranslationContextExtensions.AllowedAggregationOperators.Filter | TranslationContextExtensions.AllowedAggregationOperators.OrderBy, out var info))
