@@ -4,11 +4,11 @@ namespace LinqToDB.Internal.Extensions
 {
 	public static class NullableTypeExtensions
 	{
-		public static Type UnwrapNullableType(this Type type)
-			=> Nullable.GetUnderlyingType(type) ?? type;
+		public static Type UnwrapNullableType(this Type type) =>
+			Nullable.GetUnderlyingType(type) ?? type;
 
-		public static Type MakeNullable(this Type type)
-			=> type.IsNullableOrReferenceType()
+		public static Type MakeNullable(this Type type) =>
+			type.IsNullableOrReferenceType()
 				? type
 				: typeof(Nullable<>).MakeGenericType(type);
 
@@ -17,16 +17,16 @@ namespace LinqToDB.Internal.Extensions
 		/// </summary>
 		/// <param name="type">Type to test.</param>
 		/// <returns><c>true</c> if type is reference type or <see cref="Nullable{T}"/>.</returns>
-		internal static bool IsNullableOrReferenceType(this Type type)
-			=> !type.IsValueType || type.IsNullableType;
+		internal static bool IsNullableOrReferenceType(this Type type) =>
+			!type.IsValueType || type.IsNullableType;
 
 		/// <summary>
 		/// Wraps type into <see cref="Nullable{T}"/> class.
 		/// </summary>
 		/// <param name="type">Value type to wrap. Must be value type (except <see cref="Nullable{T}"/> itself).</param>
 		/// <returns>Type, wrapped by <see cref="Nullable{T}"/>.</returns>
-		public static Type AsNullable(this Type type)
-			=> type switch
+		public static Type AsNullable(this Type type) =>
+			type switch
 			{
 				null => throw new ArgumentNullException(nameof(type)),
 				{ IsValueType: false } => throw new ArgumentException($"{type} is not a value type"),
