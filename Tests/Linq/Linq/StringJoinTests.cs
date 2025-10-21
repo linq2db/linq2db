@@ -179,7 +179,11 @@ namespace Tests.Linq
 
 			var query = 
 				from t in table
-				select Sql.AsSql(string.Join(", ", new [] {t.NullableValue, t.NotNullableValue, t.VarcharValue, t.NVarcharValue}));
+				select new
+				{
+					Aggregated = Sql.AsSql(string.Join(", ", new [] {t.NullableValue, t.NotNullableValue, t.VarcharValue, t.NVarcharValue})),
+					AggregatedDistinct = Sql.AsSql(string.Join(", ", new [] {t.NullableValue, t.NotNullableValue, t.VarcharValue, t.NVarcharValue}.Distinct().OrderBy(x => x == null ? 0 : 1).ThenBy(x => x))),
+				};
 
 			AssertQuery(query);
 		}
@@ -193,7 +197,11 @@ namespace Tests.Linq
 
 			var query =
 				from t in table
-				select Sql.AsSql(string.Join(", ", new [] {t.NullableValue, t.NotNullableValue, t.VarcharValue, t.NVarcharValue}.Where(x => x != null)));
+				select new
+				{
+					NotNullValue = Sql.AsSql(string.Join(", ", new[] { t.NullableValue, t.NotNullableValue, t.VarcharValue, t.NVarcharValue }.Where(x => x != null))),
+					NotNullDistinctValue = Sql.AsSql(string.Join(", ", new[] { t.NullableValue, t.NotNullableValue, t.VarcharValue, t.NVarcharValue }.Where(x => x != null).Distinct().OrderBy(x => x)))
+				};
 
 			AssertQuery(query);
 		}

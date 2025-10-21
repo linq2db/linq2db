@@ -183,15 +183,18 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (method.IsQueryable(nameof(Queryable.Distinct)))
 					{
-						// Distinct should be the first method in the chain
-						if (i != 0)
+						if (!IsAllowedOperation(ITranslationContext.AllowedAggregationOperators.Distinct))
 						{
 							return null;
 						}
 
-						if (!IsAllowedOperation(ITranslationContext.AllowedAggregationOperators.Distinct))
+						// Distinct should be the first method in the chain
+						if (i != 0)
 						{
-							return null;
+							var orderByCount = chain.Take(i).Count(m => m.IsQueryable(_orderByNames));
+
+							if (i != orderByCount)
+								return null;
 						}
 
 						isDistinct = true;

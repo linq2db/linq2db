@@ -1430,6 +1430,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					{
 						var isWindowFunction = QueryHelper.IsWindowFunction(sqlExpr);
 						var isAggregationFunction = QueryHelper.IsAggregationFunction(sqlExpr);
+
+						if (!subQuery.OrderBy.IsEmpty)
+						{
+							isNotValid = true;
+							return;
+						}
+
 						if (isWindowFunction || isAggregationFunction)
 						{
 							containsWindowFunction    = containsWindowFunction    || isWindowFunction;

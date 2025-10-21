@@ -1157,6 +1157,22 @@ namespace LinqToDB.Internal.SqlQuery
 				return base.VisitSqlFunction(element);
 			}
 
+			protected override IQueryElement VisitSqlWindowFunction(SqlWindowFunction element)
+			{
+				var isAggregation = IsAggregationFunction(element);
+				var isWindow      = IsWindowFunction(element);
+
+				IsAggregation = IsAggregation || isAggregation;
+				IsWindow      = IsWindow      || isWindow;
+
+				if (isAggregation || isWindow)
+				{
+					return element;
+				}
+
+				return base.VisitSqlWindowFunction(element);
+			}
+
 			protected override IQueryElement VisitSqlExpression(SqlExpression element)
 			{
 				var isAggregation = IsAggregationFunction(element);

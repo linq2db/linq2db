@@ -159,12 +159,13 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return translationContext.CreatePlaceholder(translated, memberExpression);
 		}
 
-		Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		protected virtual Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			var builder = new AggregateFunctionBuilder()
 				.ConfigureAggregate(c => c
 					.AllowOrderBy()
 					.AllowFilter()
+					.AllowDistinct()
 					.AllowNotNullCheck(true)
 					.TranslateArguments(0)
 					.OnBuildFunction(composer =>
@@ -211,8 +212,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
 						}
 
+						var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
+
 						var fn = factory.WindowFunction(valueType, "STRING_AGG",
-							[new SqlFunctionArgument(value), new SqlFunctionArgument(separator, suffix: suffix)],
+							[new SqlFunctionArgument(value), new SqlFunctionArgument(separator, modifier: aggregateModifier, suffix: suffix)],
 							[true, true],
 							isAggregate: true);
 

@@ -41,7 +41,7 @@ namespace LinqToDB.Linq.Translation
 				var arrayResult = ctx.BuildArrayAggregationFunction(
 					sequenceExpr,
 					functionCall,
-					_aggregate.ToAllowedOps(),
+					_plain.ToAllowedOps(),
 					agg => Combine(ctx, agg, functionCall, _plain, true));
 
 				if (arrayResult is SqlPlaceholderExpression)

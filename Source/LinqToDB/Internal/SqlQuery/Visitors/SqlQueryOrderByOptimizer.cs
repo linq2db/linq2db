@@ -133,6 +133,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					return true;
 				}
 
+				if (QueryHelper.IsAggregationQuery(selectQuery))
+					return false;
+
 				if (selectQuery.From.GroupBy.IsEmpty && selectQuery.From.Tables is [{ Joins.Count: 0, Source: SelectQuery subQuery }])
 				{
 					return ExtractOrderBy(subQuery, out orderBy);
@@ -207,16 +210,18 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return selectQuery;
 		}
 
-		protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
+		protected override IQueryElement VisitSqlFromClause(SqlFromClause element)
 		{
 			var saveDisableOrderBy = _disableOrderBy;
 
 			if (!_insideSetOperator)
 			{
-				_disableOrderBy = true;
+				bool shouldDisableOrderBy = !QueryHelper.IsAggregationQuery(element.SelectQuery);
+
+				_disableOrderBy = shouldDisableOrderBy;
 			}
 
-			var newElement = base.VisitSqlTableSource(element);
+			var newElement = base.VisitSqlFromClause(element);
 
 			_disableOrderBy = saveDisableOrderBy;
 
