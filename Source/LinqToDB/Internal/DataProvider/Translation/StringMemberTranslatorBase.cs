@@ -215,7 +215,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
 
 						var fn = factory.WindowFunction(valueType, "STRING_AGG",
-							[new SqlFunctionArgument(value), new SqlFunctionArgument(separator, modifier: aggregateModifier, suffix: suffix)],
+							[new SqlFunctionArgument(value, modifier: aggregateModifier), new SqlFunctionArgument(separator, suffix: suffix)],
 							[true, true],
 							isAggregate: true);
 

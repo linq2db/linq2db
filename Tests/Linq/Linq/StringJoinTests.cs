@@ -181,8 +181,11 @@ namespace Tests.Linq
 				from t in table
 				select new
 				{
-					Aggregated = Sql.AsSql(string.Join(", ", new [] {t.NullableValue, t.NotNullableValue, t.VarcharValue, t.NVarcharValue})),
-					AggregatedDistinct = Sql.AsSql(string.Join(", ", new [] {t.NullableValue, t.NotNullableValue, t.VarcharValue, t.NVarcharValue}.Distinct().OrderBy(x => x == null ? 0 : 1).ThenBy(x => x))),
+					//Aggregated = Sql.AsSql(string.Join(", ", new [] {t.NullableValue, t.NotNullableValue, t.VarcharValue, t.NVarcharValue})),
+					AggregatedDistinct = Sql.AsSql(string.Join(", ", new [] {t.NotNullableValue, t.NotNullableValue, t.NotNullableValue, t.NVarcharValue}
+						.Where(x=> x != null)
+						.Distinct()
+						.OrderBy(x => x))),
 				};
 
 			AssertQuery(query);

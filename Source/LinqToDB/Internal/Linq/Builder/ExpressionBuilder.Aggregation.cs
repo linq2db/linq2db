@@ -315,6 +315,39 @@ namespace LinqToDB.Internal.Linq.Builder
 			return executeExpression;
 		}
 
+		public static Expression BuildAggregateExecuteExpression(MethodCallExpression methodCall, Expression sequenceExpression, Expression dataSequence, IReadOnlyList<MethodCallExpression> chain)
+		{
+			if (methodCall == null) throw new ArgumentNullException(nameof(methodCall));
+
+			var argIndex = methodCall.Arguments.IndexOf(sequenceExpression);
+			if (argIndex < 0)
+				throw new ArgumentException("The provided sequence expression is not an argument of the method call.", nameof(sequenceExpression));
+
+			var elementType = TypeHelper.GetEnumerableElementType(dataSequence.Type);
+			var sourceParam = Expression.Parameter(typeof(IEnumerable<>).MakeGenericType(elementType), "source");
+			var resultType  = methodCall.Type;
+
+			var sourceParamTyped = sourceParam;
+
+			var body = chain[0].Replace(dataSequence, sourceParamTyped);
+
+			Expression[] arguments = [..methodCall.Arguments.Take(argIndex).Select(a => a.Unwrap()), body, ..methodCall.Arguments.Skip(argIndex + 1).Select(a => a.Unwrap())];
+
+			var aggregationBody = Expression.Call(methodCall.Method.DeclaringType!, methodCall.Method.Name, methodCall.Method.IsGenericMethod ? [elementType, resultType] : [], arguments);
+
+			var aggregationLambda = Expression.Lambda(aggregationBody, sourceParam);
+
+			var sequenceArgument = dataSequence;
+			if (!typeof(IQueryable<>).IsSameOrParentOf(sequenceArgument.Type))
+				sequenceArgument = Expression.Call(Methods.Queryable.AsQueryable.MakeGenericMethod(elementType), sequenceArgument);
+
+			var method            = typeof(LinqExtensions).GetMethod(nameof(LinqExtensions.AggregateExecute));
+			var genericMethod     = method!.MakeGenericMethod([elementType, resultType]);
+			var executeExpression = Expression.Call(genericMethod, sequenceArgument, aggregationLambda);
+
+			return executeExpression;
+		}
+
 		public Expression? BuildAggregationFunction( 
 			Expression                                                                       sequenceExpression,
 			Expression                                                                       functionExpression,
@@ -382,7 +415,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (contextRef == null)
 			{
-				var aggregation = BuildAggregateExecuteExpression((MethodCallExpression)functionExpression, sequenceExpression);
+				var aggregation = BuildAggregateExecuteExpression((MethodCallExpression)functionExpression, sequenceExpression, current, chain!);
 
 				var translatedWithoutChain = BuildSqlExpression(_buildVisitor.BuildContext, aggregation, BuildPurpose.Sql, BuildFlags.None);
 
@@ -401,17 +434,19 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (method.IsQueryable(nameof(Queryable.Distinct)))
 					{
-						// Distinct should be the first method in the chain
-						if (i != 0)
+						if (!IsAllowedOperation(ITranslationContext.AllowedAggregationOperators.Distinct))
 						{
 							buildRoot = method;
 							break;
 						}
 
-						if (!IsAllowedOperation(ITranslationContext.AllowedAggregationOperators.Distinct))
+						// Distinct should be the first method in the chain
+						if (i != 0)
 						{
-							buildRoot = method;
-							break;
+							var orderByCount = chain.Take(i).Count(m => m.IsQueryable(_orderByNames));
+
+							if (i != orderByCount)
+								return null;
 						}
 
 						isDistinct = true;
