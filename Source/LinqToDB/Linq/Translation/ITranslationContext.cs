@@ -46,17 +46,17 @@ namespace LinqToDB.Linq.Translation
 		bool    TryEvaluate(ISqlExpression    expression, out object? result);
 
 		Expression? BuildArrayAggregationFunction(
-			Expression                                                                      methodsChain,
-			Expression                                                                      functionExpression,
-			AllowedAggregationOperators                                                     allowedOperations,
-			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)> functionFactory
+			Expression                                                                                                      methodsChain,
+			Expression                                                                                                      functionExpression,
+			AllowedAggregationOperators                                                                                     allowedOperations,
+			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error, Expression? fallbackExpression)> functionFactory
 		);
 
 		Expression? BuildAggregationFunction(
-			Expression                                                                      methodsChain,
-			Expression                                                                      functionExpression,
-			AllowedAggregationOperators                                                     allowedOperations,
-			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)> functionFactory
+			Expression                                                                                                      methodsChain,
+			Expression                                                                                                      functionExpression,
+			AllowedAggregationOperators                                                                                     allowedOperations,
+			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error, Expression? fallbackExpression)> functionFactory
 		);
 
 		/// <summary>

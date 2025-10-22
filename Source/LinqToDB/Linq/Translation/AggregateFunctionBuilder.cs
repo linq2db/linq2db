@@ -42,7 +42,7 @@ namespace LinqToDB.Linq.Translation
 					sequenceExpr,
 					functionCall,
 					_plain.ToAllowedOps(),
-					agg => Combine(ctx, agg, functionCall, _plain, true));
+					agg => Combine(ctx, agg, functionCall, _plain, sequenceExpr, true));
 
 				if (arrayResult is SqlPlaceholderExpression)
 				{
@@ -54,14 +54,15 @@ namespace LinqToDB.Linq.Translation
 				sequenceExpr,
 				functionCall,
 				_aggregate.ToAllowedOps(),
-				agg => Combine(ctx, agg, functionCall, _aggregate, false));
+				agg => Combine(ctx, agg, functionCall, _aggregate, sequenceExpr, false));
 		}
 
-		private (ISqlExpression? sql, SqlErrorExpression? error) Combine(
+		private (ISqlExpression? sql, SqlErrorExpression? error, Expression? fallbackExpression) Combine(
 			ITranslationContext  ctx,
 			IAggregationContext  raw,
 			MethodCallExpression functionCall,
 			ModeConfig           config,
+			Expression           sequenceExpr,
 			bool                 plainMode)
 		{
 			var factory = ctx.ExpressionFactory;
@@ -72,13 +73,13 @@ namespace LinqToDB.Linq.Translation
 				var argIndex = config.ArgumentIndexes[i];
 				if (argIndex < 0 || argIndex >= functionCall.Arguments.Count)
 				{
-					return (null, ctx.CreateErrorExpression(functionCall, $"Argument index {argIndex.ToString(CultureInfo.InvariantCulture)} out of range", functionCall.Type));
+					return (null, ctx.CreateErrorExpression(functionCall, $"Argument index {argIndex.ToString(CultureInfo.InvariantCulture)} out of range", functionCall.Type), null);
 				}
 
 				var argExpr = functionCall.Arguments[argIndex];
 				if (!raw.TranslateExpression(argExpr, out var argSql, out var argErr))
 				{
-					return (null, argErr);
+					return (null, argErr, null);
 				}
 
 				translatedArgs[i] = argSql!;
@@ -89,7 +90,7 @@ namespace LinqToDB.Linq.Translation
 			{
 				if (!raw.TranslateExpression(raw.ValueExpression, out valueSql, out var vErr))
 				{
-					return (null, vErr ?? ctx.CreateErrorExpression(raw.ValueExpression, type : functionCall.Type));
+					return (null, vErr, null);
 				}
 			}
 
@@ -102,7 +103,7 @@ namespace LinqToDB.Linq.Translation
 					var itemExpr = raw.Items[i];
 					if (!raw.TranslateExpression(itemExpr, out var itemSql, out var itemErr))
 					{
-						return (null, itemErr);
+						return (null, itemErr, null);
 					}
 
 					itemsSql[i] = itemSql!;
@@ -115,7 +116,7 @@ namespace LinqToDB.Linq.Translation
 				var obInfo = raw.OrderBy[i];
 				if (!raw.TranslateExpression(obInfo.Expr, out var obSql, out var obErr))
 				{
-					return (null, obErr);
+					return (null, obErr, null);
 				}
 
 				orderSql[i] = (obSql!, obInfo.IsDescending, obInfo.Nulls);
@@ -168,7 +169,7 @@ namespace LinqToDB.Linq.Translation
 
 					if (!raw.TranslateExpression(filterCondition, out var filterExprSql, out var fErr))
 					{
-						return (null, fErr ?? ctx.CreateErrorExpression(filterCondition, type: functionCall.Type));
+						return (null, fErr, null);
 					}
 
 					filterSql = filterExprSql as SqlSearchCondition ?? new SqlSearchCondition().Add(new SqlPredicate.Expr(filterExprSql!));
@@ -213,15 +214,40 @@ namespace LinqToDB.Linq.Translation
 
 			if (composer.Error != null)
 			{
-				return (null, composer.Error);
+				return (null, composer.Error, null);
+			}
+
+			if (composer.Fallback != null)
+			{
+				var fallbackConfig = config.Clone();
+				var fallbackBuilder = new AggregateFallbackModeBuilder(fallbackConfig);
+				composer.Fallback(fallbackBuilder);
+
+				var fallbackResult = ctx.BuildAggregationFunction(
+					sequenceExpr,
+					functionCall,
+					_plain.ToAllowedOps(),
+					agg => Combine(ctx, agg, functionCall, _plain, sequenceExpr, true));
+
+				if (fallbackResult is SqlPlaceholderExpression placeholder)
+				{
+					return (placeholder.Sql, null, null);
+				}
+
+				if (fallbackResult is SqlErrorExpression errorExpression)
+				{
+					return (null, errorExpression, null);
+				}
+			
+				return (null, null, fallbackResult);
 			}
 
 			if (composer.Result == null)
 			{
-				return (null, ctx.CreateErrorExpression(functionCall, "Aggregate builder produced no result", functionCall.Type));
+				return (null, ctx.CreateErrorExpression(functionCall, "Aggregate builder produced no result", functionCall.Type), null);
 			}
 
-			return (composer.Result, null);
+			return (composer.Result, null, null);
 		}
 
 		public sealed class ModeConfig
@@ -254,46 +280,78 @@ namespace LinqToDB.Linq.Translation
 
 				return ops;
 			}
+
+			/// <summary>
+			/// Creates a shallow copy of current configuration.
+			/// Arrays are cloned, delegates are referenced.
+			/// </summary>
+			public ModeConfig Clone()
+			{
+				return new ModeConfig
+				{
+					AllowDistinctFlag     = AllowDistinctFlag,
+					AllowFilterFlag       = AllowFilterFlag,
+					AllowNotNullCheckMode = AllowNotNullCheckMode,
+					AllowOrderByFlag      = AllowOrderByFlag,
+					ArgumentIndexes       = ArgumentIndexes.Length == 0 ? Array.Empty<int>() : (int[])ArgumentIndexes.Clone(),
+					BuildAction           = BuildAction
+				};
+			}
 		}
 
-		public sealed class AggregateModeBuilder
+		public class AggregateModeBuilderBase<TFinalBuilder>
+		where TFinalBuilder : AggregateModeBuilderBase<TFinalBuilder>
 		{
-			readonly ModeConfig _config;
-			internal AggregateModeBuilder(ModeConfig config) => _config = config;
+			protected readonly ModeConfig Config;
+			internal AggregateModeBuilderBase(ModeConfig config) => Config = config;
 
-			public AggregateModeBuilder AllowOrderBy()
+			public TFinalBuilder AllowOrderBy(bool allow = true)
 			{
-				_config.AllowOrderByFlag = true;
-				return this;
+				Config.AllowOrderByFlag = allow;
+				return (TFinalBuilder)this;
 			}
 
-			public AggregateModeBuilder AllowFilter()
+			public TFinalBuilder AllowFilter(bool allow = true)
 			{
-				_config.AllowFilterFlag = true;
-				return this;
+				Config.AllowFilterFlag = allow;
+				return (TFinalBuilder)this;
 			}
 
-			public AggregateModeBuilder AllowDistinct()
+			public TFinalBuilder AllowDistinct(bool allow = true)
 			{
-				_config.AllowDistinctFlag = true;
-				return this;
+				Config.AllowDistinctFlag = allow;
+				return (TFinalBuilder)this;
 			}
 
-			public AggregateModeBuilder AllowNotNullCheck(bool removeFromFilter)
+			public TFinalBuilder AllowNotNullCheck(bool? removeFromFilter)
 			{
-				_config.AllowNotNullCheckMode = removeFromFilter;
-				return this;
+				Config.AllowNotNullCheckMode = removeFromFilter;
+				return (TFinalBuilder)this;
+			}
+		}
+
+		public sealed class AggregateFallbackModeBuilder : AggregateModeBuilderBase<AggregateFallbackModeBuilder>
+		{
+			internal AggregateFallbackModeBuilder(ModeConfig config) : base(config)
+			{
+			}
+		}
+
+		public sealed class AggregateModeBuilder : AggregateModeBuilderBase<AggregateModeBuilder>
+		{
+			internal AggregateModeBuilder(ModeConfig config) : base(config)
+			{
 			}
 
 			public AggregateModeBuilder TranslateArguments(params int[] indexes)
 			{
-				_config.ArgumentIndexes = indexes;
+				Config.ArgumentIndexes = indexes;
 				return this;
 			}
 
 			public AggregateModeBuilder OnBuildFunction(Action<AggregateComposer> build)
 			{
-				_config.BuildAction = build;
+				Config.BuildAction = build;
 				return this;
 			}
 		}
@@ -324,14 +382,20 @@ namespace LinqToDB.Linq.Translation
 				Translator = translator;
 			}
 
-			public ISqlExpression?          Result    { get; private set; }
-			public SqlErrorExpression?      Error     { get; private set; }
-			public ISqlExpressionFactory    Factory   { get; }
-			public AggregateBuildInfo       BuildInfo { get; }
-			public ISqlExpressionTranslator Translator { get; }
+			public ISqlExpression?                       Result     { get; private set; }
+			public SqlErrorExpression?                   Error      { get; private set; }
+			public ISqlExpressionFactory                 Factory    { get; }
+			public AggregateBuildInfo                    BuildInfo  { get; }
+			public ISqlExpressionTranslator              Translator { get; }
+			public Action<AggregateFallbackModeBuilder>? Fallback   { get; private set; }
 
 			public void SetResult(ISqlExpression sql) => Result = sql;
 			public void SetError(SqlErrorExpression error) => Error = error;
+
+			public void SetFallback(Action<AggregateFallbackModeBuilder> fallback)
+			{
+				Fallback = fallback;
+			}
 
 			public bool GetFilteredToNullValues([NotNullWhen(true)] out IEnumerable<ISqlExpression>? values, [NotNullWhen(false)] out SqlErrorExpression? error)
 			{

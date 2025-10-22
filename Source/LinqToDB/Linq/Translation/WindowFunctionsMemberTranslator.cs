@@ -578,7 +578,7 @@ namespace LinqToDB.Linq.Translation
 			{
 				var argumentExpr = methodCall.Arguments[1];
 				if (!ac.TranslateExpression(argumentExpr, out var argumentSql, out var error))
-					return (null, error);
+					return (null, error, null);
 
 				var builderLambda = methodCall.Arguments[2].UnwrapLambda();
 
@@ -591,21 +591,21 @@ namespace LinqToDB.Linq.Translation
 					    builderLambda.Body,
 					    out var information,
 					    out error))
-					return (null, error);
+					return (null, error, null);
 
 				if (information.OrderBy!.Length != 1)
-					return (null, translationContext.CreateErrorExpression(methodCall.Arguments[2], "Expected single order by expression", methodCall.Type));
+					return (null, translationContext.CreateErrorExpression(methodCall.Arguments[2], "Expected single order by expression", methodCall.Type), null);
 
 				List<SqlWindowOrderItem> withinGroupOrder = new();
 				if (!TranslateOrderItems(ac, methodCall.Type, information.OrderBy, withinGroupOrder, out var orderError))
-					return (null, orderError);
+					return (null, orderError, null);
 
 				List<ISqlExpression>? partitionBy = null;
 				if (information.PartitionBy != null)
 				{
 					partitionBy ??= new();
 					if (!TranslatePartitionBy(ac, methodCall.Type, information.PartitionBy, partitionBy, out var partitionError))
-						return (null, partitionError);
+						return (null, partitionError, null);
 				}
 
 				var functionType = translationContext.GetDbDataType(withinGroupOrder[0].Expression);
@@ -620,7 +620,7 @@ namespace LinqToDB.Linq.Translation
 					isAggregate: true
 				);
 
-				return (windowFunction, null);
+				return (windowFunction, null, null);
 			});
 
 			if (result == null)

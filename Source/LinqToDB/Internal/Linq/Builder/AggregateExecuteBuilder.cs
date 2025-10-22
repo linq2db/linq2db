@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -62,6 +63,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var translated = builder.BuildSqlExpression(placeholderSequence, aggregateBody, BuildPurpose.Sql, BuildFlags.None);
 
+			if (translated is MarkerExpression { MarkerType: MarkerType.AggregationFallback } marker)
+			{
+				// Fallback chaining to allow other builders to process the method call
+				return builder.TryBuildSequence(new BuildInfo(buildInfo, marker.InnerExpression));
+			}
+
 			if (translated is not SqlPlaceholderExpression placeholder)
 			{
 				if (translated is SqlErrorExpression)
@@ -69,7 +76,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return BuildSequenceResult.Error(methodCall);
 			}
 
-			var context = new AggregateExecuteContext(sequence, lambda.Body.Type)
+			var context = new AggregateExecuteContext(sequenceExpression, sequence, lambda.Body.Type)
 			{
 				Placeholder = placeholder,
 				OuterJoinParentQuery = isSimple ? null : buildInfo.Parent?.SelectQuery
@@ -125,12 +132,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		sealed class AggregateExecuteContext : PassThroughContext
 		{
+			public Expression SequenceExpression { get; }
+
 			public AggregateExecuteContext(
+				Expression    sequenceExpression,
 				IBuildContext sequence,
-				Type returnType)
+				Type          returnType)
 				: base(sequence, sequence.SelectQuery)
 			{
-				_returnType = returnType;
+				SequenceExpression = sequenceExpression;
+				_returnType        = returnType;
 			}
 
 			readonly Type _returnType;
@@ -187,7 +198,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new AggregateExecuteContext(context.CloneContext(Context), ElementType)
+				return new AggregateExecuteContext(context.CloneExpression(SequenceExpression), context.CloneContext(Context), ElementType)
 				{
 					Placeholder = context.CloneExpression(Placeholder),
 					OuterJoinParentQuery = context.CloneElement(OuterJoinParentQuery),

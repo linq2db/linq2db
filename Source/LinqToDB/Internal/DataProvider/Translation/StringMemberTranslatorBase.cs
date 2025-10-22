@@ -184,6 +184,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						if (!info.IsNullFiltered)
 							value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
 
+						if (info is { IsDistinct: true, OrderBySql.Length: > 0 })
+						{
+							if (info.OrderBySql.Any(o => o.expr != value))
+							{
+								composer.SetFallback(c => c.AllowDistinct(false));
+								return;
+							}
+						}
+
 						ISqlExpression? suffix = null;
 						if (info.OrderBySql.Length > 0)
 						{

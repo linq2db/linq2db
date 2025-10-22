@@ -108,10 +108,10 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		public Expression? BuildArrayAggregationFunction(
-			Expression methodsChain,
-			Expression functionExpression,
-			ITranslationContext.AllowedAggregationOperators allowedOperations,
-			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)> functionFactory)
+			Expression                                                                                                      methodsChain,
+			Expression                                                                                                      functionExpression,
+			ITranslationContext.AllowedAggregationOperators                                                                 allowedOperations,
+			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error, Expression? fallbackExpression)> functionFactory)
 		{
 			if (_buildVisitor.BuildContext == null)
 				return null;
@@ -286,36 +286,66 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		public static Expression BuildAggregateExecuteExpression(MethodCallExpression methodCall, Expression sequenceExpression)
+		static Expression UnwrapEnumerableCasting(Expression expression)
 		{
-			if (methodCall == null) throw new ArgumentNullException(nameof(methodCall));
-
-			var argIndex = methodCall.Arguments.IndexOf(sequenceExpression);
-			if (argIndex < 0)
-				throw new ArgumentException("The provided sequence expression is not an argument of the method call.", nameof(sequenceExpression));
-
-			var elementType = TypeHelper.GetEnumerableElementType(methodCall.Arguments[argIndex].Type);
-			var sourceParam = Expression.Parameter(typeof(IEnumerable<>).MakeGenericType(elementType), "source");
-			var resultType  = methodCall.Type;
-
-			var aggregationBody = Expression.Call(methodCall.Method.DeclaringType!, methodCall.Method.Name, methodCall.Method.IsGenericMethod ? [elementType, resultType] : [],
-				[..methodCall.Arguments.Take(argIndex).Select(a => a.Unwrap()), sourceParam, ..methodCall.Arguments.Skip(argIndex + 1).Select(a => a.Unwrap())]
-			);
-
-			var aggregationLambda = Expression.Lambda(aggregationBody, sourceParam);
-
-			var sequenceArgument = sequenceExpression;
-			if (!typeof(IQueryable<>).IsSameOrParentOf(sequenceArgument.Type))
-				sequenceArgument = Expression.Call(Methods.Queryable.AsQueryable.MakeGenericMethod(elementType), sequenceArgument);
-
-			var method            = typeof(LinqExtensions).GetMethod(nameof(LinqExtensions.AggregateExecute));
-			var genericMethod     = method!.MakeGenericMethod([elementType, resultType]);
-			var executeExpression = Expression.Call(genericMethod, sequenceArgument, aggregationLambda);
-
-			return executeExpression;
+			if (expression is MethodCallExpression methodCall)
+			{
+				if (methodCall.IsQueryable(nameof(Queryable.AsQueryable)) || methodCall.IsQueryable(nameof(Enumerable.AsEnumerable)))
+				{
+					return UnwrapEnumerableCasting(methodCall.Arguments[0]);
+				}
+			}
+			return expression;
 		}
 
-		public static Expression BuildAggregateExecuteExpression(MethodCallExpression methodCall, Expression sequenceExpression, Expression dataSequence, IReadOnlyList<MethodCallExpression>? chain)
+		static Expression EnsureEnumerableType(Expression expression, Type targetType)
+		{
+			if (expression.Type == targetType)
+				return expression;
+
+			if (targetType.IsAssignableFrom(expression.Type))
+				return expression;
+
+			if (typeof(IQueryable<>).IsSameOrParentOf(targetType))
+			{
+				var elementType = TypeHelper.GetEnumerableElementType(targetType);
+				return Expression.Call(Methods.Queryable.AsQueryable.MakeGenericMethod(elementType), expression);
+			}
+
+			if (typeof(IEnumerable<>).IsSameOrParentOf(targetType))
+			{
+				var elementType = TypeHelper.GetEnumerableElementType(targetType);
+				return Expression.Call(Methods.Queryable.AsEnumerable.MakeGenericMethod(elementType), expression);
+			}
+
+			return Expression.Convert(expression, targetType);
+		}
+
+		static Expression UnwrapAggregateExecutors(Expression expression, out bool isInAggregation)
+		{
+			var unwrapped = expression.Transform(e =>
+			{
+				if (e is ContextRefExpression { BuildContext: AggregateExecuteBuilder.AggregateRootContext aggregateRootContext })
+				{
+					var sequence = aggregateRootContext.SequenceExpression;
+					if (!e.Type.IsAssignableFrom(sequence.Type))
+					{
+						sequence = UnwrapEnumerableCasting(sequence);
+						sequence = EnsureEnumerableType(sequence, e.Type);
+					}
+
+					return sequence;
+				}
+
+				return e;
+			});
+
+			isInAggregation = !ReferenceEquals(unwrapped, expression);
+
+			return unwrapped;
+		}
+
+		public static Expression BuildAggregateExecuteExpression(MethodCallExpression methodCall, Expression sequenceExpression, Expression dataSequence, IReadOnlyList<MethodCallExpression>? chain, out bool isInAggregation)
 		{
 			if (methodCall == null) throw new ArgumentNullException(nameof(methodCall));
 
@@ -337,7 +367,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var aggregationLambda = Expression.Lambda(aggregationBody, sourceParam);
 
-			var sequenceArgument = dataSequence;
+			var sequenceArgument = UnwrapAggregateExecutors(dataSequence, out isInAggregation);
 			if (!typeof(IQueryable<>).IsSameOrParentOf(sequenceArgument.Type))
 				sequenceArgument = Expression.Call(Methods.Queryable.AsQueryable.MakeGenericMethod(elementType), sequenceArgument);
 
@@ -349,10 +379,10 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		public Expression? BuildAggregationFunction( 
-			Expression                                                                       sequenceExpression,
-			Expression                                                                       functionExpression,
-			ITranslationContext.AllowedAggregationOperators                                  allowedOperations,
-			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error)>  functionFactory)
+			Expression                                                                                                      sequenceExpression,
+			Expression                                                                                                      functionExpression,
+			ITranslationContext.AllowedAggregationOperators                                                                 allowedOperations,
+			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error, Expression? fallbackExpression)> functionFactory)
 		{
 			List<Expression>?                             filterExpression = null;
 			Expression?                                   buildRoot        = null;
@@ -415,11 +445,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (contextRef == null)
 			{
-				var aggregation = BuildAggregateExecuteExpression((MethodCallExpression)functionExpression, sequenceExpression, current, chain!);
+				var aggregation = BuildAggregateExecuteExpression((MethodCallExpression)functionExpression, sequenceExpression, current, chain!, out var isInAggregation);
 
-				var translatedWithoutChain = BuildSqlExpression(_buildVisitor.BuildContext, aggregation, BuildPurpose.Sql, BuildFlags.None);
+				if (isInAggregation)
+					return new MarkerExpression(aggregation, MarkerType.AggregationFallback);
 
-				return translatedWithoutChain;
+				return aggregation;
 			}
 
 			var currentRef = contextRef;
@@ -504,6 +535,16 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
+			if (buildRoot != current)
+			{
+				var aggregation = BuildAggregateExecuteExpression((MethodCallExpression)functionExpression, sequenceExpression, buildRoot, chain, out var isInAggregation);
+
+				if (isInAggregation)
+					return new MarkerExpression(aggregation, MarkerType.AggregationFallback);
+
+				return aggregation;
+			}
+
 			var sqlContext = currentRef;
 			var rootRef    = sqlContext;
 
@@ -532,6 +573,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (result.sqlExpr != null)
 			{
 				return CreatePlaceholder(sqlContext.BuildContext, result.sqlExpr, functionExpression, functionExpression.Type);
+			}
+
+			if (result.fallbackExpression != null)
+			{
+				return result.fallbackExpression;
 			}
 
 			return result.error;
