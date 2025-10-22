@@ -315,7 +315,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return executeExpression;
 		}
 
-		public static Expression BuildAggregateExecuteExpression(MethodCallExpression methodCall, Expression sequenceExpression, Expression dataSequence, IReadOnlyList<MethodCallExpression> chain)
+		public static Expression BuildAggregateExecuteExpression(MethodCallExpression methodCall, Expression sequenceExpression, Expression dataSequence, IReadOnlyList<MethodCallExpression>? chain)
 		{
 			if (methodCall == null) throw new ArgumentNullException(nameof(methodCall));
 
@@ -329,7 +329,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var sourceParamTyped = sourceParam;
 
-			var body = chain[0].Replace(dataSequence, sourceParamTyped);
+			var body = chain == null ? sourceParamTyped : chain[0].Replace(dataSequence, sourceParamTyped);
 
 			Expression[] arguments = [..methodCall.Arguments.Take(argIndex).Select(a => a.Unwrap()), body, ..methodCall.Arguments.Skip(argIndex + 1).Select(a => a.Unwrap())];
 

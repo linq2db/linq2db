@@ -173,7 +173,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						var info = composer.BuildInfo;
 						if (info.Value == null || info.Argument(0) == null)
 						{
-							return null;
+							return;
 						}
 
 						var factory   = info.Factory;
@@ -220,7 +220,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							isAggregate: true);
 
 						composer.SetResult(factory.Coalesce(fn, factory.Value(valueType, string.Empty)));
-						return null;
 					}))
 				.ConfigurePlain(c => c
 					.TranslateArguments(0)
@@ -232,7 +231,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						if (info.Values.Length == 0 || info.Argument(0) == null)
 						{
 							composer.SetResult(info.Factory.Value(info.Factory.GetDbDataType(typeof(string)), string.Empty));
-							return null;
+							return;
 						}
 
 						var factory   = info.Factory;
@@ -241,7 +240,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						
 						if (!composer.GetFilteredToNullValues(out IEnumerable<ISqlExpression>? values, out var error))
 						{
-							return error;
+							composer.SetError(error);
+							return;
 						}
 
 						var items = info.IsNullFiltered
@@ -253,7 +253,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							[separator, ..items]);
 
 						composer.SetResult(function);
-						return null;
 					}));
 
 			return builder.Build(translationContext, methodCall.Arguments[1], methodCall);
