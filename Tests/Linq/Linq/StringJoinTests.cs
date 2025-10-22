@@ -68,6 +68,34 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void JoinWithGroupingVarious([IncludeDataSources(true, TestProvName.PostgreSQL16)] string context)
+		{
+			var       data  = SampleClass.GenerateDataUniquerId();
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query = from t in table
+				group t by t.Id
+				into g
+				select new
+				{
+					Id                                     = g.Key,
+
+					NullableDistinct                       = string.Join(", ", g.Select(x => x.NullableValue).Distinct()),
+					NullableDistinctNotNullDistinct        = string.Join(", ", g.Select(x => x.NullableValue).Where(x => x != null).Distinct()),
+					NullableDistinctNotNullDistinctOrdered = string.Join(", ", g.Select(x => x.NullableValue).Where(x => x != null).Distinct().OrderByDescending(x => x)),
+
+					NotNullableDistinct                    = string.Join(", ", g.Select(x => x.NotNullableValue).Distinct()),
+					NotNullableDistinctOrdered             = string.Join(", ", g.Select(x => x.NotNullableValue).Distinct().OrderByDescending(x => x)),
+				}
+				into s
+				orderby s.Id
+				select s;
+
+			AssertQuery(query);
+		}
+
+		[Test]
 		public void JoinWithGroupingAndUnsupportedMethod([IncludeDataSources(true, TestProvName.PostgreSQL16)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();

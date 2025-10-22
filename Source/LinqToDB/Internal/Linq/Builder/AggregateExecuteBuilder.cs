@@ -65,6 +65,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (translated is MarkerExpression { MarkerType: MarkerType.AggregationFallback } marker)
 			{
+				if (ExpressionEqualityComparer.Instance.Equals(marker.InnerExpression, aggregateBody))
+					return BuildSequenceResult.Error(methodCall, "Circular fallback generated");
 				// Fallback chaining to allow other builders to process the method call
 				return builder.TryBuildSequence(new BuildInfo(buildInfo, marker.InnerExpression));
 			}

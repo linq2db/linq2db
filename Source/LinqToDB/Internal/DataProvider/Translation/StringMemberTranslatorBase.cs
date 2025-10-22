@@ -186,7 +186,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 						if (info is { IsDistinct: true, OrderBySql.Length: > 0 })
 						{
-							if (info.OrderBySql.Any(o => o.expr != value))
+							if (info.OrderBySql.Any(o => o.expr != info.Value))
 							{
 								composer.SetFallback(c => c.AllowDistinct(false));
 								return;
