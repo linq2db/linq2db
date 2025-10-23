@@ -2453,12 +2453,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
+			if (QueryHelper.IsAggregationQuery(selectQuery))
+				return true;
+
 			if (selectQuery.Select.Columns.Count == 1)
 			{
-				var column = selectQuery.Select.Columns[0];
-				if (QueryHelper.IsAggregationFunction(column.Expression) && !QueryHelper.IsWindowFunction(column.Expression))
-					return true;
-
 				if (selectQuery.Select.From.Tables.Count == 0)
 					return true;
 			}
