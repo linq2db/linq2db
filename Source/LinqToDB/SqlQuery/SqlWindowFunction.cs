@@ -15,6 +15,7 @@ namespace LinqToDB.SqlQuery
 			string                           functionName,
 			IEnumerable<SqlFunctionArgument> arguments,
 			bool[]                           argumentsNullability,
+			bool?                            canBeNull   = null,
 			IEnumerable<SqlWindowOrderItem>? withinGroup = null,
 			IEnumerable<ISqlExpression>?     partitionBy = null,
 			IEnumerable<SqlWindowOrderItem>? orderBy     = null,
@@ -25,6 +26,7 @@ namespace LinqToDB.SqlQuery
 			Type                 = dbDataType;
 			FunctionName         = functionName;
 			ArgumentsNullability = argumentsNullability;
+			CanBeNull            = canBeNull;
 			Arguments            = arguments.ToList();
 			WithinGroup          = withinGroup?.ToList();
 			PartitionBy          = partitionBy?.ToList();
@@ -37,6 +39,7 @@ namespace LinqToDB.SqlQuery
 		public DbDataType                Type                 { get; }
 		public string                    FunctionName         { get; }
 		public bool[]                    ArgumentsNullability { get; }
+		public bool?                     CanBeNull            { get; }
 		public List<SqlFunctionArgument> Arguments            { get; private set; }
 		public List<SqlWindowOrderItem>? WithinGroup          { get; private set; }
 		public List<ISqlExpression>?     PartitionBy          { get; private set; }
@@ -67,6 +70,7 @@ namespace LinqToDB.SqlQuery
 				FunctionName,
 				Arguments,
 				ArgumentsNullability,
+				CanBeNull,
 				WithinGroup,
 				PartitionBy,
 				OrderBy,
@@ -81,6 +85,7 @@ namespace LinqToDB.SqlQuery
 				functionName,
 				Arguments,
 				ArgumentsNullability,
+				CanBeNull,
 				WithinGroup,
 				PartitionBy,
 				OrderBy,
@@ -95,6 +100,7 @@ namespace LinqToDB.SqlQuery
 				FunctionName,
 				arguments,
 				argumentsNullability,
+				CanBeNull,
 				WithinGroup,
 				PartitionBy,
 				OrderBy,
@@ -109,6 +115,7 @@ namespace LinqToDB.SqlQuery
 				FunctionName,
 				Arguments,
 				ArgumentsNullability,
+				CanBeNull,
 				WithinGroup,
 				partitionBy,
 				OrderBy,
@@ -123,6 +130,7 @@ namespace LinqToDB.SqlQuery
 				FunctionName,
 				Arguments,
 				ArgumentsNullability,
+				CanBeNull,
 				WithinGroup,
 				PartitionBy,
 				orderBy,
@@ -137,6 +145,7 @@ namespace LinqToDB.SqlQuery
 				FunctionName,
 				Arguments,
 				ArgumentsNullability,
+				CanBeNull,
 				WithinGroup,
 				PartitionBy,
 				OrderBy,
@@ -151,6 +160,7 @@ namespace LinqToDB.SqlQuery
 				FunctionName,
 				Arguments,
 				ArgumentsNullability,
+				CanBeNull,
 				WithinGroup,
 				PartitionBy,
 				OrderBy,
@@ -165,6 +175,7 @@ namespace LinqToDB.SqlQuery
 				FunctionName,
 				Arguments,
 				ArgumentsNullability,
+				CanBeNull,
 				withinGroup,
 				PartitionBy,
 				OrderBy,
@@ -241,6 +252,9 @@ namespace LinqToDB.SqlQuery
 
 		public override bool CanBeNullable(NullabilityContext nullability)
 		{
+			if (CanBeNull.HasValue)
+				return CanBeNull.Value;
+
 			return Arguments.Any(a => a.Expression.CanBeNullable(nullability)) ||
 				   (PartitionBy?.Any(p => p.CanBeNullable(nullability)) ?? false) ||
 				   (OrderBy?.Any(o => o.Expression.CanBeNullable(nullability)) ?? false) ||

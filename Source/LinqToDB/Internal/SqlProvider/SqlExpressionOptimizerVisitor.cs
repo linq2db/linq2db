@@ -23,6 +23,7 @@ namespace LinqToDB.Internal.SqlProvider
 		bool                        _visitQueries;
 		bool                        _isInsidePredicate;
 		bool                        _reducePredicates;
+		ISqlExpression?             _columnExpression;
 
 		protected DataOptions       DataOptions       { get; private set; } = default!;
 		protected EvaluationContext EvaluationContext { get; private set; } = default!;
@@ -68,6 +69,7 @@ namespace LinqToDB.Internal.SqlProvider
 			MappingSchema       = default!;
 			_allowOptimize      = default;
 			_allowOptimizeList  = default;
+			_columnExpression   = default;
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
@@ -1282,12 +1284,26 @@ namespace LinqToDB.Internal.SqlProvider
 			return function;
 		}
 
+		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
+		{
+			var saveColumnExpression = _columnExpression;
+			_columnExpression = expression;
+
+			var result = base.VisitSqlColumnExpression(column, expression);
+
+			_columnExpression = saveColumnExpression;
+			return result;
+		}
+
 		protected override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
 		{
 			var newElement = base.VisitSqlCoalesceExpression(element);
 
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
+
+			if (ReferenceEquals(element, _columnExpression))
+				return element;
 
 			List<ISqlExpression>? newExpressions = null;
 

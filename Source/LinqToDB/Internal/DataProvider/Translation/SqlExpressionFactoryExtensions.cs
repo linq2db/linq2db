@@ -355,6 +355,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		public static ISqlExpression WindowFunction(this ISqlExpressionFactory factory, DbDataType dataType, string functionName,
 			SqlFunctionArgument[] arguments,
 			bool[] argumentsNullability,
+			bool? canBeNull = null,
 			IEnumerable<SqlWindowOrderItem>? withinGroup = null,
 			IEnumerable<ISqlExpression>? partitionBy = null,
 			IEnumerable<SqlWindowOrderItem>? orderBy = null,
@@ -364,6 +365,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		)
 		{
 			return new SqlWindowFunction(dataType, functionName, arguments, argumentsNullability,
+				canBeNull: canBeNull,
 				withinGroup: withinGroup,
 				partitionBy: partitionBy,
 				orderBy: orderBy,

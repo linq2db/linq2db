@@ -2,7 +2,6 @@
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -24,19 +23,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (buildInfo.IsSubQuery)
 			{
-				var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceArgument) { IsAggregation = true, CreateSubQuery = false });
-
-				if (buildResult.BuildContext == null)
-					return buildResult;
-
-				sequence            = buildResult.BuildContext;
-				placeholderSequence = sequence;
-
-				var aggregationExpr = builder.BuildTraverseExpression(SequenceHelper.CreateRef(sequence));
+				var aggregationExpr = builder.BuildAggregationRootExpression(buildInfo.Expression);
 
 				if (aggregationExpr is ContextRefExpression { BuildContext: GroupByBuilder.GroupByContext groupByContext })
 				{
 					isSimple            = true;
+					sequence            = groupByContext;
 					placeholderSequence = groupByContext.SubQuery;
 				}
 				else

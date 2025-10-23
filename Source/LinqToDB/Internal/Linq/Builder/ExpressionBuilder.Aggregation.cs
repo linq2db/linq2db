@@ -306,6 +306,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (targetType.IsAssignableFrom(expression.Type))
 				return expression;
 
+			var unwrapped = UnwrapEnumerableCasting(expression);
+			if (!ReferenceEquals(unwrapped, expression))
+				return EnsureEnumerableType(unwrapped, targetType);
+
 			if (typeof(IQueryable<>).IsSameOrParentOf(targetType))
 			{
 				var elementType = TypeHelper.GetEnumerableElementType(targetType);
@@ -315,7 +319,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (typeof(IEnumerable<>).IsSameOrParentOf(targetType))
 			{
 				var elementType = TypeHelper.GetEnumerableElementType(targetType);
-				return Expression.Call(Methods.Queryable.AsEnumerable.MakeGenericMethod(elementType), expression);
+				return Expression.Call(Methods.Enumerable.AsEnumerable.MakeGenericMethod(elementType), expression);
 			}
 
 			return Expression.Convert(expression, targetType);
@@ -330,7 +334,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					var sequence = aggregateRootContext.SequenceExpression;
 					if (!e.Type.IsAssignableFrom(sequence.Type))
 					{
-						sequence = UnwrapEnumerableCasting(sequence);
 						sequence = EnsureEnumerableType(sequence, e.Type);
 					}
 
@@ -357,7 +360,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var sourceParam = Expression.Parameter(typeof(IEnumerable<>).MakeGenericType(elementType), "source");
 			var resultType  = methodCall.Type;
 
-			var sourceParamTyped = sourceParam;
+			var sourceParamTyped = EnsureEnumerableType(sourceParam, dataSequence.Type);
 
 			var body = chain == null ? sourceParamTyped : chain[0].Replace(dataSequence, sourceParamTyped);
 
@@ -468,16 +471,17 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (!IsAllowedOperation(ITranslationContext.AllowedAggregationOperators.Distinct))
 						{
 							buildRoot = method;
-							break;
 						}
-
-						// Distinct should be the first method in the chain
-						if (i != 0)
+						else
 						{
-							var orderByCount = chain.Take(i).Count(m => m.IsQueryable(_orderByNames));
+							// Distinct should be the first method in the chain
+							if (i != 0)
+							{
+								var orderByCount = chain.Take(i).Count(m => m.IsQueryable(_orderByNames));
 
-							if (i != orderByCount)
-								return null;
+								if (i != orderByCount)
+									return null;
+							}
 						}
 
 						isDistinct = true;
@@ -502,30 +506,32 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (!IsAllowedOperation(ITranslationContext.AllowedAggregationOperators.Filter))
 						{
 							buildRoot = method;
-							break;
 						}
-
-						var filter = SequenceHelper.PrepareBody(method.Arguments[1].UnwrapLambda(), currentRef.BuildContext);
-						filterExpression ??= new List<Expression>();
-						filterExpression.Add(filter);
+						else
+						{
+							var filter = SequenceHelper.PrepareBody(method.Arguments[1].UnwrapLambda(), currentRef.BuildContext);
+							filterExpression ??= new List<Expression>();
+							filterExpression.Add(filter);
+						}
 					}
 					else if (method.IsQueryable(_orderByNames))
 					{
 						if (!IsAllowedOperation(ITranslationContext.AllowedAggregationOperators.OrderBy))
 						{
 							buildRoot = method;
-							break;
 						}
+						else
+						{
+							var orderByExpression = SequenceHelper.PrepareBody(method.Arguments[1].UnwrapLambda(), currentRef.BuildContext);
 
-						var orderByExpression = SequenceHelper.PrepareBody(method.Arguments[1].UnwrapLambda(), currentRef.BuildContext);
+							orderBy ??= new List<ITranslationContext.OrderByInformation>();
 
-						orderBy ??= new List<ITranslationContext.OrderByInformation>();
-
-						orderBy.Add(new ITranslationContext.OrderByInformation(
-							orderByExpression.UnwrapConvert(),
-							method.Method.Name is nameof(Queryable.OrderByDescending) or nameof(Queryable.ThenByDescending),
-							Sql.NullsPosition.None
-						));
+							orderBy.Add(new ITranslationContext.OrderByInformation(
+								orderByExpression.UnwrapConvert(),
+								method.Method.Name is nameof(Queryable.OrderByDescending) or nameof(Queryable.ThenByDescending),
+								Sql.NullsPosition.None
+							));
+						}
 					}
 					else
 					{

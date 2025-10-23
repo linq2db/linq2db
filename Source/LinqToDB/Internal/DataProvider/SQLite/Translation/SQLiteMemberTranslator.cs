@@ -7,6 +7,7 @@ using LinqToDB;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 {
@@ -244,6 +245,46 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 				
 				return factory.Concat(fillingString, value);
 			}
+
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool ignoreNulls)
+			{
+				var builder = new AggregateFunctionBuilder()
+					.ConfigureAggregate(c => c
+						.AllowFilter()
+						.AllowNotNullCheck(true)
+						.TranslateArguments(0)
+						.OnBuildFunction(composer =>
+						{
+							var info = composer.BuildInfo;
+							if (info.Value == null || info.Argument(0) == null)
+							{
+								return;
+							}
+
+							var factory   = info.Factory;
+							var separator = info.Argument(0)!;
+							var valueType = factory.GetDbDataType(info.Value);
+
+							var value = info.Value;
+							if (!info.IsNullFiltered)
+								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
+
+							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
+							{
+								value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
+							}
+
+							var fn = factory.WindowFunction(valueType, "GROUP_CONCAT",
+								[new SqlFunctionArgument(value), new SqlFunctionArgument(separator)],
+								[true, true],
+								isAggregate : true);
+
+							composer.SetResult(factory.Coalesce(fn, factory.Value(valueType, string.Empty)));
+						}));
+
+				return builder.Build(translationContext, methodCall.Arguments[1], methodCall);
+			}
+
 		}
 
 		protected class GuidMemberTranslator : GuidMemberTranslatorBase

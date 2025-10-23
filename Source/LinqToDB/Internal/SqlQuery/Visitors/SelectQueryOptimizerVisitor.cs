@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Linq;
-using System.Text;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
@@ -2740,27 +2738,27 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 									if (QueryHelper.IsAggregationFunction(testedColumn.Expression))
 									{
-											if (!_providerFlags.AcceptsOuterExpressionInAggregate && IsInsideAggregate(sq.Select, testedColumn))
+										if (!_providerFlags.AcceptsOuterExpressionInAggregate && IsInsideAggregate(sq.Select, testedColumn))
+										{
+											if (_providerFlags.IsApplyJoinSupported)
 											{
-												if (_providerFlags.IsApplyJoinSupported)
-												{
-													// Well, provider can process this query as OUTER APPLY
-													isValid = false;
-													break;
-												}
-
-												MoveToSubQuery(sq);
-												// will be processed in the next step
-												ti      = -1;
+												// Well, provider can process this query as OUTER APPLY
 												isValid = false;
 												break;
 											}
 
-											if (!_providerFlags.IsCountSubQuerySupported)
-											{
-												isValid = false;
-												break;
-											}
+											MoveToSubQuery(sq);
+											// will be processed in the next step
+											ti      = -1;
+											isValid = false;
+											break;
+										}
+
+										if (!_providerFlags.IsCountSubQuerySupported)
+										{
+											isValid = false;
+											break;
+										}
 									}
 								}
 
