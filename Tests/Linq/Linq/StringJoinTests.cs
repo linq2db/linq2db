@@ -1,8 +1,12 @@
-﻿using System.Linq;
+﻿extern alias MySqlConnector;
+using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
+
+using MySqlConnector::MySqlConnector;
 
 using NUnit.Framework;
 
@@ -10,6 +14,8 @@ namespace Tests.Linq
 {
 	public class StringJoinTests : TestBase
 	{
+		const string SupportedProviders = TestProvName.AllPostgreSQL + "," + TestProvName.AllSqlServer2017Plus + "," + TestProvName.AllSQLite + "," + TestProvName.AllMySql;
+
 		[Table]
 		sealed class SampleClass
 		{
@@ -45,7 +51,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinWithGrouping([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer2017Plus, TestProvName.AllSQLite)] string context)
+		public void JoinWithGrouping([IncludeDataSources(true, SupportedProviders)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -69,7 +75,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(Configuration = TestProvName.AllSqlServer2016Plus, Details = "SQL Server limitation for single select")]
 		[Test]
-		public void JoinWithGroupingVarious([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer2017Plus, TestProvName.AllSQLite)] string context)
+		public void JoinWithGroupingVarious([IncludeDataSources(true, SupportedProviders)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -96,8 +102,9 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllMariaDB, TestProvName.AllMySql57], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
-		public void JoinWithGroupingAndUnsupportedMethod([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer2017Plus, TestProvName.AllSQLite)] string context)
+		public void JoinWithGroupingAndUnsupportedMethod([IncludeDataSources(true, SupportedProviders)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -121,7 +128,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(Configuration = TestProvName.AllSqlServer2016Plus, Details = "SQL Server limitation for single select")]
 		[Test]
-		public void JoinWithGroupingOrdered([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer2017Plus, TestProvName.AllSQLite)] string context)
+		public void JoinWithGroupingOrdered([IncludeDataSources(true, SupportedProviders)] string context)
 		{
 			var       data  = SampleClass.GenerateDataNotUniquerId();
 			using var db    = GetDataContext(context);
@@ -175,7 +182,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinAggregateExecuteNullable([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer2017Plus, TestProvName.AllSQLite)] string context)
+		public void JoinAggregateExecuteNullable([IncludeDataSources(true, SupportedProviders)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -188,7 +195,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinAggregateExecuteNullableOnlyNotNull([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer2017Plus, TestProvName.AllSQLite)] string context)
+		public void JoinAggregateExecuteNullableOnlyNotNull([IncludeDataSources(true, SupportedProviders)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -200,9 +207,10 @@ namespace Tests.Linq
 			Assert.That(allAggregated, Is.EqualTo(expected));
 		}
 
+		[ThrowsForProvider(typeof(MySqlException), providers: [TestProvName.AllMariaDB, TestProvName.AllMySql57], ErrorMessage = "Unknown table 't'")]
 		[ActiveIssue(Configuration = TestProvName.AllSqlServer2016Plus, Details = "SQL Server limitation for single select")]
 		[Test]
-		public void JoinAggregateArray([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer2017Plus, TestProvName.AllSQLite)] string context)
+		public void JoinAggregateArray([IncludeDataSources(true, SupportedProviders)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -229,8 +237,9 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[ThrowsForProvider(typeof(MySqlException), providers: [TestProvName.AllMariaDB, TestProvName.AllMySql57], ErrorMessage = "Unknown table 't'")]
 		[Test]
-		public void JoinAggregateArrayNotNull([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer2017Plus, TestProvName.AllSQLite)] string context)
+		public void JoinAggregateArrayNotNull([IncludeDataSources(true, SupportedProviders)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -248,7 +257,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinAggregateArrayNotNullAndFilter([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer2017Plus, TestProvName.AllSQLite)] string context)
+		public void JoinAggregateArrayNotNullAndFilter([IncludeDataSources(true, SupportedProviders)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
