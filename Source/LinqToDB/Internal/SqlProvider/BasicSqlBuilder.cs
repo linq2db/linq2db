@@ -3273,7 +3273,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (windowFunction.PartitionBy?.Count > 0     || 
 			    windowFunction.OrderBy?.Count     > 0     ||
 			    windowFunction.FrameClause        != null || 
-			    (windowFunction.WithinGroup?.Count > 0 && IsOverRequiredWithinGroup))
+			    (windowFunction.WithinGroup?.Count > 0 && IsOverRequiredWithinGroup && windowFunction.IsWindowFunction))
 			{
 				StringBuilder.Append(" OVER (");
 				if (windowFunction.PartitionBy?.Count > 0)

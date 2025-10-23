@@ -45,7 +45,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinWithGrouping([IncludeDataSources(true, TestProvName.PostgreSQL16)] string context)
+		public void JoinWithGrouping([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -67,8 +67,9 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[ActiveIssue(Configuration = TestProvName.AllSqlServer2016Plus, Details = "SQL Server limitation for single select")]
 		[Test]
-		public void JoinWithGroupingVarious([IncludeDataSources(true, TestProvName.PostgreSQL16)] string context)
+		public void JoinWithGroupingVarious([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -96,7 +97,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinWithGroupingAndUnsupportedMethod([IncludeDataSources(true, TestProvName.PostgreSQL16)] string context)
+		public void JoinWithGroupingAndUnsupportedMethod([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -118,8 +119,9 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[ActiveIssue(Configuration = TestProvName.AllSqlServer2016Plus, Details = "SQL Server limitation for single select")]
 		[Test]
-		public void JoinWithGroupingOrdered([IncludeDataSources(true, TestProvName.PostgreSQL16)] string context)
+		public void JoinWithGroupingOrdered([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			var       data  = SampleClass.GenerateDataNotUniquerId();
 			using var db    = GetDataContext(context);
@@ -173,7 +175,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinAggregateExecuteNullable([IncludeDataSources(true, TestProvName.PostgreSQL16)] string context)
+		public void JoinAggregateExecuteNullable([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -186,7 +188,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinAggregateExecuteNullableOnlyNotNull([IncludeDataSources(true, TestProvName.PostgreSQL16)] string context)
+		public void JoinAggregateExecuteNullableOnlyNotNull([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -199,7 +201,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinAggregateArray([IncludeDataSources(true, TestProvName.PostgreSQL16)] string context)
+		public void JoinAggregateArray([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -227,7 +229,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinAggregateArrayNotNull([IncludeDataSources(true, TestProvName.PostgreSQL16)] string context)
+		public void JoinAggregateArrayNotNull([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -245,7 +247,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinAggregateArrayNotNullAndFilter([IncludeDataSources(true, TestProvName.PostgreSQL16)] string context)
+		public void JoinAggregateArrayNotNullAndFilter([IncludeDataSources(true, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);

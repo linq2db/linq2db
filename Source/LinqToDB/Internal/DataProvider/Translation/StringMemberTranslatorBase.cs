@@ -159,112 +159,19 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return translationContext.CreatePlaceholder(translated, memberExpression);
 		}
 
-		protected virtual Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		Expression? TranslateStringJoinIgnoreNulls(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
-			var builder = new AggregateFunctionBuilder()
-				.ConfigureAggregate(c => c
-					.AllowOrderBy()
-					.AllowFilter()
-					.AllowDistinct()
-					.AllowNotNullCheck(true)
-					.TranslateArguments(0)
-					.OnBuildFunction(composer =>
-					{
-						var info = composer.BuildInfo;
-						if (info.Value == null || info.Argument(0) == null)
-						{
-							return;
-						}
+			return TranslateStringJoin(translationContext, methodCall, translationFlags, ignoreNulls: true);
+		}
 
-						var factory   = info.Factory;
-						var separator = info.Argument(0)!;
-						var valueType = factory.GetDbDataType(info.Value);
-						
-						var value     = info.Value;
-						if (!info.IsNullFiltered)
-							value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
+		Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			return TranslateStringJoin(translationContext, methodCall, translationFlags, ignoreNulls: false);
+		}
 
-						if (info is { IsDistinct: true, OrderBySql.Length: > 0 })
-						{
-							if (info.OrderBySql.Any(o => o.expr != info.Value))
-							{
-								composer.SetFallback(c => c.AllowDistinct(false));
-								return;
-							}
-						}
-
-						ISqlExpression? suffix = null;
-						if (info.OrderBySql.Length > 0)
-						{
-							using var sb   = Pools.StringBuilder.Allocate();
-
-							var args = info.OrderBySql.Select(o => o.expr).ToArray();
-
-							sb.Value.Append("ORDER BY ");
-							for (int i = 0; i < info.OrderBySql.Length; i++)
-							{
-								if (i > 0) sb.Value.Append(", ");
-								sb.Value.Append('{').Append(i).Append('}');
-								if (info.OrderBySql[i].desc) sb.Value.Append(" DESC");
-								if (info.OrderBySql[i].nulls != Sql.NullsPosition.None)
-								{
-									sb.Value.Append(" NULLS ");
-									sb.Value.Append(info.OrderBySql[i].nulls == Sql.NullsPosition.First ? "FIRST" : "LAST");
-								}
-							}
-
-							suffix = factory.Fragment(valueType, sb.Value.ToString(), args);
-						}
-
-						if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
-						{
-							value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
-						}
-
-						var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
-
-						var fn = factory.WindowFunction(valueType, "STRING_AGG",
-							[new SqlFunctionArgument(value, modifier: aggregateModifier), new SqlFunctionArgument(separator, suffix: suffix)],
-							[true, true],
-							isAggregate: true);
-
-						composer.SetResult(factory.Coalesce(fn, factory.Value(valueType, string.Empty)));
-					}))
-				.ConfigurePlain(c => c
-					.TranslateArguments(0)
-					.AllowFilter()
-					.AllowNotNullCheck(true)
-					.OnBuildFunction(composer =>
-					{
-						var info = composer.BuildInfo;
-						if (info.Values.Length == 0 || info.Argument(0) == null)
-						{
-							composer.SetResult(info.Factory.Value(info.Factory.GetDbDataType(typeof(string)), string.Empty));
-							return;
-						}
-
-						var factory   = info.Factory;
-						var separator = info.Argument(0)!;
-						var dataType  = factory.GetDbDataType(info.Values[0]);
-						
-						if (!composer.GetFilteredToNullValues(out IEnumerable<ISqlExpression>? values, out var error))
-						{
-							composer.SetError(error);
-							return;
-						}
-
-						var items = info.IsNullFiltered
-							? values
-							: values.Select(i => factory.Coalesce(i, factory.Value(factory.GetDbDataType(i), ""))).ToArray();
-
-						var function  = factory.Function(dataType, "CONCAT_WS",
-							parametersNullability: ParametersNullabilityType.IfAllParametersNullable,
-							[separator, ..items]);
-
-						composer.SetResult(function);
-					}));
-
-			return builder.Build(translationContext, methodCall.Arguments[1], methodCall);
+		protected virtual Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool ignoreNulls)
+		{
+			return null;
 		}
 
 		public virtual ISqlExpression? TranslateReplace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression oldValue, ISqlExpression newValue)
