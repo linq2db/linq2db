@@ -352,7 +352,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
-		public static ISqlExpression WindowFunction(this ISqlExpressionFactory factory, DbDataType dataType, string functionName,
+		public static ISqlExpression Function(this ISqlExpressionFactory factory, DbDataType dataType, string functionName,
 			SqlFunctionArgument[] arguments,
 			bool[] argumentsNullability,
 			bool? canBeNull = null,
@@ -365,7 +365,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			bool canBeAffectedByOrderBy = false
 		)
 		{
-			return new SqlWindowFunction(dataType, functionName, arguments, argumentsNullability,
+			return new SqlExtendedFunction(dataType, functionName, arguments, argumentsNullability,
 				canBeNull: canBeNull,
 				withinGroup: withinGroup,
 				partitionBy: partitionBy,

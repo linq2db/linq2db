@@ -128,7 +128,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						var orderBy  = orderQuery.OrderBy.Items.Select(o => new SqlWindowOrderItem(o.Expression, o.IsDescending, Sql.NullsPosition.None));
 						var longType = MappingSchema.GetDbDataType(typeof(long));
-						var rn       = new SqlWindowFunction(longType, "ROW_NUMBER", [], [], orderBy : orderBy);
+						var rn       = new SqlExtendedFunction(longType, "ROW_NUMBER", [], [], orderBy : orderBy);
 						var sql      = new SqlBinaryExpression(longType, rn, "-", new SqlValue(longType, 1));
 
 						_rowNumberPlaceholder = ExpressionBuilder.CreatePlaceholder(_sequence, sql, path);

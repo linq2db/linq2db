@@ -133,7 +133,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				QueryElementType.SqlCase                   => VisitSqlCaseExpression         ((SqlCaseExpression         )element),
 				QueryElementType.CompareTo                 => VisitSqlCompareToExpression    ((SqlCompareToExpression    )element),
                 QueryElementType.SqlFragment               => VisitSqlFragment               ((SqlFragment)element),
-				QueryElementType.SqlWindowFunction         => VisitSqlWindowFunction         ((SqlWindowFunction         )element),
+				QueryElementType.SqlExtendedFunction       => VisitSqlExtendedFunction       ((SqlExtendedFunction       )element),
 				QueryElementType.SqlFunctionArgument       => VisitSqlFunctionArgument       ((SqlFunctionArgument       )element),
 				QueryElementType.SqlWindowOrderItem        => VisitSqlWindowOrderItem        ((SqlWindowOrderItem        )element),
 				QueryElementType.SqlFrameClause            => VisitSqlFrameClause            ((SqlFrameClause            )element),
@@ -201,9 +201,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		}
 
 		/// <summary>
-		/// Visitor for <see cref="SqlWindowFunction"/>.
+		/// Visitor for <see cref="SqlExtendedFunction"/>.
 		/// </summary>
-		protected virtual IQueryElement VisitSqlWindowFunction(SqlWindowFunction element)
+		protected virtual IQueryElement VisitSqlExtendedFunction(SqlExtendedFunction element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -244,7 +244,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						!ReferenceEquals(element.FrameClause, frameClause) ||
 						!ReferenceEquals(element.Filter, filter))
 					{
-						return NotifyReplaced(new SqlWindowFunction(
+						return NotifyReplaced(new SqlExtendedFunction(
 							element.Type,
 							element.FunctionName,
 							arguments,

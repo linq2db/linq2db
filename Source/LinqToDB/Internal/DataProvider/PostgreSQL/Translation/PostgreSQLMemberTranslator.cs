@@ -349,7 +349,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 
 						var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
 
-						var fn = factory.WindowFunction(valueType, "STRING_AGG",
+						var fn = factory.Function(valueType, "STRING_AGG",
 							[new SqlFunctionArgument(value, modifier: aggregateModifier), new SqlFunctionArgument(separator, suffix: suffix)],
 							[true, true],
 							isAggregate: true,

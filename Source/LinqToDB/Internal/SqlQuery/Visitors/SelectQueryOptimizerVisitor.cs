@@ -1011,7 +1011,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					var orderItems = orderByItems.Select(o => new SqlWindowOrderItem(o.Expression, o.IsDescending, Sql.NullsPosition.None));
 
 					var longType = _mappingSchema.GetDbDataType(typeof(long));
-					rnExpression = new SqlWindowFunction(longType, "ROW_NUMBER", [], [], partitionBy : partitionBy, orderBy : orderItems);
+					rnExpression = new SqlExtendedFunction(longType, "ROW_NUMBER", [], [], partitionBy : partitionBy, orderBy : orderItems);
 				}
 
 				var whereToIgnore = new List<IQueryElement> { sql.Where, sql.Select };

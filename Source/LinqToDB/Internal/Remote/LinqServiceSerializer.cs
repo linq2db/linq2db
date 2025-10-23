@@ -1728,9 +1728,9 @@ namespace LinqToDB.Internal.Remote
 						break;
 					}
 
-					case QueryElementType.SqlWindowFunction:
+					case QueryElementType.SqlExtendedFunction:
 					{
-						var elem = (SqlWindowFunction)e;
+						var elem = (SqlExtendedFunction)e;
 						Append(elem.Type);
 						Append(elem.FunctionName);
 						Append(elem.Arguments);
@@ -2892,7 +2892,7 @@ namespace LinqToDB.Internal.Remote
 						break;
 					}
 
-					case QueryElementType.SqlWindowFunction:
+					case QueryElementType.SqlExtendedFunction:
 					{
 						var functionType         = ReadDbDataType();
 						var name                 = ReadString()!;
@@ -2905,7 +2905,7 @@ namespace LinqToDB.Internal.Remote
 						var partitionBy          = ReadArray<ISqlExpression>()!;
 						var frame                = Read<SqlFrameClause>();
 
-						obj = new SqlWindowFunction(functionType, name, arguments, argumentsNullability, withinGroup : withinGroup, partitionBy : partitionBy, orderBy : orderBy,
+						obj = new SqlExtendedFunction(functionType, name, arguments, argumentsNullability, withinGroup : withinGroup, partitionBy : partitionBy, orderBy : orderBy,
 							frameClause : frame, filter: filter, isAggregate : isAggregate);
 
 						break;

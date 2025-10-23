@@ -108,7 +108,7 @@
 		SqlFragment,
 
 		SqlFunctionArgument,
-		SqlWindowFunction,
+		SqlExtendedFunction,
 		SqlWindowOrderItem,
 		SqlFrameClause,
 		SqlFrameBoundary,

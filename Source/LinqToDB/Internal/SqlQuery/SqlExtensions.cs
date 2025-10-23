@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -136,25 +137,15 @@ namespace LinqToDB.Internal.SqlQuery
 			return table;
 		}
 
-		/*
-		public static SqlWindowFunction CreateCount(this ISqlTableSource table, MappingSchema mappingSchema)
+		public static SqlExtendedFunction CreateCount(this ISqlTableSource table, MappingSchema mappingSchema)
 		{
-			return new SqlWindowFunction(mappingSchema.GetDbDataType(typeof(int)), "COUNT",
+			return new SqlExtendedFunction(mappingSchema.GetDbDataType(typeof(int)), "COUNT",
 				// unused parameter to make expr unique
 				[new SqlFunctionArgument(new SqlFragment("*", new SqlValue(table.SourceID)))],
 				[],
 				canBeNull: false,
-				canBeAffectedByOrderBy: false);
-		}
-		*/
-
-		public static SqlFunction CreateCount(this ISqlTableSource table, MappingSchema mappingSchema)
-		{
-			return new SqlFunction(mappingSchema.GetDbDataType(typeof(int)), "COUNT",
 				isAggregate: true,
-				ParametersNullabilityType.NotNullable,
-				// unused parameter to make expr unique
-				new SqlFragment("*", new SqlValue(table.SourceID)));
+				canBeAffectedByOrderBy: false);
 		}
 
 		public static SqlFunction WithName(this SqlFunction func, string name)

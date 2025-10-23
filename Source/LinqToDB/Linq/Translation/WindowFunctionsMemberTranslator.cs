@@ -489,7 +489,7 @@ namespace LinqToDB.Linq.Translation
 				frame = new SqlFrameClause(frameType, startBoundary, endBoundary);
 			}
 
-			var function = translationContext.ExpressionFactory.WindowFunction(dbDataType, functionName,
+			var function = translationContext.ExpressionFactory.Function(dbDataType, functionName,
 				arguments.ToArray(),
 				arguments.Select(a => true).ToArray(),
 				partitionBy : partitionBy,
@@ -610,7 +610,7 @@ namespace LinqToDB.Linq.Translation
 
 				var functionType = translationContext.GetDbDataType(withinGroupOrder[0].Expression);
 
-				var windowFunction = translationContext.ExpressionFactory.WindowFunction(
+				var windowFunction = translationContext.ExpressionFactory.Function(
 					functionType,
 					"PERCENTILE_CONT",
 					[new SqlFunctionArgument(argumentSql, Sql.AggregateModifier.None)],
@@ -671,7 +671,7 @@ namespace LinqToDB.Linq.Translation
 
 			var functionType = translationContext.GetDbDataType(withinGroupOrder[0].Expression);
 
-			var windowFunction = translationContext.ExpressionFactory.WindowFunction(
+			var windowFunction = translationContext.ExpressionFactory.Function(
 				functionType,
 				"PERCENTILE_CONT",
 				[new SqlFunctionArgument(argumentSql, Sql.AggregateModifier.None)],

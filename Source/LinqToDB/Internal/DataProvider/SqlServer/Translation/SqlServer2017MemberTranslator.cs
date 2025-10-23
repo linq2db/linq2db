@@ -73,7 +73,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 						var withinGroup = info.OrderBySql.Length > 0 ? info.OrderBySql.Select(o => new SqlWindowOrderItem(o.expr, o.desc, o.nulls)) : null;
 
-						var fn = factory.WindowFunction(valueType, "STRING_AGG",
+						var fn = factory.Function(valueType, "STRING_AGG",
 							[new SqlFunctionArgument(value, modifier: aggregateModifier), new SqlFunctionArgument(separator)],
 							[true, true],
 							isAggregate: true, 

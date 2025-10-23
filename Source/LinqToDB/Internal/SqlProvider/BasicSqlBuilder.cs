@@ -3199,8 +3199,8 @@ namespace LinqToDB.Internal.SqlProvider
 					BuildSqlConditionExpression((SqlConditionExpression)expr);
 					break;
 
-				case QueryElementType.SqlWindowFunction:
-					BuildSqlWindowFunction((SqlWindowFunction)expr);
+				case QueryElementType.SqlExtendedFunction:
+					BuildSqlWindowFunction((SqlExtendedFunction)expr);
 					break;
 
 				default:
@@ -3215,18 +3215,18 @@ namespace LinqToDB.Internal.SqlProvider
 			BuildTypedExpression(castExpression.ToType, castExpression.Expression);
 		}
 
-		protected virtual void BuildSqlWindowFunction(SqlWindowFunction windowFunction)
+		protected virtual void BuildSqlWindowFunction(SqlExtendedFunction extendedFunction)
 		{
-			StringBuilder.Append(windowFunction.FunctionName);
+			StringBuilder.Append(extendedFunction.FunctionName);
 			StringBuilder.Append('(');
 
-			if (windowFunction.Arguments.Count > 0)
+			if (extendedFunction.Arguments.Count > 0)
 			{
-				for (var i = 0; i < windowFunction.Arguments.Count; i++)
+				for (var i = 0; i < extendedFunction.Arguments.Count; i++)
 				{
 					if (i > 0)
 						StringBuilder.Append(", ");
-					var argument = windowFunction.Arguments[i];
+					var argument = extendedFunction.Arguments[i];
 					if (argument.Modifier != Sql.AggregateModifier.None)
 					{
 						switch (argument.Modifier)
@@ -3256,47 +3256,47 @@ namespace LinqToDB.Internal.SqlProvider
 
 			StringBuilder.Append(')');
 
-			if (windowFunction.WithinGroup?.Count > 0)
+			if (extendedFunction.WithinGroup?.Count > 0)
 			{
 				StringBuilder.Append(" WITHIN GROUP (");
-				BuildOrderBy(windowFunction.WithinGroup!);
+				BuildOrderBy(extendedFunction.WithinGroup!);
 				StringBuilder.Append(')');
 			}
 
-			if (windowFunction.Filter != null)
+			if (extendedFunction.Filter != null)
 			{
 				StringBuilder.Append(" FILTER (WHERE ");
-				BuildSearchCondition(windowFunction.Filter, false);
+				BuildSearchCondition(extendedFunction.Filter, false);
 				StringBuilder.Append(')');
 			}
 
-			if (windowFunction.PartitionBy?.Count > 0     || 
-			    windowFunction.OrderBy?.Count     > 0     ||
-			    windowFunction.FrameClause        != null || 
-			    (windowFunction.WithinGroup?.Count > 0 && IsOverRequiredWithinGroup && windowFunction.IsWindowFunction))
+			if (extendedFunction.PartitionBy?.Count > 0     || 
+			    extendedFunction.OrderBy?.Count     > 0     ||
+			    extendedFunction.FrameClause        != null || 
+			    (extendedFunction.WithinGroup?.Count > 0 && IsOverRequiredWithinGroup && extendedFunction.IsWindowFunction))
 			{
 				StringBuilder.Append(" OVER (");
-				if (windowFunction.PartitionBy?.Count > 0)
+				if (extendedFunction.PartitionBy?.Count > 0)
 				{
 					StringBuilder.Append("PARTITION BY ");
-					for (var i = 0; i < windowFunction.PartitionBy.Count; i++)
+					for (var i = 0; i < extendedFunction.PartitionBy.Count; i++)
 					{
 						if (i > 0)
 							StringBuilder.Append(", ");
-						BuildExpression(windowFunction.PartitionBy[i]);
+						BuildExpression(extendedFunction.PartitionBy[i]);
 					}
 				}
 
-				if (windowFunction.OrderBy?.Count > 0)
+				if (extendedFunction.OrderBy?.Count > 0)
 				{
-					if (windowFunction.PartitionBy?.Count > 0)
+					if (extendedFunction.PartitionBy?.Count > 0)
 						StringBuilder.Append(' ');
-					BuildOrderBy(windowFunction.OrderBy!);
+					BuildOrderBy(extendedFunction.OrderBy!);
 				}
 
-				if (windowFunction.FrameClause != null)
+				if (extendedFunction.FrameClause != null)
 				{
-					var frame = windowFunction.FrameClause;
+					var frame = extendedFunction.FrameClause;
 
 					StringBuilder.Append(' ');
 

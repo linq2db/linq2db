@@ -1107,7 +1107,7 @@ namespace LinqToDB.Internal.SqlQuery
 			return expr switch
 			{
 				SqlFunction func         => func.IsAggregate,
-				SqlWindowFunction func   => func.IsAggregate,
+				SqlExtendedFunction func   => func.IsAggregate,
 				SqlExpression expression => (expression.Flags & SqlFlags.IsAggregate) != 0,
 				_                        => false,
 			};
@@ -1158,7 +1158,7 @@ namespace LinqToDB.Internal.SqlQuery
 				return base.VisitSqlFunction(element);
 			}
 
-			protected override IQueryElement VisitSqlWindowFunction(SqlWindowFunction element)
+			protected override IQueryElement VisitSqlExtendedFunction(SqlExtendedFunction element)
 			{
 				var isAggregation = IsAggregationFunction(element);
 				var isWindow      = IsWindowFunction(element);
@@ -1174,7 +1174,7 @@ namespace LinqToDB.Internal.SqlQuery
 					return element;
 				}
 
-				return base.VisitSqlWindowFunction(element);
+				return base.VisitSqlExtendedFunction(element);
 			}
 
 			protected override IQueryElement VisitSqlExpression(SqlExpression element)
@@ -1243,7 +1243,7 @@ namespace LinqToDB.Internal.SqlQuery
 			if (expr is SqlParameterizedExpressionBase expression)
 				return expression.IsWindowFunction;
 
-			if (expr is SqlWindowFunction { IsWindowFunction: true })
+			if (expr is SqlExtendedFunction { IsWindowFunction: true })
 				return true;
 
 			return false;

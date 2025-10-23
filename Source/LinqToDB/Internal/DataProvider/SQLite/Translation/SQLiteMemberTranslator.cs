@@ -274,7 +274,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 								value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
 							}
 
-							var fn = factory.WindowFunction(valueType, "GROUP_CONCAT",
+							var fn = factory.Function(valueType, "GROUP_CONCAT",
 								[new SqlFunctionArgument(value), new SqlFunctionArgument(separator)],
 								[true, true],
 								isAggregate : true,

@@ -9,20 +9,20 @@ using LinqToDB.Internal.SqlQuery;
 namespace LinqToDB.SqlQuery
 {
 
-	public class SqlWindowFunction : SqlExpressionBase
+	public class SqlExtendedFunction : SqlExpressionBase
 	{
-		public SqlWindowFunction(DbDataType  dbDataType,
-			string                           functionName,
-			IEnumerable<SqlFunctionArgument> arguments,
-			bool[]                           argumentsNullability,
-			bool?                            canBeNull              = null,
-			IEnumerable<SqlWindowOrderItem>? withinGroup            = null,
-			IEnumerable<ISqlExpression>?     partitionBy            = null,
-			IEnumerable<SqlWindowOrderItem>? orderBy                = null,
-			SqlSearchCondition?              filter                 = null,
-			SqlFrameClause?                  frameClause            = null,
-			bool                             isAggregate            = false,
-			bool                             canBeAffectedByOrderBy = false)
+		public SqlExtendedFunction(DbDataType dbDataType,
+			string                            functionName,
+			IEnumerable<SqlFunctionArgument>  arguments,
+			bool[]                            argumentsNullability,
+			bool?                             canBeNull              = null,
+			IEnumerable<SqlWindowOrderItem>?  withinGroup            = null,
+			IEnumerable<ISqlExpression>?      partitionBy            = null,
+			IEnumerable<SqlWindowOrderItem>?  orderBy                = null,
+			SqlSearchCondition?               filter                 = null,
+			SqlFrameClause?                   frameClause            = null,
+			bool                              isAggregate            = false,
+			bool                              canBeAffectedByOrderBy = false)
 		{
 			Type                   = dbDataType;
 			FunctionName           = functionName;
@@ -66,9 +66,9 @@ namespace LinqToDB.SqlQuery
 			FrameClause = frameClause;
 		}
 
-		public SqlWindowFunction WithType(DbDataType dbDataType)
+		public SqlExtendedFunction WithType(DbDataType dbDataType)
 		{
-			return new SqlWindowFunction(
+			return new SqlExtendedFunction(
 				dbDataType,
 				FunctionName,
 				Arguments,
@@ -83,9 +83,9 @@ namespace LinqToDB.SqlQuery
 				CanBeAffectedByOrderBy);
 		}
 
-		public SqlWindowFunction WithFunctionName(string functionName)
+		public SqlExtendedFunction WithFunctionName(string functionName)
 		{
-			return new SqlWindowFunction(
+			return new SqlExtendedFunction(
 				Type,
 				functionName,
 				Arguments,
@@ -100,9 +100,9 @@ namespace LinqToDB.SqlQuery
 				CanBeAffectedByOrderBy);
 		}
 
-		public SqlWindowFunction WithArguments(IEnumerable<SqlFunctionArgument> arguments, bool[] argumentsNullability)
+		public SqlExtendedFunction WithArguments(IEnumerable<SqlFunctionArgument> arguments, bool[] argumentsNullability)
 		{
-			return new SqlWindowFunction(
+			return new SqlExtendedFunction(
 				Type,
 				FunctionName,
 				arguments,
@@ -117,9 +117,9 @@ namespace LinqToDB.SqlQuery
 				CanBeAffectedByOrderBy);
 		}
 
-		public SqlWindowFunction WithPartitionBy(IEnumerable<ISqlExpression>? partitionBy)
+		public SqlExtendedFunction WithPartitionBy(IEnumerable<ISqlExpression>? partitionBy)
 		{
-			return new SqlWindowFunction(
+			return new SqlExtendedFunction(
 				Type,
 				FunctionName,
 				Arguments,
@@ -134,9 +134,9 @@ namespace LinqToDB.SqlQuery
 				CanBeAffectedByOrderBy);
 		}
 
-		public SqlWindowFunction WithOrderBy(IEnumerable<SqlWindowOrderItem>? orderBy)
+		public SqlExtendedFunction WithOrderBy(IEnumerable<SqlWindowOrderItem>? orderBy)
 		{
-			return new SqlWindowFunction(
+			return new SqlExtendedFunction(
 				Type,
 				FunctionName,
 				Arguments,
@@ -151,9 +151,9 @@ namespace LinqToDB.SqlQuery
 				CanBeAffectedByOrderBy);
 		}
 
-		public SqlWindowFunction WithFrameClause(SqlFrameClause? frameClause)
+		public SqlExtendedFunction WithFrameClause(SqlFrameClause? frameClause)
 		{
-			return new SqlWindowFunction(
+			return new SqlExtendedFunction(
 				Type,
 				FunctionName,
 				Arguments,
@@ -168,9 +168,9 @@ namespace LinqToDB.SqlQuery
 				CanBeAffectedByOrderBy);
 		}
 
-		public SqlWindowFunction WithFilter(SqlSearchCondition? filter)
+		public SqlExtendedFunction WithFilter(SqlSearchCondition? filter)
 		{
-			return new SqlWindowFunction(
+			return new SqlExtendedFunction(
 				Type,
 				FunctionName,
 				Arguments,
@@ -185,9 +185,9 @@ namespace LinqToDB.SqlQuery
 				CanBeAffectedByOrderBy);
 		}
 
-		public SqlWindowFunction WithWithinGroup(IEnumerable<SqlWindowOrderItem>? withinGroup)
+		public SqlExtendedFunction WithWithinGroup(IEnumerable<SqlWindowOrderItem>? withinGroup)
 		{
-			return new SqlWindowFunction(
+			return new SqlExtendedFunction(
 				Type,
 				FunctionName,
 				Arguments,
@@ -209,7 +209,7 @@ namespace LinqToDB.SqlQuery
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
-			if (other is not SqlWindowFunction otherFunction)
+			if (other is not SqlExtendedFunction otherFunction)
 				return false;
 
 			if (FunctionName != otherFunction.FunctionName)
@@ -284,7 +284,7 @@ namespace LinqToDB.SqlQuery
 
 		public override Type SystemType => Type.SystemType;
 
-		public override QueryElementType ElementType      => QueryElementType.SqlWindowFunction;
+		public override QueryElementType ElementType => QueryElementType.SqlExtendedFunction;
 
 		public bool IsWindowFunction => OrderBy?.Count > 0 || PartitionBy?.Count > 0 || FrameClause != null;
 

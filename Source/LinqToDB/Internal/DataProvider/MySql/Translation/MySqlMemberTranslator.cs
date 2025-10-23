@@ -284,7 +284,7 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 
 						var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
 
-						var fn = factory.WindowFunction(valueType, "GROUP_CONCAT",
+						var fn = factory.Function(valueType, "GROUP_CONCAT",
 							[new SqlFunctionArgument(value, modifier: aggregateModifier, suffix)],
 							[true, true],
 							isAggregate: true,
