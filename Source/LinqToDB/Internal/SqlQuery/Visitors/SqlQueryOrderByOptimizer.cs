@@ -52,7 +52,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				//     AVG(Value)
 				// FROM Table
 				// ORDER BY ...
-				if (QueryHelper.IsAggregationQuery(selectQuery))
+				if (QueryHelper.IsAggregationQuery(selectQuery, out var needsOrderBy) && !needsOrderBy)
 				{
 					selectQuery.OrderBy.Items.Clear();
 					_optimized = true;
@@ -133,7 +133,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					return true;
 				}
 
-				if (QueryHelper.IsAggregationQuery(selectQuery))
+				if (QueryHelper.IsAggregationQuery(selectQuery, out var needsOrderBy) && needsOrderBy)
 					return false;
 
 				if (selectQuery.From.GroupBy.IsEmpty && selectQuery.From.Tables is [{ Joins.Count: 0, Source: SelectQuery subQuery }])
@@ -216,9 +216,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (!_insideSetOperator)
 			{
-				bool shouldDisableOrderBy = !QueryHelper.IsAggregationQuery(element.SelectQuery);
-
-				_disableOrderBy = shouldDisableOrderBy;
+				if (!QueryHelper.IsAggregationQuery(element.SelectQuery, out var needsOrderBy) || !needsOrderBy)
+					_disableOrderBy = true;
 			}
 
 			var newElement = base.VisitSqlFromClause(element);

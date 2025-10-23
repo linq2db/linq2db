@@ -143,30 +143,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				sequence.SelectQuery.OrderBy.Expr(orderSql, methodCall.Method.Name.EndsWith("Descending"), isPositioned);
 			}
 
-			if (sequence is not OrderByContext)
-				sequence = new OrderByContext(sequence);
-
 			return BuildSequenceResult.FromContext(sequence);
-		}
-
-		class OrderByContext : PassThroughContext
-		{
-			public OrderByContext(IBuildContext context) : base(context)
-			{
-			}
-
-			public override Expression MakeExpression(Expression path, ProjectFlags flags)
-			{
-				if (flags.IsAggregationRoot())
-					return path;
-
-				return base.MakeExpression(path, flags);
-			}
-
-			public override IBuildContext Clone(CloningContext context)
-			{
-				return new OrderByContext(context.CloneContext(Context));
-			}
 		}
 	}
 }

@@ -8,7 +8,6 @@ using System.Text.RegularExpressions;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
-using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -1116,9 +1115,10 @@ namespace LinqToDB.Internal.SqlQuery
 
 		internal sealed class AggregationCheckVisitor : QueryElementVisitor
 		{
-			public bool IsAggregation { get; set; }
-			public bool IsWindow      { get; set; }
-			public bool HasReference  { get; set; }
+			public bool IsAggregation          { get; set; }
+			public bool IsWindow               { get; set; }
+			public bool HasReference           { get; set; }
+			public bool CanBeAffectedByOrderBy { get; set; }
 
 			public AggregationCheckVisitor() : base(VisitMode.ReadOnly)
 			{
@@ -1126,9 +1126,10 @@ namespace LinqToDB.Internal.SqlQuery
 
 			public void Cleanup()
 			{
-				IsAggregation = false;
-				IsWindow      = false;
-				HasReference  = false;
+				IsAggregation          = false;
+				IsWindow               = false;
+				HasReference           = false;
+				CanBeAffectedByOrderBy = false;
 			}
 
 			[return : NotNullIfNotNull(nameof(element))]
@@ -1161,6 +1162,9 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 				var isAggregation = IsAggregationFunction(element);
 				var isWindow      = IsWindowFunction(element);
+
+				if (element.CanBeAffectedByOrderBy)
+					CanBeAffectedByOrderBy = true;
 
 				IsAggregation = IsAggregation || isAggregation;
 				IsWindow      = IsWindow      || isWindow;
@@ -1204,6 +1208,11 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static bool IsAggregationQuery(SelectQuery selectQuery)
 		{
+			return IsAggregationQuery(selectQuery, out _);
+		}
+
+		public static bool IsAggregationQuery(SelectQuery selectQuery, out bool needsOrderBy)
+		{
 			using var visitorRef = AggregationCheckVisitors.Allocate();
 
 			var visitor        = visitorRef.Value;
@@ -1214,7 +1223,10 @@ namespace LinqToDB.Internal.SqlQuery
 				visitor.Visit(column.Expression);
 
 				if (visitor.HasReference)
+				{
+					needsOrderBy = false;
 					return false;
+				}
 
 				if (visitor.IsAggregation)
 				{
@@ -1222,6 +1234,7 @@ namespace LinqToDB.Internal.SqlQuery
 				}
 			}
 
+			needsOrderBy = visitor.CanBeAffectedByOrderBy;
 			return hasAggregation;
 		}
 

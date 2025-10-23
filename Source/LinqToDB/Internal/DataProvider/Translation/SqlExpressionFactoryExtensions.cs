@@ -361,7 +361,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			IEnumerable<SqlWindowOrderItem>? orderBy = null,
 			SqlFrameClause? frameClause = null,
 			SqlSearchCondition? filter = null,
-			bool isAggregate = false
+			bool isAggregate = false,
+			bool canBeAffectedByOrderBy = false
 		)
 		{
 			return new SqlWindowFunction(dataType, functionName, arguments, argumentsNullability,
@@ -371,7 +372,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				orderBy: orderBy,
 				filter: filter,
 				frameClause: frameClause,
-				isAggregate: isAggregate);
+				isAggregate: isAggregate,
+				canBeAffectedByOrderBy : canBeAffectedByOrderBy);
 		}
 
 		#region String functions

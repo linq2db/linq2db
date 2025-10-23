@@ -76,7 +76,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 						var fn = factory.WindowFunction(valueType, "STRING_AGG",
 							[new SqlFunctionArgument(value, modifier: aggregateModifier), new SqlFunctionArgument(separator)],
 							[true, true],
-							isAggregate: true, withinGroup: withinGroup);
+							isAggregate: true, 
+							withinGroup: withinGroup,
+							canBeAffectedByOrderBy: true);
 
 						composer.SetResult(factory.Coalesce(fn, factory.Value(valueType, string.Empty)));
 					}))

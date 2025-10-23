@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 
@@ -135,6 +135,18 @@ namespace LinqToDB.Internal.SqlQuery
 
 			return table;
 		}
+
+		/*
+		public static SqlWindowFunction CreateCount(this ISqlTableSource table, MappingSchema mappingSchema)
+		{
+			return new SqlWindowFunction(mappingSchema.GetDbDataType(typeof(int)), "COUNT",
+				// unused parameter to make expr unique
+				[new SqlFunctionArgument(new SqlFragment("*", new SqlValue(table.SourceID)))],
+				[],
+				canBeNull: false,
+				canBeAffectedByOrderBy: false);
+		}
+		*/
 
 		public static SqlFunction CreateCount(this ISqlTableSource table, MappingSchema mappingSchema)
 		{

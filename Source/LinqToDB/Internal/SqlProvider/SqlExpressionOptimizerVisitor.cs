@@ -1287,7 +1287,9 @@ namespace LinqToDB.Internal.SqlProvider
 		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
 			var saveColumnExpression = _columnExpression;
-			_columnExpression = expression;
+
+			if (column.Parent != null && QueryHelper.IsAggregationQuery(column.Parent))
+				_columnExpression = expression;
 
 			var result = base.VisitSqlColumnExpression(column, expression);
 

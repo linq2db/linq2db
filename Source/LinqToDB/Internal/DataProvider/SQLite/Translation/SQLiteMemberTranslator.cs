@@ -277,7 +277,8 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 							var fn = factory.WindowFunction(valueType, "GROUP_CONCAT",
 								[new SqlFunctionArgument(value), new SqlFunctionArgument(separator)],
 								[true, true],
-								isAggregate : true);
+								isAggregate : true,
+								canBeAffectedByOrderBy: true);
 
 							composer.SetResult(factory.Coalesce(fn, factory.Value(valueType, string.Empty)));
 						}));

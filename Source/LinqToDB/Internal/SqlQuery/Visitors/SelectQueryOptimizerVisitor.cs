@@ -1410,6 +1410,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			var nullability = NullabilityContext.GetContext(parentQuery);
 
+			if (!subQuery.OrderBy.IsEmpty && QueryHelper.IsAggregationQuery(parentQuery, out var needsOrderBy) && needsOrderBy)
+			{
+				// not allowed to move to parent if it has aggregates
+				return false;
+			}
+		
 			// Check columns
 			//
 
@@ -1429,15 +1435,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						var isWindowFunction = QueryHelper.IsWindowFunction(sqlExpr);
 						var isAggregationFunction = QueryHelper.IsAggregationFunction(sqlExpr);
 
-						if (!subQuery.OrderBy.IsEmpty)
-						{
-							isNotValid = true;
-							return;
-						}
-
 						if (isWindowFunction || isAggregationFunction)
 						{
-							containsWindowFunction    = containsWindowFunction    || isWindowFunction;
+							containsWindowFunction = containsWindowFunction    || isWindowFunction;
 							containsAggregateFunction = containsAggregateFunction || isAggregationFunction;
 
 							sqlExpr.VisitAll(se =>

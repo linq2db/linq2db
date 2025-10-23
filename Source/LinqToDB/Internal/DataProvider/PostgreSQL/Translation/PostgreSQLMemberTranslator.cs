@@ -352,7 +352,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 						var fn = factory.WindowFunction(valueType, "STRING_AGG",
 							[new SqlFunctionArgument(value, modifier: aggregateModifier), new SqlFunctionArgument(separator, suffix: suffix)],
 							[true, true],
-							isAggregate: true);
+							isAggregate: true,
+							canBeAffectedByOrderBy: true
+							);
 
 						composer.SetResult(factory.Coalesce(fn, factory.Value(valueType, string.Empty)));
 					}))
