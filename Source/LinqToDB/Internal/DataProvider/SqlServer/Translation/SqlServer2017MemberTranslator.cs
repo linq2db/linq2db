@@ -43,6 +43,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 			{
 				var builder = new AggregateFunctionBuilder()
 				.ConfigureAggregate(c => c
+					.HasSequenceIndex(1)
 					.AllowOrderBy()
 					.AllowFilter()
 					.AllowDistinct(IsDistinctSupportedInStringAgg)
@@ -83,6 +84,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 						composer.SetResult(factory.Coalesce(fn, factory.Value(valueType, string.Empty)));
 					}))
 				.ConfigurePlain(c => c
+					.HasSequenceIndex(1)
 					.TranslateArguments(0)
 					.AllowFilter()
 					.AllowNotNullCheck(true)
@@ -116,7 +118,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 						composer.SetResult(function);
 					}));
 
-				return builder.Build(translationContext, methodCall.Arguments[1], methodCall);
+				return builder.Build(translationContext, methodCall);
 			}
 		}
 	}

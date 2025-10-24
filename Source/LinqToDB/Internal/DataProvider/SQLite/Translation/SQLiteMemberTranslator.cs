@@ -250,6 +250,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 			{
 				var builder = new AggregateFunctionBuilder()
 					.ConfigureAggregate(c => c
+						.HasSequenceIndex(1)
 						.AllowFilter()
 						.AllowNotNullCheck(true)
 						.TranslateArguments(0)
@@ -283,7 +284,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 							composer.SetResult(factory.Coalesce(fn, factory.Value(valueType, string.Empty)));
 						}));
 
-				return builder.Build(translationContext, methodCall.Arguments[1], methodCall);
+				return builder.Build(translationContext, methodCall);
 			}
 
 		}

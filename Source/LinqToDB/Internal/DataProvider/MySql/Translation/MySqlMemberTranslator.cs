@@ -229,6 +229,7 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 			{
 				var builder = new AggregateFunctionBuilder()
 				.ConfigureAggregate(c => c
+					.HasSequenceIndex(1)
 					.AllowOrderBy()
 					.AllowFilter()
 					.AllowDistinct()
@@ -253,7 +254,7 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 						ISqlExpression? suffix = null;
 						if (info.OrderBySql.Length > 0)
 						{
-							using var sb   = Pools.StringBuilder.Allocate();
+							using var sb = Pools.StringBuilder.Allocate();
 
 							var args = info.OrderBySql.Select(o => o.expr).ToArray();
 
@@ -294,6 +295,7 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 						composer.SetResult(factory.Coalesce(fn, factory.Value(valueType, string.Empty)));
 					}))
 				.ConfigurePlain(c => c
+					.HasSequenceIndex(1)
 					.TranslateArguments(0)
 					.AllowFilter()
 					.AllowNotNullCheck(true)
@@ -327,7 +329,7 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 						composer.SetResult(function);
 					}));
 
-				return builder.Build(translationContext, methodCall.Arguments[1], methodCall);
+				return builder.Build(translationContext, methodCall);
 			}
 		}
 

@@ -126,6 +126,20 @@ namespace LinqToDB.Internal.Common
 			return callMethodInfo;
 		}
 
+		public static bool IsEqualParameters(ICollection<ParameterInfo> params1, ICollection<ParameterInfo> params2)
+		{
+			if (params1.Count != params2.Count)
+				return false;
+			using var enum1 = params1.GetEnumerator();
+			using var enum2 = params2.GetEnumerator();
+			while (enum1.MoveNext() && enum2.MoveNext())
+			{
+				if (enum1.Current?.ParameterType != enum2.Current?.ParameterType)
+					return false;
+			}
+			return true;
+		}
+
 		public static Type GetEnumerableElementType(Type type)
 		{
 			var genericType = typeof(IEnumerable<>).GetGenericType(type);

@@ -51,8 +51,6 @@ namespace LinqToDB.Internal.DataProvider
 				MaxInListValuesCount                 = int.MaxValue,
 				IsCrossJoinSupported                 = true,
 				IsDistinctSetOperationsSupported     = true,
-				IsCountDistinctSupported             = true,
-				IsAggregationDistinctSupported       = true,
 				AcceptsOuterExpressionInAggregate    = true,
 				IsUpdateFromSupported                = true,
 				DefaultMultiQueryIsolationLevel      = IsolationLevel.RepeatableRead,

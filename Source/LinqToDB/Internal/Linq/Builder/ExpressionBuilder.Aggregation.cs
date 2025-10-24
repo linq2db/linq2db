@@ -46,7 +46,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var builder = SqlContext.BuildContext.Builder;
 
-				var translated = builder.BuildSqlExpression(SqlContext.BuildContext, expression);
+				Expression translated;
+				if (expression is ContextRefExpression { BuildContext: GroupByBuilder.GroupByContext groupByContext })
+				{
+					translated = builder.BuildSqlExpression(groupByContext, SequenceHelper.CreateRef(groupByContext.Element));
+				}
+				else
+				{
+					translated = builder.BuildSqlExpression(SqlContext.BuildContext, expression);
+				}
 
 				if (translated is not SqlPlaceholderExpression placeholder)
 				{
@@ -356,9 +364,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (argIndex < 0)
 				throw new ArgumentException("The provided sequence expression is not an argument of the method call.", nameof(sequenceExpression));
 
-			var elementType = TypeHelper.GetEnumerableElementType(dataSequence.Type);
-			var sourceParam = Expression.Parameter(typeof(IEnumerable<>).MakeGenericType(elementType), "source");
-			var resultType  = methodCall.Type;
+			var sequenceElementType = TypeHelper.GetEnumerableElementType(sequenceExpression.Type);
+			var elementType         = TypeHelper.GetEnumerableElementType(dataSequence.Type);
+			var sourceParam         = Expression.Parameter(typeof(IEnumerable<>).MakeGenericType(elementType), "source");
+			var resultType          = methodCall.Type;
 
 			var sourceParamTyped = EnsureEnumerableType(sourceParam, dataSequence.Type);
 
@@ -366,7 +375,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			Expression[] arguments = [..methodCall.Arguments.Take(argIndex).Select(a => a.Unwrap()), body, ..methodCall.Arguments.Skip(argIndex + 1).Select(a => a.Unwrap())];
 
-			var aggregationBody = Expression.Call(methodCall.Method.DeclaringType!, methodCall.Method.Name, methodCall.Method.IsGenericMethod ? [elementType, resultType] : [], arguments);
+			Type[] typeArguments = methodCall.Method.IsGenericMethod
+				? methodCall.Method.GetGenericArguments().Length == 1 ? [sequenceElementType] : [sequenceElementType, resultType]
+				: [];
+
+			var aggregationBody = Expression.Call(methodCall.Method.DeclaringType!, methodCall.Method.Name,
+				typeArguments,
+				arguments);
 
 			var aggregationLambda = Expression.Lambda(aggregationBody, sourceParam);
 
@@ -541,7 +556,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			if (buildRoot != current)
+			if (buildRoot != current || (contextRef.BuildContext is not GroupByBuilder.GroupByContext && contextRef.BuildContext is not AggregateExecuteBuilder.AggregateRootContext))
 			{
 				var aggregation = BuildAggregateExecuteExpression((MethodCallExpression)functionExpression, sequenceExpression, buildRoot, chain, out var isInAggregation);
 

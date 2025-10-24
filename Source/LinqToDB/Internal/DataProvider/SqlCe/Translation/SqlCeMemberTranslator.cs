@@ -36,6 +36,11 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 			return new GuidMemberTranslator();
 		}
 
+		protected override IMemberTranslator CreateAggregateFunctionsMemberTranslator()
+		{
+			return new SqlCeAggregateFunctionsMemberTranslator();
+		}
+
 		protected class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertSmallMoney(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
@@ -278,6 +283,12 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 
 				return lower;
 			}
+		}
+
+		protected class SqlCeAggregateFunctionsMemberTranslator : AggregateFunctionsMemberTranslatorBase
+		{
+			protected override bool IsCountDistinctSupported       => false;
+			protected override bool IsAggregationDistinctSupported => false;
 		}
 	}
 }

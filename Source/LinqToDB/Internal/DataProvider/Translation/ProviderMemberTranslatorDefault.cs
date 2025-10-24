@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Globalization;
 using System.Linq.Expressions;
 
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
@@ -43,6 +45,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return new WindowFunctionsMemberTranslator();
 		}
 
+		protected virtual IMemberTranslator CreateAggregateFunctionsMemberTranslator()
+		{
+			return new AggregateFunctionsMemberTranslatorBase();
+		}
+
 		protected ProviderMemberTranslatorDefault()
 		{
 			InitDefaultTranslators();
@@ -68,6 +75,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			CombinedMemberTranslator.Add(CreateStringMemberTranslator());
 			CombinedMemberTranslator.Add(CreateGuidMemberTranslator());
 			CombinedMemberTranslator.Add(CreateSqlFunctionsMemberTranslator());
+			CombinedMemberTranslator.Add(CreateAggregateFunctionsMemberTranslator());
 
 			var windowFunctionsTranslator = CreateWindowFunctionsMemberTranslator();
 			if (windowFunctionsTranslator != null)

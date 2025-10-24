@@ -34,10 +34,16 @@ namespace LinqToDB.Linq.Translation
 			return this;
 		}
 
-		public Expression? Build(ITranslationContext ctx, Expression sequenceExpr, MethodCallExpression functionCall)
+		public Expression? Build(ITranslationContext ctx, MethodCallExpression functionCall)
 		{
 			if (_plain.BuildAction != null)
 			{
+				if (_aggregate.SequenceIndex == null)
+				{
+					throw new InvalidOperationException("Sequence index must be specified for plain mode when aggregate mode is configured.");
+				}
+
+				var sequenceExpr = functionCall.Arguments[_aggregate.SequenceIndex.Value];
 				var arrayResult = ctx.BuildArrayAggregationFunction(
 					sequenceExpr,
 					functionCall,
@@ -50,11 +56,18 @@ namespace LinqToDB.Linq.Translation
 				}
 			}
 
+			if (_aggregate.SequenceIndex == null)
+			{
+				throw new InvalidOperationException("Sequence index must be specified for aggregate mode.");
+			}
+
+			var sequenceExprAggregate = functionCall.Arguments[_aggregate.SequenceIndex.Value];
+
 			return ctx.BuildAggregationFunction(
-				sequenceExpr,
+				sequenceExprAggregate,
 				functionCall,
 				_aggregate.ToAllowedOps(),
-				agg => Combine(ctx, agg, functionCall, _aggregate, sequenceExpr, false));
+				agg => Combine(ctx, agg, functionCall, _aggregate, sequenceExprAggregate, false));
 		}
 
 		private (ISqlExpression? sql, SqlErrorExpression? error, Expression? fallbackExpression) Combine(
@@ -86,7 +99,7 @@ namespace LinqToDB.Linq.Translation
 			}
 
 			ISqlExpression? valueSql = null;
-			if (raw.ValueExpression != null)
+			if (raw.ValueExpression != null && config.HasValue)
 			{
 				if (!raw.TranslateExpression(raw.ValueExpression, out valueSql, out var vErr))
 				{
@@ -174,7 +187,29 @@ namespace LinqToDB.Linq.Translation
 
 					filterSql = filterExprSql as SqlSearchCondition ?? new SqlSearchCondition().Add(new SqlPredicate.Expr(filterExprSql!));
 				}
+			}
 
+			if (config.FilterLambdaIndex != null)
+			{
+				var lambdaIndex = config.FilterLambdaIndex.Value;
+				var filterLambda = functionCall.Arguments[lambdaIndex].UnwrapLambda();
+
+				if (!raw.TranslateLambdaExpression(filterLambda, out var filterExprSql, out var error))
+				{
+					return (null, error, null);
+				}
+
+				if (filterExprSql is SqlSearchCondition searchCondition)
+				{
+					if (filterSql == null)
+					{
+						filterSql = searchCondition;
+					}
+					else
+					{
+						filterSql = filterSql.Add(searchCondition);
+					}
+				}
 			}
 
 			if (filterSql != null && valueSql != null && config.AllowNotNullCheckMode.HasValue && filterSql is { IsAnd: true })
@@ -197,6 +232,7 @@ namespace LinqToDB.Linq.Translation
 			var info = new AggregateBuildInfo(
 				factory,
 				valueSql,
+				raw.ValueExpression,
 				itemsSql,
 				filterSql,
 				raw.SelectQuery,
@@ -204,6 +240,7 @@ namespace LinqToDB.Linq.Translation
 				raw.ValueParameter,
 				orderSql,
 				translatedArgs,
+				raw.IsGroupBy,
 				raw.IsDistinct,
 				isNullFiltered,
 				plainMode
@@ -220,12 +257,22 @@ namespace LinqToDB.Linq.Translation
 			if (composer.Fallback != null)
 			{
 				var fallbackConfig = config.Clone();
+				fallbackConfig.FallbackExpression = null;
+
 				var fallbackBuilder = new AggregateFallbackModeBuilder(fallbackConfig);
 				composer.Fallback(fallbackBuilder);
 
+				var newCall = fallbackConfig.FallbackExpression ?? functionCall;
+
+				// Temporary hack to extract sequence expression from MethodCallExpression
+				if (fallbackConfig.FallbackExpression != null)
+				{
+					sequenceExpr = ((MethodCallExpression)newCall).Arguments[0];
+				}
+
 				var fallbackResult = ctx.BuildAggregationFunction(
 					sequenceExpr,
-					functionCall,
+					newCall,
 					_plain.ToAllowedOps(),
 					agg => Combine(ctx, agg, functionCall, _plain, sequenceExpr, true));
 
@@ -252,13 +299,17 @@ namespace LinqToDB.Linq.Translation
 
 		public sealed class ModeConfig
 		{
-			internal bool  AllowDistinctFlag;
-			internal bool  AllowFilterFlag;
-			internal bool? AllowNotNullCheckMode;
-			internal bool  AllowOrderByFlag;
-			internal int[] ArgumentIndexes = Array.Empty<int>();
+			public bool        AllowDistinctFlag     { get; set; }
+			public bool        AllowFilterFlag       { get; set; }
+			public bool?       AllowNotNullCheckMode { get; set; }
+			public bool        AllowOrderByFlag      { get; set; }
+			public int[]       ArgumentIndexes       { get; set; } = Array.Empty<int>();
+			public bool        HasValue              { get; set; } = true;
+			public int?        SequenceIndex         { get; set; }
+			public int?        FilterLambdaIndex     { get; set; }
+			public Expression? FallbackExpression    { get; set; }
 
-			internal Action<AggregateComposer>? BuildAction;
+			public Action<AggregateComposer>? BuildAction  { get; set; }
 
 			internal ITranslationContext.AllowedAggregationOperators ToAllowedOps()
 			{
@@ -294,7 +345,11 @@ namespace LinqToDB.Linq.Translation
 					AllowNotNullCheckMode = AllowNotNullCheckMode,
 					AllowOrderByFlag      = AllowOrderByFlag,
 					ArgumentIndexes       = ArgumentIndexes.Length == 0 ? Array.Empty<int>() : (int[])ArgumentIndexes.Clone(),
-					BuildAction           = BuildAction
+					BuildAction           = BuildAction,
+					HasValue              = HasValue,
+					FilterLambdaIndex     = FilterLambdaIndex,
+					SequenceIndex         = SequenceIndex,
+					FallbackExpression    = FallbackExpression
 				};
 			}
 		}
@@ -328,12 +383,35 @@ namespace LinqToDB.Linq.Translation
 				Config.AllowNotNullCheckMode = removeFromFilter;
 				return (TFinalBuilder)this;
 			}
+
+			public TFinalBuilder HasValue(bool hasValue = true)
+			{
+				Config.HasValue = hasValue;
+				return (TFinalBuilder)this;
+			}
+
+			public TFinalBuilder HasFilterLambda(int? argumentIndex)
+			{
+				Config.FilterLambdaIndex = argumentIndex;
+				return (TFinalBuilder)this;
+			}
+			
+			public TFinalBuilder HasSequenceIndex(int? argumentIndex)
+			{
+				Config.SequenceIndex = argumentIndex;
+				return (TFinalBuilder)this;
+			}
 		}
 
 		public sealed class AggregateFallbackModeBuilder : AggregateModeBuilderBase<AggregateFallbackModeBuilder>
 		{
 			internal AggregateFallbackModeBuilder(ModeConfig config) : base(config)
 			{
+			}
+
+			public void FallbackExpression(Expression? fallbackExpression)
+			{
+				Config.FallbackExpression = fallbackExpression;
 			}
 		}
 
@@ -359,6 +437,7 @@ namespace LinqToDB.Linq.Translation
 		public sealed record AggregateBuildInfo(
 			ISqlExpressionFactory                                       Factory,
 			ISqlExpression?                                             Value,
+			Expression?                                                 ValueExpression,
 			ISqlExpression[]                                            Values,
 			SqlSearchCondition?                                         FilterCondition,
 			SelectQuery?                                                SelectQuery,
@@ -366,6 +445,7 @@ namespace LinqToDB.Linq.Translation
 			ParameterExpression?                                        ValueParameter,
 			(ISqlExpression expr, bool desc, Sql.NullsPosition nulls)[] OrderBySql,
 			ISqlExpression?[]                                           Arguments,
+			bool                                                        IsGroupBy,
 			bool                                                        IsDistinct,
 			bool                                                        IsNullFiltered,
 			bool                                                        PlainMode)
@@ -375,19 +455,20 @@ namespace LinqToDB.Linq.Translation
 
 		public sealed class AggregateComposer
 		{
-			public AggregateComposer(ISqlExpressionFactory factory, AggregateBuildInfo buildInfo, ISqlExpressionTranslator translator)
+			public AggregateComposer(ISqlExpressionFactory factory, AggregateBuildInfo buildInfo, IAggregationContext aggregationContext)
 			{
 				Factory = factory;
 				BuildInfo = buildInfo;
-				Translator = translator;
+				AggregationContext = aggregationContext;
 			}
 
-			public ISqlExpression?                       Result     { get; private set; }
-			public SqlErrorExpression?                   Error      { get; private set; }
-			public ISqlExpressionFactory                 Factory    { get; }
-			public AggregateBuildInfo                    BuildInfo  { get; }
-			public ISqlExpressionTranslator              Translator { get; }
-			public Action<AggregateFallbackModeBuilder>? Fallback   { get; private set; }
+			public ISqlExpression?                       Result             { get; private set; }
+			public SqlErrorExpression?                   Error              { get; private set; }
+			public ISqlExpressionFactory                 Factory            { get; }
+			public AggregateBuildInfo                    BuildInfo          { get; }
+			public ISqlExpressionTranslator              Translator         => AggregationContext;
+			public IAggregationContext                   AggregationContext { get; }
+			public Action<AggregateFallbackModeBuilder>? Fallback           { get; private set; }
 
 			public void SetResult(ISqlExpression sql) => Result = sql;
 			public void SetError(SqlErrorExpression error) => Error = error;
