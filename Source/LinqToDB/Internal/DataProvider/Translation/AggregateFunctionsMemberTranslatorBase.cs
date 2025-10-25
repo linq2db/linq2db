@@ -260,7 +260,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							var fn = factory.Function(resultType, functionName,
 								[new SqlFunctionArgument(argumentValue, modifier : aggregateModifier)],
 								[true, true],
-								canBeNull: !info.IsGroupBy,
+								canBeNull: info.IsGroupBy ? null : true,
 								isAggregate : true,
 								canBeAffectedByOrderBy : false
 							);
