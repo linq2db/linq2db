@@ -116,10 +116,10 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		public Expression? BuildArrayAggregationFunction(
-			Expression                                                                                                      methodsChain,
-			Expression                                                                                                      functionExpression,
-			ITranslationContext.AllowedAggregationOperators                                                                 allowedOperations,
-			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error, Expression? fallbackExpression)> functionFactory)
+			Expression                                                methodsChain,
+			Expression                                                functionExpression,
+			ITranslationContext.AllowedAggregationOperators           allowedOperations,
+			Func<IAggregationContext, BuildAggregationFunctionResult> functionFactory)
 		{
 			if (_buildVisitor.BuildContext == null)
 				return null;
@@ -278,12 +278,18 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (sqlContext != null)
 			{
 				var result = functionFactory(aggregationInfo);
-				if (result.sqlExpr != null)
+				if (result.SqlExpression != null)
 				{
-					return CreatePlaceholder(sqlContext, result.sqlExpr, functionExpression, functionExpression.Type);
+					var placeholder = CreatePlaceholder(sqlContext, result.SqlExpression, functionExpression, functionExpression.Type);
+					if (result.Validator != null)
+					{
+						return new SqlValidateExpression(placeholder, result.Validator);
+					}
+
+					return placeholder;
 				}
 
-				return result.error;
+				return result.ErrorExpression;
 			}
 
 			return null;
@@ -303,6 +309,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					return UnwrapEnumerableCasting(methodCall.Arguments[0]);
 				}
 			}
+
 			return expression;
 		}
 
@@ -400,7 +407,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			Expression                                                                                                      sequenceExpression,
 			Expression                                                                                                      functionExpression,
 			ITranslationContext.AllowedAggregationOperators                                                                 allowedOperations,
-			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error, Expression? fallbackExpression)> functionFactory)
+			Func<IAggregationContext, BuildAggregationFunctionResult> functionFactory)
 		{
 			List<Expression>?                             filterExpression = null;
 			Expression?                                   buildRoot        = null;
@@ -591,17 +598,23 @@ namespace LinqToDB.Internal.Linq.Builder
 			};
 
 			var result = functionFactory(aggregationInfo);
-			if (result.sqlExpr != null)
+			if (result.SqlExpression != null)
 			{
-				return CreatePlaceholder(sqlContext.BuildContext, result.sqlExpr, functionExpression, functionExpression.Type);
+				var placeholder = CreatePlaceholder(sqlContext.BuildContext, result.SqlExpression, functionExpression, functionExpression.Type);
+				if (result.Validator != null)
+				{
+					return new SqlValidateExpression(placeholder, result.Validator);
+				}
+
+				return placeholder;
 			}
 
-			if (result.fallbackExpression != null)
+			if (result.FallbackExpression != null)
 			{
-				return result.fallbackExpression;
+				return result.FallbackExpression;
 			}
 
-			return result.error;
+			return result.ErrorExpression;
 
 			bool IsAllowedOperation(ITranslationContext.AllowedAggregationOperators operation)
 			{

@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.SqlQuery;
@@ -25,31 +27,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod((IEnumerable<int> e) => e.LongCount(x => true), TranslateCount);
 			Registration.RegisterMethod((IQueryable<int>  e) => e.LongCount(),          TranslateCount);
 			Registration.RegisterMethod((IQueryable<int>  e) => e.LongCount(x => true), TranslateCount);
-
-			/*Registration.RegisterMethod((IEnumerable<int>    e) => e.Min(),                    TranslateMinMaxSumAverage);
-			Registration.RegisterMethod((IQueryable<int>     e) => e.Min(),                    TranslateMinMaxSumAverage);
-			Registration.RegisterMethod((IEnumerable<object> e) => e.Min<object, int>(x => 1), TranslateMinMaxSumAverage);
-			Registration.RegisterMethod((IQueryable<object>  e) => e.Min<object, int>(x => 1), TranslateMinMaxSumAverage);
-
-			Registration.RegisterMethod((IEnumerable<int>    e) => e.Max(),                    TranslateMinMaxSumAverage);
-			Registration.RegisterMethod((IQueryable<int>     e) => e.Max(),                    TranslateMinMaxSumAverage);
-			Registration.RegisterMethod((IEnumerable<object> e) => e.Max<object, int>(x => 1), TranslateMinMaxSumAverage);
-			Registration.RegisterMethod((IQueryable<object>  e) => e.Max<object, int>(x => 1), TranslateMinMaxSumAverage);
-
-			Registration.RegisterMethod((IEnumerable<int>    e) => e.Sum(),             TranslateMinMaxSumAverage);
-			Registration.RegisterMethod((IQueryable<int>     e) => e.Sum(),             TranslateMinMaxSumAverage);
-			Registration.RegisterMethod((IEnumerable<object> e) => e.Sum(x => (int)1),  TranslateMinMaxSumAverage);
-			Registration.RegisterMethod((IEnumerable<object> e) => e.Sum(x => (int?)1), TranslateMinMaxSumAverage);
-			Registration.RegisterMethod((IEnumerable<object> e) => e.Sum(x => (double?)1), TranslateMinMaxSumAverage);
-
-
-			
-			Registration.RegisterMethod((IQueryable<object>  e) => e.Sum(x => 1),       TranslateMinMaxSumAverage);
-
-			Registration.RegisterMethod((IEnumerable<int> e) => e.Average(),          TranslateMinMaxSumAverage);
-			Registration.RegisterMethod((IQueryable<int>  e) => e.Average(),          TranslateMinMaxSumAverage);
-			Registration.RegisterMethod((IEnumerable<object> e) => e.Average(x => 1), TranslateMinMaxSumAverage);
-			Registration.RegisterMethod((IQueryable<object>  e) => e.Average(x => 1), TranslateMinMaxSumAverage);*/
 		}
 
 		protected override Expression? TranslateOverrideHandler(ITranslationContext translationContext, Expression memberExpression, TranslationFlags translationFlags)
@@ -158,6 +135,37 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return builder.Build(translationContext, methodCall);
 		}
 
+		static TValue CheckNullValue<TValue>(TValue? maybeNull, string context)
+			where TValue : struct
+		{
+			if (maybeNull is null)
+				throw new InvalidOperationException(
+					$"Function {context} returns non-nullable value, but result is NULL. Use nullable version of the function instead.");
+			return maybeNull.Value;
+		}
+
+		Expression GenerateNullCheckIfNeeded(Expression expression, string methodName)
+		{
+			// in LINQ Min, Max, Avg aggregates throw exception on empty set(so Sum and Count are exceptions which return 0)
+			
+			var checkExpression = expression;
+
+			if (expression.Type.IsValueType && !expression.Type.IsNullable())
+			{
+				checkExpression = Expression.Convert(expression, expression.Type.AsNullable());
+			}
+
+			expression = Expression.Call(
+				typeof(AggregateFunctionsMemberTranslatorBase),
+				nameof(CheckNullValue),
+				[expression.Type],
+				checkExpression,
+				Expression.Constant(methodName)
+			);
+
+			return expression;
+		}
+
 		protected Expression? TranslateMinMaxSumAverage(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			if (methodCall.Method.DeclaringType != typeof(Queryable) && methodCall.Method.DeclaringType != typeof(Enumerable))
@@ -243,6 +251,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							var functionName = methodName == nameof(Enumerable.Average) ? "AVG"
 								: methodName              == nameof(Enumerable.Sum)     ? "SUM"
 								: methodName              == nameof(Enumerable.Min)     ? "MIN" : "MAX";
+
+							if (argumentValue.SystemType?.IsNullableType() == false && functionName is "AVG" or "MIN" or "MAX")
+							{
+								composer.SetValidation(p => GenerateNullCheckIfNeeded(p, methodName));
+							}
 
 							var fn = factory.Function(resultType, functionName,
 								[new SqlFunctionArgument(argumentValue, modifier : aggregateModifier)],

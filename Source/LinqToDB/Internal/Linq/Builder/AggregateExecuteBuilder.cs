@@ -1,7 +1,9 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -63,7 +65,20 @@ namespace LinqToDB.Internal.Linq.Builder
 				return builder.TryBuildSequence(new BuildInfo(buildInfo, marker.InnerExpression));
 			}
 
-			if (translated is not SqlPlaceholderExpression placeholder)
+			SqlPlaceholderExpression?                   translatedPlaceholder = null;
+			Func<SqlPlaceholderExpression, Expression>? validatorFunc         = null;
+
+
+			if (translated is SqlPlaceholderExpression placeholder)
+			{
+				translatedPlaceholder = placeholder;
+			}
+			else if (translated is SqlValidateExpression sqlValidateExpression)
+			{
+				translatedPlaceholder = sqlValidateExpression.SqlPlaceholder;
+				validatorFunc         = sqlValidateExpression.Validator;
+			}
+			else 
 			{
 				if (translated is SqlErrorExpression)
 					return BuildSequenceResult.Error(translated);
@@ -72,7 +87,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var context = new AggregateExecuteContext(sequenceExpression, sequence, lambda.Body.Type)
 			{
-				Placeholder = placeholder,
+				Placeholder          = translatedPlaceholder,
+				Validator            = validatorFunc,
 				OuterJoinParentQuery = isSimple ? null : buildInfo.Parent?.SelectQuery
 			};
 
@@ -179,12 +195,21 @@ namespace LinqToDB.Internal.Linq.Builder
 					CreateWeakOuterJoin(OuterJoinParentQuery, SelectQuery);
 				}
 
-				var result = (Expression)Placeholder;
+				Expression result;
 
-				// ite means that this context was created during aggregation function translation
-				if (Placeholder.Sql is SqlValue)
+				if (flags.IsExpression() && Validator != null)
 				{
-					result = base.MakeExpression(path, flags);
+					result = Validator(Placeholder);
+				}
+				else
+				{
+					result = Placeholder;
+
+					// ite means that this context was created during aggregation function translation
+					if (Placeholder.Sql is SqlValue)
+					{
+						result = base.MakeExpression(path, flags);
+					}
 				}
 
 				return result;
@@ -205,7 +230,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				return null;
 			}
 
-			public override bool IsSingleElement => true;
+			public override bool                                        IsSingleElement => true;
+			public          Func<SqlPlaceholderExpression, Expression>? Validator       { get; set; }
 		}
 
 	}

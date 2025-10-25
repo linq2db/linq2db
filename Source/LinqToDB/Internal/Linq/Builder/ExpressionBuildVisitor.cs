@@ -5243,20 +5243,20 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			public Expression? BuildArrayAggregationFunction(
-				Expression                                                                                                      methodsChain,
-				Expression                                                                                                      functionExpression,
-				AllowedAggregationOperators                                                                                     allowedOperations,
-				Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error, Expression? fallbackExpression)> functionFactory
+				Expression                                                methodsChain,
+				Expression                                                functionExpression,
+				AllowedAggregationOperators                               allowedOperations,
+				Func<IAggregationContext, BuildAggregationFunctionResult> functionFactory
 				)
 			{
 				return Builder.BuildArrayAggregationFunction(methodsChain, functionExpression, allowedOperations, functionFactory);
 			}
 
 			public Expression? BuildAggregationFunction(
-				Expression                                                                                                      methodsChain,
-				Expression                                                                                                      functionExpression,
-				AllowedAggregationOperators                                                                                     allowedOperations,
-				Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error, Expression? fallbackExpression)> functionFactory
+				Expression                                                methodsChain,
+				Expression                                                functionExpression,
+				AllowedAggregationOperators                               allowedOperations,
+				Func<IAggregationContext, BuildAggregationFunctionResult> functionFactory
 				)
 			{
 				return Builder.BuildAggregationFunction(methodsChain, functionExpression, allowedOperations, functionFactory);

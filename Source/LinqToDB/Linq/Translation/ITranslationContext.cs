@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Expressions;
@@ -7,6 +8,23 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq.Translation
 {
+	public record BuildAggregationFunctionResult(
+		ISqlExpression?                             SqlExpression,
+		Func<SqlPlaceholderExpression, Expression>? Validator,
+		SqlErrorExpression?                         ErrorExpression,
+		Expression?                                 FallbackExpression
+	)
+	{
+		public static BuildAggregationFunctionResult Error(SqlErrorExpression errorExpression) =>
+			new BuildAggregationFunctionResult(null, null, errorExpression, null);
+
+		public static BuildAggregationFunctionResult FromSqlExpression(ISqlExpression sqlExpression, Func<SqlPlaceholderExpression, Expression>? validator = null) =>
+			new BuildAggregationFunctionResult(sqlExpression, validator, null, null);
+
+		public static BuildAggregationFunctionResult FromFallback(Expression? fallbackExpression) =>
+			new BuildAggregationFunctionResult(null, null, null, fallbackExpression);
+	};
+
 	public interface ITranslationContext : ISqlExpressionTranslator
 	{
 		[Flags]
@@ -46,17 +64,17 @@ namespace LinqToDB.Linq.Translation
 		bool    TryEvaluate(ISqlExpression    expression, out object? result);
 
 		Expression? BuildArrayAggregationFunction(
-			Expression                                                                                                      methodsChain,
-			Expression                                                                                                      functionExpression,
-			AllowedAggregationOperators                                                                                     allowedOperations,
-			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error, Expression? fallbackExpression)> functionFactory
+			Expression                                                methodsChain,
+			Expression                                                functionExpression,
+			AllowedAggregationOperators                               allowedOperations,
+			Func<IAggregationContext, BuildAggregationFunctionResult> functionFactory
 		);
 
 		Expression? BuildAggregationFunction(
-			Expression                                                                                                      methodsChain,
-			Expression                                                                                                      functionExpression,
-			AllowedAggregationOperators                                                                                     allowedOperations,
-			Func<IAggregationContext, (ISqlExpression? sqlExpr, SqlErrorExpression? error, Expression? fallbackExpression)> functionFactory
+			Expression                                                methodsChain,
+			Expression                                                functionExpression,
+			AllowedAggregationOperators                               allowedOperations,
+			Func<IAggregationContext, BuildAggregationFunctionResult> functionFactory
 		);
 
 		/// <summary>

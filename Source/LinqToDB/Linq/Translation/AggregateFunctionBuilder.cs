@@ -70,7 +70,7 @@ namespace LinqToDB.Linq.Translation
 				agg => Combine(ctx, agg, functionCall, _aggregate, sequenceExprAggregate, false));
 		}
 
-		private (ISqlExpression? sql, SqlErrorExpression? error, Expression? fallbackExpression) Combine(
+		private BuildAggregationFunctionResult Combine(
 			ITranslationContext  ctx,
 			IAggregationContext  raw,
 			MethodCallExpression functionCall,
@@ -86,13 +86,13 @@ namespace LinqToDB.Linq.Translation
 				var argIndex = config.ArgumentIndexes[i];
 				if (argIndex < 0 || argIndex >= functionCall.Arguments.Count)
 				{
-					return (null, ctx.CreateErrorExpression(functionCall, $"Argument index {argIndex.ToString(CultureInfo.InvariantCulture)} out of range", functionCall.Type), null);
+					return BuildAggregationFunctionResult.Error(ctx.CreateErrorExpression(functionCall, $"Argument index {argIndex.ToString(CultureInfo.InvariantCulture)} out of range", functionCall.Type));
 				}
 
 				var argExpr = functionCall.Arguments[argIndex];
 				if (!raw.TranslateExpression(argExpr, out var argSql, out var argErr))
 				{
-					return (null, argErr, null);
+					return BuildAggregationFunctionResult.Error(argErr);
 				}
 
 				translatedArgs[i] = argSql!;
@@ -103,7 +103,7 @@ namespace LinqToDB.Linq.Translation
 			{
 				if (!raw.TranslateExpression(raw.ValueExpression, out valueSql, out var vErr))
 				{
-					return (null, vErr, null);
+					return BuildAggregationFunctionResult.Error(vErr);
 				}
 			}
 
@@ -116,7 +116,7 @@ namespace LinqToDB.Linq.Translation
 					var itemExpr = raw.Items[i];
 					if (!raw.TranslateExpression(itemExpr, out var itemSql, out var itemErr))
 					{
-						return (null, itemErr, null);
+						return BuildAggregationFunctionResult.Error(itemErr);
 					}
 
 					itemsSql[i] = itemSql!;
@@ -129,7 +129,7 @@ namespace LinqToDB.Linq.Translation
 				var obInfo = raw.OrderBy[i];
 				if (!raw.TranslateExpression(obInfo.Expr, out var obSql, out var obErr))
 				{
-					return (null, obErr, null);
+					return BuildAggregationFunctionResult.Error(obErr);
 				}
 
 				orderSql[i] = (obSql!, obInfo.IsDescending, obInfo.Nulls);
@@ -182,7 +182,7 @@ namespace LinqToDB.Linq.Translation
 
 					if (!raw.TranslateExpression(filterCondition, out var filterExprSql, out var fErr))
 					{
-						return (null, fErr, null);
+						return BuildAggregationFunctionResult.Error(fErr);
 					}
 
 					filterSql = filterExprSql as SqlSearchCondition ?? new SqlSearchCondition().Add(new SqlPredicate.Expr(filterExprSql!));
@@ -196,7 +196,7 @@ namespace LinqToDB.Linq.Translation
 
 				if (!raw.TranslateLambdaExpression(filterLambda, out var filterExprSql, out var error))
 				{
-					return (null, error, null);
+					return BuildAggregationFunctionResult.Error(error);
 				}
 
 				if (filterExprSql is SqlSearchCondition searchCondition)
@@ -251,7 +251,7 @@ namespace LinqToDB.Linq.Translation
 
 			if (composer.Error != null)
 			{
-				return (null, composer.Error, null);
+				return BuildAggregationFunctionResult.Error(composer.Error);
 			}
 
 			if (composer.Fallback != null)
@@ -278,23 +278,28 @@ namespace LinqToDB.Linq.Translation
 
 				if (fallbackResult is SqlPlaceholderExpression placeholder)
 				{
-					return (placeholder.Sql, null, null);
+					return BuildAggregationFunctionResult.FromSqlExpression(placeholder.Sql);
+				}
+
+				if (fallbackResult is SqlValidateExpression sqlValidateExpression)
+				{
+					return BuildAggregationFunctionResult.FromSqlExpression(sqlValidateExpression.SqlPlaceholder.Sql, sqlValidateExpression.Validator);
 				}
 
 				if (fallbackResult is SqlErrorExpression errorExpression)
 				{
-					return (null, errorExpression, null);
+					return BuildAggregationFunctionResult.Error(errorExpression);
 				}
 			
-				return (null, null, fallbackResult);
+				return BuildAggregationFunctionResult.FromFallback(fallbackResult);
 			}
 
 			if (composer.Result == null)
 			{
-				return (null, ctx.CreateErrorExpression(functionCall, "Aggregate builder produced no result", functionCall.Type), null);
+				return BuildAggregationFunctionResult.Error(ctx.CreateErrorExpression(functionCall, "Aggregate builder produced no result", functionCall.Type));
 			}
 
-			return (composer.Result, null, null);
+			return BuildAggregationFunctionResult.FromSqlExpression(composer.Result, composer.Validator);
 		}
 
 		public sealed class ModeConfig
@@ -462,16 +467,18 @@ namespace LinqToDB.Linq.Translation
 				AggregationContext = aggregationContext;
 			}
 
-			public ISqlExpression?                       Result             { get; private set; }
-			public SqlErrorExpression?                   Error              { get; private set; }
-			public ISqlExpressionFactory                 Factory            { get; }
-			public AggregateBuildInfo                    BuildInfo          { get; }
-			public ISqlExpressionTranslator              Translator         => AggregationContext;
-			public IAggregationContext                   AggregationContext { get; }
-			public Action<AggregateFallbackModeBuilder>? Fallback           { get; private set; }
+			public ISqlExpression?                             Result             { get; private set; }
+			public SqlErrorExpression?                         Error              { get; private set; }
+			public Func<SqlPlaceholderExpression, Expression>? Validator          { get; private set; }
+			public ISqlExpressionFactory                       Factory            { get; }
+			public AggregateBuildInfo                          BuildInfo          { get; }
+			public ISqlExpressionTranslator                    Translator         => AggregationContext;
+			public IAggregationContext                         AggregationContext { get; }
+			public Action<AggregateFallbackModeBuilder>?       Fallback           { get; private set; }
 
-			public void SetResult(ISqlExpression sql) => Result = sql;
-			public void SetError(SqlErrorExpression error) => Error = error;
+			public void SetResult(ISqlExpression                                 sql)       => Result = sql;
+			public void SetError(SqlErrorExpression                              error)     => Error = error;
+			public void SetValidation(Func<SqlPlaceholderExpression, Expression> validator) => Validator = validator;
 
 			public void SetFallback(Action<AggregateFallbackModeBuilder> fallback)
 			{

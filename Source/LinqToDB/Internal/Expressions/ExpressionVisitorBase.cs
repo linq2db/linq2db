@@ -112,6 +112,11 @@ namespace LinqToDB.Internal.Expressions
 			return node.Update(Visit(node.InnerExpression), VisitAndConvert(node.NotNullExpressions, nameof(VisitSqlDefaultIfEmptyExpression)));
 		}
 
+		public virtual Expression VisitSqlValidateExpression(SqlValidateExpression node)
+		{
+			return node.Update(Visit(node.SqlPlaceholder));
+		}
+
 		public virtual Expression VisitSqlQueryRootExpression(SqlQueryRootExpression node)
 		{
 			return node;
