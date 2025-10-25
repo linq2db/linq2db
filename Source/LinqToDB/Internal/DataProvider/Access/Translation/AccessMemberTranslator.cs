@@ -32,7 +32,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 		protected override IMemberTranslator CreateStringMemberTranslator()
 		{
-			return new StringMemberTranslator();
+			return new AccessStringMemberTranslator();
 		}
 
 		protected override IMemberTranslator CreateGuidMemberTranslator()
@@ -276,7 +276,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 		}
 
-		protected class StringMemberTranslator : StringMemberTranslatorBase
+		protected class AccessStringMemberTranslator : StringMemberTranslatorBase
 		{
 			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 			{
@@ -293,6 +293,23 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 				var fillingString     = factory.Function(valueTypeString, "STRING", valueSymbolsToAdd, paddingChar);
 
 				return factory.Concat(fillingString, value);
+			}
+
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool ignoreNulls)
+			{
+				var builder = new AggregateFunctionBuilder();
+
+				ConfigureConcatWsEmulation(builder, (factory, valueType, separator, valuesExpr) =>
+				{
+					var intDbType = factory.GetDbDataType(typeof(int));
+					var substring = factory.Function(valueType, "Mid",
+						valuesExpr,
+						factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)));
+
+					return substring;
+				});
+
+				return builder.Build(translationContext, methodCall);
 			}
 		}
 

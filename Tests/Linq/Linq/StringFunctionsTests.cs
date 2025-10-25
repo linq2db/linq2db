@@ -381,14 +381,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConcatStringsTest([
-			IncludeDataSources(
-				TestProvName.AllSqlServer,
-				TestProvName.AllPostgreSQL,
-				TestProvName.AllMySql,
-				TestProvName.AllClickHouse,
-				TestProvName.AllSQLite
-			)] string context)
+		public void ConcatStringsTest([DataSources] string context)
 		{
 			var data = GenerateData().OrderBy(_ => _.Id);
 

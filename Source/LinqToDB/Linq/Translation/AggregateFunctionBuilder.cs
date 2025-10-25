@@ -38,12 +38,12 @@ namespace LinqToDB.Linq.Translation
 		{
 			if (_plain.BuildAction != null)
 			{
-				if (_aggregate.SequenceIndex == null)
+				if (_plain.SequenceIndex == null)
 				{
 					throw new InvalidOperationException("Sequence index must be specified for plain mode when aggregate mode is configured.");
 				}
 
-				var sequenceExpr = functionCall.Arguments[_aggregate.SequenceIndex.Value];
+				var sequenceExpr = functionCall.Arguments[_plain.SequenceIndex.Value];
 				var arrayResult = ctx.BuildArrayAggregationFunction(
 					sequenceExpr,
 					functionCall,

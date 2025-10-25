@@ -313,9 +313,12 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 
 							if (info is { IsDistinct: true, OrderBySql.Length: > 0 })
 							{
-								if (info.OrderBySql.Any(o => o.expr != info.Value))
+								if (info.OrderBySql.Any(o => o.expr != value))
 								{
-									composer.SetFallback(c => c.AllowDistinct(false));
+									composer.SetFallback(fc => fc
+										.AllowDistinct(false)
+										.AllowNotNullCheck(null)
+									);
 									return;
 								}
 							}
@@ -333,10 +336,11 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 									if (i > 0) sb.Value.Append(", ");
 									sb.Value.Append('{').Append(i).Append('}');
 									if (info.OrderBySql[i].desc) sb.Value.Append(" DESC");
-									if (info.OrderBySql[i].nulls != Sql.NullsPosition.None)
+
+									if (!info.IsNullFiltered)
 									{
 										sb.Value.Append(" NULLS ");
-										sb.Value.Append(info.OrderBySql[i].nulls == Sql.NullsPosition.First ? "FIRST" : "LAST");
+										sb.Value.Append(info.OrderBySql[i].nulls is Sql.NullsPosition.First or Sql.NullsPosition.None ? "FIRST" : "LAST");
 									}
 								}
 
@@ -358,41 +362,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 							);
 
 							composer.SetResult(factory.Coalesce(fn, factory.Value(valueType, string.Empty)));
-						}))
-					.ConfigurePlain(c => c
-						.HasSequenceIndex(1)
-						.TranslateArguments(0)
-						.AllowFilter()
-						.AllowNotNullCheck(true)
-						.OnBuildFunction(composer =>
-						{
-							var info = composer.BuildInfo;
-							if (info.Values.Length == 0 || info.Argument(0) == null)
-							{
-								composer.SetResult(info.Factory.Value(info.Factory.GetDbDataType(typeof(string)), string.Empty));
-								return;
-							}
-
-							var factory   = info.Factory;
-							var separator = info.Argument(0)!;
-							var dataType  = factory.GetDbDataType(info.Values[0]);
-
-							if (!composer.GetFilteredToNullValues(out IEnumerable<ISqlExpression>? values, out var error))
-							{
-								composer.SetError(error);
-								return;
-							}
-
-							var items = info.IsNullFiltered
-								? values
-								: values.Select(i => factory.Coalesce(i, factory.Value(factory.GetDbDataType(i), ""))).ToArray();
-
-							var function = factory.Function(dataType, "CONCAT_WS",
-								parametersNullability : ParametersNullabilityType.IfAllParametersNullable,
-								[separator, ..items]);
-
-							composer.SetResult(function);
 						}));
+
+				ConfigureConcatWs(builder);
 
 				return builder.Build(translationContext, methodCall);
 			}

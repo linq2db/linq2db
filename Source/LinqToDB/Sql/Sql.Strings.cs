@@ -268,7 +268,7 @@ namespace LinqToDB
 			}
 		}
 
-		/// <summary>
+		/*/// <summary>
 		/// Concatenates NOT NULL strings, using the specified separator between each member.
 		/// </summary>
 		/// <param name="separator">The string to use as a separator. <paramref name="separator" /> is included in the returned string only if <paramref name="arguments" /> has more than one element.</param>
@@ -288,6 +288,23 @@ namespace LinqToDB
 			[ExprParameter(ParameterKind = ExprParameterKind.Values)] params string?[] arguments)
 		{
 			return string.Join(separator, arguments.Where(a => a != null));
+		}*/
+
+		/// <summary>
+		/// Concatenates NOT NULL strings, using the specified separator between each member.
+		/// </summary>
+		/// <param name="separator">The string to use as a separator. <paramref name="separator" /> is included in the returned string only if <paramref name="arguments" /> has more than one element.</param>
+		/// <param name="arguments">A collection that contains the strings to concatenate.</param>
+		/// <returns></returns>
+		[ExpressionMethod(nameof(ConcatStringsImpl))]
+		public static string ConcatStrings(string separator, params string?[] arguments)
+		{
+			return string.Join(separator, arguments.Where(a => a != null));
+		}
+
+		static Expression<Func<string, string?[], string>> ConcatStringsImpl()
+		{
+			return (separator, arguments) => string.Join(separator, arguments.Where(a => a != null));
 		}
 
 		#endregion

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -283,6 +284,16 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 
 							composer.SetResult(factory.Coalesce(fn, factory.Value(valueType, string.Empty)));
 						}));
+
+				ConfigureConcatWsEmulation(builder, (factory, valueType, separator, valuesExpr) =>
+				{
+					var intDbType = factory.GetDbDataType(typeof(int));
+					var substring = factory.Function(valueType, "SUBSTR",
+						valuesExpr,
+						factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)));
+
+					return substring;
+				});
 
 				return builder.Build(translationContext, methodCall);
 			}

@@ -14,7 +14,7 @@ namespace Tests.Linq
 {
 	public class StringJoinTests : TestBase
 	{
-		const string SupportedProviders = TestProvName.AllPostgreSQL + "," + TestProvName.AllSqlServer2017Plus + "," + TestProvName.AllSQLite + "," + TestProvName.AllMySql;
+		const string SupportedProviders = TestProvName.AllPostgreSQL + "," + TestProvName.AllSqlServer2017Plus + "," + TestProvName.AllSQLite + "," + TestProvName.AllMySql + "," + TestProvName.AllClickHouse;
 
 		[Table]
 		sealed class SampleClass
@@ -103,6 +103,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllMariaDB, TestProvName.AllMySql57], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[RequiresCorrelatedSubquery]
 		[Test]
 		public void JoinWithGroupingAndUnsupportedMethod([IncludeDataSources(true, SupportedProviders)] string context)
 		{
@@ -127,6 +128,7 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue(Configuration = TestProvName.AllSqlServer2016Plus, Details = "SQL Server limitation for single select")]
+		[RequiresCorrelatedSubquery]
 		[Test]
 		public void JoinWithGroupingOrdered([IncludeDataSources(true, SupportedProviders)] string context)
 		{
@@ -168,11 +170,84 @@ namespace Tests.Linq
 						.OrderByDescending(x => x.NotNullableValue)
 						.Select(x => x.NullableValue)
 					),
+
 					NotNullableDoubleOrder = string.Join(", ", g
 						.OrderByDescending(x => x.NullableValue)
 						.ThenByDescending(x => x.NotNullableValue)
 						.OrderByDescending(x => x.NotNullableValue)
 						.Select(x => x.NotNullableValue)),
+
+					NotNullableeOrderedCustom = string.Join(", ", g
+						.OrderBy(x => x.NullableValue == null ? 0 : 1)
+						.ThenByDescending(x => x.NotNullableValue)
+							.ThenBy(x => x.NullableValue)
+						.Select(x => x.NotNullableValue)),
+				}
+				into s
+				orderby s.Id
+				select s;
+
+			AssertQuery(query);
+		}
+
+		[ActiveIssue(Configuration = TestProvName.AllSqlServer2016Plus, Details = "SQL Server limitation for single select")]
+		[Test]
+		public void JoinWithGroupingOrderSimple([IncludeDataSources(true, SupportedProviders)] string context)
+		{
+			var       data  = SampleClass.GenerateDataNotUniquerId();
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query = from t in table
+				group t by t.Id
+				into g
+				select new
+				{
+					Id = g.Key,
+
+					NotNullableeOrderedNoNulls = string.Join(", ", g
+						.Where(x => x.NullableValue != null)
+						.OrderBy(x => x.NullableValue)
+						.ThenBy(x => x.Id)
+						.Select(x => x.NullableValue)),
+
+					NotNullableeOrderedNulls = string.Join(", ", g
+						.OrderBy(x => x.NullableValue)
+						.Select(x => x.NullableValue)),
+				}
+				into s
+				orderby s.Id
+				select s;
+
+			AssertQuery(query);
+		}
+
+		[ActiveIssue(Configuration = TestProvName.AllSqlServer2016Plus, Details = "SQL Server limitation for single select")]
+		[Test]
+		public void JoinWithGroupingDistinctSimple([IncludeDataSources(true, SupportedProviders)] string context)
+		{
+			var       data  = SampleClass.GenerateDataNotUniquerId();
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query = from t in table
+				group t by t.Id
+				into g
+				select new
+				{
+					Id = g.Key,
+
+					NotNullableOrderedNoNulls = string.Join(", ", g
+						.Where(x => x.NullableValue != null)
+						.OrderBy(x => x.NullableValue)
+						.ThenBy(x => x.Id)
+						.Select(x => x.NullableValue)
+						.Distinct()),
+
+					NotNullableOrderedNulls = string.Join(", ", g
+						.Select(x => x.NullableValue ?? "")
+						.OrderBy(x => x)
+						.Distinct()),
 				}
 				into s
 				orderby s.Id
@@ -207,8 +282,9 @@ namespace Tests.Linq
 			Assert.That(allAggregated, Is.EqualTo(expected));
 		}
 
-		[ThrowsForProvider(typeof(MySqlException), providers: [TestProvName.AllMariaDB, TestProvName.AllMySql57], ErrorMessage = "Unknown table 't'")]
 		[ActiveIssue(Configuration = TestProvName.AllSqlServer2016Plus, Details = "SQL Server limitation for single select")]
+		[ThrowsForProvider(typeof(MySqlException), providers: [TestProvName.AllMariaDB, TestProvName.AllMySql57], ErrorMessage = "Unknown table 't'")]
+		[RequiresCorrelatedSubquery]
 		[Test]
 		public void JoinAggregateArray([IncludeDataSources(true, SupportedProviders)] string context)
 		{
@@ -238,6 +314,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsForProvider(typeof(MySqlException), providers: [TestProvName.AllMariaDB, TestProvName.AllMySql57], ErrorMessage = "Unknown table 't'")]
+		[RequiresCorrelatedSubquery]
 		[Test]
 		public void JoinAggregateArrayNotNull([IncludeDataSources(true, SupportedProviders)] string context)
 		{

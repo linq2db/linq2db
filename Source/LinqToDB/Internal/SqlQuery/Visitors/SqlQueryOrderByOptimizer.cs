@@ -218,6 +218,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				if (!QueryHelper.IsAggregationQuery(element.SelectQuery, out var needsOrderBy) || !needsOrderBy)
 					_disableOrderBy = true;
+				else
+					_disableOrderBy = false;
 			}
 
 			var newElement = base.VisitSqlFromClause(element);

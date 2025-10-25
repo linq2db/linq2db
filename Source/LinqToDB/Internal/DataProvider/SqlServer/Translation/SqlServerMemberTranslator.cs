@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -221,6 +222,13 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				var stringToAdd  = factory.Function(valueTypeString, "REPLICATE", paddingChar, symbolsToAdd);
 				
 				return factory.Add(valueTypeString, stringToAdd, value);
+			}
+
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool ignoreNulls)
+			{
+				var builder = new AggregateFunctionBuilder();
+				ConfigureConcatWs(builder);
+				return builder.Build(translationContext, methodCall);
 			}
 		}
 

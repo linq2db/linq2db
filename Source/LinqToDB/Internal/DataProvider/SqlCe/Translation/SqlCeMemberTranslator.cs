@@ -28,7 +28,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 
 		protected override IMemberTranslator CreateStringMemberTranslator()
 		{
-			return new StringMemberTranslator();
+			return new SqlCeStringMemberTranslator();
 		}
 
 		protected override IMemberTranslator CreateGuidMemberTranslator()
@@ -239,7 +239,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 			}
 		}
 
-		protected class StringMemberTranslator : StringMemberTranslatorBase
+		protected class SqlCeStringMemberTranslator : StringMemberTranslatorBase
 		{
 			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 			{
@@ -259,6 +259,25 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 
 				return factory.Add(valueTypeString, stringToAdd, value);
 			}
+
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool ignoreNulls)
+			{
+				var builder = new AggregateFunctionBuilder();
+
+				ConfigureConcatWsEmulation(builder, (factory, valueType, separator, valuesExpr) =>
+				{
+					var intDbType = factory.GetDbDataType(typeof(int));
+					var substring = factory.Function(valueType, "SUBSTRING",
+						valuesExpr,
+						factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)),
+						factory.Value(intDbType, int.MaxValue));
+
+					return substring;
+				});
+
+				return builder.Build(translationContext, methodCall);
+			}
+
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
