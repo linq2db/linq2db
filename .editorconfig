@@ -756,6 +756,8 @@ dotnet_diagnostic.MA0168.severity = error
 dotnet_diagnostic.MA0169.severity = none
 # MA0170: Type cannot be used as an attribute argument
 dotnet_diagnostic.MA0170.severity = none
+# MA0176: Optimize guid creation
+dotnet_diagnostic.MA0176.severity = none
 ################################################################################################
 # LindhartAnalyserMissingAwaitWarningVariable: Possible unwanted Task returned from method.
 dotnet_diagnostic.LindhartAnalyserMissingAwaitWarningVariable.severity = error
