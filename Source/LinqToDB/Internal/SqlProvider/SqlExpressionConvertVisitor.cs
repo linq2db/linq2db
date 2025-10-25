@@ -878,6 +878,20 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
+		protected override IQueryElement VisitSqlExtendedFunction(SqlExtendedFunction element)
+		{
+			var newElement = base.VisitSqlExtendedFunction(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			newElement = ConvertSqlExtendedFunction(element);
+			if (!ReferenceEquals(newElement, element))
+				return Visit(Optimize(newElement));
+
+			return element;
+		}
+
 		protected override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
 		{
 			var saveNullabilityContext = NullabilityContext;
@@ -1186,6 +1200,33 @@ namespace LinqToDB.Internal.SqlProvider
 		public virtual ISqlExpression ConvertSqlExpression(SqlExpression element)
 		{
 			return element;
+		}
+
+		public virtual ISqlExpression ConvertSqlExtendedFunction(SqlExtendedFunction func)
+		{
+			switch (func.FunctionName)
+			{
+				case "MAX":
+				case "MIN":
+				{
+					if (func.SystemType == typeof(bool) || func.SystemType == typeof(bool?))
+					{
+						if (func.Arguments[0].Expression is not ISqlPredicate)
+						{
+							var predicate = new SqlPredicate.Expr(func.Arguments[0].Expression);
+							var argument  = func.Arguments[0].WithExpression(new SqlConditionExpression(predicate, new SqlValue(1), new SqlValue(0)));
+							var newFunc   = func.WithArguments(new[] { argument }, func.ArgumentsNullability);
+							newFunc = newFunc.WithType(MappingSchema.GetDbDataType(typeof(int)));
+							return newFunc;
+						}
+
+					}
+
+					break;
+				}
+			}
+
+			return func;
 		}
 
 		public virtual ISqlExpression ConvertSqlFunction(SqlFunction func)

@@ -268,6 +268,32 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			{ DataType.IPv6      , "toIPv6"       },
 		};
 
+		public override ISqlExpression ConvertSqlExtendedFunction(SqlExtendedFunction func)
+		{
+			switch (func.FunctionName)
+			{
+				case "MAX":
+				case "MIN":
+				case "AVG":
+				case "SUM":
+				{
+					var canBeNullable = func.CanBeNullable(NullabilityContext);
+					var suffix        = canBeNullable ? "OrNull" : null;
+
+					// use standard-compatible aggregates
+					// https://github.com/ClickHouse/ClickHouse/pull/16123
+					if (func.IsAggregate && _providerOptions.UseStandardCompatibleAggregates)
+					{
+						return func.WithFunctionName(func.FunctionName.ToLowerInvariant() + suffix);
+					}
+
+					break;
+				}
+			}
+
+			return base.ConvertSqlExtendedFunction(func);
+		}
+
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
 			switch (func.Name)

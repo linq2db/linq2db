@@ -457,6 +457,14 @@ namespace LinqToDB.SqlQuery
 			Expression = sqlExpression;
 			Suffix     = suffix;
 		}
+
+		public SqlFunctionArgument WithExpression(SqlConditionExpression sqlExpression)
+		{
+			if (ReferenceEquals(Expression, sqlExpression))
+				return this;
+
+			return new SqlFunctionArgument(sqlExpression, Modifier, Suffix);
+		}
 	}
 
 	public class SqlFrameBoundary : QueryElement
