@@ -260,7 +260,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 						.AllowOrderBy()
 						.AllowFilter()
 						.AllowDistinct()
-						.AllowNotNullCheck(true)
+						.AllowNotNullCheck(false)
 						.TranslateArguments(0)
 						.OnBuildFunction(composer =>
 						{
