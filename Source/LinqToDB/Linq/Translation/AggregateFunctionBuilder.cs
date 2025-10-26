@@ -191,7 +191,7 @@ namespace LinqToDB.Linq.Translation
 
 			if (config.FilterLambdaIndex != null)
 			{
-				var lambdaIndex = config.FilterLambdaIndex.Value;
+				var lambdaIndex  = config.FilterLambdaIndex.Value;
 				var filterLambda = functionCall.Arguments[lambdaIndex].UnwrapLambda();
 
 				if (!raw.TranslateLambdaExpression(filterLambda, out var filterExprSql, out var error))
@@ -199,17 +199,17 @@ namespace LinqToDB.Linq.Translation
 					return BuildAggregationFunctionResult.Error(error);
 				}
 
-				if (filterExprSql is SqlSearchCondition searchCondition)
+				if (filterSql == null)
 				{
-					if (filterSql == null)
-					{
-						filterSql = searchCondition;
-					}
-					else
-					{
-						filterSql = filterSql.Add(searchCondition);
-					}
+					filterSql = new SqlSearchCondition();
 				}
+
+				if (filterExprSql is not ISqlPredicate predicate)
+				{
+					predicate = new SqlPredicate.Expr(filterExprSql);
+				}
+
+				filterSql.Predicates.Add(predicate);
 			}
 
 			if (filterSql != null && valueSql != null && config.AllowNotNullCheckMode.HasValue && filterSql is { IsAnd: true })

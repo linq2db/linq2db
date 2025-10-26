@@ -3128,6 +3128,17 @@ namespace LinqToDB.Internal.Linq.Builder
 			return true;
 		}
 
+		public override Expression VisitSqlValidateExpression(SqlValidateExpression node)
+		{
+			if (_buildPurpose == BuildPurpose.Sql && _buildFlags.HasFlag(BuildFlags.ForKeys))
+			{
+				if (node.InnerExpression is SqlPlaceholderExpression)
+					return node.InnerExpression;
+			}
+
+			return base.VisitSqlValidateExpression(node);
+		}
+
 		static Expression SimplifyConvert(Expression expression)
 		{
 			expression = expression.UnwrapConvert();
