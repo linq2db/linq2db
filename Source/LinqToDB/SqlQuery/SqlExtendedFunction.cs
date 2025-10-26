@@ -290,7 +290,11 @@ namespace LinqToDB.SqlQuery
 
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			writer.Append(FunctionName).Append('(');
+			writer
+				//.DebugAppendUniqueId(this)
+				.Append(FunctionName)
+				.Append('(');
+
 			for (var i = 0; i < Arguments.Count; i++)
 			{
 				if (i > 0)

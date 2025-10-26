@@ -46,6 +46,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (buildResult.BuildContext == null)
 					return buildResult;
 
+				// Force initialization of sequence
+				_ = builder.BuildExtractExpression(buildResult.BuildContext, SequenceHelper.CreateRef(buildResult.BuildContext));
+
 				sequence = new SubQueryContext(buildResult.BuildContext);
 				sequence = new AggregateRootContext(sequence, sequenceExpression);
 				placeholderSequence = sequence;

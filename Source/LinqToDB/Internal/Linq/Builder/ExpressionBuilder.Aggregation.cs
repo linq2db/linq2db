@@ -404,9 +404,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		public Expression? BuildAggregationFunction( 
-			Expression                                                                                                      sequenceExpression,
-			Expression                                                                                                      functionExpression,
-			ITranslationContext.AllowedAggregationOperators                                                                 allowedOperations,
+			Expression                                                sequenceExpression,
+			Expression                                                functionExpression,
+			ITranslationContext.AllowedAggregationOperators           allowedOperations,
 			Func<IAggregationContext, BuildAggregationFunctionResult> functionFactory)
 		{
 			List<Expression>?                             filterExpression = null;
@@ -435,8 +435,9 @@ namespace LinqToDB.Internal.Linq.Builder
 						break;
 					}
 
-					current = root;
-					continue;
+					// for ensuring that everything will be cached, restart building from root
+					var replaced = functionExpression.Replace(current, root);
+					return BuildSqlExpression(_buildVisitor.BuildContext, replaced);
 				}
 
 				if (current is MethodCallExpression methodCall)
@@ -601,6 +602,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (result.SqlExpression != null)
 			{
 				var placeholder = CreatePlaceholder(sqlContext.BuildContext, result.SqlExpression, functionExpression, functionExpression.Type);
+				placeholder = UpdateNesting(currentRef.BuildContext, placeholder);
 				if (result.Validator != null)
 				{
 					return new SqlValidateExpression(placeholder, result.Validator);
