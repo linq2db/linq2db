@@ -470,7 +470,7 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 
 			if (expr is SqlValidateExpression validateExpression)
 			{
-				return validateExpression.Update(Transform(validateExpression.SqlPlaceholder));
+				return validateExpression.Update(Transform(validateExpression.InnerExpression));
 			}
 
 			return expr;

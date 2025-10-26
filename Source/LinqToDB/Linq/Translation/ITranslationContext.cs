@@ -9,16 +9,16 @@ using LinqToDB.Mapping;
 namespace LinqToDB.Linq.Translation
 {
 	public record BuildAggregationFunctionResult(
-		ISqlExpression?                             SqlExpression,
-		Func<SqlPlaceholderExpression, Expression>? Validator,
-		SqlErrorExpression?                         ErrorExpression,
-		Expression?                                 FallbackExpression
+		ISqlExpression?               SqlExpression,
+		Func<Expression, Expression>? Validator,
+		SqlErrorExpression?           ErrorExpression,
+		Expression?                   FallbackExpression
 	)
 	{
 		public static BuildAggregationFunctionResult Error(SqlErrorExpression errorExpression) =>
 			new BuildAggregationFunctionResult(null, null, errorExpression, null);
 
-		public static BuildAggregationFunctionResult FromSqlExpression(ISqlExpression sqlExpression, Func<SqlPlaceholderExpression, Expression>? validator = null) =>
+		public static BuildAggregationFunctionResult FromSqlExpression(ISqlExpression sqlExpression, Func<Expression, Expression>? validator = null) =>
 			new BuildAggregationFunctionResult(sqlExpression, validator, null, null);
 
 		public static BuildAggregationFunctionResult FromFallback(Expression? fallbackExpression) =>

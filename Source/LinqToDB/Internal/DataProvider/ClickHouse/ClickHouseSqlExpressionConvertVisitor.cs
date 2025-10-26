@@ -282,7 +282,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 					// use standard-compatible aggregates
 					// https://github.com/ClickHouse/ClickHouse/pull/16123
-					if (func.IsAggregate && _providerOptions.UseStandardCompatibleAggregates)
+					if (suffix != null && func.IsAggregate && _providerOptions.UseStandardCompatibleAggregates)
 					{
 						return func.WithFunctionName(func.FunctionName.ToLowerInvariant() + suffix);
 					}
@@ -308,7 +308,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 					// use standard-compatible aggregates
 					// https://github.com/ClickHouse/ClickHouse/pull/16123
-					if (func.IsAggregate && _providerOptions.UseStandardCompatibleAggregates)
+					if (suffix != null && func.IsAggregate && _providerOptions.UseStandardCompatibleAggregates)
 					{
 						return new SqlFunction(func.Type, func.Name.ToLowerInvariant() + suffix, isAggregate: true, func.NullabilityType, canBeNullable, func.Parameters)
 						{

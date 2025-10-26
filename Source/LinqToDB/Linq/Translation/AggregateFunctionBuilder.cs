@@ -281,9 +281,9 @@ namespace LinqToDB.Linq.Translation
 					return BuildAggregationFunctionResult.FromSqlExpression(placeholder.Sql);
 				}
 
-				if (fallbackResult is SqlValidateExpression sqlValidateExpression)
+				if (fallbackResult is SqlValidateExpression sqlValidateExpression && sqlValidateExpression.InnerExpression is SqlPlaceholderExpression validatePlaceholder)
 				{
-					return BuildAggregationFunctionResult.FromSqlExpression(sqlValidateExpression.SqlPlaceholder.Sql, sqlValidateExpression.Validator);
+					return BuildAggregationFunctionResult.FromSqlExpression(validatePlaceholder.Sql, sqlValidateExpression.Validator);
 				}
 
 				if (fallbackResult is SqlErrorExpression errorExpression)
@@ -467,18 +467,18 @@ namespace LinqToDB.Linq.Translation
 				AggregationContext = aggregationContext;
 			}
 
-			public ISqlExpression?                             Result             { get; private set; }
-			public SqlErrorExpression?                         Error              { get; private set; }
-			public Func<SqlPlaceholderExpression, Expression>? Validator          { get; private set; }
-			public ISqlExpressionFactory                       Factory            { get; }
-			public AggregateBuildInfo                          BuildInfo          { get; }
-			public ISqlExpressionTranslator                    Translator         => AggregationContext;
-			public IAggregationContext                         AggregationContext { get; }
-			public Action<AggregateFallbackModeBuilder>?       Fallback           { get; private set; }
+			public ISqlExpression?                       Result             { get; private set; }
+			public SqlErrorExpression?                   Error              { get; private set; }
+			public Func<Expression, Expression>?         Validator          { get; private set; }
+			public ISqlExpressionFactory                 Factory            { get; }
+			public AggregateBuildInfo                    BuildInfo          { get; }
+			public ISqlExpressionTranslator              Translator         => AggregationContext;
+			public IAggregationContext                   AggregationContext { get; }
+			public Action<AggregateFallbackModeBuilder>? Fallback           { get; private set; }
 
 			public void SetResult(ISqlExpression                                 sql)       => Result = sql;
 			public void SetError(SqlErrorExpression                              error)     => Error = error;
-			public void SetValidation(Func<SqlPlaceholderExpression, Expression> validator) => Validator = validator;
+			public void SetValidation(Func<Expression, Expression> validator) => Validator = validator;
 
 			public void SetFallback(Action<AggregateFallbackModeBuilder> fallback)
 			{

@@ -65,8 +65,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				return builder.TryBuildSequence(new BuildInfo(buildInfo, marker.InnerExpression));
 			}
 
-			SqlPlaceholderExpression?                   translatedPlaceholder = null;
-			Func<SqlPlaceholderExpression, Expression>? validatorFunc         = null;
+			SqlPlaceholderExpression?     translatedPlaceholder = null;
+			Func<Expression, Expression>? validatorFunc         = null;
 
 
 			if (translated is SqlPlaceholderExpression placeholder)
@@ -75,10 +75,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 			else if (translated is SqlValidateExpression sqlValidateExpression)
 			{
-				translatedPlaceholder = sqlValidateExpression.SqlPlaceholder;
+				translatedPlaceholder = sqlValidateExpression.InnerExpression as SqlPlaceholderExpression;
 				validatorFunc         = sqlValidateExpression.Validator;
 			}
-			else 
+			
+			if (translatedPlaceholder == null)
 			{
 				if (translated is SqlErrorExpression)
 					return BuildSequenceResult.Error(translated);

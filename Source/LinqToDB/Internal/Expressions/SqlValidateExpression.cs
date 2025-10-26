@@ -7,34 +7,34 @@ namespace LinqToDB.Internal.Expressions
 {
 	public sealed class SqlValidateExpression : Expression
 	{
-		public SqlPlaceholderExpression                   SqlPlaceholder { get; }
-		public Func<SqlPlaceholderExpression, Expression> Validator      { get; }
+		public Expression                   InnerExpression { get; }
+		public Func<Expression, Expression> Validator       { get; }
 
-		public SqlValidateExpression(SqlPlaceholderExpression sqlPlaceholder, Func<SqlPlaceholderExpression, Expression> validator)
+		public SqlValidateExpression(Expression innerExpression, Func<Expression, Expression> validator)
 		{
-			SqlPlaceholder = sqlPlaceholder;
-			Validator      = validator;
+			InnerExpression = innerExpression;
+			Validator       = validator;
 		}
 
 		public override ExpressionType NodeType  => ExpressionType.Extension;
 		public override bool           CanReduce => true;
-		public override Type           Type      => SqlPlaceholder.Type;
+		public override Type           Type      => InnerExpression.Type;
 
-		public override Expression Reduce() => Validator(SqlPlaceholder);
+		public override Expression Reduce() => Validator(InnerExpression);
 
-		public SqlValidateExpression Update(Expression sqlPlaceholder)
+		public SqlValidateExpression Update(Expression innerExpression)
 		{
-			if (ReferenceEquals(SqlPlaceholder, sqlPlaceholder))
+			if (ReferenceEquals(InnerExpression, innerExpression))
 			{
 				return this;
 			}
 
-			return new SqlValidateExpression(SqlPlaceholder, Validator);
+			return new SqlValidateExpression(innerExpression, Validator);
 		}
 
 		bool Equals(SqlValidateExpression other)
 		{
-			return SqlPlaceholder.Equals(other.SqlPlaceholder) && Validator.Equals(other.Validator);
+			return InnerExpression.Equals(other.InnerExpression) && Validator.Equals(other.Validator);
 		}
 
 		public override bool Equals(object? obj)
@@ -44,7 +44,7 @@ namespace LinqToDB.Internal.Expressions
 
 		public override int GetHashCode()
 		{
-			return HashCode.Combine(SqlPlaceholder, Validator);
+			return HashCode.Combine(InnerExpression, Validator);
 		}
 
 		protected override Expression Accept(ExpressionVisitor visitor)
@@ -56,7 +56,7 @@ namespace LinqToDB.Internal.Expressions
 
 		public override string ToString()
 		{
-			return $"V({SqlPlaceholder})";
+			return $"V({InnerExpression})";
 		}
 	}
 }

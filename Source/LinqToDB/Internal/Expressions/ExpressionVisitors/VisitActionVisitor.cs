@@ -327,7 +327,7 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 			}
 			else if (expr is SqlValidateExpression validateExpression)
 			{
-				Visit(validateExpression.SqlPlaceholder);
+				Visit(validateExpression.InnerExpression);
 			}
 			else if (expr.CanReduce)
 			{

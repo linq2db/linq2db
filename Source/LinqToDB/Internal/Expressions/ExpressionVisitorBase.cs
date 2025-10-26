@@ -114,7 +114,7 @@ namespace LinqToDB.Internal.Expressions
 
 		public virtual Expression VisitSqlValidateExpression(SqlValidateExpression node)
 		{
-			return node.Update(Visit(node.SqlPlaceholder));
+			return node.Update(Visit(node.InnerExpression));
 		}
 
 		public virtual Expression VisitSqlQueryRootExpression(SqlQueryRootExpression node)

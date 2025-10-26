@@ -3200,7 +3200,7 @@ namespace LinqToDB.Internal.SqlProvider
 					break;
 
 				case QueryElementType.SqlExtendedFunction:
-					BuildSqlWindowFunction((SqlExtendedFunction)expr);
+					BuildSqlExtendedFunction((SqlExtendedFunction)expr);
 					break;
 
 				default:
@@ -3215,7 +3215,7 @@ namespace LinqToDB.Internal.SqlProvider
 			BuildTypedExpression(castExpression.ToType, castExpression.Expression);
 		}
 
-		protected virtual void BuildSqlWindowFunction(SqlExtendedFunction extendedFunction)
+		protected virtual void BuildSqlExtendedFunction(SqlExtendedFunction extendedFunction)
 		{
 			StringBuilder.Append(extendedFunction.FunctionName);
 			StringBuilder.Append('(');
