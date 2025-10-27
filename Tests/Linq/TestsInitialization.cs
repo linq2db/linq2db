@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Common;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 
 using LinqToDB.Common;
@@ -26,6 +27,31 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
+		// temporary, see SQLite.Runtime.props notes
+		Environment.SetEnvironmentVariable("PreLoadSQLite_BaseDirectory", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "sds"));
+
+#if NET8_0_OR_GREATER
+		// this API is not available in NETFX, but for some reason it works if SDS test run first (which is true now)
+		IntPtr? handle = null;
+		System.Runtime.InteropServices.NativeLibrary.SetDllImportResolver(typeof(System.Data.SQLite.AssemblySourceIdAttribute).Assembly, (module, assembly, searchPath) =>
+		{
+			if (module == "e_sqlite3")
+			{
+				if (handle == null)
+				{
+					handle = assembly.GetType("System.Data.SQLite.UnsafeNativeMethods")
+						?.GetField("_SQLiteNativeModuleHandle", BindingFlags.Static | BindingFlags.NonPublic)
+						?.GetValue(null) as IntPtr?
+					?? throw new InvalidOperationException("Failed to get loaded module. Library code changed?");
+				}
+
+				return handle.Value;
+			}
+
+			return IntPtr.Zero;
+		});
+#endif
+
 #if DEBUG
 		ActivityService.AddFactory(ActivityHierarchyFactory);
 

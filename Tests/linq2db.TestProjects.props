@@ -57,17 +57,6 @@
 		<PackageReference Include="Microsoft.AspNetCore.OData" />
 	</ItemGroup>
 
-	<Target Name="CopySQLiteRuntimes" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' != 'net462'">
-		<ItemGroup>
-			<SQLiteRuntimes Include="$(PkgSourceGear_sqlite3)\runtimes\**\*" />
-		</ItemGroup>
-		<Copy SourceFiles="@(SQLiteRuntimes)" DestinationFolder="$(TargetDir)\runtimes\%(RecursiveDir)" />
-	</Target>
-
-	<Target Name="CopySQLiteRuntimes2" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' == 'net462'">
-		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-x86\native\e_sqlite3.dll"   DestinationFiles="$(TargetDir)\runtimes\win-x86\native\e_sqlite3.dll" />
-		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-x64\native\e_sqlite3.dll"   DestinationFiles="$(TargetDir)\runtimes\win-x64\native\e_sqlite3.dll" />
-		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-arm64\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\runtimes\win-arm64\native\e_sqlite3.dll" />
-	</Target>
+	<Import Project="$(MSBuildThisFileDirectory)\..\SQLite.Runtime.props" />
 
 </Project>

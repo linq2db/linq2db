@@ -766,8 +766,10 @@ namespace Tests.DataProvider
 				case ProviderName.SQLiteClassic:
 				case TestProvName.SQLiteClassicMiniProfilerMapped:
 				case TestProvName.SQLiteClassicMiniProfilerUnmapped:
-				case ProviderName.SQLiteMS:
 					expectedVersion = "3.50.4";
+					break;
+				case ProviderName.SQLiteMS:
+					expectedVersion = "3.46.1";
 					break;
 				default:
 					throw new InvalidOperationException();
@@ -781,6 +783,13 @@ namespace Tests.DataProvider
 
 				Assert.That(version, Is.EqualTo(expectedVersion));
 			}
+		}
+
+		[Test]
+		public void TestDbVersion2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			// second copy of test to ensure that with TestsInitialization runtime resolve code loads right module
+			TestDbVersion(context);
 		}
 
 		[ActiveIssue]

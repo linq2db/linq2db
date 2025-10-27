@@ -16,10 +16,11 @@
 
 				<dependency id="FirebirdSql.Data.FirebirdClient"           version="10.3.3"        />
 				<dependency id="MySqlConnector"                            version="2.4.0"         />
-				<dependency id="AdoNetCore.AseClient"                      version="0.19.3-beta.1" />
+				<dependency id="AdoNetCore.AseClient"                      version="0.19.2"        />
 				<dependency id="System.Data.SQLite"                        version="2.0.2"         />
 				<dependency id="SourceGear.sqlite3"                        version="3.50.4.2"      />
 				<dependency id="Microsoft.Data.SqlClient"                  version="6.1.2"         />
+				<dependency id="Microsoft.Data.Sqlite"                     version="9.0.10"        />
 				<dependency id="Microsoft.SqlServer.Types"                 version="160.1000.6"    />
 				<dependency id="System.Data.Odbc"                          version="9.0.10"        />
 				<dependency id="System.Data.OleDb"                         version="9.0.10"        />

@@ -914,7 +914,9 @@ namespace Tests.DataProvider
 			[Column]                                   public NpgsqlLine?    lineDataType               { get; set; }
 			// inet types
 			[Column]                                   public IPAddress?       inetDataType             { get; set; }
+#pragma warning disable CS0618 // NpgsqlCidr obsolete
 			[Column]                                   public NpgsqlCidr?      cidrDataType             { get; set; }
+#pragma warning restore CS0618
 			[Column  (DbType = "macaddr")]             public PhysicalAddress? macaddrDataType          { get; set; }
 			// PGSQL10+
 			// also supported by ProviderName.PostgreSQL, but it is hard to setup...
@@ -998,7 +1000,9 @@ namespace Tests.DataProvider
 					lineDataType        = new NpgsqlLine(3.3, 4.4, 5.5),
 
 					inetDataType        = IPAddress.Parse("2001:0db8:0000:0042:0000:8a2e:0370:7334"),
+#pragma warning disable CS0618 // NpgsqlCidr obsolete
 					cidrDataType        = new NpgsqlCidr("::ffff:1.2.3.0/120"),
+#pragma warning restore CS0618
 					macaddrDataType     = PhysicalAddress.Parse("08-00-2B-01-02-03"),
 					macaddr8DataType    = PhysicalAddress.Parse("08-00-2B-FF-FE-01-02-03"),
 
@@ -1142,7 +1146,9 @@ namespace Tests.DataProvider
 					lineDataType        = new NpgsqlLine(3.3, 4.4, 5.5),
 
 					inetDataType        = IPAddress.Parse("2001:0db8:0000:0042:0000:8a2e:0370:7334"),
+#pragma warning disable CS0618 // NpgsqlCidr obsolete
 					cidrDataType        = new NpgsqlCidr("::ffff:1.2.3.0/120"),
+#pragma warning restore CS0618
 					macaddrDataType     = PhysicalAddress.Parse("08-00-2B-01-02-03"),
 					macaddr8DataType    = PhysicalAddress.Parse("08-00-2B-FF-FE-01-02-03"),
 

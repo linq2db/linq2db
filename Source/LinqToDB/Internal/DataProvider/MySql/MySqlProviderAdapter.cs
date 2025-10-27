@@ -487,7 +487,9 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				VarBinary  = 601,
 				VarChar    = 253,
 				VarString  = 15,
-				Year       = 13
+				Year       = 13,
+				// 2.5.0+
+				Vector     = 242
 			}
 
 			[Wrapper]

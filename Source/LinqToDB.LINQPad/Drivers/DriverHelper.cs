@@ -10,6 +10,8 @@ using LinqToDB.Mapping;
 
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Text;
+
 
 #if NETFRAMEWORK
 using System.Buffers;
@@ -283,7 +285,20 @@ internal static class DriverHelper
 	// intercepts exceptions from driver to linqpad
 	public static void HandleException(Exception ex, string method)
 	{
-		Notification.Error($"Unhandled error in method '{method}': {ex.Message}\r\n{ex.StackTrace}", "Linq To DB Driver Error");
+		var error = new StringBuilder();
+
+		error.AppendLine(FormattableString.Invariant($"Unhandled error in method '{method}':"));
+
+		var currEx = ex;
+
+		while (currEx != null)
+		{
+			error.AppendLine(currEx.Message);
+			error.AppendLine(currEx.StackTrace);
+			currEx = currEx.InnerException;
+		}
+
+		Notification.Error(error.ToString(), "Linq To DB Driver Error");
 	}
 
 	public static IEnumerable<string> GetAssembliesToAdd(IConnectionInfo cxInfo)

@@ -12,21 +12,24 @@
 		<!--initial version for .NET LATEST packages, referenced from nuspec-->
 		<NetPreLatestForNuget>8.0.0</NetPreLatestForNuget>
 		<NetLatestForNuget>9.0.0</NetLatestForNuget>
+		
 		<!--latest version for .NET LATEST packages (not referenced from nuspec)-->
 		<NetLatest>9.0.10</NetLatest>
 		<NetPreLatest>8.0.21</NetPreLatest>
+		
 		<!--EF 3.1 vesions for netfx support-->
 		<EF3Latest>3.1.32</EF3Latest>
 		<EF3LatestNuget>3.1.0</EF3LatestNuget>
-		
 		<!--used by VersionOverride in project files-->
 		<EF3NpgsqlVersion>4.1.14</EF3NpgsqlVersion>
-		<OracleManagedLinqPadVersion>23.9.1</OracleManagedLinqPadVersion>
+		
+		<!--used by VersionOverride in project files-->
+		<OracleManagedLinqPadVersion>23.26.0</OracleManagedLinqPadVersion>
 	</PropertyGroup>
 	
 	<ItemGroup Label="Build: Analyzers and Tools">
-		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.236"                      />
-		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.61"                       />
+		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.238"                      />
+		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.62"                       />
 		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                      Version="5.0.0-1.25277.114"            />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="5.0.0-1.25277.114"            />
 		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"                   Version="10.0.100-rc.2.25502.107"      />
@@ -82,14 +85,14 @@
 		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="6.1.2"                        />
 		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="$(NetLatest)"                 />
 		<PackageVersion Include="Microsoft.SqlServer.Types"                             Version="160.1000.6"                   />
-		<PackageVersion Include="MySqlConnector"                                        Version="2.4.0"                        />
+		<PackageVersion Include="MySqlConnector"                                        Version="2.5.0-beta.1"                 />
 		<PackageVersion Include="MySql.Data"                                            Version="9.5.0"                        />
 		<PackageVersion Include="Net.IBM.Data.Db2"                                      Version="9.0.0.300"                    />
 		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="9.0.0.300"                    />
 		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="9.0.0.300"                    />
-		<PackageVersion Include="Npgsql"                                                Version="9.0.4"                        Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
+		<PackageVersion Include="Npgsql"                                                Version="10.0.0-rc.1"                  Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
 		<PackageVersion Include="Npgsql"                                                Version="8.0.8"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
-		<PackageVersion Include="Npgsql.NodaTime"                                       Version="9.0.4"                        Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
+		<PackageVersion Include="Npgsql.NodaTime"                                       Version="10.0.0-rc.1"                  Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
 		<PackageVersion Include="Npgsql.NodaTime"                                       Version="8.0.8"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
 		<!--as of 3.1.1 multiple introduced issues blocks update-->
 		<PackageVersion Include="Octonica.ClickHouseClient"                             Version="3.1.3"                        />

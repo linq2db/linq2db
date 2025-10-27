@@ -39,6 +39,7 @@
     <File Path="MIT-LICENSE.txt" />
     <File Path="nuget.config" />
     <File Path="README.md" />
+    <File Path="SQLite.Runtime.props" />
     <File Path="Test.cmd" />
   </Folder>
   <Folder Name="/Build/">
