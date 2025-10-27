@@ -138,7 +138,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 #if NET8_0_OR_GREATER
 			// TODO: review implementation after SqlClient adds support for this type
-			// e.g. check type name
+			// - check type name
+			// - SetField registration conflict
 			if (Adapter.SqlHalfVectorType != null)
 			{
 				var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
@@ -146,10 +147,10 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 				var methodCall = Expression.Call(dataReaderParameter, Adapter.GetSqlVectorReaderMethod!, new[] { typeof(Half) }, indexParameter);
 
-				ReaderExpressions[new ReaderInfo { ToType = Adapter.SqlVectorType, FieldType = typeof(byte[]), DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
+				ReaderExpressions[new ReaderInfo { ToType = Adapter.SqlHalfVectorType, FieldType = typeof(byte[]), DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
 					Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
 
-				SetField<DbDataReader, string>("vector", typeof(byte[]), (r, i) => r.GetString(i));
+				//SetField<DbDataReader, string>("vector", typeof(byte[]), (r, i) => r.GetString(i));
 			}
 #endif
 
