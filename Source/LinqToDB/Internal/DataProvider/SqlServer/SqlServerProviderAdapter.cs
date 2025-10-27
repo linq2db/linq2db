@@ -372,7 +372,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 #if NET8_0_OR_GREATER
 				sqlHalfVectorType = LoadType("SqlVector`1", DataType.Array | DataType.Half, null, true, true, length: 1, typeArguments: [typeof(Half)]);
-#endif
 
 				if (sqlHalfVectorType != null)
 				{
@@ -394,8 +393,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					mappingSchema!.SetValueToSqlConverter(sqlHalfVectorType, converter);
 				}
 			}
+#endif
 
-			return new SqlServerProviderAdapter(
+				return new SqlServerProviderAdapter(
 				provider,
 
 				connectionType,
