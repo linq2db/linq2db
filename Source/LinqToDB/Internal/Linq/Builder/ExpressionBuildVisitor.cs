@@ -40,6 +40,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		NewExpression?             _disableNew;
 		bool                       _preferClientSide;
 
+
+		public string? Alias => _alias;
+
 		NullabilityContext? _nullabilityContext;
 
 		public IBuildContext? BuildContext
@@ -5254,23 +5257,23 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			public Expression? BuildArrayAggregationFunction(
-				Expression                                                methodsChain,
+				int                                                       sequenceExpressionIndex,
 				Expression                                                functionExpression,
 				AllowedAggregationOperators                               allowedOperations,
 				Func<IAggregationContext, BuildAggregationFunctionResult> functionFactory
 				)
 			{
-				return Builder.BuildArrayAggregationFunction(methodsChain, functionExpression, allowedOperations, functionFactory);
+				return Builder.BuildArrayAggregationFunction(sequenceExpressionIndex, functionExpression, allowedOperations, functionFactory);
 			}
 
 			public Expression? BuildAggregationFunction(
-				Expression                                                methodsChain,
+				int                                                sequenceExpressionIndex,
 				Expression                                                functionExpression,
 				AllowedAggregationOperators                               allowedOperations,
 				Func<IAggregationContext, BuildAggregationFunctionResult> functionFactory
 				)
 			{
-				return Builder.BuildAggregationFunction(methodsChain, functionExpression, allowedOperations, functionFactory);
+				return Builder.BuildAggregationFunction(sequenceExpressionIndex, functionExpression, allowedOperations, functionFactory);
 			}
 
 			public bool CanBeEvaluatedOnClient(Expression expression)

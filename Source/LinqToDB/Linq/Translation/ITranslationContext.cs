@@ -64,14 +64,14 @@ namespace LinqToDB.Linq.Translation
 		bool    TryEvaluate(ISqlExpression    expression, out object? result);
 
 		Expression? BuildArrayAggregationFunction(
-			Expression                                                methodsChain,
+			int                                                       sequenceExpressionIndex,
 			Expression                                                functionExpression,
 			AllowedAggregationOperators                               allowedOperations,
 			Func<IAggregationContext, BuildAggregationFunctionResult> functionFactory
 		);
 
 		Expression? BuildAggregationFunction(
-			Expression                                                methodsChain,
+			int                                                       sequenceExpressionIndex,
 			Expression                                                functionExpression,
 			AllowedAggregationOperators                               allowedOperations,
 			Func<IAggregationContext, BuildAggregationFunctionResult> functionFactory

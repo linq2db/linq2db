@@ -147,6 +147,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		Expression GenerateNullCheckIfNeeded(Expression expression, string methodName)
 		{
 			// in LINQ Min, Max, Avg aggregates throw exception on empty set(so Sum and Count are exceptions which return 0)
+
+			if (expression.Type.IsNullable())
+				return expression;
 			
 			var checkExpression = expression;
 

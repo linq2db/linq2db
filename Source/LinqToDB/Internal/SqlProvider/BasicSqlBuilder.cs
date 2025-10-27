@@ -3244,7 +3244,7 @@ namespace LinqToDB.Internal.SqlProvider
 						StringBuilder.Append(' ');
 					}
 
-					BuildExpression(argument.Expression);
+					BuildExpression(argument.Expression, true, i > 0);
 
 					if (argument.Suffix != null)
 					{

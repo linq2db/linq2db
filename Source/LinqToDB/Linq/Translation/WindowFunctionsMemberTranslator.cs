@@ -574,7 +574,7 @@ namespace LinqToDB.Linq.Translation
 
 		public virtual Expression? TranslatePercentileCont(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
-			var result = translationContext.BuildAggregationFunction(methodCall.Arguments[0], methodCall, ITranslationContext.AllowedAggregationOperators.None, ac =>
+			var result = translationContext.BuildAggregationFunction(0, methodCall, ITranslationContext.AllowedAggregationOperators.None, ac =>
 			{
 				var argumentExpr = methodCall.Arguments[1];
 				if (!ac.TranslateExpression(argumentExpr, out var argumentSql, out var error))

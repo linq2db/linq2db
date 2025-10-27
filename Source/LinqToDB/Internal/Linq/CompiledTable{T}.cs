@@ -137,13 +137,20 @@ namespace LinqToDB.Internal.Linq
 				{
 					o.SlidingExpiration = ctx.dataOptions.LinqOptions.CacheSlidingExpirationOrDefault;
 
-					if (!ReplaceAsyncWithSync((MethodCallExpression)key.expression, out var newMethodCall))
+					var correctedExpression = key.expression;
+
+					if (key.expression is MethodCallExpression methodCall)
 					{
-						throw new InvalidOperationException("Cannot convert async method call to sync.");
+						if (!ReplaceAsyncWithSync(methodCall, out var newMethodCall))
+						{
+							throw new InvalidOperationException("Cannot convert async method call to sync.");
+						}
+
+						correctedExpression = newMethodCall;
 					}
 
 					var optimizationContext = new ExpressionTreeOptimizationContext(ctx.dataContext);
-					var exposed = ExpressionBuilder.ExposeExpression(newMethodCall, ctx.dataContext,
+					var exposed = ExpressionBuilder.ExposeExpression(correctedExpression, ctx.dataContext,
 						optimizationContext, ctx.parameterValues, optimizeConditions : false, compactBinary : true);
 
 					var query             = new Query<T>(ctx.dataContext);

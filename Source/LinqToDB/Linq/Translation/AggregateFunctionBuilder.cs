@@ -43,12 +43,11 @@ namespace LinqToDB.Linq.Translation
 					throw new InvalidOperationException("Sequence index must be specified for plain mode when aggregate mode is configured.");
 				}
 
-				var sequenceExpr = functionCall.Arguments[_plain.SequenceIndex.Value];
 				var arrayResult = ctx.BuildArrayAggregationFunction(
-					sequenceExpr,
+					_plain.SequenceIndex.Value,
 					functionCall,
 					_plain.ToAllowedOps(),
-					agg => Combine(ctx, agg, functionCall, _plain, sequenceExpr, true));
+					agg => Combine(ctx, agg, functionCall, _plain, _plain.SequenceIndex.Value, true));
 
 				if (arrayResult is SqlPlaceholderExpression)
 				{
@@ -61,13 +60,11 @@ namespace LinqToDB.Linq.Translation
 				throw new InvalidOperationException("Sequence index must be specified for aggregate mode.");
 			}
 
-			var sequenceExprAggregate = functionCall.Arguments[_aggregate.SequenceIndex.Value];
-
 			return ctx.BuildAggregationFunction(
-				sequenceExprAggregate,
+				_aggregate.SequenceIndex.Value,
 				functionCall,
 				_aggregate.ToAllowedOps(),
-				agg => Combine(ctx, agg, functionCall, _aggregate, sequenceExprAggregate, false));
+				agg => Combine(ctx, agg, functionCall, _aggregate, _aggregate.SequenceIndex.Value, false));
 		}
 
 		private BuildAggregationFunctionResult Combine(
@@ -75,7 +72,7 @@ namespace LinqToDB.Linq.Translation
 			IAggregationContext  raw,
 			MethodCallExpression functionCall,
 			ModeConfig           config,
-			Expression           sequenceExpr,
+			int                  sequenceExpressionIndex,
 			bool                 plainMode)
 		{
 			var factory = ctx.ExpressionFactory;
@@ -264,17 +261,11 @@ namespace LinqToDB.Linq.Translation
 
 				var newCall = fallbackConfig.FallbackExpression ?? functionCall;
 
-				// Temporary hack to extract sequence expression from MethodCallExpression
-				if (fallbackConfig.FallbackExpression != null)
-				{
-					sequenceExpr = ((MethodCallExpression)newCall).Arguments[0];
-				}
-
 				var fallbackResult = ctx.BuildAggregationFunction(
-					sequenceExpr,
+					sequenceExpressionIndex,
 					newCall,
 					_plain.ToAllowedOps(),
-					agg => Combine(ctx, agg, functionCall, _plain, sequenceExpr, true));
+					agg => Combine(ctx, agg, functionCall, _plain, sequenceExpressionIndex, true));
 
 				if (fallbackResult is SqlPlaceholderExpression placeholder)
 				{

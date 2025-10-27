@@ -19,6 +19,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var sequenceExpression = methodCall.Arguments[0];
 			var sequenceArgument = builder.BuildAggregationRootExpression(sequenceExpression);
 
+			AggregateRootContext? aggregateRootContext = null;
 			IBuildContext? sequence            = null;
 			IBuildContext? placeholderSequence = null;
 			var            isSimple            = false;
@@ -49,16 +50,24 @@ namespace LinqToDB.Internal.Linq.Builder
 				// Force initialization of sequence
 				_ = builder.BuildExtractExpression(buildResult.BuildContext, SequenceHelper.CreateRef(buildResult.BuildContext));
 
-				sequence = new SubQueryContext(buildResult.BuildContext);
-				sequence = new AggregateRootContext(sequence, sequenceExpression);
-				placeholderSequence = sequence;
+				sequence             = new SubQueryContext(buildResult.BuildContext);
+				aggregateRootContext = new AggregateRootContext(sequence, sequenceExpression);
+				sequence             = aggregateRootContext;
+				placeholderSequence  = sequence;
 			}
 
 			var lambda = methodCall.Arguments[1].UnwrapLambda();
 
 			var aggregateBody = SequenceHelper.PrepareBody(lambda, sequence);
 
-			var translated = builder.BuildSqlExpression(placeholderSequence, aggregateBody, BuildPurpose.Sql, BuildFlags.None);
+			var translated = builder.BuildSqlExpression(placeholderSequence, aggregateBody);
+
+			if (aggregateRootContext?.FallbackExpression != null)
+			{
+				// Fallback chaining to allow other builders to process the method call
+				var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, aggregateRootContext.FallbackExpression, new SelectQuery()));
+				return buildResult;
+			}
 
 			if (translated is MarkerExpression { MarkerType: MarkerType.AggregationFallback } marker)
 			{
@@ -70,7 +79,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			SqlPlaceholderExpression?     translatedPlaceholder = null;
 			Func<Expression, Expression>? validatorFunc         = null;
-
 
 			if (translated is SqlPlaceholderExpression placeholder)
 			{
@@ -97,11 +105,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			};
 
 			return BuildSequenceResult.FromContext(context);
+
 		}
 
 		public sealed class AggregateRootContext : PassThroughContext
 		{
-			public Expression SequenceExpression { get; }
+			public Expression  SequenceExpression { get; }
+			public Expression? FallbackExpression { get; set; }
 
 			public AggregateRootContext(IBuildContext context, Expression sequenceExpression) : base(context)
 			{
@@ -142,6 +152,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				return buildResult.BuildContext;
 			}
+
+			public void SetFallback(Expression expression)
+			{
+				FallbackExpression = expression;
+			}
 		}
 
 		sealed class AggregateExecuteContext : PassThroughContext
@@ -174,6 +189,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override Type ElementType => _returnType;
 
+			public void InitJoin()
+			{
+				if (OuterJoinParentQuery != null)
+				{
+					CreateWeakOuterJoin(OuterJoinParentQuery, SelectQuery);
+				}
+			}
+
 			void CreateWeakOuterJoin(SelectQuery parentQuery, SelectQuery selectQuery)
 			{
 				if (_joinedTable == null)
@@ -194,10 +217,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (flags.IsRoot() || flags.IsTraverse() || flags.IsAggregationRoot())
 					return path;
 
-				if (OuterJoinParentQuery != null)
-				{
-					CreateWeakOuterJoin(OuterJoinParentQuery, SelectQuery);
-				}
+				InitJoin();
 
 				Expression result;
 
