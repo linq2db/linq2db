@@ -377,6 +377,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 						// ranges
 						AddUdtType(npgsqlRangeTType);
+
 						{
 							void SetRangeConversion<T>(string? fromDbType = null, DataType fromDataType = DataType.Undefined, string? toDbType = null, DataType toDataType = DataType.Undefined)
 							{
