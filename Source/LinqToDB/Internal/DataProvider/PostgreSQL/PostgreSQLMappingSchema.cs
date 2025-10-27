@@ -64,8 +64,10 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 #if SUPPORTS_DATEONLY
 			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => BuildDate(sb, dt, (DateOnly)v));
 
-			// npgsql 10 returns TimeOnly instead of TimeSpan as before
+			// backward compat:
+			// npgsql 10 returns TimeOnly instead of TimeSpan/DateTime as before
 			SetConvertExpression<TimeOnly, TimeSpan>(value => value.ToTimeSpan(), conversionType: ConversionType.FromDatabase);
+			SetConvertExpression<TimeOnly, DateTime>(value => new DateTime(default, value), conversionType: ConversionType.FromDatabase);
 #endif
 
 			// npgsql doesn't support unsigned types except byte (and sbyte)
