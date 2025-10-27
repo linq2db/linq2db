@@ -392,10 +392,10 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 					mappingSchema!.SetValueToSqlConverter(sqlHalfVectorType, converter);
 				}
-			}
 #endif
+			}
 
-				return new SqlServerProviderAdapter(
+			return new SqlServerProviderAdapter(
 				provider,
 
 				connectionType,
