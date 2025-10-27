@@ -137,6 +137,11 @@
 		UInt64,
 
 		/// <summary>
+		/// A half-size floating point number.
+		/// </summary>
+		Half,
+
+		/// <summary>
 		/// A floating point number within the range of -3.40E +38 through 3.40E +38.
 		/// </summary>
 		Single,

@@ -136,6 +136,23 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				SetField<DbDataReader, string>("vector", typeof(byte[]), (r, i) => r.GetString(i));
 			}
 
+#if NET8_0_OR_GREATER
+			// TODO: review implementation after SqlClient adds support for this type
+			// e.g. check type name
+			if (Adapter.SqlHalfVectorType != null)
+			{
+				var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
+				var indexParameter      = Expression.Parameter(typeof(int), "i");
+
+				var methodCall = Expression.Call(dataReaderParameter, Adapter.GetSqlVectorReaderMethod!, new[] { typeof(Half) }, indexParameter);
+
+				ReaderExpressions[new ReaderInfo { ToType = Adapter.SqlVectorType, FieldType = typeof(byte[]), DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
+					Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
+
+				SetField<DbDataReader, string>("vector", typeof(byte[]), (r, i) => r.GetString(i));
+			}
+#endif
+
 			SetProviderField<DateTimeOffset>(Adapter.GetDateTimeOffsetReaderMethod        , dataReaderType: Adapter.DataReaderType);
 			SetProviderField<TimeSpan>      (Adapter.GetTimeSpanReaderMethod              , dataReaderType: Adapter.DataReaderType);
 
@@ -427,6 +444,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					break;
 
 				case DataType.Array | DataType.Single:
+				case DataType.Array | DataType.Half:
 					parameter.Size = 0;
 					break;
 			}
@@ -510,6 +528,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				case DataType.Timestamp               : type = SqlDbType.Timestamp;     break;
 				case DataType.Structured              : type = SqlDbType.Structured;    break;
 				case DataType.Json                    : type = Adapter.JsonDbType;      break;
+				case DataType.Array | DataType.Half   :
 				case DataType.Array | DataType.Single : type = Adapter.VectorDbType;    break;
 			}
 
