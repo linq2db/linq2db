@@ -1,10 +1,13 @@
-﻿namespace LinqToDB
+﻿using System;
+
+namespace LinqToDB
 {
 	/// <summary>
 	/// List of data types, supported by linq2db.
 	/// Provider-level support depends on database capabilities and current implementation
 	/// support level and could vary for different providers.
 	/// </summary>
+	[Flags]
 	public enum DataType
 	{
 		/// <summary>

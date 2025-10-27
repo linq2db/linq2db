@@ -335,6 +335,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					}
 
 					break;
+
 				case DataType.Array | DataType.Single:
 					StringBuilder
 						.Append("VECTOR(")
