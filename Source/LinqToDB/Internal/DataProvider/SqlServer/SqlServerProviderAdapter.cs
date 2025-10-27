@@ -385,7 +385,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					var converter = Expression.Lambda<Action<StringBuilder,SqlDataType,DataOptions,object>>(
 						Expression.Call(
 							null,
-							BuildVectorLiteralMethod,
+							BuildHalfVectorLiteralMethod,
 							sb,
 							ExpressionHelper.Property(ExpressionHelper.Property(Expression.Convert(v, sqlHalfVectorType), "Memory"), "Span")
 							), sb, dt, op, v)
@@ -456,15 +456,11 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			}
 		}
 
-		public static readonly MethodInfo BuildVectorLiteralMethod     = typeof(SqlServerProviderAdapter).GetMethod(nameof(BuildVectorLiteral), BindingFlags.Static | BindingFlags.NonPublic)!;
-		public static readonly MethodInfo BuildHalfVectorLiteralMethod = typeof(SqlServerProviderAdapter).GetMethod(nameof(BuildHalfVectorLiteral), BindingFlags.Static | BindingFlags.NonPublic)!;
+		static readonly MethodInfo BuildVectorLiteralMethod     = typeof(SqlServerProviderAdapter).GetMethod(nameof(BuildVectorLiteral), BindingFlags.Static | BindingFlags.NonPublic)!;
 
 #if !SUPPORTS_SPAN
 		// we need System.Memory dep otherwise
 		static void BuildVectorLiteral(StringBuilder sb, float[] data)
-			=> BuildAnyVectorLiteral(sb, data);
-
-		static void BuildhalfVectorLiteral(StringBuilder sb, Half[] data)
 			=> BuildAnyVectorLiteral(sb, data);
 
 		static void BuildAnyVectorLiteral<T>(StringBuilder sb, T[] data)
@@ -482,6 +478,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			sb.Append(')');
 		}
 #else
+		static readonly MethodInfo BuildHalfVectorLiteralMethod = typeof(SqlServerProviderAdapter).GetMethod(nameof(BuildHalfVectorLiteral), BindingFlags.Static | BindingFlags.NonPublic)!;
+
 		static void BuildVectorLiteral(StringBuilder sb, ReadOnlySpan<float> data) => BuildAnyVectorLiteral(sb, data);
 
 		static void BuildHalfVectorLiteral(StringBuilder sb, ReadOnlySpan<Half> data) => BuildAnyVectorLiteral(sb, data);
