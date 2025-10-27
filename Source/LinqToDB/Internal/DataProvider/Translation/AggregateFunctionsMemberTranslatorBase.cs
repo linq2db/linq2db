@@ -255,7 +255,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 								: methodName              == nameof(Enumerable.Sum)     ? "SUM"
 								: methodName              == nameof(Enumerable.Min)     ? "MIN" : "MAX";
 
-							if (argumentValue.SystemType?.IsNullableType() == false && functionName is "AVG" or "MIN" or "MAX")
+							if (!info.IsGroupBy && argumentValue.SystemType?.IsNullableType() == false && functionName is "AVG" or "MIN" or "MAX")
 							{
 								composer.SetValidation(p => GenerateNullCheckIfNeeded(p, methodName));
 							}
