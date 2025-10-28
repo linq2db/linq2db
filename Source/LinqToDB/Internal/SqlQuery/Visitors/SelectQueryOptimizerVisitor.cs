@@ -759,26 +759,127 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		static bool IsComplexQuery(SelectQuery query)
 		{
-			var accessibleSources = new HashSet<ISqlTableSource>();
-
-			var complexFound = false;
-			foreach (var source in QueryHelper.EnumerateAccessibleSources(query))
+			if (query.From.Tables.Count != 1)
 			{
-				accessibleSources.Add(source);
-				if (source is SelectQuery q && (q.From.Tables.Count != 1 || q.GroupBy.IsEmpty && QueryHelper.EnumerateJoins(q).Any()))
+				return true;
+			}
+
+			foreach (var join in query.From.Tables[0].Joins)
+			{
+				if (join.JoinType is not (JoinType.Inner or JoinType.Left) || join.Table.Joins.Count > 0)
 				{
-					complexFound = true;
-					break;
+					return true;
 				}
 			}
 
-			if (complexFound)
-				return true;
+			var mainKeys = new List<IList<ISqlExpression>>();
+			QueryHelper.CollectUniqueKeys(query.From.Tables[0].Source, includeDistinct: true, mainKeys);
 
-			var usedSources = new HashSet<ISqlTableSource>();
-			QueryHelper.CollectUsedSources(query, usedSources);
+			foreach (var join in query.From.Tables[0].Joins)
+			{
+				if (join.Cardinality.HasFlag(SourceCardinality.One))
+					continue;
 
-			return usedSources.Count > accessibleSources.Count;
+				var joinKeys = new List<IList<ISqlExpression>>();
+				QueryHelper.CollectUniqueKeys(join.Table.Source, includeDistinct: true, joinKeys);
+
+				if (!IsUniqueCondition(mainKeys, joinKeys, join.Condition))
+					return true;
+
+			}
+
+			return false;
+		}
+
+		static bool IsUniqueCondition(List<IList<ISqlExpression>> keys1, List<IList<ISqlExpression>> keys2, SqlSearchCondition searchCondition)
+		{
+			if (searchCondition.IsOr)
+				return false;
+
+			if (keys1.Count == 0 || keys2.Count == 0)
+				return false;
+
+			// Collect all equality pairs (expr1 = expr2) from (AND-only) search condition recursively.
+			var equalityPairs = new List<(ISqlExpression Left, ISqlExpression Right)>();
+
+			void CollectCondition(SqlSearchCondition condition)
+			{
+				if (condition.IsOr)
+					return; // OR parts cannot produce unique join detection safely
+
+				foreach (var p in condition.Predicates)
+				{
+					switch (p)
+					{
+						case SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } ee:
+						{
+							var left  = QueryHelper.UnwrapNullablity(ee.Expr1);
+							var right = QueryHelper.UnwrapNullablity(ee.Expr2);
+							if (!ReferenceEquals(left, right))
+								equalityPairs.Add((left, right));
+							break;
+						}
+						case SqlSearchCondition nested:
+							CollectCondition(nested);
+							break;
+					}
+				}
+			}
+
+			CollectCondition(searchCondition);
+
+			if (equalityPairs.Count == 0)
+				return false;
+
+			bool SameExpr(ISqlExpression a, ISqlExpression b) =>
+				ReferenceEquals(a, b) || QueryHelper.SameWithoutNullablity(a, b);
+
+			// Helper to check that for two keys we have equality predicates covering all columns.
+			bool CoversKey(IList<ISqlExpression> keyA, IList<ISqlExpression> keyB)
+			{
+				if (keyA.Count != keyB.Count)
+					return false;
+
+				// Each element from keyA must be paired with exactly one element from keyB via equality
+				int matched = 0;
+
+				for (int i = 0; i < keyA.Count; i++)
+				{
+					var aExpr = keyA[i];
+					bool found = false;
+					for (int j = 0; j < keyB.Count; j++)
+					{
+						var bExpr = keyB[j];
+
+						// Search equality pair either direction
+						if (equalityPairs.Any(ep => (SameExpr(ep.Left, aExpr) && SameExpr(ep.Right, bExpr)) ||
+													(SameExpr(ep.Left, bExpr) && SameExpr(ep.Right, aExpr))))
+						{
+							found = true;
+							break;
+						}
+					}
+
+					if (!found)
+						return false;
+
+					matched++;
+				}
+
+				return matched == keyA.Count;
+			}
+
+			// We consider join unique if ANY unique key from side1 fully matches ANY unique key from side2.
+			foreach (var k1 in keys1)
+			{
+				foreach (var k2 in keys2)
+				{
+					if (CoversKey(k1, k2))
+						return true;
+				}
+			}
+
+			return false;
 		}
 
 		bool OptimizeDistinct(SelectQuery selectQuery)
@@ -1978,7 +2079,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			for (var i = 0; i < selectQuery.From.Tables.Count; i++)
 			{
 				var tableSource = selectQuery.From.Tables[i];
-				if (tableSource.Joins.Count == 0 && tableSource.Source is SelectQuery { From.Tables.Count: 0, Where.IsEmpty: true, HasSetOperators: false } subQuery)
+				if (tableSource.Joins.Count == 0 && tableSource.Source is SelectQuery { From.Tables.Count: 0, HasSetOperators: false } subQuery)
 				{
 					if (selectQuery.From.Tables.Count == 1)
 					{
@@ -1990,11 +2091,22 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						}
 					}
 
+					if (!subQuery.Where.IsEmpty)
+					{
+						if (!QueryHelper.IsAggregationQuery(selectQuery))
+							continue;
+					}
+
 					replaced = true;
 
 					foreach (var c in subQuery.Select.Columns)
 					{
 						NotifyReplaced(c.Expression, c);
+					}
+
+					if (!subQuery.Where.IsEmpty)
+					{
+						selectQuery.Where.SearchCondition = QueryHelper.MergeConditions(selectQuery.Where.SearchCondition, subQuery.Where.SearchCondition);
 					}
 
 					selectQuery.From.Tables.RemoveAt(i);

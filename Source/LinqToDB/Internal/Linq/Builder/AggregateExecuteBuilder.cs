@@ -47,10 +47,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (buildResult.BuildContext == null)
 					return buildResult;
 
-				// Force initialization of sequence
-				_ = builder.BuildExtractExpression(buildResult.BuildContext, SequenceHelper.CreateRef(buildResult.BuildContext));
+				sequence = new SubQueryContext(buildResult.BuildContext);
 
-				sequence             = new SubQueryContext(buildResult.BuildContext);
+				// Force initialization of sequence
+				_ = builder.BuildSqlExpression(buildInfo.Parent, SequenceHelper.CreateRef(sequence), BuildPurpose.Sql, buildFlags: BuildFlags.ForKeys);
+
 				aggregateRootContext = new AggregateRootContext(sequence, sequenceExpression);
 				sequence             = aggregateRootContext;
 				placeholderSequence  = sequence;

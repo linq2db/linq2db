@@ -241,10 +241,8 @@ namespace LinqToDB.Internal.Linq.Builder
 							return null;
 						}
 
-						Expression orderByExpression;
-
-						var lambda = method.Arguments[1].UnwrapLambda();
-						orderByExpression = lambda.GetBody(currentValueExpression);
+						var lambda            = method.Arguments[1].UnwrapLambda();
+						var orderByExpression = lambda.GetBody(currentValueExpression);
 
 						orderBy ??= new List<ITranslationContext.OrderByInformation>();
 
@@ -282,7 +280,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				var result = functionFactory(aggregationInfo);
 				if (result.SqlExpression != null)
 				{
-					var placeholder = CreatePlaceholder(sqlContext, result.SqlExpression, functionExpression, functionExpression.Type, alias: _buildVisitor.Alias);
+					var alias       = _buildVisitor.Alias ?? (functionExpression as MethodCallExpression)?.Method.Name;
+					var placeholder = CreatePlaceholder(sqlContext, result.SqlExpression, functionExpression, functionExpression.Type, alias : alias);
+
 					if (result.Validator != null)
 					{
 						return new SqlValidateExpression(placeholder, result.Validator);

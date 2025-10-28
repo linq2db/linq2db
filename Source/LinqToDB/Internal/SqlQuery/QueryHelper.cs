@@ -1106,10 +1106,9 @@ namespace LinqToDB.Internal.SqlQuery
 		{
 			return expr switch
 			{
-				SqlFunction func         => func.IsAggregate,
-				SqlExtendedFunction func   => func.IsAggregate,
-				SqlExpression expression => (expression.Flags & SqlFlags.IsAggregate) != 0,
-				_                        => false,
+				SqlParameterizedExpressionBase p => p.IsAggregate,
+				SqlExtendedFunction func         => func.IsAggregate,
+				_                                => false,
 			};
 		}
 
