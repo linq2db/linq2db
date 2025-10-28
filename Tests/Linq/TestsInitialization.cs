@@ -50,6 +50,10 @@ public class TestsInitialization
 
 			return IntPtr.Zero;
 		});
+#else
+		// force load of SDS runtime first as there is no SetDllImportResolver API
+		using (var _ = new System.Data.SQLite.SQLiteConnection("", false))
+		{ }
 #endif
 
 #if DEBUG

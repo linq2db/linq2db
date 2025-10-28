@@ -256,7 +256,7 @@ namespace Tests.xUpdate
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSapHana,
 			ProviderName.SqlCe,
-			ProviderName.SQLiteMS
+			TestProvName.AllSQLite
 			)]
 			string context)
 		{
@@ -290,7 +290,7 @@ namespace Tests.xUpdate
 			TestProvName.AllClickHouse,
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
-			ProviderName.SQLiteMS,
+			TestProvName.AllSQLite,
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSapHana,
 			TestProvName.AllOracle
@@ -335,7 +335,7 @@ namespace Tests.xUpdate
 			TestProvName.AllClickHouse,
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
-			ProviderName.SQLiteMS,
+			TestProvName.AllSQLite,
 			TestProvName.AllMySql,
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSapHana,
@@ -382,7 +382,7 @@ namespace Tests.xUpdate
 			TestProvName.AllClickHouse,
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
-			ProviderName.SQLiteMS,
+			TestProvName.AllSQLite,
 			TestProvName.AllMySql,
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSapHana,
