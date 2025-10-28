@@ -10,6 +10,8 @@ using MySqlConnector::MySqlConnector;
 
 using NUnit.Framework;
 
+#pragma warning disable CA1820
+
 namespace Tests.Linq
 {
 	public class StringJoinTests : TestBase

@@ -40,7 +40,6 @@ namespace LinqToDB.Internal.Linq.Builder
 		NewExpression?             _disableNew;
 		bool                       _preferClientSide;
 
-
 		public string? Alias => _alias;
 
 		NullabilityContext? _nullabilityContext;
@@ -5315,7 +5314,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return new CurrentContextScope(this, contextRef.BuildContext);
 			}
 
-			class CurrentContextScope : IDisposable
+			sealed class CurrentContextScope : IDisposable
 			{
 				readonly IBuildContext?     _oldContext;
 				readonly IDisposable        _disposable;

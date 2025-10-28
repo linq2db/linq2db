@@ -7,6 +7,8 @@ using System.Reflection;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
 
+#pragma warning disable MA0048
+
 namespace LinqToDB.Internal.Expressions
 {
 	public static class WindowFunctionHelpers
@@ -109,19 +111,19 @@ namespace LinqToDB.Internal.Expressions
 		public static Expression ApplyOrderBy(Expression queryExpr, IEnumerable<(LambdaExpression lambda, bool isDescending)> order)
 		{
 			var isFirst = true;
-			foreach (var tuple in order)
+			foreach (var (lambda, isDescending) in order)
 			{
 				var methodName =
-					isFirst ? tuple.isDescending ? nameof(Queryable.OrderByDescending) : nameof(Queryable.OrderBy)
-					: tuple.isDescending ? nameof(Queryable.ThenByDescending) : nameof(Queryable.ThenBy);
+					isFirst ? isDescending ? nameof(Queryable.OrderByDescending) : nameof(Queryable.OrderBy)
+					: isDescending ? nameof(Queryable.ThenByDescending) : nameof(Queryable.ThenBy);
 
 				if (typeof(IQueryable<>).IsSameOrParentOf(queryExpr.Type))
 				{
-					queryExpr = Expression.Call(typeof(Queryable), methodName, [tuple.lambda.Parameters[0].Type, tuple.lambda.Body.Type], queryExpr, Expression.Quote(tuple.lambda));
+					queryExpr = Expression.Call(typeof(Queryable), methodName, [lambda.Parameters[0].Type, lambda.Body.Type], queryExpr, Expression.Quote(lambda));
 				}
 				else
 				{
-					queryExpr = Expression.Call(typeof(Enumerable), methodName, [tuple.lambda.Parameters[0].Type, tuple.lambda.Body.Type], queryExpr, tuple.lambda);
+					queryExpr = Expression.Call(typeof(Enumerable), methodName, [lambda.Parameters[0].Type, lambda.Body.Type], queryExpr, lambda);
 				}
 
 				isFirst   = false;

@@ -11,8 +11,10 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsMethodCall(nameof(LinqExtensions.AggregateExecute))]
 	sealed class AggregateExecuteBuilder : MethodCallBuilder
 	{
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+#pragma warning disable IDE0060
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder _)
 			=> call.IsQueryable();
+#pragma warning restore IDE0060
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{

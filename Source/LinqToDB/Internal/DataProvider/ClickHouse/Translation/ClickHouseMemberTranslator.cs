@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -9,6 +10,8 @@ using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.SqlQuery;
+
+#pragma warning disable IDE0042
 
 namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 {
@@ -250,6 +253,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 
 		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
+			static readonly bool[] OneArgumentNullability = new[] { true };
+			static readonly bool[] TwoArgumentNullability = new[] { true, true };
+
 			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool ignoreNulls)
 			{
 				var builder = new AggregateFunctionBuilder();
@@ -286,7 +292,6 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 							var hasCond = info.FilterCondition != null && !info.FilterCondition.IsTrue();
 							var cond    = hasCond ? info.FilterCondition! : null;
 
-
 							// ---------------------------
 							// Helpers (typed, factory-based)
 							// ---------------------------
@@ -301,12 +306,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 								return hasCond
 									? f.Function(valType, fn,
 										new[] { new SqlFunctionArgument(arg), new SqlFunctionArgument(cond!) },
-										new[] { true, true },
+										TwoArgumentNullability,
 										isAggregate: true,
 										canBeAffectedByOrderBy: true)
 									: f.Function(valType, fn,
 										new[] { new SqlFunctionArgument(arg) },
-										new[] { true },
+										OneArgumentNullability,
 										isAggregate: true,
 										canBeAffectedByOrderBy: true);
 							}
@@ -354,7 +359,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 							// Build tuple (k1, k2, ..., value)
 							ISqlExpression BuildTuple(IReadOnlyList<ISqlExpression> elems)
 							{
-								var fmt = "(" + string.Join(", ", Enumerable.Range(0, elems.Count).Select(i => "{" + i + "}")) + ")";
+								var fmt = "(" + string.Join(", ", Enumerable.Range(0, elems.Count).Select(i => "{" + i.ToString(CultureInfo.InvariantCulture) + "}")) + ")";
 								return f.Fragment(fmt, elems.ToArray());
 							}
 
@@ -383,6 +388,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 								var tType = f.GetDbDataType(t_i);
 								return f.Negate(tType, t_i);
 							}
+
 							ISqlExpression MakeKeyAsc(ISqlExpression t_i) => t_i;
 
 							// Date/DateTime: convert to timestamp (long) then Negate for DESC
@@ -438,10 +444,11 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 							// (t) -> (k1_nullsKey, k1_key, k2_nullsKey, k2_key, ...)
 							ISqlExpression BuildKeyLambda(IReadOnlyList<ISqlExpression> keys)
 							{
-								var keysFmt   = "(" + string.Join(", ", Enumerable.Range(0, keys.Count).Select(i => "{" + i + "}")) + ")";
+								var keysFmt   = "(" + string.Join(", ", Enumerable.Range(0, keys.Count).Select(i => "{" + i.ToString(CultureInfo.InvariantCulture) + "}")) + ")";
 								var tupleKeys = f.Fragment(keysFmt, keys.ToArray());
 								return f.Fragment("(t) -> {0}", tupleKeys);
 							}
+
 							var keySelector = BuildKeyLambda(keyElems);
 
 							// Sort: arraySort(keySelector, tuplesArr)

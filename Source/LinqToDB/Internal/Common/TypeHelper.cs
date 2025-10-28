@@ -137,6 +137,7 @@ namespace LinqToDB.Internal.Common
 				if (enum1.Current?.ParameterType != enum2.Current?.ParameterType)
 					return false;
 			}
+
 			return true;
 		}
 

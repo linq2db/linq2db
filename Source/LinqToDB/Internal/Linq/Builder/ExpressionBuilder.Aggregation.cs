@@ -22,7 +22,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		static readonly string[] _orderByNames = [nameof(Queryable.OrderBy), nameof(Queryable.OrderByDescending), nameof(Queryable.ThenBy), nameof(Queryable.ThenByDescending)];
 		static readonly string[] _allowedNames = [nameof(Queryable.Select), nameof(Queryable.Where), nameof(Queryable.Distinct), nameof(Queryable.OrderBy), .._orderByNames];
 
-		class AggregationContext : IAggregationContext
+		sealed class AggregationContext : IAggregationContext
 		{
 			public ContextRefExpression?                    RootContext         { get; set; }
 			public ParameterExpression?                     ValueParameter      { get; set; }
@@ -372,7 +372,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-
 		static Expression UnwrapAggregateRoot(Expression expression, out AggregateRootContext? aggregationRoot)
 		{
 			var visitor   = new UnwrapAggregateRootContextVisitor();
@@ -617,7 +616,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			if (buildRoot != current || (contextRef.BuildContext is not GroupByBuilder.GroupByContext && contextRef.BuildContext is not AggregateExecuteBuilder.AggregateRootContext))
+			if (buildRoot != current || (contextRef.BuildContext is not GroupByBuilder.GroupByContext && contextRef.BuildContext is not AggregateRootContext))
 			{
 				var aggregation = BuildAggregateExecuteExpression((MethodCallExpression)functionExpression, sequenceExpressionIndex, buildRoot, chain, out var isInAggregation);
 

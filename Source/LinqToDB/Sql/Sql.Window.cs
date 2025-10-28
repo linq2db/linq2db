@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Linq;
 
+#pragma warning disable MA0048
+
 namespace LinqToDB
 {
 	public static class WindowFunctionBuilder
@@ -489,7 +491,7 @@ namespace LinqToDB
 
 	partial class Sql
 	{
-		// Will be removed after completion of the task
+		/*// Will be removed after completion of the task
 		static void Test()
 		{
 			var query =
@@ -520,6 +522,6 @@ namespace LinqToDB
 					PC = g.PercentileCont(0.5, (e, f) => f.OrderBy(e.Id)),
 					PD = g.PercentileDisc(0.5, (e, f) => f.OrderBy(e.Id).ThenBy(e.Name))
 				};
-		}
+		}*/
 	}
 }

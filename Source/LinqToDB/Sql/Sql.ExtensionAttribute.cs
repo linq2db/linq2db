@@ -24,8 +24,8 @@ namespace LinqToDB
 		public interface ISqlExtension { }
 		public interface IWindowFunction { }
 
-		class SqlExtensionImpl : ISqlExtension { }
-		class WindowFunctionImpl : IWindowFunction { }
+		sealed class SqlExtensionImpl : ISqlExtension { }
+		sealed class WindowFunctionImpl : IWindowFunction { }
 
 		public static readonly ISqlExtension?  Ext    = new SqlExtensionImpl();
 		public static readonly IWindowFunction Window = new WindowFunctionImpl();

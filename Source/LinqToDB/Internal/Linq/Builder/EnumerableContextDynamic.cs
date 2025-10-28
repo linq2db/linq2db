@@ -372,7 +372,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			context.RegisterCloned(this, result);
 
-
 			result._byPathExpressions = _byPathExpressions
 				.ToDictionary(
 					x => context.CloneExpression(x.Key),

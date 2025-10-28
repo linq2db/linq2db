@@ -159,11 +159,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return translationContext.CreatePlaceholder(translated, memberExpression);
 		}
 
-		Expression? TranslateStringJoinIgnoreNulls(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
-		{
-			return TranslateStringJoin(translationContext, methodCall, translationFlags, ignoreNulls: true);
-		}
-
 		Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			return TranslateStringJoin(translationContext, methodCall, translationFlags, ignoreNulls: false);
