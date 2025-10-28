@@ -28,22 +28,6 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			return base.ConvertSqlBinaryExpression(element);
 		}
 
-		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
-		{
-			switch (func)
-			{
-				case {
-					Name: "Space",
-					Parameters: [var p0],
-					Type: var type,
-				}:
-					return new SqlFunction(type, "PadR", new SqlValue(" "), p0);
-
-				default:
-					return base.ConvertSqlFunction(func);
-			};
-		}
-
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
 			var like = ConvertSearchStringPredicateViaLike(predicate);

@@ -22,7 +22,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Acos([DataSources(TestProvName.AllAccess, ProviderName.SQLiteMS)] string context)
+		public void Acos([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -31,7 +31,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Asin([DataSources(TestProvName.AllAccess, ProviderName.SQLiteMS)] string context)
+		public void Asin([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -40,7 +40,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Atan([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Atan([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -49,7 +49,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Atan2([DataSources(TestProvName.AllAccess, ProviderName.SQLiteMS)] string context)
+		public void Atan2([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -58,7 +58,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Ceiling1([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Ceiling1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -67,7 +67,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Ceiling2([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Ceiling2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -76,7 +76,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Cos([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Cos([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -85,7 +85,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Cosh([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Cosh([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -94,7 +94,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Cot([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Cot([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -103,7 +103,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Degrees1([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Degrees1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -114,7 +114,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Degrees2([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Degrees2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -123,7 +123,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Degrees3([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Degrees3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -132,7 +132,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Exp([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Exp([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -150,7 +150,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Log([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Log([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -159,7 +159,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Log2([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Log2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -168,7 +168,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Log10([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Log10([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -195,7 +195,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Pow([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Pow([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -205,7 +205,7 @@ namespace Tests.Linq
 
 		// Sybase: https://stackoverflow.com/questions/25281843
 		[Test]
-		public void PowDecimal([DataSources(ProviderName.SQLiteMS, TestProvName.AllSybase)] string context)
+		public void PowDecimal([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -214,7 +214,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Round1([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Round1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -223,7 +223,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Round2([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Round2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -289,7 +289,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Round7([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Round7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -298,7 +298,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Round8([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Round8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -369,7 +369,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Sign([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Sign([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -378,7 +378,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Sin([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Sin([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -387,7 +387,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Sinh([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Sinh([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -396,7 +396,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Sqrt([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Sqrt([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -405,7 +405,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Tan([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Tan([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -414,7 +414,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Tanh([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Tanh([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -423,7 +423,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Truncate1([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Truncate1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -432,7 +432,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Truncate2([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Truncate2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
