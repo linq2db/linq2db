@@ -5372,6 +5372,12 @@ namespace LinqToDB.Internal.Linq.Builder
 					return false;
 				}
 
+				if (context?.SelectQuery != null)
+				{
+					if (GetAlreadyTranslated(context.SelectQuery, memberExpression, out translated))
+						return true;
+				}
+
 				using var translationContext = _translationContexts.Allocate();
 
 				translationContext.Value.Init(this, context, _alias);
@@ -5382,7 +5388,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					return false;
 
 				if (!IsSame(translated, memberExpression))
+				{
+					if (context?.SelectQuery != null)
+						RegisterTranslatedSql(context.SelectQuery, translated, memberExpression);
 					return true;
+				}
 			}
 
 			return false;

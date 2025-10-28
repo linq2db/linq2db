@@ -1211,15 +1211,15 @@ namespace LinqToDB.Internal.SqlProvider
 				{
 					if (func.SystemType == typeof(bool) || func.SystemType == typeof(bool?))
 					{
-						if (func.Arguments[0].Expression is not ISqlPredicate)
+						if (func.Arguments[0].Expression is not ISqlPredicate predicate)
 						{
-							var predicate = new SqlPredicate.Expr(func.Arguments[0].Expression);
-							var argument  = func.Arguments[0].WithExpression(new SqlConditionExpression(predicate, new SqlValue(1), new SqlValue(0)));
-							var newFunc   = func.WithArguments(new[] { argument }, func.ArgumentsNullability);
-							newFunc = newFunc.WithType(MappingSchema.GetDbDataType(typeof(int)));
-							return newFunc;
+							predicate = new SqlPredicate.Expr(func.Arguments[0].Expression);
 						}
 
+						var argument = func.Arguments[0].WithExpression(new SqlConditionExpression(predicate, new SqlValue(1), new SqlValue(0)));
+						var newFunc  = func.WithArguments(new[] { argument }, func.ArgumentsNullability);
+						newFunc = newFunc.WithType(MappingSchema.GetDbDataType(typeof(int)));
+						return newFunc;
 					}
 
 					break;

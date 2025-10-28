@@ -460,6 +460,15 @@ namespace LinqToDB.Internal.Linq.Builder
 						break;
 					}
 
+					if (root is ContextRefExpression checkRef)
+					{
+						if (checkRef.BuildContext is not AggregateRootContext)
+						{
+							var newMethod = functionExpression.Replace(current, root);
+							return BuildSqlExpression(_buildVisitor.BuildContext, newMethod);
+						}
+					}
+
 					current = root;
 					continue;
 				}
