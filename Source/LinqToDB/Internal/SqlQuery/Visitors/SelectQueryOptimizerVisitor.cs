@@ -764,6 +764,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return true;
 			}
 
+			if (!query.GroupBy.IsEmpty)
+			{
+				return false;
+			}
+
 			foreach (var join in query.From.Tables[0].Joins)
 			{
 				if (join.JoinType is not (JoinType.Inner or JoinType.Left) || join.Table.Joins.Count > 0)

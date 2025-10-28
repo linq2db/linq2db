@@ -245,15 +245,17 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						!ReferenceEquals(element.Filter, filter))
 					{
 						return NotifyReplaced(new SqlExtendedFunction(
-							element.Type,
-							element.FunctionName,
-							arguments,
-							element.ArgumentsNullability,
-							element.CanBeNull,
-							withinGroup,
-							partitionBy,
-							orderBy,
-							filter, frameClause), element);
+							dbDataType : element.Type,
+							functionName : element.FunctionName,
+							arguments : arguments,
+							argumentsNullability : element.ArgumentsNullability,
+							canBeNull : element.CanBeNull,
+							withinGroup : withinGroup,
+							partitionBy : partitionBy,
+							orderBy : orderBy,
+							filter : filter, 
+							isAggregate: element.IsAggregate,
+							frameClause : frameClause), element);
 					}
 
 					break;
