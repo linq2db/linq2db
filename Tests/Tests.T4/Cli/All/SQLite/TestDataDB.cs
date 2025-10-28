@@ -493,10 +493,10 @@ namespace Cli.All.SQLite
 		#region Associations
 		#region Doctor Associations
 		/// <summary>
-		/// FK_Doctor_0_0
+		/// FK_Doctor_0
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(SQLite.Doctor.PersonId), OtherKey = nameof(Person.PersonId))]
-		public static Person FkDoctor00(this Doctor obj, IDataContext db)
+		public static Person FkDoctor0(this Doctor obj, IDataContext db)
 		{
 			return db.GetTable<Person>().First(t => obj.PersonId == t.PersonId);
 		}
@@ -504,7 +504,7 @@ namespace Cli.All.SQLite
 
 		#region Person Associations
 		/// <summary>
-		/// FK_Doctor_0_0 backreference
+		/// FK_Doctor_0 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(Person.PersonId), OtherKey = nameof(SQLite.Doctor.PersonId))]
 		public static Doctor? Doctor(this Person obj, IDataContext db)
@@ -513,7 +513,7 @@ namespace Cli.All.SQLite
 		}
 
 		/// <summary>
-		/// FK_Patient_0_0 backreference
+		/// FK_Patient_0 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(Person.PersonId), OtherKey = nameof(SQLite.Patient.PersonId))]
 		public static Patient? Patient(this Person obj, IDataContext db)
@@ -524,7 +524,7 @@ namespace Cli.All.SQLite
 
 		#region ForeignKeyTable Associations
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0
+		/// FK_ForeignKeyTable_0
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(ForeignKeyTable.PrimaryKeyTableId), OtherKey = nameof(SQLite.PrimaryKeyTable.Id))]
 		public static PrimaryKeyTable PrimaryKeyTable(this ForeignKeyTable obj, IDataContext db)
@@ -535,7 +535,7 @@ namespace Cli.All.SQLite
 
 		#region PrimaryKeyTable Associations
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0 backreference
+		/// FK_ForeignKeyTable_0 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(SQLite.PrimaryKeyTable.Id), OtherKey = nameof(ForeignKeyTable.PrimaryKeyTableId))]
 		public static IQueryable<ForeignKeyTable> ForeignKeyTables(this PrimaryKeyTable obj, IDataContext db)
@@ -546,10 +546,10 @@ namespace Cli.All.SQLite
 
 		#region Patient Associations
 		/// <summary>
-		/// FK_Patient_0_0
+		/// FK_Patient_0
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(SQLite.Patient.PersonId), OtherKey = nameof(Person.PersonId))]
-		public static Person FkPatient00(this Patient obj, IDataContext db)
+		public static Person FkPatient0(this Patient obj, IDataContext db)
 		{
 			return db.GetTable<Person>().First(t => obj.PersonId == t.PersonId);
 		}

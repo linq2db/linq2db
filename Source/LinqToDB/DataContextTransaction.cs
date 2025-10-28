@@ -13,6 +13,8 @@ namespace LinqToDB
 	[PublicAPI]
 	public class DataContextTransaction : IDisposable, IAsyncDisposable
 	{
+		private DataContext.ConnectionLockScope _contextLock;
+
 		/// <summary>
 		/// Creates new transaction wrapper.
 		/// </summary>
@@ -41,7 +43,7 @@ namespace LinqToDB
 			db.BeginTransaction();
 
 			if (_transactionCounter == 0)
-				DataContext.LockDbManagerCounter++;
+				_contextLock = DataContext.AcquireLock();
 
 			_transactionCounter++;
 		}
@@ -59,7 +61,7 @@ namespace LinqToDB
 			db.BeginTransaction(level);
 
 			if (_transactionCounter == 0)
-				DataContext.LockDbManagerCounter++;
+				_contextLock = DataContext.AcquireLock();
 
 			_transactionCounter++;
 		}
@@ -77,7 +79,7 @@ namespace LinqToDB
 			await db.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
 
 			if (_transactionCounter == 0)
-				DataContext.LockDbManagerCounter++;
+				_contextLock = DataContext.AcquireLock();
 
 			_transactionCounter++;
 		}
@@ -96,7 +98,7 @@ namespace LinqToDB
 			await db.BeginTransactionAsync(level, cancellationToken).ConfigureAwait(false);
 
 			if (_transactionCounter == 0)
-				DataContext.LockDbManagerCounter++;
+				_contextLock = DataContext.AcquireLock();
 
 			_transactionCounter++;
 		}
@@ -116,8 +118,7 @@ namespace LinqToDB
 
 				if (_transactionCounter == 0)
 				{
-					DataContext.LockDbManagerCounter--;
-					DataContext.ReleaseQuery();
+					_contextLock!.Dispose();
 				}
 			}
 		}
@@ -137,8 +138,7 @@ namespace LinqToDB
 
 				if (_transactionCounter == 0)
 				{
-					DataContext.LockDbManagerCounter--;
-					DataContext.ReleaseQuery();
+					_contextLock!.Dispose();
 				}
 			}
 		}
@@ -161,8 +161,7 @@ namespace LinqToDB
 
 				if (_transactionCounter == 0)
 				{
-					DataContext.LockDbManagerCounter--;
-					await DataContext.ReleaseQueryAsync().ConfigureAwait(false);
+					await _contextLock!.DisposeAsync().ConfigureAwait(false);
 				}
 			}
 		}
@@ -185,8 +184,7 @@ namespace LinqToDB
 
 				if (_transactionCounter == 0)
 				{
-					DataContext.LockDbManagerCounter--;
-					await DataContext.ReleaseQueryAsync().ConfigureAwait(false);
+					await _contextLock!.DisposeAsync().ConfigureAwait(false);
 				}
 			}
 		}
@@ -204,8 +202,7 @@ namespace LinqToDB
 
 				_transactionCounter = 0;
 
-				DataContext.LockDbManagerCounter--;
-				DataContext.ReleaseQuery();
+				_contextLock!.Dispose();
 			}
 		}
 
@@ -220,8 +217,7 @@ namespace LinqToDB
 
 				_transactionCounter = 0;
 
-				DataContext.LockDbManagerCounter--;
-				await DataContext.ReleaseQueryAsync().ConfigureAwait(false);
+				await _contextLock!.DisposeAsync().ConfigureAwait(false);
 			}
 		}
 	}

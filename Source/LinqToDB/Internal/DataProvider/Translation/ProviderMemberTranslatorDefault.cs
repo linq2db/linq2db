@@ -33,11 +33,16 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return new GuidMemberTranslatorBase();
 		}
 
+		protected virtual IMemberTranslator CreateSqlFunctionsMemberTranslator()
+		{
+			return new SqlFunctionsMemberTranslatorBase();
+		}
+
 		protected ProviderMemberTranslatorDefault()
 		{
 			InitDefaultTranslators();
 
-			Registration.RegisterMethod(() => Sql.NewGuid(), TranslateNewGuidMethod);
+			Registration.RegisterMethod(() => Sql.NewGuid(),  TranslateNewGuidMethod);
 			Registration.RegisterMethod(() => Guid.NewGuid(), TranslateNewGuidMethod);
 		}
 
@@ -57,6 +62,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			CombinedMemberTranslator.Add(CreateMathMemberTranslator());
 			CombinedMemberTranslator.Add(CreateStringMemberTranslator());
 			CombinedMemberTranslator.Add(CreateGuidMemberTranslator());
+			CombinedMemberTranslator.Add(CreateSqlFunctionsMemberTranslator());
 		}
 
 		protected SqlPlaceholderExpression? TranslateNoRequiredObjectExpression(ITranslationContext translationContext, Expression? objExpression)

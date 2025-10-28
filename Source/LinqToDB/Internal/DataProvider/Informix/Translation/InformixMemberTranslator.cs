@@ -334,6 +334,16 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 				var currentTimeStamp = factory.NotNullExpression(factory.GetDbDataType(typeof(DateTime)), "CURRENT");
 				return currentTimeStamp;
 			}
+
+			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				// "datetime(1970-01-01 00:00:00) year to second + (dbinfo('utc_current')/86400)::int::char(9)::interval day(9) to day + (mod(dbinfo('utc_current'), 86400))::char(5)::interval second(5) to second
+
+				var factory = translationContext.ExpressionFactory;
+
+				return factory.Expression(dbDataType,
+					"datetime(1970-01-01 00:00:00) year to second + (dbinfo('utc_current')/86400)::int::char(9)::interval day(9) to day + (mod(dbinfo('utc_current'), 86400))::char(5)::interval second(5) to second", Precedence.Additive);
+			}
 		}
 
 		protected class StringMemberTranslator : StringMemberTranslatorBase

@@ -36,8 +36,7 @@ namespace Tests.SchemaProvider
 
 		// TODO: temporary disabled for oracle, as it takes 10 minutes for Oracle12 to process schema exceptions
 		[Test]
-		public void Test([DataSources(false, TestProvName.AllOracle12, ProviderName.SQLiteMS)]
-			string context)
+		public void Test([DataSources(false, TestProvName.AllOracle12)] string context)
 		{
 			using (var conn = GetDataConnection(context))
 			{
@@ -155,7 +154,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void NorthwindTest([NorthwindDataContext(false, true)] string context)
+		public void NorthwindTest([NorthwindDataContext(false)] string context)
 		{
 			using (var conn = GetDataConnection(context))
 			{
@@ -188,8 +187,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void MySqlPKTest([IncludeDataSources(TestProvName.AllMySql, TestProvName.AllClickHouse)]
-			string context)
+		public void MySqlPKTest([IncludeDataSources(TestProvName.AllMySql, TestProvName.AllClickHouse)] string context)
 		{
 			using (var conn = GetDataConnection(context))
 			{
@@ -258,8 +256,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void IncludeExcludeCatalogTest([DataSources(false)]
-			string context)
+		public void IncludeExcludeCatalogTest([DataSources(false)] string context)
 		{
 			using (var conn = GetDataConnection(context))
 			{
@@ -278,8 +275,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void IncludeExcludeSchemaTest([DataSources(false)]
-			string context)
+		public void IncludeExcludeSchemaTest([DataSources(false)] string context)
 		{
 			using (new DisableBaseline("TODO: exclude schema list is not stable, db2 schema provider needs refactoring", GetProviderName(context, out var _) == ProviderName.DB2))
 			using (var conn = GetDataConnection(context))
@@ -303,8 +299,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void SchemaProviderNormalizeName([IncludeDataSources(TestProvName.AllSQLiteClassic)]
-			string context)
+		public void SchemaProviderNormalizeName([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = new DataConnection(new DataOptions().UseConnectionString(context, "Data Source=:memory:;")))
 			{
@@ -345,8 +340,7 @@ namespace Tests.SchemaProvider
 		// TODO: temporary disabled for oracle, as it takes 10 minutes for Oracle12 to process schema exceptions
 		// Access.Odbc: no FK information available for provider
 		[Test]
-		public void PrimaryForeignKeyTest([DataSources(false, TestProvName.AllOracle12, TestProvName.AllAccessOdbc, ProviderName.SQLiteMS)]
-			string context)
+		public void PrimaryForeignKeyTest([DataSources(false, TestProvName.AllOracle12, TestProvName.AllAccessOdbc)] string context)
 		{
 			var skipFK = context.IsAnyOf(TestProvName.AllClickHouse);
 			using (var db = GetDataConnection(context))
@@ -402,8 +396,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
-		public void ForeignKeyMemberNameTest2([IncludeDataSources(TestProvName.AllNorthwind)]
-			string context)
+		public void ForeignKeyMemberNameTest2([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{

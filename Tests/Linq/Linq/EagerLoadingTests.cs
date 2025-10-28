@@ -1150,7 +1150,7 @@ FROM
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllFirebirdLess4, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllOracle11, TestProvName.AllMariaDB, TestProvName.AllDB2, TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void TestAggregate([DataSources] string context)
 		{
@@ -1181,7 +1181,7 @@ FROM
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllFirebirdLess4, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllOracle11, TestProvName.AllMariaDB, TestProvName.AllDB2, TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void TestAggregateAverage([DataSources] string context)
 		{
@@ -1937,8 +1937,9 @@ FROM
 			[Column] public decimal Value { get; set; }
 		}
 
+		[RequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
-		public void Issue3226Test1([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Issue3226Test1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<Item>();
@@ -1969,7 +1970,7 @@ FROM
 				.ToList();
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllClickHouse], ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
 		public void Issue3226Test3([DataSources] string context)
 		{
@@ -1987,7 +1988,7 @@ FROM
 				.ToList();
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllClickHouse], ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[RequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
 		public void Issue3226Test4([DataSources] string context)
 		{
@@ -3216,7 +3217,7 @@ FROM
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4588")]
 		public void Issue4588Test([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<Order>();
 			using var t2 = db.CreateLocalTable<SubOrder>();
 			using var t3 = db.CreateLocalTable<SubOrderDetail>();
@@ -3285,7 +3286,7 @@ FROM
 		sealed record CteRecord(int Id, int Value1, int Value2, int Value4, int Value5);
 
 		[Test]
-		public void CteCloning_Original([CteContextSource(TestProvName.AllSapHana)] string context)
+		public void CteCloning_Original([RecursiveCteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<CteTable>();
@@ -3392,7 +3393,7 @@ FROM
 		}
 
 		[Test]
-		public void CteCloning_RecursiveChain([CteContextSource(TestProvName.AllSapHana, TestProvName.AllOracle)] string context)
+		public void CteCloning_RecursiveChain([RecursiveCteContextSource(TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<CteTable>();

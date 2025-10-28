@@ -167,29 +167,21 @@ namespace LinqToDB
 			return obj;
 		}
 
-		[Expression("NULLIF({0}, {1})", PreferServerSide = true)]
-		[Expression(PN.Access, "IIF({0} = {1}, null, {0})", PreferServerSide = false)]
-		[Expression(PN.SqlCe,  "CASE WHEN {0} = {1} THEN NULL ELSE {0} END", PreferServerSide = false)]
 		public static T? NullIf<T>(T? value, T? compareTo) where T : class
 		{
 			return value != null && compareTo != null && EqualityComparer<T>.Default.Equals(value, compareTo) ? null : value;
 		}
 
-		[Expression("NULLIF({0}, {1})", PreferServerSide = true)]
-		[Expression(PN.Access, "IIF({0} = {1}, null, {0})", PreferServerSide = false)]
-		[Expression(PN.SqlCe,  "CASE WHEN {0} = {1} THEN NULL ELSE {0} END", PreferServerSide = false)]
 		public static T? NullIf<T>(T? value, T compareTo) where T : struct
 		{
 			return value.HasValue && EqualityComparer<T>.Default.Equals(value.Value, compareTo) ? null : value;
 		}
 
-		[Expression("NULLIF({0}, {1})", PreferServerSide = true)]
-		[Expression(PN.Access, "IIF({0} = {1}, null, {0})", PreferServerSide = false)]
-		[Expression(PN.SqlCe,  "CASE WHEN {0} = {1} THEN NULL ELSE {0} END", PreferServerSide = false)]
 		public static T? NullIf<T>(T? value, T? compareTo) where T : struct
 		{
 			return value.HasValue && compareTo.HasValue && EqualityComparer<T>.Default.Equals(value.Value, compareTo.Value) ? null : value;
 		}
+
 		#endregion
 
 		#region NoConvert
@@ -343,6 +335,7 @@ namespace LinqToDB
 		[Expression("{0}", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static TimeSpan? DateToTime(DateTime? date)
 		{
+			// ???
 			return date == null ? null : new TimeSpan(date.Value.Ticks);
 		}
 
@@ -463,7 +456,6 @@ namespace LinqToDB
 #endif
 		}
 
-		[Function(ServerSideOnly = true, IsPredicate = true)]
 		public static bool Like(string? matchExpression, string? pattern, char? escapeCharacter)
 		{
 #if !NETFRAMEWORK
@@ -475,12 +467,12 @@ namespace LinqToDB
 		}
 
 		[CLSCompliant(false)]
-		[Function(                                     IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.DB2,        "Locate",             IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.MySql,      "Locate",             IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.SapHana,    "Locate",       1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.Firebird,   "Position",           IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.ClickHouse, "positionUTF8", 1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(                                      IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.DB2,        "Locate",              IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.MySql,      "Locate",              IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.SapHana,    "Locate",        1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.Firebird,   "Position",            IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.ClickHouse, "positionUTF8",  1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static int? CharIndex(string? substring, string? str)
 		{
 			if (str == null || substring == null) return null;
@@ -511,14 +503,14 @@ namespace LinqToDB
 			return substring.Length == 0 ? 0 : str.IndexOf(substring, index) + 1;
 		}
 
-		[Function(                                     IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.DB2,        "Locate",             IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.MySql,      "Locate",             IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(                                      IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.DB2,        "Locate",              IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.MySql,      "Locate",              IsNullable = IsNullableType.IfAnyParameterNullable)]
 #pragma warning disable CS3016 // Arrays as attribute arguments is not CLS-compliant
-		[Function(PN.SapHana,    "Locate",       1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.ClickHouse, "positionUTF8", 1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.SapHana,    "Locate",       1, 0,  IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.ClickHouse, "positionUTF8", 1, 0,  IsNullable = IsNullableType.IfAnyParameterNullable)]
 #pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
-		[Function(PN.Firebird,   "Position",           IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.Firebird,   "Position",            IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static int? CharIndex(char? value, string? str)
 		{
 			if (value == null || str == null) return null;
@@ -673,7 +665,6 @@ namespace LinqToDB
 			return str.PadRight(length.Value, paddingChar.Value);
 		}
 
-		[Function(PseudoFunctions.REPLACE, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Replace(string? str, string? oldValue, string? newValue)
 		{
 			if (str == null || oldValue == null || newValue == null) return null;
@@ -683,9 +674,9 @@ namespace LinqToDB
 			return str.Replace(oldValue, newValue);
 		}
 
-		[Function(                              IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.Sybase,     "Str_Replace", IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.ClickHouse, "replaceAll",  IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(                                      IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.Sybase,     "Str_Replace",         IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.ClickHouse, "replaceAll",          IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Replace(string? str, char? oldValue, char? newValue)
 		{
 			if (str == null || oldValue == null || newValue == null) return null;
@@ -1151,48 +1142,21 @@ namespace LinqToDB
 
 		#region DateTime Functions
 
-		[Property(               "CURRENT_TIMESTAMP", CanBeNull = false)]
-		[Property(PN.Informix,   "CURRENT",           CanBeNull = false)]
-		[Property(PN.Access,     "Now",               CanBeNull = false)]
-		[Function(PN.ClickHouse, "now",               CanBeNull = false)]
 		public static DateTime GetDate()
 		{
 			return DateTime.Now;
 		}
 
-		[Property(               "CURRENT_TIMESTAMP", ServerSideOnly = true, CanBeNull = false)]
-		[Property(PN.Firebird,   "LOCALTIMESTAMP",    ServerSideOnly = true, CanBeNull = false)]
-		[Property(PN.Informix,   "CURRENT",           ServerSideOnly = true, CanBeNull = false)]
-		[Property(PN.Access,     "Now",               ServerSideOnly = true, CanBeNull = false)]
-		[Function(PN.SqlCe,      "GetDate",           ServerSideOnly = true, CanBeNull = false)]
-		[Function(PN.Sybase,     "GetDate",           ServerSideOnly = true, CanBeNull = false)]
-		[Function(PN.ClickHouse, "now",               ServerSideOnly = true, CanBeNull = false)]
 		public static DateTime CurrentTimestamp => throw new ServerSideOnlyException(nameof(CurrentTimestamp));
 
-		[Function  (PN.SqlServer , "SYSUTCDATETIME"                      , ServerSideOnly = true, CanBeNull = false)]
-		[Function  (PN.Sybase    , "GETUTCDATE"                          , ServerSideOnly = true, CanBeNull = false)]
-		[Expression(PN.SQLite    , "DATETIME('now')"                     , ServerSideOnly = true, CanBeNull = false)]
-		[Function  (PN.MySql     , "UTC_TIMESTAMP"                       , ServerSideOnly = true, CanBeNull = false)]
-		[Expression(PN.PostgreSQL, "timezone('UTC', now())"              , ServerSideOnly = true, CanBeNull = false)]
-		[Expression(PN.DB2       , "CURRENT TIMESTAMP - CURRENT TIMEZONE", ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Subtraction)]
-		[Expression(PN.Oracle    , "SYS_EXTRACT_UTC(SYSTIMESTAMP)"       , ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
-		[Property  (PN.SapHana   , "CURRENT_UTCTIMESTAMP"                , ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
-		[Expression(PN.Informix  , "datetime(1970-01-01 00:00:00) year to second + (dbinfo('utc_current')/86400)::int::char(9)::interval day(9) to day + (mod(dbinfo('utc_current'), 86400))::char(5)::interval second(5) to second", ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
-		[Expression(PN.ClickHouse, "now('UTC')"                          , ServerSideOnly = true, CanBeNull = false)]
 		public static DateTime CurrentTimestampUtc => DateTime.UtcNow;
 
-		[Property(               "CURRENT_TIMESTAMP", CanBeNull = false)]
-		[Property(PN.Informix,   "CURRENT",           CanBeNull = false)]
-		[Property(PN.Access,     "Now",               CanBeNull = false)]
-		[Function(PN.SqlCe,      "GetDate",           CanBeNull = false)]
-		[Function(PN.Sybase,     "GetDate",           CanBeNull = false)]
-		[Function(PN.ClickHouse, "now",               CanBeNull = false)]
 		public static DateTime CurrentTimestamp2 => DateTime.Now;
 
-		[Function(PN.SqlServer , "SYSDATETIMEOFFSET", ServerSideOnly = true, CanBeNull = false)]
-		[Function(PN.PostgreSQL, "now"              , ServerSideOnly = true, CanBeNull = false)]
-		[Property(PN.Oracle    , "SYSTIMESTAMP"     , ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
-		[Function(PN.ClickHouse, "now"              , ServerSideOnly = true, CanBeNull = false)]
+		[Function(PN.SqlServer , "SYSDATETIMEOFFSET"  , ServerSideOnly = true, CanBeNull = false)]
+		[Function(PN.PostgreSQL, "now"                , ServerSideOnly = true, CanBeNull = false)]
+		[Property(PN.Oracle    , "SYSTIMESTAMP"       , ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Additive)]
+		[Function(PN.ClickHouse, "now"                , ServerSideOnly = true, CanBeNull = false)]
 		public static DateTimeOffset CurrentTzTimestamp => DateTimeOffset.Now;
 
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
@@ -1446,6 +1410,9 @@ namespace LinqToDB
 		/// <summary>
 		/// Returns last identity value (current value) for specific table.
 		/// </summary>
+		/// <remarks>
+		/// Note that for SQL Server this function will return start value if no values were generated yet.
+		/// </remarks>
 		[Function  (PN.SqlServer    , "IDENT_CURRENT", ServerSideOnly = true, CanBeNull = true)]
 		[Expression(                  "NULL"         , ServerSideOnly = true, CanBeNull = true)]
 		internal static object? CurrentIdentity(string tableName) => throw new ServerSideOnlyException(nameof(CurrentIdentity));

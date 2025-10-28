@@ -15,9 +15,9 @@ namespace Cli.NewCliFeatures.SQLite
 	[Table("FKTestPosition")]
 	public class FkTestPosition
 	{
-		[Column("Company"   , IsPrimaryKey = true , PrimaryKeyOrder = 0)] public long   Company    { get; internal set; } // integer
-		[Column("Department", IsPrimaryKey = true , PrimaryKeyOrder = 1)] public long   Department { get; internal set; } // integer
-		[Column("PositionID", IsPrimaryKey = true , PrimaryKeyOrder = 2)] public long   PositionId { get; internal set; } // integer
+		[Column("Company"   , IsPrimaryKey = true , PrimaryKeyOrder = 0)] public long   Company    { get; internal set; } // INTEGER
+		[Column("Department", IsPrimaryKey = true , PrimaryKeyOrder = 1)] public long   Department { get; internal set; } // INTEGER
+		[Column("PositionID", IsPrimaryKey = true , PrimaryKeyOrder = 2)] public long   PositionId { get; internal set; } // INTEGER
 		[Column("Name"      , CanBeNull    = false                     )] public string Name       { get; internal set; } = null!; // nvarchar(50)
 	}
 }

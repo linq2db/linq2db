@@ -266,8 +266,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[RequiresCorrelatedSubquery]
 		[Test]
-		public void StackOverflow2([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void StackOverflow2([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -275,8 +276,9 @@ namespace Tests.Linq
 					from p in db.Parent5 where p.Children.Count != 0 select p);
 		}
 
+		[RequiresCorrelatedSubquery]
 		[Test]
-		public void StackOverflow3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void StackOverflow3([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -285,7 +287,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StackOverflow4([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		[RequiresCorrelatedSubquery]
+		public void StackOverflow4([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -472,8 +475,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[RequiresCorrelatedSubquery]
 		[Test]
-		public void LetTest1([DataSources(TestProvName.AllClickHouse)] string context)
+		public void LetTest1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -485,8 +489,9 @@ namespace Tests.Linq
 					select new { p.ParentID, Count = chs.Count() });
 		}
 
+		[RequiresCorrelatedSubquery]
 		[Test]
-		public void LetTest2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void LetTest2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -866,8 +871,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[RequiresCorrelatedSubquery]
 		[Test]
-		public void TestGenericAssociation3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void TestGenericAssociation3([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1833,8 +1839,9 @@ namespace Tests.Linq
 			return query.Where(x => x.SubEntities.Any());
 		}
 
+		[RequiresCorrelatedSubquery]
 		[Test]
-		public void ViaInterfaceAndExtension([DataSources(TestProvName.AllClickHouse)] string context)
+		public void ViaInterfaceAndExtension([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var main = db.CreateLocalTable<MainEntity>();
@@ -1850,8 +1857,9 @@ namespace Tests.Linq
 			var result = query.ToArray();
 		}
 
+		[RequiresCorrelatedSubquery]
 		[Test]
-		public void ViaInterfaceOfType([DataSources(TestProvName.AllClickHouse)] string context)
+		public void ViaInterfaceOfType([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var main = db.CreateLocalTable<MainEntity>();
@@ -1905,7 +1913,7 @@ namespace Tests.Linq
 			{
 				LinqToDB.Common.Configuration.Sql.AssociationAlias = "test.[aLыi`\",:!@#$%^&*()_'=as].{0}";
 
-				using var db = GetDataConnection(context);
+				using var db = GetDataContext(context);
 
 				db.Child.Select(c => new { c.ChildID, c.Parent!.Value1 }).ToArray();
 			}
@@ -2152,7 +2160,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4274")]
 		public void Issue4274Test([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 
 			var query1 = (
 					from serv in db.Patient

@@ -268,6 +268,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 				var nowFunction = factory.Function(factory.GetDbDataType(typeof(DateTime)), "now", ParametersNullabilityType.NotNullable);
 				return nowFunction;
 			}
+
+			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.Function(dbDataType, "now", factory.Value("UTC"));
+			}
 		}
 
 		protected class MathMemberTranslator : MathMemberTranslatorBase

@@ -93,14 +93,17 @@ namespace Cli.Fluent.SQLite
 					.Member(e => e.PersonId)
 						.HasAttribute(new ColumnAttribute("PersonID")
 						{
-							IsPrimaryKey = true
+							IsPrimaryKey = true,
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
 						})
 					.Member(e => e.Taxonomy)
 						.HasAttribute(new ColumnAttribute("Taxonomy")
 						{
 							CanBeNull = false
 						})
-					.Member(e => e.FkDoctor00)
+					.Member(e => e.FkDoctor0)
 						.HasAttribute(new AssociationAttribute()
 						{
 							CanBeNull = false,
@@ -231,14 +234,17 @@ namespace Cli.Fluent.SQLite
 					.Member(e => e.PersonId)
 						.HasAttribute(new ColumnAttribute("PersonID")
 						{
-							IsPrimaryKey = true
+							IsPrimaryKey = true,
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
 						})
 					.Member(e => e.Diagnosis)
 						.HasAttribute(new ColumnAttribute("Diagnosis")
 						{
 							CanBeNull = false
 						})
-					.Member(e => e.FkPatient00)
+					.Member(e => e.FkPatient0)
 						.HasAttribute(new AssociationAttribute()
 						{
 							CanBeNull = false,
@@ -290,7 +296,10 @@ namespace Cli.Fluent.SQLite
 					.Member(e => e.Id)
 						.HasAttribute(new ColumnAttribute("ID")
 						{
-							IsPrimaryKey = true
+							IsPrimaryKey = true,
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
 						})
 					.Member(e => e.Name)
 						.HasAttribute(new ColumnAttribute("Name")
@@ -484,7 +493,7 @@ namespace Cli.Fluent.SQLite
 					.Member(e => e.Number)
 						.HasAttribute(new ColumnAttribute("Number"));
 
-			builder.HasAttribute<Doctor>(e => ExtensionMethods.FkDoctor00(e, default(IDataContext)!), new AssociationAttribute()
+			builder.HasAttribute<Doctor>(e => ExtensionMethods.FkDoctor0(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				CanBeNull = false,
 				ThisKey = nameof(Doctor.PersonId),
@@ -510,7 +519,7 @@ namespace Cli.Fluent.SQLite
 				OtherKey = nameof(ForeignKeyTable.PrimaryKeyTableId)
 			});
 
-			builder.HasAttribute<Patient>(e => ExtensionMethods.FkPatient00(e, default(IDataContext)!), new AssociationAttribute()
+			builder.HasAttribute<Patient>(e => ExtensionMethods.FkPatient0(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				CanBeNull = false,
 				ThisKey = nameof(Patient.PersonId),
@@ -573,9 +582,9 @@ namespace Cli.Fluent.SQLite
 		#region Associations
 		#region Doctor Associations
 		/// <summary>
-		/// FK_Doctor_0_0
+		/// FK_Doctor_0
 		/// </summary>
-		public static Person FkDoctor00(this Doctor obj, IDataContext db)
+		public static Person FkDoctor0(this Doctor obj, IDataContext db)
 		{
 			return db.GetTable<Person>().First(t => obj.PersonId == t.PersonId);
 		}
@@ -583,7 +592,7 @@ namespace Cli.Fluent.SQLite
 
 		#region Person Associations
 		/// <summary>
-		/// FK_Doctor_0_0 backreference
+		/// FK_Doctor_0 backreference
 		/// </summary>
 		public static Doctor? Doctor(this Person obj, IDataContext db)
 		{
@@ -591,7 +600,7 @@ namespace Cli.Fluent.SQLite
 		}
 
 		/// <summary>
-		/// FK_Patient_0_0 backreference
+		/// FK_Patient_0 backreference
 		/// </summary>
 		public static Patient? Patient(this Person obj, IDataContext db)
 		{
@@ -601,7 +610,7 @@ namespace Cli.Fluent.SQLite
 
 		#region ForeignKeyTable Associations
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0
+		/// FK_ForeignKeyTable_0
 		/// </summary>
 		public static PrimaryKeyTable PrimaryKeyTable(this ForeignKeyTable obj, IDataContext db)
 		{
@@ -611,7 +620,7 @@ namespace Cli.Fluent.SQLite
 
 		#region PrimaryKeyTable Associations
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0 backreference
+		/// FK_ForeignKeyTable_0 backreference
 		/// </summary>
 		public static IQueryable<ForeignKeyTable> ForeignKeyTables(this PrimaryKeyTable obj, IDataContext db)
 		{
@@ -621,9 +630,9 @@ namespace Cli.Fluent.SQLite
 
 		#region Patient Associations
 		/// <summary>
-		/// FK_Patient_0_0
+		/// FK_Patient_0
 		/// </summary>
-		public static Person FkPatient00(this Patient obj, IDataContext db)
+		public static Person FkPatient0(this Patient obj, IDataContext db)
 		{
 			return db.GetTable<Person>().First(t => obj.PersonId == t.PersonId);
 		}

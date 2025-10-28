@@ -65,33 +65,33 @@ namespace Cli.T4.SQLite
 		public ITable<AllTypesView>      AllTypesViews       => this.GetTable<AllTypesView>();
 	}
 
-	[Table("AllTypes")]
+	[Table("AllTypes", Schema = "main")]
 	public partial class AllType
 	{
-		[Column("ID"                      , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long      ID                       { get; set; } // integer
+		[Column("ID"                      , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long      ID                       { get; set; } // INTEGER
 		[Column("bigintDataType"                                                                                            )] public long?     BigintDataType           { get; set; } // bigint
 		[Column("numericDataType"                                                                                           )] public decimal?  NumericDataType          { get; set; } // numeric
 		[Column("bitDataType"                                                                                               )] public bool?     BitDataType              { get; set; } // bit
 		[Column("smallintDataType"                                                                                          )] public short?    SmallintDataType         { get; set; } // smallint
 		[Column("decimalDataType"                                                                                           )] public decimal?  DecimalDataType          { get; set; } // decimal
-		[Column("intDataType"                                                                                               )] public int?      IntDataType              { get; set; } // int
+		[Column("intDataType"                                                                                               )] public int?      IntDataType              { get; set; } // INT
 		[Column("tinyintDataType"                                                                                           )] public byte?     TinyintDataType          { get; set; } // tinyint
 		[Column("moneyDataType"                                                                                             )] public decimal?  MoneyDataType            { get; set; } // money
 		[Column("floatDataType"                                                                                             )] public double?   FloatDataType            { get; set; } // float
-		[Column("realDataType"                                                                                              )] public double?   RealDataType             { get; set; } // real
+		[Column("realDataType"                                                                                              )] public double?   RealDataType             { get; set; } // REAL
 		[Column("datetimeDataType"                                                                                          )] public DateTime? DatetimeDataType         { get; set; } // datetime
 		[Column("charDataType"                                                                                              )] public char?     CharDataType             { get; set; } // char(1)
 		[Column("char20DataType"                                                                                            )] public string?   Char20DataType           { get; set; } // char(20)
 		[Column("varcharDataType"                                                                                           )] public string?   VarcharDataType          { get; set; } // varchar(20)
-		[Column("textDataType"                                                                                              )] public string?   TextDataType             { get; set; } // text(max)
-		[Column("ncharDataType"                                                                                             )] public string?   NcharDataType            { get; set; } // char(20)
+		[Column("textDataType"                                                                                              )] public string?   TextDataType             { get; set; } // TEXT
+		[Column("ncharDataType"                                                                                             )] public string?   NcharDataType            { get; set; } // nchar(20)
 		[Column("nvarcharDataType"                                                                                          )] public string?   NvarcharDataType         { get; set; } // nvarchar(20)
-		[Column("ntextDataType"                                                                                             )] public string?   NtextDataType            { get; set; } // ntext(max)
+		[Column("ntextDataType"                                                                                             )] public string?   NtextDataType            { get; set; } // ntext
 		[Column("binaryDataType"                                                                                            )] public byte[]?   BinaryDataType           { get; set; } // binary
 		[Column("varbinaryDataType"                                                                                         )] public byte[]?   VarbinaryDataType        { get; set; } // varbinary
 		[Column("imageDataType"                                                                                             )] public byte[]?   ImageDataType            { get; set; } // image
 		[Column("uniqueidentifierDataType"                                                                                  )] public Guid?     UniqueidentifierDataType { get; set; } // uniqueidentifier
-		[Column("objectDataType"                                                                                            )] public object?   ObjectDataType           { get; set; } // object
+		[Column("objectDataType"                                                                                            )] public object?   ObjectDataType           { get; set; } // Object
 	}
 
 	public static partial class ExtensionMethods
@@ -134,125 +134,125 @@ namespace Cli.T4.SQLite
 		#endregion
 	}
 
-	[Table("Child")]
+	[Table("Child", Schema = "main")]
 	public partial class Child
 	{
-		[Column("ParentID")] public int? ParentID { get; set; } // int
-		[Column("ChildID" )] public int? ChildID  { get; set; } // int
+		[Column("ParentID")] public int? ParentID { get; set; } // INT
+		[Column("ChildID" )] public int? ChildID  { get; set; } // INT
 	}
 
-	[Table("Doctor")]
+	[Table("Doctor", Schema = "main")]
 	public partial class Doctor
 	{
-		[Column("PersonID", IsPrimaryKey = true )] public long   PersonID { get; set; } // integer
-		[Column("Taxonomy", CanBeNull    = false)] public string Taxonomy { get; set; } = null!; // nvarchar(50)
+		[Column("PersonID", IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long   PersonID { get; set; } // INTEGER
+		[Column("Taxonomy", CanBeNull    = false                                                             )] public string Taxonomy { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 		/// <summary>
-		/// FK_Doctor_0_0
+		/// FK_Doctor_0
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(Person.PersonID))]
-		public Person FkDoctor00 { get; set; } = null!;
+		public Person FkDoctor0 { get; set; } = null!;
 		#endregion
 	}
 
-	[Table("Dual")]
+	[Table("Dual", Schema = "main")]
 	public partial class Dual
 	{
-		[Column("Dummy")] public string? Dummy { get; set; } // varchar(10)
+		[Column("Dummy")] public string? Dummy { get; set; } // VARCHAR(10)
 	}
 
-	[Table("FKTestPosition")]
+	[Table("FKTestPosition", Schema = "main")]
 	public partial class FKTestPosition
 	{
-		[Column("Company"   , IsPrimaryKey = true , PrimaryKeyOrder = 0)] public long   Company    { get; set; } // integer
-		[Column("Department", IsPrimaryKey = true , PrimaryKeyOrder = 1)] public long   Department { get; set; } // integer
-		[Column("PositionID", IsPrimaryKey = true , PrimaryKeyOrder = 2)] public long   PositionID { get; set; } // integer
+		[Column("Company"   , IsPrimaryKey = true , PrimaryKeyOrder = 0)] public long   Company    { get; set; } // INTEGER
+		[Column("Department", IsPrimaryKey = true , PrimaryKeyOrder = 1)] public long   Department { get; set; } // INTEGER
+		[Column("PositionID", IsPrimaryKey = true , PrimaryKeyOrder = 2)] public long   PositionID { get; set; } // INTEGER
 		[Column("Name"      , CanBeNull    = false                     )] public string Name       { get; set; } = null!; // nvarchar(50)
 	}
 
-	[Table("ForeignKeyTable")]
+	[Table("ForeignKeyTable", Schema = "main")]
 	public partial class ForeignKeyTable
 	{
-		[Column("PrimaryKeyTableID"                   )] public long   PrimaryKeyTableID { get; set; } // integer
+		[Column("PrimaryKeyTableID"                   )] public long   PrimaryKeyTableID { get; set; } // INTEGER
 		[Column("Name"             , CanBeNull = false)] public string Name              { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0
+		/// FK_ForeignKeyTable_0
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(PrimaryKeyTableID), OtherKey = nameof(SQLite.PrimaryKeyTable.ID))]
 		public PrimaryKeyTable PrimaryKeyTable { get; set; } = null!;
 		#endregion
 	}
 
-	[Table("GrandChild")]
+	[Table("GrandChild", Schema = "main")]
 	public partial class GrandChild
 	{
-		[Column("ParentID"    )] public int? ParentID     { get; set; } // int
-		[Column("ChildID"     )] public int? ChildID      { get; set; } // int
-		[Column("GrandChildID")] public int? GrandChildID { get; set; } // int
+		[Column("ParentID"    )] public int? ParentID     { get; set; } // INT
+		[Column("ChildID"     )] public int? ChildID      { get; set; } // INT
+		[Column("GrandChildID")] public int? GrandChildID { get; set; } // INT
 	}
 
-	[Table("InheritanceChild")]
+	[Table("InheritanceChild", Schema = "main")]
 	public partial class InheritanceChild
 	{
-		[Column("InheritanceChildId" )] public long    InheritanceChildId  { get; set; } // integer
-		[Column("InheritanceParentId")] public long    InheritanceParentId { get; set; } // integer
-		[Column("TypeDiscriminator"  )] public long?   TypeDiscriminator   { get; set; } // integer
+		[Column("InheritanceChildId" )] public long    InheritanceChildId  { get; set; } // INTEGER
+		[Column("InheritanceParentId")] public long    InheritanceParentId { get; set; } // INTEGER
+		[Column("TypeDiscriminator"  )] public long?   TypeDiscriminator   { get; set; } // INTEGER
 		[Column("Name"               )] public string? Name                { get; set; } // nvarchar(50)
 	}
 
-	[Table("InheritanceParent")]
+	[Table("InheritanceParent", Schema = "main")]
 	public partial class InheritanceParent
 	{
-		[Column("InheritanceParentId")] public long    InheritanceParentId { get; set; } // integer
-		[Column("TypeDiscriminator"  )] public long?   TypeDiscriminator   { get; set; } // integer
+		[Column("InheritanceParentId")] public long    InheritanceParentId { get; set; } // INTEGER
+		[Column("TypeDiscriminator"  )] public long?   TypeDiscriminator   { get; set; } // INTEGER
 		[Column("Name"               )] public string? Name                { get; set; } // nvarchar(50)
 	}
 
-	[Table("LinqDataTypes")]
+	[Table("LinqDataTypes", Schema = "main")]
 	public partial class LinqDataType
 	{
-		[Column("ID"            )] public int?      ID             { get; set; } // int
-		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; set; } // decimal
+		[Column("ID"            )] public int?      ID             { get; set; } // INT
+		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; set; } // decimal(10,4)
 		[Column("DateTimeValue" )] public DateTime? DateTimeValue  { get; set; } // datetime
 		[Column("DateTimeValue2")] public DateTime? DateTimeValue2 { get; set; } // datetime2
 		[Column("BoolValue"     )] public bool?     BoolValue      { get; set; } // boolean
 		[Column("GuidValue"     )] public Guid?     GuidValue      { get; set; } // uniqueidentifier
-		[Column("BinaryValue"   )] public byte[]?   BinaryValue    { get; set; } // binary
+		[Column("BinaryValue"   )] public byte[]?   BinaryValue    { get; set; } // binary(5000)
 		[Column("SmallIntValue" )] public short?    SmallIntValue  { get; set; } // smallint
-		[Column("IntValue"      )] public int?      IntValue       { get; set; } // int
+		[Column("IntValue"      )] public int?      IntValue       { get; set; } // INT
 		[Column("BigIntValue"   )] public long?     BigIntValue    { get; set; } // bigint
 		[Column("StringValue"   )] public string?   StringValue    { get; set; } // nvarchar(50)
 	}
 
-	[Table("Parent")]
+	[Table("Parent", Schema = "main")]
 	public partial class Parent
 	{
-		[Column("ParentID")] public int? ParentID { get; set; } // int
-		[Column("Value1"  )] public int? Value1   { get; set; } // int
+		[Column("ParentID")] public int? ParentID { get; set; } // INT
+		[Column("Value1"  )] public int? Value1   { get; set; } // INT
 	}
 
-	[Table("Patient")]
+	[Table("Patient", Schema = "main")]
 	public partial class Patient
 	{
-		[Column("PersonID" , IsPrimaryKey = true )] public long   PersonID  { get; set; } // integer
-		[Column("Diagnosis", CanBeNull    = false)] public string Diagnosis { get; set; } = null!; // nvarchar(256)
+		[Column("PersonID" , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long   PersonID  { get; set; } // INTEGER
+		[Column("Diagnosis", CanBeNull    = false                                                             )] public string Diagnosis { get; set; } = null!; // nvarchar(256)
 
 		#region Associations
 		/// <summary>
-		/// FK_Patient_0_0
+		/// FK_Patient_0
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(Person.PersonID))]
-		public Person FkPatient00 { get; set; } = null!;
+		public Person FkPatient0 { get; set; } = null!;
 		#endregion
 	}
 
-	[Table("Person")]
+	[Table("Person", Schema = "main")]
 	public partial class Person
 	{
-		[Column("PersonID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long    PersonID   { get; set; } // integer
+		[Column("PersonID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long    PersonID   { get; set; } // INTEGER
 		[Column("FirstName" , CanBeNull    = false                                                             )] public string  FirstName  { get; set; } = null!; // nvarchar(50)
 		[Column("LastName"  , CanBeNull    = false                                                             )] public string  LastName   { get; set; } = null!; // nvarchar(50)
 		[Column("MiddleName"                                                                                   )] public string? MiddleName { get; set; } // nvarchar(50)
@@ -260,129 +260,129 @@ namespace Cli.T4.SQLite
 
 		#region Associations
 		/// <summary>
-		/// FK_Doctor_0_0 backreference
+		/// FK_Doctor_0 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(SQLite.Doctor.PersonID))]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// FK_Patient_0_0 backreference
+		/// FK_Patient_0 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(SQLite.Patient.PersonID))]
 		public Patient? Patient { get; set; }
 		#endregion
 	}
 
-	[Table("PrimaryKeyTable")]
+	[Table("PrimaryKeyTable", Schema = "main")]
 	public partial class PrimaryKeyTable
 	{
-		[Column("ID"  , IsPrimaryKey = true )] public long   ID   { get; set; } // integer
-		[Column("Name", CanBeNull    = false)] public string Name { get; set; } = null!; // nvarchar(50)
+		[Column("ID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long   ID   { get; set; } // INTEGER
+		[Column("Name", CanBeNull    = false                                                             )] public string Name { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0 backreference
+		/// FK_ForeignKeyTable_0 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(ID), OtherKey = nameof(ForeignKeyTable.PrimaryKeyTableID))]
 		public IEnumerable<ForeignKeyTable> ForeignKeyTables { get; set; } = null!;
 		#endregion
 	}
 
-	[Table("TEST_T4_CASING")]
+	[Table("TEST_T4_CASING", Schema = "main")]
 	public partial class TestT4Casing
 	{
-		[Column("ALL_CAPS"             )] public int AllCaps             { get; set; } // int
-		[Column("CAPS"                 )] public int Caps                { get; set; } // int
-		[Column("PascalCase"           )] public int PascalCase          { get; set; } // int
-		[Column("Pascal_Snake_Case"    )] public int PascalSnakeCase     { get; set; } // int
-		[Column("PascalCase_Snake_Case")] public int PascalCaseSnakeCase { get; set; } // int
-		[Column("snake_case"           )] public int SnakeCase           { get; set; } // int
-		[Column("camelCase"            )] public int CamelCase           { get; set; } // int
+		[Column("ALL_CAPS"             )] public int AllCaps             { get; set; } // INT
+		[Column("CAPS"                 )] public int Caps                { get; set; } // INT
+		[Column("PascalCase"           )] public int PascalCase          { get; set; } // INT
+		[Column("Pascal_Snake_Case"    )] public int PascalSnakeCase     { get; set; } // INT
+		[Column("PascalCase_Snake_Case")] public int PascalCaseSnakeCase { get; set; } // INT
+		[Column("snake_case"           )] public int SnakeCase           { get; set; } // INT
+		[Column("camelCase"            )] public int CamelCase           { get; set; } // INT
 	}
 
-	[Table("TestIdentity")]
+	[Table("TestIdentity", Schema = "main")]
 	public partial class TestIdentity
 	{
-		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long ID { get; set; } // integer
+		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long ID { get; set; } // INTEGER
 	}
 
-	[Table("TestMerge1")]
+	[Table("TestMerge1", Schema = "main")]
 	public partial class TestMerge1
 	{
-		[Column("Id"             )] public long      Id              { get; set; } // integer
-		[Column("Field1"         )] public long?     Field1          { get; set; } // integer
-		[Column("Field2"         )] public long?     Field2          { get; set; } // integer
-		[Column("Field3"         )] public long?     Field3          { get; set; } // integer
-		[Column("Field4"         )] public long?     Field4          { get; set; } // integer
-		[Column("Field5"         )] public long?     Field5          { get; set; } // integer
-		[Column("FieldInt64"     )] public long?     FieldInt64      { get; set; } // bigint
-		[Column("FieldBoolean"   )] public bool?     FieldBoolean    { get; set; } // bit
-		[Column("FieldString"    )] public string?   FieldString     { get; set; } // varchar(20)
-		[Column("FieldNString"   )] public string?   FieldNString    { get; set; } // nvarchar(20)
-		[Column("FieldChar"      )] public char?     FieldChar       { get; set; } // char(1)
-		[Column("FieldNChar"     )] public char?     FieldNChar      { get; set; } // char(1)
-		[Column("FieldFloat"     )] public double?   FieldFloat      { get; set; } // float
-		[Column("FieldDouble"    )] public double?   FieldDouble     { get; set; } // float
-		[Column("FieldDateTime"  )] public DateTime? FieldDateTime   { get; set; } // datetime
-		[Column("FieldBinary"    )] public byte[]?   FieldBinary     { get; set; } // varbinary
-		[Column("FieldGuid"      )] public Guid?     FieldGuid       { get; set; } // uniqueidentifier
-		[Column("FieldDate"      )] public DateTime? FieldDate       { get; set; } // date
-		[Column("FieldEnumString")] public string?   FieldEnumString { get; set; } // varchar(20)
-		[Column("FieldEnumNumber")] public int?      FieldEnumNumber { get; set; } // int
+		[Column("Id"             )] public long      Id              { get; set; } // INTEGER
+		[Column("Field1"         )] public long?     Field1          { get; set; } // INTEGER
+		[Column("Field2"         )] public long?     Field2          { get; set; } // INTEGER
+		[Column("Field3"         )] public long?     Field3          { get; set; } // INTEGER
+		[Column("Field4"         )] public long?     Field4          { get; set; } // INTEGER
+		[Column("Field5"         )] public long?     Field5          { get; set; } // INTEGER
+		[Column("FieldInt64"     )] public long?     FieldInt64      { get; set; } // BIGINT
+		[Column("FieldBoolean"   )] public bool?     FieldBoolean    { get; set; } // BIT
+		[Column("FieldString"    )] public string?   FieldString     { get; set; } // VARCHAR(20)
+		[Column("FieldNString"   )] public string?   FieldNString    { get; set; } // NVARCHAR(20)
+		[Column("FieldChar"      )] public char?     FieldChar       { get; set; } // CHAR(1)
+		[Column("FieldNChar"     )] public char?     FieldNChar      { get; set; } // NCHAR(1)
+		[Column("FieldFloat"     )] public double?   FieldFloat      { get; set; } // FLOAT(24)
+		[Column("FieldDouble"    )] public double?   FieldDouble     { get; set; } // FLOAT(53)
+		[Column("FieldDateTime"  )] public DateTime? FieldDateTime   { get; set; } // DATETIME
+		[Column("FieldBinary"    )] public byte[]?   FieldBinary     { get; set; } // VARBINARY(20)
+		[Column("FieldGuid"      )] public Guid?     FieldGuid       { get; set; } // UNIQUEIDENTIFIER
+		[Column("FieldDate"      )] public DateTime? FieldDate       { get; set; } // DATE
+		[Column("FieldEnumString")] public string?   FieldEnumString { get; set; } // VARCHAR(20)
+		[Column("FieldEnumNumber")] public int?      FieldEnumNumber { get; set; } // INT
 	}
 
-	[Table("TestMerge2")]
+	[Table("TestMerge2", Schema = "main")]
 	public partial class TestMerge2
 	{
-		[Column("Id"             )] public long      Id              { get; set; } // integer
-		[Column("Field1"         )] public long?     Field1          { get; set; } // integer
-		[Column("Field2"         )] public long?     Field2          { get; set; } // integer
-		[Column("Field3"         )] public long?     Field3          { get; set; } // integer
-		[Column("Field4"         )] public long?     Field4          { get; set; } // integer
-		[Column("Field5"         )] public long?     Field5          { get; set; } // integer
-		[Column("FieldInt64"     )] public long?     FieldInt64      { get; set; } // bigint
-		[Column("FieldBoolean"   )] public bool?     FieldBoolean    { get; set; } // bit
-		[Column("FieldString"    )] public string?   FieldString     { get; set; } // varchar(20)
-		[Column("FieldNString"   )] public string?   FieldNString    { get; set; } // nvarchar(20)
-		[Column("FieldChar"      )] public char?     FieldChar       { get; set; } // char(1)
-		[Column("FieldNChar"     )] public char?     FieldNChar      { get; set; } // char(1)
-		[Column("FieldFloat"     )] public double?   FieldFloat      { get; set; } // float
-		[Column("FieldDouble"    )] public double?   FieldDouble     { get; set; } // float
-		[Column("FieldDateTime"  )] public DateTime? FieldDateTime   { get; set; } // datetime
-		[Column("FieldBinary"    )] public byte[]?   FieldBinary     { get; set; } // varbinary
-		[Column("FieldGuid"      )] public Guid?     FieldGuid       { get; set; } // uniqueidentifier
-		[Column("FieldDate"      )] public DateTime? FieldDate       { get; set; } // date
-		[Column("FieldEnumString")] public string?   FieldEnumString { get; set; } // varchar(20)
-		[Column("FieldEnumNumber")] public int?      FieldEnumNumber { get; set; } // int
+		[Column("Id"             )] public long      Id              { get; set; } // INTEGER
+		[Column("Field1"         )] public long?     Field1          { get; set; } // INTEGER
+		[Column("Field2"         )] public long?     Field2          { get; set; } // INTEGER
+		[Column("Field3"         )] public long?     Field3          { get; set; } // INTEGER
+		[Column("Field4"         )] public long?     Field4          { get; set; } // INTEGER
+		[Column("Field5"         )] public long?     Field5          { get; set; } // INTEGER
+		[Column("FieldInt64"     )] public long?     FieldInt64      { get; set; } // BIGINT
+		[Column("FieldBoolean"   )] public bool?     FieldBoolean    { get; set; } // BIT
+		[Column("FieldString"    )] public string?   FieldString     { get; set; } // VARCHAR(20)
+		[Column("FieldNString"   )] public string?   FieldNString    { get; set; } // NVARCHAR(20)
+		[Column("FieldChar"      )] public char?     FieldChar       { get; set; } // CHAR(1)
+		[Column("FieldNChar"     )] public char?     FieldNChar      { get; set; } // NCHAR(1)
+		[Column("FieldFloat"     )] public double?   FieldFloat      { get; set; } // FLOAT(24)
+		[Column("FieldDouble"    )] public double?   FieldDouble     { get; set; } // FLOAT(53)
+		[Column("FieldDateTime"  )] public DateTime? FieldDateTime   { get; set; } // DATETIME
+		[Column("FieldBinary"    )] public byte[]?   FieldBinary     { get; set; } // VARBINARY(20)
+		[Column("FieldGuid"      )] public Guid?     FieldGuid       { get; set; } // UNIQUEIDENTIFIER
+		[Column("FieldDate"      )] public DateTime? FieldDate       { get; set; } // DATE
+		[Column("FieldEnumString")] public string?   FieldEnumString { get; set; } // VARCHAR(20)
+		[Column("FieldEnumNumber")] public int?      FieldEnumNumber { get; set; } // INT
 	}
 
-	[Table("AllTypesView", IsView = true)]
+	[Table("AllTypesView", Schema = "main", IsView = true)]
 	public partial class AllTypesView
 	{
-		[Column("ID"                      , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long      ID                       { get; set; } // integer
+		[Column("ID"                      , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long      ID                       { get; set; } // INTEGER
 		[Column("bigintDataType"                                                                       )] public long?     BigintDataType           { get; set; } // bigint
 		[Column("numericDataType"                                                                      )] public decimal?  NumericDataType          { get; set; } // numeric
 		[Column("bitDataType"                                                                          )] public bool?     BitDataType              { get; set; } // bit
 		[Column("smallintDataType"                                                                     )] public short?    SmallintDataType         { get; set; } // smallint
 		[Column("decimalDataType"                                                                      )] public decimal?  DecimalDataType          { get; set; } // decimal
-		[Column("intDataType"                                                                          )] public int?      IntDataType              { get; set; } // int
+		[Column("intDataType"                                                                          )] public int?      IntDataType              { get; set; } // INT
 		[Column("tinyintDataType"                                                                      )] public byte?     TinyintDataType          { get; set; } // tinyint
 		[Column("moneyDataType"                                                                        )] public decimal?  MoneyDataType            { get; set; } // money
 		[Column("floatDataType"                                                                        )] public double?   FloatDataType            { get; set; } // float
-		[Column("realDataType"                                                                         )] public double?   RealDataType             { get; set; } // real
+		[Column("realDataType"                                                                         )] public double?   RealDataType             { get; set; } // REAL
 		[Column("datetimeDataType"                                                                     )] public DateTime? DatetimeDataType         { get; set; } // datetime
 		[Column("charDataType"                                                                         )] public char?     CharDataType             { get; set; } // char(1)
 		[Column("char20DataType"                                                                       )] public string?   Char20DataType           { get; set; } // char(20)
 		[Column("varcharDataType"                                                                      )] public string?   VarcharDataType          { get; set; } // varchar(20)
-		[Column("textDataType"                                                                         )] public string?   TextDataType             { get; set; } // text(max)
-		[Column("ncharDataType"                                                                        )] public string?   NcharDataType            { get; set; } // char(20)
+		[Column("textDataType"                                                                         )] public string?   TextDataType             { get; set; } // TEXT
+		[Column("ncharDataType"                                                                        )] public string?   NcharDataType            { get; set; } // nchar(20)
 		[Column("nvarcharDataType"                                                                     )] public string?   NvarcharDataType         { get; set; } // nvarchar(20)
-		[Column("ntextDataType"                                                                        )] public string?   NtextDataType            { get; set; } // ntext(max)
+		[Column("ntextDataType"                                                                        )] public string?   NtextDataType            { get; set; } // ntext
 		[Column("binaryDataType"                                                                       )] public byte[]?   BinaryDataType           { get; set; } // binary
 		[Column("varbinaryDataType"                                                                    )] public byte[]?   VarbinaryDataType        { get; set; } // varbinary
 		[Column("imageDataType"                                                                        )] public byte[]?   ImageDataType            { get; set; } // image
 		[Column("uniqueidentifierDataType"                                                             )] public Guid?     UniqueidentifierDataType { get; set; } // uniqueidentifier
-		[Column("objectDataType"                                                                       )] public object?   ObjectDataType           { get; set; } // object
-		[Column("Number"                                                                               )] public object?   Number                   { get; set; } // NUMERIC
+		[Column("objectDataType"                                                                       )] public object?   ObjectDataType           { get; set; } // Object
+		[Column("Number"                                                                               )] public long?     Number                   { get; set; } // INTEGER
 	}
 }

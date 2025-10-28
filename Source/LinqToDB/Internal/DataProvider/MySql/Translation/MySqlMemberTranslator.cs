@@ -217,6 +217,11 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 
 				return factory.Function(factory.GetDbDataType(dateExpression), "Date", dateExpression);
 			}
+
+			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				return translationContext.ExpressionFactory.Function(dbDataType, "UTC_TIMESTAMP");
+			}
 		}
 
 		protected class StringMemberTranslator : StringMemberTranslatorBase

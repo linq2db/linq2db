@@ -13,7 +13,7 @@ namespace Cli.NoMetadata.SQLiteNorthwind
 {
 	public class Supplier
 	{
-		public int     SupplierId   { get; set; } // int
+		public int     SupplierId   { get; set; } // INT
 		public string  CompanyName  { get; set; } = null!; // varchar(40)
 		public string? ContactName  { get; set; } // varchar(30)
 		public string? ContactTitle { get; set; } // varchar(30)
@@ -24,6 +24,6 @@ namespace Cli.NoMetadata.SQLiteNorthwind
 		public string? Country      { get; set; } // varchar(15)
 		public string? Phone        { get; set; } // varchar(24)
 		public string? Fax          { get; set; } // varchar(24)
-		public string? HomePage     { get; set; } // text(max)
+		public string? HomePage     { get; set; } // TEXT
 	}
 }

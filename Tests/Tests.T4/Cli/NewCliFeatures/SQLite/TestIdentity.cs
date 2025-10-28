@@ -15,6 +15,6 @@ namespace Cli.NewCliFeatures.SQLite
 	[Table("TestIdentity")]
 	public class TestIdentity
 	{
-		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long Id { get; internal set; } // integer
+		[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long Id { get; internal set; } // INTEGER
 	}
 }

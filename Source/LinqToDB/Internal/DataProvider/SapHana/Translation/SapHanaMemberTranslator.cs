@@ -278,6 +278,11 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 				var factory = translationContext.ExpressionFactory;
 				return factory.Function(factory.GetDbDataType(dateExpression), "To_Date", dateExpression);
 			}
+
+			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				return translationContext.ExpressionFactory.Expression(dbDataType, "CURRENT_UTCTIMESTAMP");
+			}
 		}
 
 		protected class SapHanaMathMemberTranslator : MathMemberTranslatorBase

@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.SQLite;
 
+using Microsoft.Data.Sqlite;
+
 namespace LinqToDB.LINQPad;
 
 internal sealed class SQLiteProvider : DatabaseProviderBase
 {
 	private static readonly IReadOnlyList<ProviderInfo> _providers =
 	[
-		new(ProviderName.SQLiteClassic, "SQLite")
+		new(ProviderName.SQLiteClassic, "Official Client (System.Data.SQLite)"   ),
+		new(ProviderName.SQLiteMS,      "Microsof Client (Microsoft.Data.Sqlite)")
 	];
 
 	public SQLiteProvider()
@@ -19,7 +22,10 @@ internal sealed class SQLiteProvider : DatabaseProviderBase
 
 	public override void ClearAllPools(string providerName)
 	{
-		SQLiteConnection.ClearAllPools();
+		if (providerName == ProviderName.SQLiteClassic)
+			SQLiteConnection.ClearAllPools();
+		else
+			SqliteConnection.ClearAllPools();
 	}
 
 	public override DateTime? GetLastSchemaUpdate(ConnectionSettings settings)
@@ -30,6 +36,9 @@ internal sealed class SQLiteProvider : DatabaseProviderBase
 
 	public override DbProviderFactory GetProviderFactory(string providerName)
 	{
-		return SQLiteFactory.Instance;
+		if (providerName == ProviderName.SQLiteClassic)
+			return SQLiteFactory.Instance;
+		else
+			return SqliteFactory.Instance;
 	}
 }

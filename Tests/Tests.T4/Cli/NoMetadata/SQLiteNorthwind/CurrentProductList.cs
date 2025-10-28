@@ -13,7 +13,7 @@ namespace Cli.NoMetadata.SQLiteNorthwind
 {
 	public class CurrentProductList
 	{
-		public int    ProductId   { get; set; } // int
+		public int    ProductId   { get; set; } // INT
 		public string ProductName { get; set; } = null!; // varchar(40)
 	}
 }

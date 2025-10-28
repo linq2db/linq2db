@@ -36,6 +36,7 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual bool SupportsBooleanInColumn           => false;
 		protected virtual bool SupportsNullInColumn              => true;
 		protected virtual bool SupportsDistinctAsExistsIntersect => false;
+		protected virtual bool SupportsNullIf                    => true;
 
 		public virtual IQueryElement Convert(OptimizationContext optimizationContext, NullabilityContext nullabilityContext, IQueryElement element, bool visitQueries)
 		{
@@ -131,6 +132,19 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 			{
 				return Visit(NotifyReplaced(newElement, element));
+			}
+
+			if (SupportsNullIf)
+			{
+				if (element.Condition is SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr
+				    && element.TrueValue.IsNullValue())
+				{
+					if (element.FalseValue.Equals(exprExpr.Expr1, LinqToDB.Internal.SqlQuery.SqlExtensions.DefaultComparer))
+						return NotifyReplaced(new SqlFunction(QueryHelper.GetDbDataType(element.FalseValue, MappingSchema), "NULLIF", false, true, exprExpr.Expr1, exprExpr.Expr2), element);
+
+					if (element.FalseValue.Equals(exprExpr.Expr2, LinqToDB.Internal.SqlQuery.SqlExtensions.DefaultComparer))
+						return NotifyReplaced(new SqlFunction(QueryHelper.GetDbDataType(element.FalseValue, MappingSchema), "NULLIF", false, true, exprExpr.Expr2, exprExpr.Expr1), element);
+				}
 			}
 
 			return element;
@@ -706,6 +720,8 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </summary>
 		public virtual bool   LikeIsEscapeSupported       => true;
 
+		public virtual ISqlExpression CreateLikeEscapeCharacter() => new SqlValue(LikeEscapeCharacter);
+
 		protected static string[] StandardLikeCharactersToEscape = {"%", "_", "?", "*", "#", "[", "]"};
 
 		/// <summary>
@@ -753,7 +769,7 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			var newExpr = expression;
 
-			escape ??= new SqlValue(LikeEscapeCharacter);
+			escape ??= CreateLikeEscapeCharacter();
 
 			newExpr = GenerateEscapeReplacement(newExpr, escape, escape);
 
@@ -801,7 +817,7 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 
 				return new SqlPredicate.Like(valueExpr, predicate.IsNot, patternExpr,
-					LikeIsEscapeSupported && (patternValue != patternRawValue) ? new SqlValue(LikeEscapeCharacter) : null);
+					LikeIsEscapeSupported && (patternValue != patternRawValue) ? CreateLikeEscapeCharacter() : null);
 			}
 			else
 			{

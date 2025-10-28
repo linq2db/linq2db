@@ -6,31 +6,6 @@ namespace LinqToDB.Remote.SignalR
 {
 	public class LinqToDBHub : Hub
 	{
-		public virtual LinqServiceInfo GetInfo(string? configuration)
-		{
-			return LinqService.GetInfo(configuration);
-		}
-
-		public virtual int ExecuteNonQuery(string? configuration, string queryData)
-		{
-			return LinqService.ExecuteNonQuery(configuration, queryData);
-		}
-
-		public virtual string? ExecuteScalar(string? configuration, string queryData)
-		{
-			return LinqService.ExecuteScalar(configuration, queryData);
-		}
-
-		public virtual string ExecuteReader(string? configuration, string queryData)
-		{
-			return LinqService.ExecuteReader(configuration, queryData);
-		}
-
-		public virtual int ExecuteBatch(string? configuration, string queryData)
-		{
-			return LinqService.ExecuteBatch(configuration, queryData);
-		}
-
 		public virtual Task<LinqServiceInfo> GetInfoAsync(string? configuration)
 		{
 			return LinqService.GetInfoAsync(configuration, default);

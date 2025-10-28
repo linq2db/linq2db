@@ -200,6 +200,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryField     :
 				case ConvertType.NameToQueryTable     :
+				case ConvertType.NameToCteName        :
 				case ConvertType.NameToProcedure      :
 				case ConvertType.NameToPackage        :
 				case ConvertType.NameToServer         :

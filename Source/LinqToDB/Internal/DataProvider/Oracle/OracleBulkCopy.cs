@@ -35,7 +35,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		public OracleBulkCopy(OracleDataProvider provider, AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			_provider                    = provider;
+			_provider               = provider;
 			_useAlternativeBulkCopy = useAlternativeBulkCopy;
 		}
 
@@ -123,8 +123,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 								opts.RowsCopiedCallback(rc);
 						}
 
-						if (table.DataContext.CloseAfterUse)
-							table.DataContext.Close();
+						CloseConnectionIfNecessary(table.DataContext);
 
 						return rc;
 					}
@@ -265,8 +264,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				{
 					if (!Execute(helper, list))
 					{
-						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-							helper.OriginalContext.Close();
+						if (!helper.SuppressCloseAfterUse)
+							CloseConnectionIfNecessary(helper.OriginalContext);
 
 						return helper.RowsCopied;
 					}
@@ -278,8 +277,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			if (helper.CurrentCount > 0)
 				Execute(helper, list);
 
-			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-				helper.OriginalContext.Close();
+			if (!helper.SuppressCloseAfterUse)
+				CloseConnectionIfNecessary(helper.OriginalContext);
 
 			return helper.RowsCopied;
 		}
@@ -299,8 +298,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				{
 					if (!await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(false))
 					{
-						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-							await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+						if (!helper.SuppressCloseAfterUse)
+							await CloseConnectionIfNecessaryAsync(helper.OriginalContext).ConfigureAwait(false);
 
 						return helper.RowsCopied;
 					}
@@ -314,8 +313,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(false);
 			}
 
-			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-				await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+			if (!helper.SuppressCloseAfterUse)
+				await CloseConnectionIfNecessaryAsync(helper.OriginalContext).ConfigureAwait(false);
 
 			return helper.RowsCopied;
 		}
@@ -335,8 +334,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				{
 					if (!await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(false))
 					{
-						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-							await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+						if (!helper.SuppressCloseAfterUse)
+							await CloseConnectionIfNecessaryAsync(helper.OriginalContext).ConfigureAwait(false);
 
 						return helper.RowsCopied;
 					}
@@ -350,8 +349,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(false);
 			}
 
-			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-				await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+			if (!helper.SuppressCloseAfterUse)
+				await CloseConnectionIfNecessaryAsync(helper.OriginalContext).ConfigureAwait(false);
 
 			return helper.RowsCopied;
 		}

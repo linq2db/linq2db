@@ -192,6 +192,11 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				var factory = translationContext.ExpressionFactory;
 				return factory.NotNullExpression(factory.GetDbDataType(typeof(DateTime)), "CURRENT_TIMESTAMP");
 			}
+
+			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				return translationContext.ExpressionFactory.Function(dbDataType, "SYSUTCDATETIME");
+			}
 		}
 
 		protected class SqlServerMathMemberTranslator : MathMemberTranslatorBase

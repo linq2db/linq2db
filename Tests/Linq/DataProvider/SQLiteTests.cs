@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.Common;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -11,7 +12,10 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Internal.DataProvider.SQLite;
+using LinqToDB.Internal.Logging;
 using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+using LinqToDB.Tools.Activity;
 
 using NUnit.Framework;
 
@@ -27,7 +31,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestParameters([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -41,7 +45,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		static void TestType<T>(DataConnection connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
+		static void TestType<T>(IDataContext connection, string dataTypeName, T value, string tableName = "AllTypes", bool convertToString = false)
 			where T : notnull
 		{
 			Assert.That(connection.Execute<T>(string.Format("SELECT {0} FROM {1} WHERE ID = 1", dataTypeName, tableName)),
@@ -62,7 +66,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDataTypes([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				TestType(conn, "bigintDataType",           1000000L);
 				TestType(conn, "numericDataType",          9999999m);
@@ -100,7 +104,7 @@ namespace Tests.DataProvider
 			throw new InvalidOperationException();
 		}
 
-		static void TestNumeric<T>(DataConnection conn, T expectedValue, DataType dataType, string skip = "")
+		static void TestNumeric<T>(IDataContext conn, T expectedValue, DataType dataType, string skip = "")
 		{
 			var skipTypes = skip.Split(' ');
 
@@ -144,7 +148,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		static void TestSimple<T>(DataConnection conn, T expectedValue, DataType dataType, string skip = "")
+		static void TestSimple<T>(IDataContext conn, T expectedValue, DataType dataType, string skip = "")
 			where T : struct
 		{
 			TestNumeric<T> (conn, expectedValue, dataType, skip);
@@ -157,7 +161,7 @@ namespace Tests.DataProvider
 		{
 			// culture region needed if tests run on system with non-dot decimal separator, e.g. nl-NL
 			using (new InvariantCultureRegion())
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				TestSimple<bool>   (conn, true, DataType.Boolean);
 				TestSimple<sbyte>  (conn, 1,    DataType.SByte);
@@ -214,7 +218,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDoubleRoundTrip([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var value = -1.7900000000000002E+308;
 
@@ -233,7 +237,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestNumericsDouble([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				TestNumeric(conn, -1.7900000000000002E+308d, DataType.Double, "bigint int smallint tinyint");
 				TestNumeric(conn, -1.7900000000000008E+308d, DataType.Double, "bigint int smallint tinyint");
@@ -245,7 +249,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDateTime([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 				using (Assert.EnterMultipleScope())
@@ -263,7 +267,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestChar([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -321,7 +325,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestString([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -367,7 +371,7 @@ namespace Tests.DataProvider
 			var arr1 = new byte[] { 1 };
 			var arr2 = new byte[] { 2 };
 
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -395,7 +399,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestGuid([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -420,7 +424,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestObject([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -437,7 +441,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestXml([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -465,7 +469,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestJson([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var testJson = /*lang=json,strict*/ "{\"name\":\"bob\", \"age\":10}";
 
@@ -482,7 +486,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -497,7 +501,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -549,7 +553,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					try
 					{
@@ -580,7 +584,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					try
 					{
@@ -607,7 +611,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void Issue784Test([IncludeDataSources(TestProvName.AllSQLiteClassic)] string context)
+		public void Issue784Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -771,7 +775,7 @@ namespace Tests.DataProvider
 					throw new InvalidOperationException();
 			}
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (var rd = db.ExecuteReader("select sqlite_version()"))
 			{
 				rd.Reader!.Read();
@@ -913,17 +917,119 @@ namespace Tests.DataProvider
 			[Column] public int Field { get; set; }
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2099")]
 		public void Issue2099Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue2099Table>();
+
+			db.Insert(new Issue2099Table());
+			var result = tb.Single();
+
+			Assert.That(result.Id, Is.EqualTo(1));
 		}
 
 		sealed class Issue2099Table
 		{
 			[PrimaryKey, Identity] public long Id { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/934")]
+		public void Issue934Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			try
+			{
+			db.Execute(@"
+CREATE TABLE withid_1(x INTEGER PRIMARY KEY ASC, y, z);
+CREATE TABLE withid_2(x INTEGER, y, z, PRIMARY KEY(x ASC));
+CREATE TABLE withid_3(x INTEGER, y, z, PRIMARY KEY(x DESC));
+CREATE TABLE withoutid_1(x INTEGER PRIMARY KEY DESC, y, z);
+CREATE TABLE withoutid_2(x INTEGER PRIMARY KEY ASC, y, z) without rowid;
+CREATE TABLE withoutid_3(x INTEGER, y, z, PRIMARY KEY(x ASC)) without rowid;
+CREATE TABLE withoutid_4(x INTEGER, y, z, PRIMARY KEY(x DESC)) without rowid;
+");
+
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
+
+				AssertIdentity(schema.Tables.FirstOrDefault(t => t.TableName == "withid_1"), true);
+				AssertIdentity(schema.Tables.FirstOrDefault(t => t.TableName == "withid_2"), true);
+				AssertIdentity(schema.Tables.FirstOrDefault(t => t.TableName == "withid_3"), true);
+				AssertIdentity(schema.Tables.FirstOrDefault(t => t.TableName == "withoutid_1"), false);
+				AssertIdentity(schema.Tables.FirstOrDefault(t => t.TableName == "withoutid_2"), false);
+				AssertIdentity(schema.Tables.FirstOrDefault(t => t.TableName == "withoutid_3"), false);
+				AssertIdentity(schema.Tables.FirstOrDefault(t => t.TableName == "withoutid_4"), false);
+
+				static void AssertIdentity(TableSchema? table, bool hasIdentity)
+				{
+					Assert.That(table, Is.Not.Null);
+
+					var pk = table.Columns.Where(c => c.IsPrimaryKey).ToArray();
+
+					Assert.That(pk, Has.Length.EqualTo(1));
+					using (Assert.EnterMultipleScope())
+					{
+						Assert.That(pk[0].ColumnName, Is.EqualTo("x"));
+						Assert.That(pk[0].IsIdentity, Is.EqualTo(hasIdentity));
+					}
+				}
+			}
+			finally
+			{
+				db.Execute(@"
+DROP TABLE withid_1;
+DROP TABLE withid_2;
+DROP TABLE withid_3;
+DROP TABLE withoutid_1;
+DROP TABLE withoutid_2;
+DROP TABLE withoutid_3;
+DROP TABLE withoutid_4;
+");
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4736")]
+		public void Issue4736Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			try
+			{
+				db.Execute(@"
+CREATE TABLE FirstTable (PkField1 INT, PkField2 INT, AdditionalField INTEGER, PRIMARY KEY (PkField1, PkField2));
+CREATE TABLE SecondTable (FkField1 INT, FkField2 INT, FOREIGN KEY (FkField1, FkField2) REFERENCES FirstTable (PkField1, PkField2));
+");
+
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
+
+				var firstTable = schema.Tables.FirstOrDefault(t => t.TableName == "FirstTable");
+				var secondTable = schema.Tables.FirstOrDefault(t => t.TableName == "SecondTable");
+
+				Assert.That(firstTable, Is.Not.Null);
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(firstTable.Columns.Count(c => c.IsPrimaryKey), Is.EqualTo(2));
+
+					Assert.That(secondTable, Is.Not.Null);
+				}
+
+				Assert.That(secondTable.ForeignKeys, Has.Count.EqualTo(1));
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(secondTable.ForeignKeys[0].ThisColumns, Has.Count.EqualTo(2));
+					Assert.That(secondTable.ForeignKeys[0].OtherColumns, Has.Count.EqualTo(2));
+				}
+			}
+			finally
+			{
+				db.Execute(@"
+DROP TABLE FirstTable;
+DROP TABLE SecondTable;
+");
+			}
 		}
 
 		#region issue 4808
@@ -1035,7 +1141,7 @@ namespace Tests.DataProvider
 
 		// TODO: Enable AllSQLite when MSSQLite provider is supported. Related: #4117
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5014")]
-		public void Issue5014Test([IncludeDataSources(TestProvName.AllSQLiteClassic)] string context)
+		public void Issue5014Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataConnection(context);
 

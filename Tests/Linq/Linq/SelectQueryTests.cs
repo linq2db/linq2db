@@ -247,7 +247,7 @@ namespace Tests.Linq
 			TestProvName.AllDB2
 			)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 
 			var res = db.FromSqlScalar<int>($"SELECT 1 as value").ToArray();
 
@@ -259,7 +259,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2779")]
 		public void Issue2779Test2([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 
 			var res = db.FromSql<int>("SELECT 1").ToArray();
 
@@ -270,7 +270,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2779")]
 		public void Issue2779Test3([DataSources(false, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllOracle21Minus, TestProvName.AllSapHana)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 
 			var res = db.Query<int>("SELECT 1").ToArray();
 
@@ -287,7 +287,7 @@ namespace Tests.Linq
 			TestProvName.AllDB2
 			)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 
 			var res = (from x in db.Person
 					  where db.FromSqlScalar<int>($"SELECT 1 as value").Contains(x.ID)
