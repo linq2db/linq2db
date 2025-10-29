@@ -140,7 +140,7 @@ namespace Tests
 		public virtual void OnAfterTest()
 		{
 			// SequentialAccess-enabled provider cleanup
-			var (provider, _) = NUnitUtils.GetContext(TestExecutionContext.CurrentContext.CurrentTest);
+			var (provider, isRemote) = NUnitUtils.GetContext(TestExecutionContext.CurrentContext.CurrentTest);
 			if (provider?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
 			{
 				Configuration.OptimizeForSequentialAccess = false;
@@ -160,7 +160,7 @@ namespace Tests
 			if (provider != null)
 				AssertState(provider);
 
-			BaselinesManager.Dump();
+			BaselinesManager.Dump(isRemote);
 
 			var ctx = CustomTestContext.Get();
 
