@@ -69,7 +69,7 @@ namespace Tests
 
 				if (expected != baseline)
 				{
-					throw new InvalidOperationException($"Baselines for remote context doesn't match direct access baselines");
+					throw new InvalidOperationException($"Baselines for remote context doesn't match direct access baselines. Test: {test.FullName}");
 				}
 			}
 			else
