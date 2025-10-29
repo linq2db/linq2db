@@ -28,7 +28,7 @@
 	</PropertyGroup>
 	
 	<ItemGroup Label="Build: Analyzers and Tools">
-		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.238"                      />
+		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.239"                      />
 		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.62"                       />
 		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                      Version="5.0.0-1.25277.114"            />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="5.0.0-1.25277.114"            />
@@ -123,7 +123,7 @@
 		<PackageVersion Include="Shouldly"                                              Version="4.3.0"                        />
 		<PackageVersion Include="Microsoft.NET.Test.Sdk"                                Version="18.0.0"                       />
 		<PackageVersion Include="NUnit"                                                 Version="4.4.0"                        />
-		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.10.0"                       />
+		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.11.0"                       />
 		<PackageVersion Include="NUnit3TestAdapter"                                     Version="5.2.0"                        />
 
 		<PackageVersion Include="Microsoft.AspNet.OData"                                Version="7.7.9"                        />
