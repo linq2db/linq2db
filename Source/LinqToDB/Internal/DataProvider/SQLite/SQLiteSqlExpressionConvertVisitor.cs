@@ -194,6 +194,9 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 					if (IsDateDataType(dbDataType, "Date"))
 						return new SqlFunction(dbDataType, "Date", expression) { DoNotOptimize = true };
 
+					if (expression is SqlFunction { Parameters: [SqlValue { Value: "%Y-%m-%d %H:%M:%f" }, var expr] })
+						expression = expr;
+
 					return new SqlFunction(dbDataType, "strftime", ParametersNullabilityType.SameAsSecondParameter, new SqlValue("%Y-%m-%d %H:%M:%f"), expression) { DoNotOptimize = true };
 				}
 			}

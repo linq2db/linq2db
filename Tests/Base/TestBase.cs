@@ -139,44 +139,49 @@ namespace Tests
 		[TearDown]
 		public virtual void OnAfterTest()
 		{
-			// SequentialAccess-enabled provider cleanup
-			var (provider, isRemote) = NUnitUtils.GetContext(TestExecutionContext.CurrentContext.CurrentTest);
-			if (provider?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
+			try
 			{
-				Configuration.OptimizeForSequentialAccess = false;
-			}
-
-			if (provider?.IsAnyOf(TestProvName.AllSapHana) == true)
-			{
-				using (new DisableLogging())
-				using (new DisableBaseline("isn't baseline query"))
-				using (var db = new TestDataConnection(provider))
+				// SequentialAccess-enabled provider cleanup
+				var (provider, isRemote) = NUnitUtils.GetContext(TestExecutionContext.CurrentContext.CurrentTest);
+				if (provider?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
 				{
-					// release memory
-					db.Execute("ALTER SYSTEM CLEAR SQL PLAN CACHE");
+					Configuration.OptimizeForSequentialAccess = false;
+				}
+
+				if (provider?.IsAnyOf(TestProvName.AllSapHana) == true)
+				{
+					using (new DisableLogging())
+					using (new DisableBaseline("isn't baseline query"))
+					using (var db = new TestDataConnection(provider))
+					{
+						// release memory
+						db.Execute("ALTER SYSTEM CLEAR SQL PLAN CACHE");
+					}
+				}
+
+				if (provider != null)
+					AssertState(provider);
+
+				BaselinesManager.Dump(isRemote);
+
+				var ctx = CustomTestContext.Get();
+
+				var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
+
+				if (trace != null && TestContext.CurrentContext.Result.FailCount > 0 && ctx.Get<bool>(CustomTestContext.LIMITED))
+				{
+					// we need to set ErrorInfo.Message element text
+					// because Azure displays only ErrorInfo node data
+					TestExecutionContext.CurrentContext.CurrentResult.SetResult(
+						TestExecutionContext.CurrentContext.CurrentResult.ResultState,
+						TestExecutionContext.CurrentContext.CurrentResult.Message + "\r\n" + trace.ToString(),
+						TestExecutionContext.CurrentContext.CurrentResult.StackTrace);
 				}
 			}
-
-			if (provider != null)
-				AssertState(provider);
-
-			BaselinesManager.Dump(isRemote);
-
-			var ctx = CustomTestContext.Get();
-
-			var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
-
-			if (trace != null && TestContext.CurrentContext.Result.FailCount > 0 && ctx.Get<bool>(CustomTestContext.LIMITED))
+			finally
 			{
-				// we need to set ErrorInfo.Message element text
-				// because Azure displays only ErrorInfo node data
-				TestExecutionContext.CurrentContext.CurrentResult.SetResult(
-					TestExecutionContext.CurrentContext.CurrentResult.ResultState,
-					TestExecutionContext.CurrentContext.CurrentResult.Message + "\r\n" + trace.ToString(),
-					TestExecutionContext.CurrentContext.CurrentResult.StackTrace);
+				CustomTestContext.Release();
 			}
-
-			CustomTestContext.Release();
 		}
 	}
 }
