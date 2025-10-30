@@ -290,6 +290,11 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 						return Find(validateExpression.InnerExpression);
 					}
 
+					if (expr is SqlPathExpression pathExpression)
+					{
+						return Find(pathExpression.Path);
+					}
+
 					if (expr.CanReduce)
 						return Find(expr.Reduce());
 

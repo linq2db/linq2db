@@ -560,19 +560,29 @@ namespace LinqToDB.Internal.Linq.Builder
 			return translated;
 		}
 
+		static bool HasConstant(Expression expression)
+		{
+			return expression.Find(1, static (_, e) => e.NodeType == ExpressionType.Constant) != null;
+		}
+
 		Expression RegisterTranslatedSql(SelectQuery selectQuery, Expression translated, Expression path)
 		{
 			if (translated is SqlPlaceholderExpression placeholder)
 			{
 				if (_alias != null)
+				{
 					placeholder = placeholder.WithAlias(_alias);
+				}
 
 				translated = placeholder.WithTrackingPath(path);
 
 				var cacheKey = GetSqlCacheKey(path, selectQuery);
 
-				if (!_translationCache.ContainsKey(cacheKey))
-					_translationCache.Add(cacheKey, translated);
+				if (!(placeholder.Sql.HasParameter() && HasConstant(placeholder.Path)))
+				{
+					if (!_translationCache.ContainsKey(cacheKey))
+						_translationCache.Add(cacheKey, translated);
+				}
 			}
 
 			return translated;
@@ -867,15 +877,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					return Visit(translatedMember);
 				}
 
-				if (HandleExtension(BuildContext, node, out var attribute, out translatedMember))
+				if (HandleExtension(BuildContext, node, out translatedMember))
 				{
-					if (node.Type == typeof(bool) && translatedMember is SqlPlaceholderExpression { Sql: var sql } && attribute.IsPredicate)
-					{
-						var predicate = ConvertExpressionToPredicate(sql);
-						var searchCondition = new SqlSearchCondition().Add(predicate);
-						return CreatePlaceholder(searchCondition, node);
-					}
-
 					return Visit(translatedMember);
 				}
 
@@ -1109,7 +1112,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return base.VisitInvocation(node);
 		}
 
-		public bool HandleExtension(IBuildContext context, Expression expr, [NotNullWhen(true)] out Sql.ExpressionAttribute? attribute, [NotNullWhen(true)] out Expression? translated)
+		public bool HandleExtension(IBuildContext context, Expression expr, [NotNullWhen(true)] out Expression? translated)
 		{
 			// Handling ExpressionAttribute
 			//
@@ -1125,7 +1128,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					memberInfo = ((MemberExpression)expr).Member;
 				}
 
-				attribute = memberInfo.GetExpressionAttribute(MappingSchema);
+				var attribute = memberInfo.GetExpressionAttribute(MappingSchema);
 
 				if (attribute != null)
 				{
@@ -1146,7 +1149,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					translated = ConvertExtension(attribute, context, expr);
 
-					if (translated is not SqlPlaceholderExpression)
+					if (translated is not SqlPlaceholderExpression placeholder)
 					{
 						if (attribute.ServerSideOnly)
 						{
@@ -1162,7 +1165,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			attribute  = null;
 			translated = null;
 			return false;
 		}
@@ -1225,16 +1227,21 @@ namespace LinqToDB.Internal.Linq.Builder
 				rootSelectQuery = groupBy.SubQuery.SelectQuery;
 			}
 
+			Expression transformed;
 			if (GetAlreadyTranslated(rootSelectQuery, expr, out var translated))
-				return translated;
-
-			var transformed = attr.GetExpression((buildVisitor: this, context: rootContext),
-				Builder.DataContext,
-				Builder,
-				rootSelectQuery,
-				expr,
-				static (context, e, descriptor, inline) =>
-					context.buildVisitor.ConvertToExtensionSql(context.context, e, descriptor, inline));
+			{
+				transformed = translated;
+			}
+			else
+			{
+				transformed = attr.GetExpression((buildVisitor : this, context : rootContext),
+					Builder.DataContext,
+					Builder,
+					rootSelectQuery,
+					expr,
+					static (context, e, descriptor, inline) =>
+						context.buildVisitor.ConvertToExtensionSql(context.context, e, descriptor, inline));
+			}
 
 			if (transformed is SqlPlaceholderExpression placeholder)
 			{
@@ -1242,6 +1249,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				placeholder = placeholder.WithSql(Builder.PosProcessCustomExpression(placeholder.Sql, NullabilityContext.GetContext(placeholder.SelectQuery)));
 				placeholder = placeholder.WithPath(expr);
+
+				if (placeholder.Type == typeof(bool) && attr.IsPredicate)
+				{
+					if (placeholder.Sql is not ISqlPredicate)
+					{
+						var predicate       = ConvertExpressionToPredicate(placeholder.Sql);
+						var searchCondition = new SqlSearchCondition().Add(predicate);
+						placeholder = placeholder.WithSql(searchCondition);
+					}
+				}
 
 				placeholder = (SqlPlaceholderExpression)RegisterTranslatedSql(rootSelectQuery, placeholder, expr);
 
@@ -1540,18 +1557,8 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (HandleValue(node, out var translated))
 							return Visit(translated);
 
-						if (HandleExtension(BuildContext, node, out var attribute, out translated))
+						if (HandleExtension(BuildContext, node, out translated))
 						{
-							if (node.Type == typeof(bool) && translated is SqlPlaceholderExpression placeholder && !attribute.IsPredicate)
-							{
-								var isTruePredicate = MakeIsTrueCheck(placeholder.Sql);
-								if (isTruePredicate == null)
-									return node;
-
-								var searchCondition = new SqlSearchCondition().Add(isTruePredicate);
-								return CreatePlaceholder(searchCondition, node);
-							}
-
 							return Visit(translated);
 						}
 

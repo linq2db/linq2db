@@ -1580,6 +1580,19 @@ namespace LinqToDB.Internal.SqlQuery
 			});
 		}
 
+		public static bool HasParameter(this IQueryElement root)
+		{
+			return null != root.Find(static e =>
+			{
+				if (e.ElementType == QueryElementType.SqlParameter)
+				{
+					return true;
+				}
+
+				return false;
+			});
+		}
+
 		public static void MarkAsNonQueryParameters(IQueryElement root)
 		{
 			root.VisitAll(static e =>

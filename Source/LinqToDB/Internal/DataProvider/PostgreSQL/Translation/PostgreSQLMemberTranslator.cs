@@ -266,6 +266,61 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 
 				return result;
 			}
+
+			protected override ISqlExpression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				ISqlExpression result;
+
+				if (precision == null)
+				{
+					/*
+					CASE
+						WHEN value > 0 THEN floor(value + 0.5)
+						   ELSE ceil(value - 0.5)
+					   END
+					 */
+					result = factory.Condition(factory.Greater(value, factory.Value(valueType, 0)),
+						factory.Function(valueType, "FLOOR", factory.Add(valueType, value, factory.Value(valueType, 0.5))),
+						factory.Function(valueType, "CEIL",  factory.Sub(valueType, value, factory.Value(valueType, 0.5)))
+					);
+				}
+				else
+				{
+					/*
+					CASE
+						   WHEN value >= 0 THEN floor(value * power(10, precision) + 0.5) / power(10, precision)
+						   ELSE ceil(value * power(10, precision) - 0.5) / power(10, precision)
+					   END
+					 */
+					var powerExpr = factory.Function(valueType, "POWER",
+						factory.Value(valueType, 10),
+						precision);
+
+					result = factory.Condition(factory.GreaterOrEqual(value, factory.Value(valueType, 0)),
+						factory.Div(
+							valueType,
+							factory.Function(valueType, "FLOOR",
+								factory.Add(
+									valueType,
+									factory.Multiply(valueType, value, powerExpr),
+									factory.Value(valueType, 0.5))),
+							powerExpr),
+						factory.Div(
+							valueType,
+							factory.Function(valueType, "CEIL",
+								factory.Sub(
+									valueType,
+									factory.Multiply(valueType, value, powerExpr),
+									factory.Value(valueType, 0.5))),
+							powerExpr)
+					);
+				}
+
+				return result;
+			}
 		}
 
 		protected class GuidMemberTranslator : GuidMemberTranslatorBase
