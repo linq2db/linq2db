@@ -48,8 +48,8 @@ namespace LinqToDB.Internal.DataProvider
 				{
 					Utils.MakeUniqueNames(_tablesVisited,
 						_allAliases,
-						(n, a) => !a!.Contains(n) && IsValidAlias(n), 
-						GetCurrentAlias, 
+						(n, a) => !a!.Contains(n) && IsValidAlias(n),
+						GetCurrentAlias,
 						(ts, n, a) =>
 						{
 							ts.Alias = n;

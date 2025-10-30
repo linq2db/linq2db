@@ -2391,9 +2391,12 @@ $function$
 
 			// test bulk copy
 			if (db is DataConnection dc)
+			{
+				using var _ = new DisableBaseline("Makes baselines differ for remote context");
 				dc.BulkCopy(
 					new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific },
 					new[] { new BigIntegerTable() { Id = 2, Value1 = value2, Value2 = value1 } });
+			}
 
 			// test read
 			var data = table.OrderBy(r => r.Id).ToArray();
