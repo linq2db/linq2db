@@ -434,6 +434,8 @@ namespace Tests.Linq
 		[Test]
 		public void Truncate2([DataSources] string context)
 		{
+			using var _ = context.IsAnyOf(TestProvName.AllAccess) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
+
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from t in from p in    Types select Math.Truncate((double)-p.MoneyValue) where t != 0.1 select t,
