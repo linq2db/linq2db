@@ -769,7 +769,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return false;
 			}
 
-			foreach (var join in query.From.Tables[0].Joins)
+			var mainTable = query.From.Tables[0];
+
+			if (mainTable.Joins.Count == 0)
+			{
+				return false;
+			}
+
+			foreach (var join in mainTable.Joins)
 			{
 				if (join.JoinType is not (JoinType.Inner or JoinType.Left) || join.Table.Joins.Count > 0)
 				{
@@ -778,9 +785,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 
 			var mainKeys = new List<IList<ISqlExpression>>();
-			QueryHelper.CollectUniqueKeys(query.From.Tables[0].Source, includeDistinct: true, mainKeys);
+			QueryHelper.CollectUniqueKeys(mainTable.Source, includeDistinct: true, mainKeys);
 
-			foreach (var join in query.From.Tables[0].Joins)
+			foreach (var join in mainTable.Joins)
 			{
 				if (join.Cardinality.HasFlag(SourceCardinality.One))
 					continue;

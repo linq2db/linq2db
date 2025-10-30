@@ -661,7 +661,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			var result = functionFactory(aggregationInfo);
 			if (result.SqlExpression != null)
 			{
-				var placeholder = CreatePlaceholder(sqlContext.BuildContext, result.SqlExpression, functionExpression, functionExpression.Type, alias: _buildVisitor.Alias);
+				var alias       = _buildVisitor.Alias ?? (functionExpression as MethodCallExpression)?.Method.Name;
+				var placeholder = CreatePlaceholder(sqlContext.BuildContext, result.SqlExpression, functionExpression, functionExpression.Type, alias: alias);
+
 				placeholder = UpdateNesting(currentRef.BuildContext, placeholder);
 				if (result.Validator != null)
 				{

@@ -962,7 +962,57 @@ namespace LinqToDB.Internal.Linq.Builder
 			using var saveAlias      = UsingAlias(null);
 
 			FoundRoot = null;
+
 			return base.VisitNew(node);
+
+			// Uncomment to enable aliasing for NewExpression members. Postponed for future PR.
+			/*
+			using var saveDescriptor = UsingColumnDescriptor(null);
+
+			FoundRoot = null;
+
+			if (node.Members?.Count > 0)
+			{
+				var saveAlias = _alias;
+
+				Expression[]? newArguments = null;
+				for (int i = 0, n = node.Members.Count; i < n; i++)
+				{
+					var memberInfo   = node.Members[i];
+
+					_alias = memberInfo.Name;
+
+					var nodeArgument = node.Arguments[i];
+					var newArgument  = Visit(nodeArgument);
+
+					if (newArguments != null)
+					{
+						newArguments[i] = newArgument;
+					}
+					else if (!ReferenceEquals(newArgument, nodeArgument))
+					{
+						newArguments = new Expression[n];
+						for (int j = 0; j < i; j++)
+						{
+							newArguments[j] = node.Arguments[j];
+						}
+						newArguments[i] = newArgument;
+					}
+				}
+
+				_alias = saveAlias;
+
+				if (newArguments != null)
+				{
+					var newNode = node.Update(newArguments);
+					return newNode;
+				}
+			}
+			else
+			{
+				return base.VisitNew(node);
+			}
+			*/
 		}
 
 		protected override Expression VisitMemberInit(MemberInitExpression node)
