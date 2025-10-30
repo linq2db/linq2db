@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider.SqlServer.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
@@ -343,7 +344,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 				case DataType.Udt:
 					if (param != null
-						&& value != null
+						&& !value.IsNullValue()
 						&& _udtTypeNames.TryGetValue(value.GetType(), out var typeName))
 					{
 						Adapter.SetUdtTypeName(param, typeName);
@@ -433,7 +434,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				}
 
 				case DataType.Undefined:
-					if (value != null
+					if (!value.IsNullValue()
 						&& (value is DataTable
 						|| value is DbDataReader
 							|| value is IEnumerable<DbDataRecord>
@@ -463,7 +464,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 								Adapter.SetTypeName(param, dataType.DbType!);
 
 							// TVP doesn't support DBNull
-							if (parameter.Value is DBNull)
+							if (parameter.Value.IsNullValue())
 								parameter.Value = null;
 
 							break;
@@ -471,7 +472,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					case SqlDbType.VarChar:
 						{
 							var strValue = value as string;
-							if ((strValue != null && strValue.Length > 8000) || (value != null && strValue == null))
+							if ((strValue != null && strValue.Length > 8000) || (!value.IsNullValue() && strValue == null))
 								parameter.Size = -1;
 							else if (dataType.Length != null && dataType.Length <= 8000 && (strValue == null || strValue.Length <= dataType.Length))
 								parameter.Size = dataType.Length.Value;
@@ -483,7 +484,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					case SqlDbType.NVarChar:
 						{
 							var strValue = value as string;
-							if ((strValue != null && strValue.Length > 4000) || (value != null && strValue == null))
+							if ((strValue != null && strValue.Length > 4000) || (!value.IsNullValue() && strValue == null))
 								parameter.Size = -1;
 							else if (dataType.Length != null && dataType.Length <= 4000 && (strValue == null || strValue.Length <= dataType.Length))
 								parameter.Size = dataType.Length.Value;
@@ -495,7 +496,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					case SqlDbType.VarBinary:
 						{
 							var binaryValue = value as byte[];
-							if ((binaryValue != null && binaryValue.Length > 8000) || (value != null && binaryValue == null))
+							if ((binaryValue != null && binaryValue.Length > 8000) || (!value.IsNullValue() && binaryValue == null))
 								parameter.Size = -1;
 							else if (dataType.Length != null && dataType.Length <= 8000 && (binaryValue == null || binaryValue.Length <= dataType.Length))
 								parameter.Size = dataType.Length.Value;

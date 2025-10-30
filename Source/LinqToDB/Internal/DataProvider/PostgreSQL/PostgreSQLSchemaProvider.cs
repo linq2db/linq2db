@@ -504,7 +504,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				from col in item.thisColumns
 					.Zip(item.otherColumns, (thisColumn,otherColumn) => new { thisColumn, otherColumn })
 					.Select((cs,i) => new { cs.thisColumn, cs.otherColumn, ordinal = i})
-				where col.thisColumn != null && !(col.thisColumn is DBNull)
+				where !col.thisColumn.IsNullValue()
 				select new ForeignKeyInfo
 				{
 					Name         = name,
