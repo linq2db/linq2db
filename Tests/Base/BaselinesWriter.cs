@@ -73,6 +73,7 @@ namespace Tests
 
 				if (expected != baseline)
 				{
+					File.WriteAllText(fullPath + ".other", baseline, Encoding.UTF8);
 					throw new InvalidOperationException($"Baselines for remote context doesn't match direct access baselines. Test: {test.FullName}");
 				}
 			}
