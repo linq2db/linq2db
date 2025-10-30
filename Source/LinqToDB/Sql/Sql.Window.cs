@@ -9,10 +9,11 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Linq;
 
 #pragma warning disable MA0048
-
+#pragma warning disable IDE0130
 namespace LinqToDB
 {
-	public static class WindowFunctionBuilder
+	// Hidden until fully implemented
+	static class WindowFunctionBuilder
 	{
 		public interface IDefinedFunction<out TR> { }
 		public interface IDefinedFunction { }
@@ -487,41 +488,5 @@ namespace LinqToDB
 
 		#endregion
 
-	}
-
-	partial class Sql
-	{
-		/*// Will be removed after completion of the task
-		static void Test()
-		{
-			var query =
-				from t in new[] { new { Id = 1, Name = "John" } }
-				//let w = Sql.Window.DefineWindow(w => w.Filter(t.Name.StartsWith("Jo")).PartitionBy(t.Name).OrderBy(t.Id))
-				select new
-				{
-					t.Id,
-					RNPO = Window.RowNumber(w => w.PartitionBy(t.Name).OrderBy(t.Id)),
-					RNO2 = Window.RowNumber(w => w
-						.OrderByDesc(t.Id)
-						.ThenBy(t.Name)),
-					RN01 = Window.RowNumber(w => w.OrderBy(t.Id)),
-
-					Sum      = Window.Sum(t.Id, w => w.PartitionBy(t.Name).OrderBy(t.Id).ThenBy(t.Name)),
-
-					CountP    = Window.Count(w => w.PartitionBy(t.Name)),
-					CountPArg = Window.Count(w => w.Argument(t.Id).PartitionBy(t.Name)),
-					CountArg = Window.Count(w => w.Argument(AggregateModifier.Distinct, t.Id).PartitionBy(t.Name).OrderBy(t.Id).ThenBy(t.Name)),
-				};
-
-			var groupQuery =
-				from t in new[] { new { Id = 1, Name = "John" } }
-				group t by t.Id into g
-				select new
-				{
-					g.Key,
-					PC = g.PercentileCont(0.5, (e, f) => f.OrderBy(e.Id)),
-					PD = g.PercentileDisc(0.5, (e, f) => f.OrderBy(e.Id).ThenBy(e.Name))
-				};
-		}*/
 	}
 }
