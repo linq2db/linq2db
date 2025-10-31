@@ -1602,5 +1602,20 @@ namespace LinqToDB
 
 			return currentSource.Provider.Execute<TResult>(expr);
 		}
+
+		[Pure]
+		public static Task<TResult> AggregateExecuteAsync<TSource, TResult>(this IQueryable<TSource> source, Expression<Func<IEnumerable<TSource>, TResult>> aggregate, CancellationToken cancellationToken = default)
+		{
+			if (source    == null) throw new ArgumentNullException(nameof(source));
+			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
+
+			var currentSource = source.GetLinqToDBSource();
+
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(AggregateExecute, source, aggregate), currentSource.Expression, aggregate);
+
+			return currentSource.ExecuteAsync<TResult>(expr, cancellationToken);
+		}
 	}
 }

@@ -381,7 +381,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConcatStringsTest([DataSources] string context)
+		public void ConcatStringsTest([DataSources(TestProvName.AllOracle)] string context)
 		{
 			var data = GenerateData().OrderBy(_ => _.Id);
 

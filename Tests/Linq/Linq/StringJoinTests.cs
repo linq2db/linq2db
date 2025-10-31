@@ -1,6 +1,7 @@
 ﻿extern alias MySqlConnector;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
@@ -17,7 +18,7 @@ namespace Tests.Linq
 	public class StringJoinTests : TestBase
 	{
 		const string SupportedProviders = TestProvName.AllPostgreSQL + "," + TestProvName.AllSqlServer2017Plus + "," + TestProvName.AllSQLite + "," + TestProvName.AllMySql + "," +
-		                                  TestProvName.AllClickHouse + "," + TestProvName.AllSapHana;
+		                                  TestProvName.AllClickHouse + "," + TestProvName.AllSapHana           + "," + TestProvName.AllOracle;
 
 		[Table]
 		sealed class SampleClass
@@ -76,7 +77,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllSqlServer2016Plus, Details = "SQL Server limitation for single select")]
+		[ActiveIssue(Configurations = [TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle], Details = "SQL Server limitation for single select")]
 		[Test]
 		public void JoinWithGroupingVarious([IncludeDataSources(true, SupportedProviders)] string context)
 		{
@@ -105,6 +106,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[ActiveIssue(Configurations = [TestProvName.AllOracle], Details = "Treats empty strings as NULL")]
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllMariaDB, TestProvName.AllMySql57], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[RequiresCorrelatedSubquery]
 		[Test]
@@ -130,7 +132,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllSqlServer2016Plus, Details = "SQL Server limitation for single select")]
+		[ActiveIssue(Configurations = [TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle], Details = "SQL Server limitation for single select")]
 		[RequiresCorrelatedSubquery]
 		[Test]
 		public void JoinWithGroupingOrdered([IncludeDataSources(true, SupportedProviders)] string context)
@@ -193,7 +195,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllSqlServer2016Plus, Details = "SQL Server limitation for single select")]
+		[ActiveIssue(Configurations = [TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle], Details = "SQL Server limitation for single select")]
 		[Test]
 		public void JoinWithGroupingOrderSimple([IncludeDataSources(true, SupportedProviders)] string context)
 		{
@@ -225,7 +227,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSqlServer2016Plus, TestProvName.AllSapHana], Details = "SQL Server limitation for single select")]
+		[ActiveIssue(Configurations = [TestProvName.AllSqlServer2016Plus, TestProvName.AllSapHana, TestProvName.AllOracle], Details = "SQL Server limitation for single select")]
 		[Test]
 		public void JoinWithGroupingDistinctSimple([IncludeDataSources(true, SupportedProviders)] string context)
 		{
@@ -259,6 +261,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[ActiveIssue(Configurations = [TestProvName.AllOracle], Details = "Treats empty strings a NULL")]
 		[Test]
 		public void JoinAggregateExecuteNullable([IncludeDataSources(true, SupportedProviders)] string context)
 		{
@@ -268,6 +271,32 @@ namespace Tests.Linq
 
 			var allAggregated = table.AggregateExecute(e => string.Join(", ", e.OrderBy(x => x.NotNullableValue).Select(x => x.NullableValue)));
 			var expected      = string.Join(", ", data.OrderBy(x => x.NotNullableValue).Select(x => x.NullableValue));
+
+			Assert.That(allAggregated, Is.EqualTo(expected));
+		}
+
+		[Test]
+		public void JoinAggregateExecuteNullableButFiltered([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			var       data  = SampleClass.GenerateDataUniquerId();
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var allAggregated = table.AggregateExecute(e => string.Join(", ", e.OrderBy(x => x.NotNullableValue).Select(x => x.NullableValue).Where(x => x != null)));
+			var expected      = string.Join(", ", data.OrderBy(x => x.NotNullableValue).Select(x => x.NullableValue).Where(x => x != null));
+
+			Assert.That(allAggregated, Is.EqualTo(expected));
+		}
+
+		[Test]
+		public async Task JoinAggregateExecuteNullableButFilteredAsync([IncludeDataSources(true, TestProvName.AllOracle + "," + SupportedProviders)] string context)
+		{
+			var       data  = SampleClass.GenerateDataUniquerId();
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var allAggregated = await table.AggregateExecuteAsync(e => string.Join(", ", e.OrderBy(x => x.NotNullableValue).Select(x => x.NullableValue).Where(x => x != null)));
+			var expected      = string.Join(", ", data.OrderBy(x => x.NotNullableValue).Select(x => x.NullableValue).Where(x => x != null));
 
 			Assert.That(allAggregated, Is.EqualTo(expected));
 		}
@@ -285,7 +314,7 @@ namespace Tests.Linq
 			Assert.That(allAggregated, Is.EqualTo(expected));
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllSqlServer2016Plus, Details = "SQL Server limitation for single select")]
+		[ActiveIssue(Configurations = [TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle], Details = "SQL Server limitation for single select")]
 		[ThrowsForProvider(typeof(MySqlException), providers: [TestProvName.AllMariaDB, TestProvName.AllMySql57], ErrorMessage = "Unknown table 't'")]
 		[RequiresCorrelatedSubquery]
 		[Test]
@@ -346,6 +375,8 @@ namespace Tests.Linq
 			var query =
 				from t in table
 				select Sql.AsSql(string.Join(", ", new[] { t.NullableValue, t.NotNullableValue, t.VarcharValue, t.NVarcharValue }.Where(x => x != null).Where(x => x!.Contains("A"))));
+
+			query = query.Where(x => !string.IsNullOrWhiteSpace(x));
 
 			AssertQuery(query);
 		}
