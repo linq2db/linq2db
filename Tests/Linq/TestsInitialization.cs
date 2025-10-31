@@ -39,10 +39,31 @@ public class TestsInitialization
 			{
 				if (handle == null)
 				{
-					handle = assembly.GetType("System.Data.SQLite.UnsafeNativeMethods")
-						?.GetField("_SQLiteNativeModuleHandle", BindingFlags.Static | BindingFlags.NonPublic)
-						?.GetValue(null) as IntPtr?
-					?? throw new InvalidOperationException("Failed to get loaded module. Library code changed?");
+					// This code targets System.Data.SQLite version X.Y.Z (update as appropriate).
+					try
+					{
+						var type = assembly.GetType("System.Data.SQLite.UnsafeNativeMethods");
+						if (type == null)
+						{
+							throw new InvalidOperationException($"Failed to find type 'System.Data.SQLite.UnsafeNativeMethods' in assembly '{assembly.FullName}'. Library code may have changed. Expected System.Data.SQLite version X.Y.Z.");
+						}
+						var field = type.GetField("_SQLiteNativeModuleHandle", BindingFlags.Static | BindingFlags.NonPublic);
+						if (field == null)
+						{
+							throw new InvalidOperationException($"Failed to find field '_SQLiteNativeModuleHandle' in type '{type.FullName}'. Library code may have changed. Expected System.Data.SQLite version X.Y.Z.");
+						}
+						handle = field.GetValue(null) as IntPtr?;
+						if (handle == null)
+						{
+							throw new InvalidOperationException($"Failed to get value of '_SQLiteNativeModuleHandle'. Library code may have changed. Expected System.Data.SQLite version X.Y.Z.");
+						}
+					}
+					catch (Exception ex)
+					{
+						// Log the error for diagnostics
+						Debug.WriteLine($"[ERROR] SQLite DllImportResolver reflection failed: {ex}");
+						throw;
+					}
 				}
 
 				return handle.Value;
