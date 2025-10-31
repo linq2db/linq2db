@@ -142,17 +142,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					|| (Provider is MySqlProvider.MySqlConnector && parameter is BulkCopyReader.Parameter)))
 			{
 				var bytes = new byte[vector.Length * 4];
-
-				for (var i = 0; i < vector.Length; i++)
-				{
-#if NET8_0_OR_GREATER
-					BitConverter.TryWriteBytes(bytes.AsSpan(i * 4), vector[i]);
-#else
-					var bits = BitConverter.GetBytes(vector[i]);
-					Array.Copy(bits, 0, bytes, i * 4, 4);
-#endif
-				}
-
+				Buffer.BlockCopy(vector, 0, bytes, 0, bytes.Length);
 				value = bytes;
 			}
 
