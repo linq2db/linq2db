@@ -184,6 +184,8 @@
     <File Path="Build/Azure/scripts/clickhouse.sh" />
     <File Path="Build/Azure/scripts/db2.provider.sh" />
     <File Path="Build/Azure/scripts/db2.sh" />
+    <File Path="Build/Azure/scripts/disable_tls11.cmd" />
+    <File Path="Build/Azure/scripts/enable_tls11.cmd" />
     <File Path="Build/Azure/scripts/firebird25.sh" />
     <File Path="Build/Azure/scripts/firebird3.sh" />
     <File Path="Build/Azure/scripts/firebird4.sh" />
@@ -236,6 +238,7 @@
     <File Path="Build/Azure/scripts/sqlserver.extras.cmd" />
     <File Path="Build/Azure/scripts/sqlserver.extras.sh" />
     <File Path="Build/Azure/scripts/sybase.sh" />
+    <File Path="Build/Azure/scripts/tls11_disable.reg" />
     <File Path="Build/Azure/scripts/tls11_enable.reg" />
   </Folder>
   <Folder Name="/Build/Local/">
