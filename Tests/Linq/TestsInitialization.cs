@@ -39,30 +39,23 @@ public class TestsInitialization
 			{
 				if (handle == null)
 				{
-					// This code targets System.Data.SQLite version X.Y.Z (update as appropriate).
-					try
+					// This code targets System.Data.SQLite version 2.0.2
+					var type = assembly.GetType("System.Data.SQLite.UnsafeNativeMethods");
+					if (type == null)
 					{
-						var type = assembly.GetType("System.Data.SQLite.UnsafeNativeMethods");
-						if (type == null)
-						{
-							throw new InvalidOperationException($"Failed to find type 'System.Data.SQLite.UnsafeNativeMethods' in assembly '{assembly.FullName}'. Library code may have changed. Expected System.Data.SQLite version X.Y.Z.");
-						}
-						var field = type.GetField("_SQLiteNativeModuleHandle", BindingFlags.Static | BindingFlags.NonPublic);
-						if (field == null)
-						{
-							throw new InvalidOperationException($"Failed to find field '_SQLiteNativeModuleHandle' in type '{type.FullName}'. Library code may have changed. Expected System.Data.SQLite version X.Y.Z.");
-						}
-						handle = field.GetValue(null) as IntPtr?;
-						if (handle == null)
-						{
-							throw new InvalidOperationException($"Failed to get value of '_SQLiteNativeModuleHandle'. Library code may have changed. Expected System.Data.SQLite version X.Y.Z.");
-						}
+						throw new InvalidOperationException($"Failed to find type 'System.Data.SQLite.UnsafeNativeMethods' in assembly '{assembly.FullName}'.");
 					}
-					catch (Exception ex)
+
+					var field = type.GetField("_SQLiteNativeModuleHandle", BindingFlags.Static | BindingFlags.NonPublic);
+					if (field == null)
 					{
-						// Log the error for diagnostics
-						Debug.WriteLine($"[ERROR] SQLite DllImportResolver reflection failed: {ex}");
-						throw;
+						throw new InvalidOperationException($"Failed to find field '_SQLiteNativeModuleHandle' in type '{type.FullName}'.");
+					}
+
+					handle = field.GetValue(null) as IntPtr?;
+					if (handle == null)
+					{
+						throw new InvalidOperationException($"Failed to get value of '_SQLiteNativeModuleHandle'.");
 					}
 				}
 
