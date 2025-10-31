@@ -123,7 +123,7 @@
 		<PackageVersion Include="Shouldly"                                              Version="4.3.0"                        />
 		<PackageVersion Include="Microsoft.NET.Test.Sdk"                                Version="18.0.0"                       />
 		<PackageVersion Include="NUnit"                                                 Version="4.4.0"                        />
-		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.11.0"                       />
+		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.11.1"                       />
 		<PackageVersion Include="NUnit3TestAdapter"                                     Version="5.2.0"                        />
 
 		<PackageVersion Include="Microsoft.AspNet.OData"                                Version="7.7.9"                        />
@@ -164,7 +164,7 @@
 	</ItemGroup>
 
 	<ItemGroup Label="Benchmarks">
-		<PackageVersion Include="BenchmarkDotNet"                                       Version="0.15.4"                       />
+		<PackageVersion Include="BenchmarkDotNet"                                       Version="0.15.5"                       />
 		<PackageVersion Include="JetBrains.Profiler.Api"                                Version="1.4.10"                       />
 	</ItemGroup>
 
