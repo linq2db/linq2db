@@ -899,7 +899,7 @@ namespace LinqToDB.Internal.Remote
 							Append(elem.Name);
 							Append(elem.IsQueryParameter);
 							Append(elem.NeedsCast);
-							Append(elem.Type);
+							Append(paramValue.DbDataType);
 
 							var value = paramValue.ProviderValue;
 							var type  = value == null ? paramValue.DbDataType.SystemType : value.GetType();
