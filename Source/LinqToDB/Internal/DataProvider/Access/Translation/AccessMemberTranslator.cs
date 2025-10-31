@@ -244,6 +244,68 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 				return result;
 			}
 
+			protected override ISqlExpression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+				var intType   = factory.GetDbDataType(typeof(int));
+
+				ISqlExpression result;
+
+				if (precision == null || precision is SqlValue { Value: 0 })
+				{
+					/*
+					IIf([Value] >= 0, Int([Value] + 0.5), Int([Value] - 0.5))
+					 */
+
+					// Create condition: [Value] >= 0
+					var isPositive = factory.GreaterOrEqual(value, factory.Value(valueType, 0));
+
+					// True branch: Int([Value] + 0.5)
+					var addHalf        = factory.Add(valueType, value, factory.Value(valueType, 0.5));
+					var positiveResult = factory.Function(intType, "Int", addHalf);
+
+					// False branch: Int([Value] - 0.5)
+					var subtractHalf   = factory.Sub(valueType, value, factory.Value(valueType, 0.5));
+					var negativeResult = factory.Function(intType, "Int", subtractHalf);
+
+					// IIf condition
+					var condition = factory.SearchCondition().Add(isPositive);
+					result = factory.Condition(condition, positiveResult, negativeResult);
+				}
+				else
+				{
+					/*
+					Int([Value] * (10 ^ [Precision]) + IIf([Value] >= 0, 0.5, -0.5)) / (10 ^ [Precision])
+					 */
+
+					// Calculate 10 ^ [Precision]
+					var ten   = factory.Value(valueType, 10);
+					var power = factory.Binary(valueType, ten, "^", precision);
+
+					// [Value] * (10 ^ [Precision])
+					var scaled = factory.Multiply(valueType, value, power);
+
+					// IIf([Value] >= 0, 0.5, -0.5)
+					var isPositive = factory.GreaterOrEqual(value, factory.Value(valueType, 0));
+					var condition  = factory.SearchCondition().Add(isPositive);
+					var adjustment = factory.Condition(condition,
+						factory.Value(valueType, 0.5),
+						factory.Value(valueType, -0.5));
+
+					// [Value] * (10 ^ [Precision]) + IIf([Value] >= 0, 0.5, -0.5)
+					var adjusted = factory.Add(valueType, scaled, adjustment);
+
+					// Int(...)
+					var truncated = factory.Function(valueType, "Int", adjusted);
+
+					// Int(...) / (10 ^ [Precision])
+					result = factory.Div(valueType, truncated, power);
+				}
+
+				return result;
+			}
+
 			protected override ISqlExpression? TranslatePow(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
 			{
 				var factory = translationContext.ExpressionFactory;
