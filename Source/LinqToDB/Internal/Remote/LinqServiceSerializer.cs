@@ -1736,6 +1736,7 @@ namespace LinqToDB.Internal.Remote
 						Append(elem.Arguments);
 						Append(elem.ArgumentsNullability);
 						Append(elem.IsAggregate);
+						Append(elem.CanBeNull);
 						Append(elem.WithinGroup);
 						Append(elem.Filter);
 						Append(elem.OrderBy);
@@ -2899,6 +2900,7 @@ namespace LinqToDB.Internal.Remote
 						var arguments            = ReadArray<SqlFunctionArgument>()!;
 						var argumentsNullability = ReadBoolArray()!;
 						var isAggregate          = ReadBool();
+						var canBeNull            = ReadNullableBool();
 						var withinGroup          = ReadArray<SqlWindowOrderItem>()!;
 						var filter               = Read<SqlSearchCondition>();
 						var orderBy              = ReadArray<SqlWindowOrderItem>()!;
@@ -2906,7 +2908,7 @@ namespace LinqToDB.Internal.Remote
 						var frame                = Read<SqlFrameClause>();
 
 						obj = new SqlExtendedFunction(functionType, name, arguments, argumentsNullability, withinGroup : withinGroup, partitionBy : partitionBy, orderBy : orderBy,
-							frameClause : frame, filter: filter, isAggregate : isAggregate);
+							frameClause : frame, filter: filter, isAggregate : isAggregate, canBeNull: canBeNull);
 
 						break;
 					}
