@@ -19,7 +19,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			var dts = dataConnection.OpenDbConnection().GetSchema("DataTypes");
 
 			var dt = dts.AsEnumerable()
-				.Where(x=> x["ProviderDbType"].IsNullValue())
+				.Where(x=> !x["ProviderDbType"].IsNullValue())
 				.Select(t => new DataTypeInfo
 				{
 					TypeName         = t.Field<string>("TypeName")!,
