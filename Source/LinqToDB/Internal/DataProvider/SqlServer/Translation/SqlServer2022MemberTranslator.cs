@@ -13,11 +13,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 			return new SqlServer2022MathMemberTranslator();
 		}
 
-		protected override IMemberTranslator CreateStringMemberTranslator()
-		{
-			return new SqlServer2022StringMemberTranslator();
-		}
-
 		protected class SqlServer2022MathMemberTranslator : SqlServerMathMemberTranslator
 		{
 			protected override ISqlExpression? TranslateMaxMethod(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
@@ -38,11 +33,5 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				return factory.Function(dbType, "LEAST", ParametersNullabilityType.IfAllParametersNullable, xValue, yValue);
 			}
 		}
-
-		protected class SqlServer2022StringMemberTranslator : SqlServer2017StringMemberTranslator
-		{
-			protected override bool IsDistinctSupportedInStringAgg => true;
-		}
-
 	}
 }
