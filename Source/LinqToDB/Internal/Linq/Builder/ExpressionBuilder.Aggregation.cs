@@ -555,17 +555,16 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (!IsAllowedOperation(ITranslationContext.AllowedAggregationOperators.Distinct))
 						{
 							buildRoot = method;
+							break;
 						}
-						else
-						{
-							// Distinct should be the first method in the chain
-							if (i != 0)
-							{
-								var orderByCount = chain.Take(i).Count(m => m.IsQueryable(_orderByNames));
 
-								if (i != orderByCount)
-									return null;
-							}
+						// Distinct should be the first method in the chain
+						if (i != 0)
+						{
+							var orderByCount = chain.Take(i).Count(m => m.IsQueryable(_orderByNames));
+
+							if (i != orderByCount)
+								return null;
 						}
 
 						isDistinct = true;

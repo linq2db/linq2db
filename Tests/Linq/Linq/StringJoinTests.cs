@@ -16,7 +16,8 @@ namespace Tests.Linq
 {
 	public class StringJoinTests : TestBase
 	{
-		const string SupportedProviders = TestProvName.AllPostgreSQL + "," + TestProvName.AllSqlServer2017Plus + "," + TestProvName.AllSQLite + "," + TestProvName.AllMySql + "," + TestProvName.AllClickHouse;
+		const string SupportedProviders = TestProvName.AllPostgreSQL + "," + TestProvName.AllSqlServer2017Plus + "," + TestProvName.AllSQLite + "," + TestProvName.AllMySql + "," +
+		                                  TestProvName.AllClickHouse + "," + TestProvName.AllSapHana;
 
 		[Table]
 		sealed class SampleClass
@@ -224,7 +225,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllSqlServer2016Plus, Details = "SQL Server limitation for single select")]
+		[ActiveIssue(Configurations = [TestProvName.AllSqlServer2016Plus, TestProvName.AllSapHana], Details = "SQL Server limitation for single select")]
 		[Test]
 		public void JoinWithGroupingDistinctSimple([IncludeDataSources(true, SupportedProviders)] string context)
 		{
