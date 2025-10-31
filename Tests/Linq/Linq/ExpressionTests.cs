@@ -390,8 +390,10 @@ namespace Tests.Linq
 					   select new { a.TenantId, a.Code, a.Description, b.StockroomCode, b.Quantity };
 
 			;
+#pragma warning disable NUnit2057 // https://github.com/nunit/nunit.analyzers/issues/945
 			Assert.That(() => qry.ToArray(), Throws.InstanceOf<LinqToDBException>()
 				.With.Message.Contain("The LINQ expression could not be converted to SQL."));
+#pragma warning restore NUnit2057 // Remove unnecessary lambda expression
 		}
 		#endregion
 

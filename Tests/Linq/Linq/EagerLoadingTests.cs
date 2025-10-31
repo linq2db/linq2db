@@ -2180,7 +2180,9 @@ FROM
 
 			var query = db.GetTable<EntityA>().LoadWith(e => e.ObjectBRO.ObjectC).LoadWith(e => e.ObjectBRO.ObjectsD);
 
+#pragma warning disable NUnit2057 // https://github.com/nunit/nunit.analyzers/issues/945
 			Assert.That(() => query.ToList(), Throws.InvalidOperationException.With.Message.EqualTo("Cannot construct object 'Tests.Linq.EagerLoadingTests+EntityA'. Following members are not assignable: ObjectBRO."));
+#pragma warning restore NUnit2057 // Remove unnecessary lambda expression
 		}
 
 		[Test]
@@ -2196,7 +2198,9 @@ FROM
 				.LoadWith(e => e.ObjectsBRO).ThenLoad(e => e.ObjectsC)
 				.LoadWith(e => e.ObjectsBRO).ThenLoad(e => e.ObjectD);
 
+#pragma warning disable NUnit2057 // https://github.com/nunit/nunit.analyzers/issues/945
 			Assert.That(() => query.ToList(), Throws.InvalidOperationException.With.Message.EqualTo("Cannot construct object 'Tests.Linq.EagerLoadingTests+EntityMA'. Following members are not assignable: ObjectsBRO."));
+#pragma warning restore NUnit2057 // Remove unnecessary lambda expression
 		}
 
 		[Test]
@@ -2210,7 +2214,9 @@ FROM
 
 			var query = db.GetTable<EntityA>().LoadWith(e => e.ObjectBRO.ObjectC).LoadWith(e => e.ObjectBRO.ObjectsD);
 
+#pragma warning disable NUnit2057 // https://github.com/nunit/nunit.analyzers/issues/945
 			Assert.That(() => query.ToList(), Throws.InvalidOperationException.With.Message.EqualTo("Cannot construct object 'Tests.Linq.EagerLoadingTests+EntityA'. Following members are not assignable: ObjectBRO."));
+#pragma warning restore NUnit2057 // Remove unnecessary lambda expression
 		}
 
 		[Test]
@@ -2226,7 +2232,9 @@ FROM
 				.LoadWith(e => e.ObjectsBRO).ThenLoad(e => e.ObjectsC)
 				.LoadWith(e => e.ObjectsBRO).ThenLoad(e => e.ObjectD);
 
+#pragma warning disable NUnit2057 // https://github.com/nunit/nunit.analyzers/issues/945
 			Assert.That(() => query.ToList(), Throws.InvalidOperationException.With.Message.EqualTo("Cannot construct object 'Tests.Linq.EagerLoadingTests+EntityMA'. Following members are not assignable: ObjectsBRO."));
+#pragma warning restore NUnit2057 // Remove unnecessary lambda expression
 		}
 
 		[Test]

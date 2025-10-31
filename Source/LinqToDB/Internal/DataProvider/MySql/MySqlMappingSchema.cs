@@ -38,6 +38,9 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		private float[] ConvertToVector(byte[] bytes)
 		{
+			if (bytes.Length % 4 != 0)
+				throw new InvalidOperationException($"Server send vector data of invalid size: {bytes.Length}");
+
 			var result = new float[bytes.Length / 4];
 
 			for (var i = 0; i < bytes.Length; i += 4)

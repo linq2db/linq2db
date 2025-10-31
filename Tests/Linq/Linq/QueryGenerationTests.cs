@@ -37,7 +37,9 @@ namespace Tests.Linq
 		[Test]
 		public void ToSqlQuery_NotLinqQuery()
 		{
+#pragma warning disable NUnit2057 // https://github.com/nunit/nunit.analyzers/issues/945
 			Assert.That(() => Array.Empty<string>().AsQueryable().ToSqlQuery(), Throws.InstanceOf<LinqToDBException>().With.Message.EqualTo("LinqToDB method 'ToSqlQuery' called on non-LinqToDB IQueryable."));
+#pragma warning restore NUnit2057 // Remove unnecessary lambda expression
 		}
 
 		[Test]

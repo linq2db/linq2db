@@ -178,11 +178,13 @@ namespace Tests.Linq
 			using (var db = (TestDataConnection)GetDataContext(context))
 			using (var db1 = new DataContext(new DataOptions().UseConnectionString(db.DataProvider.Name, "BAD")))
 			{
+#pragma warning disable NUnit2057 // https://github.com/nunit/nunit.analyzers/issues/945
 				Assert.That(
 					() => db1.GetTable<Child>().ToList(),
 					Throws.TypeOf<ArgumentException>()
 						.Or.TypeOf<InvalidOperationException>()
 						.Or.TypeOf<MySqlException>());
+#pragma warning restore NUnit2057 // Remove unnecessary lambda expression
 			}
 		}
 

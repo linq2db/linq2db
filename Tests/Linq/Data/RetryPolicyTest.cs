@@ -333,11 +333,13 @@ namespace Tests.Data
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4913")]
 		public void GetNextDelay_Invalid_ExpBase()
 		{
+#pragma warning disable NUnit2057 // https://github.com/nunit/nunit.analyzers/issues/945
 			Assert.That(() =>
 			{
 				IRetryPolicy policy = new TestDelayRetryPolicy(0.999);
 				policy.Execute(() => throw new InvalidOperationException());
 			}, Throws.InstanceOf<ArgumentOutOfRangeException>().With.Property(nameof(ArgumentOutOfRangeException.ParamName)).EqualTo("exponentialBase"));
+#pragma warning restore NUnit2057 // Remove unnecessary lambda expression
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4913")]
