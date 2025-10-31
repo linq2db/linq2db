@@ -82,49 +82,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 								canBeAffectedByOrderBy : true);
 
 							composer.SetResult(factory.Coalesce(fn, factory.Value(valueType, string.Empty)));
-						}))
-					.ConfigurePlain(c => c
-						.HasSequenceIndex(1)
-						.TranslateArguments(0)
-						.AllowFilter()
-						.AllowNotNullCheck(true)
-						.OnBuildFunction(composer =>
-						{
-							var info = composer.BuildInfo;
-							if (info.Values.Length == 0 || info.Argument(0) == null)
-							{
-								composer.SetResult(info.Factory.Value(info.Factory.GetDbDataType(typeof(string)), string.Empty));
-								return;
-							}
-
-							var factory   = info.Factory;
-							var separator = info.Argument(0)!;
-							var dataType  = factory.GetDbDataType(info.Values[0]);
-
-							if (info.Values.Length == 1)
-							{
-								var singleValue = info.Values[0];
-								singleValue = factory.Coalesce(singleValue, factory.Value(dataType, string.Empty));
-								composer.SetResult(singleValue);
-								return;
-							}
-
-							if (!composer.GetFilteredToNullValues(out IEnumerable<ISqlExpression>? values, out var error))
-							{
-								composer.SetError(error);
-								return;
-							}
-
-							var items = info.IsNullFiltered
-								? values
-								: values.Select(i => factory.Coalesce(i, factory.Value(factory.GetDbDataType(i), ""))).ToArray();
-
-							var function = factory.Function(dataType, "CONCAT_WS",
-								parametersNullability : ParametersNullabilityType.IfAllParametersNullable,
-								[separator, ..items]);
-
-							composer.SetResult(function);
 						}));
+
+				ConfigureConcatWs(builder);
 
 				return builder.Build(translationContext, methodCall);
 			}

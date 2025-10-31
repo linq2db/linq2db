@@ -227,7 +227,18 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool ignoreNulls)
 			{
 				var builder = new AggregateFunctionBuilder();
-				ConfigureConcatWs(builder);
+				
+				ConfigureConcatWsEmulation(builder, (factory, valueType, separator, valuesExpr) =>
+				{
+					var intDbType = factory.GetDbDataType(typeof(int));
+					var substring = factory.Function(valueType, "SUBSTRING",
+						valuesExpr,
+						factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)),
+						factory.Value(intDbType, int.MaxValue));
+
+					return substring;
+				}); 
+				
 				return builder.Build(translationContext, methodCall);
 			}
 		}
