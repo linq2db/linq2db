@@ -149,7 +149,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					BitConverter.TryWriteBytes(bytes.AsSpan(i * 4), vector[i]);
 #else
 					var bits = BitConverter.GetBytes(vector[i]);
-					Array.Copy(bits, 0, bytes, i + 4, 4);
+					Array.Copy(bits, 0, bytes, i * 4, 4);
 #endif
 				}
 
