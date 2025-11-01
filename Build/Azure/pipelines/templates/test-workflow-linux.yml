@@ -7,6 +7,31 @@ steps:
 # .NET 8 SDK already installed https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md
 # but we still need to install all required versions because only last installed available due to bug
 
+# https://github.com/apache/flink/blob/master/tools/azure-pipelines/free_disk_space.sh
+- task: CmdLine@2
+  inputs:
+    script: |
+      df -h
+      sudo apt-get remove -y '^llvm-.*'
+      df -h
+      sudo apt-get remove -y 'php.*'
+      df -h
+      sudo apt-get remove -y '^mongodb-.*'
+      df -h
+      sudo apt-get remove -y '^mysql-.*'
+      df -h
+      sudo rm -rf /usr/local/graalvm/
+      df -h
+      sudo rm -rf /usr/local/.ghcup/
+      df -h
+      sudo rm -rf /usr/local/share/chromium
+      df -h
+      sudo rm -rf /usr/local/lib/android
+      df -h
+      sudo rm -rf /usr/local/lib/node_modules
+      df -h
+  displayName: Cleanup Junk
+
 - task: CmdLine@2
   inputs:
     script: 'git clone https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines && cd baselines && git checkout -b $(baselines_branch) origin/$(baselines_branch) && cd ..'
@@ -92,12 +117,7 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: |
-      ls
-      df -h
-      rm -rf $(System.DefaultWorkingDirectory)/net8.0
-      ls
-      df -h
+    script: rm -rf $(System.DefaultWorkingDirectory)/net8.0
   displayName: Remove NET 8 test binaries
   condition: and(variables.title, eq(variables.net80, 'true'))
 
