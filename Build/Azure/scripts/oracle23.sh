@@ -2,7 +2,7 @@
 
 echo "##vso[task.setvariable variable=TZ]CET"
 
-docker run -d --name oracle -e ORACLE_PWD=oracle -p 1521:1521 container-registry.oracle.com/database/free:latest
+docker run -d --name oracle -e ORACLE_PWD=oracle -p 1521:1521 container-registry.oracle.com/database/free:23.2.0.0
 
 docker ps -a
 

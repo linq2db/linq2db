@@ -5,8 +5,8 @@ docker stop oracle23
 docker rm -f oracle23
 
 REM use pull to get latest layers (run will use cached layers)
-docker pull container-registry.oracle.com/database/free:latest
-docker run -d --name oracle23 -e ORACLE_PWD=password -p 1530:1521 container-registry.oracle.com/database/free:latest
+docker pull container-registry.oracle.com/database/free:23.2.0.0
+docker run -d --name oracle23 -e ORACLE_PWD=password -p 1530:1521 container-registry.oracle.com/database/free:23.2.0.0
 
 call wait oracle23 "DATABASE IS READY TO USE!"
 
