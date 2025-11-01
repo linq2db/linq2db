@@ -8,27 +8,18 @@ steps:
 # but we still need to install all required versions because only last installed available due to bug
 
 # https://github.com/apache/flink/blob/master/tools/azure-pipelines/free_disk_space.sh
+# when more space needed, uncomment more lines
 - task: CmdLine@2
   inputs:
     script: |
+      # 1Gb
+      #sudo apt-get remove -y '^llvm-.*'
+      # 10Gb
+      #sudo rm -rf /usr/local/lib/android
       df -h
-      sudo apt-get remove -y '^llvm-.*'
-      df -h
-      sudo apt-get remove -y 'php.*'
-      df -h
-      sudo apt-get remove -y '^mongodb-.*'
-      df -h
-      sudo apt-get remove -y '^mysql-.*'
-      df -h
-      sudo rm -rf /usr/local/graalvm/
-      df -h
+      # frees ~7Gb
+      echo remove .ghcup
       sudo rm -rf /usr/local/.ghcup/
-      df -h
-      sudo rm -rf /usr/local/share/chromium
-      df -h
-      sudo rm -rf /usr/local/lib/android
-      df -h
-      sudo rm -rf /usr/local/lib/node_modules
       df -h
   displayName: Cleanup Junk
 
