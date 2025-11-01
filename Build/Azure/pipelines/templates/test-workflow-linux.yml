@@ -92,7 +92,12 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: 'rm -rf $(System.DefaultWorkingDirectory)/net8.0'
+    script: |
+      ls
+      df -h
+      rm -rf $(System.DefaultWorkingDirectory)/net8.0
+      ls
+      df -h
   displayName: Remove NET 8 test binaries
   condition: and(variables.title, eq(variables.net80, 'true'))
 
