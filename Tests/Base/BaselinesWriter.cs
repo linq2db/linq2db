@@ -45,19 +45,20 @@ namespace Tests
 
 			// normalize baselines
 			baseline = baseline
+				.Replace("\r\n", "\n")
 				.Replace(" (asynchronously)", string.Empty)
-				.Replace($"BeginTransaction{Environment.NewLine}", string.Empty)
-				.Replace($"BeginTransaction(Unspecified){Environment.NewLine}", string.Empty)
-				.Replace($"BeginTransaction(Serializable){Environment.NewLine}", string.Empty)
-				.Replace($"BeginTransaction(RepeatableRead){Environment.NewLine}", string.Empty)
-				.Replace($"BeginTransaction(ReadCommitted){Environment.NewLine}", string.Empty)
-				.Replace($"BeginTransactionAsync(Unspecified){Environment.NewLine}", string.Empty)
-				.Replace($"BeginTransactionAsync(Serializable){Environment.NewLine}", string.Empty)
-				.Replace($"BeginTransactionAsync(RepeatableRead){Environment.NewLine}", string.Empty)
-				.Replace($"BeginTransactionAsync(ReadCommitted){Environment.NewLine}", string.Empty)
-				.Replace($"BeforeExecute{Environment.NewLine}", string.Empty)
-				.Replace($"DisposeTransaction{Environment.NewLine}", string.Empty)
-				.Replace($"DisposeTransactionAsync{Environment.NewLine}", string.Empty)
+				.Replace($"BeginTransaction\n", string.Empty)
+				.Replace($"BeginTransaction(Unspecified)\n", string.Empty)
+				.Replace($"BeginTransaction(Serializable)\n", string.Empty)
+				.Replace($"BeginTransaction(RepeatableRead)\n", string.Empty)
+				.Replace($"BeginTransaction(ReadCommitted)\n", string.Empty)
+				.Replace($"BeginTransactionAsync(Unspecified)\n", string.Empty)
+				.Replace($"BeginTransactionAsync(Serializable)\n", string.Empty)
+				.Replace($"BeginTransactionAsync(RepeatableRead)\n", string.Empty)
+				.Replace($"BeginTransactionAsync(ReadCommitted)\n", string.Empty)
+				.Replace($"BeforeExecute\n", string.Empty)
+				.Replace($"DisposeTransaction\n", string.Empty)
+				.Replace($"DisposeTransactionAsync\n", string.Empty)
 				;
 
 			if (_baselines.TryGetValue(fullPath, out var type))
