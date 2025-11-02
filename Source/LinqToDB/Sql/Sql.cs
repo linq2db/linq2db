@@ -473,6 +473,7 @@ namespace LinqToDB
 		[Function(PN.SapHana,    "Locate",        1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.Firebird,   "Position",            IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.ClickHouse, "positionUTF8",  1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.SQLite,     "INSTR",         1, 0, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static int? CharIndex(string? substring, string? str)
 		{
 			if (str == null || substring == null) return null;
@@ -511,6 +512,7 @@ namespace LinqToDB
 		[Function(PN.ClickHouse, "positionUTF8", 1, 0,  IsNullable = IsNullableType.IfAnyParameterNullable)]
 #pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
 		[Function(PN.Firebird,   "Position",            IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.SQLite,     "INSTR",        1, 0,  IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static int? CharIndex(char? value, string? str)
 		{
 			if (value == null || str == null) return null;
@@ -545,9 +547,9 @@ namespace LinqToDB
 			return new string(chars);
 		}
 
-		[Function(                           PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.SQLite,     "LeftStr",  PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.ClickHouse, "leftUTF8", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(                                         PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Expression(PN.SQLite,   "SUBSTRING({0}, 1, {1})", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.ClickHouse, "leftUTF8",               PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Left(string? str, int? length)
 		{
 			if (length == null || str == null) return null;
@@ -600,11 +602,11 @@ namespace LinqToDB
 			}
 		}
 
-		[Function("RIGHT",                    PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.SQLite,     "RightStr",  PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.ClickHouse, "rightUTF8", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Extension(PN.Oracle,    "",          PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, BuilderType = typeof(OracleRightBuilder))]
-		[Extension(PN.SqlCe,     "",          PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, BuilderType = typeof(SqlCeRightBuilder))]
+		[Function("RIGHT",                                                PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Expression(PN.SQLite,   "SUBSTRING({0}, LENGTH({0}) - {1} + 1)", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.ClickHouse, "rightUTF8",                             PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Extension(PN.Oracle,    "",                                      PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, BuilderType = typeof(OracleRightBuilder))]
+		[Extension(PN.SqlCe,     "",                                      PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, BuilderType = typeof(SqlCeRightBuilder))]
 		public static string? Right(string? str, int? length)
 		{
 			if (length == null || str == null) return null;
@@ -635,9 +637,10 @@ namespace LinqToDB
 			throw new NotImplementedException();
 		}
 
-		[Function(                                                        IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.SapHana,    "Lpad('',{0},' ')",                    IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Expression(PN.ClickHouse, "leftPadUTF8('', toUInt32({0}), ' ')", IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(                                                           IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Expression(PN.SapHana,    "Lpad('',{0},' ')",                       IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Expression(PN.ClickHouse, "leftPadUTF8('', toUInt32({0}), ' ')",    IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Expression(PN.SQLite,     "REPLACE(HEX(ZEROBLOB({0})), '00', ' ')", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Space(int? length)
 		{
 			return length == null || length.Value < 0 ? null : "".PadRight(length.Value);
@@ -1252,6 +1255,7 @@ namespace LinqToDB
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Cosh   (double?  value) => value == null ? null : Math.Cosh   (value.Value);
 
 		[Expression(PN.ClickHouse, "1/tan({0})", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
+		[Expression(PN.SQLite,     "1/TAN({0})", IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Multiplicative)]
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Cot    (double?  value) { return value == null ? null : (double?)Math.Cos(value.Value) / Math.Sin(value.Value); }
 
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static decimal? Degrees(decimal? value) => value == null ? null : (value.Value * 180m / (decimal)Math.PI);
@@ -1276,6 +1280,7 @@ namespace LinqToDB
 		[Function(PN.Firebird,   "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.PostgreSQL, "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.SapHana,    "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.SQLite,     "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(                       IsNullable = IsNullableType.IfAnyParameterNullable)] public static decimal? Log    (decimal? value) { return value == null ? null : (decimal?)Math.Log     ((double)value.Value); }
 
 		[Function(PN.Informix,   "LogN", IsNullable = IsNullableType.IfAnyParameterNullable)]
@@ -1283,6 +1288,7 @@ namespace LinqToDB
 		[Function(PN.Firebird,   "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.PostgreSQL, "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.SapHana,    "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(PN.SQLite,     "Ln",   IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(                       IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Log    (double?  value) => value == null ? null : Math.Log(value.Value);
 
 		[Function(PN.PostgreSQL, "Log", IsNullable = IsNullableType.IfAnyParameterNullable)]

@@ -1,6 +1,7 @@
 ---
 uid: contributing
 ---
+
 # Contributing guide
 
 ## Project structure
@@ -312,3 +313,14 @@ In general you should follow simple rules:
 * Do not add new public classes, properties, methods without XML documentation on them
 * Read issues and help users
 * Do not EF :)
+
+## Other Topics
+
+### LINQPad Testing
+
+To test LINQPad nuget you need to build it and add test nuget source to LINQPad, but because LINQPad expects driver to have tags, it cannot be file-based source.
+
+1. Install local nuget server using [this guide](https://learn.microsoft.com/en-us/nuget/hosting-packages/nuget-server)
+2. Build nugets using command `nuget\packlocal.cmd <version>` where version should be release version (e.g. `1.2.3`) as LINQPad ignores non-release versions
+3. Push built nugets to your custom nuget server using this command `dotnet nuget push .build/nugets/*.nupkg -s https://<your local nuget server addres>/nuget --skip-duplicate`. If will produce 406 error for some unsupported nugets - you need to remove them and rerun command
+4. add your feed (`https://<your local nuget server addres>/nuget`) to LINQPad

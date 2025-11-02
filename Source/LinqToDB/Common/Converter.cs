@@ -10,6 +10,7 @@ using System.Xml;
 using JetBrains.Annotations;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Conversion;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;
@@ -127,7 +128,7 @@ namespace LinqToDB.Common
 		/// <returns>Converted value.</returns>
 		public static object? ChangeType(object? value, Type toConvertType, MappingSchema? mappingSchema = null, ConversionType conversionType = ConversionType.Common)
 		{
-			if (value is null or DBNull)
+			if (value.IsNullValue())
 				return mappingSchema == null ?
 					DefaultValue.GetValue(toConvertType) :
 					mappingSchema.GetDefaultValue(toConvertType);
@@ -187,7 +188,7 @@ namespace LinqToDB.Common
 		/// <returns>Converted value.</returns>
 		public static T ChangeTypeTo<T>(object? value, MappingSchema? mappingSchema = null, ConversionType conversionType = ConversionType.Common)
 		{
-			if (value == null || value is DBNull)
+			if (value.IsNullValue())
 				return mappingSchema == null ?
 					DefaultValue<T>.Value :
 					(T)mappingSchema.GetDefaultValue(typeof(T))!;
