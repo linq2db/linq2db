@@ -81,13 +81,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			// as EF generates SQL differently, we cannot share baselines
 #if NETFRAMEWORK
-			BaselinesManager.Dump(".EF31");
+			BaselinesManager.Dump(false, ".EF31");
 #elif NET8_0
-			BaselinesManager.Dump(".EF8");
+			BaselinesManager.Dump(false, ".EF8");
 #elif NET9_0
-			BaselinesManager.Dump(".EF9");
+			BaselinesManager.Dump(false, ".EF9");
 #elif NET10_0
-			BaselinesManager.Dump(".EF10");
+			BaselinesManager.Dump(false, ".EF10");
 #else
 #error Unknown framework
 #endif

@@ -16,7 +16,8 @@
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
 		<PackageReference Include="Oracle.ManagedDataAccess" />
 		<PackageReference Include="Npgsql" />
-		<PackageReference Include="System.Data.SQLite.Core" />
+		<PackageReference Include="System.Data.SQLite" />
+		<PackageReference Include="SourceGear.sqlite3" GeneratePathProperty="true" />
 		<PackageReference Include="Microsoft.SqlServer.Types" />
 
 		<None Include="..\Data\*">
@@ -50,4 +51,6 @@
 			<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x86\IBM.Data.DB2.dll</HintPath>
 		</Reference>
 	</ItemGroup>
+
+	<Import Project="$(MSBuildThisFileDirectory)\..\SQLite.Runtime.props" />
 </Project>

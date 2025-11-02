@@ -29,7 +29,12 @@ variables:
   artifact_linq2db_linqpad_binaries: 'linq2db_linqpad_binaries'
   artifact_linq2db_linqpad_lpx: 'linq2db_linqpad_lpx'
   artifact_t4_binaries: 't4_binaries'
-  artifact_test_binaries: 'test_binaries'
+  artifact_test_configs: 'test_configs'
+  artifact_test_scripts: 'test_scripts'
+  artifact_test_netfx_binaries: 'test_netfx_binaries'
+  artifact_test_net80_binaries: 'test_net80_binaries'
+  artifact_test_net90_binaries: 'test_net90_binaries'
+  artifact_test_net100_binaries: 'test_net100_binaries'
 # nuget/assembly versions
   assemblyVersion: 6.0.0
   ef3AssemblyVersion: 3.28.0

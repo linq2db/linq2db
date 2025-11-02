@@ -71,7 +71,6 @@ namespace LinqToDB.Benchmarks.Queries
 					from soh in db.SalesOrderHeaders
 						.LoadWith(x => x.SalesOrderDetails)
 						.LoadWith(x => x.Customer)
-						.AsQueryable()
 					where soh.SalesOrderID > 50000 && soh.SalesOrderID <= 51000
 					select soh
 				)
@@ -88,7 +87,6 @@ namespace LinqToDB.Benchmarks.Queries
 					from soh in db.SalesOrderHeaders
 						.LoadWith(x => x.SalesOrderDetails)
 						.LoadWith(x => x.Customer)
-						.AsQueryable()
 					where soh.SalesOrderID > 50000 && soh.SalesOrderID <= 51000
 					select soh
 				)

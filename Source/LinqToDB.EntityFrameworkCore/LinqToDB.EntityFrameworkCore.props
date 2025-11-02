@@ -13,7 +13,7 @@
 		<!--EF1001: use of internal EF API-->
 		<NoWarn>EF1001</NoWarn>
 	</PropertyGroup>
-	
+
 	<ItemGroup>
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />

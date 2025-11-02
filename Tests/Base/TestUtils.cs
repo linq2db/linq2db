@@ -210,6 +210,7 @@ namespace Tests
 				return base.DisposeAsync();
 			}
 		}
+
 		class TestTempTable<T> : TempTable<T>
 			where T : notnull
 		{
@@ -231,11 +232,11 @@ namespace Tests
 			}
 		}
 
-		static TempTable<T> CreateTable<T>(IDataContext db, string? tableName, TableOptions tableOptions = TableOptions.NotSet)
+		static TempTable<T> CreateTable<T>(IDataContext db, string? tableName, string? schemaName = null, TableOptions tableOptions = TableOptions.NotSet)
 			where T : notnull =>
 			db.ConfigurationString?.IsAnyOf(TestProvName.AllFirebird) == true ?
-				new FirebirdTempTable<T>(db, tableName, tableOptions : tableOptions) :
-				new     TestTempTable<T>(db, tableName, tableOptions : tableOptions);
+				new FirebirdTempTable<T>(db, tableName, schemaName: schemaName, tableOptions : tableOptions) :
+				new     TestTempTable<T>(db, tableName, schemaName: schemaName, tableOptions : tableOptions);
 
 		static void ClearDataContext(IDataContext db)
 		{
@@ -252,21 +253,21 @@ namespace Tests
 			return new Version(version);
 		}
 
-		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, TableOptions tableOptions = TableOptions.CheckExistence)
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, string? schemaName = null, TableOptions tableOptions = TableOptions.CheckExistence)
 			where T : notnull
 		{
 			using var _ = new DisableBaseline("Test setup");
 			try
 			{
 				if ((tableOptions & TableOptions.CheckExistence) == TableOptions.CheckExistence)
-					db.DropTable<T>(tableName, tableOptions:tableOptions);
-				return CreateTable<T>(db, tableName, tableOptions);
+					db.DropTable<T>(tableName, schemaName: schemaName, tableOptions:tableOptions);
+				return CreateTable<T>(db, tableName, schemaName: schemaName, tableOptions: tableOptions);
 			}
 			catch
 			{
 				ClearDataContext(db);
-				db.DropTable<T>(tableName, throwExceptionIfNotExists:false);
-				return CreateTable<T>(db, tableName, tableOptions);
+				db.DropTable<T>(tableName, schemaName: schemaName, throwExceptionIfNotExists:false);
+				return CreateTable<T>(db, tableName, schemaName: schemaName, tableOptions: tableOptions);
 			}
 		}
 
@@ -276,7 +277,7 @@ namespace Tests
 			using var _ = new DisableBaseline("Test setup");
 			using (new DisableLogging())
 			{
-				var table = CreateLocalTable<T>(db, tableName, TableOptions.CheckExistence);
+				var table = CreateLocalTable<T>(db, tableName, tableOptions: TableOptions.CheckExistence);
 
 				if (db is DataConnection dc)
 				{
@@ -355,31 +356,6 @@ namespace Tests
 		{
 			var path = Path.GetTempPath();
 			File.AppendAllText(path + "linq2db.Tests." + GetConfigName() + ".log", (message ?? "") + Environment.NewLine);
-		}
-
-		public static string GetTableName(string context, [System.Runtime.CompilerServices.CallerMemberName] string? methodName = null)
-		{
-			var tableName  = "xxPerson";
-
-			if (context.IsAnyOf(TestProvName.AllFirebird))
-			{
-				tableName += "_f";
-
-				if (context.IsRemote())
-					tableName += "l";
-
-				tableName += "_" + methodName;
-			}
-
-			if (context.IsAnyOf(TestProvName.AllOracle))
-			{
-				tableName += "_o";
-
-				if (context.IsRemote())
-					tableName += "l";
-			}
-
-			return tableName;
 		}
 
 		public static void DeleteTestCases()

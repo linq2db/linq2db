@@ -242,7 +242,7 @@ namespace LinqToDB.Data
 						dataConnection.DataProvider.SqlProviderFlags,
 						dataConnection.MappingSchema,
 						optimizeVisitor,
-						convertVisitor, 
+						convertVisitor,
 						factory,
 						dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
 						isAlreadyOptimizedAndConverted : optimizeAndConvertAll,

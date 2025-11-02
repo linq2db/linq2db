@@ -1622,6 +1622,7 @@ namespace LinqToDB.Linq
 		[Sql.Function(ProviderName.DB2,        "Repeat",       IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
 		[Sql.Function(ProviderName.PostgreSQL, "Repeat",       IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
 		[Sql.Function(ProviderName.Access,     "string", 1, 0, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
+		[Sql.Expression(ProviderName.SQLite, "REPLACE(HEX(ZEROBLOB({1})), '00', {0})", IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
 		public static string? Replicate(string? str, int? count)
 		{
 			if (str == null || count == null)
@@ -1642,6 +1643,7 @@ namespace LinqToDB.Linq
 		[Sql.Function(ProviderName.DB2,        "Repeat",       IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
 		[Sql.Function(ProviderName.PostgreSQL, "Repeat",       IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
 		[Sql.Function(ProviderName.Access,     "string", 1, 0, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
+		[Sql.Expression(ProviderName.SQLite, "REPLACE(HEX(ZEROBLOB({1})), '00', {0})", IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
 		public static string? Replicate(char? ch, int? count)
 		{
 			if (ch == null || count == null)

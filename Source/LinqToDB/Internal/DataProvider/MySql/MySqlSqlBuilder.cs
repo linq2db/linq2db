@@ -14,20 +14,15 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.MySql
 {
-	public class MySqlSqlBuilder : BasicSqlBuilder<MySqlOptions>
+	public abstract class MySqlSqlBuilder : BasicSqlBuilder<MySqlOptions>
 	{
-		public MySqlSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		protected MySqlSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
 		protected MySqlSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
-		}
-
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new MySqlSqlBuilder(this) { HintBuilder = HintBuilder };
 		}
 
 		protected override bool IsRecursiveCteKeywordRequired   => true;

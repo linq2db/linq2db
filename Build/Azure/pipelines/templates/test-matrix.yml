@@ -67,6 +67,8 @@ parameters:
 # - psscript_win_local (string) : contains name of local powershell setup script for windows runs (with extension)
 # - script_linux_local (string) : contains name of local shell setup script for linux runs (with extension)
 # - script_macos_local (string) : contains name of local shell setup script for MacOS runs (with extension)
+# - pre_test_win_local (string) : contains name of local cmd setup script for windows runs (with extension) executed before test run
+# - post_test_win_local (string): contains name of local cmd setup script for windows runs (with extension) executed after test run
 
 # MISC
 # - install_docker_macos (true/false string) : enables pre-installation of docker for macos testruns
@@ -363,6 +365,8 @@ jobs:
           title: SQL Server 2005
           config_win: sqlserver.2005
           script_win_global: sqlserver.2005.cmd
+          pre_test_win_local: enable_tls11.cmd
+          post_test_win_local: disable_tls11.cmd
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
