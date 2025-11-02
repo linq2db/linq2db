@@ -70,13 +70,11 @@ namespace Tests.Data
 					counters[e.TraceInfoStep]++;
 				}));
 
-#pragma warning disable NUnit2057 // https://github.com/nunit/nunit.analyzers/issues/945
 				Assert.That(
 					() => db.GetTable<Child>().ToList(),
 					Throws.TypeOf<ArgumentException>()
 						.Or.TypeOf<InvalidOperationException>()
 						.Or.TypeOf<MySqlException>());
-#pragma warning restore NUnit2057 // Remove unnecessary lambda expression
 				using (Assert.EnterMultipleScope())
 				{
 					// steps called once
@@ -107,13 +105,11 @@ namespace Tests.Data
 					counters[e.TraceInfoStep]++;
 				}));
 
-#pragma warning disable NUnit2057 // https://github.com/nunit/nunit.analyzers/issues/945
 				Assert.That(
 					() => db.GetTable<Child>().ToListAsync(),
 					Throws.TypeOf<ArgumentException>()
 						.Or.TypeOf<InvalidOperationException>()
 						.Or.TypeOf<MySqlException>());
-#pragma warning restore NUnit2057 // Remove unnecessary lambda expression
 
 				using (Assert.EnterMultipleScope())
 				{
