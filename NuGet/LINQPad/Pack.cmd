@@ -58,5 +58,5 @@ pushd "%RELDIR%"
 ren "linq2db.LINQPad.%EXT%.zip" "linq2db.LINQPad.%EXT%"
 popd
 
-echo Packed -> "%RELDIR%\linq2db.LINQPad.%EXT%"
+echo "Packed -> %RELDIR%\linq2db.LINQPad.%EXT%"
 endlocal

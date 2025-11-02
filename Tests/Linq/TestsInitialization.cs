@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Common;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 
 using LinqToDB.Common;
@@ -26,6 +27,49 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
+		// temporary, see SQLite.Runtime.props notes
+		Environment.SetEnvironmentVariable("PreLoadSQLite_BaseDirectory", Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "sds"));
+
+#if NET8_0_OR_GREATER
+		// this API is not available in NETFX, but for some reason it works if SDS test run first (which is true now)
+		IntPtr? handle = null;
+		System.Runtime.InteropServices.NativeLibrary.SetDllImportResolver(typeof(System.Data.SQLite.AssemblySourceIdAttribute).Assembly, (module, assembly, searchPath) =>
+		{
+			if (module == "e_sqlite3")
+			{
+				if (handle == null)
+				{
+					// This code targets System.Data.SQLite version 2.0.2
+					var type = assembly.GetType("System.Data.SQLite.UnsafeNativeMethods");
+					if (type == null)
+					{
+						throw new InvalidOperationException($"Failed to find type 'System.Data.SQLite.UnsafeNativeMethods' in assembly '{assembly.FullName}'.");
+					}
+
+					var field = type.GetField("_SQLiteNativeModuleHandle", BindingFlags.Static | BindingFlags.NonPublic);
+					if (field == null)
+					{
+						throw new InvalidOperationException($"Failed to find field '_SQLiteNativeModuleHandle' in type '{type.FullName}'.");
+					}
+
+					handle = field.GetValue(null) as IntPtr?;
+					if (handle == null)
+					{
+						throw new InvalidOperationException($"Failed to get value of '_SQLiteNativeModuleHandle'.");
+					}
+				}
+
+				return handle.Value;
+			}
+
+			return IntPtr.Zero;
+		});
+#else
+		// force load of SDS runtime first as there is no SetDllImportResolver API
+		using (var _ = new System.Data.SQLite.SQLiteConnection("", false))
+		{ }
+#endif
+
 #if DEBUG
 		ActivityService.AddFactory(ActivityHierarchyFactory);
 
