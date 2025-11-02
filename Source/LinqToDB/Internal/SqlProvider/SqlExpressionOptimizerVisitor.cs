@@ -1208,12 +1208,25 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (element.Expression is SelectQuery selectQuery && selectQuery.Select.Columns.Count == 1)
 			{
+				var columnExpression = selectQuery.Select.Columns[0].Expression;
+				var newExpression = (ISqlExpression)Visit(new SqlCastExpression(columnExpression, element.ToType, element.FromType, isMandatory: element.IsMandatory));
+
 				if (GetVisitMode(selectQuery) == VisitMode.Modify)
 				{
-					var columnExpression = selectQuery.Select.Columns[0].Expression;
-					selectQuery.Select.Columns[0].Expression = (ISqlExpression)Visit(new SqlCastExpression(columnExpression, element.ToType, element.FromType, isMandatory: element.IsMandatory));
+					selectQuery.Select.Columns[0].Expression = newExpression;
 
 					return selectQuery;
+				}
+				else
+				{
+					NotifyReplaced(newExpression, columnExpression);
+
+					var query = VisitSqlQuery(selectQuery);
+
+					// magic...
+					NotifyReplaced(columnExpression, columnExpression);
+
+					return query;
 				}
 			}
 

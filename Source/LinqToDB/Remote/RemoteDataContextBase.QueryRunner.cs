@@ -95,6 +95,7 @@ namespace LinqToDB.Remote
 
 							querySql = sqlBuilder.ApplyQueryHints(querySql, queryHints);
 
+							sqlStringBuilder.Value.Clear();
 							sqlStringBuilder.Value.Append(querySql);
 						}
 					}

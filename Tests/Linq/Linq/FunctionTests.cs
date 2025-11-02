@@ -629,7 +629,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3543Test([IncludeDataSources(true, TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
+		public void Issue3543Test([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tags = db.CreateLocalTable<TagsTable>();

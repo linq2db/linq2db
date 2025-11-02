@@ -85,6 +85,8 @@ namespace Tests.Linq
 		[Test]
 		public void InTest2([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
+			using var _ = context.IsAnyOf(TestProvName.AllClickHouse) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
+
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
 			var query =
@@ -286,6 +288,8 @@ namespace Tests.Linq
 		[Test]
 		public void Null_In_Null_Test1([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
+			using var _ = context.IsAnyOf(TestProvName.AllClickHouse) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
+
 			using var db = GetDataContext(context, o => o
 				.UsePreferExistsForScalar(preferExists)
 				.UseCompareNulls(compareNullsAsValues ? CompareNulls.LikeClr : CompareNulls.LikeSql)
@@ -302,6 +306,8 @@ namespace Tests.Linq
 		[Test]
 		public void Null_In_Null_Test2([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
+			using var _ = context.IsAnyOf(TestProvName.AllClickHouse) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
+
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select(i => new { ID = i }));
@@ -347,6 +353,8 @@ namespace Tests.Linq
 		[Test]
 		public void Null_NotIn_Null_Test1([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
+			using var _ = context.IsAnyOf(TestProvName.AllClickHouse) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
+
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, 4, 5, null }.Select(i => new { ID = i }));

@@ -7,6 +7,22 @@ steps:
 # .NET 8 SDK already installed https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md
 # but we still need to install all required versions because only last installed available due to bug
 
+# https://github.com/apache/flink/blob/master/tools/azure-pipelines/free_disk_space.sh
+# when more space needed, uncomment more lines
+- task: CmdLine@2
+  inputs:
+    script: |
+      # 1Gb
+      #sudo apt-get remove -y '^llvm-.*'
+      # 10Gb
+      #sudo rm -rf /usr/local/lib/android
+      df -h
+      # frees ~7Gb
+      echo remove .ghcup
+      sudo rm -rf /usr/local/.ghcup/
+      df -h
+  displayName: Cleanup Junk
+
 - task: CmdLine@2
   inputs:
     script: 'git clone https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines && cd baselines && git checkout -b $(baselines_branch) origin/$(baselines_branch) && cd ..'
@@ -16,10 +32,24 @@ steps:
 
 - task: DownloadPipelineArtifact@2
   inputs:
-    artifactName: $(artifact_test_binaries)
-    targetPath: '$(System.DefaultWorkingDirectory)'
+    artifactName: $(artifact_test_configs)
+    targetPath: '$(System.DefaultWorkingDirectory)/configs'
   condition: and(variables.title, succeeded())
-  displayName: Extract test files
+  displayName: Extract test configs
+
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: $(artifact_test_scripts)
+    targetPath: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, succeeded())
+  displayName: Extract test scripts
+
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: $(artifact_test_net80_binaries)
+    targetPath: '$(System.DefaultWorkingDirectory)/net8.0'
+  condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
+  displayName: Extract NET 8 test binaries
 
 - task: CmdLine@2
   inputs:
@@ -27,13 +57,6 @@ steps:
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Copy .NET 8 test config
   condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
-
-- task: CmdLine@2
-  inputs:
-    script: 'cp $(System.DefaultWorkingDirectory)/configs/net90/$(config).json net9.0/UserDataProviders.json'
-    workingDirectory: '$(System.DefaultWorkingDirectory)'
-  displayName: Copy .NET 9 test config
-  condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
@@ -83,6 +106,26 @@ steps:
   condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
   displayName: 'EF.Core Tests (.NET 8): $(title)'
 
+- task: CmdLine@2
+  inputs:
+    script: rm -rf $(System.DefaultWorkingDirectory)/net8.0
+  displayName: Remove NET 8 test binaries
+  condition: and(variables.title, eq(variables.net80, 'true'))
+
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: $(artifact_test_net90_binaries)
+    targetPath: '$(System.DefaultWorkingDirectory)/net9.0'
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
+  displayName: Extract NET 9 test binaries
+
+- task: CmdLine@2
+  inputs:
+    script: 'cp $(System.DefaultWorkingDirectory)/configs/net90/$(config).json net9.0/UserDataProviders.json'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  displayName: Copy .NET 9 test config
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
+
 - task: UseDotNet@2
   displayName: 'Use .NET 9'
   inputs:
@@ -109,6 +152,12 @@ steps:
 - script: dotnet test ./net9.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx $(extra) --blame-hang-timeout 5m
   condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
   displayName: 'EF.Core Tests (.NET 9): $(title)'
+
+- task: CmdLine@2
+  inputs:
+    script: 'rm -rf $(System.DefaultWorkingDirectory)/net9.0'
+  displayName: Remove NET 9 test binaries
+  condition: and(variables.title, eq(variables.net90, 'true'))
 
 - task: PublishTestResults@2
   condition: and(variables.title, succeededOrFailed())
