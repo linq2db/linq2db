@@ -888,7 +888,6 @@ namespace Tests.Linq
 				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllSybase,
-				ProviderName.SQLiteMS,
 				TestProvName.AllSybase,
 				TestProvName.AllInformix)]
 			string context, [Values(1, 2)] int iteration)

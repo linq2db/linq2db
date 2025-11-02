@@ -1029,7 +1029,7 @@ namespace Tests.Linq
 			private static Expression<Func<Issue3472TableDC, DataConnection, int>> PersonsCountExpr() => (r, db) => db.GetTable<Person>().Where(p => p.ID == r.Id).Count();
 		}
 
-		[Table]
+		[Table(nameof(Issue3472TableDC))]
 		public class Issue3472TableDCTX
 		{
 			[Column] public int Id { get; set; }

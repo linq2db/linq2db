@@ -77,7 +77,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			Type? jsonDocumentType,
 			Func<object, string?>? jsdocToStringConverter,
 			Type? sqlJsonType,
-			Type? sqlVectorType)
+			Type? sqlVectorType,
+			Type? sqlHalfVectorType)
 		{
 			Provider = provider;
 
@@ -109,9 +110,10 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			JsonDocumentToStringConverter = jsdocToStringConverter;
 
-			JsonDocumentType = jsonDocumentType;
-			SqlJsonType      = sqlJsonType;
-			SqlVectorType    = sqlVectorType;
+			JsonDocumentType  = jsonDocumentType;
+			SqlJsonType       = sqlJsonType;
+			SqlVectorType     = sqlVectorType;
+			SqlHalfVectorType = sqlHalfVectorType;
 		}
 
 		public SqlServerProvider Provider { get; }
@@ -148,6 +150,10 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		public Type?     SqlVectorType            { get; }
 		public string?   GetSqlVectorReaderMethod => SqlVectorType == null ? null : "GetSqlVector";
 		public SqlDbType VectorDbType             => SqlVectorType == null ? SqlDbType.VarBinary : (SqlDbType)36;
+
+		// TODO: review implementation after SqlClient adds support for this type
+		// e.g. do we need different SqlDbType value?
+		public Type?     SqlHalfVectorType        { get; }
 
 		// TODO: Remove in v7
 		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -276,10 +282,12 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			var connectionFactory = typeMapper.BuildTypedFactory<string, SqlConnection, DbConnection>(connectionString => new SqlConnection(connectionString));
 
-			MappingSchema? mappingSchema    = null;
-			Type?          jsonDocumentType = null;
-			Type?          sqlJsonType      = null;
-			Type?          sqlVectorType    = null;
+			MappingSchema? mappingSchema     = null;
+			Type?          jsonDocumentType  = null;
+			Type?          sqlJsonType       = null;
+			Type?          sqlVectorType     = null;
+			Type?          sqlHalfVectorType = null;
+
 			Func<object, string?>? jsdocToStringConverter = null;
 
 			if (provider == SqlServerProvider.MicrosoftDataSqlClient)
@@ -337,7 +345,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					}
 				}
 
-				// type is unnecessary-generic
 				sqlVectorType = LoadType("SqlVector`1", DataType.Array | DataType.Single, null, true, true, length: 1, typeArguments: [typeof(float)]);
 
 				if (sqlVectorType != null)
@@ -363,6 +370,30 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 					mappingSchema!.SetValueToSqlConverter(sqlVectorType, converter);
 				}
+
+#if NET8_0_OR_GREATER
+				sqlHalfVectorType = LoadType("SqlVector`1", DataType.Array | DataType.Half, null, true, true, length: 1, typeArguments: [typeof(Half)]);
+
+				if (sqlHalfVectorType != null)
+				{
+					var sb = Expression.Parameter(typeof(StringBuilder));
+					var dt = Expression.Parameter(typeof(SqlDataType));
+					var op = Expression.Parameter(typeof(DataOptions));
+					var v  = Expression.Parameter(typeof(object));
+
+					// SqlVector -> literal
+					var converter = Expression.Lambda<Action<StringBuilder,SqlDataType,DataOptions,object>>(
+						Expression.Call(
+							null,
+							BuildHalfVectorLiteralMethod,
+							sb,
+							ExpressionHelper.Property(ExpressionHelper.Property(Expression.Convert(v, sqlHalfVectorType), "Memory"), "Span")
+							), sb, dt, op, v)
+						.CompileExpression();
+
+					mappingSchema!.SetValueToSqlConverter(sqlHalfVectorType, converter);
+				}
+#endif
 			}
 
 			return new SqlServerProviderAdapter(
@@ -396,7 +427,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				jsonDocumentType,
 				jsdocToStringConverter,
 				sqlJsonType,
-				sqlVectorType);
+				sqlVectorType,
+				sqlHalfVectorType);
 
 			IEnumerable<int> exceptionErrorsGettter(Exception ex) => typeMapper.Wrap<SqlException>(ex).Errors.Errors.Select(err => err.Number);
 
@@ -425,11 +457,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			}
 		}
 
-		public static readonly MethodInfo BuildVectorLiteralMethod = typeof(SqlServerProviderAdapter).GetMethod(nameof(BuildVectorLiteral), BindingFlags.Static | BindingFlags.NonPublic)!;
+		static readonly MethodInfo BuildVectorLiteralMethod     = typeof(SqlServerProviderAdapter).GetMethod(nameof(BuildVectorLiteral), BindingFlags.Static | BindingFlags.NonPublic)!;
 
 #if !SUPPORTS_SPAN
 		// we need System.Memory dep otherwise
 		static void BuildVectorLiteral(StringBuilder sb, float[] data)
+			=> BuildAnyVectorLiteral(sb, data);
+
+		static void BuildAnyVectorLiteral<T>(StringBuilder sb, T[] data)
 		{
 			sb.Append("JSON_ARRAY(");
 
@@ -444,7 +479,13 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			sb.Append(')');
 		}
 #else
-		static void BuildVectorLiteral(StringBuilder sb, ReadOnlySpan<float> data)
+		static readonly MethodInfo BuildHalfVectorLiteralMethod = typeof(SqlServerProviderAdapter).GetMethod(nameof(BuildHalfVectorLiteral), BindingFlags.Static | BindingFlags.NonPublic)!;
+
+		static void BuildVectorLiteral(StringBuilder sb, ReadOnlySpan<float> data) => BuildAnyVectorLiteral(sb, data);
+
+		static void BuildHalfVectorLiteral(StringBuilder sb, ReadOnlySpan<Half> data) => BuildAnyVectorLiteral(sb, data);
+
+		static void BuildAnyVectorLiteral<T>(StringBuilder sb, ReadOnlySpan<T> data)
 		{
 			sb.Append("JSON_ARRAY(");
 
