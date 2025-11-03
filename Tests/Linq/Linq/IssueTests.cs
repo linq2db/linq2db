@@ -659,6 +659,8 @@ namespace Tests.Linq
 		[Test]
 		public void InsertFromSelectWithNullableFilter([DataSources] string context)
 		{
+			using var _ = context.IsAnyOf(ProviderName.SqlCe) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
+
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(InsertIssueTest.TestData);
 

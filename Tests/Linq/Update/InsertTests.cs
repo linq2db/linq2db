@@ -1730,53 +1730,41 @@ namespace Tests.xUpdate
 		public void InsertByTableName([DataSources] string context)
 		{
 			const string? schemaName = null;
-			var tableName  = TestUtils.GetTableName(context, "35");
+			var tableName  = "xxPerson";
 
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<Person>(tableName, schemaName: schemaName);
+
+			using (Assert.EnterMultipleScope())
 			{
-				try
+				Assert.That(table.TableName, Is.EqualTo(tableName));
+				Assert.That(table.SchemaName, Is.EqualTo(schemaName));
+			}
+
+			var person = new Person()
+			{
+				FirstName = "Steven",
+				LastName = "King",
+				Gender = Gender.Male,
+			};
+
+			// insert a row into the table
+			db.Insert(person, tableName: tableName, schemaName: schemaName);
+			if (!context.IsAnyOf(TestProvName.AllClickHouse))
+			{
+				var newId1 = db.InsertWithInt32Identity(person, tableName: tableName, schemaName: schemaName);
+				var newId2 = db.InsertWithIdentity(person, tableName: tableName, schemaName: schemaName);
+
+				var newCount = table.Count();
+				using (Assert.EnterMultipleScope())
 				{
-					db.DropTable<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+					Assert.That(newCount, Is.EqualTo(3));
 
-					var table = db.CreateTable<Person>(tableName, schemaName: schemaName);
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(table.TableName, Is.EqualTo(tableName));
-						Assert.That(table.SchemaName, Is.EqualTo(schemaName));
-					}
-
-					var person = new Person()
-					{
-						FirstName = "Steven",
-						LastName = "King",
-						Gender = Gender.Male,
-					};
-
-					// insert a row into the table
-					db.Insert(person, tableName: tableName, schemaName: schemaName);
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					{
-						var newId1 = db.InsertWithInt32Identity(person, tableName: tableName, schemaName: schemaName);
-						var newId2 = db.InsertWithIdentity(person, tableName: tableName, schemaName: schemaName);
-
-						var newCount = table.Count();
-						using (Assert.EnterMultipleScope())
-						{
-							Assert.That(newCount, Is.EqualTo(3));
-
-							Assert.That(newId2, Is.Not.EqualTo(newId1));
-						}
-
-						var integritycount = table.Where(p => p.FirstName == "Steven" && p.LastName == "King" && p.Gender == Gender.Male).Count();
-						Assert.That(integritycount, Is.EqualTo(3));
-					}
-
-					table.Drop();
+					Assert.That(newId2, Is.Not.EqualTo(newId1));
 				}
-				finally
-				{
-					db.DropTable<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
-				}
+
+				var integritycount = table.Where(p => p.FirstName == "Steven" && p.LastName == "King" && p.Gender == Gender.Male).Count();
+				Assert.That(integritycount, Is.EqualTo(3));
 			}
 		}
 
@@ -1784,51 +1772,41 @@ namespace Tests.xUpdate
 		public async Task InsertByTableNameAsync([DataSources] string context)
 		{
 			const string? schemaName = null;
-			var tableName  = TestUtils.GetTableName(context, "31");
+			var tableName  = "xxPerson";
 
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<Person>(tableName, schemaName: schemaName);
+
+			using (Assert.EnterMultipleScope())
 			{
-				try
+				Assert.That(table.TableName, Is.EqualTo(tableName));
+				Assert.That(table.SchemaName, Is.EqualTo(schemaName));
+			}
+
+			var person = new Person()
+			{
+				FirstName = "Steven",
+				LastName = "King",
+				Gender = Gender.Male,
+			};
+
+			// insert a row into the table
+			await db.InsertAsync(person, tableName: tableName, schemaName: schemaName);
+			if (!context.IsAnyOf(TestProvName.AllClickHouse))
+			{
+				var newId1 = await db.InsertWithInt32IdentityAsync(person, tableName: tableName, schemaName: schemaName);
+				var newId2 = await db.InsertWithIdentityAsync(person, tableName: tableName, schemaName: schemaName);
+
+				var newCount = await table.CountAsync();
+				using (Assert.EnterMultipleScope())
 				{
-					var table = await db.CreateTableAsync<Person>(tableName, schemaName: schemaName);
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(table.TableName, Is.EqualTo(tableName));
-						Assert.That(table.SchemaName, Is.EqualTo(schemaName));
-					}
+					Assert.That(newCount, Is.EqualTo(3));
 
-					var person = new Person()
-					{
-						FirstName = "Steven",
-						LastName = "King",
-						Gender = Gender.Male,
-					};
-
-					// insert a row into the table
-					await db.InsertAsync(person, tableName: tableName, schemaName: schemaName);
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					{
-						var newId1 = await db.InsertWithInt32IdentityAsync(person, tableName: tableName, schemaName: schemaName);
-						var newId2 = await db.InsertWithIdentityAsync(person, tableName: tableName, schemaName: schemaName);
-
-						var newCount = await table.CountAsync();
-						using (Assert.EnterMultipleScope())
-						{
-							Assert.That(newCount, Is.EqualTo(3));
-
-							Assert.That(newId2, Is.Not.EqualTo(newId1));
-						}
-
-						var integritycount = await table.Where(p => p.FirstName == "Steven" && p.LastName == "King" && p.Gender == Gender.Male).CountAsync();
-						Assert.That(integritycount, Is.EqualTo(3));
-					}
-
-					await table.DropAsync();
+					Assert.That(newId2, Is.Not.EqualTo(newId1));
 				}
-				finally
-				{
-					await db.DropTableAsync<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
-				}
+
+				var integritycount = await table.Where(p => p.FirstName == "Steven" && p.LastName == "King" && p.Gender == Gender.Male).CountAsync();
+				Assert.That(integritycount, Is.EqualTo(3));
 			}
 		}
 
@@ -1836,95 +1814,74 @@ namespace Tests.xUpdate
 		public void InsertOrReplaceByTableName([InsertOrUpdateDataSources] string context)
 		{
 			const string? schemaName = null;
-			var tableName  = "xxPatient" + (context.IsAnyOf(TestProvName.AllFirebird) ? TestUtils.GetNext().ToString() : string.Empty);
+			var tableName  = "xxPatient";
 
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<Patient>(tableName, schemaName: schemaName);
+			using (Assert.EnterMultipleScope())
 			{
-				db.DropTable<Patient>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
-				var table = db.CreateTable<Patient>(tableName, schemaName: schemaName);
-
-				try
-				{
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(table.TableName, Is.EqualTo(tableName));
-						Assert.That(table.SchemaName, Is.EqualTo(schemaName));
-					}
-
-					var person1 = new Patient()
-					{
-						PersonID = 1,
-						Diagnosis = "ABC1",
-					};
-
-					var person2 = new Patient()
-					{
-						PersonID = 2,
-						Diagnosis = "ABC2",
-					};
-
-					db.InsertOrReplace(person1, tableName: tableName, schemaName: schemaName);
-					db.InsertOrReplace(person2, tableName: tableName, schemaName: schemaName);
-
-					Assert.That(table.Count(), Is.EqualTo(2));
-
-					db.InsertOrReplace(person1, tableName: tableName, schemaName: schemaName);
-					db.InsertOrReplace(person2, tableName: tableName, schemaName: schemaName);
-
-					Assert.That(table.Count(), Is.EqualTo(2));
-				}
-				finally
-				{
-					table.Drop(throwExceptionIfNotExists: false);
-				}
+				Assert.That(table.TableName, Is.EqualTo(tableName));
+				Assert.That(table.SchemaName, Is.EqualTo(schemaName));
 			}
+
+			var person1 = new Patient()
+			{
+				PersonID = 1,
+				Diagnosis = "ABC1",
+			};
+
+			var person2 = new Patient()
+			{
+				PersonID = 2,
+				Diagnosis = "ABC2",
+			};
+
+			db.InsertOrReplace(person1, tableName: tableName, schemaName: schemaName);
+			db.InsertOrReplace(person2, tableName: tableName, schemaName: schemaName);
+
+			Assert.That(table.Count(), Is.EqualTo(2));
+
+			db.InsertOrReplace(person1, tableName: tableName, schemaName: schemaName);
+			db.InsertOrReplace(person2, tableName: tableName, schemaName: schemaName);
+
+			Assert.That(table.Count(), Is.EqualTo(2));
 		}
 
 		[Test]
 		public async Task InsertOrReplaceByTableNameAsync([InsertOrUpdateDataSources] string context)
 		{
 			const string? schemaName = null;
-			var tableName  = "xxPatient" + (context.IsAnyOf(TestProvName.AllFirebird) ? TestUtils.GetNext().ToString() : string.Empty);
+			var tableName  = "xxPatient";
 
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<Patient>(tableName, schemaName: schemaName);
+			using (Assert.EnterMultipleScope())
 			{
-				await db.DropTableAsync<Patient>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
-				var table = await db.CreateTableAsync<Patient>(tableName, schemaName: schemaName);
-				try
-				{
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(table.TableName, Is.EqualTo(tableName));
-						Assert.That(table.SchemaName, Is.EqualTo(schemaName));
-					}
-
-					var person1 = new Patient()
-					{
-						PersonID = 1,
-						Diagnosis = "ABC1",
-					};
-
-					var person2 = new Patient()
-					{
-						PersonID = 2,
-						Diagnosis = "ABC2",
-					};
-
-					await db.InsertOrReplaceAsync(person1, tableName: tableName, schemaName: schemaName);
-					await db.InsertOrReplaceAsync(person2, tableName: tableName, schemaName: schemaName);
-
-					Assert.That(await table.CountAsync(), Is.EqualTo(2));
-
-					await db.InsertOrReplaceAsync(person1, tableName: tableName, schemaName: schemaName);
-					await db.InsertOrReplaceAsync(person2, tableName: tableName, schemaName: schemaName);
-
-					Assert.That(await table.CountAsync(), Is.EqualTo(2));
-				}
-				finally
-				{
-					await table.DropAsync(throwExceptionIfNotExists: false);
-				}
+				Assert.That(table.TableName, Is.EqualTo(tableName));
+				Assert.That(table.SchemaName, Is.EqualTo(schemaName));
 			}
+
+			var person1 = new Patient()
+			{
+				PersonID = 1,
+				Diagnosis = "ABC1",
+			};
+
+			var person2 = new Patient()
+			{
+				PersonID = 2,
+				Diagnosis = "ABC2",
+			};
+
+			await db.InsertOrReplaceAsync(person1, tableName: tableName, schemaName: schemaName);
+			await db.InsertOrReplaceAsync(person2, tableName: tableName, schemaName: schemaName);
+
+			Assert.That(await table.CountAsync(), Is.EqualTo(2));
+
+			await db.InsertOrReplaceAsync(person1, tableName: tableName, schemaName: schemaName);
+			await db.InsertOrReplaceAsync(person2, tableName: tableName, schemaName: schemaName);
+
+			Assert.That(await table.CountAsync(), Is.EqualTo(2));
 		}
 
 		[Test]

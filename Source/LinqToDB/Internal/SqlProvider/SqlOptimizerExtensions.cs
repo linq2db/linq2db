@@ -18,7 +18,7 @@ namespace LinqToDB.Internal.SqlProvider
 				sqlProviderFlags : sqlProviderFlags,
 				mappingSchema : mappingSchema,
 				optimizerVisitor : optimizer.CreateOptimizerVisitor(false),
-				convertVisitor : optimizer.CreateConvertVisitor(false), 
+				convertVisitor : optimizer.CreateConvertVisitor(false),
 				factory : factory,
 				isParameterOrderDepended : false,
 				isAlreadyOptimizedAndConverted : false,

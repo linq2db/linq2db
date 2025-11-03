@@ -96,15 +96,6 @@ internal static class AdoAsyncDispose
 	}
 }
 
-internal static class TypeExtensions
-{
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static ConstructorInfo? GetConstructor(this Type type, BindingFlags bindingAttr, Type[] types)
-	{
-		return type.GetConstructor(bindingAttr, null, types, null);
-	}
-}
-
 #else
 
 internal static class CharExtensions

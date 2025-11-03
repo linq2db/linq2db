@@ -700,6 +700,10 @@ namespace LinqToDB.Internal.SqlQuery
 			if (table1 == null || table2 == null)
 				return false;
 
+			// TODO: we should introduce better class hierarchy for tables
+			if (table1.GetType() != typeof(SqlTable) || table2.GetType() != typeof(SqlTable))
+				return false;
+
 			var result =
 				table1.ObjectType   == table2.ObjectType &&
 				table1.TableName    == table2.TableName  &&
