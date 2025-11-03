@@ -10,5 +10,4 @@ docker run -d --name pgsql13 -e POSTGRES_PASSWORD=Password12! -p 5413:5432 -v /v
 
 call wait pgsql13 "server started"
 
-REM create test database
-docker exec pgsql13 psql -U postgres -c "create database testdata"
+call pgsql-createdb pgsql13

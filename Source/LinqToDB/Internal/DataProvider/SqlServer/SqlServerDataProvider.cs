@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider.SqlServer.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
@@ -135,6 +136,24 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 				SetField<DbDataReader, string>("vector", typeof(byte[]), (r, i) => r.GetString(i));
 			}
+
+#if NET8_0_OR_GREATER
+			// TODO: review implementation after SqlClient adds support for this type
+			// - check type name
+			// - SetField registration conflict
+			if (Adapter.SqlHalfVectorType != null)
+			{
+				var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
+				var indexParameter      = Expression.Parameter(typeof(int), "i");
+
+				var methodCall = Expression.Call(dataReaderParameter, Adapter.GetSqlVectorReaderMethod!, new[] { typeof(Half) }, indexParameter);
+
+				ReaderExpressions[new ReaderInfo { ToType = Adapter.SqlHalfVectorType, FieldType = typeof(byte[]), DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
+					Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
+
+				//SetField<DbDataReader, string>("vector", typeof(byte[]), (r, i) => r.GetString(i));
+			}
+#endif
 
 			SetProviderField<DateTimeOffset>(Adapter.GetDateTimeOffsetReaderMethod        , dataReaderType: Adapter.DataReaderType);
 			SetProviderField<TimeSpan>      (Adapter.GetTimeSpanReaderMethod              , dataReaderType: Adapter.DataReaderType);
@@ -328,7 +347,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 				case DataType.Udt:
 					if (param != null
-						&& value != null
+						&& !value.IsNullValue()
 						&& _udtTypeNames.TryGetValue(value.GetType(), out var typeName))
 					{
 						Adapter.SetUdtTypeName(param, typeName);
@@ -418,7 +437,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				}
 
 				case DataType.Undefined:
-					if (value != null
+					if (!value.IsNullValue()
 						&& (value is DataTable
 						|| value is DbDataReader
 							|| value is IEnumerable<DbDataRecord>
@@ -430,6 +449,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					break;
 
 				case DataType.Array | DataType.Single:
+				case DataType.Array | DataType.Half:
 					parameter.Size = 0;
 					break;
 			}
@@ -447,7 +467,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 								Adapter.SetTypeName(param, dataType.DbType!);
 
 							// TVP doesn't support DBNull
-							if (parameter.Value is DBNull)
+							if (parameter.Value.IsNullValue())
 								parameter.Value = null;
 
 							break;
@@ -455,7 +475,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					case SqlDbType.VarChar:
 						{
 							var strValue = value as string;
-							if ((strValue != null && strValue.Length > 8000) || (value != null && strValue == null))
+							if ((strValue != null && strValue.Length > 8000) || (!value.IsNullValue() && strValue == null))
 								parameter.Size = -1;
 							else if (dataType.Length != null && dataType.Length <= 8000 && (strValue == null || strValue.Length <= dataType.Length))
 								parameter.Size = dataType.Length.Value;
@@ -467,7 +487,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					case SqlDbType.NVarChar:
 						{
 							var strValue = value as string;
-							if ((strValue != null && strValue.Length > 4000) || (value != null && strValue == null))
+							if ((strValue != null && strValue.Length > 4000) || (!value.IsNullValue() && strValue == null))
 								parameter.Size = -1;
 							else if (dataType.Length != null && dataType.Length <= 4000 && (strValue == null || strValue.Length <= dataType.Length))
 								parameter.Size = dataType.Length.Value;
@@ -479,7 +499,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					case SqlDbType.VarBinary:
 						{
 							var binaryValue = value as byte[];
-							if ((binaryValue != null && binaryValue.Length > 8000) || (value != null && binaryValue == null))
+							if ((binaryValue != null && binaryValue.Length > 8000) || (!value.IsNullValue() && binaryValue == null))
 								parameter.Size = -1;
 							else if (dataType.Length != null && dataType.Length <= 8000 && (binaryValue == null || binaryValue.Length <= dataType.Length))
 								parameter.Size = dataType.Length.Value;
@@ -513,6 +533,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				case DataType.Timestamp               : type = SqlDbType.Timestamp;     break;
 				case DataType.Structured              : type = SqlDbType.Structured;    break;
 				case DataType.Json                    : type = Adapter.JsonDbType;      break;
+				case DataType.Array | DataType.Half   :
 				case DataType.Array | DataType.Single : type = Adapter.VectorDbType;    break;
 			}
 

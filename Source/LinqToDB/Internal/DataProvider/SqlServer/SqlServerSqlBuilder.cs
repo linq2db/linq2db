@@ -337,6 +337,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					}
 
 					break;
+
 				case DataType.Array | DataType.Single:
 					StringBuilder
 						.Append("VECTOR(")
@@ -344,6 +345,15 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 						// we use default 0 to produce error when user didn't specify length
 						.Append(CultureInfo.InvariantCulture, $"{type.Length ?? 0}")
 						.Append(')');
+					return;
+
+				case DataType.Array | DataType.Half:
+					StringBuilder
+						.Append("VECTOR(")
+						// length is required and in 1-3996 range
+						// we use default 0 to produce error when user didn't specify length
+						.Append(CultureInfo.InvariantCulture, $"{type.Length ?? 0}")
+						.Append(", float16)");
 					return;
 
 				case DataType.VarChar   :
