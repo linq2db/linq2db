@@ -574,10 +574,10 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						var convertExpression = MappingSchema.GetConvertExpression(readerExpression.Type, placeholder.Type, false, true, ConversionType.FromDatabase);
 
-						if (convertExpression != null)
-							readerExpression = InternalExtensions.ApplyLambdaToExpression(convertExpression, readerExpression);
-						else
+						if (convertExpression is null)
 							throw new InvalidOperationException($"No conversions defined from {readerExpression.Type} to {placeholder.Type}");
+
+						readerExpression = InternalExtensions.ApplyLambdaToExpression(convertExpression, readerExpression);
 					}
 
 					if (!canBeNull && readerExpression.Type == typeof(string) && DataContext.SqlProviderFlags.DoesProviderTreatsEmptyStringAsNull)
