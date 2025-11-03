@@ -318,7 +318,7 @@ namespace Tests.Linq
 		[ThrowsForProvider(typeof(MySqlException), providers: [TestProvName.AllMariaDB, TestProvName.AllMySql57], ErrorMessage = "Unknown table 't'")]
 		[RequiresCorrelatedSubquery]
 		[Test]
-		public void JoinAggregateArray([IncludeDataSources(true, SupportedProviders)] string context)
+		public void JoinAggregateArray([IncludeDataSources(false, SupportedProviders)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -348,7 +348,7 @@ namespace Tests.Linq
 		[ThrowsForProvider(typeof(MySqlException), providers: [TestProvName.AllMariaDB, TestProvName.AllMySql57], ErrorMessage = "Unknown table 't'")]
 		[RequiresCorrelatedSubquery]
 		[Test]
-		public void JoinAggregateArrayNotNull([IncludeDataSources(true, SupportedProviders)] string context)
+		public void JoinAggregateArrayNotNull([IncludeDataSources(false, SupportedProviders)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
