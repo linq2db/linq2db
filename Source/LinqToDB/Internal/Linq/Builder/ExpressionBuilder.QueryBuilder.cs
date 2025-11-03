@@ -12,6 +12,7 @@ using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
@@ -571,7 +572,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (placeholder.Type != readerExpression.Type)
 					{
-						readerExpression = Expression.Convert(readerExpression, placeholder.Type);
+						var convertExpression = MappingSchema.GetConvertExpression(readerExpression.Type, placeholder.Type, false, true, ConversionType.FromDatabase);
+
+						if (convertExpression != null)
+							readerExpression = InternalExtensions.ApplyLambdaToExpression(convertExpression, readerExpression);
+						else
+							throw new InvalidOperationException($"No conversions defined from {readerExpression.Type} to {placeholder.Type}");
 					}
 
 					if (!canBeNull && readerExpression.Type == typeof(string) && DataContext.SqlProviderFlags.DoesProviderTreatsEmptyStringAsNull)
