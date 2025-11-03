@@ -41,7 +41,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), [TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57], ErrorMessage = "The LINQ expression could not be converted to SQL.")]
+		[ThrowsForProvider(typeof(LinqToDBException), [TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess4], ErrorMessage = "The LINQ expression could not be converted to SQL.")]
 		[Test]
 		public void DistinctBy([DataSources] string context)
 		{
