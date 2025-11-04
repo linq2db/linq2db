@@ -266,7 +266,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		public static ISqlExpression EnsureType(this ISqlExpressionFactory factory, ISqlExpression expression, DbDataType dbDataType)
 		{
 			var expressionType = factory.GetDbDataType(expression);
-			if (expressionType.Equals(dbDataType))
+			if (expressionType.EqualsDbOnly(dbDataType))
 				return expression;
 
 			return factory.Cast(expression, dbDataType);
