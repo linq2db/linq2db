@@ -143,7 +143,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestCase1([DataSources] string context)
+		public void TestCase1([DataSources(TestProvName.AllAccessJet)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable<SampleClass>();
@@ -170,7 +170,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestCase2([DataSources] string context)
+		public void TestCase2([DataSources(TestProvName.AllAccessJet)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable<SampleClass>();

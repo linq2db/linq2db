@@ -98,10 +98,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			// ToString called on custom type already mapped to text-based db type or string
 			if (fromType.IsTextType())
 			{
-				return translationContext.CreatePlaceholder(
-					translationContext.CurrentSelectQuery,
-					objPlaceholder.Sql,
-					methodCall);
+				return objPlaceholder;
 			}
 
 			DbDataType toType;
