@@ -5,9 +5,6 @@ using System.Linq.Expressions;
 
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlQuery;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using PN = LinqToDB.ProviderName;
 
@@ -166,129 +163,6 @@ namespace LinqToDB
 		#endregion
 
 		#region ConcatStrings
-
-		sealed class CommonConcatWsArgumentsBuilder : IExtensionCallBuilder
-		{
-			static SqlExpression IsNullExpression(MappingSchema mappingSchema, string isNullFormat, ISqlExpression value)
-			{
-				return new SqlExpression(mappingSchema.GetDbDataType(typeof(string)), isNullFormat, value);
-			}
-
-			public void Build(ISqExtensionBuilder builder)
-			{
-				var arguments = (NewArrayExpression)builder.Arguments[1];
-				if (arguments.Expressions.Count == 0 && builder.BuilderValue != null)
-				{
-					builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), "''");
-				}
-				else if (arguments.Expressions.Count == 1 && builder.BuilderValue != null)
-				{
-					builder.ResultExpression = IsNullExpression(builder.Mapping, (string)builder.BuilderValue, builder.ConvertExpressionToSql(arguments.Expressions[0])!);
-				}
-				else
-				{
-					var items = arguments.Expressions.Select(e => builder.ConvertExpressionToSql(e)!);
-					foreach (var item in items)
-					{
-						builder.AddParameter("argument", item);
-					}
-				}
-			}
-		}
-
-		abstract class BaseEmulationConcatWsBuilder : IExtensionCallBuilder
-		{
-			protected abstract SqlExpression IsNullExpression(MappingSchema mappingSchema, ISqlExpression value);
-			protected abstract SqlExpression StringConcatExpression(MappingSchema mappingSchema, ISqlExpression value1, ISqlExpression value2);
-			protected abstract SqlExpression TruncateExpression(MappingSchema mappingSchema, ISqlExpression value, ISqlExpression separator);
-
-			public void Build(ISqExtensionBuilder builder)
-			{
-				var separator = builder.GetExpression(0)!;
-				var arguments = (NewArrayExpression)builder.Arguments[1];
-				if (arguments.Expressions.Count == 0)
-				{
-					builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), "''");
-				}
-				else if (arguments.Expressions.Count == 1)
-				{
-					builder.ResultExpression = IsNullExpression(builder.Mapping, builder.ConvertExpressionToSql(arguments.Expressions[0])!);
-				}
-				else
-				{
-					var items = arguments.Expressions.Select(e =>
-						IsNullExpression(builder.Mapping, StringConcatExpression(builder.Mapping, separator, builder.ConvertExpressionToSql(e)!))
-					);
-
-					var concatenation =
-						items.Aggregate((v1, v2) => StringConcatExpression(builder.Mapping, v1, v2));
-
-					builder.ResultExpression = TruncateExpression(builder.Mapping, concatenation, separator);
-				}
-			}
-		}
-
-		sealed class OldSqlServerConcatWsBuilder : BaseEmulationConcatWsBuilder
-		{
-			protected override SqlExpression IsNullExpression(MappingSchema mappingSchema, ISqlExpression value)
-			{
-				return new SqlExpression(mappingSchema.GetDbDataType(typeof(string)), "ISNULL({0}, '')", Precedence.Primary, value);
-			}
-
-			protected override SqlExpression StringConcatExpression(MappingSchema mappingSchema, ISqlExpression value1, ISqlExpression value2)
-			{
-				return new SqlExpression(mappingSchema.GetDbDataType(typeof(string)), "{0} + {1}", value1, value2);
-			}
-
-			protected override SqlExpression TruncateExpression(MappingSchema mappingSchema, ISqlExpression value, ISqlExpression separator)
-			{
-				// you can read more about this gore code here:
-				// https://stackoverflow.com/questions/2025585
-				return new SqlExpression(mappingSchema.GetDbDataType(typeof(string)), "SUBSTRING({0}, LEN(CONVERT(NVARCHAR(MAX), {1}) + N'!'), 8000)",
-					Precedence.Primary, value, separator);
-			}
-		}
-
-		sealed class SqliteConcatWsBuilder : BaseEmulationConcatWsBuilder
-		{
-			protected override SqlExpression IsNullExpression(MappingSchema mappingSchema, ISqlExpression value)
-			{
-				return new SqlExpression(mappingSchema.GetDbDataType(typeof(string)), "IFNULL({0}, '')", Precedence.Primary, value);
-			}
-
-			protected override SqlExpression StringConcatExpression(MappingSchema mappingSchema, ISqlExpression value1, ISqlExpression value2)
-			{
-				return new SqlExpression(mappingSchema.GetDbDataType(typeof(string)), "{0} || {1}", value1, value2);
-			}
-
-			protected override SqlExpression TruncateExpression(MappingSchema mappingSchema, ISqlExpression value, ISqlExpression separator)
-			{
-				return new SqlExpression(mappingSchema.GetDbDataType(typeof(string)), "SUBSTR({0}, LENGTH({1}) + 1)",
-					Precedence.Primary, value, separator);
-			}
-		}
-
-		/*/// <summary>
-		/// Concatenates NOT NULL strings, using the specified separator between each member.
-		/// </summary>
-		/// <param name="separator">The string to use as a separator. <paramref name="separator" /> is included in the returned string only if <paramref name="arguments" /> has more than one element.</param>
-		/// <param name="arguments">A collection that contains the strings to concatenate.</param>
-		/// <returns></returns>
-		[Extension(PN.SqlServer2025, "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = "ISNULL({0}, '')", IsAggregate = false)]
-		[Extension(PN.SqlServer2022, "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = "ISNULL({0}, '')", IsAggregate = false)]
-		[Extension(PN.SqlServer2019, "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = "ISNULL({0}, '')", IsAggregate = false)]
-		[Extension(PN.SqlServer2017, "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = "ISNULL({0}, '')", IsAggregate = false)]
-		[Extension(PN.PostgreSQL,    "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = null, IsAggregate = false)]
-		[Extension(PN.MySql,         "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = null, IsAggregate = false)]
-		[Extension(PN.SqlServer,     "", BuilderType = typeof(OldSqlServerConcatWsBuilder), IsAggregate = false)]
-		[Extension(PN.SQLite,        "", BuilderType = typeof(SqliteConcatWsBuilder), IsAggregate = false)]
-		[Extension(PN.ClickHouse,    "arrayStringConcat([{arguments, ', '}], {separator})", IsAggregate = false, CanBeNull = false)]
-		public static string ConcatStrings(
-			[ExprParameter(ParameterKind = ExprParameterKind.Values)]        string    separator,
-			[ExprParameter(ParameterKind = ExprParameterKind.Values)] params string?[] arguments)
-		{
-			return string.Join(separator, arguments.Where(a => a != null));
-		}*/
 
 		/// <summary>
 		/// Concatenates NOT NULL strings, using the specified separator between each member.
