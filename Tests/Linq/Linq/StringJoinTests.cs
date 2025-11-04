@@ -72,6 +72,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
 		public void JoinWithGroupingVarious([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
 		{
@@ -100,7 +101,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllMariaDB, TestProvName.AllMySql57], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[RequiresCorrelatedSubquery]
 		[Test]
 		public void JoinWithGroupingAndUnsupportedMethod([DataSources(TestProvName.AllOracle)] string context)
@@ -188,7 +189,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinWithGroupingOrderSimple([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
+		public void JoinWithGroupingOrderSimple([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle, TestProvName.AllDB2)] string context)
 		{
 			var       data  = SampleClass.GenerateDataNotUniquerId();
 			using var db    = GetDataContext(context);
@@ -218,6 +219,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
 		public void JoinWithGroupingDistinctSimple([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllSapHana, TestProvName.AllOracle)] string context)
 		{
@@ -306,6 +308,7 @@ namespace Tests.Linq
 			Assert.That(allAggregated, Is.EqualTo(expected));
 		}
 
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[ThrowsCannotBeConverted(TestProvName.AllAccess)]
 		[RequiresCorrelatedSubquery]
 		[Test]
@@ -337,7 +340,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsCannotBeConverted(TestProvName.AllAccess)]
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllOracle11, TestProvName.AllOracle11], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllOracle11, TestProvName.AllOracle11, TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[RequiresCorrelatedSubquery]
 		[Test]
 		public void JoinAggregateArrayNotNull([DataSources(TestProvName.AllMariaDB, TestProvName.AllMySql57)] string context)
