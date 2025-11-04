@@ -72,6 +72,29 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[Test]
+		public void JoinWithGroupingParameter([DataSources] string context, [Values(", ", ": ")]string separator)
+		{
+			var       data  = SampleClass.GenerateDataUniquerId();
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query = from t in table
+				group t by t.Id
+				into g
+				select new
+				{
+					Id          = g.Key, 
+					Nullable    = string.Join(separator, g.Select(x => x.NullableValue)),
+					NotNullable = string.Join(separator, g.Select(x => x.NotNullableValue)),
+				}
+				into s
+				orderby s.Id
+				select s;
+
+			AssertQuery(query);
+		}
+
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
 		public void JoinWithGroupingVarious([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
