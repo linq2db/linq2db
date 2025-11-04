@@ -35,7 +35,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 
 		protected override IMemberTranslator CreateStringMemberTranslator()
 		{
-			return new StringMemberTranslator();
+			return new OracleStringMemberTranslator();
 		}
 
 		protected class SqlTypesTranslation : SqlTypesTranslationDefault
@@ -306,8 +306,10 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 			}
 		}
 
-		protected class StringMemberTranslator : StringMemberTranslatorBase
+		protected class OracleStringMemberTranslator : StringMemberTranslatorBase
 		{
+			protected virtual bool IsWithinGroupRequired => true;
+
 			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool ignoreNulls)
 			{
 				var builder = new AggregateFunctionBuilder()
@@ -341,6 +343,11 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 							var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
 
 							var withinGroup = info.OrderBySql.Length > 0 ? info.OrderBySql.Select(o => new SqlWindowOrderItem(o.expr, o.desc, o.nulls)) : null;
+
+							if (IsWithinGroupRequired && withinGroup == null)
+							{
+								withinGroup = [new SqlWindowOrderItem(info.Value, false, Sql.NullsPosition.None)];
+							}
 
 							var fn = factory.Function(valueType, "LISTAGG",
 								[new SqlFunctionArgument(value, modifier : aggregateModifier), new SqlFunctionArgument(separator)],

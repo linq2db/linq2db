@@ -55,16 +55,21 @@ namespace LinqToDB.Linq.Translation
 				}
 			}
 
-			if (_aggregate.SequenceIndex == null)
+			if (_aggregate.BuildAction != null)
 			{
-				throw new InvalidOperationException("Sequence index must be specified for aggregate mode.");
+				if (_aggregate.SequenceIndex == null)
+				{
+					throw new InvalidOperationException("Sequence index must be specified for aggregate mode.");
+				}
+
+				return ctx.BuildAggregationFunction(
+					_aggregate.SequenceIndex.Value,
+					functionCall,
+					_aggregate.ToAllowedOps(),
+					agg => Combine(ctx, agg, functionCall, _aggregate, _aggregate.SequenceIndex.Value, false));
 			}
 
-			return ctx.BuildAggregationFunction(
-				_aggregate.SequenceIndex.Value,
-				functionCall,
-				_aggregate.ToAllowedOps(),
-				agg => Combine(ctx, agg, functionCall, _aggregate, _aggregate.SequenceIndex.Value, false));
+			return null;
 		}
 
 		private BuildAggregationFunctionResult Combine(

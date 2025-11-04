@@ -1,13 +1,11 @@
 ﻿extern alias MySqlConnector;
+
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
-
-using MySqlConnector::MySqlConnector;
 
 using NUnit.Framework;
 
@@ -17,9 +15,6 @@ namespace Tests.Linq
 {
 	public class StringJoinTests : TestBase
 	{
-		const string SupportedProviders = TestProvName.AllPostgreSQL + "," + TestProvName.AllSqlServer2017Plus + "," + TestProvName.AllSQLite + "," + TestProvName.AllMySql + "," +
-		                                  TestProvName.AllClickHouse + "," + TestProvName.AllSapHana           + "," + TestProvName.AllOracle;
-
 		[Table]
 		sealed class SampleClass
 		{
@@ -55,7 +50,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinWithGrouping([IncludeDataSources(true, SupportedProviders)] string context)
+		public void JoinWithGrouping([DataSources] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -77,9 +72,8 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle], Details = "SQL Server limitation for single select")]
 		[Test]
-		public void JoinWithGroupingVarious([IncludeDataSources(true, SupportedProviders)] string context)
+		public void JoinWithGroupingVarious([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -106,11 +100,10 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllOracle], Details = "Treats empty strings as NULL")]
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllMariaDB, TestProvName.AllMySql57], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[RequiresCorrelatedSubquery]
 		[Test]
-		public void JoinWithGroupingAndUnsupportedMethod([IncludeDataSources(true, SupportedProviders)] string context)
+		public void JoinWithGroupingAndUnsupportedMethod([DataSources(TestProvName.AllOracle)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -132,10 +125,9 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle], Details = "SQL Server limitation for single select")]
 		[RequiresCorrelatedSubquery]
 		[Test]
-		public void JoinWithGroupingOrdered([IncludeDataSources(true, SupportedProviders)] string context)
+		public void JoinWithGroupingOrdered([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
 		{
 			var       data  = SampleClass.GenerateDataNotUniquerId();
 			using var db    = GetDataContext(context);
@@ -195,9 +187,8 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle], Details = "SQL Server limitation for single select")]
 		[Test]
-		public void JoinWithGroupingOrderSimple([IncludeDataSources(true, SupportedProviders)] string context)
+		public void JoinWithGroupingOrderSimple([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
 		{
 			var       data  = SampleClass.GenerateDataNotUniquerId();
 			using var db    = GetDataContext(context);
@@ -227,9 +218,8 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSqlServer2016Plus, TestProvName.AllSapHana, TestProvName.AllOracle], Details = "SQL Server limitation for single select")]
 		[Test]
-		public void JoinWithGroupingDistinctSimple([IncludeDataSources(true, SupportedProviders)] string context)
+		public void JoinWithGroupingDistinctSimple([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllSapHana, TestProvName.AllOracle)] string context)
 		{
 			var       data  = SampleClass.GenerateDataNotUniquerId();
 			using var db    = GetDataContext(context);
@@ -261,9 +251,9 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllOracle], Details = "Treats empty strings a NULL")]
+		[ThrowsCannotBeConverted(TestProvName.AllAccess)]
 		[Test]
-		public void JoinAggregateExecuteNullable([IncludeDataSources(true, SupportedProviders)] string context)
+		public void JoinAggregateExecuteNullable([DataSources(TestProvName.AllOracle)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -288,8 +278,9 @@ namespace Tests.Linq
 			Assert.That(allAggregated, Is.EqualTo(expected));
 		}
 
+		[ThrowsCannotBeConverted(TestProvName.AllAccess)]
 		[Test]
-		public async Task JoinAggregateExecuteNullableButFilteredAsync([IncludeDataSources(true, TestProvName.AllOracle + "," + SupportedProviders)] string context)
+		public async Task JoinAggregateExecuteNullableButFilteredAsync([DataSources] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -301,8 +292,9 @@ namespace Tests.Linq
 			Assert.That(allAggregated, Is.EqualTo(expected));
 		}
 
+		[ThrowsCannotBeConverted(TestProvName.AllAccess)]
 		[Test]
-		public void JoinAggregateExecuteNullableOnlyNotNull([IncludeDataSources(true, SupportedProviders)] string context)
+		public void JoinAggregateExecuteNullableOnlyNotNull([DataSources] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -314,11 +306,10 @@ namespace Tests.Linq
 			Assert.That(allAggregated, Is.EqualTo(expected));
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle], Details = "SQL Server limitation for single select")]
-		[ThrowsForProvider(typeof(MySqlException), providers: [TestProvName.AllMariaDB, TestProvName.AllMySql57], ErrorMessage = "Unknown table 't'")]
+		[ThrowsCannotBeConverted(TestProvName.AllAccess)]
 		[RequiresCorrelatedSubquery]
 		[Test]
-		public void JoinAggregateArray([IncludeDataSources(false, SupportedProviders)] string context)
+		public void JoinAggregateArray([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql57)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -345,10 +336,11 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsForProvider(typeof(MySqlException), providers: [TestProvName.AllMariaDB, TestProvName.AllMySql57], ErrorMessage = "Unknown table 't'")]
+		[ThrowsCannotBeConverted(TestProvName.AllAccess)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllOracle11, TestProvName.AllOracle11], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[RequiresCorrelatedSubquery]
 		[Test]
-		public void JoinAggregateArrayNotNull([IncludeDataSources(false, SupportedProviders)] string context)
+		public void JoinAggregateArrayNotNull([DataSources(TestProvName.AllMariaDB, TestProvName.AllMySql57)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -366,7 +358,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinAggregateArrayNotNullAndFilter([IncludeDataSources(true, SupportedProviders)] string context)
+		public void JoinAggregateArrayNotNullAndFilter([DataSources(true, TestProvName.AllOracle11)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();
 			using var db    = GetDataContext(context);
@@ -376,7 +368,7 @@ namespace Tests.Linq
 				from t in table
 				select Sql.AsSql(string.Join(", ", new[] { t.NullableValue, t.NotNullableValue, t.VarcharValue, t.NVarcharValue }.Where(x => x != null).Where(x => x!.Contains("A"))));
 
-			query = query.Where(x => !string.IsNullOrWhiteSpace(x));
+			query = query.Where(x => !string.IsNullOrEmpty(x));
 
 			AssertQuery(query);
 		}
