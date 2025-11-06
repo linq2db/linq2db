@@ -623,13 +623,41 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 			}
 
+			// removing duplicates
 			if (element.Predicates.Count > 1)
 			{
-				var distinct = element.Predicates.Distinct(ObjectReferenceEqualityComparer<ISqlPredicate>.Default).ToList();
-				if (distinct.Count != element.Predicates.Count)
+				var                     visitMode  = GetVisitMode(element);
+				HashSet<ISqlPredicate>? seen       = null;
+				List<ISqlPredicate>?    filtered   = null;
+				var                     predicates = element.Predicates;
+				for (int i = 0; i < predicates.Count; i++)
 				{
-					var newSearchCondition = new SqlSearchCondition(element.IsOr, canBeUnknown: element.CanReturnUnknown, distinct);
-					return NotifyReplaced(newSearchCondition, element);
+					var p = predicates[i];
+					if ((seen ??= new HashSet<ISqlPredicate>(ObjectReferenceEqualityComparer<ISqlPredicate>.Default)).Add(p))
+					{
+						if (filtered != null)
+							filtered.Add(p);
+					}
+					else
+					{
+						// duplicate found
+						if (visitMode == VisitMode.Modify)
+						{
+							predicates.RemoveAt(i);
+							i--;
+						}
+						else
+						{
+							filtered ??= new List<ISqlPredicate>(predicates.Count - 1);
+							filtered.AddRange(predicates.Take(i));
+						}
+					}
+				}
+
+				if (visitMode == VisitMode.Transform && filtered != null)
+				{
+					var newSearchCondition = new SqlSearchCondition(element.IsOr, canBeUnknown: element.CanReturnUnknown, filtered);
+					return Visit(NotifyReplaced(newSearchCondition, element));
 				}
 			}
 
