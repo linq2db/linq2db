@@ -31,6 +31,13 @@ namespace LinqToDB.SqlQuery
 			}
 
 			writer.AppendElement(Expression);
+			if (Suffix != null)
+			{
+				writer
+					.Append(" ")
+					.AppendElement(Suffix);
+			}
+
 			return writer;
 		}
 

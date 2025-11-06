@@ -15,6 +15,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 	{
 		protected virtual bool IsCountDistinctSupported       => true;
 		protected virtual bool IsAggregationDistinctSupported => true;
+		protected virtual bool IsFilterSupported              => false;
 
 		public AggregateFunctionsMemberTranslatorBase()
 		{
@@ -90,7 +91,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							var factory   = info.Factory;
 							var resultType = factory.GetDbDataType(methodCall.Method.ReturnType);
 
-							ISqlExpression argumentValue;
+							SqlSearchCondition? filterCondition = null;
+							ISqlExpression      argumentValue;
 
 							if (info.IsDistinct)
 							{
@@ -108,16 +110,36 @@ namespace LinqToDB.Internal.DataProvider.Translation
 								var valueType = factory.GetDbDataType(value);
 
 								if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
-									argumentValue = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
+								{
+									if (IsFilterSupported)
+									{
+										filterCondition = info.FilterCondition;
+										argumentValue   = value;
+									}
+									else
+										argumentValue = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
+								}
 								else
+								{
 									argumentValue = value;
+								}
 							}
 							else
 							{
 								if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
-									argumentValue = factory.Condition(info.FilterCondition, factory.Value(resultType, 1), factory.Null(resultType));
+								{
+									if (IsFilterSupported)
+									{
+										filterCondition = info.FilterCondition;
+										argumentValue   = factory.Fragment(resultType, "*", factory.Value(info.SelectQuery.SourceID));
+									}
+									else
+										argumentValue = factory.Condition(info.FilterCondition, factory.Value(resultType, 1), factory.Null(resultType));
+								}
 								else
+								{
 									argumentValue = factory.Fragment(resultType, "*", factory.Value(info.SelectQuery.SourceID));
+								}
 							}
 
 							var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
@@ -126,6 +148,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 								[new SqlFunctionArgument(argumentValue, modifier : aggregateModifier)],
 								[true, true],
 								isAggregate : true,
+								filter: filterCondition,
 								canBeAffectedByOrderBy : false
 							);
 
@@ -193,7 +216,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 							var factory = info.Factory;
 
-							ISqlExpression argumentValue;
+							SqlSearchCondition? filterCondition = null;
+							ISqlExpression      argumentValue;
 
 							if (info.ValueExpression == null)
 							{
@@ -245,9 +269,21 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							var resultType = factory.GetDbDataType(methodCall.Method.ReturnType);
 
 							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
-								argumentValue = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
+							{
+								if (IsFilterSupported)
+								{
+									filterCondition = info.FilterCondition;
+									argumentValue   = value;
+								}
+								else
+								{
+									argumentValue = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
+								}
+							}
 							else
+							{
 								argumentValue = value;
+							}
 
 							var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
 
@@ -265,6 +301,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 								[true, true],
 								canBeNull: true,
 								isAggregate : true,
+								filter: filterCondition,
 								canBeAffectedByOrderBy : false
 							);
 

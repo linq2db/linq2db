@@ -51,7 +51,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				Expression translated;
 				if (expression is ContextRefExpression { BuildContext: GroupByBuilder.GroupByContext groupByContext })
 				{
-					translated = builder.BuildSqlExpression(groupByContext, SequenceHelper.CreateRef(groupByContext.Element));
+					translated = builder.BuildSqlExpression(SqlContext.BuildContext, SequenceHelper.CreateRef(groupByContext.Element));
 				}
 				else
 				{
@@ -302,46 +302,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		static Expression UnwrapEnumerableCasting(Expression expression)
-		{
-			if (expression is MethodCallExpression methodCall)
-			{
-				if (methodCall.IsQueryable(nameof(Queryable.AsQueryable)) || methodCall.IsQueryable(nameof(Enumerable.AsEnumerable)))
-				{
-					return UnwrapEnumerableCasting(methodCall.Arguments[0]);
-				}
-			}
-
-			return expression;
-		}
-
-		static Expression EnsureEnumerableType(Expression expression, Type targetType)
-		{
-			if (expression.Type == targetType)
-				return expression;
-
-			if (targetType.IsAssignableFrom(expression.Type))
-				return expression;
-
-			var unwrapped = UnwrapEnumerableCasting(expression);
-			if (!ReferenceEquals(unwrapped, expression))
-				return EnsureEnumerableType(unwrapped, targetType);
-
-			if (typeof(IQueryable<>).IsSameOrParentOf(targetType))
-			{
-				var elementType = TypeHelper.GetEnumerableElementType(targetType);
-				return Expression.Call(Methods.Queryable.AsQueryable.MakeGenericMethod(elementType), expression);
-			}
-
-			if (typeof(IEnumerable<>).IsSameOrParentOf(targetType))
-			{
-				var elementType = TypeHelper.GetEnumerableElementType(targetType);
-				return Expression.Call(Methods.Enumerable.AsEnumerable.MakeGenericMethod(elementType), expression);
-			}
-
-			return Expression.Convert(expression, targetType);
-		}
-
 		sealed class UnwrapAggregateRootContextVisitor : ExpressionVisitorBase
 		{
 			internal override Expression VisitContextRefExpression(ContextRefExpression node)
@@ -355,7 +315,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var sequence = aggregateRootContext.SequenceExpression;
 					if (!node.Type.IsAssignableFrom(sequence.Type))
 					{
-						sequence = EnsureEnumerableType(sequence, node.Type);
+						sequence = BuildExpressionUtils.EnsureEnumerableType(sequence, node.Type);
 					}
 
 					return sequence;
@@ -393,7 +353,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var sourceParam         = Expression.Parameter(typeof(IEnumerable<>).MakeGenericType(elementType), "source");
 			var resultType          = methodCall.Type;
 
-			var sourceParamTyped = EnsureEnumerableType(sourceParam, dataSequence.Type);
+			var sourceParamTyped = BuildExpressionUtils.EnsureEnumerableType(sourceParam, dataSequence.Type);
 
 			var body = chain == null ? sourceParamTyped : chain[0].Replace(dataSequence, sourceParamTyped);
 

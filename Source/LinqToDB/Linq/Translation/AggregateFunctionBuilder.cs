@@ -481,12 +481,12 @@ namespace LinqToDB.Linq.Translation
 				Fallback = fallback;
 			}
 
-			public bool GetFilteredToNullValues([NotNullWhen(true)] out IEnumerable<ISqlExpression>? values, [NotNullWhen(false)] out SqlErrorExpression? error)
+			public bool GetFilteredToNullValues([NotNullWhen(true)] out ICollection<ISqlExpression>? values, [NotNullWhen(false)] out SqlErrorExpression? error)
 			{
 				return GetFilteredValues((expression, predicate) => Factory.Condition(predicate, expression, Factory.Null(Factory.GetDbDataType(expression))), out values, out error);
 			}
 
-			private bool GetFilteredValues(Func<ISqlExpression, ISqlPredicate, ISqlExpression> decorator, [NotNullWhen(true)] out IEnumerable<ISqlExpression>? values, [NotNullWhen(false)] out SqlErrorExpression? error)
+			private bool GetFilteredValues(Func<ISqlExpression, ISqlPredicate, ISqlExpression> decorator, [NotNullWhen(true)] out ICollection<ISqlExpression>? values, [NotNullWhen(false)] out SqlErrorExpression? error)
 			{
 				values = null;
 				error  = null;

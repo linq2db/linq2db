@@ -6,6 +6,7 @@ using System.Reflection;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Reflection;
 
 #pragma warning disable MA0048
 
@@ -142,21 +143,36 @@ namespace LinqToDB.Internal.Expressions
 			return executeExpression;
 		}
 
-		public static Expression BuildAggregateExecuteExpression(MethodCallExpression methodCall)
+		public static Expression BuildAggregateExecuteExpression(MethodCallExpression methodCall, int sequenceIndex = 0)
 		{
 			if (methodCall == null) throw new ArgumentNullException(nameof(methodCall));
 
-			var elementType = TypeHelper.GetEnumerableElementType(methodCall.Arguments[0].Type);
-			var sourceParam = Expression.Parameter(typeof(IEnumerable<>).MakeGenericType(elementType), "source");
-			var resultType  = methodCall.Type;
+			var sequenceArgument = methodCall.Arguments[sequenceIndex];
+			var elementType      = TypeHelper.GetEnumerableElementType(sequenceArgument.Type);
+			var sourceParam      = Expression.Parameter(typeof(IEnumerable<>).MakeGenericType(elementType), "source");
+			var resultType       = methodCall.Type;
 
-			var aggregationBody = Expression.Call(methodCall.Method.DeclaringType!, methodCall.Method.Name, [elementType, resultType],
-				[sourceParam, ..methodCall.Arguments.Skip(1).Select(a => a.Unwrap())]
+			Type[] typeArguments = methodCall.Method.IsGenericMethod ? [elementType, resultType] : [];
+
+			var aggregationBody = Expression.Call(methodCall.Method.DeclaringType!, methodCall.Method.Name, typeArguments,
+				[..methodCall.Arguments.Take(sequenceIndex), sourceParam, ..methodCall.Arguments.Skip(sequenceIndex + 1).Select(a => a.Unwrap())]
 			);
 
 			var aggregationLambda = Expression.Lambda(aggregationBody, sourceParam);
 
-			var executeExpression = Expression.Call(typeof(LinqExtensions), nameof(LinqExtensions.AggregateExecute), [elementType, resultType], methodCall.Arguments[0], aggregationLambda);
+			var method = Methods.LinqToDB.AggregateExecute.MakeGenericMethod(elementType, resultType);
+
+			var queryableArgument = sequenceArgument;
+			var queryableType     = typeof(IQueryable<>).MakeGenericType(elementType);
+		
+			if (queryableArgument.Type != queryableType)
+			{
+				queryableArgument = Expression.Call(
+					Methods.Queryable.AsQueryable.MakeGenericMethod(elementType),
+					queryableArgument);
+			}
+
+			var executeExpression = Expression.Call(method, queryableArgument, aggregationLambda);
 
 			return executeExpression;
 		}

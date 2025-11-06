@@ -39,7 +39,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				return factory.Add(valueTypeString, stringToAdd, value);
 			}
 
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool ignoreNulls)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
 			{
 				var builder = new AggregateFunctionBuilder()
 					.ConfigureAggregate(c => c
@@ -62,7 +62,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 							var valueType = factory.GetDbDataType(info.Value);
 
 							var value = info.Value;
-							if (!info.IsNullFiltered)
+							if (!info.IsNullFiltered && nullValuesAsEmptyString)
 								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
 
 							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
@@ -79,12 +79,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 								[true, true],
 								isAggregate : true,
 								withinGroup : withinGroup,
-								canBeAffectedByOrderBy : true);
+								canBeAffectedByOrderBy : false);
 
-							composer.SetResult(factory.Coalesce(fn, factory.Value(valueType, string.Empty)));
+							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+
+							composer.SetResult(result);
 						}));
 
-				ConfigureConcatWs(builder);
+				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult);
 
 				return builder.Build(translationContext, methodCall);
 			}

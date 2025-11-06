@@ -357,11 +357,11 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 				return factory.Concat(fillingString, value);
 			}
 
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool ignoreNulls)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
 			{
 				var builder = new AggregateFunctionBuilder();
 
-				ConfigureConcatWsEmulation(builder, (factory, valueType, separator, valuesExpr) =>
+				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
 				{
 					var intDbType = factory.GetDbDataType(typeof(int));
 					var substring = factory.Function(valueType, "Mid",

@@ -247,7 +247,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 				return factory.Concat(fillingString, value);
 			}
 
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool ignoreNulls)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
 			{
 				var builder = new AggregateFunctionBuilder()
 					.ConfigureAggregate(c => c
@@ -268,7 +268,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 							var valueType = factory.GetDbDataType(info.Value);
 
 							var value = info.Value;
-							if (!info.IsNullFiltered)
+							if (!info.IsNullFiltered && nullValuesAsEmptyString)
 								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
 
 							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
@@ -282,10 +282,12 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 								isAggregate : true,
 								canBeAffectedByOrderBy: true);
 
-							composer.SetResult(factory.Coalesce(fn, factory.Value(valueType, string.Empty)));
+							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+
+							composer.SetResult(result);
 						}));
 
-				ConfigureConcatWsEmulation(builder, (factory, valueType, separator, valuesExpr) =>
+				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
 				{
 					var intDbType = factory.GetDbDataType(typeof(int));
 					var substring = factory.Function(valueType, "SUBSTR",

@@ -256,7 +256,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 			static readonly bool[] OneArgumentNullability = new[] { true };
 			static readonly bool[] TwoArgumentNullability = new[] { true, true };
 
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool ignoreNulls)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
 			{
 				var builder = new AggregateFunctionBuilder();
 
@@ -282,7 +282,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 
 							// 1) string.Join semantics: NULL -> '' unless IsNullFiltered
 							ISqlExpression value = info.Value;
-							if (!info.IsNullFiltered)
+							if (!info.IsNullFiltered && nullValuesAsEmptyString)
 								value = f.Coalesce(value, f.Value(valType, string.Empty));
 
 							// Ensure String for CH
@@ -323,7 +323,11 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 							{
 								var arr    = MakeGroupArray(value);
 								var joined = f.Function(strType, "arrayStringConcat", arr, sep);
-								composer.SetResult(f.Coalesce(joined, f.Value(strType, string.Empty)));
+
+								var result = isNullableResult ? joined : f.Coalesce(joined, f.Value(strType, string.Empty));
+
+								composer.SetResult(result);
+
 								return;
 							}
 
@@ -470,12 +474,17 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 
 							// Join
 							var finalAgg = f.Function(strType, "arrayStringConcat", onlyVals, sep);
-							composer.SetResult(f.Coalesce(finalAgg, f.Value(strType, string.Empty)));
+
+							var finalResult = isNullableResult
+								? finalAgg
+								: f.Coalesce(finalAgg, f.Value(strType, string.Empty));
+
+							composer.SetResult(finalResult);
 						}));
 
 				//TODO: For ClickHouse we cah even add filter to ignore nulls in arrayStringConcat function
 
-				ConfigureConcatWs(builder, (factory, valueType, separator, values) =>
+				ConfigureConcatWs(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, values) =>
 				{
 					// arrayStringConcat([t.Value3, t.Value1, t.Value2], ' -> ')
 

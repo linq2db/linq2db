@@ -31,7 +31,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod(() => "".PadLeft(0, ' '), TranslateStringPadLeft);
 
 			Registration.RegisterMethod(() => string.Join(",", Enumerable.Empty<string>()), TranslateStringJoin);
-			Registration.RegisterMethod(() => string.Join(",", Array.Empty<string>()), TranslateStringJoin);
+			Registration.RegisterMethod(() => string.Join(",", Array.Empty<string>()),      TranslateStringJoin);
+
+			Registration.RegisterMethod(() => Sql.ConcatStrings(",", Enumerable.Empty<string>()), TranslateConcatStrings);
+			Registration.RegisterMethod(() => Sql.ConcatStrings(",", Array.Empty<string>()),      TranslateConcatStrings);
+
+			Registration.RegisterMethod(() => Sql.ConcatStringsNullable(",", Enumerable.Empty<string>()), TranslateConcatStringsNullable);
 		}
 
 		protected virtual Expression? TranslateLike(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
@@ -161,10 +166,20 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
-			return TranslateStringJoin(translationContext, methodCall, translationFlags, ignoreNulls: false);
+			return TranslateStringJoin(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: true, isNullableResult : false);
 		}
 
-		protected void ConfigureConcatWs(AggregateFunctionBuilder builder, Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression[], ISqlExpression>? functionFactory = null)
+		Expression? TranslateConcatStrings(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			return TranslateStringJoin(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: false, isNullableResult : false);
+		}
+
+		Expression? TranslateConcatStringsNullable(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			return TranslateStringJoin(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: false, isNullableResult : true);
+		}
+
+		protected void ConfigureConcatWs(AggregateFunctionBuilder builder, bool nullValuesAsEmptyString, bool isNullableResult, Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression[], ISqlExpression>? functionFactory = null)
 		{
 			builder
 				.ConfigurePlain(c => c
@@ -188,39 +203,48 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						if (info.Values.Length == 1)
 						{
 							var singleValue = info.Values[0];
-							singleValue = factory.Coalesce(singleValue, factory.Value(dataType, string.Empty));
+							singleValue = isNullableResult && !nullValuesAsEmptyString ? singleValue : factory.Coalesce(singleValue, factory.Value(dataType, string.Empty));
 							composer.SetResult(singleValue);
 							return;
 						}
 
-						if (!composer.GetFilteredToNullValues(out IEnumerable<ISqlExpression>? values, out var error))
+						if (!composer.GetFilteredToNullValues(out ICollection<ISqlExpression>? values, out var error))
 						{
 							composer.SetError(error);
 							return;
 						}
 
-						var items = info.IsNullFiltered
-							? values
-							: values.Select(i => factory.Coalesce(i, factory.Value(factory.GetDbDataType(i), ""))).ToArray();
+						var items = !info.IsNullFiltered && nullValuesAsEmptyString
+							? values.Select(i => factory.Coalesce(i, factory.Value(factory.GetDbDataType(i), ""))).ToArray()
+							: values;
+
+						ISqlExpression result;
 
 						if (functionFactory != null)
 						{
-							var customResult = functionFactory(factory, dataType, separator, items.ToArray());
-							composer.SetResult(customResult);
+							result = functionFactory(factory, dataType, separator, items.ToArray());
 						}
 						else
 						{
-							var function = factory.Function(dataType, "CONCAT_WS",
-								parametersNullability : ParametersNullabilityType.IfAllParametersNullable,
+							result = factory.Function(dataType, "CONCAT_WS",
+								parametersNullability : ParametersNullabilityType.SameAsFirstParameter,
 								[separator, ..items]);
-
-							composer.SetResult(function);
 						}
+
+						if (isNullableResult)
+						{
+							var condition = factory.SearchCondition();
+							condition.AddRange(values.Select(v => factory.IsNull(v)));
+
+							result = factory.Condition(condition, factory.Null(dataType), result);
+						}
+
+						composer.SetResult(result);
 
 					}));
 		}
 
-		protected void ConfigureConcatWsEmulation(AggregateFunctionBuilder builder, Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression, ISqlExpression> substringFunc)
+		protected void ConfigureConcatWsEmulation(AggregateFunctionBuilder builder, bool nullValuesAsEmptyString, bool isNullResult, Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression, ISqlExpression> substringFunc)
 		{
 			builder
 				.ConfigurePlain(c => c
@@ -244,7 +268,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						if (info.Values.Length == 1)
 						{
 							var singleValue = info.Values[0];
-							singleValue = factory.Coalesce(singleValue, factory.Value(dataType, string.Empty));
+							singleValue = isNullResult ? singleValue : factory.Coalesce(singleValue, factory.Value(dataType, string.Empty));
 							composer.SetResult(singleValue);
 							return;
 						}
@@ -255,7 +279,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							return;
 						}
 
-						if (info.IsNullFiltered)
+						if (info.IsNullFiltered || isNullResult || !nullValuesAsEmptyString)
 						{
 							var concatValues = values
 								.Select(v => factory.Coalesce(factory.Concat(dataType, separator, v), factory.Value(dataType, "")))
@@ -265,7 +289,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 							composer.SetResult(substring);
 						}
-						else
+						else 
 						{
 							var concatValues = values
 								.Select(v => factory.Coalesce(v, factory.Value(dataType, "")))
@@ -276,7 +300,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					}));
 		}
 
-		protected virtual Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool ignoreNulls)
+		protected virtual Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString,
+			bool                                                              isNullableResult)
 		{
 			return null;
 		}

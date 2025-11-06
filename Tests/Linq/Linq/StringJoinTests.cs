@@ -305,6 +305,20 @@ namespace Tests.Linq
 
 		[ThrowsCannotBeConverted(TestProvName.AllAccess)]
 		[Test]
+		public void JoinAggregateExecuteFiltered([DataSources(true)] string context)
+		{
+			var       data  = SampleClass.GenerateDataUniquerId();
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var allAggregated = table.AggregateExecute(e => string.Join(", ", e.OrderBy(x => x.NotNullableValue).Select(x => x.NullableValue).Where(x => x != null && x.In("A", "B"))));
+			var expected      = string.Join(", ", data.OrderBy(x => x.NotNullableValue).Select(x => x.NullableValue).Where(x => x != null && x.In("A", "B")));
+
+			Assert.That(allAggregated, Is.EqualTo(expected));
+		}
+
+		[ThrowsCannotBeConverted(TestProvName.AllAccess)]
+		[Test]
 		public async Task JoinAggregateExecuteNullableButFilteredAsync([DataSources] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniquerId();

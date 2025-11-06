@@ -170,15 +170,9 @@ namespace LinqToDB
 		/// <param name="separator">The string to use as a separator. <paramref name="separator" /> is included in the returned string only if <paramref name="arguments" /> has more than one element.</param>
 		/// <param name="arguments">A collection that contains the strings to concatenate.</param>
 		/// <returns></returns>
-		[ExpressionMethod(nameof(ConcatStringsArrayImpl))]
 		public static string ConcatStrings(string separator, params string?[] arguments)
 		{
 			return string.Join(separator, arguments.Where(a => a != null));
-		}
-
-		static Expression<Func<string, string?[], string>> ConcatStringsArrayImpl()
-		{
-			return (separator, arguments) => string.Join(separator, arguments.Where(a => a != null));
 		}
 
 		/// <summary>
@@ -187,15 +181,31 @@ namespace LinqToDB
 		/// <param name="separator">The string to use as a separator. <paramref name="separator" /> is included in the returned string only if <paramref name="arguments" /> has more than one element.</param>
 		/// <param name="arguments">A collection that contains the strings to concatenate.</param>
 		/// <returns></returns>
-		[ExpressionMethod(nameof(ConcatStringsEnumerableImpl))]
-		public static string ConcatStrings(string separator, IEnumerable<string?> arguments)
+		public static string? ConcatStrings(string separator, IEnumerable<string?> arguments)
 		{
 			return string.Join(separator, arguments.Where(a => a != null));
 		}
 
-		static Expression<Func<string, IEnumerable<string?>, string>> ConcatStringsEnumerableImpl()
+		/// <summary>
+		/// Concatenates NOT NULL strings, using the specified separator between each member. Returns NULL if all arguments are NULL.
+		/// </summary>
+		/// <param name="separator">The string to use as a separator. <paramref name="separator" /> is included in the returned string only if <paramref name="arguments" /> has more than one element.</param>
+		/// <param name="arguments">A collection that contains the strings to concatenate.</param>
+		/// <returns></returns>
+		public static string? ConcatStringsNullable(string separator, IEnumerable<string?> arguments)
 		{
-			return (separator, arguments) => string.Join(separator, arguments.Where(a => a != null));
+			var result = arguments.Aggregate((v1, v2) =>
+			{
+				if (v1 == null && v2 == null)
+					return null;
+				if (v1 == null)
+					return v2;
+				if (v2 == null)
+					return v1;
+				return v1 + separator + v2;
+			});
+
+			return result;
 		}
 
 		#endregion
