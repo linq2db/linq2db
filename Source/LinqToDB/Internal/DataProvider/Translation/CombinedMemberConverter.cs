@@ -19,6 +19,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				if (handled)
 					return result;
 			}
+
 			handled = false;
 			return expression;
 		}

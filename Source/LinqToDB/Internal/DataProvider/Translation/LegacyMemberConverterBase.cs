@@ -93,6 +93,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						{
 							functionCallBody = Expression.Convert(functionCallBody, startSequence.Type);
 						}
+
 						functionCallBody = sequence.Replace(startSequence, functionCallBody);
 
 						var concatExpression = Expression.Call(_concatStringMethodInfo, separator, functionCallBody);
@@ -197,7 +198,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return queryExpr;
 		}
 
-
 		protected bool BuildFunctionsChain(Expression expr, List<MethodCallExpression> chain, [NotNullWhen(true)] out MethodCallExpression? foundMethod, params MethodInfo[] stopMethods)
 		{
 			Expression? current = expr;
@@ -217,7 +217,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						else
 							next = call.Object;
 
-						if (stopMethods.Any(sm => call.IsSameGenericMethod(sm)))
+						if (stopMethods.Any(call.IsSameGenericMethod))
 						{
 							chain.RemoveAt(0);
 							foundMethod = call;
@@ -246,7 +246,5 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			foundMethod = null;
 			return false;
 		}
-
-
 	}
 }
