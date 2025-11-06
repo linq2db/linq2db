@@ -846,7 +846,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllOracle11, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void CountInGroup([DataSources] string context)
 		{
 			var data = AggregationData.Data;

@@ -353,6 +353,12 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 
 							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
 							{
+								if (!info.IsGroupBy)
+								{
+									composer.SetFallback(f => f.AllowFilter(false));
+									return;
+								}
+
 								value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
 							}
 

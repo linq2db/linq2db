@@ -39,18 +39,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				return factory.Add(valueTypeString, stringToAdd, value);
 			}
 
-			static bool HasMultipleReferences(ISqlExpression expr)
-			{ 
-				var foundReferences = new HashSet<ISqlExpression>();
-				expr.Visit(e =>
-				{
-					if (e is SqlColumn or SqlField)
-						foundReferences.Add((ISqlExpression)e);
-				});
-
-				return foundReferences.Count > 1;
-			}
-
 			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
 			{
 				var builder = new AggregateFunctionBuilder()
@@ -81,9 +69,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 							{
 								value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
 
-								if (HasMultipleReferences(value))
+								if (!info.IsGroupBy)
 								{
-									// SQL Server limitation in aggregate function
 									composer.SetFallback(f => f.AllowFilter(false));
 									return;
 								}

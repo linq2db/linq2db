@@ -276,7 +276,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsCannotBeConverted(TestProvName.AllAccess)]
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix)]
 		[Test]
 		public void JoinAggregateExecuteNullable([DataSources(TestProvName.AllOracle)] string context)
 		{
@@ -303,7 +303,7 @@ namespace Tests.Linq
 			Assert.That(allAggregated, Is.EqualTo(expected));
 		}
 
-		[ThrowsCannotBeConverted(TestProvName.AllAccess)]
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix)]
 		[Test]
 		public void JoinAggregateExecuteFiltered([DataSources(true)] string context)
 		{
@@ -317,7 +317,7 @@ namespace Tests.Linq
 			Assert.That(allAggregated, Is.EqualTo(expected));
 		}
 
-		[ThrowsCannotBeConverted(TestProvName.AllAccess)]
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix)]
 		[Test]
 		public async Task JoinAggregateExecuteNullableButFilteredAsync([DataSources] string context)
 		{
@@ -331,7 +331,7 @@ namespace Tests.Linq
 			Assert.That(allAggregated, Is.EqualTo(expected));
 		}
 
-		[ThrowsCannotBeConverted(TestProvName.AllAccess)]
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix)]
 		[Test]
 		public void JoinAggregateExecuteNullableOnlyNotNull([DataSources] string context)
 		{
@@ -346,7 +346,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		[ThrowsCannotBeConverted(TestProvName.AllAccess)]
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix)]
 		[RequiresCorrelatedSubquery]
 		[Test]
 		public void JoinAggregateArray([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql57)] string context)
@@ -376,7 +376,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsCannotBeConverted(TestProvName.AllAccess)]
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix)]
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllOracle11, TestProvName.AllOracle11, TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[RequiresCorrelatedSubquery]
 		[Test]
