@@ -103,6 +103,7 @@ namespace LinqToDB
 			return new Sql.AggregateFunctionNotOrderedImpl<T, TR>(query);
 		}
 
+		[Sql.Extension("", ChainPrecedence = 0, IsAggregate = true)]
 		public static TR ToValue<T, TR>(this Sql.IAggregateFunction<T, TR> aggregate)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
