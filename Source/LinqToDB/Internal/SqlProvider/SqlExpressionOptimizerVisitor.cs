@@ -623,6 +623,16 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 			}
 
+			if (element.Predicates.Count > 1)
+			{
+				var distinct = element.Predicates.Distinct(ObjectReferenceEqualityComparer<ISqlPredicate>.Default).ToList();
+				if (distinct.Count != element.Predicates.Count)
+				{
+					var newSearchCondition = new SqlSearchCondition(element.IsOr, canBeUnknown: element.CanReturnUnknown, distinct);
+					return NotifyReplaced(newSearchCondition, element);
+				}
+			}
+
 			// Optimizations: PREDICATE vs PREDICATE:
 			// 1. A IS NOT NULL AND A = B => A = B, when B is not nullable
 			// 2. A OR B OR A => A OR B
