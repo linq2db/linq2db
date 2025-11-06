@@ -1884,7 +1884,7 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 		}
 
-		protected void BuildEmptyValues(SqlValuesTable valuesTable)
+		protected void BuildEmptyValues(SqlValuesTable valuesTable, bool useTypedExpression = true)
 		{
 			StringBuilder.Append("SELECT ");
 			for (var i = 0; i < valuesTable.Fields.Count; i++)
@@ -1892,7 +1892,7 @@ namespace LinqToDB.Internal.SqlProvider
 				if (i > 0)
 					StringBuilder.Append(InlineComma);
 				var field = valuesTable.Fields[i];
-				if (IsSqlValuesTableValueTypeRequired(valuesTable, [], -1, i))
+				if (useTypedExpression)
 					BuildTypedExpression(QueryHelper.GetDbDataType(field, MappingSchema), new SqlValue(field.Type, null));
 				else
 					BuildExpression(new SqlValue(field.Type, null));

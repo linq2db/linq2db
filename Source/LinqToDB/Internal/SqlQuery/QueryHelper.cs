@@ -1641,8 +1641,6 @@ namespace LinqToDB.Internal.SqlQuery
 			});
 		}
 
-		
-
 		public static void CollectParametersAndValues(IQueryElement root, ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
 		{
 			root.VisitAll(x =>
@@ -1716,6 +1714,30 @@ namespace LinqToDB.Internal.SqlQuery
 			if (clause == null)
 				return false;
 			return null != element.Find(clause, static (c, e) => e.ElementType == QueryElementType.SqlCteTable && ((SqlCteTable)e).Cte == c);
+		}
+
+		/// <summary>
+		/// Returns true, if type represents text/string database type.
+		/// </summary>
+		internal static bool IsTextType(this DbDataType type)
+		{
+			// TODO: such information should be moved to type system in future probably
+			// and if needed handle type names too
+			return type.DataType.IsTextType();
+		}
+
+		/// <summary>
+		/// Returns true, if type represents text/string database type.
+		/// </summary>
+		internal static bool IsTextType(this DataType type)
+		{
+			return type is DataType.Char
+				or DataType.VarChar
+				or DataType.Text
+				or DataType.NChar
+				or DataType.NVarChar
+				or DataType.NText
+				;
 		}
 	}
 }

@@ -997,7 +997,7 @@ namespace LinqToDB.Internal.SqlProvider
 							{
 								var elementType = QueryHelper.GetDbDataType(element, MappingSchema);
 								var expr2Type   = QueryHelper.GetDbDataType(element.Expr2, MappingSchema);
-								if (!elementType.Equals(expr2Type))
+								if (!elementType.EqualsDbOnly(expr2Type))
 									return new SqlCastExpression(element.Expr2, elementType, null);
 								return element.Expr2;
 							}
