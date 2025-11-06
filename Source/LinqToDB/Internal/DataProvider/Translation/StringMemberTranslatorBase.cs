@@ -166,16 +166,22 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
+			if (translationContext.CanBeEvaluatedOnClient(methodCall))
+				return null;
 			return TranslateStringJoin(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: true, isNullableResult : false);
 		}
 
 		Expression? TranslateConcatStrings(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
+			if (translationContext.CanBeEvaluatedOnClient(methodCall))
+				return null;
 			return TranslateStringJoin(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: false, isNullableResult : false);
 		}
 
 		Expression? TranslateConcatStringsNullable(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
+			if (translationContext.CanBeEvaluatedOnClient(methodCall))
+				return null;
 			return TranslateStringJoin(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: false, isNullableResult : true);
 		}
 

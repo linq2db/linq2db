@@ -412,5 +412,23 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		[Test]
+		public void JoinOnClient([DataSources(true)] string context)
+		{
+			var       data  = SampleClass.GenerateDataUniquerId();
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				select new
+				{
+					Result = string.Join(", ", data.Select(x => x.NullableValue).Where(x => x != null))
+				};
+
+			Assert.DoesNotThrow(() => _ = query.ToList());
+		}
+
 	}
 }

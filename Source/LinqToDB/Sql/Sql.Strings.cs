@@ -14,65 +14,25 @@ namespace LinqToDB
 	{
 		#region StringAggregate
 
-		sealed class StringAggSql2017Builder : IExtensionCallBuilder
-		{
-			public void Build(ISqExtensionBuilder builder)
-			{
-				ISqlExpression data;
-				if (builder.Arguments.Length == 2)
-					data = builder.GetExpression("source")!;
-				else
-					data = builder.GetExpression("selector")!;
-
-				// https://github.com/linq2db/linq2db/issues/1765
-				var descriptor = QueryHelper.GetColumnDescriptor(data);
-				if (descriptor != null)
-				{
-					var dbDataType = descriptor.GetDbDataType(true);
-					if (dbDataType.DataType != DataType.Undefined)
-					{
-						var separator = builder.GetExpression("separator");
-
-						if (separator is SqlValue value && value.ValueType.DataType == DataType.Undefined)
-							value.ValueType = value.ValueType.WithDataType(dbDataType.DataType);
-						else if (separator is SqlParameter parameter && parameter.Type.DataType == DataType.Undefined)
-							parameter.Type = parameter.Type.WithDataType(dbDataType.DataType);
-					}
-				}
-			}
-		}
-
-		sealed class StringAggSapHanaBuilder : IExtensionCallBuilder
-		{
-			public void Build(ISqExtensionBuilder builder)
-			{
-				var separator = builder.GetExpression("separator");
-
-				// SAP HANA doesn't support parameters as separators
-				if (separator is SqlParameter parameter)
-					parameter.IsQueryParameter = false;
-			}
-		}
-
-		[Extension(PN.SqlServer2025, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
-		[Extension(PN.SqlServer2022, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
-		[Extension(PN.SqlServer2019, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
-		[Extension(PN.SqlServer2017, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
-		[Extension(PN.PostgreSQL,    "STRING_AGG({source}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
-		[Extension(PN.SapHana,       "STRING_AGG({source}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSapHanaBuilder))]
-		[Extension(PN.SQLite,        "GROUP_CONCAT({source}, {separator})",                               IsAggregate = true, ChainPrecedence = 10)]
-		[Extension(PN.MySql,         "GROUP_CONCAT({source}{_}{order_by_clause?} SEPARATOR {separator})", IsAggregate = true, ChainPrecedence = 10)]
-		[Extension(PN.Oracle,        "LISTAGG({source}, {separator}) {aggregation_ordering}",             IsAggregate = true, ChainPrecedence = 10)]
-		[Extension(PN.OracleNative,  "LISTAGG({source}, {separator}) {aggregation_ordering}",             IsAggregate = true, ChainPrecedence = 10)]
-		[Extension(PN.DB2,           "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
-		[Extension(PN.DB2LUW,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
-		[Extension(PN.DB2zOS,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
-		[Extension(PN.Firebird,      "LIST({source}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
-		[Extension(PN.ClickHouse,    "arrayStringConcat(groupArray({source}), {separator})",              IsAggregate = true, ChainPrecedence = 10, CanBeNull = false)]
-		[Extension("{source}",        TokenName = "aggregate")]
+		/// <summary>
+		/// Creates a server-side aggregate function that concatenates the elements of a sequence of nullable strings within an <see cref="IQueryable"/> query,
+		/// using the specified separator between each element.
+		/// </summary>
+		/// <param name="source">Queryable sequence of nullable strings. Cannot be <see langword="null"/>.</param>
+		/// <param name="separator">Separator string. Cannot be <see langword="null"/>.</param>
+		/// <returns>
+		/// An <see cref="IAggregateFunctionNotOrdered{TSource, TResult}"/> expression representing the aggregation in the query. The database produces the final concatenated string.
+		/// </returns>
+		/// <exception cref="ArgumentNullException">Thrown if <paramref name="source"/> or <paramref name="separator"/> is <see langword="null"/>.</exception>
+		/// <remarks>
+		/// LEGACY: Retained for backward compatibility.
+		/// Prefer using one of the following (both forms can execute client-side or be translated when used inside an <see cref="IQueryable"/>):
+		/// <para><c>string.Join(separator, source.Where(s => s != null))</c></para>
+		/// <para><c>Sql.ConcatStrings(separator, source)</c></para>
+		/// </remarks>
 		public static IAggregateFunctionNotOrdered<string?, string> StringAggregate(
-			[ExprParameter] this IQueryable<string?> source,
-			[ExprParameter]      string              separator)
+			this IQueryable<string?> source,
+			string                   separator)
 		{
 			if (source    == null) throw new ArgumentNullException(nameof(source));
 			if (separator == null) throw new ArgumentNullException(nameof(separator));
@@ -86,46 +46,22 @@ namespace LinqToDB
 			return new AggregateFunctionNotOrderedImpl<string?, string>(query);
 		}
 
-		[Extension(PN.SqlServer2025, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
-		[Extension(PN.SqlServer2022, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
-		[Extension(PN.SqlServer2019, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
-		[Extension(PN.SqlServer2017, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
-		[Extension(PN.PostgreSQL,    "STRING_AGG({selector}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10)]
-		[Extension(PN.SapHana,       "STRING_AGG({selector}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSapHanaBuilder))]
-		[Extension(PN.SQLite,        "GROUP_CONCAT({selector}, {separator})",                               IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10)]
-		[Extension(PN.MySql,         "GROUP_CONCAT({selector}{_}{order_by_clause?} SEPARATOR {separator})", IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10)]
-		[Extension(PN.Oracle,        "LISTAGG({selector}, {separator}) {aggregation_ordering}",             IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10)]
-		[Extension(PN.OracleNative,  "LISTAGG({selector}, {separator}) {aggregation_ordering}",             IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10)]
-		[Extension(PN.DB2,           "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10)]
-		[Extension(PN.DB2LUW,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10)]
-		[Extension(PN.DB2zOS,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10)]
-		[Extension(PN.Firebird,      "LIST({selector}, {separator})",                                       IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10)]
-		[Extension(PN.ClickHouse,    "arrayStringConcat(groupArray({selector}), {separator})",              IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, CanBeNull = false)]
+		/// <summary>
+		/// Creates a server-side aggregate that concatenates projected nullable string values from a queryable sequence, using the specified separator.
+		/// </summary>
+		/// <param name="source">Queryable source sequence. Cannot be <see langword="null"/>.</param>
+		/// <param name="separator">Separator string. Cannot be <see langword="null"/>.</param>
+		/// <param name="selector">Projection producing nullable string values. Cannot be <see langword="null"/>.</param>
+		/// <remarks>
+		/// LEGACY: Retained for backward compatibility.
+		/// Prefer using one of the following (both can run client-side or be translated when part of an <see cref="IQueryable"/>):
+		/// <para><c>string.Join(separator, source.Select(selector).Where(s => s != null))</c></para>
+		/// <para><c>Sql.ConcatStrings(separator, source.Select(selector))</c></para>
+		/// </remarks>
 		public static IAggregateFunctionNotOrdered<T, string> StringAggregate<T>(
-							this IEnumerable<T>   source,
-			[ExprParameter]      string           separator,
-			[ExprParameter]      Func<T, string?> selector)
-			=> throw new ServerSideOnlyException(nameof(StringAggregate));
-
-		[Extension(PN.SqlServer2025, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
-		[Extension(PN.SqlServer2022, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
-		[Extension(PN.SqlServer2019, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
-		[Extension(PN.SqlServer2017, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
-		[Extension(PN.PostgreSQL,    "STRING_AGG({selector}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
-		[Extension(PN.SapHana,       "STRING_AGG({selector}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSapHanaBuilder))]
-		[Extension(PN.SQLite,        "GROUP_CONCAT({selector}, {separator})",                               IsAggregate = true, ChainPrecedence = 10)]
-		[Extension(PN.MySql,         "GROUP_CONCAT({selector}{_}{order_by_clause?} SEPARATOR {separator})", IsAggregate = true, ChainPrecedence = 10)]
-		[Extension(PN.Oracle,        "LISTAGG({selector}, {separator}) {aggregation_ordering}",             IsAggregate = true, ChainPrecedence = 10)]
-		[Extension(PN.OracleNative,  "LISTAGG({selector}, {separator}) {aggregation_ordering}",             IsAggregate = true, ChainPrecedence = 10)]
-		[Extension(PN.DB2,           "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
-		[Extension(PN.DB2LUW,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
-		[Extension(PN.DB2zOS,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
-		[Extension(PN.Firebird,      "LIST({selector}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
-		[Extension(PN.ClickHouse,    "arrayStringConcat(groupArray({selector}), {separator})",              IsAggregate = true, ChainPrecedence = 10, CanBeNull = false)]
-		public static IAggregateFunctionNotOrdered<T, string> StringAggregate<T>(
-							this IQueryable<T> source,
-			[ExprParameter] string separator,
-			[ExprParameter] Expression<Func<T, string?>> selector)
+			this IQueryable<T>           source,
+			string                       separator,
+			Expression<Func<T, string?>> selector)
 		{
 			if (source    == null) throw new ArgumentNullException(nameof(source));
 			if (separator == null) throw new ArgumentNullException(nameof(separator));
@@ -140,24 +76,34 @@ namespace LinqToDB
 			return new AggregateFunctionNotOrderedImpl<T, string>(query);
 		}
 
-		[Extension(PN.SqlServer2025, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
-		[Extension(PN.SqlServer2022, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
-		[Extension(PN.SqlServer2019, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
-		[Extension(PN.SqlServer2017, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
-		[Extension(PN.PostgreSQL,    "STRING_AGG({source}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10)]
-		[Extension(PN.SapHana,       "STRING_AGG({source}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSapHanaBuilder))]
-		[Extension(PN.SQLite,        "GROUP_CONCAT({source}, {separator})",                               IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10)]
-		[Extension(PN.MySql,         "GROUP_CONCAT({source}{_}{order_by_clause?} SEPARATOR {separator})", IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10)]
-		[Extension(PN.Oracle,        "LISTAGG({source}, {separator}) {aggregation_ordering}",             IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10)]
-		[Extension(PN.OracleNative,  "LISTAGG({source}, {separator}) {aggregation_ordering}",             IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10)]
-		[Extension(PN.DB2,           "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10)]
-		[Extension(PN.DB2LUW,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10)]
-		[Extension(PN.DB2zOS,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10)]
-		[Extension(PN.Firebird,      "LIST({source}, {separator})",                                       IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10)]
-		[Extension(PN.ClickHouse,    "arrayStringConcat(groupArray({source}), {separator})",              IsAggregate = true, ServerSideOnly = true, ChainPrecedence = 10, CanBeNull = false)]
+		/// <summary>
+		/// Server-side aggregate placeholder for concatenation of nullable strings. This overload cannot execute on an <see cref="IEnumerable{T}"/> and will always throw.
+		/// Use only inside an <see cref="IQueryable"/> expression tree.
+		/// </summary>
+		/// <param name="source">Sequence (must be part of query translation). Cannot be <see langword="null"/>.</param>
+		/// <param name="separator">Separator string. Cannot be <see langword="null"/>.</param>
+		/// <remarks>
+		/// LEGACY. Use <c>string.Join(separator, source.Where(s => s != null))</c> or <c>Sql.ConcatStrings(separator, source)</c> (both forms support client or server execution).
+		/// </remarks>
 		public static IAggregateFunctionNotOrdered<string?, string> StringAggregate(
-			[ExprParameter] this IEnumerable<string?> source,
-			[ExprParameter] string separator)
+			this IEnumerable<string?> source,
+			string separator)
+			=> throw new ServerSideOnlyException(nameof(StringAggregate));
+
+		/// <summary>
+		/// Server-side aggregate placeholder for concatenation of projected nullable strings. This overload cannot execute on an <see cref="IEnumerable{T}"/> and will always throw.
+		/// Use only inside an <see cref="IQueryable"/> expression tree.
+		/// </summary>
+		/// <param name="source">Sequence (must be part of query translation). Cannot be <see langword="null"/>.</param>
+		/// <param name="separator">Separator string. Cannot be <see langword="null"/>.</param>
+		/// <param name="selector">Projection producing nullable string values.</param>
+		/// <remarks>
+		/// LEGACY. Use <c>string.Join(separator, source.Select(selector).Where(s => s != null))</c> or <c>Sql.ConcatStrings(separator, source.Select(selector))</c> (both client/server capable).
+		/// </remarks>
+		public static IAggregateFunctionNotOrdered<T, string> StringAggregate<T>(
+			this IEnumerable<T> source,
+			string              separator,
+			Func<T, string?>    selector)
 			=> throw new ServerSideOnlyException(nameof(StringAggregate));
 
 		#endregion
@@ -188,10 +134,16 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Concatenates NOT NULL strings, using the specified separator between each member. Returns NULL if all arguments are NULL.
+		/// Null values are skipped without adding extra separators.
 		/// </summary>
-		/// <param name="separator">The string to use as a separator. <paramref name="separator" /> is included in the returned string only if <paramref name="arguments" /> has more than one element.</param>
-		/// <param name="arguments">A collection that contains the strings to concatenate.</param>
-		/// <returns></returns>
+		/// <param name="separator">Separator inserted between consecutive non-null values.</param>
+		/// <param name="arguments">Sequence of nullable strings to concatenate.</param>
+		/// <returns>
+		/// Concatenated string, or <see langword="null"/> if the sequence contains only <see langword="null"/> values or is empty.
+		/// </returns>
+		/// <remarks>
+		/// Can be evaluated client-side or translated server-side when used inside an <see cref="IQueryable"/>.
+		/// </remarks>
 		public static string? ConcatStringsNullable(string separator, IEnumerable<string?> arguments)
 		{
 			var result = arguments.Aggregate((v1, v2) =>
