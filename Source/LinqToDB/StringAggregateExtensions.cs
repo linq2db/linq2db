@@ -10,6 +10,9 @@ namespace LinqToDB
 {
 	public static class StringAggregateExtensions
 	{
+		[Sql.Extension("WITHIN GROUP ({order_by_clause})", TokenName = "aggregation_ordering", ChainPrecedence = 2)]
+		[Sql.Extension("ORDER BY {order_item, ', '}",      TokenName = "order_by_clause")]
+		[Sql.Extension("{expr}",                           TokenName = "order_item")]
 		public static Sql.IAggregateFunctionOrdered<T, TR> OrderBy<T, TR, TKey>(
 							this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate,
 			[ExprParameter]      Expression<Func<T, TKey>>               expr)
@@ -26,6 +29,9 @@ namespace LinqToDB
 			return new Sql.AggregateFunctionNotOrderedImpl<T, TR>(query);
 		}
 
+		[Sql.Extension("WITHIN GROUP ({order_by_clause})", TokenName = "aggregation_ordering", ChainPrecedence = 2)]
+		[Sql.Extension("ORDER BY {order_item, ', '}",      TokenName = "order_by_clause")]
+		[Sql.Extension("{aggregate}",                      TokenName = "order_item")]
 		public static Sql.IAggregateFunction<T, TR> OrderBy<T, TR>(
 			this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate)
 		{
@@ -40,6 +46,9 @@ namespace LinqToDB
 			return new Sql.AggregateFunctionNotOrderedImpl<T, TR>(query);
 		}
 
+		[Sql.Extension("WITHIN GROUP ({order_by_clause})", TokenName = "aggregation_ordering", ChainPrecedence = 2)]
+		[Sql.Extension("ORDER BY {order_item, ', '}",      TokenName = "order_by_clause")]
+		[Sql.Extension("{expr} DESC",                      TokenName = "order_item")]
 		public static Sql.IAggregateFunctionOrdered<T, TR> OrderByDescending<T, TR, TKey>(
 							this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate,
 			[ExprParameter]      Expression<Func<T, TKey>>               expr)
@@ -56,6 +65,9 @@ namespace LinqToDB
 			return new Sql.AggregateFunctionNotOrderedImpl<T, TR>(query);
 		}
 
+		[Sql.Extension("WITHIN GROUP ({order_by_clause})", TokenName = "aggregation_ordering", ChainPrecedence = 2)]
+		[Sql.Extension("ORDER BY {order_item, ', '}",      TokenName = "order_by_clause")]
+		[Sql.Extension("{aggregate} DESC",                 TokenName = "order_item")]
 		public static Sql.IAggregateFunction<T, TR> OrderByDescending<T, TR>(
 			this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate)
 		{
@@ -71,6 +83,7 @@ namespace LinqToDB
 			return new Sql.AggregateFunctionNotOrderedImpl<T, TR>(query);
 		}
 
+		[Sql.Extension("{expr}", TokenName = "order_item")]
 		public static Sql.IAggregateFunctionOrdered<T, TR> ThenBy<T, TR, TKey>(
 							this Sql.IAggregateFunctionOrdered<T, TR> aggregate,
 			[ExprParameter]      Expression<Func<T, TKey>>            expr)
@@ -87,6 +100,7 @@ namespace LinqToDB
 			return new Sql.AggregateFunctionNotOrderedImpl<T, TR>(query);
 		}
 
+		[Sql.Extension("{expr} DESC", TokenName = "order_item")]
 		public static Sql.IAggregateFunctionOrdered<T, TR> ThenByDescending<T, TR, TKey>(
 							this Sql.IAggregateFunctionOrdered<T, TR> aggregate,
 			[ExprParameter]      Expression<Func<T, TKey>>        expr)
@@ -103,7 +117,10 @@ namespace LinqToDB
 			return new Sql.AggregateFunctionNotOrderedImpl<T, TR>(query);
 		}
 
-		[Sql.Extension("", ChainPrecedence = 0, IsAggregate = true)]
+		// For Oracle we always define at least one ordering by rownum. If ordering defined explicitly, this definition will be replaced.
+		[Sql.Extension(PN.Oracle,       "WITHIN GROUP (ORDER BY ROWNUM)", TokenName = "aggregation_ordering", ChainPrecedence = 0, IsAggregate = true)]
+		[Sql.Extension(PN.OracleNative, "WITHIN GROUP (ORDER BY ROWNUM)", TokenName = "aggregation_ordering", ChainPrecedence = 0, IsAggregate = true)]
+		[Sql.Extension(                  "",                                                                  ChainPrecedence = 0, IsAggregate = true)]
 		public static TR ToValue<T, TR>(this Sql.IAggregateFunction<T, TR> aggregate)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
