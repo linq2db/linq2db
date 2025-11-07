@@ -397,6 +397,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[ActiveIssue(Configurations = [TestProvName.AllOracle], Details = "Null and '' comparison")]
 		[Test]
 		public void JoinAggregateArrayNotNullAndFilter([DataSources(true, TestProvName.AllOracle11)] string context)
 		{
