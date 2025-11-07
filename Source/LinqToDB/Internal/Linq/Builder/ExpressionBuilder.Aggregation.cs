@@ -342,7 +342,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return unwrapped;
 		}
 
-		public static Expression BuildAggregateExecuteExpression(MethodCallExpression methodCall, int sequenceExpressionIndex, Expression dataSequence, IReadOnlyList<MethodCallExpression>? chain, out bool isInAggregation)
+		public static Expression BuildAggregateExecuteExpression(MethodCallExpression methodCall, int sequenceExpressionIndex, Expression dataSequence, IReadOnlyList<MethodCallExpression>? chain)
 		{
 			if (methodCall == null) throw new ArgumentNullException(nameof(methodCall));
 
@@ -371,7 +371,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var sequenceArgument = UnwrapAggregateRoot(dataSequence, out var aggregationRoot);
 
-			isInAggregation = false;
 			//var sequenceArgument = dataSequence;
 			if (!typeof(IQueryable<>).IsSameOrParentOf(sequenceArgument.Type))
 				sequenceArgument = Expression.Call(Methods.Queryable.AsQueryable.MakeGenericMethod(elementType), sequenceArgument);
@@ -496,12 +495,13 @@ namespace LinqToDB.Internal.Linq.Builder
 					return null;
 				}
 
-				var aggregation = BuildAggregateExecuteExpression((MethodCallExpression)functionExpression, sequenceExpressionIndex, current, chain!, out var isInAggregation);
+				var aggregation = BuildAggregateExecuteExpression((MethodCallExpression)functionExpression, sequenceExpressionIndex, current, chain!);
 				return aggregation;
 			}
 
 			var currentRef = contextRef;
 
+			var isFallback = false;
 			buildRoot = current;
 
 			if (chain != null)
@@ -531,26 +531,32 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 					else if (method.IsQueryable(nameof(Queryable.Select)))
 					{
-						// do not support complex projections
 						if (method.Arguments.Count != 2)
 						{
-							buildRoot = method;
-							break;
+							buildRoot  = method;
+							isFallback = true;
+							continue;
 						}
 
-						var body = SequenceHelper.PrepareBody(method.Arguments[1].UnwrapLambda(), currentRef.BuildContext);
+						if (!isFallback)
+						{
+							var body = SequenceHelper.PrepareBody(method.Arguments[1].UnwrapLambda(), currentRef.BuildContext);
 
-						var selectContext = new SelectContext(currentRef.BuildContext, body, currentRef.BuildContext, false);
-						currentRef = new ContextRefExpression(selectContext.ElementType, selectContext);
+							var selectContext = new SelectContext(currentRef.BuildContext, body, currentRef.BuildContext, false);
+							currentRef = new ContextRefExpression(selectContext.ElementType, selectContext);
+						}
 
 					}
 					else if (method.IsQueryable(nameof(Queryable.Where)))
 					{
 						if (!IsAllowedOperation(ITranslationContext.AllowedAggregationOperators.Filter))
 						{
-							buildRoot = method;
+							buildRoot  = method;
+							isFallback = true;
+							continue;
 						}
-						else
+
+						if (!isFallback)
 						{
 							var filter = SequenceHelper.PrepareBody(method.Arguments[1].UnwrapLambda(), currentRef.BuildContext);
 							filterExpression ??= new List<Expression>();
@@ -561,9 +567,12 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						if (!IsAllowedOperation(ITranslationContext.AllowedAggregationOperators.OrderBy))
 						{
-							buildRoot = method;
+							buildRoot  = method;
+							isFallback = true;
+							continue;
 						}
-						else
+
+						if (!isFallback)
 						{
 							var orderByExpression = SequenceHelper.PrepareBody(method.Arguments[1].UnwrapLambda(), currentRef.BuildContext);
 
@@ -584,11 +593,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			if (buildRoot != current || (contextRef.BuildContext is not GroupByBuilder.GroupByContext && contextRef.BuildContext is not AggregateRootContext))
+			if (buildRoot != current || isFallback || (contextRef.BuildContext is not GroupByBuilder.GroupByContext && contextRef.BuildContext is not AggregateRootContext))
 			{
-				var aggregation = BuildAggregateExecuteExpression((MethodCallExpression)functionExpression, sequenceExpressionIndex, buildRoot, chain, out var isInAggregation);
-
-//				var translated  = _buildVisitor.BuildExpression(_buildVisitor.BuildContext, aggregation);
+				var aggregation = BuildAggregateExecuteExpression((MethodCallExpression)functionExpression, sequenceExpressionIndex, buildRoot, chain);
 
 				return aggregation;
 			}

@@ -269,8 +269,8 @@ namespace LinqToDB.Linq.Translation
 				var fallbackResult = ctx.BuildAggregationFunction(
 					sequenceExpressionIndex,
 					newCall,
-					_plain.ToAllowedOps(),
-					agg => Combine(ctx, agg, functionCall, _plain, sequenceExpressionIndex, true));
+					fallbackConfig.ToAllowedOps(),
+					agg => Combine(ctx, agg, functionCall, fallbackConfig, sequenceExpressionIndex, true));
 
 				if (fallbackResult is SqlPlaceholderExpression placeholder)
 				{
