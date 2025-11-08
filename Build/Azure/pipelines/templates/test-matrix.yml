@@ -92,6 +92,7 @@ jobs:
           enable_os_macos: true
           enable_fw_netfx: true
           enable_fw_net80: true
+          enable_fw_net90: true
           enable_fw_net100: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
             enabled: true
@@ -201,7 +202,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net80: true
           enable_fw_net90: true
-          enable_fw_net100: false
+          enable_fw_net100: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]'))) }}:
@@ -220,7 +221,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net80: true
           enable_fw_net90: true
-          enable_fw_net100: false
+          enable_fw_net100: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]'))) }}:
@@ -239,7 +240,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net80: true
           enable_fw_net90: true
-          enable_fw_net100: false
+          enable_fw_net100: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]'))) }}:

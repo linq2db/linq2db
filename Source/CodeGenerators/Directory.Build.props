@@ -12,8 +12,6 @@
 		<ArtifactsPath>$(MSBuildThisFileDirectory)..\..\.build</ArtifactsPath>
 		<ArtifactsPivots>$(Configuration)</ArtifactsPivots>
 
-		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-
 		<RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
 		<RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
 		<AnalysisLevel>preview-All</AnalysisLevel>
