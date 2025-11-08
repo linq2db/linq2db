@@ -293,7 +293,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 							var substring = substringFunc(factory, dataType, separator, concatValues);
 
-							composer.SetResult(substring);
+							var result = isNullResult ? substring : factory.Coalesce(substring, factory.Value(dataType, string.Empty));
+
+							composer.SetResult(result);
 						}
 						else 
 						{

@@ -66,27 +66,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			Expression result;
 
-			if (flags.IsAggregationRoot() && InnerContext != null)
-			{
-				if (SequenceHelper.IsSameContext(path, this))
-				{
-					result = Builder.BuildExpression(InnerContext, new ContextRefExpression(InnerContext.ElementType, InnerContext));
-				}
-				else
-				{
-					result = Builder.Project(this, path, null, 0, flags, Body, false);
-					if (result is not ContextRefExpression)
-					{
-						result = new ContextRefExpression(InnerContext.ElementType, InnerContext);
-					}
-				}
-
-				return result;
-			}
-
 			if (SequenceHelper.IsSameContext(path, this))
 			{
-				if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsTable() || flags.IsTraverse() || flags.IsSubquery() || (flags.IsExpand() && !flags.IsKeys()) || flags.IsMemberRoot())
+				if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsTable() || flags.IsTraverse() || flags.IsSubquery() || (flags.IsExpand() && !flags.IsKeys()) || flags.IsMemberRoot() || flags.IsAggregationRoot())
 				{
 					var isTypeMatch = path.Type.IsSameOrParentOf(ElementType) || ElementType.IsSameOrParentOf(path.Type);
 
@@ -126,6 +108,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					var translated = Builder.BuildExpression(this, Body);
 					if (!ExpressionEqualityComparer.Instance.Equals(translated, path))
 					{
+						if (flags.IsAggregationRoot() && translated is not ContextRefExpression)
+							return path;
+
 						if ((flags.IsRoot() || flags.IsMemberRoot() || flags.IsTraverse() || flags.IsSubquery()) &&
 						    !(translated is ContextRefExpression || translated is MemberExpression))
 						{
@@ -182,6 +167,9 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							result = Builder.RemoveNullPropagation(result);
 						}
+
+						if (flags.IsAggregationRoot() && result is not ContextRefExpression)
+							return path;
 
 						if ((flags.IsRoot() || flags.IsTraverse() || flags.IsSubquery() || flags.IsMemberRoot() || flags.IsAssociationRoot()) &&
 						    !(result is ContextRefExpression or MemberExpression))

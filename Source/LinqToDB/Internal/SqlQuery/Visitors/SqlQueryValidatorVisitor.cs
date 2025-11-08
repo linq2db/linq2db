@@ -89,6 +89,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return isDependedOnOuterSources.Value;
 			}
 
+			bool IsDependsOnOuterSourcesExcept(IReadOnlyCollection<IQueryElement> except)
+			{
+				return QueryHelper.IsDependsOnOuterSources(selectQuery, elementsToIgnore: except);
+			}
+
 			if (_columnSubqueryLevel != null)
 			{
 				if (!_providerFlags.IsSubQueryColumnSupported)
@@ -116,15 +121,21 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					if (_columnSubqueryLevel >= _providerFlags.SupportedCorrelatedSubqueriesLevel)
 					{
-						if (IsDependsOnOuterSources())
+						bool isValid;
+						if (_columnSubqueryLevel == _providerFlags.SupportedCorrelatedSubqueriesLevel)
+							isValid = !IsDependsOnOuterSourcesExcept([selectQuery.Where, selectQuery.Having, selectQuery.OrderBy]);
+						else
+							isValid = !IsDependsOnOuterSources();
+
+						if (!isValid)
 						{
-							var isValied = false;
+							isValid = false;
 							if (_providerFlags.IsSupportedSimpleCorrelatedSubqueries && IsSimpleCorrelatedSubquery(selectQuery))
 							{
-								isValied = true;
+								isValid = true;
 							}
 
-							if (!isValied)
+							if (!isValid)
 							{
 								if (_providerFlags.SupportedCorrelatedSubqueriesLevel == 0)
 									errorMessage = ErrorHelper.Error_Correlated_Subqueries;
