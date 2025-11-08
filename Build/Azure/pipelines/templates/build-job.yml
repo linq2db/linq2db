@@ -91,7 +91,7 @@ jobs:
             )
 
         dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF3.csproj -f net462 -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/net462_x64
-            if %errorlevel% neq 0 exit
+        if %errorlevel% neq 0 exit
 
         dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF8.csproj -f net8.0 -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/net8.0_x64
         if %errorlevel% neq 0 exit
@@ -107,15 +107,15 @@ jobs:
         if %errorlevel% neq 0 exit
     
         FOR %%f IN (net8.0 net9.0 net10.0) DO (
-                dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -a x86 /p:DB2STUB=True -o .build/publish/Tests/$(test_configuration)/%%f_x86
+            dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -a x86 /p:DB2STUB=True -o .build/publish/Tests/$(test_configuration)/%%f_x86
             if %errorlevel% neq 0 exit
-            )
+        )
 
         dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF3.csproj -f net462 -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/net462_x86
-            if %errorlevel% neq 0 exit
+        if %errorlevel% neq 0 exit
 
         dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF8.csproj -f net8.0 -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/net8.0_x86
-            if %errorlevel% neq 0 exit
+        if %errorlevel% neq 0 exit
 
         dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF9.csproj -f net9.0 -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/net9.0_x86
         if %errorlevel% neq 0 exit

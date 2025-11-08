@@ -14,7 +14,7 @@ IF [%1] EQU [] (SET CONFIG=Debug)
 IF [%2] EQU [] (SET NETFX=1)
 IF [%3] EQU [] (SET NET80=1)
 IF [%4] EQU [] (SET NET90=1)
-IF [%5] EQU [] (SET NET90=1)
+IF [%5] EQU [] (SET NET100=1)
 IF [%6] EQU [] (SET FORMAT=html)
 
 dotnet build linq2db.slnx -c %CONFIG% -v m
