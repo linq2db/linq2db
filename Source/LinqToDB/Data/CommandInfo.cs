@@ -1017,7 +1017,7 @@ namespace LinqToDB.Data
 
 					await task.ConfigureAwait(false);
 
-					var value = task.GetType().GetProperty(nameof(Task<int>.Result))!.GetValue(task);
+					var value = task.GetType().GetProperty(nameof(Task<>.Result))!.GetValue(task);
 
 					member.SetValue(result, value);
 				}

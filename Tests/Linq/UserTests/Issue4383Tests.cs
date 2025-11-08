@@ -50,7 +50,7 @@ namespace Tests.UserTests
 			where TChain : IChainTest
 			where TPumpLineChain : PumpLineChainTest<TChain>
 		{
-			[Association(ThisKey = nameof(Id), OtherKey = nameof(PumpLineChainTest<TChain>.LineId), CanBeNull = false)]
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(PumpLineChainTest<>.LineId), CanBeNull = false)]
 			public IEnumerable<TPumpLineChain> PipeLineChains { get; set; } = null!;
 		}
 

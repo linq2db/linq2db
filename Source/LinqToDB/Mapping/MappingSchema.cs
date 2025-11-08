@@ -752,7 +752,7 @@ namespace LinqToDB.Mapping
 			{
 				expr = Expression.Lambda(
 					Expression.Condition(
-						ExpressionHelper.Property(p, nameof(Nullable<int>.HasValue)),
+						ExpressionHelper.Property(p, nameof(Nullable<>.HasValue)),
 						expr.Body,
 						new DefaultValueExpression(this, expr.Body.Type)),
 					expr.Parameters);
@@ -778,7 +778,7 @@ namespace LinqToDB.Mapping
 			if (fromType.IsNullableType)
 			{
 				body = Expression.Condition(
-					ExpressionHelper.Property(param, nameof(Nullable<int>.HasValue)),
+					ExpressionHelper.Property(param, nameof(Nullable<>.HasValue)),
 					Expression.Convert(body, type),
 					new DefaultValueExpression(this, type));
 			}

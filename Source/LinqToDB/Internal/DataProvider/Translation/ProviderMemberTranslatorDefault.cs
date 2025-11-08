@@ -232,7 +232,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (nullableType == null || !typeof(Nullable<>).IsSameOrParentOf(nullableType))
 				return false;
 
-			if (methodCall.Method.Name != nameof(Nullable<int>.GetValueOrDefault))
+			if (methodCall.Method.Name != nameof(Nullable<>.GetValueOrDefault))
 				return false;
 
 			var argumentPlaceholder = TranslateNoRequiredObjectExpression(translationContext, methodCall.Object);

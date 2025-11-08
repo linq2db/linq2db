@@ -724,8 +724,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					// new UpdateOutput<T> { Deleted = deleted, Inserted = inserted, }
 					Expression.MemberInit(
 						Expression.New(returnType),
-						Expression.Bind(returnType.GetProperty(nameof(UpdateOutput<object>.Deleted))!, deletedExpr),
-						Expression.Bind(returnType.GetProperty(nameof(UpdateOutput<object>.Inserted))!, insertedExpr));
+						Expression.Bind(returnType.GetProperty(nameof(UpdateOutput<>.Deleted))!, deletedExpr),
+						Expression.Bind(returnType.GetProperty(nameof(UpdateOutput<>.Inserted))!, insertedExpr));
 			}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)

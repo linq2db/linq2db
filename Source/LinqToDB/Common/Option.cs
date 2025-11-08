@@ -27,7 +27,7 @@ namespace LinqToDB.Common
 		public T Value
 		{
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => HasValue ? field : throw new InvalidOperationException($"{nameof(Option<int>)}.{nameof(Value)} not set");
+			get => HasValue ? field : throw new InvalidOperationException($"{nameof(Option<>)}.{nameof(Value)} not set");
 		}
 
 		/// <summary>

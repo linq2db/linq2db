@@ -687,8 +687,8 @@ namespace LinqToDB.Mapping
 							new[] { variable },
 							assign,
 							Expression.Condition(
-								ExpressionHelper.Property(variable, nameof(Nullable<int>.HasValue)),
-								InternalExtensions.ApplyLambdaToExpression(toProvider, ExpressionHelper.Property(variable, nameof(Nullable<int>.Value))),
+								ExpressionHelper.Property(variable, nameof(Nullable<>.HasValue)),
+								InternalExtensions.ApplyLambdaToExpression(toProvider, ExpressionHelper.Property(variable, nameof(Nullable<>.Value))),
 								new DefaultValueExpression(mappingSchema, toProvider.ReturnType)));
 					}
 					else
