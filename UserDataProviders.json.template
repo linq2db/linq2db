@@ -539,7 +539,7 @@
 
 			"MariaDB.11": {
 				"Provider": "MySqlConnector",
-				"ConnectionString": "Server=localhost;Port=3316;SslMode=None;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;AllowLoadLocalInfile=true;"
+				"ConnectionString": "Server=localhost;Port=3316;SslMode=Disabled;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;AllowLoadLocalInfile=true;"
 			},
 
 			"Oracle.11.Native": {

@@ -1551,6 +1551,8 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
 		public void MappingTypingByConstant_FromQuery_UInt64([DataSources(TestProvName.AllAccess)] string context, [Values] bool inline, [Values(null, 1ul)] ulong? first)
 		{
+			using var _ = inline && context.IsAnyOf(TestProvName.AllPostgreSQL) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
+
 			using var db = GetDataContext(context);
 			db.InlineParameters = inline;
 

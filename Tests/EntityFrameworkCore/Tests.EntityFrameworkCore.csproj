@@ -29,7 +29,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net462'" Label="Override Transient Vulnerable Deps">
-		<PackageReference Include="Npgsql" VersionOverride="4.1.14" />
+		<PackageReference Include="Npgsql" VersionOverride="$(EF3NpgsqlVersion)" />
 	</ItemGroup>
 
 </Project>

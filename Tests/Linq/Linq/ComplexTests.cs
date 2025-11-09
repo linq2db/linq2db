@@ -761,7 +761,7 @@ namespace Tests.Linq
 
 			var records = tb.LoadWith(t => t.Parent!.Parent).OrderBy(r => r.Id).ToArray();
 
-			Assert.That(records.Count, Is.EqualTo(2));
+			Assert.That(records.Count(), Is.EqualTo(2));
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(records[0].Parent, Is.Null);

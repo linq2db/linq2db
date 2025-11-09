@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Internal.SqlQuery
@@ -9,7 +10,7 @@ namespace LinqToDB.Internal.SqlQuery
 	{
 		public SqlValue(Type systemType, object? value)
 		{
-			_valueType = new DbDataType(value != null && value is not DBNull ? systemType.UnwrapNullableType() : systemType);
+			_valueType = new DbDataType(!value.IsNullValue() ? systemType.UnwrapNullableType() : systemType);
 			Value      = value;
 		}
 
@@ -92,7 +93,7 @@ namespace LinqToDB.Internal.SqlQuery
 				return true;
 
 			return
-				other is SqlValue value          
+				other is SqlValue value
 				&& ValueType.Equals(value.ValueType)
 				&& (Value == null && value.Value == null || Value != null && Value.Equals(value.Value))
 				&& comparer(this, other);

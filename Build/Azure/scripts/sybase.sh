@@ -1,6 +1,6 @@
 #!/bin/bash
 
-docker run -d --name sybase -e SYBASE_DB=TestDataCore -p 5000:5000 linq2db/linq2db:ase-16
+docker run -d --name sybase -e SYBASE_DB=TestDataCore -p 5000:5000 linq2db/linq2db:ase-16.1
 docker ps -a
 
 retries=0
@@ -72,6 +72,6 @@ go
 EOL
 
 docker cp ase.sql sybase:/opt/sap/ase.sql
-docker exec -e SYBASE=/opt/sap sybase bash -c 'source /opt/sap/SYBASE.sh && /opt/sap/OCS-16_0/bin/isql -Usa -PmyPassword -SMYSYBASE -i/opt/sap/ase.sql'
+docker exec -e SYBASE=/opt/sap sybase bash -c 'source /opt/sap/SYBASE.sh && /opt/sap/OCS-16_1/bin/isql -Usa -PmyPassword -SMYSYBASE -i/opt/sap/ase.sql'
 
 docker logs sybase

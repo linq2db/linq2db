@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
@@ -164,7 +165,7 @@ namespace LinqToDB.Tools
 			var sql      = sqlBuilder.GetMaxValueSql(entityDescriptor, column);
 			var maxValue = context.Execute<object?>(sql);
 
-			if (maxValue == null || maxValue == DBNull.Value)
+			if (maxValue.IsNullValue())
 				maxValue = 0;
 
 			var type = Type.GetTypeCode(maxValue.GetType());
@@ -195,7 +196,7 @@ namespace LinqToDB.Tools
 			var sql      = sqlBuilder.GetMaxValueSql(entityDescriptor, column);
 			var maxValue = await context.ExecuteAsync<object?>(sql, cancellationToken).ConfigureAwait(false);
 
-			if (maxValue == null || maxValue == DBNull.Value)
+			if (maxValue.IsNullValue())
 				maxValue = 0;
 
 			var type = Type.GetTypeCode(maxValue.GetType());
