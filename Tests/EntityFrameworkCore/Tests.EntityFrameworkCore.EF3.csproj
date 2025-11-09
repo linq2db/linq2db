@@ -10,8 +10,11 @@
 		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.EF3.csproj" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net462'" Label="Override Transient Vulnerable Deps">
+	<ItemGroup Label="Override Transient Vulnerable Deps">
 		<PackageReference Include="Npgsql" VersionOverride="4.1.14" />
+
+		<!--wrong version copied on CI build-->
+		<PackageReference Include="System.Text.Json" />
 	</ItemGroup>
 
 </Project>
