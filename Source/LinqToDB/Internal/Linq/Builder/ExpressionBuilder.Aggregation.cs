@@ -412,7 +412,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (current is ContextRefExpression refExpression)
 				{
-					var root = BuildAggregationRootExpression(current);
+					var root = BuildTraverseExpression(current);
 					if (ExpressionEqualityComparer.Instance.Equals(root, current))
 					{
 						contextRef = refExpression;
