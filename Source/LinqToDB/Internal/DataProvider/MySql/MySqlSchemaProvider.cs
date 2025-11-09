@@ -65,7 +65,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 						CatalogName        = catalog,
 						TableName          = name,
 						IsDefaultSchema    = true,
-						IsView             = type == "VIEW" || type == "SYSTEM VIEW",
+						IsView             = type is "VIEW" or "SYSTEM VIEW",
 						IsProviderSpecific = type == "SYSTEM VIEW" || catalog.Equals("sys", StringComparison.OrdinalIgnoreCase),
 						Description        = rd.GetString(3)
 					};
@@ -301,8 +301,8 @@ SELECT
 					{
 						ProcedureID   = procId,
 						ParameterName = name,
-						IsIn          = mode == "IN"  || mode == "INOUT",
-						IsOut         = mode == "OUT" || mode == "INOUT",
+						IsIn          = mode is "IN"  or "INOUT",
+						IsOut         = mode is "OUT" or "INOUT",
 						Precision     = precision,
 						Scale         = (int?)scale,
 						Ordinal       = ordinal,

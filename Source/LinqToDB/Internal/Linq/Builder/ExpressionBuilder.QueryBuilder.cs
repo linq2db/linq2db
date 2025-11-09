@@ -588,7 +588,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					return new TransformInfo(readerExpression);
 				}
 
-				if (e.NodeType == ExpressionType.Equal || e.NodeType == ExpressionType.NotEqual)
+				if (e.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
 				{
 					var binary = (BinaryExpression)e;
 					if (binary.Left.IsNullValue() && binary.Right is SqlPlaceholderExpression placeholderRight)

@@ -145,21 +145,18 @@ namespace Tests.Linq
 					{
 						var toEnrichRaw = mc.Arguments[0];
 
-						if (toEnrichRaw is MethodCallExpression mca && mca.Method.Name == "Alias")
+						if (toEnrichRaw is MethodCallExpression { Method.Name: "Alias" } mca)
 						{
 							toEnrichRaw = mca.Arguments[0];
 						}
 
-						var toEnrich   = toEnrichRaw as MemberInitExpression;
-						var enrichWith = mc.Arguments[1] as MemberInitExpression;
-
-						if (toEnrich == null)
+						if (toEnrichRaw is not MemberInitExpression toEnrich)
 						{
 							throw new InvalidOperationException(
 								"Enriched expression should be 'SomeClass { Prop = x.Prop }'");
 						}
 
-						if (enrichWith == null)
+						if (mc.Arguments[1] is not MemberInitExpression enrichWith)
 						{
 							throw new InvalidOperationException(
 								"Expression for extending should be 'SomeClass { AdditionalProp = x.OtherProp }'");

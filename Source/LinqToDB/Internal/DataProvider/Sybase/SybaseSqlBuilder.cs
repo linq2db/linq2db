@@ -71,7 +71,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				case DataType.SmallMoney: StringBuilder.Append("SMALLMONEY");  return;
 				case DataType.NVarChar  :
 					// yep, 5461...
-					if (type.Length == null || type.Length > 5461 || type.Length < 1)
+					if (type.Length is null or > 5461 or < 1)
 					{
 						StringBuilder.Append("NVarChar(5461)");
 						return;

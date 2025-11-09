@@ -519,7 +519,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					pathMapping.Add(path, (column1, column2));
 				}
 
-				if (_setOperation != SetOperation.Except && _setOperation != SetOperation.ExceptAll)
+				if (_setOperation is not SetOperation.Except and not SetOperation.ExceptAll)
 				{
 					foreach (var (placeholder, path) in placeholders2)
 					{

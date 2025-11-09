@@ -543,19 +543,16 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static bool IsConstantFast(ISqlExpression expr)
 		{
-			if (expr.ElementType == QueryElementType.SqlValue || expr.ElementType == QueryElementType.SqlParameter)
-				return true;
-
-			if (expr.ElementType == QueryElementType.SqlBinaryExpression)
+			return expr switch
 			{
-				var be = (SqlBinaryExpression)expr;
-				return IsConstantFast(be.Expr1) && IsConstantFast(be.Expr2);
-			}
+				{ ElementType: QueryElementType.SqlValue or QueryElementType.SqlParameter } => true,
 
-			if (expr.ElementType == QueryElementType.SqlNullabilityExpression)
-				return IsConstantFast(((SqlNullabilityExpression)expr).SqlExpression);
+				SqlBinaryExpression { ElementType: QueryElementType.SqlBinaryExpression } be => IsConstantFast(be.Expr1) && IsConstantFast(be.Expr2),
 
-			return false;
+				SqlNullabilityExpression { ElementType: QueryElementType.SqlNullabilityExpression, SqlExpression: { } expression } => IsConstantFast(expression),
+
+				_ => false,
+			};
 		}
 
 		/// <summary>
@@ -1378,10 +1375,11 @@ namespace LinqToDB.Internal.SqlQuery
 			if (expr.ElementType == QueryElementType.SqlBinaryExpression)
 				return false;
 
-			if (expr.ElementType == QueryElementType.SqlField ||
-				expr.ElementType == QueryElementType.Column   ||
-				expr.ElementType == QueryElementType.SqlValue ||
-				expr.ElementType == QueryElementType.SqlParameter)
+			if (expr.ElementType
+					is QueryElementType.SqlField
+					or QueryElementType.Column
+					or QueryElementType.SqlValue
+					or QueryElementType.SqlParameter)
 				return true;
 
 			if ((expr.ElementType == QueryElementType.SqlFunction) && ((SqlFunction)expr).Parameters.Length == 1)

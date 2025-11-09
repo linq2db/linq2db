@@ -135,7 +135,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Precision}, {type.Scale})");
 					return;
 				case DataType.NVarChar:
-					if (type.Length == null || type.Length > 255 || type.Length < 1)
+					if (type.Length is null or > 255 or < 1)
 					{
 						StringBuilder.Append("NVarChar(255)");
 
@@ -158,13 +158,14 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			// TODO: Letter definitions is: In the default locale, must be an ASCII character in the range A to Z or a to z
 			// add support for other locales later
 			return !IsReserved(name) &&
-				((name[0] >= 'a' && name[0] <= 'z') || (name[0] >= 'A' && name[0] <= 'Z') || name[0] == '_') &&
-				name.All(c =>
-					(c >= 'a' && c <= 'z') ||
-					(c >= 'A' && c <= 'Z') ||
-					(c >= '0' && c <= '9') ||
-					c == '$' ||
-					c == '_');
+				name[0] is (>= 'a' and <= 'z') or (>= 'A' and <= 'Z') or '_' &&
+				name.All(c => c is
+					(>= 'a' and <= 'z') or
+					(>= 'A' and <= 'Z') or
+					(>= '0' and <= '9') or
+					'$' or
+					'_'
+				);
 		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
@@ -184,12 +185,17 @@ namespace LinqToDB.Internal.DataProvider.Informix
 						return sb.Append('"').Append(value).Append('"');
 
 					break;
+
 				case ConvertType.NameToQueryParameter   :
 					return SqlProviderFlags.IsParameterOrderDependent
 						? sb.Append('?')
 						: sb.Append('@').Append(value);
+
 				case ConvertType.NameToCommandParameter :
-				case ConvertType.NameToSprocParameter   : return sb.Append(':').Append(value);
+
+				case ConvertType.NameToSprocParameter   :
+					return sb.Append(':').Append(value);
+
 				case ConvertType.SprocParameterToName   :
 					return (value.Length > 0 && value[0] == ':')
 						? sb.Append(value.Substring(1))

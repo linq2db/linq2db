@@ -190,10 +190,10 @@ namespace LinqToDB
 
 		private static ColumnDescriptor[] GetColumnsFromExpression(Type entityType, LambdaExpression fieldExpr, MappingSchema mappingSchema, DataOptions options)
 		{
-			if (!(fieldExpr.Body is NewExpression init))
+			if (fieldExpr.Body is not NewExpression init)
 				return new[] { GetColumnFromExpression(entityType, fieldExpr, mappingSchema, options) };
 
-			if (init.Arguments == null || init.Arguments.Count == 0)
+			if (init.Arguments is null or [])
 				throw new LinqToDBException($"Cannot extract columns info from expression {fieldExpr.Body}");
 
 			var ed = mappingSchema.GetEntityDescriptor(entityType, options.ConnectionOptions.OnEntityDescriptorCreated);
@@ -201,7 +201,7 @@ namespace LinqToDB
 			for (var i = 0; i < init.Arguments.Count; i++)
 			{
 				var memberInfo = MemberHelper.GetMemberInfo(init.Arguments[i]);
-				if (memberInfo == null)
+				if (memberInfo is null)
 					throw new LinqToDBException($"Cannot extract member info from expression {init.Arguments[i]}");
 
 				var column = ed.FindColumnDescriptor(memberInfo);
@@ -215,7 +215,7 @@ namespace LinqToDB
 		private static ColumnDescriptor GetColumnFromExpression(Type entityType, LambdaExpression fieldExpr, MappingSchema mappingSchema, DataOptions options)
 		{
 			var memberInfo = MemberHelper.GetMemberInfo(fieldExpr.Body);
-			if (memberInfo == null)
+			if (memberInfo is null)
 				throw new LinqToDBException($"Cannot extract member info from expression {fieldExpr.Body}");
 
 			var ed     = mappingSchema.GetEntityDescriptor(entityType, options.ConnectionOptions.OnEntityDescriptorCreated);

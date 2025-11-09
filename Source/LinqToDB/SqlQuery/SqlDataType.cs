@@ -414,9 +414,9 @@ namespace LinqToDB.SqlQuery
 			if (!string.IsNullOrEmpty(Type.DbType))
 				writer.Append(":\"").Append(Type.DbType).Append('"');
 
-			if (Type.Length != null && Type.Length != 0)
+			if (Type.Length is not null and not 0)
 				writer.Append('(').Append(Type.Length).Append(')');
-			else if (Type.Precision != null && Type.Precision != 0)
+			else if (Type.Precision is not null and not 0)
 				writer.Append('(').Append(Type.Precision).Append(',').Append(Type.Scale).Append(')');
 
 			return writer;

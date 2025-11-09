@@ -256,7 +256,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					Scale       = rd.IsDBNull(8) ? (int?)null : rd.GetInt32(8),
 					IsIdentity  = rd.GetInt32(9) != 0,
 					Description = rd.IsDBNull(10) ? null : rd.GetString(10),
-					Length      = dataType == "CHAR" || dataType == "NCHAR" || dataType == "NVARCHAR2" || dataType == "VARCHAR2" || dataType == "VARCHAR"
+					Length      = dataType is "CHAR" or "NCHAR" or "NVARCHAR2" or "VARCHAR2" or "VARCHAR"
 									? charLength : dataLength
 				};
 			},

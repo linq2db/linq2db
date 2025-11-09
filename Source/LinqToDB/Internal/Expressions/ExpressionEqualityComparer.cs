@@ -115,9 +115,9 @@ namespace LinqToDB.Internal.Expressions
 				{
 					var constantExpression = (ConstantExpression)obj;
 
-					if (constantExpression.Value != null
-						&& constantExpression.Value is not IQueryable 
-						&& (constantExpression.Value is string or not IEnumerable))
+					if (constantExpression.Value is not null
+							and not IQueryable
+							and (string or not IEnumerable))
 					{
 						hashCode.Add(constantExpression.Value);
 					}

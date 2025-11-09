@@ -107,7 +107,7 @@ namespace LinqToDB.CommandLine
 						
 						break;
 					case "prefix"                          :
-						if (property.Value.ValueKind == JsonValueKind.Null || property.Value.ValueKind == JsonValueKind.Undefined)
+						if (property.Value.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
 							options.Prefix = null;
 						else if (property.Value.ValueKind == JsonValueKind.String)
 							options.Prefix = property.Value.GetString()!;
@@ -119,7 +119,7 @@ namespace LinqToDB.CommandLine
 
 						break;
 					case "suffix"                          :
-						if (property.Value.ValueKind == JsonValueKind.Null || property.Value.ValueKind == JsonValueKind.Undefined)
+						if (property.Value.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
 							options.Suffix = null;
 						else if (property.Value.ValueKind == JsonValueKind.String)
 							options.Suffix = property.Value.GetString()!;

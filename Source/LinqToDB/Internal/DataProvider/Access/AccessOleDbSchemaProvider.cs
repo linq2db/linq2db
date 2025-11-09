@@ -80,7 +80,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 				let schema  = t.Field<string>("TABLE_SCHEMA") // empty
 				let name    = t.Field<string>("TABLE_NAME") // object name
 				// TABLE/VIEW/SYSTEM TABLE/ACCESS TABLE
-				let system  = t.Field<string>("TABLE_TYPE") == "SYSTEM TABLE" || t.Field<string>("TABLE_TYPE") == "ACCESS TABLE"
+				let system  = t.Field<string>("TABLE_TYPE") is "SYSTEM TABLE" or "ACCESS TABLE"
 				select new TableInfo
 				{
 					TableID            = catalog + '.' + schema + '.' + name,

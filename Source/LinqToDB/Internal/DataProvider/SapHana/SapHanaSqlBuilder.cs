@@ -127,7 +127,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				case DataType.NVarChar:
 				case DataType.VarChar:
 				case DataType.VarBinary:
-					if (type.Length == null || type.Length > 5000 || type.Length < 1)
+					if (type.Length is null or > 5000 or < 1)
 					{
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.DataType}(5000)");
 

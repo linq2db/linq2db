@@ -74,7 +74,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		{
 			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(EvaluationContext);
 
-			if (caseSensitive == null || caseSensitive == false)
+			if (caseSensitive is null or false)
 			{
 				var searchExpr = predicate.Expr2;
 				var dataExpr   = predicate.Expr1;

@@ -229,17 +229,17 @@ WHERE
 					var scale      = rd.IsDBNull(13) ? (int?)null : rd.GetInt32(13);
 					var type       = rd.GetString(15);
 
-					if (type == "nchar" || type == "nvarchar")
+					if (type is "nchar" or "nvarchar")
 						length /= _nCharSize;
-					else if (type == "unichar" || type == "univarchar")
+					else if (type is "unichar" or "univarchar")
 						length /= _uniCharSize;
 
 					return new ProcedureParameterInfo()
 					{
 						ProcedureID   = catalog + "." + schema + "." + name,
 						ParameterName = pName,
-						IsIn          = direction == 1 || direction == 2,
-						IsOut         = direction == 3 || direction == 2,
+						IsIn          = direction is 1 or 2,
+						IsOut         = direction is 3 or 2,
 						Length        = length,
 						Precision     = length, // this is also correct...
 						Scale         = scale,

@@ -182,7 +182,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		static bool NeedsEncoding(char c)
 		{
-			return c == '\x00' || c >= '\x80';
+			return c is '\x00' or >= '\x80';
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, DataOptions options, char value)

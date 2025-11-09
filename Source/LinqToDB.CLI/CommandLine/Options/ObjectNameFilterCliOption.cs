@@ -124,7 +124,7 @@ namespace LinqToDB.CommandLine
 
 									hasSchema = true;
 
-									if (property.Value.ValueKind == JsonValueKind.Null || property.Value.ValueKind == JsonValueKind.Undefined)
+									if (property.Value.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
 										break;
 
 									if (property.Value.ValueKind != JsonValueKind.String)

@@ -509,7 +509,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		protected override void BuildGroupByBody(GroupingType groupingType,
 			List<ISqlExpression>                              items)
 		{
-			if (groupingType == GroupingType.GroupBySets || groupingType == GroupingType.Default)
+			if (groupingType is GroupingType.GroupBySets or GroupingType.Default)
 			{
 				base.BuildGroupByBody(groupingType, items);
 				return;

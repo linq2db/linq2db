@@ -372,7 +372,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.DataType}");
 					// Default precision for all three types is 7.
 					// For all other non-null values (including 0) precision must be specified.
-					if (type.Precision != null && type.Precision != 7)
+					if (type.Precision is not null and not 7)
 					{
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Precision})");
 					}

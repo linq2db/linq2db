@@ -24,6 +24,7 @@ namespace Tests.Exceptions
 			{
 				if (statement.IsInsert() && statement.RequireInsertClause().Into!.TableName.Name == "Parent")
 				{
+#pragma warning disable IDE0019 // Use pattern matching
 					var expr =
 						statement.RequireInsertClause().Find(static e =>
 						{
@@ -35,6 +36,7 @@ namespace Tests.Exceptions
 
 							return false;
 						}) as SqlSetExpression;
+#pragma warning restore IDE0019 // Use pattern matching
 
 					if (expr != null && expr.Expression!.TryEvaluateExpression(context, out var expressionValue))
 					{

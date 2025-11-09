@@ -363,7 +363,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 				// CompareNulls.LikeSqlExceptParameters and CompareNulls.LikeClr
 				// always sniffs parameters to == and != (for backward compatibility).
-				if (Operator == Operator.Equal || Operator == Operator.NotEqual)
+				if (Operator is Operator.Equal or Operator.NotEqual)
 				{
 					if (this.TryEvaluateExpression(context, out var value))
 					{

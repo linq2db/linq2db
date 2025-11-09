@@ -101,17 +101,19 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				case DataType.Date           :
 				case DataType.DateTime       : StringBuilder.Append("date");                      break;
 				case DataType.DateTime2      :
-					if (type.Precision == 6 || type.Precision == null)
+					if (type.Precision is 6 or null)
 						StringBuilder.Append("timestamp");
 					else
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"timestamp({type.Precision})");
 					break;
+
 				case DataType.DateTimeOffset :
-					if (type.Precision == 6 || type.Precision == null)
+					if (type.Precision is 6 or null)
 						StringBuilder.Append("timestamp with time zone");
 					else
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"timestamp({type.Precision}) with time zone");
 					break;
+
 				case DataType.UInt32         :
 				case DataType.Int64          : StringBuilder.Append("Number(19)");                break;
 				case DataType.SByte          :
@@ -119,28 +121,31 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				case DataType.Money          : StringBuilder.Append("Number(19, 4)");             break;
 				case DataType.SmallMoney     : StringBuilder.Append("Number(10, 4)");             break;
 				case DataType.VarChar        :
-					if (type.Length == null || type.Length > 4000 || type.Length < 1)
+					if (type.Length is null or > 4000 or < 1)
 						StringBuilder.Append("VarChar(4000)");
 					else
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"VarChar({type.Length})");
 					break;
+
 				case DataType.NVarChar       :
-					if (type.Length == null || type.Length > 4000 || type.Length < 1)
+					if (type.Length is null or > 4000 or < 1)
 						StringBuilder.Append("VarChar2(4000)");
 					else
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"VarChar2({type.Length})");
 					break;
+
 				case DataType.Boolean        : StringBuilder.Append("NUMBER(1)");                 break;
 				case DataType.NText          : StringBuilder.Append("NClob");                     break;
 				case DataType.Text           : StringBuilder.Append("Clob");                      break;
 				case DataType.Guid           : StringBuilder.Append("Raw(16)");                   break;
 				case DataType.Binary         :
 				case DataType.VarBinary      :
-					if (type.Length == null || type.Length == 0)
+					if (type.Length is null or 0)
 						StringBuilder.Append("BLOB");
 					else
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"Raw({type.Length})");
 					break;
+
 				default: base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);         break;
 			}
 		}

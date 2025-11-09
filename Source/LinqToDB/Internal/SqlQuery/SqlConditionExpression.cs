@@ -48,7 +48,7 @@ namespace LinqToDB.Internal.SqlQuery
 			if (ReferenceEquals(other, this))
 				return true;
 
-			if (!(other is SqlConditionExpression otherCondition))
+			if (other is not SqlConditionExpression otherCondition)
 				return false;
 
 			return Condition.Equals(otherCondition.Condition, comparer) &&

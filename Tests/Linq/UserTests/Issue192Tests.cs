@@ -33,9 +33,7 @@ namespace Tests.UserTests
 
 			public override bool Equals(object? obj)
 			{
-				var e = obj as TypeConvertTable;
-
-				if (e == null)
+				if (obj is not TypeConvertTable e)
 					return false;
 
 				return

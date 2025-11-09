@@ -116,7 +116,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							CheckFilterFunc(lastElement.MemberInfo.GetMemberType(), lastElement.FilterFunc!.Type, sequence.MappingSchema);
 					}
 				}
-				else if (methodCall.Method.Name == "LoadWith" || methodCall.Method.Name == "LoadWithAsTable")
+				else if (methodCall.Method.Name is "LoadWith" or "LoadWithAsTable")
 				{
 					lastLoadWith = tableLoadWith ?? throw new InvalidOperationException();
 
