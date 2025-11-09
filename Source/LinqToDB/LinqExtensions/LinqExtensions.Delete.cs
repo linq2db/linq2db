@@ -99,11 +99,11 @@ namespace LinqToDB
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		public static Task<TSource[]> DeleteWithOutputAsync<TSource>(
+		public static ValueTask<TSource[]> DeleteWithOutputAsync<TSource>(
 			IQueryable<TSource> source,
 			CancellationToken token)
 		{
-			return AsyncEnumerableExtensions.ToArrayAsync(DeleteWithOutputAsync(source), token);
+			return DeleteWithOutputAsync(source).ToArrayAsync(token);
 		}
 
 		/// <summary>
@@ -203,12 +203,12 @@ namespace LinqToDB
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		public static Task<TOutput[]> DeleteWithOutputAsync<TSource, TOutput>(
+		public static ValueTask<TOutput[]> DeleteWithOutputAsync<TSource, TOutput>(
 			IQueryable<TSource> source,
 			Expression<Func<TSource, TOutput>> outputExpression,
 			CancellationToken token)
 		{
-			return AsyncEnumerableExtensions.ToArrayAsync(DeleteWithOutputAsync(source, outputExpression), token);
+			return DeleteWithOutputAsync(source, outputExpression).ToArrayAsync(token);
 		}
 
 		/// <summary>

@@ -218,7 +218,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					query.GetResultEnumerable(db, expr, ps, preambles).First();
 
 				query.GetElementAsync = query.GetElementAsync = async (db, expr, ps, preambles, token) =>
-					await AsyncEnumerableExtensions.FirstAsync(query.GetResultEnumerable(db, expr, ps, preambles), token).ConfigureAwait(false);
+					await query.GetResultEnumerable(db, expr, ps, preambles).FirstAsync(token).ConfigureAwait(false);
 			}
 
 			static void GetFirstOrDefaultElement<T>(Query<T> query)
@@ -227,7 +227,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					query.GetResultEnumerable(db, expr, ps, preambles).FirstOrDefault();
 
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
-					await AsyncEnumerableExtensions.FirstOrDefaultAsync(query.GetResultEnumerable(db, expr, ps, preambles), token).ConfigureAwait(false);
+					await query.GetResultEnumerable(db, expr, ps, preambles).FirstOrDefaultAsync(token).ConfigureAwait(false);
 			}
 
 			static void GetSingleElement<T>(Query<T> query)
@@ -236,7 +236,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					query.GetResultEnumerable(db, expr, ps, preambles).Single();
 
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
-					await AsyncEnumerableExtensions.SingleAsync(query.GetResultEnumerable(db, expr, ps, preambles), token).ConfigureAwait(false);
+					await query.GetResultEnumerable(db, expr, ps, preambles).SingleAsync(token).ConfigureAwait(false);
 			}
 
 			static void GetSingleOrDefaultElement<T>(Query<T> query)
@@ -245,7 +245,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					query.GetResultEnumerable(db, expr, ps, preambles).SingleOrDefault();
 
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
-					await AsyncEnumerableExtensions.SingleOrDefaultAsync(query.GetResultEnumerable(db, expr, ps, preambles), token).ConfigureAwait(false);
+					await query.GetResultEnumerable(db, expr, ps, preambles).SingleOrDefaultAsync(token).ConfigureAwait(false);
 			}
 
 			bool _isJoinCreated;

@@ -883,7 +883,7 @@ namespace LinqToDB.Data
 		static readonly MethodInfo _readAsListAsyncMethodInfo =
 			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadAsListAsync<int>(null!, default)).GetGenericMethodDefinition();
 
-		static readonly MethodInfo _readSingletAsyncMethodInfo =
+		static readonly MethodInfo _readSingleAsyncMethodInfo =
 			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadFirstOrDefaultAsync<int>(null!, default)).GetGenericMethodDefinition();
 
 		sealed class ReaderAsyncEnumerable<T> : IAsyncEnumerable<T>
@@ -966,19 +966,19 @@ namespace LinqToDB.Data
 			}
 		}
 
-		Task<T[]> ReadAsArrayAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
+		async Task<T[]> ReadAsArrayAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
 		{
-			return AsyncEnumerableExtensions.ToArrayAsync(new ReaderAsyncEnumerable<T>(this, rd), cancellationToken: cancellationToken);
+			return await new ReaderAsyncEnumerable<T>(this, rd).ToArrayAsync(cancellationToken).ConfigureAwait(false);
 		}
 
-		Task<List<T>> ReadAsListAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
+		async Task<List<T>> ReadAsListAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
 		{
-			return AsyncEnumerableExtensions.ToListAsync(new ReaderAsyncEnumerable<T>(this, rd), cancellationToken: cancellationToken);
+			return await new ReaderAsyncEnumerable<T>(this, rd).ToListAsync(cancellationToken).ConfigureAwait(false);
 		}
 
-		Task<T?> ReadFirstOrDefaultAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
+		async Task<T?> ReadFirstOrDefaultAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
 		{
-			return AsyncEnumerableExtensions.FirstOrDefaultAsync(new ReaderAsyncEnumerable<T>(this, rd), cancellationToken: cancellationToken);
+			return await new ReaderAsyncEnumerable<T>(this, rd).FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 		}
 
 		async Task<T> ReadMultipleResultSetsAsync<T>(DbDataReader rd, CancellationToken cancellationToken)
@@ -1008,7 +1008,7 @@ namespace LinqToDB.Data
 					}
 					else
 					{
-						valueMethodInfo = _readSingletAsyncMethodInfo;
+						valueMethodInfo = _readSingleAsyncMethodInfo;
 						elementType     = member.Type;
 					}
 

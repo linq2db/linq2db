@@ -100,6 +100,14 @@
 		<Polyfill>$(Polyfill)|M:System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd``1(`0,System.Func{`0,``0,`1},``0)</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.String.Contains(System.String,System.StringComparison)</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.Type.GetConstructor(System.Reflection.BindingFlags,System.Type[])</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.ToListAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.ToArrayAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.FirstOrDefaultAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.FirstOrDefaultAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},``0,System.Threading.CancellationToken)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.FirstAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.SingleOrDefaultAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.SingleOrDefaultAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},``0,System.Threading.CancellationToken)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.SingleAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
 		<!--wait till C# 14 migration-->
 		<!--<Polyfill>$(Polyfill)|M:M:System.Enum.GetNames``1</Polyfill>-->
 		<MeziantouPolyfill_IncludedPolyfills>$(Polyfill)</MeziantouPolyfill_IncludedPolyfills>
