@@ -38,11 +38,11 @@ CREATE TABLE LinqDataTypes
 	DateTimeValue2 Timestamp,
 	BoolValue      Bool,
 	GuidValue      UUID,
-	BinaryValue    String,
+	BinaryValue    Bytes,
 	SmallIntValue  Int16,
 	IntValue       Int32,
 	BigIntValue    Int64,
-	StringValue    Utf8,
+	StringValue    Text,
 	PRIMARY KEY (ID)
 );
 GO
@@ -50,7 +50,7 @@ CREATE TABLE InheritanceParent
 (
 	InheritanceParentId Int32 NOT NULL,
 	TypeDiscriminator   Int32,
-	Name                Utf8,
+	Name                Text,
 	PRIMARY KEY (InheritanceParentId)
 );
 GO
@@ -59,17 +59,17 @@ CREATE TABLE InheritanceChild
 	InheritanceChildId  Int32 NOT NULL,
 	InheritanceParentId Int32 NOT NULL,
 	TypeDiscriminator   Int32,
-	Name                Utf8,
+	Name                Text,
 	PRIMARY KEY (InheritanceChildId)
 );
 GO
 CREATE TABLE Person
 (
 	PersonID   SERIAL NOT NULL,
-	FirstName  Utf8 NOT NULL,
-	LastName   Utf8 NOT NULL,
-	MiddleName Utf8,
-	Gender     Utf8 NOT NULL,
+	FirstName  Text NOT NULL,
+	LastName   Text NOT NULL,
+	MiddleName Text,
+	Gender     Text NOT NULL,
 	PRIMARY KEY (PersonID)
 );
 GO
@@ -83,7 +83,7 @@ GO
 CREATE TABLE Doctor
 (
 	PersonID Int32 NOT NULL,
-	Taxonomy Utf8 NOT NULL,
+	Taxonomy Text NOT NULL,
 	PRIMARY KEY (PersonID)
 );
 GO
@@ -92,7 +92,7 @@ GO
 CREATE TABLE Patient
 (
 	PersonID  Int32 NOT NULL,
-	Diagnosis Utf8 NOT NULL,
+	Diagnosis Text NOT NULL,
 	PRIMARY KEY (PersonID)
 );
 GO
@@ -110,10 +110,10 @@ CREATE TABLE AllTypes
 	doubleDataType           Double,
 
 
-	ncharDataType            String,
-	char20DataType           String,
-	varcharDataType          String,
-	charDataType             String,
+	ncharDataType            Bytes,
+	char20DataType           Bytes,
+	varcharDataType          Bytes,
+	charDataType             Bytes,
 	bitDataType              Bool,
 
 	PRIMARY KEY (ID)
@@ -130,7 +130,7 @@ INSERT INTO AllTypes
 VALUES(1,
 		CAST(NULL AS Int32), CAST(NULL AS Int16),
 		CAST(NULL AS Float), CAST(NULL AS Double),
-		CAST(NULL AS String), CAST(NULL AS String), CAST(NULL AS String), CAST(NULL AS String));
+		CAST(NULL AS Bytes), CAST(NULL AS Bytes), CAST(NULL AS Bytes), CAST(NULL AS Bytes));
 GO
 INSERT INTO AllTypes
 (
@@ -147,8 +147,8 @@ GO
 CREATE TABLE CollatedTable
 (
 	Id              Int32 NOT NULL,
-	CaseSensitive   String,
-	CaseInsensitive String,
+	CaseSensitive   Bytes,
+	CaseInsensitive Bytes,
 	PRIMARY KEY (Id)
 );
 GO
@@ -163,20 +163,20 @@ CREATE TABLE TestMerge1
 
 	FieldInt64      Int64,
 	FieldBoolean    Bool,
-	FieldString     String,
-	FieldNString    String,
-	FieldChar       String,
-	FieldNChar      String,
+	FieldString     Bytes,
+	FieldNString    Bytes,
+	FieldChar       Bytes,
+	FieldNChar      Bytes,
 	FieldFloat      Float,
 	FieldDouble     Double,
 	FieldDateTime   Timestamp,
 	FieldDateTime2  Timestamp,
-	FieldBinary     String,
+	FieldBinary     Bytes,
 	FieldGuid       UUID,
 	FieldDecimal    Decimal(10, 0),
 	FieldDate       Date,
 	FieldTime       Int64,
-	FieldEnumString String,
+	FieldEnumString Bytes,
 	FieldEnumNumber Int32,
 	PRIMARY KEY (Id)
 );
@@ -193,20 +193,20 @@ CREATE TABLE TestMerge2
 
 	FieldInt64      Int64,
 	FieldBoolean    Bool,
-	FieldString     String,
-	FieldNString    String,
-	FieldChar       String,
-	FieldNChar      String,
+	FieldString     Bytes,
+	FieldNString    Bytes,
+	FieldChar       Bytes,
+	FieldNChar      Bytes,
 	FieldFloat      Float,
 	FieldDouble     Double,
 	FieldDateTime   Timestamp,
 	FieldDateTime2  Timestamp,
-	FieldBinary     String,
+	FieldBinary     Bytes,
 	FieldGuid       UUID,
 	FieldDecimal    Decimal(10, 0),
 	FieldDate       Date,
 	FieldTime       Int64,
-	FieldEnumString String,
+	FieldEnumString Bytes,
 	FieldEnumNumber Int32,
 	PRIMARY KEY (Id)
 );
