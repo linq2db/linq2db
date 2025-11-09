@@ -883,7 +883,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net80: true
           enable_fw_net90: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[ydb.all]')) }}:
+          ${{ if or(contains(parameters.db_filter, '[all_disabled]'), contains(parameters.db_filter, '[ydb.all]')) }}:
             enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[ydb.all]'))) }}:
+          ${{ if not(or(contains(parameters.db_filter, '[all_disabled]'), contains(parameters.db_filter, '[ydb.all]'))) }}:
             enabled: false
