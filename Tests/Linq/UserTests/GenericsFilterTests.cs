@@ -10,7 +10,7 @@ using NUnit.Framework;
 namespace Tests.UserTests
 {
 	[TestFixture]
-	public class GenericsFilterTests
+	public class GenericsFilterTests : TestBase
 	{
 		[Test]
 		public void WhenPredicateFactoryIsGeneric([IncludeDataSources(TestProvName.AllSQLite)] string context)
@@ -39,16 +39,14 @@ namespace Tests.UserTests
 
 		void CheckPredicate(Expression<Func<Firm, bool>> predicate, string context)
 		{
-			using (var db = new DataConnection(new DataOptions().UseConnectionString(context, context == ProviderName.SQLiteMS ? "Data Source=:memory:;" : "Data Source=:memory:;Version=3;New=True;")))
-			{
-				db.CreateTable<TypeA>();
-				db.CreateTable<TypeB>();
+			using var db = GetDataConnection(context);
+			using var t1 = db.CreateLocalTable<TypeA>();
+			using var t2 = db.CreateLocalTable<TypeB>();
 
-				var query = db.GetTable<TypeA>()
+			var query = db.GetTable<TypeA>()
 					.Select(a => new Firm { Id = a.Id, Value = db.GetTable<TypeB>().Select(b => b.Id).FirstOrDefault() });
 
-				query.Where(predicate).GetEnumerator();
-			}
+			query.Where(predicate).GetEnumerator();
 		}
 
 		interface IIdentifiable

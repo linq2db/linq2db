@@ -117,12 +117,6 @@ jobs:
             )
         )
 
-        REM copy sqlite.interop.dll runtime, missing from publish for NETFX
-        copy .build\bin\Tests\$(test_configuration)\$(netfx_tfm)\x86\SQLite.Interop.dll testing\$(netfx_tfm)\main\x86\x86\SQLite.Interop.dll
-        if %errorlevel% neq 0 exit
-        copy .build\bin\Tests\$(test_configuration)\$(netfx_tfm)\x64\SQLite.Interop.dll testing\$(netfx_tfm)\main\x64\x64\SQLite.Interop.dll
-        if %errorlevel% neq 0 exit
-
         FOR %%c IN (netfx net80 net90) DO (
             xcopy /i Build\$(test_configuration)\%%c testing\configs\%%c
             if %errorlevel% neq 0 exit
@@ -138,10 +132,38 @@ jobs:
 
   - task: PublishPipelineArtifact@1
     inputs:
-      path: '$(Build.SourcesDirectory)/testing'
-      artifact: $(artifact_test_binaries)
+      path: '$(Build.SourcesDirectory)/testing/configs'
+      artifact: $(artifact_test_configs)
     condition: and(succeeded(), ${{ parameters.with_tests }})
-    displayName: Publish Test Artifacts
+    displayName: Publish Test Configs
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/testing/scripts'
+      artifact: $(artifact_test_scripts)
+    condition: and(succeeded(), ${{ parameters.with_tests }})
+    displayName: Publish Test Scripts
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/testing/net462'
+      artifact: $(artifact_test_netfx_binaries)
+    condition: and(succeeded(), ${{ parameters.with_tests }})
+    displayName: Publish NETFX Test Binaries
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/testing/net8.0'
+      artifact: $(artifact_test_net80_binaries)
+    condition: and(succeeded(), ${{ parameters.with_tests }})
+    displayName: Publish NET 8.0 Test Binaries
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/testing/net9.0'
+      artifact: $(artifact_test_net90_binaries)
+    condition: and(succeeded(), ${{ parameters.with_tests }})
+    displayName: Publish NET 9.0 Test Binaries
 
 # we shouldn't care about CI cleanup in general, but it's about limited disk space we need for next tasks
   - task: CmdLine@2

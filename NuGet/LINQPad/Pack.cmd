@@ -20,7 +20,7 @@ REM For LP5 remove satellite folders and extra files
 if /i "%EXT%"=="lpx" (
   for %%L in (cs,de,es,fr,it,ja,ko,pl,pt,pt-BR,ru,tr,zh-Hans,zh-Hant) do (
     if exist "%OUTDIR%%%L" rd /s /q "%OUTDIR%%%L"
-  )
+)
   del /q "%OUTDIR%linq2db*.xml" 2>nul
   del /q "%OUTDIR%*.pdb"        2>nul
 )
@@ -58,5 +58,5 @@ pushd "%RELDIR%"
 ren "linq2db.LINQPad.%EXT%.zip" "linq2db.LINQPad.%EXT%"
 popd
 
-echo Packed -> "%RELDIR%\linq2db.LINQPad.%EXT%"
+echo "Packed -> %RELDIR%\linq2db.LINQPad.%EXT%"
 endlocal

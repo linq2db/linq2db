@@ -28,6 +28,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
+		public static ISqlExpression Expression(this ISqlExpressionFactory factory, DbDataType dataType, string expr, int precedence, params ISqlExpression[] parameters)
+		{
+			return factory.Expression(dataType, precedence, expr, null, parameters);
+		}
+
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression NotNullExpression(this ISqlExpressionFactory factory, DbDataType dataType, string expr, params ISqlExpression[] parameters)
 		{
 			return factory.NotNullExpression(dataType, Precedence.Primary, expr, parameters);
@@ -260,7 +266,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		public static ISqlExpression EnsureType(this ISqlExpressionFactory factory, ISqlExpression expression, DbDataType dbDataType)
 		{
 			var expressionType = factory.GetDbDataType(expression);
-			if (expressionType.Equals(dbDataType))
+			if (expressionType.EqualsDbOnly(dbDataType))
 				return expression;
 
 			return factory.Cast(expression, dbDataType);

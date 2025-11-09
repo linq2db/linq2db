@@ -16,7 +16,7 @@ namespace Tests.xUpdate
 		private const string FeatureDeleteOutputMultiple                = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{ProviderName.Ydb}";
 		private const string FeatureDeleteOutputSingleWithExpressions   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
 		private const string FeatureDeleteOutputSingle                  = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{ProviderName.Ydb}";
-		private const string FeatureDeleteOutputInto                    = $"{TestProvName.AllSqlServer}";
+		private const string FeatureDeleteOutputInto     = $"{TestProvName.AllSqlServer}";
 
 		[Table]
 		sealed class TableWithData

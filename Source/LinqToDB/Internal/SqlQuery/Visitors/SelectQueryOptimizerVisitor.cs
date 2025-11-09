@@ -33,6 +33,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		SelectQuery?     _applySelect;
 		SelectQuery?     _inSubquery;
 		bool             _isInRecursiveCte;
+		CteClause?       _currentCteClause;
 		SelectQuery?     _updateQuery;
 		ISqlTableSource? _updateTable;
 
@@ -138,6 +139,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_applySelect       = default!;
 			_version           = default;
 			_isInRecursiveCte  = false;
+			_currentCteClause  = null;
 			_updateQuery       = default;
 			_updateTable       = default;
 
@@ -1221,7 +1223,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (subQuery.DoNotRemove)
 				return false;
 
-			if (subQuery.From.Tables.Count == 0)
+			if (subQuery.From.Tables.Count == 0 && !subQuery.HasSetOperators)
 			{
 				// optimized in level up function
 				return false;
@@ -1560,7 +1562,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				else
 				{
-					if (!IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, column.Expression, ignoreWhere : false, inGrouping: !subQuery.GroupBy.IsEmpty))
+					if (!QueryHelper.HasCteClauseReference(subQuery, _currentCteClause) && !IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, column.Expression, ignoreWhere : false, inGrouping: !subQuery.GroupBy.IsEmpty))
 					{
 						// Column expression is complex and Column has more than one reference
 						return false;
@@ -2419,7 +2421,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					var join = table.Joins[joinIndex];
 					if (join.JoinType == JoinType.Inner && join.Condition.IsTrue())
 					{
-						if (_providerFlags.IsCrossJoinSupported && (table.Joins.Count > 0 || !QueryHelper.IsDependsOnSource(selectQuery.Where, join.Table.Source)))
+						if (_providerFlags.IsCrossJoinSupported
+							&& (table.Joins.Count > (_providerFlags.IsCrossJoinSyntaxRequired ? 0 : 1)
+								|| !QueryHelper.IsDependsOnSource(selectQuery.Where, join.Table.Source)))
 						{
 							join.JoinType = JoinType.Cross;
 							if (join.Table.Joins.Count > 0)
@@ -2865,16 +2869,19 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		protected override IQueryElement VisitCteClause(CteClause element)
 		{
 			var saveIsInRecursiveCte = _isInRecursiveCte;
+			var saveCurrentCteClause = _currentCteClause;
 			if (element.IsRecursive)
 				_isInRecursiveCte = true;
 
 			var saveParent = _parentSelect;
 			_parentSelect = null;
+			_currentCteClause = element;
 			
 			var newElement = base.VisitCteClause(element);
 
 			_parentSelect = saveParent;
 
+			_currentCteClause = saveCurrentCteClause;
 			_isInRecursiveCte = saveIsInRecursiveCte;
 
 			return newElement;

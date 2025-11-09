@@ -186,7 +186,7 @@ namespace LinqToDB.Internal.Expressions
 			else
 				result = $"{startStr}(S:{SelectQuery.SourceID})";
 
-			var sqlStr = $"{{{Sql}}}";
+			var sqlStr = $"{{{Sql.ToDebugString()}}}";
 			if (Sql.CanBeNullable(NullabilityContext.NonQuery) && Sql is not SqlColumn)
 				sqlStr += "?";
 			result += $": {sqlStr} ({pathStr})";

@@ -280,7 +280,7 @@ namespace LinqToDB.Internal.DataProvider
 			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType                                                 }, out expr) ||
 			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType                                                 }, out expr) ||
 			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType,                        DataTypeName = typeName }, out expr) ||
-				FindExpression(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
+			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
 			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
 			    FindExpression(new ReaderInfo { ToType = toType,                                   FieldType = fieldType, DataTypeName = typeName }, out expr) ||
 			    FindExpression(new ReaderInfo { ToType = toType,                                   FieldType = fieldType                          }, out expr) ||

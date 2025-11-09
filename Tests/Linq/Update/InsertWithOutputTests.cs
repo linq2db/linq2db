@@ -22,7 +22,7 @@ namespace Tests.xUpdate
 		private const string FeatureInsertOutputMultipleWithExpressions = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
 		private const string FeatureInsertOutputMultiple                = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{ProviderName.Ydb}";
 		private const string FeatureInsertOutputWithSchema              = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllSQLite},{ProviderName.Ydb}";
-		private const string FeatureInsertOutputInto                    = $"{TestProvName.AllSqlServer}";
+		private const string FeatureInsertOutputInto       = $"{TestProvName.AllSqlServer}";
 
 		[Table]
 		sealed class TableWithData

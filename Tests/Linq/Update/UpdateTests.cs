@@ -958,6 +958,30 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void UpdateSimilarNames([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
+			{
+				const int childId  = 10000;
+				const int parentId = 20000;
+
+				db.Parent.Insert(() => new Parent { ParentID = parentId, Value1 = parentId });
+				db.Child.Insert(() => new Child { ChildID = childId, ParentID = parentId });
+
+				// do not change names (!)
+				// SQLite fails between aliases [child] and [Child]
+				var parents =
+						from child in db.Parent
+						from parent in db.Child.InnerJoin(_ => _.ParentID == child.ParentID)
+						where child.Value1 == parentId
+						select parent;
+
+				Assert.That(parents.Set(x => x.ParentID, parentId).Update(), Is.EqualTo(1));
+			}
+		}
+
+		[Test]
 		public void AsUpdatableTest([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1403,96 +1427,74 @@ namespace Tests.xUpdate
 		public void UpdateByTableName([DataSources] string context)
 		{
 			const string? schemaName = null;
-			var tableName  = TestUtils.GetTableName(context, "32");
+			var tableName  = "xxPerson";
 
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<Person>(tableName, schemaName: schemaName);
+
+			using (Assert.EnterMultipleScope())
 			{
-				db.DropTable<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+				Assert.That(table.TableName, Is.EqualTo(tableName));
+				Assert.That(table.SchemaName, Is.EqualTo(schemaName));
 			}
 
-			using (var db = GetDataContext(context))
+			var person = new Person()
 			{
-				var table = db.CreateTable<Person>(tableName, schemaName: schemaName);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(table.TableName, Is.EqualTo(tableName));
-					Assert.That(table.SchemaName, Is.EqualTo(schemaName));
-				}
+				FirstName = "Steven",
+				LastName  = "King",
+				Gender    = Gender.Male,
+			};
 
-				var person = new Person()
-				{
-					FirstName = "Steven",
-					LastName  = "King",
-					Gender    = Gender.Male,
-				};
+			// insert a row into the table
+			db.Insert(person, tableName: tableName, schemaName: schemaName);
+			var newCount  = table.Count();
+			Assert.That(newCount, Is.EqualTo(1));
 
-				// insert a row into the table
-				db.Insert(person, tableName: tableName, schemaName: schemaName);
-				var newCount  = table.Count();
-				Assert.That(newCount, Is.EqualTo(1));
+			var personForUpdate = table.Single();
 
-				var personForUpdate = table.Single();
+			// update that row
+			personForUpdate.MiddleName = "None";
+			db.Update(personForUpdate, tableName: tableName, schemaName: schemaName);
 
-				// update that row
-				personForUpdate.MiddleName = "None";
-				db.Update(personForUpdate, tableName: tableName, schemaName: schemaName);
-
-				var updatedPerson = table.Single();
-				Assert.That(updatedPerson.MiddleName, Is.EqualTo("None"));
-
-				if (db is DataConnection dc && dc.OpenDbConnection() is FirebirdSql.Data.FirebirdClient.FbConnection)
-					db.Close();
-
-				table.Drop();
-			}
+			var updatedPerson = table.Single();
+			Assert.That(updatedPerson.MiddleName, Is.EqualTo("None"));
 		}
 
 		[Test]
 		public async Task UpdateByTableNameAsync([DataSources] string context)
 		{
 			const string? schemaName = null;
-			var tableName  = TestUtils.GetTableName(context, "33");
+			var tableName  = "xxPerson";
 
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<Person>(tableName, schemaName: schemaName);
+
+			using (Assert.EnterMultipleScope())
 			{
-				await db.DropTableAsync<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+				Assert.That(table.TableName, Is.EqualTo(tableName));
+				Assert.That(table.SchemaName, Is.EqualTo(schemaName));
 			}
 
-			using (var db = GetDataContext(context))
+			var person = new Person()
 			{
-				var table = await db.CreateTableAsync<Person>(tableName, schemaName: schemaName);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(table.TableName, Is.EqualTo(tableName));
-					Assert.That(table.SchemaName, Is.EqualTo(schemaName));
-				}
+				FirstName = "Steven",
+				LastName  = "King",
+				Gender    = Gender.Male,
+			};
 
-				var person = new Person()
-				{
-					FirstName = "Steven",
-					LastName  = "King",
-					Gender    = Gender.Male,
-				};
+			// insert a row into the table
+			await db.InsertAsync(person, tableName: tableName, schemaName: schemaName);
+			var newCount  = await table.CountAsync();
+			Assert.That(newCount, Is.EqualTo(1));
 
-				// insert a row into the table
-				await db.InsertAsync(person, tableName: tableName, schemaName: schemaName);
-				var newCount  = await table.CountAsync();
-				Assert.That(newCount, Is.EqualTo(1));
+			var personForUpdate = await table.SingleAsync();
 
-				var personForUpdate = await table.SingleAsync();
+			// update that row
+			personForUpdate.MiddleName = "None";
+			await db.UpdateAsync(personForUpdate, tableName: tableName, schemaName: schemaName);
 
-				// update that row
-				personForUpdate.MiddleName = "None";
-				await db.UpdateAsync(personForUpdate, tableName: tableName, schemaName: schemaName);
-
-				var updatedPerson = await table.SingleAsync();
-				Assert.That(updatedPerson.MiddleName, Is.EqualTo("None"));
-
-				//if (db is DataConnection { Connection: FirebirdSql.Data.FirebirdClient.FbConnection })
-					await db.CloseAsync();
-
-				await table.DropAsync();
-			}
+			var updatedPerson = await table.SingleAsync();
+			Assert.That(updatedPerson.MiddleName, Is.EqualTo("None"));
 		}
 
 		[Table("gt_s_one")]

@@ -39,6 +39,7 @@
     <File Path="MIT-LICENSE.txt" />
     <File Path="nuget.config" />
     <File Path="README.md" />
+    <File Path="SQLite.Runtime.props" />
     <File Path="Test.cmd" />
   </Folder>
   <Folder Name="/Build/">
@@ -185,6 +186,8 @@
     <File Path="Build/Azure/scripts/clickhouse.sh" />
     <File Path="Build/Azure/scripts/db2.provider.sh" />
     <File Path="Build/Azure/scripts/db2.sh" />
+    <File Path="Build/Azure/scripts/disable_tls11.cmd" />
+    <File Path="Build/Azure/scripts/enable_tls11.cmd" />
     <File Path="Build/Azure/scripts/firebird25.sh" />
     <File Path="Build/Azure/scripts/firebird3.sh" />
     <File Path="Build/Azure/scripts/firebird4.sh" />
@@ -237,6 +240,7 @@
     <File Path="Build/Azure/scripts/sqlserver.extras.cmd" />
     <File Path="Build/Azure/scripts/sqlserver.extras.sh" />
     <File Path="Build/Azure/scripts/sybase.sh" />
+    <File Path="Build/Azure/scripts/tls11_disable.reg" />
     <File Path="Build/Azure/scripts/tls11_enable.reg" />
     <File Path="Build/Azure/scripts/ydb.sh" />
   </Folder>
@@ -262,6 +266,7 @@
     <File Path="Data/Setup Scripts/oracle19.cmd" />
     <File Path="Data/Setup Scripts/oracle21.cmd" />
     <File Path="Data/Setup Scripts/oracle23.cmd" />
+    <File Path="Data/Setup Scripts/pgsql-createdb.cmd" />
     <File Path="Data/Setup Scripts/pgsql10.cmd" />
     <File Path="Data/Setup Scripts/pgsql11.cmd" />
     <File Path="Data/Setup Scripts/pgsql12.cmd" />
