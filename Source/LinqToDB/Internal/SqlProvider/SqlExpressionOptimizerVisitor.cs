@@ -1658,19 +1658,18 @@ namespace LinqToDB.Internal.SqlProvider
 
 		static bool Compare(int v1, int v2, SqlPredicate.Operator op)
 		{
-			switch (op)
+			return op switch
 			{
-				case SqlPredicate.Operator.Equal:          return v1 == v2;
-				case SqlPredicate.Operator.NotEqual:       return v1 != v2;
-				case SqlPredicate.Operator.Greater:        return v1 >  v2;
-				case SqlPredicate.Operator.NotLess:
-				case SqlPredicate.Operator.GreaterOrEqual: return v1 >= v2;
-				case SqlPredicate.Operator.Less:           return v1 <  v2;
-				case SqlPredicate.Operator.NotGreater:
-				case SqlPredicate.Operator.LessOrEqual:    return v1 <= v2;
-			}
-
-			throw new InvalidOperationException();
+				SqlPredicate.Operator.Equal          => v1 == v2,
+				SqlPredicate.Operator.NotEqual       => v1 != v2,
+				SqlPredicate.Operator.Greater        => v1 > v2,
+				SqlPredicate.Operator.NotLess or
+				SqlPredicate.Operator.GreaterOrEqual => v1 >= v2,
+				SqlPredicate.Operator.Less           => v1 < v2,
+				SqlPredicate.Operator.NotGreater or
+				SqlPredicate.Operator.LessOrEqual    => v1 <= v2,
+				_ => throw new InvalidOperationException(),
+			};
 		}
 
 		static bool Compare(object? value1, object? value2, SqlPredicate.Operator op, out bool result)

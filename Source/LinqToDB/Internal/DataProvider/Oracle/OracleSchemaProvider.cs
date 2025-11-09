@@ -527,40 +527,44 @@ WHERE SEQUENCE > 0 AND DATA_LEVEL = 0 AND OWNER = USER
 
 		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
-			switch (dataType)
+			return dataType switch
 			{
-				case "OBJECT"                 : return DataType.Variant;
-				case "BFILE"                  : return DataType.VarBinary;
-				case "BINARY_DOUBLE"          : return DataType.Double;
-				case "BINARY_FLOAT"           : return DataType.Single;
-				case "BINARY_INTEGER"         : return DataType.Int32;
-				case "BLOB"                   : return DataType.Blob;
-				case "CHAR"                   : return DataType.Char;
-				case "CLOB"                   : return DataType.Text;
-				case "DATE"                   : return DataType.DateTime;
-				case "FLOAT"                  : return DataType.Decimal;
-				case "LONG"                   : return DataType.Long;
-				case "LONG RAW"               : return DataType.LongRaw;
-				case "NCHAR"                  : return DataType.NChar;
-				case "NCLOB"                  : return DataType.NText;
-				case "NUMBER"                 : return DataType.Decimal;
-				case "NVARCHAR2"              : return DataType.NVarChar;
-				case "RAW"                    : return DataType.Binary;
-				case "VARCHAR2"               : return DataType.VarChar;
-				case "XMLTYPE"                : return DataType.Xml;
-				case "ROWID"                  : return DataType.VarChar;
-				case "REF CURSOR"             : return DataType.Cursor;
-				default:
-					if (dataType?.StartsWith("TIMESTAMP") == true)
-						return dataType.EndsWith("TIME ZONE") ? DataType.DateTimeOffset : DataType.DateTime2;
-					if (dataType?.StartsWith("INTERVAL DAY") == true)
-						return DataType.Time;
-					if (dataType?.StartsWith("INTERVAL YEAR") == true)
-						return DataType.Int64;
-					break;
-			}
+				"OBJECT"         => DataType.Variant,
+				"BFILE"          => DataType.VarBinary,
+				"BINARY_DOUBLE"  => DataType.Double,
+				"BINARY_FLOAT"   => DataType.Single,
+				"BINARY_INTEGER" => DataType.Int32,
+				"BLOB"           => DataType.Blob,
+				"CHAR"           => DataType.Char,
+				"CLOB"           => DataType.Text,
+				"DATE"           => DataType.DateTime,
+				"FLOAT"          => DataType.Decimal,
+				"LONG"           => DataType.Long,
+				"LONG RAW"       => DataType.LongRaw,
+				"NCHAR"          => DataType.NChar,
+				"NCLOB"          => DataType.NText,
+				"NUMBER"         => DataType.Decimal,
+				"NVARCHAR2"      => DataType.NVarChar,
+				"RAW"            => DataType.Binary,
+				"VARCHAR2"       => DataType.VarChar,
+				"XMLTYPE"        => DataType.Xml,
+				"ROWID"          => DataType.VarChar,
+				"REF CURSOR"     => DataType.Cursor,
 
-			return DataType.Undefined;
+			    { } txt when txt.StartsWith("TIMESTAMP") && dataType.EndsWith("TIME ZONE")
+				                 => DataType.DateTimeOffset,
+
+				{ } txt when txt.StartsWith("TIMESTAMP")
+				                 => DataType.DateTime2,
+
+				{ } txt when txt.StartsWith("INTERVAL DAY")
+				                 => DataType.Time,
+
+				{ } txt when txt.StartsWith("INTERVAL YEAR")
+				                 => DataType.Int64,
+
+				_                => DataType.Undefined,
+			};
 		}
 
 		protected override string GetProviderSpecificTypeNamespace()
@@ -570,31 +574,26 @@ WHERE SEQUENCE > 0 AND DATA_LEVEL = 0 AND OWNER = USER
 
 		protected override string? GetProviderSpecificType(string? dataType)
 		{
-			switch (dataType)
+			return dataType switch
 			{
-				case "BFILE"                          : return _provider.Adapter.OracleBFileType       .Name;
-				case "RAW"                            :
-				case "LONG RAW"                       : return _provider.Adapter.OracleBinaryType      .Name;
-				case "BLOB"                           : return _provider.Adapter.OracleBlobType        .Name;
-				case "CLOB"                           : return _provider.Adapter.OracleClobType        .Name;
-				case "DATE"                           : return _provider.Adapter.OracleDateType        .Name;
-				case "BINARY_DOUBLE"                  :
-				case "BINARY_FLOAT"                   :
-				case "NUMBER"                         : return _provider.Adapter.OracleDecimalType     .Name;
-				case "INTERVAL DAY TO SECOND"         : return _provider.Adapter.OracleIntervalDSType  .Name;
-				case "INTERVAL YEAR TO MONTH"         : return _provider.Adapter.OracleIntervalYMType  .Name;
-				case "NCHAR"                          :
-				case "LONG"                           :
-				case "ROWID"                          :
-				case "CHAR"                           : return _provider.Adapter.OracleStringType       .Name;
-				case "TIMESTAMP"                      : return _provider.Adapter.OracleTimeStampType    .Name;
-				case "TIMESTAMP WITH LOCAL TIME ZONE" : return _provider.Adapter.OracleTimeStampLTZType?.Name ?? _provider.Adapter.OracleTimeStampType.Name;
-				case "TIMESTAMP WITH TIME ZONE"       : return _provider.Adapter.OracleTimeStampTZType? .Name ?? _provider.Adapter.OracleTimeStampType.Name;
-				case "XMLTYPE"                        : return _provider.Adapter.OracleXmlTypeType      .Name;
-				case "REF CURSOR"                     : return _provider.Adapter.OracleRefCursorType    .Name;
-			}
-
-			return base.GetProviderSpecificType(dataType);
+				"BFILE"                          => _provider.Adapter.OracleBFileType.Name,
+				"RAW" or "LONG RAW"              => _provider.Adapter.OracleBinaryType.Name,
+				"BLOB"                           => _provider.Adapter.OracleBlobType.Name,
+				"CLOB"                           => _provider.Adapter.OracleClobType.Name,
+				"DATE"                           => _provider.Adapter.OracleDateType.Name,
+				"BINARY_DOUBLE"                  or
+				"BINARY_FLOAT"                   or
+				"NUMBER"                         => _provider.Adapter.OracleDecimalType.Name,
+				"INTERVAL DAY TO SECOND"         => _provider.Adapter.OracleIntervalDSType.Name,
+				"INTERVAL YEAR TO MONTH"         => _provider.Adapter.OracleIntervalYMType.Name,
+				"NCHAR" or "LONG" or "ROWID" or "CHAR" => _provider.Adapter.OracleStringType.Name,
+				"TIMESTAMP"                      => _provider.Adapter.OracleTimeStampType.Name,
+				"TIMESTAMP WITH LOCAL TIME ZONE" => _provider.Adapter.OracleTimeStampLTZType?.Name ?? _provider.Adapter.OracleTimeStampType.Name,
+				"TIMESTAMP WITH TIME ZONE"       => _provider.Adapter.OracleTimeStampTZType?.Name ?? _provider.Adapter.OracleTimeStampType.Name,
+				"XMLTYPE"                        => _provider.Adapter.OracleXmlTypeType.Name,
+				"REF CURSOR"                     => _provider.Adapter.OracleRefCursorType.Name,
+				_                                => base.GetProviderSpecificType(dataType),
+			};
 		}
 
 		protected override string BuildTableFunctionLoadTableSchemaCommand(ProcedureSchema procedure, string commandText)

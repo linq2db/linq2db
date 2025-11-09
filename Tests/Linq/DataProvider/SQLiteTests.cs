@@ -761,29 +761,21 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDbVersion([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			string expectedVersion;
-			switch (context)
+			var expectedVersion = context switch
 			{
-				case ProviderName.SQLiteClassic:
-				case TestProvName.SQLiteClassicMiniProfilerMapped:
-				case TestProvName.SQLiteClassicMiniProfilerUnmapped:
-					expectedVersion = "3.50.4";
-					break;
-				case ProviderName.SQLiteMS:
-					expectedVersion = "3.46.1";
-					break;
-				default:
-					throw new InvalidOperationException();
-			}
+				ProviderName.SQLiteClassic or TestProvName.SQLiteClassicMiniProfilerMapped or TestProvName.SQLiteClassicMiniProfilerUnmapped => "3.50.4",
+				ProviderName.SQLiteMS => "3.46.1",
 
-			using (var db = GetDataContext(context))
-			using (var rd = db.ExecuteReader("select sqlite_version()"))
-			{
-				rd.Reader!.Read();
-				var version = rd.Reader.GetString(0);
+				_ => throw new InvalidOperationException(),
+			};
 
-				Assert.That(version, Is.EqualTo(expectedVersion));
-			}
+			using var db = GetDataContext(context);
+			using var rd = db.ExecuteReader("select sqlite_version()");
+		
+			rd.Reader!.Read();
+			var version = rd.Reader.GetString(0);
+
+			Assert.That(version, Is.EqualTo(expectedVersion));
 		}
 
 		[Explicit("disabled till MDS migration to new runtimes nuget")]

@@ -133,14 +133,11 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func)
+			return func switch
 			{
-				case { Name: PseudoFunctions.LENGTH }:
-					return func.WithName("CHAR_LENGTH");
-
-				default:
-					return base.ConvertSqlFunction(func);
-			}
+				{ Name: PseudoFunctions.LENGTH } => func.WithName("CHAR_LENGTH"),
+				_ => base.ConvertSqlFunction(func),
+			};
 		}
 
 		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)

@@ -474,27 +474,25 @@ FROM RDB$FUNCTION_ARGUMENTS p
 
 		protected override string? GetProviderSpecificType(string? dataType)
 		{
-			switch (dataType?.ToLowerInvariant())
+			return (dataType?.ToLowerInvariant()) switch
 			{
-				case "decfloat"                : return _provider.Adapter.FbDecFloatType?.Name;
-				case "timestamp with time zone": return _provider.Adapter.FbZonedDateTimeType?.Name;
-				case "time with time zone"     : return _provider.Adapter.FbZonedTimeType?.Name;
-			}
-
-			return base.GetProviderSpecificType(dataType);
+				"decfloat"                 => _provider.Adapter.FbDecFloatType?.Name,
+				"timestamp with time zone" => _provider.Adapter.FbZonedDateTimeType?.Name,
+				"time with time zone"      => _provider.Adapter.FbZonedTimeType?.Name,
+				_                          => base.GetProviderSpecificType(dataType),
+			};
 		}
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
-			switch (dataType?.ToLowerInvariant())
+			return (dataType?.ToLowerInvariant()) switch
 			{
-				case "int128"                  : return typeof(BigInteger);
-				case "decfloat"                : return _provider.Adapter.FbDecFloatType;
-				case "timestamp with time zone": return _provider.Adapter.FbZonedDateTimeType;
-				case "time with time zone"     : return _provider.Adapter.FbZonedTimeType;
-			}
-
-			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
+				"int128"                   => typeof(BigInteger),
+				"decfloat"                 => _provider.Adapter.FbDecFloatType,
+				"timestamp with time zone" => _provider.Adapter.FbZonedDateTimeType,
+				"time with time zone"      => _provider.Adapter.FbZonedTimeType,
+				_                          => base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options),
+			};
 		}
 
 		protected override void LoadProcedureTableSchema(DataConnection dataConnection, GetSchemaOptions options, ProcedureSchema procedure, string commandText, List<TableSchema> tables)

@@ -355,39 +355,38 @@ WHERE
 
 		protected override string? GetProviderSpecificType(string? dataType)
 		{
-			switch (dataType)
+			return dataType switch
 			{
-				case "XML"                       : return _provider.Adapter.DB2XmlType         .Name;
-				case "DECFLOAT"                  : return _provider.Adapter.DB2DecimalFloatType.Name;
-				case "DBCLOB"                    :
-				case "CLOB"                      : return _provider.Adapter.DB2ClobType        .Name;
-				case "BLOB"                      : return _provider.Adapter.DB2BlobType        .Name;
-				case "BIGINT"                    : return _provider.Adapter.DB2Int64Type       .Name;
-				case "LONG VARCHAR FOR BIT DATA" :
-				case "VARCHAR () FOR BIT DATA"   :
-				case "VARBIN"                    :
-				case "BINARY"                    :
-				case "CHAR () FOR BIT DATA"      : return _provider.Adapter.DB2BinaryType      .Name;
-				case "LONG VARGRAPHIC"           :
-				case "VARGRAPHIC"                :
-				case "GRAPHIC"                   :
-				case "LONG VARCHAR"              :
-				case "CHARACTER"                 :
-				case "VARCHAR"                   :
-				case "CHAR"                      : return _provider.Adapter.DB2StringType      .Name;
-				case "DECIMAL"                   : return _provider.Adapter.DB2DecimalType     .Name;
-				case "INTEGER"                   : return _provider.Adapter.DB2Int32Type       .Name;
-				case "SMALLINT"                  : return _provider.Adapter.DB2Int16Type       .Name;
-				case "REAL"                      : return _provider.Adapter.DB2RealType        .Name;
-				case "DOUBLE"                    : return _provider.Adapter.DB2DoubleType      .Name;
-				case "DATE"                      : return _provider.Adapter.DB2DateType        .Name;
-				case "TIME"                      : return _provider.Adapter.DB2TimeType        .Name;
-				case "TIMESTMP"                  :
-				case "TIMESTAMP"                 : return _provider.Adapter.DB2TimeStampType   .Name;
-				case "ROWID"                     : return _provider.Adapter.DB2RowIdType       .Name;
-			}
-
-			return base.GetProviderSpecificType(dataType);
+				"XML"                       => _provider.Adapter.DB2XmlType         .Name,
+				"DECFLOAT"                  => _provider.Adapter.DB2DecimalFloatType.Name,
+				"DBCLOB"                    or
+				"CLOB"                      => _provider.Adapter.DB2ClobType        .Name,
+				"BLOB"                      => _provider.Adapter.DB2BlobType        .Name,
+				"BIGINT"                    => _provider.Adapter.DB2Int64Type       .Name,
+				"LONG VARCHAR FOR BIT DATA" or
+				"VARCHAR () FOR BIT DATA"   or
+				"VARBIN"                    or
+				"BINARY"                    or
+				"CHAR () FOR BIT DATA"      => _provider.Adapter.DB2BinaryType      .Name,
+				"LONG VARGRAPHIC"           or
+				"VARGRAPHIC"                or
+				"GRAPHIC"                   or
+				"LONG VARCHAR"              or
+				"CHARACTER"                 or
+				"VARCHAR"                   or
+				"CHAR"                      => _provider.Adapter.DB2StringType      .Name,
+				"DECIMAL"                   => _provider.Adapter.DB2DecimalType     .Name,
+				"INTEGER"                   => _provider.Adapter.DB2Int32Type       .Name,
+				"SMALLINT"                  => _provider.Adapter.DB2Int16Type       .Name,
+				"REAL"                      => _provider.Adapter.DB2RealType        .Name,
+				"DOUBLE"                    => _provider.Adapter.DB2DoubleType      .Name,
+				"DATE"                      => _provider.Adapter.DB2DateType        .Name,
+				"TIME"                      => _provider.Adapter.DB2TimeType        .Name,
+				"TIMESTMP"                  or
+				"TIMESTAMP"                 => _provider.Adapter.DB2TimeStampType   .Name,
+				"ROWID"                     => _provider.Adapter.DB2RowIdType       .Name,
+				_							=> base.GetProviderSpecificType(dataType),
+			};
 		}
 
 		protected override string GetDataSourceName(DataConnection dbConnection)

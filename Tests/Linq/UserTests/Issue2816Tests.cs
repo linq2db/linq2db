@@ -137,24 +137,22 @@ namespace Tests.UserTests
 
 		private static bool IsSupported(char character, string providerName)
 		{
-			switch (providerName)
+			return providerName switch
 			{
-				case string when providerName.IsAnyOf(TestProvName.AllAccess):
+				string when providerName.IsAnyOf(TestProvName.AllAccess) =>
 					// only 4 characters including space supported
-					return character == 0x20
-						|| character == 0x1680
-						|| character == 0x205F
-						|| character == 0x3000;
+					character is (char)0x20 or (char)0x1680 or (char)0x205F or (char)0x3000,
+
 #if AZURE
-				case ProviderName.InformixDB2:
+				ProviderName.InformixDB2 =>
 					// TODO: fix azure instance locale
 					// currently fails on test data insert with
 					// ERROR [IX000] [IBM][IDS/UNIX64] Code-set conversion function failed due to illegal sequence or invalid value.
-					return character <= 0xA0;
+					character <= 0xA0,
 #endif
-			}
 
-			return true;
+				_ => true,
+			};
 		}
 	}
 }

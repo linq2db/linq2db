@@ -181,36 +181,34 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					format = DATE_FORMAT;
 					break;
 				case DataType.DateTime2:
-					switch (dataType.Type.Precision)
+					format = dataType.Type.Precision switch
 					{
-						case 0   : format = TIMESTAMP0_FORMAT; break;
-						case 1   : format = TIMESTAMP1_FORMAT; break;
-						case 2   : format = TIMESTAMP2_FORMAT; break;
-						case 3   : format = TIMESTAMP3_FORMAT; break;
-						case 4   : format = TIMESTAMP4_FORMAT; break;
-						case 5   : format = TIMESTAMP5_FORMAT; break;
+						0    => TIMESTAMP0_FORMAT,
+						1    => TIMESTAMP1_FORMAT,
+						2    => TIMESTAMP2_FORMAT,
+						3    => TIMESTAMP3_FORMAT,
+						4    => TIMESTAMP4_FORMAT,
+						5    => TIMESTAMP5_FORMAT,
 						// .net types doesn't support more than 7 digits, so it doesn't make sense to generate 8/9
-						case >= 7: format = TIMESTAMP7_FORMAT; break;
-						default  : format = TIMESTAMP6_FORMAT; break;
-					}
-
+						>= 7 => TIMESTAMP7_FORMAT,
+						_    => TIMESTAMP6_FORMAT,
+					};
 					break;
 				case DataType.DateTimeOffset:
 					// just use UTC literal
 					value = value.ToUniversalTime();
-					switch (dataType.Type.Precision)
+					format = dataType.Type.Precision switch
 					{
-						case 0   : format = TIMESTAMPTZ0_FORMAT; break;
-						case 1   : format = TIMESTAMPTZ1_FORMAT; break;
-						case 2   : format = TIMESTAMPTZ2_FORMAT; break;
-						case 3   : format = TIMESTAMPTZ3_FORMAT; break;
-						case 4   : format = TIMESTAMPTZ4_FORMAT; break;
-						case 5   : format = TIMESTAMPTZ5_FORMAT; break;
+						0    => TIMESTAMPTZ0_FORMAT,
+						1    => TIMESTAMPTZ1_FORMAT,
+						2    => TIMESTAMPTZ2_FORMAT,
+						3    => TIMESTAMPTZ3_FORMAT,
+						4    => TIMESTAMPTZ4_FORMAT,
+						5    => TIMESTAMPTZ5_FORMAT,
 						// .net types doesn't support more than 7 digits, so it doesn't make sense to generate 8/9
-						case >= 7: format = TIMESTAMPTZ7_FORMAT; break;
-						default  : format = TIMESTAMPTZ6_FORMAT; break;
-					}
-
+						>= 7 => TIMESTAMPTZ7_FORMAT,
+						_    => TIMESTAMPTZ6_FORMAT,
+					};
 					break;
 				case DataType.DateTime:
 				default:

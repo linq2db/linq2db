@@ -254,25 +254,30 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		private static string GetTablePhysicalName(string physicalName, TableOptions tableOptions)
 		{
-			if (physicalName.StartsWith("#") || !tableOptions.IsTemporaryOptionSet())
+			if (physicalName.StartsWith("#"))
 				return physicalName;
 
-			switch (tableOptions & TableOptions.IsTemporaryOptionSet)
+			return tableOptions.TemporaryOptionValue switch
 			{
-				case TableOptions.IsTemporary                                                                              :
-				case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
-				case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
-				case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-				case                                                                     TableOptions.IsLocalTemporaryData :
-				case                            TableOptions.IsLocalTemporaryStructure                                     :
-				case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-					return $"#{physicalName}";
-				case TableOptions.IsGlobalTemporaryStructure                                                               :
-				case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData                          :
-					return $"##{physicalName}";
-				case var value :
-					throw new InvalidOperationException($"Incompatible table options '{value}'");
-			}
+				TableOptions.IsTemporary                                                                              or
+				TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData or
+				                                                                    TableOptions.IsLocalTemporaryData or
+				                           TableOptions.IsLocalTemporaryStructure                                     or
+				                           TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData =>
+					$"#{physicalName}",
+
+				TableOptions.IsGlobalTemporaryStructure                                                               or
+				TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData                          =>
+					$"##{physicalName}",
+
+				0 =>
+					physicalName,
+
+				var value =>
+					throw new InvalidOperationException($"Incompatible table options '{value}'"),
+			};
 		}
 
 		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)

@@ -479,26 +479,22 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		private static bool IsTemporaryTable(TableOptions tableOptions)
 		{
-			if (tableOptions.IsTemporaryOptionSet())
+			return tableOptions.TemporaryOptionValue switch
 			{
-				var tempOptions = tableOptions & TableOptions.IsTemporaryOptionSet;
+				0 => false,
 
-				switch (tempOptions)
-				{
-					case TableOptions.IsTemporary                                                                              :
-					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-					case                                                                     TableOptions.IsLocalTemporaryData :
-					case                            TableOptions.IsLocalTemporaryStructure                                     :
-					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-						return true;
-					default:
-						throw new InvalidOperationException($"Incompatible table options '{tempOptions}'");
-				}
-			}
+				TableOptions.IsTemporary                                                                              or
+				TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData or
+				                                                                    TableOptions.IsLocalTemporaryData or
+				                           TableOptions.IsLocalTemporaryStructure                                     or
+				                           TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData =>
+					true,
 
-			return false;
+				var value =>
+					throw new InvalidOperationException($"Incompatible table options '{value}'"),
+			};
 		}
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)

@@ -35,22 +35,6 @@ namespace Tests.Linq
 			public T       Data        = default!;
 		}
 
-		static Expression? Unwrap(this Expression? ex)
-		{
-			if (ex == null)
-				return null;
-
-			switch (ex.NodeType)
-			{
-				case ExpressionType.Quote          :
-				case ExpressionType.ConvertChecked :
-				case ExpressionType.Convert        :
-					return ((UnaryExpression)ex).Operand.Unwrap();
-			}
-
-			return ex;
-		}
-
 		static MethodInfo? FindMethodInfoInType(Type type, string methodName, int paramCount)
 		{
 			var method = type.GetRuntimeMethods()
@@ -140,7 +124,7 @@ namespace Tests.Linq
 				var currentType = rowNumberBody.Type;
 				var methodInfo = FindMethodInfo(currentType, methodName, 1).GetGenericMethodDefinition();
 
-				var arg = ((LambdaExpression)Unwrap(order.Item1)!).GetBody(entityParam);
+				var arg = ((LambdaExpression)order.Item1.Unwrap()).GetBody(entityParam);
 
 				rowNumberBody = Expression.Call(rowNumberBody, methodInfo.MakeGenericMethod(arg.Type), arg);
 			}

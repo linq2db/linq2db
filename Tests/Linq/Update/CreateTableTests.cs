@@ -81,40 +81,36 @@ namespace Tests.xUpdate
 						.HasLength(50)
 				.Build();
 
-			using (var db = GetDataContext(context, ms))
+			using var db = GetDataContext(context, ms);
+
+			const string tableName = "TestTable";
+
+			try
 			{
-				const string tableName = "TestTable";
-
-				try
-				{
-					switch (context)
-					{
-						case string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus) : db.DropTable<TestTable>("#" + tableName); break;
-						default                                                             : db.DropTable<TestTable>(tableName);       break;
-					}
-				}
-				catch
-				{
-				}
-
-				ITable<TestTable> table;
-
 				switch (context)
 				{
-					case string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus):
-						table = db.CreateTable<TestTable>("#" + tableName);
-						break;
-					case ProviderName.DB2                                 :
-						table = db.CreateTable<TestTable>(statementHeader :"DECLARE GLOBAL TEMPORARY TABLE SESSION.{0}");
-						break;
-					default                                               :
-						throw new InvalidOperationException();
+					case string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus) : db.DropTable<TestTable>("#" + tableName); break;
+					default                                                             : db.DropTable<TestTable>(tableName);       break;
 				}
-
-				var list = table.ToList();
-
-				table.Drop();
 			}
+			catch
+			{
+			}
+
+			var table = context switch
+			{
+				string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus) =>
+					db.CreateTable<TestTable>("#" + tableName),
+
+				ProviderName.DB2 =>
+					db.CreateTable<TestTable>(statementHeader: "DECLARE GLOBAL TEMPORARY TABLE SESSION.{0}"),
+
+				_ => throw new InvalidOperationException(),
+			};
+
+			var list = table.ToList();
+
+			table.Drop();
 		}
 
 		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/58", Configuration = ProviderName.ClickHouseOctonica)]
@@ -132,41 +128,36 @@ namespace Tests.xUpdate
 						.HasLength(50)
 				.Build();
 
-			using (var db = GetDataContext(context, ms))
+			using var db = GetDataContext(context, ms);
+
+			const string tableName = "TestTable";
+
+			try
 			{
-				const string tableName = "TestTable";
-
-				try
-				{
-					switch (context)
-					{
-						case string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus): await db.DropTableAsync<TestTable>("#" + tableName); break;
-						default                                                            : await db.DropTableAsync<TestTable>(tableName);       break;
-					}
-				}
-				catch
-				{
-				}
-
-				ITable<TestTable> table;
-
 				switch (context)
 				{
-					case string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus):
-						table = await db.CreateTableAsync<TestTable>("#" + tableName);
-						break;
-					case ProviderName.DB2                                           :
-						table = await db.CreateTableAsync<TestTable>(statementHeader:"DECLARE GLOBAL TEMPORARY TABLE SESSION.{0}");
-						break;
-					default                                                         :
-						table = await db.CreateTableAsync<TestTable>(tableName);
-						break;
+					case string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus): await db.DropTableAsync<TestTable>("#" + tableName); break;
+					default                                                            : await db.DropTableAsync<TestTable>(tableName);       break;
 				}
-
-				var list = await table.ToListAsync();
-
-				await table.DropAsync();
 			}
+			catch
+			{
+			}
+
+			var table = context switch
+			{
+				string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus) =>
+					await db.CreateTableAsync<TestTable>("#" + tableName),
+
+				ProviderName.DB2 =>
+					await db.CreateTableAsync<TestTable>(statementHeader: "DECLARE GLOBAL TEMPORARY TABLE SESSION.{0}"),
+
+				_ => await db.CreateTableAsync<TestTable>(tableName),
+			};
+
+			var list = await table.ToListAsync();
+
+			await table.DropAsync();
 		}
 
 		[Test]
@@ -179,40 +170,35 @@ namespace Tests.xUpdate
 						.HasLength(50)
 				.Build();
 
-			using (var db = GetDataContext(context, ms))
+			using var db = GetDataContext(context, ms);
+
+			const string tableName = "TestTable";
+
+			try
 			{
-				const string tableName = "TestTable";
-
-				try
-				{
-					switch (context)
-					{
-						case string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus): db.DropTable<TestTable>("#" + tableName); break;
-						default: db.DropTable<TestTable>(tableName); break;
-					}
-				}
-				catch
-				{
-				}
-
-				ITable<TestTable> table;
-
 				switch (context)
 				{
-					case string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus):
-						table = db.CreateTable<TestTable>(new CreateTableOptions(TableName: "#" + tableName));
-						break;
-					case ProviderName.DB2:
-						table = db.CreateTable<TestTable>(new CreateTableOptions(StatementHeader: "DECLARE GLOBAL TEMPORARY TABLE SESSION.{0}"));
-						break;
-					default:
-						throw new InvalidOperationException();
+					case string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus): db.DropTable<TestTable>("#" + tableName); break;
+					default: db.DropTable<TestTable>(tableName); break;
 				}
-
-				var list = table.ToList();
-
-				table.Drop();
 			}
+			catch
+			{
+			}
+
+			var table = context switch
+			{
+				string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus) =>
+					db.CreateTable<TestTable>(new CreateTableOptions(TableName: "#" + tableName)),
+
+				ProviderName.DB2 =>
+					db.CreateTable<TestTable>(new CreateTableOptions(StatementHeader: "DECLARE GLOBAL TEMPORARY TABLE SESSION.{0}")),
+
+				_ => throw new InvalidOperationException(),
+			};
+			var list = table.ToList();
+
+			table.Drop();
 		}
 
 		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/58", Configuration = ProviderName.ClickHouseOctonica)]
@@ -230,41 +216,36 @@ namespace Tests.xUpdate
 						.HasLength(50)
 				.Build();
 
-			using (var db = GetDataContext(context, ms))
+			using var db = GetDataContext(context, ms);
+
+			const string tableName = "TestTable";
+
+			try
 			{
-				const string tableName = "TestTable";
-
-				try
-				{
-					switch (context)
-					{
-						case string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus): await db.DropTableAsync<TestTable>("#" + tableName); break;
-						default: await db.DropTableAsync<TestTable>(tableName); break;
-					}
-				}
-				catch
-				{
-				}
-
-				ITable<TestTable> table;
-
 				switch (context)
 				{
-					case string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus):
-						table = await db.CreateTableAsync<TestTable>(new CreateTableOptions(TableName: "#" + tableName));
-						break;
-					case ProviderName.DB2:
-						table = await db.CreateTableAsync<TestTable>(new CreateTableOptions(StatementHeader: "DECLARE GLOBAL TEMPORARY TABLE SESSION.{0}"));
-						break;
-					default:
-						table = await db.CreateTableAsync<TestTable>(new CreateTableOptions(TableName: tableName));
-						break;
+					case string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus): await db.DropTableAsync<TestTable>("#" + tableName); break;
+					default: await db.DropTableAsync<TestTable>(tableName); break;
 				}
-
-				var list = await table.ToListAsync();
-
-				await table.DropAsync();
 			}
+			catch
+			{
+			}
+
+			var table = context switch
+			{
+				string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus) =>
+					await db.CreateTableAsync<TestTable>(new CreateTableOptions(TableName: "#" + tableName)),
+
+				ProviderName.DB2 =>
+					await db.CreateTableAsync<TestTable>(new CreateTableOptions(StatementHeader: "DECLARE GLOBAL TEMPORARY TABLE SESSION.{0}")),
+
+				_ => await db.CreateTableAsync<TestTable>(new CreateTableOptions(TableName: tableName)),
+			};
+
+			var list = await table.ToListAsync();
+
+			await table.DropAsync();
 		}
 
 		enum FieldType1

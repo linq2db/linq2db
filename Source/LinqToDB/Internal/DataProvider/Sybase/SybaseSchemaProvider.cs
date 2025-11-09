@@ -27,47 +27,46 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
-			switch (dataType)
+			return dataType switch
 			{
-				case "smallint"          : return DataType.Int16;
-				case "unsigned smallint" : return DataType.UInt16;
-				case "int"               : return DataType.Int32;
-				case "unsigned int"      : return DataType.UInt32;
-				case "real"              : return DataType.Single;
-				case "float"             : return DataType.Double;
-				case "money"             : return DataType.Money;
-				case "smallmoney"        : return DataType.SmallMoney;
-				case "bit"               : return DataType.Boolean;
-				case "tinyint"           : return DataType.SByte;
-				case "bigint"            : return DataType.Int64;
-				case "unsigned bigint"   : return DataType.UInt64;
-				case "timestamp"         : return DataType.Timestamp;
-				case "binary"            : return DataType.Binary;
-				case "image"             : return DataType.Image;
-				case "text"              : return DataType.Text;
-				case "unitext"           :
-				case "ntext"             : return DataType.NText;
-				case "decimal"           :
-				case "numeric"           : return DataType.Decimal;
-				case "time"              :
-				case "bigtime"           : return DataType.Time;
-				case "date"              : return DataType.Date;
-				case "datetime"          :
-				case "bigdatetime"       : return DataType.DateTime;
-				case "smalldatetime"     : return DataType.SmallDateTime;
-				case "sql_variant"       : return DataType.Variant;
-				case "xml"               : return DataType.Xml;
-				case "varchar"           : return DataType.VarChar;
-				case "char"              : return DataType.Char;
-				case "nchar"             :
-				case "unichar"           : return DataType.NChar;
-				case "nvarchar"          :
-				case "univarchar"        : return DataType.NVarChar;
-				case "varbinary"         : return DataType.VarBinary;
-				case "uniqueidentifier"  : return DataType.Guid;
-			}
-
-			return DataType.Undefined;
+				"smallint"          => DataType.Int16,
+				"unsigned smallint" => DataType.UInt16,
+				"int"               => DataType.Int32,
+				"unsigned int"      => DataType.UInt32,
+				"real"              => DataType.Single,
+				"float"             => DataType.Double,
+				"money"             => DataType.Money,
+				"smallmoney"        => DataType.SmallMoney,
+				"bit"               => DataType.Boolean,
+				"tinyint"           => DataType.SByte,
+				"bigint"            => DataType.Int64,
+				"unsigned bigint"   => DataType.UInt64,
+				"timestamp"         => DataType.Timestamp,
+				"binary"            => DataType.Binary,
+				"image"             => DataType.Image,
+				"text"              => DataType.Text,
+				"unitext"           or
+				"ntext"             => DataType.NText,
+				"decimal"           or
+				"numeric"           => DataType.Decimal,
+				"time"              or
+				"bigtime"           => DataType.Time,
+				"date"              => DataType.Date,
+				"datetime"          or
+				"bigdatetime"       => DataType.DateTime,
+				"smalldatetime"     => DataType.SmallDateTime,
+				"sql_variant"       => DataType.Variant,
+				"xml"               => DataType.Xml,
+				"varchar"           => DataType.VarChar,
+				"char"              => DataType.Char,
+				"nchar"             or
+				"unichar"           => DataType.NChar,
+				"nvarchar"          or
+				"univarchar"        => DataType.NVarChar,
+				"varbinary"         => DataType.VarBinary,
+				"uniqueidentifier"  => DataType.Guid,
+				_                   => DataType.Undefined,
+			};
 		}
 
 		protected override string? GetProviderSpecificTypeNamespace() => null;

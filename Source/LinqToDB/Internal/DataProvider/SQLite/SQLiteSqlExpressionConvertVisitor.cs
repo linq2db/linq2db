@@ -16,16 +16,20 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
-			switch (element.Operation)
+			return element.Operation switch
 			{
-				case "+": return element.SystemType == typeof(string)? new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence) : element;
-				case "^": // (a + b) - (a & b) * 2
-					return Sub(
-						Add(element.Expr1, element.Expr2, element.SystemType),
-						Mul(new SqlBinaryExpression(element.SystemType, element.Expr1, "&", element.Expr2), 2), element.SystemType);
-			}
+				"+" when element.SystemType == typeof(string) => new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
+				"+" => element,
 
-			return base.ConvertSqlBinaryExpression(element);
+				// (a + b) - (a & b) * 2
+				"^" => Sub(
+						Add(element.Expr1, element.Expr2, element.SystemType),
+						Mul(new SqlBinaryExpression(element.SystemType, element.Expr1, "&", element.Expr2), 2),
+						element.SystemType
+					),
+
+				_ => base.ConvertSqlBinaryExpression(element),
+			};
 		}
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)

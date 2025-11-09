@@ -317,13 +317,12 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			switch (statement)
+			return statement switch
 			{
-				case SqlTruncateTableStatement truncate:
-					return truncate.ResetIdentity && truncate.Table!.IdentityFields.Count > 0 ? 2 : 1;
-			}
+				SqlTruncateTableStatement truncate => truncate.ResetIdentity && truncate.Table!.IdentityFields.Count > 0 ? 2 : 1,
 
-			return base.CommandCount(statement);
+				_ => base.CommandCount(statement),
+			};
 		}
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
@@ -448,31 +447,25 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			string command;
+			var command = table.TableOptions.TemporaryOptionValue switch
+			{
+				TableOptions.IsTemporary                                                                                     or
+				TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData       or
+				TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure                                           or
+				TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       or
+																					 TableOptions.IsLocalTemporaryData       or
+																					 TableOptions.IsTransactionTemporaryData or
+										   TableOptions.IsGlobalTemporaryStructure                                           or
+										   TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       or
+										   TableOptions.IsGlobalTemporaryStructure | TableOptions.IsTransactionTemporaryData =>
+					"CREATE GLOBAL TEMPORARY TABLE ",
 
-			if (table.TableOptions.IsTemporaryOptionSet())
-			{
-				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-				{
-					case TableOptions.IsTemporary                                                                                     :
-					case TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData       :
-					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure                                           :
-					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
-					case                                                                      TableOptions.IsLocalTemporaryData       :
-					case                                                                      TableOptions.IsTransactionTemporaryData :
-					case                            TableOptions.IsGlobalTemporaryStructure                                           :
-					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
-					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsTransactionTemporaryData :
-						command = "CREATE GLOBAL TEMPORARY TABLE ";
-						break;
-					case var value :
-						throw new InvalidOperationException($"Incompatible table options '{value}'");
-				}
-			}
-			else
-			{
-				command = "CREATE TABLE ";
-			}
+				0 =>
+					"CREATE TABLE ",
+
+				var value =>
+					throw new InvalidOperationException($"Incompatible table options '{value}'"),
+			};
 
 			StringBuilder.Append(command);
 		}

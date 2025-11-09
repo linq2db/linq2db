@@ -243,29 +243,23 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			string command;
+			var command = table.TableOptions.TemporaryOptionValue switch
+			{
+				TableOptions.IsTemporary                                                                              or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryData                                          or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData or
+				TableOptions.IsLocalTemporaryData                                                                     or
+				TableOptions.IsLocalTemporaryStructure                                                                or
+				TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData                            =>
+					"CREATE TEMPORARY TABLE ",
 
-			if (table.TableOptions.IsTemporaryOptionSet())
-			{
-				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-				{
-					case TableOptions.IsTemporary                                                                             :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryData                                         :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                    :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData:
-					case TableOptions.IsLocalTemporaryData                                                                    :
-					case TableOptions.IsLocalTemporaryStructure                                                               :
-					case TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData                           :
-						command = "CREATE TEMPORARY TABLE ";
-						break;
-					case var value                                                                                            :
-						throw new LinqToDBException($"Incompatible table options '{value}'");
-				}
-			}
-			else
-			{
-				command = "CREATE TABLE ";
-			}
+				0 =>
+					"CREATE TABLE ",
+
+				var value =>
+					throw new LinqToDBException($"Incompatible table options '{value}'"),
+			};
 
 			StringBuilder.Append(command);
 

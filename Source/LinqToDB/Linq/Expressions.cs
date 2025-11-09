@@ -438,13 +438,7 @@ namespace LinqToDB.Linq
 
 			// Startup optimization.
 			//
-			switch (root)
-			{
-				case "LinqToDB" :
-				case "System"   :
-				case "Microsoft": return false;
-				default         : return true;
-			}
+			return root is not ("LinqToDB" or "System" or "Microsoft");
 		}
 
 		public static MemberHelper.MemberInfoWithType M<T>(Expression<Func<T,object?>> func)

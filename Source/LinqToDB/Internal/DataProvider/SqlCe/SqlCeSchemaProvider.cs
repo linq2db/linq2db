@@ -171,30 +171,29 @@ FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
 
 		protected override string? GetProviderSpecificType(string? dataType)
 		{
-			switch (dataType)
+			return dataType switch
 			{
-				case "varbinary"        :
-				case "rowversion"       :
-				case "image"            :
-				case "binary"           : return nameof(SqlBinary);
-				case "tinyint"          : return nameof(SqlByte);
-				case "datetime"         : return nameof(SqlDateTime);
-				case "bit"              : return nameof(SqlBoolean);
-				case "smallint"         : return nameof(SqlInt16);
-				case "numeric"          :
-				case "decimal"          : return nameof(SqlDecimal);
-				case "int"              : return nameof(SqlInt32);
-				case "real"             : return nameof(SqlSingle);
-				case "float"            : return nameof(SqlDouble);
-				case "money"            : return nameof(SqlMoney);
-				case "bigint"           : return nameof(SqlInt64);
-				case "nvarchar"         :
-				case "nchar"            :
-				case "ntext"            : return nameof(SqlString);
-				case "uniqueidentifier" : return nameof(SqlGuid);
-			}
-
-			return base.GetProviderSpecificType(dataType);
+				"varbinary"        or
+				"rowversion"       or
+				"image"            or
+				"binary"           => nameof(SqlBinary),
+				"tinyint"          => nameof(SqlByte),
+				"datetime"         => nameof(SqlDateTime),
+				"bit"              => nameof(SqlBoolean),
+				"smallint"         => nameof(SqlInt16),
+				"numeric"          or
+				"decimal"          => nameof(SqlDecimal),
+				"int"              => nameof(SqlInt32),
+				"real"             => nameof(SqlSingle),
+				"float"            => nameof(SqlDouble),
+				"money"            => nameof(SqlMoney),
+				"bigint"           => nameof(SqlInt64),
+				"nvarchar"         or
+				"nchar"            or
+				"ntext"            => nameof(SqlString),
+				"uniqueidentifier" => nameof(SqlGuid),
+				_                  => base.GetProviderSpecificType(dataType),
+			};
 		}
 	}
 }

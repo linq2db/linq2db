@@ -387,17 +387,15 @@ SELECT
 
 		protected override string? GetProviderSpecificType(string? dataType)
 		{
-			switch (dataType?.ToLowerInvariant())
+			return (dataType?.ToLowerInvariant()) switch
 			{
-				case "geometry"  : return _provider.Adapter.MySqlGeometryType.Name;
-				case "decimal"   : return _provider.Adapter.MySqlDecimalType?.Name;
-				case "date"      :
-				case "newdate"   :
-				case "datetime"  :
-				case "timestamp" : return _provider.Adapter.MySqlDateTimeType.Name;
-			}
+				"geometry" => _provider.Adapter.MySqlGeometryType.Name,
+				"decimal"  => _provider.Adapter.MySqlDecimalType?.Name,
 
-			return base.GetProviderSpecificType(dataType);
+				"date" or "newdate" or "datetime" or "timestamp" => _provider.Adapter.MySqlDateTimeType.Name,
+
+				_          => base.GetProviderSpecificType(dataType),
+			};
 		}
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)

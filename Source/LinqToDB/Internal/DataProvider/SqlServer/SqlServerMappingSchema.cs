@@ -304,38 +304,21 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		internal static void ConvertStringToSql(StringBuilder stringBuilder, DataType dataType, string value)
 		{
-			string? startPrefix;
-
-			switch (dataType)
+			var startPrefix = dataType switch
 			{
-				case DataType.Char    :
-				case DataType.VarChar :
-				case DataType.Text    :
-					startPrefix = null;
-					break;
-				default               :
-					startPrefix = "N";
-					break;
-			}
-
+				DataType.Char or DataType.VarChar or DataType.Text => null,
+				_                                                  => "N",
+			};
 			DataTools.ConvertStringToSql(stringBuilder, "+", startPrefix, AppendConversionAction, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, char value)
 		{
-			string start;
-
-			switch (sqlDataType.Type.DataType)
+			var start = sqlDataType.Type.DataType switch
 			{
-				case DataType.Char    :
-				case DataType.VarChar :
-				case DataType.Text    :
-					start = "'";
-					break;
-				default               :
-					start = "N'";
-					break;
-			}
+				DataType.Char or DataType.VarChar or DataType.Text => "'",
+				_                                                  => "N'",
+			};
 
 			DataTools.ConvertCharToSql(stringBuilder, start, AppendConversionAction, value);
 		}

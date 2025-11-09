@@ -53,140 +53,156 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 			if (ex != expr)
 				return ex;
 
-			switch (expr.NodeType)
+			return expr.NodeType switch
 			{
-				case ExpressionType.Add                  :
-				case ExpressionType.AddChecked           :
-				case ExpressionType.And                  :
-				case ExpressionType.AndAlso              :
-				case ExpressionType.ArrayIndex           :
-				case ExpressionType.Assign               :
-				case ExpressionType.Coalesce             :
-				case ExpressionType.Divide               :
-				case ExpressionType.Equal                :
-				case ExpressionType.ExclusiveOr          :
-				case ExpressionType.GreaterThan          :
-				case ExpressionType.GreaterThanOrEqual   :
-				case ExpressionType.LeftShift            :
-				case ExpressionType.LessThan             :
-				case ExpressionType.LessThanOrEqual      :
-				case ExpressionType.Modulo               :
-				case ExpressionType.Multiply             :
-				case ExpressionType.MultiplyChecked      :
-				case ExpressionType.NotEqual             :
-				case ExpressionType.Or                   :
-				case ExpressionType.OrElse               :
-				case ExpressionType.Power                :
-				case ExpressionType.RightShift           :
-				case ExpressionType.Subtract             :
-				case ExpressionType.SubtractChecked      :
-				case ExpressionType.AddAssign            :
-				case ExpressionType.AndAssign            :
-				case ExpressionType.DivideAssign         :
-				case ExpressionType.ExclusiveOrAssign    :
-				case ExpressionType.LeftShiftAssign      :
-				case ExpressionType.ModuloAssign         :
-				case ExpressionType.MultiplyAssign       :
-				case ExpressionType.OrAssign             :
-				case ExpressionType.PowerAssign          :
-				case ExpressionType.RightShiftAssign     :
-				case ExpressionType.SubtractAssign       :
-				case ExpressionType.AddAssignChecked     :
-				case ExpressionType.MultiplyAssignChecked:
-				case ExpressionType.SubtractAssignChecked: return TransformX    ((BinaryExpression          )expr);
-				case ExpressionType.ArrayLength          :
-				case ExpressionType.Convert              :
-				case ExpressionType.ConvertChecked       :
-				case ExpressionType.Negate               :
-				case ExpressionType.NegateChecked        :
-				case ExpressionType.Not                  :
-				case ExpressionType.Quote                :
-				case ExpressionType.TypeAs               :
-				case ExpressionType.UnaryPlus            :
-				case ExpressionType.Decrement            :
-				case ExpressionType.Increment            :
-				case ExpressionType.IsFalse              :
-				case ExpressionType.IsTrue               :
-				case ExpressionType.Throw                :
-				case ExpressionType.Unbox                :
-				case ExpressionType.PreIncrementAssign   :
-				case ExpressionType.PreDecrementAssign   :
-				case ExpressionType.PostIncrementAssign  :
-				case ExpressionType.PostDecrementAssign  :
-				case ExpressionType.OnesComplement       : return TransformX    ((UnaryExpression           )expr);
-				case ExpressionType.Call                 : return TransformX    ((MethodCallExpression      )expr);
-				case ExpressionType.Lambda               : return TransformX    ((LambdaExpression          )expr);
-				case ExpressionType.ListInit             : return TransformX    ((ListInitExpression        )expr);
-				case ExpressionType.MemberAccess         : return TransformX    ((MemberExpression          )expr);
-				case ExpressionType.MemberInit           : return TransformX    ((MemberInitExpression      )expr);
-				case ExpressionType.NewArrayBounds       : return TransformX    ((NewArrayExpression        )expr);
-				case ExpressionType.NewArrayInit         : return TransformXInit((NewArrayExpression        )expr);
-				case ChangeTypeExpression.ChangeTypeType : return TransformX    ((ChangeTypeExpression      )expr);
-				case ExpressionType.DebugInfo            :
-				case ExpressionType.Default              :
-				case ExpressionType.Constant             :
-				case ExpressionType.Parameter            : return expr;
-				case ExpressionType.Switch               : return TransformX    ((SwitchExpression          )expr);
-				case ExpressionType.Try                  : return TransformX    ((TryExpression             )expr);
-				case ExpressionType.Extension            : return TransformXE   (                            expr);
+				ExpressionType.Add or
+				ExpressionType.AddChecked or
+				ExpressionType.And or
+				ExpressionType.AndAlso or
+				ExpressionType.ArrayIndex or
+				ExpressionType.Assign or
+				ExpressionType.Coalesce or
+				ExpressionType.Divide or
+				ExpressionType.Equal or
+				ExpressionType.ExclusiveOr or
+				ExpressionType.GreaterThan or
+				ExpressionType.GreaterThanOrEqual or
+				ExpressionType.LeftShift or
+				ExpressionType.LessThan or
+				ExpressionType.LessThanOrEqual or
+				ExpressionType.Modulo or
+				ExpressionType.Multiply or
+				ExpressionType.MultiplyChecked or
+				ExpressionType.NotEqual or
+				ExpressionType.Or or
+				ExpressionType.OrElse or
+				ExpressionType.Power or
+				ExpressionType.RightShift or
+				ExpressionType.Subtract or
+				ExpressionType.SubtractChecked or
+				ExpressionType.AddAssign or
+				ExpressionType.AndAssign or
+				ExpressionType.DivideAssign or
+				ExpressionType.ExclusiveOrAssign or
+				ExpressionType.LeftShiftAssign or
+				ExpressionType.ModuloAssign or
+				ExpressionType.MultiplyAssign or
+				ExpressionType.OrAssign or
+				ExpressionType.PowerAssign or
+				ExpressionType.RightShiftAssign or
+				ExpressionType.SubtractAssign or
+				ExpressionType.AddAssignChecked or
+				ExpressionType.MultiplyAssignChecked or
+				ExpressionType.SubtractAssignChecked =>
+					TransformX((BinaryExpression)expr),
 
-				case ExpressionType.Dynamic:
-					return ((DynamicExpression)expr)
-						.Update(Transform(((DynamicExpression)expr).Arguments));
+				ExpressionType.ArrayLength or
+				ExpressionType.Convert or
+				ExpressionType.ConvertChecked or
+				ExpressionType.Negate or
+				ExpressionType.NegateChecked or
+				ExpressionType.Not or
+				ExpressionType.Quote or
+				ExpressionType.TypeAs or
+				ExpressionType.UnaryPlus or
+				ExpressionType.Decrement or
+				ExpressionType.Increment or
+				ExpressionType.IsFalse or
+				ExpressionType.IsTrue or
+				ExpressionType.Throw or
+				ExpressionType.Unbox or
+				ExpressionType.PreIncrementAssign or
+				ExpressionType.PreDecrementAssign or
+				ExpressionType.PostIncrementAssign or
+				ExpressionType.PostDecrementAssign or
+				ExpressionType.OnesComplement =>
+					TransformX((UnaryExpression)expr),
 
-				case ExpressionType.New:
-					return ((NewExpression)expr)
-						.Update(Transform(((NewExpression)expr).Arguments));
+				ExpressionType.DebugInfo or
+				ExpressionType.Default or
+				ExpressionType.Constant or
+				ExpressionType.Parameter =>
+					expr,
 
-				case ExpressionType.TypeEqual:
-				case ExpressionType.TypeIs   :
-					return ((TypeBinaryExpression)expr)
-						.Update(Transform(((TypeBinaryExpression)expr).Expression));
+				ExpressionType.Call                 => TransformX((MethodCallExpression)expr),
+				ExpressionType.Lambda               => TransformX((LambdaExpression)expr),
+				ExpressionType.ListInit             => TransformX((ListInitExpression)expr),
+				ExpressionType.MemberAccess         => TransformX((MemberExpression)expr),
+				ExpressionType.MemberInit           => TransformX((MemberInitExpression)expr),
+				ExpressionType.NewArrayBounds       => TransformX((NewArrayExpression)expr),
+				ExpressionType.NewArrayInit         => TransformXInit((NewArrayExpression)expr),
+				ChangeTypeExpression.ChangeTypeType => TransformX((ChangeTypeExpression)expr),
+				ExpressionType.Switch               => TransformX((SwitchExpression)expr),
+				ExpressionType.Try                  => TransformX((TryExpression)expr),
+				ExpressionType.Extension            => TransformXE(expr),
 
-				case ExpressionType.RuntimeVariables     :
-					return ((RuntimeVariablesExpression)expr)
-						.Update(Transform(((RuntimeVariablesExpression)expr).Variables));
+				ExpressionType.Dynamic =>
+					((DynamicExpression)expr)
+						.Update(Transform(((DynamicExpression)expr).Arguments)
+					),
 
-				case ExpressionType.Conditional:
-					return ((ConditionalExpression)expr).Update(
+				ExpressionType.New =>
+					((NewExpression)expr)
+						.Update(Transform(((NewExpression)expr).Arguments)
+					),
+
+				ExpressionType.TypeEqual or
+				ExpressionType.TypeIs =>
+					((TypeBinaryExpression)expr)
+						.Update(Transform(((TypeBinaryExpression)expr).Expression)
+					),
+
+				ExpressionType.RuntimeVariables =>
+					((RuntimeVariablesExpression)expr)
+						.Update(Transform(((RuntimeVariablesExpression)expr).Variables)
+					),
+
+				ExpressionType.Conditional =>
+					((ConditionalExpression)expr).Update(
 						Transform(((ConditionalExpression)expr).Test),
 						Transform(((ConditionalExpression)expr).IfTrue),
-						Transform(((ConditionalExpression)expr).IfFalse));
+						Transform(((ConditionalExpression)expr).IfFalse)
+					),
 
-				case ExpressionType.Invoke:
-					return ((InvocationExpression)expr).Update(
+				ExpressionType.Invoke =>
+					((InvocationExpression)expr).Update(
 						Transform(((InvocationExpression)expr).Expression),
-						Transform(((InvocationExpression)expr).Arguments));
+						Transform(((InvocationExpression)expr).Arguments)
+					),
 
-				case ExpressionType.Block:
-					return ((BlockExpression)expr).Update(
+				ExpressionType.Block =>
+					((BlockExpression)expr).Update(
 						Transform(((BlockExpression)expr).Variables),
-						Transform(((BlockExpression)expr).Expressions));
+						Transform(((BlockExpression)expr).Expressions)
+					),
 
-				case ExpressionType.Goto:
-					return ((GotoExpression)expr).Update(
+				ExpressionType.Goto =>
+					((GotoExpression)expr).Update(
 						((GotoExpression)expr).Target,
-						Transform(((GotoExpression)expr).Value));
+						Transform(((GotoExpression)expr).Value)
+					),
 
-				case ExpressionType.Index:
-					return ((IndexExpression)expr).Update(
+				ExpressionType.Index =>
+					((IndexExpression)expr).Update(
 						Transform(((IndexExpression)expr).Object!),
-						Transform(((IndexExpression)expr).Arguments));
+						Transform(((IndexExpression)expr).Arguments)
+					),
 
-				case ExpressionType.Label:
-					return ((LabelExpression)expr).Update(
+				ExpressionType.Label =>
+					((LabelExpression)expr).Update(
 						((LabelExpression)expr).Target,
-						Transform(((LabelExpression)expr).DefaultValue));
+						Transform(((LabelExpression)expr).DefaultValue)
+					),
 
-				case ExpressionType.Loop:
-					return ((LoopExpression)expr).Update(
+				ExpressionType.Loop =>
+					((LoopExpression)expr).Update(
 						((LoopExpression)expr).BreakLabel,
 						((LoopExpression)expr).ContinueLabel,
-						Transform(((LoopExpression)expr).Body));
+						Transform(((LoopExpression)expr).Body)
+					),
 
-				default:
-					throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}");
-			}
+				_ => throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}"),
+			};
 		}
 
 		// ReSharper disable once InconsistentNaming

@@ -69,7 +69,7 @@ namespace LinqToDB
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
 				var nulls = builder.GetValue<Sql.Nulls>("nulls");
-				var nullsStr = GetNullsStr(nulls, false);
+				var nullsStr = GetNullsStr(nulls, forceRespect: false);
 				if (!string.IsNullOrEmpty(nullsStr))
 					builder.AddFragment("modifier", nullsStr);
 			}
@@ -80,7 +80,7 @@ namespace LinqToDB
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
 				var nulls = builder.GetValue<Sql.Nulls>("nulls");
-				var nullsStr = GetNullsStr(nulls, true);
+				var nullsStr = GetNullsStr(nulls, forceRespect: true);
 				if (!string.IsNullOrEmpty(nullsStr))
 					builder.AddFragment("modifier", nullsStr);
 			}
@@ -88,35 +88,26 @@ namespace LinqToDB
 
 		static string GetNullsStr(Sql.Nulls nulls, bool forceRespect)
 		{
-			switch (nulls)
+			return nulls switch
 			{
-				case Sql.Nulls.None   :
-					return string.Empty;
-				case Sql.Nulls.Respect:
-					// RESPECT NULLS is default behavior for all supported databases except ClickHouse
-					return forceRespect ? "RESPECT NULLS" : string.Empty;
-				case Sql.Nulls.Ignore :
-					return "IGNORE NULLS";
-				default :
-					throw new InvalidOperationException($"Unexpected nulls: {nulls}");
-			}
+				Sql.Nulls.None                      => string.Empty,
+				// RESPECT NULLS is default behavior for all supported databases except ClickHouse
+				Sql.Nulls.Respect when forceRespect => "RESPECT NULLS",
+				Sql.Nulls.Respect                   => string.Empty,
+				Sql.Nulls.Ignore                    => "IGNORE NULLS",
+				_ => throw new InvalidOperationException($"Unexpected nulls: {nulls}"),
+			};
 		}
 
 		static string GetFromStr(Sql.From from)
 		{
-			switch (from)
+			return from switch
 			{
-				case Sql.From.None :
-					break;
-				case Sql.From.First :
-					return "FROM FIRST";
-				case Sql.From.Last :
-					return "FROM LAST";
-				default :
-					throw new InvalidOperationException($"Unexpected from: {from}");
-			}
-
-			return string.Empty;
+				Sql.From.None  => string.Empty,
+				Sql.From.First => "FROM FIRST",
+				Sql.From.Last  => "FROM LAST",
+				_ => throw new InvalidOperationException($"Unexpected from: {from}"),
+			};
 		}
 
 		sealed class ApplyFromAndNullsModifier : Sql.IExtensionCallBuilder
@@ -127,7 +118,7 @@ namespace LinqToDB
 				var from  = builder.GetValue<Sql.From>("from");
 
 				var fromStr  = GetFromStr(from);
-				var nullsStr = GetNullsStr(nulls, false);
+				var nullsStr = GetNullsStr(nulls, forceRespect: false);
 
 				if (!string.IsNullOrEmpty(fromStr))
 					builder.AddFragment("from", fromStr);

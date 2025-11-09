@@ -107,7 +107,7 @@ csharp_style_expression_bodied_accessors = true:warning
 # Suggest more modern language features when available
 csharp_style_pattern_matching_over_is_with_cast_check = true:warning
 csharp_style_pattern_matching_over_as_with_null_check = true:warning
-# csharp_style_prefer_switch_expression = true:warning                     # to enable see https://github.com/linq2db/linq2db/pull/4433
+csharp_style_prefer_switch_expression = true:warning
 # dotnet_style_prefer_compound_assignment = true:warning                   # to enable see https://github.com/linq2db/linq2db/pull/4433
 
 csharp_style_inlined_variable_declaration = true:suggestion
@@ -375,7 +375,6 @@ dotnet_diagnostic.IDE0059.severity = none # IDE0059: Remove unnecessary value as
 dotnet_diagnostic.IDE0060.severity = none # IDE0060: Remove unused parameter
 dotnet_diagnostic.IDE0061.severity = none # IDE0061: Use expression body for local functions
 dotnet_diagnostic.IDE0062.severity = none # IDE0062: Make local function static
-dotnet_diagnostic.IDE0066.severity = none # IDE0066: Convert switch statement to expression
 dotnet_diagnostic.IDE0070.severity = none # IDE0070: Use 'System.HashCode.Combine'
 dotnet_diagnostic.IDE0072.severity = none # IDE0072: Add missing cases
 dotnet_diagnostic.IDE0074.severity = none # IDE0074: Use compound assignment

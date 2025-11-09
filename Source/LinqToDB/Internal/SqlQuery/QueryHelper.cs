@@ -1397,18 +1397,16 @@ namespace LinqToDB.Internal.SqlQuery
 			if (sqlExpression == null)
 				return null;
 
-			switch (UnwrapNullablity(sqlExpression))
+			return UnwrapNullablity(sqlExpression) switch
 			{
-				case SelectQuery
+				SelectQuery
 				{
 					Select.Columns: [{ Expression: var expr }],
 					From.Tables: [],
 					HasSetOperators: false
-				}:
-					return SimplifyColumnExpression(expr);
+				} => SimplifyColumnExpression(expr),
 
-				default:
-					return sqlExpression;
+				_ => sqlExpression,
 			};
 		}
 

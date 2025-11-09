@@ -440,72 +440,73 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
-			switch (dataType)
+			return dataType switch
 			{
-				case "TINYINT"              :
-					return typeof(byte);
-				case "ST_GEOMETRY"          :
-				case "ST_GEOMETRYCOLLECTION":
-				case "ST_POINT"             :
-				case "ST_MULTIPOINT"        :
-				case "ST_LINESTRING"        :
-				case "ST_MULTILINESTRING"   :
-				case "ST_POLYGON"           :
-				case "ST_MULTIPOLYGON"      :
-				case "ST_CIRCULARSTRING"    :
-					return typeof(byte[]);
-			}
+				"TINYINT" => typeof(byte),
 
-			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
+				"ST_GEOMETRY" or
+				"ST_GEOMETRYCOLLECTION" or
+				"ST_POINT" or
+				"ST_MULTIPOINT" or
+				"ST_LINESTRING" or
+				"ST_MULTILINESTRING" or
+				"ST_POLYGON" or
+				"ST_MULTIPOLYGON" or
+				"ST_CIRCULARSTRING" =>
+					typeof(byte[]),
+
+				_ => base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options),
+			};
 		}
 
 		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
-			switch (dataType)
+			return dataType switch
 			{
-				case "BIGINT"       : return DataType.Int64;
-				case "SMALLINT"     : return DataType.Int16;
-				case "DECIMAL"      : return scale == null ? DataType.DecFloat : DataType.Decimal;
-				case "SMALLDECIMAL" : return DataType.SmallDecFloat;
-				case "INTEGER"      : return DataType.Int32;
-				case "TINYINT"      : return DataType.Byte;
-				case "DOUBLE"       : return DataType.Double;
-				case "REAL"         : return DataType.Single;
+				"BIGINT"       => DataType.Int64,
+				"SMALLINT"     => DataType.Int16,
+				"DECIMAL"      => scale == null ? DataType.DecFloat : DataType.Decimal,
+				"SMALLDECIMAL" => DataType.SmallDecFloat,
+				"INTEGER"      => DataType.Int32,
+				"TINYINT"      => DataType.Byte,
+				"DOUBLE"       => DataType.Double,
+				"REAL"         => DataType.Single,
 
-				case "DATE"         : return DataType.Date;
-				case "TIME"         : return DataType.Time;
-				case "SECONDDATE"   : return DataType.SmallDateTime;
-				case "TIMESTAMP"    : return DataType.Timestamp;
+				"DATE"         => DataType.Date,
+				"TIME"         => DataType.Time,
+				"SECONDDATE"   => DataType.SmallDateTime,
+				"TIMESTAMP"    => DataType.Timestamp,
 
-				case "CHAR"         : return DataType.Char;
-				case "VARCHAR"      : return DataType.VarChar;
-				case "TEXT"         : return DataType.Text;
-				case "NCHAR"        : return DataType.NChar;
-				case "ALPHANUM"     :
-				case "SHORTTEXT"    :
-				case "NVARCHAR"     : return DataType.NVarChar;
+				"CHAR"         => DataType.Char,
+				"VARCHAR"      => DataType.VarChar,
+				"TEXT"         => DataType.Text,
+				"NCHAR"        => DataType.NChar,
 
-				case "BINARY"       : return DataType.Binary;
-				case "VARBINARY"    : return DataType.VarBinary;
+				"ALPHANUM"     or
+				"SHORTTEXT"    or
+				"NVARCHAR"     => DataType.NVarChar,
 
-				case "BLOB"         : return DataType.Blob;
-				case "CLOB"         : return DataType.Text;
-				case "NCLOB"        :
-				case "BINTEXT"      : return DataType.NText;
-				case "REAL_VECTOR"  : return DataType.Array | DataType.Single;
+				"BINARY"       => DataType.Binary,
+				"VARBINARY"    => DataType.VarBinary,
 
-				case "ST_GEOMETRY"          :
-				case "ST_GEOMETRYCOLLECTION":
-				case "ST_POINT"             :
-				case "ST_MULTIPOINT"        :
-				case "ST_LINESTRING"        :
-				case "ST_MULTILINESTRING"   :
-				case "ST_POLYGON"           :
-				case "ST_MULTIPOLYGON"      :
-				case "ST_CIRCULARSTRING"    : return DataType.Udt;
-			}
+				"BLOB"         => DataType.Blob,
+				"CLOB"         => DataType.Text,
+				"NCLOB"        or
+				"BINTEXT"      => DataType.NText,
+				"REAL_VECTOR"  => DataType.Array | DataType.Single,
 
-			return DataType.Undefined;
+				"ST_GEOMETRY"          or
+				"ST_GEOMETRYCOLLECTION"or
+				"ST_POINT"             or
+				"ST_MULTIPOINT"        or
+				"ST_LINESTRING"        or
+				"ST_MULTILINESTRING"   or
+				"ST_POLYGON"           or
+				"ST_MULTIPOLYGON"      or
+				"ST_CIRCULARSTRING"    => DataType.Udt,
+
+				_ => DataType.Undefined,
+			};
 		}
 
 		protected override string? GetProviderSpecificTypeNamespace() => null;

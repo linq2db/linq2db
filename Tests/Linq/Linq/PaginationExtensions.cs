@@ -92,20 +92,20 @@ namespace Tests.Linq
 		#region Helpers
 
 		[return: NotNullIfNotNull(nameof(ex))]
-		static Expression? Unwrap(this Expression? ex)
+		public static Expression? Unwrap(this Expression? ex)
 		{
 			if (ex == null)
 				return null;
 
-			switch (ex.NodeType)
+			return ex.NodeType switch
 			{
-				case ExpressionType.Quote:
-				case ExpressionType.ConvertChecked:
-				case ExpressionType.Convert:
-					return ((UnaryExpression)ex).Operand.Unwrap();
-			}
+				ExpressionType.Quote or
+				ExpressionType.ConvertChecked or
+				ExpressionType.Convert =>
+					((UnaryExpression)ex).Operand.Unwrap(),
 
-			return ex;
+				_ => ex,
+			};
 		}
 
 		static MethodInfo? FindMethodInfoInType(Type type, string methodName, int paramCount)

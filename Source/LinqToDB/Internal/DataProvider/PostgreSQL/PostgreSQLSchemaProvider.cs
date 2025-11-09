@@ -378,62 +378,62 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				     ) columns;";
 
 			var result = dataConnection
-					.Query(rd =>
+				.Query(rd =>
+				{
+					// IMPORTANT: reader calls must be ordered to support SequentialAccess
+					var tableId    = rd.GetString(0);
+					var name       = rd.GetString(1);
+					var isNullable = rd.GetBoolean(2);
+					var ordinal    = rd.GetInt32(3);
+					var dataType   = rd.GetString(4);
+					// null - not array
+					// 0 - array with unknown dimensions (unknown for views)
+					// >0 - array with specified dimensions (known for tables)
+					var arrayDimensions = rd.IsDBNull(5) ? (int?)null : rd.GetInt32(5);
+					if (arrayDimensions != null)
 					{
-						// IMPORTANT: reader calls must be ordered to support SequentialAccess
-						var tableId    = rd.GetString(0);
-						var name       = rd.GetString(1);
-						var isNullable = rd.GetBoolean(2);
-						var ordinal    = rd.GetInt32(3);
-						var dataType   = rd.GetString(4);
-						// null - not array
-						// 0 - array with unknown dimensions (unknown for views)
-						// >0 - array with specified dimensions (known for tables)
-						var arrayDimensions = rd.IsDBNull(5) ? (int?)null : rd.GetInt32(5);
-						if (arrayDimensions != null)
+						if (arrayDimensions > 0)
 						{
-							if (arrayDimensions > 0)
+							// first brackets already there
+							--arrayDimensions;
+							while (arrayDimensions > 0)
 							{
-								// first brackets already there
-								--arrayDimensions;
-								while (arrayDimensions > 0)
-								{
-									dataType += "[]";
-									arrayDimensions--;
-								}
+								dataType += "[]";
+								arrayDimensions--;
 							}
 						}
+					}
 
-						int? length       = rd.IsDBNull(6) ? null : rd.GetInt32(6);
-						int? precision    = rd.IsDBNull(7) ? null : rd.GetInt32(7);
-						int? scale        = rd.IsDBNull(8) ? null : rd.GetInt32(8);
-						var isIdentity    = rd.GetBoolean(9);
-						var skipOnInsert  = rd.GetBoolean(10);
-						var skipOnUpdate  = rd.GetBoolean(11);
-						var description   = rd.IsDBNull(12) ? null : rd.GetString(12);
-						// currently mapped to string
-						var isCustomEnum  = rd.GetBoolean(13);
-						// not used currently
-						var isCustomRange = rd.GetBoolean(14);
+					int? length       = rd.IsDBNull(6) ? null : rd.GetInt32(6);
+					int? precision    = rd.IsDBNull(7) ? null : rd.GetInt32(7);
+					int? scale        = rd.IsDBNull(8) ? null : rd.GetInt32(8);
+					var isIdentity    = rd.GetBoolean(9);
+					var skipOnInsert  = rd.GetBoolean(10);
+					var skipOnUpdate  = rd.GetBoolean(11);
+					var description   = rd.IsDBNull(12) ? null : rd.GetString(12);
+					// currently mapped to string
+					var isCustomEnum  = rd.GetBoolean(13);
+					// not used currently
+					var isCustomRange = rd.GetBoolean(14);
 
-						return new ColumnInfo()
-						{
-							TableID      = tableId,
-							Name         = name,
-							IsNullable   = isNullable,
-							Ordinal      = ordinal,
-							DataType     = dataType,
-							Length       = length,
-							Precision    = precision,
-							Scale        = scale,
-							IsIdentity   = isIdentity,
-							SkipOnInsert = skipOnInsert,
-							SkipOnUpdate = skipOnUpdate,
-							Description  = description,
-							Type         = isCustomEnum ? DataType.Enum : null
-						};
-					}, sql)
-					.ToList();
+					return new ColumnInfo()
+					{
+						TableID      = tableId,
+						Name         = name,
+						IsNullable   = isNullable,
+						Ordinal      = ordinal,
+						DataType     = dataType,
+						Length       = length,
+						Precision    = precision,
+						Scale        = scale,
+						IsIdentity   = isIdentity,
+						SkipOnInsert = skipOnInsert,
+						SkipOnUpdate = skipOnUpdate,
+						Description  = description,
+						Type         = isCustomEnum ? DataType.Enum : null
+					};
+				}, sql)
+				.ToList();
 
 			return result;
 		}
@@ -526,68 +526,67 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 			if (dataType == null)
 				return DataType.Undefined;
-			dataType = SimplifyDataType(dataType);
-			switch (dataType)
-			{
-				case "bpchar"                      :
-				case "character"                   : return DataType.NChar;
-				case "text"                        : return DataType.Text;
-				case "int2"                        :
-				case "smallint"                    : return DataType.Int16;
-				case "oid"                         :
-				case "xid"                         :
-				case "int4"                        :
-				case "integer"                     : return DataType.Int32;
-				case "int8"                        :
-				case "bigint"                      : return DataType.Int64;
-				case "float4"                      :
-				case "real"                        : return DataType.Single;
-				case "float8"                      :
-				case "double precision"            : return DataType.Double;
-				case "bytea"                       : return DataType.Binary;
-				case "bool"                        :
-				case "boolean"                     : return DataType.Boolean;
-				case "numeric"                     : return DataType.Decimal;
-				case "money"                       : return DataType.Money;
-				case "uuid"                        : return DataType.Guid;
-				case "varchar"                     :
-				case "character varying"           : return DataType.NVarChar;
-				case "timestamptz"                 :
-				case "timestamp with time zone"    : return DataType.DateTimeOffset;
-				case "timestamp"                   :
-				case "timestamp without time zone" : return DataType.DateTime2;
-				case "timetz"                      :
-				case "time with time zone"         :
-				case "time"                        :
-				case "time without time zone"      : return DataType.Time;
-				case "interval"                    : return DataType.Interval;
-				case "date"                        : return DataType.Date;
-				case "xml"                         : return DataType.Xml;
-				case "point"                       :
-				case "lseg"                        :
-				case "box"                         :
-				case "circle"                      :
-				case "path"                        :
-				case "line"                        :
-				case "polygon"                     :
-				case "inet"                        :
-				case "cidr"                        :
-				case "macaddr"                     :
-				case "macaddr8"                    :
-				case "ARRAY"                       :
-				case "anyarray"                    :
-				case "anyelement"                  :
-				case "USER-DEFINED"                : return DataType.Udt;
-				case "bit"                         :
-				case "bit varying"                 :
-				case "varbit"                      : return DataType.BitArray;
-				case "hstore"                      : return DataType.Dictionary;
-				case "json"                        : return DataType.Json;
-				case "jsonb"                       : return DataType.BinaryJson;
-			}
 
-			return DataType.Undefined;
-		}
+			return SimplifyDataType(dataType) switch
+			{
+				"bpchar"                      or
+				"character"                   => DataType.NChar,
+				"text"                        => DataType.Text,
+				"int2"                        or
+				"smallint"                    => DataType.Int16,
+				"oid"                         or
+				"xid"                         or
+				"int4"                        or
+				"integer"                     => DataType.Int32,
+				"int8"                        or
+				"bigint"                      => DataType.Int64,
+				"float4"                      or
+				"real"                        => DataType.Single,
+				"float8"                      or
+				"double precision"            => DataType.Double,
+				"bytea"                       => DataType.Binary,
+				"bool"                        or
+				"boolean"                     => DataType.Boolean,
+				"numeric"                     => DataType.Decimal,
+				"money"                       => DataType.Money,
+				"uuid"                        => DataType.Guid,
+				"varchar"                     or
+				"character varying"           => DataType.NVarChar,
+				"timestamptz"                 or
+				"timestamp with time zone"    => DataType.DateTimeOffset,
+				"timestamp"                   or
+				"timestamp without time zone" => DataType.DateTime2,
+				"timetz"                      or
+				"time with time zone"         or
+				"time"                        or
+				"time without time zone"      => DataType.Time,
+				"interval"                    => DataType.Interval,
+				"date"                        => DataType.Date,
+				"xml"                         => DataType.Xml,
+				"point"                       or
+				"lseg"                        or
+				"box"                         or
+				"circle"                      or
+				"path"                        or
+				"line"                        or
+				"polygon"                     or
+				"inet"                        or
+				"cidr"                        or
+				"macaddr"                     or
+				"macaddr8"                    or
+				"ARRAY"                       or
+				"anyarray"                    or
+				"anyelement"                  or
+				"USER-DEFINED"                => DataType.Udt,
+				"bit"                         or
+				"bit varying"                 or
+				"varbit"                      => DataType.BitArray,
+				"hstore"                      => DataType.Dictionary,
+				"json"                        => DataType.Json,
+				"jsonb"                       => DataType.BinaryJson,
+				_                             => DataType.Undefined,
+			};
+			}
 
 		protected override string GetProviderSpecificTypeNamespace()
 		{
@@ -596,28 +595,27 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		protected override string? GetProviderSpecificType(string? dataType)
 		{
-			switch (dataType)
+			return dataType switch
 			{
-				case "timestamp"                   :
-				case "timestamptz"                 :
-				case "timestamp with time zone"    :
-				case "timestamp without time zone" : return _provider.Adapter.NpgsqlDateTimeType?.Name;
-				case "date"                        : return _provider.Adapter.NpgsqlDateType?    .Name;
-				case "interval"                    : return _provider.Adapter.NpgsqlIntervalType?.Name;
-				case "point"                       : return _provider.Adapter.NpgsqlPointType    .Name;
-				case "lseg"                        : return _provider.Adapter.NpgsqlLSegType     .Name;
-				case "box"                         : return _provider.Adapter.NpgsqlBoxType      .Name;
-				case "circle"                      : return _provider.Adapter.NpgsqlCircleType   .Name;
-				case "path"                        : return _provider.Adapter.NpgsqlPathType     .Name;
-				case "polygon"                     : return _provider.Adapter.NpgsqlPolygonType  .Name;
-				case "line"                        : return _provider.Adapter.NpgsqlLineType     .Name;
-				case "cidr"                        :
-				case "inet"                        : return _provider.Adapter.NpgsqlInetType     .Name;
-				case "cube"                        : return _provider.Adapter.NpgsqlCubeType?    .Name;
-				case "geometry"                    : return "PostgisGeometry";
-			}
-
-			return base.GetProviderSpecificType(dataType);
+				"timestamp"                   or
+				"timestamptz"                 or
+				"timestamp with time zone"    or
+				"timestamp without time zone" => _provider.Adapter.NpgsqlDateTimeType?.Name,
+				"date"                        => _provider.Adapter.NpgsqlDateType?    .Name,
+				"interval"                    => _provider.Adapter.NpgsqlIntervalType?.Name,
+				"point"                       => _provider.Adapter.NpgsqlPointType    .Name,
+				"lseg"                        => _provider.Adapter.NpgsqlLSegType     .Name,
+				"box"                         => _provider.Adapter.NpgsqlBoxType      .Name,
+				"circle"                      => _provider.Adapter.NpgsqlCircleType   .Name,
+				"path"                        => _provider.Adapter.NpgsqlPathType     .Name,
+				"polygon"                     => _provider.Adapter.NpgsqlPolygonType  .Name,
+				"line"                        => _provider.Adapter.NpgsqlLineType     .Name,
+				"cidr"                        or
+				"inet"                        => _provider.Adapter.NpgsqlInetType     .Name,
+				"cube"                        => _provider.Adapter.NpgsqlCubeType?    .Name,
+				"geometry"                    => "PostgisGeometry",
+				_                             => base.GetProviderSpecificType(dataType),
+			};
 		}
 
 		static Regex _matchArray = new (@"^(.*)(\[\]){1}$", RegexOptions.Compiled);
@@ -655,24 +653,26 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			}
 
 			// built-in (multi)ranges
-			switch (dataType)
+			return dataType switch
 			{
-				case "int4range": return _provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(int));
-				case "int8range": return _provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(long));
-				case "numrange" : return _provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(decimal));
-				case "daterange": return _provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateTime));
-				case "tsrange"  : return _provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateTime));
-				case "tstzrange": return _provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateTime));
+				"int4range"      => _provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(int)),
+				"int8range"      => _provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(long)),
+				"numrange"       => _provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(decimal)),
 
-				case "int4multirange": return typeof(List<>).MakeGenericType(_provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(int)));
-				case "int8multirange": return typeof(List<>).MakeGenericType(_provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(long)));
-				case "nummultirange" : return typeof(List<>).MakeGenericType(_provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(decimal)));
-				case "datemultirange": return typeof(List<>).MakeGenericType(_provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateTime)));
-				case "tsmultirange"  : return typeof(List<>).MakeGenericType(_provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateTime)));
-				case "tstzmultirange": return typeof(List<>).MakeGenericType(_provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateTime)));
-			}
+				"daterange"      or
+				"tsrange"        or
+				"tstzrange"      => _provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateTime)),
 
-			return foundType;
+				"int4multirange" => typeof(List<>).MakeGenericType(_provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(int))),
+				"int8multirange" => typeof(List<>).MakeGenericType(_provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(long))),
+				"nummultirange"  => typeof(List<>).MakeGenericType(_provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(decimal))),
+
+				"datemultirange" or
+				"tsmultirange"   or
+				"tstzmultirange" => typeof(List<>).MakeGenericType(_provider.Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateTime))),
+
+				_ => foundType,
+			};
 		}
 
 		protected override DataTypeInfo? GetDataType(string? typeName, DataType? dataType, GetSchemaOptions options)
