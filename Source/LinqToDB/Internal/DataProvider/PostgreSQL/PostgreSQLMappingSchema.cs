@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Linq;
 using System.Globalization;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Numerics;
 using System.Text;
@@ -63,6 +64,12 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 #if SUPPORTS_DATEONLY
 			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => BuildDate(sb, dt, (DateOnly)v));
+
+			// backward compat:
+			// npgsql 10 returns TimeOnly instead of DateTime as before
+			SetConvertExpression<TimeOnly, DateTime>(value => new DateTime(default, value), conversionType: ConversionType.FromDatabase);
+
+			AddScalarType(typeof(IPNetwork), new SqlDataType(new DbDataType(typeof(IPNetwork), DataType.Undefined, "cidr")));
 #endif
 
 			// npgsql doesn't support unsigned types except byte (and sbyte)

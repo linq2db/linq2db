@@ -2232,6 +2232,115 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Table]
+		sealed class VectorTable
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(Length = 5, CanBeNull = false)] public float[]  Vector         { get; set; } = default!;
+			[Column(Length = 6)]                    public float[]? VectorNullable { get; set; }
+		}
+
+		// TODO: embedd schema testing into type tests
+		[Test]
+		public void TestVectorSchema([IncludeDataSources(false, TestProvName.AllMySql8Plus)] string context)
+		{
+			const string procName = "VectorProc";
+
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<VectorTable>();
+
+			db.Execute($"DROP PROCEDURE IF EXISTS {procName}");
+			db.Execute($@"CREATE PROCEDURE {procName} (IN vin VECTOR(3), OUT vout VECTOR(3))
+BEGIN
+	SELECT vin INTO vout;
+	SELECT @vin FROM Person;
+END");
+
+			var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions()
+			{
+				LoadTable = t => t.Name == nameof(VectorTable),
+				LoadProcedure = p => p.ProcedureName == procName
+			});
+
+			db.Execute($"DROP PROCEDURE IF EXISTS {procName}");
+
+			var table = schema.Tables.FirstOrDefault(t => t.TableName == nameof(VectorTable));
+			var proc  = schema.Procedures.FirstOrDefault(t => t.ProcedureName == procName);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(table, Is.Not.Null);
+				Assert.That(proc, Is.Not.Null);
+			}
+
+			var vectorColumn  = table!.Columns.FirstOrDefault(c => c.ColumnName == nameof(VectorTable.Vector));
+			var vectorNColumn = table.Columns.FirstOrDefault(c => c.ColumnName == nameof(VectorTable.VectorNullable));
+
+			var input  = proc.Parameters.FirstOrDefault(p => p.ParameterName == "vin");
+			var output = proc.Parameters.FirstOrDefault(p => p.ParameterName == "vout");
+			var procColumn = proc.ResultTable?.Columns.FirstOrDefault(p => p.ColumnName == "@vin");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(vectorColumn, Is.Not.Null);
+				Assert.That(vectorNColumn, Is.Not.Null);
+
+				Assert.That(input, Is.Not.Null);
+				Assert.That(output, Is.Not.Null);
+				Assert.That(procColumn, Is.Not.Null);
+			}
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(vectorColumn!.SystemType, Is.EqualTo(typeof(float[])));
+				Assert.That(vectorNColumn!.SystemType, Is.EqualTo(typeof(float[])));
+
+				Assert.That(vectorColumn!.IsNullable, Is.False);
+				Assert.That(vectorNColumn!.IsNullable, Is.True);
+				
+				Assert.That(vectorColumn!.Length, Is.EqualTo(5));
+				Assert.That(vectorNColumn!.Length, Is.EqualTo(6));
+				
+				Assert.That(vectorColumn!.DataType, Is.EqualTo(DataType.Single | DataType.Array));
+				Assert.That(vectorNColumn!.DataType, Is.EqualTo(DataType.Single | DataType.Array));
+
+				Assert.That(input!.SystemType, Is.EqualTo(typeof(float[])));
+				Assert.That(output!.SystemType, Is.EqualTo(typeof(float[])));
+
+				Assert.That(input!.IsNullable, Is.True);
+				Assert.That(output!.IsNullable, Is.True);
+
+				Assert.That(input!.IsIn, Is.True);
+				Assert.That(input!.IsOut, Is.False);
+				Assert.That(input!.IsResult, Is.False);
+
+				Assert.That(output!.IsIn, Is.False);
+				Assert.That(output!.IsOut, Is.True);
+				Assert.That(output!.IsResult, Is.False);
+
+				Assert.That(input!.Size, Is.EqualTo(3));
+				Assert.That(output!.Size, Is.EqualTo(3));
+
+				Assert.That(input!.DataType, Is.EqualTo(DataType.Single | DataType.Array));
+				Assert.That(output!.DataType, Is.EqualTo(DataType.Single | DataType.Array));
+
+				Assert.That(procColumn!.IsNullable, Is.True);
+
+				// provider returns incorrect data
+				Assert.That(procColumn!.SystemType, Is.EqualTo(typeof(byte[])));
+				Assert.That(procColumn!.Length, Is.Null);
+				if (context.IsAnyOf(TestProvName.AllMariaDB))
+					Assert.That(procColumn!.DataType, Is.EqualTo(DataType.Blob));
+				else
+					Assert.That(procColumn!.DataType, Is.EqualTo(DataType.VarBinary));
+
+				//Assert.That(procColumn!.SystemType, Is.EqualTo(typeof(float[])));
+				//Assert.That(procColumn!.Length, Is.EqualTo(3));
+				//Assert.That(procColumn!.DataType, Is.EqualTo(DataType.Single | DataType.Array));
+			}
+		}
+
 		#region Issue 4439
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4439")]
 		public void Issue4439Test([IncludeDataSources(false, TestProvName.AllMySql)] string context)

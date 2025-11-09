@@ -93,6 +93,14 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (objPlaceholder == null)
 				return null;
 
+			var fromType = translationContext.ExpressionFactory.GetDbDataType(objPlaceholder.Sql);
+
+			// ToString called on custom type already mapped to text-based db type or string
+			if (fromType.IsTextType())
+			{
+				return objPlaceholder.WithType(typeof(string));
+			}
+
 			DbDataType toType;
 
 			if (translationContext.CurrentColumnDescriptor != null)

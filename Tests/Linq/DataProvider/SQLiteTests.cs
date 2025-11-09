@@ -757,6 +757,7 @@ namespace Tests.DataProvider
 		// test to make sure our tests work with expected version of sqlite
 		// should be updated when we bump dependency
 		// also test matrix document should be updated too in that case (Build/Azure/README.md)
+		[Explicit("disabled till MDS migration to new runtimes nuget")]
 		[Test]
 		public void TestDbVersion([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -766,7 +767,7 @@ namespace Tests.DataProvider
 				case ProviderName.SQLiteClassic:
 				case TestProvName.SQLiteClassicMiniProfilerMapped:
 				case TestProvName.SQLiteClassicMiniProfilerUnmapped:
-					expectedVersion = "3.46.1";
+					expectedVersion = "3.50.4";
 					break;
 				case ProviderName.SQLiteMS:
 					expectedVersion = "3.46.1";
@@ -783,6 +784,14 @@ namespace Tests.DataProvider
 
 				Assert.That(version, Is.EqualTo(expectedVersion));
 			}
+		}
+
+		[Explicit("disabled till MDS migration to new runtimes nuget")]
+		[Test]
+		public void TestDbVersion2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			// second copy of test to ensure that with TestsInitialization runtime resolve code loads right module
+			TestDbVersion(context);
 		}
 
 		[ActiveIssue]

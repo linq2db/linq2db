@@ -9,7 +9,7 @@ namespace LinqToDB
 	/// <typeparam name="TEntity">The entity type.</typeparam>
 	/// <typeparam name="TProperty">The property type.</typeparam>
 	// ReSharper disable once UnusedTypeParameter
-	public interface ILoadWithQueryable<out TEntity, out TProperty> : IQueryable<TEntity>, IAsyncEnumerable<TEntity>
+	public interface ILoadWithQueryable<out TEntity, out TProperty> : IQueryable<TEntity>
 	{
 	}
 }

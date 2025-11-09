@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Interceptors;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Infrastructure;
@@ -172,7 +173,7 @@ namespace LinqToDB.Remote
 		{
 			string? result = null;
 
-			if (scalar is not (null or DBNull))
+			if (!scalar.IsNullValue())
 			{
 				var lsr = new LinqServiceResult
 				{

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+	<!--
+	System.Data.Sqlite runtimes deployment script.
+	
+	Why:
+	- S.D.S v2 introduced new separate package for sqlite runtime for many architectures and those runtimes
+	  now partially conflict by path with runtimes from Microsoft.Data.SQLite
+	  and which is more important: confuse DllImport with which runtime module to use
+	- MSBUILD scripts from nuget doesn't work nice with non-platform specific projects
+	
+	When:
+	- with .NET 11 Microsoft provider will migrate to same runtimes package and we will be able to remove this script and workarounds
+	
+	What:
+	To workaround those issues we do following:
+	
+	- to disable bad build scripts we override bad CheckForAnyCPU target from package
+	- to solve path conflicts we:
+	  1. copy S.D.S runtimes to custom folder instead of runtimes
+	  2. in startup code (for tests and linqpad) we override runtimes folder, configured by PreLoadSQLite_BaseDirectory env variable
+	  so MDS will use default load logic and SDS will load runtimes by custom path
+	-->
+
+	<!--override (disable) build scripts from SourceGear.sqlite3-->
+	<Target Name="CheckForAnyCPU" BeforeTargets="BeforeBuild" Condition="$(TargetFramework) == 'net472'" />
+
+	<PropertyGroup>
+		<SystemDataSqliteRuntimeFolder>sds/runtimes</SystemDataSqliteRuntimeFolder>
+	</PropertyGroup>
+
+	<Target Name="CopySQLiteRuntimes" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' != 'net462'">
+		<ItemGroup>
+			<SQLiteRuntimes Include="$(PkgSourceGear_sqlite3)\runtimes\**\*" />
+		</ItemGroup>
+		<Copy SourceFiles="@(SQLiteRuntimes)" DestinationFolder="$(TargetDir)\$(SystemDataSqliteRuntimeFolder)\%(RecursiveDir)" />
+	</Target>
+
+	<!--for netfx copy only supported runtimes-->
+	<Target Name="CopySQLiteRuntimes2" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' == 'net462'">
+		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-x86\native\e_sqlite3.dll"   DestinationFiles="$(TargetDir)\$(SystemDataSqliteRuntimeFolder)\win-x86\native\e_sqlite3.dll" />
+		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-x64\native\e_sqlite3.dll"   DestinationFiles="$(TargetDir)\$(SystemDataSqliteRuntimeFolder)\win-x64\native\e_sqlite3.dll" />
+		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-arm64\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\$(SystemDataSqliteRuntimeFolder)\win-arm64\native\e_sqlite3.dll" />
+	</Target>
+
+</Project>

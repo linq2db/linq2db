@@ -70,6 +70,14 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			if (Adapter.SupportsBigInteger)
 				SetProviderField<DbDataReader, BigInteger, decimal>((rd, idx) => rd.GetFieldValue<BigInteger>(idx));
 
+#if SUPPORTS_DATEONLY
+			SetProviderField<DbDataReader, TimeSpan, TimeOnly>((rd, idx) => rd.GetFieldValue<TimeSpan>(idx));
+
+			var rangeDateTime = Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateTime));
+			var rangeDateOnly = Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateOnly));
+			SetGetFieldValueReader(rangeDateTime, rangeDateOnly, Adapter.DataReaderType);
+#endif
+
 			_sqlOptimizer = new PostgreSQLSqlOptimizer(SqlProviderFlags);
 
 			ConfigureTypes();

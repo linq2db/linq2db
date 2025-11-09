@@ -505,9 +505,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			if (table.SqlQueryExtensions is not null)
 			{
 				BuildTableExtensions(StringBuilder, table, alias, null, ", ", null,
-					ext =>
-						ext.Scope is Sql.QueryExtensionScope.TableHint or Sql.QueryExtensionScope.TablesInScopeHint &&
-						!(ext.Arguments.TryGetValue("hint", out var hint) && hint is SqlValue(ClickHouseHints.Table.Final)));
+					ext => ext.Scope is Sql.QueryExtensionScope.TableHint or Sql.QueryExtensionScope.TablesInScopeHint);
 			}
 		}
 
@@ -561,54 +559,6 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		{
 			if (statement.SqlQueryExtensions is not null)
 				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, Environment.NewLine, null, Sql.QueryExtensionScope.QueryHint);
-		}
-
-		HashSet<SqlQueryExtension>? _finalHints;
-
-		protected override void BuildFromExtensions(SelectQuery selectQuery)
-		{
-			var hasFinal =
-				selectQuery.SqlQueryExtensions?.Any(HasFinal) == true ||
-				selectQuery.From.Tables.Any(t => t.Source switch
-				{
-					SqlTable                   s  => s.SqlQueryExtensions?.Any(HasFinal) == true,
-					SelectQuery                s  => s.SqlQueryExtensions?.Any(HasFinal) == true,
-					SqlTableSource(SelectQuery s) => s.SqlQueryExtensions?.Any(HasFinal) == true,
-					_ => false
-				});
-
-			bool HasFinal(SqlQueryExtension ext)
-			{
-				var has =
-					ext.Scope is Sql.QueryExtensionScope.TableHint or Sql.QueryExtensionScope.TablesInScopeHint or Sql.QueryExtensionScope.SubQueryHint &&
-					ext.Arguments.TryGetValue("hint", out var hint) && hint is SqlValue(ClickHouseHints.Table.Final);
-
-				if (!has)
-					return false;
-
-				if (_finalHints == null)
-					_finalHints = new();
-				else if (_finalHints.Contains(ext))
-					return false;
-
-				_finalHints.Add(ext);
-
-				return true;
-			}
-
-			if (hasFinal)
-			{
-				StringBuilder
-					.Append(' ')
-					.Append(ClickHouseHints.Table.Final)
-					;
-			}
-		}
-
-		protected override void MergeSqlBuilderData(BasicSqlBuilder sqlBuilder)
-		{
-			if (sqlBuilder is ClickHouseSqlBuilder { _finalHints: {} fh } )
-				(_finalHints ??= new()).AddRange(fh);
 		}
 
 		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)

@@ -7,7 +7,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\Source\LinqToDB.Compat\LinqToDB.Compat.csproj" />
 
-		<PackageReference Include="System.Data.SQLite.Core" />
+		<PackageReference Include="System.Data.SQLite" />
 		<PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" />
 	</ItemGroup>
 </Project>

@@ -85,8 +85,7 @@ namespace LinqToDB.Internal.Remote
 				if (withType)
 					Append(type);
 
-				// TODO: should we preserve DBNull is AST?
-				if (value == null || value is DBNull)
+				if (value.IsNullValue())
 					Append((string?)null);
 				else if (!type.IsArray)
 				{

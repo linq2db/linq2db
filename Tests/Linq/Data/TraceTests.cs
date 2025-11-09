@@ -1,4 +1,6 @@
-﻿using System;
+﻿extern alias MySqlData;
+
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -8,6 +10,8 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Data;
+
+using MySqlData::MySql.Data.MySqlClient;
 
 using NUnit.Framework;
 
@@ -68,7 +72,9 @@ namespace Tests.Data
 
 				Assert.That(
 					() => db.GetTable<Child>().ToList(),
-					Throws.TypeOf<ArgumentException>().Or.TypeOf<InvalidOperationException>());
+					Throws.TypeOf<ArgumentException>()
+						.Or.TypeOf<InvalidOperationException>()
+						.Or.TypeOf<MySqlException>());
 				using (Assert.EnterMultipleScope())
 				{
 					// steps called once
@@ -101,7 +107,10 @@ namespace Tests.Data
 
 				Assert.That(
 					() => db.GetTable<Child>().ToListAsync(),
-					Throws.TypeOf<ArgumentException>().Or.TypeOf<InvalidOperationException>());
+					Throws.TypeOf<ArgumentException>()
+						.Or.TypeOf<InvalidOperationException>()
+						.Or.TypeOf<MySqlException>());
+
 				using (Assert.EnterMultipleScope())
 				{
 					// steps called once

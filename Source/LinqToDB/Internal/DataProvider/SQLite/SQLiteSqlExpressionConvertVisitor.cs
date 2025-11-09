@@ -28,22 +28,6 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			return base.ConvertSqlBinaryExpression(element);
 		}
 
-		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
-		{
-			switch (func)
-			{
-				case {
-					Name: "Space",
-					Parameters: [var p0],
-					Type: var type,
-				}:
-					return new SqlFunction(type, "PadR", new SqlValue(" "), p0);
-
-				default:
-					return base.ConvertSqlFunction(func);
-			};
-		}
-
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
 			var like = ConvertSearchStringPredicateViaLike(predicate);
@@ -209,6 +193,9 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 				{
 					if (IsDateDataType(dbDataType, "Date"))
 						return new SqlFunction(dbDataType, "Date", expression) { DoNotOptimize = true };
+
+					if (expression is SqlFunction { Parameters: [SqlValue { Value: "%Y-%m-%d %H:%M:%f" }, var expr] })
+						expression = expr;
 
 					return new SqlFunction(dbDataType, "strftime", ParametersNullabilityType.SameAsSecondParameter, new SqlValue("%Y-%m-%d %H:%M:%f"), expression) { DoNotOptimize = true };
 				}

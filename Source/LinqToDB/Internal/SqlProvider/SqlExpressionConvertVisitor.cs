@@ -1525,7 +1525,7 @@ namespace LinqToDB.Internal.SqlProvider
 				var newLength = maxLength != null && maxLength >= 0 ? Math.Min(toDataType.Length ?? 0, maxLength.Value) : fromDbType.Length;
 
 				var newDataType = toDataType.WithLength(newLength);
-				if (!newDataType.Equals(toDataType))
+				if (!newDataType.EqualsDbOnly(toDataType))
 				{
 					return new SqlCastExpression(cast.Expression, newDataType, cast.FromType);
 				}

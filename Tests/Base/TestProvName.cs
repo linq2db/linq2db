@@ -187,6 +187,7 @@ namespace Tests
 		public const string AllAccess      = $"{AllAccessOleDb},{AllAccessOdbc}";
 		public const string AllAccessOleDb = $"{ProviderName.AccessJetOleDb},{ProviderName.AccessAceOleDb}";
 		public const string AllAccessOdbc  = $"{ProviderName.AccessJetOdbc},{ProviderName.AccessAceOdbc}";
+		public const string AllAccessJet   = $"{ProviderName.AccessJetOdbc},{ProviderName.AccessJetOleDb}";
 		#endregion
 
 		#region Oracle

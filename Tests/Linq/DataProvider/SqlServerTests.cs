@@ -1284,7 +1284,7 @@ namespace Tests.DataProvider
 
 				var loaded = db.GetTable<AllTypes2>().Where(p => p.ID >= 3).OrderBy(p=> p.ID).ToArray();
 
-				Assert.That(loaded.Count, Is.EqualTo(allTypes2.Length));
+				Assert.That(loaded.Count(), Is.EqualTo(allTypes2.Length));
 
 				for (var i = 0; i < loaded.Length; i++)
 					CompareObject(db.MappingSchema, loaded[i], allTypes2[i]);
@@ -1313,7 +1313,7 @@ namespace Tests.DataProvider
 
 				var loaded = db.GetTable<AllTypes2>().Where(p => p.ID >= 3).OrderBy(p=> p.ID).ToArray();
 
-				Assert.That(loaded.Count, Is.EqualTo(allTypes2.Length));
+				Assert.That(loaded.Count(), Is.EqualTo(allTypes2.Length));
 
 				for (var i = 0; i < loaded.Length; i++)
 					CompareObject(db.MappingSchema, loaded[i], allTypes2[i]);

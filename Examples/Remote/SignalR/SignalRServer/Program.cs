@@ -12,7 +12,7 @@ using LinqToDB.Remote.SignalR;
 
 namespace SignalRServer
 {
-	public class Program
+	static class Program
 	{
 		public static void Main(string[] args)
 		{

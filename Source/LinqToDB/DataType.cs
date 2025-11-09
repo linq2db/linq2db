@@ -1,10 +1,13 @@
-﻿namespace LinqToDB
+﻿using System;
+
+namespace LinqToDB
 {
 	/// <summary>
 	/// List of data types, supported by linq2db.
 	/// Provider-level support depends on database capabilities and current implementation
 	/// support level and could vary for different providers.
 	/// </summary>
+	[Flags]
 	public enum DataType
 	{
 		/// <summary>
@@ -135,6 +138,11 @@
 		/// An integral type representing unsigned 64-bit integers with values between 0 and 18446744073709551615.
 		/// </summary>
 		UInt64,
+
+		/// <summary>
+		/// A half-size floating point number.
+		/// </summary>
+		Half,
 
 		/// <summary>
 		/// A floating point number within the range of -3.40E +38 through 3.40E +38.

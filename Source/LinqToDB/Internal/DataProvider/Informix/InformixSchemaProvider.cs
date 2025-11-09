@@ -6,6 +6,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SchemaProvider;
 using LinqToDB.SchemaProvider;
 
@@ -133,7 +134,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 						for (var i = 0; i < arr.Length; i++)
 						{
 							var value = rd[FormattableString.Invariant($"col{i + 1}")];
-							arr[i] = value is DBNull ? null : (string)value;
+							arr[i] = value.IsNullValue() ? null : (string)value;
 						}
 
 						return new
@@ -385,8 +386,8 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 							arr[i] = new[]
 							{
-								value1 is DBNull ? null : (string)value1,
-								value2 is DBNull ? null : (string)value2
+								value1.IsNullValue() ? null : (string)value1,
+								value2.IsNullValue() ? null : (string)value2
 							};
 						}
 

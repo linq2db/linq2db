@@ -256,7 +256,7 @@ namespace Tests.xUpdate
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSapHana,
 			ProviderName.SqlCe,
-			ProviderName.SQLiteMS
+			TestProvName.AllSQLite
 			)]
 			string context)
 		{
@@ -290,7 +290,7 @@ namespace Tests.xUpdate
 			TestProvName.AllClickHouse,
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
-			ProviderName.SQLiteMS,
+			TestProvName.AllSQLite,
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSapHana,
 			TestProvName.AllOracle
@@ -335,7 +335,7 @@ namespace Tests.xUpdate
 			TestProvName.AllClickHouse,
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
-			ProviderName.SQLiteMS,
+			TestProvName.AllSQLite,
 			TestProvName.AllMySql,
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSapHana,
@@ -382,7 +382,7 @@ namespace Tests.xUpdate
 			TestProvName.AllClickHouse,
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
-			ProviderName.SQLiteMS,
+			TestProvName.AllSQLite,
 			TestProvName.AllMySql,
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSapHana,
@@ -527,83 +527,69 @@ namespace Tests.xUpdate
 		[Test]
 		public void DeleteByTableName([DataSources] string context)
 		{
-			var tableName  = TestUtils.GetTableName(context, "1a");
+			var tableName  = "xxPerson";
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<Person>(tableName))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<Person>(tableName);
+
+			var iTable = (ITable<Person>)table;
+			using (Assert.EnterMultipleScope())
 			{
-				var iTable = (ITable<Person>)table;
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(iTable.TableName, Is.EqualTo(tableName));
-					Assert.That(iTable.SchemaName, Is.Null);
-				}
-
-				var person = new Person()
-				{
-					FirstName = "Steven",
-					LastName = "King",
-					Gender = Gender.Male,
-				};
-
-				// insert a row into the table
-				db.Insert(person, tableName);
-				var newCount = table.Count();
-				Assert.That(newCount, Is.EqualTo(1));
-
-				var personForDelete = table.Single();
-
-				db.Delete(personForDelete, tableName);
-
-				Assert.That(table.Count(), Is.Zero);
+				Assert.That(iTable.TableName, Is.EqualTo(tableName));
+				Assert.That(iTable.SchemaName, Is.Null);
 			}
+
+			var person = new Person()
+			{
+				FirstName = "Steven",
+				LastName = "King",
+				Gender = Gender.Male,
+			};
+
+			// insert a row into the table
+			db.Insert(person, tableName);
+			var newCount = table.Count();
+			Assert.That(newCount, Is.EqualTo(1));
+
+			var personForDelete = table.Single();
+
+			db.Delete(personForDelete, tableName);
+
+			Assert.That(table.Count(), Is.Zero);
 		}
 
 		[Test]
 		public async Task DeleteByTableNameAsync([DataSources] string context)
 		{
 			const string? schemaName = null;
-			var tableName  = TestUtils.GetTableName(context, "30");
+			var tableName  = "xxPerson";
 
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<Person>(tableName, schemaName: schemaName);
+
+			using (Assert.EnterMultipleScope())
 			{
-				await db.DropTableAsync<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists:false);
-
-				try
-				{
-					var table = await db.CreateTableAsync<Person>(tableName, schemaName: schemaName);
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(table.TableName, Is.EqualTo(tableName));
-						Assert.That(table.SchemaName, Is.EqualTo(schemaName));
-					}
-
-					var person = new Person()
-					{
-						FirstName = "Steven",
-						LastName  = "King",
-						Gender    = Gender.Male,
-					};
-
-					// insert a row into the table
-					await db.InsertAsync(person, tableName: tableName, schemaName: schemaName);
-					var newCount = await table.CountAsync();
-					Assert.That(newCount, Is.EqualTo(1));
-
-					var personForDelete = await table.SingleAsync();
-
-					await db.DeleteAsync(personForDelete, tableName: tableName, schemaName: schemaName);
-
-					Assert.That(await table.CountAsync(), Is.Zero);
-
-					await table.DropAsync();
-				}
-				catch
-				{
-					await db.DropTableAsync<Person>(tableName, schemaName: schemaName);
-					throw;
-				}
+				Assert.That(table.TableName, Is.EqualTo(tableName));
+				Assert.That(table.SchemaName, Is.EqualTo(schemaName));
 			}
+
+			var person = new Person()
+			{
+				FirstName = "Steven",
+				LastName  = "King",
+				Gender    = Gender.Male,
+			};
+
+			// insert a row into the table
+			await db.InsertAsync(person, tableName: tableName, schemaName: schemaName);
+			var newCount = await table.CountAsync();
+			Assert.That(newCount, Is.EqualTo(1));
+
+			var personForDelete = await table.SingleAsync();
+
+			await db.DeleteAsync(personForDelete, tableName: tableName, schemaName: schemaName);
+
+			Assert.That(await table.CountAsync(), Is.Zero);
 		}
 
 		// based on TestDeleteFrom test in EFCore tests project, it should be reenabled after fix

@@ -567,6 +567,5 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			CacheManager.RegisterSqlValue(constantExpr, value);
 		}
-
 	}
 }

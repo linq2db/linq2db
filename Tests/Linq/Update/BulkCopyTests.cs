@@ -27,6 +27,7 @@ namespace Tests.xUpdate
 		// is silently treated as non-identity field
 		[Table("KeepIdentityTest", Configuration = ProviderName.DB2)]
 		[Table("KeepIdentityTest", Configuration = ProviderName.Sybase)]
+		[Table("KeepIdentityTest", Configuration = ProviderName.MySql)]
 		[Table("AllTypes")]
 		public class TestTable1
 		{
@@ -37,11 +38,13 @@ namespace Tests.xUpdate
 			[Column("intDataType")]
 			[Column("Value", Configuration = ProviderName.DB2)]
 			[Column("Value", Configuration = ProviderName.Sybase)]
+			[Column("Value", Configuration = ProviderName.MySql)]
 			public int Value { get; set; }
 		}
 
 		[Table("KeepIdentityTest", Configuration = ProviderName.DB2)]
 		[Table("KeepIdentityTest", Configuration = ProviderName.Sybase)]
+		[Table("KeepIdentityTest", Configuration = ProviderName.MySql)]
 		[Table("AllTypes")]
 		public class TestTable2
 		{
@@ -52,6 +55,7 @@ namespace Tests.xUpdate
 			[Column("intDataType")]
 			[Column("Value", Configuration = ProviderName.DB2)]
 			[Column("Value", Configuration = ProviderName.Sybase)]
+			[Column("Value", Configuration = ProviderName.MySql)]
 			public int Value { get; set; }
 		}
 

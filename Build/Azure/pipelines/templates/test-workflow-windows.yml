@@ -34,28 +34,17 @@ steps:
 
 - task: DownloadPipelineArtifact@2
   inputs:
-    artifactName: $(artifact_test_binaries)
-    targetPath: '$(System.DefaultWorkingDirectory)'
+    artifactName: $(artifact_test_configs)
+    targetPath: '$(System.DefaultWorkingDirectory)/configs'
   condition: and(variables.title, succeeded())
-  displayName: Extract test files
+  displayName: Extract test configs
 
-- task: CmdLine@2
+- task: DownloadPipelineArtifact@2
   inputs:
-    script: 'copy $(System.DefaultWorkingDirectory)\configs\netfx\$(config).json $(System.DefaultWorkingDirectory)\$(netfx_tfm)\UserDataProviders.json'
-  displayName: Copy .NET FW test config
-  condition: and(variables.title, eq(variables.netfx, 'true'), succeeded())
-
-- task: CmdLine@2
-  inputs:
-    script: 'copy $(System.DefaultWorkingDirectory)\configs\net80\$(config).json $(System.DefaultWorkingDirectory)\net8.0\UserDataProviders.json'
-  displayName: Copy .NET 8 test config
-  condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
-
-- task: CmdLine@2
-  inputs:
-    script: 'copy $(System.DefaultWorkingDirectory)\configs\net90\$(config).json $(System.DefaultWorkingDirectory)\net9.0\UserDataProviders.json'
-  displayName: Copy .NET 9 test config
-  condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
+    artifactName: $(artifact_test_scripts)
+    targetPath: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, succeeded())
+  displayName: Extract test scripts
 
 - task: CmdLine@2
   inputs:
@@ -71,6 +60,19 @@ steps:
   condition: and(variables.title, variables.psscript_global, succeeded())
   displayName: Execute Global PowerShell Setup Script
 
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: $(artifact_test_netfx_binaries)
+    targetPath: '$(System.DefaultWorkingDirectory)/$(netfx_tfm)'
+  condition: and(variables.title, eq(variables.netfx, 'true'), succeeded())
+  displayName: Extract NETFX test binaries
+
+- task: CmdLine@2
+  inputs:
+    script: 'copy $(System.DefaultWorkingDirectory)\configs\netfx\$(config).json $(System.DefaultWorkingDirectory)\$(netfx_tfm)\UserDataProviders.json'
+  displayName: Copy .NET FW test config
+  condition: and(variables.title, eq(variables.netfx, 'true'), succeeded())
+
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
@@ -84,6 +86,13 @@ steps:
     workingDirectory: '$(System.DefaultWorkingDirectory)/$(netfx_tfm)/main/x86'
   condition: and(variables.title, eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.psscript_local, succeeded())
   displayName: Execute NETFX x86 PowerShell Setup Script
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(pre_test_win_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, variables.pre_test_win_local, succeeded())
+  displayName: Execute Pre-test Script
 
 - script: dotnet test $(netfx_tfm)/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f $(netfx_tfm) -l trx $(extra) --blame-hang-timeout 5m
   displayName: 'Tests (NETFX): $(title)'
@@ -100,6 +109,13 @@ steps:
 
 - task: CmdLine@2
   inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(post_test_win_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, variables.post_test_win_local, succeeded())
+  displayName: Execute Post-test Script
+
+- task: CmdLine@2
+  inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/$(netfx_tfm)/main/x64'
   condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.netfx, 'true'), variables.script_local, succeeded())
@@ -111,6 +127,13 @@ steps:
     workingDirectory: '$(System.DefaultWorkingDirectory)/$(netfx_tfm)/main/x64'
   condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.netfx, 'true'), variables.psscript_local, succeeded())
   displayName: Execute NETFX x64 PowerShell Setup Script
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(pre_test_win_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, variables.pre_test_win_local, succeeded())
+  displayName: Execute Pre-test Script
 
 - script: dotnet test $(netfx_tfm)/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f $(netfx_tfm) -l trx --arch x64 --blame-hang-timeout 5m
   displayName: 'Tests (NETFX x64): $(title)'
@@ -124,6 +147,32 @@ steps:
 - script: dotnet test $(netfx_tfm)/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f $(netfx_tfm) -l trx --arch x64 --blame-hang-timeout 5m
   displayName: 'EF.Core Tests (NETFX x64): $(title)'
   condition: and(eq(variables.netfx, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(post_test_win_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, variables.post_test_win_local, succeeded())
+  displayName: Execute Post-test Script
+
+- task: CmdLine@2
+  inputs:
+    script: 'RMDIR $(System.DefaultWorkingDirectory)\$(netfx_tfm) /S /Q'
+  displayName: Remove NETFX test binaries
+  condition: and(variables.title, eq(variables.netfx, 'true'))
+
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: $(artifact_test_net80_binaries)
+    targetPath: '$(System.DefaultWorkingDirectory)/net8.0'
+  condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
+  displayName: Extract NET 8 test binaries
+
+- task: CmdLine@2
+  inputs:
+    script: 'copy $(System.DefaultWorkingDirectory)\configs\net80\$(config).json $(System.DefaultWorkingDirectory)\net8.0\UserDataProviders.json'
+  displayName: Copy .NET 8 test config
+  condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
@@ -153,6 +202,13 @@ steps:
   condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net80, 'true'), variables.psscript_local, succeeded())
   displayName: Execute NET 8 (x86) PowerShell Setup Script
 
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(pre_test_win_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, variables.pre_test_win_local, succeeded())
+  displayName: Execute Pre-test Script
+
 - script: dotnet test net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (.NET 8 x64): $(title)'
   condition: and(eq(variables.net80, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
@@ -178,6 +234,32 @@ steps:
 - script: dotnet test net8.0/efcore/x86/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx --blame-hang-timeout 5m
   displayName: 'EF.Core Tests (.NET 8 x86): $(title)'
   condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(post_test_win_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, variables.post_test_win_local, succeeded())
+  displayName: Execute Post-test Script
+
+- task: CmdLine@2
+  inputs:
+    script: 'RMDIR $(System.DefaultWorkingDirectory)\net8.0 /S /Q'
+  displayName: Remove NET 8 test binaries
+  condition: and(variables.title, eq(variables.net80, 'true'))
+
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: $(artifact_test_net90_binaries)
+    targetPath: '$(System.DefaultWorkingDirectory)/net9.0'
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
+  displayName: Extract NET 9 test binaries
+
+- task: CmdLine@2
+  inputs:
+    script: 'copy $(System.DefaultWorkingDirectory)\configs\net90\$(config).json $(System.DefaultWorkingDirectory)\net9.0\UserDataProviders.json'
+  displayName: Copy .NET 9 test config
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
@@ -207,6 +289,13 @@ steps:
   condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net90, 'true'), variables.psscript_local, succeeded())
   displayName: Execute NET 9 (x86) PowerShell Setup Script
 
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(pre_test_win_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, variables.pre_test_win_local, succeeded())
+  displayName: Execute Pre-test Script
+
 - script: dotnet test net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (.NET 9 x64): $(title)'
   condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
@@ -233,6 +322,19 @@ steps:
   displayName: 'EF.Core Tests (.NET 9 x86): $(title)'
   condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
 
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(post_test_win_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, variables.post_test_win_local, succeeded())
+  displayName: Execute Post-test Script
+
+- task: CmdLine@2
+  inputs:
+    script: 'RMDIR $(System.DefaultWorkingDirectory)\net9.0 /S /Q'
+  displayName: Remove NET 9 test binaries
+  condition: and(variables.title, eq(variables.net90, 'true'))
+
 - task: PublishTestResults@2
   condition: and(variables.title, succeededOrFailed())
   inputs:
@@ -245,7 +347,6 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
-      reg import $(System.DefaultWorkingDirectory)/scripts/tls11_disable.reg
       Write-Host "Add baselines changes to commit (index)"
       $output = git add -A
       if ($LASTEXITCODE -ne 0) {

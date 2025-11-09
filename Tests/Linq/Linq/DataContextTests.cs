@@ -1,4 +1,6 @@
-﻿using System;
+﻿extern alias MySqlData;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,6 +10,8 @@ using LinqToDB.Async;
 using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SQLite;
+
+using MySqlData::MySql.Data.MySqlClient;
 
 using NUnit.Framework;
 
@@ -176,7 +180,9 @@ namespace Tests.Linq
 			{
 				Assert.That(
 					() => db1.GetTable<Child>().ToList(),
-					Throws.TypeOf<ArgumentException>().Or.TypeOf<InvalidOperationException>());
+					Throws.TypeOf<ArgumentException>()
+						.Or.TypeOf<InvalidOperationException>()
+						.Or.TypeOf<MySqlException>());
 			}
 		}
 

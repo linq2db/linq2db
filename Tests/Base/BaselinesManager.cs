@@ -21,13 +21,13 @@ namespace Tests
 			}
 		}
 
-		public static void Dump(string? providerSuffix = null)
+		public static void Dump(bool isRemote, string? providerSuffix = null)
 		{
 			if (TestConfiguration.BaselinesPath != null)
 			{
 				var baseline = CustomTestContext.Get().Get<StringBuilder>(CustomTestContext.BASELINE);
 				if (baseline != null)
-					BaselinesWriter.Write(TestConfiguration.BaselinesPath, baseline.ToString(), providerSuffix);
+					BaselinesWriter.Write(TestConfiguration.BaselinesPath, baseline.ToString(), isRemote, providerSuffix);
 			}
 		}
 	}

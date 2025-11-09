@@ -110,7 +110,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			if (Version == MySqlVersion.MySql80)
 				return new MySql80SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 
-			return new MySqlSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
+			return new MariaDBSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 		}
 
 		private static MappingSchema GetMappingSchema(MySqlProvider provider, MySqlVersion version)
@@ -136,6 +136,16 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
+			// facepalm, MySql.Data needs byte[] as parameter value
+			if (value is float[] vector
+				&& (Provider is MySqlProvider.MySqlData
+					|| (Provider is MySqlProvider.MySqlConnector && parameter is BulkCopyReader.Parameter)))
+			{
+				var bytes = new byte[vector.Length * 4];
+				Buffer.BlockCopy(vector, 0, bytes, 0, bytes.Length);
+				value = bytes;
+			}
+
 			// mysql.data bugs workaround
 			if (Adapter.MySqlDecimalType != null && Adapter.MySqlDecimalGetter != null && value?.GetType() == Adapter.MySqlDecimalType)
 			{
@@ -166,6 +176,26 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				case DataType.Date:
 				case DataType.DateTime2 : parameter.DbType = DbType.DateTime; return;
 				case DataType.BitArray  : parameter.DbType = DbType.UInt64;   return;
+			}
+
+			object? type = null;
+			switch (dataType.DataType)
+			{
+				case DataType.Array | DataType.Single:
+					type = Provider == MySqlProvider.MySqlConnector
+						? MySqlProviderAdapter.MySqlConnector.MySqlDbType.Vector
+						: MySqlProviderAdapter.MySqlData.MySqlDbType.Vector;
+					break;
+			}
+
+			if (type != null)
+			{
+				var param = TryGetProviderParameter(dataConnection, parameter);
+				if (param != null)
+				{
+					Adapter.SetDbType(param, type);
+					return;
+				}
 			}
 
 			base.SetParameterType(dataConnection, parameter, dataType);

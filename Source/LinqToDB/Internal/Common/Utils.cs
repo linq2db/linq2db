@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 
@@ -196,6 +198,11 @@ namespace LinqToDB.Internal.Common
 					list.RemoveAt(i);
 				}
 			}
+		}
+
+		public static bool IsNullValue([NotNullWhen(false)] this object? value)
+		{
+			return value is null or DBNull or INullable { IsNull: true };
 		}
 	}
 }
