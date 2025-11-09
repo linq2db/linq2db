@@ -56,8 +56,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			SetProviderField<uint>    (YdbProviderAdapter.GetUInt32,       Adapter.DataReaderType);
 			SetProviderField<ulong>   (YdbProviderAdapter.GetUInt64,       Adapter.DataReaderType);
 			SetProviderField<TimeSpan>(YdbProviderAdapter.GetInterval,     Adapter.DataReaderType);
-			SetProviderField<string>  (YdbProviderAdapter.GetJson,         Adapter.DataReaderType, dataTypeName: "Json");
-			SetProviderField<string>  (YdbProviderAdapter.GetJsonDocument, Adapter.DataReaderType, dataTypeName: "JsonDocument");
 
 			SetGetFieldValueReader<TextReader>(dataReaderType: Adapter.DataReaderType);
 			SetGetFieldValueReader<Stream>(dataReaderType: Adapter.DataReaderType);

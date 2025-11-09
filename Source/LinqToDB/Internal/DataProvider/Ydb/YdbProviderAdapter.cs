@@ -38,8 +38,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		internal const string GetUInt32       = "GetUInt32";
 		internal const string GetUInt64       = "GetUInt64";
 		internal const string GetInterval     = "GetInterval";
-		internal const string GetJson         = "GetJson";
-		internal const string GetJsonDocument = "GetJsonDocument";
 
 		YdbProviderAdapter()
 		{
@@ -293,7 +291,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			Bool         = 1,
 			Bytes        = 13,
 			Date         = 18,
-			DateTime     = 19,
+			Date32       = 24,
+			Datetime     = 21,
+			Datetime64   = 25,
 			Decimal      = 12,
 			Double       = 11,
 			Float        = 10,
@@ -302,20 +302,23 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			Int64        = 5,
 			Int8         = 2,
 			Interval     = 21,
+			Interval64   = 27,
 			Json         = 15,
 			JsonDocument = 16,
 			Text         = 14,
 			Timestamp    = 20,
-			UInt16       = 7,
-			UInt32       = 8,
-			UInt64       = 9,
-			UInt8        = 6,
+			Timestamp64  = 26,
+			Uint16       = 7,
+			Uint32       = 8,
+			Uint64       = 9,
+			Uint8        = 6,
 			Unspecified  = 0,
 			Uuid         = 17,
+			Yson         = 16,
+			List         = -2147483648
 
 			// missing simple types:
 			// DyNumber
-			// Yson
 
 			// missing simple non-column types:
 			// TzDate

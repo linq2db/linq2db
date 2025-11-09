@@ -128,5 +128,37 @@ namespace Tests.DataProvider
 			Assert.That(pks, Is.Empty, "YDB driver doesn’t expose PK meta for local tables yet");
 		}
 		#endregion
+
+		[Test]
+		public void InsertSimpleEntity([IncludeDataSources(Ctx)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var table = db.CreateLocalTable<SimpleEntity>();
+
+			var now = DateTime.UtcNow;
+
+			var entity = new SimpleEntity
+			{
+				IntVal = 42,
+				DecVal = 3.14m,
+				StrVal = "hello",
+				BoolVal = true,
+				DtVal = now
+			};
+
+			Assert.DoesNotThrow(() => db.Insert(entity), "Insert should not throw any exceptions.");
+
+			var result = table.SingleOrDefault(e => e.IntVal == 42);
+			Assert.That(result, Is.Not.Null, "A record with IntVal = 42 should exist in the table.");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result!.DecVal, Is.EqualTo(3.14m), "Decimal value should be 3.14.");
+				Assert.That(result.StrVal, Is.EqualTo("hello"), "String value should be 'hello'.");
+				Assert.That(result.BoolVal, Is.True, "Boolean value should be true.");
+				Assert.That(result.DtVal, Is.EqualTo(now).Within(TimeSpan.FromSeconds(1)),
+					"DateTime value should match the inserted time (with 1s tolerance).");
+			}
+		}
 	}
 }

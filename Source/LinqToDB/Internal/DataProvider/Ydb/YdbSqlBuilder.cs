@@ -147,6 +147,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 										 : StringBuilder.Append("Text");         break;
 				case DataType.Json       : StringBuilder.Append("Json");         break;
 				case DataType.BinaryJson : StringBuilder.Append("JsonDocument"); break;
+				case DataType.Yson       : StringBuilder.Append("Yson");         break;
 				case DataType.Guid       : StringBuilder.Append("Uuid");         break;
 				case DataType.Date       : StringBuilder.Append("Date");         break;
 				case DataType.DateTime   : StringBuilder.Append("Datetime");     break;
@@ -198,14 +199,16 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
-				{
-					return sb.Append('@').Append(value);
-				}
+				//{
+				//	return sb.Append('@').Append(value);
+				//}
 
 				case ConvertType.NameToCteName:
 				{
 					var quote = (value.Length > 0 && char.IsDigit(value[0]))
 					            || value.Any(c => !c.IsAsciiLetterOrDigit() && c is not '_');
+
+					sb.Append('$');
 
 					if (quote)
 						return sb.Append('`').Append(value.Replace("`", "\\`")).Append('`');
