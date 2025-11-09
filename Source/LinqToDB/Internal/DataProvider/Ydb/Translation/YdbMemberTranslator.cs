@@ -161,6 +161,11 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				return cast;
 			}
 
+			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				return translationContext.ExpressionFactory.Function(dbDataType, "CurrentUtcTimestamp");
+			}
+
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				var f       = translationContext.ExpressionFactory;
@@ -282,9 +287,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 
 			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
-				var f = translationContext.ExpressionFactory;
-
-				return f.Function(f.GetDbDataType(typeof(DateTime)), "CurrentUtcTimestamp", ParametersNullabilityType.NotNullable);
+				var factory = translationContext.ExpressionFactory;
+				return factory.Function(factory.GetDbDataType(typeof(DateTime)), "CurrentUtcTimestamp");
 			}
 		}
 
