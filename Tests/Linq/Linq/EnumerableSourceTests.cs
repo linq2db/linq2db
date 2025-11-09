@@ -830,6 +830,26 @@ namespace Tests.Linq
 					table.GetCacheMissCount().ShouldBe(cacheMiss);
 			}
 		}
+		
+		[Test]
+		public void EmptyValuesWithTypeSpecificUsage([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var records = Array.Empty<TableToInsert>().AsQueryable(db);
+
+				var queryToSelect =
+					from r in records
+					group r by r.Id into g
+					select new
+					{
+						Id = g.Key,
+						Count = g.Sum(r => r.Id)
+					};
+				
+				queryToSelect.ToArray().Length.ShouldBe(0);
+			}
+		}
 
 		[Test]
 		public void SubQuery([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
