@@ -58,8 +58,6 @@
 		<PackageReference Include="ClickHouse.Driver" />
 		<PackageReference Include="Octonica.ClickHouseClient" />
 
-		<PackageReference Remove="System.Private.Uri" />
-
 		<AdditionalFiles Include="PublicAPI.*.txt" />
 	</ItemGroup>
 </Project>
