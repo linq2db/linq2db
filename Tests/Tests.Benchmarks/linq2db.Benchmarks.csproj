@@ -15,7 +15,6 @@
 	<ItemGroup>
 		<PackageReference Include="BenchmarkDotNet" />
 		<PackageReference Condition="$(DefineConstants.Contains('JETBRAINS'))" Include="JetBrains.Profiler.Api" />
-		<PackageReference Include="System.Private.Uri" />
 	</ItemGroup>
 
 </Project>

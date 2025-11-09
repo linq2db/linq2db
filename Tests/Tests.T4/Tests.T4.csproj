@@ -16,10 +16,6 @@
 		<Compile Update="WPF\ViewModel.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="ViewModel.tt" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="System.Private.Uri" />
-	</ItemGroup>
-
 	<ItemGroup Condition="'$(TargetFramework)' != 'net462'">
 		<Compile Remove="WPF\*.cs" />
 		<None Include="WPF\ViewModel.cs" />

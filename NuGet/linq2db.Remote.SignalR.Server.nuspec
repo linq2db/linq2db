@@ -9,10 +9,12 @@
 			<group targetFramework="net462">
 				<dependency id="linq2db"                             version="6.0.0"  />
 				<dependency id="Microsoft.AspNetCore.SignalR.Core"   version="1.2.0"  />
+				<dependency id="Newtonsoft.Json"                     version="13.0.1" />
 			</group>
 			<group targetFramework="netstandard2.0">
 				<dependency id="linq2db"                             version="6.0.0"  />
 				<dependency id="Microsoft.AspNetCore.SignalR.Core"   version="1.2.0"  />
+				<dependency id="Newtonsoft.Json"                     version="13.0.1" />
 			</group>
 			<group targetFramework="net8.0">
 				<dependency id="linq2db"                             version="6.0.0"  />

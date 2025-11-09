@@ -101,7 +101,7 @@ namespace LinqToDB.Internal.Expressions
 			switch (ex.NodeType)
 			{
 				case ExpressionType.ConvertChecked:
-				case ExpressionType.Convert:
+				case ExpressionType.Convert       :
 				{
 					var unaryExpression = (UnaryExpression)ex;
 					if (unaryExpression.Method == null)

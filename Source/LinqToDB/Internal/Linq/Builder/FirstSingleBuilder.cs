@@ -10,16 +10,16 @@ using LinqToDB.Internal.SqlQuery;
 namespace LinqToDB.Internal.Linq.Builder
 {
 	[BuildsMethodCall(
-		nameof(Queryable.First), 
-		nameof(Queryable.FirstOrDefault), 
-		nameof(Queryable.Single), 
-		nameof(Queryable.SingleOrDefault), 
+		nameof(Queryable.First),
+		nameof(Queryable.FirstOrDefault),
+		nameof(Queryable.Single),
+		nameof(Queryable.SingleOrDefault),
 		nameof(LinqInternalExtensions.AssociationRecord),
 		nameof(LinqInternalExtensions.AssociationOptionalRecord))]
 	[BuildsMethodCall(
-		nameof(AsyncExtensions.FirstAsync), 
-		nameof(AsyncExtensions.FirstOrDefaultAsync), 
-		nameof(AsyncExtensions.SingleAsync), 
+		nameof(AsyncExtensions.FirstAsync),
+		nameof(AsyncExtensions.FirstOrDefaultAsync),
+		nameof(AsyncExtensions.SingleAsync),
 		nameof(AsyncExtensions.SingleOrDefaultAsync),
 		CanBuildName = nameof(CanBuildAsyncMethod))]
 	sealed class FirstSingleBuilder : MethodCallBuilder

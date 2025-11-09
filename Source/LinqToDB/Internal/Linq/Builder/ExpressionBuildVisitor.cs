@@ -3341,7 +3341,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					break;
 
 #if NET8_0_OR_GREATER
-				case 
+				case
 				{
 					Method: { DeclaringType.IsMemoryExtensionsType: true, Name: nameof(MemoryExtensions.Contains) },
 					Arguments:

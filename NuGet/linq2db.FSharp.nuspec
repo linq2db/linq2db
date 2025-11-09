@@ -8,7 +8,7 @@
 		<dependencies>
 			<group targetFramework="net462">
 				<dependency id="linq2db"     version="6.0.0"   />
-				<dependency id="FSharp.Core" version="9.0.300" />
+				<dependency id="FSharp.Core" version="9.0.303" />
 			</group>
 			<group targetFramework="netstandard2.0">
 				<dependency id="linq2db"     version="6.0.0"   />

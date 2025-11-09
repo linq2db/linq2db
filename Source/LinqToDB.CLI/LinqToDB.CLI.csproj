@@ -58,8 +58,7 @@
 		<PackageReference Include="ClickHouse.Driver" />
 		<PackageReference Include="Octonica.ClickHouseClient" />
 
-		<!-- SPU 4.3.0 is a security vulnerability -->
-		<PackageReference Include="System.Private.Uri" />
+		<PackageReference Remove="System.Private.Uri" />
 
 		<AdditionalFiles Include="PublicAPI.*.txt" />
 	</ItemGroup>

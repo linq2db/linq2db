@@ -71,15 +71,15 @@ namespace LinqToDB.EntityFrameworkCore
 
 			if (accessor != null)
 			{
-				_dependencies = accessor.GetService<RelationalSqlTranslatingExpressionVisitorDependencies>();
-				_mappingSource = accessor.GetService<IRelationalTypeMappingSource>();
+				_dependencies           = accessor.GetService<RelationalSqlTranslatingExpressionVisitorDependencies>();
+				_mappingSource          = accessor.GetService<IRelationalTypeMappingSource>();
 				_valueConverterSelector = accessor.GetService<IValueConverterSelector>();
 #if EF31
 				_annotationProvider     = accessor.GetService<IMigrationsAnnotationProvider>();
 #else
-				_annotationProvider = accessor.GetService<IRelationalAnnotationProvider>();
-				_logger = accessor.GetService<IDiagnosticsLogger<DbLoggerCategory.Query>>();
-				_databaseDependencies = accessor.GetService<DatabaseDependencies>();
+				_annotationProvider     = accessor.GetService<IRelationalAnnotationProvider>();
+				_logger                 = accessor.GetService<IDiagnosticsLogger<DbLoggerCategory.Query>>();
+				_databaseDependencies   = accessor.GetService<DatabaseDependencies>();
 #endif
 			}
 
@@ -219,34 +219,34 @@ namespace LinqToDB.EntityFrameworkCore
 		{
 			return dbType switch
 			{
-				DbType.AnsiString => DataType.VarChar,
+				DbType.AnsiString            => DataType.VarChar,
 				DbType.AnsiStringFixedLength => DataType.VarChar,
-				DbType.Binary => DataType.Binary,
-				DbType.Boolean => DataType.Boolean,
-				DbType.Byte => DataType.Byte,
-				DbType.Currency => DataType.Money,
-				DbType.Date => DataType.Date,
-				DbType.DateTime => DataType.DateTime,
-				DbType.DateTime2 => DataType.DateTime2,
-				DbType.DateTimeOffset => DataType.DateTimeOffset,
-				DbType.Decimal => DataType.Decimal,
-				DbType.Double => DataType.Double,
-				DbType.Guid => DataType.Guid,
-				DbType.Int16 => DataType.Int16,
-				DbType.Int32 => DataType.Int32,
-				DbType.Int64 => DataType.Int64,
-				DbType.Object => DataType.Undefined,
-				DbType.SByte => DataType.SByte,
-				DbType.Single => DataType.Single,
-				DbType.String => DataType.NVarChar,
-				DbType.StringFixedLength => DataType.NVarChar,
-				DbType.Time => DataType.Time,
-				DbType.UInt16 => DataType.UInt16,
-				DbType.UInt32 => DataType.UInt32,
-				DbType.UInt64 => DataType.UInt64,
-				DbType.VarNumeric => DataType.VarNumeric,
-				DbType.Xml => DataType.Xml,
-				_ => DataType.Undefined
+				DbType.Binary                => DataType.Binary,
+				DbType.Boolean               => DataType.Boolean,
+				DbType.Byte                  => DataType.Byte,
+				DbType.Currency              => DataType.Money,
+				DbType.Date                  => DataType.Date,
+				DbType.DateTime              => DataType.DateTime,
+				DbType.DateTime2             => DataType.DateTime2,
+				DbType.DateTimeOffset        => DataType.DateTimeOffset,
+				DbType.Decimal               => DataType.Decimal,
+				DbType.Double                => DataType.Double,
+				DbType.Guid                  => DataType.Guid,
+				DbType.Int16                 => DataType.Int16,
+				DbType.Int32                 => DataType.Int32,
+				DbType.Int64                 => DataType.Int64,
+				DbType.Object                => DataType.Undefined,
+				DbType.SByte                 => DataType.SByte,
+				DbType.Single                => DataType.Single,
+				DbType.String                => DataType.NVarChar,
+				DbType.StringFixedLength     => DataType.NVarChar,
+				DbType.Time                  => DataType.Time,
+				DbType.UInt16                => DataType.UInt16,
+				DbType.UInt32                => DataType.UInt32,
+				DbType.UInt64                => DataType.UInt64,
+				DbType.VarNumeric            => DataType.VarNumeric,
+				DbType.Xml                   => DataType.Xml,
+				_                            => DataType.Undefined
 			};
 		}
 
@@ -374,19 +374,19 @@ namespace LinqToDB.EntityFrameworkCore
 					var ca = new ColumnAttribute()
 					{
 #if EF31
-						Name = prop.GetColumnName(),
+						Name            = prop.GetColumnName(),
 #else
-						Name = storeObjectId != null ? prop.GetColumnName(storeObjectId.Value) : null,
+						Name            = storeObjectId != null ? prop.GetColumnName(storeObjectId.Value) : null,
 #endif
-						CanBeNull = prop.IsNullable,
-						DbType = prop.GetColumnType(),
-						DataType = dataType,
-						IsPrimaryKey = isPrimaryKey,
+						CanBeNull       = prop.IsNullable,
+						DbType          = prop.GetColumnType(),
+						DataType        = dataType,
+						IsPrimaryKey    = isPrimaryKey,
 						PrimaryKeyOrder = primaryKeyOrder,
-						IsIdentity = isIdentity,
+						IsIdentity      = isIdentity,
 						IsDiscriminator = discriminator == prop,
-						SkipOnInsert = skipOnInsert,
-						SkipOnUpdate = skipOnUpdate
+						SkipOnInsert    = skipOnInsert,
+						SkipOnUpdate    = skipOnUpdate
 					};
 
 					var maxLen = prop.GetMaxLength();
@@ -424,8 +424,8 @@ namespace LinqToDB.EntityFrameworkCore
 							var otherKey = string.Join(",", fk.Properties.Select(static p => p.Name));
 							(result ??= new()).Add(new AssociationAttribute()
 							{
-								ThisKey = thisKey,
-								OtherKey = otherKey,
+								ThisKey   = thisKey,
+								OtherKey  = otherKey,
 #if !EF31
 								CanBeNull = !fk.IsRequiredDependent,
 #else
@@ -440,8 +440,8 @@ namespace LinqToDB.EntityFrameworkCore
 							var otherKey = string.Join(",", fk.PrincipalKey.Properties.Select(static p => p.Name));
 							(result ??= new()).Add(new AssociationAttribute()
 							{
-								ThisKey = thisKey,
-								OtherKey = otherKey,
+								ThisKey   = thisKey,
+								OtherKey  = otherKey,
 								CanBeNull = !fk.IsRequired
 							});
 						}
@@ -491,7 +491,7 @@ namespace LinqToDB.EntityFrameworkCore
 				if (func != null)
 					(result ??= new()).Add(new Sql.FunctionAttribute()
 					{
-						Name = func.Name,
+						Name           = func.Name,
 						ServerSideOnly = true
 					});
 
@@ -499,7 +499,7 @@ namespace LinqToDB.EntityFrameworkCore
 				if (functionAttribute != null)
 					(result ??= new()).Add(new Sql.FunctionAttribute()
 					{
-						Name = functionAttribute.Name,
+						Name           = functionAttribute.Name,
 						ServerSideOnly = true,
 					});
 			}
@@ -514,13 +514,13 @@ namespace LinqToDB.EntityFrameworkCore
 				LambdaExpression convertFromProviderExpression, bool handlesNulls)
 			{
 				FromProviderExpression = convertFromProviderExpression;
-				ToProviderExpression = convertToProviderExpression;
-				HandlesNulls = handlesNulls;
+				ToProviderExpression   = convertToProviderExpression;
+				HandlesNulls           = handlesNulls;
 			}
 
-			public bool HandlesNulls { get; }
+			public bool             HandlesNulls           { get; }
 			public LambdaExpression FromProviderExpression { get; }
-			public LambdaExpression ToProviderExpression { get; }
+			public LambdaExpression ToProviderExpression   { get; }
 		}
 
 		sealed class SqlTransparentExpression : EfSqlExpression
@@ -635,9 +635,10 @@ namespace LinqToDB.EntityFrameworkCore
 					{
 						var value = Expression.Constant(DefaultValue.GetValue(ctx.type), ctx.type);
 
-						var objExpr = new SqlTransparentExpression(value, ctx.this_._mappingSource?.FindMapping(ctx.type));
-						var parameterInfos = ctx.methodInfo.GetParameters();
+						var objExpr         = new SqlTransparentExpression(value, ctx.this_._mappingSource?.FindMapping(ctx.type));
+						var parameterInfos  = ctx.methodInfo.GetParameters();
 						var parametersArray = new EfSqlExpression[parameterInfos.Length];
+
 						for (var i = 0; i < parameterInfos.Length; i++)
 						{
 							var p = parameterInfos[i];

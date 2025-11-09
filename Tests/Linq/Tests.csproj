@@ -10,7 +10,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
-		<PackageReference Include="System.Private.Uri" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
