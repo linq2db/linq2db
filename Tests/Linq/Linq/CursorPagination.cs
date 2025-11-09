@@ -239,32 +239,30 @@ namespace Tests.Linq
 				BookingID = i
 			}).ToArray();
 
-			using (var db = (DataConnection)GetDataContext(context))
-			using (var table = db.CreateLocalTable(sampleData))
+			using var db = (DataConnection)GetDataContext(context);
+			using var table = db.CreateLocalTable(sampleData);
+			var dataQuery = table.Where(t => t.ServiceDate > TestData.DateTime.AddDays(-2));
+
+			var query = dataQuery.OrderByDescending(t => t.ServiceDate).ThenByDescending(tt => tt.BookingID);
+
+			var expected = query.ToList();
+			var actual = new List<Booking>();
+
+			var pageResult = Paginator.GetPageViaCursor(query, b => b.BookingID, (int?)null, take, true);
+
+			Assert.That(pageResult.TotalCount, Is.EqualTo(expected.Count));
+
+			while (pageResult.Items.Count > 0)
 			{
-				var dataQuery = table.Where(t => t.ServiceDate > TestData.DateTime.AddDays(-2));
+				actual.AddRange(pageResult.Items);
+				var cursorValue = pageResult.Items.Last().BookingID;
 
-				var query = dataQuery.OrderByDescending(t => t.ServiceDate).ThenByDescending(tt => tt.BookingID);
+				pageResult = Paginator.GetPageViaCursor(query, b => b.BookingID, (int?)cursorValue, take, false);
 
-				var expected = query.ToList();
-				var actual = new List<Booking>();
-
-				var pageResult = Paginator.GetPageViaCursor(query, b => b.BookingID, (int?)null, take, true);
-
-				Assert.That(pageResult.TotalCount, Is.EqualTo(expected.Count));
-
-				while (pageResult.Items.Count > 0)
-				{
-					actual.AddRange(pageResult.Items);
-					var cursorValue = pageResult.Items.Last().BookingID;
-
-					pageResult = Paginator.GetPageViaCursor(query, b => b.BookingID, (int?)cursorValue, take, false);
-
-					Assert.That(db.LastQuery, Does.Not.Contain("CTE_2"));
-				}
-
-				AreEqualWithComparer(expected, actual);
+				Assert.That(db.LastQuery, Does.Not.Contain("CTE_2"));
 			}
+
+			AreEqualWithComparer(expected, actual);
 		}
 	}
 }

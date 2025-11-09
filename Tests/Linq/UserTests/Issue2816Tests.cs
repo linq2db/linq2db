@@ -67,17 +67,13 @@ namespace Tests.UserTests
 				new TestClass() { Id = cnt++, Text = null }
 			};
 
-			using (var db = GetDataContext(context))
-			{
-				using (var table = db.CreateLocalTable(testData))
-				{
-					var query = from p in table
-								where string.IsNullOrWhiteSpace(p.Text)
-								select p;
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+			var query = from p in table
+						where string.IsNullOrWhiteSpace(p.Text)
+						select p;
 
-					AssertQuery(query);
-				}
-			}
+			AssertQuery(query);
 		}
 
 		[Test]
@@ -90,24 +86,20 @@ namespace Tests.UserTests
 			if (!supported)
 				Assert.Inconclusive($"Character {(char)character} not supported by database");
 
-			using (var db = GetDataContext(context))
-			{
-				using (var table = db.CreateLocalTable(testData))
-				{
-					var query = (from p in table
-								 where !string.IsNullOrWhiteSpace(p.Text)
-								 select p).ToArray();
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+			var query = (from p in table
+						 where !string.IsNullOrWhiteSpace(p.Text)
+						 select p).ToArray();
 
-					if (supported)
-					{
-						Assert.That(query, Has.Length.EqualTo(1));
-						Assert.That(query[0].Id, Is.EqualTo(3));
-					}
-					else
-					{
-						Assert.That(query, Has.Length.EqualTo(3));
-					}
-				}
+			if (supported)
+			{
+				Assert.That(query, Has.Length.EqualTo(1));
+				Assert.That(query[0].Id, Is.EqualTo(3));
+			}
+			else
+			{
+				Assert.That(query, Has.Length.EqualTo(3));
 			}
 		}
 

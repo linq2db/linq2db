@@ -12,18 +12,16 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([NorthwindDataContext] string context)
 		{
-			using (var db = new NorthwindDB(context))
-			{
-				var zz =
+			using var db = new NorthwindDB(context);
+			var zz =
 					from e in db.Employee
 					select e;
 
-				var lst = zz.ToList();
-				var item1 = lst.Take(1).Single();
-				var item2 = zz.Take(1).Single();
+			var lst = zz.ToList();
+			var item1 = lst.Take(1).Single();
+			var item2 = zz.Take(1).Single();
 
-				Assert.That(item2.EmployeeID, Is.EqualTo(item1.EmployeeID));
-			}
+			Assert.That(item2.EmployeeID, Is.EqualTo(item1.EmployeeID));
 		}
 	}
 }

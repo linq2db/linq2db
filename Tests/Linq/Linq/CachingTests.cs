@@ -53,9 +53,8 @@ namespace Tests.Linq
 				nameof(ALLTYPE.REALDATATYPE)
 			)] string fieldName)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			var query =
 					from t in db.GetTable<ALLTYPE>()
 					from c in db.GetTable<Child>()
 					select new
@@ -63,11 +62,10 @@ namespace Tests.Linq
 						Aggregate = AggregateFunc(funcName, fieldName)
 					};
 
-				query.ToArray();
-				var sql = query.ToSqlQuery().Sql;
+			query.ToArray();
+			var sql = query.ToSqlQuery().Sql;
 
-				Assert.That(sql, Contains.Substring(funcName).And.Contains(fieldName));
-			}
+			Assert.That(sql, Contains.Substring(funcName).And.Contains(fieldName));
 		}
 
 		[Test]
@@ -83,9 +81,8 @@ namespace Tests.Linq
 				nameof(ALLTYPE.DECFLOATDATATYPE)
 			)] string fieldName)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			var query =
 					from t in db.GetTable<ALLTYPE>()
 					from c in db.GetTable<Child>()
 					select new
@@ -93,11 +90,10 @@ namespace Tests.Linq
 						Aggregate = AggregateFunc(funcName, fieldName)
 					};
 
-				query.ToArray();
-				var sql = query.ToSqlQuery().Sql;
+			query.ToArray();
+			var sql = query.ToSqlQuery().Sql;
 
-				Assert.That(sql, Contains.Substring(funcName).And.Contains(fieldName));
-			}
+			Assert.That(sql, Contains.Substring(funcName).And.Contains(fieldName));
 		}
 
 		[Test]
@@ -114,9 +110,8 @@ namespace Tests.Linq
 				nameof(ALLTYPE.TIMEDATATYPE)
 			)] string fieldName)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			var query =
 					from t in db.GetTable<ALLTYPE>()
 					from c in db.GetTable<Child>()
 					select new
@@ -124,11 +119,10 @@ namespace Tests.Linq
 						Aggregate = AggregateFunc(funcName, fieldName)
 					};
 
-				query.ToArray();
-				var sql = query.ToSqlQuery().Sql;
+			query.ToArray();
+			var sql = query.ToSqlQuery().Sql;
 
-				Assert.That(sql, Contains.Substring(funcName).And.Contains(fieldName));
-			}
+			Assert.That(sql, Contains.Substring(funcName).And.Contains(fieldName));
 		}
 
 		static IQueryable<T> GetTestTable<T>(IDataContext context,
@@ -166,9 +160,8 @@ namespace Tests.Linq
 			[Values("schema1",    "schema2")]    string schemaName
 		)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			var query =
 					from c in db.Child
 					from cc in (
 						from c1 in GetTestTable<Child>(db, tableName, databaseName, schemaName)
@@ -177,14 +170,13 @@ namespace Tests.Linq
 					)
 					select cc;
 
-				var sql = query.ToSqlQuery().Sql;
-				BaselinesManager.LogQuery(sql);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(CountOccurrences(sql, tableName), Is.EqualTo(2));
-					Assert.That(CountOccurrences(sql, databaseName), Is.EqualTo(2));
-					Assert.That(CountOccurrences(sql, schemaName), Is.EqualTo(2));
-				}
+			var sql = query.ToSqlQuery().Sql;
+			BaselinesManager.LogQuery(sql);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(CountOccurrences(sql, tableName), Is.EqualTo(2));
+				Assert.That(CountOccurrences(sql, databaseName), Is.EqualTo(2));
+				Assert.That(CountOccurrences(sql, schemaName), Is.EqualTo(2));
 			}
 		}
 
@@ -196,9 +188,8 @@ namespace Tests.Linq
 			[Values("schema1",    "schema2")]    string schemaName
 		)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			var query =
 					from c in db.Child
 					from cc in
 					(
@@ -208,14 +199,13 @@ namespace Tests.Linq
 					)
 					select cc;
 
-				var sql = query.ToSqlQuery().Sql;
-				BaselinesManager.LogQuery(sql);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(CountOccurrences(sql, tableName), Is.EqualTo(2));
-					Assert.That(CountOccurrences(sql, databaseName), Is.EqualTo(2));
-					Assert.That(CountOccurrences(sql, schemaName), Is.EqualTo(2));
-				}
+			var sql = query.ToSqlQuery().Sql;
+			BaselinesManager.LogQuery(sql);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(CountOccurrences(sql, tableName), Is.EqualTo(2));
+				Assert.That(CountOccurrences(sql, databaseName), Is.EqualTo(2));
+				Assert.That(CountOccurrences(sql, schemaName), Is.EqualTo(2));
 			}
 		}
 
@@ -227,22 +217,20 @@ namespace Tests.Linq
 			if (takeHint.HasFlag(TakeHints.Percent) && context.IsAnyOf(TestProvName.AllClickHouse))
 				Assert.Inconclusive($"ClickHouse doesn't support '{takeHint}' hint");
 
-			using (var db = GetDataContext(context))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			var query =
 					from c1 in db.Child
 					from c2 in db.Child.OrderBy(r => r.ParentID).Take(10, takeHint)
 					select new {c1, c2};
 
-				query.ToArray();
-				var sql = query.ToSqlQuery().Sql;
+			query.ToArray();
+			var sql = query.ToSqlQuery().Sql;
 
-				if (takeHint.HasFlag(TakeHints.Percent))
-					Assert.That(sql, Contains.Substring("PERCENT"));
+			if (takeHint.HasFlag(TakeHints.Percent))
+				Assert.That(sql, Contains.Substring("PERCENT"));
 
-				if (takeHint.HasFlag(TakeHints.WithTies))
-					Assert.That(sql, Contains.Substring("WITH TIES"));
-			}
+			if (takeHint.HasFlag(TakeHints.WithTies))
+				Assert.That(sql, Contains.Substring("WITH TIES"));
 		}
 
 		[ActiveIssue]

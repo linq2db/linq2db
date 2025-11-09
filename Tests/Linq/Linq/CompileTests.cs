@@ -149,12 +149,10 @@ namespace Tests.Linq
 
 					threads[i] = Task.Run(() =>
 					{
-						using (var db = GetDataContext(context))
-						{
-							var id = (n % 6) + 1;
-							results[n, 0] = id;
-							results[n, 1] = query(db, id);
-						}
+						using var db = GetDataContext(context);
+						var id = (n % 6) + 1;
+						results[n, 0] = id;
+						results[n, 1] = query(db, id);
 					});
 				}
 
@@ -184,12 +182,10 @@ namespace Tests.Linq
 
 					threads[i] = Task.Run(() =>
 					{
-						using (var db = GetDataContext(context))
-						{
-							var id = (n % 6) + 1;
-							results[n, 0] = id;
-							results[n, 1] = query(db, id, id);
-						}
+						using var db = GetDataContext(context);
+						var id = (n % 6) + 1;
+						results[n, 0] = id;
+						results[n, 1] = query(db, id, id);
 					});
 				}
 
@@ -214,12 +210,10 @@ namespace Tests.Linq
 
 					threads[i] = Task.Run(() =>
 					{
-						using (var db = GetDataContext(context))
-						{
-							var id = (n % 6) + 1;
-							results[n, 0] = id;
-							results[n, 1] = db.Parent.Where(p => p.ParentID == id).First().ParentID;
-						}
+						using var db = GetDataContext(context);
+						var id = (n % 6) + 1;
+						results[n, 0] = id;
+						results[n, 1] = db.Parent.Where(p => p.ParentID == id).First().ParentID;
 					});
 				}
 
@@ -246,12 +240,10 @@ namespace Tests.Linq
 
 					threads[i] = Task.Run(() =>
 					{
-						using (var db = GetDataContext(context))
-						{
-							var id = (n % 6) + 1;
-							results[n, 0] = id;
-							results[n, 1] = db.Parent.Where(p => p.ParentID == id && id >= 0).First().ParentID;
-						}
+						using var db = GetDataContext(context);
+						var id = (n % 6) + 1;
+						results[n, 0] = id;
+						results[n, 1] = db.Parent.Where(p => p.ParentID == id && id >= 0).First().ParentID;
 					});
 				}
 
@@ -329,23 +321,19 @@ namespace Tests.Linq
 		[Test]
 		public void CompiledQueryWithExpressionMethodTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query = CompiledQuery.Compile((ITestDataContext xdb, int id) => Filter(xdb, id).FirstOrDefault());
+			using var db = GetDataContext(context);
+			var query = CompiledQuery.Compile((ITestDataContext xdb, int id) => Filter(xdb, id).FirstOrDefault());
 
-				query(db, 1);
-			}
+			query(db, 1);
 		}
 
 		[Test]
 		public async Task CompiledQueryWithExpressionMethoAsyncdTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query = CompiledQuery.Compile((ITestDataContext xdb, int id) => Filter(xdb, id).FirstOrDefaultAsync(default));
+			using var db = GetDataContext(context);
+			var query = CompiledQuery.Compile((ITestDataContext xdb, int id) => Filter(xdb, id).FirstOrDefaultAsync(default));
 
-				await query(db, 1);
-			}
+			await query(db, 1);
 		}
 
 		[ExpressionMethod(nameof(FilterExpression))]

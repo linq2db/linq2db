@@ -126,9 +126,9 @@ namespace LinqToDB.DataProvider.Access
 		[SecuritySafeCritical]
 		private static void CreateAccessDB(string connectionString)
 		{
-			using (var catalog = ComWrapper.Create("ADOX.Catalog"))
-				using (var conn = ComWrapper.Wrap(catalog.Create(connectionString)))
-					conn.Close();
+			using var catalog = ComWrapper.Create("ADOX.Catalog");
+			using var conn = ComWrapper.Wrap(catalog.Create(connectionString));
+			conn.Close();
 		}
 
 		/// <summary>

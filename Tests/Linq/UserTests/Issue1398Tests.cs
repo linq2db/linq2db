@@ -86,10 +86,8 @@ namespace Tests.UserTests
 
 		private void Insert(string context, int value)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.GetTable<InsertTable>().Insert(() => new InsertTable { Value = value });
-			}
+			using var db = GetDataContext(context);
+			db.GetTable<InsertTable>().Insert(() => new InsertTable { Value = value });
 		}
 
 		[Retry(3)] // could fail due to deadlock
@@ -167,27 +165,25 @@ namespace Tests.UserTests
 
 		private void Update(string context, Data data, int iteration)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.GetTable<Animal>()
-					.Merge()
-					.Using(db.GetTable<AnimalUpdate>().Where(_ => _.Iteration == iteration))
-					.On((target, source) => target.Name == source.Name)
-					.UpdateWhenMatched(
-						(target, source) => new Animal()
-						{
-							Color  = data.Color,
-							Length = source.Length
-						})
-					.InsertWhenNotMatched(
-						source => new Animal()
-						{
-							Name   = source.Name,
-							Color  = data.Color,
-							Length = source.Length
-						})
-					.Merge();
-			}
+			using var db = GetDataContext(context);
+			db.GetTable<Animal>()
+				.Merge()
+				.Using(db.GetTable<AnimalUpdate>().Where(_ => _.Iteration == iteration))
+				.On((target, source) => target.Name == source.Name)
+				.UpdateWhenMatched(
+					(target, source) => new Animal()
+					{
+						Color = data.Color,
+						Length = source.Length
+					})
+				.InsertWhenNotMatched(
+					source => new Animal()
+					{
+						Name = source.Name,
+						Color = data.Color,
+						Length = source.Length
+					})
+				.Merge();
 		}
 	}
 }

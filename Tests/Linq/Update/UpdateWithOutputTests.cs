@@ -71,12 +71,11 @@ namespace Tests.xUpdate
 		public void UpdateITableWithDefaultOutputTest([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			using (var target = db.CreateLocalTable(sourceData
-				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", }));
+			var expected = sourceData
 					.Select(s => new UpdateOutput<DestinationTable>()
 					{
 						Inserted = new DestinationTable { Id = s.Id, Value = s.Value,     ValueStr = s.ValueStr, },
@@ -84,30 +83,28 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = source
+			var output = source
 					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
 					.UpdateWithOutput(
 						target,
 						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, })
 					.ToArray();
 
-				AreEqual(
-					expected,
-					output,
-					new UpdateOutputComparer<DestinationTable>());
-			}
+			AreEqual(
+				expected,
+				output,
+				new UpdateOutputComparer<DestinationTable>());
 		}
 
 		[Test]
 		public void UpdateITableWithDefaultOutputTestSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			using (var target = db.CreateLocalTable(sourceData
-				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", }));
+			var expected = sourceData
 					.Where(s => s.Id == 3)
 					.Select(s => new UpdateOutput<DestinationTable>()
 					{
@@ -116,7 +113,7 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = source
+			var output = source
 					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
 					.Where(_ => _.s.Id == 3)
 					.UpdateWithOutput(
@@ -124,23 +121,21 @@ namespace Tests.xUpdate
 						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, })
 					.ToArray();
 
-				AreEqual(
-					expected,
-					output,
-					new UpdateOutputComparer<DestinationTable>());
-			}
+			AreEqual(
+				expected,
+				output,
+				new UpdateOutputComparer<DestinationTable>());
 		}
 
 		[Test]
 		public async Task UpdateITableWithDefaultOutputTestAsync([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			using (var target = db.CreateLocalTable(sourceData
-				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", }));
+			var expected = sourceData
 					.Select(s => new UpdateOutput<DestinationTable>()
 					{
 						Inserted = new DestinationTable { Id = s.Id, Value = s.Value,     ValueStr = s.ValueStr, },
@@ -148,30 +143,28 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = await AsyncEnumerableToListAsync(
+			var output = await AsyncEnumerableToListAsync(
 					source
 						.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
 						.UpdateWithOutputAsync(
 							target,
 							s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, }));
 
-				AreEqual(
-					expected,
-					output,
-					new UpdateOutputComparer<DestinationTable>());
-			}
+			AreEqual(
+				expected,
+				output,
+				new UpdateOutputComparer<DestinationTable>());
 		}
 
 		[Test]
 		public async Task UpdateITableWithDefaultOutputTestAsyncSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			using (var target = db.CreateLocalTable(sourceData
-				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", }));
+			var expected = sourceData
 					.Where(s => s.Id == 3)
 					.Select(s => new UpdateOutput<DestinationTable>()
 					{
@@ -180,7 +173,7 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = await AsyncEnumerableToListAsync(
+			var output = await AsyncEnumerableToListAsync(
 					source
 						.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
 						.Where(_ => _.s.Id == 3)
@@ -188,11 +181,10 @@ namespace Tests.xUpdate
 							target,
 							s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, }));
 
-				AreEqual(
-					expected,
-					output,
-					new UpdateOutputComparer<DestinationTable>());
-			}
+			AreEqual(
+				expected,
+				output,
+				new UpdateOutputComparer<DestinationTable>());
 		}
 
 		[Test]
@@ -623,48 +615,44 @@ namespace Tests.xUpdate
 		public void UpdateITableWithDefaultOutputIntoTest([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			using (var target = db.CreateLocalTable(sourceData
-				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
-			using (var destination = db.CreateLocalTable<DestinationTable>(tableName: "Destination"))
-			{
-				source
-					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
-					.UpdateWithOutputInto(
-						target,
-						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
-						destination);
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", }));
+			using var destination = db.CreateLocalTable<DestinationTable>(tableName: "Destination");
+			source
+				.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+				.UpdateWithOutputInto(
+					target,
+					s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+					destination);
 
-				AreEqual(
-					target.ToArray(),
-					destination.ToArray(),
-					ComparerBuilder.GetEqualityComparer<DestinationTable>());
-			}
+			AreEqual(
+				target.ToArray(),
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<DestinationTable>());
 		}
 
 		[Test]
 		public async Task UpdateITableWithDefaultOutputIntoTestAsync([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			using (var target = db.CreateLocalTable(sourceData
-				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
-			using (var destination = db.CreateLocalTable<DestinationTable>(tableName: "Destination"))
-			{
-				await source
-					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
-					.UpdateWithOutputIntoAsync(
-						target,
-						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
-						destination);
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", }));
+			using var destination = db.CreateLocalTable<DestinationTable>(tableName: "Destination");
+			await source
+				.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+				.UpdateWithOutputIntoAsync(
+					target,
+					s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+					destination);
 
-				AreEqual(
-					target.ToArray(),
-					destination.ToArray(),
-					ComparerBuilder.GetEqualityComparer<DestinationTable>());
-			}
+			AreEqual(
+				target.ToArray(),
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<DestinationTable>());
 		}
 
 		[Test]
@@ -859,12 +847,11 @@ namespace Tests.xUpdate
 		public void UpdateExpressionWithDefaultOutputTest([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			using (var target = db.CreateLocalTable(sourceData
-				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", }));
+			var expected = sourceData
 					.Select(s => new UpdateOutput<DestinationTable>()
 					{
 						Inserted = new DestinationTable { Id = s.Id, Value = s.Value,     ValueStr = s.ValueStr, },
@@ -872,30 +859,28 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = source
+			var output = source
 					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
 					.UpdateWithOutput(
 						s => s.t,
 						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, })
 					.ToArray();
 
-				AreEqual(
-					expected,
-					output,
-					new UpdateOutputComparer<DestinationTable>());
-			}
+			AreEqual(
+				expected,
+				output,
+				new UpdateOutputComparer<DestinationTable>());
 		}
 
 		[Test]
 		public void UpdateExpressionWithDefaultOutputTestSingleRecord([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			using (var target = db.CreateLocalTable(sourceData
-				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", }));
+			var expected = sourceData
 					.Where(_ => _.Id == 3)
 					.Select(s => new UpdateOutput<DestinationTable>()
 					{
@@ -904,7 +889,7 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = source
+			var output = source
 					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
 					.Where(_ => _.s.Id == 3)
 					.UpdateWithOutput(
@@ -912,23 +897,21 @@ namespace Tests.xUpdate
 						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, })
 					.ToArray();
 
-				AreEqual(
-					expected,
-					output,
-					new UpdateOutputComparer<DestinationTable>());
-			}
+			AreEqual(
+				expected,
+				output,
+				new UpdateOutputComparer<DestinationTable>());
 		}
 
 		[Test]
 		public async Task UpdateExpressionWithDefaultOutputTestAsync([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			using (var target = db.CreateLocalTable(sourceData
-				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", }));
+			var expected = sourceData
 					.Select(s => new UpdateOutput<DestinationTable>()
 					{
 						Inserted = new DestinationTable { Id = s.Id, Value = s.Value,     ValueStr = s.ValueStr, },
@@ -936,30 +919,28 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = await AsyncEnumerableToListAsync(
+			var output = await AsyncEnumerableToListAsync(
 					source
 						.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
 						.UpdateWithOutputAsync(
 							s => s.t,
 							s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, }));
 
-				AreEqual(
-					expected,
-					output,
-					new UpdateOutputComparer<DestinationTable>());
-			}
+			AreEqual(
+				expected,
+				output,
+				new UpdateOutputComparer<DestinationTable>());
 		}
 
 		[Test]
 		public async Task UpdateExpressionWithDefaultOutputTestAsyncSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			using (var target = db.CreateLocalTable(sourceData
-				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", }));
+			var expected = sourceData
 					.Where(_ => _.Id == 3)
 					.Select(s => new UpdateOutput<DestinationTable>()
 					{
@@ -968,7 +949,7 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = await AsyncEnumerableToListAsync(
+			var output = await AsyncEnumerableToListAsync(
 					source
 						.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
 						.Where(_ => _.s.Id == 3)
@@ -976,11 +957,10 @@ namespace Tests.xUpdate
 							s => s.t,
 							s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, }));
 
-				AreEqual(
-					expected,
-					output,
-					new UpdateOutputComparer<DestinationTable>());
-			}
+			AreEqual(
+				expected,
+				output,
+				new UpdateOutputComparer<DestinationTable>());
 		}
 
 		[Test]
@@ -1411,48 +1391,44 @@ namespace Tests.xUpdate
 		public void UpdateExpressionWithDefaultOutputIntoTest([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			using (var target = db.CreateLocalTable(sourceData
-				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
-			using (var destination = db.CreateLocalTable<DestinationTable>(tableName: "Destination"))
-			{
-				source
-					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
-					.UpdateWithOutputInto(
-						s => s.t,
-						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
-						destination);
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", }));
+			using var destination = db.CreateLocalTable<DestinationTable>(tableName: "Destination");
+			source
+				.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+				.UpdateWithOutputInto(
+					s => s.t,
+					s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+					destination);
 
-				AreEqual(
-					target.ToArray(),
-					destination.ToArray(),
-					ComparerBuilder.GetEqualityComparer<DestinationTable>());
-			}
+			AreEqual(
+				target.ToArray(),
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<DestinationTable>());
 		}
 
 		[Test]
 		public async Task UpdateExpressionWithDefaultOutputIntoTestAsync([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			using (var target = db.CreateLocalTable(sourceData
-				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", })))
-			using (var destination = db.CreateLocalTable<DestinationTable>(tableName: "Destination"))
-			{
-				await source
-					.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
-					.UpdateWithOutputIntoAsync(
-						s => s.t,
-						s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
-						destination);
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var target = db.CreateLocalTable(sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", }));
+			using var destination = db.CreateLocalTable<DestinationTable>(tableName: "Destination");
+			await source
+				.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+				.UpdateWithOutputIntoAsync(
+					s => s.t,
+					s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+					destination);
 
-				AreEqual(
-					target.ToArray(),
-					destination.ToArray(),
-					ComparerBuilder.GetEqualityComparer<DestinationTable>());
-			}
+			AreEqual(
+				target.ToArray(),
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<DestinationTable>());
 		}
 
 		[Test]
@@ -1655,10 +1631,9 @@ namespace Tests.xUpdate
 		public void UpdateSourceWithDefaultOutputTest([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id > 3)
 					.Select(s => new UpdateOutput<TableWithData>()
 					{
@@ -1667,26 +1642,24 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = source
+			var output = source
 					.Where(s => s.Id > 3)
 					.UpdateWithOutput(s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", })
 					.ToArray();
 
-				AreEqual(
-					expected,
-					output,
-					new UpdateOutputComparer<TableWithData>());
-			}
+			AreEqual(
+				expected,
+				output,
+				new UpdateOutputComparer<TableWithData>());
 		}
 
 		[Test]
 		public void UpdateSourceWithDefaultOutputTestSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id == 3)
 					.Select(s => new UpdateOutput<TableWithData>()
 					{
@@ -1695,26 +1668,24 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = source
+			var output = source
 					.Where(s => s.Id == 3)
 					.UpdateWithOutput(s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", })
 					.ToArray();
 
-				AreEqual(
-					expected,
-					output,
-					new UpdateOutputComparer<TableWithData>());
-			}
+			AreEqual(
+				expected,
+				output,
+				new UpdateOutputComparer<TableWithData>());
 		}
 
 		[Test]
 		public async Task UpdateSourceWithDefaultOutputTestAsync([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id > 3)
 					.Select(s => new UpdateOutput<TableWithData>()
 					{
@@ -1723,26 +1694,24 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = await AsyncEnumerableToListAsync(
+			var output = await AsyncEnumerableToListAsync(
 					source
 						.Where(s => s.Id > 3)
 						.UpdateWithOutputAsync(s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", }));
 
-				AreEqual(
-					expected,
-					output,
-					new UpdateOutputComparer<TableWithData>());
-			}
+			AreEqual(
+				expected,
+				output,
+				new UpdateOutputComparer<TableWithData>());
 		}
 
 		[Test]
 		public async Task UpdateSourceWithDefaultOutputTestAsyncSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id == 3)
 					.Select(s => new UpdateOutput<TableWithData>()
 					{
@@ -1751,26 +1720,24 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = await AsyncEnumerableToListAsync(
+			var output = await AsyncEnumerableToListAsync(
 					source
 						.Where(s => s.Id == 3)
 						.UpdateWithOutputAsync(s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", }));
 
-				AreEqual(
-					expected,
-					output,
-					new UpdateOutputComparer<TableWithData>());
-			}
+			AreEqual(
+				expected,
+				output,
+				new UpdateOutputComparer<TableWithData>());
 		}
 
 		[Test]
 		public void UpdateSourceWithProjectionOutputTest([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id > 3)
 					.Select(s => new
 					{
@@ -1779,27 +1746,25 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = source
+			var output = source
 					.Where(s => s.Id > 3)
 					.UpdateWithOutput(
 						s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
 						(deleted, inserted) => new { DeletedValue = deleted.Value, InsertedValue = inserted.Value, })
 					.ToArray();
 
-				AreEqual(
-					expected,
-					output);
-			}
+			AreEqual(
+				expected,
+				output);
 		}
 
 		[Test]
 		public void UpdateSourceWithProjectionOutputTestSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id == 3)
 					.Select(s => new
 					{
@@ -1808,27 +1773,25 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = source
+			var output = source
 					.Where(s => s.Id == 3)
 					.UpdateWithOutput(
 						s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
 						(deleted, inserted) => new { DeletedValue = deleted.Value, InsertedValue = inserted.Value, })
 					.ToArray();
 
-				AreEqual(
-					expected,
-					output);
-			}
+			AreEqual(
+				expected,
+				output);
 		}
 
 		[Test]
 		public void UpdateSourceWithProjectionOutputTestWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id > 3)
 					.Select(s => new
 					{
@@ -1836,27 +1799,25 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = source
+			var output = source
 					.Where(s => s.Id > 3)
 					.UpdateWithOutput(
 						s => new TableWithData { Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
 						(deleted, inserted) => new { InsertedValue = inserted.Value, })
 					.ToArray();
 
-				AreEqual(
-					expected,
-					output);
-			}
+			AreEqual(
+				expected,
+				output);
 		}
 
 		[Test]
 		public void UpdateSourceWithProjectionOutputTestWithoutOldSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id == 3)
 					.Select(s => new
 					{
@@ -1864,27 +1825,25 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = source
+			var output = source
 					.Where(s => s.Id == 3)
 					.UpdateWithOutput(
 						s => new TableWithData { Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
 						(deleted, inserted) => new { InsertedValue = inserted.Value, })
 					.ToArray();
 
-				AreEqual(
-					expected,
-					output);
-			}
+			AreEqual(
+				expected,
+				output);
 		}
 
 		[Test]
 		public async Task UpdateSourceWithProjectionOutputTestAsync([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id > 3)
 					.Select(s => new
 					{
@@ -1893,27 +1852,25 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = await AsyncEnumerableToListAsync(
+			var output = await AsyncEnumerableToListAsync(
 					source
 						.Where(s => s.Id > 3)
 						.UpdateWithOutputAsync(
 							s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
 							(deleted, inserted) => new { DeletedValue = deleted.Value, InsertedValue = inserted.Value, }));
 
-				AreEqual(
-					expected,
-					output);
-			}
+			AreEqual(
+				expected,
+				output);
 		}
 
 		[Test]
 		public async Task UpdateSourceWithProjectionOutputTestAsyncSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id == 3)
 					.Select(s => new
 					{
@@ -1922,27 +1879,25 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = await AsyncEnumerableToListAsync(
+			var output = await AsyncEnumerableToListAsync(
 					source
 						.Where(s => s.Id == 3)
 						.UpdateWithOutputAsync(
 							s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
 							(deleted, inserted) => new { DeletedValue = deleted.Value, InsertedValue = inserted.Value, }));
 
-				AreEqual(
-					expected,
-					output);
-			}
+			AreEqual(
+				expected,
+				output);
 		}
 
 		[Test]
 		public async Task UpdateSourceWithProjectionOutputTestAsyncWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id > 3)
 					.Select(s => new
 					{
@@ -1950,27 +1905,25 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = await AsyncEnumerableToListAsync(
+			var output = await AsyncEnumerableToListAsync(
 					source
 						.Where(s => s.Id > 3)
 						.UpdateWithOutputAsync(
 							s => new TableWithData { Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
 							(deleted, inserted) => new { InsertedValue = inserted.Value, }));
 
-				AreEqual(
-					expected,
-					output);
-			}
+			AreEqual(
+				expected,
+				output);
 		}
 
 		[Test]
 		public async Task UpdateSourceWithProjectionOutputTestAsyncWithoutOldSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id == 3)
 					.Select(s => new
 					{
@@ -1978,69 +1931,64 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = await AsyncEnumerableToListAsync(
+			var output = await AsyncEnumerableToListAsync(
 					source
 						.Where(s => s.Id == 3)
 						.UpdateWithOutputAsync(
 							s => new TableWithData { Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
 							(deleted, inserted) => new { InsertedValue = inserted.Value, }));
 
-				AreEqual(
-					expected,
-					output);
-			}
+			AreEqual(
+				expected,
+				output);
 		}
 
 		[Test]
 		public void UpdateSourceWithDefaultOutputIntoTest([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData         = GetSourceData();
-			using (var db          = GetDataContext(context))
-			using (var source      = db.CreateLocalTable(sourceData))
-			using (var destination = db.CreateLocalTable<TableWithData>("destination"))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var destination = db.CreateLocalTable<TableWithData>("destination");
+			var expected = sourceData
 					.Where(s => s.Id > 3)
 					.Select(s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", })
 					.ToArray();
 
-				source
-					.Where(s => s.Id > 3)
-					.UpdateWithOutputInto(
-						s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
-						destination);
+			source
+				.Where(s => s.Id > 3)
+				.UpdateWithOutputInto(
+					s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+					destination);
 
-				AreEqual(
-					expected,
-					destination.ToArray(),
-					ComparerBuilder.GetEqualityComparer<TableWithData>());
-			}
+			AreEqual(
+				expected,
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<TableWithData>());
 		}
 
 		[Test]
 		public async Task UpdateSourceWithDefaultOutputIntoTestAsync([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData         = GetSourceData();
-			using (var db          = GetDataContext(context))
-			using (var source      = db.CreateLocalTable(sourceData))
-			using (var destination = db.CreateLocalTable<TableWithData>("destination"))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var destination = db.CreateLocalTable<TableWithData>("destination");
+			var expected = sourceData
 					.Where(s => s.Id > 3)
 					.Select(s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", })
 					.ToArray();
 
-				await source
-					.Where(s => s.Id > 3)
-					.UpdateWithOutputIntoAsync(
-						s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
-						destination);
+			await source
+				.Where(s => s.Id > 3)
+				.UpdateWithOutputIntoAsync(
+					s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+					destination);
 
-				AreEqual(
-					expected,
-					destination.ToArray(),
-					ComparerBuilder.GetEqualityComparer<TableWithData>());
-			}
+			AreEqual(
+				expected,
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<TableWithData>());
 		}
 
 		[Test]
@@ -2103,54 +2051,50 @@ namespace Tests.xUpdate
 		public void UpdateSourceWithProjectionOutputIntoTest([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData         = GetSourceData();
-			using (var db          = GetDataContext(context))
-			using (var source      = db.CreateLocalTable(sourceData))
-			using (var destination = db.CreateLocalTable<DestinationTable>("destination"))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var destination = db.CreateLocalTable<DestinationTable>("destination");
+			var expected = sourceData
 					.Where(s => s.Id > 3)
 					.Select(s => new DestinationTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr + "Upd", })
 					.ToArray();
 
-				source
-					.Where(s => s.Id > 3)
-					.UpdateWithOutputInto(
-						s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
-						destination,
-						(deleted, inserted) => new DestinationTable { Id = inserted.Id, Value = deleted.Value, ValueStr = inserted.ValueStr, });
+			source
+				.Where(s => s.Id > 3)
+				.UpdateWithOutputInto(
+					s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+					destination,
+					(deleted, inserted) => new DestinationTable { Id = inserted.Id, Value = deleted.Value, ValueStr = inserted.ValueStr, });
 
-				AreEqual(
-					expected,
-					destination.ToArray(),
-					ComparerBuilder.GetEqualityComparer<DestinationTable>());
-			}
+			AreEqual(
+				expected,
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<DestinationTable>());
 		}
 
 		[Test]
 		public async Task UpdateSourceWithProjectionOutputTestIntoAsync([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData         = GetSourceData();
-			using (var db          = GetDataContext(context))
-			using (var source      = db.CreateLocalTable(sourceData))
-			using (var destination = db.CreateLocalTable<DestinationTable>("destination"))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var destination = db.CreateLocalTable<DestinationTable>("destination");
+			var expected = sourceData
 					.Where(s => s.Id > 3)
 					.Select(s => new DestinationTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr + "Upd", })
 					.ToArray();
 
-				await source
-					.Where(s => s.Id > 3)
-					.UpdateWithOutputIntoAsync(
-						s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
-						destination,
-						(deleted, inserted) => new DestinationTable { Id = inserted.Id, Value = deleted.Value, ValueStr = inserted.ValueStr, });
+			await source
+				.Where(s => s.Id > 3)
+				.UpdateWithOutputIntoAsync(
+					s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+					destination,
+					(deleted, inserted) => new DestinationTable { Id = inserted.Id, Value = deleted.Value, ValueStr = inserted.ValueStr, });
 
-				AreEqual(
-					expected,
-					destination.ToArray(),
-					ComparerBuilder.GetEqualityComparer<DestinationTable>());
-			}
+			AreEqual(
+				expected,
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<DestinationTable>());
 		}
 
 		[Test]
@@ -2219,10 +2163,9 @@ namespace Tests.xUpdate
 		public void UpdateIUpdatableWithDefaultOutputTest([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id > 3)
 					.Select(s => new UpdateOutput<TableWithData>()
 					{
@@ -2231,7 +2174,7 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = source
+			var output = source
 					.Where(s => s.Id > 3)
 					.AsUpdatable()
 					.Set(s => s.Value, s => s.Value + 1)
@@ -2239,21 +2182,19 @@ namespace Tests.xUpdate
 					.UpdateWithOutput()
 					.ToArray();
 
-				AreEqual(
-					expected,
-					output,
-					new UpdateOutputComparer<TableWithData>());
-			}
+			AreEqual(
+				expected,
+				output,
+				new UpdateOutputComparer<TableWithData>());
 		}
 
 		[Test]
 		public void UpdateIUpdatableWithDefaultOutputTestSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id == 3)
 					.Select(s => new UpdateOutput<TableWithData>()
 					{
@@ -2262,7 +2203,7 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = source
+			var output = source
 					.Where(s => s.Id == 3)
 					.AsUpdatable()
 					.Set(s => s.Value, s => s.Value + 1)
@@ -2270,21 +2211,19 @@ namespace Tests.xUpdate
 					.UpdateWithOutput()
 					.ToArray();
 
-				AreEqual(
-					expected,
-					output,
-					new UpdateOutputComparer<TableWithData>());
-			}
+			AreEqual(
+				expected,
+				output,
+				new UpdateOutputComparer<TableWithData>());
 		}
 
 		[Test]
 		public async Task UpdateIUpdatableWithDefaultOutputTestAsync([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id > 3)
 					.Select(s => new UpdateOutput<TableWithData>()
 					{
@@ -2293,7 +2232,7 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = await AsyncEnumerableToListAsync(
+			var output = await AsyncEnumerableToListAsync(
 					source
 						.Where(s => s.Id > 3)
 						.AsUpdatable()
@@ -2301,21 +2240,19 @@ namespace Tests.xUpdate
 						.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
 						.UpdateWithOutputAsync());
 
-				AreEqual(
-					expected,
-					output,
-					new UpdateOutputComparer<TableWithData>());
-			}
+			AreEqual(
+				expected,
+				output,
+				new UpdateOutputComparer<TableWithData>());
 		}
 
 		[Test]
 		public async Task UpdateIUpdatableWithDefaultOutputTestAsyncSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id == 3)
 					.Select(s => new UpdateOutput<TableWithData>()
 					{
@@ -2324,7 +2261,7 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = await AsyncEnumerableToListAsync(
+			var output = await AsyncEnumerableToListAsync(
 					source
 						.Where(s => s.Id == 3)
 						.AsUpdatable()
@@ -2332,21 +2269,19 @@ namespace Tests.xUpdate
 						.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
 						.UpdateWithOutputAsync());
 
-				AreEqual(
-					expected,
-					output,
-					new UpdateOutputComparer<TableWithData>());
-			}
+			AreEqual(
+				expected,
+				output,
+				new UpdateOutputComparer<TableWithData>());
 		}
 
 		[Test]
 		public void UpdateIUpdatableWithProjectionOutputTest([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id > 3)
 					.Select(s => new
 					{
@@ -2355,7 +2290,7 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = source
+			var output = source
 					.Where(s => s.Id > 3)
 					.AsUpdatable()
 					.Set(s => s.Value, s => s.Value + 1)
@@ -2364,20 +2299,18 @@ namespace Tests.xUpdate
 						(deleted, inserted) => new { DeletedValue = deleted.Value, InsertedValue = inserted.Value, })
 					.ToArray();
 
-				AreEqual(
-					expected,
-					output);
-			}
+			AreEqual(
+				expected,
+				output);
 		}
 
 		[Test]
 		public void UpdateIUpdatableWithProjectionOutputTestSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id == 3)
 					.Select(s => new
 					{
@@ -2386,7 +2319,7 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = source
+			var output = source
 					.Where(s => s.Id == 3)
 					.AsUpdatable()
 					.Set(s => s.Value, s => s.Value + 1)
@@ -2395,20 +2328,18 @@ namespace Tests.xUpdate
 						(deleted, inserted) => new { DeletedValue = deleted.Value, InsertedValue = inserted.Value, })
 					.ToArray();
 
-				AreEqual(
-					expected,
-					output);
-			}
+			AreEqual(
+				expected,
+				output);
 		}
 
 		[Test]
 		public void UpdateIUpdatableWithProjectionOutputTestWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id > 3)
 					.Select(s => new
 					{
@@ -2416,7 +2347,7 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = source
+			var output = source
 					.Where(s => s.Id > 3)
 					.AsUpdatable()
 					.Set(s => s.Value, s => s.Value + 1)
@@ -2425,20 +2356,18 @@ namespace Tests.xUpdate
 						(deleted, inserted) => new { InsertedValue = inserted.Value, })
 					.ToArray();
 
-				AreEqual(
-					expected,
-					output);
-			}
+			AreEqual(
+				expected,
+				output);
 		}
 
 		[Test]
 		public void UpdateIUpdatableWithProjectionOutputTestWithoutOldSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id == 3)
 					.Select(s => new
 					{
@@ -2446,7 +2375,7 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = source
+			var output = source
 					.Where(s => s.Id == 3)
 					.AsUpdatable()
 					.Set(s => s.Value, s => s.Value + 1)
@@ -2455,20 +2384,18 @@ namespace Tests.xUpdate
 						(deleted, inserted) => new { InsertedValue = inserted.Value, })
 					.ToArray();
 
-				AreEqual(
-					expected,
-					output);
-			}
+			AreEqual(
+				expected,
+				output);
 		}
 
 		[Test]
 		public async Task UpdateIUpdatableWithProjectionOutputTestAsync([IncludeDataSources(true, FeatureUpdateOutputWithOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id > 3)
 					.Select(s => new
 					{
@@ -2477,7 +2404,7 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = await AsyncEnumerableToListAsync(
+			var output = await AsyncEnumerableToListAsync(
 					source
 						.Where(s => s.Id > 3)
 						.AsUpdatable()
@@ -2486,20 +2413,18 @@ namespace Tests.xUpdate
 						.UpdateWithOutputAsync(
 							(deleted, inserted) => new { DeletedValue = deleted.Value, InsertedValue = inserted.Value, }));
 
-				AreEqual(
-					expected,
-					output);
-			}
+			AreEqual(
+				expected,
+				output);
 		}
 
 		[Test]
 		public async Task UpdateIUpdatableWithProjectionOutputTestAsyncSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id == 3)
 					.Select(s => new
 					{
@@ -2508,7 +2433,7 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = await AsyncEnumerableToListAsync(
+			var output = await AsyncEnumerableToListAsync(
 					source
 						.Where(s => s.Id == 3)
 						.AsUpdatable()
@@ -2517,20 +2442,18 @@ namespace Tests.xUpdate
 						.UpdateWithOutputAsync(
 							(deleted, inserted) => new { DeletedValue = deleted.Value, InsertedValue = inserted.Value, }));
 
-				AreEqual(
-					expected,
-					output);
-			}
+			AreEqual(
+				expected,
+				output);
 		}
 
 		[Test]
 		public async Task UpdateIUpdatableWithProjectionOutputTestAsyncWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultiple)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id > 3)
 					.Select(s => new
 					{
@@ -2538,7 +2461,7 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = await AsyncEnumerableToListAsync(
+			var output = await AsyncEnumerableToListAsync(
 					source
 						.Where(s => s.Id > 3)
 						.AsUpdatable()
@@ -2547,20 +2470,18 @@ namespace Tests.xUpdate
 						.UpdateWithOutputAsync(
 							(deleted, inserted) => new { InsertedValue = inserted.Value, }));
 
-				AreEqual(
-					expected,
-					output);
-			}
+			AreEqual(
+				expected,
+				output);
 		}
 
 		[Test]
 		public async Task UpdateIUpdatableWithProjectionOutputTestAsyncWithoutOldSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var expected = sourceData
 					.Where(s => s.Id == 3)
 					.Select(s => new
 					{
@@ -2568,7 +2489,7 @@ namespace Tests.xUpdate
 					})
 					.ToArray();
 
-				var output = await AsyncEnumerableToListAsync(
+			var output = await AsyncEnumerableToListAsync(
 					source
 						.Where(s => s.Id == 3)
 						.AsUpdatable()
@@ -2577,66 +2498,61 @@ namespace Tests.xUpdate
 						.UpdateWithOutputAsync(
 							(deleted, inserted) => new { InsertedValue = inserted.Value, }));
 
-				AreEqual(
-					expected,
-					output);
-			}
+			AreEqual(
+				expected,
+				output);
 		}
 		
 		[Test]
 		public void UpdateIUpdatableWithDefaultOutputIntoTest([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData         = GetSourceData();
-			using (var db          = GetDataContext(context))
-			using (var source      = db.CreateLocalTable(sourceData))
-			using (var destination = db.CreateLocalTable<TableWithData>("destination"))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var destination = db.CreateLocalTable<TableWithData>("destination");
+			var expected = sourceData
 					.Where(s => s.Id > 3)
 					.Select(s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", })
 					.ToArray();
 
-				source
-					.Where(s => s.Id > 3)
-					.AsUpdatable()
-					.Set(s => s.Value, s => s.Value + 1)
-					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
-					.UpdateWithOutputInto(
-						destination);
+			source
+				.Where(s => s.Id > 3)
+				.AsUpdatable()
+				.Set(s => s.Value, s => s.Value + 1)
+				.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+				.UpdateWithOutputInto(
+					destination);
 
-				AreEqual(
-					expected,
-					destination.ToArray(),
-					ComparerBuilder.GetEqualityComparer<TableWithData>());
-			}
+			AreEqual(
+				expected,
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<TableWithData>());
 		}
 
 		[Test]
 		public async Task UpdateIUpdatableWithDefaultOutputIntoTestAsync([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData         = GetSourceData();
-			using (var db          = GetDataContext(context))
-			using (var source      = db.CreateLocalTable(sourceData))
-			using (var destination = db.CreateLocalTable<TableWithData>("destination"))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var destination = db.CreateLocalTable<TableWithData>("destination");
+			var expected = sourceData
 					.Where(s => s.Id > 3)
 					.Select(s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", })
 					.ToArray();
 
-				await source
-					.Where(s => s.Id > 3)
-					.AsUpdatable()
-					.Set(s => s.Value, s => s.Value + 1)
-					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
-					.UpdateWithOutputIntoAsync(
-						destination);
+			await source
+				.Where(s => s.Id > 3)
+				.AsUpdatable()
+				.Set(s => s.Value, s => s.Value + 1)
+				.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+				.UpdateWithOutputIntoAsync(
+					destination);
 
-				AreEqual(
-					expected,
-					destination.ToArray(),
-					ComparerBuilder.GetEqualityComparer<TableWithData>());
-			}
+			AreEqual(
+				expected,
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<TableWithData>());
 		}
 
 		[Test]
@@ -2699,58 +2615,54 @@ namespace Tests.xUpdate
 		public void UpdateIUpdatableWithProjectionOutputIntoTest([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData         = GetSourceData();
-			using (var db          = GetDataContext(context))
-			using (var source      = db.CreateLocalTable(sourceData))
-			using (var destination = db.CreateLocalTable<DestinationTable>("destination"))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var destination = db.CreateLocalTable<DestinationTable>("destination");
+			var expected = sourceData
 					.Where(s => s.Id > 3)
 					.Select(s => new DestinationTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr + "Upd", })
 					.ToArray();
 
-				source
-					.Where(s => s.Id > 3)
-					.AsUpdatable()
-					.Set(s => s.Value, s => s.Value + 1)
-					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
-					.UpdateWithOutputInto(
-						destination,
-						(deleted, inserted) => new DestinationTable { Id = inserted.Id, Value = deleted.Value, ValueStr = inserted.ValueStr, });
+			source
+				.Where(s => s.Id > 3)
+				.AsUpdatable()
+				.Set(s => s.Value, s => s.Value + 1)
+				.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+				.UpdateWithOutputInto(
+					destination,
+					(deleted, inserted) => new DestinationTable { Id = inserted.Id, Value = deleted.Value, ValueStr = inserted.ValueStr, });
 
-				AreEqual(
-					expected,
-					destination.ToArray(),
-					ComparerBuilder.GetEqualityComparer<DestinationTable>());
-			}
+			AreEqual(
+				expected,
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<DestinationTable>());
 		}
 
 		[Test]
 		public async Task UpdateIUpdatableWithProjectionOutputTestIntoAsync([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData         = GetSourceData();
-			using (var db          = GetDataContext(context))
-			using (var source      = db.CreateLocalTable(sourceData))
-			using (var destination = db.CreateLocalTable<DestinationTable>("destination"))
-			{
-				var expected = sourceData
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			using var destination = db.CreateLocalTable<DestinationTable>("destination");
+			var expected = sourceData
 					.Where(s => s.Id > 3)
 					.Select(s => new DestinationTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr + "Upd", })
 					.ToArray();
 
-				await source
-					.Where(s => s.Id > 3)
-					.AsUpdatable()
-					.Set(s => s.Value, s => s.Value + 1)
-					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
-					.UpdateWithOutputIntoAsync(
-						destination,
-						(deleted, inserted) => new DestinationTable { Id = inserted.Id, Value = deleted.Value, ValueStr = inserted.ValueStr, });
+			await source
+				.Where(s => s.Id > 3)
+				.AsUpdatable()
+				.Set(s => s.Value, s => s.Value + 1)
+				.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+				.UpdateWithOutputIntoAsync(
+					destination,
+					(deleted, inserted) => new DestinationTable { Id = inserted.Id, Value = deleted.Value, ValueStr = inserted.ValueStr, });
 
-				AreEqual(
-					expected,
-					destination.ToArray(),
-					ComparerBuilder.GetEqualityComparer<DestinationTable>());
-			}
+			AreEqual(
+				expected,
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<DestinationTable>());
 		}
 
 		[Test]
@@ -2850,27 +2762,25 @@ namespace Tests.xUpdate
 		public void Issue3044UpdateOutputWithTake([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var output = source
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var output = source
 					.Where(i => i.Id >= 7)
 					.OrderBy(i => i.Id)
 					.Take(1)
 					.UpdateWithOutput(x => new TableWithData { Id = 20, Value = x.Value, ValueStr = x.ValueStr });
 
-				AreEqual(
-					new[]
-					{
+			AreEqual(
+				new[]
+				{
 						new UpdateOutput<TableWithData>
 						{
 							Deleted  = sourceData[6],
 							Inserted = sourceData[6] with { Id = 20 },
 						}
-					},
-					output,
-					new UpdateOutputComparer<TableWithData>());
-			}
+				},
+				output,
+				new UpdateOutputComparer<TableWithData>());
 		}
 
 		[Test]
@@ -2904,55 +2814,51 @@ namespace Tests.xUpdate
 		public void Issue3044UpdateOutputWithTakeSubquery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var output = source
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var output = source
 					.Where(i => i.Id >= 7)
 					.OrderBy(i => i.Id)
 					.Take(1)
 					.UpdateWithOutput(x => new TableWithData { Id = 20, Value = x.Value, ValueStr = x.ValueStr });
 
-				AreEqual(
-					new[]
-					{
+			AreEqual(
+				new[]
+				{
 						new UpdateOutput<TableWithData>
 						{
 							Deleted = sourceData[6],
 							Inserted = sourceData[6] with { Id = 20 },
 						}
-					},
-					output,
-					new UpdateOutputComparer<TableWithData>());
-			}
+				},
+				output,
+				new UpdateOutputComparer<TableWithData>());
 		}
 
 		[Test]
 		public void Issue3044UpdateOutputWithTakeCte([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var sourceData    = GetSourceData();
-			using (var db     = GetDataContext(context))
-			using (var source = db.CreateLocalTable(sourceData))
-			{
-				var output = source
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable(sourceData);
+			var output = source
 					.Where(i => i.Id == 7)
 					.OrderBy(i => i.Id)
 					.Take(1)
 					.AsCte()
 					.UpdateWithOutput(x => new TableWithData { Value = 20, ValueStr = x.ValueStr });
 
-				AreEqual(
-					new[]
-					{
+			AreEqual(
+				new[]
+				{
 						new UpdateOutput<TableWithData>
 						{
 							Deleted = sourceData[6],
 							Inserted = sourceData[6] with { Value = 20 },
 						}
-					},
-					output,
-					new UpdateOutputComparer<TableWithData>());
-			}
+				},
+				output,
+				new UpdateOutputComparer<TableWithData>());
 		}
 
 		[Table]

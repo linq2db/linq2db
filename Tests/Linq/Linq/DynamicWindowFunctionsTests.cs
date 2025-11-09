@@ -191,12 +191,10 @@ namespace Tests.Linq
 		[Test]
 		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<SampleClass>())
-			{
-				var query = table.OrderBy(t => t.Id).ThenByDescending(t => t.Value1).SelectRanked(x => x.Value1);
-				var result = query.ToArray();
-			}
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<SampleClass>();
+			var query = table.OrderBy(t => t.Id).ThenByDescending(t => t.Value1).SelectRanked(x => x.Value1);
+			var result = query.ToArray();
 		}
 	}
 }

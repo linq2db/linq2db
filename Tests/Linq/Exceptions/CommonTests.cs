@@ -81,13 +81,12 @@ namespace Tests.Exceptions
 		public void ReplaceTableTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)]
 			string context)
 		{
-			using (var db = new MyDataConnection(context))
-			{
-				db.BeginTransaction();
+			using var db = new MyDataConnection(context);
+			db.BeginTransaction();
 
-				var n = 555;
+			var n = 555;
 
-				var ex = Assert.Throws(
+			var ex = Assert.Throws(
 					Is.AssignableTo<Exception>(),
 					() =>
 						db.Parent.Insert(() => new Parent
@@ -96,21 +95,20 @@ namespace Tests.Exceptions
 							Value1   = n
 						}),
 					"Invalid object name 'Parent1'.")!;
-				Assert.That(ex.GetType().Name, Is.EqualTo("SqlException"));
+			Assert.That(ex.GetType().Name, Is.EqualTo("SqlException"));
 
-				ex = Assert.Throws(
-					Is.AssignableTo<Exception>(),
-					() =>
-						db.Parent.Insert(() => new Parent
-						{
-							ParentID = n,
-							Value1   = n
-						}),
-					"Invalid object name 'Parent1'.")!;
-				Assert.That(ex.GetType().Name, Is.EqualTo("SqlException"));
+			ex = Assert.Throws(
+				Is.AssignableTo<Exception>(),
+				() =>
+					db.Parent.Insert(() => new Parent
+					{
+						ParentID = n,
+						Value1 = n
+					}),
+				"Invalid object name 'Parent1'.")!;
+			Assert.That(ex.GetType().Name, Is.EqualTo("SqlException"));
 
-				db.Parent.Delete(p => p.ParentID == n);
-			}
+			db.Parent.Delete(p => p.ParentID == n);
 		}
 	}
 }

@@ -244,27 +244,25 @@ namespace Tests.Linq
 			int totalRecords;
 			int page = 0;
 
-			using (var enumerator = query.GetEnumerator())
+			using var enumerator = query.GetEnumerator();
+			List<T> result;
+			if (!enumerator.MoveNext())
 			{
-				List<T> result;
-				if (!enumerator.MoveNext())
-				{
-					totalRecords = 0;
-					result = new List<T>();
-				}
-				else
-				{
-					totalRecords = enumerator.Current.TotalCount;
-					page = enumerator.Current.Page;
-					result = new List<T>(pageSize);
-					do
-					{
-						result.Add(enumerator.Current.Data);
-					} while (enumerator.MoveNext());
-				}
-
-				return new PaginationResult<T>(totalRecords, page, pageSize, result);
+				totalRecords = 0;
+				result = new List<T>();
 			}
+			else
+			{
+				totalRecords = enumerator.Current.TotalCount;
+				page = enumerator.Current.Page;
+				result = new List<T>(pageSize);
+				do
+				{
+					result.Add(enumerator.Current.Data);
+				} while (enumerator.MoveNext());
+			}
+
+			return new PaginationResult<T>(totalRecords, page, pageSize, result);
 		}
 
 		static async Task<PaginationResult<T>> ProcessPaginationResultAsync<T>(IQueryable<Envelope<T>> query, int pageSize, CancellationToken cancellationToken)
@@ -273,27 +271,25 @@ namespace Tests.Linq
 			int totalRecords;
 			int page = 0;
 
-			await using (var enumerator = items.GetAsyncEnumerator(cancellationToken))
+			await using var enumerator = items.GetAsyncEnumerator(cancellationToken);
+			List<T> result;
+			if (!await enumerator.MoveNextAsync())
 			{
-				List<T> result;
-				if (!await enumerator.MoveNextAsync())
-				{
-					totalRecords = 0;
-					result = new List<T>();
-				}
-				else
-				{
-					totalRecords = enumerator.Current.TotalCount;
-					page = enumerator.Current.Page;
-					result = new List<T>(pageSize);
-					do
-					{
-						result.Add(enumerator.Current.Data);
-					} while (await enumerator.MoveNextAsync());
-				}
-
-				return new PaginationResult<T>(totalRecords, page, pageSize, result);
+				totalRecords = 0;
+				result = new List<T>();
 			}
+			else
+			{
+				totalRecords = enumerator.Current.TotalCount;
+				page = enumerator.Current.Page;
+				result = new List<T>(pageSize);
+				do
+				{
+					result.Add(enumerator.Current.Data);
+				} while (await enumerator.MoveNextAsync());
+			}
+
+			return new PaginationResult<T>(totalRecords, page, pageSize, result);
 		}
 
 		sealed class RownNumberHolder<T>

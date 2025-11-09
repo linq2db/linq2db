@@ -222,24 +222,22 @@ namespace Tests.Linq
 		[Test]
 		public void EnrichSimple([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, o => o.UseInterceptor(new EnrichInterceptor())))
-			using (var users = db.CreateLocalTable(new[]
+			using var db = GetDataContext(context, o => o.UseInterceptor(new EnrichInterceptor()));
+			using var users = db.CreateLocalTable(new[]
 				   {
 					   new User { UserId = 1, FirstName = "First", LastName = "Last", Supervisor = "Sup" }
-				   }))
-			using (var table = db.CreateLocalTable(new[] { new SampleClass { Id = 1, Value = "Some" } }))
-			{
-				var query =
+				   });
+			using var table = db.CreateLocalTable(new[] { new SampleClass { Id = 1, Value = "Some" } });
+			var query =
 					from x in table
 					from u in users
 					select u.ToUserSearchResult()
 						.EnrichWith(new UserSearchResult { PTOAccrued = 1, LastName = "Enriched" });
 
-				var result = query.First();
+			var result = query.First();
 
-				result.PTOAccrued.ShouldBe(1);
-				result.LastName.ShouldBe("Enriched");
-			}
+			result.PTOAccrued.ShouldBe(1);
+			result.LastName.ShouldBe("Enriched");
 		}
 
 		private static IQueryable<UserSearchResult> QueryableResult(IDataContext dc)
@@ -256,23 +254,21 @@ namespace Tests.Linq
 		[Test]
 		public void EnrichViaQueryableMethod([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context, o => o.UseInterceptor(new EnrichInterceptor())))
-			using (var users = db.CreateLocalTable(new[]
-			       {
-				       new User { UserId = 1, FirstName = "First", LastName = "Last", Supervisor = "Sup" }
-			       }))
-			using (var table = db.CreateLocalTable(new[] { new SampleClass { Id = 1, Value = "Some" } }))
-			{
-				var query =
+			using var db = GetDataContext(context, o => o.UseInterceptor(new EnrichInterceptor()));
+			using var users = db.CreateLocalTable(new[]
+				   {
+					   new User { UserId = 1, FirstName = "First", LastName = "Last", Supervisor = "Sup" }
+				   });
+			using var table = db.CreateLocalTable(new[] { new SampleClass { Id = 1, Value = "Some" } });
+			var query =
 					from x in table
 					from u in QueryableResult(db).InnerJoin(u => u.UserId == x.Id)
 					select u;
 
-				var result = query.First();
+			var result = query.First();
 
-				result.PTOAccrued.ShouldBe(1);
-				result.LastName.ShouldBe("Enriched");
-			}
+			result.PTOAccrued.ShouldBe(1);
+			result.LastName.ShouldBe("Enriched");
 		}
 	}
 }

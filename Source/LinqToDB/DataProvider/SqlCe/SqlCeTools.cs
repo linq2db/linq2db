@@ -67,8 +67,8 @@ namespace LinqToDB.DataProvider.SqlCe
 				databaseName, deleteIfExists, ".sdf",
 				dbName =>
 				{
-					using (var engine = SqlCeProviderAdapter.GetInstance().CreateSqlCeEngine("Data Source=" + dbName))
-						engine.CreateDatabase();
+					using var engine = SqlCeProviderAdapter.GetInstance().CreateSqlCeEngine("Data Source=" + dbName);
+					engine.CreateDatabase();
 				});
 		}
 

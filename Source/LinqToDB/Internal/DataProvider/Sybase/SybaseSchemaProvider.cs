@@ -178,12 +178,14 @@ WHERE
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			using (var reader = dataConnection.ExecuteReader(
+			using var reader = dataConnection.ExecuteReader(
 				"sp_oledb_stored_procedures",
 				CommandType.StoredProcedure,
-				CommandBehavior.Default))
-			{
-				return reader.Query(rd =>
+				CommandBehavior.Default
+			);
+
+			return reader
+				.Query(rd =>
 				{
 					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					var catalog = rd.GetString(0);
@@ -199,8 +201,8 @@ WHERE
 						IsFunction      = rd.GetInt16(3) == 2,
 						IsDefaultSchema = schema == "dbo"
 					};
-				}).ToList();
-			}
+				})
+				.ToList();
 		}
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
@@ -209,12 +211,14 @@ WHERE
 			if (dataConnection.Transaction != null && GetProcedureSchemaExecutesProcedure)
 				throw new LinqToDBException("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false");
 
-			using (var reader = dataConnection.ExecuteReader(
-				"sp_oledb_getprocedurecolumns",
+			using var reader = dataConnection.ExecuteReader(
+				"sp_oledb_stored_procedures",
 				CommandType.StoredProcedure,
-				CommandBehavior.Default))
-			{
-				return reader.Query(rd =>
+				CommandBehavior.Default
+			);
+
+			return reader
+				.Query(rd =>
 				{
 					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					var catalog    = rd.GetString(0);
@@ -247,8 +251,8 @@ WHERE
 						DataType      = type,
 						IsNullable    = isNullable
 					};
-				}).ToList();
-			}
+				})
+				.ToList();
 		}
 
 		protected override DataTable? GetProcedureSchema(DataConnection dataConnection, string commandText, CommandType commandType, DataParameter[] parameters, GetSchemaOptions options)
@@ -260,8 +264,8 @@ WHERE
 			if (dataConnection.DataProvider.Name == ProviderName.SybaseManaged)
 			{
 				// https://github.com/DataAction/AdoNetCore.AseClient/issues/189
-				using (var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.Default, parameters))
-					dt = rd.Reader!.GetSchemaTable();
+				using var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.Default, parameters);
+				dt = rd.Reader!.GetSchemaTable();
 			}
 			else
 				dt = base.GetProcedureSchema(dataConnection, commandText, commandType, parameters, options);

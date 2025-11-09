@@ -69,19 +69,15 @@ namespace Tests.UserTests
 				TestProvName.AllSapHana)]
 					string context)
 		{
-			using (var db = new IssueDataConnection(context))
-			{
-				db.GetTable<Child>().LoadWith(p => p.Parent!.Children).First();
-			}
+			using var db = new IssueDataConnection(context);
+			db.GetTable<Child>().LoadWith(p => p.Parent!.Children).First();
 		}
 
 		[Test]
 		public void TestFactory([DataSources(false)] string context)
 		{
-			using (var db = new FactoryDataConnection(context))
-			{
-				db.GetTable<Child>().LoadWith(p => p.Parent!.Children).First();
-			}
+			using var db = new FactoryDataConnection(context);
+			db.GetTable<Child>().LoadWith(p => p.Parent!.Children).First();
 		}
 	}
 }

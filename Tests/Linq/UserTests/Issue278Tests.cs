@@ -164,18 +164,18 @@ namespace Tests.UserTests
 				{
 					var rnd = new Random();
 
-					using (var db = GetDataContext(context, o => o.UseDisableQueryCache(disableQueryCache)))
-						for (var i = 0; i < TOTAL_QUERIES_PER_RUN / threadCount; i++)
-						{
-							if (mode == CacheMode.ClearCache)
-								db.GetTable<LinqDataTypes2>().ClearCache();
+					using var db = GetDataContext(context, o => o.UseDisableQueryCache(disableQueryCache));
+					for (var i = 0; i < TOTAL_QUERIES_PER_RUN / threadCount; i++)
+					{
+						if (mode == CacheMode.ClearCache)
+							db.GetTable<LinqDataTypes2>().ClearCache();
 
-							if (mode == CacheMode.NoCacheScope && (rnd.Next() % 2 == 0))
-								using (NoLinqCache.Scope())
-									actions[rnd.Next() % actions.Length](db);
-							else
+						if (mode == CacheMode.NoCacheScope && (rnd.Next() % 2 == 0))
+							using (NoLinqCache.Scope())
 								actions[rnd.Next() % actions.Length](db);
-						}
+						else
+							actions[rnd.Next() % actions.Length](db);
+					}
 				});
 
 			// precision of this approach is more than enough for this test

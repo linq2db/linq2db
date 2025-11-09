@@ -26,19 +26,19 @@ namespace Tests.Linq
 		[Test]
 		public void Enum1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Person where new[] { Gender.Male }.Contains(p.Gender) select p,
-					from p in db.Person where new[] { Gender.Male }.Contains(p.Gender) select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Person where new[] { Gender.Male }.Contains(p.Gender) select p,
+				from p in db.Person where new[] { Gender.Male }.Contains(p.Gender) select p);
 		}
 
 		[Test]
 		public void Enum2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Person where p.Gender == Gender.Male select p,
-					from p in db.Person where p.Gender == Gender.Male select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Person where p.Gender == Gender.Male select p,
+				from p in db.Person where p.Gender == Gender.Male select p);
 		}
 
 		[Test]
@@ -46,10 +46,10 @@ namespace Tests.Linq
 		{
 			var gender = Gender.Male;
 
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Person where p.Gender == gender select p,
-					from p in db.Person where p.Gender == gender select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Person where p.Gender == gender select p,
+				from p in db.Person where p.Gender == gender select p);
 		}
 
 		[Test]
@@ -57,19 +57,19 @@ namespace Tests.Linq
 		{
 			var fm = Gender.Female;
 
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Person where p.Gender != fm select p,
-					from p in db.Person where p.Gender != fm select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Person where p.Gender != fm select p,
+				from p in db.Person where p.Gender != fm select p);
 		}
 
 		[Test]
 		public void Enum4([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Parent4 where p.Value1 == TypeValue.Value1 select p,
-					from p in db.Parent4 where p.Value1 == TypeValue.Value1 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Parent4 where p.Value1 == TypeValue.Value1 select p,
+				from p in db.Parent4 where p.Value1 == TypeValue.Value1 select p);
 		}
 
 		[Test]
@@ -86,23 +86,25 @@ namespace Tests.Linq
 		[Test]
 		public void Enum5([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Parent4 where p.Value1 == TypeValue.Value3 select p,
-					from p in db.Parent4 where p.Value1 == TypeValue.Value3 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Parent4 where p.Value1 == TypeValue.Value3 select p,
+				from p in db.Parent4 where p.Value1 == TypeValue.Value3 select p);
 		}
 
 		[Test]
 		public void Enum6([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Parent4
-					join c in    Child on p.ParentID equals c.ParentID
-					where p.Value1 == TypeValue.Value1 select p,
-					from p in db.Parent4
-					join c in db.Child on p.ParentID equals c.ParentID
-					where p.Value1 == TypeValue.Value1 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Parent4
+				join c in Child on p.ParentID equals c.ParentID
+				where p.Value1 == TypeValue.Value1
+				select p,
+				from p in db.Parent4
+				join c in db.Child on p.ParentID equals c.ParentID
+				where p.Value1 == TypeValue.Value1
+				select p);
 		}
 
 		[Test]
@@ -110,11 +112,9 @@ namespace Tests.Linq
 		{
 			var v1 = TypeValue.Value1;
 
-			using (var db = GetDataContext(context))
-			{
-				db.BeginTransaction();
-				db.Parent4.Update(p => p.Value1 == v1, p => new Parent4 { Value1 = v1 });
-			}
+			using var db = GetDataContext(context);
+			db.BeginTransaction();
+			db.Parent4.Update(p => p.Value1 == v1, p => new Parent4 { Value1 = v1 });
 		}
 
 		public enum TestValue
@@ -132,8 +132,8 @@ namespace Tests.Linq
 		[Test]
 		public void Enum81([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				db.GetTable<TestParent>().Where(p => p.Value1 == TestValue.Value1).ToList();
+			using var db = GetDataContext(context);
+			db.GetTable<TestParent>().Where(p => p.Value1 == TestValue.Value1).ToList();
 		}
 
 		internal sealed class LinqDataTypes
@@ -144,18 +144,18 @@ namespace Tests.Linq
 		[Test]
 		public void Enum812([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				db.GetTable<LinqDataTypes>()
-					.Where(p => p.ID == TestValue.Value1)
-					.Count();
+			using var db = GetDataContext(context);
+			db.GetTable<LinqDataTypes>()
+				.Where(p => p.ID == TestValue.Value1)
+				.Count();
 		}
 
 		[Test]
 		public void Enum82([DataSources] string context)
 		{
 			var testValue = TestValue.Value1;
-			using (var db = GetDataContext(context))
-				db.GetTable<TestParent>().Where(p => p.Value1 == testValue).ToList();
+			using var db = GetDataContext(context);
+			db.GetTable<TestParent>().Where(p => p.Value1 == testValue).ToList();
 		}
 
 		public enum Gender9
@@ -179,8 +179,8 @@ namespace Tests.Linq
 		[Test]
 		public void Enum9([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				db.GetTable<Person9>().Where(p => p.PersonID == 1 && p.Gender == Gender9.Male).ToList();
+			using var db = GetDataContext(context);
+			db.GetTable<Person9>().Where(p => p.PersonID == 1 && p.Gender == Gender9.Male).ToList();
 		}
 
 		[Table("Parent")]
@@ -198,28 +198,24 @@ namespace Tests.Linq
 		[Test]
 		public void Inner1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var e = db.GetTable<ParentObject>().First(p => p.ParentID == 1);
+			using (Assert.EnterMultipleScope())
 			{
-				var e = db.GetTable<ParentObject>().First(p => p.ParentID == 1);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(e.ParentID, Is.EqualTo(1));
-					Assert.That(e.Value.Value1, Is.EqualTo(1));
-				}
+				Assert.That(e.ParentID, Is.EqualTo(1));
+				Assert.That(e.Value.Value1, Is.EqualTo(1));
 			}
 		}
 
 		[Test]
 		public void Inner2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var e = db.GetTable<ParentObject>().First(p => p.ParentID == 1 && p.Value.Value1 == 1);
+			using (Assert.EnterMultipleScope())
 			{
-				var e = db.GetTable<ParentObject>().First(p => p.ParentID == 1 && p.Value.Value1 == 1);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(e.ParentID, Is.EqualTo(1));
-					Assert.That(e.Value.Value1, Is.EqualTo(1));
-				}
+				Assert.That(e.ParentID, Is.EqualTo(1));
+				Assert.That(e.Value.Value1, Is.EqualTo(1));
 			}
 		}
 
@@ -236,11 +232,9 @@ namespace Tests.Linq
 		[Test]
 		public void Inner3([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var e = db.GetTable<ChildObject>().First(c => c.Parent!.Value.Value1 == 1);
-				Assert.That(e.ParentID, Is.EqualTo(1));
-			}
+			using var db = GetDataContext(context);
+			var e = db.GetTable<ChildObject>().First(c => c.Parent!.Value.Value1 == 1);
+			Assert.That(e.ParentID, Is.EqualTo(1));
 		}
 
 		struct MyInt
@@ -270,74 +264,64 @@ namespace Tests.Linq
 		[Test]
 		public void MyType1()
 		{
-			using (var db = new TestDataConnection())
-			{
-				db.AddMappingSchema(_myMappingSchema);
-				var _ = db.GetTable<MyParent>().ToList();
-			}
+			using var db = new TestDataConnection();
+			db.AddMappingSchema(_myMappingSchema);
+			var _ = db.GetTable<MyParent>().ToList();
 		}
 
 		[Test]
 		public void MyType2()
 		{
-			using (var db = new TestDataConnection())
-			{
-				db.AddMappingSchema(_myMappingSchema);
-				var _ = db.GetTable<MyParent>()
+			using var db = new TestDataConnection();
+			db.AddMappingSchema(_myMappingSchema);
+			var _ = db.GetTable<MyParent>()
 					.Select(t => new MyParent { ParentID = t.ParentID, Value1 = t.Value1 })
 					.ToList();
-			}
 		}
 
 		[Test]
 		public void MyType3()
 		{
-			using (var db = (TestDataConnection) new TestDataConnection())
+			using var db = (TestDataConnection)new TestDataConnection();
+			db.AddMappingSchema(_myMappingSchema);
+			try
 			{
-				db.AddMappingSchema(_myMappingSchema);
-				try
-				{
-					db.Insert(new MyParent { ParentID = new MyInt { MyValue = 1001 }, Value1 = 1001 });
-				}
-				finally
-				{
-					db.Parent.Delete(p => p.ParentID >= 1000);
-				}
+				db.Insert(new MyParent { ParentID = new MyInt { MyValue = 1001 }, Value1 = 1001 });
+			}
+			finally
+			{
+				db.Parent.Delete(p => p.ParentID >= 1000);
 			}
 		}
 
 		[Test]
 		public void MyType4()
 		{
-			using (var db = (TestDataConnection)new TestDataConnection())
+			using var db = (TestDataConnection)new TestDataConnection();
+			db.AddMappingSchema(_myMappingSchema);
+			try
 			{
-				db.AddMappingSchema(_myMappingSchema);
-				try
-				{
-					var id = new MyInt { MyValue = 1001 };
-					db.GetTable<MyParent>().Insert(() => new MyParent { ParentID = id, Value1 = 1001 });
-				}
-				finally
-				{
-					db.Parent.Delete(p => p.ParentID >= 1000);
-				}
+				var id = new MyInt { MyValue = 1001 };
+				db.GetTable<MyParent>().Insert(() => new MyParent { ParentID = id, Value1 = 1001 });
+			}
+			finally
+			{
+				db.Parent.Delete(p => p.ParentID >= 1000);
 			}
 		}
 
 		[Test]
 		public void MyType5()
 		{
-			using (var db = (TestDataConnection)new TestDataConnection())
+			using var db = (TestDataConnection)new TestDataConnection();
+			db.AddMappingSchema(_myMappingSchema);
+			try
 			{
-				db.AddMappingSchema(_myMappingSchema);
-				try
-				{
-					db.GetTable<MyParent>().Insert(() => new MyParent { ParentID = new MyInt { MyValue = 1001 }, Value1 = 1001 });
-				}
-				finally
-				{
-					db.Parent.Delete(p => p.ParentID >= 1000);
-				}
+				db.GetTable<MyParent>().Insert(() => new MyParent { ParentID = new MyInt { MyValue = 1001 }, Value1 = 1001 });
+			}
+			finally
+			{
+				db.Parent.Delete(p => p.ParentID >= 1000);
 			}
 		}
 
@@ -355,28 +339,28 @@ namespace Tests.Linq
 		[Test]
 		public void MapIgnore1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					              Parent    .Select(p => new { p.ParentID,   Value2 = "1" }),
-					db.GetTable<MyParent1>().Select(p => new { p.ParentID, p.Value2 }));
+			using var db = GetDataContext(context);
+			AreEqual(
+							  Parent.Select(p => new { p.ParentID, Value2 = "1" }),
+				db.GetTable<MyParent1>().Select(p => new { p.ParentID, p.Value2 }));
 		}
 
 		[Test]
 		public void MapIgnore2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					              Parent    .Select(p => new { p.ParentID,          Length = 1 }),
-					db.GetTable<MyParent1>().Select(p => new { p.ParentID, p.Value2.Length }));
+			using var db = GetDataContext(context);
+			AreEqual(
+							  Parent.Select(p => new { p.ParentID, Length = 1 }),
+				db.GetTable<MyParent1>().Select(p => new { p.ParentID, p.Value2.Length }));
 		}
 
 		[Test]
 		public void MapIgnore3([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					              Parent    .Select(p => new { p.ParentID, Value = 2            }),
-					db.GetTable<MyParent1>().Select(p => new { p.ParentID, Value = p.GetValue() }));
+			using var db = GetDataContext(context);
+			AreEqual(
+							  Parent.Select(p => new { p.ParentID, Value = 2 }),
+				db.GetTable<MyParent1>().Select(p => new { p.ParentID, Value = p.GetValue() }));
 		}
 
 		public class     Entity    { [PrimaryKey] public int Id { get; set; } }
@@ -418,24 +402,20 @@ namespace Tests.Linq
 		[Test]
 		public void TestInterfaceMapping1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var results = db.GetTable<IChild>().Where(c => c.ChildID == 32).Count();
+			using var db = GetDataContext(context);
+			var results = db.GetTable<IChild>().Where(c => c.ChildID == 32).Count();
 
-				Assert.That(results, Is.EqualTo(1));
-			}
+			Assert.That(results, Is.EqualTo(1));
 		}
 
 		[Test]
 		public void TestInterfaceMapping2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var results = db.GetTable<IChild>().Where(c => c.ChildID == 32).Select(_ => new { _.ChildID }).ToList();
+			using var db = GetDataContext(context);
+			var results = db.GetTable<IChild>().Where(c => c.ChildID == 32).Select(_ => new { _.ChildID }).ToList();
 
-				Assert.That(results, Has.Count.EqualTo(1));
-				Assert.That(results[0].ChildID, Is.EqualTo(32));
-			}
+			Assert.That(results, Has.Count.EqualTo(1));
+			Assert.That(results[0].ChildID, Is.EqualTo(32));
 		}
 
 		[Table("Person")]
@@ -459,23 +439,21 @@ namespace Tests.Linq
 		{
 			GetProviderName(context, out var isLinqService);
 
-			using (var db = GetDataContext(context, testLinqService : false, suppressSequentialAccess: true))
+			using var db = GetDataContext(context, testLinqService: false, suppressSequentialAccess: true);
+			if (isLinqService)
 			{
-				if (isLinqService)
-				{
 #if NETFRAMEWORK
-					var fe = Assert.Throws<FaultException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
+				var fe = Assert.Throws<FaultException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
 #else
-					var fe = Assert.Throws<Grpc.Core.RpcException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
+				var fe = Assert.Throws<Grpc.Core.RpcException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
 #endif
-					Assert.That(fe.Message.ToLowerInvariant(), Does.Contain("firstname"));
-				}
-				else
-				{
-					var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
-					// field name casing depends on database
-					Assert.That(ex.ColumnName!.ToLowerInvariant(), Is.EqualTo("firstname"));
-				}
+				Assert.That(fe.Message.ToLowerInvariant(), Does.Contain("firstname"));
+			}
+			else
+			{
+				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
+				// field name casing depends on database
+				Assert.That(ex.ColumnName!.ToLowerInvariant(), Is.EqualTo("firstname"));
 			}
 		}
 
@@ -484,11 +462,9 @@ namespace Tests.Linq
 		{
 			GetProviderName(context, out var isLinqService);
 
-			using (var db = GetDataContext(context, suppressSequentialAccess: true))
-			{
-				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList())!;
-				Assert.That(ex.ColumnName!.ToLowerInvariant(), Is.EqualTo("lastname"));
-			}
+			using var db = GetDataContext(context, suppressSequentialAccess: true);
+			var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList())!;
+			Assert.That(ex.ColumnName!.ToLowerInvariant(), Is.EqualTo("lastname"));
 		}
 
 #region Records
@@ -541,37 +517,35 @@ namespace Tests.Linq
 					.Property(p => p.BaseValue)
 				.Build();
 
-			using (var db = GetDataContext(context, ms))
-			using (var table = db.CreateLocalTable<Record>())
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable<Record>();
+			db.Insert(new Record(1, "One", "OneBase"));
+			db.Insert(new Record(2, "Two", "TwoBase"));
+
+			var data = table.OrderBy(r => r.Id).ToArray();
+
+			Assert.That(data, Has.Length.EqualTo(2));
+			using (Assert.EnterMultipleScope())
 			{
-				db.Insert(new Record(1, "One", "OneBase"));
-				db.Insert(new Record(2, "Two", "TwoBase"));
+				Assert.That(data[0].Id, Is.EqualTo(1));
+				Assert.That(data[0].Value, Is.EqualTo("One"));
+				Assert.That(data[0].BaseValue, Is.EqualTo("OneBase"));
+				Assert.That(data[1].Id, Is.EqualTo(2));
+				Assert.That(data[1].Value, Is.EqualTo("Two"));
+				Assert.That(data[1].BaseValue, Is.EqualTo("TwoBase"));
+			}
 
-				var data = table.OrderBy(r => r.Id).ToArray();
+			var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
 
-				Assert.That(data, Has.Length.EqualTo(2));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(data[0].Id, Is.EqualTo(1));
-					Assert.That(data[0].Value, Is.EqualTo("One"));
-					Assert.That(data[0].BaseValue, Is.EqualTo("OneBase"));
-					Assert.That(data[1].Id, Is.EqualTo(2));
-					Assert.That(data[1].Value, Is.EqualTo("Two"));
-					Assert.That(data[1].BaseValue, Is.EqualTo("TwoBase"));
-				}
-
-				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
-
-				Assert.That(proj, Has.Length.EqualTo(2));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(proj[0].Id, Is.EqualTo(1));
-					Assert.That(proj[0].Value, Is.EqualTo("One"));
-					Assert.That(proj[0].BaseValue, Is.EqualTo("OneBase"));
-					Assert.That(proj[1].Id, Is.EqualTo(2));
-					Assert.That(proj[1].Value, Is.EqualTo("Two"));
-					Assert.That(proj[1].BaseValue, Is.EqualTo("TwoBase"));
-				}
+			Assert.That(proj, Has.Length.EqualTo(2));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(proj[0].Id, Is.EqualTo(1));
+				Assert.That(proj[0].Value, Is.EqualTo("One"));
+				Assert.That(proj[0].BaseValue, Is.EqualTo("OneBase"));
+				Assert.That(proj[1].Id, Is.EqualTo(2));
+				Assert.That(proj[1].Value, Is.EqualTo("Two"));
+				Assert.That(proj[1].BaseValue, Is.EqualTo("TwoBase"));
 			}
 		}
 
@@ -586,37 +560,35 @@ namespace Tests.Linq
 					.Property(p => p.BaseValue)
 				.Build();
 
-			using (var db = GetDataContext(context, ms))
-			using (var table = db.CreateLocalTable<RecordLike>())
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable<RecordLike>();
+			db.Insert(new RecordLike(1, "One", "OneBase"));
+			db.Insert(new RecordLike(2, "Two", "TwoBase"));
+
+			var data = table.OrderBy(r => r.Id).ToArray();
+
+			Assert.That(data, Has.Length.EqualTo(2));
+			using (Assert.EnterMultipleScope())
 			{
-				db.Insert(new RecordLike(1, "One", "OneBase"));
-				db.Insert(new RecordLike(2, "Two", "TwoBase"));
+				Assert.That(data[0].Id, Is.EqualTo(1));
+				Assert.That(data[0].Value, Is.EqualTo("One"));
+				Assert.That(data[0].BaseValue, Is.EqualTo("OneBase"));
+				Assert.That(data[1].Id, Is.EqualTo(2));
+				Assert.That(data[1].Value, Is.EqualTo("Two"));
+				Assert.That(data[1].BaseValue, Is.EqualTo("TwoBase"));
+			}
 
-				var data = table.OrderBy(r => r.Id).ToArray();
+			var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
 
-				Assert.That(data, Has.Length.EqualTo(2));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(data[0].Id, Is.EqualTo(1));
-					Assert.That(data[0].Value, Is.EqualTo("One"));
-					Assert.That(data[0].BaseValue, Is.EqualTo("OneBase"));
-					Assert.That(data[1].Id, Is.EqualTo(2));
-					Assert.That(data[1].Value, Is.EqualTo("Two"));
-					Assert.That(data[1].BaseValue, Is.EqualTo("TwoBase"));
-				}
-
-				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
-
-				Assert.That(proj, Has.Length.EqualTo(2));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(proj[0].Id, Is.EqualTo(1));
-					Assert.That(proj[0].Value, Is.EqualTo("One"));
-					Assert.That(proj[0].BaseValue, Is.EqualTo("OneBase"));
-					Assert.That(proj[1].Id, Is.EqualTo(2));
-					Assert.That(proj[1].Value, Is.EqualTo("Two"));
-					Assert.That(proj[1].BaseValue, Is.EqualTo("TwoBase"));
-				}
+			Assert.That(proj, Has.Length.EqualTo(2));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(proj[0].Id, Is.EqualTo(1));
+				Assert.That(proj[0].Value, Is.EqualTo("One"));
+				Assert.That(proj[0].BaseValue, Is.EqualTo("OneBase"));
+				Assert.That(proj[1].Id, Is.EqualTo(2));
+				Assert.That(proj[1].Value, Is.EqualTo("Two"));
+				Assert.That(proj[1].BaseValue, Is.EqualTo("TwoBase"));
 			}
 		}
 
@@ -630,37 +602,35 @@ namespace Tests.Linq
 					.Property(p => p.Value)
 				.Build();
 
-			using (var db = GetDataContext(context, ms))
-			using (var table = db.CreateLocalTable<WithInitOnly>())
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable<WithInitOnly>();
+			db.Insert(new WithInitOnly { Id = 1, Value = "One", BaseValue = "OneBase" });
+			db.Insert(new WithInitOnly { Id = 2, Value = "Two", BaseValue = "TwoBase" });
+
+			var data = table.OrderBy(r => r.Id).ToArray();
+
+			Assert.That(data, Has.Length.EqualTo(2));
+			using (Assert.EnterMultipleScope())
 			{
-				db.Insert(new WithInitOnly{Id = 1, Value = "One", BaseValue = "OneBase"});
-				db.Insert(new WithInitOnly{Id = 2, Value = "Two", BaseValue = "TwoBase"});
+				Assert.That(data[0].Id, Is.EqualTo(1));
+				Assert.That(data[0].Value, Is.EqualTo("One"));
+				Assert.That(data[0].BaseValue, Is.EqualTo("OneBase"));
+				Assert.That(data[1].Id, Is.EqualTo(2));
+				Assert.That(data[1].Value, Is.EqualTo("Two"));
+				Assert.That(data[1].BaseValue, Is.EqualTo("TwoBase"));
+			}
 
-				var data = table.OrderBy(r => r.Id).ToArray();
+			var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
 
-				Assert.That(data, Has.Length.EqualTo(2));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(data[0].Id, Is.EqualTo(1));
-					Assert.That(data[0].Value, Is.EqualTo("One"));
-					Assert.That(data[0].BaseValue, Is.EqualTo("OneBase"));
-					Assert.That(data[1].Id, Is.EqualTo(2));
-					Assert.That(data[1].Value, Is.EqualTo("Two"));
-					Assert.That(data[1].BaseValue, Is.EqualTo("TwoBase"));
-				}
-
-				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
-
-				Assert.That(proj, Has.Length.EqualTo(2));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(proj[0].Id, Is.EqualTo(1));
-					Assert.That(proj[0].Value, Is.EqualTo("One"));
-					Assert.That(proj[0].BaseValue, Is.EqualTo("OneBase"));
-					Assert.That(proj[1].Id, Is.EqualTo(2));
-					Assert.That(proj[1].Value, Is.EqualTo("Two"));
-					Assert.That(proj[1].BaseValue, Is.EqualTo("TwoBase"));
-				}
+			Assert.That(proj, Has.Length.EqualTo(2));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(proj[0].Id, Is.EqualTo(1));
+				Assert.That(proj[0].Value, Is.EqualTo("One"));
+				Assert.That(proj[0].BaseValue, Is.EqualTo("OneBase"));
+				Assert.That(proj[1].Id, Is.EqualTo(2));
+				Assert.That(proj[1].Value, Is.EqualTo("Two"));
+				Assert.That(proj[1].BaseValue, Is.EqualTo("TwoBase"));
 			}
 		}
 

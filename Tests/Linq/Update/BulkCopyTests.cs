@@ -75,38 +75,37 @@ namespace Tests.xUpdate
 				Assert.Inconclusive("Oracle BulkCopy doesn't support identity triggers");
 
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
-			using (var db = GetDataConnection(context))
+			using var db = GetDataConnection(context);
+			var lastId = db.InsertWithInt32Identity(new TestTable2());
+			try
 			{
-				var lastId = db.InsertWithInt32Identity(new TestTable2());
-				try
+				var options = new BulkCopyOptions()
 				{
-					var options = new BulkCopyOptions()
-					{
-						KeepIdentity = keepIdentity,
-						BulkCopyType = copyType
-					};
+					KeepIdentity = keepIdentity,
+					BulkCopyType = copyType
+				};
 
-					if (!await ExecuteAsync(db, context, perform, keepIdentity, copyType))
-						return;
+				if (!await ExecuteAsync(db, context, perform, keepIdentity, copyType))
+					return;
 
-					var data = db.GetTable<TestTable2>().Where(_ => _.ID > lastId).OrderBy(_ => _.ID).ToArray();
+				var data = db.GetTable<TestTable2>().Where(_ => _.ID > lastId).OrderBy(_ => _.ID).ToArray();
 
-					Assert.That(data, Has.Length.EqualTo(2));
+				Assert.That(data, Has.Length.EqualTo(2));
 
-					// oracle supports identity insert only starting from version 12c, which is not used yet for tests
-					var useGenerated = keepIdentity != true
+				// oracle supports identity insert only starting from version 12c, which is not used yet for tests
+				var useGenerated = keepIdentity != true
 						|| context.IsAnyOf(TestProvName.AllOracle);
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(data[0].ID, Is.EqualTo(lastId + (!useGenerated ? 10 : 1)));
-						Assert.That(data[0].Value, Is.EqualTo(200));
-						Assert.That(data[1].ID, Is.EqualTo(lastId + (!useGenerated ? 20 : 2)));
-						Assert.That(data[1].Value, Is.EqualTo(300));
-					}
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(data[0].ID, Is.EqualTo(lastId + (!useGenerated ? 10 : 1)));
+					Assert.That(data[0].Value, Is.EqualTo(200));
+					Assert.That(data[1].ID, Is.EqualTo(lastId + (!useGenerated ? 20 : 2)));
+					Assert.That(data[1].Value, Is.EqualTo(300));
+				}
 
-					async Task perform()
-					{
-						var values = new[]
+				async Task perform()
+				{
+					var values = new[]
 							{
 								new TestTable2()
 								{
@@ -119,31 +118,30 @@ namespace Tests.xUpdate
 									Value = 300
 								}
 							};
-						if (asyncMode == 0) // synchronous
-						{
-							db.BulkCopy(
-								options,
-								values);
-						}
-						else if (asyncMode == 1) // asynchronous
-						{
-							await db.BulkCopyAsync(
-								options,
-								values);
-						}
-						else // asynchronous with IAsyncEnumerable
-						{
-							await db.BulkCopyAsync(
-								options,
-								AsAsyncEnumerable(values));
-						}
+					if (asyncMode == 0) // synchronous
+					{
+						db.BulkCopy(
+							options,
+							values);
+					}
+					else if (asyncMode == 1) // asynchronous
+					{
+						await db.BulkCopyAsync(
+							options,
+							values);
+					}
+					else // asynchronous with IAsyncEnumerable
+					{
+						await db.BulkCopyAsync(
+							options,
+							AsAsyncEnumerable(values));
 					}
 				}
-				finally
-				{
-					// cleanup
-					db.GetTable<TestTable2>().Delete(_ => _.ID >= lastId);
-				}
+			}
+			finally
+			{
+				// cleanup
+				db.GetTable<TestTable2>().Delete(_ => _.ID >= lastId);
 			}
 		}
 
@@ -161,38 +159,37 @@ namespace Tests.xUpdate
 			ResetAllTypesIdentity(context);
 
 			// don't use transactions as some providers will fallback to non-provider-specific implementation then
-			using (var db = GetDataConnection(context))
+			using var db = GetDataConnection(context);
+			var lastId = db.InsertWithInt32Identity(new TestTable1());
+			try
 			{
-				var lastId = db.InsertWithInt32Identity(new TestTable1());
-				try
+				var options = new BulkCopyOptions()
 				{
-					var options = new BulkCopyOptions()
-					{
-						KeepIdentity = keepIdentity,
-						BulkCopyType = copyType
-					};
+					KeepIdentity = keepIdentity,
+					BulkCopyType = copyType
+				};
 
-					if (!await ExecuteAsync(db, context, perform, keepIdentity, copyType))
-						return;
+				if (!await ExecuteAsync(db, context, perform, keepIdentity, copyType))
+					return;
 
-					var data = db.GetTable<TestTable1>().Where(_ => _.ID > lastId).OrderBy(_ => _.ID).ToArray();
+				var data = db.GetTable<TestTable1>().Where(_ => _.ID > lastId).OrderBy(_ => _.ID).ToArray();
 
-					Assert.That(data, Has.Length.EqualTo(2));
+				Assert.That(data, Has.Length.EqualTo(2));
 
-					// oracle supports identity insert only starting from version 12c, which is not used yet for tests
-					var useGenerated = keepIdentity != true
+				// oracle supports identity insert only starting from version 12c, which is not used yet for tests
+				var useGenerated = keepIdentity != true
 						|| context.IsAnyOf(TestProvName.AllOracle);
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(data[0].ID, Is.EqualTo(lastId + (!useGenerated ? 10 : 1)));
-						Assert.That(data[0].Value, Is.EqualTo(200));
-						Assert.That(data[1].ID, Is.EqualTo(lastId + (!useGenerated ? 20 : 2)));
-						Assert.That(data[1].Value, Is.EqualTo(300));
-					}
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(data[0].ID, Is.EqualTo(lastId + (!useGenerated ? 10 : 1)));
+					Assert.That(data[0].Value, Is.EqualTo(200));
+					Assert.That(data[1].ID, Is.EqualTo(lastId + (!useGenerated ? 20 : 2)));
+					Assert.That(data[1].Value, Is.EqualTo(300));
+				}
 
-					async Task perform()
-					{
-						var values = new[]
+				async Task perform()
+				{
+					var values = new[]
 							{
 								new TestTable1()
 								{
@@ -205,31 +202,30 @@ namespace Tests.xUpdate
 									Value = 300
 								}
 							};
-						if (asyncMode == 0) // synchronous
-						{
-							db.BulkCopy(
-								options,
-								values);
-						}
-						else if (asyncMode == 1) // asynchronous
-						{
-							await db.BulkCopyAsync(
-								options,
-								values);
-						}
-						else // asynchronous with IAsyncEnumerable
-						{
-							await db.BulkCopyAsync(
-								options,
-								AsAsyncEnumerable(values));
-						}
+					if (asyncMode == 0) // synchronous
+					{
+						db.BulkCopy(
+							options,
+							values);
+					}
+					else if (asyncMode == 1) // asynchronous
+					{
+						await db.BulkCopyAsync(
+							options,
+							values);
+					}
+					else // asynchronous with IAsyncEnumerable
+					{
+						await db.BulkCopyAsync(
+							options,
+							AsAsyncEnumerable(values));
 					}
 				}
-				finally
-				{
-					// cleanup
-					db.GetTable<TestTable1>().Delete(_ => _.ID >= lastId);
-				}
+			}
+			finally
+			{
+				// cleanup
+				db.GetTable<TestTable1>().Delete(_ => _.ID >= lastId);
 			}
 		}
 
@@ -344,12 +340,10 @@ namespace Tests.xUpdate
 			[DataSources(false)]        string       context,
 			[Values]                    BulkCopyType copyType)
 		{
-			using (var db = new DataContext(context))
-			using (var table = db.CreateLocalTable<SimpleBulkCopyTable>())
-			{
-				var options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
-				db.DataProvider.BulkCopy(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } });
-			}
+			using var db = new DataContext(context);
+			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
+			var options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+			db.DataProvider.BulkCopy(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } });
 		}
 
 		[Test]
@@ -357,15 +351,13 @@ namespace Tests.xUpdate
 			[DataSources(false)] string context,
 			[Values] BulkCopyType copyType)
 		{
-			using (var db = new DataContext(context))
-			using (var table = db.CreateLocalTable<SimpleBulkCopyTable>())
-			{
-				var options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
-				await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } }, default);
+			using var db = new DataContext(context);
+			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
+			var options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } }, default);
 
-				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
-				await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, AsyncEnumerableData(2, 1), default);
-			}
+			options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, AsyncEnumerableData(2, 1), default);
 		}
 
 		[Test]
@@ -373,18 +365,16 @@ namespace Tests.xUpdate
 			[DataSources(false)] string context,
 			[Values] BulkCopyType copyType)
 		{
-			using (var db = new DataContext(context))
-			using (var table = db.CreateLocalTable<SimpleBulkCopyTable>())
-			{
-				var options = GetDefaultBulkCopyOptions(context);
-				table.BulkCopy(options, new[] { new SimpleBulkCopyTable() { Id = 1 } });
+			using var db = new DataContext(context);
+			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
+			var options = GetDefaultBulkCopyOptions(context);
+			table.BulkCopy(options, new[] { new SimpleBulkCopyTable() { Id = 1 } });
 
-				options = GetDefaultBulkCopyOptions(context) with { MaxBatchSize = 5 };
-				table.BulkCopy(options, new[] { new SimpleBulkCopyTable() { Id = 2 } });
+			options = GetDefaultBulkCopyOptions(context) with { MaxBatchSize = 5 };
+			table.BulkCopy(options, new[] { new SimpleBulkCopyTable() { Id = 2 } });
 
-				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
-				table.BulkCopy(options, new[] { new SimpleBulkCopyTable() { Id = 3 } });
-			}
+			options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+			table.BulkCopy(options, new[] { new SimpleBulkCopyTable() { Id = 3 } });
 		}
 
 		[Test]
@@ -392,27 +382,25 @@ namespace Tests.xUpdate
 			[DataSources(false)] string context,
 			[Values] BulkCopyType copyType)
 		{
-			using (var db = new DataContext(context))
-			using (var table = db.CreateLocalTable<SimpleBulkCopyTable>())
-			{
-				var options = GetDefaultBulkCopyOptions(context);
-				await table.BulkCopyAsync(options, new[] { new SimpleBulkCopyTable() { Id = 1 } });
+			using var db = new DataContext(context);
+			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
+			var options = GetDefaultBulkCopyOptions(context);
+			await table.BulkCopyAsync(options, new[] { new SimpleBulkCopyTable() { Id = 1 } });
 
-				options = GetDefaultBulkCopyOptions(context) with { MaxBatchSize = 5 };
-				await table.BulkCopyAsync(options, new[] { new SimpleBulkCopyTable() { Id = 2 } });
+			options = GetDefaultBulkCopyOptions(context) with { MaxBatchSize = 5 };
+			await table.BulkCopyAsync(options, new[] { new SimpleBulkCopyTable() { Id = 2 } });
 
-				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
-				await table.BulkCopyAsync(options, new[] { new SimpleBulkCopyTable() { Id = 3 } });
+			options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+			await table.BulkCopyAsync(options, new[] { new SimpleBulkCopyTable() { Id = 3 } });
 
-				options = GetDefaultBulkCopyOptions(context);
-				await table.BulkCopyAsync(options, AsyncEnumerableData(10, 1));
+			options = GetDefaultBulkCopyOptions(context);
+			await table.BulkCopyAsync(options, AsyncEnumerableData(10, 1));
 
-				options = GetDefaultBulkCopyOptions(context) with { MaxBatchSize = 5 };
-				await table.BulkCopyAsync(options, AsyncEnumerableData(20, 1));
+			options = GetDefaultBulkCopyOptions(context) with { MaxBatchSize = 5 };
+			await table.BulkCopyAsync(options, AsyncEnumerableData(20, 1));
 
-				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
-				await table.BulkCopyAsync(options, AsyncEnumerableData(30, 1));
-			}
+			options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+			await table.BulkCopyAsync(options, AsyncEnumerableData(30, 1));
 		}
 
 #if SUPPORTS_DATEONLY
@@ -1059,34 +1047,32 @@ namespace Tests.xUpdate
 				new Inherited3 { Id = 3, Value3 = "Str3", NullableBool = true },
 			};
 
-			using (var db = new DataConnection(new DataOptions().UseConfiguration(context, ms)))
-			using (var table = db.CreateLocalTable<BaseClass>())
-			{
-				var options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
-				table.BulkCopy(options, data);
+			using var db = new DataConnection(new DataOptions().UseConfiguration(context, ms));
+			using var table = db.CreateLocalTable<BaseClass>();
+			var options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+			table.BulkCopy(options, data);
 
-				var items = table.OrderBy(_ => _.Id).ToArray();
+			var items = table.OrderBy(_ => _.Id).ToArray();
 
-				items[0].Id.ShouldBe(1);
-				items[0].Discriminator.ShouldBe(1);
-				((Inherited1)items[0]).Value1.ShouldBe("Str1");
+			items[0].Id.ShouldBe(1);
+			items[0].Discriminator.ShouldBe(1);
+			((Inherited1)items[0]).Value1.ShouldBe("Str1");
 
-				items[1].Id.ShouldBe(2);
-				items[1].Discriminator.ShouldBe(2);
-				((Inherited2)items[1]).Value2.ShouldBe("Str2");
+			items[1].Id.ShouldBe(2);
+			items[1].Discriminator.ShouldBe(2);
+			((Inherited2)items[1]).Value2.ShouldBe("Str2");
 
-				items[2].Id.ShouldBe(3);
-				items[2].Discriminator.ShouldBe(3);
-				((Inherited3)items[2]).Value3.ShouldBe("Str3");
+			items[2].Id.ShouldBe(3);
+			items[2].Discriminator.ShouldBe(3);
+			((Inherited3)items[2]).Value3.ShouldBe("Str3");
 
-				table.Single(x => x is Inherited1).ShouldBeOfType<Inherited1>();
-				table.Single(x => x is Inherited2).ShouldBeOfType<Inherited2>();
-				table.Single(x => x is Inherited3).ShouldBeOfType<Inherited3>();
+			table.Single(x => x is Inherited1).ShouldBeOfType<Inherited1>();
+			table.Single(x => x is Inherited2).ShouldBeOfType<Inherited2>();
+			table.Single(x => x is Inherited3).ShouldBeOfType<Inherited3>();
 
-				table.Single(x => ((Inherited1)x).Value1 == "Str1").ShouldBeOfType<Inherited1>();
-				table.Single(x => ((Inherited2)x).Value2 == "Str2").ShouldBeOfType<Inherited2>();
-				table.Single(x => ((Inherited3)x).Value3 == "Str3").ShouldBeOfType<Inherited3>();
-			}
+			table.Single(x => ((Inherited1)x).Value1 == "Str1").ShouldBeOfType<Inherited1>();
+			table.Single(x => ((Inherited2)x).Value2 == "Str2").ShouldBeOfType<Inherited2>();
+			table.Single(x => ((Inherited3)x).Value3 == "Str3").ShouldBeOfType<Inherited3>();
 		}
 
 		[Table("TPHTableDefault")]
@@ -1132,34 +1118,32 @@ namespace Tests.xUpdate
 				new InheritedDefault3 { Id = 3, Value3 = "Str3" },
 			};
 
-			using (var db = new DataConnection(context))
-			using (var table = db.CreateLocalTable<BaseDefaultDiscriminator>())
-			{
-				var options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
-				table.BulkCopy(options, data);
+			using var db = new DataConnection(context);
+			using var table = db.CreateLocalTable<BaseDefaultDiscriminator>();
+			var options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+			table.BulkCopy(options, data);
 
-				var items = table.OrderBy(_ => _.Id).ToArray();
+			var items = table.OrderBy(_ => _.Id).ToArray();
 
-				items[0].Id.ShouldBe(1);
-				items[0].Discriminator.ShouldBe(1);
-				((InheritedDefault1)items[0]).Value1.ShouldBe("Str1");
+			items[0].Id.ShouldBe(1);
+			items[0].Discriminator.ShouldBe(1);
+			((InheritedDefault1)items[0]).Value1.ShouldBe("Str1");
 
-				items[1].Id.ShouldBe(2);
-				items[1].Discriminator.ShouldBe(2);
-				((InheritedDefault2)items[1]).Value2.ShouldBe("Str2");
+			items[1].Id.ShouldBe(2);
+			items[1].Discriminator.ShouldBe(2);
+			((InheritedDefault2)items[1]).Value2.ShouldBe("Str2");
 
-				items[2].Id.ShouldBe(3);
-				items[2].Discriminator.ShouldBe(3);
-				((InheritedDefault3)items[2]).Value3.ShouldBe("Str3");
+			items[2].Id.ShouldBe(3);
+			items[2].Discriminator.ShouldBe(3);
+			((InheritedDefault3)items[2]).Value3.ShouldBe("Str3");
 
-				table.Single(x => x is InheritedDefault1).ShouldBeOfType<InheritedDefault1>();
-				table.Single(x => x is InheritedDefault2).ShouldBeOfType<InheritedDefault2>();
-				table.Single(x => x is InheritedDefault3).ShouldBeOfType<InheritedDefault3>();
+			table.Single(x => x is InheritedDefault1).ShouldBeOfType<InheritedDefault1>();
+			table.Single(x => x is InheritedDefault2).ShouldBeOfType<InheritedDefault2>();
+			table.Single(x => x is InheritedDefault3).ShouldBeOfType<InheritedDefault3>();
 
-				table.Single(x => ((InheritedDefault1)x).Value1 == "Str1").ShouldBeOfType<InheritedDefault1>();
-				table.Single(x => ((InheritedDefault2)x).Value2 == "Str2").ShouldBeOfType<InheritedDefault2>();
-				table.Single(x => ((InheritedDefault3)x).Value3 == "Str3").ShouldBeOfType<InheritedDefault3>();
-			}
+			table.Single(x => ((InheritedDefault1)x).Value1 == "Str1").ShouldBeOfType<InheritedDefault1>();
+			table.Single(x => ((InheritedDefault2)x).Value2 == "Str2").ShouldBeOfType<InheritedDefault2>();
+			table.Single(x => ((InheritedDefault3)x).Value3 == "Str3").ShouldBeOfType<InheritedDefault3>();
 		}
 
 		[Table]

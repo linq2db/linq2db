@@ -107,10 +107,8 @@ namespace Tests.Linq
 		[Test]
 		public void TestAsProperty([DataSources(false)] string context)
 		{
-			using (var db = new MyContext(context))
-			{
-				db.SomeValue.ShouldBe(10);
-			}
+			using var db = new MyContext(context);
+			db.SomeValue.ShouldBe(10);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4226")]

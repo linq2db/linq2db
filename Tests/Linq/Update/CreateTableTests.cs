@@ -36,15 +36,13 @@ namespace Tests.xUpdate
 						.HasLength(50)
 				.Build();
 
-			using (var db = GetDataContext(context, ms))
-			{
-				db.DropTable<TestTable>(throwExceptionIfNotExists:false);
+			using var db = GetDataContext(context, ms);
+			db.DropTable<TestTable>(throwExceptionIfNotExists: false);
 
-				var table = db.CreateTable<TestTable>();
-				var list = table.ToList();
+			var table = db.CreateTable<TestTable>();
+			var list = table.ToList();
 
-				db.DropTable<TestTable>();
-			}
+			db.DropTable<TestTable>();
 		}
 
 		[Test]
@@ -60,15 +58,13 @@ namespace Tests.xUpdate
 						.HasLength(50)
 				.Build();
 
-			using (var db = GetDataContext(context, ms))
-			{
-				await db.DropTableAsync<TestTable>(throwExceptionIfNotExists:false);
+			using var db = GetDataContext(context, ms);
+			await db.DropTableAsync<TestTable>(throwExceptionIfNotExists: false);
 
-				var table = await db.CreateTableAsync<TestTable>();
-				var list  = await table.ToListAsync();
+			var table = await db.CreateTableAsync<TestTable>();
+			var list  = await table.ToListAsync();
 
-				await db.DropTableAsync<TestTable>();
-			}
+			await db.DropTableAsync<TestTable>();
 		}
 
 		[Test]
@@ -282,31 +278,29 @@ namespace Tests.xUpdate
 		[Test]
 		public void CreateTableWithEnum([IncludeDataSources(TestProvName.AllSqlServer2012, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					db.DropTable<TestEnumTable>();
-				}
-				catch
-				{
-				}
-
-				var table = db.CreateTable<TestEnumTable>();
-
-				table.Insert(() => new TestEnumTable
-				{
-					Field1  = FieldType1.Value1,
-					Field11 = FieldType1.Value1,
-					Field2  = FieldType2.Value1,
-					Field21 = FieldType2.Value1,
-					Field3  = FieldType3.Value1,
-				});
-
-				var list = table.ToList();
-
 				db.DropTable<TestEnumTable>();
 			}
+			catch
+			{
+			}
+
+			var table = db.CreateTable<TestEnumTable>();
+
+			table.Insert(() => new TestEnumTable
+			{
+				Field1 = FieldType1.Value1,
+				Field11 = FieldType1.Value1,
+				Field2 = FieldType2.Value1,
+				Field21 = FieldType2.Value1,
+				Field3 = FieldType3.Value1,
+			});
+
+			var list = table.ToList();
+
+			db.DropTable<TestEnumTable>();
 		}
 
 		public enum Jjj
@@ -349,45 +343,42 @@ namespace Tests.xUpdate
 
 				.Build();
 
-			using (var conn = GetDataContext(context, ms))
+			using var conn = GetDataContext(context, ms);
+			try
 			{
-				try
-				{
-					conn.CreateTable<Qq>();
-				}
-				catch
-				{
-					conn.DropTable<Qq>();
-					conn.CreateTable<Qq>();
-				}
-
-				conn.Insert(new Aa
-				{
-					bb = 99,
-					cc = "hallo",
-					dd = Jjj.aa
-				});
-
-				var qq = conn.GetTable<Aa>().ToList().First();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(qq.bb, Is.EqualTo(99));
-					Assert.That(qq.cc, Is.EqualTo("hallo"));
-				}
-
-				conn.DropTable<Qq>();
+				conn.CreateTable<Qq>();
 			}
+			catch
+			{
+				conn.DropTable<Qq>();
+				conn.CreateTable<Qq>();
+			}
+
+			conn.Insert(new Aa
+			{
+				bb = 99,
+				cc = "hallo",
+				dd = Jjj.aa
+			});
+
+			var qq = conn.GetTable<Aa>().ToList().First();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(qq.bb, Is.EqualTo(99));
+				Assert.That(qq.cc, Is.EqualTo("hallo"));
+			}
+
+			conn.DropTable<Qq>();
 		}
 
 		[Test]
 		public void CreateTable2([IncludeDataSources(TestProvName.AllSqlServer2012)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var table = db.CreateTable<TestEnumTable>("#TestTable");
+			table.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific },
+				new[]
 			{
-				var table = db.CreateTable<TestEnumTable>("#TestTable");
-				table.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.ProviderSpecific },
-					new[]
-				{
 					new TestEnumTable
 					{
 						Field1  = FieldType1.Value1,
@@ -396,9 +387,8 @@ namespace Tests.xUpdate
 						Field21 = FieldType2.Value1,
 						Field3  = FieldType3.Value1,
 					}
-				});
-				table.DropTable();
-			}
+			});
+			table.DropTable();
 		}
 
 		sealed class TestCreateFormat
@@ -412,11 +402,9 @@ namespace Tests.xUpdate
 		[Test]
 		public void CreateFormatTest([IncludeDataSources(TestProvName.AllSqlServer2012)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var table = db.CreateTable<TestCreateFormat>("#TestTable");
-				table.DropTable();
-			}
+			using var db = GetDataContext(context);
+			var table = db.CreateTable<TestCreateFormat>("#TestTable");
+			table.DropTable();
 		}
 
 		#region Issue 3223
