@@ -158,9 +158,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public ReadOnlyCollection<Expression> GetNotNullConditions()
 			{
-				if (_notNullConditions == null)
-					_notNullConditions = PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence) ?? throw new InvalidOperationException();
-				return _notNullConditions;
+				return _notNullConditions ??= PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence) ?? throw new InvalidOperationException();
 			}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
@@ -235,10 +233,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						return placeholder;
 					}
 
-					if (_notNullConditions == null)
-					{
-						_notNullConditions = PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence);
-					}
+					_notNullConditions ??= PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence);
 
 					if (_notNullConditions != null)
 					{

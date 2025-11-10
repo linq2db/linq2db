@@ -1216,20 +1216,12 @@ namespace LinqToDB.Internal.SqlProvider
 
 				var newUpdateStatement = new SqlUpdateStatement(sql);
 
-				if (clonedQuery == null)
-					clonedQuery = CloneQuery(updateStatement.SelectQuery, null, out replaceTree);
+				clonedQuery ??= CloneQuery(updateStatement.SelectQuery, null, out replaceTree);
 
-				SqlTable? tableToCompare = null;
 				if (replaceTree!.TryGetValue(updateStatement.Update.Table!, out var newTable))
 				{
-					tableToCompare = (SqlTable)newTable;
-				}
-
-				if (tableToCompare != null)
-				{
 					replaceTree = CorrectReplaceTree(replaceTree, updateStatement.Update.Table);
-
-					ApplyUpdateTableComparison(clonedQuery, updateStatement.Update, tableToCompare, dataOptions);
+					ApplyUpdateTableComparison(clonedQuery, updateStatement.Update, (SqlTable)newTable, dataOptions);
 				}
 
 				CorrectUpdateSetters(updateStatement);

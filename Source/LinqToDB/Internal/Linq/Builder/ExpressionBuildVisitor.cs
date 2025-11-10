@@ -697,19 +697,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			_alias = assignment.MemberInfo.Name;
 
-			SqlGenericConstructorExpression.Assignment? newNode = null;
-			if (BuildContext != null && IsSqlOrExpression())
-			{
-				if (TryConvertToSql(assignment.Expression, out var translated))
-				{
-					newNode = assignment.WithExpression(Visit(translated));
-				}
-			}
-			
-			if (newNode == null)
-			{
-				newNode = base.VisitSqlGenericAssignment(assignment);
-			}
+			var newNode =
+				BuildContext != null
+				&& IsSqlOrExpression()
+				&& TryConvertToSql(assignment.Expression, out var translated)
+				? assignment.WithExpression(Visit(translated))
+				: base.VisitSqlGenericAssignment(assignment);
 
 			_alias            = saveAlias;
 			_columnDescriptor = saveDescriptor;
@@ -4060,7 +4053,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					_                                 => throw new InvalidOperationException(),
 				};
 
-				if ((left.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked || right.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked) && (op == SqlPredicate.Operator.Equal || op == SqlPredicate.Operator.NotEqual))
+				if ((left.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked || right.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
+					&& (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual))
 				{
 					var p = ConvertEnumConversion(left, op, right);
 					if (p != null)
@@ -4192,13 +4186,12 @@ namespace LinqToDB.Internal.Linq.Builder
 						}
 					}
 
-					if (predicate == null)
-					{
-						predicate = new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
-							compareNullsAsValues && (lOriginal.CanBeNullable(nullability) || rOriginal.CanBeNullable(nullability))
-								? op == SqlPredicate.Operator.Equal
-								: null);
-					}
+					predicate ??= new SqlPredicate.ExprExpr(
+						lOriginal, op, rOriginal,
+						compareNullsAsValues && (lOriginal.CanBeNullable(nullability) || rOriginal.CanBeNullable(nullability))
+							? op == SqlPredicate.Operator.Equal
+							: null
+					);
 				}
 
 				return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, predicate), GetOriginalExpression());

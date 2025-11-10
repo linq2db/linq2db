@@ -65,7 +65,7 @@ namespace LinqToDB.Scaffold
 			classModel.Namespace = _options.CodeGeneration.Namespace;
 			classModel.Modifiers = Modifiers.Public;
 			if (_options.DataModel.EntityClassIsPartial)
-				classModel.Modifiers = classModel.Modifiers | Modifiers.Partial;
+				classModel.Modifiers |= Modifiers.Partial;
 
 			// entity data model
 			var entity = new EntityModel(

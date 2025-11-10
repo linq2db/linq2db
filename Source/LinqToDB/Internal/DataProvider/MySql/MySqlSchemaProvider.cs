@@ -127,7 +127,7 @@ SELECT
 					var extra      = rd.GetString(10);
 
 					if (dataType == "vector")
-						length = length / 4;
+						length /= 4;
 
 					return new ColumnInfo()
 					{
@@ -295,7 +295,7 @@ SELECT
 					var length    = Converter.ChangeTypeTo<long?>(rd[8]);
 
 					if (type == "VECTOR")
-						length = length / 4;
+						length /= 4;
 
 					return new ProcedureParameterInfo()
 					{

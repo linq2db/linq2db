@@ -19,16 +19,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			get
 			{
-				if (field == null)
+				return field ??= CteContext switch
 				{
-					field = CteContext switch
-					{
-						{ CteClause: var clause } => new SqlCteTable(clause, ObjectType),
-						_ => throw new InvalidOperationException("CteContext not initialized"),
-					};
-				}
-
-				return field;
+					{ CteClause: var clause } => new SqlCteTable(clause, ObjectType),
+					_ => throw new InvalidOperationException("CteContext not initialized"),
+				};
 			}
 			set;
 		}

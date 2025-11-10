@@ -93,10 +93,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				table = extractResult.Value.context ?? throw new LinqToDBException("Unable to find table for LoadWith association.");
 
-				if (table.LoadWithRoot == null)
-					table.LoadWithRoot = new();
-
-				var tableLoadWith = table.LoadWithRoot;
+				var tableLoadWith = table.LoadWithRoot ??= new();
 
 				if (methodCall.Method.Name == "ThenLoad")
 				{
