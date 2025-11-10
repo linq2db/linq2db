@@ -6,6 +6,10 @@
 		<description>Allows to execute Linq to DB queries in Entity Framework Core DbContext.</description>
 		<tags>entity-framework-core EntityFrameworkCore EFCore</tags>
 		<dependencies>
+			<group targetFramework="net462">
+				<dependency id="Microsoft.EntityFrameworkCore.Relational" version="3.1.0" />
+				<dependency id="linq2db"                                  version="6.0.0" />
+			</group>
 			<group targetFramework="netstandard2.0">
 				<dependency id="Microsoft.EntityFrameworkCore.Relational" version="3.1.0" />
 				<dependency id="linq2db"                                  version="6.0.0" />
@@ -14,10 +18,13 @@
 	</metadata>
 
 	<files>
-		<file src="NuGet\README.EF.md"                                                                  target="README.md"           />
+		<file src="NuGet\README.EF.md"                                                                      target="README.md"           />
 
 		<file src="bin\LinqToDB.EntityFrameworkCore.EF3\{0}\netstandard2.0\linq2db.EntityFrameworkCore.pdb" target="lib\netstandard2.0\" />
 		<file src="bin\LinqToDB.EntityFrameworkCore.EF3\{0}\netstandard2.0\linq2db.EntityFrameworkCore.xml" target="lib\netstandard2.0\" />
 		<file src="bin\LinqToDB.EntityFrameworkCore.EF3\{0}\netstandard2.0\linq2db.EntityFrameworkCore.dll" target="lib\netstandard2.0\" />
+		<file src="bin\LinqToDB.EntityFrameworkCore.EF3\{0}\net462\linq2db.EntityFrameworkCore.pdb"         target="lib\net462\"         />
+		<file src="bin\LinqToDB.EntityFrameworkCore.EF3\{0}\net462\linq2db.EntityFrameworkCore.xml"         target="lib\net462\"         />
+		<file src="bin\LinqToDB.EntityFrameworkCore.EF3\{0}\net462\linq2db.EntityFrameworkCore.dll"         target="lib\net462\"         />
 	</files>
 </package>

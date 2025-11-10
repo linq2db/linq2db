@@ -14,13 +14,7 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Condition="'$(RunApiAnalyzersDuringBuild)' == 'true'" /> 
 
-		<PackageReference Include="Microsoft.SourceLink.GitHub">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-		</PackageReference>
-
 		<AdditionalFiles Include="$(MSBuildThisFileDirectory)\BannedSymbols.txt" />
 		<AdditionalFiles Include="$(MSBuildThisFileDirectory)\CodeMetricsConfig.txt" />
-
 	</ItemGroup>
 </Project>

@@ -14,8 +14,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Source\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
-
 		<AdditionalFiles Include="$(MSBuildThisFileDirectory)\BannedSymbols.txt" />
 	</ItemGroup>
 
@@ -23,4 +21,20 @@
 		<Reference Include="System.Data.Linq" />
 	</ItemGroup>
 
+	<!--https://github.com/microsoft/vstest/issues/15297-->
+	<Target Name="Save_PublishDir" BeforeTargets="CopyTraceDataCollectorArtifacts">
+		<CreateProperty Value="$(PublishDir)">
+			<Output TaskParameter="Value" PropertyName="PublishDir_Backup"/>
+		</CreateProperty>
+		<CreateProperty Value="$(PublishDir)\_ignore\">
+			<Output TaskParameter="Value" PropertyName="PublishDir"/>
+		</CreateProperty>
+	</Target>
+	<Target Name="Restore_PublishDir" AfterTargets="CopyTraceDataCollectorArtifacts">
+		<RemoveDir Directories="$(PublishDir)" />
+		<CreateProperty Value="$(PublishDir_Backup)">
+			<Output TaskParameter="Value" PropertyName="PublishDir"/>
+		</CreateProperty>
+	</Target>
+	
 </Project>

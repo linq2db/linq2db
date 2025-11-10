@@ -3,7 +3,7 @@
 	<Import Project="LinqToDB.EntityFrameworkCore.props" />
 	
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0;net462</TargetFrameworks>
 		<AssemblyVersion>$(EF3Version)</AssemblyVersion>
 		<DefineConstants>EF31;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
