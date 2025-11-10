@@ -34,6 +34,7 @@
 	</PropertyGroup>
 	
 	<ItemGroup Label="Build: Analyzers and Tools">
+		<PackageVersion Include="DotNet.ReproducibleBuilds"                             Version="1.2.39"                       />
 		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.245"                      />
 		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.62"                       />
 		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                      Version="5.0.0-1.25277.114"            />
