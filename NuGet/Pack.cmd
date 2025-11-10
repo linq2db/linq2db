@@ -13,15 +13,8 @@ cmd /c "exit /b 0"
 ECHO build binary nugets (with debug support)
 FOR %%n IN (linq2db linq2db.Extensions linq2db.Compat linq2db.Tools linq2db.Scaffold linq2db.Remote.Grpc linq2db.Remote.Wcf linq2db.Remote.SignalR.Client linq2db.Remote.SignalR.Server linq2db.Remote.HttpClient.Client linq2db.Remote.HttpClient.Server linq2db.FSharp linq2db.EntityFrameworkCore.v3 linq2db.EntityFrameworkCore.v8 linq2db.EntityFrameworkCore.v9 linq2db.EntityFrameworkCore.v10) DO (
     ECHO %NUSPECS%/%%n.nuspec
-    IF [%1] EQU [snupkg] (
-        dotnet pack %NUSPECS%/%%n.nuspec -o %NUGETS% --include-symbols -p:SymbolPackageFormat=snupkg
-        IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
-    ) ELSE (
-        REM Azure Artifacts doesn't support snupkg yet/still
-        REM https://developercommunity.visualstudio.com/idea/657354/add-snupkg-support-to-azure-devops-artifacts.html
-        dotnet pack %NUSPECS%/%%n.nuspec -o %NUGETS%
-        IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
-    )
+    dotnet pack %NUSPECS%/%%n.nuspec -o %NUGETS%
+    IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 )
 
 ECHO build cli/linqpad/t4 nugets (no debug support required)

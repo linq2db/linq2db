@@ -5,12 +5,6 @@
 		<RunApiAnalyzersDuringBuild>false</RunApiAnalyzersDuringBuild>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)'=='Release'">
-		<DebugType>portable</DebugType>
-		<EmbedUntrackedSources>true</EmbedUntrackedSources>
-		<DebugSymbols>true</DebugSymbols>
-	</PropertyGroup>
-
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Condition="'$(RunApiAnalyzersDuringBuild)' == 'true'" />
 		<PackageReference Include="DotNet.ReproducibleBuilds" PrivateAssets="All" /> 
