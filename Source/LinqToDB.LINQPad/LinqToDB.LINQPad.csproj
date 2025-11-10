@@ -22,7 +22,7 @@
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
 
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
-		<PackageReference Include="MySqlConnector" />
+		<PackageReference Include="MySqlConnector" VersionOverride="$(MySqlConnectorNonPreview)" />
 		<PackageReference Include="AdoNetCore.AseClient" />
 		<PackageReference Include="System.Data.SQLite" />
 		<PackageReference Include="SourceGear.sqlite3" GeneratePathProperty="true" />
