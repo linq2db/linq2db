@@ -212,8 +212,8 @@ jobs:
       script: $(Build.SourcesDirectory)/NuGet/Pack.cmd
       workingDirectory: $(Build.SourcesDirectory)/NuGet
       failOnStderr: true # needed as dotnet pack doesn't set exit code
-    displayName: Build nugets for Azure Artifacts
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], variables['release_branch']))
+    displayName: Build nugets
+    condition: succeeded()
 
   - task: PublishBuildArtifacts@1
     inputs:
