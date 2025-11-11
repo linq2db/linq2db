@@ -39,7 +39,7 @@ namespace Tests.Linq
 
 		public class Eye
 		{
-			public int     Id { get; set; }
+			[PrimaryKey] public int     Id { get; set; }
 			public string? Xy { get; set; }
 		}
 
@@ -58,7 +58,7 @@ namespace Tests.Linq
 		{
 			public AnimalType  AnimalType    { get; set; }
 			public AnimalType2 AnimalType2   { get; set; }
-			public int         Id            { get; set; }
+			[PrimaryKey] public int       Id { get; set; }
 			public string?     Name          { get; set; }
 			public string?     Discriminator { get; set; }
 		}
@@ -101,7 +101,7 @@ namespace Tests.Linq
 
 		public class Test
 		{
-			public int     Id           { get; set; }
+			[PrimaryKey] public int  Id { get; set; }
 			public int?    TestAnimalId { get; set; }
 			public Animal? TestAnimal   { get; set; }
 		}

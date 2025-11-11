@@ -819,7 +819,7 @@ namespace Tests.Linq
 		[Table]
 		public class Issue3830TestTable
 		{
-			[Column                                                                            ] public int   Id    { get; set; }
+			[PrimaryKey                                                                        ] public int   Id    { get; set; }
 			[Column(DataType = DataType.Char, Length = 1), BoolConverter                       ] public bool  Bool1 { get; set; }
 			[Column(DataType = DataType.Char, Length = 1), BoolConverterNullable               ] public bool? Bool2 { get; set; }
 			[Column(DataType = DataType.Char, Length = 1, CanBeNull = true), BoolConverterNulls] public bool  Bool3 { get; set; }

@@ -1932,7 +1932,7 @@ FROM
 		[Table]
 		sealed class ItemValue
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			[Column] public int ItemId { get; set; }
 			[Column] public decimal Value { get; set; }
 		}
@@ -3091,7 +3091,7 @@ FROM
 
 			fluentMappingBuilder
 				.Entity<Issue4585TableNested>()
-				.Property(x => x.Id)
+				.Property(x => x.Id).IsPrimaryKey()
 				.Property(x => x.Code);
 
 			fluentMappingBuilder
@@ -3234,7 +3234,7 @@ FROM
 
 		sealed class Order
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			public string? Name { get; set; }
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(SubOrder.OrderId))]
 			public List<SubOrder> SubOrders { get; set; } = null!;
@@ -3242,7 +3242,7 @@ FROM
 
 		sealed class SubOrder
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			public int OrderId { get; set; }
 			[Association(ThisKey = nameof(OrderId), OtherKey = nameof(Order.Id))]
 			public Order? Order { get; set; }
@@ -3252,7 +3252,7 @@ FROM
 
 		sealed class SubOrderDetail
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			public int SubOrderId { get; set; }
 			[Association(ThisKey = nameof(SubOrderId), OtherKey = nameof(SubOrder.Id))]
 			public SubOrder? SubOrder { get; set; }
@@ -3266,6 +3266,7 @@ FROM
 
 		class CteTable
 		{
+			[PrimaryKey]
 			public int Id { get; set; }
 			public int Value1 { get; set; }
 			public int Value2 { get; set; }
@@ -3276,6 +3277,7 @@ FROM
 
 		class CteChildTable
 		{
+			[PrimaryKey]
 			public int Id { get; set; }
 			public int Value { get; set; }
 
