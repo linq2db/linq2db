@@ -86,7 +86,8 @@ namespace Tests.DataProvider
 			Func<TType, bool>? isExpectedValue = null,
 			Func<TNullableType?, bool>? isExpectedNullableValue = null,
 			Func<DataOptions, DataOptions>? optionsBuilder = null,
-			Func<BulkCopyType, bool>? testBulkCopyType = null)
+			Func<BulkCopyType, bool>? testBulkCopyType = null,
+			int? expectedParamCount = null)
 		{
 			testParameters ??= TestParameters;
 
@@ -140,7 +141,7 @@ namespace Tests.DataProvider
 			{
 				db.InlineParameters = false;
 
-				var expectedParamCount = (filterByValue ? 1 : 0) + (filterByNullableValue && nullableValue != null ? 1 : 0);
+				expectedParamCount ??= (filterByValue ? 1 : 0) + (filterByNullableValue && nullableValue != null ? 1 : 0);
 
 				db.OnNextCommandInitialized((_, cmd) =>
 				{

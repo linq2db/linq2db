@@ -20,8 +20,16 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 #if SUPPORTS_COMPOSITE_FORMAT
 		private static readonly CompositeFormat DATE_FORMAT         = CompositeFormat.Parse("Date('{0:yyyy-MM-dd}')");
+		private static readonly CompositeFormat DATE32_FORMAT       = CompositeFormat.Parse("Date32('{0:yyyy-MM-dd}')");
 		private static readonly CompositeFormat DATETIME_FORMAT     = CompositeFormat.Parse("Datetime('{0:yyyy-MM-ddTHH:mm:ssZ}')");
+		private static readonly CompositeFormat DATETIME64_FORMAT   = CompositeFormat.Parse("Datetime64('{0:yyyy-MM-ddTHH:mm:ssZ}')");
 		private static readonly CompositeFormat TIMESTAMP_FORMAT    = CompositeFormat.Parse("Timestamp('{0:yyyy-MM-ddTHH:mm:ss.ffffffZ}')");
+		private static readonly CompositeFormat TIMESTAMP64_FORMAT  = CompositeFormat.Parse("Timestamp64('{0:yyyy-MM-ddTHH:mm:ss.ffffffZ}')");
+
+		private static readonly CompositeFormat DATE32I_FORMAT      = CompositeFormat.Parse("Unwrap(CAST({0} as Date32))");
+		private static readonly CompositeFormat DATETIME64I_FORMAT  = CompositeFormat.Parse("Unwrap(CAST({0} as Datetime64))");
+		private static readonly CompositeFormat TIMESTAMP64I_FORMAT = CompositeFormat.Parse("Unwrap(CAST({0} as Timestamp64))");
+		private static readonly CompositeFormat INTERVAL64I_FORMAT  = CompositeFormat.Parse("Unwrap(CAST({0} as Interval64))");
 
 		private static readonly CompositeFormat TZ_DATE_FORMAT      = CompositeFormat.Parse("TzDate('{0:yyyy-MM-dd},{1}')");
 		private static readonly CompositeFormat TZ_DATETIME_FORMAT  = CompositeFormat.Parse("TzDatetime('{0:yyyy-MM-ddTHH:mm:ss.fff},{1}')");
@@ -44,8 +52,16 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 #else
 		private const           string          DATE_FORMAT         = "Date('{0:yyyy-MM-dd}')";
+		private const           string          DATE32_FORMAT       = "Date32('{0:yyyy-MM-dd}')";
 		private const           string          DATETIME_FORMAT     = "Datetime('{0:yyyy-MM-ddTHH:mm:ssZ}')";
+		private const           string          DATETIME64_FORMAT   = "Datetime64('{0:yyyy-MM-ddTHH:mm:ssZ}')";
 		private const           string          TIMESTAMP_FORMAT    = "Timestamp('{0:yyyy-MM-ddTHH:mm:ss.ffffffZ}')";
+		private const           string          TIMESTAMP64_FORMAT  = "Timestamp64('{0:yyyy-MM-ddTHH:mm:ss.ffffffZ}')";
+
+		private const           string          DATE32I_FORMAT      = "Unwrap(CAST({0} as Date32))";
+		private const           string          DATETIME64I_FORMAT  = "Unwrap(CAST({0} as Datetime64))";
+		private const           string          TIMESTAMP64I_FORMAT = "Unwrap(CAST({0} as Timestamp64))";
+		private const           string          INTERVAL64I_FORMAT  = "Unwrap(CAST({0} as Interval64))";
 
 		private const           string          TZ_DATE_FORMAT      = "TzDate('{0:yyyy-MM-dd},{1}')";
 		private const           string          TZ_DATETIME_FORMAT  = "TzDatetime('{0:yyyy-MM-ddTHH:mm:ss.fff},{1}')";
@@ -275,6 +291,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				case DataType.Double   : BuildDoubleLiteral(sb, value);                  return;
 				case DataType.Decimal  : BuildDecimalLiteral(sb, value, dt);             return;
 				case DataType.DecFloat : BuildDyNumberLiteral(sb, (decimal)value);       return;
+				case DataType.Date32   : BuildDate32Literal(sb, value);                  return;
 			}
 		}
 
@@ -302,19 +319,22 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		{
 			switch (dt.Type.DataType)
 			{
-				case DataType.Byte     : BuildByteLiteral(sb, checked((byte)value));     return;
-				case DataType.SByte    : BuildSByteLiteral(sb, checked((sbyte)value));   return;
-				case DataType.Int16    : BuildInt16Literal(sb, checked((short)value));   return;
-				case DataType.UInt16   : BuildUInt16Literal(sb, checked((ushort)value)); return;
-				case DataType.Int32    : BuildInt32Literal(sb, checked((int)value));     return;
-				case DataType.UInt32   : BuildUInt32Literal(sb, checked((uint)value));   return;
-				default                :
-				case DataType.Int64    : BuildInt64Literal(sb, value);                   return;
-				case DataType.UInt64   : BuildUInt64Literal(sb, checked((ulong)value));  return;
-				case DataType.Single   : BuildFloatLiteral(sb, value);                   return;
-				case DataType.Double   : BuildDoubleLiteral(sb, value);                  return;
-				case DataType.Decimal  : BuildDecimalLiteral(sb, value, dt);             return;
-				case DataType.DecFloat : BuildDyNumberLiteral(sb, (decimal)value);       return;
+				case DataType.Byte       : BuildByteLiteral(sb, checked((byte)value));     return;
+				case DataType.SByte      : BuildSByteLiteral(sb, checked((sbyte)value));   return;
+				case DataType.Int16      : BuildInt16Literal(sb, checked((short)value));   return;
+				case DataType.UInt16     : BuildUInt16Literal(sb, checked((ushort)value)); return;
+				case DataType.Int32      : BuildInt32Literal(sb, checked((int)value));     return;
+				case DataType.UInt32     : BuildUInt32Literal(sb, checked((uint)value));   return;
+				default                  :
+				case DataType.Int64      : BuildInt64Literal(sb, value);                   return;
+				case DataType.UInt64     : BuildUInt64Literal(sb, checked((ulong)value));  return;
+				case DataType.Single     : BuildFloatLiteral(sb, value);                   return;
+				case DataType.Double     : BuildDoubleLiteral(sb, value);                  return;
+				case DataType.Decimal    : BuildDecimalLiteral(sb, value, dt);             return;
+				case DataType.DecFloat   : BuildDyNumberLiteral(sb, (decimal)value);       return;
+				case DataType.DateTime64 : BuildDateTime64Literal(sb, value);              return;
+				case DataType.Timestamp64: BuildTimestamp64Literal(sb, value);             return;
+				case DataType.Interval64 : BuildInterval64Literal(sb, value);              return;
 			}
 		}
 
@@ -402,9 +422,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		{
 			switch (dt.Type.DataType)
 			{
-				case DataType.Int64    : ConvertInt64(sb, dt, value.Ticks); break;
-				default                :
-				case DataType.Interval : BuildIntervalLiteral(sb, value);   break;
+				case DataType.Int64     : ConvertInt64(sb, dt, value.Ticks); break;
+				default                 :
+				case DataType.Interval  : BuildIntervalLiteral(sb, value);   break;
+				case DataType.Interval64: BuildInterval64Literal(sb, value); break;
 			}
 		}
 
@@ -413,11 +434,14 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			switch (dt.Type.DataType)
 			{
 				case DataType.Date       : BuildDateLiteral(sb, value.Date);   break;
+				case DataType.Date32     : BuildDate32Literal(sb, value.Date); break;
 				case DataType.DateTz     : BuildDateTzLiteral(sb, value.Date); break;
 				case DataType.DateTime   : BuildDateTimeLiteral(sb, value);    break;
+				case DataType.DateTime64 : BuildDateTime64Literal(sb, value);  break;
 				case DataType.DateTimeTz : BuildDateTimeTzLiteral(sb, value);  break;
 				default                  :
 				case DataType.DateTime2  : BuildTimestampLiteral(sb, value);   break;
+				case DataType.Timestamp64: BuildTimestamp64Literal(sb, value); break;
 				case DataType.DateTime2Tz: BuildTimestampTzLiteral(sb, value); break;
 			}
 		}
@@ -427,11 +451,14 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			switch (dt.Type.DataType)
 			{
 				case DataType.Date       : BuildDateLiteral(sb, value.Date);                 break;
+				case DataType.Date32     : BuildDate32Literal(sb, value.Date);               break;
 				case DataType.DateTz     : BuildDateTzLiteral(sb, value.LocalDateTime.Date); break;
-				case DataType.DateTime   : BuildDateTimeLiteral(sb, value.LocalDateTime);    break;
+				case DataType.DateTime   : BuildDateTimeLiteral(sb, value.UtcDateTime);      break;
+				case DataType.DateTime64 : BuildDateTime64Literal(sb, value.UtcDateTime);    break;
 				case DataType.DateTimeTz : BuildDateTimeTzLiteral(sb, value.UtcDateTime);    break;
 				default                  :
 				case DataType.DateTime2  : BuildTimestampLiteral(sb, value.UtcDateTime);     break;
+				case DataType.Timestamp64: BuildTimestamp64Literal(sb, value.UtcDateTime);   break;
 				case DataType.DateTime2Tz: BuildTimestampTzLiteral(sb, value.UtcDateTime);   break;
 			}
 		}
@@ -443,6 +470,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			{
 				default             :
 				case DataType.Date  : BuildDateLiteral(sb, value.ToDateTime(default));   break;
+				case DataType.Date32: BuildDate32Literal(sb, value.ToDateTime(default)); break;
 				case DataType.DateTz: BuildDateTzLiteral(sb, value.ToDateTime(default)); break;
 			}
 		}
@@ -612,33 +640,112 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			sb.Append("')");
 		}
 
+		private static void BuildInterval64Literal(StringBuilder sb, TimeSpan value)
+		{
+			sb.Append("Interval64('");
+			value = value.Ticks % 10 != 0 ? TimeSpan.FromTicks((value.Ticks / 10) * 10) : value;
+			DataTools.ConvertToIso8601Interval(sb, value);
+			sb.Append("')");
+		}
+
 		private static void BuildDateLiteral(StringBuilder sb, DateTime value)
 		{
+			if (value.Kind == DateTimeKind.Local)
+				value = value.ToUniversalTime();
+			else if (value.Kind == DateTimeKind.Unspecified)
+				value = DateTime.SpecifyKind(value, DateTimeKind.Utc);
 			sb.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
+		}
+
+		private static void BuildDate32Literal(StringBuilder sb, DateTime value)
+		{
+			if (value.Kind == DateTimeKind.Local)
+				value = value.ToUniversalTime();
+			else if (value.Kind == DateTimeKind.Unspecified)
+				value = DateTime.SpecifyKind(value, DateTimeKind.Utc);
+			sb.AppendFormat(CultureInfo.InvariantCulture, DATE32_FORMAT, value);
+		}
+
+		private static void BuildDate32Literal(StringBuilder sb, int value)
+		{
+			sb.AppendFormat(CultureInfo.InvariantCulture, DATE32I_FORMAT, value);
+		}
+
+		private static void BuildDateTime64Literal(StringBuilder sb, long value)
+		{
+			sb.AppendFormat(CultureInfo.InvariantCulture, DATETIME64I_FORMAT, value);
+		}
+
+		private static void BuildTimestamp64Literal(StringBuilder sb, long value)
+		{
+			sb.AppendFormat(CultureInfo.InvariantCulture, TIMESTAMP64I_FORMAT, value);
+		}
+
+		private static void BuildInterval64Literal(StringBuilder sb, long value)
+		{
+			sb.AppendFormat(CultureInfo.InvariantCulture, INTERVAL64I_FORMAT, value);
 		}
 
 		private static void BuildDateTzLiteral(StringBuilder sb, DateTime value)
 		{
+			if (value.Kind == DateTimeKind.Local)
+				value = value.ToUniversalTime();
+			else if (value.Kind == DateTimeKind.Unspecified)
+				value = DateTime.SpecifyKind(value, DateTimeKind.Utc);
 			sb.AppendFormat(CultureInfo.InvariantCulture, TZ_DATE_FORMAT, value, DEFAULT_TIMEZONE);
 		}
 
 		private static void BuildDateTimeLiteral(StringBuilder sb, DateTime value)
 		{
+			if (value.Kind == DateTimeKind.Local)
+				value = value.ToUniversalTime();
+			else if (value.Kind == DateTimeKind.Unspecified)
+				value = DateTime.SpecifyKind(value, DateTimeKind.Utc);
 			sb.AppendFormat(CultureInfo.InvariantCulture, DATETIME_FORMAT, value);
+		}
+
+		private static void BuildDateTime64Literal(StringBuilder sb, DateTime value)
+		{
+			if (value.Kind == DateTimeKind.Local)
+				value = value.ToUniversalTime();
+			else if (value.Kind == DateTimeKind.Unspecified)
+				value = DateTime.SpecifyKind(value, DateTimeKind.Utc);
+			sb.AppendFormat(CultureInfo.InvariantCulture, DATETIME64_FORMAT, value);
 		}
 
 		private static void BuildDateTimeTzLiteral(StringBuilder sb, DateTime value)
 		{
+			if (value.Kind == DateTimeKind.Local)
+				value = value.ToUniversalTime();
+			else if (value.Kind == DateTimeKind.Unspecified)
+				value = DateTime.SpecifyKind(value, DateTimeKind.Utc);
 			sb.AppendFormat(CultureInfo.InvariantCulture, TZ_DATETIME_FORMAT, value, DEFAULT_TIMEZONE);
 		}
 
 		private static void BuildTimestampLiteral(StringBuilder sb, DateTime value)
 		{
+			if (value.Kind == DateTimeKind.Local)
+				value = value.ToUniversalTime();
+			else if (value.Kind == DateTimeKind.Unspecified)
+				value = DateTime.SpecifyKind(value, DateTimeKind.Utc);
 			sb.AppendFormat(CultureInfo.InvariantCulture, TIMESTAMP_FORMAT, value);
+		}
+
+		private static void BuildTimestamp64Literal(StringBuilder sb, DateTime value)
+		{
+			if (value.Kind == DateTimeKind.Local)
+				value = value.ToUniversalTime();
+			else if (value.Kind == DateTimeKind.Unspecified)
+				value = DateTime.SpecifyKind(value, DateTimeKind.Utc);
+			sb.AppendFormat(CultureInfo.InvariantCulture, TIMESTAMP64_FORMAT, value);
 		}
 
 		private static void BuildTimestampTzLiteral(StringBuilder sb, DateTime value)
 		{
+			if (value.Kind == DateTimeKind.Local)
+				value = value.ToUniversalTime();
+			else if (value.Kind == DateTimeKind.Unspecified)
+				value = DateTime.SpecifyKind(value, DateTimeKind.Utc);
 			sb.AppendFormat(CultureInfo.InvariantCulture, TZ_TIMESTAMP_FORMAT, value, DEFAULT_TIMEZONE);
 		}
 

@@ -5,13 +5,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Numerics;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Common;
-using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions.Types;
 
 namespace LinqToDB.Internal.DataProvider.Ydb
@@ -82,9 +80,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			var dbTypeBuilder = paramMapper.Member(p => p.YdbDbType);
 			SetDbType         = dbTypeBuilder.BuildSetter<DbParameter>();
 			GetDbType         = dbTypeBuilder.BuildGetter<DbParameter>();
-
-			MakeYson         = typeMapper.BuildFunc<byte[], object>(typeMapper.MapLambda((byte[] value) => YdbValue.MakeYson(value)));
-			YsonNull         = typeMapper.BuildFunc<object>(typeMapper.MapLambda(() => YdbValue.MakeOptionalYson(null)))();
 
 			var makeDecimal = typeMapper.BuildFunc<DecimalValue, object>(
 				typeMapper.MapLambda((DecimalValue value) => new YdbValue(
@@ -178,10 +173,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		public Action<DbParameter, YdbDbType> SetDbType { get; }
 		public Func  <DbParameter, YdbDbType> GetDbType { get; }
 
-		// missing parameter value factories
-		public Func<byte[], object> MakeYson { get; }
-		public object YsonNull { get; }
-
 		internal Func<string, int, int, object> MakeDecimalFromString { get; }
 
 		internal Func<DbConnection, string, IReadOnlyList<string>, CancellationToken, IBulkUpsertImporter> BeginBulkCopy { get; }
@@ -226,9 +217,6 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			// access internal .ctor
 			[WrappedBindingFlags(BindingFlags.Instance | BindingFlags.NonPublic)]
 			public YdbValue(ProtoType type, ProtoValue value) => throw new NotImplementedException();
-
-			public static YdbValue MakeYson        (byte[] value) => throw new NotImplementedException();
-			public static YdbValue MakeOptionalYson(byte[]? value) => throw new NotImplementedException();
 		}
 
 		[Wrapper("Value")]
@@ -288,34 +276,34 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		[Wrapper]
 		public enum YdbDbType
 		{
-			Bool         = 1,
-			Bytes        = 13,
-			Date         = 18,
-			Date32       = 24,
-			Datetime     = 21,
-			Datetime64   = 25,
-			Decimal      = 12,
-			Double       = 11,
-			Float        = 10,
-			Int16        = 3,
-			Int32        = 4,
-			Int64        = 5,
-			Int8         = 2,
-			Interval     = 21,
-			Interval64   = 27,
-			Json         = 15,
-			JsonDocument = 16,
-			Text         = 14,
-			Timestamp    = 20,
-			Timestamp64  = 26,
-			Uint16       = 7,
-			Uint32       = 8,
-			Uint64       = 9,
-			Uint8        = 6,
-			Unspecified  = 0,
-			Uuid         = 17,
+			Unspecified  = 1,
+			Bool         = 2,
+			Int8         = 3,
+			Int16        = 4,
+			Int32        = 5,
+			Int64        = 6,
+			Uint8        = 7,
+			Uint16       = 8,
+			Uint32       = 9,
+			Uint64       = 10,
+			Float        = 11,
+			Double       = 12,
+			Decimal      = 13,
+			Bytes        = 14,
+			Text         = 15,
 			Yson         = 16,
-			List         = -2147483648
+			Json         = 17,
+			JsonDocument = 18,
+			Uuid         = 19,
+			Date         = 20,
+			Datetime     = 21,
+			Timestamp    = 22,
+			Interval     = 23,
+			Date32       = 24,
+			Datetime64   = 25,
+			Timestamp64  = 26,
+			Interval64   = 27,
+			List         = int.MinValue
 
 			// missing simple types:
 			// DyNumber

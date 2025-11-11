@@ -61,12 +61,11 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			SetGetFieldValueReader<Stream>(dataReaderType: Adapter.DataReaderType);
 
 			// datetime/datetimeoffset handling is a mess in provider
-			SetProviderField<DbDataReader, DateTimeOffset, DateTime>((r, i) => new DateTimeOffset(r.GetDateTime(i), default), dataTypeName: "Timestamp");
-			SetProviderField<DbDataReader, DateTimeOffset, DateTime>((r, i) => new DateTimeOffset(r.GetDateTime(i), default), dataTypeName: "Timestamp64");
-			SetProviderField<DbDataReader, DateTimeOffset, DateTime>((r, i) => new DateTimeOffset(r.GetDateTime(i), default), dataTypeName: "Datetime64");
-			// another bug in provider. For Yson it returns byte[] but reports String as a value type
-			SetProviderField<DbDataReader, byte[], string>((r, i) => (byte[])r.GetValue(i), dataTypeName: "Yson");
-			SetProviderField<DbDataReader, string, string>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i)), dataTypeName: "Yson");
+			SetProviderField<DbDataReader, DateTime, DateTime>((r, i) => DateTime.SpecifyKind(r.GetDateTime(i), DateTimeKind.Utc));
+			SetProviderField<DbDataReader, DateTimeOffset, DateTime>((r, i) => new DateTimeOffset(r.GetDateTime(i), default));
+
+			SetProviderField<DbDataReader, string, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i)), dataTypeName: "Yson");
+			SetProviderField<DbDataReader, string, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i)), dataTypeName: "Yson", dataReaderType: Adapter.DataReaderType);
 
 			SetProviderField<DbDataReader, string, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i)), dataTypeName: "String");
 			SetProviderField<DbDataReader, string, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i)), dataTypeName: "String", dataReaderType: Adapter.DataReaderType);
@@ -351,24 +350,20 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				break;
 
 				case DataType.Date:
-				{
-					if (value is DateTimeOffset dto)
-						value = dto.LocalDateTime.Date;
-				}
-
-				break;
-
+				case DataType.Date32:
 				case DataType.DateTime:
-				{
-					if (value is DateTimeOffset dto)
-						value = dto.LocalDateTime;
-				}
-
-				break;
-
+				case DataType.DateTime64:
 				case DataType.DateTime2:
+				case DataType.Timestamp64:
 				{
-					if (value is DateTimeOffset dto)
+					if (value is DateTime dt)
+					{
+						if (dt.Kind == DateTimeKind.Local)
+							value = dt.ToUniversalTime();
+						else  if (dt.Kind == DateTimeKind.Unspecified)
+							value = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+					}
+					else if (value is DateTimeOffset dto)
 						value = dto.UtcDateTime;
 				}
 
@@ -376,16 +371,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 				case DataType.Yson:
 				{
-					if (value is null)
-						value = Adapter.YsonNull;
-					else
-					{
-						if (value is string str)
-							value = Encoding.UTF8.GetBytes(str);
-
-						if (value is byte[] val)
-							value = Adapter.MakeYson(val);
-					}
+					if (value is string str)
+						value = Encoding.UTF8.GetBytes(str);
 				}
 
 				break;
@@ -418,9 +405,14 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 			switch (dataType.DataType)
 			{
-				case DataType.Json      : type = YdbProviderAdapter.YdbDbType.Json;         break;
-				case DataType.BinaryJson: type = YdbProviderAdapter.YdbDbType.JsonDocument; break;
-				case DataType.Interval  : type = YdbProviderAdapter.YdbDbType.Interval;     break;
+				case DataType.Json       : type = YdbProviderAdapter.YdbDbType.Json;         break;
+				case DataType.BinaryJson : type = YdbProviderAdapter.YdbDbType.JsonDocument; break;
+				case DataType.Yson       : type = YdbProviderAdapter.YdbDbType.Yson;         break;
+				case DataType.Interval   : type = YdbProviderAdapter.YdbDbType.Interval;     break;
+				case DataType.Date32     : type = YdbProviderAdapter.YdbDbType.Date32;       break;
+				case DataType.DateTime64 : type = YdbProviderAdapter.YdbDbType.Datetime64;   break;
+				case DataType.Timestamp64: type = YdbProviderAdapter.YdbDbType.Timestamp64;  break;
+				case DataType.Interval64 : type = YdbProviderAdapter.YdbDbType.Interval64;   break;
 
 				case DataType.Decimal:
 				{

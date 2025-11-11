@@ -150,9 +150,13 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				case DataType.Yson       : StringBuilder.Append("Yson");         break;
 				case DataType.Guid       : StringBuilder.Append("Uuid");         break;
 				case DataType.Date       : StringBuilder.Append("Date");         break;
+				case DataType.Date32     : StringBuilder.Append("Date32");       break;
 				case DataType.DateTime   : StringBuilder.Append("Datetime");     break;
+				case DataType.DateTime64 : StringBuilder.Append("Datetime64");   break;
 				case DataType.DateTime2  : StringBuilder.Append("Timestamp");    break;
+				case DataType.Timestamp64: StringBuilder.Append("Timestamp64");  break;
 				case DataType.Interval   : StringBuilder.Append("Interval");     break;
+				case DataType.Interval64 : StringBuilder.Append("Interval64");   break;
 
 				//Tz types not supported as column types
 				case DataType.DateTz     : StringBuilder.Append(forCreateTable ? "Date"      : "TzDate");      break;

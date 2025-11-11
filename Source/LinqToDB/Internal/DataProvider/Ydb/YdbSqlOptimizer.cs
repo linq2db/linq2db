@@ -1,5 +1,6 @@
 ﻿using System;
 
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -55,6 +56,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{
+			statement.VisitAll(SetQueryParameter);
+
 			statement = base.Finalize(mappingSchema, statement, dataOptions);
 
 			if (MoveScalarSubQueriesToCte(statement))
@@ -104,6 +107,18 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 					return elem;
 				}, true);
+			}
+		}
+
+		static void SetQueryParameter(IQueryElement element)
+		{
+			// Following parameters not supported by provider and should be literals:
+			// - Date32 mapped to raw int
+			if (element is SqlParameter p)
+			{
+				if ((p.Type.SystemType.UnwrapNullableType() == typeof(int) && p.Type.DataType is DataType.Date32)
+					|| (p.Type.SystemType.UnwrapNullableType() == typeof(long) && p.Type.DataType is DataType.DateTime64 or DataType.Timestamp64 or DataType.Interval64))
+					p.IsQueryParameter = false;
 			}
 		}
 	}

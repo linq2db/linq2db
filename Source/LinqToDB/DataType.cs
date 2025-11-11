@@ -227,7 +227,7 @@ namespace LinqToDB
 		DateTimeOffset,
 
 		/// <summary>
-		/// DateTime64 ClickHouse type.
+		/// DateTime64 ClickHouse/YDB type.
 		/// </summary>
 		DateTime64,
 
@@ -237,6 +237,11 @@ namespace LinqToDB
 		/// timestamp is used typically as a mechanism for version-stamping table rows. The storage size is 8 bytes.
 		/// </summary>
 		Timestamp,
+
+		/// <summary>
+		/// Timestamp64 YDB type.
+		/// </summary>
+		Timestamp64,
 
 		/// <summary>
 		/// An XML value. Obtain the XML as a string using the GetValue method or Value property,
@@ -308,6 +313,11 @@ namespace LinqToDB
 		/// PostgreSQL interval type.
 		/// </summary>
 		Interval,
+
+		/// <summary>
+		/// YDB Interval64 type.
+		/// </summary>
+		Interval64,
 
 		/// <summary>
 		/// PostgreSQL Enum type.

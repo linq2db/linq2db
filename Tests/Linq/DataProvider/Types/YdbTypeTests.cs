@@ -2,12 +2,10 @@
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Management;
 using System.Text;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -402,7 +400,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public async ValueTask TestString([YdbDataSources] string context)
+		public async ValueTask TestBytes([YdbDataSources] string context)
 		{
 			await TestType<byte[], byte[]?>(context, new(typeof(byte[])), Array.Empty<byte>(), default);
 			await TestType<byte[], byte[]?>(context, new(typeof(byte[])), new byte[] { 0, 1, 2, 3, 4, 0 }, new byte[] { 1, 2, 3, 4, 0, 0 });
@@ -410,14 +408,14 @@ namespace Tests.DataProvider
 			await TestType<string, string?>(context, new(typeof(string), DataType.VarBinary), string.Empty, default);
 			await TestType<string, string?>(context, new(typeof(string), DataType.VarBinary), TestEscapingString, TestEscapingString);
 
-			await TestType<char, char?>(context, new(typeof(string), DataType.VarBinary), default, default);
-			await TestType<char, char?>(context, new(typeof(string), DataType.VarBinary), '\0', '1');
+			await TestType<char, char?>(context, new(typeof(char), DataType.VarBinary), default, default);
+			await TestType<char, char?>(context, new(typeof(char), DataType.VarBinary), '\0', '1');
 
 			await TestType<string, string?>(context, new(typeof(string), DataType.Binary), string.Empty, default);
 			await TestType<string, string?>(context, new(typeof(string), DataType.Binary), TestEscapingString, TestEscapingString);
 
-			await TestType<char, char?>(context, new(typeof(string), DataType.Binary), default, default);
-			await TestType<char, char?>(context, new(typeof(string), DataType.Binary), '\x01', '\x03');
+			await TestType<char, char?>(context, new(typeof(char), DataType.Binary), default, default);
+			await TestType<char, char?>(context, new(typeof(char), DataType.Binary), '\x01', '\x03');
 
 			var streamEmpty = new MemoryStream(Array.Empty<byte>());
 			var streamData1 = new MemoryStream(new byte[] { 0, 1, 2, 3, 4, 0 });
@@ -427,15 +425,28 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public async ValueTask TestUtf8([YdbDataSources] string context)
+		public async ValueTask TestText([YdbDataSources] string context)
 		{
 			await TestType<string, string?>(context, new(typeof(string)), string.Empty, default);
 			await TestType<string, string?>(context, new(typeof(string)), TestEscapingString, TestEscapingString);
 
-			await TestType<char, char?>(context, new(typeof(string)), default, default);
-			await TestType<char, char?>(context, new(typeof(string)), '\0', '1');
-			await TestType<char, char?>(context, new(typeof(string)), 'ы', '\xFE');
-			await TestType<char, char?>(context, new(typeof(string)), '\xFF', '\n');
+			await TestType<char, char?>(context, new(typeof(char)), default, default);
+			await TestType<char, char?>(context, new(typeof(char)), '\0', '1');
+			await TestType<char, char?>(context, new(typeof(char)), 'ы', '\xFE');
+			await TestType<char, char?>(context, new(typeof(char)), '\xFF', '\n');
+		}
+
+		[Test]
+		public async ValueTask TestYson([YdbDataSources] string context)
+		{
+			await TestType<string, string?>(context, new(typeof(string), DataType.Yson), "{}", default, filterByValue: false, filterByNullableValue: false);
+			await TestType<string, string?>(context, new(typeof(string), DataType.Yson), "null", "null", filterByValue: false, filterByNullableValue: false);
+			await TestType<string, string?>(context, new(typeof(string), DataType.Yson), "false", "true", filterByValue: false, filterByNullableValue: false);
+			await TestType<string, string?>(context, new(typeof(string), DataType.Yson), "-12.345", "123", filterByValue: false, filterByNullableValue: false);
+			await TestType<string, string?>(context, new(typeof(string), DataType.Yson), "{\u0001\u0010тест=\u0001\u0014валью}", "{\u0001\bprop=\u0004}", filterByValue: false, filterByNullableValue: false);
+
+			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Yson), Encoding.UTF8.GetBytes("{}"), default, filterByValue: false, filterByNullableValue: false);
+			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Yson), Encoding.UTF8.GetBytes("{\u0001\bprop=\u0005}"), Encoding.UTF8.GetBytes("{\u0001\u0010тест=\u0001\u0014валью}"), filterByValue: false, filterByNullableValue: false);
 		}
 
 		[Test]
@@ -459,19 +470,6 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public async ValueTask TestYson([YdbDataSources] string context)
-		{
-			await TestType<string, string?>(context, new(typeof(string), DataType.Yson), "{}", default, filterByValue: false, filterByNullableValue: false);
-			await TestType<string, string?>(context, new(typeof(string), DataType.Yson), "null", "null", filterByValue: false, filterByNullableValue: false);
-			await TestType<string, string?>(context, new(typeof(string), DataType.Yson), "false", "true", filterByValue: false, filterByNullableValue: false);
-			await TestType<string, string?>(context, new(typeof(string), DataType.Yson), "-12.345", "123", filterByValue: false, filterByNullableValue: false);
-			await TestType<string, string?>(context, new(typeof(string), DataType.Yson), "{\u0001\u0010тест=\u0001\u0014валью}", "{\u0001\bprop=\u0004}", filterByValue: false, filterByNullableValue: false);
-
-			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Yson), Encoding.UTF8.GetBytes("{}"), default, filterByValue: false, filterByNullableValue: false);
-			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Yson), Encoding.UTF8.GetBytes("{\u0001\bprop=\u0005}"), Encoding.UTF8.GetBytes("{\u0001\u0010тест=\u0001\u0014валью}"), filterByValue: false, filterByNullableValue: false);
-		}
-
-		[Test]
 		public async ValueTask TestUUID([YdbDataSources] string context)
 		{
 			// UUID
@@ -482,19 +480,16 @@ namespace Tests.DataProvider
 		[Test]
 		public async ValueTask TestDate([YdbDataSources] string context)
 		{
-			var min = new DateTime(1970, 1, 1);
-			var max = new DateTime(2105, 12, 31);
+			var min = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+			var max = new DateTime(2105, 12, 31, 0, 0, 0, DateTimeKind.Utc);
 
 #if SUPPORTS_DATEONLY
 			await TestType<DateOnly, DateOnly?>(context, new(typeof(DateOnly)), DateOnly.FromDateTime(TestData.Date), default);
 			await TestType<DateOnly, DateOnly?>(context, new(typeof(DateOnly)), DateOnly.FromDateTime(min), DateOnly.FromDateTime(max));
 #endif
 
-			var expectedMin = new DateTime(min.Ticks, DateTimeKind.Utc);
-			var expectedMax = new DateTime(max.Ticks, DateTimeKind.Utc);
-
 			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.Date), TestData.Date, default);
-			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.Date), min, max, getExpectedValue: _ => expectedMin, getExpectedNullableValue: _ => expectedMax);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.Date), min, max);
 
 			var expectedDtoMin = new DateTimeOffset(min);
 			var expectedDtoMax = new DateTimeOffset(max);
@@ -506,40 +501,86 @@ namespace Tests.DataProvider
 		[Test]
 		public async ValueTask TestDateTime([YdbDataSources] string context)
 		{
-			var min = new DateTime(1970, 1, 1);
-			var max = new DateTime(2105, 12, 31);
+			// A moment in time in UTC, precision to the second
+			// from 00:00 01.01.1970 to 00:00 01.01.2106
 
+			var min = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+			var max = new DateTime(2105, 12, 31, 0, 0, 0, DateTimeKind.Utc);
 			var minWithTime = min.AddSeconds(1);
-			var maxWithtime = max.AddSeconds(-1);
+			var maxWithTime = max.AddSeconds(-1);
+
+			var minU = DateTime.SpecifyKind(min, DateTimeKind.Unspecified);
+			var maxU = DateTime.SpecifyKind(max, DateTimeKind.Unspecified);
+			var minL = min.ToLocalTime();
+			var maxL = max.ToLocalTime();
+
+			var minWithTimeU = DateTime.SpecifyKind(minWithTime, DateTimeKind.Unspecified);
+			var maxWithTimeU = DateTime.SpecifyKind(maxWithTime, DateTimeKind.Unspecified);
+			var minWithTimeL = minWithTime.ToLocalTime();
+			var maxWithTimeL = maxWithTime.ToLocalTime();
 
 			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.DateTime), TestData.Date, default);
 			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.DateTime), min, max);
-			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.DateTime), minWithTime, maxWithtime);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.DateTime), minU, maxU);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.DateTime), minL, maxL, getExpectedValue: _ => min, getExpectedNullableValue: _ => max);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.DateTime), minWithTime, maxWithTime);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.DateTime), minWithTimeU, maxWithTimeU);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.DateTime), minWithTimeL, maxWithTimeL, getExpectedValue: _ => minWithTime, getExpectedNullableValue: _ => maxWithTime);
 
-			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.DateTime), new DateTimeOffset(TestData.Date, default), default);
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.DateTime), new DateTimeOffset(min, default), default);
 			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.DateTime), new DateTimeOffset(min, default), new DateTimeOffset(max, default));
-			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.DateTime), new DateTimeOffset(minWithTime, default), new DateTimeOffset(maxWithtime, default));
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.DateTime), new DateTimeOffset(minWithTime, default), new DateTimeOffset(maxWithTime, default));
 		}
 
 		[Test]
 		public async ValueTask TestTimestamp([YdbDataSources] string context)
 		{
-			var min = new DateTime(1970, 1, 1);
-			var max = new DateTime(2105, 12, 31);
+			// A moment in time in UTC, precision to the second
+			// from 00:00 01.01.1970 to 00:00 01.01.2106
 
+			var min = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+			var max = new DateTime(2105, 12, 31, 0, 0, 0, DateTimeKind.Utc);
 			var minWithTime = min.AddTicks(10);
-			var maxWithtime = max.AddTicks(-10);
+			var maxWithTime = max.AddTicks(-10);
+
+			var minU = DateTime.SpecifyKind(min, DateTimeKind.Unspecified);
+			var maxU = DateTime.SpecifyKind(max, DateTimeKind.Unspecified);
+			var minL = min.ToLocalTime();
+			var maxL = max.ToLocalTime();
+
+			var minWithTimeU = DateTime.SpecifyKind(minWithTime, DateTimeKind.Unspecified);
+			var maxWithTimeU = DateTime.SpecifyKind(maxWithTime, DateTimeKind.Unspecified);
+			var minWithTimeL = minWithTime.ToLocalTime();
+			var maxWithTimeL = maxWithTime.ToLocalTime();
 
 			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime)), TestData.Date, default);
 			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime)), min, max);
-			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime)), minWithTime, maxWithtime);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime)), minU, maxU);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime)), minL, maxL, getExpectedValue: _ => min, getExpectedNullableValue: _ => max);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime)), minWithTime, maxWithTime);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime)), minWithTimeU, maxWithTimeU);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime)), minWithTimeL, maxWithTimeL, getExpectedValue: _ => minWithTime, getExpectedNullableValue: _ => maxWithTime);
 
-			var minDto = new DateTimeOffset(min, default);
-			var maxDto = new DateTimeOffset(max, default);
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset)), new DateTimeOffset(min, default), default);
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset)), new DateTimeOffset(min, default), new DateTimeOffset(max, default));
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset)), new DateTimeOffset(minWithTime, default), new DateTimeOffset(maxWithTime, default));
 
-			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset)), new DateTimeOffset(TestData.Date), default);
-			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset)), minDto, maxDto);
-			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset)), maxDto, minDto);
+			//var min = new DateTime(1970, 1, 1);
+			//var max = new DateTime(2105, 12, 31);
+
+			//var minWithTime = min.AddTicks(10);
+			//var maxWithtime = max.AddTicks(-10);
+
+			//await TestType<DateTime, DateTime?>(context, new(typeof(DateTime)), TestData.Date, default);
+			//await TestType<DateTime, DateTime?>(context, new(typeof(DateTime)), min, max);
+			//await TestType<DateTime, DateTime?>(context, new(typeof(DateTime)), minWithTime, maxWithtime);
+
+			//var minDto = new DateTimeOffset(min, default);
+			//var maxDto = new DateTimeOffset(max, default);
+
+			//await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset)), new DateTimeOffset(TestData.Date, default), default);
+			//await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset)), minDto, maxDto);
+			//await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset)), maxDto, minDto);
 		}
 
 		[Test]
@@ -554,113 +595,121 @@ namespace Tests.DataProvider
 			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan)), max, default, getExpectedValue: _ => maxExpected);
 			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan)), min, max, getExpectedValue: _ => minExpected, getExpectedNullableValue: _ => maxExpected);
 		}
+
 		[Test]
 		public async ValueTask TestDate32([YdbDataSources] string context)
 		{
-			var min = new DateTime(1970, 1,  1);
-			var max = new DateTime(2105, 12, 31);
+			// actual min/max are:
+			// from 00:00 01.01.144169 BC to 00:00 01.01.148107 AD
+			// but require provider type to support such range
+			var min = DateTime.SpecifyKind(DateTime.MinValue, DateTimeKind.Utc).Date;
+			var max = DateTime.SpecifyKind(DateTime.MaxValue, DateTimeKind.Utc).Date;
 
 #if SUPPORTS_DATEONLY
-			await TestType<DateOnly, DateOnly?>(context, new (typeof(DateOnly), DataType.Date),
-				DateOnly.FromDateTime(TestData.Date),    default);
-			await TestType<DateOnly, DateOnly?>(context, new (typeof(DateOnly), DataType.Date),
-				DateOnly.FromDateTime(min),              DateOnly.FromDateTime(max));
+			await TestType<DateOnly, DateOnly?>(context, new(typeof(DateOnly), DataType.Date32), DateOnly.FromDateTime(TestData.Date), default);
+			await TestType<DateOnly, DateOnly?>(context, new(typeof(DateOnly), DataType.Date32), DateOnly.FromDateTime(min), DateOnly.FromDateTime(max));
 #endif
 
-			// YDB return Date as UTC-date
-			var expectedMin = new DateTime(min.Ticks, DateTimeKind.Utc);
-			var expectedMax = new DateTime(max.Ticks, DateTimeKind.Utc);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.Date32), TestData.Date, default);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.Date32), min, max);
 
-			await TestType<DateTime, DateTime?>(context, new (typeof(DateTime), DataType.Date),
-				TestData.Date,                           default);
-			await TestType<DateTime, DateTime?>(context, new (typeof(DateTime), DataType.Date),
-				min,                                     max, getExpectedValue : _ => expectedMin, getExpectedNullableValue : _ => expectedMax);
+			// tz adjustments
+			min = min.AddDays(1);
+			max = max.AddDays(-1);
+			var expectedDtoMin = new DateTimeOffset(min);
+			var expectedDtoMax = new DateTimeOffset(max);
+
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.Date32), new DateTimeOffset(max, default), default, getExpectedValue: _ => expectedDtoMax);
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.Date32), new DateTimeOffset(min, default), new DateTimeOffset(max, default), getExpectedValue: _ => expectedDtoMin, getExpectedNullableValue: _ => expectedDtoMax);
+
+			// TODO: we can write values to database, but cannot read it
+			// raw
+			//var intMin = int.MinValue;
+			//var intMax = int.MaxValue;
+			//await TestType<int, int?>(context, new(typeof(int), DataType.Date32), default, default, expectedParamCount: 0);
+			//await TestType<int, int?>(context, new(typeof(int), DataType.Date32), intMin, intMax, expectedParamCount: 0);
 		}
 
 		[Test]
 		public async ValueTask TestDatetime64([YdbDataSources] string context)
 		{
-			var min         = new DateTime(1970, 1,  1);
-			var max         = new DateTime(2105, 12, 31);
-			var minWithTime = min.AddTicks(10);
-			var maxWithTime = max.AddTicks(-10);
+			// A moment in time in UTC, precision to the second
+			// from 00:00 01.01.144169 BC to 00:00 01.01.148107 AD
 
-			// DateTime → Timestamp (µs)
-			await TestType<DateTime, DateTime?>(context, new (typeof(DateTime), DataType.DateTime2), TestData.Date, default);
-			await TestType<DateTime, DateTime?>(context, new (typeof(DateTime), DataType.DateTime2), min,           max);
-			await TestType<DateTime, DateTime?>(context, new (typeof(DateTime), DataType.DateTime2), minWithTime,   maxWithTime);
+			var min = DateTime.SpecifyKind(DateTime.MinValue, DateTimeKind.Utc);
+			var max = DateTime.SpecifyKind(DateTime.MaxValue.AddSeconds(-1).AddTicks(1), DateTimeKind.Utc);
 
-			await TestType<DateTimeOffset, DateTimeOffset?>(
-				context,
-				new (typeof(DateTimeOffset), DataType.DateTime2),
-				new DateTimeOffset(TestData.Date, default),
-				default,
-				testParameters : false);
+			var minU = DateTime.SpecifyKind(min, DateTimeKind.Unspecified);
+			var maxU = DateTime.SpecifyKind(max, DateTimeKind.Unspecified);
+			// for local time use 1 day adjustment to avoid timezone offset overflow
+			var minL = min.AddDays(1).ToLocalTime();
+			var maxL = max.AddDays(-1).ToLocalTime();
 
-			await TestType<DateTimeOffset, DateTimeOffset?>(
-				context,
-				new (typeof(DateTimeOffset), DataType.DateTime2),
-				new DateTimeOffset(min, default),
-				new DateTimeOffset(max, default),
-				testParameters : false);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.DateTime64), TestData.Date, default);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.DateTime64), min, max);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.DateTime64), minU, maxU);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.DateTime64), minL, maxL, getExpectedValue: _ => min.AddDays(1), getExpectedNullableValue: _ => max.AddDays(-1));
 
-			await TestType<DateTimeOffset, DateTimeOffset?>(
-				context,
-				new (typeof(DateTimeOffset), DataType.DateTime2),
-				new DateTimeOffset(minWithTime, default),
-				new DateTimeOffset(maxWithTime, default),
-				testParameters : false);
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.DateTime64), new DateTimeOffset(min, default), default);
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.DateTime64), new DateTimeOffset(min, default), new DateTimeOffset(max, default));
+
+			// TODO: we can write values to database, but cannot read it
+			//// raw
+			//var intMin = long.MinValue;
+			//var intMax = long.MaxValue;
+			//await TestType<long, long?>(context, new(typeof(long), DataType.DateTime64), default, default, expectedParamCount: 0);
+			//await TestType<long, long?>(context, new(typeof(long), DataType.DateTime64), intMin, intMax, expectedParamCount: 0);
 		}
 
 		[Test]
 		public async ValueTask TestTimestamp64([YdbDataSources] string context)
 		{
-			var min         = new DateTime(1970, 1,  1);
-			var max         = new DateTime(2105, 12, 31);
-			var minWithTime = min.AddTicks(10);
-			var maxWithTime = max.AddTicks(-10);
+			// A moment in time in UTC, precision to the microsecond
+			// from 00:00 01.01.144169 BC to 00:00 01.01.148107 AD
 
-			// DateTime → Timestamp (µс)
-			await TestType<DateTime, DateTime?>(context, new (typeof(DateTime), DataType.DateTime2), TestData.Date, default);
-			await TestType<DateTime, DateTime?>(context, new (typeof(DateTime), DataType.DateTime2), min,           max);
-			await TestType<DateTime, DateTime?>(context, new (typeof(DateTime), DataType.DateTime2), minWithTime,   maxWithTime);
+			var min = DateTime.SpecifyKind(DateTime.MinValue, DateTimeKind.Utc);
+			var max = DateTime.SpecifyKind(DateTime.MaxValue.AddTicks(-9), DateTimeKind.Utc);
 
-			await TestType<DateTimeOffset, DateTimeOffset?>(
-				context,
-				new (typeof(DateTimeOffset), DataType.DateTime2),
-				new DateTimeOffset(TestData.Date, default),
-				default,
-				testParameters : false);
+			var minU = DateTime.SpecifyKind(min, DateTimeKind.Unspecified);
+			var maxU = DateTime.SpecifyKind(max, DateTimeKind.Unspecified);
+			// for local time use 1 day adjustment to avoid timezone offset overflow
+			var minL = min.AddDays(1).ToLocalTime();
+			var maxL = max.AddDays(-1).ToLocalTime();
 
-			await TestType<DateTimeOffset, DateTimeOffset?>(
-				context,
-				new (typeof(DateTimeOffset), DataType.DateTime2),
-				new DateTimeOffset(min, default),
-				new DateTimeOffset(max, default),
-				testParameters : false);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.Timestamp64), TestData.Date, default);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.Timestamp64), min, max);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.Timestamp64), minU, maxU);
+			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.Timestamp64), minL, maxL, getExpectedValue: _ => min.AddDays(1), getExpectedNullableValue: _ => max.AddDays(-1));
 
-			await TestType<DateTimeOffset, DateTimeOffset?>(
-				context,
-				new (typeof(DateTimeOffset), DataType.DateTime2),
-				new DateTimeOffset(max, default),
-				new DateTimeOffset(min, default),
-				testParameters : false);
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.Timestamp64), new DateTimeOffset(min, default), default);
+			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.Timestamp64), new DateTimeOffset(min, default), new DateTimeOffset(max, default));
+
+			// TODO: we can write values to database, but cannot read it
+			//// raw
+			//var intMin = long.MinValue;
+			//var intMax = long.MaxValue;
+			//await TestType<long, long?>(context, new(typeof(long), DataType.Timestamp64), default, default, expectedParamCount: 0);
+			//await TestType<long, long?>(context, new(typeof(long), DataType.Timestamp64), intMin, intMax, expectedParamCount: 0);
 		}
-		
+
+		[ActiveIssue("https://github.com/ydb-platform/ydb-dotnet-sdk/issues/561")]
 		[Test]
 		public async ValueTask TestInterval64([YdbDataSources] string context)
 		{
-			var min = TimeSpan.FromDays(-49673) + TimeSpan.FromTicks(1);
-			var max = TimeSpan.FromDays(49673)  - TimeSpan.FromTicks(1);
+			// from -292277 years to +292277 years
+			// In YDB Interval in microseconds: round to 10 ticks
+			var min = TimeSpan.FromTicks(TimeSpan.MinValue.Ticks + 8);
+			var max = TimeSpan.FromTicks(TimeSpan.MaxValue.Ticks - 7);
 
-			// In YDB Interval in microseconds: round to 10 tik
-			var minExpected = TimeSpan.FromDays(-49673) + TimeSpan.FromTicks(10);
-			var maxExpected = TimeSpan.FromDays(49673)  - TimeSpan.FromTicks(10);
+			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan), DataType.Interval64), max, default);
+			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan), DataType.Interval64), min, max);
 
-			await TestType<TimeSpan, TimeSpan?>(context, new (typeof(TimeSpan), DataType.Interval),
-				max,                                     default, getExpectedValue : _ => maxExpected);
-			await TestType<TimeSpan, TimeSpan?>(context, new (typeof(TimeSpan), DataType.Interval),
-				min,                                     max, getExpectedValue : _ => minExpected, getExpectedNullableValue : _ => maxExpected);
+			// TODO: we can write values to database, but cannot read it
+			//// raw. no idea why such min/max used
+			var intMin = -9223339708799999999;
+			var intMax = 9223339708799999999;
+			await TestType<long, long?>(context, new(typeof(long), DataType.Interval64), default, default, expectedParamCount: 0);
+			await TestType<long, long?>(context, new(typeof(long), DataType.Interval64), intMin, intMax, expectedParamCount: 0);
 		}
 	}
 }
