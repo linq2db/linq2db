@@ -26,7 +26,6 @@ jobs:
     inputs:
       packageType: sdk
       version: 10.x
-      includePreviewVersions: true
 
   - task: PowerShell@2
     inputs:

@@ -158,7 +158,6 @@ jobs:
     inputs:
       packageType: sdk
       version: 10.x
-      includePreviewVersions: true
 
   - task: DotNetCoreCLI@2
     displayName: Install dotnet-script tool

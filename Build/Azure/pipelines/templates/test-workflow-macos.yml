@@ -169,7 +169,6 @@ steps:
   inputs:
     packageType: sdk
     version: 10.x
-    includePreviewVersions: true
   condition: and(variables.title, eq(variables.net100, 'true'), succeeded())
 
 - task: CmdLine@2
