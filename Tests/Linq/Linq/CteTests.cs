@@ -460,9 +460,8 @@ namespace Tests.Linq
 				return HashCode.Combine(ChildID, ParentID);
 			}
 
-			[PrimaryKey]
-			public int ChildID  { get; set; }
-			public int ParentID { get; set; }
+			[PrimaryKey] public int ChildID  { get; set; }
+			[PrimaryKey] public int ParentID { get; set; }
 		}
 
 		[Test]
@@ -522,20 +521,20 @@ namespace Tests.Linq
 					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).AsCte("LAST").InnerJoin(c4 => c4.ParentID == p.ParentID)
 					select new CteDMLTests
 					{
-						ChildID = c4.ChildID,
+						ChildID  = c4.ChildID,
 						ParentID = c4.ParentID
 					};
 
-				var affected = toInsert.Insert(testTable, c => c);
+				var affected = toInsert.Distinct().Insert(testTable, c => c);
 
 				var _cte1 = db.GetTable<Child>().Where(c => c.ParentID > 1);
-				var expected = from p in _cte1
+				var expected = (from p in _cte1
 					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).InnerJoin(c4 => c4.ParentID == p.ParentID)
 					select new CteDMLTests
 					{
-						ChildID = c4.ChildID,
+						ChildID  = c4.ChildID,
 						ParentID = c4.ParentID
-					};
+					}).Distinct();
 
 				var result = testTable.OrderBy(c => c.ChildID).ThenBy(c => c.ParentID);
 				expected   = expected. OrderBy(c => c.ChildID).ThenBy(c => c.ParentID);

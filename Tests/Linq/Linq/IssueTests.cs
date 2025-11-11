@@ -689,6 +689,7 @@ namespace Tests.Linq
 						db.GetTable<InsertIssueTest>(),
 						_ => new InsertIssueTest()
 						{
+							Pk = _,
 							ID = 123,
 							intDataType = _
 						});

@@ -565,8 +565,8 @@ namespace Tests.Linq
 		{
 			var data = new[]
 			{
-				new Ints { One = 1,  Two = 2,  Three = 3,  Four = 4,  Five = 5,  Nil = (int?)null },
-				new Ints { One = 10, Two = 20, Three = 30, Four = 40, Five = 50, Nil = (int?)null },
+				new Ints { Id = 1, One = 1,  Two = 2,  Three = 3,  Four = 4,  Five = 5,  Nil = (int?)null },
+				new Ints { Id = 2, One = 10, Two = 20, Three = 30, Four = 40, Five = 50, Nil = (int?)null },
 			};
 
 			using var db   = GetDataContext(context);
@@ -583,8 +583,8 @@ namespace Tests.Linq
 				.ShouldBeEquivalentTo(
 				new Ints[]
 				{
-					new Ints { One = 1,   Two = 2,   Three = 3,   Four = 4,   Five = 5,  Nil = (int?)null },
-					new Ints { One = 100, Two = 200, Three = 300, Four = 400, Five = 50, Nil = 600 }
+					new Ints { Id = 1, One = 1,   Two = 2,   Three = 3,   Four = 4,   Five = 5,  Nil = (int?)null },
+					new Ints { Id = 2, One = 100, Two = 200, Three = 300, Four = 400, Five = 50, Nil = 600 }
 				});
 		}
 
@@ -599,8 +599,8 @@ namespace Tests.Linq
 		{
 			var data = new[]
 			{
-				new Ints { One = 1,  Two = 2,  Three = 3,  Four = 4,  Five = 5,  Nil = (int?)null },
-				new Ints { One = 10, Two = 20, Three = 30, Four = 40, Five = 50, Nil = (int?)null },
+				new Ints { Id = 1, One = 1,  Two = 2,  Three = 3,  Four = 4,  Five = 5,  Nil = (int?)null },
+				new Ints { Id = 2, One = 10, Two = 20, Three = 30, Four = 40, Five = 50, Nil = (int?)null },
 			};
 
 			using var db   = GetDataContext(context);
@@ -625,8 +625,8 @@ namespace Tests.Linq
 				.ShouldBeEquivalentTo(
 				new Ints[]
 				{
-					new Ints { One = 1,   Two = 2,   Three = 3,   Four = 4,   Five = 5,  Nil = (int?)null },
-					new Ints { One = 100, Two = 200, Three = 300, Four = 400, Five = 50, Nil = 600 }
+					new Ints { Id = 1, One = 1,   Two = 2,   Three = 3,   Four = 4,   Five = 5,  Nil = (int?)null },
+					new Ints { Id = 2, One = 100, Two = 200, Three = 300, Four = 400, Five = 50, Nil = 600 }
 				});
 		}
 

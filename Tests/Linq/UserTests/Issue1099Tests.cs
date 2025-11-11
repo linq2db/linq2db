@@ -21,7 +21,7 @@ namespace Tests.UserTests
 		{
 			[PrimaryKey]
 			int? ID { get; set; }
-			[Column]
+			[PrimaryKey]
 			int DurationID { get; set; }
 			[Column]
 			int DurationInterval { get; set; }
