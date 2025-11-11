@@ -64,6 +64,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 			{
 				var factory   = translationContext.ExpressionFactory;
 				var intDbType = factory.GetDbDataType(typeof(int));
+				var longDbType = factory.GetDbDataType(typeof(long));
 
 				switch (datepart)
 				{
@@ -101,6 +102,30 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 						// Not found better solution for this
 						var stringDbType = factory.GetDbDataType(typeof(string));
 						var result       = factory.Cast(factory.Function(stringDbType, "To_NVarchar", ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.Value(stringDbType, "FF3")), intDbType);
+
+						return result;
+					}
+					case Sql.DateParts.Microsecond:
+					{
+						// Not found better solution for this
+						var stringDbType = factory.GetDbDataType(typeof(string));
+						var result       = factory.Cast(factory.Function(stringDbType, "To_NVarchar", dateTimeExpression, factory.Value(stringDbType, "FF6")), longDbType);
+
+						return result;
+					}
+					case Sql.DateParts.Tick:
+					{
+						// Not found better solution for this
+						var stringDbType = factory.GetDbDataType(typeof(string));
+						var result       = factory.Cast(factory.Function(stringDbType, "To_NVarchar", dateTimeExpression, factory.Value(stringDbType, "FF7")), longDbType);
+
+						return result;
+					}
+					case Sql.DateParts.Nanosecond:
+					{
+						// Not found better solution for this
+						var stringDbType = factory.GetDbDataType(typeof(string));
+						var result       = factory.Multiply<long>(factory.Cast(factory.Function(stringDbType, "To_NVarchar", dateTimeExpression, factory.Value(stringDbType, "FF7")), longDbType), 100);
 
 						return result;
 					}
@@ -165,8 +190,25 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 						break;
 					case Sql.DateParts.Millisecond:
 					{
-						function = "Add_Seconds";
-						number   = factory.Div(incrementType, number, 1000);
+						function = "Add_Nano100";
+						number   = factory.Multiply(incrementType, number, 10_000);
+						break;
+					}
+					case Sql.DateParts.Microsecond:
+					{
+						function = "Add_Nano100";
+						number = factory.Multiply(incrementType, number, 10);
+						break;
+					}
+					case Sql.DateParts.Tick:
+					{
+						function = "Add_Nano100";
+						break;
+					}
+					case Sql.DateParts.Nanosecond:
+					{
+						function = "Add_Nano100";
+						number = factory.Div(incrementType, number, 100);
 						break;
 					}
 					default:

@@ -141,6 +141,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					else
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"Raw({type.Length})");
 					break;
+				case DataType.Interval       : StringBuilder.Append("interval day (9) to second (9)");
+					break;
 				default: base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);         break;
 			}
 		}
