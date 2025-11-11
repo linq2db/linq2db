@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -256,11 +257,11 @@ namespace LinqToDB
 			set => _isMarsEnabled = value;
 		}
 
-		private List<string>? _queryHints;
 		/// <summary>
 		/// Gets list of query hints (writable collection), that will be used for all queries, executed through current context.
 		/// </summary>
-		public List<string>  QueryHints
+		[AllowNull]
+		public List<string> QueryHints
 		{
 			get
 			{
@@ -269,15 +270,16 @@ namespace LinqToDB
 				if (_dataConnection != null)
 					return _dataConnection.QueryHints;
 
-				return _queryHints ??= new List<string>();
+				return field ??= new List<string>();
 			}
+			private set;
 		}
 
-		private List<string>? _nextQueryHints;
 		/// <summary>
 		/// Gets list of query hints (writable collection), that will be used only for next query, executed through current context.
 		/// </summary>
-		public List<string>  NextQueryHints
+		[AllowNull]
+		public List<string> NextQueryHints
 		{
 			get
 			{
@@ -286,8 +288,9 @@ namespace LinqToDB
 				if (_dataConnection != null)
 					return _dataConnection.NextQueryHints;
 
-				return _nextQueryHints ??= new List<string>();
+				return field ??= new List<string>();
 			}
+			private set;
 		}
 
 		/// <summary>
@@ -391,16 +394,16 @@ namespace LinqToDB
 				if (_commandTimeout != null)
 					_dataConnection.CommandTimeout = CommandTimeout;
 
-				if (_queryHints?.Count > 0)
+				if (QueryHints?.Count > 0)
 				{
-					_dataConnection.QueryHints.AddRange(_queryHints);
-					_queryHints = null;
+					_dataConnection.QueryHints.AddRange(QueryHints);
+					QueryHints = null;
 				}
 
-				if (_nextQueryHints?.Count > 0)
+				if (NextQueryHints?.Count > 0)
 				{
-					_dataConnection.NextQueryHints.AddRange(_nextQueryHints);
-					_nextQueryHints = null;
+					_dataConnection.NextQueryHints.AddRange(NextQueryHints);
+					NextQueryHints = null;
 				}
 
 				if (OnTraceConnection != null)
@@ -438,8 +441,8 @@ namespace LinqToDB
 
 				if (_lockDbManagerCounter == 0 && KeepConnectionAlive == false)
 				{
-					if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new()).AddRange(_dataConnection.QueryHints);
-					if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new()).AddRange(_dataConnection.NextQueryHints);
+					if (_dataConnection.QueryHints.    Count > 0) QueryHints    .AddRange(_dataConnection.QueryHints);
+					if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_dataConnection.NextQueryHints);
 
 					_dataConnection.OnRemoveInterceptor -= RemoveInterceptor;
 					_dataConnection.Dispose();
@@ -465,8 +468,8 @@ namespace LinqToDB
 
 				if (_lockDbManagerCounter == 0 && KeepConnectionAlive == false)
 				{
-					if (_dataConnection.QueryHints.    Count > 0) QueryHints.    AddRange(_queryHints!);
-					if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints!);
+					if (_dataConnection.QueryHints.    Count > 0) QueryHints    .AddRange(_dataConnection.QueryHints);
+					if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_dataConnection.NextQueryHints);
 
 					_dataConnection.OnRemoveInterceptor -= RemoveInterceptor;
 					await _dataConnection.DisposeAsync().ConfigureAwait(false);
@@ -528,8 +531,8 @@ namespace LinqToDB
 
 			if (_dataConnection != null)
 			{
-				if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new ()).AddRange(_dataConnection.QueryHints);
-				if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new ()).AddRange(_dataConnection.NextQueryHints);
+				if (_dataConnection.QueryHints.    Count > 0) QueryHints    .AddRange(_dataConnection.QueryHints);
+				if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_dataConnection.NextQueryHints);
 
 				_dataConnection.OnRemoveInterceptor -= RemoveInterceptor;
 				_dataConnection.Dispose();
@@ -550,8 +553,8 @@ namespace LinqToDB
 
 			if (_dataConnection != null)
 			{
-				if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new ()).AddRange(_dataConnection.QueryHints);
-				if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new ()).AddRange(_dataConnection.NextQueryHints);
+				if (_dataConnection.QueryHints.    Count > 0) QueryHints    .AddRange(_dataConnection.QueryHints);
+				if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_dataConnection.NextQueryHints);
 
 				_dataConnection.OnRemoveInterceptor -= RemoveInterceptor;
 				await _dataConnection.DisposeAsync().ConfigureAwait(false);

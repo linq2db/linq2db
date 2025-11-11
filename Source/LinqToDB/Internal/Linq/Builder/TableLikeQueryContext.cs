@@ -43,17 +43,17 @@ namespace LinqToDB.Internal.Linq.Builder
 			var projectionType = typeof(ProjectionHelper<,>).MakeGenericType(targetContextRef.Type, sourceContextRef.Type);
 
 			ProjectionBody = Expression.MemberInit(Expression.New(projectionType),
-				Expression.Bind(projectionType.GetProperty(nameof(ProjectionHelper<object, object>.target)) ?? throw new InvalidOperationException(),
+				Expression.Bind(projectionType.GetProperty(nameof(ProjectionHelper<,>.target)) ?? throw new InvalidOperationException(),
 					targetContextRef),
-				Expression.Bind(projectionType.GetProperty(nameof(ProjectionHelper<object, object>.source)) ?? throw new InvalidOperationException(),
+				Expression.Bind(projectionType.GetProperty(nameof(ProjectionHelper<,>.source)) ?? throw new InvalidOperationException(),
 					sourceContextRef),
-				Expression.Bind(projectionType.GetProperty(nameof(ProjectionHelper<object, object>.selft_target)) ?? throw new InvalidOperationException(),
+				Expression.Bind(projectionType.GetProperty(nameof(ProjectionHelper<,>.selft_target)) ?? throw new InvalidOperationException(),
 					targetContextRef));
 
 			var thisContextRef = new ContextRefExpression(projectionType, this);
 
-			TargetPropAccess = Expression.Property(thisContextRef, nameof(ProjectionHelper<object, object>.target));
-			SourcePropAccess = Expression.Property(thisContextRef, nameof(ProjectionHelper<object, object>.source));
+			TargetPropAccess = Expression.Property(thisContextRef, nameof(ProjectionHelper<,>.target));
+			SourcePropAccess = Expression.Property(thisContextRef, nameof(ProjectionHelper<,>.source));
 
 			Source = sourceContextRef.BuildContext is EnumerableContext enumerableSource
 				? new SqlTableLikeSource { SourceEnumerable = enumerableSource.Table, SourceQuery = enumerableSource.SelectQuery }

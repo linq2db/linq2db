@@ -14,7 +14,7 @@ namespace LinqToDB.Internal.SqlQuery
 		public bool                   HasOutputItems => _outputItems                    != null && _outputItems.Count > 0;
 		public List<SqlSetExpression> OutputItems
 		{
-			get => _outputItems ??= new List<SqlSetExpression>();
+			get => _outputItems ??= [];
 			set => _outputItems = value;
 		}
 

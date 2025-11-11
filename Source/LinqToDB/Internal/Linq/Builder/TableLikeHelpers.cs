@@ -136,14 +136,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (placeholder.Type != newPlaceholder.Type)
 				{
-					if (placeholder.Type.IsNullable())
+					if (placeholder.Type.IsNullableType)
 					{
-						if (!newPlaceholder.Type.IsNullable())
+						if (!newPlaceholder.Type.IsNullableType)
 							newPlaceholder = newPlaceholder.MakeNullable();
 					}
 					else
 					{
-						if (newPlaceholder.Type.IsNullable())
+						if (newPlaceholder.Type.IsNullableType)
 							newPlaceholder = newPlaceholder.MakeNotNullable();
 
 					}

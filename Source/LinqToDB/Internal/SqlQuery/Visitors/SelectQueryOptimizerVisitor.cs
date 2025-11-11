@@ -727,7 +727,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 								{
 									var dbType = QueryHelper.GetDbDataType(column.Expression, _mappingSchema);
 									var type   = dbType.SystemType;
-									if (!type.IsNullableType())
+									if (!type.IsNullableOrReferenceType())
 										type = type.AsNullable();
 									nullValue = new SqlValue(dbType.WithSystemType(type), null);
 								}
@@ -2926,13 +2926,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			IQueryElement?[]              _ignore            = default!;
 			int                           _foundCount;
 			bool                          _notAllowedScope;
-			bool                          _doNotAllow;
 
-			public bool DoNotAllow
-			{
-				get => _doNotAllow;
-				private set => _doNotAllow = value;
-			}
+			public bool DoNotAllow { get; private set; }
 
 			public MovingComplexityVisitor() : base(VisitMode.ReadOnly)
 			{
@@ -2942,7 +2937,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				_ignore            = default!;
 				_expressionToCheck = default!;
-				_doNotAllow        = default;
+				DoNotAllow         = default;
 
 				_foundCount = 0;
 			}
@@ -2951,7 +2946,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				_ignore            = ignore;
 				_expressionToCheck = testExpression;
-				_doNotAllow        = default;
+				DoNotAllow         = default;
 				_foundCount        = 0;
 
 				Visit(parent);

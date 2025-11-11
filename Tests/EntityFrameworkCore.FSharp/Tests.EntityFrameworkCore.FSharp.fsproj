@@ -2,6 +2,7 @@
 	<Import Project="..\linq2db.BasicTestProjects.props" />
 
 	<PropertyGroup>
+		<LangVersion>9</LangVersion>
 		<TargetFrameworks>net8.0</TargetFrameworks>
 		<WarningLevel>5</WarningLevel>
 		<DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
@@ -16,7 +17,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.EF8.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.FSharp\LinqToDB.FSharp.fsproj" />
 
 		<PackageReference Include="EntityFrameworkCore.FSharp" />
 		<PackageReference Include="FSharp.Core" />

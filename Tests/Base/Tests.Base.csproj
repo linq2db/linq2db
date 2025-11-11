@@ -3,7 +3,6 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests.Base</AssemblyName>
 		<RootNamespace>Tests</RootNamespace>
-		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net9.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -11,6 +10,7 @@
 
 		<ProjectReference Include="..\Model\Tests.Model.csproj" />
 		<ProjectReference Include="..\..\Source\LinqToDB.Remote.SignalR.Server\LinqToDB.Remote.SignalR.Server.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.FSharp\LinqToDB.FSharp.fsproj" />
 
 		<PackageReference Include="NUnit" />
 		<PackageReference Include="NUnit.Analyzers" />
@@ -25,9 +25,11 @@
 		<Reference Include="System.ServiceModel" />
 
 		<PackageReference Include="MiniProfiler.Shared" />
-		<PackageReference Include="System.Text.Json" />
 		<PackageReference Include="Microsoft.AspNetCore" />
 		<PackageReference Include="Microsoft.AspNetCore.SignalR" />
+
+		<!--vulnerable transient dependency-->
+		<PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Core" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">

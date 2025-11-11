@@ -21,9 +21,6 @@ namespace LinqToDB.Internal.SqlQuery
 			set => _update = value;
 		}
 
-		internal bool HasInsert => _insert != null;
-		internal bool HasUpdate => _update != null;
-
 		public SqlInsertOrUpdateStatement(SelectQuery? selectQuery) : base(selectQuery)
 		{
 		}

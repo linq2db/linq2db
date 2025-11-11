@@ -18,7 +18,7 @@ namespace LinqToDB.Internal.Linq
 			Func<string> toExpressionString,
 			Func<string> toQueryString,
 			Func<string> toQueryStringNoParams
-			)
+		)
 		{
 			_toExpressionString    = toExpressionString;
 			_toQueryString         = toQueryString;

@@ -39,12 +39,12 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 					// PostgreSQL '%' operator supports only decimal and numeric types
 
 					var fromType = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
-					if (fromType.SystemType.ToNullableUnderlying() != typeof(decimal))
+					if (fromType.SystemType.UnwrapNullableType() != typeof(decimal))
 					{
 						var toType          = MappingSchema.GetDbDataType(typeof(decimal));
 						var newExpr1        = PseudoFunctions.MakeCast(element.Expr1, toType);
 						var systemType      = typeof(decimal);
-						if (fromType.SystemType.IsNullable())
+						if (fromType.SystemType.IsNullableType)
 							systemType = systemType.AsNullable();
 
 						var newExpr =  PseudoFunctions.MakeMandatoryCast(new SqlBinaryExpression(systemType, newExpr1, element.Operation, element.Expr2), toType);
@@ -133,7 +133,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 			if (cast.SystemType.ToUnderlying() == typeof(bool))
 			{
-				if (cast.IsMandatory && cast.Expression.SystemType?.ToNullableUnderlying() == typeof(bool))
+				if (cast.IsMandatory && cast.Expression.SystemType?.UnwrapNullableType() == typeof(bool))
 				{
 					// do nothing
 				}

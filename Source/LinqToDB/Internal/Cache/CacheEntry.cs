@@ -19,13 +19,7 @@ namespace LinqToDB.Internal.Cache
 		private IList<PostEvictionCallbackRegistration<TKey>>? _postEvictionCallbacks;
 		private bool                                           _isExpired;
 
-		internal IList<IChangeToken>? _expirationTokens;
-		internal DateTimeOffset?      _absoluteExpiration;
-		internal TimeSpan?            _absoluteExpirationRelativeToNow;
-		private TimeSpan?             _slidingExpiration;
-		private long?                 _size;
 		private IDisposable?          _scope;
-		private TEntry?               _value;
 		private bool                  _valueHasBeenSet;
 
 		internal readonly object _lock = new ();
@@ -45,18 +39,14 @@ namespace LinqToDB.Internal.Cache
 		/// <summary>
 		/// Gets or sets an absolute expiration date for the cache entry.
 		/// </summary>
-		public DateTimeOffset? AbsoluteExpiration
-		{
-			get => _absoluteExpiration;
-			set => _absoluteExpiration = value;
-		}
+		public DateTimeOffset? AbsoluteExpiration { get; set; }
 
 		/// <summary>
 		/// Gets or sets an absolute expiration time, relative to now.
 		/// </summary>
 		public TimeSpan? AbsoluteExpirationRelativeToNow
 		{
-			get => _absoluteExpirationRelativeToNow;
+			get;
 			set
 			{
 				if (value <= TimeSpan.Zero)
@@ -67,7 +57,7 @@ namespace LinqToDB.Internal.Cache
 						"The relative expiration value must be positive.");
 				}
 
-				_absoluteExpirationRelativeToNow = value;
+				field = value;
 			}
 		}
 
@@ -77,7 +67,7 @@ namespace LinqToDB.Internal.Cache
 		/// </summary>
 		public TimeSpan? SlidingExpiration
 		{
-			get => _slidingExpiration;
+			get;
 			set
 			{
 				if (value <= TimeSpan.Zero)
@@ -88,7 +78,7 @@ namespace LinqToDB.Internal.Cache
 						"The sliding expiration value must be positive.");
 				}
 
-				_slidingExpiration = value;
+				field = value;
 			}
 		}
 
@@ -97,12 +87,7 @@ namespace LinqToDB.Internal.Cache
 		/// </summary>
 		public IList<IChangeToken> ExpirationTokens
 		{
-			get
-			{
-				_expirationTokens ??= new List<IChangeToken>();
-
-				return _expirationTokens;
-			}
+			get => field ??= new List<IChangeToken>();
 		}
 
 		/// <summary>
@@ -110,12 +95,7 @@ namespace LinqToDB.Internal.Cache
 		/// </summary>
 		public IList<PostEvictionCallbackRegistration<TKey>> PostEvictionCallbacks
 		{
-			get
-			{
-				_postEvictionCallbacks ??= new List<PostEvictionCallbackRegistration<TKey>>();
-
-				return _postEvictionCallbacks;
-			}
+			get => _postEvictionCallbacks ??= new List<PostEvictionCallbackRegistration<TKey>>();
 		}
 
 		/// <summary>
@@ -129,7 +109,7 @@ namespace LinqToDB.Internal.Cache
 		/// </summary>
 		public long? Size
 		{
-			get => _size;
+			get;
 			set
 			{
 				if (value < 0)
@@ -137,7 +117,7 @@ namespace LinqToDB.Internal.Cache
 					throw new ArgumentOutOfRangeException(nameof(value), value, $"{nameof(value)} must be non-negative.");
 				}
 
-				_size = value;
+				field = value;
 			}
 		}
 
@@ -145,10 +125,10 @@ namespace LinqToDB.Internal.Cache
 
 		public TEntry? Value
 		{
-			get => _value;
+			get;
 			set
 			{
-				_value = value;
+				field = value;
 				_valueHasBeenSet = true;
 			}
 		}
@@ -198,13 +178,13 @@ namespace LinqToDB.Internal.Cache
 
 		private bool CheckForExpiredTime(DateTimeOffset now)
 		{
-			if (_absoluteExpiration.HasValue && _absoluteExpiration.Value <= now)
+			if (AbsoluteExpiration is { } absoluteExpiration && absoluteExpiration <= now)
 			{
 				SetExpired(EvictionReason.Expired);
 				return true;
 			}
 
-			if (_slidingExpiration.HasValue && (now - LastAccessed) >= _slidingExpiration)
+			if (SlidingExpiration is { } slidingExpiration && (now - LastAccessed) >= slidingExpiration)
 			{
 				SetExpired(EvictionReason.Expired);
 				return true;
@@ -215,11 +195,11 @@ namespace LinqToDB.Internal.Cache
 
 		internal bool CheckForExpiredTokens()
 		{
-			if (_expirationTokens != null)
+			if (ExpirationTokens != null)
 			{
-				for (var i = 0; i < _expirationTokens.Count; i++)
+				for (var i = 0; i < ExpirationTokens.Count; i++)
 				{
-					var expiredToken = _expirationTokens[i];
+					var expiredToken = ExpirationTokens[i];
 
 					if (expiredToken.HasChanged)
 					{
@@ -234,13 +214,13 @@ namespace LinqToDB.Internal.Cache
 
 		internal void AttachTokens()
 		{
-			if (_expirationTokens != null)
+			if (ExpirationTokens != null)
 			{
 				lock (_lock)
 				{
-					for (var i = 0; i < _expirationTokens.Count; i++)
+					for (var i = 0; i < ExpirationTokens.Count; i++)
 					{
-						var expirationToken = _expirationTokens[i];
+						var expirationToken = ExpirationTokens[i];
 
 						if (expirationToken.ActiveChangeCallbacks)
 						{
@@ -285,7 +265,7 @@ namespace LinqToDB.Internal.Cache
 
 		internal void InvokeEvictionCallbacks()
 		{
-			if (_postEvictionCallbacks != null)
+			if (PostEvictionCallbacks != null)
 			{
 				_ = Task.Factory.StartNew(state => InvokeCallbacks((CacheEntry<TKey,TEntry>)state!), this,
 					CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
@@ -326,13 +306,13 @@ namespace LinqToDB.Internal.Cache
 
 			// Copy expiration tokens and AbsoluteExpiration to the cache entries hierarchy.
 			// We do this regardless of it gets cached because the tokens are associated with the value we'll return.
-			if (_expirationTokens != null)
+			if (ExpirationTokens != null)
 			{
 				lock (_lock)
 				{
 					lock (parent._lock)
 					{
-						foreach (var expirationToken in _expirationTokens)
+						foreach (var expirationToken in ExpirationTokens)
 						{
 							parent.AddExpirationToken(expirationToken);
 						}
@@ -340,11 +320,11 @@ namespace LinqToDB.Internal.Cache
 				}
 			}
 
-			if (_absoluteExpiration.HasValue)
+			if (AbsoluteExpiration.HasValue)
 			{
-				if (!parent._absoluteExpiration.HasValue || _absoluteExpiration < parent._absoluteExpiration)
+				if (!parent.AbsoluteExpiration.HasValue || AbsoluteExpiration < parent.AbsoluteExpiration)
 				{
-					parent._absoluteExpiration = _absoluteExpiration;
+					parent.AbsoluteExpiration = AbsoluteExpiration;
 				}
 			}
 		}

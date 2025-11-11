@@ -347,7 +347,7 @@ namespace Tests.Linq
 		[Test]
 		public void Contains15([DataSources] string context)
 		{
-			var arr = Parent1.Take(2).ToArray();
+			var arr = Parent1.Take(2).ToArray().AsEnumerable();
 
 			using (var db = GetDataContext(context))
 				AreEqual(

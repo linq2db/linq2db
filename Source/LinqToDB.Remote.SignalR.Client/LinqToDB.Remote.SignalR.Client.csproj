@@ -3,10 +3,7 @@
 		<AssemblyName>linq2db.Remote.SignalR.Client</AssemblyName>
 		<RootNamespace>LinqToDB.Remote.SignalR</RootNamespace>
 
-		<TargetFrameworks>netstandard2.0;net462;net8.0;net9.0</TargetFrameworks>
-		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net9.0</TargetFrameworks>
-
-		<IsAotCompatible Condition="$(TargetFramework) == 'net8.0' OR $(TargetFramework) == 'net9.0'">true</IsAotCompatible>
+		<IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">true</IsAotCompatible>
 
 		<Title>Linq to DB Signal/R Client Remote</Title>
 		<Description>Linq to DB support for querying remote data contexts over Signal/R</Description>
@@ -17,6 +14,11 @@
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
 
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
+	</ItemGroup>
+
+	<ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+		<!--transitive vulnerable packages-->
+		<PackageReference Include="Newtonsoft.Json" />
 	</ItemGroup>
 
 	<ItemGroup>

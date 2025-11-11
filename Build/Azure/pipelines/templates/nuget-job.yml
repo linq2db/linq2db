@@ -28,6 +28,10 @@ jobs:
     condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
     displayName: Update nuget version
 
+  - powershell: echo "##vso[task.setvariable variable=ef10PackageVersion]$(ef10PackageVersion)-dev.$(Build.BuildId)"
+    condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
+    displayName: Update nuget version
+
   - task: DownloadPipelineArtifact@2
     displayName: Download LinqToDB files
     inputs:
@@ -109,14 +113,26 @@ jobs:
   - task: DownloadPipelineArtifact@2
     displayName: Download LinqToDB.EntityFrameworkCore files
     inputs:
-      artifactName: '$(artifact_linq2db_efcore_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore/Release'
+      artifactName: '$(artifact_linq2db_efcore_3_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.EF3/Release'
 
   - task: DownloadPipelineArtifact@2
-    displayName: Download LinqToDB.EntityFrameworkCore.STS files
+    displayName: Download LinqToDB.EntityFrameworkCore files
     inputs:
-      artifactName: '$(artifact_linq2db_efcore_sts_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.STS/Release'
+      artifactName: '$(artifact_linq2db_efcore_8_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.EF8/Release'
+
+  - task: DownloadPipelineArtifact@2
+    displayName: Download LinqToDB.EntityFrameworkCore files
+    inputs:
+      artifactName: '$(artifact_linq2db_efcore_9_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.EF9/Release'
+
+  - task: DownloadPipelineArtifact@2
+    displayName: Download LinqToDB.EntityFrameworkCore files
+    inputs:
+      artifactName: '$(artifact_linq2db_efcore_10_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.EF10/Release'
 
   - task: DownloadPipelineArtifact@2
     displayName: Download test files (for t4 nugets)
@@ -131,6 +147,18 @@ jobs:
       targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.LINQPad/Release/'
 
 #dotnet tool install -g dotnet-script
+  - task: UseDotNet@2
+    displayName: 'Use latest .NET SDK'
+    inputs:
+      packageType: sdk
+      version: 9.x
+
+  - task: UseDotNet@2
+    displayName: 'Use latest .NET SDK'
+    inputs:
+      packageType: sdk
+      version: 10.x
+
   - task: DotNetCoreCLI@2
     displayName: Install dotnet-script tool
     inputs:
@@ -170,21 +198,21 @@ jobs:
       workingDirectory: '$(Build.SourcesDirectory)/NuGet'
       arguments: BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v9.nuspec /buildPath:../.build/nuspecs /version:$(ef9PackageVersion) /linq2DbVersion:$(packageVersion) /branch:$(Build.SourceBranchName)
 
+  - task: DotNetCoreCLI@2
+    displayName: Update nuspecs (EF10)
+    inputs:
+      command: custom
+      custom: script
+      workingDirectory: '$(Build.SourcesDirectory)/NuGet'
+      arguments: BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v10.nuspec /buildPath:../.build/nuspecs /version:$(ef10PackageVersion) /linq2DbVersion:$(packageVersion) /branch:$(Build.SourceBranchName)
+
   - task: CmdLine@2
     inputs:
       script: $(Build.SourcesDirectory)/NuGet/Pack.cmd
       workingDirectory: $(Build.SourcesDirectory)/NuGet
       failOnStderr: true # needed as dotnet pack doesn't set exit code
-    displayName: Build nugets for Azure Artifacts
-    condition: and(succeeded(), ne(variables['Build.SourceBranchName'], variables['release_branch']))
-
-  - task: CmdLine@2
-    inputs:
-      script: $(Build.SourcesDirectory)/NuGet/Pack.cmd snupkg
-      workingDirectory: $(Build.SourcesDirectory)/NuGet
-      failOnStderr: true # needed as dotnet pack doesn't set exit code
-    displayName: Build nugets for Nuget.org
-    condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['release_branch']))
+    displayName: Build nugets
+    condition: succeeded()
 
   - task: PublishBuildArtifacts@1
     inputs:

@@ -106,7 +106,7 @@ namespace LinqToDB.Internal.Linq
 								}
 								else
 								{
-									var isNullable = !type.IsNullableType();
+									var isNullable = !type.IsNullableOrReferenceType();
 									if (isNullable)
 									{
 										type                                        = type.AsNullable();

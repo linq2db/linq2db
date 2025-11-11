@@ -339,6 +339,8 @@ namespace Tests
 			return "NET80";
 #elif NET9_0
 			return "NET90";
+#elif NET10_0
+			return "NET100";
 #else
 #error Unknown framework
 #endif
@@ -362,18 +364,6 @@ namespace Tests
 
 			if (File.Exists(fileName))
 				File.Delete(fileName);
-		}
-
-		public static string? GetLastTestCase()
-		{
-			var fileName = GetTestFilePath();
-
-			TestContext.Out.WriteLine($"Test expression file: {fileName} ({File.Exists(fileName)})");
-
-			if (File.Exists(fileName))
-				return File.ReadAllText(fileName);
-
-			return null;
 		}
 
 		// sync logic with ExpressionTestGenerator.GetTestFilePath

@@ -480,27 +480,26 @@ namespace LinqToDB.Internal.DataProvider
 			serviceProvider.AddService(CreateIdentifierService());
 		}
 
-		SimpleServiceProvider? _serviceProvider;
-		readonly Lock          _guard = new();
+		readonly Lock _guard = new();
 
 		IServiceProvider IInfrastructure<IServiceProvider>.Instance
 		{
 			get
 			{
-				if (_serviceProvider == null)
+				if (field == null)
 				{
 					lock (_guard)
 					{
-						if (_serviceProvider == null)
+						if (field == null)
 						{
 							var serviceProvider = new SimpleServiceProvider();
 							InitServiceProvider(serviceProvider);
-							_serviceProvider = serviceProvider;
+							field = serviceProvider;
 						}
 					}
 				}
 
-				return _serviceProvider;
+				return field;
 			}
 		}
 

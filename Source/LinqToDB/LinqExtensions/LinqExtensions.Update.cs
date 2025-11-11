@@ -117,16 +117,14 @@ namespace LinqToDB
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		public static Task<UpdateOutput<TTarget>[]> UpdateWithOutputAsync<TSource, TTarget>(
+		public static ValueTask<UpdateOutput<TTarget>[]> UpdateWithOutputAsync<TSource, TTarget>(
 							IQueryable<TSource> source,
 							ITable<TTarget> target,
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
 							CancellationToken token)
 			where TTarget : class
 		{
-			return source
-				.UpdateWithOutputAsync(target, setter)
-				.ToArrayAsync(token);
+			return source.UpdateWithOutputAsync(target, setter).ToArrayAsync(token);
 		}
 
 		/// <summary>
@@ -248,7 +246,7 @@ namespace LinqToDB
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		public static Task<TOutput[]> UpdateWithOutputAsync<TSource, TTarget, TOutput>(
+		public static ValueTask<TOutput[]> UpdateWithOutputAsync<TSource, TTarget, TOutput>(
 							IQueryable<TSource> source,
 							ITable<TTarget> target,
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
@@ -256,9 +254,7 @@ namespace LinqToDB
 							CancellationToken token)
 			where TTarget : class
 		{
-			return source
-				.UpdateWithOutputAsync(target, setter, outputExpression)
-				.ToArrayAsync(token);
+			return source.UpdateWithOutputAsync(target, setter, outputExpression).ToArrayAsync(token);
 		}
 
 		/// <summary>
@@ -542,15 +538,13 @@ namespace LinqToDB
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		public static Task<UpdateOutput<TTarget>[]> UpdateWithOutputAsync<TSource, TTarget>(
+		public static ValueTask<UpdateOutput<TTarget>[]> UpdateWithOutputAsync<TSource, TTarget>(
 							IQueryable<TSource> source,
 							Expression<Func<TSource, TTarget>> target,
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
 							CancellationToken token)
 		{
-			return source
-				.UpdateWithOutputAsync(target, setter)
-				.ToArrayAsync(token);
+			return source.UpdateWithOutputAsync(target, setter).ToArrayAsync(token);
 		}
 
 		/// <summary>
@@ -670,16 +664,14 @@ namespace LinqToDB
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		public static Task<TOutput[]> UpdateWithOutputAsync<TSource, TTarget, TOutput>(
+		public static ValueTask<TOutput[]> UpdateWithOutputAsync<TSource, TTarget, TOutput>(
 							IQueryable<TSource> source,
 							Expression<Func<TSource, TTarget>> target,
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
 							Expression<Func<TSource, TTarget, TTarget, TOutput>> outputExpression,
 							CancellationToken token)
 		{
-			return source
-				.UpdateWithOutputAsync(target, setter, outputExpression)
-				.ToArrayAsync(token);
+			return source.UpdateWithOutputAsync(target, setter, outputExpression).ToArrayAsync(token);
 		}
 
 		/// <summary>
@@ -948,14 +940,12 @@ namespace LinqToDB
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		public static Task<UpdateOutput<T>[]> UpdateWithOutputAsync<T>(
+		public static ValueTask<UpdateOutput<T>[]> UpdateWithOutputAsync<T>(
 					        IQueryable<T> source,
 			[InstantHandle] Expression<Func<T, T>> setter,
 							CancellationToken token)
 		{
-			return source
-				.UpdateWithOutputAsync(setter)
-				.ToArrayAsync(token);
+			return source.UpdateWithOutputAsync(setter).ToArrayAsync(token);
 		}
 
 		/// <summary>
@@ -1063,15 +1053,13 @@ namespace LinqToDB
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		public static Task<TOutput[]> UpdateWithOutputAsync<T, TOutput>(
+		public static ValueTask<TOutput[]> UpdateWithOutputAsync<T, TOutput>(
 					        IQueryable<T> source,
 			[InstantHandle] Expression<Func<T, T>> setter,
 							Expression<Func<T, T, TOutput>> outputExpression,
 							CancellationToken token)
 		{
-			return source
-				.UpdateWithOutputAsync(setter, outputExpression)
-				.ToArrayAsync(token);
+			return source.UpdateWithOutputAsync(setter, outputExpression).ToArrayAsync(token);
 		}
 
 		/// <summary>
@@ -1314,7 +1302,7 @@ namespace LinqToDB
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		public static Task<UpdateOutput<T>[]> UpdateWithOutputAsync<T>(
+		public static ValueTask<UpdateOutput<T>[]> UpdateWithOutputAsync<T>(
 					        IUpdatable<T> source,
 							CancellationToken token)
 		{
@@ -1419,14 +1407,12 @@ namespace LinqToDB
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
-		public static Task<TOutput[]> UpdateWithOutputAsync<T, TOutput>(
+		public static ValueTask<TOutput[]> UpdateWithOutputAsync<T, TOutput>(
 					        IUpdatable<T> source,
 							Expression<Func<T, T, TOutput>> outputExpression,
 							CancellationToken token)
 		{
-			return source
-				.UpdateWithOutputAsync(outputExpression)
-				.ToArrayAsync(token);
+			return source.UpdateWithOutputAsync(outputExpression).ToArrayAsync(token);
 		}
 
 		/// <summary>

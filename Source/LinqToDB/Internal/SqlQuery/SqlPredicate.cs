@@ -20,24 +20,8 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 #if DEBUG
-		static readonly TruePredicate  _trueInstance  = new();
-		static readonly FalsePredicate _falseInstance = new();
-
-		public static TruePredicate True
-		{
-			get
-			{
-				return _trueInstance;
-			}
-		}
-
-		public static FalsePredicate False
-		{
-			get
-			{
-				return _falseInstance;
-			}
-		}
+		public static TruePredicate True { get; } = new();
+		public static FalsePredicate False { get; } = new();
 #else
 		public static readonly TruePredicate True   = new();
 		public static readonly FalsePredicate False = new();

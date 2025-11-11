@@ -12,26 +12,17 @@ namespace LinqToDB.Internal.Cache
 	sealed class MemoryCacheEntryOptions<TKey>
 		where TKey: notnull
 	{
-		private DateTimeOffset? _absoluteExpiration;
-		private TimeSpan? _absoluteExpirationRelativeToNow;
-		private TimeSpan? _slidingExpiration;
-		private long? _size;
-
 		/// <summary>
 		/// Gets or sets an absolute expiration date for the cache entry.
 		/// </summary>
-		public DateTimeOffset? AbsoluteExpiration
-		{
-			get => _absoluteExpiration;
-			set => _absoluteExpiration = value;
-		}
+		public DateTimeOffset? AbsoluteExpiration { get; set; }
 
 		/// <summary>
 		/// Gets or sets an absolute expiration time, relative to now.
 		/// </summary>
 		public TimeSpan? AbsoluteExpirationRelativeToNow
 		{
-			get => _absoluteExpirationRelativeToNow;
+			get;
 			set
 			{
 				if (value <= TimeSpan.Zero)
@@ -42,7 +33,7 @@ namespace LinqToDB.Internal.Cache
 						"The relative expiration value must be positive.");
 				}
 
-				_absoluteExpirationRelativeToNow = value;
+				field = value;
 			}
 		}
 
@@ -52,7 +43,7 @@ namespace LinqToDB.Internal.Cache
 		/// </summary>
 		public TimeSpan? SlidingExpiration
 		{
-			get => _slidingExpiration;
+			get;
 			set
 			{
 				if (value <= TimeSpan.Zero)
@@ -63,7 +54,7 @@ namespace LinqToDB.Internal.Cache
 						"The sliding expiration value must be positive.");
 				}
 
-				_slidingExpiration = value;
+				field = value;
 			}
 		}
 
@@ -89,7 +80,7 @@ namespace LinqToDB.Internal.Cache
 		/// </summary>
 		public long? Size
 		{
-			get => _size;
+			get;
 			set
 			{
 				if (value < 0)
@@ -97,7 +88,7 @@ namespace LinqToDB.Internal.Cache
 					throw new ArgumentOutOfRangeException(nameof(value), value, $"{nameof(value)} must be non-negative.");
 				}
 
-				_size = value;
+				field = value;
 			}
 		}
 	}

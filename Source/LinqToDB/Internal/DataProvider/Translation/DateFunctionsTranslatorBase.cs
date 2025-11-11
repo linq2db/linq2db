@@ -222,7 +222,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				}
 			}
 
-			var makeExpression = TranslateMakeDateTime(translationContext, translationContext.ExpressionFactory.GetDbDataType(methodCall.Type.ToNullableUnderlying()), year, month, day, hour, minute, second, null);
+			var makeExpression = TranslateMakeDateTime(translationContext, translationContext.ExpressionFactory.GetDbDataType(methodCall.Type.UnwrapNullableType()), year, month, day, hour, minute, second, null);
 
 			if (makeExpression == null)
 				return null;

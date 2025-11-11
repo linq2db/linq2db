@@ -218,21 +218,19 @@ namespace LinqToDB.Data
 
 		#region Default Options
 
-		static BulkCopyOptions _default = new();
-
 		/// <summary>
 		/// Gets default <see cref="BulkCopyOptions"/> instance.
 		/// </summary>
 		public static BulkCopyOptions Default
 		{
-			get => _default;
+			get;
 			set
 			{
-				_default = value;
+				field = value;
 				DataConnection.ResetDefaultOptions();
 				DataConnection.ConnectionOptionsByConfigurationString.Clear();
 			}
-		}
+		} = new();
 
 		/// <inheritdoc />
 		IOptionSet IOptionSet.Default => Default;

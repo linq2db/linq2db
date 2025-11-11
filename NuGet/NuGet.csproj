@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net462</TargetFramework>
+		<TargetFrameworks>net462</TargetFrameworks>
 		<PlatformTarget>x64</PlatformTarget>
 	</PropertyGroup>
 
@@ -38,8 +38,6 @@
 			<Link>x86\%(RecursiveDir)%(FileName)%(Extension)</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Include="empty/empty.csproj" />
-		<None Include="empty/Directory.Build.props" />
 
 		<Reference Include="Sap.Data.Hana.v4.5">
 			<HintPath>$(SolutionDir)\Redist\SapHana\v4.5\Sap.Data.Hana.v4.5.dll</HintPath>

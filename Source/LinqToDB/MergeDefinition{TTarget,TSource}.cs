@@ -150,27 +150,23 @@ namespace LinqToDB
 				UpdateBySourceExpression = updateBySource;
 			}
 
-			public bool HasCondition
-			{
-				get
+			public bool HasCondition =>
+				Type switch
 				{
-					switch (Type)
-					{
-						case MergeOperationType.Delete:
-						case MergeOperationType.Update:
-							return MatchedPredicate != null;
-						case MergeOperationType.UpdateWithDelete:
-							return MatchedPredicate != null || MatchedPredicate2 != null;
-						case MergeOperationType.Insert:
-							return NotMatchedPredicate != null;
-						case MergeOperationType.DeleteBySource:
-						case MergeOperationType.UpdateBySource:
-							return BySourcePredicate != null;
-					}
+					MergeOperationType.Delete or MergeOperationType.Update =>
+						MatchedPredicate != null,
 
-					throw new InvalidOperationException();
-				}
-			}
+					MergeOperationType.UpdateWithDelete =>
+						MatchedPredicate != null || MatchedPredicate2 != null,
+
+					MergeOperationType.Insert =>
+						NotMatchedPredicate != null,
+
+					MergeOperationType.DeleteBySource or MergeOperationType.UpdateBySource =>
+						BySourcePredicate != null,
+
+					_ => throw new InvalidOperationException(),
+				};
 
 			public Expression<Func<TTarget,bool>>?            BySourcePredicate        { get; }
 			public Expression<Func<TSource,TTarget>>?         CreateExpression         { get; }

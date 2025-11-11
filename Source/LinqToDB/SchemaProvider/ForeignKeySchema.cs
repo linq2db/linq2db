@@ -13,25 +13,22 @@ namespace LinqToDB.SchemaProvider
 		public ForeignKeySchema?  BackReference { get; set; }
 		public string             MemberName    { get; set; } = null!;
 
-		private AssociationType _associationType = AssociationType.Auto;
-		public  AssociationType  AssociationType
+		public AssociationType AssociationType
 		{
-			get => _associationType;
+			get;
 			set
 			{
-				_associationType = value;
+				field = value;
 
-				if (BackReference != null)
+				BackReference?.AssociationType = value switch
 				{
-					switch (value)
-					{
-						case AssociationType.Auto      : BackReference.AssociationType = AssociationType.Auto;      break;
-						case AssociationType.OneToOne  : BackReference.AssociationType = AssociationType.OneToOne;  break;
-						case AssociationType.OneToMany : BackReference.AssociationType = AssociationType.ManyToOne; break;
-						case AssociationType.ManyToOne : BackReference.AssociationType = AssociationType.OneToMany; break;
-					}
-				}
+					AssociationType.Auto      => AssociationType.Auto,
+					AssociationType.OneToOne  => AssociationType.OneToOne,
+					AssociationType.OneToMany => AssociationType.ManyToOne,
+					AssociationType.ManyToOne => AssociationType.OneToMany,
+					_ => (AssociationType)-1,
+				};
 			}
-		}
+		} = AssociationType.Auto;
 	}
 }

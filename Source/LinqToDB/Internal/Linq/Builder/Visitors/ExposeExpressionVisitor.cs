@@ -496,8 +496,8 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 				if (isList)
 				{
-					var mi = ExpressionBuilder.EnumerableMethods
-						.First(static m => m.Name == "Count" && m.GetParameters().Length == 1)
+					var mi = ExpressionBuilder.EnumerableMethods["Count"]
+						.First(static m => m.GetParameters().Length == 1)
 						.MakeGenericMethod(node.Expression!.Type.GetItemType()!);
 
 					return Visit(Expression.Call(null, mi, node.Expression));
@@ -743,7 +743,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				case ExpressionType.Coalesce:
 				{
 					if (node.Left is BinaryExpression equalityLeft && node.Right is ConstantExpression constantRight)
-						if (equalityLeft.Type.IsNullable())
+						if (equalityLeft.Type.IsNullableType)
 							if (equalityLeft.NodeType == ExpressionType.Equal && equalityLeft.Left.Type == equalityLeft.Right.Type)
 								if (constantRight.Value is bool val && val == false)
 								{

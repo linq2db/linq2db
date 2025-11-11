@@ -114,7 +114,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 					break;
 					case DataType.Interval   : StringBuilder.Append("interval");       break;
 				case DataType.Udt            :
-					var udtType = type.SystemType.ToNullableUnderlying();
+					var udtType = type.SystemType.UnwrapNullableType();
 
 					var provider = DataProvider as PostgreSQLDataProvider;
 

@@ -41,47 +41,43 @@ namespace LinqToDB.Internal.Linq.Builder
 		public bool           IsSubQuery               => Parent != null;
 		public bool           IgnoreOrderBy            { get; set; }
 
-		bool _isAssociationBuilt;
 		public bool   IsAssociationBuilt
 		{
-			get => _isAssociationBuilt;
+			get;
 			set
 			{
-				_isAssociationBuilt = value;
+				field = value;
 
 				if (SequenceInfo != null)
 					SequenceInfo.IsAssociationBuilt = value;
 			}
 		}
 
-		SourceCardinality _sourceCardinality;
 		public SourceCardinality SourceCardinality
 		{
 			get
 			{
 				if (SequenceInfo == null)
-					return _sourceCardinality;
+					return field;
 				var parent = SequenceInfo.SourceCardinality;
 				if (parent == SourceCardinality.Unknown)
-					return _sourceCardinality;
+					return field;
 				return parent;
 			}
 
-			set => _sourceCardinality = value;
+			set;
 		}
-
-		bool _isAggregation;
 
 		public bool IsAggregation
 		{
 			get
 			{
-				if (_isAggregation || SequenceInfo == null)
-					return _isAggregation;
+				if (field || SequenceInfo == null)
+					return field;
 				return SequenceInfo.IsAggregation;
 			}
 
-			set => _isAggregation = value;
+			set;
 		}
 
 		public bool IsSubqueryExpression { get; set; }
