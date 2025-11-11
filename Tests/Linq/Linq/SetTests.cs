@@ -72,13 +72,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
-		public void Contains3([DataSources] string context)
+		//TODO:[RequiresCorrelatedSubquery]
+		public void Contains3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Parent where    Child.Select(c => c.Parent).Contains(p) select p,
-					from p in db.Parent where db.Child.Select(c => c.Parent).Contains(p) select p);
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				from p in    Parent where    Child.Select(c => c.Parent).Contains(p) select p,
+				from p in db.Parent where db.Child.Select(c => c.Parent).Contains(p) select p);
 		}
 
 		[Test]

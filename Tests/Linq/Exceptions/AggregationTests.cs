@@ -28,7 +28,7 @@ namespace Tests.Exceptions
 						max = p.Children.Where(_ => _.ParentID < 0).Max(_ => _.ParentID)
 					};
 
-				Assert.Catch<InvalidOperationException>(() => q.ToList());
+				Assert.That(() => q.ToList(), Throws.InvalidOperationException);
 			}
 		}
 
