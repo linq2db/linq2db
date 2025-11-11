@@ -383,19 +383,19 @@ namespace Tests.DataProvider
 
 		public class Table1
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			public string Field1 { get; set; } = null!;
 		}
 
 		public class Table2
 		{
-			public int Table1Id { get; set; }
+			[PrimaryKey] public int Table1Id { get; set; }
 			public string Field2 { get; set; } = null!;
 		}
 
 		public class Table3
 		{
-			public int Table1Id { get; set; }
+			[PrimaryKey] public int Table1Id { get; set; }
 			public string Field3 { get; set; } = null!;
 		}
 	}

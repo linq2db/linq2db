@@ -985,7 +985,7 @@ namespace Tests.Linq
 
 		sealed class Issue4469Table
 		{
-			public int Integer { get; set; }
+			[PrimaryKey] public int Integer { get; set; }
 			[Column(Precision = 10, Scale = 5)] public decimal Decimal { get; set; }
 			public double Double { get; set; }
 
