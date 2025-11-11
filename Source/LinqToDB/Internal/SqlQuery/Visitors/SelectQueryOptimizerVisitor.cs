@@ -2797,7 +2797,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							{
 								if (joinQuery.Select.Columns.Count > 1)
 								{
-									if (!processMultiColumn)
+									if (!processMultiColumn || join.JoinType == JoinType.Left)
 										continue;
 
 									if (ProviderOuterCanHandleSeveralColumnsQuery(/*joinQuery*/))
