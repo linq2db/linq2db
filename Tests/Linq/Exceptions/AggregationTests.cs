@@ -15,9 +15,9 @@ namespace Tests.Exceptions
 				Assert.Throws<InvalidOperationException>(() => db.Parent.Where(_ => _.ParentID < 0).Max(_ => _.ParentID));
 		}
 
-		[RequiresCorrelatedSubquery]
+		// TODO: [RequiresCorrelatedSubquery]
 		[Test]
-		public void NonNullableMax2([DataSources] string context)
+		public void NonNullableMax2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
