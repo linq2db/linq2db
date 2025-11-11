@@ -456,20 +456,6 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsNestedJoinsSupported { get; set; } = true;
 
 		/// <summary>
-		/// Provider supports COUNT(DISTINCT column) function. Otherwise, it will be emulated.
-		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
-		/// </summary>
-		[DataMember(Order = 52)]
-		public bool IsCountDistinctSupported { get; set; }
-
-		/// <summary>
-		/// Provider supports SUM/AVG/MIN/MAX(DISTINCT column) function. Otherwise, it will be emulated.
-		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
-		/// </summary>
-		[DataMember(Order = 53)]
-		public bool IsAggregationDistinctSupported { get; set; }
-
-		/// <summary>
 		/// Provider supports SUM/AVG/MIN/MAX(DISTINCT column) function. Otherwise, it will be emulated.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
@@ -595,9 +581,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsCommonTableExpressionsSupported                    .GetHashCode()
 				^ IsAllSetOperationsSupported                          .GetHashCode()
 				^ IsDistinctSetOperationsSupported                     .GetHashCode()
-				^ IsCountDistinctSupported                             .GetHashCode()
 				^ IsNestedJoinsSupported                               .GetHashCode()
-				^ IsAggregationDistinctSupported                       .GetHashCode()
 				^ IsUpdateFromSupported                                .GetHashCode()
 				^ DefaultMultiQueryIsolationLevel                      .GetHashCode()
 				^ AcceptsOuterExpressionInAggregate                    .GetHashCode()
@@ -662,9 +646,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsCommonTableExpressionsSupported                     == other.IsCommonTableExpressionsSupported
 				&& IsAllSetOperationsSupported                           == other.IsAllSetOperationsSupported
 				&& IsDistinctSetOperationsSupported                      == other.IsDistinctSetOperationsSupported
-				&& IsCountDistinctSupported                              == other.IsCountDistinctSupported
 				&& IsNestedJoinsSupported                                == other.IsNestedJoinsSupported
-				&& IsAggregationDistinctSupported                        == other.IsAggregationDistinctSupported
 				&& IsUpdateFromSupported                                 == other.IsUpdateFromSupported
 				&& DefaultMultiQueryIsolationLevel                       == other.DefaultMultiQueryIsolationLevel
 				&& AcceptsOuterExpressionInAggregate                     == other.AcceptsOuterExpressionInAggregate

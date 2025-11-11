@@ -54,9 +54,6 @@ namespace LinqToDB.Internal.DataProvider.Access
 			SqlProviderFlags.IsAccessBuggyLeftJoinConstantNullability = true;
 			SqlProviderFlags.SupportsPredicatesComparison             = true;
 
-			SqlProviderFlags.IsCountDistinctSupported                     = false;
-			SqlProviderFlags.IsAggregationDistinctSupported               = false;
-
 			if (provider == AccessProvider.OleDb)
 			{
 				SetCharField("DBTYPE_WCHAR", (r, i) => r.GetString(i).TrimEnd(' '));

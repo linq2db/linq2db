@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
@@ -28,7 +30,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 		protected override IMemberTranslator CreateStringMemberTranslator()
 		{
-			return new StringMemberTranslator();
+			return new SqlServerStringMemberTranslator();
 		}
 
 		protected override IMemberTranslator CreateGuidMemberTranslator()
@@ -201,7 +203,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 			}
 		}
 
-		protected class StringMemberTranslator : StringMemberTranslatorBase
+		protected class SqlServerStringMemberTranslator : StringMemberTranslatorBase
 		{
 			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 			{
@@ -220,6 +222,13 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				var stringToAdd  = factory.Function(valueTypeString, "REPLICATE", paddingChar, symbolsToAdd);
 				
 				return factory.Add(valueTypeString, stringToAdd, value);
+			}
+
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool ignoreNulls)
+			{
+				var builder = new AggregateFunctionBuilder();
+				ConfigureConcatWs(builder);
+				return builder.Build(translationContext, methodCall);
 			}
 		}
 

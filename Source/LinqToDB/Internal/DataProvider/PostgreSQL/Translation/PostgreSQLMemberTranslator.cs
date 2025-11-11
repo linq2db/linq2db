@@ -1,10 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 {
@@ -23,6 +27,11 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 		protected override IMemberTranslator CreateMathMemberTranslator()
 		{
 			return new MathMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
 		}
 
 		protected override IMemberTranslator CreateGuidMemberTranslator()
@@ -257,6 +266,61 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 
 				return result;
 			}
+
+			protected override ISqlExpression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+
+				ISqlExpression result;
+
+				if (precision == null)
+				{
+					/*
+					CASE
+						WHEN value > 0 THEN floor(value + 0.5)
+						   ELSE ceil(value - 0.5)
+					   END
+					 */
+					result = factory.Condition(factory.Greater(value, factory.Value(valueType, 0)),
+						factory.Function(valueType, "FLOOR", factory.Add(valueType, value, factory.Value(valueType, 0.5))),
+						factory.Function(valueType, "CEIL",  factory.Sub(valueType, value, factory.Value(valueType, 0.5)))
+					);
+				}
+				else
+				{
+					/*
+					CASE
+						   WHEN value >= 0 THEN floor(value * power(10, precision) + 0.5) / power(10, precision)
+						   ELSE ceil(value * power(10, precision) - 0.5) / power(10, precision)
+					   END
+					 */
+					var powerExpr = factory.Function(valueType, "POWER",
+						factory.Value(valueType, 10),
+						precision);
+
+					result = factory.Condition(factory.GreaterOrEqual(value, factory.Value(valueType, 0)),
+						factory.Div(
+							valueType,
+							factory.Function(valueType, "FLOOR",
+								factory.Add(
+									valueType,
+									factory.Multiply(valueType, value, powerExpr),
+									factory.Value(valueType, 0.5))),
+							powerExpr),
+						factory.Div(
+							valueType,
+							factory.Function(valueType, "CEIL",
+								factory.Sub(
+									valueType,
+									factory.Multiply(valueType, value, powerExpr),
+									factory.Value(valueType, 0.5))),
+							powerExpr)
+					);
+				}
+
+				return result;
+			}
 		}
 
 		protected class GuidMemberTranslator : GuidMemberTranslatorBase
@@ -271,6 +335,93 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 				var cast  = factory.Cast(guidExpr, stringDataType);
 				
 				return cast;
+			}
+		}
+
+		protected class StringMemberTranslator : StringMemberTranslatorBase
+		{
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool ignoreNulls)
+			{
+				var builder = new AggregateFunctionBuilder()
+					.ConfigureAggregate(c => c
+						.HasSequenceIndex(1)
+						.AllowOrderBy()
+						.AllowFilter()
+						.AllowDistinct()
+						.AllowNotNullCheck(true)
+						.TranslateArguments(0)
+						.OnBuildFunction(composer =>
+						{
+							var info = composer.BuildInfo;
+							if (info.Value == null || info.Argument(0) == null)
+							{
+								return;
+							}
+
+							var factory   = info.Factory;
+							var separator = info.Argument(0)!;
+							var valueType = factory.GetDbDataType(info.Value);
+
+							var value = info.Value;
+							if (!info.IsNullFiltered)
+								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
+
+							if (info is { IsDistinct: true, OrderBySql.Length: > 0 })
+							{
+								if (info.OrderBySql.Any(o => o.expr != value))
+								{
+									composer.SetFallback(fc => fc
+										.AllowDistinct(false)
+										.AllowNotNullCheck(null)
+									);
+									return;
+								}
+							}
+
+							ISqlExpression? suffix = null;
+							if (info.OrderBySql.Length > 0)
+							{
+								using var sb = Pools.StringBuilder.Allocate();
+
+								var args = info.OrderBySql.Select(o => o.expr).ToArray();
+
+								sb.Value.Append("ORDER BY ");
+								for (int i = 0; i < info.OrderBySql.Length; i++)
+								{
+									if (i > 0) sb.Value.Append(", ");
+									sb.Value.Append('{').Append(i).Append('}');
+									if (info.OrderBySql[i].desc) sb.Value.Append(" DESC");
+
+									if (!info.IsNullFiltered)
+									{
+										sb.Value.Append(" NULLS ");
+										sb.Value.Append(info.OrderBySql[i].nulls is Sql.NullsPosition.First or Sql.NullsPosition.None ? "FIRST" : "LAST");
+									}
+								}
+
+								suffix = factory.Fragment(valueType, sb.Value.ToString(), args);
+							}
+
+							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
+							{
+								value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
+							}
+
+							var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
+
+							var fn = factory.Function(valueType, "STRING_AGG",
+								[new SqlFunctionArgument(value, modifier : aggregateModifier), new SqlFunctionArgument(separator, suffix : suffix)],
+								[true, true],
+								isAggregate : true,
+								canBeAffectedByOrderBy : true
+							);
+
+							composer.SetResult(factory.Coalesce(fn, factory.Value(valueType, string.Empty)));
+						}));
+
+				ConfigureConcatWs(builder);
+
+				return builder.Build(translationContext, methodCall);
 			}
 		}
 	}

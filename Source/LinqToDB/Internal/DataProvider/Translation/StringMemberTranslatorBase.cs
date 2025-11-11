@@ -1,8 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Translation
 {
@@ -25,6 +29,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			Registration.RegisterMethod(() => "".PadLeft(0), TranslateStringPadLeft);
 			Registration.RegisterMethod(() => "".PadLeft(0, ' '), TranslateStringPadLeft);
+
+			Registration.RegisterMethod(() => string.Join(",", Enumerable.Empty<string>()), TranslateStringJoin);
+			Registration.RegisterMethod(() => string.Join(",", Array.Empty<string>()), TranslateStringJoin);
 		}
 
 		protected virtual Expression? TranslateLike(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
@@ -150,6 +157,128 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return null;
 
 			return translationContext.CreatePlaceholder(translated, memberExpression);
+		}
+
+		Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			return TranslateStringJoin(translationContext, methodCall, translationFlags, ignoreNulls: false);
+		}
+
+		protected void ConfigureConcatWs(AggregateFunctionBuilder builder, Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression[], ISqlExpression>? functionFactory = null)
+		{
+			builder
+				.ConfigurePlain(c => c
+					.HasSequenceIndex(1)
+					.TranslateArguments(0)
+					.AllowFilter()
+					.AllowNotNullCheck(true)
+					.OnBuildFunction(composer =>
+					{
+						var info = composer.BuildInfo;
+						if (info.Values.Length == 0 || info.Argument(0) == null)
+						{
+							composer.SetResult(info.Factory.Value(info.Factory.GetDbDataType(typeof(string)), string.Empty));
+							return;
+						}
+
+						var factory   = info.Factory;
+						var separator = info.Argument(0)!;
+						var dataType  = factory.GetDbDataType(info.Values[0]);
+
+						if (info.Values.Length == 1)
+						{
+							var singleValue = info.Values[0];
+							singleValue = factory.Coalesce(singleValue, factory.Value(dataType, string.Empty));
+							composer.SetResult(singleValue);
+							return;
+						}
+
+						if (!composer.GetFilteredToNullValues(out IEnumerable<ISqlExpression>? values, out var error))
+						{
+							composer.SetError(error);
+							return;
+						}
+
+						var items = info.IsNullFiltered
+							? values
+							: values.Select(i => factory.Coalesce(i, factory.Value(factory.GetDbDataType(i), ""))).ToArray();
+
+						if (functionFactory != null)
+						{
+							var customResult = functionFactory(factory, dataType, separator, items.ToArray());
+							composer.SetResult(customResult);
+						}
+						else
+						{
+							var function = factory.Function(dataType, "CONCAT_WS",
+								parametersNullability : ParametersNullabilityType.IfAllParametersNullable,
+								[separator, ..items]);
+
+							composer.SetResult(function);
+						}
+
+					}));
+		}
+
+		protected void ConfigureConcatWsEmulation(AggregateFunctionBuilder builder, Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression, ISqlExpression> substringFunc)
+		{
+			builder
+				.ConfigurePlain(c => c
+					.HasSequenceIndex(1)
+					.TranslateArguments(0)
+					.AllowFilter()
+					.AllowNotNullCheck(true)
+					.OnBuildFunction(composer =>
+					{
+						var info = composer.BuildInfo;
+						if (info.Values.Length == 0 || info.Argument(0) == null)
+						{
+							composer.SetResult(info.Factory.Value(info.Factory.GetDbDataType(typeof(string)), string.Empty));
+							return;
+						}
+
+						var factory   = info.Factory;
+						var separator = info.Argument(0)!;
+						var dataType  = factory.GetDbDataType(info.Values[0]);
+
+						if (info.Values.Length == 1)
+						{
+							var singleValue = info.Values[0];
+							singleValue = factory.Coalesce(singleValue, factory.Value(dataType, string.Empty));
+							composer.SetResult(singleValue);
+							return;
+						}
+
+						if (!composer.GetFilteredToNullValues(out var values, out var error))
+						{
+							composer.SetError(error);
+							return;
+						}
+
+						if (info.IsNullFiltered)
+						{
+							var concatValues = values
+								.Select(v => factory.Coalesce(factory.Concat(dataType, separator, v), factory.Value(dataType, "")))
+								.Aggregate((v1, v2) => factory.Concat(dataType, v1, v2));
+
+							var substring = substringFunc(factory, dataType, separator, concatValues);
+
+							composer.SetResult(substring);
+						}
+						else
+						{
+							var concatValues = values
+								.Select(v => factory.Coalesce(v, factory.Value(dataType, "")))
+								.Aggregate((v1, v2) => factory.Concat(v1, separator, v2));
+
+							composer.SetResult(concatValues);
+						}
+					}));
+		}
+
+		protected virtual Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool ignoreNulls)
+		{
+			return null;
 		}
 
 		public virtual ISqlExpression? TranslateReplace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression oldValue, ISqlExpression newValue)

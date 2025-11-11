@@ -1587,5 +1587,20 @@ namespace LinqToDB
 			return expressionQuery.GetSqlQueries(options)[0];
 		}
 		#endregion
+
+		[Pure]
+		public static TResult AggregateExecute<TSource, TResult>(this IQueryable<TSource> source, Expression<Func<IEnumerable<TSource>, TResult>> aggregate)
+		{
+			if (source    == null) throw new ArgumentNullException(nameof(source));
+			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
+
+			var currentSource = source.ProcessIQueryable();
+
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(AggregateExecute, source, aggregate), currentSource.Expression, aggregate);
+
+			return currentSource.Provider.Execute<TResult>(expr);
+		}
 	}
 }
