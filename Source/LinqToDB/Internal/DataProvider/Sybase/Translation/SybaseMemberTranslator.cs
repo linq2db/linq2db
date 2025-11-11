@@ -214,7 +214,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 					var substring = factory.Function(valueType, "SUBSTRING",
 						valuesExpr,
 						factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)),
-						factory.Value(intDbType, int.MaxValue));
+						factory.Value(intDbType, 8000));
 
 					return substring;
 				});

@@ -157,7 +157,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 				}
 
-				if (!_providerFlags.IsSubQueryOrderBySupported && !selectQuery.OrderBy.IsEmpty && IsDependsOnOuterSources())
+				if (!_providerFlags.IsSubQueryOrderBySupported && !selectQuery.OrderBy.IsEmpty && !selectQuery.IsLimited && IsDependsOnOuterSources())
 				{
 					if (_parentQuery?.From.Tables.Count > 0 || IsDependsOnOuterSources())
 					{
@@ -393,12 +393,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		protected override IQueryElement VisitSqlFromClause(SqlFromClause element)
 		{
-			if (_columnSubqueryLevel != null)
+			var isAggregateSubquery = QueryHelper.IsAggregationQuery(element.SelectQuery);
+		
+			if (_columnSubqueryLevel != null && !isAggregateSubquery)
 				_columnSubqueryLevel += 1;
 
 			base.VisitSqlFromClause(element);
 
-			if (_columnSubqueryLevel != null)
+			if (_columnSubqueryLevel != null && !isAggregateSubquery)
 				_columnSubqueryLevel -= 1;
 
 			return element;
@@ -417,7 +419,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return expression;
 		}
 
-		protected override IQueryElement VisitSqlFunction(SqlFunction element)
+		// TODO: remove if not needed
+		/*protected override IQueryElement VisitSqlFunction(SqlFunction element)
 		{
 			var saveLevel = _columnSubqueryLevel;
 
@@ -454,6 +457,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_columnSubqueryLevel = saveLevel;
 
 			return element;
-		}
+		}*/
 	}
 }

@@ -2718,7 +2718,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (_providerFlags.IsApplyJoinSupported)
 				return true;
 
-			if (_providerFlags.IsWindowFunctionsSupported)
+			// TODO: remove when ok
+			/*if (_providerFlags.IsWindowFunctionsSupported)
 			{
 				if (!selectQuery.GroupBy.IsEmpty)
 				{
@@ -2744,7 +2745,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				// provider can handle this query
 				return true;
-			}
+			}*/
 
 			return false;
 		}
@@ -2796,7 +2797,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							{
 								if (joinQuery.Select.Columns.Count > 1)
 								{
-									if (!processMultiColumn || ProviderOuterCanHandleSeveralColumnsQuery(joinQuery))
+									if (!processMultiColumn)
+										continue;
+
+									if (ProviderOuterCanHandleSeveralColumnsQuery(joinQuery))
 									{
 										// provider can handle this query
 										continue;
