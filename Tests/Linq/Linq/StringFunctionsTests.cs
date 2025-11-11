@@ -368,7 +368,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConcatStringsTest([DataSources(TestProvName.AllOracle)] string context)
+		public void ConcatStringsTest([DataSources(TestProvName.AllOracle, TestProvName.AllSybase)] string context)
 		{
 			var data = GenerateData().OrderBy(_ => _.Id);
 
@@ -376,6 +376,8 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(data))
 			{
 				var query = table.OrderBy(_ => _.Id);
+
+				var xx = query.ToList();
 
 				var actualOne   = query.Select(t => Sql.ConcatStrings(" -> ", t.Value2));
 				var expectedOne = data .Select(t => Sql.ConcatStrings(" -> ", t.Value2));
