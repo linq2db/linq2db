@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Data.Common;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Data;
 using LinqToDB.DataProvider.Access;
 using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.DataProvider.DB2;
@@ -15,6 +17,8 @@ using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.DataProvider.Sybase;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider.ClickHouse;
 
 // ReSharper disable once CheckNamespace
 namespace LinqToDB
@@ -959,7 +963,35 @@ namespace LinqToDB
 			     Func<ClickHouseOptions, ClickHouseOptions>? optionSetter = null)
 		{
 			options = ClickHouseTools.ProviderDetector.CreateOptions(options, default, provider);
-			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+			if (optionSetter != null)
+				options = options.WithOptions(optionSetter);
+
+			// if ClickHouseOptions.HttpClient is set, plumb it now..
+			var chops = options.FindOrDefault(ClickHouseOptions.Default);
+			if (options.ConnectionOptions.DataProvider is ClickHouseDataProvider chProvider && chProvider.Provider == ClickHouseProvider.ClickHouseDriver && chops.HttpClient != null)
+			{
+				options = options.WithOptions<ConnectionOptions>(static co => co with
+				{
+					ConnectionFactory = opts =>
+					{
+						var innerChops = opts.FindOrDefault(ClickHouseOptions.Default);
+						var connString = opts.ConnectionOptions.ConnectionString ?? "host=localhost";
+						var dataProvider = (ClickHouseDataProvider)opts.ConnectionOptions.DataProvider!;
+						var adapter = dataProvider.Adapter;
+						if (innerChops.HttpClient != null)
+						{
+							var connectionType = adapter.ConnectionType;
+							var ctor = connectionType.GetConstructor(new[] { typeof(string), innerChops.HttpClient.GetType() });
+							if (ctor != null)
+								return (DbConnection)ctor.InvokeExt(new object[] { connString, innerChops.HttpClient });
+						}
+
+						return adapter.CreateConnection(connString);
+					}
+				});
+			}
+
+			return options;
 		}
 
 		/// <summary>

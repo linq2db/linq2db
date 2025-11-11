@@ -13,10 +13,14 @@ namespace LinqToDB.DataProvider.ClickHouse
 	/// Enables -OrNull combinator for Min, Max, Sum and Avg aggregation functions to support SQL standard-compatible behavior.
 	/// Default value: <c>false</c>.
 	/// </param>
+	/// <param name="HttpClient">
+	/// Optional, specify the HttpClient instance to use for making requests.
+	/// </param>
 	public sealed record ClickHouseOptions
 	(
 		BulkCopyType BulkCopyType                    = BulkCopyType.ProviderSpecific,
-		bool         UseStandardCompatibleAggregates = default
+		bool         UseStandardCompatibleAggregates = default,
+		object?      HttpClient                      = null
 		// If you add another parameter here, don't forget to update
 		// ClickHouseOptions copy constructor and CreateID method.
 	)
@@ -29,10 +33,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 		ClickHouseOptions(ClickHouseOptions original) : base(original)
 		{
 			UseStandardCompatibleAggregates = original.UseStandardCompatibleAggregates;
+			HttpClient                      = original.HttpClient;
 		}
 
 		protected override IdentifierBuilder CreateID(IdentifierBuilder builder) => builder
 			.Add(UseStandardCompatibleAggregates)
+			.Add(HttpClient)
 			;
 
 		#region IEquatable implementation
