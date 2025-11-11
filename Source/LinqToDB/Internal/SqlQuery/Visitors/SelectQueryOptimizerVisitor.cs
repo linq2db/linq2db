@@ -2713,7 +2713,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_columnNestingCorrector.CorrectColumnNesting(query);
 		}
 
-		bool ProviderOuterCanHandleSeveralColumnsQuery(SelectQuery selectQuery)
+		bool ProviderOuterCanHandleSeveralColumnsQuery(/*SelectQuery selectQuery*/)
 		{
 			if (_providerFlags.IsApplyJoinSupported)
 				return true;
@@ -2800,7 +2800,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 									if (!processMultiColumn)
 										continue;
 
-									if (ProviderOuterCanHandleSeveralColumnsQuery(joinQuery))
+									if (ProviderOuterCanHandleSeveralColumnsQuery(/*joinQuery*/))
 									{
 										// provider can handle this query
 										continue;
