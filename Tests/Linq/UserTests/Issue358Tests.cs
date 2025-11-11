@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -20,6 +21,8 @@ namespace Tests.UserTests
 
 		sealed class TestIssue358Class
 		{
+			[PrimaryKey] public int Id { get; set; }
+
 			public TestIssue358Enum? MyEnum;
 			public TestIssue358Enum  MyEnum2;
 		}
