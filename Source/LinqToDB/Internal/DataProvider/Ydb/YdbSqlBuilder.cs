@@ -123,6 +123,14 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
+			var isList = type.DataType.HasFlag(DataType.Array);
+
+			if (isList)
+			{
+				type = type.WithDataType(type.DataType ^ DataType.Array);
+				StringBuilder.Append("List<");
+			}
+
 			switch (type.DataType)
 			{
 				case DataType.Boolean    : StringBuilder.Append("Bool");         break;
@@ -183,8 +191,12 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 				default:
 					base.BuildDataTypeFromDataType(type, false, false);
+
 					break;
 			}
+
+			if (isList)
+				StringBuilder.Append('>');
 		}
 
 		protected sealed override bool IsReserved(string word)

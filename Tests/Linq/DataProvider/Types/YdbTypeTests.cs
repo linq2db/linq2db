@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -25,12 +26,39 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Sql.Expression("ListHas({1}, {0})", IsPredicate = true, ServerSideOnly = true)]
+		static bool InList(object? field, object? list) => throw new InvalidOperationException();
+
+		protected override IQueryable<TypeTable<TType, TNullableType>> MakeListFilter<TType, TNullableType>(TempTable<TypeTable<TType, TNullableType>> table, object? columnValue, object? nullableColumnValue)
+		{
+			if (columnValue != null && nullableColumnValue != null)
+			{
+				var list = new List<TType>() { (TType)columnValue };
+				var nullableList = new List<TNullableType>() { (TNullableType)nullableColumnValue };
+				return table.Where(r => InList(r.Column, list) && InList(r.ColumnNullable, nullableList));
+			}
+
+			if (columnValue != null)
+			{
+				var list = new List<TType>() { (TType)columnValue };
+				return table.Where(r => InList(r.Column, list));
+			}
+
+			if (nullableColumnValue != null)
+			{
+				var nullableList = new List<TNullableType>() { (TNullableType)nullableColumnValue };
+				return table.Where(r => InList(r.ColumnNullable, nullableList));
+			}
+
+			throw new InvalidOperationException("Unreachable");
+		}
+
 		[Test]
 		public async ValueTask TestBool([YdbDataSources] string context)
 		{
-			await TestType<bool, bool?>(context, new(typeof(bool)), default, default);
-			await TestType<bool, bool?>(context, new(typeof(bool)), true, false);
-			await TestType<bool, bool?>(context, new(typeof(bool)), false, true);
+			await TestType<bool, bool?>(context, new(typeof(bool)), default, default, testListParameter: true);
+			await TestType<bool, bool?>(context, new(typeof(bool)), true, false, testListParameter: true);
+			await TestType<bool, bool?>(context, new(typeof(bool)), false, true, testListParameter: true);
 		}
 
 		ValueTask TestInteger<TType>(string context, DataType dataType, TType min, TType max, bool? testParameters = null)

@@ -115,6 +115,17 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 #if SUPPORTS_DATEONLY
 			SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateOnly      (sb, dt, (DateOnly)v));
 #endif
+
+			// map lists
+			// TODO: new type system must do it (semi)automatic, but now we do it explicitly and for specific collection types
+			AddScalarType(typeof(bool[]), DataType.Array | DataType.Boolean);
+			AddScalarType(typeof(List<bool>), DataType.Array | DataType.Boolean);
+			AddScalarType(typeof(bool?[]), DataType.Array | DataType.Boolean);
+			AddScalarType(typeof(List<bool?>), DataType.Array | DataType.Boolean);
+			SetValueToSqlConverter(typeof(bool[]), (sb, dt, _, v) => BuildListLiteral(sb, (bool[])v, v => BuildBooleanLiteral(sb, v)));
+			SetValueToSqlConverter(typeof(bool?[]), (sb, dt, _, v) => BuildListLiteral(sb, (bool?[])v, v => BuildBooleanLiteral(sb, v!.Value)));
+			SetValueToSqlConverter(typeof(List<bool>), (sb, dt, _, v) => BuildListLiteral(sb, (List<bool>)v, v => BuildBooleanLiteral(sb, v)));
+			SetValueToSqlConverter(typeof(List<bool?>), (sb, dt, _, v) => BuildListLiteral(sb, (List<bool?>)v, v => BuildBooleanLiteral(sb, v!.Value)));
 		}
 
 		#region Type to SQL converters (for multi-bindings)
@@ -747,6 +758,25 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			else if (value.Kind == DateTimeKind.Unspecified)
 				value = DateTime.SpecifyKind(value, DateTimeKind.Utc);
 			sb.AppendFormat(CultureInfo.InvariantCulture, TZ_TIMESTAMP_FORMAT, value, DEFAULT_TIMEZONE);
+		}
+
+		private void BuildListLiteral<T>(StringBuilder sb, IEnumerable<T> list, Action<T> valueGenerator)
+		{
+			sb.Append('[');
+			var first = true;
+			foreach (var value in list)
+			{
+				if (!first) sb.Append(", ");
+
+				if (value == null)
+					sb.Append("NULL");
+				else
+					valueGenerator(value);
+
+				first = false;
+			}
+
+			sb.Append(']');
 		}
 
 		#endregion

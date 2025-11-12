@@ -403,7 +403,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		{
 			YdbProviderAdapter.YdbDbType? type = null;
 
-			switch (dataType.DataType)
+			var isArray = dataType.DataType.HasFlag(DataType.Array);
+			var dt = isArray ? dataType.DataType ^ DataType.Array : dataType.DataType;
+
+			switch (dt)
 			{
 				case DataType.Json       : type = YdbProviderAdapter.YdbDbType.Json;         break;
 				case DataType.BinaryJson : type = YdbProviderAdapter.YdbDbType.JsonDocument; break;
@@ -431,6 +434,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				var param = TryGetProviderParameter(dataConnection, parameter);
 				if (param != null)
 				{
+					if (isArray)
+						type = type | YdbProviderAdapter.YdbDbType.List;
+
 					Adapter.SetDbType(param, type.Value);
 					return;
 				}
