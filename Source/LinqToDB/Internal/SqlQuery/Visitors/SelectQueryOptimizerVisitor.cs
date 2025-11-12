@@ -2713,43 +2713,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_columnNestingCorrector.CorrectColumnNesting(query);
 		}
 
-		bool ProviderOuterCanHandleSeveralColumnsQuery(/*SelectQuery selectQuery*/)
-		{
-			if (_providerFlags.IsApplyJoinSupported)
-				return true;
-
-			// TODO: remove when ok
-			/*if (_providerFlags.IsWindowFunctionsSupported)
-			{
-				if (!selectQuery.GroupBy.IsEmpty)
-				{
-					return false;
-				}
-
-				if (selectQuery.Select.TakeValue != null)
-				{
-					if (!selectQuery.Where.IsEmpty)
-					{
-						if (selectQuery.Where.SearchCondition.Predicates.Any(predicate => predicate is not SqlPredicate.ExprExpr expExpr || expExpr.Operator != SqlPredicate.Operator.Equal))
-						{
-							// OuterApply cannot be converted in this case
-							return false;
-						}
-					}
-				}
-
-				if (selectQuery.From.Tables is [{ Source: SelectQuery baseQuery }])
-				{
-					return ProviderOuterCanHandleSeveralColumnsQuery(baseQuery);
-				}
-
-				// provider can handle this query
-				return true;
-			}*/
-
-			return false;
-		}
-
 		bool MoveOuterJoinsToSubQuery(SelectQuery selectQuery, ref List<SelectQuery>? doNotRemoveQueries, bool processMultiColumn)
 		{
 			var currentVersion = _version;
@@ -2800,7 +2763,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 									if (!processMultiColumn || join.JoinType == JoinType.Left)
 										continue;
 
-									if (ProviderOuterCanHandleSeveralColumnsQuery(/*joinQuery*/))
+									if (_providerFlags.IsApplyJoinSupported)
 									{
 										// provider can handle this query
 										continue;

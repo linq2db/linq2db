@@ -377,8 +377,6 @@ namespace Tests.Linq
 			{
 				var query = table.OrderBy(_ => _.Id);
 
-				var xx = query.ToList();
-
 				var actualOne   = query.Select(t => Sql.ConcatStrings(" -> ", t.Value2));
 				var expectedOne = data .Select(t => Sql.ConcatStrings(" -> ", t.Value2));
 

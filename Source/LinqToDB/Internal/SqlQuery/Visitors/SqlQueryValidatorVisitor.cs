@@ -393,14 +393,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		protected override IQueryElement VisitSqlFromClause(SqlFromClause element)
 		{
-			var isAggregateSubquery = QueryHelper.IsAggregationQuery(element.SelectQuery);
+			var appendLevel = _providerFlags.CalculateSupportedCorrelatedLevelWithAggregateQueries || !QueryHelper.IsAggregationQuery(element.SelectQuery);
 		
-			if (_columnSubqueryLevel != null && !isAggregateSubquery)
+			if (_columnSubqueryLevel != null && appendLevel)
 				_columnSubqueryLevel += 1;
 
 			base.VisitSqlFromClause(element);
 
-			if (_columnSubqueryLevel != null && !isAggregateSubquery)
+			if (_columnSubqueryLevel != null && appendLevel)
 				_columnSubqueryLevel -= 1;
 
 			return element;
@@ -418,45 +418,5 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			return expression;
 		}
-
-		// TODO: remove if not needed
-		/*protected override IQueryElement VisitSqlFunction(SqlFunction element)
-		{
-			var saveLevel = _columnSubqueryLevel;
-
-			_columnSubqueryLevel = null;
-
-			base.VisitSqlFunction(element);
-
-			_columnSubqueryLevel = saveLevel;
-
-			return element;
-		}
-
-		protected override IQueryElement VisitSqlConditionExpression(SqlConditionExpression element)
-		{
-			var saveLevel = _columnSubqueryLevel;
-
-			_columnSubqueryLevel = null;
-
-			base.VisitSqlConditionExpression(element);
-
-			_columnSubqueryLevel = saveLevel;
-
-			return element;
-		}
-
-		protected override IQueryElement VisitSqlCaseExpression(SqlCaseExpression element)
-		{
-			var saveLevel = _columnSubqueryLevel;
-
-			_columnSubqueryLevel = null;
-
-			base.VisitSqlCaseExpression(element);
-
-			_columnSubqueryLevel = saveLevel;
-
-			return element;
-		}*/
 	}
 }
