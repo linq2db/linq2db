@@ -2760,8 +2760,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							{
 								if (joinQuery.Select.Columns.Count > 1)
 								{
-									if (!processMultiColumn || join.JoinType == JoinType.Left)
+									if (!processMultiColumn)
 										continue;
+
+									if (join.JoinType == JoinType.Left)
+									{
+										if (_providerFlags.IsSupportsJoinWithoutCondition || join.Condition.Predicates.Count > 0)
+											continue;
+									}
 
 									if (_providerFlags.IsApplyJoinSupported)
 									{
