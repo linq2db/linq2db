@@ -2047,10 +2047,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				if (tableSource.Joins.Count > 0)
 				{
-					foreach (var join in tableSource.Joins)
+					for (var j = 0; j < tableSource.Joins.Count; j++)
 					{
+						var join = tableSource.Joins[j];
 						if (!_providerFlags.IsComplexJoinConditionSupported)
-							MoveJoinConditionsToWhere(join, selectQuery.Where, NullabilityContext.GetContext(selectQuery));
+							MoveJoinConditionsToWhere(tableSource, join, selectQuery.Where, NullabilityContext.GetContext(selectQuery));
 
 						if (JoinMoveSubQueryUp(selectQuery, join))
 							replaced = true;
@@ -2089,7 +2090,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return replaced;
 		}
 
-		private void MoveJoinConditionsToWhere(SqlJoinedTable join, SqlWhereClause where, NullabilityContext nullabilityContext)
+		private void MoveJoinConditionsToWhere(SqlTableSource left, SqlJoinedTable join, SqlWhereClause where, NullabilityContext nullabilityContext)
 		{
 			if (join.JoinType is not (JoinType.Inner or JoinType.Left) || join.Condition.IsOr || join.Condition.Predicates.Count == 0)
 				return;
@@ -2097,7 +2098,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			var isLeft = join.JoinType == JoinType.Left;
 			List<ISqlTableSource>? sources = null;
 
-			SqlSearchCondition? whereCond = null;
+			SqlSearchCondition? whereCond       = null;
+			SqlSearchCondition? nestedWhereCond = null;
+
 			for (var i = 0; i < join.Condition.Predicates.Count; i++)
 			{
 				var predicate = join.Condition.Predicates[i];
@@ -2110,6 +2113,39 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					sources ??= QueryHelper.EnumerateAccessibleSources(join.Table).ToList();
 					move = !QueryHelper.IsDependsOnSources(predicate, sources);
+
+					if (!move && !QueryHelper.IsDependsOnSources(predicate, [left]))
+					{
+						if (nestedWhereCond == null)
+						{
+							// TODO: table support
+							if (join.Table.Source is SelectQuery sq)
+							{
+								QueryHelper.WrapQuery((SqlStatement)_root, sq, true);
+								nestedWhereCond = ((SelectQuery)join.Table.Source).Where.EnsureConjunction();
+							}
+						}
+
+						if (nestedWhereCond != null)
+						{
+							// update references
+							var foundFields = new HashSet<ISqlExpression>();
+							QueryHelper.CollectDependencies(predicate, [join.Table.Source], foundFields);
+
+							if (foundFields.Count > 0)
+							{
+								var toReplace = new Dictionary<IQueryElement, IQueryElement>(foundFields.Count);
+								foreach (var expr in foundFields)
+									toReplace.Add(expr, ((SqlColumn)expr).Expression);
+								predicate.Replace(toReplace);
+							}
+
+							nestedWhereCond.Predicates.Add(predicate);
+							join.Condition.Predicates.RemoveAt(i);
+							i--;
+							continue;
+						}
+					}
 				}
 
 				if (move)
