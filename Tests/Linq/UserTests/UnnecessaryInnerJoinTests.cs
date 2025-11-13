@@ -30,6 +30,7 @@ namespace Tests.UserTests
 			public List<Table1> Field3 { get; set; } = null!;
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Test([DataSources(TestProvName.AllClickHouse)] string context)
 		{

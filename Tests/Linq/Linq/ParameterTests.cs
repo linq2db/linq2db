@@ -217,6 +217,7 @@ namespace Tests.Linq
 
 		// Excluded providers inline such parameter or miss mappings
 		[Test]
+		[YdbMemberNotFound]
 		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -232,6 +233,7 @@ namespace Tests.Linq
 
 		// Excluded providers inline such parameter or miss mappings
 		[Test]
+		[YdbMemberNotFound]
 		public void ExposeSqlBinaryParameter([DataSources(false, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllInformix, TestProvName.AllFirebird, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -313,6 +315,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbCteAsSource]
 		public void TestQueryableCall([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -322,6 +325,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbCteAsSource]
 		public void TestQueryableCallWithParameters([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// baselines could be affected by cache
@@ -330,6 +334,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbCteAsSource]
 		public void TestQueryableCallWithParametersWorkaround([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// baselines could be affected by cache
@@ -354,6 +359,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbCteAsSource]
 		public void TestQueryableCallWithParametersWorkaround2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1334,6 +1340,7 @@ namespace Tests.Linq
 		private int _param;
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
+		[YdbCteAsSource]
 		public void TestIQueryableParameterEvaluation([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// cached queries affect cnt values due to extra comparisons in cache
@@ -1480,6 +1487,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
+		[YdbCteAsSource]
 		public void TestIQueryableParameterEvaluationCaching([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))

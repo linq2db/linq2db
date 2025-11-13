@@ -244,6 +244,7 @@ namespace Tests.UserTests
 		[TestFixture]
 		public class Issue1347Tests : TestBase
 		{
+			[YdbTableNotFound]
 			[Test]
 			public void Test5([DataSources] string context)
 			{
@@ -338,6 +339,7 @@ namespace Tests.UserTests
 				qry.ToArray();
 			}
 
+			[YdbTableNotFound]
 			[Test]
 			public void Test2([DataSources] string context)
 			{
@@ -386,6 +388,7 @@ namespace Tests.UserTests
 				_ = qry.ToArray();
 			}
 
+			[YdbTableNotFound]
 			[Test]
 			public void Test([DataSources] string context)
 			{

@@ -17,12 +17,12 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class InsertWithOutputTests : TestBase
 	{
-		private const string FeatureInsertOutputSingle                  = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
 		private const string FeatureInsertOutputSingleWithExpressions   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureInsertOutputSingle                  = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{ProviderName.Ydb}";
 		private const string FeatureInsertOutputMultipleWithExpressions = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
-		private const string FeatureInsertOutputMultiple                = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
-		private const string FeatureInsertOutputWithSchema              = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllSQLite}";
-		private const string FeatureInsertOutputInto                    = $"{TestProvName.AllSqlServer}";
+		private const string FeatureInsertOutputMultiple                = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{ProviderName.Ydb}";
+		private const string FeatureInsertOutputWithSchema              = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllSQLite},{ProviderName.Ydb}";
+		private const string FeatureInsertOutputInto       = $"{TestProvName.AllSqlServer}";
 
 		[Table]
 		sealed class TableWithData

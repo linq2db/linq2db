@@ -26,7 +26,7 @@ namespace Tests.xUpdate
 	public class UpdateTests : TestBase
 	{
 		[Test]
-		public void Update1([DataSources] string context)
+		public void Update1([DataSources(ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -46,7 +46,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task Update1Async([DataSources] string context)
+		public async Task Update1Async([DataSources(ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -66,7 +66,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Update2([DataSources] string context)
+		public void Update2([DataSources(ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -86,7 +86,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task Update2Async([DataSources] string context)
+		public async Task Update2Async([DataSources(ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -105,6 +105,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Update3([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -123,6 +124,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Update4([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -144,6 +146,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Update4String([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -160,6 +163,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public async Task Update4Async([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -181,6 +185,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Update5([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -273,6 +278,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Obsolete("Remove test after API removed")]
 		[Test]
 		public void Update9Old(
@@ -305,6 +311,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Update9(
 			[DataSources(
@@ -336,6 +343,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Obsolete("Remove test after API removed")]
 		[Test]
 		public void Update10Old(
@@ -367,6 +375,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Update10(
 			[DataSources(
@@ -412,6 +421,7 @@ namespace Tests.xUpdate
 		//	}
 		//}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Update12(
 			[DataSources(
@@ -434,6 +444,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public async Task Update12Async(
 			[DataSources(
@@ -456,6 +467,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Update13(
 			[DataSources(
@@ -744,6 +756,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Obsolete("Remove test after API removed")]
 		[Test]
 		public void UpdateAssociation1Old([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
@@ -766,6 +779,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Obsolete("Remove test after API removed")]
 		[Test]
 		public async Task UpdateAssociation1AsyncOld([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
@@ -788,6 +802,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void UpdateAssociation1([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
@@ -809,6 +824,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public async Task UpdateAssociation1Async([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
@@ -830,6 +846,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void UpdateAssociation2([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
@@ -851,6 +868,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void UpdateAssociation3([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
@@ -872,6 +890,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void UpdateAssociation4([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
@@ -929,6 +948,7 @@ namespace Tests.xUpdate
 			public Table1 Table1 = null!;
 		}
 
+		[YdbUnexpectedSqlQuery]
 		[Test]
 		public void UpdateAssociation5(
 			[DataSources(
@@ -957,6 +977,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void UpdateSimilarNames([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
@@ -981,6 +1002,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void AsUpdatableTest([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -1006,6 +1028,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void AsUpdatableDuplicate([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -1041,7 +1064,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateNullablePrimaryKey([DataSources] string context)
+		public void UpdateNullablePrimaryKey([DataSources(ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1058,7 +1081,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateTop([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void UpdateTop([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -1079,6 +1102,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_UpdateWithTopOrderBy)]
 		public void TestUpdateTakeOrdered([DataSources(TestProvName.AllClickHouse)] string context)
@@ -1112,6 +1136,7 @@ namespace Tests.xUpdate
 		public void TestUpdateOrdered(
 			[DataSources(
 			ProviderName.SqlCe,
+			ProviderName.Ydb,
 			TestProvName.AllInformix,
 			TestProvName.AllClickHouse,
 			TestProvName.AllDB2,
@@ -1148,6 +1173,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void TestUpdateSkipTakeNotOrdered(
 			[DataSources(
@@ -1181,6 +1207,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void TestUpdateSkipTakeOrdered(
 			[DataSources(
@@ -1218,7 +1245,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestUpdateTakeNotOrdered([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void TestUpdateTakeNotOrdered([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -1242,6 +1269,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void UpdateSetSelect([DataSources(
 			TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllInformix, ProviderName.SqlCe)]
@@ -1268,6 +1296,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void UpdateIssue319Regression(
 			[DataSources(
@@ -1522,6 +1551,7 @@ namespace Tests.xUpdate
 			public static AccessMode[] Data = [];
 		}
 
+		[YdbTableNotFound]
 		[Obsolete("Remove test after API removed")]
 		[Test]
 		public void TestUpdateFromJoinOld([DataSources(
@@ -1566,6 +1596,7 @@ namespace Tests.xUpdate
 		}
 
 		// https://stackoverflow.com/questions/57115728/
+		[YdbTableNotFound]
 		[Test]
 		public void TestUpdateFromJoin([DataSources(
 			TestProvName.AllAccess, // access doesn't have Replace mapping
@@ -1608,6 +1639,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Obsolete("Remove test after API removed")]
 		[Test]
 		public void TestUpdateFromJoinDifferentTableOld([DataSources(
@@ -1654,6 +1686,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void TestUpdateFromJoinDifferentTable([DataSources(
 			TestProvName.AllAccess, // access doesn't have Replace mapping
@@ -2082,6 +2115,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void UpdateByAssociation2Optional([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -2110,6 +2144,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void UpdateByAssociation2Required([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{

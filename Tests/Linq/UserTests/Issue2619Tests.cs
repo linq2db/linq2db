@@ -91,6 +91,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void OrderByExcept([DataSources(TestProvName.AllSybase, TestProvName.AllSqlServer, TestProvName.AllAccess)] string context)
 		{

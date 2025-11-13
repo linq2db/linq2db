@@ -108,6 +108,7 @@ namespace Tests.UserTests
 			new Executant { Id = 2, TestId = 2 }
 		};
 
+		[YdbTableNotFound]
 		[Test]
 		public void JoinUsingAggregateResult([DataSources] string context)
 		{
