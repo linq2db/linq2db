@@ -530,7 +530,7 @@ namespace Tests.Linq
 
 		[Test]
 		[RequiresCorrelatedSubquery]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void LetTest8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
