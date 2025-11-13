@@ -2118,11 +2118,31 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					{
 						if (nestedWhereCond == null)
 						{
-							// TODO: table support
 							if (join.Table.Source is SelectQuery sq)
 							{
 								QueryHelper.WrapQuery((SqlStatement)_root, sq, true);
 								nestedWhereCond = ((SelectQuery)join.Table.Source).Where.EnsureConjunction();
+							}
+							else if (join.Table.Source is SqlTable t)
+							{
+								var subQuery      = new SelectQuery() { DoNotRemove = true };
+								join.Table.Source = subQuery;
+								nestedWhereCond   = subQuery.Where.EnsureConjunction();
+								subQuery.From.Table(t);
+
+								var tableSources = new HashSet<ISqlTableSource>() { t };
+								var foundFields  = new HashSet<ISqlExpression>();
+
+								QueryHelper.CollectDependencies(_rootElement, sources, foundFields);
+
+								if (foundFields.Count > 0)
+								{
+									var toReplace = new Dictionary<IQueryElement, IQueryElement>(foundFields.Count);
+									foreach (var expr in foundFields)
+										toReplace.Add(expr, subQuery.Select.AddColumn(expr));
+
+									_rootElement.Replace(toReplace, subQuery.Select);
+								}
 							}
 						}
 
