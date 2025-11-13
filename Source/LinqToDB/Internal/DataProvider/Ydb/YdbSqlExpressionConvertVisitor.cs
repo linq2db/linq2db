@@ -11,8 +11,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 	{
 		public YdbSqlExpressionConvertVisitor(bool allowModify) : base(allowModify) { }
 
-		///// <inheritdoc/>
-		//protected override bool SupportsNullInColumn => false;
+		/// <inheritdoc/>
+		protected override bool SupportsNullInColumn => false;
 
 		#region (I)LIKE https://ydb.tech/docs/en/yql/reference/syntax/expressions#check-match
 

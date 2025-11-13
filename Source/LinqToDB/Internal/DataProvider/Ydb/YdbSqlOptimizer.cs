@@ -63,6 +63,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			if (MoveScalarSubQueriesToCte(statement))
 				FinalizeCte(statement);
 
+			statement.VisitAll(ReplaceTableAll);
+
 			return statement;
 		}
 
@@ -119,6 +121,16 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				if ((p.Type.SystemType.UnwrapNullableType() == typeof(int) && p.Type.DataType is DataType.Date32)
 					|| (p.Type.SystemType.UnwrapNullableType() == typeof(long) && p.Type.DataType is DataType.DateTime64 or DataType.Timestamp64 or DataType.Interval64))
 					p.IsQueryParameter = false;
+			}
+		}
+
+		static void ReplaceTableAll(IQueryElement element)
+		{
+			// "SELECT *" could fail if there are columns with same name. E.g. from joined tables
+			if (element is SqlPredicate.Exists predicate)
+			{
+				predicate.SubQuery.Select.Columns.Clear();
+				predicate.SubQuery.Select.Columns.Add(new SqlColumn(predicate.SubQuery, new SqlValue(1)));
 			}
 		}
 	}

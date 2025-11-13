@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 
+using LinqToDB;
+
 using NUnit.Framework;
 
 namespace Tests.Exceptions
@@ -15,9 +17,8 @@ namespace Tests.Exceptions
 				Assert.Throws<InvalidOperationException>(() => db.Parent.Where(_ => _.ParentID < 0).Max(_ => _.ParentID));
 		}
 
-		// TODO: [RequiresCorrelatedSubquery]
 		[Test]
-		public void NonNullableMax2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void NonNullableMax2([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
