@@ -82,8 +82,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		//TODO: we can emulate it for other providers by suing additional order by with CASE:
-		//ROW_NUMBER() OVER(ODER BY WHEN x.Value IS NULL THEN 1 ELSE 0 END, x.Value)
+		//TODO: we can emulate it for other providers by using additional order by with CASE:
+		//ROW_NUMBER() OVER(ORDER BY WHEN x.Value IS NULL THEN 1 ELSE 0 END, x.Value)
 		public void RowNumberWithNulls([IncludeDataSources(
 			true,
 			TestProvName.AllOracle12Plus)] string context)
