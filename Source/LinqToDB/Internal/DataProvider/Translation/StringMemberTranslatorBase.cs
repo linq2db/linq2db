@@ -206,9 +206,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						var separator = info.Argument(0)!;
 						var dataType  = factory.GetDbDataType(info.Values[0]);
 
-						if (info.Values.Length == 1)
+						if (info.Values is [var singleValue])
 						{
-							var singleValue = info.Values[0];
 							singleValue = isNullableResult && !nullValuesAsEmptyString ? singleValue : factory.Coalesce(singleValue, factory.Value(dataType, string.Empty));
 							composer.SetResult(singleValue);
 							return;
