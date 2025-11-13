@@ -115,7 +115,9 @@ namespace LinqToDB
 		/// </summary>
 		/// <param name="separator">The string to use as a separator. <paramref name="separator" /> is included in the returned string only if <paramref name="arguments" /> has more than one element.</param>
 		/// <param name="arguments">A collection that contains the strings to concatenate.</param>
-		/// <returns></returns>
+		/// <returns>
+		/// A string that consists of the elements in <paramref name="arguments"/> delimited by the <paramref name="separator"/> string. If <paramref name="arguments"/> has only one element, the separator is not included.
+		/// </returns>
 		public static string ConcatStrings(string separator, params string?[] arguments)
 		{
 			return string.Join(separator, arguments.Where(a => a != null));
