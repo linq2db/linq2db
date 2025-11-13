@@ -18,6 +18,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class GroupByTests : TestBase
 	{
+		[YdbTableNotFound]
 		[Test]
 		public void Simple1([DataSources] string context)
 		{
@@ -97,6 +98,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Simple5([DataSources] string context)
 		{
@@ -166,6 +168,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Simple10([DataSources] string context)
 		{
@@ -225,6 +228,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Simple14([DataSources] string context)
 		{
@@ -307,6 +311,7 @@ namespace Tests.Linq
 					select g.Key);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void SubQuery1([DataSources] string context)
 		{
@@ -327,6 +332,7 @@ namespace Tests.Linq
 					select g.Key);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void SubQuery2([DataSources] string context)
 		{
@@ -463,6 +469,7 @@ namespace Tests.Linq
 					select g.Sum(_ => _.ParentID));
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void SubQuery6([DataSources] string context)
 		{
@@ -503,6 +510,7 @@ namespace Tests.Linq
 					select new { gg.Key });
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Calculated1([DataSources(ProviderName.SQLiteMS)] string context)
 		{
@@ -530,6 +538,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Calculated2([DataSources] string context)
 		{
@@ -554,6 +563,7 @@ namespace Tests.Linq
 					select p);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void GroupBy1([DataSources] string context)
 		{
@@ -563,6 +573,7 @@ namespace Tests.Linq
 					db.Child.GroupBy(ch => ch.ParentID).GroupBy(ch => ch).GroupBy(ch => ch).Select(p => p.Key.Key.Key));
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void GroupBy2([DataSources] string context)
 		{
@@ -593,6 +604,7 @@ namespace Tests.Linq
 					});
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void GroupBy3([DataSources] string context)
 		{
@@ -1006,6 +1018,7 @@ namespace Tests.Linq
 					select g.Max(c => c.ChildID));
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void JoinMax([DataSources] string context)
 		{
@@ -1276,6 +1289,7 @@ namespace Tests.Linq
 					select g.Key.Value1);
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void GroupByAssociation2([DataSources] string context)
 		{
@@ -1425,6 +1439,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void GroupByAggregate3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
@@ -1463,6 +1478,7 @@ namespace Tests.Linq
 					select g.Sum(_ => _.ChildID));
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void SelectMany([DataSources] string context)
 		{
@@ -1771,6 +1787,7 @@ namespace Tests.Linq
 					});
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void InnerQuery([DataSources(ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
@@ -1783,6 +1800,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void CalcMember([DataSources] string context)
 		{
@@ -1843,6 +1861,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void EmptySetAggregateNullability([DataSources(false)] string context)
 		{
@@ -2037,6 +2056,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void FirstGroupBy([DataSources] string context)
@@ -2347,6 +2367,7 @@ namespace Tests.Linq
 			[Column, Nullable    ] public string? ImageFullUrl { get; set; } // nvarchar(255)
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue672Test([DataSources(TestProvName.AllSybase)] string context)
@@ -2446,6 +2467,7 @@ namespace Tests.Linq
 			[MapValue("D")] Delisted,
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Issue913Test([DataSources] string context)
 		{
@@ -2620,6 +2642,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void IssueGroupByNonTableColumn([DataSources] string context)
 		{
@@ -2637,6 +2660,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void GroupByWithSubquery([DataSources] string context)
 		{
@@ -3774,6 +3798,7 @@ namespace Tests.Linq
 				.LongCount();
 		}
 
+		[YdbTableNotFound]
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		[Test]
 		public void Issue_FilterByOrderedGroupBy([DataSources] string context)
@@ -3803,6 +3828,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void InsertFirstFromGroup([DataSources(false, TestProvName.AllFirebird, TestProvName.AllMySql57, TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{

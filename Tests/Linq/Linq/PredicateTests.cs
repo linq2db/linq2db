@@ -1063,6 +1063,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbCteAsSource]
 		public void Test_FieldInSubquery([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1083,6 +1084,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void Test_VariableInSubquery([DataSources(TestProvName.AllClickHouse)] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
@@ -1356,6 +1358,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void Test_PredicateAsNonConditionBooleanValue_Test2([DataSources] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);

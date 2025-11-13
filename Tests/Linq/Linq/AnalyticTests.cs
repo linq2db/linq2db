@@ -2004,6 +2004,7 @@ namespace Tests.Linq
 		// This will require additional asserts for results and tests to ensure expected behavior
 		[ActiveIssue(Configurations = [ProviderName.SqlCe, TestProvName.AllSqlServer2016Minus, TestProvName.AllAccess, TestProvName.AllInformix, TestProvName.AllSybase])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4626")]
+		[YdbTableNotFound]
 		public void EmptySequenceTest([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

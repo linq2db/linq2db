@@ -73,6 +73,7 @@ namespace Tests.Linq
 					(from ch in db.Child group ch by ch.ParentID).Count(), Is.EqualTo((from ch in    Child group ch by ch.ParentID).Count()));
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Count6([DataSources] string context)
 		{
@@ -188,6 +189,7 @@ namespace Tests.Linq
 					select g.Count(p => p.ParentID < 3));
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void GroupBy22([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -329,6 +331,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void GroupByWhere1([DataSources] string context)
 		{

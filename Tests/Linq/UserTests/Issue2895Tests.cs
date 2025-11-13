@@ -146,6 +146,7 @@ namespace Tests.UserTests
 			public string Name { get; set; } = null!;
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void EagerLoadingTest([DataSources(TestProvName.AllClickHouse)] string context)

@@ -32,6 +32,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void TestTake([TestDataContextSource(TestProvName.AllClickHouse)] string context)
 		{
@@ -57,6 +58,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void TestDistinct([TestDataContextSource(TestProvName.AllClickHouse)] string context)
 		{

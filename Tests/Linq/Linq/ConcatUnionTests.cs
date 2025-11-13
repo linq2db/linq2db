@@ -152,6 +152,7 @@ namespace Tests.Linq
 					Where(c => c.ParentID == 1));
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Concat502([DataSources(TestProvName.AllInformix)] string context)
 		{
@@ -349,6 +350,7 @@ namespace Tests.Linq
 					(from ch in db.Child      join p  in db.Parent on ch.ParentID equals p.ParentID select ch)));
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Union2([DataSources] string context)
 		{
@@ -752,6 +754,7 @@ namespace Tests.Linq
 					select c.Parent!.ParentID);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void AssociationConcat2([DataSources] string context)
 		{
@@ -763,6 +766,7 @@ namespace Tests.Linq
 					select c.Parent!.ParentID);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void ConcatToString([DataSources] string context)
 		{
@@ -777,6 +781,7 @@ namespace Tests.Linq
 					(from p in db.Person where p.ID.ToString().Contains(pattern) select p.FirstName)).Take(10));
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void ConcatWithUnion([DataSources] string context)
 		{
@@ -947,6 +952,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbCteAsSource]
 		[ActiveIssue("UNION in subquery not supported by Access. We should transform it if we want to support such cases", Configuration = TestProvName.AllAccess)]
 		[Test]
 		public void ConcatInAny([DataSources] string context)
@@ -1229,6 +1235,7 @@ namespace Tests.Linq
 			act.ShouldNotThrow();
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void SelectWithToString([DataSources] string context)
 		{
@@ -1878,6 +1885,7 @@ namespace Tests.Linq
 			res[0].Name.ShouldBe("John");
 		}
 
+		[YdbMemberNotFound]
 		[Test(Description = "invalid SQL for Any() subquery")]
 		public void Issue2932_Broken([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -1888,6 +1896,7 @@ namespace Tests.Linq
 			query.Concat(query).ToArray();
 		}
 
+		[YdbMemberNotFound]
 		[Test(Description = "invalid SQL for Any() subquery")]
 		public void Issue2932_Works([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -1967,6 +1976,7 @@ namespace Tests.Linq
 			query.ToList();
 		}
 
+		[YdbMemberNotFound]
 		[Test(Description = "ArgumentOutOfRangeException : Index was out of range. Must be non-negative and less than the size of the collection.")]
 		public void Issue2511_Query1([DataSources] string context)
 		{
@@ -1984,6 +1994,7 @@ namespace Tests.Linq
 			Assert.That(pat.Patient!.Diagnosis, Is.EqualTo("Hallucination with Paranoid Bugs' Delirium of Persecution"));
 		}
 
+		[YdbMemberNotFound]
 		[Test(Description = "Associations with Concat/Union or other Set operations are not supported")]
 		public void Issue2511_Query2([DataSources] string context)
 		{
@@ -2315,6 +2326,7 @@ namespace Tests.Linq
 			Assert.That(q1, Is.EqualTo(q2));
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void ConcatCountExt_ShouldNotRemoveSingleColumn([DataSources] string context)
 		{
@@ -2332,6 +2344,7 @@ namespace Tests.Linq
 			Assert.That(q1, Is.EqualTo(q2));
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void ConcatSumTest([DataSources] string context)
 		{

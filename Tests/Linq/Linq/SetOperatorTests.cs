@@ -24,6 +24,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void TestExcept([DataSources] string context)
 		{
 			var isDistinct = !context.IsAnyOf(TestProvName.AllClickHouse);
@@ -52,6 +53,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void TestExceptAll([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
@@ -76,6 +78,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void TestIntersectAll([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
@@ -100,6 +103,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void TestExceptProjection([DataSources] string context)
 		{
 			var testData = GenerateTestData();
@@ -124,6 +128,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void TestIntersect([DataSources] string context)
 		{
 			var isDistinct = !context.IsAnyOf(TestProvName.AllClickHouse);

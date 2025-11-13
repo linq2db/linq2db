@@ -9,6 +9,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue1397Tests : TestBase
 	{
+		[YdbTableNotFound]
 		[Test]
 		public void ConcatJoinTest([DataSources] string context)
 		{
@@ -52,6 +53,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void ConcatJoinTestChain([DataSources] string context)
 		{

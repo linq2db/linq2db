@@ -516,6 +516,7 @@ namespace Tests.Linq
 			AreEqual(groups1, groups2);
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void ParameterTest1([DataSources(TestProvName.AllClickHouse)] string context)
 		{

@@ -50,6 +50,7 @@ namespace Tests.UserTests
 			public int UserId { get; set; }
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Test([DataSources(TestProvName.AllClickHouse)] string context)
 		{

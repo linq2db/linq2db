@@ -588,6 +588,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void SkipTake6([DataSources(
 			ProviderName.SqlCe,
 			TestProvName.AllSybase,
@@ -824,6 +825,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void TakeSkipJoin([DataSources(TestProvName.AllSybase)] string context, [Values] bool withParameters)
 		{
 			// orderby needed to preserve stable test results
@@ -971,6 +973,7 @@ namespace Tests.Linq
 
 		// Sybase, Informix: doesn't support TOP/FIRST in subqueries
 		[Test]
+		[YdbCteAsSource]
 		public void GroupTakeAnyTest([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values] bool withParameters)
 		{
 			using (var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters)))

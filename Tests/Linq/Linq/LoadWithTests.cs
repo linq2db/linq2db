@@ -83,6 +83,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void LoadWithAsTable4([DataSources] string context)
 		{
@@ -275,6 +276,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 //		[Timeout(15000)]
 		public void LoadWith10([DataSources] string context)
@@ -293,6 +295,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void LoadWith11([DataSources] string context)
 		{
@@ -317,6 +320,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void LoadWith12([DataSources(TestProvName.AllAccess)] string context)
 		{

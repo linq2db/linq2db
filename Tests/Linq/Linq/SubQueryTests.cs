@@ -164,6 +164,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbCteAsSource]
 		public void Test8([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -241,6 +242,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void Contains1([DataSources(
 			TestProvName.AllInformix,
 			TestProvName.AllClickHouse,
@@ -263,6 +265,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void Contains2([DataSources(
 			TestProvName.AllClickHouse,
 			TestProvName.AllMySql,
@@ -673,6 +676,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void Issue1601([DataSources(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -789,6 +793,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void Issue383Test1([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -885,6 +890,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbCteAsSource]
 		public void DropOrderByFromNonLimitedSubquery([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1118,6 +1124,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4347")]
+		[YdbTableNotFound]
 		public void Issue4347Test1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllMariaDB, TestProvName.AllOracle11)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1139,6 +1146,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4347")]
+		[YdbTableNotFound]
 		public void Issue4347Test2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllMariaDB, TestProvName.AllOracle11)] string context)
 		{
 			using var db = GetDataContext(context);

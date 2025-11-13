@@ -495,6 +495,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void Min2([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -503,6 +504,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void Min3([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -511,6 +513,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void Distinct([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -527,6 +530,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void Take([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

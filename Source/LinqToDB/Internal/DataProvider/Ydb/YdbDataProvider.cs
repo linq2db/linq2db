@@ -73,6 +73,11 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			SetProviderField<DbDataReader, char, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i))[0], dataTypeName: "String");
 			SetProviderField<DbDataReader, char, byte[]>((r, i) => Encoding.UTF8.GetString((byte[])r.GetValue(i))[0], dataTypeName: "String", dataReaderType: Adapter.DataReaderType);
 
+#if SUPPORTS_DATEONLY
+			SetProviderField<DbDataReader, DateOnly, DateTime>((rd, idx) => rd.GetFieldValue<DateOnly>(idx), "Date", dataReaderType: Adapter.DataReaderType);
+			SetProviderField<DbDataReader, DateOnly, DateTime>((rd, idx) => rd.GetFieldValue<DateOnly>(idx), "Date32", dataReaderType: Adapter.DataReaderType);
+#endif
+
 			_sqlOptimizer = new YdbSqlOptimizer(SqlProviderFlags);
 		}
 

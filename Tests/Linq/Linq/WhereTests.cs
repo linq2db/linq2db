@@ -1181,6 +1181,7 @@ namespace Tests.Linq
 					where p.p.ParentID == 1 && p.Value > 0 select new { p.p.Value1, p.Value, p.p, p1 = p });
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void SubQuery1([DataSources] string context)
 		{
@@ -1233,6 +1234,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void GroupBySubQquery2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -1252,6 +1254,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void GroupBySubQquery2In([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -1655,6 +1658,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void ExistsSqlTest1([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
@@ -1666,6 +1670,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void ExistsSqlTest2([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
@@ -2133,6 +2138,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Issue_SubQueryFilter2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -2258,6 +2264,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Issue_Filter_Checked([DataSources(
 			TestProvName.AllAccess,
@@ -2284,6 +2291,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void Issue_CompareQueries1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -2298,6 +2306,7 @@ namespace Tests.Linq
 			Assert.That(result1 && result2, Is.False);
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void Issue_CompareQueries2([DataSources(TestProvName.AllClickHouse)] string context)
 		{

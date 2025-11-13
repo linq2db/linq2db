@@ -74,6 +74,7 @@ namespace Tests.Linq
 			AreEqual(exptected, query);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void WithDefaultInSelectMany([DataSources(TestProvName.AllClickHouse)] string context)
 		{

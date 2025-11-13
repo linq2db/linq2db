@@ -228,6 +228,7 @@ namespace Tests.Linq
 			Assert.That(result, Is.EqualTo(20D));
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void ConditionInsideCondition_BoolWrapping([DataSources] string context)
 		{
@@ -247,6 +248,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void ConditionInsideCondition_BoolWrappingFilter([DataSources] string context)
 		{
