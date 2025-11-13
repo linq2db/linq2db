@@ -46,6 +46,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 			SqlProviderFlags.IsComplexJoinConditionSupported  = false;
 			SqlProviderFlags.IsNestedJoinsSupported           = false;
+			SqlProviderFlags.IsCrossJoinSyntaxRequired        = true;
 
 			SqlProviderFlags.IsSupportedSimpleCorrelatedSubqueries = true;
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel    = 0;
