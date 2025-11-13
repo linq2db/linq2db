@@ -2091,8 +2091,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		private void MoveJoinConditionsToWhere(SqlJoinedTable join, SqlWhereClause where, NullabilityContext nullabilityContext)
 		{
-			if (join.JoinType != JoinType.Inner || join.Condition.IsOr || join.Condition.Predicates.Count == 0)
+			if (join.JoinType is not (JoinType.Inner or JoinType.Left) || join.Condition.IsOr || join.Condition.Predicates.Count == 0)
 				return;
+
+			var isLeft = join.JoinType == JoinType.Left;
+			List<ISqlTableSource>? sources = null;
 
 			SqlSearchCondition? whereCond = null;
 			for (var i = 0; i < join.Condition.Predicates.Count; i++)
@@ -2102,6 +2105,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				var move = predicate is not SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr
 					|| exprExpr != exprExpr.Reduce(nullabilityContext, _evaluationContext, false, _dataOptions.LinqOptions)
 					|| exprExpr.Expr1 is SqlValue || exprExpr.Expr2 is SqlValue;
+
+				if (move && isLeft)
+				{
+					sources ??= QueryHelper.EnumerateAccessibleSources(join.Table).ToList();
+					move = !QueryHelper.IsDependsOnSources(predicate, sources);
+				}
 
 				if (move)
 				{
