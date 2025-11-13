@@ -252,7 +252,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 				ISqlExpression result;
 
-				if (precision == null || precision is SqlValue { Value: 0 })
+				if (precision is null or SqlValue { Value: 0 })
 				{
 					/*
 					IIf([Value] >= 0, Int([Value] + 0.5), Int([Value] - 0.5))
