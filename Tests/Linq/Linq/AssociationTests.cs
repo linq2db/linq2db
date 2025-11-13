@@ -1942,6 +1942,7 @@ namespace Tests.Linq
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2933")]
+		[YdbTableNotFound]
 		public void Issue2933Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

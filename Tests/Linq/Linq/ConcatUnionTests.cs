@@ -804,6 +804,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[YdbTableNotFound]
 		public void ConcatDefaultIfEmpty([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2523,6 +2524,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4620")]
+		[YdbMemberNotFound]
 		public void Issue4620Test2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

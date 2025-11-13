@@ -223,6 +223,7 @@ namespace Tests.Linq
 		//}
 
 		[Test]
+		[YdbTableNotFound]
 		public void LetTest1([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -241,6 +242,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void LetTest2([DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))

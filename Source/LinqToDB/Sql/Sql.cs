@@ -746,8 +746,39 @@ namespace LinqToDB
 		[Extension(PN.MySql,         typeof(IsNullOrWhiteSpaceMySqlBuilder),                       IsPredicate = true)]
 		[Extension(PN.Firebird,      typeof(IsNullOrWhiteSpaceFirebirdBuilder),                    IsPredicate = true)]
 		[Extension(PN.SqlCe,         typeof(IsNullOrWhiteSpaceSqlCeBuilder),                       IsPredicate = true)]
+		[Extension(PN.Ydb,           typeof(IsNullOrWhiteSpaceYdbBuilder),                         IsPredicate = true)]
 		[Expression(PN.ClickHouse, $"empty(replaceRegexpAll(coalesce({{0}}, ''), '{WHITESPACES_REGEX}', ''))", IsPredicate = true)]
 		internal static bool IsNullOrWhiteSpace(string? str) => string.IsNullOrWhiteSpace(str);
+
+		// {0} IS NULL OR LENGTH(Unicode::Strip({ 0})) == 0
+		internal sealed class IsNullOrWhiteSpaceYdbBuilder : IExtensionCallBuilder
+		{
+			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
+			{
+				var str = builder.GetExpression("str")!;
+
+				var predicate = new SqlPredicate.ExprExpr(
+					new SqlFunction(
+						builder.Mapping.GetDbDataType(typeof(int)),
+						"LENGTH",
+						ParametersNullabilityType.IfAnyParameterNullable,
+						new SqlFunction(
+							builder.Mapping.GetDbDataType(typeof(string)),
+							"Unicode::Strip",
+							ParametersNullabilityType.IfAnyParameterNullable,
+							str)),
+					SqlPredicate.Operator.Equal,
+					new SqlValue(0),
+					null);
+
+				var nullability = new NullabilityContext(builder.Query);
+				if (str.CanBeNullable(nullability))
+					builder.ResultExpression = new SqlSearchCondition(true, canBeUnknown: null,
+						new SqlPredicate.IsNull(str, false), predicate);
+				else
+					builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, predicate);
+			}
+		}
 
 		// str IS NULL OR REPLACE...(str, WHITEPACES, '') == ''
 		internal sealed class IsNullOrWhiteSpaceSqlCeBuilder : IExtensionCallBuilder
