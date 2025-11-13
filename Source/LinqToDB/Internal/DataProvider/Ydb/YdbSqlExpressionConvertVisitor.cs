@@ -47,8 +47,18 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					is DataType.NVarChar
 					or DataType.NChar
 					or DataType.Char
-					or DataType.VarChar
-					or DataType.Binary
+					or DataType.VarChar:
+				{
+					var castType  = MappingSchema.GetDbDataType(typeof(string));
+					var expr1Type = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
+					var expr2Type = QueryHelper.GetDbDataType(element.Expr2, MappingSchema);
+					var expr1     = expr1Type.IsTextType() ? element.Expr1 : new SqlCastExpression(element.Expr1, castType, null, false);
+					var expr2     = expr2Type.IsTextType() ? element.Expr2 : new SqlCastExpression(element.Expr2, castType, null, false);
+					return new SqlBinaryExpression(element.SystemType, expr1, "||", expr2, element.Precedence);
+				}
+
+				case "+" when element.Type.DataType
+					is DataType.Binary
 					or DataType.VarBinary
 					or DataType.Blob:
 					return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
