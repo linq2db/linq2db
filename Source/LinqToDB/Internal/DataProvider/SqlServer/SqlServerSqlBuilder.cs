@@ -26,6 +26,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 		}
 
+		protected override bool IsOverRequiredWithinGroup => true;
+
 		protected override string? FirstFormat(SelectQuery selectQuery)
 		{
 			return selectQuery.Select.SkipValue == null ? "TOP ({0})" : null;

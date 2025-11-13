@@ -27,15 +27,16 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		{
 			Version = version;
 
-			SqlProviderFlags.AcceptsTakeAsParameter                   = false;
-			SqlProviderFlags.AcceptsTakeAsParameterIfSkip             = true;
-			SqlProviderFlags.IsCommonTableExpressionsSupported        = true;
-			SqlProviderFlags.IsUpdateFromSupported                    = false;
-			SqlProviderFlags.IsCrossJoinSupported                     = false;
-			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel       = 1;
-			SqlProviderFlags.IsRecursiveCTEJoinWithConditionSupported = false;
-			SqlProviderFlags.IsDistinctFromSupported                  = true;
-			SqlProviderFlags.SupportsPredicatesComparison             = true;
+			SqlProviderFlags.AcceptsTakeAsParameter                                = false;
+			SqlProviderFlags.AcceptsTakeAsParameterIfSkip                          = true;
+			SqlProviderFlags.IsCommonTableExpressionsSupported                     = true;
+			SqlProviderFlags.IsUpdateFromSupported                                 = false;
+			SqlProviderFlags.IsCrossJoinSupported                                  = false;
+			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel                    = 1;
+			SqlProviderFlags.CalculateSupportedCorrelatedLevelWithAggregateQueries = true;
+			SqlProviderFlags.IsRecursiveCTEJoinWithConditionSupported              = false;
+			SqlProviderFlags.IsDistinctFromSupported                               = true;
+			SqlProviderFlags.SupportsPredicatesComparison                          = true;
 
 			// Requires:
 			// DB2 LUW: 11.1+

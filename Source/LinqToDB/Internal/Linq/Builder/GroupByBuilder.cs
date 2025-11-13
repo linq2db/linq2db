@@ -454,6 +454,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
+				if (flags.IsTraverse())
+					return path;
+
 				var isSameContext = SequenceHelper.IsSameContext(path, this);
 
 				if (isSameContext)

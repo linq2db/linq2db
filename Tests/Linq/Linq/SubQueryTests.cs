@@ -994,19 +994,12 @@ namespace Tests.Linq
 						{
 							ItemId = item.Id,
 							TotalAvailable = stock.Sum(s => s.QuantityAvailable),
-							Reviews = t3.Where(r => r.ItemId == item.Id)
+							Reviews = t3.Where(r => r.ItemId == item.Id).OrderBy(r => r.ItemId).ThenBy(r => r.UserId)
 						};
 
 			var filteredByScore = query.Where(i => i.Reviews.Any(r => r.Score > 95));
 
-			var result = filteredByScore.ToArray();
-			Assert.That(result, Has.Length.EqualTo(1));
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(result[0].ItemId, Is.EqualTo("1"));
-				Assert.That(result[0].TotalAvailable, Is.EqualTo(10));
-				Assert.That(result[0].Reviews.Count(), Is.EqualTo(2));
-			}
+			AssertQuery(filteredByScore);
 		}
 
 		[RequiresCorrelatedSubquery]

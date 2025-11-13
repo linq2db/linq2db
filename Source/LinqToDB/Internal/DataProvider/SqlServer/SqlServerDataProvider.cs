@@ -221,6 +221,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			if (Version >= SqlServerVersion.v2022)
 				return new SqlServer2022MemberTranslator();
 
+			if (Version >= SqlServerVersion.v2017)
+				return new SqlServer2017MemberTranslator();
+
 			if (Version >= SqlServerVersion.v2012)
 				return new SqlServer2012MemberTranslator();
 

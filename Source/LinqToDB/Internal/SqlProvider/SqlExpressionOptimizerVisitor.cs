@@ -23,6 +23,7 @@ namespace LinqToDB.Internal.SqlProvider
 		bool                        _visitQueries;
 		bool                        _isInsidePredicate;
 		bool                        _reducePredicates;
+		ISqlExpression?             _columnExpression;
 
 		protected DataOptions       DataOptions       { get; private set; } = default!;
 		protected EvaluationContext EvaluationContext { get; private set; } = default!;
@@ -68,6 +69,7 @@ namespace LinqToDB.Internal.SqlProvider
 			MappingSchema       = default!;
 			_allowOptimize      = default;
 			_allowOptimizeList  = default;
+			_columnExpression   = default;
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
@@ -618,6 +620,44 @@ namespace LinqToDB.Internal.SqlProvider
 						return Visit(new SqlSearchCondition(element.IsOr, canBeUnknown: element.CanReturnUnknown, newPredicates));
 					else if (modified)
 						return Visit(element);
+				}
+			}
+
+			// removing duplicates
+			if (element.Predicates.Count > 1)
+			{
+				var                     visitMode  = GetVisitMode(element);
+				HashSet<ISqlPredicate>? seen       = null;
+				List<ISqlPredicate>?    filtered   = null;
+				var                     predicates = element.Predicates;
+				for (int i = 0; i < predicates.Count; i++)
+				{
+					var p = predicates[i];
+					if ((seen ??= new HashSet<ISqlPredicate>(ObjectReferenceEqualityComparer<ISqlPredicate>.Default)).Add(p))
+					{
+						if (filtered != null)
+							filtered.Add(p);
+					}
+					else
+					{
+						// duplicate found
+						if (visitMode == VisitMode.Modify)
+						{
+							predicates.RemoveAt(i);
+							i--;
+						}
+						else
+						{
+							filtered ??= new List<ISqlPredicate>(predicates.Count - 1);
+							filtered.AddRange(predicates.Take(i));
+						}
+					}
+				}
+
+				if (visitMode == VisitMode.Transform && filtered != null)
+				{
+					var newSearchCondition = new SqlSearchCondition(element.IsOr, canBeUnknown: element.CanReturnUnknown, filtered);
+					return Visit(NotifyReplaced(newSearchCondition, element));
 				}
 			}
 
@@ -1295,12 +1335,28 @@ namespace LinqToDB.Internal.SqlProvider
 			return function;
 		}
 
+		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
+		{
+			var saveColumnExpression = _columnExpression;
+
+			if (column.Parent != null && QueryHelper.IsAggregationQuery(column.Parent))
+				_columnExpression = expression;
+
+			var result = base.VisitSqlColumnExpression(column, expression);
+
+			_columnExpression = saveColumnExpression;
+			return result;
+		}
+
 		protected override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
 		{
 			var newElement = base.VisitSqlCoalesceExpression(element);
 
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
+
+			if (ReferenceEquals(element, _columnExpression))
+				return element;
 
 			List<ISqlExpression>? newExpressions = null;
 

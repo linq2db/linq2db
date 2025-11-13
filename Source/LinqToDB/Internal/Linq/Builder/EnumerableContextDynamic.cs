@@ -25,14 +25,15 @@ namespace LinqToDB.Internal.Linq.Builder
 		public override Expression?    Expression    { get; }
 		public override MappingSchema  MappingSchema => Builder.MappingSchema;
 		public          SqlValuesTable Table         { get; }
+		public          IBuildContext? ValuesContext { get; }
 
 		public override bool AutomaticAssociations => false;
 
-		public EnumerableContextDynamic(TranslationModifier translationModifier, IBuildContext? parent, ExpressionBuilder builder, Expression[] expressionRows, SelectQuery query, Type elementType)
+		public EnumerableContextDynamic(TranslationModifier translationModifier, IBuildContext? valuesContext, ExpressionBuilder builder, Expression[] expressionRows, SelectQuery query, Type elementType)
 			: base(translationModifier, builder, elementType, query)
 		{
 			_expressionRows = expressionRows;
-			Parent          = parent;
+			ValuesContext   = valuesContext;
 
 			Table      = new SqlValuesTable();
 			Expression = null;
@@ -59,7 +60,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			if (SequenceHelper.IsSameContext(path, this))
 			{
-				if (flags.IsRoot() || flags.IsTable() || flags.IsAssociationRoot() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsExtractProjection() || flags.IsMemberRoot())
+				if (flags.IsRoot() || flags.IsTable() || flags.IsAssociationRoot() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsMemberRoot())
 					return path;
 
 				if (MappingSchema.IsScalarType(ElementType) || Builder.CurrentDescriptor != null)
@@ -189,7 +190,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			for (var i = 0; i < _expressionRows.Length; i++)
 			{
 				var rowProjection = _expressionRows[i];
-				if (!helper.BuildProjectionExpression(rowProjection, Parent!, out var pathProjection, out var placeholders, out var foundEager, out var errorExpr))
+				if (!helper.BuildProjectionExpression(rowProjection, ValuesContext!, out var pathProjection, out var placeholders, out var foundEager, out var errorExpr))
 				{
 					error                    = errorExpr;
 					expandedRows             = null;
@@ -260,10 +261,10 @@ namespace LinqToDB.Internal.Linq.Builder
 					var rowProjection = _expressionRows[index];
 					var projected = isSpecial ? rowProjection
 						: isRowIndex ? ExpressionInstances.Int32(index)
-						: Builder.Project(Parent!, memberExpression, null, 0, flags, rowProjection, false);
+						: Builder.Project(ValuesContext!, memberExpression, null, 0, flags, rowProjection, false);
 
 					using var saveDescriptor = Builder.UsingColumnDescriptor(descriptor);
-					var translated = Builder.BuildSqlExpression(Parent, projected);
+					var       translated     = Builder.BuildSqlExpression(ValuesContext, projected);
 
 					translations.Add(translated);
 				}
@@ -365,7 +366,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override IBuildContext Clone(CloningContext context)
 		{
-			var result = new EnumerableContextDynamic(TranslationModifier, Parent, Builder, _expressionRows.Select(e => context.CloneExpression(e)).ToArray(), 
+			var result = new EnumerableContextDynamic(TranslationModifier, context.CloneContext(ValuesContext), Builder, _expressionRows.Select(e => context.CloneExpression(e)).ToArray(), 
 				context.CloneElement(SelectQuery),
 				ElementType);
 

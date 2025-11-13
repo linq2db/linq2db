@@ -10,9 +10,12 @@ using System.Reflection;
 using LinqToDB;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Reflection;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder.Visitors
@@ -22,6 +25,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 		static ObjectPool<IsCompilableVisitor> _isCompilableVisitorPool = new(() => new IsCompilableVisitor(), v => v.Cleanup(), 100);
 
 		IDataContext                      _dataContext         = default!;
+		IMemberConverter                  _memberConverter     = default!;
 		ExpressionTreeOptimizationContext _optimizationContext = default!;
 		object?[]?                        _parameterValues;
 		bool                              _includeConvert;
@@ -50,6 +54,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			_optimizeConditions  = optimizeConditions;
 			_compactBinary       = compactBinary;
 			_isSingleConvert     = isSingleConvert;
+			_memberConverter     = ((IInfrastructure<IServiceProvider>)dataContext).Instance.GetRequiredService<IMemberConverter>();
 
 			return Visit(expression);
 		}
@@ -58,6 +63,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 		{
 			_dataContext         = default!;
 			_includeConvert      = default;
+			_memberConverter     = default!;
 			_optimizationContext = default!;
 			_optimizeConditions  = default;
 			_compactBinary       = false;
@@ -79,6 +85,12 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		protected override Expression VisitMethodCall(MethodCallExpression node)
 		{
+			var convertedMember = _memberConverter.Convert(node, out var handled);
+			if (handled && !ReferenceEquals(node, convertedMember))
+			{
+				return Visit(convertedMember);
+			}
+
 			var l = ConvertExpressionMethodAttribute(node.Object?.Type ?? node.Method.ReflectedType!, node.Method, out var alias);
 
 			if (l != null)
@@ -433,6 +445,12 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		protected override Expression VisitMember(MemberExpression node)
 		{
+			var convertedMember = _memberConverter.Convert(node, out var handled);
+			if (handled && !ReferenceEquals(node, convertedMember))
+			{
+				return Visit(convertedMember);
+			}
+
 			if (!IsCompilable(node))
 			{
 				var l = ConvertExpressionMethodAttribute(node.Expression?.Type ?? node.Member.ReflectedType!,

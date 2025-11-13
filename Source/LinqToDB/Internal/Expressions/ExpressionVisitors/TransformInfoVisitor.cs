@@ -468,6 +468,11 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 					Transform(defaultIfEmptyExpression.NotNullExpressions));
 			}
 
+			if (expr is SqlValidateExpression validateExpression)
+			{
+				return validateExpression.Update(Transform(validateExpression.InnerExpression));
+			}
+
 			return expr;
 		}
 
