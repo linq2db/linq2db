@@ -135,12 +135,12 @@ namespace Tests.UserTests
 			{
 				try
 				{
-					db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
+					db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
 					db.CreateTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
 				}
 				finally
 				{
-					db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
+					db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
 				}
 
 				return Task.CompletedTask;
@@ -159,12 +159,12 @@ namespace Tests.UserTests
 			{
 				try
 				{
-					db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
+					db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
 					await db.CreateTableAsync<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
 				}
 				finally
 				{
-					await db.DropTableAsync<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
+					await db.DropTableAsync<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
 				}
 				// not allowed for remote server
 			}, $"{TestProvName.AllSqlServer},{TestProvName.AllOracle}", ddl: true);
@@ -181,8 +181,8 @@ namespace Tests.UserTests
 			{
 				try
 				{
-					db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
-					db.CreateTable<TestTable>(tableName: "Issue681Table2");
+					db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
+					db.CreateTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
 				}
 				finally
 				{
@@ -209,10 +209,6 @@ namespace Tests.UserTests
 			string? serverName;
 			string? schemaName;
 			string? dbName;
-
-			using var _  = new DisableBaseline("Use instance name is SQL", context.IsAnyOf(TestProvName.AllSqlServer) && !context.IsAnyOf(TestProvName.AllSqlAzure) && withServer);
-			using var db = GetDataContext(context, testLinqService : false);
-			using var t  = db.CreateLocalTable<TTable>();
 
 			if (withServer && (!withDatabase || !withSchema || ddl) && context.IsAnyOf(TestProvName.AllSqlServer))
 			{
@@ -263,12 +259,17 @@ namespace Tests.UserTests
 				throws = true;
 			}
 
+			using var _  = new DisableBaseline("Use instance name is SQL", context.IsAnyOf(TestProvName.AllSqlServer) && !context.IsAnyOf(TestProvName.AllSqlAzure) && withServer);
+			using var db = GetDataContext(context, testLinqService : false);
+
 			using (new DisableLogging())
 			{
 				serverName = withServer   ? TestUtils.GetServerName  (db, context) : null;
 				dbName     = withDatabase ? TestUtils.GetDatabaseName(db, context) : null;
 				schemaName = withSchema   ? TestUtils.GetSchemaName  (db, context) : null;
 			}
+
+			using var t  = db.CreateLocalTable<TTable>(databaseName: dbName, serverName: serverName, schemaName: schemaName);
 
 			var table = db.GetTable<TTable>();
 

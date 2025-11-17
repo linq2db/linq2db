@@ -453,5 +453,41 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		}
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge) => throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
+
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
+		{
+			string fqn;
+
+			if (name.Database == null && name.Schema == null)
+			{
+				fqn = name.Name;
+			}
+			else
+			{
+				// full name is escaped and whole and consists of:
+				// [/databasename/][path][object_name]
+				// path: (dir/)+
+				using var fullName = Pools.StringBuilder.Allocate();
+
+				if (name.Database != null)
+				{
+					fullName.Value
+						.Append('/')
+						.Append(name.Database)
+						.Append('/');
+				}
+
+				if (name.Schema != null)
+				{
+					fullName.Value.Append(name.Schema).Append('/');
+				}
+
+				fullName.Value.Append(name.Name);
+
+				fqn = fullName.Value.ToString()!;
+			}
+
+			return Convert(sb, fqn, ConvertType.NameToQueryTable);
+		}
 	}
 }
