@@ -489,5 +489,12 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 			return Convert(sb, fqn, ConvertType.NameToQueryTable);
 		}
+
+		protected override void BuildSqlCastExpression(SqlCastExpression castExpression)
+		{
+			StringBuilder.Append("Unwrap(");
+			base.BuildSqlCastExpression(castExpression);
+			StringBuilder.Append(')');
+		}
 	}
 }
