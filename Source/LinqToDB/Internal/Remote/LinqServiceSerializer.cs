@@ -1735,6 +1735,7 @@ namespace LinqToDB.Internal.Remote
 						Append(elem.Arguments);
 						Append(elem.ArgumentsNullability);
 						Append(elem.IsAggregate);
+						Append(elem.CanBeAffectedByOrderBy);
 						Append(elem.CanBeNull);
 						Append(elem.WithinGroup);
 						Append(elem.Filter);
@@ -2894,20 +2895,21 @@ namespace LinqToDB.Internal.Remote
 
 					case QueryElementType.SqlExtendedFunction:
 					{
-						var functionType         = ReadDbDataType();
-						var name                 = ReadString()!;
-						var arguments            = ReadArray<SqlFunctionArgument>()!;
-						var argumentsNullability = ReadBoolArray()!;
-						var isAggregate          = ReadBool();
-						var canBeNull            = ReadNullableBool();
-						var withinGroup          = ReadArray<SqlWindowOrderItem>()!;
-						var filter               = Read<SqlSearchCondition>();
-						var orderBy              = ReadArray<SqlWindowOrderItem>()!;
-						var partitionBy          = ReadArray<ISqlExpression>()!;
-						var frame                = Read<SqlFrameClause>();
+						var functionType           = ReadDbDataType();
+						var name                   = ReadString()!;
+						var arguments              = ReadArray<SqlFunctionArgument>()!;
+						var argumentsNullability   = ReadBoolArray()!;
+						var isAggregate            = ReadBool();
+						var canBeAffectedByOrderBy = ReadBool();
+						var canBeNull              = ReadNullableBool();
+						var withinGroup            = ReadArray<SqlWindowOrderItem>()!;
+						var filter                 = Read<SqlSearchCondition>();
+						var orderBy                = ReadArray<SqlWindowOrderItem>()!;
+						var partitionBy            = ReadArray<ISqlExpression>()!;
+						var frame                  = Read<SqlFrameClause>();
 
 						obj = new SqlExtendedFunction(functionType, name, arguments, argumentsNullability, withinGroup : withinGroup, partitionBy : partitionBy, orderBy : orderBy,
-							frameClause : frame, filter: filter, isAggregate : isAggregate, canBeNull: canBeNull);
+							frameClause : frame, filter: filter, isAggregate : isAggregate, canBeNull: canBeNull, canBeAffectedByOrderBy: canBeAffectedByOrderBy);
 
 						break;
 					}
