@@ -10,6 +10,7 @@ namespace Tests.Model
 	{
 		[PrimaryKey(Configuration = ProviderName.ClickHouse)]
 		public int       ID;
+		[Column(Precision = 6, Scale = 2, Configuration = ProviderName.Ydb)]
 		[Column(DataType = DataType.Decimal64, Scale = 4, Configuration = ProviderName.ClickHouse)]
 		public decimal   MoneyValue;
 		[Column(Precision = 3, Configuration = ProviderName.ClickHouse)]
@@ -81,6 +82,7 @@ namespace Tests.Model
 	public class LinqDataTypes2 : IEquatable<LinqDataTypes2>, IComparable
 	{
 		[PrimaryKey]                                    public int       ID;
+		[Column(Precision = 6, Scale = 2, Configuration = ProviderName.Ydb)]
 		[Column]                                        public decimal   MoneyValue;
 		// type it explicitly for sql server, because SQL Server 2005+ provider maps DateTime .Net type to DataType.DateTime2 by default
 		[Column(DataType = DataType.DateTime,  Configuration = ProviderName.SqlServer)]

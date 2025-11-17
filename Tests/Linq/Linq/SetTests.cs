@@ -17,6 +17,7 @@ namespace Tests.Linq
 	public class SetTests : TestBase
 	{
 		[Test]
+		[YdbMemberNotFound]
 		public void Except1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -36,6 +37,7 @@ namespace Tests.Linq
 		//}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void Intersect([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -54,6 +56,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbCteAsSource]
 		public void Contains2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -63,6 +66,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbCteAsSource]
 		public void Contains201([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -72,15 +76,18 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		//TODO:[RequiresCorrelatedSubquery]
 		public void Contains3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Parent where    Child.Select(c => c.Parent).Contains(p) select p,
-					from p in db.Parent where db.Child.Select(c => c.Parent).Contains(p) select p);
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				from p in    Parent where    Child.Select(c => c.Parent).Contains(p) select p,
+				from p in db.Parent where db.Child.Select(c => c.Parent).Contains(p) select p);
 		}
 
 		[Test]
+		[YdbCteAsSource]
 		public void Contains4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -90,6 +97,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbCteAsSource]
 		public void Contains5([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -99,6 +107,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbCteAsSource]
 		public void Contains6([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			var n = 1;
@@ -110,6 +119,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbCteAsSource]
 		public void Contains7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -335,6 +345,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbCteAsSource]
 		public void Contains14([DataSources] string context)
 		{
 			var ps = Parent1.OrderBy(p => p.ParentID).Take(2).ToArray();

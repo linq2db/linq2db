@@ -870,6 +870,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void ConditionNullTest([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);

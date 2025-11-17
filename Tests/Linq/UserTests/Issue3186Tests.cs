@@ -85,6 +85,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void UpdateWhenTableSecond([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -110,6 +111,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void UpdateWhenTableFirst([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -135,6 +137,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void UpdateWhenTableFirstWithLeftJoin([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{

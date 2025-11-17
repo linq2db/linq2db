@@ -7,7 +7,7 @@ namespace Tests
 	{
 		public RequiresCorrelatedSubqueryAttribute()
 			: base(typeof(LinqToDBException),
-			TestProvName.AllClickHouse)
+			ProviderName.Ydb, TestProvName.AllClickHouse)
 		{
 			ErrorMessage = ErrorHelper.Error_Correlated_Subqueries;
 		}

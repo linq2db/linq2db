@@ -46,6 +46,7 @@ namespace Tests.UserTests
 			[Column("inIdMain"), NotNull]          public int InIdMain { get; set; } // int
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Test([DataSources] string context)
 		{
