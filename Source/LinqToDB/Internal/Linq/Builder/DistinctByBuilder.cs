@@ -15,10 +15,8 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsMethodCall(nameof(Queryable.DistinctBy))]
 	sealed class DistinctByBuilder : MethodCallBuilder
 	{
-#pragma warning disable IDE0060
-		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsSameGenericMethod(Methods.Enumerable.DistinctBy, Methods.Queryable.DistinctBy);
-#pragma warning restore IDE0060
 
 		static readonly MethodInfo _buildDistinctByViaRowNumberMethodInfo = MemberHelper.MethodOfGeneric(() => BuildDistinctByViaRowNumber<int>(null!, null!, null!, null!));
 
