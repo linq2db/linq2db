@@ -229,6 +229,9 @@ namespace LinqToDB.SqlQuery
 			if (Filter != null && !Filter.Equals(otherFunction.Filter!, comparer))
 				return false;
 
+			if (CanBeAffectedByOrderBy != otherFunction.CanBeAffectedByOrderBy)
+				return false;
+
 			foreach (var argument in Arguments)
 			{
 				if (!otherFunction.Arguments.Any(a => argument.Modifier == a.Modifier && argument.Expression.Equals(a.Expression, comparer) && argument.Suffix.AreEqual(a.Suffix, comparer)))
@@ -399,6 +402,7 @@ namespace LinqToDB.SqlQuery
 			hash.Add(FrameClause?.GetElementHashCode());
 			hash.Add(Filter?.GetElementHashCode());
 			hash.Add(IsAggregate);
+			hash.Add(CanBeAffectedByOrderBy);
 
 			foreach (var t in Arguments)
 			{
