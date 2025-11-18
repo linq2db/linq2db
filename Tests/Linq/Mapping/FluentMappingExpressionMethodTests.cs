@@ -14,6 +14,7 @@ namespace Tests.Mapping
 	{
 		sealed class InstanceClass
 		{
+			[PrimaryKey]
 			public int    Id       { get; set; }
 			public int    Value    { get; set; }
 

@@ -467,16 +467,16 @@ namespace Tests.Linq
 		[Table("T2")]
 		public class T2
 		{
-			[Column] public int InstrumentId { get; set; }
-			[Column] public int IndexId { get; set; }
+			[Column, PrimaryKey] public int InstrumentId { get; set; }
+			[Column, PrimaryKey] public int IndexId { get; set; }
 
 		}
 
 		[Table("T3")]
 		public class T3
 		{
-			[Column] public int InstrumentId { get; set; }
-			[Column] public int IndexId { get; set; }
+			[Column, PrimaryKey] public int InstrumentId { get; set; }
+			[Column, PrimaryKey] public int IndexId { get; set; }
 		}
 
 		[Test]
@@ -776,7 +776,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class Issue4139Table
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			[Column("ParentId", ".ParentId")]
 			// TODO: missing ctor
