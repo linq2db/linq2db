@@ -1523,6 +1523,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (context != null)
 				{
+					using var saveContext = UsingBuildContext(context.BuildContext);
+
 					if (_buildPurpose is BuildPurpose.Expression or BuildPurpose.Sql)
 					{
 						var exprCacheKey = GetSqlCacheKey(node);
@@ -1971,6 +1973,10 @@ namespace LinqToDB.Internal.Linq.Builder
 					    && ifTrue is SqlPlaceholderExpression truePlaceholder
 					    && ifFalse is SqlPlaceholderExpression falsePlaceholder)
 					{
+						testPlaceholder  = UpdateNesting(testPlaceholder);
+						truePlaceholder  = UpdateNesting(truePlaceholder);
+						falsePlaceholder = UpdateNesting(falsePlaceholder);
+
 						return Visit(CreatePlaceholder(new SqlConditionExpression(ConvertExpressionToPredicate(testPlaceholder.Sql), truePlaceholder.Sql, falsePlaceholder.Sql), node));
 					}
 				}
