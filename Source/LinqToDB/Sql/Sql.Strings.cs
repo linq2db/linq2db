@@ -150,13 +150,13 @@ namespace LinqToDB
 		{
 			var result = arguments.Aggregate((v1, v2) =>
 			{
-				if (v1 == null && v2 == null)
-					return null;
-				if (v1 == null)
-					return v2;
-				if (v2 == null)
-					return v1;
-				return v1 + separator + v2;
+                return (v1, v2) switch
+                {
+                    (null, null) => null,
+                    ({ } _v1, null) => _v1,
+                    (null, { } _v2) => _v2,
+                    ({ } _v1, { } _v2) => v1 + separator + v2,
+                };
 			});
 
 			return result;
