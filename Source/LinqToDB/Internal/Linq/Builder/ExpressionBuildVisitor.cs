@@ -1523,8 +1523,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (context != null)
 				{
-					using var saveContext = UsingBuildContext(context.BuildContext);
-
 					if (_buildPurpose is BuildPurpose.Expression or BuildPurpose.Sql)
 					{
 						var exprCacheKey = GetSqlCacheKey(node);
