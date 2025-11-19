@@ -253,8 +253,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							withinGroup : withinGroup,
 							partitionBy : partitionBy,
 							orderBy : orderBy,
-							filter : filter, 
+							filter : filter,
 							isAggregate: element.IsAggregate,
+							canBeAffectedByOrderBy: element.CanBeAffectedByOrderBy,
 							frameClause : frameClause), element);
 					}
 
