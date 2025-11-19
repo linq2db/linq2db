@@ -502,7 +502,7 @@ namespace LinqToDB.Linq.Translation
 					return false;
 				}
 
-				if (BuildInfo.FilterExpressions == null || BuildInfo.FilterExpressions.Count == 0)
+				if (BuildInfo.FilterExpressions is null or [])
 				{
 					values = BuildInfo.Values;
 					return true;
