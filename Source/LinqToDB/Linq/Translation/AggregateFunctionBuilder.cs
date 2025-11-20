@@ -458,8 +458,8 @@ namespace LinqToDB.Linq.Translation
 		{
 			public AggregateComposer(ISqlExpressionFactory factory, AggregateBuildInfo buildInfo, IAggregationContext aggregationContext)
 			{
-				Factory = factory;
-				BuildInfo = buildInfo;
+				Factory            = factory;
+				BuildInfo          = buildInfo;
 				AggregationContext = aggregationContext;
 			}
 
@@ -472,8 +472,8 @@ namespace LinqToDB.Linq.Translation
 			public IAggregationContext                   AggregationContext { get; }
 			public Action<AggregateFallbackModeBuilder>? Fallback           { get; private set; }
 
-			public void SetResult(ISqlExpression                                 sql)       => Result = sql;
-			public void SetError(SqlErrorExpression                              error)     => Error = error;
+			public void SetResult(ISqlExpression                   sql)       => Result = sql;
+			public void SetError(SqlErrorExpression                error)     => Error = error;
 			public void SetValidation(Func<Expression, Expression> validator) => Validator = validator;
 
 			public void SetFallback(Action<AggregateFallbackModeBuilder> fallback)
