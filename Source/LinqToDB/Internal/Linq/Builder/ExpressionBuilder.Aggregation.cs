@@ -230,7 +230,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							return null;
 						}
 
-						var        lambda = method.Arguments[1].UnwrapLambda();
+						var lambda = method.Arguments[1].UnwrapLambda();
 						var filter = lambda.GetBody(currentValueExpression);
 
 						filterExpression ??= new List<Expression>();
