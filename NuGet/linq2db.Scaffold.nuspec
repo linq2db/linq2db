@@ -7,24 +7,24 @@
 		<tags>Scaffold T4 cli RevEng</tags>
 		<dependencies>
 			<group targetFramework="net462">
-				<dependency id="linq2db.Tools"  version="6.0.0"  />
-				<dependency id="Humanizer.Core" version="2.14.1" />
+				<dependency id="linq2db.Tools"  version="6.0.0" />
+				<dependency id="Humanizer.Core" version="3.0.1" />
 			</group>
 			<group targetFramework="netstandard2.0">
-				<dependency id="linq2db.Tools"  version="6.0.0"  />
-				<dependency id="Humanizer.Core" version="2.14.1" />
+				<dependency id="linq2db.Tools"  version="6.0.0" />
+				<dependency id="Humanizer.Core" version="3.0.1" />
 			</group>
 			<group targetFramework="net8.0">
-				<dependency id="linq2db.Tools"  version="6.0.0"  />
-				<dependency id="Humanizer.Core" version="2.14.1" />
+				<dependency id="linq2db.Tools"  version="6.0.0" />
+				<dependency id="Humanizer.Core" version="3.0.1" />
 			</group>
 			<group targetFramework="net9.0">
-				<dependency id="linq2db.Tools"  version="6.0.0"  />
-				<dependency id="Humanizer.Core" version="2.14.1" />
+				<dependency id="linq2db.Tools"  version="6.0.0" />
+				<dependency id="Humanizer.Core" version="3.0.1" />
 			</group>
 			<group targetFramework="net10.0">
-				<dependency id="linq2db.Tools"  version="6.0.0"  />
-				<dependency id="Humanizer.Core" version="2.14.1" />
+				<dependency id="linq2db.Tools"  version="6.0.0" />
+				<dependency id="Humanizer.Core" version="3.0.1" />
 			</group>
 		</dependencies>
 	</metadata>

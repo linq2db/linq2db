@@ -137,9 +137,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			// facepalm, MySql.Data needs byte[] as parameter value
-			if (value is float[] vector
-				&& (Provider is MySqlProvider.MySqlData
-					|| (Provider is MySqlProvider.MySqlConnector && parameter is BulkCopyReader.Parameter)))
+			if (value is float[] vector && Provider is MySqlProvider.MySqlData)
 			{
 				var bytes = new byte[vector.Length * 4];
 				Buffer.BlockCopy(vector, 0, bytes, 0, bytes.Length);
