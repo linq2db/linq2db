@@ -47,10 +47,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				if (((MethodCallExpression)expression).IsSameGenericMethod(_toValueMethodInfo))
 				{
 					var chain = new List<MethodCallExpression>();
-					if (BuildFunctionsChain(expression, chain, out var foudMethod, _stringAggregateMethodInfoE, _stringAggregateMethodInfoQ, _stringAggregateMethodInfoES, _stringAggregateMethodInfoQS))
+					if (BuildFunctionsChain(expression, chain, out var foundMethod, _stringAggregateMethodInfoE, _stringAggregateMethodInfoQ, _stringAggregateMethodInfoES, _stringAggregateMethodInfoQS))
 					{
-						var sequence  = foudMethod.Arguments[0];
-						var separator = foudMethod.Arguments[1];
+						var sequence  = foundMethod.Arguments[0];
+						var separator = foundMethod.Arguments[1];
 
 						sequence = BuildExpressionUtils.UnwrapEnumerableCasting(sequence);
 						sequence = BuildExpressionUtils.EnsureEnumerableType(sequence);
@@ -61,9 +61,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							sequence = ApplyOrderBy(sequence, orderBy);
 						}
 
-						if (foudMethod.Arguments.Count > 2)
+						if (foundMethod.Arguments.Count > 2)
 						{
-							var selector = foudMethod.Arguments[2].UnwrapLambda();
+							var selector = foundMethod.Arguments[2].UnwrapLambda();
 							sequence = Expression.Call(
 								typeof(Enumerable),
 								nameof(Enumerable.Select),
