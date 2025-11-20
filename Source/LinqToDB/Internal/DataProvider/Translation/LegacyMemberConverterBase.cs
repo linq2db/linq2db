@@ -187,9 +187,13 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			foreach (var tuple in order)
 			{
 				var lambda = (LambdaExpression)tuple.Expr;
-				var methodName =
-					isFirst              ? tuple.IsDescending ? nameof(Queryable.OrderByDescending) : nameof(Queryable.OrderBy)
-					: tuple.IsDescending ? nameof(Queryable.ThenByDescending) : nameof(Queryable.ThenBy);
+				var methodName = (isFirst, tuple.IsDescending) switch
+                {
+                    (true, true) => nameof(Queryable.OrderByDescending),
+                    (true, false) => nameof(Queryable.OrderBy),
+                    (false, true) => nameof(Queryable.ThenByDescending),
+                    (false, false) => nameof(Queryable.ThenBy),
+                };
 
 				queryExpr = Expression.Call(typeof(Enumerable), methodName, new[] { entityType, lambda.Body.Type }, queryExpr, lambda);
 				isFirst   = false;
