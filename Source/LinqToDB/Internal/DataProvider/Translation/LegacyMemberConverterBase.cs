@@ -135,11 +135,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			{
 				var methodName = methodCall.Method.Name;
 
-				var isThenBy = methodName == nameof(Queryable.ThenBy) || methodName == nameof(Queryable.ThenByDescending) ||
-					methodName == nameof(Enumerable.ThenBy) || methodName == nameof(Enumerable.ThenByDescending);
+				var isThenBy = methodName is nameof(Queryable.ThenBy) or nameof(Queryable.ThenByDescending) or
+					nameof(Enumerable.ThenBy) or nameof(Enumerable.ThenByDescending);
 
-				if (isThenBy || methodName == nameof(Queryable.OrderBy) || methodName == nameof(Queryable.OrderByDescending) ||
-					methodName == nameof(Enumerable.OrderBy) || methodName == nameof(Enumerable.OrderByDescending))
+				if (isThenBy || methodName is nameof(Queryable.OrderBy) or nameof(Queryable.OrderByDescending) or
+					nameof(Enumerable.OrderBy) or nameof(Enumerable.OrderByDescending))
 				{
 					var isDescending = methodName.EndsWith("Descending");
 
@@ -187,11 +187,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			foreach (var tuple in order)
 			{
 				var lambda = (LambdaExpression)tuple.Expr;
-				var methodName =
-					isFirst              ? tuple.IsDescending ? nameof(Queryable.OrderByDescending) : nameof(Queryable.OrderBy)
-					: tuple.IsDescending ? nameof(Queryable.ThenByDescending) : nameof(Queryable.ThenBy);
+				var methodName = (isFirst, tuple.IsDescending) switch
+                {
+                    (true, true) => nameof(Queryable.OrderByDescending),
+                    (true, false) => nameof(Queryable.OrderBy),
+                    (false, true) => nameof(Queryable.ThenByDescending),
+                    (false, false) => nameof(Queryable.ThenBy),
+                };
 
-				queryExpr = Expression.Call(typeof(Enumerable), methodName, new[] { entityType, lambda.Body.Type }, queryExpr, lambda);
+				queryExpr = Expression.Call(typeof(Enumerable), methodName, [entityType, lambda.Body.Type], queryExpr, lambda);
 				isFirst   = false;
 			}
 
