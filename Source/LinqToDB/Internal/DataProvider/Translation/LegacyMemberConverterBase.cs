@@ -138,8 +138,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				var isThenBy = methodName is nameof(Queryable.ThenBy) or nameof(Queryable.ThenByDescending) or
 					nameof(Enumerable.ThenBy) or nameof(Enumerable.ThenByDescending);
 
-				if (isThenBy || methodName == nameof(Queryable.OrderBy) || methodName == nameof(Queryable.OrderByDescending) ||
-					methodName == nameof(Enumerable.OrderBy) || methodName == nameof(Enumerable.OrderByDescending))
+				if (isThenBy || methodName is nameof(Queryable.OrderBy) or nameof(Queryable.OrderByDescending) or
+					nameof(Enumerable.OrderBy) or nameof(Enumerable.OrderByDescending))
 				{
 					var isDescending = methodName.EndsWith("Descending");
 
