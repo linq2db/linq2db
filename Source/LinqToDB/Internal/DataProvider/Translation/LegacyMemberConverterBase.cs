@@ -195,7 +195,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
                     (false, false) => nameof(Queryable.ThenBy),
                 };
 
-				queryExpr = Expression.Call(typeof(Enumerable), methodName, new[] { entityType, lambda.Body.Type }, queryExpr, lambda);
+				queryExpr = Expression.Call(typeof(Enumerable), methodName, [entityType, lambda.Body.Type], queryExpr, lambda);
 				isFirst   = false;
 			}
 
