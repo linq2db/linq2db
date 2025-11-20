@@ -351,8 +351,8 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from p in    Child where arr.Contains(p.Parent1) select p,
-					from p in db.Child where arr.Contains(p.Parent1) select p);
+					from p in    Child where arr.Contains(p.Parent1!) select p,
+					from p in db.Child where arr.Contains(p.Parent1!) select p);
 		}
 
 		[Test]
