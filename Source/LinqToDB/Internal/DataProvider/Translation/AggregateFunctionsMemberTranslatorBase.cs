@@ -267,9 +267,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 							var valueType  = factory.GetDbDataType(value);
 							var resultType = factory.GetDbDataType(methodCall.Method.ReturnType);
+							var hasFilter  = false;
 
 							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
 							{
+								hasFilter = true;
 								if (IsFilterSupported)
 								{
 									filterCondition = info.FilterCondition;
@@ -296,7 +298,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 								composer.SetValidation(p => GenerateNullCheckIfNeeded(p, methodName));
 							}
 
-							var canBeNull = info is { IsGroupBy: true, IsEmptyGroupBy: false } ? (bool?)null : true;
+							var canBeNull = info is { IsGroupBy: true, IsEmptyGroupBy: false } && !hasFilter ? (bool?)null : true;
 
 							var fn = factory.Function(resultType, functionName,
 								[new SqlFunctionArgument(argumentValue, modifier : aggregateModifier)],
