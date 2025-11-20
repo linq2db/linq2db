@@ -409,7 +409,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 									}
 								}
 
-								suffix = factory.Fragment(valueType, sb.Value.ToString(), args);
+								suffix = factory.Expression(valueType, sb.Value.ToString(), args);
 							}
 
 							SqlSearchCondition? filterCondition = null;

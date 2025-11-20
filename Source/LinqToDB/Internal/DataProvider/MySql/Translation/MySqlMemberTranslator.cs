@@ -271,12 +271,12 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 									}
 								}
 
-								suffix = factory.Fragment(valueType, sb.Value.ToString(), args);
+								suffix = factory.Expression(valueType, sb.Value.ToString(), args);
 							}
 
 							suffix = suffix != null
-								? factory.Fragment(valueType, "{0} SEPARATOR {1}", suffix, separator)
-								: factory.Fragment(valueType, "SEPARATOR {0}",     separator);
+								? factory.Expression(valueType, "{0} SEPARATOR {1}", suffix, separator)
+								: factory.Expression(valueType, "SEPARATOR {0}",     separator);
 
 							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
 							{

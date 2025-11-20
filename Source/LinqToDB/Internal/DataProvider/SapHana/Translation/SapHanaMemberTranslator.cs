@@ -348,7 +348,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 									}
 								}
 
-								suffix = factory.Fragment(valueType, sb.Value.ToString(), args);
+								suffix = factory.Expression(valueType, sb.Value.ToString(), args);
 							}
 
 							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())

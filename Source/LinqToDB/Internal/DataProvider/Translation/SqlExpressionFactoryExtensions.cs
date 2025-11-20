@@ -316,12 +316,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
-		public static ISqlExpression Fragment(this ISqlExpressionFactory factory, DbDataType dataType, string fragmentText, params ISqlExpression[] arguments)
-		{
-			return factory.Fragment(dataType, Precedence.Primary, fragmentText, null, arguments);
-		}
-
-		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression NotNullFragment(this ISqlExpressionFactory factory, DbDataType dataType, string fragmentText, params ISqlExpression[] arguments)
 		{
 			return factory.NotNullFragment(dataType, Precedence.Primary, fragmentText, arguments);
@@ -331,18 +325,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		public static ISqlExpression NonPureFragment(this ISqlExpressionFactory factory, DbDataType dataType, string fragmentText, params ISqlExpression[] arguments)
 		{
 			return new SqlExpression(dataType, fragmentText, Precedence.Primary, SqlFlags.None, ParametersNullabilityType.IfAnyParameterNullable, null, arguments);
-		}
-
-		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
-		public static ISqlExpression Fragment(this ISqlExpressionFactory factory, DbDataType dataType, int precedence, string fragmentText, params ISqlExpression[] arguments)
-		{
-			return new SqlExpression(dataType, fragmentText, precedence, SqlFlags.None, ParametersNullabilityType.Undefined, null, arguments);
-		}
-
-		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
-		public static ISqlExpression Fragment(this ISqlExpressionFactory factory, DbDataType dataType, int precedence, string fragmentText, bool? canBeNull, params ISqlExpression[] arguments)
-		{
-			return new SqlExpression(dataType, fragmentText, precedence, SqlFlags.None, ParametersNullabilityType.Undefined, canBeNull, arguments);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]

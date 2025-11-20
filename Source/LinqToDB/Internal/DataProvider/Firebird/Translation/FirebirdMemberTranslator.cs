@@ -309,7 +309,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 				{
 					var intDbType = factory.GetDbDataType(typeof(int));
 					var substring = factory.Function(valueType, "SUBSTRING",
-						[new SqlFunctionArgument(valuesExpr, suffix: factory.Fragment(intDbType, "FROM {0}", factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1))))],
+						[new SqlFunctionArgument(valuesExpr, suffix: factory.Expression(intDbType, "FROM {0}", factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1))))],
 						[true]
 					);
 

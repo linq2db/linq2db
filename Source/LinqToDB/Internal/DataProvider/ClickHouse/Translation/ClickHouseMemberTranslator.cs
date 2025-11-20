@@ -490,9 +490,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 
 					var arrayDataType = factory.GetDbDataType(typeof(string[]));
 
-					var argumentsArray = values.Aggregate((v1, v2) => factory.Fragment(valueType, Precedence.Primary, "{0}, {1}", true, v1, v2));
+					var argumentsArray = values.Aggregate((v1, v2) => factory.Expression(valueType, Precedence.Primary, "{0}, {1}", true, v1, v2));
 
-					var param = factory.Fragment(arrayDataType, "[{0}]", argumentsArray);
+					var param = factory.Expression(arrayDataType, Precedence.Primary, "[{0}]", false, argumentsArray);
 
 					var function = factory.Function(valueType, "arrayStringConcat", param, separator);
 					return function;
