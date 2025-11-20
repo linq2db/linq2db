@@ -135,8 +135,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			{
 				var methodName = methodCall.Method.Name;
 
-				var isThenBy = methodName == nameof(Queryable.ThenBy) || methodName == nameof(Queryable.ThenByDescending) ||
-					methodName == nameof(Enumerable.ThenBy) || methodName == nameof(Enumerable.ThenByDescending);
+				var isThenBy = methodName is nameof(Queryable.ThenBy) or nameof(Queryable.ThenByDescending) or
+					nameof(Enumerable.ThenBy) or nameof(Enumerable.ThenByDescending);
 
 				if (isThenBy || methodName == nameof(Queryable.OrderBy) || methodName == nameof(Queryable.OrderByDescending) ||
 					methodName == nameof(Enumerable.OrderBy) || methodName == nameof(Enumerable.OrderByDescending))
