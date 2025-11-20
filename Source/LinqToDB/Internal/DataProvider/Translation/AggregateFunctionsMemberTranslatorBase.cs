@@ -131,14 +131,14 @@ namespace LinqToDB.Internal.DataProvider.Translation
 									if (IsFilterSupported)
 									{
 										filterCondition = info.FilterCondition;
-										argumentValue   = factory.Expression(resultType, "*", factory.Value(info.SelectQuery.SourceID));
+										argumentValue   = factory.Fragment("*", factory.Value(info.SelectQuery.SourceID));
 									}
 									else
 										argumentValue = factory.Condition(info.FilterCondition, factory.Value(resultType, 1), factory.Null(resultType));
 								}
 								else
 								{
-									argumentValue = factory.Expression(resultType, "*", factory.Value(info.SelectQuery.SourceID));
+									argumentValue = factory.Fragment("*", factory.Value(info.SelectQuery.SourceID));
 								}
 							}
 
