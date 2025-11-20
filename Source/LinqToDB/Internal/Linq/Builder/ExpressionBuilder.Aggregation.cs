@@ -24,16 +24,17 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		sealed class AggregationContext : IAggregationContext
 		{
-			public ContextRefExpression?                    RootContext         { get; set; }
-			public ParameterExpression?                     ValueParameter      { get; set; }
-			public Expression[]?                            FilterExpressions    { get; set; }
-			public Expression?                              ValueExpression     { get; set; }
-			public Expression[]?                            Items               { get; set; }
-			public ITranslationContext.OrderByInformation[] OrderBy             { get; set; } = [];
-			public bool                                     IsDistinct          { get; set; }
-			public bool                                     IsGroupBy           { get; set; }
-			public ContextRefExpression?                    SqlContext          { get; set; }
-			public SelectQuery?                             SelectQuery         => SqlContext?.BuildContext.SelectQuery;
+			public ContextRefExpression?                    RootContext       { get; init; }
+			public ParameterExpression?                     ValueParameter    { get; init; }
+			public Expression[]?                            FilterExpressions { get; init; }
+			public Expression?                              ValueExpression   { get; init; }
+			public Expression[]?                            Items             { get; init; }
+			public ITranslationContext.OrderByInformation[] OrderBy           { get; init; } = [];
+			public bool                                     IsDistinct        { get; init; }
+			public bool                                     IsGroupBy         { get; init; }
+			public bool                                     IsEmptyGroupBy    { get; init; }
+			public ContextRefExpression?                    SqlContext        { get; init; }
+			public SelectQuery?                             SelectQuery       => SqlContext?.BuildContext.SelectQuery;
 
 			public bool TranslateExpression(Expression expression, [NotNullWhen(true)] out ISqlExpression? sql, [NotNullWhen(false)] out SqlErrorExpression? error)
 			{
@@ -130,6 +131,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			List<ITranslationContext.OrderByInformation>? orderBy          = null;
 			bool                                          isDistinct       = false;
 			bool                                          isGroupBy        = false;
+			bool                                          isEmptyGroupBy   = false;
 
 			List<MethodCallExpression>? chain = null;
 
@@ -264,15 +266,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var aggregationInfo = new AggregationContext
 			{
-				RootContext         = rootContext,
-				SqlContext          = rootContext,
-				FilterExpressions    = filterExpression?.ToArray(),
-				ValueParameter      = valueParameter,
-				ValueExpression     = null,
-				Items               = arrayElements,
-				OrderBy             = orderBy?.ToArray() ?? [],
-				IsDistinct          = isDistinct,
-				IsGroupBy           = isGroupBy
+				RootContext       = rootContext,
+				SqlContext        = rootContext,
+				FilterExpressions = filterExpression?.ToArray(),
+				ValueParameter    = valueParameter,
+				ValueExpression   = null,
+				Items             = arrayElements,
+				OrderBy           = orderBy?.ToArray() ?? [],
+				IsDistinct        = isDistinct,
+				IsGroupBy         = isGroupBy,
+				IsEmptyGroupBy    = isEmptyGroupBy
 			};
 
 			if (sqlContext != null)
@@ -399,6 +402,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			List<ITranslationContext.OrderByInformation>? orderBy          = null;
 			bool                                          isDistinct       = false;
 			bool                                          isGroupBy        = false;
+			bool                                          isEmptyGroupBy   = false;
 
 			List<MethodCallExpression>? chain = null;
 
@@ -605,8 +609,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (contextRef.BuildContext is GroupByBuilder.GroupByContext groupByCtx)
 			{
-				isGroupBy  = true;
-				sqlContext = SequenceHelper.CreateRef(groupByCtx.SubQuery);
+				isGroupBy      = true;
+				isEmptyGroupBy = groupByCtx.SubQuery.SelectQuery.GroupBy.IsEmpty;
+				sqlContext     = SequenceHelper.CreateRef(groupByCtx.SubQuery);
 			}
 
 			valueExpression = currentRef;
@@ -621,7 +626,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				Items             = null,
 				OrderBy           = orderBy?.ToArray() ?? [],
 				IsDistinct        = isDistinct,
-				IsGroupBy         = isGroupBy
+				IsGroupBy         = isGroupBy,
+				IsEmptyGroupBy    = isEmptyGroupBy
 			};
 
 			var result = functionFactory(aggregationInfo);

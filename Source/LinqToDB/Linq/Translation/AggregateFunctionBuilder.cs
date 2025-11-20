@@ -243,6 +243,7 @@ namespace LinqToDB.Linq.Translation
 				orderSql,
 				translatedArgs,
 				raw.IsGroupBy,
+				raw.IsEmptyGroupBy,
 				raw.IsDistinct,
 				isNullFiltered,
 				plainMode
@@ -447,6 +448,7 @@ namespace LinqToDB.Linq.Translation
 			(ISqlExpression expr, bool desc, Sql.NullsPosition nulls)[] OrderBySql,
 			ISqlExpression?[]                                           Arguments,
 			bool                                                        IsGroupBy,
+			bool                                                        IsEmptyGroupBy,
 			bool                                                        IsDistinct,
 			bool                                                        IsNullFiltered,
 			bool                                                        PlainMode)

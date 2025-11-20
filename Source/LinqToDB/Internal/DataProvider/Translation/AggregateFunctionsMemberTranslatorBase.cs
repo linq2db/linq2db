@@ -296,10 +296,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 								composer.SetValidation(p => GenerateNullCheckIfNeeded(p, methodName));
 							}
 
+							var canBeNull = info is { IsGroupBy: true, IsEmptyGroupBy: false } ? (bool?)null : true;
+
 							var fn = factory.Function(resultType, functionName,
 								[new SqlFunctionArgument(argumentValue, modifier : aggregateModifier)],
 								[true, true],
-								canBeNull: true,
+								canBeNull: canBeNull,
 								isAggregate : true,
 								filter: filterCondition,
 								canBeAffectedByOrderBy : false
