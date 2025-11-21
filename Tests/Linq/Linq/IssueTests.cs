@@ -844,5 +844,123 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 		#endregion
+
+		#region Nesting Issue
+		[Table]
+		public partial class Transition
+		{
+			[PrimaryKey] public int ThingId { get; set; }
+			[PrimaryKey] public DateTimeOffset CreatedDate { get; set; }
+			[Column(CanBeNull = false)] public string TransitionType { get; set; } = null!;
+
+			//[Association(CanBeNull = false, ThisKey = nameof(ThingId), OtherKey = nameof(Databases.Thing.Id))]
+			//public Thing Thing { get; set; } = null!;
+
+			//[Association(CanBeNull = false, ThisKey = nameof(TransitionType), OtherKey = nameof(Databases.TransitionType.Name))]
+			//public TransitionType TransitionType1 { get; set; } = null!;
+		}
+
+		[Table]
+		public partial class ThingState
+		{
+			[Column] public int ThingId { get; set; }
+			[Column] public DateTimeOffset? LastTransitionDate { get; set; }
+		}
+
+		[Table]
+		public partial class Thing
+		{
+			[PrimaryKey] public int Id { get; set; }
+			//[Column("ThingSequence", CanBeNull = false, SkipOnInsert = true, SkipOnUpdate = true)] public string ThingSequence { get; set; } = null!; // char(8)
+			//[Column("CreatedDate")] public DateTimeOffset CreatedDate { get; set; } // datetimeoffset(7)
+			//[Column("ThingCounter")] public int ThingCounter { get; set; } // int
+			//[Column("UserFacingId", CanBeNull = false, SkipOnInsert = true, SkipOnUpdate = true)] public string UserFacingId { get; set; } = null!; // varchar(20)
+			//[Column("ItemId")] public int? ItemId { get; set; } // int
+			//[Column("EntityId")] public int EntityId { get; set; } // int
+			//[Column("Description", CanBeNull = false)] public string Description { get; set; } = null!; // nvarchar(max)
+
+			//#region Associations
+			///// <summary>
+			///// FK_Thing_Item
+			///// </summary>
+			//[Association(ThisKey = nameof(ItemId), OtherKey = nameof(Databases.Item.ItemId))]
+			//public Item? Item { get; set; }
+
+			///// <summary>
+			///// FK_Transition_Thing backreference
+			///// </summary>
+			//[Association(ThisKey = nameof(Id), OtherKey = nameof(Transition.ThingId))]
+			//public IEnumerable<Transition> Transitions { get; set; } = null!;
+			//#endregion
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5193")]
+		public void IncorrectNesting([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Transition>();
+			using var t2 = db.CreateLocalTable<ThingState>();
+			using var t3 = db.CreateLocalTable<Thing>();
+
+			Expression<Func<Transition?, bool?, bool>> fitsUndeletedStatusFilter =
+			(transition, filter) =>
+				filter == null || filter == (transition == null || transition.TransitionType != "Delete");
+
+			Expression<Func<ThingState?, bool?, bool>> stateFitsUndeletedStatusFilter =
+			(state, filter) =>
+				state != null
+					? fitsUndeletedStatusFilter.Compile()(
+						t1.SingleOrDefault(t =>
+							t.ThingId == state.ThingId &&
+							t.CreatedDate == state.LastTransitionDate),
+						filter)
+					: fitsUndeletedStatusFilter.Compile()(null, filter);
+
+			Expression<Func<Thing, bool?, bool>> thingFitsUndeletedStatusFilter =
+			(thing, filter) => stateFitsUndeletedStatusFilter.Compile()(
+				t2.SingleOrDefault(s => s.ThingId == thing.Id), filter);
+
+			var filterQuery = t3.Where(thing => thingFitsUndeletedStatusFilter.Compile()(thing, true));
+			filterQuery.Select(thing => thing.Id).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5193")]
+		public void IncorrectNesting_Merged([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Transition>();
+			using var t2 = db.CreateLocalTable<ThingState>();
+			using var t3 = db.CreateLocalTable<Thing>();
+
+			var filterQuery = t3.Where(thing => t2.SingleOrDefault(s => s.ThingId == thing.Id) != null
+					? t1.SingleOrDefault(t =>
+							t.ThingId == t2.SingleOrDefault(s => s.ThingId == thing.Id)!.ThingId
+							&& t.CreatedDate == t2.SingleOrDefault(s => s.ThingId == thing.Id)!.LastTransitionDate) == null
+							|| t1.SingleOrDefault(t => t.ThingId == t2.SingleOrDefault(s => s.ThingId == thing.Id)!.ThingId &&
+							t.CreatedDate == t2.SingleOrDefault(s => s.ThingId == thing.Id)!.LastTransitionDate)!.TransitionType != "Delete"
+					: true);
+			filterQuery.Select(thing => thing.Id).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5193")]
+		public void IncorrectNesting_Workaround([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Transition>();
+			using var t2 = db.CreateLocalTable<ThingState>();
+			using var t3 = db.CreateLocalTable<Thing>();
+
+			Expression<Func<Thing, bool>> thingHasDeletedState =
+			thing => t2
+				.Where(state => state.ThingId == thing.Id)
+				.SelectMany(state => t1
+					.Where(t => t.ThingId == state.ThingId && t.CreatedDate == state.LastTransitionDate))
+				.Any(transition => transition.TransitionType == "Delete");
+			var filterQuery = t3.Where(thing => !thingHasDeletedState.Compile()(thing));
+
+			filterQuery.Select(thing => thing.Id).ToList();
+		}
+
+		#endregion
 	}
 }
