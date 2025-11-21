@@ -22,7 +22,8 @@ stages:
       with_nugets: true
       with_examples: true
       with_tests: false
-      with_analyzers: false # true disabled till https://github.com/dotnet/roslyn/pull/80621 shipped
+#      with_analyzers: true disabled till https://github.com/dotnet/roslyn/pull/80621 shipped
+      with_analyzers: false
       with_release: false
 ##############
 #  NUGET JOB #
