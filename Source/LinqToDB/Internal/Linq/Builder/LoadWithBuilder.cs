@@ -84,6 +84,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var associations = extractResult.Value.info.Length <= 1
 					? extractResult.Value.info
 					: extractResult.Value.info
+						.AsEnumerable()
 						.Reverse()
 						.ToArray();
 

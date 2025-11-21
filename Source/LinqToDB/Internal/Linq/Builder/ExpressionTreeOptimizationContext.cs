@@ -92,6 +92,12 @@ namespace LinqToDB.Internal.Linq.Builder
 					return node;
 				}
 
+				if (node.Method.IsGenericMethod && node.IsSameGenericMethod(Methods.LinqToDB.AggregateExecute))
+				{
+					_isServerSideOnly = true;
+					return node;
+				}
+
 				return base.VisitMethodCall(node);
 			}
 		}
@@ -207,6 +213,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				if (node.Method.DeclaringType == typeof(DataExtensions))
+				{
+					CanBeEvaluated = false;
+					return node;
+				}
+
+				if (node.Method.IsGenericMethod && node.IsSameGenericMethod(Methods.LinqToDB.AggregateExecute))
 				{
 					CanBeEvaluated = false;
 					return node;

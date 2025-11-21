@@ -264,9 +264,18 @@ namespace LinqToDB.Internal.Expressions
 
 		public static bool IsSameGenericMethod(this MethodCallExpression method, MethodInfo genericMethodInfo)
 		{
-			if (!method.Method.IsGenericMethod || method.Method.Name != genericMethodInfo.Name)
+			if (method.Method.Name != genericMethodInfo.Name)
 				return false;
+
+			if (!method.Method.IsGenericMethod)
+				return method.Method == genericMethodInfo;
+
 			return method.Method.GetGenericMethodDefinitionCached() == genericMethodInfo;
+		}
+
+		public static bool IsSameGenericMethod(this MethodCallExpression method, MethodInfo genericMethodInfo1, MethodInfo genericMethodInfo2)
+		{
+			return method.IsSameGenericMethod(genericMethodInfo1) || method.IsSameGenericMethod(genericMethodInfo2);
 		}
 
 		public static bool IsSameGenericMethod(this MethodCallExpression method, MethodInfo[] genericMethodInfo)
