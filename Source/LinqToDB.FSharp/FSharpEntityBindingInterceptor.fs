@@ -30,10 +30,9 @@ type FSharpEntityBindingInterceptor private () =
         if AttributesExtensions.HasAttribute<CLIMutableAttribute> objectType = true
             then false
         else
-            let mapping: CompilationMappingAttribute | null = objectType.GetAttribute<CompilationMappingAttribute>()
-            match mapping with
-            | null -> false
-            | attr -> attr.SourceConstructFlags = SourceConstructFlags.RecordType
+            objectType.GetAttribute<CompilationMappingAttribute>()
+            |> Option.ofObj
+            |> Option.exists (fun attr -> attr.SourceConstructFlags = SourceConstructFlags.RecordType)
 
     static member TryMapMembersToConstructor(typeAccessor: TypeAccessor) : IReadOnlyDictionary<int, MemberAccessor> option =
         let found, map = _cache.TryGetValue typeAccessor.Type
@@ -45,13 +44,11 @@ type FSharpEntityBindingInterceptor private () =
             then
                 let mappings = Dictionary<int, MemberAccessor>()
                 for m in typeAccessor.Members do
-                    let memberAttr = m.MemberInfo.GetAttribute<CompilationMappingAttribute> true
-                    match memberAttr: CompilationMappingAttribute | null with
-                    | null -> ()
-                    | attr ->
-                        if attr.SourceConstructFlags = SourceConstructFlags.Field
-                        then mappings.Add(attr.SequenceNumber, m)
-                        else ()
+                    m.MemberInfo.GetAttribute<CompilationMappingAttribute> true
+                    |> Option.ofObj
+                    |> Option.iter (fun attr ->
+                        if attr.SourceConstructFlags = SourceConstructFlags.Field then
+                            mappings.Add(attr.SequenceNumber, m))
                 _cache.GetOrAdd(typeAccessor.Type, Some(mappings :> IReadOnlyDictionary<int, MemberAccessor>))
             else None
 
