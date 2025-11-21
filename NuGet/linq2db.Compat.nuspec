@@ -32,19 +32,14 @@
 	<files>
 		<file src="NuGet\..\Source\LinqToDB.Compat\README.md"                 target="README.md"           />
 
-		<file src="bin\LinqToDB.Compat\{0}\net462\linq2db.Compat.pdb"         target="lib\net462\"         />
 		<file src="bin\LinqToDB.Compat\{0}\net462\linq2db.Compat.xml"         target="lib\net462\"         />
 		<file src="bin\LinqToDB.Compat\{0}\net462\linq2db.Compat.dll"         target="lib\net462\"         />
-		<file src="bin\LinqToDB.Compat\{0}\netstandard2.0\linq2db.Compat.pdb" target="lib\netstandard2.0\" />
 		<file src="bin\LinqToDB.Compat\{0}\netstandard2.0\linq2db.Compat.xml" target="lib\netstandard2.0\" />
 		<file src="bin\LinqToDB.Compat\{0}\netstandard2.0\linq2db.Compat.dll" target="lib\netstandard2.0\" />
-		<file src="bin\LinqToDB.Compat\{0}\net8.0\linq2db.Compat.pdb"         target="lib\net8.0\"         />
 		<file src="bin\LinqToDB.Compat\{0}\net8.0\linq2db.Compat.xml"         target="lib\net8.0\"         />
 		<file src="bin\LinqToDB.Compat\{0}\net8.0\linq2db.Compat.dll"         target="lib\net8.0\"         />
-		<file src="bin\LinqToDB.Compat\{0}\net9.0\linq2db.Compat.pdb"         target="lib\net9.0\"         />
 		<file src="bin\LinqToDB.Compat\{0}\net9.0\linq2db.Compat.xml"         target="lib\net9.0\"         />
 		<file src="bin\LinqToDB.Compat\{0}\net9.0\linq2db.Compat.dll"         target="lib\net9.0\"         />
-		<file src="bin\LinqToDB.Compat\{0}\net10.0\linq2db.Compat.pdb"        target="lib\net10.0\"        />
 		<file src="bin\LinqToDB.Compat\{0}\net10.0\linq2db.Compat.xml"        target="lib\net10.0\"        />
 		<file src="bin\LinqToDB.Compat\{0}\net10.0\linq2db.Compat.dll"        target="lib\net10.0\"        />
 	</files>

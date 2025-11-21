@@ -32,19 +32,14 @@
 	<files>
 		<file src="NuGet\README.Scaffold.md"                                      target="README.md"           />
 
-		<file src="bin\LinqToDB.Scaffold\{0}\net462\linq2db.Scaffold.pdb"         target="lib\net462\"         />
 		<file src="bin\LinqToDB.Scaffold\{0}\net462\linq2db.Scaffold.xml"         target="lib\net462\"         />
 		<file src="bin\LinqToDB.Scaffold\{0}\net462\linq2db.Scaffold.dll"         target="lib\net462\"         />
-		<file src="bin\LinqToDB.Scaffold\{0}\netstandard2.0\linq2db.Scaffold.pdb" target="lib\netstandard2.0\" />
 		<file src="bin\LinqToDB.Scaffold\{0}\netstandard2.0\linq2db.Scaffold.xml" target="lib\netstandard2.0\" />
 		<file src="bin\LinqToDB.Scaffold\{0}\netstandard2.0\linq2db.Scaffold.dll" target="lib\netstandard2.0\" />
-		<file src="bin\LinqToDB.Scaffold\{0}\net8.0\linq2db.Scaffold.pdb"         target="lib\net8.0\"         />
 		<file src="bin\LinqToDB.Scaffold\{0}\net8.0\linq2db.Scaffold.xml"         target="lib\net8.0\"         />
 		<file src="bin\LinqToDB.Scaffold\{0}\net8.0\linq2db.Scaffold.dll"         target="lib\net8.0\"         />
-		<file src="bin\LinqToDB.Scaffold\{0}\net9.0\linq2db.Scaffold.pdb"         target="lib\net9.0\"         />
 		<file src="bin\LinqToDB.Scaffold\{0}\net9.0\linq2db.Scaffold.xml"         target="lib\net9.0\"         />
 		<file src="bin\LinqToDB.Scaffold\{0}\net9.0\linq2db.Scaffold.dll"         target="lib\net9.0\"         />
-		<file src="bin\LinqToDB.Scaffold\{0}\net10.0\linq2db.Scaffold.pdb"        target="lib\net10.0\"        />
 		<file src="bin\LinqToDB.Scaffold\{0}\net10.0\linq2db.Scaffold.xml"        target="lib\net10.0\"        />
 		<file src="bin\LinqToDB.Scaffold\{0}\net10.0\linq2db.Scaffold.dll"        target="lib\net10.0\"        />
 	</files>

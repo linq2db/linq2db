@@ -16,7 +16,6 @@
 	<files>
 		<file src="NuGet\README.EF.md"                                                                target="README.md"    />
 
-		<file src="bin\LinqToDB.EntityFrameworkCore.EF10\{0}\net10.0\linq2db.EntityFrameworkCore.pdb" target="lib\net10.0\" />
 		<file src="bin\LinqToDB.EntityFrameworkCore.EF10\{0}\net10.0\linq2db.EntityFrameworkCore.xml" target="lib\net10.0\" />
 		<file src="bin\LinqToDB.EntityFrameworkCore.EF10\{0}\net10.0\linq2db.EntityFrameworkCore.dll" target="lib\net10.0\" />
 	</files>
