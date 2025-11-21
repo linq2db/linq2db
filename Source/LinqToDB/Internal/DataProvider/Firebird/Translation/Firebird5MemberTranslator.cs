@@ -6,6 +6,16 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 {
 	public class Firebird5MemberTranslator : FirebirdMemberTranslator
 	{
+		protected override IMemberTranslator CreateDateMemberTranslator()
+		{
+			return new Firebird5DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new Firebird5StringMemberTranslator();
+		}
+
 		protected class Firebird5DateFunctionsTranslator : FirebirdDateFunctionsTranslator
 		{
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
@@ -70,9 +80,11 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			}
 		}
 
-		protected override IMemberTranslator CreateDateMemberTranslator()
+		protected class Firebird5StringMemberTranslator : FirebirdStringMemberTranslator
 		{
-			return new Firebird5DateFunctionsTranslator();
+			protected override bool IsWithinGroupSupported => false;
+			protected override bool IsDistinctSupported    => true;
 		}
+
 	}
 }

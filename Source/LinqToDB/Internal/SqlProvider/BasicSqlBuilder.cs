@@ -98,6 +98,12 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </example>
 		public virtual bool WrapJoinCondition => false;
 
+		/// <summary>
+		/// True if provider requires OVER() clause to be present in window function WITHIN GROUP.
+		/// Currently only SQL Server
+		/// </summary>
+		protected virtual bool IsOverRequiredWithinGroup => false;
+
 		protected virtual bool CanSkipRootAliases(SqlStatement statement) => true;
 
 		#endregion
@@ -3193,6 +3199,10 @@ namespace LinqToDB.Internal.SqlProvider
 					BuildSqlConditionExpression((SqlConditionExpression)expr);
 					break;
 
+				case QueryElementType.SqlExtendedFunction:
+					BuildSqlExtendedFunction((SqlExtendedFunction)expr);
+					break;
+
 				default:
 					throw new InvalidOperationException($"Unexpected expression type {expr.ElementType}");
 			}
@@ -3203,6 +3213,168 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual void BuildSqlCastExpression(SqlCastExpression castExpression)
 		{
 			BuildTypedExpression(castExpression.ToType, castExpression.Expression);
+		}
+
+		protected virtual void BuildSqlExtendedFunction(SqlExtendedFunction extendedFunction)
+		{
+			StringBuilder.Append(extendedFunction.FunctionName);
+			StringBuilder.Append('(');
+
+			if (extendedFunction.Arguments.Count > 0)
+			{
+				for (var i = 0; i < extendedFunction.Arguments.Count; i++)
+				{
+					if (i > 0)
+						StringBuilder.Append(", ");
+					var argument = extendedFunction.Arguments[i];
+					if (argument.Modifier != Sql.AggregateModifier.None)
+					{
+						switch (argument.Modifier)
+						{
+							case Sql.AggregateModifier.All:
+								StringBuilder.Append("ALL");
+								break;
+							case Sql.AggregateModifier.Distinct:
+								StringBuilder.Append("DISTINCT");
+								break;
+							default:
+								throw new InvalidOperationException($"Unexpected aggregate modifier: {argument.Modifier}");
+						}
+
+						StringBuilder.Append(' ');
+					}
+
+					BuildExpression(argument.Expression, true, i > 0);
+
+					if (argument.Suffix != null)
+					{
+						StringBuilder.Append(' ');
+						BuildExpression(argument.Suffix);
+					}
+				}
+			}
+
+			StringBuilder.Append(')');
+
+			if (extendedFunction.WithinGroup?.Count > 0)
+			{
+				StringBuilder.Append(" WITHIN GROUP (");
+				BuildOrderBy(extendedFunction.WithinGroup!);
+				StringBuilder.Append(')');
+			}
+
+			if (extendedFunction.Filter != null)
+			{
+				StringBuilder.Append(" FILTER (WHERE ");
+				BuildSearchCondition(extendedFunction.Filter, false);
+				StringBuilder.Append(')');
+			}
+
+			if (extendedFunction.PartitionBy?.Count > 0     || 
+			    extendedFunction.OrderBy?.Count     > 0     ||
+			    extendedFunction.FrameClause        != null || 
+			    (extendedFunction.WithinGroup?.Count > 0 && IsOverRequiredWithinGroup && extendedFunction.IsWindowFunction))
+			{
+				StringBuilder.Append(" OVER (");
+				if (extendedFunction.PartitionBy?.Count > 0)
+				{
+					StringBuilder.Append("PARTITION BY ");
+					for (var i = 0; i < extendedFunction.PartitionBy.Count; i++)
+					{
+						if (i > 0)
+							StringBuilder.Append(", ");
+						BuildExpression(extendedFunction.PartitionBy[i]);
+					}
+				}
+
+				if (extendedFunction.OrderBy?.Count > 0)
+				{
+					if (extendedFunction.PartitionBy?.Count > 0)
+						StringBuilder.Append(' ');
+					BuildOrderBy(extendedFunction.OrderBy!);
+				}
+
+				if (extendedFunction.FrameClause != null)
+				{
+					var frame = extendedFunction.FrameClause;
+
+					StringBuilder.Append(' ');
+
+					switch (frame.FrameType)
+					{
+						case SqlFrameClause.FrameTypeKind.Rows:
+							StringBuilder.Append("ROWS");
+							break;
+						case SqlFrameClause.FrameTypeKind.Groups:
+							StringBuilder.Append("GROUPS");
+							break;
+						case SqlFrameClause.FrameTypeKind.Range:
+							StringBuilder.Append("RANGE");
+							break;
+						default:
+							throw new InvalidOperationException($"Unexpected window frame type: {frame.FrameType}");
+					}
+
+					StringBuilder.Append(" BETWEEN ");
+
+					switch (frame.Start.BoundaryType)
+					{
+						case SqlFrameBoundary.FrameBoundaryType.Unbounded:
+							StringBuilder.Append("UNBOUNDED PRECEDING");
+							break;
+						case SqlFrameBoundary.FrameBoundaryType.CurrentRow:
+							StringBuilder.Append("CURRENT ROW");
+							break;
+						case SqlFrameBoundary.FrameBoundaryType.Offset:
+							BuildExpression(frame.Start.Offset!);
+							StringBuilder.Append(" PRECEDING");
+							break;
+						default:
+							throw new InvalidOperationException($"Unexpected window frame boundary type: {frame.Start.BoundaryType}");
+					}
+
+					StringBuilder.Append(" AND ");
+
+					switch (frame.End.BoundaryType)
+					{
+						case SqlFrameBoundary.FrameBoundaryType.Unbounded:
+							StringBuilder.Append("UNBOUNDED FOLLOWING");
+							break;
+						case SqlFrameBoundary.FrameBoundaryType.CurrentRow:
+							StringBuilder.Append("CURRENT ROW");
+							break;
+						case SqlFrameBoundary.FrameBoundaryType.Offset:
+							BuildExpression(frame.End.Offset!);
+							StringBuilder.Append(" FOLLOWING");
+							break;
+						default:
+							throw new InvalidOperationException($"Unexpected window frame boundary type: {frame.End.BoundaryType}");
+					}
+				}
+
+				StringBuilder.Append(')');
+			}
+
+			void BuildOrderBy(List<SqlWindowOrderItem> orderBy)
+			{
+				StringBuilder.Append("ORDER BY ");
+				for (var i = 0; i < orderBy.Count; i++)
+				{
+					if (i > 0)
+						StringBuilder.Append(", ");
+
+					var orderItem = orderBy[i];
+					BuildExpression(orderItem.Expression);
+					if (orderItem.IsDescending)
+						StringBuilder.Append(" DESC");
+
+					if (orderItem.NullsPosition != Sql.NullsPosition.None)
+					{
+						StringBuilder.Append(" NULLS ");
+						StringBuilder.Append(orderItem.NullsPosition == Sql.NullsPosition.First ? "FIRST" : "LAST");
+					}
+				}
+			}
 		}
 
 		protected virtual void BuildSqlConditionExpression(SqlConditionExpression conditionExpression)

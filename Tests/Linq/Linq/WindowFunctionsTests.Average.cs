@@ -1,0 +1,95 @@
+﻿using System.Linq;
+
+using LinqToDB;
+
+using NUnit.Framework;
+
+namespace Tests.Linq
+{
+	partial class WindowFunctionsTests
+	{
+		[Test]
+		public void AverageOverloads([IncludeDataSources(
+			true,
+			// native oracle provider crashes with AV
+			TestProvName.AllOracleManaged,
+			TestProvName.AllOracleDevart,
+			TestProvName.AllSqlServer2012Plus,
+			TestProvName.AllClickHouse,
+			TestProvName.AllPostgreSQL)] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				let w = Sql.Window.DefineWindow(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id))
+				select new
+				{
+					IntSum             = Sql.Window.Average(t.IntValue,             w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					NullableIntSum     = Sql.Window.Average(t.NullableIntValue,     w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					LongSum            = Sql.Window.Average(t.LongValue,            w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					NullableLongSum    = Sql.Window.Average(t.NullableLongValue,    w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					DoubleSum          = Sql.Window.Average(t.DoubleValue,          w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					NullableDoubleSum  = Sql.Window.Average(t.NullableDoubleValue,  w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					DecimalSum         = Sql.Window.Average(t.DecimalValue,         w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					NullableDecimalSum = Sql.Window.Average(t.NullableDecimalValue, w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					FloatSum           = Sql.Window.Average(t.FloatValue,           w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					NullableFloatSum   = Sql.Window.Average(t.NullableFloatValue,   w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					ShortSum           = Sql.Window.Average(t.ShortValue,           w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					NullableShortSum   = Sql.Window.Average(t.NullableShortValue,   w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					ByteSum            = Sql.Window.Average(t.ByteValue,            w => w.PartitionBy(t.CategoryId).OrderBy(t.Id)),
+					NullableByteSum    = Sql.Window.Average(t.NullableByteValue,    w => w.PartitionBy(t.CategoryId).OrderBy(t.Id))
+				};
+
+			Assert.DoesNotThrow(() =>
+			{
+				query.ToList();
+			});
+		}
+
+		[Test]
+		public void AverageOverloadsViaWindow([IncludeDataSources(
+			true,
+			// native oracle provider crashes with AV
+			TestProvName.AllOracleManaged,
+			TestProvName.AllOracleDevart,
+			TestProvName.AllSqlServer2012Plus,
+			TestProvName.AllClickHouse,
+			TestProvName.AllPostgreSQL)] string context)
+		{
+			var data = WindowFunctionTestEntity.Seed();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query =
+				from t in table
+				let wnd = Sql.Window.DefineWindow(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id))
+				select new
+				{
+					IntSum             = Sql.Window.Average(t.IntValue,             w => w.UseWindow(wnd)),
+					NullableIntSum     = Sql.Window.Average(t.NullableIntValue,     w => w.UseWindow(wnd)),
+					LongSum            = Sql.Window.Average(t.LongValue,            w => w.UseWindow(wnd)),
+					NullableLongSum    = Sql.Window.Average(t.NullableLongValue,    w => w.UseWindow(wnd)),
+					DoubleSum          = Sql.Window.Average(t.DoubleValue,          w => w.UseWindow(wnd)),
+					NullableDoubleSum  = Sql.Window.Average(t.NullableDoubleValue,  w => w.UseWindow(wnd)),
+					DecimalSum         = Sql.Window.Average(t.DecimalValue,         w => w.UseWindow(wnd)),
+					NullableDecimalSum = Sql.Window.Average(t.NullableDecimalValue, w => w.UseWindow(wnd)),
+					FloatSum           = Sql.Window.Average(t.FloatValue,           w => w.UseWindow(wnd)),
+					NullableFloatSum   = Sql.Window.Average(t.NullableFloatValue,   w => w.UseWindow(wnd)),
+					ShortSum           = Sql.Window.Average(t.ShortValue,           w => w.UseWindow(wnd)),
+					NullableShortSum   = Sql.Window.Average(t.NullableShortValue,   w => w.UseWindow(wnd)),
+					ByteSum            = Sql.Window.Average(t.ByteValue,            w => w.UseWindow(wnd)),
+					NullableByteSum    = Sql.Window.Average(t.NullableByteValue,    w => w.UseWindow(wnd))
+				};
+
+			Assert.DoesNotThrow(() =>
+			{
+				query.ToList();
+			});
+		}
+
+	}
+}
+

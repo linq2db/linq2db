@@ -259,7 +259,19 @@ namespace Tests
 
 			if (mc.Method.Name == nameof(LinqExtensions.InnerJoin))
 			{
-				return TypeHelper.MakeMethodCall(Methods.Queryable.Where, mc.Arguments.ToArray());
+				if (mc.Arguments.Count == 2)
+				{
+					return TypeHelper.MakeMethodCall(Methods.Queryable.Where, mc.Arguments.ToArray());
+				}
+			}
+
+			if (mc.Method.Name == nameof(LinqExtensions.LeftJoin))
+			{
+				if (mc.Arguments.Count == 2)
+				{
+					var whereCall = TypeHelper.MakeMethodCall(Methods.Queryable.Where, mc.Arguments.ToArray());
+					return TypeHelper.MakeMethodCall(Methods.Queryable.DefaultIfEmpty, whereCall);
+				}
 			}
 
 			if (mc.Method.Name == nameof(LinqExtensions.Having))

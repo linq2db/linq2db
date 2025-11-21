@@ -20,6 +20,7 @@ using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Cache;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Infrastructure;
@@ -68,6 +69,7 @@ namespace LinqToDB.Remote
 		protected void InitServiceProvider(SimpleServiceProvider serviceProvider)
 		{
 			serviceProvider.AddService(GetConfigurationInfoForPublicApi().MemberTranslator);
+			serviceProvider.AddService(GetConfigurationInfoForPublicApi().MemberConverter);
 		}
 
 		readonly Lock _guard = new();
@@ -100,6 +102,7 @@ namespace LinqToDB.Remote
 			public LinqServiceInfo   LinqServiceInfo  = null!;
 			public MappingSchema     MappingSchema    = null!;
 			public IMemberTranslator MemberTranslator = null!;
+			public IMemberConverter  MemberConverter  = null!;
 		}
 
 		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new();
@@ -151,6 +154,32 @@ namespace LinqToDB.Remote
 				=> ProviderTranslator.Translate(translationContext, memberExpression, translationFlags);
 		}
 
+		sealed class RemoteMemberConverter : IMemberConverter
+		{
+			static readonly MemoryCache<Type, IMemberConverter> _cache = new (new ());
+
+			public RemoteMemberConverter(IMemberConverter providerConverter)
+			{
+				ProviderConverter = providerConverter;
+			}
+			
+			public IMemberConverter ProviderConverter { get; }
+
+			public static IMemberConverter GetOrCreate(Type memberConverterType)
+			{
+				return _cache.GetOrCreate(
+					memberConverterType,
+					static entry =>
+					{
+						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+						return new RemoteMemberConverter(ActivatorExt.CreateInstance<IMemberConverter>(entry.Key));
+					});
+			}
+
+			public Expression Convert(Expression expression, out bool handled)
+				=> ProviderConverter.Convert(expression, out handled);
+		}
+
 		ConfigurationInfo? _configurationInfo;
 
 		// call it only external sync calls
@@ -186,11 +215,15 @@ namespace LinqToDB.Remote
 					var translatorType = Type.GetType(info.MethodCallTranslatorType)!;
 					var translator     = RemoteMemberTranslator.GetOrCreate(translatorType);
 
+					var memberConverterType = Type.GetType(info.MemberConverterType)!;
+					var memberConverter     = RemoteMemberConverter.GetOrCreate(memberConverterType);
+
 					_configurationInfo = _configurations[ConfigurationString ?? ""] = new ConfigurationInfo()
 					{
 						LinqServiceInfo  = info,
 						MappingSchema    = ms,
 						MemberTranslator = translator,
+						MemberConverter  = memberConverter,
 					};
 				}
 				finally

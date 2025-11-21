@@ -8,6 +8,22 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Linq\WindowFunctionsTests.Average.cs" />
+	  <Compile Remove="Linq\WindowFunctionsTests.cs" />
+	  <Compile Remove="Linq\WindowFunctionsTests.Cume.cs" />
+	  <Compile Remove="Linq\WindowFunctionsTests.DenseRank.cs" />
+	  <Compile Remove="Linq\WindowFunctionsTests.Frame.cs" />
+	  <Compile Remove="Linq\WindowFunctionsTests.Max.cs" />
+	  <Compile Remove="Linq\WindowFunctionsTests.Min.cs" />
+	  <Compile Remove="Linq\WindowFunctionsTests.NTile.cs" />
+	  <Compile Remove="Linq\WindowFunctionsTests.PercentileCont.cs" />
+	  <Compile Remove="Linq\WindowFunctionsTests.PercentRank.cs" />
+	  <Compile Remove="Linq\WindowFunctionsTests.Rank.cs" />
+	  <Compile Remove="Linq\WindowFunctionsTests.RowNumber.cs" />
+	  <Compile Remove="Linq\WindowFunctionsTests.Sum.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
 	</ItemGroup>
 
