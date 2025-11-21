@@ -13,6 +13,19 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	public static class QueryableAssociationTestsExtensions
+	{
+		[Association(QueryExpressionMethod = nameof(OtherImpl), CanBeNull = true)]
+		public static List<QueryableAssociationTests.SomeOtherEntity> OthersExtension(this QueryableAssociationTests.SomeEntity instance) => instance.Others;
+
+		private static Expression<Func<QueryableAssociationTests.SomeEntity, IDataContext, IQueryable<QueryableAssociationTests.SomeOtherEntity>>> OtherImpl()
+		{
+			return (e, db) => db.GetTable<QueryableAssociationTests.SomeOtherEntity>().Where(se => se.Id == e.Id)
+				.Select(o => new QueryableAssociationTests.SomeOtherEntity { Id = o.Id, StrValue = o.StrValue + "_A" })
+				.Take(1);
+		}
+	}
+
 	[TestFixture]
 	public class QueryableAssociationTests : TestBase
 	{
@@ -30,6 +43,9 @@ namespace Tests.Linq
 
 			[Association(QueryExpressionMethod = nameof(OtherImpl), CanBeNull = true)]
 			public List<SomeOtherEntity> Others { get; set; } = new List<SomeOtherEntity>();
+
+			[Association(QueryExpressionMethod = nameof(OtherImpl), CanBeNull = true)]
+			public List<SomeOtherEntity> OthersMethod() => Others;
 
 			public SomeOtherEntity?      OtherMapped  { get; set; }
 			public List<SomeOtherEntity> OthersMapped { get; set; } = new List<SomeOtherEntity>();
@@ -328,6 +344,72 @@ AS RETURN
 					};
 
 				var result = query.ToArray();
+				var expected = expectedQuery.ToArray();
+
+				AreEqual(expected, result);
+			}
+		}
+
+		[Test]
+		public void AssociationOneToManyViaMethod([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var (entities, others) = GenerateEntities();
+
+			using var db = GetDataContext(context, GetMapping());
+
+			using (db.CreateLocalTable(entities))
+			using (db.CreateLocalTable(others))
+			{
+				var query = from e in db.GetTable<SomeEntity>()
+					from o in e.OthersMethod()
+					select new
+					{
+						o,
+						e.Id
+					};
+
+				var expectedQuery = from e in entities
+					from o in e.OthersMethod()
+					select new
+					{
+						o,
+						e.Id
+					};
+
+				var result   = query.ToArray();
+				var expected = expectedQuery.ToArray();
+
+				AreEqual(expected, result);
+			}
+		}
+
+		[Test]
+		public void AssociationOneToManyViaExtensionMethod([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var (entities, others) = GenerateEntities();
+
+			using var db = GetDataContext(context, GetMapping());
+
+			using (db.CreateLocalTable(entities))
+			using (db.CreateLocalTable(others))
+			{
+				var query = from e in db.GetTable<SomeEntity>()
+					from o in e.OthersExtension()
+					select new
+					{
+						o,
+						e.Id
+					};
+
+				var expectedQuery = from e in entities
+					from o in e.OthersExtension()
+					select new
+					{
+						o,
+						e.Id
+					};
+
+				var result   = query.ToArray();
 				var expected = expectedQuery.ToArray();
 
 				AreEqual(expected, result);
