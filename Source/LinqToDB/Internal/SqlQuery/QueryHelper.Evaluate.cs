@@ -365,7 +365,6 @@ namespace LinqToDB.Internal.SqlQuery
 							case "*":  result = left * right; break;
 							case "/":  result = left / right; break;
 							case "%":  result = left % right; break;
-							case "^":  result = left ^ right; break;
 							case "&":  result = left & right; break;
 							case "<":  result = left < right; break;
 							case ">":  result = left > right; break;

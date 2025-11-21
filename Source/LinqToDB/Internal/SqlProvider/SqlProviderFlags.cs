@@ -456,38 +456,24 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsNestedJoinsSupported { get; set; } = true;
 
 		/// <summary>
-		/// Provider supports COUNT(DISTINCT column) function. Otherwise, it will be emulated.
+		/// Provider supports SUM/AVG/MIN/MAX(DISTINCT column) function. Otherwise, it will be emulated.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
 		[DataMember(Order = 52)]
-		public bool IsCountDistinctSupported { get; set; }
-
-		/// <summary>
-		/// Provider supports SUM/AVG/MIN/MAX(DISTINCT column) function. Otherwise, it will be emulated.
-		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
-		/// </summary>
-		[DataMember(Order = 53)]
-		public bool IsAggregationDistinctSupported { get; set; }
-
-		/// <summary>
-		/// Provider supports SUM/AVG/MIN/MAX(DISTINCT column) function. Otherwise, it will be emulated.
-		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
-		/// </summary>
-		[DataMember(Order = 54)]
 		public bool IsDerivedTableOrderBySupported { get; set; }
 
 		/// <summary>
 		/// Provider supports TAKE limit for UPDATE query.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
-		[DataMember(Order = 55)]
+		[DataMember(Order = 53)]
 		public bool IsUpdateTakeSupported { get; set; }
 
 		/// <summary>
 		/// Provider supports SKIP+TAKE limit for UPDATE query.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
-		[DataMember(Order = 56)]
+		[DataMember(Order = 54)]
 		public bool IsUpdateSkipTakeSupported { get; set; }
 
 		/// <summary>
@@ -497,22 +483,29 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <remarks>
 		/// Applied only to ClickHouse provider.
 		/// </remarks>
-		[DataMember(Order = 57)]
+		[DataMember(Order = 55)]
 		public bool IsSupportedSimpleCorrelatedSubqueries { get; set; }
 
 		/// <summary>
 		/// Provider supports correlated subqueris, but limited how deep in subquery outer reference
 		/// Default <c>null</c>. If this value is <c>0</c>c>, provider do not support correlated subqueries
 		/// </summary>
-		[DataMember(Order = 58)]
+		[DataMember(Order = 56)]
 		public int? SupportedCorrelatedSubqueriesLevel { get; set; }
+
+		/// <summary>
+		/// Gets or sets a value indicating whether the calculation of deep level includes aggregation queries.
+		/// Works in conjunction with <see cref="SupportedCorrelatedSubqueriesLevel"/>.
+		/// </summary>
+		[DataMember(Order = 57)]
+		public bool CalculateSupportedCorrelatedLevelWithAggregateQueries { get; set; }
 
 		/// <summary>
 		/// Provider supports correlated DISTINCT FROM directly or through db-specific operator/method (e.g. DECODE, IS, &lt;=&gt;).
 		/// This doesn't include emulation using INTERSECT.
 		/// Default <c>false</c>
 		/// </summary>
-		[DataMember(Order = 59)]
+		[DataMember(Order = 58)]
 		public bool IsDistinctFromSupported { get; set; }
 
 		/// <summary>
@@ -522,7 +515,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <remarks>
 		/// Applied only to SqlCe provider.
 		/// </remarks>
-		[DataMember(Order = 60)]
+		[DataMember(Order = 59)]
 		public bool IsOrderByAggregateFunctionSupported { get; set; }
 
 		/// <summary>
@@ -535,14 +528,14 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </code>
 		/// Default: <c>true</c>.
 		/// </summary>
-		[DataMember(Order = 61), DefaultValue(true)]
+		[DataMember(Order = 60), DefaultValue(true)]
 		public bool IsComplexJoinConditionSupported { get; set; } = true;
 
 		/// <summary>
 		/// When enabled, always prefer "FROM T1 CROSS JOIN T2" over "FROM T1, T2" join syntax.
 		/// Default: <c>false</c>.
 		/// </summary>
-		[DataMember(Order = 62), DefaultValue(false)]
+		[DataMember(Order = 61), DefaultValue(false)]
 		public bool IsCrossJoinSyntaxRequired { get; set; }
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
@@ -595,9 +588,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsCommonTableExpressionsSupported                    .GetHashCode()
 				^ IsAllSetOperationsSupported                          .GetHashCode()
 				^ IsDistinctSetOperationsSupported                     .GetHashCode()
-				^ IsCountDistinctSupported                             .GetHashCode()
 				^ IsNestedJoinsSupported                               .GetHashCode()
-				^ IsAggregationDistinctSupported                       .GetHashCode()
 				^ IsUpdateFromSupported                                .GetHashCode()
 				^ DefaultMultiQueryIsolationLevel                      .GetHashCode()
 				^ AcceptsOuterExpressionInAggregate                    .GetHashCode()
@@ -625,6 +616,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsUpdateSkipTakeSupported                            .GetHashCode()
 				^ IsSupportedSimpleCorrelatedSubqueries                .GetHashCode()
 				^ SupportedCorrelatedSubqueriesLevel                   .GetHashCode()
+				^ CalculateSupportedCorrelatedLevelWithAggregateQueries.GetHashCode()
 				^ IsDistinctFromSupported                              .GetHashCode()
 				^ DoesProviderTreatsEmptyStringAsNull                  .GetHashCode()
 				^ IsOrderByAggregateFunctionSupported                  .GetHashCode()
@@ -662,9 +654,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsCommonTableExpressionsSupported                     == other.IsCommonTableExpressionsSupported
 				&& IsAllSetOperationsSupported                           == other.IsAllSetOperationsSupported
 				&& IsDistinctSetOperationsSupported                      == other.IsDistinctSetOperationsSupported
-				&& IsCountDistinctSupported                              == other.IsCountDistinctSupported
 				&& IsNestedJoinsSupported                                == other.IsNestedJoinsSupported
-				&& IsAggregationDistinctSupported                        == other.IsAggregationDistinctSupported
 				&& IsUpdateFromSupported                                 == other.IsUpdateFromSupported
 				&& DefaultMultiQueryIsolationLevel                       == other.DefaultMultiQueryIsolationLevel
 				&& AcceptsOuterExpressionInAggregate                     == other.AcceptsOuterExpressionInAggregate
@@ -692,6 +682,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsUpdateSkipTakeSupported                             == other.IsUpdateSkipTakeSupported
 				&& IsSupportedSimpleCorrelatedSubqueries                 == other.IsSupportedSimpleCorrelatedSubqueries
 				&& SupportedCorrelatedSubqueriesLevel                    == other.SupportedCorrelatedSubqueriesLevel
+				&& CalculateSupportedCorrelatedLevelWithAggregateQueries == other.CalculateSupportedCorrelatedLevelWithAggregateQueries
 				&& IsDistinctFromSupported                               == other.IsDistinctFromSupported
 				&& DoesProviderTreatsEmptyStringAsNull                   == other.DoesProviderTreatsEmptyStringAsNull
 				&& IsOrderByAggregateFunctionSupported                   == other.IsOrderByAggregateFunctionSupported

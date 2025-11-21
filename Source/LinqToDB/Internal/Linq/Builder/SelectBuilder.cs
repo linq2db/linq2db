@@ -70,34 +70,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override MappingSchema MappingSchema => Builder.MappingSchema;
 
-			static IBuildContext GetOrderSequence(IBuildContext context)
-			{
-				var prevSequence = context;
-				while (true)
-				{
-					if (prevSequence.SelectQuery.Select.HasModifier)
-					{
-						break;
-					}
-
-					if (!prevSequence.SelectQuery.OrderBy.IsEmpty)
-						break;
-
-					if (prevSequence is SubQueryContext { IsSelectWrapper: true } subQuery)
-					{
-						prevSequence = subQuery.SubQuery;
-					}
-					else if (prevSequence is SelectContext { InnerContext: not null } selectContext)
-					{
-						prevSequence = selectContext.InnerContext;
-					}
-					else
-						break;
-				}
-
-				return prevSequence;
-			}
-
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (SequenceHelper.IsSameContext(path, this))
@@ -117,23 +89,19 @@ namespace LinqToDB.Internal.Linq.Builder
 							return new SqlErrorExpression(path, ErrorHelper.Error_RowNumber, path.Type);
 						}
 
-						var orderSequence = GetOrderSequence(_sequence);
+						var orderSequence = SequenceHelper.GetOrderSequence(_sequence);
 
-						var orderQuery = orderSequence.SelectQuery;
-
-						if (orderQuery.OrderBy.IsEmpty)
+						if (orderSequence == null)
 						{
 							return new SqlErrorExpression(path, ErrorHelper.Error_OrderByRequiredForIndexing, path.Type);
 						}
 
-						var orderBy = string.Join(", ",
-							orderQuery.OrderBy.Items.Select(static (oi, i) => oi.IsDescending ? FormattableString.Invariant($"{{{i}}} DESC") : FormattableString.Invariant($"{{{i}}}")));
+						var orderQuery = orderSequence.SelectQuery;
 
-						var parameters = orderQuery.OrderBy.Items.Select(static oi => oi.Expression).ToArray();
-
-						var rn = new SqlExpression(MappingSchema.GetDbDataType(typeof(long)), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, parameters);
-						var intType = MappingSchema.GetDbDataType(typeof(int));
-						var sql = new SqlBinaryExpression(intType, rn, "-", new SqlValue(intType, 1));
+						var orderBy  = orderQuery.OrderBy.Items.Select(o => new SqlWindowOrderItem(o.Expression, o.IsDescending, Sql.NullsPosition.None));
+						var longType = MappingSchema.GetDbDataType(typeof(long));
+						var rn       = new SqlExtendedFunction(longType, "ROW_NUMBER", [], [], orderBy : orderBy);
+						var sql      = new SqlBinaryExpression(longType, rn, "-", new SqlValue(longType, 1));
 
 						_rowNumberPlaceholder = ExpressionBuilder.CreatePlaceholder(_sequence, sql, path);
 						return _rowNumberPlaceholder;
