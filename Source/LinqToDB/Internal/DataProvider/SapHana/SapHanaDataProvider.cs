@@ -145,12 +145,12 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				SapHanaProviderAdapter.HanaDbType? type = null;
 				switch (dataType.DataType)
 				{
-					case DataType.Text                   : type = SapHanaProviderAdapter.HanaDbType.Text;         break;
-					case DataType.Image                  : type = SapHanaProviderAdapter.HanaDbType.Blob;         break;
-					case DataType.Decimal                :
-					case DataType.DecFloat               : type = SapHanaProviderAdapter.HanaDbType.Decimal;      break;
-					case DataType.SmallDecFloat          : type = SapHanaProviderAdapter.HanaDbType.SmallDecimal; break;
-					case DataType.Array | DataType.Single: type = SapHanaProviderAdapter.HanaDbType.RealVector;   break;
+					case DataType.Text          : type = SapHanaProviderAdapter.HanaDbType.Text;         break;
+					case DataType.Image         : type = SapHanaProviderAdapter.HanaDbType.Blob;         break;
+					case DataType.Decimal       :
+					case DataType.DecFloat      : type = SapHanaProviderAdapter.HanaDbType.Decimal;      break;
+					case DataType.SmallDecFloat : type = SapHanaProviderAdapter.HanaDbType.SmallDecimal; break;
+					case DataType.Vector32      : type = SapHanaProviderAdapter.HanaDbType.RealVector;   break;
 				}
 
 				if (type != null)

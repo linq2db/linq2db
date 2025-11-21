@@ -336,16 +336,16 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 					break;
 
-				case DataType.Array | DataType.Single:
+				case DataType.Vector32  :
 					StringBuilder
 						.Append("VECTOR(")
 						// length is required and in 1-1998 range
 						// we use default 0 to produce error when user didn't specify length
 						.Append(CultureInfo.InvariantCulture, $"{type.Length ?? 0}")
-						.Append(')');
+						.Append(", float32)");
 					return;
 
-				case DataType.Array | DataType.Half:
+				case DataType.Vector16  :
 					StringBuilder
 						.Append("VECTOR(")
 						// length is required and in 1-3996 range

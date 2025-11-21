@@ -3751,6 +3751,19 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#endregion
 
+		#region Vector Support
+
+		extension(float[] vector1)
+		{
+			[Sql.Expression("VECTOR_DISTANCE({1}, {0}, {2})", ServerSideOnly = true)]
+			public float VectorDistance(string metric, float[] vector2)
+			{
+				throw new NotImplementedException();
+			}
+		}
+
+		#endregion
+
 		sealed class PropertyBuilder<T> : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)

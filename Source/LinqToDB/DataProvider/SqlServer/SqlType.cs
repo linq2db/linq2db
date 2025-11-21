@@ -104,6 +104,12 @@ namespace LinqToDB.DataProvider.SqlServer
 		[SqlExpression("geography")]           public static SqlType<object?>         Geography()                       => new SqlType<object?>("geography");
 		[SqlExpression("geography")]           public static SqlType<T>               Geography<T>()                    => new SqlType<T>      ("geography");
 		[SqlExpression("table")]               public static SqlType<object?>         Table                             => new SqlType<object?>("table");
+
+		// Vectors
+		[SqlExpression("vector({0},float32)")] public static SqlType<float[]?>        Vector32(int size)                => new (FormattableString.Invariant($"vector({size},float32)"));
+#if NET8_0_OR_GREATER
+		[SqlExpression("vector({0},float16)")] public static SqlType<Half[]?>         Vector16(int size)                => new (FormattableString.Invariant($"vector({size},float16)"));
+#endif
 	}
 
 	/// <summary>

@@ -14,6 +14,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider.SqlServer.Translation;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Linq.Translation;
@@ -134,6 +135,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				ReaderExpressions[new ReaderInfo { ToType = Adapter.SqlVectorType, FieldType = typeof(byte[]), DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
 					Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
 
+				ReaderExpressions[new ReaderInfo { ToType = typeof(float[]), FieldType = typeof(byte[]), DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
+					Expression.Lambda(Expression.Call(ExpressionHelper.Property(methodCall, "Memory"), "ToArray", Array.Empty<Type>()), dataReaderParameter, indexParameter);
+
 				SetField<DbDataReader, string>("vector", typeof(byte[]), (r, i) => r.GetString(i));
 			}
 
@@ -150,6 +154,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 				ReaderExpressions[new ReaderInfo { ToType = Adapter.SqlHalfVectorType, FieldType = typeof(byte[]), DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
 					Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
+
+				ReaderExpressions[new ReaderInfo { ToType = typeof(Half[]), FieldType = typeof(byte[]), DataReaderType = Adapter.DataReaderType, DataTypeName = "vector" }] =
+					Expression.Lambda(Expression.Call(ExpressionHelper.Property(methodCall, "Memory"), "ToArray", Array.Empty<Type>()), dataReaderParameter, indexParameter);
 
 				//SetField<DbDataReader, string>("vector", typeof(byte[]), (r, i) => r.GetString(i));
 			}
@@ -445,8 +452,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 					break;
 
-				case DataType.Array | DataType.Single:
-				case DataType.Array | DataType.Half:
+				case DataType.Vector32:
+				case DataType.Vector16:
 					parameter.Size = 0;
 					break;
 			}
@@ -518,20 +525,20 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			switch (dataType.DataType)
 			{
-				case DataType.Text                    : type = SqlDbType.Text;          break;
-				case DataType.NText                   : type = SqlDbType.NText;         break;
-				case DataType.Binary                  : type = SqlDbType.Binary;        break;
-				case DataType.Image                   : type = SqlDbType.Image;         break;
-				case DataType.SmallMoney              : type = SqlDbType.SmallMoney;    break;
+				case DataType.Text          : type = SqlDbType.Text;          break;
+				case DataType.NText         : type = SqlDbType.NText;         break;
+				case DataType.Binary        : type = SqlDbType.Binary;        break;
+				case DataType.Image         : type = SqlDbType.Image;         break;
+				case DataType.SmallMoney    : type = SqlDbType.SmallMoney;    break;
 				// ArgumentException: The version of SQL Server in use does not support datatype 'date'
-				case DataType.Date                    : type = Version == SqlServerVersion.v2005 ? SqlDbType.DateTime : SqlDbType.Date; break;
-				case DataType.Time                    : type = SqlDbType.Time;          break;
-				case DataType.SmallDateTime           : type = SqlDbType.SmallDateTime; break;
-				case DataType.Timestamp               : type = SqlDbType.Timestamp;     break;
-				case DataType.Structured              : type = SqlDbType.Structured;    break;
-				case DataType.Json                    : type = Adapter.JsonDbType;      break;
-				case DataType.Array | DataType.Half   :
-				case DataType.Array | DataType.Single : type = Adapter.VectorDbType;    break;
+				case DataType.Date          : type = Version == SqlServerVersion.v2005 ? SqlDbType.DateTime : SqlDbType.Date; break;
+				case DataType.Time          : type = SqlDbType.Time;          break;
+				case DataType.SmallDateTime : type = SqlDbType.SmallDateTime; break;
+				case DataType.Timestamp     : type = SqlDbType.Timestamp;     break;
+				case DataType.Structured    : type = SqlDbType.Structured;    break;
+				case DataType.Json          : type = Adapter.JsonDbType;      break;
+				case DataType.Vector16      :
+				case DataType.Vector32      : type = Adapter.VectorDbType;    break;
 			}
 
 			if (type != null)

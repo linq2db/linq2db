@@ -13,8 +13,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.Types;
@@ -72,7 +72,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			Func<DbConnection, SqlBulkCopyOptions, DbTransaction?, SqlBulkCopy> createBulkCopy,
 			Func<int, string, SqlBulkCopyColumnMapping>                         createBulkCopyColumnMapping,
-			
+
 			MappingSchema? mappingSchema,
 
 			Type? jsonDocumentType,
@@ -344,7 +344,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					}
 				}
 
-				sqlVectorType = LoadType("SqlVector`1", DataType.Array | DataType.Single, null, true, true, length: 1, typeArguments: [typeof(float)]);
+				sqlVectorType = LoadType("SqlVector`1", DataType.Vector32, null, true, true, length: 1, typeArguments: [typeof(float)]);
 
 				if (sqlVectorType != null)
 				{
@@ -368,10 +368,53 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 						.CompileExpression();
 
 					mappingSchema!.SetValueToSqlConverter(sqlVectorType, converter);
+
+					mappingSchema!.SetValueToSqlConverter(typeof(float[]), (s, _, _, value) => BuildVectorLiteral(s, (float[])value));
+					mappingSchema.SetDefaultValue        (typeof(float[]), null);
+					mappingSchema.SetCanBeNull           (typeof(float[]), true);
+					mappingSchema.AddScalarType          (typeof(float[]), new SqlDataType(new DbDataType(typeof(float[]), DataType.Vector32, null, length: 1)));
+
+					// value => new DataParameter(null, value == null ? SqlVector.Null : new SqlVector<float>(value))
+					//
+#if NET8_0_OR_GREATER
+					var readOnlyMemoryType = typeof(ReadOnlyMemory<float>);
+#else
+					var ctors              = sqlVectorType.GetConstructors();
+					var readOnlyMemoryType = ctors[0].GetParameters()[0].ParameterType;
+#endif
+
+					var p = Expression.Parameter(typeof(float[]), "value");
+
+					var ln = Expression.Lambda<Func<float[],DataParameter>>(
+						Expression.New(
+							typeof(DataParameter).GetConstructor([typeof(string), typeof(object)])!,
+							Expression.Constant(null, typeof(string)),
+							Expression.Condition(
+								Expression.Equal(p, Expression.Constant(null, typeof(float[]))),
+								Expression.Convert(ExpressionHelper.Property(sqlVectorType, "Null"), typeof(object)),
+								Expression.Convert(
+									Expression.New(
+										sqlVectorType.GetConstructor([readOnlyMemoryType])!,
+										Expression.New(readOnlyMemoryType.GetConstructor([typeof(float[])])!, p)),
+									typeof(object)))),
+						p);
+
+					var l = Expression.Lambda<Func<float[],DataParameter>>(
+						Expression.New(
+							typeof(DataParameter).GetConstructor([typeof(string), typeof(object)])!,
+							Expression.Constant(null, typeof(string)),
+							Expression.Convert(
+								Expression.New(
+									sqlVectorType.GetConstructor([readOnlyMemoryType])!,
+									Expression.New(readOnlyMemoryType.GetConstructor([typeof(float[])])!, p)),
+								typeof(object))),
+						p);
+
+					mappingSchema.SetConvertExpression(ln, l);
 				}
 
 #if NET8_0_OR_GREATER
-				sqlHalfVectorType = LoadType("SqlVector`1", DataType.Array | DataType.Half, null, true, true, length: 1, typeArguments: [typeof(Half)]);
+				sqlHalfVectorType = LoadType("SqlVector`1", DataType.Vector16, null, true, true, length: 1, typeArguments: [typeof(Half)]);
 
 				if (sqlHalfVectorType != null)
 				{
@@ -391,6 +434,11 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 						.CompileExpression();
 
 					mappingSchema!.SetValueToSqlConverter(sqlHalfVectorType, converter);
+
+					mappingSchema!.SetValueToSqlConverter(typeof(Half[]), (s, _, _, value) => BuildHalfVectorLiteral(s, (Half[])value));
+					mappingSchema.SetDefaultValue        (typeof(Half[]), null);
+					mappingSchema.SetCanBeNull           (typeof(Half[]), true);
+					mappingSchema.AddScalarType          (typeof(Half[]), new SqlDataType(new DbDataType(typeof(Half[]), DataType.Vector16, null, length: 1)));
 				}
 #endif
 			}
@@ -465,7 +513,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		static void BuildAnyVectorLiteral<T>(StringBuilder sb, T[] data)
 		{
-			sb.Append("JSON_ARRAY(");
+			sb.Append("'[");
 
 			for (var i = 0; i < data.Length; i++)
 			{
@@ -475,7 +523,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				sb.Append(CultureInfo.InvariantCulture, $"{data[i]}");
 			}
 
-			sb.Append(')');
+			sb.Append("]'");
 		}
 #else
 		static readonly MethodInfo BuildHalfVectorLiteralMethod = typeof(SqlServerProviderAdapter).GetMethod(nameof(BuildHalfVectorLiteral), BindingFlags.Static | BindingFlags.NonPublic)!;
@@ -486,7 +534,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		static void BuildAnyVectorLiteral<T>(StringBuilder sb, ReadOnlySpan<T> data)
 		{
-			sb.Append("JSON_ARRAY(");
+			sb.Append("'[");
 
 			for (var i = 0; i < data.Length; i++)
 			{
@@ -496,7 +544,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				sb.Append(CultureInfo.InvariantCulture, $"{data[i]}");
 			}
 
-			sb.Append(')');
+			sb.Append("]'");
 		}
 #endif
 

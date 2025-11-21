@@ -1,11 +1,13 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
+using LinqToDB.Async;
+using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Tools;
 
 using Microsoft.Data.SqlTypes;
 
@@ -76,7 +78,7 @@ namespace Tests.DataProvider
 
 			var msClient = context.IsAnyOf(TestProvName.AllSqlServerMS);
 
-			//var dt = DataType.Array | DataType.Single;
+			//var dt = DataType.Vector32;
 
 			//const string asString1 = /*lang=json,strict*/ "[1.1, -1.2]";
 			//const string asString2 = /*lang=json,strict*/ "[2.1, -3.2]";
@@ -85,9 +87,9 @@ namespace Tests.DataProvider
 			//var asString2Expected = msClient ? /*lang=json,strict*/ "[2.1,-3.2]" : /*lang=json,strict*/ "[2.1, -3.2]";
 			//var asBinary1 = BitConverter.GetBytes(1.1f).Concat(BitConverter.GetBytes(-1.2f)).ToArray();
 			//var asBinary2 = BitConverter.GetBytes(-7.1f).Concat(BitConverter.GetBytes(-4.2f)).ToArray();
-			var asArray1 = new float[] { 1.2f, -1.1f };
-			var asArray2 = new float[] { 5.2f, -3.1f };
-			var asArray3 = new float[] { 11.2f, -4.1f };
+			var asArray1 = new[] {  1.2f, -1.1f };
+			var asArray2 = new[] {  5.2f, -3.1f };
+			var asArray3 = new[] { 11.2f, -4.1f };
 
 			// string
 			//await TestType<string, string?>(context, new(typeof(string), dt, null, length: 2), asString1, default, filterByValue: false, getExpectedValue: _ => asString1Expected);
@@ -108,11 +110,17 @@ namespace Tests.DataProvider
 				var sqlVector2 = new SqlVector<float>(asArray2.AsMemory());
 				var sqlVector3 = new SqlVector<float>(asArray3.AsMemory());
 
-				await TestType<SqlVector<float>, SqlVector<float>?>(context, type, sqlVector1, default, filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector1.Memory.ToArray()));
+//				await TestType<SqlVector<float>, SqlVector<float>?>(context, type, sqlVector1, default,               filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector1.Memory.ToArray()));
+//
+//				await TestType<SqlVector<float>, SqlVector<float>?>(context, type, sqlVector2, SqlVector<float>.Null, filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector2.Memory.ToArray()));
+//
+//				await TestType<SqlVector<float>, SqlVector<float>?>(context, type, sqlVector3, sqlVector2,            filterByValue: false, filterByNullableValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector3.Memory.ToArray()), isExpectedNullableValue: v => v != null && Enumerable.SequenceEqual(v.Value.Memory.ToArray(), sqlVector2.Memory.ToArray()));
 
-				await TestType<SqlVector<float>, SqlVector<float>?>(context, type, sqlVector2, SqlVector<float>.Null, filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector2.Memory.ToArray()));
+				await TestType<float[],          float[]?>         (context, type, asArray1,   default,               filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v, asArray1));
 
-				await TestType<SqlVector<float>, SqlVector<float>?>(context, type, sqlVector3, sqlVector2, filterByValue: false, filterByNullableValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector3.Memory.ToArray()), isExpectedNullableValue: v => v != null && Enumerable.SequenceEqual(v.Value.Memory.ToArray(), sqlVector2.Memory.ToArray()));
+				await TestType<float[],          float[]?>         (context, type, asArray2,   null,                  filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v, asArray2));
+
+				await TestType<float[],          float[]?>         (context, type, asArray3,   asArray2,              filterByValue: false, filterByNullableValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v, asArray3), isExpectedNullableValue: v => v != null && Enumerable.SequenceEqual(v, asArray2));
 			}
 		}
 
@@ -133,7 +141,7 @@ namespace Tests.DataProvider
 
 			var msClient = context.IsAnyOf(TestProvName.AllSqlServerMS);
 
-			//var dt = DataType.Array | DataType.Single;
+			//var dt = DataType.Vector32;
 
 			//const string asString1 = /*lang=json,strict*/ "[1.1, -1.2]";
 			//const string asString2 = /*lang=json,strict*/ "[2.1, -3.2]";
@@ -175,6 +183,78 @@ namespace Tests.DataProvider
 				await TestType<SqlVector<Half>, SqlVector<Half>?>(context, type, sqlVector3, sqlVector2, filterByValue: false, filterByNullableValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector3.Memory.ToArray()), isExpectedNullableValue: v => v != null && Enumerable.SequenceEqual(v.Value.Memory.ToArray(), sqlVector2.Memory.ToArray()));
 #endif
 				await Task.CompletedTask;
+			}
+		}
+
+		[Test]
+		public async ValueTask VectorDistanceSqlTest([IncludeDataSources(TestProvName.SqlServer2025MS)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var vectors = new[]
+			{
+				new { Vector = new SqlVector<float>(new[] { 1.0f, 2.0f, 3.0f }.AsMemory()) },
+				new { Vector = new SqlVector<float>(new[] { 4.0f, 5.0f, 6.0f }.AsMemory()) }
+			};
+
+			await using var tmp = db.CreateTempTable(
+				vectors,
+				fmb => fmb
+					.Property(t => t.Vector)
+						.HasLength(3));
+
+			var q =
+				from t in tmp
+				orderby t.Vector.VectorDistance("cosine", vectors[0].Vector)
+				select t;
+
+			var list = await q.ToListAsync();
+
+			await Task.CompletedTask;
+		}
+
+		[Test]
+		public async ValueTask VectorDistanceFloatTest([IncludeDataSources(TestProvName.SqlServer2025MS)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var vectors = new[]
+			{
+				new { Vector = new[] { 1.0f, 2.0f, 3.0f } },
+				new { Vector = new[] { 4.0f, 5.0f, 6.0f } }
+			};
+
+			await using var tmp = db.CreateTempTable(
+				vectors,
+				fmb => fmb
+					.Property(t => t.Vector)
+						.HasLength(3));
+
+			var q =
+				from t in tmp
+				orderby t.Vector.VectorDistance("cosine", vectors[0].Vector)
+				select new
+				{
+					t,
+					v = t.Vector.VectorDistance("cosine", vectors[0].Vector)
+				};
+
+			var list = await q.ToListAsync();
+
+			await TestContext.Out.WriteLineAsync(list.ToDiagnosticString());
+
+			await Task.CompletedTask;
+		}
+	}
+
+	static class VectorExtensions
+	{
+		extension(SqlVector<float> vector1)
+		{
+			[Sql.Expression("VECTOR_DISTANCE({1}, {0}, {2})", ServerSideOnly = true)]
+			public float VectorDistance(string metric, SqlVector<float> vector2)
+			{
+				throw new NotImplementedException();
 			}
 		}
 	}

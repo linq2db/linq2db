@@ -275,7 +275,7 @@ namespace Tests
 			where T : notnull
 		{
 			using var _ = new DisableBaseline("Test setup");
-			using (new DisableLogging())
+//			using (new DisableLogging())
 			{
 				var table = CreateLocalTable<T>(db, tableName, tableOptions: TableOptions.CheckExistence);
 
