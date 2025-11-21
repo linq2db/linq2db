@@ -814,5 +814,20 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		public sealed class SqlServer2022MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2022 + MDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2022 }.Where(ms => ms != null).ToArray()!);
 		public sealed class SqlServer2025MappingSchemaSystem   () : LockedMappingSchema(ProviderName.SqlServer2025 + SDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.SystemDataSqlClient   ).MappingSchema, Instance2025 }.Where(ms => ms != null).ToArray()!);
 		public sealed class SqlServer2025MappingSchemaMicrosoft() : LockedMappingSchema(ProviderName.SqlServer2025 + MDS, new[] { SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema, Instance2025 }.Where(ms => ms != null).ToArray()!);
+
+		internal static MappingSchema GetRemoteMappingSchema(Type type)
+		{
+			if (type == typeof(SqlServer2025MappingSchemaSystem) || type == typeof(SqlServer2025MappingSchemaMicrosoft)) return Instance2025;
+			if (type == typeof(SqlServer2022MappingSchemaSystem) || type == typeof(SqlServer2022MappingSchemaMicrosoft)) return Instance2022;
+			if (type == typeof(SqlServer2019MappingSchemaSystem) || type == typeof(SqlServer2019MappingSchemaMicrosoft)) return Instance2019;
+			if (type == typeof(SqlServer2017MappingSchemaSystem) || type == typeof(SqlServer2017MappingSchemaMicrosoft)) return Instance2017;
+			if (type == typeof(SqlServer2016MappingSchemaSystem) || type == typeof(SqlServer2016MappingSchemaMicrosoft)) return Instance2016;
+			if (type == typeof(SqlServer2014MappingSchemaSystem) || type == typeof(SqlServer2014MappingSchemaMicrosoft)) return Instance2014;
+			if (type == typeof(SqlServer2012MappingSchemaSystem) || type == typeof(SqlServer2012MappingSchemaMicrosoft)) return Instance2012;
+			if (type == typeof(SqlServer2008MappingSchemaSystem) || type == typeof(SqlServer2008MappingSchemaMicrosoft)) return Instance2008;
+			if (type == typeof(SqlServer2005MappingSchemaSystem) || type == typeof(SqlServer2005MappingSchemaMicrosoft)) return Instance2005;
+
+			throw new InvalidOperationException();
+		}
 	}
 }
