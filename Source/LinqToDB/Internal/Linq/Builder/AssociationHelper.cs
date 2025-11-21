@@ -10,6 +10,7 @@ using LinqToDB.Interceptors;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Interceptors;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Mapping;
@@ -70,19 +71,31 @@ namespace LinqToDB.Internal.Linq.Builder
 				cacheCheckAdded = true;
 
 				var parameterMatch = new Dictionary<ParameterExpression, Expression>();
-				if (onMember.Arguments == null)
+
+				var queryParameters = definedQueryMethod.Parameters;
+
+				if (queryParameters.Count > 0)
 				{
-					if (definedQueryMethod.Parameters.Count > 1 && typeof(IDataContext).IsSameOrParentOf(definedQueryMethod.Parameters[1].Type))
-						parameterMatch.Add(definedQueryMethod.Parameters[1], dataContextExpr);
-				}
-				else
-				{
-					var definedCount = definedQueryMethod.Parameters.Count;
-					var argumentsCount = onMember.Arguments.Count;
-					var diff = definedCount - argumentsCount;
-					for (int i = definedCount - 1; i >= diff; i--)
+					// preserve first parameter identity (used later for replacement)
+					parameterMatch.Add(queryParameters[0], queryParameters[0]);
+
+					var argumentsCount = onMember.Arguments?.Count ?? 0;
+
+					// static method: parameters start from 0
+					// instance method: parameter[0] is "this" so start mapping from 1
+					var startIndex = 0;
+					if (onMember.MemberInfo is MethodInfo { IsStatic: false })
+						startIndex = 1;
+
+					for (int qpIndex = startIndex; qpIndex < queryParameters.Count && qpIndex - startIndex < argumentsCount; qpIndex++)
 					{
-						parameterMatch.Add(definedQueryMethod.Parameters[i], onMember.Arguments[i - diff]);
+						parameterMatch[queryParameters[qpIndex]] = onMember.Arguments![qpIndex - startIndex];
+					}
+
+					var lastParameter = queryParameters[^1];
+					if (!parameterMatch.ContainsKey(lastParameter) && typeof(IDataContext).IsSameOrParentOf(lastParameter.Type))
+					{
+						parameterMatch.Add(lastParameter, dataContextExpr);
 					}
 				}
 
