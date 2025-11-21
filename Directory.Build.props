@@ -74,8 +74,7 @@
 	<PropertyGroup Label="Code Analysis Setup">
 		<RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
 		<!--enable on release build only to not slowdown development/testing-->
-		<!--temporary disabled due to compiler bug-->
-		<!--<RunAnalyzersDuringBuild Condition="$(Configuration) == 'Release'">true</RunAnalyzersDuringBuild>-->
+		<RunAnalyzersDuringBuild Condition="$(Configuration) == 'Release'">true</RunAnalyzersDuringBuild>
 		<RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
 
 		<AnalysisLevel>preview-All</AnalysisLevel>

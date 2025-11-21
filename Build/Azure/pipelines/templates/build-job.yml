@@ -208,7 +208,7 @@ jobs:
     inputs:
       command: build
       projects: $(solution)
-      arguments: -property:RunAnalyzersDuringBuild=$(with_analyzers) -property:RunApiAnalyzersDuringBuild=$(with_api_analyzers) --configuration $(release_configuration)
+      arguments: -property:RunAnalyzersDuringBuild=${{ parameters.with_analyzers }} -property:RunApiAnalyzersDuringBuild=${{ parameters.with_api_analyzers }} --configuration $(release_configuration)
     displayName: Build Solution for Release and Nuget
     condition: and(succeeded(), ${{ parameters.with_nugets }})
 
