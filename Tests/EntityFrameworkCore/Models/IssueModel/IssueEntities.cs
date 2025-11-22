@@ -412,7 +412,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 	#endregion
 
-
 	public sealed class Issue5177Table
 	{
 		public int Id { get; set; }
