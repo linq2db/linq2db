@@ -18,7 +18,7 @@
 		<PackageReference Include="Npgsql" />
 		<PackageReference Include="System.Data.SQLite" />
 		<PackageReference Include="SourceGear.sqlite3" GeneratePathProperty="true" />
-		<PackageReference Include="Microsoft.SqlServer.Types" />
+		<PackageReference Include="Microsoft.SqlServer.Types" GeneratePathProperty="true" />
 
 		<None Include="..\Data\*">
 			<Link>Database/%(FileName)%(Extension)</Link>
@@ -52,5 +52,12 @@
 		</Reference>
 	</ItemGroup>
 
+	<Target Name="CopySQLServerTypes" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' == 'net462'">
+		<!--copy manually as package contains only net472 copy instructions-->
+		<Copy SourceFiles="$(PkgMicrosoft_SqlServer_Types)\runtimes\win-x86\native\SqlServerSpatial170.dll"   DestinationFiles="$(TargetDir)\x86\SqlServerSpatial170.dll" />
+		<Copy SourceFiles="$(PkgMicrosoft_SqlServer_Types)\runtimes\win-x64\native\SqlServerSpatial170.dll"   DestinationFiles="$(TargetDir)\x64\SqlServerSpatial170.dll" />
+		<Copy SourceFiles="$(PkgMicrosoft_SqlServer_Types)\runtimes\win-arm64\native\SqlServerSpatial170.dll" DestinationFiles="$(TargetDir)\arm64\SqlServerSpatial170.dll" />
+	</Target>
+	
 	<Import Project="$(MSBuildThisFileDirectory)\..\SQLite.Runtime.props" />
 </Project>
