@@ -69,7 +69,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 			// and it isn't clear why
 			// (see Typestests.Guid1/2 and DataTypesTests.TestGuid)
 			// Native literal works always, but cannot be used with ODBC
-			// Al "works everywhere" solution we decided to use parameter here
+			// As "works everywhere" solution we decided to use parameter here
 			if (value is Guid g)
 			{
 				BuildParameter(new SqlParameter(dataType ?? MappingSchema.GetDbDataType(typeof(Guid)), "value", value));

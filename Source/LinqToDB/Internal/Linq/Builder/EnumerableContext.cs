@@ -42,7 +42,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		static ConstructorInfo _parameterConstructor =
 			MemberHelper.ConstructorOf(() => new SqlParameter(new DbDataType(typeof(object)), "", null));
 
-		static ConstructorInfo _sqlValueconstructor =
+		static ConstructorInfo _sqlValueConstructor =
 			MemberHelper.ConstructorOf(() => new SqlValue(new DbDataType(typeof(object)), null));
 
 		List<(Expression path, ColumnDescriptor? descriptor, SqlPlaceholderExpression placeholder)> _fieldsMap = new ();
@@ -207,7 +207,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				generator.AddExpression(ifThenExpression);
 
 				generator.IfThen(Expression.Equal(resultVariable, Expression.Constant(null, resultVariable.Type)), Expression.Assign(resultVariable,
-					Expression.New(_sqlValueconstructor,
+					Expression.New(_sqlValueConstructor,
 						Expression.Constant(dbDataType),
 						Expression.Constant(null, typeof(object)))));
 
@@ -247,7 +247,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					accessor = accessor.EnsureType<object>();
 
 					var valueExpr = Expression.New(
-						_sqlValueconstructor,
+						_sqlValueConstructor,
 						Expression.Constant(dbDataType),
 						accessor);
 
