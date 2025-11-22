@@ -203,7 +203,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			helper.StringBuilder.Length -= 2;
 
 			helper.StringBuilder.Append(") VALUES (");
-			helper.BuildColumns(item, _ => _.DataType == DataType.Text || _.DataType == DataType.NText);
+			helper.BuildColumns(item, _ => _.DataType is DataType.Text or DataType.NText or DataType.Binary or DataType.VarBinary);
 			helper.StringBuilder.AppendLine(")");
 
 			helper.RowsCopied.RowsCopied++;
