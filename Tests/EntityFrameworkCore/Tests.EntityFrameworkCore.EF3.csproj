@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="Tests.EntityFrameworkCore.props" />
+
+	<PropertyGroup>
+		<TargetFrameworks>net462</TargetFrameworks>
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.EF3.csproj" />
+	</ItemGroup>
+
+	<ItemGroup Label="Override Transient Vulnerable Deps">
+		<PackageReference Include="Npgsql" VersionOverride="4.1.14" />
+	</ItemGroup>
+
+</Project>

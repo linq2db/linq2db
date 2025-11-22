@@ -119,27 +119,20 @@ namespace LinqToDB.Internal.Linq
 			return true;
 		}
 
-		List<ParameterAccessor>? _parameterAccessors;
-
 		internal QueryCacheCompareInfo? CompareInfo;
 
-		internal List<ParameterAccessor>? ParameterAccessors
-		{
-			get => _parameterAccessors;
-			set => _parameterAccessors = value;
-		}
+		internal List<ParameterAccessor>? ParameterAccessors { get; set; }
 
 		internal List<SqlParameter>? BuiltParameters;
 
 		internal void AddParameterAccessor(ParameterAccessor accessor)
 		{
-			_parameterAccessors ??= new List<ParameterAccessor>();
-			_parameterAccessors.Add(accessor);
+			(ParameterAccessors ??= []).Add(accessor);
 		}
 
 		internal void SetParametersAccessors(List<ParameterAccessor>? parameterAccessors)
 		{
-			_parameterAccessors = parameterAccessors;
+			ParameterAccessors = parameterAccessors;
 		}
 
 		#endregion

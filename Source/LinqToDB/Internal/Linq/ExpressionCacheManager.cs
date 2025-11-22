@@ -319,7 +319,7 @@ namespace LinqToDB.Internal.Linq
 					case ExpressionType.ConvertChecked:
 					{
 						var ce = (UnaryExpression) e;
-						if (ce.Operand.Type.IsNullable() && !ce.Type.IsNullable())
+						if (ce.Operand.Type.IsNullableType && !ce.Type.IsNullableType)
 						{
 							return Expression.Condition(
 								Expression.Equal(ce.Operand, Expression.Constant(null, ce.Operand.Type)),

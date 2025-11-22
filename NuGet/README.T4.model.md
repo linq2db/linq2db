@@ -68,7 +68,7 @@ This package includes only scaffolding functionality. Additionally you will need
 
 ## Obsoletion Note
 
-T4 templates obsoleted starting from `Linq To DB` 4.0.0 and replaced with new scaffolding utility. We still release newer versions of templates to maintain compatibility with new `LinqToDB` releases but don't actively develop new features for them.
+Starting from `Linq To DB` 4.0.0 we introduced new scaffolding utility. We still release newer versions of templates to maintain compatibility with new `LinqToDB` releases but don't actively develop new features for them.
 
 There are multiple reasons for it:
 

@@ -33,7 +33,6 @@ namespace LinqToDB.Internal.Linq.Builder
 		public   ExpressionBuilder Builder { get; }
 		BuildPurpose               _buildPurpose;
 		BuildFlags                 _buildFlags;
-		IBuildContext?             _buildContext;
 		ColumnDescriptor?          _columnDescriptor;
 		string?                    _alias;
 		Stack<Expression>          _disableSubqueries = new();
@@ -46,12 +45,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public IBuildContext? BuildContext
 		{
-			get => _buildContext;
+			get;
 			private set
 			{
-				if (ReferenceEquals(_buildContext, value))
+				if (ReferenceEquals(field, value))
 					return;
-				_buildContext       = value;
+
+				field               = value;
 				_nullabilityContext = null;
 			}
 		}
@@ -773,45 +773,42 @@ namespace LinqToDB.Internal.Linq.Builder
 				return newNode;
 			}
 
-			if (node.Method.Name == nameof(Sql.Alias) && node.Method.DeclaringType == typeof(Sql))
+			if (node.Method.DeclaringType == typeof(Sql))
 			{
-				using var saveAlias = UsingAlias(Builder.EvaluateExpression<string>(node.Arguments[1]));
-
-				var translated = Visit(node.Arguments[0]);
-
-				translated = RegisterTranslatedSql(translated, node);
-
-				return translated;
-			}
-
-			if (IsSqlOrExpression() && node.Method.Name == nameof(Sql.Parameter) && node.Method.DeclaringType == typeof(Sql))
-			{
-				using var saveFlags = UsingBuildFlags(BuildFlags.ForceParameter);
-
-				var translated = Visit(node.Arguments[0]);
-
-				translated = RegisterTranslatedSql(translated, node);
-
-				return translated;
-			}
-
-			if (IsSqlOrExpression() && node.Method.Name == nameof(Sql.Constant) && node.Method.DeclaringType == typeof(Sql))
-			{
-				using var saveFlags = UsingBuildFlags(BuildFlags.ForceParameter);
-
-				if (HandleValue(node.Arguments[0], out var translated))
+				switch (node.Method.Name)
 				{
-					if (translated is SqlPlaceholderExpression { Sql: SqlParameter sqlParameter })
+					case nameof(Sql.Alias):
 					{
-						sqlParameter.IsQueryParameter = false;
+						using var saveAlias = UsingAlias(Builder.EvaluateExpression<string>(node.Arguments[1]));
+						var translated = Visit(node.Arguments[0]);
+						return RegisterTranslatedSql(translated, node);
 					}
 
-					translated = RegisterTranslatedSql(translated, node);
+					case nameof(Sql.Parameter) when IsSqlOrExpression():
+					{
+						using var saveFlags = UsingBuildFlags(BuildFlags.ForceParameter);
+						var translated = Visit(node.Arguments[0]);
+						return RegisterTranslatedSql(translated, node);
+					}
 
-					return translated;
+					case nameof(Sql.Constant) when IsSqlOrExpression():
+					{
+						using var saveFlags = UsingBuildFlags(BuildFlags.ForceParameter);
+
+						if (HandleValue(node.Arguments[0], out var translated))
+						{
+							if (translated is SqlPlaceholderExpression { Sql: SqlParameter sqlParameter })
+							{
+								sqlParameter.IsQueryParameter = false;
+							}
+
+							translated = RegisterTranslatedSql(translated, node);
+							return translated;
+						}
+
+						return node;
+					}
 				}
-
-				return node;
 			}
 
 			if (Builder.IsAssociation(node, out _))
@@ -1833,7 +1830,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var notNullPath = notNull.Path;
 
-			if (notNullPath.Type.IsValueType && !notNullPath.Type.IsNullable())
+			if (!notNullPath.Type.IsNullableOrReferenceType())
 			{
 				notNullPath = Expression.Convert(notNullPath, typeof(Nullable<>).MakeGenericType(notNullPath.Type));
 			}
@@ -2172,7 +2169,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							var predicate = placeholder.Sql as ISqlPredicate;
 							if (predicate is null)
 							{
-								var withNull = !node.Operand.Type.IsNullable();
+								var withNull = !node.Operand.Type.IsNullableType;
 
 								predicate = ConvertExpressionToPredicate(
 									placeholder.Sql,
@@ -2309,7 +2306,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override Expression VisitDefaultValueExpression(DefaultValueExpression node)
 		{
-			if (_buildPurpose is BuildPurpose.Sql && _buildContext is not null)
+			if (_buildPurpose is BuildPurpose.Sql && BuildContext is not null)
 			{
 				if (node.IsNull)
 				{
@@ -3094,7 +3091,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var left  = node.Left;
 			var right = node.Right;
 
-			var shouldCheckColumn = node.Left.Type.ToNullableUnderlying() == node.Right.Type.ToNullableUnderlying();
+			var shouldCheckColumn = node.Left.Type.UnwrapNullableType() == node.Right.Type.UnwrapNullableType();
 
 			if (shouldCheckColumn)
 			{
@@ -3141,7 +3138,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					// do nothing
 				}
-				else if (left.Type.ToNullableUnderlying() != right.Type.ToNullableUnderlying())
+				else if (left.Type.UnwrapNullableType() != right.Type.UnwrapNullableType())
 					columnDescriptor = null;
 			}
 
@@ -3330,7 +3327,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public bool BuildSearchCondition(IBuildContext? context, Expression expression, SqlSearchCondition searchCondition, [NotNullWhen(false)] out SqlErrorExpression? error)
 		{
-			using var saveContext = UsingBuildContext(context ?? _buildContext);
+			using var saveContext = UsingBuildContext(context ?? BuildContext);
 			using var savePurpose = UsingBuildPurpose(BuildPurpose.Sql);
 
 			var result = Visit(expression);
@@ -3390,63 +3387,77 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			ISqlPredicate? predicate = null;
 
-			if (node.Method.Name == "Equals" && node.Object != null && node.Arguments.Count == 1)
+			if (node is { Method.Name: "Equals", Object: { }, Arguments.Count: 1 })
 				return ConvertCompareExpression(ExpressionType.Equal, node.Object, node.Arguments[0]);
 
 			var saveFlags = _buildFlags;
 			_buildFlags |= BuildFlags.ForKeys;
 			_buildFlags &= ~BuildFlags.ForMemberRoot;
 
-			if (node.Method.DeclaringType == typeof(string))
+			switch (node)
 			{
-				switch (node.Method.Name)
+				case { Method: { DeclaringType.IsStringType: true, Name: nameof(string.Contains) } }:
+					predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.Contains, IsCaseSensitive(node));
+					break;
+
+				case { Method: { DeclaringType.IsStringType: true, Name: nameof(string.StartsWith) } }:
+					predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.StartsWith, IsCaseSensitive(node));
+					break;
+
+				case { Method: { DeclaringType.IsStringType: true, Name: nameof(string.EndsWith) } }:
+					predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.EndsWith, IsCaseSensitive(node));
+					break;
+
+				// static Contains(this src, item) extension methods
+				case { Method: { DeclaringType: { } type, Name: nameof(Enumerable.Contains) } } when (
+					type == typeof(Enumerable) ||
+					(type == typeof(Queryable) && node.Arguments.Count == 2 && Builder.CanBeEvaluatedOnClient(node.Arguments[0]))
+				):
+					predicate = ConvertInPredicate(node.Arguments[1], node.Arguments[0]);
+					break;
+
+				// src.Contains(item) instance methods
+				case { Method: { DeclaringType: { } type, Name: nameof(IList.Contains) } } when (
+					typeof(IList).IsSameOrParentOf(type) ||
+					typeof(ICollection<>).IsSameOrParentOf(type) ||
+					// IReadOnlyCollection<> doesn't declare Contains(), but derived (readonly) collection classes could.
+					typeof(IReadOnlyCollection<>).IsSameOrParentOf(type)
+				):
+					predicate = ConvertInPredicate(node.Arguments[0], node.Object!);
+					break;
+
+#if NET8_0_OR_GREATER
+				case
 				{
-					case "Contains"  : predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.Contains,   IsCaseSensitive(node)); break;
-					case "StartsWith": predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.StartsWith, IsCaseSensitive(node)); break;
-					case "EndsWith"  : predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.EndsWith,   IsCaseSensitive(node)); break;
-				}
-			}
-			else if (node.Method.Name == "Contains")
-			{
-				if (node.Method.DeclaringType == typeof(Enumerable) ||
-					(node.Method.DeclaringType == typeof(Queryable) && node.Arguments.Count == 2 && Builder.CanBeEvaluatedOnClient(node.Arguments[0])) ||
-					typeof(IList).IsSameOrParentOf(node.Method.DeclaringType!) ||
-					typeof(ICollection<>).IsSameOrParentOf(node.Method.DeclaringType!) ||
-					typeof(IReadOnlyCollection<>).IsSameOrParentOf(node.Method.DeclaringType!))
-				{
-					predicate = ConvertInPredicate(node);
-				}
-			}
-			else if (node.Method.Name == "ContainsValue" && typeof(Dictionary<,>).IsSameOrParentOf(node.Method.DeclaringType!))
-			{
-				var args = node.Method.DeclaringType!.GetGenericArguments(typeof(Dictionary<,>))!;
-				var minf = ExpressionBuilder.EnumerableMethods
-								.First(static m => m.Name == "Contains" && m.GetParameters().Length == 2)
-								.MakeGenericMethod(args[1]);
+					Method: { DeclaringType.IsMemoryExtensionsType: true, Name: nameof(MemoryExtensions.Contains) },
+					Arguments:
+					[
+						MethodCallExpression
+						{
+							Method.Name: "op_Implicit",
+							Type.Name: "ReadOnlySpan`1" or "Span`1",
+							Arguments: [var spanSource],
+						},
+						var value,
+						..
+					]
+				}:
+					predicate = ConvertInPredicate(value, spanSource!.UnwrapConvertToSelf());
+					break;
+#endif
 
-				var expr = Expression.Call(
-								minf,
-								ExpressionHelper.PropertyOrField(node.Object!, "Values"),
-								node.Arguments[0]);
+				case { Method: { DeclaringType: { } type, Name: nameof(Dictionary<,>.ContainsValue) } } when (
+					typeof(Dictionary<,>).IsSameOrParentOf(type)
+				):
+					predicate = ConvertInPredicate(node.Arguments[0], ExpressionHelper.PropertyOrField(node.Object!, "Values"));
+					break;
 
-				predicate = ConvertInPredicate(expr);
-			}
-			else if (node.Method.Name == "ContainsKey" &&
-				(typeof(IDictionary<,>).IsSameOrParentOf(node.Method.DeclaringType!) ||
-				 typeof(IReadOnlyDictionary<,>).IsSameOrParentOf(node.Method.DeclaringType!)))
-			{
-				var type = typeof(IDictionary<,>).IsSameOrParentOf(node.Method.DeclaringType!) ? typeof(IDictionary<,>) : typeof(IReadOnlyDictionary<,>);
-				var args = node.Method.DeclaringType!.GetGenericArguments(type)!;
-				var minf = ExpressionBuilder.EnumerableMethods
-								.First(static m => m.Name == "Contains" && m.GetParameters().Length == 2)
-								.MakeGenericMethod(args[0]);
-
-				var expr = Expression.Call(
-								minf,
-								ExpressionHelper.PropertyOrField(node.Object!, "Keys"),
-								node.Arguments[0]);
-
-				predicate = ConvertInPredicate(expr);
+				case { Method: { DeclaringType: { } type, Name: nameof(IDictionary<,>.ContainsKey) } } when (
+					typeof(IDictionary<,>).IsSameOrParentOf(type) ||
+					typeof(IReadOnlyDictionary<,>).IsSameOrParentOf(type)
+				):
+					predicate = ConvertInPredicate(node.Arguments[0], ExpressionHelper.PropertyOrField(node.Object!, "Keys"));
+					break;
 			}
 
 			_buildFlags = saveFlags;
@@ -4521,7 +4532,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 				// here underlying type used
 				// (int?)enum? op (int?)enum
-				else if (op1conv.Operand.Type.IsNullable() && Nullable.GetUnderlyingType(op1conv.Operand.Type)!.IsEnum
+				else if (op1conv.Operand.Type.IsNullableType && Nullable.GetUnderlyingType(op1conv.Operand.Type)!.IsEnum
 					&& op2.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked
 					&& op2 is UnaryExpression op2conv2
 					&& op2conv2.Operand.NodeType == ExpressionType.Constant
@@ -4621,7 +4632,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var type = operand.Type;
 
-			if (!type.ToNullableUnderlying().IsEnum)
+			if (!type.UnwrapNullableType().IsEnum)
 				return null;
 
 			var dic = new Dictionary<object, object?>();
@@ -4834,13 +4845,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		private ISqlPredicate? ConvertInPredicate(MethodCallExpression expression)
+		private ISqlPredicate? ConvertInPredicate(Expression value, Expression arr)
 		{
-			var e        = expression;
-			var argIndex = e.Object != null ? 0 : 1;
-			var arr      = e.Object ?? e.Arguments[0];
-			var arg      = e.Arguments[argIndex];
-
 			ISqlExpression? expr = null;
 
 			var saveFlags            = _buildFlags;
@@ -4850,7 +4856,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				_buildFlags |= BuildFlags.ForKeys;
 
-				var builtExpr = Visit(arg);
+				var builtExpr = Visit(value);
 
 				_buildFlags = saveFlags;
 
@@ -5465,7 +5471,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				throw new InvalidOperationException();
 
 			var placeholderType = sqlPlaceholder.Type;
-			if (placeholderType.IsNullable())
+			if (placeholderType.IsNullableType)
 				placeholderType = placeholderType.UnwrapNullableType();
 
 			if (sqlPlaceholder.SelectQuery == null)
@@ -5530,7 +5536,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		NullabilityContext GetNullabilityContext()
 		{
-			_nullabilityContext ??= NullabilityContext.GetContext(_buildContext?.SelectQuery);
+			_nullabilityContext ??= NullabilityContext.GetContext(BuildContext?.SelectQuery);
 			return _nullabilityContext;
 		}
 

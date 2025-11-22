@@ -295,9 +295,9 @@ namespace LinqToDB.Internal.SqlQuery
 
 					if (result != null)
 					{
-						if (cast.SystemType == typeof(string))
+						if (cast.SystemType.IsStringType)
 						{
-							if (result.GetType().IsNumeric())
+							if (result.GetType().IsNumberType)
 							{
 								if (result is int intValue)
 									result = intValue.ToString(CultureInfo.InvariantCulture);

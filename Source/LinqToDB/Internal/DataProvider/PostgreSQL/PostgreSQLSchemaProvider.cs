@@ -111,6 +111,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			if (provider.Adapter.NpgsqlIntervalType != null)
 				list.Add(new DataTypeInfo { TypeName = "interval", DataType = provider.Adapter.NpgsqlIntervalType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "interval({0})", CreateParameters = "precision" });
 
+			if (provider.Adapter.NpgsqlCubeType != null)
+				list.Add(new DataTypeInfo { TypeName = "cube",     DataType = provider.Adapter.NpgsqlCubeType.AssemblyQualifiedName!,     ProviderSpecific = true });
+
 			if (provider.Adapter.NpgsqlDateTimeType != null)
 			{
 				list.Add(new DataTypeInfo { TypeName = "timestamptz"                , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "timestamp ({0}) with time zone"   , CreateParameters = "precision" });
@@ -608,6 +611,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				case "line"                        : return _provider.Adapter.NpgsqlLineType     .Name;
 				case "cidr"                        :
 				case "inet"                        : return _provider.Adapter.NpgsqlInetType     .Name;
+				case "cube"                        : return _provider.Adapter.NpgsqlCubeType?    .Name;
 				case "geometry"                    : return "PostgisGeometry";
 			}
 

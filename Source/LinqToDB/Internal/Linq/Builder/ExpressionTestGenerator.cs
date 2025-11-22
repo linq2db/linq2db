@@ -820,7 +820,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (idx > 0)
 					name = name.Substring(0, idx);
 
-				if (type.IsNullable())
+				if (type.IsNullableType)
 				{
 					name = $"{GetTypeName(args[0])}?";
 				}

@@ -1,4 +1,4 @@
-﻿//
+//
 // This file defines data providers and connection strings used by default for all users.
 // Copy this file as UserDataProviders.json and specify providers and connection strings you need to work on.
 // UserDataProviders.json is in .gitignore and it is not committed to the repository.
@@ -36,6 +36,11 @@
 		"DefaultConfiguration": "SQLite.MS"
 	},
 
+	"NET100": {
+		"BasedOn": "LocalConnectionStrings",
+		"DefaultConfiguration": "SQLite.MS"
+	},
+
 	"NETFX.Azure": {
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
@@ -49,6 +54,12 @@
 	},
 
 	"NET90.Azure": {
+		"BasedOn": "AzureConnectionStrings",
+		"DefaultConfiguration": "SQLite.MS",
+		"TraceLevel": "Info"
+	},
+
+	"NET100.Azure": {
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
 		"TraceLevel": "Info"

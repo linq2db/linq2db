@@ -99,12 +99,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						var idx = i;
 
-						var helper = new MergeProjectionHelper(Builder, MappingSchema, (Expression projection1, Expression projection2, out Expression? mergedProjection) =>
-						{
-							var row1 = EnsureRowIndexCreated(path);
-							mergedProjection = Expression.Condition(Expression.Equal(row1, ExpressionInstances.Int32(idx - 1)), projection1, projection2);
-							return true;
-						});
+						var helper = new MergeProjectionHelper(
+							Builder,
+							MappingSchema,
+							(projection1, projection2, out mergedProjection) =>
+							{
+								var row1 = EnsureRowIndexCreated(path);
+								mergedProjection = Expression.Condition(Expression.Equal(row1, ExpressionInstances.Int32(idx - 1)), projection1, projection2);
+								return true;
+							}
+						);
 
 						if (!helper.TryMergeProjections(projection, rowProjection, flags, out var merged))
 						{

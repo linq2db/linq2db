@@ -19,15 +19,14 @@ namespace LinqToDB.Internal.Mapping
 	class MappingSchemaInfo(string configuration) : IConfigurationID
 	{
 		public   string          Configuration = configuration;
-		private  MetadataReader? _metadataReader;
 		readonly Lock            _syncRoot = new();
 
 		public MetadataReader? MetadataReader
 		{
-			get => _metadataReader;
+			get;
 			set
 			{
-				_metadataReader = value;
+				field = value;
 				ResetID();
 			}
 		}
@@ -235,13 +234,12 @@ namespace LinqToDB.Internal.Mapping
 
 		#region Comparers
 
-		private StringComparer? _columnNameComparer;
-		public  StringComparer?  ColumnNameComparer
+		public StringComparer? ColumnNameComparer
 		{
-			get => _columnNameComparer;
+			get;
 			set
 			{
-				_columnNameComparer = value;
+				field = value;
 				ResetID();
 			}
 		}
@@ -318,8 +316,8 @@ namespace LinqToDB.Internal.Mapping
 
 			return idBuilder
 				.Add(_convertInfo?.GetConfigurationID())
-				.Add(IdentifierBuilder.GetObjectID(_columnNameComparer))
-				.Add(_metadataReader?.GetObjectID())
+				.Add(IdentifierBuilder.GetObjectID(ColumnNameComparer))
+				.Add(MetadataReader?.GetObjectID())
 				.CreateID()
 				;
 

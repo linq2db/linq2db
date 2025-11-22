@@ -22,28 +22,29 @@ namespace LinqToDB.Internal.Expressions
 
 		public static bool IsConstantable(this Type type, bool includingArrays)
 		{
-			if (type.IsEnum)
-				return true;
-
-			switch (type.GetTypeCodeEx())
+			if (
+				type.IsEnum
+				|| type.TypeCode
+					is TypeCode.Int16
+					or TypeCode.Int32
+					or TypeCode.Int64
+					or TypeCode.UInt16
+					or TypeCode.UInt32
+					or TypeCode.UInt64
+					or TypeCode.SByte
+					or TypeCode.Byte
+					or TypeCode.Decimal
+					or TypeCode.Double
+					or TypeCode.Single
+					or TypeCode.Boolean
+					or TypeCode.String
+					or TypeCode.Char
+			)
 			{
-				case TypeCode.Int16   :
-				case TypeCode.Int32   :
-				case TypeCode.Int64   :
-				case TypeCode.UInt16  :
-				case TypeCode.UInt32  :
-				case TypeCode.UInt64  :
-				case TypeCode.SByte   :
-				case TypeCode.Byte    :
-				case TypeCode.Decimal :
-				case TypeCode.Double  :
-				case TypeCode.Single  :
-				case TypeCode.Boolean :
-				case TypeCode.String  :
-				case TypeCode.Char    : return true;
+				return true;
 			}
 
-			if (type.IsNullable())
+			if (type.IsNullableType)
 				return type.GetGenericArguments()[0].IsConstantable(includingArrays);
 
 			if (includingArrays && type.IsArray)
@@ -99,8 +100,8 @@ namespace LinqToDB.Internal.Expressions
 
 			switch (ex.NodeType)
 			{
-				case ExpressionType.ConvertChecked :
-				case ExpressionType.Convert        :
+				case ExpressionType.ConvertChecked:
+				case ExpressionType.Convert       :
 				{
 					var unaryExpression = (UnaryExpression)ex;
 					if (unaryExpression.Method == null)
@@ -111,6 +112,31 @@ namespace LinqToDB.Internal.Expressions
 					when ex is SqlAdjustTypeExpression adjustType:
 				{
 					return adjustType.Expression.Unwrap();
+				}
+			}
+
+			return ex;
+		}
+
+		[return: NotNullIfNotNull(nameof(ex))]
+		public static Expression? UnwrapConvertToSelf(this Expression? ex)
+		{
+			if (ex == null)
+				return null;
+
+			switch (ex.NodeType)
+			{
+				case ExpressionType.ConvertChecked:
+				case ExpressionType.Convert:
+				{
+					var unaryExpression = (UnaryExpression)ex;
+					if (unaryExpression.Method == null
+						&& unaryExpression.Type.IsSameOrParentOf(unaryExpression.Operand.Type))
+					{
+						return unaryExpression.Operand.UnwrapConvertToSelf();
+					}
+
+					break;
 				}
 			}
 
@@ -329,7 +355,7 @@ namespace LinqToDB.Internal.Expressions
 		public static bool IsNullValue(this Expression expr)
 		{
 			return (expr is ConstantExpression { Value: null })
-				|| (expr is DefaultExpression or DefaultValueExpression && expr.Type.IsNullableType());
+				|| (expr is DefaultExpression or DefaultValueExpression && expr.Type.IsNullableOrReferenceType());
 		}
 
 		public static Expression? GetArgumentByName(this MethodCallExpression methodCall, string parameterName)

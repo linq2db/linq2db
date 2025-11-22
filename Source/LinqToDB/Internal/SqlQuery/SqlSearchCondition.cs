@@ -108,15 +108,13 @@ namespace LinqToDB.Internal.SqlQuery
 
 		#region IPredicate Members
 
-		public override int Precedence
-		{
-			get
+		public override int Precedence =>
+			this switch
 			{
-				if (Predicates.Count == 0) return LinqToDB.SqlQuery.Precedence.Unknown;
-
-				return IsOr ? LinqToDB.SqlQuery.Precedence.LogicalDisjunction : LinqToDB.SqlQuery.Precedence.LogicalConjunction;
-			}
-		}
+				{ Predicates.Count: 0 } => LinqToDB.SqlQuery.Precedence.Unknown,
+				{ IsOr: true } => LinqToDB.SqlQuery.Precedence.LogicalDisjunction,
+				_ => LinqToDB.SqlQuery.Precedence.LogicalConjunction,
+			};
 
 		public override Type SystemType => typeof(bool);
 
@@ -247,13 +245,13 @@ namespace LinqToDB.Internal.SqlQuery
 				NotNullOverrides?.Clear();
 
 				base.Cleanup();
-	}
+			}
 
 			public void Collect(SqlSearchCondition search)
 			{
 				_isOr = search.IsOr;
 				Visit(search);
-}
+			}
 
 			[return: NotNullIfNotNull(nameof(element))]
 			public override IQueryElement? Visit(IQueryElement? element)

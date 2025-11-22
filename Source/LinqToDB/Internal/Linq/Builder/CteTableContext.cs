@@ -11,8 +11,6 @@ namespace LinqToDB.Internal.Linq.Builder
 {
 	internal sealed class CteTableContext: BuildContextBase, ITableContext
 	{
-		readonly Type          _objectType;
-
 		public override  MappingSchema MappingSchema => CteContext.MappingSchema;
 
 		public CteContext  CteContext { get; set; }
@@ -21,31 +19,32 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			get
 			{
-				if (_cteTable == null)
+				if (field == null)
 				{
-					if (CteContext != null)
-						_cteTable = new SqlCteTable(CteContext.CteClause, ObjectType);
-					else
-						throw new InvalidOperationException("CteContext not initialized");
+					field = CteContext switch
+					{
+						{ CteClause: var clause } => new SqlCteTable(clause, ObjectType),
+						_ => throw new InvalidOperationException("CteContext not initialized"),
+					};
 				}
 
-				return _cteTable!;
+				return field;
 			}
-			set => _cteTable = value;
+			set;
 		}
 
-		public Type            ObjectType   => _objectType;
+		public Type            ObjectType   { get; }
 		public SqlTable        SqlTable     => CteTable;
 		public LoadWithEntity? LoadWithRoot { get; set; }
 
 		public CteTableContext(TranslationModifier translationModifier, ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery, CteContext cteContext)
 			: this(translationModifier, builder, parent, objectType, selectQuery)
 		{
-			_objectType = objectType;
+			ObjectType  = objectType;
 			Parent      = parent;
 
 			CteContext = cteContext;
-			CteTable   = new SqlCteTable(CteContext.CteClause, _objectType);
+			CteTable   = new SqlCteTable(CteContext.CteClause, ObjectType);
 
 			SelectQuery.From.Table(CteTable);
 		}
@@ -53,7 +52,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		CteTableContext(TranslationModifier translationModifier, ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery)
 			: base(translationModifier, builder, objectType, selectQuery)
 		{
-			_objectType = objectType;
+			ObjectType  = objectType;
 			Parent      = parent;
 			CteTable    = default!;
 			CteContext  = default!;
@@ -81,8 +80,6 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		readonly Dictionary<string, SqlPlaceholderExpression> _fieldsMap = new ();
-
-		SqlCteTable? _cteTable;
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{

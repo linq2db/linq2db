@@ -33,6 +33,11 @@
 		"BasedOn" : "NETBASE"
 	},
 
+	"NET100":
+	{
+		"BasedOn" : "NETBASE"
+	},
+
 	"User.Providers":
 	{
 		"BasedOn"   : "LocalConnectionStrings",

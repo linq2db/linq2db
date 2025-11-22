@@ -1,9 +1,9 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project>
 	<Import Project="$(MSBuildThisFileDirectory)\..\Directory.Build.props" />
 
 	<PropertyGroup>
-		<TargetFrameworks>net462;net8.0;net9.0</TargetFrameworks>
-		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net9.0</TargetFrameworks>
+		<TargetFrameworks>net462;net8.0;net9.0;net10.0</TargetFrameworks>
+		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net10.0</TargetFrameworks>
 		<DefineConstants Condition=" $(DB2STUB) == 'True' ">$(DefineConstants);DB2STUBS</DefineConstants>
 	</PropertyGroup>
 
@@ -14,9 +14,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Source\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
-		<ProjectReference Include="..\..\Source\LinqToDB.FSharp\LinqToDB.FSharp.fsproj" />
-
 		<AdditionalFiles Include="$(MSBuildThisFileDirectory)\BannedSymbols.txt" />
 	</ItemGroup>
 
@@ -24,4 +21,20 @@
 		<Reference Include="System.Data.Linq" />
 	</ItemGroup>
 
+	<!--https://github.com/microsoft/vstest/issues/15297-->
+	<Target Name="Save_PublishDir" BeforeTargets="CopyTraceDataCollectorArtifacts">
+		<CreateProperty Value="$(PublishDir)">
+			<Output TaskParameter="Value" PropertyName="PublishDir_Backup"/>
+		</CreateProperty>
+		<CreateProperty Value="$(PublishDir)\_ignore\">
+			<Output TaskParameter="Value" PropertyName="PublishDir"/>
+		</CreateProperty>
+	</Target>
+	<Target Name="Restore_PublishDir" AfterTargets="CopyTraceDataCollectorArtifacts">
+		<RemoveDir Directories="$(PublishDir)" />
+		<CreateProperty Value="$(PublishDir_Backup)">
+			<Output TaskParameter="Value" PropertyName="PublishDir"/>
+		</CreateProperty>
+	</Target>
+	
 </Project>

@@ -171,12 +171,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			// in LINQ Min, Max, Avg aggregates throw exception on empty set(so Sum and Count are exceptions which return 0)
 
-			if (expression.Type.IsNullable())
+			if (expression.Type.IsNullableOrReferenceType())
 				return expression;
 			
 			var checkExpression = expression;
 
-			if (expression.Type.IsValueType && !expression.Type.IsNullable())
+			if (expression.Type.IsValueType && !expression.Type.IsNullableOrReferenceType())
 			{
 				checkExpression = Expression.Convert(expression, expression.Type.AsNullable());
 			}
@@ -249,7 +249,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 								if (info.IsDistinct)
 								{
 									if (!composer.Translator.TranslateExpression(info.ValueExpression, out var checkValue, out var checkError)
-									    || !value.Equals(checkValue, LinqToDB.Internal.SqlQuery.SqlExtensions.DefaultComparer))
+									    || !value.Equals(checkValue, SqlQuery.SqlExtensions.DefaultComparer))
 									{
 										composer.SetFallback(c => c.AllowDistinct(false));
 										return;
@@ -293,7 +293,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 								: methodName              == nameof(Enumerable.Sum)     ? "SUM"
 								: methodName              == nameof(Enumerable.Min)     ? "MIN" : "MAX";
 
-							if (!info.IsGroupBy && argumentValue.SystemType?.IsNullableType() == false && functionName is "AVG" or "MIN" or "MAX")
+							if (!info.IsGroupBy && argumentValue.SystemType?.IsNullableOrReferenceType() == false && functionName is "AVG" or "MIN" or "MAX")
 							{
 								composer.SetValidation(p => GenerateNullCheckIfNeeded(p, methodName));
 							}

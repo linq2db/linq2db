@@ -1,0 +1,8 @@
+﻿{
+	"NET100.Azure": {
+		"Providers": [
+			"SqlServer.2025",
+			"SqlServer.2025.MS"
+		]
+	}
+}

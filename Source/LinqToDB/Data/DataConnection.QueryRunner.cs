@@ -49,14 +49,13 @@ namespace LinqToDB.Data
 			readonly Stopwatch        _stopwatch = Stopwatch.StartNew();
 
 			bool        _isAsync;
-			Expression? _mapperExpression;
 
 			public override Expression? MapperExpression
 			{
-				get => _mapperExpression;
+				get;
 				set
 				{
-					_mapperExpression = value;
+					field = value;
 
 					if (value != null && DataContext.Options.LinqOptions.TraceMapperExpression && _dataConnection.TraceSwitchConnection.TraceInfo)
 					{

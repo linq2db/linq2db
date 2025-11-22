@@ -489,21 +489,18 @@ namespace LinqToDB.Linq
 		{
 			get
 			{
-				if (_members == null)
+				if (field == null)
 				{
 					lock (_memberSync)
-#pragma warning disable CA1508 // Avoid dead conditional code
-						_members ??= LoadMembers();
-#pragma warning restore CA1508 // Avoid dead conditional code
+						field ??= LoadMembers();
 				}
 
-				return _members;
+				return field;
 			}
 		}
 
 		#region Mapping
 
-		private static          Dictionary<string, Dictionary<MemberHelper.MemberInfoWithType, IExpressionInfo>>? _members;
 		private static readonly Lock _memberSync = new();
 
 		static readonly Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>> _binaries =

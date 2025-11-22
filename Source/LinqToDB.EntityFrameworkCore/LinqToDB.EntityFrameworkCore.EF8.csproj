@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="LinqToDB.EntityFrameworkCore.props" />
+
+	<PropertyGroup>
+		<TargetFrameworks>net8.0</TargetFrameworks>
+		<AssemblyVersion>$(EF8Version)</AssemblyVersion>
+		<DefineConstants>EF8;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
+
+</Project>

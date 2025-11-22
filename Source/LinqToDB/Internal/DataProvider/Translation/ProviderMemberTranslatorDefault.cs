@@ -249,7 +249,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (nullableType == null || !typeof(Nullable<>).IsSameOrParentOf(nullableType))
 				return false;
 
-			if (methodCall.Method.Name != nameof(Nullable<int>.GetValueOrDefault))
+			if (methodCall.Method.Name != nameof(Nullable<>.GetValueOrDefault))
 				return false;
 
 			var argumentPlaceholder = TranslateNoRequiredObjectExpression(translationContext, methodCall.Object);
@@ -274,7 +274,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			}
 			else
 			{
-				defaultValueExpression = factory.Value(argumentType, translationContext.MappingSchema.GetDefaultValue(argumentType.SystemType.ToNullableUnderlying()));
+				defaultValueExpression = factory.Value(argumentType, translationContext.MappingSchema.GetDefaultValue(argumentType.SystemType.UnwrapNullableType()));
 			}
 
 			var caseExpression = factory.Condition(factory.IsNull(sqlExpression, true), sqlExpression, defaultValueExpression);
