@@ -9,7 +9,7 @@ if [ $? != 0 ]; then exit 1; fi
 wget https://www.nuget.org/api/v2/package/Net.IBM.Data.Db2-lnx/9.0.0.400
 if [ $? != 0 ]; then exit 1; fi
 
-unzip 9.0.0.300 -d Net.IBM.Data.Db2-lnx
+unzip 9.0.0.400 -d Net.IBM.Data.Db2-lnx
 if [ $? != 0 ]; then exit 1; fi
 
 cp -a ./Net.IBM.Data.Db2-lnx/buildTransitive/clidriver/. ./clidriver/
