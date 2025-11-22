@@ -17,7 +17,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				"9.2"           => PostgreSQLVersion.v92,
 				"9.3" or "9.4"  => PostgreSQLVersion.v93,
 				"9.5"           => PostgreSQLVersion.v95,
-				"10" or "11" or "12" or "13" or "14" or "15" or "16" or "17"
+				"10" or "11" or "12" or "13"
+				                => PostgreSQLVersion.v13,
+				"14" or "15" or "16" or "17"
 				                => PostgreSQLVersion.v15,
 				"18"            => PostgreSQLVersion.v18,
 				_               => PostgreSQLVersion.AutoDetect,
