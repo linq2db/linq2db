@@ -844,5 +844,96 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 		#endregion
+
+		#region Nesting Issue
+		[Table]
+		public sealed class Transition
+		{
+			[PrimaryKey] public int ThingId { get; set; }
+			[PrimaryKey] public DateTimeOffset CreatedDate { get; set; }
+			[Column(CanBeNull = false)] public string TransitionType { get; set; } = null!;
+		}
+
+		[Table]
+		public sealed class ThingState
+		{
+			[Column] public int ThingId { get; set; }
+			[Column] public DateTimeOffset? LastTransitionDate { get; set; }
+		}
+
+		[Table]
+		public sealed class Thing
+		{
+			[PrimaryKey] public int Id { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5193")]
+		public void IncorrectNesting([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Transition>();
+			using var t2 = db.CreateLocalTable<ThingState>();
+			using var t3 = db.CreateLocalTable<Thing>();
+
+			Expression<Func<Transition?, bool?, bool>> fitsUndeletedStatusFilter =
+			(transition, filter) =>
+				filter == null || filter == (transition == null || transition.TransitionType != "Delete");
+
+			Expression<Func<ThingState?, bool?, bool>> stateFitsUndeletedStatusFilter =
+			(state, filter) =>
+				state != null
+					? fitsUndeletedStatusFilter.Compile()(
+						t1.SingleOrDefault(t =>
+							t.ThingId == state.ThingId &&
+							t.CreatedDate == state.LastTransitionDate),
+						filter)
+					: fitsUndeletedStatusFilter.Compile()(null, filter);
+
+			Expression<Func<Thing, bool?, bool>> thingFitsUndeletedStatusFilter =
+			(thing, filter) => stateFitsUndeletedStatusFilter.Compile()(
+				t2.SingleOrDefault(s => s.ThingId == thing.Id), filter);
+
+			var filterQuery = t3.Where(thing => thingFitsUndeletedStatusFilter.Compile()(thing, true));
+			filterQuery.Select(thing => thing.Id).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5193")]
+		public void IncorrectNesting_Merged([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Transition>();
+			using var t2 = db.CreateLocalTable<ThingState>();
+			using var t3 = db.CreateLocalTable<Thing>();
+
+			var filterQuery = t3.Where(thing => t2.SingleOrDefault(s => s.ThingId == thing.Id) != null
+					? t1.SingleOrDefault(t =>
+							t.ThingId == t2.SingleOrDefault(s => s.ThingId == thing.Id)!.ThingId
+							&& t.CreatedDate == t2.SingleOrDefault(s => s.ThingId == thing.Id)!.LastTransitionDate) == null
+							|| t1.SingleOrDefault(t => t.ThingId == t2.SingleOrDefault(s => s.ThingId == thing.Id)!.ThingId &&
+							t.CreatedDate == t2.SingleOrDefault(s => s.ThingId == thing.Id)!.LastTransitionDate)!.TransitionType != "Delete"
+					: true);
+			filterQuery.Select(thing => thing.Id).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5193")]
+		public void IncorrectNesting_Workaround([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Transition>();
+			using var t2 = db.CreateLocalTable<ThingState>();
+			using var t3 = db.CreateLocalTable<Thing>();
+
+			Expression<Func<Thing, bool>> thingHasDeletedState =
+			thing => t2
+				.Where(state => state.ThingId == thing.Id)
+				.SelectMany(state => t1
+					.Where(t => t.ThingId == state.ThingId && t.CreatedDate == state.LastTransitionDate))
+				.Any(transition => transition.TransitionType == "Delete");
+			var filterQuery = t3.Where(thing => !thingHasDeletedState.Compile()(thing));
+
+			filterQuery.Select(thing => thing.Id).ToList();
+		}
+
+		#endregion
 	}
 }

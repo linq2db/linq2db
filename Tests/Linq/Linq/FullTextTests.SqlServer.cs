@@ -2107,6 +2107,30 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5191")]
+		public void ConditionConvertIssue([IncludeDataSources(TestProvName.AllNorthwind)] string context)
+		{
+			using var db = new NorthwindDB(context);
+
+			var query =
+				from thing in db.Product
+				from item in db.Category
+					.Where(salesOrder => salesOrder.CategoryID == thing.CategoryID)
+					.DefaultIfEmpty()
+				from entity in db.OrderDetail
+					.Where(a => a.ProductID == thing.ProductID)
+				select new { item, thing, entity };
+
+			const string term = "\"test\"";
+
+			query = query.Where(row =>
+				Sql.Ext.SqlServer().Contains(term, row.thing) ||
+				Sql.Ext.SqlServer().Contains(term, row.entity) ||
+				Sql.Ext.SqlServer().Contains(term, row.item));
+
+			query.Select(tables => tables.thing.ProductID).ToList();
+		}
+
 		#endregion
 
 		#region ContainsProperty

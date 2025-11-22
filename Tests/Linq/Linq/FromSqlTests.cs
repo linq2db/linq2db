@@ -1209,5 +1209,26 @@ namespace Tests.Linq
 
 			query.ToArray();
 		}
+
+		sealed record Projection1(int i1, int i2);
+
+		sealed record Projection2(int i);
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5176")]
+		public void InsertFromSql([IncludeDataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tempTable = db.CreateTempTable<Projection2>();
+
+			var tempRows = db.FromSql<Projection1>("(with Rows as (select 1 as i1, 2 as i2) select * from Rows)");
+
+			tempRows
+				.Select(t1 => new Projection2(t1.i1))
+				.Insert(tempTable, row => row);
+
+			var record = tempTable.Single();
+
+			Assert.That(record.i, Is.EqualTo(1));
+		}
 	}
 }
