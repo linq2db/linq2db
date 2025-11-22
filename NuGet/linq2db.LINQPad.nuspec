@@ -23,7 +23,7 @@
 				<dependency id="Microsoft.SqlServer.Types"                 version="170.1000.7"    />
 				<dependency id="System.Data.Odbc"                          version="10.0.0"        />
 				<dependency id="System.Data.OleDb"                         version="10.0.0"        />
-				<dependency id="Npgsql"                                    version="9.0.4"         />
+				<dependency id="Npgsql"                                    version="10.0.0"        />
 				<dependency id="Oracle.ManagedDataAccess.Core"             version="23.26.0"       />
 				<dependency id="Net.IBM.Data.Db2"                          version="9.0.0.400"     />
 				<dependency id="ClickHouse.Driver"                         version="0.8.1"         />
