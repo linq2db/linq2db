@@ -31,7 +31,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				ProviderName.DB2,
 				TestProvName.AllInformix,
-				TestProvName.AllPostgreSQL,
+				TestProvName.AllPostgreSQL12Minus,
 				TestProvName.AllSQLite,
 				TestProvName.AllAccess)]
 			string context)
@@ -75,7 +75,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				ProviderName.DB2,
 				TestProvName.AllInformix,
-				TestProvName.AllPostgreSQL,
+				TestProvName.AllPostgreSQL12Minus,
 				TestProvName.AllSQLite,
 				TestProvName.AllAccess)]
 			string context)

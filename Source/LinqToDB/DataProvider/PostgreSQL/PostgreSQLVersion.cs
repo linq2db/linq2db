@@ -22,6 +22,10 @@
 		/// </summary>
 		v95,
 		/// <summary>
+		/// PostgreSQL 13+ SQL dialect.
+		/// </summary>
+		v13,
+		/// <summary>
 		/// PostgreSQL 15+ SQL dialect.
 		/// </summary>
 		v15,

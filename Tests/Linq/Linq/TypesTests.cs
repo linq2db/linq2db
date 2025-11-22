@@ -201,7 +201,6 @@ namespace Tests.Linq
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				TestProvName.AllAccess,
 				TestProvName.AllSapHana)]
