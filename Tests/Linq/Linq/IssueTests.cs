@@ -847,51 +847,24 @@ namespace Tests.Linq
 
 		#region Nesting Issue
 		[Table]
-		public partial class Transition
+		public sealed class Transition
 		{
 			[PrimaryKey] public int ThingId { get; set; }
 			[PrimaryKey] public DateTimeOffset CreatedDate { get; set; }
 			[Column(CanBeNull = false)] public string TransitionType { get; set; } = null!;
-
-			//[Association(CanBeNull = false, ThisKey = nameof(ThingId), OtherKey = nameof(Databases.Thing.Id))]
-			//public Thing Thing { get; set; } = null!;
-
-			//[Association(CanBeNull = false, ThisKey = nameof(TransitionType), OtherKey = nameof(Databases.TransitionType.Name))]
-			//public TransitionType TransitionType1 { get; set; } = null!;
 		}
 
 		[Table]
-		public partial class ThingState
+		public sealed class ThingState
 		{
 			[Column] public int ThingId { get; set; }
 			[Column] public DateTimeOffset? LastTransitionDate { get; set; }
 		}
 
 		[Table]
-		public partial class Thing
+		public sealed class Thing
 		{
 			[PrimaryKey] public int Id { get; set; }
-			//[Column("ThingSequence", CanBeNull = false, SkipOnInsert = true, SkipOnUpdate = true)] public string ThingSequence { get; set; } = null!; // char(8)
-			//[Column("CreatedDate")] public DateTimeOffset CreatedDate { get; set; } // datetimeoffset(7)
-			//[Column("ThingCounter")] public int ThingCounter { get; set; } // int
-			//[Column("UserFacingId", CanBeNull = false, SkipOnInsert = true, SkipOnUpdate = true)] public string UserFacingId { get; set; } = null!; // varchar(20)
-			//[Column("ItemId")] public int? ItemId { get; set; } // int
-			//[Column("EntityId")] public int EntityId { get; set; } // int
-			//[Column("Description", CanBeNull = false)] public string Description { get; set; } = null!; // nvarchar(max)
-
-			//#region Associations
-			///// <summary>
-			///// FK_Thing_Item
-			///// </summary>
-			//[Association(ThisKey = nameof(ItemId), OtherKey = nameof(Databases.Item.ItemId))]
-			//public Item? Item { get; set; }
-
-			///// <summary>
-			///// FK_Transition_Thing backreference
-			///// </summary>
-			//[Association(ThisKey = nameof(Id), OtherKey = nameof(Transition.ThingId))]
-			//public IEnumerable<Transition> Transitions { get; set; } = null!;
-			//#endregion
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5193")]
