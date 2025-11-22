@@ -85,5 +85,11 @@
 		<Copy SourceFiles="$(PkgMicrosoft_SqlServer_Types)\runtimes\win-x64\native\SqlServerSpatial170.dll"   DestinationFiles="$(TargetDir)\x64\SqlServerSpatial170.dll" />
 		<Copy SourceFiles="$(PkgMicrosoft_SqlServer_Types)\runtimes\win-arm64\native\SqlServerSpatial170.dll" DestinationFiles="$(TargetDir)\arm64\SqlServerSpatial170.dll" />
 	</Target>
+	<Target Name="CopySQLServerTypes" AfterTargets="Publish" Condition="'$(TargetFramework)' == 'net462'">
+		<!--copy manually as package contains only net472 copy instructions-->
+		<Copy SourceFiles="$(PkgMicrosoft_SqlServer_Types)\runtimes\win-x86\native\SqlServerSpatial170.dll"   DestinationFiles="$(PublishDir)\x86\SqlServerSpatial170.dll" />
+		<Copy SourceFiles="$(PkgMicrosoft_SqlServer_Types)\runtimes\win-x64\native\SqlServerSpatial170.dll"   DestinationFiles="$(PublishDir)\x64\SqlServerSpatial170.dll" />
+		<Copy SourceFiles="$(PkgMicrosoft_SqlServer_Types)\runtimes\win-arm64\native\SqlServerSpatial170.dll" DestinationFiles="$(PublishDir)\arm64\SqlServerSpatial170.dll" />
+	</Target>
 
 </Project>
