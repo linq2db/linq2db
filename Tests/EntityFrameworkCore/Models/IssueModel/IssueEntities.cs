@@ -375,6 +375,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		Rejected = 3,
 		Reviewed = 4
 	}
+
 	public partial class IssueEnumTable
 	{
 		public int Id { get; set; }
@@ -410,4 +411,16 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 	}
 
 	#endregion
+
+
+	public sealed class Issue5177Table
+	{
+		public int Id { get; set; }
+		public GuidValue? Value { get; set; }
+
+		public struct GuidValue
+		{
+			public Guid Value { get; set; }
+		}
+	}
 }
