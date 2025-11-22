@@ -22,7 +22,7 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
 		<PackageReference Include="Oracle.ManagedDataAccess" />
-		<PackageReference Include="Microsoft.SqlServer.Types" />
+		<PackageReference Include="Microsoft.SqlServer.Types" GeneratePathProperty="true" />
 
 		<Reference Include="IBM.Data.Informix" Condition=" $(PlatformTarget) != 'x86' ">
 			<HintPath>$(MSBuildThisFileDirectory)\..\Redist\IBM\SQLI x64\IBM.Data.Informix.dll</HintPath>
@@ -78,4 +78,12 @@
 			</ItemGroup>
 		</When>
 	</Choose>
+
+	<Target Name="CopySQLServerTypes" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' == 'net462'">
+		<!--copy manually as package contains only net472 copy instructions-->
+		<Copy SourceFiles="$(PkgMicrosoft_SqlServer_Types)\runtimes\win-x86\native\SqlServerSpatial170.dll"   DestinationFiles="$(TargetDir)\x86\SqlServerSpatial170.dll" />
+		<Copy SourceFiles="$(PkgMicrosoft_SqlServer_Types)\runtimes\win-x64\native\SqlServerSpatial170.dll"   DestinationFiles="$(TargetDir)\x64\SqlServerSpatial170.dll" />
+		<Copy SourceFiles="$(PkgMicrosoft_SqlServer_Types)\runtimes\win-arm64\native\SqlServerSpatial170.dll" DestinationFiles="$(TargetDir)\arm64\SqlServerSpatial170.dll" />
+	</Target>
+
 </Project>
