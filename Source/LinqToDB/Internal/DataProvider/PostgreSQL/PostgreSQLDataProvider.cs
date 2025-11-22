@@ -99,10 +99,11 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		protected override IMemberTranslator CreateMemberTranslator()
 		{
-			if (Version >= PostgreSQLVersion.v13)
-				return new PostgreSQL13MemberTranslator();
-
-			return new PostgreSQLMemberTranslator();
+			return Version switch
+			{
+				>= PostgreSQLVersion.v13 => new PostgreSQL13MemberTranslator(),
+				_ => new PostgreSQLMemberTranslator(),
+			};
 		}
 
 		private void ConfigureTypes()
