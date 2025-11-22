@@ -4,9 +4,6 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net10.0</TargetFrameworks>
-	
-		<!--temporary till npgsql 10 release-->
-		<NoWarn>$(NoWarn);NU1608</NoWarn>
 	</PropertyGroup>
 	
 	<ItemGroup>
