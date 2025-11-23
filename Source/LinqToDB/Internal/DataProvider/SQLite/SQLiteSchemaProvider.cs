@@ -16,7 +16,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 {
 	public class SQLiteSchemaProvider : SchemaProviderBase
 	{
-		static Regex _extract = new (@"^(\w+)(\((\d+)(,\s*(\d+))?\))?$", RegexOptions.Compiled);
+		static readonly Regex _extract = new (@"^(\w+)(\((\d+)(,\s*(\d+))?\))?$", RegexOptions.Compiled);
 
 		static IReadOnlyDictionary<string, (Type dotnetType, DataType dataType)> _typeMappings = new Dictionary<string, (Type dotnetType, DataType dataType)>(StringComparer.OrdinalIgnoreCase)
 		{

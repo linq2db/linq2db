@@ -299,13 +299,20 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			BuildTag(dropTable);
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
-				AppendIndent().Append(@"BEGIN
-	DECLARE CONTINUE HANDLER FOR SQLSTATE '42704' BEGIN END;
-	EXECUTE IMMEDIATE 'DROP TABLE ");
+				AppendIndent().Append(
+					"""
+					BEGIN
+						DECLARE CONTINUE HANDLER FOR SQLSTATE '42704' BEGIN END;
+						EXECUTE IMMEDIATE 'DROP TABLE 
+					"""
+				);
 				BuildPhysicalTable(table, null);
 				StringBuilder.AppendLine(
-				@"';
-END");
+					"""
+					';
+					END
+					"""
+				);
 			}
 			else
 			{
@@ -346,12 +353,12 @@ END");
 		{
 			if (createTable.StatementHeader == null && createTable.Table.TableOptions.HasCreateIfNotExists())
 			{
-				AppendIndent().AppendLine(@"BEGIN");
+				AppendIndent().AppendLine("BEGIN");
 
 				Indent++;
 
-				AppendIndent().AppendLine(@"DECLARE CONTINUE HANDLER FOR SQLSTATE '42710' BEGIN END;");
-				AppendIndent().AppendLine(@"EXECUTE IMMEDIATE '");
+				AppendIndent().AppendLine("DECLARE CONTINUE HANDLER FOR SQLSTATE '42710' BEGIN END;");
+				AppendIndent().AppendLine("EXECUTE IMMEDIATE '");
 
 				Indent++;
 			}

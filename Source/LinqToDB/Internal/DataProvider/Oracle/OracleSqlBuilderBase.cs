@@ -318,7 +318,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				BuildTag(dropTable);
 
 				StringBuilder
-					.AppendLine(@"BEGIN");
+					.AppendLine("BEGIN");
 
 				if (identityField == null)
 				{
@@ -434,23 +434,26 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					var sequenceName = ConvertInline(MakeIdentitySequenceName(truncate.Table!.TableName.Name), ConvertType.SequenceName);
 					StringBuilder
 						.AppendFormat(
-						CultureInfo.InvariantCulture,
-						@"DECLARE
-	l_value number;
-BEGIN
-	-- Select the next value of the sequence
-	EXECUTE IMMEDIATE 'SELECT {0}.NEXTVAL FROM dual' INTO l_value;
+							CultureInfo.InvariantCulture,
+							"""
+							DECLARE
+								l_value number;
+							BEGIN
+								-- Select the next value of the sequence
+								EXECUTE IMMEDIATE 'SELECT {0}.NEXTVAL FROM dual' INTO l_value;
 
-	-- Set a negative increment for the sequence, with value = the current value of the sequence
-	EXECUTE IMMEDIATE 'ALTER SEQUENCE {0} INCREMENT BY -' || l_value || ' MINVALUE 0';
+								-- Set a negative increment for the sequence, with value = the current value of the sequence
+								EXECUTE IMMEDIATE 'ALTER SEQUENCE {0} INCREMENT BY -' || l_value || ' MINVALUE 0';
 
-	-- Select once from the sequence, to take its current value back to 0
-	EXECUTE IMMEDIATE 'select {0}.NEXTVAL FROM dual' INTO l_value;
+								-- Select once from the sequence, to take its current value back to 0
+								EXECUTE IMMEDIATE 'select {0}.NEXTVAL FROM dual' INTO l_value;
 
-	-- Set the increment back to 1
-	EXECUTE IMMEDIATE 'ALTER SEQUENCE {0} INCREMENT BY 1 MINVALUE 0';
-END;",
-							sequenceName)
+								-- Set the increment back to 1
+								EXECUTE IMMEDIATE 'ALTER SEQUENCE {0} INCREMENT BY 1 MINVALUE 0';
+							END;
+							""",
+							sequenceName
+						)
 						.AppendLine()
 						;
 
@@ -592,11 +595,11 @@ END;",
 		{
 			if (createTable.StatementHeader == null && (createTable.Table.TableOptions.HasCreateIfNotExists() || createTable.Table.TableOptions.HasIsTemporary()))
 			{
-				AppendIndent().AppendLine(@"BEGIN");
+				AppendIndent().AppendLine("BEGIN");
 
 				Indent++;
 
-				AppendIndent().AppendLine(@"EXECUTE IMMEDIATE '");
+				AppendIndent().AppendLine("EXECUTE IMMEDIATE '");
 
 				Indent++;
 			}

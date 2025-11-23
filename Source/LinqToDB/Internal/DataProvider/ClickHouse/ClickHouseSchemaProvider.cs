@@ -20,52 +20,55 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 	{
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			return dataConnection.Query(
-				rd =>
-				{
-					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					var table       = rd.GetString(0);
-					var name        = rd.GetString(1);
-					var type        = rd.GetString(2);
-					var ordinal     = Convert.ToUInt64(rd.GetValue(3), CultureInfo.InvariantCulture);
-					var description = rd.GetString(4);
-					var length      = rd.IsDBNull(5) ? null : (ulong?)Convert.ToUInt64(rd.GetValue(5), CultureInfo.InvariantCulture);
-					var precision   = rd.IsDBNull(6) ? null : (ulong?)Convert.ToUInt64(rd.GetValue(6), CultureInfo.InvariantCulture);
-					var scale       = rd.IsDBNull(7) ? null : (ulong?)Convert.ToUInt64(rd.GetValue(7), CultureInfo.InvariantCulture);
-					var readOnly    = rd.GetBoolean(8);
-
-					(type, var isNullable, _) = PreParseTypeName(type);
-
-					return new ColumnInfo()
+			return dataConnection
+				.Query(
+					rd =>
 					{
-						TableID      = table,
-						Name         = name,
-						IsNullable   = isNullable,
-						Ordinal      = checked((int)ordinal),
-						DataType     = type,
-						ColumnType   = type,
-						// this is probably only possible failue point with checked casts
-						// but I don't think anyone will hit it as such huge FixedString columns are impractical
-						Length       = checked((int?)length),
-						Precision    = checked((int?)precision),
-						Scale        = checked((int?)scale),
-						Description  = string.IsNullOrWhiteSpace(description) ? null : description,
-						SkipOnUpdate = readOnly
-					};
-				},
-				@"
-SELECT
-	table,
-	name,
-	type,
-	position,
-	comment,
-	multiIf(type LIKE '%FixedString%', character_octet_length, NULL),
-	multiIf(type LIKE '%DateTime64%', datetime_precision, numeric_precision_radix = 10, numeric_precision, NULL),
-	multiIf(numeric_precision_radix = 10, numeric_scale, NULL),
-	is_in_primary_key
-FROM system.columns
-WHERE database = database() and default_kind <> 'ALIAS'")
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						var table       = rd.GetString(0);
+						var name        = rd.GetString(1);
+						var type        = rd.GetString(2);
+						var ordinal     = Convert.ToUInt64(rd.GetValue(3), CultureInfo.InvariantCulture);
+						var description = rd.GetString(4);
+						var length      = rd.IsDBNull(5) ? null : (ulong?)Convert.ToUInt64(rd.GetValue(5), CultureInfo.InvariantCulture);
+						var precision   = rd.IsDBNull(6) ? null : (ulong?)Convert.ToUInt64(rd.GetValue(6), CultureInfo.InvariantCulture);
+						var scale       = rd.IsDBNull(7) ? null : (ulong?)Convert.ToUInt64(rd.GetValue(7), CultureInfo.InvariantCulture);
+						var readOnly    = rd.GetBoolean(8);
+
+						(type, var isNullable, _) = PreParseTypeName(type);
+
+						return new ColumnInfo()
+						{
+							TableID      = table,
+							Name         = name,
+							IsNullable   = isNullable,
+							Ordinal      = checked((int)ordinal),
+							DataType     = type,
+							ColumnType   = type,
+							// this is probably only possible failue point with checked casts
+							// but I don't think anyone will hit it as such huge FixedString columns are impractical
+							Length       = checked((int?)length),
+							Precision    = checked((int?)precision),
+							Scale        = checked((int?)scale),
+							Description  = string.IsNullOrWhiteSpace(description) ? null : description,
+							SkipOnUpdate = readOnly
+						};
+					},
+					"""
+					SELECT
+						table,
+						name,
+						type,
+						position,
+						comment,
+						multiIf(type LIKE '%FixedString%', character_octet_length, NULL),
+						multiIf(type LIKE '%DateTime64%', datetime_precision, numeric_precision_radix = 10, numeric_precision, NULL),
+						multiIf(numeric_precision_radix = 10, numeric_scale, NULL),
+						is_in_primary_key
+					FROM system.columns
+					WHERE database = database() and default_kind <> 'ALIAS'
+					"""
+				)
 				.ToList();
 		}
 

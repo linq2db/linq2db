@@ -150,7 +150,8 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 			var defaultSchema = ToDatabaseLiteral(dataConnection, options.DefaultSchema ?? "public");
 
-			var sql = $@"
+			var sql = 
+				$"""
 				SELECT
 					t.table_catalog || '.' || t.table_schema || '.' || t.table_name            as TableID,
 					t.table_catalog                                                            as CatalogName,
@@ -175,32 +176,35 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				    JOIN pg_namespace n ON c.relnamespace = n.oid
 				    WHERE c.relname = t.table_name AND n.nspname = t.table_schema
 				) = i.inhrelid
-				WHERE i.inhrelid IS NULL AND {GenerateSchemaFilter(dataConnection, "table_schema")}";
+				WHERE i.inhrelid IS NULL AND {GenerateSchemaFilter(dataConnection, "table_schema")}
+				""";
 
 			// materialized views supported starting from pgsql 9.3
 			if (_version >= v93)
 			{
 				// materialized views are not exposed to information_schema
-				sql += $@"
-			UNION ALL
-				SELECT
-					current_database() || '.' || v.schemaname || '.' || v.matviewname          as TableID,
-					current_database()                                                         as CatalogName,
-					v.schemaname                                                               as SchemaName,
-					v.matviewname                                                              as TableName,
-					v.schemaname = {defaultSchema}                                             as IsDefaultSchema,
-					true                                                                       as IsView,
-					(
-						SELECT pgd.description
-							FROM pg_catalog.pg_class
-								INNER JOIN pg_catalog.pg_namespace       ON pg_class.relnamespace = pg_namespace.oid
-								INNER JOIN pg_catalog.pg_description pgd ON pgd.objoid = pg_class.oid
-						WHERE pg_class.relkind = 'm' AND pgd.objsubid = 0 AND pg_namespace.nspname = v.schemaname AND pg_class.relname = v.matviewname
-						LIMIT 1
-					)                                                                          as Description,
-					false                                                                      as IsProviderSpecific
-				FROM pg_matviews v
-				WHERE {GenerateSchemaFilter(dataConnection, "v.schemaname")}";
+				sql += 
+					$"""
+					UNION ALL
+						SELECT
+							current_database() || '.' || v.schemaname || '.' || v.matviewname          as TableID,
+							current_database()                                                         as CatalogName,
+							v.schemaname                                                               as SchemaName,
+							v.matviewname                                                              as TableName,
+							v.schemaname = {defaultSchema}                                             as IsDefaultSchema,
+							true                                                                       as IsView,
+							(
+								SELECT pgd.description
+									FROM pg_catalog.pg_class
+										INNER JOIN pg_catalog.pg_namespace       ON pg_class.relnamespace = pg_namespace.oid
+										INNER JOIN pg_catalog.pg_description pgd ON pgd.objoid = pg_class.oid
+								WHERE pg_class.relkind = 'm' AND pgd.objsubid = 0 AND pg_namespace.nspname = v.schemaname AND pg_class.relname = v.matviewname
+								LIMIT 1
+							)                                                                          as Description,
+							false                                                                      as IsProviderSpecific
+						FROM pg_matviews v
+						WHERE {GenerateSchemaFilter(dataConnection, "v.schemaname")}
+					""";
 			}
 
 			return dataConnection.Query<TableInfo>(sql).ToList();
@@ -209,22 +213,24 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			return dataConnection.Query<PrimaryKeyInfo>(
-				$"""
-					SELECT
-						current_database() || '.' || pg_namespace.nspname || '.' || pg_class.relname as TableID,
-						pg_constraint.conname                                                        as PrimaryKeyName,
-						attname                                                                      as ColumnName,
-						attnum                                                                       as Ordinal
-					FROM
-						pg_attribute
-							JOIN pg_constraint ON pg_attribute.attrelid = pg_constraint.conrelid AND pg_attribute.attnum = ANY(pg_constraint.conkey)
-							JOIN pg_class      ON pg_class.oid = pg_constraint.conrelid
-							JOIN pg_namespace  ON pg_class.relnamespace = pg_namespace.oid
-					WHERE
-						pg_constraint.contype = 'p'
-					AND {GenerateSchemaFilter(dataConnection, "pg_namespace.nspname")}
-				""")
+			return dataConnection
+				.Query<PrimaryKeyInfo>(
+					$"""
+						SELECT
+							current_database() || '.' || pg_namespace.nspname || '.' || pg_class.relname as TableID,
+							pg_constraint.conname                                                        as PrimaryKeyName,
+							attname                                                                      as ColumnName,
+							attnum                                                                       as Ordinal
+						FROM
+							pg_attribute
+								JOIN pg_constraint ON pg_attribute.attrelid = pg_constraint.conrelid AND pg_attribute.attnum = ANY(pg_constraint.conkey)
+								JOIN pg_class      ON pg_class.oid = pg_constraint.conrelid
+								JOIN pg_namespace  ON pg_class.relnamespace = pg_namespace.oid
+						WHERE
+							pg_constraint.contype = 'p'
+						AND {GenerateSchemaFilter(dataConnection, "pg_namespace.nspname")}
+					"""
+				)
 				.ToList();
 		}
 
@@ -291,7 +297,8 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			// d: generated by default
 			var isIdentityExpr = _version >= v10 ? "attr.attidentity IN ('a', 'd')" : "false";
 
-			var sql = $@"
+			var sql = 
+				$"""
 				SELECT columns.TableID,
 				       columns.Name,
 				       columns.IsNullable,
@@ -310,22 +317,22 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				FROM (
 				         SELECT current_database() || '.' || ns.nspname || '.' || cls.relname                            AS TableID,
 				                attr.attname                                                                             AS Name,
-				                NOT (attr.attnotnull OR typ.typtype = 'd'::""char"" AND typ.typnotnull)                    AS IsNullable,
+				                NOT (attr.attnotnull OR typ.typtype = 'd'::"char" AND typ.typnotnull)                    AS IsNullable,
 				                attr.attnum                                                                              AS Ordinal,
 				                CASE
-				                    WHEN typ.typtype = 'd'::""char"" THEN
+				                    WHEN typ.typtype = 'd'::"char" THEN
 				                        CASE
 				                            WHEN nbt.nspname = 'pg_catalog'::name THEN format_type(typ.typbasetype, attr.atttypmod)
 				                            ELSE 'USER-DEFINED'::text
 				                        END
 				                    ELSE
 				                        CASE
-				                            WHEN nt.nspname = 'pg_catalog'::name or typ.typtype = 'e'::""char"" or typ.typtype = 'r'::""char"" THEN format_type(attr.atttypid, attr.atttypmod)
+				                            WHEN nt.nspname = 'pg_catalog'::name or typ.typtype = 'e'::"char" or typ.typtype = 'r'::"char" THEN format_type(attr.atttypid, attr.atttypmod)
 				                            ELSE 'USER-DEFINED'::text
 				                        END
 				                    END                                                                                  AS DataType,
-				                typ.typtype = 'e'::""char"" and nt.nspname <> 'pg_catalog'::name                           AS IsCustomEnum,
-				                typ.typtype = 'r'::""char"" and nt.nspname <> 'pg_catalog'::name                           AS IsCustomRange,
+				                typ.typtype = 'e'::"char" and nt.nspname <> 'pg_catalog'::name                           AS IsCustomEnum,
+				                typ.typtype = 'r'::"char" and nt.nspname <> 'pg_catalog'::name                           AS IsCustomRange,
 				                attr.attndims                                                                            AS ArrayDimensions,
 				                information_schema._pg_char_max_length(information_schema._pg_truetypid(attr.*, typ.*),
 				                                                       information_schema._pg_truetypmod(attr.*, typ.*)) AS Length,
@@ -339,17 +346,17 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				                information_schema._pg_numeric_scale(attr.atttypid, attr.atttypmod)                      AS Scale,
 				                {isIdentityExpr}                                                                         AS IsIdentity,
 				                cls.relkind IN ('v', 'm')                                                                AS SkipOnInsert,
-				                NOT (cls.relkind = 'r'::""char"" OR cls.relkind = 'v'::""char""
+				                NOT (cls.relkind = 'r'::"char" OR cls.relkind = 'v'::"char"
 				                    AND (EXISTS(SELECT 1
 				                                FROM pg_rewrite
 				                                WHERE pg_rewrite.ev_class = cls.oid
-				                                  AND pg_rewrite.ev_type = '2'::""char""
+				                                  AND pg_rewrite.ev_type = '2'::"char"
 				                                  AND pg_rewrite.is_instead))
 				                    AND
 				                                                  (EXISTS(SELECT 1
 				                                                          FROM pg_rewrite
 				                                                          WHERE pg_rewrite.ev_class = cls.oid
-				                                                            AND pg_rewrite.ev_type = '4'::""char""
+				                                                            AND pg_rewrite.ev_type = '4'::"char"
 				                                                            AND pg_rewrite.is_instead))
 				                    )                                                                                    AS SkipOnUpdate,
 				                des.description                                                                          AS Description,
@@ -370,69 +377,73 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				                  JOIN pg_namespace nt ON typ.typnamespace = nt.oid
 				                  LEFT JOIN (pg_type bt
 				                 JOIN pg_namespace nbt ON bt.typnamespace = nbt.oid)
-				                            ON typ.typtype = 'd'::""char"" AND typ.typbasetype = bt.oid
+				                            ON typ.typtype = 'd'::"char" AND typ.typbasetype = bt.oid
 				         WHERE cls.relkind IN ({relKind})
 				           AND attr.attnum > 0
 				           AND NOT attr.attisdropped
 				           AND {GenerateSchemaFilter(dataConnection, "ns.nspname")}
-				     ) columns;";
+				     ) columns;
+				""";
 
 			var result = dataConnection
-				.Query(rd =>
-				{
-					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					var tableId    = rd.GetString(0);
-					var name       = rd.GetString(1);
-					var isNullable = rd.GetBoolean(2);
-					var ordinal    = rd.GetInt32(3);
-					var dataType   = rd.GetString(4);
-					// null - not array
-					// 0 - array with unknown dimensions (unknown for views)
-					// >0 - array with specified dimensions (known for tables)
-					var arrayDimensions = rd.IsDBNull(5) ? (int?)null : rd.GetInt32(5);
-					if (arrayDimensions != null)
+				.Query(
+					rd =>
 					{
-						if (arrayDimensions > 0)
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						var tableId    = rd.GetString(0);
+						var name       = rd.GetString(1);
+						var isNullable = rd.GetBoolean(2);
+						var ordinal    = rd.GetInt32(3);
+						var dataType   = rd.GetString(4);
+						// null - not array
+						// 0 - array with unknown dimensions (unknown for views)
+						// >0 - array with specified dimensions (known for tables)
+						var arrayDimensions = rd.IsDBNull(5) ? (int?)null : rd.GetInt32(5);
+						if (arrayDimensions != null)
 						{
-							// first brackets already there
-							--arrayDimensions;
-							while (arrayDimensions > 0)
+							if (arrayDimensions > 0)
 							{
-								dataType += "[]";
-								arrayDimensions--;
+								// first brackets already there
+								--arrayDimensions;
+								while (arrayDimensions > 0)
+								{
+									dataType += "[]";
+									arrayDimensions--;
+								}
 							}
 						}
-					}
 
-					int? length       = rd.IsDBNull(6) ? null : rd.GetInt32(6);
-					int? precision    = rd.IsDBNull(7) ? null : rd.GetInt32(7);
-					int? scale        = rd.IsDBNull(8) ? null : rd.GetInt32(8);
-					var isIdentity    = rd.GetBoolean(9);
-					var skipOnInsert  = rd.GetBoolean(10);
-					var skipOnUpdate  = rd.GetBoolean(11);
-					var description   = rd.IsDBNull(12) ? null : rd.GetString(12);
-					// currently mapped to string
-					var isCustomEnum  = rd.GetBoolean(13);
-					// not used currently
-					var isCustomRange = rd.GetBoolean(14);
+						int? length       = rd.IsDBNull(6) ? null : rd.GetInt32(6);
+						int? precision    = rd.IsDBNull(7) ? null : rd.GetInt32(7);
+						int? scale        = rd.IsDBNull(8) ? null : rd.GetInt32(8);
+						var isIdentity    = rd.GetBoolean(9);
+						var skipOnInsert  = rd.GetBoolean(10);
+						var skipOnUpdate  = rd.GetBoolean(11);
+						var description   = rd.IsDBNull(12) ? null : rd.GetString(12);
+						// currently mapped to string
+						var isCustomEnum  = rd.GetBoolean(13);
+						// not used currently
+						var isCustomRange = rd.GetBoolean(14);
 
-					return new ColumnInfo()
-					{
-						TableID      = tableId,
-						Name         = name,
-						IsNullable   = isNullable,
-						Ordinal      = ordinal,
-						DataType     = dataType,
-						Length       = length,
-						Precision    = precision,
-						Scale        = scale,
-						IsIdentity   = isIdentity,
-						SkipOnInsert = skipOnInsert,
-						SkipOnUpdate = skipOnUpdate,
-						Description  = description,
-						Type         = isCustomEnum ? DataType.Enum : null
-					};
-				}, sql)
+						return new ColumnInfo()
+						{
+							TableID      = tableId,
+							Name         = name,
+							IsNullable   = isNullable,
+							Ordinal      = ordinal,
+							DataType     = dataType,
+							Length       = length,
+							Precision    = precision,
+							Scale        = scale,
+							IsIdentity   = isIdentity,
+							SkipOnInsert = skipOnInsert,
+							SkipOnUpdate = skipOnUpdate,
+							Description  = description,
+							Type         = isCustomEnum ? DataType.Enum : null
+						};
+					},
+					sql
+				)
 				.ToList();
 
 			return result;
@@ -441,61 +452,65 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var data = dataConnection.Query(
-				rd => new
-				{
-					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					name         = rd[0],
-					thisTable    = rd[1],
-					otherTable   = rd[2],
-					thisColumns  = new[] { rd[ 3], rd[ 4], rd[ 5], rd[ 6], rd[ 7], rd[ 8], rd[ 9], rd[10], rd[11], rd[12], rd[13], rd[14], rd[15], rd[16], rd[17], rd[18] },
-					otherColumns = new[] { rd[19], rd[20], rd[21], rd[22], rd[23], rd[24], rd[25], rd[26], rd[27], rd[28], rd[29], rd[30], rd[31], rd[32], rd[33], rd[34] },
-				}, $@"
-				SELECT
-					pg_constraint.conname,
-					current_database() || '.' || this_schema.nspname  || '.' || this_table.relname,
-					current_database() || '.' || other_schema.nspname || '.' || other_table.relname,
-					(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[01]),
-					(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[02]),
-					(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[03]),
-					(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[04]),
-					(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[05]),
-					(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[06]),
-					(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[07]),
-					(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[08]),
-					(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[09]),
-					(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[10]),
-					(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[11]),
-					(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[12]),
-					(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[13]),
-					(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[14]),
-					(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[15]),
-					(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[16]),
-					(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[01]),
-					(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[02]),
-					(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[03]),
-					(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[04]),
-					(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[05]),
-					(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[06]),
-					(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[07]),
-					(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[08]),
-					(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[09]),
-					(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[10]),
-					(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[11]),
-					(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[12]),
-					(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[13]),
-					(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[14]),
-					(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[15]),
-					(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[16])
-				FROM
-					pg_constraint
-						JOIN pg_class as this_table ON this_table.oid = pg_constraint.conrelid
-							JOIN pg_namespace as this_schema ON this_table.relnamespace = this_schema.oid
-						JOIN pg_class as other_table ON other_table.oid = pg_constraint.confrelid
-							JOIN pg_namespace as other_schema ON other_table.relnamespace = other_schema.oid
-				WHERE
-					pg_constraint.contype = 'f'
-					AND {GenerateSchemaFilter(dataConnection, "this_schema.nspname")}")
+			var data = dataConnection
+				.Query(
+					rd => new
+					{
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						name         = rd[0],
+						thisTable    = rd[1],
+						otherTable   = rd[2],
+						thisColumns  = new[] { rd[ 3], rd[ 4], rd[ 5], rd[ 6], rd[ 7], rd[ 8], rd[ 9], rd[10], rd[11], rd[12], rd[13], rd[14], rd[15], rd[16], rd[17], rd[18] },
+						otherColumns = new[] { rd[19], rd[20], rd[21], rd[22], rd[23], rd[24], rd[25], rd[26], rd[27], rd[28], rd[29], rd[30], rd[31], rd[32], rd[33], rd[34] },
+					}, 
+					$"""
+					SELECT
+						pg_constraint.conname,
+						current_database() || '.' || this_schema.nspname  || '.' || this_table.relname,
+						current_database() || '.' || other_schema.nspname || '.' || other_table.relname,
+						(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[01]),
+						(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[02]),
+						(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[03]),
+						(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[04]),
+						(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[05]),
+						(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[06]),
+						(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[07]),
+						(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[08]),
+						(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[09]),
+						(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[10]),
+						(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[11]),
+						(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[12]),
+						(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[13]),
+						(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[14]),
+						(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[15]),
+						(select attname from pg_attribute where attrelid = pg_constraint.conrelid  and attnum = pg_constraint.conkey[16]),
+						(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[01]),
+						(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[02]),
+						(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[03]),
+						(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[04]),
+						(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[05]),
+						(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[06]),
+						(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[07]),
+						(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[08]),
+						(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[09]),
+						(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[10]),
+						(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[11]),
+						(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[12]),
+						(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[13]),
+						(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[14]),
+						(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[15]),
+						(select attname from pg_attribute where attrelid = pg_constraint.confrelid and attnum = pg_constraint.confkey[16])
+					FROM
+						pg_constraint
+							JOIN pg_class as this_table ON this_table.oid = pg_constraint.conrelid
+								JOIN pg_namespace as this_schema ON this_table.relnamespace = this_schema.oid
+							JOIN pg_class as other_table ON other_table.oid = pg_constraint.confrelid
+								JOIN pg_namespace as other_schema ON other_table.relnamespace = other_schema.oid
+					WHERE
+						pg_constraint.contype = 'f'
+						AND {GenerateSchemaFilter(dataConnection, "this_schema.nspname")}
+					"""
+				)
 				.ToList();
 
 			return
@@ -618,8 +633,8 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			};
 		}
 
-		static Regex _matchArray = new (@"^(.*)(\[\]){1}$", RegexOptions.Compiled);
-		static Regex _matchType  = new (@"^(.*)(\(\d+(,\s*\d+)?\))(.*){1}$", RegexOptions.Compiled);
+		static readonly Regex _matchArray = new(@"^(.*)(\[\]){1}$", RegexOptions.Compiled);
+		static readonly Regex _matchType  = new(@"^(.*)(\(\d+(,\s*\d+)?\))(.*){1}$", RegexOptions.Compiled);
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo,
 			int? length, int? precision, int? scale, GetSchemaOptions options)
@@ -722,101 +737,109 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			if (_version < v11)
 			{
 				return dataConnection
-					.Query(rd =>
-					{
-						// IMPORTANT: reader calls must be ordered to support SequentialAccess
-						var catalog       = rd.GetString(0);
-						var schema        = rd.GetString(1);
-						var procName      = rd.GetString(2);
-						var isFunction    = rd.GetString(3) == "FUNCTION";
-						var definition    = Converter.ChangeTypeTo<string>(rd[4]);
-						var procId        = catalog + "." + schema + "." + rd.GetString(5);
-						var isAggregate   = Converter.ChangeTypeTo<bool>(rd[6]);
-						var isTableResult = Converter.ChangeTypeTo<bool>(rd[7]);
-
-						return new ProcedureInfo()
+					.Query(
+						rd =>
 						{
-							ProcedureID         = procId,
-							CatalogName         = catalog,
-							SchemaName          = schema,
-							ProcedureName       = procName,
-							// versions prior 11 doesn't support procedures but support functions with void return type
-							// still, we report them as function in metadata. Just without return parameter
-							IsFunction          = isFunction,
-							IsTableFunction     = isTableResult,
-							IsAggregateFunction = isAggregate,
-							IsDefaultSchema     = schema == (options.DefaultSchema ?? "public"),
-							ProcedureDefinition = definition,
-							// result of function has dynamic form and vary per call if function return type is 'record'
-							// only exception is function with out/inout parameters, where we know that record contains those parameters
-							IsResultDynamic     = Converter.ChangeTypeTo<string>(rd[8]) == "record" && Converter.ChangeTypeTo<int>(rd[9]) == 0
-						};
-					}, $@"
-SELECT	r.ROUTINE_CATALOG,
-		r.ROUTINE_SCHEMA,
-		r.ROUTINE_NAME,
-		r.ROUTINE_TYPE,
-		r.ROUTINE_DEFINITION,
-		r.SPECIFIC_NAME,
-		p.proisagg,
-		p.proretset,
-		r.DATA_TYPE,
-		outp.cnt
-	FROM INFORMATION_SCHEMA.ROUTINES r
-		LEFT JOIN pg_catalog.pg_namespace n ON r.ROUTINE_SCHEMA = n.nspname
-		LEFT JOIN pg_catalog.pg_proc p ON p.pronamespace = n.oid AND r.SPECIFIC_NAME = p.proname || '_' || p.oid
-		LEFT JOIN (SELECT SPECIFIC_SCHEMA, SPECIFIC_NAME, COUNT(*) as cnt FROM INFORMATION_SCHEMA.parameters WHERE parameter_mode IN('OUT', 'INOUT') GROUP BY SPECIFIC_SCHEMA, SPECIFIC_NAME) as outp
-			ON r.SPECIFIC_SCHEMA = outp.SPECIFIC_SCHEMA AND r.SPECIFIC_NAME = outp.SPECIFIC_NAME
-		WHERE {GenerateSchemaFilter(dataConnection, "n.nspname")}")
+							// IMPORTANT: reader calls must be ordered to support SequentialAccess
+							var catalog       = rd.GetString(0);
+							var schema        = rd.GetString(1);
+							var procName      = rd.GetString(2);
+							var isFunction    = rd.GetString(3) == "FUNCTION";
+							var definition    = Converter.ChangeTypeTo<string>(rd[4]);
+							var procId        = catalog + "." + schema + "." + rd.GetString(5);
+							var isAggregate   = Converter.ChangeTypeTo<bool>(rd[6]);
+							var isTableResult = Converter.ChangeTypeTo<bool>(rd[7]);
+
+							return new ProcedureInfo()
+							{
+								ProcedureID         = procId,
+								CatalogName         = catalog,
+								SchemaName          = schema,
+								ProcedureName       = procName,
+								// versions prior 11 doesn't support procedures but support functions with void return type
+								// still, we report them as function in metadata. Just without return parameter
+								IsFunction          = isFunction,
+								IsTableFunction     = isTableResult,
+								IsAggregateFunction = isAggregate,
+								IsDefaultSchema     = schema == (options.DefaultSchema ?? "public"),
+								ProcedureDefinition = definition,
+								// result of function has dynamic form and vary per call if function return type is 'record'
+								// only exception is function with out/inout parameters, where we know that record contains those parameters
+								IsResultDynamic     = Converter.ChangeTypeTo<string>(rd[8]) == "record" && Converter.ChangeTypeTo<int>(rd[9]) == 0
+							};
+						},
+						$"""
+						SELECT	r.ROUTINE_CATALOG,
+								r.ROUTINE_SCHEMA,
+								r.ROUTINE_NAME,
+								r.ROUTINE_TYPE,
+								r.ROUTINE_DEFINITION,
+								r.SPECIFIC_NAME,
+								p.proisagg,
+								p.proretset,
+								r.DATA_TYPE,
+								outp.cnt
+							FROM INFORMATION_SCHEMA.ROUTINES r
+								LEFT JOIN pg_catalog.pg_namespace n ON r.ROUTINE_SCHEMA = n.nspname
+								LEFT JOIN pg_catalog.pg_proc p ON p.pronamespace = n.oid AND r.SPECIFIC_NAME = p.proname || '_' || p.oid
+								LEFT JOIN (SELECT SPECIFIC_SCHEMA, SPECIFIC_NAME, COUNT(*) as cnt FROM INFORMATION_SCHEMA.parameters WHERE parameter_mode IN('OUT', 'INOUT') GROUP BY SPECIFIC_SCHEMA, SPECIFIC_NAME) as outp
+									ON r.SPECIFIC_SCHEMA = outp.SPECIFIC_SCHEMA AND r.SPECIFIC_NAME = outp.SPECIFIC_NAME
+								WHERE {GenerateSchemaFilter(dataConnection, "n.nspname")}
+						"""
+					)
 					.ToList();
 			}
 			else
 			{
 				return dataConnection
-					.Query(rd =>
-					{
-						// IMPORTANT: reader calls must be ordered to support SequentialAccess
-						var catalog       = rd.GetString(0);
-						var schema        = rd.GetString(1);
-						var name          = rd.GetString(2);
-						var definition    = Converter.ChangeTypeTo<string>(rd[3]);
-						var procId        = catalog + "." + schema + "." + rd.GetString(4);
-						var kind          = Converter.ChangeTypeTo<char>(rd[5]);
-						var isTableResult = Converter.ChangeTypeTo<bool>(rd[6]);
-
-						return new ProcedureInfo()
+					.Query(
+						rd =>
 						{
-							ProcedureID         = procId,
-							CatalogName         = catalog,
-							SchemaName          = schema,
-							ProcedureName       = name,
-							// versions prior 11 doesn't support procedures but support functions with void return type
-							// still, we report them as function in metadata. Just without return parameter
-							IsFunction          = kind != 'p',
-							IsTableFunction     = isTableResult,
-							// this is only diffrence starting from v11
-							IsAggregateFunction = kind == 'a',
-							IsWindowFunction    = kind == 'w',
-							IsDefaultSchema     = schema == (options.DefaultSchema ?? "public"),
-							ProcedureDefinition = definition,
-							IsResultDynamic     = Converter.ChangeTypeTo<string>(rd[7]) == "record" && Converter.ChangeTypeTo<int>(rd[8]) == 0
-						};
-					}, $@"
-SELECT	r.ROUTINE_CATALOG,
-		r.ROUTINE_SCHEMA,
-		r.ROUTINE_NAME,
-		r.ROUTINE_DEFINITION,
-		r.SPECIFIC_NAME,
-		p.prokind,
-		p.proretset,
-		r.DATA_TYPE,
-		outp.cnt
-	FROM INFORMATION_SCHEMA.ROUTINES r
-		LEFT JOIN pg_catalog.pg_namespace n ON r.ROUTINE_SCHEMA = n.nspname
-		LEFT JOIN pg_catalog.pg_proc p ON p.pronamespace = n.oid AND r.SPECIFIC_NAME = p.proname || '_' || p.oid
-		LEFT JOIN (SELECT SPECIFIC_SCHEMA, SPECIFIC_NAME, COUNT(*)as cnt FROM INFORMATION_SCHEMA.parameters WHERE parameter_mode IN('OUT', 'INOUT') GROUP BY SPECIFIC_SCHEMA, SPECIFIC_NAME) as outp
-			ON r.SPECIFIC_SCHEMA = outp.SPECIFIC_SCHEMA AND r.SPECIFIC_NAME = outp.SPECIFIC_NAME
-		WHERE {GenerateSchemaFilter(dataConnection, "n.nspname")}")
+							// IMPORTANT: reader calls must be ordered to support SequentialAccess
+							var catalog       = rd.GetString(0);
+							var schema        = rd.GetString(1);
+							var name          = rd.GetString(2);
+							var definition    = Converter.ChangeTypeTo<string>(rd[3]);
+							var procId        = catalog + "." + schema + "." + rd.GetString(4);
+							var kind          = Converter.ChangeTypeTo<char>(rd[5]);
+							var isTableResult = Converter.ChangeTypeTo<bool>(rd[6]);
+
+							return new ProcedureInfo()
+							{
+								ProcedureID         = procId,
+								CatalogName         = catalog,
+								SchemaName          = schema,
+								ProcedureName       = name,
+								// versions prior 11 doesn't support procedures but support functions with void return type
+								// still, we report them as function in metadata. Just without return parameter
+								IsFunction          = kind != 'p',
+								IsTableFunction     = isTableResult,
+								// this is only diffrence starting from v11
+								IsAggregateFunction = kind == 'a',
+								IsWindowFunction    = kind == 'w',
+								IsDefaultSchema     = schema == (options.DefaultSchema ?? "public"),
+								ProcedureDefinition = definition,
+								IsResultDynamic     = Converter.ChangeTypeTo<string>(rd[7]) == "record" && Converter.ChangeTypeTo<int>(rd[8]) == 0
+							};
+						},
+						$"""
+						SELECT	r.ROUTINE_CATALOG,
+								r.ROUTINE_SCHEMA,
+								r.ROUTINE_NAME,
+								r.ROUTINE_DEFINITION,
+								r.SPECIFIC_NAME,
+								p.prokind,
+								p.proretset,
+								r.DATA_TYPE,
+								outp.cnt
+							FROM INFORMATION_SCHEMA.ROUTINES r
+								LEFT JOIN pg_catalog.pg_namespace n ON r.ROUTINE_SCHEMA = n.nspname
+								LEFT JOIN pg_catalog.pg_proc p ON p.pronamespace = n.oid AND r.SPECIFIC_NAME = p.proname || '_' || p.oid
+								LEFT JOIN (SELECT SPECIFIC_SCHEMA, SPECIFIC_NAME, COUNT(*)as cnt FROM INFORMATION_SCHEMA.parameters WHERE parameter_mode IN('OUT', 'INOUT') GROUP BY SPECIFIC_SCHEMA, SPECIFIC_NAME) as outp
+									ON r.SPECIFIC_SCHEMA = outp.SPECIFIC_SCHEMA AND r.SPECIFIC_NAME = outp.SPECIFIC_NAME
+								WHERE {GenerateSchemaFilter(dataConnection, "n.nspname")}
+						"""
+					)
 					.ToList();
 			}
 		}
@@ -824,55 +847,68 @@ SELECT	r.ROUTINE_CATALOG,
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			return dataConnection
-				.Query(rd =>
-				{
-					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					var procId  = rd.GetString(0) + "." + rd.GetString(1) + "." + rd.GetString(2);
-					var ordinal = Converter.ChangeTypeTo<int>(rd[3]);
-					var mode    = Converter.ChangeTypeTo<string>(rd[4]);
-
-					return new ProcedureParameterInfo()
+				.Query(
+					rd =>
 					{
-						ProcedureID   = procId,
-						ParameterName = Converter.ChangeTypeTo<string>(rd[5]),
-						IsIn          = mode is "IN"  or "INOUT",
-						IsOut         = mode is "OUT" or "INOUT",
-						Ordinal       = ordinal,
-						IsResult      = false,
-						DataType      = rd.GetString(6),
-						// those fields not supported by pgsql on parameter level
-						Precision     = null,
-						Scale         = null,
-						Length        = null,
-						IsNullable    = true
-					};
-				}, "SELECT SPECIFIC_CATALOG, SPECIFIC_SCHEMA, SPECIFIC_NAME, ORDINAL_POSITION, PARAMETER_MODE, PARAMETER_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.parameters")
-				// populare return parameters for functions
-				.ToList()
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						var procId  = rd.GetString(0) + "." + rd.GetString(1) + "." + rd.GetString(2);
+						var ordinal = Converter.ChangeTypeTo<int>(rd[3]);
+						var mode    = Converter.ChangeTypeTo<string>(rd[4]);
+
+						return new ProcedureParameterInfo()
+						{
+							ProcedureID   = procId,
+							ParameterName = Converter.ChangeTypeTo<string>(rd[5]),
+							IsIn          = mode is "IN"  or "INOUT",
+							IsOut         = mode is "OUT" or "INOUT",
+							Ordinal       = ordinal,
+							IsResult      = false,
+							DataType      = rd.GetString(6),
+							// those fields not supported by pgsql on parameter level
+							Precision     = null,
+							Scale         = null,
+							Length        = null,
+							IsNullable    = true
+						};
+					},
+					"""
+					SELECT SPECIFIC_CATALOG, SPECIFIC_SCHEMA, SPECIFIC_NAME, ORDINAL_POSITION, PARAMETER_MODE, PARAMETER_NAME, DATA_TYPE
+					FROM INFORMATION_SCHEMA.parameters
+					"""
+				)
+				// populate return parameters for functions
 				// there is no separate result parameter for functions (maybe it will be for procedures in v11), so
 				// we need to read data_type of function itself if it is not table/void function to define return parameter
-				.Concat(dataConnection.Query(rd => new ProcedureParameterInfo()
-				{
-					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					ProcedureID   = rd.GetString(0) + "." + rd.GetString(1) + "." + rd.GetString(2),
-					ParameterName = null,
-					IsIn          = false,
-					IsOut         = false,
-					Ordinal       = 0,
-					IsResult      = true,
-					DataType      = rd.GetString(3),
-					// not supported by pgsql
-					Precision     = null,
-					Scale         = null,
-					Length        = null,
-					IsNullable    = true
-				}, @"SELECT r.SPECIFIC_CATALOG, r.SPECIFIC_SCHEMA, r.SPECIFIC_NAME, r.DATA_TYPE
-	FROM INFORMATION_SCHEMA.ROUTINES r
-		LEFT JOIN pg_catalog.pg_namespace n ON r.ROUTINE_SCHEMA = n.nspname
-		LEFT JOIN pg_catalog.pg_proc p ON p.pronamespace = n.oid AND r.SPECIFIC_NAME = p.proname || '_' || p.oid
-		LEFT JOIN (SELECT SPECIFIC_SCHEMA, SPECIFIC_NAME, COUNT(*)as cnt FROM INFORMATION_SCHEMA.parameters WHERE parameter_mode IN('OUT', 'INOUT') GROUP BY SPECIFIC_SCHEMA, SPECIFIC_NAME) as outp
-			ON r.SPECIFIC_SCHEMA = outp.SPECIFIC_SCHEMA AND r.SPECIFIC_NAME = outp.SPECIFIC_NAME
-	WHERE r.DATA_TYPE <> 'record' AND r.DATA_TYPE <> 'void' AND p.proretset = false AND (outp.cnt IS NULL OR outp.cnt = 0)"))
+				.Concat(
+					dataConnection
+						.Query(
+							rd => new ProcedureParameterInfo()
+							{
+								// IMPORTANT: reader calls must be ordered to support SequentialAccess
+								ProcedureID   = rd.GetString(0) + "." + rd.GetString(1) + "." + rd.GetString(2),
+								ParameterName = null,
+								IsIn          = false,
+								IsOut         = false,
+								Ordinal       = 0,
+								IsResult      = true,
+								DataType      = rd.GetString(3),
+								// not supported by pgsql
+								Precision     = null,
+								Scale         = null,
+								Length        = null,
+								IsNullable    = true
+							},
+							"""
+							SELECT r.SPECIFIC_CATALOG, r.SPECIFIC_SCHEMA, r.SPECIFIC_NAME, r.DATA_TYPE
+								FROM INFORMATION_SCHEMA.ROUTINES r
+									LEFT JOIN pg_catalog.pg_namespace n ON r.ROUTINE_SCHEMA = n.nspname
+									LEFT JOIN pg_catalog.pg_proc p ON p.pronamespace = n.oid AND r.SPECIFIC_NAME = p.proname || '_' || p.oid
+									LEFT JOIN (SELECT SPECIFIC_SCHEMA, SPECIFIC_NAME, COUNT(*)as cnt FROM INFORMATION_SCHEMA.parameters WHERE parameter_mode IN('OUT', 'INOUT') GROUP BY SPECIFIC_SCHEMA, SPECIFIC_NAME) as outp
+										ON r.SPECIFIC_SCHEMA = outp.SPECIFIC_SCHEMA AND r.SPECIFIC_NAME = outp.SPECIFIC_NAME
+								WHERE r.DATA_TYPE <> 'record' AND r.DATA_TYPE <> 'void' AND p.proretset = false AND (outp.cnt IS NULL OR outp.cnt = 0)
+							"""
+						)
+				)
 				.ToList();
 		}
 
