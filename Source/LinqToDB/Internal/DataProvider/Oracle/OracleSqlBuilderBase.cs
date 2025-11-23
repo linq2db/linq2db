@@ -764,24 +764,31 @@ END;",
 
 		protected override void BuildValue(DbDataType? dataType, object? value)
 		{
-			// workaround for "ORA-01704 string literal too long"
-			// oracle limits string literal to 4000 bytes(!)
-			// to workaround we have two options:
-			// - use parameter
-			// - split literal in concatenation of several values
-			if (value is string str && (str.Length > 4000 || Encoding.UTF8.GetByteCount(str) > 4000))
+			switch (value)
 			{
-				BuildParameter(new SqlParameter(dataType ?? MappingSchema.GetDbDataType(typeof(string)), "value", value));
-				return;
-			}
-			// 2000 as we use HEX format
-			else if (value is byte[] { Length: > 2000 })
-			{
-				BuildParameter(new SqlParameter(dataType ?? MappingSchema.GetDbDataType(typeof(byte[])), "value", value));
-				return;
-			}
+				// workaround for "ORA-01704 string literal too long"
+				// oracle limits string literal to 4000 bytes(!)
+				// to workaround we have two options:
+				// - use parameter
+				// - split literal in concatenation of several values
+				case string str when (str.Length > 4000 || Encoding.UTF8.GetByteCount(str) > 4000):
+				{
+					BuildParameter(new SqlParameter(dataType ?? MappingSchema.GetDbDataType(typeof(string)), "value", value));
+					return;
+				}
+				// 2000 as we use HEX format
+				case byte[] { Length: > 2000 }:
+				{
+					BuildParameter(new SqlParameter(dataType ?? MappingSchema.GetDbDataType(typeof(byte[])), "value", value));
+					return;
+				}
 
-			base.BuildValue(dataType, value);
+				default:
+				{
+					base.BuildValue(dataType, value);
+					return;
+				}
+			}
 		}
 	}
 }
