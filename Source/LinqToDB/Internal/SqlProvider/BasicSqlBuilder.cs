@@ -4126,7 +4126,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void PrintParameterName(StringBuilder sb, DbParameter parameter)
 		{
-			if (!parameter.ParameterName.StartsWith("@"))
+			if (!parameter.ParameterName.StartsWith('@'))
 				sb.Append('@');
 			sb.Append(parameter.ParameterName);
 		}

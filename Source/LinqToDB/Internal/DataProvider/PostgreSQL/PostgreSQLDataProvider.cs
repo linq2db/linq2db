@@ -548,7 +548,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 					break;
 			}
 
-			if (dbType.StartsWith("float(") && dbType.EndsWith(")"))
+			if (dbType.StartsWith("float(") && dbType.EndsWith(')'))
 			{
 				if (int.TryParse(dbType.AsSpan("float(".Length, dbType.Length - "float(".Length - 1), NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var precision))
 				{

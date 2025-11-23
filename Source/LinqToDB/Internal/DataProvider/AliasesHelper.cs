@@ -57,7 +57,7 @@ namespace LinqToDB.Internal.DataProvider
 						ts =>
 						{
 							var a = GetCurrentAlias(ts);
-							return string.IsNullOrEmpty(a) ? "t1" : a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
+							return string.IsNullOrEmpty(a) ? "t1" : a + (a!.EndsWith('_') ? string.Empty : "_") + "1";
 						},
 						StringComparer.OrdinalIgnoreCase);
 				}
@@ -143,7 +143,7 @@ namespace LinqToDB.Internal.DataProvider
 						var a = TruncateAlias(f.PhysicalName);
 						return string.IsNullOrEmpty(a)
 							? "c1"
-							: a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
+							: a + (a!.EndsWith('_') ? string.Empty : "_") + "1";
 					},
 					StringComparer.OrdinalIgnoreCase);
 
@@ -178,7 +178,7 @@ namespace LinqToDB.Internal.DataProvider
 						var a = TruncateAlias(f.PhysicalName);
 						return string.IsNullOrEmpty(a)
 							? "f1"
-							: a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
+							: a + (a!.EndsWith('_') ? string.Empty : "_") + "1";
 					},
 					StringComparer.OrdinalIgnoreCase);
 
@@ -267,7 +267,7 @@ namespace LinqToDB.Internal.DataProvider
 							var a = TruncateAlias(c.Alias ?? string.Empty);
 							return string.IsNullOrEmpty(a)
 								? "c1"
-								: a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
+								: a + (a!.EndsWith('_') ? string.Empty : "_") + "1";
 						},
 						StringComparer.OrdinalIgnoreCase);
 

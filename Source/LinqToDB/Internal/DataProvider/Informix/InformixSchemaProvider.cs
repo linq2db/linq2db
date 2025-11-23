@@ -403,7 +403,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 								};
 							}
 
-							if (name.StartsWith("r"))
+							if (name.StartsWith('r'))
 							{
 								var ns = name.Substring(1).Split('_');
 

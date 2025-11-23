@@ -215,7 +215,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 							return sb.Append(value);
 
 						if (ProviderOptions.IdentifierQuoteMode == DB2IdentifierQuoteMode.Quote ||
-						    value.StartsWith("_") ||
+						    value.StartsWith('_') ||
 						    value.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
 							return sb.Append('"').Append(value).Append('"');
 					}

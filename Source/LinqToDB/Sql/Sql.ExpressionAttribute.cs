@@ -190,7 +190,7 @@ namespace LinqToDB
 				var str = _matchParamRegEx.Replace(expression, match =>
 				{
 					var paramName     = match.Groups[1].Value;
-					var canBeOptional = paramName.EndsWith("?");
+					var canBeOptional = paramName.EndsWith('?');
 					if (canBeOptional)
 						paramName = paramName.TrimEnd('?');
 

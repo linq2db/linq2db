@@ -254,7 +254,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		private static string GetTablePhysicalName(string physicalName, TableOptions tableOptions)
 		{
-			if (physicalName.StartsWith("#"))
+			if (physicalName.StartsWith('#'))
 				return physicalName;
 
 			return tableOptions.TemporaryOptionValue switch
@@ -361,7 +361,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		static bool IsTemporary(string tableName, TableOptions tableOptions)
 		{
-			return tableOptions.IsTemporaryOptionSet() || tableName.StartsWith("#");
+			return tableOptions.IsTemporaryOptionSet() || tableName.StartsWith('#');
 		}
 
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);

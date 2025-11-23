@@ -1,11 +1,5 @@
 ﻿#if !NET8_0_OR_GREATER
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 #pragma warning disable IDE0130
 #pragma warning disable IDE0160
 namespace System;

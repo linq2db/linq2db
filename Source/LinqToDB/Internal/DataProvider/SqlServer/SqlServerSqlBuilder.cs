@@ -173,7 +173,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		private static string GetTablePhysicalName(string tableName, TableOptions tableOptions)
 		{
-			if (tableName.StartsWith("#"))
+			if (tableName.StartsWith('#'))
 				return tableName;
 
 			return tableOptions.TemporaryOptionValue switch
@@ -205,7 +205,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			// remove database name, which could be inherited from non-temporary table mapping
 			// except explicit use of tempdb, needed in some cases at least for sql server 2014
-			if ((name.Name.StartsWith("#") || tableOptions.IsTemporaryOptionSet()) && databaseName != "tempdb")
+			if ((name.Name.StartsWith('#') || tableOptions.IsTemporaryOptionSet()) && databaseName != "tempdb")
 				databaseName = "tempdb";
 
 			if (name.Server != null && (databaseName == null || name.Schema == null))
@@ -309,7 +309,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
 				var defaultDatabaseName =
-					table.TableName.Name.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet() ?
+					table.TableName.Name.StartsWith('#') || table.TableOptions.IsTemporaryOptionSet() ?
 						"tempdb" : null;
 
 				StringBuilder.Append("IF (OBJECT_ID(N'");
@@ -448,7 +448,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				var table = createTable.Table;
 
 				var defaultDatabaseName =
-					table.TableName.Name.StartsWith("#") || table.TableOptions.IsTemporaryOptionSet() ?
+					table.TableName.Name.StartsWith('#') || table.TableOptions.IsTemporaryOptionSet() ?
 						"tempdb" : null;
 
 				StringBuilder.Append("IF (OBJECT_ID(N'");

@@ -149,11 +149,11 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		private static (string type, bool isNullable, bool lowCardinality) PreParseTypeName(string type)
 		{
 			// we don't need this information currently, so it is not returned
-			var lowCardinality = type.StartsWith("LowCardinality(") && type.EndsWith(")");
+			var lowCardinality = type.StartsWith("LowCardinality(") && type.EndsWith(')');
 			if (lowCardinality)
 				type = type.Substring(15, type.Length - 16);
 
-			var isNullable = type.StartsWith("Nullable(") && type.EndsWith(")");
+			var isNullable = type.StartsWith("Nullable(") && type.EndsWith(')');
 			if (isNullable)
 				type = type.Substring(9, type.Length - 10);
 
