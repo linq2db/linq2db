@@ -18,6 +18,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		static readonly Lazy<IDataProvider> _postgreSQLDataProvider92 = CreateDataProvider<PostgreSQLDataProvider92>();
 		static readonly Lazy<IDataProvider> _postgreSQLDataProvider93 = CreateDataProvider<PostgreSQLDataProvider93>();
 		static readonly Lazy<IDataProvider> _postgreSQLDataProvider95 = CreateDataProvider<PostgreSQLDataProvider95>();
+		static readonly Lazy<IDataProvider> _postgreSQLDataProvider13 = CreateDataProvider<PostgreSQLDataProvider13>();
 		static readonly Lazy<IDataProvider> _postgreSQLDataProvider15 = CreateDataProvider<PostgreSQLDataProvider15>();
 		static readonly Lazy<IDataProvider> _postgreSQLDataProvider18 = CreateDataProvider<PostgreSQLDataProvider18>();
 
@@ -28,6 +29,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				case ProviderName.PostgreSQL92 : return _postgreSQLDataProvider92.Value;
 				case ProviderName.PostgreSQL93 : return _postgreSQLDataProvider93.Value;
 				case ProviderName.PostgreSQL95 : return _postgreSQLDataProvider95.Value;
+				case ProviderName.PostgreSQL13 : return _postgreSQLDataProvider13.Value;
 				case ProviderName.PostgreSQL15 : return _postgreSQLDataProvider15.Value;
 				case ProviderName.PostgreSQL18 : return _postgreSQLDataProvider18.Value;
 				case ""                        :
@@ -49,6 +51,12 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 							return _postgreSQLDataProvider15.Value;
 						}
 
+						if (options.ConfigurationString.Contains("14")
+							|| options.ConfigurationString.Contains("13"))
+						{
+							return _postgreSQLDataProvider13.Value;
+						}
+
 						if (options.ConfigurationString.Contains("92") || options.ConfigurationString.Contains("9.2"))
 							return _postgreSQLDataProvider92.Value;
 
@@ -60,9 +68,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 							options.ConfigurationString.Contains("96") || options.ConfigurationString.Contains("9.6") ||
 							options.ConfigurationString.Contains("10") ||
 							options.ConfigurationString.Contains("11") ||
-							options.ConfigurationString.Contains("12") ||
-							options.ConfigurationString.Contains("13") ||
-							options.ConfigurationString.Contains("14"))
+							options.ConfigurationString.Contains("12"))
 							return _postgreSQLDataProvider95.Value;
 					}
 
@@ -93,6 +99,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				PostgreSQLVersion.AutoDetect => GetDataProvider(options, default, DetectServerVersion(options, default) ?? DefaultVersion),
 				PostgreSQLVersion.v18        => _postgreSQLDataProvider18.Value,
 				PostgreSQLVersion.v15        => _postgreSQLDataProvider15.Value,
+				PostgreSQLVersion.v13        => _postgreSQLDataProvider13.Value,
 				PostgreSQLVersion.v95        => _postgreSQLDataProvider95.Value,
 				PostgreSQLVersion.v93        => _postgreSQLDataProvider93.Value,
 				_                            => _postgreSQLDataProvider92.Value,
@@ -108,6 +115,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 			if (postgreSqlVersion.Major >= 15)
 				return PostgreSQLVersion.v15;
+
+			if (postgreSqlVersion.Major >= 13)
+				return PostgreSQLVersion.v13;
 
 			if (postgreSqlVersion.Major > 9 || postgreSqlVersion.Major == 9 && postgreSqlVersion.Minor > 4)
 				return PostgreSQLVersion.v95;
