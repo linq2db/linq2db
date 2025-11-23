@@ -64,6 +64,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 		public DbSet<Issue4783Record> Issue4783Records { get; set; } = null!;
 
+		public DbSet<Issue5177Table> Issue5177 { get; set; } = null!;
+
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
 		}
@@ -333,6 +335,17 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 				builder.Property(e => e.NullableStatusString).HasConversion<string>();
 				builder.Property(e => e.NullableStatusConverter).HasConversion(new EnumToStringConverter<Issue4783Status>());
+			});
+
+			modelBuilder.Entity<Issue5177Table>(e =>
+			{
+				e.Property(e => e.Id).ValueGeneratedNever();
+
+				var converter = new ValueConverter<Issue5177Table.GuidValue, Guid>(
+					v => v.Value,
+					v => new Issue5177Table.GuidValue() { Value = v });
+
+				e.Property(e => e.Value).HasConversion(converter);
 			});
 		}
 	}
