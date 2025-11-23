@@ -669,9 +669,10 @@ namespace LinqToDB.Mapping
 			if (valueConverter != null)
 			{
 				var toProvider = valueConverter.ToProviderExpression;
-				var assignable = toProvider.Parameters[0].Type.IsAssignableFrom(getterExpr.Type);
-				if (assignable
-					|| toProvider.Parameters[0].Type.IsAssignableFrom(getterExpr.Type.UnwrapNullableType()))
+				var fromType   = toProvider.Parameters[0].Type;
+				var assignable = fromType.IsAssignableFrom(getterExpr.Type);
+
+				if (assignable || fromType.IsAssignableFrom(getterExpr.Type.UnwrapNullableType()))
 				{
 					if (!valueConverter.HandlesNulls)
 					{
@@ -683,13 +684,19 @@ namespace LinqToDB.Mapping
 						var variable = Expression.Variable(getterExpr.Type);
 						var assign   = Expression.Assign(variable, getterExpr);
 
+						var resultType = toProvider.ReturnType.MakeNullable();
+
+						var convert = InternalExtensions.ApplyLambdaToExpression(toProvider, ExpressionHelper.Property(variable, nameof(Nullable<int>.Value)));
+						if (resultType != toProvider.ReturnType)
+							convert = Expression.Convert(convert, resultType);
+
 						getterExpr = Expression.Block(
 							new[] { variable },
 							assign,
 							Expression.Condition(
 								ExpressionHelper.Property(variable, nameof(Nullable<>.HasValue)),
-								InternalExtensions.ApplyLambdaToExpression(toProvider, ExpressionHelper.Property(variable, nameof(Nullable<>.Value))),
-								new DefaultValueExpression(mappingSchema, toProvider.ReturnType)));
+								convert,
+								new DefaultValueExpression(mappingSchema, resultType)));
 					}
 					else
 					{

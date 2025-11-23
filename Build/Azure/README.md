@@ -148,7 +148,7 @@ Legend:
 |`TestProvName.PostgreSQL10`|PostgreSQL 10|Not tested by CI (EOL)|
 |`TestProvName.PostgreSQL11`|PostgreSQL 11|Not tested by CI (EOL)|
 |`TestProvName.PostgreSQL12`|PostgreSQL 12|Not tested by CI (EOL)|
-|`TestProvName.PostgreSQL13`|PostgreSQL 13||
+|`ProviderName.PostgreSQL13`|PostgreSQL 13||
 |`TestProvName.PostgreSQL14`|PostgreSQL 14||
 |`ProviderName.PostgreSQL15`|PostgreSQL 15||
 |`TestProvName.PostgreSQL16`|PostgreSQL 16||
