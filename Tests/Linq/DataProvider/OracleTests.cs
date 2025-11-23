@@ -4511,7 +4511,7 @@ END convert_bool;");
 
 			using (var db1 = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertDual })))
 			{
-				db.BulkCopy(new BulkCopyOptions(BulkCopyType: BulkCopyType.MultipleRows), records);
+				db1.BulkCopy(new BulkCopyOptions(BulkCopyType: BulkCopyType.MultipleRows), records);
 				AssertRecord();
 			}
 
