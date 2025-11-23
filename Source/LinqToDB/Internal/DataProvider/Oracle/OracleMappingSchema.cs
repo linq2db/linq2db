@@ -133,7 +133,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				case DataType.Text : stringBuilder.Append("TO_CLOB(");  break;
 				case DataType.NText: stringBuilder.Append("TO_NCLOB("); break;
 			}
-
+			
 			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversionAction, value, null);
 
 			switch (type.Type.DataType)
@@ -228,47 +228,17 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		internal static readonly OracleMappingSchema Instance = new ();
 
-		public sealed class NativeMappingSchema : LockedMappingSchema
-		{
-			public NativeMappingSchema() : base(ProviderName.OracleNative, OracleProviderAdapter.GetInstance(OracleProvider.Native).MappingSchema, Instance)
-			{
-			}
-		}
+		public sealed class NativeMappingSchema() : LockedMappingSchema(ProviderName.OracleNative, OracleProviderAdapter.GetInstance(OracleProvider.Native).MappingSchema, Instance);
 
-		public sealed class ManagedMappingSchema : LockedMappingSchema
-		{
-			public ManagedMappingSchema() : base(ProviderName.OracleManaged, OracleProviderAdapter.GetInstance(OracleProvider.Managed).MappingSchema, Instance)
-			{
-			}
-		}
+		public sealed class ManagedMappingSchema() : LockedMappingSchema(ProviderName.OracleManaged, OracleProviderAdapter.GetInstance(OracleProvider.Managed).MappingSchema, Instance);
 
-		public sealed class DevartMappingSchema : LockedMappingSchema
-		{
-			public DevartMappingSchema() : base(ProviderName.OracleDevart, OracleProviderAdapter.GetInstance(OracleProvider.Devart).MappingSchema, Instance)
-			{
-			}
-		}
+		public sealed class DevartMappingSchema() : LockedMappingSchema(ProviderName.OracleDevart, OracleProviderAdapter.GetInstance(OracleProvider.Devart).MappingSchema, Instance);
 
-		public sealed class Native11MappingSchema : LockedMappingSchema
-		{
-			public Native11MappingSchema() : base(ProviderName.Oracle11Native, OracleProviderAdapter.GetInstance(OracleProvider.Native).MappingSchema, Instance)
-			{
-			}
-		}
+		public sealed class Native11MappingSchema() : LockedMappingSchema(ProviderName.Oracle11Native, OracleProviderAdapter.GetInstance(OracleProvider.Native).MappingSchema, Instance);
 
-		public sealed class Managed11MappingSchema : LockedMappingSchema
-		{
-			public Managed11MappingSchema() : base(ProviderName.Oracle11Managed, OracleProviderAdapter.GetInstance(OracleProvider.Managed).MappingSchema, Instance)
-			{
-			}
-		}
+		public sealed class Managed11MappingSchema() : LockedMappingSchema(ProviderName.Oracle11Managed, OracleProviderAdapter.GetInstance(OracleProvider.Managed).MappingSchema, Instance);
 
-		public sealed class Devart11MappingSchema : LockedMappingSchema
-		{
-			public Devart11MappingSchema() : base(ProviderName.Oracle11Devart, OracleProviderAdapter.GetInstance(OracleProvider.Devart).MappingSchema, Instance)
-			{
-			}
-		}
+		public sealed class Devart11MappingSchema() : LockedMappingSchema(ProviderName.Oracle11Devart, OracleProviderAdapter.GetInstance(OracleProvider.Devart).MappingSchema, Instance);
 
 		sealed class OracleRemoteMappingSchema(string configuration) : LockedMappingSchema(configuration, Instance);
 

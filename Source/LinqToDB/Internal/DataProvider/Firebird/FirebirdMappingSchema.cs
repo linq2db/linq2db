@@ -247,25 +247,14 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					.Append('\'');
 			}
 		}
+		
+		public sealed class Firebird25MappingSchema() : Firebird25MappingSchemaBase(FirebirdProviderAdapter.Instance.MappingSchema, Instance);
 
-		public sealed class Firebird25MappingSchema : Firebird25MappingSchemaBase
-		{
-			public Firebird25MappingSchema() : base(FirebirdProviderAdapter.Instance.MappingSchema, Instance)
-			{
-			}
-		}
+		public sealed class Firebird3MappingSchema() : LockedMappingSchema(ProviderName.Firebird3, FirebirdProviderAdapter.Instance.MappingSchema, Instance);
 
-		public sealed class Firebird3MappingSchema() : LockedMappingSchema(ProviderName.Firebird3, FirebirdProviderAdapter.Instance.MappingSchema, Instance)
-		{
-		}
+		public sealed class Firebird4MappingSchema() : LockedMappingSchema(ProviderName.Firebird4, FirebirdProviderAdapter.Instance.MappingSchema, Instance);
 
-		public sealed class Firebird4MappingSchema() : LockedMappingSchema(ProviderName.Firebird4, FirebirdProviderAdapter.Instance.MappingSchema, Instance)
-		{
-		}
-
-		public sealed class Firebird5MappingSchema() : LockedMappingSchema(ProviderName.Firebird5, FirebirdProviderAdapter.Instance.MappingSchema, Instance)
-		{
-		}
+		public sealed class Firebird5MappingSchema() : LockedMappingSchema(ProviderName.Firebird5, FirebirdProviderAdapter.Instance.MappingSchema, Instance);
 
 		sealed class FirebirdRemoteMappingSchema(string configuration) : LockedMappingSchema(configuration, Instance);
 

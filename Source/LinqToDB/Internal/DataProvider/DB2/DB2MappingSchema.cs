@@ -199,18 +199,8 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 		internal static readonly DB2MappingSchema Instance = new ();
 
-		public sealed class DB2zOSMappingSchema : LockedMappingSchema
-		{
-			public DB2zOSMappingSchema() : base(ProviderName.DB2zOS,  DB2ProviderAdapter.Instance.MappingSchema, Instance)
-			{
-			}
-		}
+		public sealed class DB2zOSMappingSchema() : LockedMappingSchema(ProviderName.DB2zOS, DB2ProviderAdapter.Instance.MappingSchema, Instance);
 
-		public sealed class DB2LUWMappingSchema : LockedMappingSchema
-		{
-			public DB2LUWMappingSchema() : base(ProviderName.DB2LUW, DB2ProviderAdapter.Instance.MappingSchema, Instance)
-			{
-			}
-		}
+		public sealed class DB2LUWMappingSchema() : LockedMappingSchema(ProviderName.DB2LUW, DB2ProviderAdapter.Instance.MappingSchema, Instance);
 	}
 }
