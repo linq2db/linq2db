@@ -198,119 +198,126 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return null;
 
 			var methodName = methodCall.Method.Name;
-			if (methodName != nameof(Enumerable.Min) && methodName != nameof(Enumerable.Max) && methodName != nameof(Enumerable.Average) && methodName != nameof(Enumerable.Sum))
+			if (methodName is not nameof(Enumerable.Min) and not nameof(Enumerable.Max)
+					and not nameof(Enumerable.Average) and not nameof(Enumerable.Sum))
+			{
 				return null;
+			}
 
 			var builder = new AggregateFunctionBuilder()
-					.ConfigureAggregate(c => c
-						.HasSequenceIndex(0)
-						.AllowFilter()
-						.AllowDistinct(IsAggregationDistinctSupported)
-						.HasValue(false)
-						.OnBuildFunction(composer =>
+				.ConfigureAggregate(c => c
+					.HasSequenceIndex(0)
+					.AllowFilter()
+					.AllowDistinct(IsAggregationDistinctSupported)
+					.HasValue(false)
+					.OnBuildFunction(composer =>
+					{
+						var info = composer.BuildInfo;
+
+						if (info.SelectQuery == null)
+							return;
+
+						var factory = info.Factory;
+
+						SqlSearchCondition? filterCondition = null;
+						ISqlExpression      argumentValue;
+
+						if (info.ValueExpression == null)
 						{
-							var info = composer.BuildInfo;
+							return;
+						}
 
-							if (info.SelectQuery == null)
-								return;
-
-							var factory = info.Factory;
-
-							SqlSearchCondition? filterCondition = null;
-							ISqlExpression      argumentValue;
-
-							if (info.ValueExpression == null)
+						if (!info.IsGroupBy)
+						{
+							if (info.FilterCondition != null)
 							{
+								composer.SetFallback(c => c
+									.AllowFilter(false)
+								);
+
+								return;
+							}
+						}
+
+						ISqlExpression? value;
+
+						if (methodCall.Arguments.Count > 1)
+						{
+							if (!composer.AggregationContext.TranslateLambdaExpression(methodCall.Arguments[1].UnwrapLambda(), out value, out var error))
+							{
+								composer.SetError(error);
 								return;
 							}
 
-							if (!info.IsGroupBy)
+							if (info.IsDistinct)
 							{
-								if (info.FilterCondition != null)
+								if (!composer.Translator.TranslateExpression(info.ValueExpression, out var checkValue, out var checkError)
+									|| !value.Equals(checkValue, SqlQuery.SqlExtensions.DefaultComparer))
 								{
-									composer.SetFallback(c => c
-										.AllowFilter(false)
-									);
-
+									composer.SetFallback(c => c.AllowDistinct(false));
 									return;
 								}
 							}
-
-							ISqlExpression? value;
-
-							if (methodCall.Arguments.Count > 1)
+						}
+						else
+						{
+							if (!composer.Translator.TranslateExpression(info.ValueExpression, out value, out var error))
 							{
-								if (!composer.AggregationContext.TranslateLambdaExpression(methodCall.Arguments[1].UnwrapLambda(), out value, out var error))
-								{
-									composer.SetError(error);
-									return;
-								}
+								composer.SetError(error);
+								return;
+							}
+						}
 
-								if (info.IsDistinct)
-								{
-									if (!composer.Translator.TranslateExpression(info.ValueExpression, out var checkValue, out var checkError)
-									    || !value.Equals(checkValue, SqlQuery.SqlExtensions.DefaultComparer))
-									{
-										composer.SetFallback(c => c.AllowDistinct(false));
-										return;
-									}
-								}
+						var valueType  = factory.GetDbDataType(value);
+						var resultType = factory.GetDbDataType(methodCall.Method.ReturnType);
+						var hasFilter  = false;
+
+						if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
+						{
+							hasFilter = true;
+							if (IsFilterSupported)
+							{
+								filterCondition = info.FilterCondition;
+								argumentValue   = value;
 							}
 							else
 							{
-								if (!composer.Translator.TranslateExpression(info.ValueExpression, out value, out var error))
-								{
-									composer.SetError(error);
-									return;
-								}
+								argumentValue = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
 							}
+						}
+						else
+						{
+							argumentValue = value;
+						}
 
-							var valueType  = factory.GetDbDataType(value);
-							var resultType = factory.GetDbDataType(methodCall.Method.ReturnType);
-							var hasFilter  = false;
+						var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
 
-							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
-							{
-								hasFilter = true;
-								if (IsFilterSupported)
-								{
-									filterCondition = info.FilterCondition;
-									argumentValue   = value;
-								}
-								else
-								{
-									argumentValue = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
-								}
-							}
-							else
-							{
-								argumentValue = value;
-							}
+						var functionName = methodName switch
+						{
+							nameof(Enumerable.Average) => "AVG",
+							nameof(Enumerable.Sum)     => "SUM",
+							nameof(Enumerable.Min)     => "MIN",
+							_                          => "MAX",
+						};
 
-							var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
+						if (!info.IsGroupBy && argumentValue.SystemType?.IsNullableOrReferenceType() == false && functionName is "AVG" or "MIN" or "MAX")
+						{
+							composer.SetValidation(p => GenerateNullCheckIfNeeded(p, methodName));
+						}
 
-							var functionName = methodName == nameof(Enumerable.Average) ? "AVG"
-								: methodName              == nameof(Enumerable.Sum)     ? "SUM"
-								: methodName              == nameof(Enumerable.Min)     ? "MIN" : "MAX";
+						var canBeNull = info is { IsGroupBy: true, IsEmptyGroupBy: false } && !hasFilter ? (bool?)null : true;
 
-							if (!info.IsGroupBy && argumentValue.SystemType?.IsNullableOrReferenceType() == false && functionName is "AVG" or "MIN" or "MAX")
-							{
-								composer.SetValidation(p => GenerateNullCheckIfNeeded(p, methodName));
-							}
+						var fn = factory.Function(resultType, functionName,
+							[new SqlFunctionArgument(argumentValue, modifier : aggregateModifier)],
+							[true, true],
+							canBeNull: canBeNull,
+							isAggregate : true,
+							filter: filterCondition,
+							canBeAffectedByOrderBy : false
+						);
 
-							var canBeNull = info is { IsGroupBy: true, IsEmptyGroupBy: false } && !hasFilter ? (bool?)null : true;
-
-							var fn = factory.Function(resultType, functionName,
-								[new SqlFunctionArgument(argumentValue, modifier : aggregateModifier)],
-								[true, true],
-								canBeNull: canBeNull,
-								isAggregate : true,
-								filter: filterCondition,
-								canBeAffectedByOrderBy : false
-							);
-
-							composer.SetResult(fn);
-						}));
+						composer.SetResult(fn);
+					}));
 
 			return builder.Build(translationContext, methodCall);
 		}

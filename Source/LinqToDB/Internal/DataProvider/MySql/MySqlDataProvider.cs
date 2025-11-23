@@ -49,7 +49,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			SqlProviderFlags.IsWindowFunctionsSupported        = Version >= MySqlVersion.MySql80;
 
 			SqlProviderFlags.IsSubqueryWithParentReferenceInJoinConditionSupported = false;
-			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel                    = (version > MySqlVersion.MySql57) && version != MySqlVersion.MariaDB10 ? null : 1;
+			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel                    = version is > MySqlVersion.MySql57 and not MySqlVersion.MariaDB10 ? null : 1;
 			SqlProviderFlags.CalculateSupportedCorrelatedLevelWithAggregateQueries = true;
 			SqlProviderFlags.RowConstructorSupport                                 = RowFeature.Equality | RowFeature.Comparisons | RowFeature.CompareToSelect | RowFeature.In;
 
