@@ -403,9 +403,9 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				var insertIndex = sql.IndexOf("INSERT", position, StringComparison.Ordinal);
 
 				StringBuilder.Clear()
-					.Append(sql.Substring(0, insertIndex))
+					.Append(sql.AsSpan(0, insertIndex))
 					.Append("INSERT IGNORE")
-					.Append(sql.Substring(insertIndex + "INSERT".Length));
+					.Append(sql.AsSpan(insertIndex + "INSERT".Length));
 			}
 		}
 

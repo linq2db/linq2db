@@ -32,7 +32,7 @@ namespace LinqToDB.Internal.DataProvider
 			while (nextIndex >= 0)
 			{
 				if (nextIndex != 0)
-					newStr.Value.Append(str.Substring(lastIndex, nextIndex - lastIndex));
+					newStr.Value.Append(str.AsSpan(lastIndex, nextIndex - lastIndex));
 
 				lastIndex = nextIndex;
 
@@ -51,7 +51,7 @@ namespace LinqToDB.Internal.DataProvider
 
 			}
 
-			newStr.Value.Append(str.Substring(lastIndex + 1));
+			newStr.Value.Append(str.AsSpan(lastIndex + 1));
 			return newStr.Value.ToString();
 		}
 

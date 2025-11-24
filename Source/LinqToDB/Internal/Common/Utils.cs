@@ -102,7 +102,7 @@ namespace LinqToDB.Internal.Common
 
 					if (!currentCounters.TryGetValue(name, out startDigit))
 					{
-						startDigit = int.Parse(prevName.Substring(prevName.Length - digitCount, digitCount), NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
+						startDigit = int.Parse(prevName.AsSpan(prevName.Length - digitCount, digitCount), NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
 					}
 				}
 

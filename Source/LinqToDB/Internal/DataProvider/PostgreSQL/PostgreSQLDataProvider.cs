@@ -550,7 +550,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 			if (dbType.StartsWith("float(") && dbType.EndsWith(")"))
 			{
-				if (int.TryParse(dbType.Substring("float(".Length, dbType.Length - "float(".Length - 1), NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var precision))
+				if (int.TryParse(dbType.AsSpan("float(".Length, dbType.Length - "float(".Length - 1), NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var precision))
 				{
 					if (precision is >= 1 and <= 24)
 						dbType = "real";

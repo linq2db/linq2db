@@ -198,7 +198,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 				case ConvertType.SprocParameterToName   :
 					return (value.Length > 0 && value[0] == ':')
-						? sb.Append(value.Substring(1))
+						? sb.Append(value.AsSpan(1))
 						: sb.Append(value);
 			}
 

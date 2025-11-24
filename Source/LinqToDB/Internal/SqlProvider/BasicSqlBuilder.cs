@@ -1466,8 +1466,10 @@ namespace LinqToDB.Internal.SqlProvider
 					if (field.Field.CreateFormat != null)
 					{
 						var sb = field.StringBuilder;
+						sb.Length = field.Name.Length;
+						sb.Append(' ');
 
-						field.Type = sb.ToString().Substring(field.Name.Length) + ' ';
+						field.Type = sb.ToString();
 						sb.Length = 0;
 					}
 				}
