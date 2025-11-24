@@ -67,7 +67,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 		public EFCoreMetadataReader(IModel? model, IInfrastructure<IServiceProvider>? accessor)
 		{
-			_model    = model;
+			_model = model;
 
 			if (accessor != null)
 			{
@@ -108,8 +108,18 @@ namespace LinqToDB.EntityFrameworkCore
 #endif
 
 				// QueryFilterAttribute
-				var filter = et.GetQueryFilter();
-				if (filter != null)
+#if EF10
+				foreach (var queryFilter in et.GetDeclaredQueryFilters())
+				{
+					if (queryFilter is { Expression: { } filter })
+						TransformFilter(filter);
+				}
+#else
+				if (et.GetQueryFilter() is { } filter)
+					TransformFilter(filter);
+#endif
+
+				void TransformFilter(LambdaExpression filter)
 				{
 					var dcParam     = Expression.Parameter(typeof(IDataContext), "dc");
 					var contextProp = Expression.Property(Expression.Convert(dcParam, typeof(LinqToDBForEFToolsDataConnection)), "Context");
@@ -190,9 +200,9 @@ namespace LinqToDB.EntityFrameworkCore
 				return false;
 
 			if (memberInfo.DeclaringType?.IsAssignableFrom(property.DeclaringType) == true
-			    && memberInfo.Name == property.Name
-			    && memberInfo.MemberType == property.MemberType
-			    && memberInfo.GetMemberType() == property.GetMemberType())
+				&& memberInfo.Name == property.Name
+				&& memberInfo.MemberType == property.MemberType
+				&& memberInfo.GetMemberType() == property.GetMemberType())
 			{
 				return true;
 			}
@@ -257,7 +267,7 @@ namespace LinqToDB.EntityFrameworkCore
 				// ColumnAttribute
 				if (prop != null)
 				{
-					hasColumn         = true;
+					hasColumn = true;
 #if EF31
 					var discriminator = et.GetDiscriminatorProperty();
 #else
@@ -305,7 +315,7 @@ namespace LinqToDB.EntityFrameworkCore
 							if (primaryKey is { Properties.Count: 1 }
 								&& primaryKey.Properties[0] == prop
 								&& prop.ValueGenerated == ValueGenerated.OnAdd
-								&& prop.ClrType.IsInteger()
+								&& prop.ClrType.IsIntegerType
 								&& prop.FindTypeMapping()?.Converter == null)
 							{
 								isIdentity = true;
@@ -364,19 +374,19 @@ namespace LinqToDB.EntityFrameworkCore
 					var ca = new ColumnAttribute()
 					{
 #if EF31
-						Name = prop.GetColumnName(),
+						Name            = prop.GetColumnName(),
 #else
-						Name = storeObjectId != null ? prop.GetColumnName(storeObjectId.Value) : null,
+						Name            = storeObjectId != null ? prop.GetColumnName(storeObjectId.Value) : null,
 #endif
-						CanBeNull = prop.IsNullable,
-						DbType = prop.GetColumnType(),
-						DataType = dataType,
-						IsPrimaryKey = isPrimaryKey,
+						CanBeNull       = prop.IsNullable,
+						DbType          = prop.GetColumnType(),
+						DataType        = dataType,
+						IsPrimaryKey    = isPrimaryKey,
 						PrimaryKeyOrder = primaryKeyOrder,
-						IsIdentity = isIdentity,
+						IsIdentity      = isIdentity,
 						IsDiscriminator = discriminator == prop,
-						SkipOnInsert = skipOnInsert,
-						SkipOnUpdate = skipOnUpdate
+						SkipOnInsert    = skipOnInsert,
+						SkipOnUpdate    = skipOnUpdate
 					};
 
 					var maxLen = prop.GetMaxLength();
@@ -564,7 +574,7 @@ namespace LinqToDB.EntityFrameworkCore
 				if (obj is null) return false;
 				if (ReferenceEquals(this, obj)) return true;
 				if (obj.GetType() != GetType()) return false;
-				return Equals((SqlTransparentExpression) obj);
+				return Equals((SqlTransparentExpression)obj);
 			}
 
 			public override int GetHashCode()
@@ -579,68 +589,97 @@ namespace LinqToDB.EntityFrameworkCore
 			return entityType.GetTableName() switch
 			{
 				not null => StoreObjectIdentifier.Create(entityType, StoreObjectType.Table),
-				null     => StoreObjectIdentifier.Create(entityType, StoreObjectType.View),
+				null => StoreObjectIdentifier.Create(entityType, StoreObjectType.View),
 			};
 		}
 #endif
+
+		private static bool HasSpanTypes(MethodInfo methodInfo)
+		{
+			if (IsSpan(methodInfo.ReturnType))
+				return true;
+
+			foreach (var parameter in methodInfo.GetParameters())
+			{
+				if (IsSpan(parameter.ParameterType))
+					return true;
+			}
+
+			return false;
+		}
+
+		private static bool IsSpan(Type type)
+		{
+			if (!type.IsGenericType)
+				return false;
+
+			var definition = type.GetGenericTypeDefinition();
+			return definition == typeof(ReadOnlySpan<>) || definition == typeof(Span<>);
+		}
 
 		private Sql.ExpressionAttribute? GetDbFunctionFromMethodCall(Type type, MethodInfo methodInfo)
 		{
 			if (_dependencies == null || _model == null)
 				return null;
 
-			methodInfo = (MethodInfo?) type.GetMemberEx(methodInfo) ?? methodInfo;
+			methodInfo = (MethodInfo?)type.GetMemberEx(methodInfo) ?? methodInfo;
 
-			var found = _calculatedExtensions.GetOrAdd(methodInfo, static (mi, ctx) =>
-			{
-				Sql.ExpressionAttribute? result = null;
-
-				if (!ctx.methodInfo.IsGenericMethodDefinition && !mi.HasAttribute<Sql.ExpressionAttribute>())
+			var found = _calculatedExtensions.GetOrAdd(
+				methodInfo,
+				static (mi, ctx) =>
 				{
-					var value = Expression.Constant(DefaultValue.GetValue(ctx.type), ctx.type);
+					if (HasSpanTypes(ctx.methodInfo))
+						return null;
 
-					var objExpr = new SqlTransparentExpression(value, ctx.this_._mappingSource?.FindMapping(ctx.type));
-					var parameterInfos = ctx.methodInfo.GetParameters();
-					var parametersArray = new EfSqlExpression[parameterInfos.Length];
-					for (var i = 0; i < parameterInfos.Length; i++)
+					if (!ctx.methodInfo.IsGenericMethodDefinition && !mi.HasAttribute<Sql.ExpressionAttribute>())
 					{
-						var p = parameterInfos[i];
+						var value = Expression.Constant(DefaultValue.GetValue(ctx.type), ctx.type);
 
-						parametersArray[i] = new SqlTransparentExpression(
-							Expression.Constant(DefaultValue.GetValue(p.ParameterType), p.ParameterType),
-							ctx.this_._mappingSource?.FindMapping(p.ParameterType));
-					}
+						var objExpr         = new SqlTransparentExpression(value, ctx.this_._mappingSource?.FindMapping(ctx.type));
+						var parameterInfos  = ctx.methodInfo.GetParameters();
+						var parametersArray = new EfSqlExpression[parameterInfos.Length];
 
-#if !EF31
-					// https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/issues/1801
-					if (ctx.this_._dependencies!.MethodCallTranslatorProvider.GetType().Name == "MySqlMethodCallTranslatorProvider")
-					{
-						var contextProperty = ctx.this_._dependencies!.MethodCallTranslatorProvider.GetType().GetProperty("QueryCompilationContext")
-						?? throw new InvalidOperationException("MySqlMethodCallTranslatorProvider.QueryCompilationContext property not found");
-
-						if (contextProperty.GetValue(ctx.this_._dependencies!.MethodCallTranslatorProvider) == null)
+						for (var i = 0; i < parameterInfos.Length; i++)
 						{
-							contextProperty.SetValue(ctx.this_._dependencies!.MethodCallTranslatorProvider, ctx.this_._databaseDependencies!.QueryCompilationContextFactory.Create(false));
+							var p = parameterInfos[i];
+
+							parametersArray[i] = new SqlTransparentExpression(
+								Expression.Constant(DefaultValue.GetValue(p.ParameterType), p.ParameterType),
+								ctx.this_._mappingSource?.FindMapping(p.ParameterType));
+						}
+
+	#if !EF31
+						// https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/issues/1801
+						if (ctx.this_._dependencies!.MethodCallTranslatorProvider.GetType().Name == "MySqlMethodCallTranslatorProvider")
+						{
+							var contextProperty = ctx.this_._dependencies!.MethodCallTranslatorProvider.GetType().GetProperty("QueryCompilationContext")
+							?? throw new InvalidOperationException("MySqlMethodCallTranslatorProvider.QueryCompilationContext property not found");
+
+							if (contextProperty.GetValue(ctx.this_._dependencies!.MethodCallTranslatorProvider) == null)
+							{
+								contextProperty.SetValue(ctx.this_._dependencies!.MethodCallTranslatorProvider, ctx.this_._databaseDependencies!.QueryCompilationContextFactory.Create(false));
+							}
+						}
+	#endif
+
+	#if !EF31
+						var newExpression = ctx.this_._dependencies!.MethodCallTranslatorProvider.Translate(ctx.this_._model!, objExpr, ctx.methodInfo, parametersArray, ctx.this_._logger!);
+	#else
+						var newExpression = ctx.this_._dependencies!.MethodCallTranslatorProvider.Translate(ctx.this_._model!, objExpr, ctx.methodInfo, parametersArray);
+	#endif
+						if (newExpression != null)
+						{
+							if (!ctx.methodInfo.IsStatic)
+								parametersArray = new EfSqlExpression[] { objExpr }.Concat(parametersArray).ToArray();
+
+							return ConvertToExpressionAttribute(ctx.methodInfo, newExpression, parametersArray);
 						}
 					}
-#endif
 
-#if !EF31
-					var newExpression = ctx.this_._dependencies!.MethodCallTranslatorProvider.Translate(ctx.this_._model!, objExpr, ctx.methodInfo, parametersArray, ctx.this_._logger!);
-#else
-					var newExpression = ctx.this_._dependencies!.MethodCallTranslatorProvider.Translate(ctx.this_._model!, objExpr, ctx.methodInfo, parametersArray);
-#endif
-					if (newExpression != null)
-					{
-						if (!ctx.methodInfo.IsStatic)
-							parametersArray = new EfSqlExpression[] { objExpr }.Concat(parametersArray).ToArray();
-
-						result = ConvertToExpressionAttribute(ctx.methodInfo, newExpression, parametersArray);
-					}
-				}
-
-				return result;
-			}, (methodInfo, type, this_: this));
+					return null;
+				},
+				(methodInfo, type, this_: this)
+			);
 
 			return found;
 		}
@@ -695,7 +734,7 @@ namespace LinqToDB.EntityFrameworkCore
 						if (param is SqlTransparentExpression transparent)
 						{
 							if (transparent.Expression is ConstantExpression &&
-							    expr is SqlConstantExpression)
+								expr is SqlConstantExpression)
 							{
 								//found = sqlConstantExpr.Value.Equals(constantExpr.Value);
 								found = true;
@@ -770,11 +809,11 @@ namespace LinqToDB.EntityFrameworkCore
 					{
 						"Contains"
 							when left.Type.Name == "NpgsqlInetTypeMapping" ||
-							     left.Type.Name == "NpgsqlCidrTypeMapping"
+								 left.Type.Name == "NpgsqlCidrTypeMapping"
 							=> ">>",
 						"ContainedBy"
 							when left.Type.Name == "NpgsqlInetTypeMapping" ||
-							     left.Type.Name == "NpgsqlCidrTypeMapping"
+								 left.Type.Name == "NpgsqlCidrTypeMapping"
 							=> "<<",
 						"Contains"                      => "@>",
 						"ContainedBy"                   => "<@",
@@ -822,7 +861,7 @@ namespace LinqToDB.EntityFrameworkCore
 			var converted = UnwrapConverted(newExpression);
 			var expressionText = PrepareExpressionText(converted);
 			var result = new Sql.ExpressionAttribute(expressionText)
-				{ ServerSideOnly = true, IsPredicate = memberInfo.GetMemberType() == typeof(bool) };
+			{ ServerSideOnly = true, IsPredicate = memberInfo.GetMemberType() == typeof(bool) };
 
 			if (converted is SqlFunctionExpression or SqlFragmentExpression)
 				result.Precedence = Precedence.Primary;
@@ -835,7 +874,7 @@ namespace LinqToDB.EntityFrameworkCore
 			if (expr is SqlFunctionExpression func)
 			{
 				if (string.Equals(func.Name, "COALESCE", StringComparison.InvariantCultureIgnoreCase) &&
-				    func.Arguments?.Count == 2 && func.Arguments[1].NodeType == ExpressionType.Extension)
+					func.Arguments?.Count == 2 && func.Arguments[1].NodeType == ExpressionType.Extension)
 					return UnwrapConverted(func.Arguments[0]);
 			}
 

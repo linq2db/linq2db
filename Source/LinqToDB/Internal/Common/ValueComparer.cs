@@ -102,7 +102,7 @@ namespace LinqToDB.Internal.Common
 		/// <returns> The <see cref="ValueComparer{T}" />. </returns>
 		public static ValueComparer CreateDefault(Type type, bool favorStructuralComparisons)
 		{
-			var nonNullabletype = type.ToNullableUnderlying();
+			var nonNullabletype = type.UnwrapNullableType();
 
 			// The equality operator returns false for NaNs, but the Equals methods returns true
 			if (nonNullabletype == typeof(double))
@@ -115,7 +115,7 @@ namespace LinqToDB.Internal.Common
 				return new DefaultFloatValueComparer(favorStructuralComparisons);
 			}
 
-			var comparerType = nonNullabletype.IsInteger()
+			var comparerType = nonNullabletype.IsIntegerType
 				|| nonNullabletype == typeof(decimal)
 				|| nonNullabletype == typeof(bool)
 				|| nonNullabletype == typeof(string)

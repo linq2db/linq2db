@@ -14,8 +14,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		readonly DataOptions _dataOptions;
 
-		ClickHouseOptions? _providerOptions;
-		public ClickHouseOptions ProviderOptions => _providerOptions ??= _dataOptions.FindOrDefault(ClickHouseOptions.Default);
+		public ClickHouseOptions ProviderOptions => field ??= _dataOptions.FindOrDefault(ClickHouseOptions.Default);
 
 		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions, MappingSchema mappingSchema)
 		{

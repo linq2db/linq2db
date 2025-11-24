@@ -1,18 +1,17 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project>
 	<Import Project="..\linq2db.BasicTestProjects.props" />
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.EntityFrameworkCore.Tests</AssemblyName>
 		<RootNamespace>LinqToDB.EntityFrameworkCore.Tests</RootNamespace>
 
-		<TargetFrameworks>net9.0</TargetFrameworks>
+		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
+
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
 	</PropertyGroup>
-
+	
 	<ItemGroup>
-		<None Remove="app.config" />
-
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
-		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.STS.csproj" />
 
 		<PackageReference Include="Microsoft.Extensions.Logging.Console" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />

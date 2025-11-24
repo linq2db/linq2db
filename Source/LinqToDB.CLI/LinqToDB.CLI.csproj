@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<RootNamespace>LinqToDB.CLI</RootNamespace>
 		<AssemblyName>dotnet-linq2db</AssemblyName>
-		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
 		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 		<OutputType>Exe</OutputType>
 		<SignAssembly>False</SignAssembly>

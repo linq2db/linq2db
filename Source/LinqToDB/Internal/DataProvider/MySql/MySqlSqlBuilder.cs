@@ -175,7 +175,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				(DataType.Double,         _,                   _,                  _                   ) => "DOUBLE",
 				(DataType.Single,         _,                   _,                  _                   ) => "FLOAT",
 				(DataType.BitArray,       _,                   _,                  null                ) =>
-					type.SystemType.ToNullableUnderlying()
+					type.SystemType.UnwrapNullableType()
 					switch
 					{
 						var t when t == typeof(byte)  || t == typeof(sbyte)  =>  8,

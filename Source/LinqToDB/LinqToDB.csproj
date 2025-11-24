@@ -5,8 +5,6 @@
 		<RootNamespace>LinqToDB</RootNamespace>
 
 		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
-		<TargetFrameworks>net462;netstandard2.0;net8.0;net9.0</TargetFrameworks>
-		<TargetFrameworks Condition="'$(Configuration)'=='Testing'">net8.0;net9.0</TargetFrameworks>
 
 		<Title>Linq to DB</Title>
 		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
@@ -22,7 +20,7 @@
 		<!-- T4 support -->
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
 
-		<ProjectReference Include="../CodeGenerators/CodeGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" SetTargetFramework="TargetFramework=netstandard2.0" />
+		<ProjectReference Include="../CodeGenerators/CodeGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 
 		<EmbeddedResource Include="Resources\*.txt" />
 

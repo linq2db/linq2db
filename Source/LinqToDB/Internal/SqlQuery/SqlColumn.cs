@@ -16,7 +16,7 @@ namespace LinqToDB.Internal.SqlQuery
 #endif
 
 			Parent      = parent;
-			_expression = expression ?? throw new ArgumentNullException(nameof(expression));
+			Expression  = expression ?? throw new ArgumentNullException(nameof(expression));
 			RawAlias    = alias;
 
 #if DEBUG
@@ -41,19 +41,16 @@ namespace LinqToDB.Internal.SqlQuery
 		static   int _columnCounter;
 #endif
 
-		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		ISqlExpression _expression;
-
 		public ISqlExpression Expression
 		{
-			get => _expression;
+			get;
 			set
 			{
-				if (_expression == value)
+				if (field == value)
 					return;
 				if (ReferenceEquals(value, this))
 					throw new InvalidOperationException();
-				_expression = value;
+				field = value;
 			}
 		}
 

@@ -13,6 +13,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\Source\LinqToDB\LinqToDB.csproj" />
+
 		<PackageReference Include="BenchmarkDotNet" />
 		<PackageReference Condition="$(DefineConstants.Contains('JETBRAINS'))" Include="JetBrains.Profiler.Api" />
 	</ItemGroup>

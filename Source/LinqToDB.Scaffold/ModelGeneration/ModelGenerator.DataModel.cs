@@ -206,6 +206,8 @@ namespace LinqToDB.Tools.ModelGeneration
 				case "NpgsqlDateTime?":
 				case "NpgsqlCidr":
 				case "NpgsqlCidr?":
+				case "NpgsqlCube":
+				case "NpgsqlCube?":
 					return true;
 				case "object":
 				case "string":
