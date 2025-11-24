@@ -84,7 +84,6 @@ namespace Tests
 		public const string PostgreSQL10      = "PostgreSQL.10";
 		public const string PostgreSQL11      = "PostgreSQL.11";
 		public const string PostgreSQL12      = "PostgreSQL.12";
-		public const string PostgreSQL13      = "PostgreSQL.13";
 		public const string PostgreSQL14      = "PostgreSQL.14";
 		public const string PostgreSQL16      = "PostgreSQL.16";
 		public const string PostgreSQL17      = "PostgreSQL.17";
@@ -93,12 +92,13 @@ namespace Tests
 		public const string AllPostgreSQL93Plus  = $"{ProviderName.PostgreSQL93},{AllPostgreSQL95Plus}";
 		public const string AllPostgreSQL95Plus  = $"{ProviderName.PostgreSQL95},{AllPostgreSQL10Plus}";
 		public const string AllPostgreSQL10Plus  = $"{PostgreSQL10},{PostgreSQL11},{PostgreSQL12},{AllPostgreSQL13Plus}";
-		public const string AllPostgreSQL13Plus  = $"{PostgreSQL13},{PostgreSQL14},{AllPostgreSQL15Plus}";
+		public const string AllPostgreSQL13Plus  = $"{ProviderName.PostgreSQL13},{PostgreSQL14},{AllPostgreSQL15Plus}";
 		public const string AllPostgreSQL15Plus  = $"{ProviderName.PostgreSQL15},{PostgreSQL16},{AllPostgreSQL17Plus}";
 		public const string AllPostgreSQL17Plus  = $"{PostgreSQL17},{AllPostgreSQL18Plus}";
 		public const string AllPostgreSQL18Plus  = ProviderName.PostgreSQL18;
 		public const string AllPostgreSQL        = $"{AllPostgreSQL9},{AllPostgreSQL10Plus}";
-		public const string AllPostgreSQL14Minus = $"{AllPostgreSQL9},{PostgreSQL10},{PostgreSQL11},{PostgreSQL12},{PostgreSQL13},{PostgreSQL14}";
+		public const string AllPostgreSQL12Minus = $"{AllPostgreSQL9},{PostgreSQL10},{PostgreSQL11},{PostgreSQL12}";
+		public const string AllPostgreSQL14Minus = $"{AllPostgreSQL12Minus},{ProviderName.PostgreSQL13},{PostgreSQL14}";
 		public const string AllPostgreSQL15Minus = $"{AllPostgreSQL14Minus},{ProviderName.PostgreSQL15}";
 		public const string AllPostgreSQL16Minus = $"{AllPostgreSQL15Minus},{PostgreSQL16}";
 		#endregion

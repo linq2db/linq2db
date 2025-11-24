@@ -4383,9 +4383,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return BuildObjectName(sb.Value, entity.Name, ConvertType.NameToQueryTable, true, entity.TableOptions).ToString();
 		}
 
-		private string? _name;
-
-		public virtual string Name => _name ??= GetType().Name.Replace("SqlBuilder", "");
+		public virtual string Name => field ??= GetType().Name.Replace("SqlBuilder", "");
 
 		#endregion
 

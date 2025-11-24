@@ -159,13 +159,13 @@ namespace LinqToDB.Linq.Translation
 				{
 					switch (mc.Method.Name)
 					{
-						case nameof(WindowFunctionBuilder.IOrderByPart<object>.OrderBy):
-						case nameof(WindowFunctionBuilder.IOrderByPart<object>.OrderByDesc):
-						case nameof(WindowFunctionBuilder.IThenOrderPart<object>.ThenBy):
-						case nameof(WindowFunctionBuilder.IThenOrderPart<object>.ThenByDesc):
+						case nameof(WindowFunctionBuilder.IOrderByPart<>.OrderBy):
+						case nameof(WindowFunctionBuilder.IOrderByPart<>.OrderByDesc):
+						case nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenBy):
+						case nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenByDesc):
 						{
-							var isDesc = mc.Method.Name == nameof(WindowFunctionBuilder.IOrderByPart<object>.OrderByDesc) ||
-									 mc.Method.Name == nameof(WindowFunctionBuilder.IThenOrderPart<object>.ThenByDesc);
+							var isDesc = mc.Method.Name == nameof(WindowFunctionBuilder.IOrderByPart<>.OrderByDesc) ||
+									 mc.Method.Name == nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenByDesc);
 
 							orderByList ??= new();
 
@@ -187,7 +187,7 @@ namespace LinqToDB.Linq.Translation
 							break;
 						}
 
-						case nameof(WindowFunctionBuilder.IPartitionPart<object>.PartitionBy):
+						case nameof(WindowFunctionBuilder.IPartitionPart<>.PartitionBy):
 						{
 							partitionByList ??= new();
 
@@ -207,7 +207,7 @@ namespace LinqToDB.Linq.Translation
 							break;
 						}
 
-						case nameof(WindowFunctionBuilder.IArgumentPart<object>.Argument):
+						case nameof(WindowFunctionBuilder.IArgumentPart<>.Argument):
 						{
 							argumentsList ??= new();
 							var        modifier = Sql.AggregateModifier.None;
@@ -228,7 +228,7 @@ namespace LinqToDB.Linq.Translation
 							break;
 						}
 
-						case nameof(WindowFunctionBuilder.IFilterPart<object>.Filter):
+						case nameof(WindowFunctionBuilder.IFilterPart<>.Filter):
 						{
 							filter = mc.Arguments[0];
 
@@ -236,7 +236,7 @@ namespace LinqToDB.Linq.Translation
 							break;
 						}
 
-						case nameof(WindowFunctionBuilder.IUseWindow<object>.UseWindow):
+						case nameof(WindowFunctionBuilder.IUseWindow<>.UseWindow):
 						{
 							buildBody = mc.Arguments[0];
 							var expanded = translationContext.Translate(buildBody, TranslationFlags.Expand);
@@ -259,7 +259,7 @@ namespace LinqToDB.Linq.Translation
 							break;
 						}
 
-						case nameof(WindowFunctionBuilder.IBoundaryPart<int>.Value):
+						case nameof(WindowFunctionBuilder.IBoundaryPart<>.Value):
 						{
 							var boundary = new FrameBoundary(endBoundary != null, SqlFrameBoundary.FrameBoundaryType.Offset, mc.Arguments[0].UnwrapConvertToObject());
 							if (endBoundary == null)
@@ -302,7 +302,7 @@ namespace LinqToDB.Linq.Translation
 							break;
 						}
 
-						case nameof(WindowFunctionBuilder.IBoundaryPart<int>.CurrentRow):
+						case nameof(WindowFunctionBuilder.IBoundaryPart<>.CurrentRow):
 						{
 							var boundary = new FrameBoundary(endBoundary != null, SqlFrameBoundary.FrameBoundaryType.CurrentRow, null);
 							if (endBoundary == null)
@@ -314,7 +314,7 @@ namespace LinqToDB.Linq.Translation
 							break;
 						}
 
-						case nameof(WindowFunctionBuilder.IBoundaryPart<int>.Unbounded):
+						case nameof(WindowFunctionBuilder.IBoundaryPart<>.Unbounded):
 						{
 							var boundary = new FrameBoundary(endBoundary != null, SqlFrameBoundary.FrameBoundaryType.Unbounded, null);
 							if (endBoundary == null)

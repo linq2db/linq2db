@@ -16,8 +16,7 @@
 	<files>
 		<file src="NuGet\README.EF.md"                                                              target="README.md"   />
 
-		<file src="bin\LinqToDB.EntityFrameworkCore.STS\{0}\net8.0\linq2db.EntityFrameworkCore.pdb" target="lib\net8.0\" />
-		<file src="bin\LinqToDB.EntityFrameworkCore.STS\{0}\net8.0\linq2db.EntityFrameworkCore.xml" target="lib\net8.0\" />
-		<file src="bin\LinqToDB.EntityFrameworkCore.STS\{0}\net8.0\linq2db.EntityFrameworkCore.dll" target="lib\net8.0\" />
+		<file src="bin\LinqToDB.EntityFrameworkCore.EF9\{0}\net8.0\linq2db.EntityFrameworkCore.xml" target="lib\net8.0\" />
+		<file src="bin\LinqToDB.EntityFrameworkCore.EF9\{0}\net8.0\linq2db.EntityFrameworkCore.dll" target="lib\net8.0\" />
 	</files>
 </package>

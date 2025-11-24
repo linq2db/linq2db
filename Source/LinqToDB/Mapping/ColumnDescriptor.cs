@@ -452,7 +452,7 @@ namespace LinqToDB.Mapping
 				}
 				else
 				{
-					var enumType = systemType.ToNullableUnderlying();
+					var enumType = systemType.UnwrapNullableType();
 					if (enumType.IsEnum)
 					{
 						var type = Converter.GetDefaultMappingFromEnumType(MappingSchema, dbDataType.SystemType);
@@ -474,16 +474,16 @@ namespace LinqToDB.Mapping
 		{
 			DbDataType dbDataType = default;
 
-			if (systemType.ToNullableUnderlying().IsEnum)
+			if (systemType.UnwrapNullableType().IsEnum)
 			{
 				var enumType = mappingSchema.GetDefaultFromEnumType(systemType);
 
 				if (enumType != null)
 					dbDataType = mappingSchema.GetDataType(enumType).Type;
 
-				if (dbDataType.DataType == DataType.Undefined && systemType.IsNullable())
+				if (dbDataType.DataType == DataType.Undefined && systemType.IsNullableType)
 				{
-					enumType = mappingSchema.GetDefaultFromEnumType(systemType.ToNullableUnderlying());
+					enumType = mappingSchema.GetDefaultFromEnumType(systemType.UnwrapNullableType());
 
 					if (enumType != null)
 						dbDataType = mappingSchema.GetDataType(enumType).Type;
@@ -669,9 +669,10 @@ namespace LinqToDB.Mapping
 			if (valueConverter != null)
 			{
 				var toProvider = valueConverter.ToProviderExpression;
-				var assignable = toProvider.Parameters[0].Type.IsAssignableFrom(getterExpr.Type);
-				if (assignable
-					|| toProvider.Parameters[0].Type.IsAssignableFrom(getterExpr.Type.UnwrapNullableType()))
+				var fromType   = toProvider.Parameters[0].Type;
+				var assignable = fromType.IsAssignableFrom(getterExpr.Type);
+
+				if (assignable || fromType.IsAssignableFrom(getterExpr.Type.UnwrapNullableType()))
 				{
 					if (!valueConverter.HandlesNulls)
 					{
@@ -683,13 +684,19 @@ namespace LinqToDB.Mapping
 						var variable = Expression.Variable(getterExpr.Type);
 						var assign   = Expression.Assign(variable, getterExpr);
 
+						var resultType = toProvider.ReturnType.MakeNullable();
+
+						var convert = InternalExtensions.ApplyLambdaToExpression(toProvider, ExpressionHelper.Property(variable, nameof(Nullable<int>.Value)));
+						if (resultType != toProvider.ReturnType)
+							convert = Expression.Convert(convert, resultType);
+
 						getterExpr = Expression.Block(
 							new[] { variable },
 							assign,
 							Expression.Condition(
-								ExpressionHelper.Property(variable, nameof(Nullable<int>.HasValue)),
-								InternalExtensions.ApplyLambdaToExpression(toProvider, ExpressionHelper.Property(variable, nameof(Nullable<int>.Value))),
-								new DefaultValueExpression(mappingSchema, toProvider.ReturnType)));
+								ExpressionHelper.Property(variable, nameof(Nullable<>.HasValue)),
+								convert,
+								new DefaultValueExpression(mappingSchema, resultType)));
 					}
 					else
 					{
@@ -713,9 +720,9 @@ namespace LinqToDB.Mapping
 				else
 				{
 					// For DataType.Enum we do not provide any additional conversion
-					if (valueConverter == null && includingEnum && dbDataType.DataType != DataType.Enum && getterExpr.Type.ToNullableUnderlying().IsEnum)
+					if (valueConverter == null && includingEnum && dbDataType.DataType != DataType.Enum && getterExpr.Type.UnwrapNullableType().IsEnum)
 					{
-						var type = dbDataType.SystemType != typeof(object) && !dbDataType.SystemType.ToNullableUnderlying().IsEnum
+						var type = dbDataType.SystemType != typeof(object) && !dbDataType.SystemType.UnwrapNullableType().IsEnum
 							? dbDataType.SystemType
 							: Converter.GetDefaultMappingFromEnumType(mappingSchema, getterExpr.Type);
 
