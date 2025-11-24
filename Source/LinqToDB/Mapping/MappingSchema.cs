@@ -333,7 +333,7 @@ namespace LinqToDB.Mapping
 				}
 			}
 
-			return type.IsNullableType();
+			return type.IsNullableOrReferenceType();
 		}
 
 		/// <summary>
@@ -748,11 +748,11 @@ namespace LinqToDB.Mapping
 		{
 			var p = expr.Parameters[0];
 
-			if (p.Type.IsNullable())
+			if (p.Type.IsNullableType)
 			{
 				expr = Expression.Lambda(
 					Expression.Condition(
-						ExpressionHelper.Property(p, nameof(Nullable<int>.HasValue)),
+						ExpressionHelper.Property(p, nameof(Nullable<>.HasValue)),
 						expr.Body,
 						new DefaultValueExpression(this, expr.Body.Type)),
 					expr.Parameters);
@@ -775,14 +775,14 @@ namespace LinqToDB.Mapping
 			var param = Expression.Parameter(fromType, "v");
 			var body  = (Expression)param;
 
-			if (fromType.IsNullable())
+			if (fromType.IsNullableType)
 			{
 				body = Expression.Condition(
-					ExpressionHelper.Property(param, nameof(Nullable<int>.HasValue)),
+					ExpressionHelper.Property(param, nameof(Nullable<>.HasValue)),
 					Expression.Convert(body, type),
 					new DefaultValueExpression(this, type));
 			}
-			else if (type.IsNullable())
+			else if (type.IsNullableType)
 			{
 				body = Expression.Convert(param, type);
 			}
@@ -889,8 +889,8 @@ namespace LinqToDB.Mapping
 
 			if (create)
 			{
-				var ufrom = from.SystemType.ToNullableUnderlying();
-				var uto   = to.SystemType.  ToNullableUnderlying();
+				var ufrom = from.SystemType.UnwrapNullableType();
+				var uto   = to.SystemType.  UnwrapNullableType();
 
 				LambdaExpression? ex;
 				bool              ss = false;
@@ -1349,28 +1349,16 @@ namespace LinqToDB.Mapping
 			Schemas[0].ResetID();
 		}
 
-		private string[]? _configurationList;
 		/// <summary>
 		/// Gets configurations, associated with current mapping schema.
 		/// </summary>
-		public  string[]   ConfigurationList
+		public string[] ConfigurationList
 		{
-			get
-			{
-				if (_configurationList == null)
-				{
-					var hash = new HashSet<string>();
-					var list = new List<string>();
-
-					foreach (var s in Schemas)
-						if (!string.IsNullOrEmpty(s.Configuration) && hash.Add(s.Configuration))
-							list.Add(s.Configuration);
-
-					_configurationList = list.ToArray();
-				}
-
-				return _configurationList;
-			}
+			get => field ??= Schemas
+				.Select(s => s.Configuration)
+				.Where(s => !string.IsNullOrEmpty(s))
+				.Distinct()
+				.ToArray();
 		}
 
 		public string DisplayID
@@ -1652,7 +1640,7 @@ namespace LinqToDB.Mapping
 			canBeNull   = false;
 			int? length = null;
 
-			var underlyingType = type.ToNullableUnderlying();
+			var underlyingType = type.UnwrapNullableType();
 
 			if (underlyingType.IsEnum)
 			{
@@ -1735,34 +1723,36 @@ namespace LinqToDB.Mapping
 		{
 			if (type == null) throw new ArgumentNullException(nameof(type));
 
-			return (_mapValues ??= new ConcurrentDictionary<Type, MapValue[]?>()).GetOrAdd(type, type =>
-			{
-				var underlyingType = type.ToNullableUnderlying();
+			return (_mapValues ??= new ConcurrentDictionary<Type, MapValue[]?>())
+				.GetOrAdd(
+					type,
+					type =>
+					{
+						var underlyingType = type.UnwrappedNullableType;
 
-				if (underlyingType.IsEnum)
-				{
-					List<MapValue>? fields = null;
-
-					foreach (var f in underlyingType.GetFields())
-						if ((f.Attributes & EnumField) == EnumField)
+						if (underlyingType.IsEnum)
 						{
-							var attrs = GetAttributes<MapValueAttribute>(underlyingType, f);
-							(fields ??= new()).Add(new MapValue(Enum.Parse(underlyingType, f.Name, false), attrs));
+							List<MapValue>? fields = null;
+
+							foreach (var f in underlyingType.GetFields())
+								if ((f.Attributes & EnumField) == EnumField)
+								{
+									var attrs = GetAttributes<MapValueAttribute>(underlyingType, f);
+									(fields ??= new()).Add(new MapValue(Enum.Parse(underlyingType, f.Name, false), attrs));
+								}
+
+							if (fields?.Any(f => f.MapValues.Length > 0) == true)
+								return fields.ToArray();
 						}
 
-					if (fields?.Any(static f => f.MapValues.Length > 0) == true)
-						return fields.ToArray();
-				}
-
-				return null;
-			});
+						return null;
+					}
+				);
 		}
 
 		#endregion
 
 		#region Options
-
-		StringComparer? _columnNameComparer;
 
 		/// <summary>
 		/// Gets or sets column name comparison rules for comparison of column names in mapping with column name,
@@ -1772,26 +1762,19 @@ namespace LinqToDB.Mapping
 		{
 			get
 			{
-				if (_columnNameComparer == null)
+				return field ??= Schemas switch
 				{
-					if (Schemas[0].ColumnNameComparer != null)
-						_columnNameComparer = Schemas[0].ColumnNameComparer;
-					else
-					{
-						_columnNameComparer = Schemas
-							.Select        (static s => s.ColumnNameComparer)
-							.FirstOrDefault(static s => s != null)
-							??
-							StringComparer.Ordinal;
-					}
-				}
-
-				return _columnNameComparer!;
+					[{ ColumnNameComparer: { } comparer }, ..] => comparer,
+					_ => Schemas
+						.Select(static s => s.ColumnNameComparer)
+						.FirstOrDefault(static s => s != null)
+						?? StringComparer.Ordinal
+				};
 			}
 
 			set
 			{
-				Schemas[0].ColumnNameComparer = _columnNameComparer = value;
+				Schemas[0].ColumnNameComparer = field = value;
 				_configurationID = null;
 			}
 		}

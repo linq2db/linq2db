@@ -42,9 +42,9 @@ namespace LinqToDB.Internal.Expressions
 					method = (descending, index) switch
                     {
                         (true, 0) => nameof(WindowFunctionBuilder.IWindowBuilder.OrderByDesc),
-                        (true, _) => nameof(WindowFunctionBuilder.IThenOrderPart<object>.ThenByDesc),
+                        (true, _) => nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenByDesc),
                         (false, 0) => nameof(WindowFunctionBuilder.IWindowBuilder.OrderBy),
-                        (false, _) => nameof(WindowFunctionBuilder.IThenOrderPart<object>.ThenBy),
+                        (false, _) => nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenBy),
                     };
 
 					var methodInfo = FindMethodInfo(windowBody.Type, method, 1);

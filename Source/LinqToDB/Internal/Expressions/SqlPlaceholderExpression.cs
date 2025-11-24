@@ -76,7 +76,7 @@ namespace LinqToDB.Internal.Expressions
 
 		public SqlPlaceholderExpression MakeNullable()
 		{
-			if (!Type.IsNullableType())
+			if (!Type.IsNullableOrReferenceType())
 			{
 				var type           = Type.AsNullable();
 				var newPlaceholder = new SqlPlaceholderExpression(SelectQuery, Sql, Path, type, Alias, Index, TrackingPath);
@@ -91,7 +91,7 @@ namespace LinqToDB.Internal.Expressions
 
 		public SqlPlaceholderExpression MakeNotNullable()
 		{
-			if (Type.IsNullable())
+			if (Type.IsNullableType)
 			{
 				var type           = Type.GetGenericArguments()[0];
 				var newPlaceholder = new SqlPlaceholderExpression(SelectQuery, Sql, Path, type, Alias, Index, TrackingPath);

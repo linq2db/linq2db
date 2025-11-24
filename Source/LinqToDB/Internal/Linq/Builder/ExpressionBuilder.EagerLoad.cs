@@ -485,9 +485,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken)
 			{
-				return await _query.GetResultEnumerable(dataContext, expressions, preambles, preambles)
-					.ToListAsync(cancellationToken)
-					.ConfigureAwait(false);
+				return await _query.GetResultEnumerable(dataContext, expressions, preambles, preambles).ToListAsync(cancellationToken).ConfigureAwait(false);
 			}
 
 			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)

@@ -83,7 +83,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			// AseBulkManager.IsWrongType
 			if (Name == ProviderName.Sybase)
 			{
-				type = type.ToNullableUnderlying();
+				type = type.UnwrapNullableType();
 				if (type == typeof(char) || type == typeof(Guid))
 					type = typeof(string);
 				else if (type == typeof(TimeSpan))

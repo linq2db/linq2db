@@ -37,23 +37,6 @@ namespace LinqToDB.Internal.Extensions
 			{ typeof(void), "void" }
 		};
 
-		public static Type MakeNullable(this Type type, bool nullable = true)
-			=> type.IsNullableType() == nullable
-				? type
-				: nullable
-					? typeof(Nullable<>).MakeGenericType(type)
-					: type.UnwrapNullableType();
-
-		public static bool IsNumeric(this Type type)
-		{
-			type = type.UnwrapNullableType();
-
-			return type.IsInteger()
-				|| type == typeof(decimal)
-				|| type == typeof(float)
-				|| type == typeof(double);
-		}
-
 		public static bool IsAnonymousType(this Type type)
 			=> type.Name.StartsWith("<>", StringComparison.Ordinal)
 			   && type.GetCustomAttributes(typeof(CompilerGeneratedAttribute), inherit: false).Length > 0
