@@ -166,7 +166,7 @@ namespace Tests.Linq
 					Where(p => p.Value1!.Value != 2));
 		}
 
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void Concat6([DataSources(ProviderName.SqlCe)] string context)
 		{
