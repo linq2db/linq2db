@@ -534,7 +534,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		[Conditional("DEBUG")]
 		void DebugCacheHit(ExprCacheKey cacheKey, Expression translated)
 		{
-			Debug.WriteLine($"Cache hit: {cacheKey.Expression} => {translated}");
+			Debug.WriteLine($"Cache hit: {cacheKey.Expression} ({cacheKey.Flags}) => {translated}");
 		}
 
 		ExprCacheKey GetSqlCacheKey(Expression path)
@@ -901,6 +901,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (HandleSqlRelated(node, out var translatedSqlRelated))
 				return translatedSqlRelated;
+
+			if (_buildPurpose is BuildPurpose.Sql || _buildFlags.HasFlag(BuildFlags.ForSetProjection))
+			{
+				var generic = Builder.ParseGenericConstructor(node, ProjectFlags.SQL, _columnDescriptor);
+				if (!IsSame(generic, node))
+					return Visit(generic);
+			}
 
 			if (_buildPurpose is BuildPurpose.Expression or BuildPurpose.Traverse or BuildPurpose.Expand or BuildPurpose.Extract or BuildPurpose.SubQuery)
 			{

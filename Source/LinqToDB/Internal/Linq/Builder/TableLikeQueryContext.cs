@@ -257,7 +257,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			if (!flags.IsSql())
+			if (!(flags.IsSql() || flags.IsExpression()))
 				return path;
 
 			if (SequenceHelper.IsSameContext(path, this))

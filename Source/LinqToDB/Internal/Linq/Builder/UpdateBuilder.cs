@@ -572,6 +572,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					ParseSet(builder, sourceRef.BuildContext, memberAccess, memberAccess, assignment.Expression, envelopes, false);
 				}
+
+				foreach (var parameter in generic.Parameters)
+				{
+					if (parameter.MemberInfo != null)
+					{
+						var memberAccess = Expression.MakeMemberAccess(targetRef, parameter.MemberInfo);
+
+						ParseSet(builder, sourceRef.BuildContext, memberAccess, memberAccess, parameter.Expression, envelopes, false);
+					}
+				}
 			}
 			else
 			{
