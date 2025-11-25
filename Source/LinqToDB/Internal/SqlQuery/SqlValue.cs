@@ -10,20 +10,20 @@ namespace LinqToDB.Internal.SqlQuery
 	{
 		public SqlValue(Type systemType, object? value)
 		{
-			_valueType = new DbDataType(!value.IsNullValue() ? systemType.UnwrapNullableType() : systemType);
-			Value      = value;
+			ValueType = new DbDataType(!value.IsNullValue() ? systemType.UnwrapNullableType() : systemType);
+			Value     = value;
 		}
 
 		public SqlValue(DbDataType valueType, object? value)
 		{
-			_valueType = valueType;
-			Value      = value;
+			ValueType = valueType;
+			Value     = value;
 		}
 
 		public SqlValue(object value)
 		{
-			Value         = value ?? throw new ArgumentNullException(nameof(value), "Untyped null value");
-			_valueType    = new DbDataType(value.GetType());
+			Value     = value ?? throw new ArgumentNullException(nameof(value), "Untyped null value");
+			ValueType = new DbDataType(value.GetType());
 		}
 
 		/// <summary>
@@ -31,16 +31,14 @@ namespace LinqToDB.Internal.SqlQuery
 		/// </summary>
 		public object? Value { get; }
 
-		DbDataType _valueType;
-
 		public DbDataType ValueType
 		{
-			get => _valueType;
+			get;
 			set
 			{
-				if (_valueType == value)
+				if (field == value)
 					return;
-				_valueType = value;
+				field = value;
 			}
 		}
 

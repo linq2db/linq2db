@@ -35,8 +35,6 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static ILinqToDBSettings? _defaultSettings;
-
 		/// <summary>
 		/// Gets or sets default connection settings. By default, contains settings from linq2db configuration section from configuration file (not supported by .Net Core).
 		/// <seealso cref="ILinqToDBSettings"/>
@@ -44,14 +42,14 @@ namespace LinqToDB.Data
 		public static ILinqToDBSettings? DefaultSettings
 		{
 #if NETFRAMEWORK
-			get => _defaultSettings ??= LinqToDBSection.Instance;
+			get => field ??= LinqToDBSection.Instance;
 #else
-			get => _defaultSettings;
+			get;
 #endif
 			set
 			{
-				_defaultSettings    = value;
-				_defaultDataOptions = null;
+				field              = value;
+				DefaultDataOptions = null;
 
 				Configuration.EnsureInit();
 			}
@@ -74,12 +72,16 @@ namespace LinqToDB.Data
 			}
 		}
 
-		private  static DataOptions? _defaultDataOptions;
-		internal static DataOptions   DefaultDataOptions => _defaultDataOptions ??= new(new());
+		[AllowNull]
+		internal static DataOptions DefaultDataOptions
+		{
+			get => field ??= new(new());
+			private set;
+		}
 
 		internal static void ResetDefaultOptions()
 		{
-			_defaultDataOptions = null;
+			DefaultDataOptions = null;
 		}
 
 		internal static ConcurrentDictionary<string,DataOptions> ConnectionOptionsByConfigurationString = new();
@@ -92,7 +94,7 @@ namespace LinqToDB.Data
 			public ConfigurationInfo(string configurationString, string connectionString, IDataProvider? dataProvider)
 			{
 				ConnectionString     = connectionString;
-				_dataProvider        = dataProvider;
+				DataProvider         = dataProvider;
 				_dataProviderSet     = dataProvider != null;
 				_configurationString = configurationString;
 			}
@@ -104,27 +106,26 @@ namespace LinqToDB.Data
 				_connectionStringSettings = connectionStringSettings;
 			}
 
-			private string? _connectionString;
-			public  string   ConnectionString
+			public string ConnectionString
 			{
-				get => _connectionString!;
+				get;
 				set
 				{
 					if (!_dataProviderSet)
-						_dataProvider = null;
+						DataProvider = null;
 
-					_connectionString = value;
+					field = value;
 				}
 			}
 
 			readonly IConnectionStringSettings? _connectionStringSettings;
 
-			private IDataProvider? _dataProvider;
-			public  IDataProvider   DataProvider
+			[AllowNull]
+			public IDataProvider DataProvider
 			{
 				get
 				{
-					var dataProvider = _dataProvider ??= GetDataProvider(
+					var dataProvider = field ??= GetDataProvider(
 						new (ConfigurationString: _connectionStringSettings?.Name, ConnectionString: ConnectionString, ProviderName: _connectionStringSettings?.ProviderName),
 						_connectionStringSettings?.IsGlobal ?? false);
 
@@ -133,6 +134,7 @@ namespace LinqToDB.Data
 
 					return dataProvider;
 				}
+				private set;
 			}
 
 			public static IDataProvider? GetDataProvider(ConnectionOptions options, bool isGlobal)
@@ -385,7 +387,7 @@ namespace LinqToDB.Data
 
 			Configuration.Info.AddOrUpdate(configuration, info, (_, _) => info);
 
-			_defaultDataOptions = null;
+			DefaultDataOptions = null;
 			ConnectionOptionsByConfigurationString.Clear();
 		}
 
@@ -441,9 +443,6 @@ namespace LinqToDB.Data
 			return key != null && Configuration.Info.TryGetValue(key, out var ci) ? ci.ConnectionString : null;
 		}
 
-		static string? _defaultConfiguration;
-		static string? _defaultDataProvider;
-
 		/// <summary>
 		/// Gets or sets default connection configuration name. Used by <see cref="DataConnection"/> by default and could be set automatically from:
 		/// <para> - <see cref="ILinqToDBSettings.DefaultConfiguration"/>;</para>
@@ -453,11 +452,11 @@ namespace LinqToDB.Data
 		/// <seealso cref="DefaultConfiguration"/>
 		public static string? DefaultConfiguration
 		{
-			get => _defaultConfiguration;
+			get;
 			set
 			{
-				_defaultConfiguration = value;
-				_defaultDataOptions   = null;
+				field              = value;
+				DefaultDataOptions = null;
 			}
 		}
 
@@ -468,11 +467,11 @@ namespace LinqToDB.Data
 		/// <seealso cref="DefaultConfiguration"/>
 		public static string? DefaultDataProvider
 		{
-			get => _defaultDataProvider;
+			get;
 			set
 			{
-				_defaultDataProvider = value;
-				_defaultDataOptions  = null;
+				field               = value;
+				DefaultDataOptions  = null;
 			}
 		}
 

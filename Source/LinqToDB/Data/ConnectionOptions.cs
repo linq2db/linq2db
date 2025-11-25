@@ -172,21 +172,19 @@ namespace LinqToDB.Data
 
 		#region Default Options
 
-		static ConnectionOptions _default = new();
-
 		/// <summary>
 		/// Gets default <see cref="ConnectionOptions"/> instance.
 		/// </summary>
 		public static ConnectionOptions Default
 		{
-			get => _default;
+			get;
 			set
 			{
-				_default = value;
+				field = value;
 				DataConnection.ResetDefaultOptions();
 				DataConnection.ConnectionOptionsByConfigurationString.Clear();
 			}
-		}
+		} = new();
 
 		/// <inheritdoc />
 		IOptionSet IOptionSet.Default => Default;

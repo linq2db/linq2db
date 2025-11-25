@@ -189,6 +189,7 @@ namespace LinqToDB.EntityFrameworkCore
 				ProviderName.PostgreSQL92                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v92, connectionInfo.ConnectionString, connectionInfo.Connection),
 				ProviderName.PostgreSQL93                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v93, connectionInfo.ConnectionString, connectionInfo.Connection),
 				ProviderName.PostgreSQL95                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v95, connectionInfo.ConnectionString, connectionInfo.Connection),
+				ProviderName.PostgreSQL13                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v13, connectionInfo.ConnectionString, connectionInfo.Connection),
 				ProviderName.PostgreSQL15                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v15, connectionInfo.ConnectionString, connectionInfo.Connection),
 				ProviderName.PostgreSQL18                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v18, connectionInfo.ConnectionString, connectionInfo.Connection),
 

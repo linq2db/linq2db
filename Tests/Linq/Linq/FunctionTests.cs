@@ -421,7 +421,7 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.DB2,
 				TestProvName.AllInformix,
-				TestProvName.AllPostgreSQL,
+				TestProvName.AllPostgreSQL12Minus,
 				TestProvName.AllSQLite,
 				TestProvName.AllSapHana,
 				TestProvName.AllAccess)]
@@ -438,7 +438,6 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.DB2,
 				TestProvName.AllInformix,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				TestProvName.AllAccess)]
 			string context)

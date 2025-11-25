@@ -72,14 +72,13 @@ namespace LinqToDB.Internal.SqlQuery
 		public SqlHavingClause  Having  { get; internal set; } = null!;
 		public SqlOrderByClause OrderBy { get; internal set; } = null!;
 
-		private List<object>? _properties;
-		public  List<object>   Properties => _properties ??= new ();
+		public List<object>     Properties => field ??= new ();
 
-		public bool           IsSimple         => IsSimpleOrSet && !HasSetOperators;
-		public bool           IsSimpleOrSet    => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty && From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0;
-		public bool           IsSimpleButWhere => !HasSetOperators && !Select.HasModifier && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty && From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0;
-		public bool           IsLimited        => Select.SkipValue != null || Select.TakeValue != null;
-		public bool           IsParameterDependent { get; set; }
+		public bool             IsSimple         => IsSimpleOrSet && !HasSetOperators;
+		public bool             IsSimpleOrSet    => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty && From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0;
+		public bool             IsSimpleButWhere => !HasSetOperators && !Select.HasModifier && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty && From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0;
+		public bool             IsLimited        => Select.SkipValue != null || Select.TakeValue != null;
+		public bool             IsParameterDependent { get; set; }
 
 		/// <summary>
 		/// Gets or sets flag when sub-query can be removed during optimization.
@@ -97,7 +96,7 @@ namespace LinqToDB.Internal.SqlQuery
 		/// </summary>
 		public List<ISqlExpression[]> UniqueKeys
 		{
-			get => _uniqueKeys ??= new();
+			get => _uniqueKeys ??= [];
 			internal set => _uniqueKeys = value;
 		}
 
@@ -110,11 +109,11 @@ namespace LinqToDB.Internal.SqlQuery
 		private List<SqlSetOperator>? _setOperators;
 		public  List<SqlSetOperator>  SetOperators
 		{
-			get => _setOperators ??= new List<SqlSetOperator>();
+			get => _setOperators ??= [];
 			internal set => _setOperators = value;
 		}
 
-		public bool HasSetOperators => _setOperators != null && _setOperators.Count > 0;
+		public bool HasSetOperators => _setOperators?.Count > 0;
 
 		public void AddUnion(SelectQuery union, bool isAll)
 		{
@@ -186,17 +185,14 @@ namespace LinqToDB.Internal.SqlQuery
 		public int           SourceID { get; }
 		public SqlTableType  SqlTableType => SqlTableType.Table;
 
-		private SqlField? _all;
-		public  SqlField   All
+		public SqlField All
 		{
-			get => _all ??= SqlField.All(this);
+			get => field ??= SqlField.All(this);
 
 			internal set
 			{
-				_all = value;
-
-				if (_all != null)
-					_all.Table = this;
+				field = value;
+				field?.Table = this;
 			}
 		}
 

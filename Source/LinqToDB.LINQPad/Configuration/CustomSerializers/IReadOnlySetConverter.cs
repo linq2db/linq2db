@@ -74,7 +74,7 @@ internal sealed class IReadOnlySetConverter<T> : JsonConverter<IReadOnlySet<T>>
 
 			var converterType = typeof(IReadOnlySetConverter<>).MakeGenericType(elementType);
 			return (JsonConverter)converterType
-				.GetMethod(nameof(IReadOnlySetConverter<int>.GetInstance), BindingFlags.NonPublic | BindingFlags.Static)!
+				.GetMethod(nameof(IReadOnlySetConverter<>.GetInstance), BindingFlags.NonPublic | BindingFlags.Static)!
 				.InvokeExt(null, [options.GetConverter(elementType)])!;
 		}
 	}
