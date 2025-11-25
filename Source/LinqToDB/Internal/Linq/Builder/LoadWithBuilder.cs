@@ -83,7 +83,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var associations = extractResult.Value.info.Length <= 1
 					? extractResult.Value.info
-					: Enumerable.Reverse(extractResult.Value.info).ToArray();
+					: extractResult.Value.info
+						.AsEnumerable()
+						.Reverse()
+						.ToArray();
 
 				if (associations.Length == 0)
 					throw new LinqToDBException($"Unable to retrieve properties path for LoadWith/ThenLoad. Path: '{path}'");

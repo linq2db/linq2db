@@ -73,7 +73,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			SetValueToSqlConverter(typeof(Guid),           (sb, _,_,v) => ConvertBinaryToSql  (sb,     ((Guid)   v).ToByteArray()));
 			SetValueToSqlConverter(typeof(DateTime),       (sb,dt,_,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
 			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeToSql(sb, dt, ((DateTimeOffset)v).UtcDateTime));
-			SetValueToSqlConverter(typeof(string)        , (sb, _,_,v) => ConvertStringToSql  (sb,     (string)v));
+			SetValueToSqlConverter(typeof(string)        , (sb,dt,_,v) => ConvertStringToSql  (sb, dt, (string)v));
 			SetValueToSqlConverter(typeof(char)          , (sb, _,_,v) => ConvertCharToSql    (sb,     (char)v));
 			SetValueToSqlConverter(typeof(byte[]),         (sb, _,_,v) => ConvertBinaryToSql  (sb,     (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),         (sb, _,_,v) => ConvertBinaryToSql  (sb,     ((Binary)v).ToArray()));
@@ -125,9 +125,21 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			stringBuilder.Append(CultureInfo.InvariantCulture, $"chr({value})");
 		}
 
-		internal static void ConvertStringToSql(StringBuilder stringBuilder, string value)
+		internal static void ConvertStringToSql(StringBuilder stringBuilder, SqlDataType type, string value)
 		{
+			switch (type.Type.DataType)
+			{
+				case DataType.Text : stringBuilder.Append("TO_CLOB(");  break;
+				case DataType.NText: stringBuilder.Append("TO_NCLOB("); break;
+			}
+			
 			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversionAction, value, null);
+
+			switch (type.Type.DataType)
+			{
+				case DataType.Text :
+				case DataType.NText: stringBuilder.Append(')'); break;
+			}
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)

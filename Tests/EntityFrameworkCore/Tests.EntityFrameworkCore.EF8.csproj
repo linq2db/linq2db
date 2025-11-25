@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="Tests.EntityFrameworkCore.props" />
+
+	<PropertyGroup>
+		<TargetFrameworks>net8.0</TargetFrameworks>
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.EF8.csproj" />
+		<ProjectReference Include="..\EntityFrameworkCore.FSharp\Tests.EntityFrameworkCore.FSharp.fsproj" />
+	</ItemGroup>
+
+</Project>

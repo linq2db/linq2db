@@ -51,6 +51,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			column.Expression.VisitParentFirst(this, (v, e) =>
 			{
+				if (e is SqlFromClause or SqlJoinedTable)
+					return false;
+
 				if (e is SqlSelectClause selectClause)
 				{
 					foreach(var ec in selectClause.Columns)
@@ -66,14 +69,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					v.RegisterColumn(c);
 				}
 
-				if (e is SqlField f && f.Table is SqlCteTable cte)
+				if (e is SqlField { Table: SqlCteTable cte } f)
 				{
 					for (var i = 0; i < cte.Cte!.Fields.Count; i++)
 					{
 						if (cte.Cte!.Fields[i].Name == f.PhysicalName)
 						{
-							var column = cte.Cte.Body!.Select.Columns[i];
-							v.RegisterColumn(column);
+							var cteColumn = cte.Cte.Body!.Select.Columns[i];
+							v.RegisterColumn(cteColumn);
 							break;
 						}
 					}

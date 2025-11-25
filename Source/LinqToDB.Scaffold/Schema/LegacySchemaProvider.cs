@@ -529,6 +529,7 @@ namespace LinqToDB.Schema
 					case "NpgsqlInet"    : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlInet"    , true); break;
 					case "NpgsqlCidr"    : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlCidr"    , true); break;
 					case "NpgsqlInterval": type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlInterval", true); break;
+					case "NpgsqlCube"    : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlCube"    , true); break;
 
 					// SQL Server spatial types
 					case "Microsoft.SqlServer.Types.SqlHierarchyId": type = WellKnownTypes.Microsoft.SqlServer.Types.SqlHierarchyId; break;

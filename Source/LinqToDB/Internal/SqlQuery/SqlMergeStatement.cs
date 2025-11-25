@@ -40,9 +40,9 @@ namespace LinqToDB.Internal.SqlQuery
 		public List<SqlMergeOperationClause> Operations { get; private  set; } = new();
 		public SqlOutputClause?              Output     { get; set; }
 
-		public          bool             HasIdentityInsert => Operations.Any(o => o.OperationType == MergeOperationType.Insert && o.Items.Any(item => item.Column is SqlField { IsIdentity: true }));
-		public override QueryType        QueryType         => QueryType.Merge;
-		public override QueryElementType ElementType       => QueryElementType.MergeStatement;
+		public bool                          HasIdentityInsert => Operations.Any(o => o.OperationType == MergeOperationType.Insert && o.Items.Any(item => item.Column is SqlField { IsIdentity: true }));
+		public override QueryType            QueryType         => QueryType.Merge;
+		public override QueryElementType     ElementType       => QueryElementType.MergeStatement;
 
 		public void Modify(SqlTableSource target, SqlTableLikeSource source, SqlSearchCondition on, SqlOutputClause? output)
 		{

@@ -60,7 +60,7 @@ namespace LinqToDB.Tools
 
 						var member = ta.Members[i];
 						var value  = member.GetValue(item);
-						var type   = ta.Members[i].Type.ToNullableUnderlying();
+						var type   = ta.Members[i].Type.UnwrapNullableType();
 
 						if      (value == null)            values[i] = "<NULL>";
 						else if (type == typeof(decimal))  values[i] = ((decimal) value).ToString("G", DateTimeFormatInfo.InvariantInfo);
@@ -112,7 +112,7 @@ namespace LinqToDB.Tools
 				{
 					stringBuilder.Append("| ");
 
-					var type  = ta.Members[i].Type.ToNullableUnderlying();
+					var type  = ta.Members[i].Type.UnwrapNullableType();
 					var right = false;
 
 					switch (Type.GetTypeCode(type))

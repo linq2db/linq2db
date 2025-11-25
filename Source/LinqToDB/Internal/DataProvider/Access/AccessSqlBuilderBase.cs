@@ -82,7 +82,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 			{
 				// NULL value typization. Critical for UNION, UNION ALL queries.
 				//
-				var type = sqlValue.ValueType.SystemType.ToNullableUnderlying();
+				var type = sqlValue.ValueType.SystemType.UnwrapNullableType();
 
 				object? defaultValue;
 				if (type == typeof(string))

@@ -20,6 +20,7 @@ using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Cache;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Infrastructure;
@@ -68,10 +69,10 @@ namespace LinqToDB.Remote
 		protected void InitServiceProvider(SimpleServiceProvider serviceProvider)
 		{
 			serviceProvider.AddService(GetConfigurationInfoForPublicApi().MemberTranslator);
+			serviceProvider.AddService(GetConfigurationInfoForPublicApi().MemberConverter);
 		}
 
-		SimpleServiceProvider? _serviceProvider;
-		readonly Lock          _guard = new();
+		readonly Lock _guard = new();
 
 		IServiceProvider IInfrastructure<IServiceProvider>.Instance
 		{
@@ -79,20 +80,20 @@ namespace LinqToDB.Remote
 			{
 				ThrowOnDisposed();
 
-				if (_serviceProvider == null)
+				if (field == null)
 				{
 					lock (_guard)
 					{
-						if (_serviceProvider == null)
+						if (field == null)
 						{
 							var serviceProvider = new SimpleServiceProvider();
 							InitServiceProvider(serviceProvider);
-							_serviceProvider = serviceProvider;
+							field = serviceProvider;
 						}
 					}
 				}
 
-				return _serviceProvider;
+				return field;
 			}
 		}
 
@@ -101,6 +102,7 @@ namespace LinqToDB.Remote
 			public LinqServiceInfo   LinqServiceInfo  = null!;
 			public MappingSchema     MappingSchema    = null!;
 			public IMemberTranslator MemberTranslator = null!;
+			public IMemberConverter  MemberConverter  = null!;
 		}
 
 		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new();
@@ -152,6 +154,32 @@ namespace LinqToDB.Remote
 				=> ProviderTranslator.Translate(translationContext, memberExpression, translationFlags);
 		}
 
+		sealed class RemoteMemberConverter : IMemberConverter
+		{
+			static readonly MemoryCache<Type, IMemberConverter> _cache = new (new ());
+
+			public RemoteMemberConverter(IMemberConverter providerConverter)
+			{
+				ProviderConverter = providerConverter;
+			}
+			
+			public IMemberConverter ProviderConverter { get; }
+
+			public static IMemberConverter GetOrCreate(Type memberConverterType)
+			{
+				return _cache.GetOrCreate(
+					memberConverterType,
+					static entry =>
+					{
+						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+						return new RemoteMemberConverter(ActivatorExt.CreateInstance<IMemberConverter>(entry.Key));
+					});
+			}
+
+			public Expression Convert(Expression expression, out bool handled)
+				=> ProviderConverter.Convert(expression, out handled);
+		}
+
 		ConfigurationInfo? _configurationInfo;
 
 		// call it only external sync calls
@@ -187,11 +215,15 @@ namespace LinqToDB.Remote
 					var translatorType = Type.GetType(info.MethodCallTranslatorType)!;
 					var translator     = RemoteMemberTranslator.GetOrCreate(translatorType);
 
+					var memberConverterType = Type.GetType(info.MemberConverterType)!;
+					var memberConverter     = RemoteMemberConverter.GetOrCreate(memberConverterType);
+
 					_configurationInfo = _configurations[ConfigurationString ?? ""] = new ConfigurationInfo()
 					{
 						LinqServiceInfo  = info,
 						MappingSchema    = ms,
 						MemberTranslator = translator,
+						MemberConverter  = memberConverter,
 					};
 				}
 				finally
@@ -268,60 +300,55 @@ namespace LinqToDB.Remote
 			}
 		}
 
-		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= MappingSchema.CombineSchemas(Internal.Remote.SerializationMappingSchema.Instance, MappingSchema);
+		internal MappingSchema SerializationMappingSchema => _serializationMappingSchema ??= MappingSchema.CombineSchemas(Internal.Remote.SerializationMappingSchema.Instance, MappingSchema);
 
-		public  bool InlineParameters { get; set; }
-		public  bool CloseAfterUse    { get; set; }
+		public bool InlineParameters { get; set; }
+		public bool CloseAfterUse    { get; set; }
 
-		private List<string>? _queryHints;
-		public  List<string>  QueryHints => _queryHints ??= new();
+		public List<string> QueryHints => field ??= new();
+		public List<string> NextQueryHints => field ??= new();
 
-		private List<string>? _nextQueryHints;
-		public  List<string>   NextQueryHints => _nextQueryHints ??= new();
-
-		private           Type? _sqlProviderType;
-		protected virtual Type   SqlProviderType
+		protected virtual Type SqlProviderType
 		{
 			get
 			{
 				ThrowOnDisposed();
 
-				if (_sqlProviderType == null)
+				if (field == null)
 				{
 					var type = GetConfigurationInfoForPublicApi().LinqServiceInfo.SqlBuilderType;
-					_sqlProviderType = Type.GetType(type)!;
+					field = Type.GetType(type)!;
 				}
 
-				return _sqlProviderType;
+				return field;
 			}
 
 			set
 			{
 				ThrowOnDisposed();
 
-				_sqlProviderType = value;
+				field = value;
 			}
 		}
 
-		private           Type? _sqlOptimizerType;
-		protected virtual Type   SqlOptimizerType
+		protected virtual Type SqlOptimizerType
 		{
 			get
 			{
-				if (_sqlOptimizerType == null)
+				if (field == null)
 				{
 					var type = GetConfigurationInfoForPublicApi().LinqServiceInfo.SqlOptimizerType;
-					_sqlOptimizerType = Type.GetType(type)!;
+					field = Type.GetType(type)!;
 				}
 
-				return _sqlOptimizerType;
+				return field;
 			}
 
 			set
 			{
 				ThrowOnDisposed();
 
-				_sqlOptimizerType = value;
+				field = value;
 			}
 		}
 
@@ -352,7 +379,7 @@ namespace LinqToDB.Remote
 
 		static MethodInfo GetReaderMethodInfo(Type type)
 		{
-			switch (type.ToNullableUnderlying().GetTypeCodeEx())
+			switch (type.UnwrapNullableType().TypeCode)
 			{
 				case TypeCode.Boolean  : return MemberHelper.MethodOf<DbDataReader>(r => r.GetBoolean (0));
 				case TypeCode.Byte     : return MemberHelper.MethodOf<DbDataReader>(r => r.GetByte    (0));
@@ -380,52 +407,49 @@ namespace LinqToDB.Remote
 
 		static readonly ConcurrentDictionary<Tuple<Type,MappingSchema,Type,SqlProviderFlags,DataOptions>,Func<ISqlBuilder>> _sqlBuilders = new ();
 
-		Func<ISqlBuilder>? _createSqlBuilder;
-
 		Func<ISqlBuilder> IDataContext.CreateSqlBuilder
 		{
 			get
 			{
 				ThrowOnDisposed();
 
-				if (_createSqlBuilder == null)
+				if (field == null)
 				{
 					var key = Tuple.Create(SqlProviderType, MappingSchema, SqlOptimizerType, ((IDataContext)this).SqlProviderFlags, Options);
 
-					_createSqlBuilder = _sqlBuilders.GetOrAdd(
+					field = _sqlBuilders.GetOrAdd(
 						key,
 						static (key, args) =>
-					{
-						return Expression.Lambda<Func<ISqlBuilder>>(
-							Expression.New(
-								key.Item1.GetConstructor(new[]
-								{
-									typeof(IDataProvider),
-									typeof(MappingSchema),
-									typeof(DataOptions),
-									typeof(ISqlOptimizer),
-									typeof(SqlProviderFlags)
-								}) ?? throw new InvalidOperationException($"Constructor for type '{key.Item1.Name}' not found."),
-								new Expression[]
-								{
-									Expression.Constant(null, typeof(IDataProvider)),
-									Expression.Constant(args.mappingSchema, typeof(MappingSchema)),
-									Expression.Constant(key.Item5),
-									Expression.Constant(args.sqlOptimizer),
-									Expression.Constant(key.Item4)
-								}))
-							.CompileExpression();
-					}
-					, (mappingSchema: MappingSchema, sqlOptimizer: ((IDataContext)this).GetSqlOptimizer(Options)));
+						{
+							return Expression.Lambda<Func<ISqlBuilder>>(
+								Expression.New(
+									key.Item1.GetConstructor(new[]
+									{
+										typeof(IDataProvider),
+										typeof(MappingSchema),
+										typeof(DataOptions),
+										typeof(ISqlOptimizer),
+										typeof(SqlProviderFlags)
+									}) ?? throw new InvalidOperationException($"Constructor for type '{key.Item1.Name}' not found."),
+									new Expression[]
+									{
+										Expression.Constant(null, typeof(IDataProvider)),
+										Expression.Constant(args.mappingSchema, typeof(MappingSchema)),
+										Expression.Constant(key.Item5),
+										Expression.Constant(args.sqlOptimizer),
+										Expression.Constant(key.Item4)
+									}))
+								.CompileExpression();
+						},
+						(mappingSchema: MappingSchema, sqlOptimizer: ((IDataContext)this).GetSqlOptimizer(Options))
+					);
 				}
 
-				return _createSqlBuilder;
+				return field;
 			}
 		}
 
 		static readonly ConcurrentDictionary<Tuple<Type,SqlProviderFlags>,Func<DataOptions,ISqlOptimizer>> _sqlOptimizers = new ();
-
-		Func<DataOptions,ISqlOptimizer>? _getSqlOptimizer;
 
 		Func<DataOptions,ISqlOptimizer> IDataContext.GetSqlOptimizer
 		{
@@ -433,11 +457,11 @@ namespace LinqToDB.Remote
 			{
 				ThrowOnDisposed();
 
-				if (_getSqlOptimizer == null)
+				if (field == null)
 				{
 					var key = Tuple.Create(SqlOptimizerType, ((IDataContext)this).SqlProviderFlags);
 
-					_getSqlOptimizer = _sqlOptimizers.GetOrAdd(key, static key =>
+					field = _sqlOptimizers.GetOrAdd(key, static key =>
 					{
 						var p = Expression.Parameter(typeof(DataOptions));
 						var c = key.Item1.GetConstructor(new[] {typeof(SqlProviderFlags)});
@@ -458,7 +482,7 @@ namespace LinqToDB.Remote
 					});
 				}
 
-				return _getSqlOptimizer;
+				return field;
 			}
 		}
 

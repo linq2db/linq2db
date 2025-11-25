@@ -2183,70 +2183,70 @@ namespace Tests.Linq
 			TestBulkCopy(tb, context, db =>
 			{
 				db.BulkCopy(new BulkCopyOptions().WithBulkCopyType(BulkCopyType.MultipleRows), BulkCopyTable.Data);
-			});
+			}, o => o.UseOracle(o => o with { AlternativeBulkCopy = type }));
 
 			TestBulkCopy(tb, context, db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(BulkCopyType.MultipleRows));
 				db.BulkCopy(1, BulkCopyTable.Data);
-			});
+			}, o => o.UseOracle(o => o with { AlternativeBulkCopy = type }));
 
 			TestBulkCopy(tb, context, db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(BulkCopyType.MultipleRows));
 				db.BulkCopy(BulkCopyTable.Data);
-			});
+			}, o => o.UseOracle(o => o with { AlternativeBulkCopy = type }));
 
 			TestBulkCopy(tb, context, db =>
 			{
 				db.GetTable<BulkCopyTable>().BulkCopy(new BulkCopyOptions().WithBulkCopyType(BulkCopyType.MultipleRows), BulkCopyTable.Data);
-			});
+			}, o => o.UseOracle(o => o with { AlternativeBulkCopy = type }));
 
 			TestBulkCopy(tb, context, db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(BulkCopyType.MultipleRows));
 				db.GetTable<BulkCopyTable>().BulkCopy(1, BulkCopyTable.Data);
-			});
+			}, o => o.UseOracle(o => o with { AlternativeBulkCopy = type }));
 
 			TestBulkCopy(tb, context, db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(BulkCopyType.MultipleRows));
 				db.GetTable<BulkCopyTable>().BulkCopy(BulkCopyTable.Data);
-			});
+			}, o => o.UseOracle(o => o with { AlternativeBulkCopy = type }));
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				await db.BulkCopyAsync(new BulkCopyOptions().WithBulkCopyType(BulkCopyType.MultipleRows), BulkCopyTable.Data);
-			});
+			}, o => o.UseOracle(o => o with { AlternativeBulkCopy = type }));
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(BulkCopyType.MultipleRows));
 				await db.BulkCopyAsync(1, BulkCopyTable.Data);
-			});
+			}, o => o.UseOracle(o => o with { AlternativeBulkCopy = type }));
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(BulkCopyType.MultipleRows));
 				await db.BulkCopyAsync(BulkCopyTable.Data);
-			});
+			}, o => o.UseOracle(o => o with { AlternativeBulkCopy = type }));
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				await db.GetTable<BulkCopyTable>().BulkCopyAsync(new BulkCopyOptions().WithBulkCopyType(BulkCopyType.MultipleRows), BulkCopyTable.Data);
-			});
+			}, o => o.UseOracle(o => o with { AlternativeBulkCopy = type }));
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(BulkCopyType.MultipleRows));
 				await db.GetTable<BulkCopyTable>().BulkCopyAsync(1, BulkCopyTable.Data);
-			});
+			}, o => o.UseOracle(o => o with { AlternativeBulkCopy = type }));
 
 			await TestBulkCopyAsync(tb, context, async db =>
 			{
 				using var _ = db.UseBulkCopyOptions(o => o.WithBulkCopyType(BulkCopyType.MultipleRows));
 				await db.GetTable<BulkCopyTable>().BulkCopyAsync(BulkCopyTable.Data);
-			});
+			}, o => o.UseOracle(o => o with { AlternativeBulkCopy = type }));
 		}
 
 		[Test]
