@@ -1,14 +1,27 @@
-﻿using System.Linq.Expressions;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 {
 	public class SqlServer2005MemberTranslator : SqlServerMemberTranslator
 	{
+		protected override IMemberTranslator CreateSqlTypesTranslator()
+		{
+			return new SqlTypes2005Translation();
+		}
+
+		protected override IMemberTranslator CreateDateMemberTranslator()
+		{
+			return new DateFunctionsTranslator2005();
+		}
+
 		protected class SqlTypes2005Translation : SqlTypesTranslation
 		{
 			protected override Expression? ConvertDate(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
@@ -32,16 +45,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 				return dateAdd;
 			}
-		}
-
-		protected override IMemberTranslator CreateSqlTypesTranslator()
-		{
-			return new SqlTypes2005Translation();
-		}
-
-		protected override IMemberTranslator CreateDateMemberTranslator()
-		{
-			return new DateFunctionsTranslator2005();
 		}
 	}
 }

@@ -15,7 +15,6 @@
 	<files>
 		<file src="NuGet\README.Remote.Wcf.md"                                target="README.md"  />
 
-		<file src="bin\LinqToDB.Remote.Wcf\{0}\net462\linq2db.Remote.Wcf.pdb" target="lib\net462\" />
 		<file src="bin\LinqToDB.Remote.Wcf\{0}\net462\linq2db.Remote.Wcf.xml" target="lib\net462\" />
 		<file src="bin\LinqToDB.Remote.Wcf\{0}\net462\linq2db.Remote.Wcf.dll" target="lib\net462\" />
 	</files>

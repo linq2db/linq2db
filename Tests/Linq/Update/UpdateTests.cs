@@ -1991,7 +1991,7 @@ namespace Tests.xUpdate
 		[Table]
 		sealed class MainTable
 		{
-			[Column] public int Id;
+			[PrimaryKey] public int Id;
 			[Column] public string? Field;
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(AssociatedTable.Id))]
@@ -2011,7 +2011,7 @@ namespace Tests.xUpdate
 		[Table]
 		sealed class AssociatedTable
 		{
-			[Column] public int Id;
+			[PrimaryKey] public int Id;
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(MainTable.Id))]
 			public MainTable MainOptional = null!;

@@ -37,7 +37,7 @@ namespace Tests.Linq
 		[Table("AllTypes")]
 		public class CharTestTable
 		{
-			[Column("ID")]
+			[Column("ID"), PrimaryKey, Identity]
 			public int Id;
 
 			[Column("char20DataType")]

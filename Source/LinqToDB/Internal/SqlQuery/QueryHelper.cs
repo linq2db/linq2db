@@ -8,7 +8,6 @@ using System.Text.RegularExpressions;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
-using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -1105,17 +1104,20 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static bool IsAggregationFunction(IQueryElement expr)
 		{
-			if (expr is SqlParameterizedExpressionBase e)
-				return e.IsAggregate;
-
-			return false;
+			return expr switch
+			{
+				SqlParameterizedExpressionBase p => p.IsAggregate,
+				SqlExtendedFunction func         => func.IsAggregate,
+				_                                => false,
+			};
 		}
 
 		internal sealed class AggregationCheckVisitor : QueryElementVisitor
 		{
-			public bool IsAggregation { get; set; }
-			public bool IsWindow      { get; set; }
-			public bool HasReference  { get; set; }
+			public bool IsAggregation          { get; set; }
+			public bool IsWindow               { get; set; }
+			public bool HasReference           { get; set; }
+			public bool CanBeAffectedByOrderBy { get; set; }
 
 			public AggregationCheckVisitor() : base(VisitMode.ReadOnly)
 			{
@@ -1123,9 +1125,10 @@ namespace LinqToDB.Internal.SqlQuery
 
 			public void Cleanup()
 			{
-				IsAggregation = false;
-				IsWindow      = false;
-				HasReference  = false;
+				IsAggregation          = false;
+				IsWindow               = false;
+				HasReference           = false;
+				CanBeAffectedByOrderBy = false;
 			}
 
 			[return : NotNullIfNotNull(nameof(element))]
@@ -1152,6 +1155,25 @@ namespace LinqToDB.Internal.SqlQuery
 				}
 
 				return base.VisitSqlFunction(element);
+			}
+
+			protected override IQueryElement VisitSqlExtendedFunction(SqlExtendedFunction element)
+			{
+				var isAggregation = IsAggregationFunction(element);
+				var isWindow      = IsWindowFunction(element);
+
+				if (element.CanBeAffectedByOrderBy)
+					CanBeAffectedByOrderBy = true;
+
+				IsAggregation = IsAggregation || isAggregation;
+				IsWindow      = IsWindow      || isWindow;
+
+				if (isAggregation || isWindow)
+				{
+					return element;
+				}
+
+				return base.VisitSqlExtendedFunction(element);
 			}
 
 			protected override IQueryElement VisitSqlExpression(SqlExpression element)
@@ -1185,6 +1207,11 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static bool IsAggregationQuery(SelectQuery selectQuery)
 		{
+			return IsAggregationQuery(selectQuery, out _);
+		}
+
+		public static bool IsAggregationQuery(SelectQuery selectQuery, out bool needsOrderBy)
+		{
 			using var visitorRef = AggregationCheckVisitors.Allocate();
 
 			var visitor        = visitorRef.Value;
@@ -1195,7 +1222,10 @@ namespace LinqToDB.Internal.SqlQuery
 				visitor.Visit(column.Expression);
 
 				if (visitor.HasReference)
+				{
+					needsOrderBy = false;
 					return false;
+				}
 
 				if (visitor.IsAggregation)
 				{
@@ -1203,6 +1233,7 @@ namespace LinqToDB.Internal.SqlQuery
 				}
 			}
 
+			needsOrderBy = visitor.CanBeAffectedByOrderBy;
 			return hasAggregation;
 		}
 
@@ -1210,6 +1241,9 @@ namespace LinqToDB.Internal.SqlQuery
 		{
 			if (expr is SqlParameterizedExpressionBase expression)
 				return expression.IsWindowFunction;
+
+			if (expr is SqlExtendedFunction { IsWindowFunction: true })
+				return true;
 
 			return false;
 		}
@@ -1409,7 +1443,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		internal static bool TypeCanBeNull(Type type)
 		{
-			return type.IsNullableType() || type is INullable;
+			return type.IsNullableOrReferenceType() || type is INullable;
 		}
 
 		public static bool CalcCanBeNull(Type? type, bool? canBeNull, ParametersNullabilityType isNullable, IEnumerable<bool> nullInfo)
@@ -1540,6 +1574,19 @@ namespace LinqToDB.Internal.SqlQuery
 				{
 					var param = (SqlParameter)e;
 					return param.IsQueryParameter;
+				}
+
+				return false;
+			});
+		}
+
+		public static bool HasParameter(this IQueryElement root)
+		{
+			return null != root.Find(static e =>
+			{
+				if (e.ElementType == QueryElementType.SqlParameter)
+				{
+					return true;
 				}
 
 				return false;
