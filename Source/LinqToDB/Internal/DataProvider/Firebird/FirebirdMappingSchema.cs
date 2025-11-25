@@ -228,7 +228,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		public class Firebird25MappingSchemaBase : LockedMappingSchema
 		{
 			public Firebird25MappingSchemaBase(params MappingSchema[] schemata)
-				: base(ProviderName.Firebird25)
+				: base(ProviderName.Firebird25, schemata)
 			{
 				// setup bool to "1"/"0" conversions
 				var booleanType = new SqlDataType(DataType.Char, typeof(bool), length: 1, null, null, dbType: "CHAR(1)");
