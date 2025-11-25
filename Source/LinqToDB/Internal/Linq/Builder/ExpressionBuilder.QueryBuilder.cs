@@ -196,7 +196,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				postProcessed = FinalizeConstructors(context, correctedEager);
 			}
 
-			var withColumns = ToColumns(context, postProcessed);
+			var withColumns = ToColumns(context.GetResultQuery(), postProcessed);
 			return withColumns;
 		}
 
