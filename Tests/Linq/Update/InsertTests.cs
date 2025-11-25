@@ -2516,7 +2516,14 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertFromWithCoalesce([DataSources] string context)
+		public void InsertFromWithCoalesce([IncludeDataSources(
+			true,
+			// native oracle provider crashes with AV
+			TestProvName.AllOracleManaged,
+			TestProvName.AllOracleDevart,
+			TestProvName.AllSqlServer2012Plus,
+			TestProvName.AllClickHouse,
+			TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Thing>();
