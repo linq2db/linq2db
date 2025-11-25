@@ -2113,12 +2113,12 @@ namespace Tests.Linq
 			using var db = new NorthwindDB(context);
 
 			var query =
-				from thing in db.Product
+				from thing in db.Category
 				from item in db.Category
 					.Where(salesOrder => salesOrder.CategoryID == thing.CategoryID)
 					.DefaultIfEmpty()
-				from entity in db.OrderDetail
-					.Where(a => a.ProductID == thing.ProductID)
+				from entity in db.Category
+					.Where(a => a.CategoryID == thing.CategoryID)
 				select new { item, thing, entity };
 
 			const string term = "\"test\"";
@@ -2128,7 +2128,7 @@ namespace Tests.Linq
 				Sql.Ext.SqlServer().Contains(term, row.entity) ||
 				Sql.Ext.SqlServer().Contains(term, row.item));
 
-			query.Select(tables => tables.thing.ProductID).ToList();
+			query.Select(tables => tables.thing.CategoryID).ToList();
 		}
 
 		#endregion
