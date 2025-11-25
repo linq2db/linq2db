@@ -44,18 +44,16 @@ namespace LinqToDB.Internal.DataProvider.Access
 			// should be: provider == AccessProvider.ODBC
 			// but OleDb provider has some issues with complex queries
 			// see TestPositionedParameters test
-			SqlProviderFlags.IsParameterOrderDependent                = true;
-			SqlProviderFlags.IsUpdateFromSupported                    = false;
-			SqlProviderFlags.IsWindowFunctionsSupported               = false;
-			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel       = 1;
-			SqlProviderFlags.DefaultMultiQueryIsolationLevel          = IsolationLevel.Unspecified;
-			SqlProviderFlags.IsOuterJoinSupportsInnerJoin             = false;
-			SqlProviderFlags.IsMultiTablesSupportsJoins               = false;
-			SqlProviderFlags.IsAccessBuggyLeftJoinConstantNullability = true;
-			SqlProviderFlags.SupportsPredicatesComparison             = true;
-
-			SqlProviderFlags.IsCountDistinctSupported                     = false;
-			SqlProviderFlags.IsAggregationDistinctSupported               = false;
+			SqlProviderFlags.IsParameterOrderDependent                             = true;
+			SqlProviderFlags.IsUpdateFromSupported                                 = false;
+			SqlProviderFlags.IsWindowFunctionsSupported                            = false;
+			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel                    = 1;
+			SqlProviderFlags.CalculateSupportedCorrelatedLevelWithAggregateQueries = true;
+			SqlProviderFlags.DefaultMultiQueryIsolationLevel                       = IsolationLevel.Unspecified;
+			SqlProviderFlags.IsOuterJoinSupportsInnerJoin                          = false;
+			SqlProviderFlags.IsMultiTablesSupportsJoins                            = false;
+			SqlProviderFlags.IsAccessBuggyLeftJoinConstantNullability              = true;
+			SqlProviderFlags.SupportsPredicatesComparison                          = true;
 
 			if (provider == AccessProvider.OleDb)
 			{

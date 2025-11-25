@@ -57,8 +57,6 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
-		<PackageReference Include="System.Configuration.ConfigurationManager" VersionOverride="$(NetLatest)" />
-
 		<PackageReference Include="System.Data.Odbc" />
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="Oracle.ManagedDataAccess.Core" />

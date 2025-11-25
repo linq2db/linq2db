@@ -17,6 +17,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.SqlProvider;
@@ -51,8 +52,6 @@ namespace LinqToDB.Internal.DataProvider
 				MaxInListValuesCount                 = int.MaxValue,
 				IsCrossJoinSupported                 = true,
 				IsDistinctSetOperationsSupported     = true,
-				IsCountDistinctSupported             = true,
-				IsAggregationDistinctSupported       = true,
 				AcceptsOuterExpressionInAggregate    = true,
 				IsUpdateFromSupported                = true,
 				DefaultMultiQueryIsolationLevel      = IsolationLevel.RepeatableRead,
@@ -472,35 +471,36 @@ namespace LinqToDB.Internal.DataProvider
 		public virtual IQueryParametersNormalizer GetQueryParameterNormalizer() => new UniqueParametersNormalizer();
 
 		protected abstract IMemberTranslator  CreateMemberTranslator();
+		protected virtual  IMemberConverter   CreateMemberConverter()   => new LegacyMemberConverterBase();
 		protected virtual  IIdentifierService CreateIdentifierService() => new IdentifierServiceSimple(128);
 
 		protected virtual void InitServiceProvider(SimpleServiceProvider serviceProvider)
 		{
 			serviceProvider.AddService(CreateMemberTranslator());
 			serviceProvider.AddService(CreateIdentifierService());
+			serviceProvider.AddService(CreateMemberConverter());
 		}
 
-		SimpleServiceProvider? _serviceProvider;
-		readonly Lock          _guard = new();
+		readonly Lock _guard = new();
 
 		IServiceProvider IInfrastructure<IServiceProvider>.Instance
 		{
 			get
 			{
-				if (_serviceProvider == null)
+				if (field == null)
 				{
 					lock (_guard)
 					{
-						if (_serviceProvider == null)
+						if (field == null)
 						{
 							var serviceProvider = new SimpleServiceProvider();
 							InitServiceProvider(serviceProvider);
-							_serviceProvider = serviceProvider;
+							field = serviceProvider;
 						}
 					}
 				}
 
-				return _serviceProvider;
+				return field;
 			}
 		}
 

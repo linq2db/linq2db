@@ -88,7 +88,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 							return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("%Y-%m-%d"));
 						}
 #endif
-						if (stype.IsNumeric())
+						if (stype.IsNumberType)
 						{
 							return new SqlFunction(cast.Type, "To_Char", argument);
 						}
@@ -97,7 +97,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 					}
 
 					case TypeCode.UInt64   :
-						if (argument.SystemType!.IsFloatType())
+						if (argument.SystemType!.IsFloatType)
 							argument = new SqlFunction(cast.Type, "Floor", argument);
 						break;
 

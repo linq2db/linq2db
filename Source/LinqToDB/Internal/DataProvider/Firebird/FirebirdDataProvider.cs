@@ -50,7 +50,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			SqlProviderFlags.IsUpdateSkipTakeSupported = true;
 			SqlProviderFlags.IsDistinctFromSupported   = true;
 
-			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel = 1;
+			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel = 2;
 
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);

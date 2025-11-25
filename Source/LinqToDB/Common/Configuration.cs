@@ -86,7 +86,6 @@ namespace LinqToDB.Common
 		/// </remarks>
 		public static int MaxArrayParameterLengthLogging { get; set; } = 8;
 
-		private static bool _useNullableTypesMetadata;
 		/// <summary>
 		/// Whether or not Nullable Reference Types annotations from C#
 		/// are read and taken into consideration to determine if a
@@ -97,12 +96,12 @@ namespace LinqToDB.Common
 		/// <remarks>Defaults to false.</remarks>
 		public static bool UseNullableTypesMetadata
 		{
-			get => _useNullableTypesMetadata;
+			get;
 			set
 			{
 				// Can't change the default value of "false" on platforms where nullable metadata is unavailable.
 				if (value) Nullability.EnsureSupport();
-				_useNullableTypesMetadata = value;
+				field = value;
 			}
 		}
 

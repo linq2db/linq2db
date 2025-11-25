@@ -990,7 +990,7 @@ namespace Tests.Linq
 		[InheritanceMapping(Code = "GrandChild", Type = typeof(Issue4460GrandChild))]
 		abstract class Issue4460Base
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			[Column(IsDiscriminator = true)] public string? Code { get; set; }
 		}
 
@@ -1046,7 +1046,7 @@ namespace Tests.Linq
 		abstract class Issue4460TicketBase
 		{
 			[Column(IsDiscriminator = true)] public string? EventCode { get; set; }
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 		}
 
 		class Issue4460TicketChild : Issue4460TicketBase
@@ -1101,7 +1101,7 @@ namespace Tests.Linq
 		class Issue4460_3_Base
 		{
 			[Column(IsDiscriminator = true)] public string? Code { get; set; }
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 		}
 
 		interface IChild
@@ -1172,7 +1172,7 @@ namespace Tests.Linq
 		class Issue4460_4_Base
 		{
 			[Column(IsDiscriminator = true)] public string? Code { get; set; }
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 		}
 
 		[Table(Name = "Base")]
@@ -1252,7 +1252,7 @@ namespace Tests.Linq
 		public class Issue4460_5_Base
 		{
 			[Column(IsDiscriminator = true)] public string? Code { get; set; }
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 		}
 
 		[Table(Name = "Base")]
@@ -1814,7 +1814,7 @@ namespace Tests.Linq
 		[InheritanceMapping(Code = 2, Type = typeof(CreateTable2))]
 		abstract class CreateTableBase
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			[Column(IsDiscriminator = true)]  public int Type { get; set; }
 		}
 

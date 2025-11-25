@@ -27,6 +27,7 @@ namespace Tests.Mapping
 		[Table("DynamicColumnsTestTable")]
 		sealed class FluentMetadataBasedStore
 		{
+			[PrimaryKey]
 			public int Id { get; set; }
 
 			public Dictionary<string, object> Values { get; set; } = new Dictionary<string, object>();

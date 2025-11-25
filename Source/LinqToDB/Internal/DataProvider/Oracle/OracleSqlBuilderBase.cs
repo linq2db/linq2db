@@ -749,5 +749,46 @@ END;",
 			if (HintBuilder is not null && table.SqlQueryExtensions is not null)
 				BuildTableExtensions(HintBuilder, table, alias, null, " ", null);
 		}
+
+		protected override bool TryConvertParameterToSql(SqlParameterValue paramValue)
+		{
+			// see BuildValue notes
+			if (paramValue.ProviderValue is byte[] { Length: > 2000 }
+				|| (paramValue.ProviderValue is string str && (str.Length > 4000 || Encoding.UTF8.GetByteCount(str) > 4000)))
+			{
+				return false;
+			}
+
+			return base.TryConvertParameterToSql(paramValue);
+		}
+
+		protected override void BuildValue(DbDataType? dataType, object? value)
+		{
+			switch (value)
+			{
+				// workaround for "ORA-01704 string literal too long"
+				// oracle limits string literal to 4000 bytes(!)
+				// to workaround we have two options:
+				// - use parameter
+				// - split literal in concatenation of several values
+				case string str when (str.Length > 4000 || Encoding.UTF8.GetByteCount(str) > 4000):
+				{
+					BuildParameter(new SqlParameter(dataType ?? MappingSchema.GetDbDataType(typeof(string)), "value", value));
+					return;
+				}
+				// 2000 as we use HEX format
+				case byte[] { Length: > 2000 }:
+				{
+					BuildParameter(new SqlParameter(dataType ?? MappingSchema.GetDbDataType(typeof(byte[])), "value", value));
+					return;
+				}
+
+				default:
+				{
+					base.BuildValue(dataType, value);
+					return;
+				}
+			}
+		}
 	}
 }

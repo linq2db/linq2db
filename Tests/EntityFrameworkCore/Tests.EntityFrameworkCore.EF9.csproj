@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<Import Project="Tests.EntityFrameworkCore.props" />
+
+	<PropertyGroup>
+		<TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.EF9.csproj" />
+		<PackageReference Update="Pomelo.EntityFrameworkCore.MySql" VersionOverride="9.0.0" />
+	</ItemGroup>
+
+</Project>

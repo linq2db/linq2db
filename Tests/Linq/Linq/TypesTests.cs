@@ -201,7 +201,6 @@ namespace Tests.Linq
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				TestProvName.AllAccess,
 				TestProvName.AllSapHana)]
@@ -985,7 +984,7 @@ namespace Tests.Linq
 
 		sealed class Issue4469Table
 		{
-			public int Integer { get; set; }
+			[PrimaryKey] public int Integer { get; set; }
 			[Column(Precision = 10, Scale = 5)] public decimal Decimal { get; set; }
 			public double Double { get; set; }
 

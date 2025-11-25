@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	
+	<Import Project="LinqToDB.EntityFrameworkCore.props" />
+
+	<PropertyGroup>
+		<TargetFrameworks>net8.0</TargetFrameworks>
+		<AssemblyVersion>$(EF9Version)</AssemblyVersion>
+		<DefineConstants>EF9;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Update="Microsoft.EntityFrameworkCore.Relational" VersionOverride="9.0.0" />
+	</ItemGroup>
+
+</Project>

@@ -14,7 +14,7 @@ namespace Tests.UserTests
 		[Table("Issue1363")]
 		public sealed class Issue1363Record
 		{
-			[Column("required_field")] public Guid  Required { get; set; }
+			[PrimaryKey, Column("required_field")] public Guid  Required { get; set; }
 			[Column("optional_field")] public Guid? Optional { get; set; }
 		}
 

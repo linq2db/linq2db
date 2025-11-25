@@ -20,7 +20,7 @@ namespace Tests.Linq
 		public abstract class TypeTable<TType>
 			where TType : struct
 		{
-			[Column] public int    Id             { get; set; }
+			[PrimaryKey] public int    Id         { get; set; }
 			[Column] public TType  Column         { get; set; }
 			[Column] public TType? ColumnNullable { get; set; }
 		}
@@ -296,7 +296,7 @@ namespace Tests.Linq
 		[Table("Issue4163Table")]
 		sealed class Issue1918Table
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			[Column(DataType = DataType.Blob)] public Stream? Blob { get; set; }
 		}
 		#endregion

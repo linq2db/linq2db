@@ -49,7 +49,7 @@ internal sealed class SqlServerProvider : DatabaseProviderBase
 		// must unload unmanaged dlls to allow LINQPad 5 to delete old driver instance without error
 		// as SQL Server types lib doesn't implement cleanup for unloadable domains...
 		foreach (ProcessModule mod in Process.GetCurrentProcess().Modules)
-			if (string.Equals(mod.ModuleName, "SqlServerSpatial160.dll", StringComparison.OrdinalIgnoreCase))
+			if (string.Equals(mod.ModuleName, "SqlServerSpatial170.dll", StringComparison.OrdinalIgnoreCase))
 				FreeLibrary(mod.BaseAddress);
 	}
 #endif

@@ -14,6 +14,8 @@ namespace Tests.UserTests
 		[LinqToDB.Mapping.Table("MRECEIPT")]
 		public class TestReceipt
 		{
+			[LinqToDB.Mapping.PrimaryKey] public int Id { get; set; }
+
 			public static string TableName => "MRECEIPT";
 			public static string ExternalReceiptsTableName => "EXTERNAL_RECEIPTS";
 
@@ -27,6 +29,8 @@ namespace Tests.UserTests
 		[LinqToDB.Mapping.Table("CUST_DTL")]
 		public class TestCustomer
 		{
+			[LinqToDB.Mapping.PrimaryKey] public int Id { get; set; }
+
 			[LinqToDB.Mapping.Column("CUSTKEY")]
 			public string Custkey { get; set;} = null!;
 

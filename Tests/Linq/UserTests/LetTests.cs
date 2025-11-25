@@ -13,6 +13,7 @@ namespace Tests.UserTests
 	{
 		sealed class Table1
 		{
+			[PrimaryKey] public int  Id;
 			public int  Field3;
 			public int? Field5;
 
@@ -25,6 +26,8 @@ namespace Tests.UserTests
 
 		sealed class Table2
 		{
+			[PrimaryKey] public int  Id;
+
 			public int? Field6;
 
 			[Association(ThisKey = "Field6", OtherKey = "Field6", CanBeNull = true)]
@@ -33,6 +36,8 @@ namespace Tests.UserTests
 
 		sealed class Table3
 		{
+			[PrimaryKey] public int  Id;
+
 			public int? Field6;
 			public int  Field3;
 			public int  Field4;
@@ -49,6 +54,8 @@ namespace Tests.UserTests
 
 		sealed class Table7
 		{
+			[PrimaryKey] public int  Id;
+
 			public int     Field4;
 			public string? Field8;
 		}
