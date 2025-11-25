@@ -61,9 +61,9 @@ namespace LinqToDB.Metadata
 
 		readonly Dictionary<string,MetaTypeInfo> _types;
 
-		static readonly IReadOnlyDictionary<string,Type> _mappingAttributes;
+		static readonly IReadOnlyDictionary<string,Type> _mappingAttributes = BuildMappingAttributes();
 
-		static XmlAttributeReader()
+		private static IReadOnlyDictionary<string, Type> BuildMappingAttributes()
 		{
 			var baseType = typeof(MappingAttribute);
 			var lookup   = new Dictionary<string,Type>();
@@ -83,7 +83,7 @@ namespace LinqToDB.Metadata
 				}
 			}
 
-			_mappingAttributes = lookup;
+			return lookup;
 		}
 
 		/// <summary>

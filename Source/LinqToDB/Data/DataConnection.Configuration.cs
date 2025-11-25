@@ -19,11 +19,10 @@ namespace LinqToDB.Data
 		{
 			static Configuration()
 			{
-				Info = new();
 				EnsureInit();
 			}
 
-			public static readonly ConcurrentDictionary<string,ConfigurationInfo> Info;
+			public static readonly ConcurrentDictionary<string,ConfigurationInfo> Info = new();
 
 			public static void EnsureInit()
 			{
