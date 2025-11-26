@@ -39,10 +39,15 @@ namespace LinqToDB
 	/// </code>
 	/// </example>
 	/// </param>
+	/// <param name="DisableBuiltInTimeSpanConversion">
+	/// If <c>true</c>, it disables built-in TimeSpan member access conversions in ExposeExpressionVisitor to allow external conversion via ExtensionAttribute.
+	/// Default value: <c>false</c>.
+	/// </param>
 	public sealed record SqlOptions
 	(
 		bool EnableConstantExpressionInOrderBy = false,
-		bool GenerateFinalAliases              = false
+		bool GenerateFinalAliases              = false,
+		bool DisableBuiltInTimeSpanConversion  = false
 	)
 		: IOptionSet
 	{
@@ -54,6 +59,7 @@ namespace LinqToDB
 		{
 			EnableConstantExpressionInOrderBy = original.EnableConstantExpressionInOrderBy;
 			GenerateFinalAliases              = original.GenerateFinalAliases;
+			DisableBuiltInTimeSpanConversion  = original.DisableBuiltInTimeSpanConversion;
 		}
 
 		int? _configurationID;
