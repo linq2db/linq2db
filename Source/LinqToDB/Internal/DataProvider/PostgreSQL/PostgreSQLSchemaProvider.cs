@@ -94,11 +94,6 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 			list.Add(new DataTypeInfo { TypeName = "inet"                       , DataType = provider.Adapter.NpgsqlInetType.    AssemblyQualifiedName!, ProviderSpecific = true });
 
-			if (provider.Adapter.NpgsqlCidrType != null)
-				list.Add(new DataTypeInfo { TypeName = "cidr"                   , DataType = provider.Adapter.NpgsqlCidrType.AssemblyQualifiedName!, ProviderSpecific = true });
-			else
-				list.Add(new DataTypeInfo { TypeName = "cidr"                   , DataType = provider.Adapter.NpgsqlInetType.AssemblyQualifiedName!, ProviderSpecific = true });
-
 			list.Add(new DataTypeInfo { TypeName = "point"                      , DataType = provider.Adapter.NpgsqlPointType.   AssemblyQualifiedName!, ProviderSpecific = true });
 			list.Add(new DataTypeInfo { TypeName = "line"                       , DataType = provider.Adapter.NpgsqlLineType.    AssemblyQualifiedName!, ProviderSpecific = true });
 			list.Add(new DataTypeInfo { TypeName = "lseg"                       , DataType = provider.Adapter.NpgsqlLSegType.    AssemblyQualifiedName!, ProviderSpecific = true });
@@ -126,6 +121,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			}
 
 			list.Add(new DataTypeInfo { TypeName = "inet"                   , DataType = typeof(IPAddress).      AssemblyQualifiedName! });
+
 #if NET8_0_OR_GREATER
 			list.Add(new DataTypeInfo { TypeName = "cidr"                   , DataType = typeof(IPNetwork).      AssemblyQualifiedName! });
 #else
