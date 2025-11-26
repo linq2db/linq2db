@@ -1,7 +1,10 @@
 ﻿<Project>
 	<PropertyGroup>
 		<Version>6.0.0-local.1</Version>
+		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+		<CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
 	</PropertyGroup>
+	
 	<ItemGroup Label="Build: Prerelease Nugets">
 		<PackageVersion Include="linq2db"            Version="$(Version)" />
 		<PackageVersion Include="linq2db.Access"     Version="$(Version)" />
@@ -21,8 +24,12 @@
 	</ItemGroup>
 
 	<ItemGroup Label="Build: Providers">
-		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"     Version="10.3.3" />
-		<PackageVersion Include="Npgsql"                              Version="9.0.3"  />
+		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"     Version="10.3.4" />
+		<PackageVersion Include="Npgsql"                              Version="10.0.0" />
 		<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types" Version="1.5.0"  />
+	</ItemGroup>
+
+	<ItemGroup Label="Transient">
+		<PackageVersion Include="System.Data.SqlClient" Version="4.9.0"  />
 	</ItemGroup>
 </Project>
