@@ -686,7 +686,7 @@ namespace LinqToDB.Mapping
 
 						var resultType = toProvider.ReturnType.MakeNullable();
 
-						var convert = InternalExtensions.ApplyLambdaToExpression(toProvider, ExpressionHelper.Property(variable, nameof(Nullable<int>.Value)));
+						var convert = InternalExtensions.ApplyLambdaToExpression(toProvider, ExpressionHelper.Property(variable, nameof(Nullable<>.Value)));
 						if (resultType != toProvider.ReturnType)
 							convert = Expression.Convert(convert, resultType);
 

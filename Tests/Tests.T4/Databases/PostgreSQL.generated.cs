@@ -159,7 +159,7 @@ namespace PostreSQLDataContext
 			[Column("circleDataType")     ] public NpgsqlCircle?     CircleDataType      { get; set; }
 			[Column("lineDataType")       ] public NpgsqlLine?       LineDataType        { get; set; }
 			[Column("inetDataType")       ] public NpgsqlInet?       InetDataType        { get; set; }
-			[Column("cidrDataType")       ] public NpgsqlInet?       CidrDataType        { get; set; }
+			[Column("cidrDataType")       ] public NpgsqlCidr?       CidrDataType        { get; set; }
 			[Column("macaddrDataType")    ] public PhysicalAddress?  MacaddrDataType     { get; set; }
 			[Column("macaddr8DataType")   ] public PhysicalAddress?  Macaddr8DataType    { get; set; }
 			[Column("jsonDataType")       ] public string?           JsonDataType        { get; set; }
@@ -229,7 +229,7 @@ namespace PostreSQLDataContext
 		[Column("circleDataType",      DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlCircle?     CircleDataType      { get; set; } // circle
 		[Column("lineDataType",        DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlLine?       LineDataType        { get; set; } // line
 		[Column("inetDataType",        DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlInet?       InetDataType        { get; set; } // inet
-		[Column("cidrDataType",        DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlInet?       CidrDataType        { get; set; } // cidr
+		[Column("cidrDataType",        DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlCidr?       CidrDataType        { get; set; } // cidr
 		[Column("macaddrDataType",     DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public PhysicalAddress?  MacaddrDataType     { get; set; } // macaddr
 		[Column("macaddr8DataType",    DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public PhysicalAddress?  Macaddr8DataType    { get; set; } // macaddr8
 		[Column("jsonDataType",        DataType=LinqToDB.DataType.Json),                                  Nullable            ] public string?           JsonDataType        { get; set; } // json
