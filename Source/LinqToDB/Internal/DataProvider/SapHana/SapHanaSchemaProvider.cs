@@ -144,7 +144,8 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			if (HasAccessForCalculationViews)
 			{
 				result +=
-					"""
+					$"""
+					
 					UNION ALL
 					SELECT v.*
 					FROM SYS.VIEWS AS v
@@ -155,12 +156,13 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 						FROM _SYS_BI.BIMC_VARIABLE AS p
 						GROUP BY p.CUBE_NAME
 					) AS p ON c.CUBE_NAME = p.CUBE_NAME
-					WHERE v.VIEW_TYPE = 'CALC' AND v.IS_VALID = 'TRUE' AND p.CUBE_NAME IS NULL AND v.SCHEMA_NAME
-					""" + SchemasFilter;
+					WHERE v.VIEW_TYPE = 'CALC' AND v.IS_VALID = 'TRUE' AND p.CUBE_NAME IS NULL AND v.SCHEMA_NAME {SchemasFilter}
+					""";
 			}
 
 			result +=
 				"""
+
 					) AS v
 				) AS combined
 				JOIN SYS.SCHEMAS AS s ON combined.SCHEMA_NAME = s.SCHEMA_NAME

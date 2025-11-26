@@ -185,6 +185,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				// materialized views are not exposed to information_schema
 				sql += 
 					$"""
+
 					UNION ALL
 						SELECT
 							current_database() || '.' || v.schemaname || '.' || v.matviewname          as TableID,

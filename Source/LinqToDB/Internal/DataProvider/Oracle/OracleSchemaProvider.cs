@@ -89,7 +89,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 								WHERE v.OWNER {SchemasFilter}
 							UNION ALL
 							SELECT m.OWNER, m.MVIEW_NAME NAME, 1 as IsView, 1 as MatView FROM ALL_MVIEWS m
-								WHERE v.OWNER {SchemasFilter}
+								WHERE m.OWNER {SchemasFilter}
 						) d
 							LEFT JOIN ALL_TAB_COMMENTS tc ON
 								d.OWNER = tc.OWNER AND
