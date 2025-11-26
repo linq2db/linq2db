@@ -963,15 +963,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				return node;
 
 			using var saveDescriptor = UsingColumnDescriptor(null);
-			using var saveAlias      = UsingAlias(null);
-
-			FoundRoot = null;
-
-			return base.VisitNew(node);
-
-			// Uncomment to enable aliasing for NewExpression members. Postponed for future PR.
-			/*
-			using var saveDescriptor = UsingColumnDescriptor(null);
 
 			FoundRoot = null;
 
@@ -1005,18 +996,16 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				_alias = saveAlias;
-
 				if (newArguments != null)
 				{
 					var newNode = node.Update(newArguments);
 					return newNode;
 				}
+
+				return node;
 			}
-			else
-			{
-				return base.VisitNew(node);
-			}
-			*/
+
+			return base.VisitNew(node);
 		}
 
 		protected override Expression VisitMemberInit(MemberInitExpression node)
