@@ -95,7 +95,7 @@ namespace LinqToDB.Mapping
 			{
 				IsIdentity = columnAttribute.IsIdentity;
 			}
-			else if (MemberName.IndexOf(".") < 0)
+			else if (MemberName.IndexOf('.') < 0)
 			{
 				var hasIdentity = mappingSchema.HasAttribute<IdentityAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
 				if (hasIdentity)
@@ -114,7 +114,7 @@ namespace LinqToDB.Mapping
 
 			if (columnAttribute?.HasIsPrimaryKey() == true)
 				IsPrimaryKey = columnAttribute.IsPrimaryKey;
-			else if (MemberName.IndexOf(".") < 0)
+			else if (MemberName.IndexOf('.') < 0)
 			{
 				var a = mappingSchema.GetAttribute<PrimaryKeyAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
 
@@ -686,7 +686,7 @@ namespace LinqToDB.Mapping
 
 						var resultType = toProvider.ReturnType.MakeNullable();
 
-						var convert = InternalExtensions.ApplyLambdaToExpression(toProvider, ExpressionHelper.Property(variable, nameof(Nullable<int>.Value)));
+						var convert = InternalExtensions.ApplyLambdaToExpression(toProvider, ExpressionHelper.Property(variable, nameof(Nullable<>.Value)));
 						if (resultType != toProvider.ReturnType)
 							convert = Expression.Convert(convert, resultType);
 

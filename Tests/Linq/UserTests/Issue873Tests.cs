@@ -9,7 +9,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue873Tests : TestBase
 	{
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void Test([DataSources(ProviderName.SqlCe)] string context)
 		{

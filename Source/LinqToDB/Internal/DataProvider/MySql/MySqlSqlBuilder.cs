@@ -400,7 +400,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			else
 			{
 				var sql = StringBuilder.ToString();
-				var insertIndex = sql.IndexOf("INSERT", position);
+				var insertIndex = sql.IndexOf("INSERT", position, StringComparison.Ordinal);
 
 				StringBuilder.Clear()
 					.Append(sql.Substring(0, insertIndex))

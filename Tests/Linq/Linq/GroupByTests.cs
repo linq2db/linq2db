@@ -644,7 +644,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Sum3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1324,7 +1324,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void GroupByAggregate1([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1339,7 +1339,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void GroupByAggregate11([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1356,7 +1356,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void GroupByAggregate12([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
