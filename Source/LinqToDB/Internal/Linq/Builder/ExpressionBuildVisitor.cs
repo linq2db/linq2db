@@ -1375,7 +1375,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						return result;
 					}
 
-					if (HandleGenericConstructor(result, out var translated))
+					if (HandleTableContextForExtension(expression, out var translated))
 						return translated;
 				}
 				else
@@ -1387,7 +1387,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						return converted;
 					}
 
-					if (HandleGenericConstructor(converted, out var translated))
+					if (HandleTableContextForExtension(expression, out var translated))
 						return translated;
 
 					// Weird case, see Stuff2 test
@@ -1417,28 +1417,20 @@ namespace LinqToDB.Internal.Linq.Builder
 				_columnDescriptor = saveColumnDescriptor;
 				Builder.PopTranslationModifier();
 			}
+		}
 
-			bool HandleGenericConstructor(Expression expr, [NotNullWhen(true)] out Expression? translated)
+		bool HandleTableContextForExtension(Expression expr, [NotNullWhen(true)] out Expression? translated)
+		{
+			var table = SequenceHelper.GetTableOrCteContext(Builder, expr);
+			if (table != null)
 			{
-				if (expr is SqlGenericConstructorExpression generic)
-				{
-					var placeholders = CollectPlaceholders(generic);
-					var usedSources  = new HashSet<ISqlTableSource>();
-
-					foreach (var p in placeholders)
-						QueryHelper.GetUsedSources(p.Sql, usedSources);
-
-					if (usedSources.Count == 1)
-					{
-						var source = usedSources.First();
-						translated = CreatePlaceholder(source.All, expression);
-						return true;
-					}
-				}
-
-				translated = null;
-				return false;
+				var allPlaceholder = CreatePlaceholder(table.SqlTable.All, expr);
+				translated = allPlaceholder;
+				return true;
 			}
+
+			translated = null;
+			return false;
 		}
 
 		protected override Expression VisitMember(MemberExpression node)
