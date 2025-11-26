@@ -3310,18 +3310,28 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static Expression? GetSearchConditionError(Expression expression)
 		{
-			if (expression is BinaryExpression binary)
+			var found = SequenceHelper.FindError(expression);
+
+			if (found != null)
+				return found;
+
+			return FindErrorExpression(expression);
+
+			static Expression? FindErrorExpression(Expression expression)
 			{
-				if (binary.Left is not SqlPlaceholderExpression && binary.Right is not SqlPlaceholderExpression)
-					return expression;
+				if (expression is BinaryExpression binary)
+				{
+					if (binary.Left is not SqlPlaceholderExpression && binary.Right is not SqlPlaceholderExpression)
+						return expression;
 
-				return GetSearchConditionError(binary.Left) ?? GetSearchConditionError(binary.Right);
+					return FindErrorExpression(binary.Left) ?? FindErrorExpression(binary.Right);
+				}
+
+				if (expression is SqlPlaceholderExpression)
+					return null;
+
+				return expression;
 			}
-
-			if (expression is SqlPlaceholderExpression)
-				return null;
-
-			return expression;
 		}
 
 		public bool BuildSearchCondition(IBuildContext? context, Expression expression, SqlSearchCondition searchCondition, [NotNullWhen(false)] out SqlErrorExpression? error)
