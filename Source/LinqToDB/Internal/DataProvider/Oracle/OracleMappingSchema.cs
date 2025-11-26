@@ -133,7 +133,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				case DataType.Text : stringBuilder.Append("TO_CLOB(");  break;
 				case DataType.NText: stringBuilder.Append("TO_NCLOB("); break;
 			}
-			
+
 			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversionAction, value, null);
 
 			switch (type.Type.DataType)
@@ -290,7 +290,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			if (type == typeof(Managed11MappingSchema)) return _oracleManaged11MappingSchema;
 			if (type == typeof(Devart11MappingSchema))  return _oracleDevart11MappingSchema;
 
-			throw new InvalidOperationException();
+			throw new InvalidOperationException($"Unknown Oracle mapping schema type: {type.FullName}");
 		}
 	}
 }

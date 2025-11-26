@@ -281,7 +281,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			if (type == typeof(Firebird4MappingSchema))  return _firebird4MappingSchema;
 			if (type == typeof(Firebird5MappingSchema))  return _firebird5MappingSchema;
 
-			throw new InvalidOperationException();
+			throw new InvalidOperationException($"Unknown Firebird mapping schema type: {type.FullName}");
 		}
 	}
 }

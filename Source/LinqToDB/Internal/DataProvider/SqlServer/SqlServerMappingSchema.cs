@@ -827,7 +827,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			if (type == typeof(SqlServer2008MappingSchemaSystem) || type == typeof(SqlServer2008MappingSchemaMicrosoft)) return Instance2008;
 			if (type == typeof(SqlServer2005MappingSchemaSystem) || type == typeof(SqlServer2005MappingSchemaMicrosoft)) return Instance2005;
 
-			throw new InvalidOperationException();
+			throw new InvalidOperationException($"Unknown SqlServer mapping schema type: {type.FullName}");
 		}
 	}
 }
