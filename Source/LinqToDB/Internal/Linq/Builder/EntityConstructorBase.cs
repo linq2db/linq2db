@@ -68,7 +68,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						continue;
 
 					Expression me;
-					if (column.MemberName.Contains('.') && !column.MemberInfo.Name.Contains("."))
+					if (column.MemberName.Contains('.') && !column.MemberInfo.Name.Contains('.'))
 					{
 						hasNested = true;
 					}
@@ -104,7 +104,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					// explicit interface implementation
 					//
-					if (column.MemberInfo.Name.Contains("."))
+					if (column.MemberInfo.Name.Contains('.'))
 						continue;
 
 					var names = column.MemberName.Split('.');

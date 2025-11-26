@@ -40,13 +40,13 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 						if (options.ConfigurationString.Contains("2.5") || options.ConfigurationString.Contains("25"))
 							return _firebirdDataProvider25.Value;
 
-						if (options.ConfigurationString.Contains("5"))
+						if (options.ConfigurationString.Contains('5'))
 							return _firebirdDataProvider5.Value;
 
-						if (options.ConfigurationString.Contains("4"))
+						if (options.ConfigurationString.Contains('4'))
 							return _firebirdDataProvider4.Value;
 
-						if (options.ConfigurationString.Contains("3"))
+						if (options.ConfigurationString.Contains('3'))
 							return _firebirdDataProvider3.Value;
 					}
 

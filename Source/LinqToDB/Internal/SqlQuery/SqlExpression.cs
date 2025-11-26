@@ -80,15 +80,14 @@ namespace LinqToDB.Internal.SqlQuery
 			if (Parameters.Length == 0)
 				return writer.Append(Expr);
 
-			if (Expr.Contains("{"))
-				writer.AppendFormat(Expr, arguments.ToArray());
-			else
-				writer.Append(Expr)
-					.Append('{')
-					.Append(string.Join(", ", arguments.Select(s => string.Format(CultureInfo.InvariantCulture, "{0}", s))))
-					.Append('}');
+			if (Expr.Contains('{'))
+				return writer.AppendFormat(Expr, arguments.ToArray());
 
-			return writer;
+			return writer
+				.Append(Expr)
+				.Append('{')
+				.Append(string.Join(", ", arguments.Select(s => string.Format(CultureInfo.InvariantCulture, "{0}", s))))
+				.Append('}');
 		}
 
 		#endregion

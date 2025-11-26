@@ -300,7 +300,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 					if (type.CreateFormat == null)
 					{
-						if (type.TypeName.IndexOf("()", StringComparison.Ordinal) >= 0)
+						if (type.TypeName.Contains("()", StringComparison.Ordinal))
 						{
 							type.CreateFormat = type.TypeName.Replace("()", "({0})");
 						}

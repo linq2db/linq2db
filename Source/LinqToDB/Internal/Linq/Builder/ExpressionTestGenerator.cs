@@ -593,7 +593,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				);
 			}).ToList();
 
-			if (ctors.Count == 1 && ctors[0].IndexOf("()", StringComparison.Ordinal) >= 0)
+			if (ctors.Count == 1 && ctors[0].Contains("()", StringComparison.Ordinal))
 				ctors.Clear();
 
 			var members = type.GetFields().Intersect(_usedMembers.OfType<FieldInfo>()).Select(f =>

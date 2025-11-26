@@ -28,7 +28,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			var version = dataConnection.Execute<string>("select @@version");
 
-			IsAzure            = version.IndexOf("Azure", StringComparison.Ordinal) >= 0;
+			IsAzure            = version.Contains("Azure", StringComparison.Ordinal);
 			CompatibilityLevel = dataConnection.Execute<int>("SELECT compatibility_level FROM sys.databases WHERE name = db_name()");
 		}
 
