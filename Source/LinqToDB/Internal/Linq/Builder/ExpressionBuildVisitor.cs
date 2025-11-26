@@ -2163,6 +2163,21 @@ namespace LinqToDB.Internal.Linq.Builder
 				return base.VisitUnary(node);
 			}
 
+			if (_buildPurpose is BuildPurpose.Sql or BuildPurpose.Expression)
+			{
+				if (TranslateUnary(BuildContext, node, out var translated))
+					return Visit(translated);
+			}
+
+			var exposed = Builder.ConvertSingleExpression(node);
+			if (!IsSame(exposed, node))
+			{
+				var translated = Visit(exposed);
+				if (SequenceHelper.HasError(translated))
+					return node;
+				return translated;
+			}
+
 			switch (node.NodeType)
 			{
 				case ExpressionType.Not:
@@ -2772,6 +2787,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (BuildContext == null || _buildPurpose is not (BuildPurpose.Sql or BuildPurpose.Expression or BuildPurpose.Expand))
 				return base.VisitBinary(node);
 
+			if (TranslateBinary(BuildContext, node, out var translated))
+				return Visit(translated);
+
 			var shouldSkipSqlConversion = false;
 			if (_buildPurpose is BuildPurpose.Expression)
 			{
@@ -2814,14 +2832,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (_buildPurpose is BuildPurpose.Expression)
 				return base.VisitBinary(node);
 
-			if (HandleBinary(node, out var translated))
-				return translated; // Do not Visit again
-
 			var exposed = Builder.ConvertSingleExpression(node);
 
 			if (!IsSame(exposed, node))
 				return Visit(exposed);
-			
+
+			if (HandleBinary(node, out translated))
+				return translated; // Do not Visit again
+
 			return base.VisitBinary(node);
 		}
 
@@ -5468,6 +5486,48 @@ namespace LinqToDB.Internal.Linq.Builder
 					return true;
 				}
 			}
+
+			return false;
+		}
+
+		public bool TranslateUnary(IBuildContext? context, UnaryExpression unaryExpression, [NotNullWhen(true)] out Expression? translated)
+		{
+			translated = null;
+			if (context == null || Builder._unaryTranslator == null)
+				return false;
+
+			using var translationContext = _translationContexts.Allocate();
+
+			translationContext.Value.Init(this, context, _alias);
+
+			translated = Builder._unaryTranslator.Translate(translationContext.Value, unaryExpression, GetTranslationFlags());
+
+			if (translated == null)
+				return false;
+
+			if (!IsSame(translated, unaryExpression))
+				return true;
+
+			return false;
+		}
+
+		public bool TranslateBinary(IBuildContext? context, BinaryExpression binaryExpression, [NotNullWhen(true)] out Expression? translated)
+		{
+			translated = null;
+			if (context == null || Builder._binaryTranslator == null)
+				return false;
+
+			using var translationContext = _translationContexts.Allocate();
+
+			translationContext.Value.Init(this, context, _alias);
+
+			translated = Builder._binaryTranslator.Translate(translationContext.Value, binaryExpression, GetTranslationFlags());
+
+			if (translated == null)
+				return false;
+
+			if (!IsSame(translated, binaryExpression))
+				return true;
 
 			return false;
 		}
