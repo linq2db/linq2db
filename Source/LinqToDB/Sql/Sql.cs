@@ -487,7 +487,7 @@ namespace LinqToDB
 			//  0 when substring is empty <= this needs to handled special way to mimic behavior.
 			//  -1 when substring is not found
 
-			return substring.Length == 0 ? 0 : str.IndexOf(substring) + 1;
+			return substring.Length == 0 ? 0 : str.IndexOf(substring, StringComparison.Ordinal) + 1;
 		}
 
 		[Function(                                                             IsNullable = IsNullableType.IfAnyParameterNullable)]
@@ -501,7 +501,7 @@ namespace LinqToDB
 			if (str == null || substring == null || start == null) return null;
 
 			var index = start.Value < 1 ? 0 : start.Value > str.Length ? str.Length - 1 : start.Value - 1;
-			return substring.Length == 0 ? 0 : str.IndexOf(substring, index) + 1;
+			return substring.Length == 0 ? 0 : str.IndexOf(substring, index, StringComparison.Ordinal) + 1;
 		}
 
 		[Function(                                      IsNullable = IsNullableType.IfAnyParameterNullable)]

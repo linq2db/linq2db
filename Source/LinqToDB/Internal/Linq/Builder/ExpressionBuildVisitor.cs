@@ -1375,7 +1375,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						return result;
 					}
 
-					if (HandleGenericConstructor(result, out var translated))
+					if (HandleTableContextForExtension(expression, out var translated))
 						return translated;
 				}
 				else
@@ -1387,7 +1387,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						return converted;
 					}
 
-					if (HandleGenericConstructor(converted, out var translated))
+					if (HandleTableContextForExtension(expression, out var translated))
 						return translated;
 
 					// Weird case, see Stuff2 test
@@ -1417,28 +1417,20 @@ namespace LinqToDB.Internal.Linq.Builder
 				_columnDescriptor = saveColumnDescriptor;
 				Builder.PopTranslationModifier();
 			}
+		}
 
-			bool HandleGenericConstructor(Expression expr, [NotNullWhen(true)] out Expression? translated)
+		bool HandleTableContextForExtension(Expression expr, [NotNullWhen(true)] out Expression? translated)
+		{
+			var table = SequenceHelper.GetTableOrCteContext(Builder, expr);
+			if (table != null)
 			{
-				if (expr is SqlGenericConstructorExpression generic)
-				{
-					var placeholders = CollectPlaceholders(generic);
-					var usedSources  = new HashSet<ISqlTableSource>();
-
-					foreach (var p in placeholders)
-						QueryHelper.GetUsedSources(p.Sql, usedSources);
-
-					if (usedSources.Count == 1)
-					{
-						var source = usedSources.First();
-						translated = CreatePlaceholder(source.All, expression);
-						return true;
-					}
-				}
-
-				translated = null;
-				return false;
+				var allPlaceholder = CreatePlaceholder(table.SqlTable.All, expr);
+				translated = allPlaceholder;
+				return true;
 			}
+
+			translated = null;
+			return false;
 		}
 
 		protected override Expression VisitMember(MemberExpression node)
@@ -3318,18 +3310,28 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static Expression? GetSearchConditionError(Expression expression)
 		{
-			if (expression is BinaryExpression binary)
+			var found = SequenceHelper.FindError(expression);
+
+			if (found != null)
+				return found;
+
+			return FindErrorExpression(expression);
+
+			static Expression? FindErrorExpression(Expression expression)
 			{
-				if (binary.Left is not SqlPlaceholderExpression && binary.Right is not SqlPlaceholderExpression)
-					return expression;
+				if (expression is BinaryExpression binary)
+				{
+					if (binary.Left is not SqlPlaceholderExpression && binary.Right is not SqlPlaceholderExpression)
+						return expression;
 
-				return GetSearchConditionError(binary.Left) ?? GetSearchConditionError(binary.Right);
+					return FindErrorExpression(binary.Left) ?? FindErrorExpression(binary.Right);
+				}
+
+				if (expression is SqlPlaceholderExpression)
+					return null;
+
+				return expression;
 			}
-
-			if (expression is SqlPlaceholderExpression)
-				return null;
-
-			return expression;
 		}
 
 		public bool BuildSearchCondition(IBuildContext? context, Expression expression, SqlSearchCondition searchCondition, [NotNullWhen(false)] out SqlErrorExpression? error)
