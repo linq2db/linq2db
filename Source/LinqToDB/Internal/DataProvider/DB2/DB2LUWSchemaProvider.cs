@@ -292,7 +292,7 @@ WHERE
 
 					if (type.CreateFormat == null)
 					{
-						if (type.TypeName.IndexOf("()") >= 0)
+						if (type.TypeName.IndexOf("()", StringComparison.Ordinal) >= 0)
 						{
 							type.CreateFormat = type.TypeName.Replace("()", "({0})");
 						}
