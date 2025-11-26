@@ -288,16 +288,14 @@ namespace LinqToDB.Internal.Linq
 
 		IQueryable<TElement> IQueryProvider.CreateQuery<TElement>(Expression expression)
 		{
-			if (expression == null)
-				throw new ArgumentNullException(nameof(expression));
+			ArgumentNullException.ThrowIfNull(expression);
 
 			return new ExpressionQueryImpl<TElement>(DataContext, expression);
 		}
 
 		IQueryable IQueryProvider.CreateQuery(Expression expression)
 		{
-			if (expression == null)
-				throw new ArgumentNullException(nameof(expression));
+			ArgumentNullException.ThrowIfNull(expression);
 
 			var elementType = expression.Type.GetItemType() ?? expression.Type;
 

@@ -162,7 +162,7 @@ namespace LinqToDB.Async
 		/// <returns>A query that can be enumerated asynchronously.</returns>
 		public static IAsyncEnumerable<TSource> AsAsyncEnumerable<TSource>(this IQueryable<TSource> source)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(source);
 
 			if (source is IAsyncEnumerable<TSource> asyncQuery)
 				return asyncQuery;

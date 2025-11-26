@@ -32,7 +32,7 @@ namespace LinqToDB.SqlQuery
 
 		public SqlDataType(DataType dataType, Type type)
 		{
-			if (type == null) throw new ArgumentNullException(nameof(type));
+			ArgumentNullException.ThrowIfNull(type);
 
 			Type = GetDataType(dataType).Type
 				.WithDataType(dataType)
@@ -41,7 +41,7 @@ namespace LinqToDB.SqlQuery
 
 		public SqlDataType(DataType dataType, Type type, string dbType)
 		{
-			if (type == null) throw new ArgumentNullException(nameof(type));
+			ArgumentNullException.ThrowIfNull(type);
 
 			Type = GetDataType(dataType).Type
 				.WithDataType(dataType)
@@ -51,8 +51,8 @@ namespace LinqToDB.SqlQuery
 
 		public SqlDataType(DataType dataType, Type type, int length)
 		{
-			if (type == null) throw new ArgumentNullException(nameof(type));
-			if (length <= 0)  throw new ArgumentOutOfRangeException(nameof(length));
+			ArgumentNullException.ThrowIfNull(type);
+			ArgumentOutOfRangeException.ThrowIfNegativeOrZero(length);
 
 			Type = GetDataType(dataType).Type
 				.WithDataType(dataType)
@@ -62,9 +62,9 @@ namespace LinqToDB.SqlQuery
 
 		public SqlDataType(DataType dataType, Type type, int precision, int scale)
 		{
-			if (type      == null) throw new ArgumentNullException(nameof(type));
-			if (precision <= 0   ) throw new ArgumentOutOfRangeException(nameof(precision));
-			if (scale     <  0   ) throw new ArgumentOutOfRangeException(nameof(scale));
+			ArgumentNullException.ThrowIfNull(type);
+			ArgumentOutOfRangeException.ThrowIfNegativeOrZero(precision);
+			ArgumentOutOfRangeException.ThrowIfNegative(scale);
 
 			Type = GetDataType(dataType).Type
 				.WithDataType(dataType)

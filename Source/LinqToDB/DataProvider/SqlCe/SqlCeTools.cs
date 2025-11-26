@@ -61,7 +61,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false)
 		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+			ArgumentNullException.ThrowIfNull(databaseName);
 
 			DataTools.CreateFileDatabase(
 				databaseName, deleteIfExists, ".sdf",
@@ -74,7 +74,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public static void DropDatabase(string databaseName)
 		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+			ArgumentNullException.ThrowIfNull(databaseName);
 
 			DataTools.DropFileDatabase(databaseName, ".sdf");
 		}

@@ -89,7 +89,7 @@ namespace LinqToDB
 				bool? canBeNull,
 				params SqlExtensionParam[] parameters)
 			{
-				if (parameters == null) throw new ArgumentNullException(nameof(parameters));
+				ArgumentNullException.ThrowIfNull(parameters);
 
 				foreach (var value in parameters)
 					if (value == null) throw new ArgumentNullException(nameof(parameters));

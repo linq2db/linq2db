@@ -52,9 +52,9 @@ namespace LinqToDB.Mapping
 			bool?         canBeNull,
 			string?       aliasName)
 		{
-			if (memberInfo == null) throw new ArgumentNullException(nameof(memberInfo));
-			if (thisKey    == null) throw new ArgumentNullException(nameof(thisKey));
-			if (otherKey   == null) throw new ArgumentNullException(nameof(otherKey));
+			ArgumentNullException.ThrowIfNull(memberInfo);
+			ArgumentNullException.ThrowIfNull(thisKey);
+			ArgumentNullException.ThrowIfNull(otherKey);
 
 			if (thisKey.Length == 0 && string.IsNullOrEmpty(expressionPredicate) && predicate == null && string.IsNullOrEmpty(expressionQueryMethod) && expressionQuery == null)
 				throw new ArgumentOutOfRangeException(

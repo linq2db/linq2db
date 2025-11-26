@@ -943,7 +943,7 @@ namespace LinqToDB.Internal.SqlQuery
 		/// <param name="foundSources">Output container for detected sources/</param>
 		public static void GetUsedSources(ISqlExpression root, HashSet<ISqlTableSource> foundSources)
 		{
-			if (foundSources == null) throw new ArgumentNullException(nameof(foundSources));
+			ArgumentNullException.ThrowIfNull(foundSources);
 
 			root.Visit(foundSources, static (foundSources, e) =>
 			{
@@ -1009,8 +1009,8 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static string TransformExpressionIndexes<TContext>(TContext context, string expression, Func<TContext, int, int> transformFunc)
 		{
-			if (expression    == null) throw new ArgumentNullException(nameof(expression));
-			if (transformFunc == null) throw new ArgumentNullException(nameof(transformFunc));
+			ArgumentNullException.ThrowIfNull(expression);
+			ArgumentNullException.ThrowIfNull(transformFunc);
 
 			var str = ParamsRegex().Replace(expression, match =>
 			{
@@ -1036,8 +1036,8 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static ISqlExpression ConvertFormatToConcatenation(string format, IReadOnlyList<ISqlExpression> parameters)
 		{
-			if (format     == null) throw new ArgumentNullException(nameof(format));
-			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
+			ArgumentNullException.ThrowIfNull(format);
+			ArgumentNullException.ThrowIfNull(parameters);
 
 			string StripDoubleQuotes(string str)
 			{
