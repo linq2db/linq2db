@@ -648,33 +648,35 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				return expr;
 			}
 
-			if (node.Member.DeclaringType == typeof(TimeSpan) && node.Expression != null)
+			if (!DataContext.Options.SqlOptions.DisableBuiltInTimeSpanConversion)
 			{
-				switch (node.Expression.NodeType)
+				if (node.Member.DeclaringType == typeof(TimeSpan) && node.Expression != null)
 				{
-					case ExpressionType.Subtract:
-					case ExpressionType.SubtractChecked:
+					switch (node.Expression.NodeType)
+					{
+						case ExpressionType.Subtract:
+						case ExpressionType.SubtractChecked:
 
-						Sql.DateParts datePart;
+							Sql.DateParts datePart;
 
-						switch (node.Member.Name)
-						{
-							case "TotalMilliseconds": datePart = Sql.DateParts.Millisecond; break;
-							case "TotalSeconds"     : datePart = Sql.DateParts.Second;      break;
-							case "TotalMinutes"     : datePart = Sql.DateParts.Minute;      break;
-							case "TotalHours"       : datePart = Sql.DateParts.Hour;        break;
-							case "TotalDays"        : datePart = Sql.DateParts.Day;         break;
-							default                 : return null;
-						}
+							switch (node.Member.Name)
+							{
+								case "TotalMilliseconds": datePart = Sql.DateParts.Millisecond; break;
+								case "TotalSeconds": datePart = Sql.DateParts.Second; break;
+								case "TotalMinutes": datePart = Sql.DateParts.Minute; break;
+								case "TotalHours": datePart = Sql.DateParts.Hour; break;
+								case "TotalDays": datePart = Sql.DateParts.Day; break;
+								default: return null;
+							}
 
-						var ex = (BinaryExpression)node.Expression;
-						if (ex.Left.Type == typeof(DateTime)
-							&& ex.Right.Type == typeof(DateTime))
-						{
-							var method = MemberHelper.MethodOf(
+							var ex = (BinaryExpression)node.Expression;
+							if (ex.Left.Type == typeof(DateTime)
+								&& ex.Right.Type == typeof(DateTime))
+							{
+								var method = MemberHelper.MethodOf(
 										() => Sql.DateDiff(Sql.DateParts.Day, DateTime.MinValue, DateTime.MinValue));
 
-							var call   =
+								var call   =
 										Expression.Convert(
 											Expression.Call(
 												null,
@@ -684,14 +686,14 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 												Expression.Convert(ex.Left,  typeof(DateTime?))),
 											typeof(double));
 
-							return call;
-						}
-						else
-						{
-							var method = MemberHelper.MethodOf(
+								return call;
+							}
+							else
+							{
+								var method = MemberHelper.MethodOf(
 										() => Sql.DateDiff(Sql.DateParts.Day, DateTimeOffset.MinValue, DateTimeOffset.MinValue));
 
-							var call =
+								var call =
 								Expression.Convert(
 									Expression.Call(
 										null,
@@ -701,8 +703,9 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 										Expression.Convert(ex.Left, typeof(DateTimeOffset?))),
 									typeof(double));
 
-							return call;
-						}
+								return call;
+							}
+					}
 				}
 			}
 
