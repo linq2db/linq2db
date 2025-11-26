@@ -71,7 +71,7 @@ namespace Tests
 
 				foreach (var str in _substrings)
 				{
-					idx = actual.IndexOf(str, idx, StringComparison.InvariantCulture);
+					idx = actual.IndexOf(str, idx, StringComparison.Ordinal);
 
 					if (idx < 0)
 						return false;
