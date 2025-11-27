@@ -282,7 +282,7 @@ public sealed partial class LinqToDBDriver : DynamicDataContextDriver
 	}
 
 	/// <inheritdoc/>
-	public override DbProviderFactory GetProviderFactory(IConnectionInfo cxInfo)
+	public override DbProviderFactory? GetProviderFactory(IConnectionInfo cxInfo)
 	{
 		try
 		{

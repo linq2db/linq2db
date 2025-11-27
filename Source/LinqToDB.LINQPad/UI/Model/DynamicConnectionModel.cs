@@ -56,10 +56,10 @@ internal sealed class DynamicConnectionModel : ConnectionModelBase, INotifyPrope
 			return;
 		}
 
-		var assemblyName       = db.GetProviderAssemblyName(provider.Name);
+		var assemblyNames      = db.GetProviderAssemblyNames(provider.Name);
 		ProviderPathVisibility = Visibility.Visible;
 		ProviderPath           = Settings.Connection.ProviderPath ?? db.TryGetDefaultPath(provider.Name);
-		ProviderPathLabel      = $"Specify path to {assemblyName}";
+		ProviderPathLabel      = $"Specify path to {string.Join("/", assemblyNames)}";
 
 		OnPropertyChanged(_providerPathVisibilityChangedEventArgs);
 		OnPropertyChanged(_providerPathLabelChangedEventArgs);

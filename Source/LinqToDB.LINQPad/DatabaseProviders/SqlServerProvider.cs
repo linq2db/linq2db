@@ -4,17 +4,19 @@ using System.Data.Common;
 using System.Linq;
 using System.Reflection;
 
-#if NETFRAMEWORK
-using System.Diagnostics;
-using System.IO;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-#endif
-
 using LinqToDB.Data;
 
 using Microsoft.Data.SqlClient;
 using Microsoft.SqlServer.Types;
+
+#if NETFRAMEWORK
+using System.IO;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+#else
+using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.SqlServer;
+#endif
 
 namespace LinqToDB.LINQPad;
 
@@ -82,4 +84,26 @@ If you have errors displaying types from Microsoft.SqlServer.Types assembly, add
 	{
 		return SqlClientFactory.Instance;
 	}
+
+#if !NETFRAMEWORK
+	public override IDataProvider GetDataProvider(string providerName, string connectionString)
+	{
+		// provider detector fails to detect Microsoft.Data.SqlClient
+		// kinda regression in linq2db v5
+		return providerName switch
+		{
+			ProviderName.SqlServer2005 => SqlServerTools.GetDataProvider(SqlServerVersion.v2005, DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient, connectionString),
+			ProviderName.SqlServer2008 => SqlServerTools.GetDataProvider(SqlServerVersion.v2008, DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient, connectionString),
+			ProviderName.SqlServer2012 => SqlServerTools.GetDataProvider(SqlServerVersion.v2012, DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient, connectionString),
+			ProviderName.SqlServer2014 => SqlServerTools.GetDataProvider(SqlServerVersion.v2014, DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient, connectionString),
+			ProviderName.SqlServer2016 => SqlServerTools.GetDataProvider(SqlServerVersion.v2016, DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient, connectionString),
+			ProviderName.SqlServer2017 => SqlServerTools.GetDataProvider(SqlServerVersion.v2017, DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient, connectionString),
+			ProviderName.SqlServer2019 => SqlServerTools.GetDataProvider(SqlServerVersion.v2019, DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient, connectionString),
+			ProviderName.SqlServer2022 => SqlServerTools.GetDataProvider(SqlServerVersion.v2022, DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient, connectionString),
+			ProviderName.SqlServer2025 => SqlServerTools.GetDataProvider(SqlServerVersion.v2025, DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient, connectionString),
+			ProviderName.SqlServer     => SqlServerTools.GetDataProvider(SqlServerVersion.AutoDetect, DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient, connectionString),
+			_                          => base.GetDataProvider(providerName, connectionString)
+		};
+	}
+#endif
 }
