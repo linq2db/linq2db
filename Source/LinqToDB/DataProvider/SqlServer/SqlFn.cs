@@ -3809,13 +3809,13 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				var datepart = builder.GetValue<DistanceMetric>("distanceMetric");
-				builder.AddFragment("distanceMetric", datepart switch
+				var distanceMetric = builder.GetValue<DistanceMetric>("distanceMetric");
+				builder.AddFragment("distanceMetric", distanceMetric switch
 				{
 					DistanceMetric.Cosine    => "'cosine'",
 					DistanceMetric.Euclidean => "'euclidean'",
 					DistanceMetric.Dot       => "'dot'",
-					_                        => throw new NotSupportedException($"Distance metric '{datepart}' is not supported."),
+					_                        => throw new NotSupportedException($"Distance metric '{distanceMetric}' is not supported."),
 				});
 			}
 		}
