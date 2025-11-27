@@ -90,7 +90,7 @@ namespace Tests.DataProvider
 			//var asBinary2 = BitConverter.GetBytes(-7.1f).Concat(BitConverter.GetBytes(-4.2f)).ToArray();
 			var asArray1 = new[] {  1.2f, -1.1f };
 			var asArray2 = new[] {  5.2f, -3.1f };
-			var asArray3 = new[] { 11.2f, -4.1f };
+			var asArray3 = new[] {  11.2f, -4.1f };
 
 			// string
 			//await TestType<string, string?>(context, new(typeof(string), dt, null, length: 2), asString1, default, filterByValue: false, getExpectedValue: _ => asString1Expected);
