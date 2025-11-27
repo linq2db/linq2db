@@ -492,13 +492,18 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				if (register)
 				{
 					var nullValueProp  = ExpressionHelper.Property(type, "Null");
-					var getNullValue   = Expression.Lambda<Func<object>>(Expression.Convert(nullValueProp, typeof(object))).CompileExpression();
+					var getNullValue   = Expression.Lambda<Func<object?>>(Expression.Convert(nullValueProp, typeof(object))).CompileExpression();
 
 					mappingSchema ??= new SqlServerAdapterMappingSchema(provider);
 
-					mappingSchema.SetDefaultValue(nullValueProp.Type, getNullValue());
-					mappingSchema.SetCanBeNull   (type, true);
-					mappingSchema.AddScalarType  (type, new SqlDataType(new DbDataType(type, dataType, dbType, length: length)));
+					var value     = getNullValue();
+					var canBeNull = value is not null && nullValueProp.Type == type;
+
+					if (canBeNull)
+						mappingSchema.SetDefaultValue(type, getNullValue());
+
+					mappingSchema.SetCanBeNull (type, canBeNull);
+					mappingSchema.AddScalarType(type, new SqlDataType(new DbDataType(type, dataType, dbType, length: length)));
 				}
 
 				return type;
