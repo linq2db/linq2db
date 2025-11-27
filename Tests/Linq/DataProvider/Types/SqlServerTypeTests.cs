@@ -224,8 +224,6 @@ namespace Tests.DataProvider
 
 			await TestContext.Out.WriteLineAsync(list.ToDiagnosticString());
 
-			await Task.CompletedTask;
-
 		}
 
 		[Test]
