@@ -226,7 +226,6 @@ namespace Tests.DataProvider
 
 			await Task.CompletedTask;
 
-			var _ = SqlVector<float>.Null;
 		}
 
 		[Test]
