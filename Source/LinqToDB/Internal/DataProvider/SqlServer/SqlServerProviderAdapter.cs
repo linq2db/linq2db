@@ -492,8 +492,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				if (register)
 				{
 					var nullValueProp  = ExpressionHelper.Property(type, "Null");
-					var getNullValueEx = Expression.Lambda<Func<object>>(Expression.Convert(nullValueProp, typeof(object)));
-					var getNullValue   = getNullValueEx.CompileExpression();
+					var getNullValue   = Expression.Lambda<Func<object>>(Expression.Convert(nullValueProp, typeof(object))).CompileExpression();
 
 					mappingSchema ??= new SqlServerAdapterMappingSchema(provider);
 
