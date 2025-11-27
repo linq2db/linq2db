@@ -369,10 +369,10 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 					mappingSchema!.SetValueToSqlConverter(sqlVectorType, converter);
 
-					mappingSchema!.SetValueToSqlConverter(typeof(float[]), (s, _, _, value) => BuildVectorLiteral(s, (float[])value));
-					mappingSchema.SetDefaultValue        (typeof(float[]), null);
-					mappingSchema.SetCanBeNull           (typeof(float[]), true);
-					mappingSchema.AddScalarType          (typeof(float[]), new SqlDataType(new DbDataType(typeof(float[]), DataType.Vector32, null, length: 1)));
+					mappingSchema.SetValueToSqlConverter(typeof(float[]), (s, _, _, value) => BuildVectorLiteral(s, (float[])value));
+					mappingSchema.SetDefaultValue       (typeof(float[]), null);
+					mappingSchema.SetCanBeNull          (typeof(float[]), true);
+					mappingSchema.AddScalarType         (typeof(float[]), new SqlDataType(new DbDataType(typeof(float[]), DataType.Vector32, null, length: 1)));
 
 					// value => new DataParameter(null, value == null ? SqlVector.Null : new SqlVector<float>(value))
 					//
@@ -491,13 +491,15 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 				if (register)
 				{
-					var getNullValue = Expression.Lambda<Func<object>>(Expression.Convert(ExpressionHelper.Property(type, "Null"), typeof(object))).CompileExpression();
+					var nullValueProp  = ExpressionHelper.Property(type, "Null");
+					var getNullValueEx = Expression.Lambda<Func<object>>(Expression.Convert(nullValueProp, typeof(object)));
+					var getNullValue   = getNullValueEx.CompileExpression();
 
 					mappingSchema ??= new SqlServerAdapterMappingSchema(provider);
 
-					mappingSchema.SetDefaultValue(type, getNullValue());
-					mappingSchema.SetCanBeNull(type, true);
-					mappingSchema.AddScalarType(type, new SqlDataType(new DbDataType(type, dataType, dbType, length: length)));
+					mappingSchema.SetDefaultValue(nullValueProp.Type, getNullValue());
+					mappingSchema.SetCanBeNull   (type, true);
+					mappingSchema.AddScalarType  (type, new SqlDataType(new DbDataType(type, dataType, dbType, length: length)));
 				}
 
 				return type;

@@ -11,6 +11,8 @@ using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
+using static LinqToDB.DataProvider.SqlServer.SqlFn;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
 	[PublicAPI]
@@ -3753,14 +3755,314 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region Vector Support
 
-		extension(float[] vector1)
+		/// <summary>
+		/// A string with the name of the distance metric to use to calculate the distance between the two given vectors.
+		/// </summary>
+		[Sql.Enum]
+		public enum DistanceMetric
 		{
-			[Sql.Expression("VECTOR_DISTANCE({1}, {0}, {2})", ServerSideOnly = true)]
-			public float VectorDistance(string metric, float[] vector2)
+			/// <summary>
+			/// Cosine (angular) distance.
+			/// <list type="table">
+			/// <listheader>
+			/// [0, 2]
+			/// </listheader>
+			/// <item>
+			/// <term>0</term>
+			/// <description>identical vectors</description>
+			/// </item>
+			/// <item>
+			/// <term>2</term>
+			/// <description>opposing vectors</description>
+			/// </item>
+			/// </list>
+			/// </summary>
+			Cosine,
+			/// <summary>
+			/// Euclidean distance.
+			/// <list type="table">
+			/// <listheader>
+			/// [0, +∞]
+			/// </listheader>
+			/// <item>
+			/// <term>0</term>
+			/// <description>identical vectors</description>
+			/// </item>
+			/// </list>
+			/// </summary>
+			Euclidean,
+			/// <summary>
+			/// Dot product-based indication of distance, obtained by calculating the negative dot product.
+			/// <list type="table">
+			/// <listheader>
+			/// [-∞, +∞]
+			/// </listheader>
+			/// <item>
+			/// <description>Smaller numbers indicate more similar vectors</description>
+			/// </item>
+			/// </list>
+			/// </summary>
+			Dot,
+		}
+
+		sealed class DistanceMetricBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				throw new NotImplementedException();
+				var datepart = builder.GetValue<DistanceMetric>("distanceMetric");
+				builder.AddFragment("distanceMetric", datepart switch
+				{
+					DistanceMetric.Cosine    => "'cosine'",
+					DistanceMetric.Euclidean => "'euclidean'",
+					DistanceMetric.Dot       => "'dot'",
+					_                        => throw new NotSupportedException($"Distance metric '{datepart}' is not supported."),
+				});
 			}
 		}
+
+		/// <summary>
+		/// The <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-distance-transact-sql">VECTOR_DISTANCE</a> function calculates the distance between two vectors using a specified distance metric.
+		/// </summary>
+		/// <param name="distanceMetric">
+		/// A string with the name of the distance metric to use to calculate the distance between the two given vectors. The following distance metrics are supported:
+		/// <list type="table">
+		/// <item>
+		/// <term>cosine</term>
+		/// <description>Cosine distance</description>
+		/// </item>
+		/// <item>
+		/// <term>euclidean</term>
+		/// <description>Euclidean distance</description>
+		/// </item>
+		/// <item>
+		/// <term>dot</term>
+		/// <description>(Negative) Dot product</description>
+		/// </item>
+		/// </list>
+		/// </param>
+		/// <param name="vector1">An expression that evaluates to <b>vector</b> data type.</param>
+		/// <param name="vector2">An expression that evaluates to <b>vector</b> data type.</param>
+		/// <returns>
+		/// The function returns a scalar <b>float</b> value that represents the distance between the two vectors using the specified distance metric.
+		/// </returns>
+		/// <exception cref="NotImplementedException"></exception>
+		[Sql.Extension(ProviderName.SqlServer, "VECTOR_DISTANCE({distanceMetric}, {vector1}, {vector2})", ServerSideOnly=true, BuilderType=typeof(DistanceMetricBuilder))]
+		public static float VectorDistance([SqlQueryDependent] DistanceMetric distanceMetric, [ExprParameter] float[] vector1, [ExprParameter] float[] vector2)
+		{
+			throw new NotImplementedException();
+		}
+
+		/// <param name="vector1">An expression that evaluates to <b>vector</b> data type.</param>
+		extension([ExprParameter] float[] vector1)
+		{
+			/// <summary>
+			/// The <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-distance-transact-sql">VECTOR_DISTANCE</a> function calculates the distance between two vectors using a specified distance metric.
+			/// </summary>
+			/// <param name="distanceMetric">
+			/// A string with the name of the distance metric to use to calculate the distance between the two given vectors. The following distance metrics are supported:
+			/// <list type="table">
+			/// <item>
+			/// <term>cosine</term>
+			/// <description>Cosine distance</description>
+			/// </item>
+			/// <item>
+			/// <term>euclidean</term>
+			/// <description>Euclidean distance</description>
+			/// </item>
+			/// <item>
+			/// <term>dot</term>
+			/// <description>(Negative) Dot product</description>
+			/// </item>
+			/// </list>
+			/// </param>
+			/// <param name="vector2">An expression that evaluates to <b>vector</b> data type.</param>
+			/// <returns>
+			/// The function returns a scalar <b>float</b> value that represents the distance between the two vectors using the specified distance metric.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Extension(ProviderName.SqlServer, "VECTOR_DISTANCE({distanceMetric}, {vector1}, {vector2})", ServerSideOnly = true, BuilderType = typeof(DistanceMetricBuilder))]
+			public float VectorDistance([SqlQueryDependent] DistanceMetric distanceMetric, [ExprParameter] float[] vector2)
+			{
+				return VectorDistance(distanceMetric, vector1, vector2);
+			}
+
+			/// <summary>
+			/// The <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-distance-transact-sql">VECTOR_DISTANCE</a> function calculates the distance between two vectors using the <b>cosine</b> distance metric.
+			/// </summary>
+			/// <param name="vector2">An expression that evaluates to <b>vector</b> data type.</param>
+			/// <returns>
+			/// The function returns a scalar <b>float</b> value that represents the distance between the two vectors using the specified distance metric.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_DISTANCE('cosine', {0}, {1})", ServerSideOnly=true)]
+			public float CosineVectorDistance(float[] vector2)
+			{
+				return VectorDistance(DistanceMetric.Cosine, vector1, vector2);
+			}
+
+			/// <summary>
+			/// The <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-distance-transact-sql">VECTOR_DISTANCE</a> function calculates the distance between two vectors using the <b>Euclidean</b> distance metric.
+			/// </summary>
+			/// <param name="vector2">An expression that evaluates to <b>vector</b> data type.</param>
+			/// <returns>
+			/// The function returns a scalar <b>float</b> value that represents the distance between the two vectors using the specified distance metric.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_DISTANCE('euclidean', {0}, {1})", ServerSideOnly=true)]
+			public float EuclideanVectorDistance(float[] vector2)
+			{
+				return VectorDistance(DistanceMetric.Euclidean, vector1, vector2);
+			}
+
+			/// <summary>
+			/// The <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-distance-transact-sql">VECTOR_DISTANCE</a> function calculates the distance between two vectors using the <b>dot product-based indication of</b> distance metric.
+			/// </summary>
+			/// <param name="vector2">An expression that evaluates to <b>vector</b> data type.</param>
+			/// <returns>
+			/// The function returns a scalar <b>float</b> value that represents the distance between the two vectors using the specified distance metric.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_DISTANCE('dot', {0}, {1})", ServerSideOnly=true)]
+			public float DotVectorDistance(float[] vector2)
+			{
+				return VectorDistance(DistanceMetric.Dot, vector1, vector2);
+			}
+		}
+
+		/// <summary>
+		/// The <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-distance-transact-sql">VECTOR_DISTANCE</a> function calculates the distance between two vectors using a specified distance metric.
+		/// </summary>
+		/// <param name="distanceMetric">
+		/// A string with the name of the distance metric to use to calculate the distance between the two given vectors. The following distance metrics are supported:
+		/// <list type="table">
+		/// <item>
+		/// <term>cosine</term>
+		/// <description>Cosine distance</description>
+		/// </item>
+		/// <item>
+		/// <term>euclidean</term>
+		/// <description>Euclidean distance</description>
+		/// </item>
+		/// <item>
+		/// <term>dot</term>
+		/// <description>(Negative) Dot product</description>
+		/// </item>
+		/// </list>
+		/// </param>
+		/// <param name="vector1">An expression that evaluates to <b>vector</b> data type.</param>
+		/// <param name="vector2">An expression that evaluates to <b>vector</b> data type.</param>
+		/// <returns>
+		/// The function returns a scalar <b>float</b> value that represents the distance between the two vectors using the specified distance metric.
+		/// </returns>
+		/// <exception cref="NotImplementedException"></exception>
+		[Sql.Extension(ProviderName.SqlServer, "VECTOR_DISTANCE({distanceMetric}, {vector1}, {vector2})", ServerSideOnly = true, BuilderType = typeof(DistanceMetricBuilder))]
+		public static float VectorDistance<T>([SqlQueryDependent] DistanceMetric distanceMetric, [ExprParameter] T vector1, [ExprParameter] T vector2)
+			where T : unmanaged
+		{
+			throw new NotImplementedException();
+		}
+
+		/// <param name="vector1">An expression that evaluates to <b>vector</b> data type.</param>
+		extension<T>([ExprParameter] T vector1) where T : unmanaged
+		{
+			/// <summary>
+			/// The <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-distance-transact-sql">VECTOR_DISTANCE</a> function calculates the distance between two vectors using a specified distance metric.
+			/// </summary>
+			/// <param name="distanceMetric">
+			/// A string with the name of the distance metric to use to calculate the distance between the two given vectors. The following distance metrics are supported:
+			/// <list type="table">
+			/// <item>
+			/// <term>cosine</term>
+			/// <description>Cosine distance</description>
+			/// </item>
+			/// <item>
+			/// <term>euclidean</term>
+			/// <description>Euclidean distance</description>
+			/// </item>
+			/// <item>
+			/// <term>dot</term>
+			/// <description>(Negative) Dot product</description>
+			/// </item>
+			/// </list>
+			/// </param>
+			/// <param name="vector2">An expression that evaluates to <b>vector</b> data type.</param>
+			/// <returns>
+			/// The function returns a scalar <b>float</b> value that represents the distance between the two vectors using the specified distance metric.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Extension(ProviderName.SqlServer, "VECTOR_DISTANCE({distanceMetric}, {vector1}, {vector2})", ServerSideOnly = true, BuilderType = typeof(DistanceMetricBuilder))]
+			public float VectorDistance([SqlQueryDependent] DistanceMetric distanceMetric, [ExprParameter] T vector2)
+			{
+				return VectorDistance(distanceMetric, vector1, vector2);
+			}
+
+			/// <summary>
+			/// The <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-distance-transact-sql">VECTOR_DISTANCE</a> function calculates the distance between two vectors using the <b>cosine</b> distance metric.
+			/// </summary>
+			/// <param name="vector2">An expression that evaluates to <b>vector</b> data type.</param>
+			/// <returns>
+			/// The function returns a scalar <b>float</b> value that represents the distance between the two vectors using the specified distance metric.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_DISTANCE('cosine', {0}, {1})", ServerSideOnly=true)]
+			public float CosineVectorDistance(T vector2)
+			{
+				return VectorDistance(DistanceMetric.Cosine, vector1, vector2);
+			}
+
+			/// <summary>
+			/// The <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-distance-transact-sql">VECTOR_DISTANCE</a> function calculates the distance between two vectors using the <b>Euclidean</b> distance metric.
+			/// </summary>
+			/// <param name="vector2">An expression that evaluates to <b>vector</b> data type.</param>
+			/// <returns>
+			/// The function returns a scalar <b>float</b> value that represents the distance between the two vectors using the specified distance metric.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_DISTANCE('euclidean', {0}, {1})", ServerSideOnly = true)]
+			public float EuclideanVectorDistance(T vector2)
+			{
+				return VectorDistance(DistanceMetric.Euclidean, vector1, vector2);
+			}
+
+			/// <summary>
+			/// The <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-distance-transact-sql">VECTOR_DISTANCE</a> function calculates the distance between two vectors using the <b>dot product-based indication of</b> distance metric.
+			/// </summary>
+			/// <param name="vector2">An expression that evaluates to <b>vector</b> data type.</param>
+			/// <returns>
+			/// The function returns a scalar <b>float</b> value that represents the distance between the two vectors using the specified distance metric.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_DISTANCE('dot', {0}, {1})", ServerSideOnly = true)]
+			public float DotVectorDistance(T vector2)
+			{
+				return VectorDistance(DistanceMetric.Dot, vector1, vector2);
+			}
+		}
+
+		/*
+		sealed class NormTypeBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var datepart = builder.GetValue<DistanceMetric>("distanceMetric");
+				builder.AddFragment("distanceMetric", datepart switch
+				{
+					DistanceMetric.Cosine    => "'cosine'",
+					DistanceMetric.Euclidean => "'euclidean'",
+					DistanceMetric.Dot       => "'dot'",
+					_                        => throw new NotSupportedException($"Distance metric '{datepart}' is not supported."),
+				});
+			}
+		}
+
+		extension(float[] vector)
+		{
+			public float VectorNorm()
+			{
+
+			}
+		}
+		*/
 
 		#endregion
 

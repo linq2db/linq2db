@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -189,7 +190,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async ValueTask VectorDistanceSqlTest([IncludeDataSources(TestProvName.SqlServer2025MS)] string context)
 		{
-			using var db = GetDataContext(context);
+			await using var db = GetDataContext(context);
 
 			var vectors = new[]
 			{
@@ -205,18 +206,33 @@ namespace Tests.DataProvider
 
 			var q =
 				from t in tmp
-				orderby t.Vector.VectorDistance("cosine", vectors[0].Vector)
-				select t;
+				orderby SqlFn.VectorDistance(SqlFn.DistanceMetric.Cosine, t.Vector, vectors[0].Vector)
+				select new
+				{
+					t,
+					Cosine1   = SqlFn.VectorDistance   (SqlFn.DistanceMetric.Cosine, t.Vector, vectors[0].Vector),
+					Cosine2   = t.Vector.VectorDistance(SqlFn.DistanceMetric.Cosine, vectors[0].Vector),
+					Cosine3   = t.Vector.CosineVectorDistance   (vectors[0].Vector),
+					Euclidean = t.Vector.EuclideanVectorDistance(vectors[0].Vector),
+					Dot       = t.Vector.DotVectorDistance      (vectors[0].Vector),
+				};
 
 			var list = await q.ToListAsync();
+			var v    = list[0];
+
+			Assert.That(v.Cosine1, Is.EqualTo(v.Cosine2).And.EqualTo(v.Cosine3));
+
+			await TestContext.Out.WriteLineAsync(list.ToDiagnosticString());
 
 			await Task.CompletedTask;
+
+			var _ = SqlVector<float>.Null;
 		}
 
 		[Test]
 		public async ValueTask VectorDistanceFloatTest([IncludeDataSources(TestProvName.SqlServer2025MS)] string context)
 		{
-			using var db = GetDataContext(context);
+			await using var db = GetDataContext(context);
 
 			var vectors = new[]
 			{
@@ -232,11 +248,17 @@ namespace Tests.DataProvider
 
 			var q =
 				from t in tmp
-				orderby t.Vector.VectorDistance("cosine", vectors[0].Vector)
+				orderby
+					SqlFn.VectorDistance(SqlFn.DistanceMetric.Cosine, t.Vector, vectors[0].Vector),
+					t.Vector.VectorDistance(SqlFn.DistanceMetric.Cosine, vectors[0].Vector)
 				select new
 				{
 					t,
-					v = t.Vector.VectorDistance("cosine", vectors[0].Vector)
+					Cosine1   = SqlFn.VectorDistance   (SqlFn.DistanceMetric.Cosine, t.Vector, vectors[0].Vector),
+					Cosine2   = t.Vector.VectorDistance(SqlFn.DistanceMetric.Cosine, vectors[0].Vector),
+					Cosine3   = t.Vector.CosineVectorDistance   (vectors[0].Vector),
+					Euclidean = t.Vector.EuclideanVectorDistance(vectors[0].Vector),
+					Dot       = t.Vector.DotVectorDistance      (vectors[0].Vector),
 				};
 
 			var list = await q.ToListAsync();
@@ -244,18 +266,6 @@ namespace Tests.DataProvider
 			await TestContext.Out.WriteLineAsync(list.ToDiagnosticString());
 
 			await Task.CompletedTask;
-		}
-	}
-
-	static class VectorExtensions
-	{
-		extension(SqlVector<float> vector1)
-		{
-			[Sql.Expression("VECTOR_DISTANCE({1}, {0}, {2})", ServerSideOnly = true)]
-			public float VectorDistance(string metric, SqlVector<float> vector2)
-			{
-				throw new NotImplementedException();
-			}
 		}
 	}
 }
