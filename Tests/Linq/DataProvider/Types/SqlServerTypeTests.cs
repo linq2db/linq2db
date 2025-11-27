@@ -223,10 +223,6 @@ namespace Tests.DataProvider
 			Assert.That(v.Cosine1, Is.EqualTo(v.Cosine2).And.EqualTo(v.Cosine3));
 
 			await TestContext.Out.WriteLineAsync(list.ToDiagnosticString());
-
-			await Task.CompletedTask;
-
-			var _ = SqlVector<float>.Null;
 		}
 
 		[Test]
@@ -264,8 +260,6 @@ namespace Tests.DataProvider
 			var list = await q.ToListAsync();
 
 			await TestContext.Out.WriteLineAsync(list.ToDiagnosticString());
-
-			await Task.CompletedTask;
 		}
 	}
 }
