@@ -156,7 +156,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		sealed class DataTypeBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var dataType = builder.GetObjectValue("data_type");
 				builder.AddFragment("data_type", dataType is SqlType ? string.Format(CultureInfo.InvariantCulture, "{0}", dataType) : ((Func<SqlType>)dataType)().ToString());
@@ -743,7 +743,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		sealed class DatePartBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var datepart = builder.GetValue<DateParts>("datepart");
 				builder.AddFragment("datepart", datepart.ToString());
@@ -2291,7 +2291,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		sealed class NextValueForBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				builder.AddFragment("sequence_name", builder.GetValue<string>("sequence_name"));
 			}
@@ -3269,7 +3269,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		sealed class CollateBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var collationName = builder.GetValue<string>("collation_name");
 				builder.AddFragment("collation_name", collationName);
@@ -3807,7 +3807,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		sealed class DistanceMetricBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var distanceMetric = builder.GetValue<DistanceMetric>("distanceMetric");
 				builder.AddFragment("distanceMetric", distanceMetric switch
@@ -4068,7 +4068,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		sealed class PropertyBuilder<T> : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var method = (MethodInfo)builder.Member;
 				var props  = method.GetParameters();

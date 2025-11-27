@@ -22,7 +22,7 @@ namespace Tests.Linq
 	{
 		sealed class DatePartBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var part = builder.GetValue<Sql.DateParts>("part");
 				var partStr = part switch
@@ -46,7 +46,7 @@ namespace Tests.Linq
 
 		sealed class DatePartBuilderMySql : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				string? partStr = null;
 				var part = builder.GetValue<Sql.DateParts>("part");
@@ -79,7 +79,7 @@ namespace Tests.Linq
 
 		sealed class DatePartBuilderPostgre : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				string? partStr = null;
 				var part = builder.GetValue<Sql.DateParts>("part");
@@ -112,7 +112,7 @@ namespace Tests.Linq
 
 		sealed class DatePartBuilderSqLite : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				string? partStr = null;
 				var part = builder.GetValue<Sql.DateParts>("part");
@@ -149,7 +149,7 @@ namespace Tests.Linq
 
 		sealed class DatePartBuilderAccess : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var part    = builder.GetValue<Sql.DateParts>("part");
 				var partStr = part switch
@@ -172,7 +172,7 @@ namespace Tests.Linq
 
 		sealed class DatePartBuilderSapHana : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var part = builder.GetValue<Sql.DateParts>("part");
 				var partStr = part switch
@@ -195,7 +195,7 @@ namespace Tests.Linq
 
 		sealed class DatePartBuilderInformix : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var part = builder.GetValue<Sql.DateParts>("part");
 				var partStr = part switch
@@ -219,7 +219,7 @@ namespace Tests.Linq
 
 		sealed class DatePartBuilderOracle : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var part = builder.GetValue<Sql.DateParts>("part");
 				var partStr = part switch
@@ -243,7 +243,7 @@ namespace Tests.Linq
 
 		sealed class DatePartBuilderClickHouse : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				string exprStr;
 				var part = builder.GetValue<Sql.DateParts>("part");
@@ -277,7 +277,7 @@ namespace Tests.Linq
 
 		sealed class DatePartBuilderDB2 : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var part = builder.GetValue<Sql.DateParts>("part");
 				var partStr = part switch
@@ -301,7 +301,7 @@ namespace Tests.Linq
 
 		sealed class DatePartBuilderFirebird : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				string partStr;
 				var part = builder.GetValue<Sql.DateParts>("part");
@@ -512,7 +512,7 @@ namespace Tests.Linq
 
 		class CompositeKeyEqualsExtensionBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var entityType = builder.Arguments[0].Type;
 				var entityDescriptor = builder.DataContext.MappingSchema.GetEntityDescriptor(entityType);

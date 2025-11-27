@@ -127,7 +127,7 @@ namespace LinqToDB
 
 		sealed class IsDistinctBuilder : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var left  = builder.GetExpression(0)!;
 				var right = builder.GetExpression(1)!;
@@ -212,7 +212,7 @@ namespace LinqToDB
 				return e;
 			}
 
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var expr    = builder.Arguments[0];
 				var newExpr = _transformer.Transform(expr);
@@ -256,7 +256,7 @@ namespace LinqToDB
 
 		sealed class ConvertBuilder : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var from = builder.GetExpression("from");
 				var to = builder.GetExpression("to");
@@ -291,7 +291,7 @@ namespace LinqToDB
 
 		sealed class ConvertBuilderSimple : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var obj = builder.GetExpression("obj")!;
 
@@ -311,7 +311,7 @@ namespace LinqToDB
 
 		sealed class ConvertBuilderInner : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var obj = builder.GetExpression("obj", unwrap: true)!;
 
@@ -561,7 +561,7 @@ namespace LinqToDB
 
 		sealed class OracleRightBuilder : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var stringExpr = builder.GetExpression(0);
 				var lengthExpr = builder.GetExpression(1);
@@ -580,7 +580,7 @@ namespace LinqToDB
 
 		sealed class SqlCeRightBuilder : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var stringExpr = builder.GetExpression(0);
 				var lengthExpr = builder.GetExpression(1);
@@ -730,7 +730,7 @@ namespace LinqToDB
 		// str IS NULL OR REPLACE...(str, WHITEPACES, '') == ''
 		internal sealed class IsNullOrWhiteSpaceSqlCeBuilder : IExtensionCallBuilder
 		{
-			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
+			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
 			{
 				var str = builder.GetExpression("str")!;
 
@@ -755,7 +755,7 @@ namespace LinqToDB
 		// str IS NULL OR NOT(str SIMILAR TO _utf8 x'%[^WHITESPACES_UTF8]%')
 		internal sealed class IsNullOrWhiteSpaceFirebirdBuilder : IExtensionCallBuilder
 		{
-			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
+			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
 			{
 				var str = builder.GetExpression("str")!;
 
@@ -783,7 +783,7 @@ namespace LinqToDB
 		// str IS NULL OR NOT(str RLIKE '%[^WHITESPACES]%')
 		internal sealed class IsNullOrWhiteSpaceMySqlBuilder : IExtensionCallBuilder
 		{
-			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
+			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
 			{
 				var str = builder.GetExpression("str")!;
 
@@ -811,7 +811,7 @@ namespace LinqToDB
 		// str IS NULL OR str NOT LIKE '%[^WHITESPACES]%'
 		internal sealed class IsNullOrWhiteSpaceSybaseBuilder : IExtensionCallBuilder
 		{
-			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
+			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
 			{
 				var str = builder.GetExpression("str")!;
 
@@ -834,7 +834,7 @@ namespace LinqToDB
 		// str IS NULL OR str NOT LIKE N'%[^WHITESPACES]%'
 		internal sealed class IsNullOrWhiteSpaceSqlServerBuilder : IExtensionCallBuilder
 		{
-			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
+			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
 			{
 				var str = builder.GetExpression("str")!;
 
@@ -858,7 +858,7 @@ namespace LinqToDB
 		// str IS NULL OR LTRIM(str, '') = ''
 		internal sealed class IsNullOrWhiteSpaceAccessBuilder : IExtensionCallBuilder
 		{
-			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
+			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
 			{
 				var str = builder.GetExpression("str")!;
 
@@ -880,7 +880,7 @@ namespace LinqToDB
 		// str IS NULL OR TRIM(N'WHITESPACES FROM str) = ''
 		internal sealed class IsNullOrWhiteSpaceSqlServer2017Builder : IExtensionCallBuilder
 		{
-			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
+			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
 			{
 				var str = builder.GetExpression("str")!;
 
@@ -902,7 +902,7 @@ namespace LinqToDB
 		// str IS NULL OR LTRIM(str, WHITESPACES) IS NULL
 		internal sealed class IsNullOrWhiteSpaceOracleBuilder : IExtensionCallBuilder
 		{
-			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
+			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
 			{
 				var str = builder.GetExpression("str")!;
 
@@ -921,7 +921,7 @@ namespace LinqToDB
 		// str IS NULL OR LTRIM(str, ASCII_WHITESPACES) = ''
 		internal sealed class IsNullOrWhiteSpaceInformixBuilder : IExtensionCallBuilder
 		{
-			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
+			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
 			{
 				var str = builder.GetExpression("str")!;
 
@@ -943,7 +943,7 @@ namespace LinqToDB
 		// str IS NULL OR LTRIM(str, WHITESPACES) = ''
 		internal sealed class IsNullOrWhiteSpaceDefaultBuilder : IExtensionCallBuilder
 		{
-			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
+			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
 			{
 				var str = builder.GetExpression("str")!;
 

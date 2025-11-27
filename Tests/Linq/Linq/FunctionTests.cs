@@ -690,7 +690,7 @@ namespace Tests.Linq
 	{
 		sealed class MatchBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var srcExpr = builder.GetExpression("src");
 				if (srcExpr == null)
