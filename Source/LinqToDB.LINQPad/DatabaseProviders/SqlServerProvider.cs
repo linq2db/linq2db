@@ -9,11 +9,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-
 #endif
+
 using LinqToDB.Data;
-using LinqToDB.DataProvider;
-using LinqToDB.DataProvider.SqlServer;
 
 using Microsoft.Data.SqlClient;
 using Microsoft.SqlServer.Types;
@@ -22,49 +20,39 @@ namespace LinqToDB.LINQPad;
 
 internal sealed class SqlServerProvider : DatabaseProviderBase
 {
-#if NETFRAMEWORK
-	static SqlServerProvider()
-	{
-		var oldCurrent = Directory.GetCurrentDirectory();
-		var newCurrent = Path.GetDirectoryName(_additionalAssemblies[0].Location);
+#if !NETFRAMEWORK
+	private const string? Troubleshoot = null;
+#else
+	// SqlClient loads assembly by strong name and if it is present in GAC - there is no way to override it
+	// in any way from running application and user need to use binding redirect policy config
+	private const string? Troubleshoot = @"
+If you have errors displaying types from Microsoft.SqlServer.Types assembly, add following binding redirect policy (CTRL+SHIFT+O):
 
-		if (oldCurrent != newCurrent)
-			Directory.SetCurrentDirectory(newCurrent);
-
-		// This will trigger GLNativeMethods .cctor, which loads native runtime for spatial types from relative path
-		// We need to reset current directory before it otherwise it fails to find runtime dll as LINQPad 5 default directory is LINQPad directory, not driver's dir
-		var type = _additionalAssemblies[0].GetType("Microsoft.SqlServer.Types.GLNativeMethods");
-		RuntimeHelpers.RunClassConstructor(type.TypeHandle);
-
-		if (oldCurrent != newCurrent)
-			Directory.SetCurrentDirectory(oldCurrent);
-	}
-
-	[DllImport("kernel32", SetLastError = true)]
-	[DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-	private static extern bool FreeLibrary(IntPtr hModule);
-
-	public override void Unload()
-	{
-		// must unload unmanaged dlls to allow LINQPad 5 to delete old driver instance without error
-		// as SQL Server types lib doesn't implement cleanup for unloadable domains...
-		foreach (ProcessModule mod in Process.GetCurrentProcess().Modules)
-			if (string.Equals(mod.ModuleName, "SqlServerSpatial170.dll", StringComparison.OrdinalIgnoreCase))
-				FreeLibrary(mod.BaseAddress);
-	}
+<configuration>
+  <runtime>
+    <assemblyBinding xmlns=""urn:schemas-microsoft-com:asm.v1"">
+      <dependentAssembly>
+        <assemblyIdentity name=""Microsoft.SqlServer.Types"" publicKeyToken=""89845dcd8080cc91"" culture=""neutral"" />
+        <bindingRedirect oldVersion=""10.0.0.0-17.0.0.0"" newVersion=""17.0.0.0"" />
+      </dependentAssembly>
+    </assemblyBinding>
+  </runtime>
+</configuration>
+";
 #endif
 
 	private static readonly IReadOnlyList<ProviderInfo> _providers =
 	[
-		new (ProviderName.SqlServer    , "Detect Dialect Automatically", true),
-		new (ProviderName.SqlServer2005, "SQL Server 2005 Dialect"           ),
-		new (ProviderName.SqlServer2008, "SQL Server 2008 Dialect"           ),
-		new (ProviderName.SqlServer2012, "SQL Server 2012 Dialect"           ),
-		new (ProviderName.SqlServer2014, "SQL Server 2014 Dialect"           ),
-		new (ProviderName.SqlServer2016, "SQL Server 2016 Dialect"           ),
-		new (ProviderName.SqlServer2017, "SQL Server 2017 Dialect"           ),
-		new (ProviderName.SqlServer2019, "SQL Server 2019 Dialect"           ),
-		new (ProviderName.SqlServer2022, "SQL Server 2022 Dialect"           ),
+		new (ProviderName.SqlServer    , "Detect Dialect Automatically", true, Troubleshoot: Troubleshoot),
+		new (ProviderName.SqlServer2005, "SQL Server 2005 Dialect"           , Troubleshoot: Troubleshoot),
+		new (ProviderName.SqlServer2008, "SQL Server 2008 Dialect"           , Troubleshoot: Troubleshoot),
+		new (ProviderName.SqlServer2012, "SQL Server 2012 Dialect"           , Troubleshoot: Troubleshoot),
+		new (ProviderName.SqlServer2014, "SQL Server 2014 Dialect"           , Troubleshoot: Troubleshoot),
+		new (ProviderName.SqlServer2016, "SQL Server 2016 Dialect"           , Troubleshoot: Troubleshoot),
+		new (ProviderName.SqlServer2017, "SQL Server 2017 Dialect"           , Troubleshoot: Troubleshoot),
+		new (ProviderName.SqlServer2019, "SQL Server 2019 Dialect"           , Troubleshoot: Troubleshoot),
+		new (ProviderName.SqlServer2022, "SQL Server 2022 Dialect"           , Troubleshoot: Troubleshoot),
+		new (ProviderName.SqlServer2025, "SQL Server 2025 Dialect"           , Troubleshoot: Troubleshoot),
 	];
 
 	public SqlServerProvider()
@@ -93,24 +81,5 @@ internal sealed class SqlServerProvider : DatabaseProviderBase
 	public override DbProviderFactory GetProviderFactory(string providerName)
 	{
 		return SqlClientFactory.Instance;
-	}
-
-	public override IDataProvider GetDataProvider(string providerName, string connectionString)
-	{
-		// provider detector fails to detect Microsoft.Data.SqlClient
-		// kinda regression in linq2db v5
-		return providerName switch
-		{
-			ProviderName.SqlServer2005 => SqlServerTools.GetDataProvider(SqlServerVersion.v2005     , DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient, connectionString),
-			ProviderName.SqlServer2008 => SqlServerTools.GetDataProvider(SqlServerVersion.v2008     , DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient, connectionString),
-			ProviderName.SqlServer2012 => SqlServerTools.GetDataProvider(SqlServerVersion.v2012     , DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient, connectionString),
-			ProviderName.SqlServer2014 => SqlServerTools.GetDataProvider(SqlServerVersion.v2014     , DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient, connectionString),
-			ProviderName.SqlServer2016 => SqlServerTools.GetDataProvider(SqlServerVersion.v2016     , DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient, connectionString),
-			ProviderName.SqlServer2017 => SqlServerTools.GetDataProvider(SqlServerVersion.v2017     , DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient, connectionString),
-			ProviderName.SqlServer2019 => SqlServerTools.GetDataProvider(SqlServerVersion.v2019     , DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient, connectionString),
-			ProviderName.SqlServer2022 => SqlServerTools.GetDataProvider(SqlServerVersion.v2022     , DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient, connectionString),
-			ProviderName.SqlServer     => SqlServerTools.GetDataProvider(SqlServerVersion.AutoDetect, DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient, connectionString),
-			_                          => base.GetDataProvider(providerName, connectionString)
-		};
 	}
 }
