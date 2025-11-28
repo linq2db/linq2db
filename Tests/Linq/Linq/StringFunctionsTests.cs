@@ -623,5 +623,31 @@ namespace Tests.Linq
 				.Select(s => s.Children.StringAggregate(", ", l => l.ChildID.ToString()).ToValue())
 				.ToArray();
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5173")]
+		public void Issue5173_ParameterLocation([StringTestSources] string provider)
+		{
+			using var db = GetDataContext(provider);
+
+			const string separator = ";";
+			List<int> channels = [11, 13];
+
+			var query = from ti in db.Parent
+						from ch in channels.AsQueryable()
+						from m in db.Child
+						.LeftJoin(i => i.ParentID == ti.ParentID && i.ChildID == ch)
+						orderby ti.ParentID
+						group new
+						{
+							ch,
+						} by ch % 10
+						into grp
+						select new
+						{
+							Value = grp.StringAggregate(separator,i => Sql.Concat("test:", i.ch)).ToValue()
+						};
+
+			_ = query.ToArray();
+		}
 	}
 }
