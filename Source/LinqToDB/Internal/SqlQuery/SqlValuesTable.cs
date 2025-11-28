@@ -117,6 +117,17 @@ namespace LinqToDB.Internal.SqlQuery
 					}
 				}
 			}
+			else
+			{
+				// columns are not used, but cardinality must be preserved
+				foreach (var record in source)
+				{
+					if (record == null)
+						throw new LinqToDBException("Merge source cannot hold null records");
+
+					rows.Add([]);
+				}
+			}
 
 			return rows;
 		}

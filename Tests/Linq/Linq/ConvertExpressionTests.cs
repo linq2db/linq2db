@@ -13,7 +13,7 @@ namespace Tests.Linq
 	public class ConvertExpressionTests : TestBase
 	{
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Select1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -27,7 +27,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Select2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -43,7 +43,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Select3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -59,7 +59,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Select4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -74,7 +74,7 @@ namespace Tests.Linq
 						.Select(t => t.Sum(c => c.ChildID)));
 		}
 
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void Where1([DataSources] string context)
 		{
@@ -92,7 +92,7 @@ namespace Tests.Linq
 					select children2.Sum(c => c.ChildID));
 		}
 
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void Where2([DataSources] string context)
 		{
@@ -111,7 +111,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Where3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -272,7 +272,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void LetTest4([DataSources(TestProvName.AllInformix)] string context)
 		{
@@ -304,7 +304,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void LetTest41([DataSources(TestProvName.AllInformix)] string context)
 		{
@@ -336,7 +336,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void LetTest5([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -367,7 +367,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void LetTest6([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix)] string context)
 		{
@@ -412,7 +412,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void LetTest61([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix)] string context)
 		{
@@ -458,7 +458,7 @@ namespace Tests.Linq
 
 		// PostgreSQL92 Uses 3 queries and we join results in wrong order. See LetTest71 with explicit sort
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void LetTest7([DataSources(TestProvName.AllInformix, ProviderName.PostgreSQL92, TestProvName.AllSybase, TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -493,7 +493,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void LetTest71([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix)] string context)
 		{
@@ -529,7 +529,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void LetTest8([DataSources] string context)
 		{
