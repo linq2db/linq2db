@@ -24,13 +24,13 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			{
 				case "%":
 				{
-					var expr1 = !element.Expr1.SystemType!.IsIntegerType() ? new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), "Int", element.Expr1) : element.Expr1;
+					var expr1 = !element.Expr1.SystemType!.IsIntegerType ? new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), "Int", element.Expr1) : element.Expr1;
 					return new SqlFunction(element.Type, "Mod", expr1, element.Expr2);
 				}
 				case "&": return new SqlFunction(element.Type, "BitAnd", element.Expr1, element.Expr2);
 				case "|": return new SqlFunction(element.Type, "BitOr", element.Expr1, element.Expr2);
 				case "^": return new SqlFunction(element.Type, "BitXor", element.Expr1, element.Expr2);
-				case "+": return element.SystemType == typeof(string) ? new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence) : element;
+				case "+": return element.SystemType.IsStringType ? new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence) : element;
 			}
 
 			return base.ConvertSqlBinaryExpression(element);
@@ -101,7 +101,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				if (toType.Equals(param.Type))
 					return param;
 
-				var paramSystemType = param.Type.SystemType.ToNullableUnderlying();
+				var paramSystemType = param.Type.SystemType.UnwrapNullableType();
 
 				switch (toType.DataType)
 				{

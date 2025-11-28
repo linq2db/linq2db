@@ -106,5 +106,11 @@
 		CompareTo,
 
 		SqlFragment,
+
+		SqlFunctionArgument,
+		SqlExtendedFunction,
+		SqlWindowOrderItem,
+		SqlFrameClause,
+		SqlFrameBoundary,
 	}
 }

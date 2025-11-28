@@ -1353,6 +1353,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class Position
 		{
+			[PrimaryKey, Identity] public int Pk { get; set; }
 			[Column] public int  Group { get; set; }
 			[Column] public int  Order { get; set; }
 			[Column] public int? Id    { get; set; }
@@ -1642,22 +1643,22 @@ namespace Tests.Linq
 		[Table]
 		sealed class Issue1799Table1
 		{
-			[Column] public int      EventUser { get; set; }
-			[Column] public int      ProcessID { get; set; }
+			[PrimaryKey] public int      EventUser { get; set; }
+			[PrimaryKey] public int      ProcessID { get; set; }
 			[Column] public DateTime EventTime { get; set; }
 		}
 
 		[Table]
 		sealed class Issue1799Table2
 		{
-			[Column] public int     UserId        { get; set; }
+			[PrimaryKey] public int     UserId     { get; set; }
 			[Column] public string? UserGroups { get; set; }
 		}
 
 		[Table]
 		sealed class Issue1799Table3
 		{
-			[Column] public int     ProcessID   { get; set; }
+			[PrimaryKey] public int     ProcessID   { get; set; }
 			[Column] public string? ProcessName { get; set; }
 		}
 

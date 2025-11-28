@@ -32,7 +32,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
 		{
 			var defaultSchema = dataConnection.Execute<string>("SELECT USER FROM DUAL");
-			SchemasFilter     = BuildSchemaFilter(options, defaultSchema, OracleMappingSchema.ConvertStringToSql);
+			SchemasFilter     = BuildSchemaFilter(options, defaultSchema, (sb, v) => OracleMappingSchema.ConvertStringToSql(sb, dataConnection.MappingSchema.GetDataType(typeof(string)), v));
 			_majorVersion     = GetMajorVersion(dataConnection);
 
 			return base.GetSchema(dataConnection, options);

@@ -104,7 +104,7 @@ namespace LinqToDB
 				{
 					if (aggregator != null)
 						// this actually shouldn't be possible
-						throw new InvalidOperationException($"{nameof(AggregatedInterceptor<TI>)}<{nameof(TI)}> already exists");
+						throw new InvalidOperationException($"{nameof(AggregatedInterceptor<>)}<{nameof(TI)}> already exists");
 
 					aggregator = new();
 					aggregator.Interceptors.AddRange(ai.Interceptors);

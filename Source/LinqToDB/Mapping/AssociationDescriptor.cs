@@ -9,6 +9,7 @@ using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.Mapping;
 
@@ -58,11 +59,11 @@ namespace LinqToDB.Mapping
 			if (thisKey.Length == 0 && string.IsNullOrEmpty(expressionPredicate) && predicate == null && string.IsNullOrEmpty(expressionQueryMethod) && expressionQuery == null)
 				throw new ArgumentOutOfRangeException(
 					nameof(thisKey),
-					$"Association '{type.Name}.{memberInfo.Name}' does not define keys.");
+					$"Association '{type.ShortDisplayName()}.{memberInfo.Name}' does not define keys.");
 
 			if (thisKey.Length != otherKey.Length)
 				throw new ArgumentException(
-					$"Association '{type.Name}.{memberInfo.Name}' has different number of keys for parent and child objects.");
+					$"Association '{type.ShortDisplayName()}.{memberInfo.Name}' has different number of keys for parent and child objects.");
 
 			MappingSchema                     = mappingSchema;
 			MemberInfo                        = memberInfo;
@@ -213,10 +214,10 @@ namespace LinqToDB.Mapping
 				var members = type.GetStaticMembersEx(ExpressionPredicate!);
 
 				if (members.Length == 0)
-					throw new LinqToDBException($"Static member '{ExpressionPredicate}' for type '{type.Name}' not found");
+					throw new LinqToDBException($"Static member '{ExpressionPredicate}' for type '{type.ShortDisplayName()}' not found");
 
 				if (members.Length > 1)
-					throw new LinqToDBException($"Ambiguous members '{ExpressionPredicate}' for type '{type.Name}' has been found");
+					throw new LinqToDBException($"Ambiguous members '{ExpressionPredicate}' for type '{type.ShortDisplayName()}' has been found");
 
 				var propInfo = members[0] as PropertyInfo;
 
@@ -228,7 +229,7 @@ namespace LinqToDB.Mapping
 
 					predicate = value as Expression;
 					if (predicate == null)
-						throw new LinqToDBException($"Property '{ExpressionPredicate}' for type '{type.Name}' should return expression");
+						throw new LinqToDBException($"Property '{ExpressionPredicate}' for type '{type.ShortDisplayName()}' should return expression");
 				}
 				else
 				{
@@ -236,20 +237,20 @@ namespace LinqToDB.Mapping
 					if (method != null)
 					{
 						if (method.GetParameters().Length > 0)
-							throw new LinqToDBException($"Method '{ExpressionPredicate}' for type '{type.Name}' should have no parameters");
+							throw new LinqToDBException($"Method '{ExpressionPredicate}' for type '{type.ShortDisplayName()}' should have no parameters");
 						var value = method.InvokeExt(null, []);
 						if (value == null)
 							return null;
 
 						predicate = value as Expression;
 						if (predicate == null)
-							throw new LinqToDBException($"Method '{ExpressionPredicate}' for type '{type.Name}' should return expression");
+							throw new LinqToDBException($"Method '{ExpressionPredicate}' for type '{type.ShortDisplayName()}' should return expression");
 					}
 				}
 
 				if (predicate == null)
 					throw new LinqToDBException(
-						$"Member '{ExpressionPredicate}' for type '{type.Name}' should be static property or method");
+						$"Member '{ExpressionPredicate}' for type '{type.ShortDisplayName()}' should be static property or method");
 			}
 			else
 				predicate = Predicate;
@@ -258,19 +259,19 @@ namespace LinqToDB.Mapping
 			if (lambda == null || lambda.Parameters.Count != 2)
 				if (!string.IsNullOrEmpty(ExpressionPredicate))
 					throw new LinqToDBException(
-						$"Invalid predicate expression in {type.Name}.{ExpressionPredicate}. Expected: Expression<Func<{parentType.Name}, {objectType.Name}, bool>>");
+						$"Invalid predicate expression in {type.ShortDisplayName()}.{ExpressionPredicate}. Expected: Expression<Func<{parentType.ShortDisplayName()}, {objectType.ShortDisplayName()}, bool>>");
 				else
 					throw new LinqToDBException(
-						$"Invalid predicate expression in {type.Name}. Expected: Expression<Func<{parentType.Name}, {objectType.Name}, bool>>");
+						$"Invalid predicate expression in {type.ShortDisplayName()}. Expected: Expression<Func<{parentType.ShortDisplayName()}, {objectType.ShortDisplayName()}, bool>>");
 
 			var firstParameter = lambda.Parameters[0];
 			if (!firstParameter.Type.IsSameOrParentOf(parentType) && !parentType.IsSameOrParentOf(firstParameter.Type))
 			{
-				throw new LinqToDBException($"First parameter of expression predicate should be '{parentType.Name}'");
+				throw new LinqToDBException($"First parameter of expression predicate should be '{parentType.ShortDisplayName()}'");
 			}
 
 			if (lambda.Parameters[1].Type != objectType)
-				throw new LinqToDBException($"Second parameter of expression predicate should be '{objectType.Name}'");
+				throw new LinqToDBException($"Second parameter of expression predicate should be '{objectType.ShortDisplayName()}'");
 
 			if (lambda.ReturnType != typeof(bool))
 				throw new LinqToDBException("Result type of expression predicate should be 'bool'");
@@ -309,19 +310,20 @@ namespace LinqToDB.Mapping
 
 			var lambda = queryExpression as LambdaExpression;
 			if (lambda == null || lambda.Parameters.Count < 1)
+			{
 				if (!string.IsNullOrEmpty(ExpressionQueryMethod))
 					throw new LinqToDBException(
-						$"Invalid predicate expression in {type.Name}.{ExpressionQueryMethod}. Expected: Expression<Func<{parentType.Name}, IDataContext, IQueryable<{objectType.Name}>>>");
-				else
-					throw new LinqToDBException(
-						$"Invalid predicate expression in {type.Name}. Expected: Expression<Func<{parentType.Name}, IDataContext, IQueryable<{objectType.Name}>>>");
+						$"Invalid predicate expression in {type.ShortDisplayName()}.{ExpressionQueryMethod}. Expected: Expression<Func<{parentType.ShortDisplayName()}, IDataContext, IQueryable<{objectType.ShortDisplayName()}>>>");
+				throw new LinqToDBException(
+					$"Invalid predicate expression in {type.ShortDisplayName()}. Expected: Expression<Func<{parentType.ShortDisplayName()}, IDataContext, IQueryable<{objectType.ShortDisplayName()}>>>");
+			}
 
 			if (!lambda.Parameters[0].Type.IsSameOrParentOf(parentType))
-				throw new LinqToDBException($"First parameter of expression predicate should be '{parentType.Name}'");
+				throw new LinqToDBException($"First parameter of expression predicate should be '{parentType.ShortDisplayName()}'");
 
 			if (!(typeof(IQueryable<>).IsSameOrParentOf(lambda.ReturnType) &&
 			      lambda.ReturnType.GetGenericArguments()[0].IsSameOrParentOf(objectType)))
-				throw new LinqToDBException($"Result type of expression predicate should be 'IQueryable<{objectType.Name}>'");
+				throw new LinqToDBException($"Result type of expression predicate should be 'IQueryable<{objectType.ShortDisplayName()}>'");
 
 			return lambda;
 		}
@@ -372,13 +374,13 @@ namespace LinqToDB.Mapping
 			if (lambda == null || lambda.Parameters.Count != 2)
 				if (!string.IsNullOrEmpty(AssociationSetterExpressionMethod))
 					throw new LinqToDBException(
-						$"Invalid setter expression in {type.Name}.{AssociationSetterExpressionMethod}. Expected: Expression<Action<{memberType.Name}, {objectType.Name}>>");
+						$"Invalid setter expression in {type.ShortDisplayName()}.{AssociationSetterExpressionMethod}. Expected: Expression<Action<{memberType.ShortDisplayName()}, {objectType.ShortDisplayName()}>>");
 				else
 					throw new LinqToDBException(
-						$"Invalid setter expression in {type.Name}. Expected: Expression<Action<{memberType.Name}, {objectType.Name}>>");
+						$"Invalid setter expression in {type.ShortDisplayName()}. Expected: Expression<Action<{memberType.ShortDisplayName()}, {objectType.ShortDisplayName()}>>");
 
 			if (!lambda.Parameters[0].Type.IsSameOrParentOf(memberType))
-				throw new LinqToDBException($"First parameter of setter expression should be '{memberType.Name}'");
+				throw new LinqToDBException($"First parameter of setter expression should be '{memberType.ShortDisplayName()}'");
 
 			if (lambda.ReturnType != typeof(void))
 				throw new LinqToDBException("Result type of setter expression should be 'void'");

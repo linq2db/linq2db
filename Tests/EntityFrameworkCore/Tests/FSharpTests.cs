@@ -1,4 +1,4 @@
-﻿#if !NETFRAMEWORK && !NET9_0
+﻿#if EF8
 using System;
 using System.Linq;
 

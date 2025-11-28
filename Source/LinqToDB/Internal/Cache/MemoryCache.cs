@@ -94,13 +94,13 @@ namespace LinqToDB.Internal.Cache
 			var utcNow = _options.Clock!.UtcNow;
 
 			DateTimeOffset? absoluteExpiration = null;
-			if (entry._absoluteExpirationRelativeToNow.HasValue)
+			if (entry.AbsoluteExpirationRelativeToNow.HasValue)
 			{
-				absoluteExpiration = utcNow + entry._absoluteExpirationRelativeToNow;
+				absoluteExpiration = utcNow + entry.AbsoluteExpirationRelativeToNow;
 			}
-			else if (entry._absoluteExpiration.HasValue)
+			else if (entry.AbsoluteExpiration.HasValue)
 			{
-				absoluteExpiration = entry._absoluteExpiration;
+				absoluteExpiration = entry.AbsoluteExpiration;
 			}
 
 			// Applying the option's absolute expiration only if it's not already smaller.
@@ -108,9 +108,9 @@ namespace LinqToDB.Internal.Cache
 			// it was set by cascading it to its parent.
 			if (absoluteExpiration.HasValue)
 			{
-				if (!entry._absoluteExpiration.HasValue || absoluteExpiration.Value < entry._absoluteExpiration.Value)
+				if (!entry.AbsoluteExpiration.HasValue || absoluteExpiration.Value < entry.AbsoluteExpiration.Value)
 				{
-					entry._absoluteExpiration = absoluteExpiration;
+					entry.AbsoluteExpiration = absoluteExpiration;
 				}
 			}
 

@@ -93,10 +93,10 @@ namespace LinqToDB.Internal.Conversion
 			convertedValue = null;
 
 			if (value == null)
-				return  toType.IsNullableType();
+				return  toType.IsNullableOrReferenceType();
 
-			var from = value.GetType().ToNullableUnderlying();
-			var to   = toType         .ToNullableUnderlying();
+			var from = value.GetType().UnwrapNullableType();
+			var to   = toType         .UnwrapNullableType();
 
 			if (from == to)
 			{

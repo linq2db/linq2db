@@ -1,8 +1,8 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project>
 	<PropertyGroup>
 		<Configurations>Testing;Debug;Release;Azure</Configurations>
 		
-		<LangVersion>latest</LangVersion>
+		<LangVersion>14</LangVersion>
 		<Nullable>enable</Nullable>
 		<WarningLevel>9999</WarningLevel>
 		<ErrorReport>prompt</ErrorReport>
@@ -11,8 +11,6 @@
 
 		<ArtifactsPath>$(MSBuildThisFileDirectory)..\..\.build</ArtifactsPath>
 		<ArtifactsPivots>$(Configuration)</ArtifactsPivots>
-
-		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
 
 		<RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
 		<RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>

@@ -199,31 +199,38 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			BuildPhysicalTable(mergeSource.Source, null);
 
-			BuildMergeAsSourceClause(mergeSource);
+			BuildMergeAsSourceClause(mergeSource, false);
 		}
 
-		private void BuildMergeAsSourceClause(SqlTableLikeSource mergeSource)
+		private void BuildMergeAsSourceClause(SqlTableLikeSource mergeSource, bool forceAlias)
 		{
 			StringBuilder.Append(' ');
 
 			BuildObjectName(StringBuilder, new (mergeSource.Name), ConvertType.NameToQueryTable, true, TableOptions.NotSet);
 
-			if (SupportsColumnAliasesInSource)
+			if (SupportsColumnAliasesInSource && (forceAlias || mergeSource.SourceFields.Count > 0))
 			{
 				StringBuilder.AppendLine();
 				StringBuilder.AppendLine(OpenParens);
 
 				++Indent;
 
-				var first = true;
-				foreach (var field in mergeSource.SourceFields)
+				if (mergeSource.SourceFields.Count == 0)
 				{
-					if (!first)
-						StringBuilder.AppendLine(Comma);
+					Convert(StringBuilder, "Unused", ConvertType.NameToQueryField);
+				}
+				else
+				{
+					var first = true;
+					foreach (var field in mergeSource.SourceFields)
+					{
+						if (!first)
+							StringBuilder.AppendLine(Comma);
 
-					first = false;
-					AppendIndent();
-					Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+						first = false;
+						AppendIndent();
+						Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+					}
 				}
 
 				--Indent;
@@ -254,7 +261,7 @@ namespace LinqToDB.Internal.SqlProvider
 			else
 				throw new LinqToDBException($"{Name} doesn't support merge with empty source");
 
-			BuildMergeAsSourceClause(merge.Source);
+			BuildMergeAsSourceClause(merge.Source, true);
 		}
 
 		/// <summary>
@@ -292,22 +299,30 @@ namespace LinqToDB.Internal.SqlProvider
 				StringBuilder.Append("\tSELECT ");
 
 				var row = rows[i];
-				for (var fieldIndex = 0; fieldIndex < row.Count; fieldIndex++)
+
+				if (row.Count == 0)
 				{
-					var value = row[fieldIndex];
-					if (fieldIndex > 0)
-						StringBuilder.Append(InlineComma);
-
-					if (IsSqlValuesTableValueTypeRequired(source, rows, i, fieldIndex))
-						BuildTypedExpression(columnTypes[fieldIndex], value);
-					else
-						BuildExpression(value);
-
-					// add aliases only for first row
-					if (RequiresConstantColumnAliases || i == 0)
+					StringBuilder.Append('1');
+				}
+				else
+				{
+					for (var fieldIndex = 0; fieldIndex < row.Count; fieldIndex++)
 					{
-						StringBuilder.Append(" AS ");
-						Convert(StringBuilder, sourceFields[fieldIndex].PhysicalName, ConvertType.NameToQueryField);
+						var value = row[fieldIndex];
+						if (fieldIndex > 0)
+							StringBuilder.Append(InlineComma);
+
+						if (IsSqlValuesTableValueTypeRequired(source, rows, i, fieldIndex))
+							BuildTypedExpression(columnTypes[fieldIndex], value);
+						else
+							BuildExpression(value);
+
+						// add aliases only for first row
+						if (RequiresConstantColumnAliases || i == 0)
+						{
+							StringBuilder.Append(" AS ");
+							Convert(StringBuilder, sourceFields[fieldIndex].PhysicalName, ConvertType.NameToQueryField);
+						}
 					}
 				}
 
@@ -326,22 +341,30 @@ namespace LinqToDB.Internal.SqlProvider
 				.Append("\tSELECT ")
 				;
 
-			for (var i = 0; i < merge.Source.SourceFields.Count; i++)
+			if (merge.Source.SourceFields.Count == 0)
 			{
-				var field = merge.Source.SourceFields[i];
-
-				if (i > 0)
-					StringBuilder.Append(InlineComma);
-
-				if (IsSqlValuesTableValueTypeRequired(merge.Source.SourceEnumerable!, [], -1, i))
-					BuildTypedExpression(field.Type, new SqlValue(field.Type, null));
-				else
-					BuildExpression(new SqlValue(field.Type, null));
-
-				if (!SupportsColumnAliasesInSource)
+				StringBuilder.Append("1 AS ");
+				Convert(StringBuilder, "Unused", ConvertType.NameToQueryField);
+			}
+			else
+			{
+				for (var i = 0; i < merge.Source.SourceFields.Count; i++)
 				{
-					StringBuilder.Append(' ');
-					Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+					var field = merge.Source.SourceFields[i];
+
+					if (i > 0)
+						StringBuilder.Append(InlineComma);
+
+					if (IsSqlValuesTableValueTypeRequired(merge.Source.SourceEnumerable!, [], -1, i))
+						BuildTypedExpression(field.Type, new SqlValue(field.Type, null));
+					else
+						BuildExpression(new SqlValue(field.Type, null));
+
+					if (!SupportsColumnAliasesInSource)
+					{
+						StringBuilder.Append(' ');
+						Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+					}
 				}
 			}
 
@@ -391,16 +414,23 @@ namespace LinqToDB.Internal.SqlProvider
 				StringBuilder.Append(OpenParens);
 				var row = rows[i];
 
-				for (var j = 0; j < columnTypes.Length; j++)
+				if (columnTypes.Length == 0)
 				{
-					var value = row[j];
-					if (j > 0)
-						StringBuilder.Append(Comma);
+					StringBuilder.Append('1');
+				}
+				else
+				{
+					for (var j = 0; j < columnTypes.Length; j++)
+					{
+						var value = row[j];
+						if (j > 0)
+							StringBuilder.Append(Comma);
 
-					if (IsSqlValuesTableValueTypeRequired(source, rows, i, j))
-						BuildTypedExpression(columnTypes[j], value);
-					else
-						BuildExpression(value);
+						if (IsSqlValuesTableValueTypeRequired(source, rows, i, j))
+							BuildTypedExpression(columnTypes[j], value);
+						else
+							BuildExpression(value);
+					}
 				}
 
 				StringBuilder.Append(')');
@@ -428,7 +458,6 @@ namespace LinqToDB.Internal.SqlProvider
 
 			StringBuilder.AppendLine();
 			AppendIndent();
-
 		}
 
 		private void BuildMergeSource(NullabilityContext nullability, SqlMergeStatement merge)

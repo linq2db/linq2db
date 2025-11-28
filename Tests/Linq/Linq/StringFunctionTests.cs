@@ -296,7 +296,7 @@ namespace Tests.Linq
 
 		class TestLengthModel
 		{
-			[Column] public int    Id  { get; set; }
+			[PrimaryKey] public int    Id  { get; set; }
 			[Column] public string Str { get; set; } = string.Empty;
 		}
 
@@ -700,7 +700,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class StringTypesTable
 		{
-			[Column]                                                              public int    Id             { get; set; }
+			[PrimaryKey]                                                          public int    Id             { get; set; }
 			[Column(Length = 50, CanBeNull = true, DataType = DataType.Char)]     public string CharColumn     { get; set; } = null!;
 			[Column(Length = 50, CanBeNull = true, DataType = DataType.NChar)]    public string NCharColumn    { get; set; } = null!;
 			[Column(Length = 50, CanBeNull = true, DataType = DataType.VarChar)]  public string VarCharColumn  { get; set; } = null!;
@@ -1985,7 +1985,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class SampleClass
 		{
-			[Column]                                            public int      Id     { get; set; }
+			[PrimaryKey]                                        public int      Id     { get; set; }
 			[Column(DataType = DataType.NVarChar, Length = 50)] public MyClass? Value  { get; set; }
 			[Column]                                            public string?  Value2 { get; set; }
 		}

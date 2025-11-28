@@ -1,4 +1,4 @@
-﻿#if NETSTANDARD2_0
+﻿#if NETSTANDARD2_0 || NETFRAMEWORK
 #pragma warning disable MA0048 // File name must match type name
 #pragma warning disable IDE0130
 

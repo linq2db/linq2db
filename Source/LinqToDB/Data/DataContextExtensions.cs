@@ -2617,7 +2617,7 @@ namespace LinqToDB.Data
 
 			if (options.BulkCopyType == BulkCopyType.RowByRow && !table.TryGetDataConnection(out dataConnection))
 			{
-			return CallMetrics(() =>
+				return CallMetrics(() =>
 					new RowByRowBulkCopy().BulkCopyAsync(
 						BulkCopyType.RowByRow,
 						table,

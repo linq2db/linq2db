@@ -89,7 +89,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		public override Type ConvertParameterType(Type type, DbDataType dataType)
 		{
-			if (type.IsNullable())
+			if (type.IsNullableType)
 				type = type.ToUnderlying();
 
 #if SUPPORTS_DATEONLY

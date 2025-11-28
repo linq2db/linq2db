@@ -34,6 +34,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			public Expression?  OutputExpression { get; set; }
 			public IBuildContext? OutputContext  { get; set; }
 
+			public override SelectQuery GetResultQuery() => OutputContext?.SelectQuery ?? base.GetResultQuery();
+
 			public override SqlStatement GetResultStatement()
 			{
 				return Merge;
@@ -75,7 +77,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var outputExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
 
-					var sqlExpr = Builder.BuildSqlExpression(selectContext, outputRef);
+					var sqlExpr = Builder.BuildSqlExpression(selectContext, outputRef, BuildPurpose.Sql, BuildFlags.None);
 					sqlExpr = SequenceHelper.CorrectSelectQuery(sqlExpr, OutputContext.SelectQuery);
 
 					if (sqlExpr is SqlPlaceholderExpression)

@@ -28,7 +28,7 @@ namespace Shouldly
 			{
 				var cnt = 0;
 				var idx = 0;
-				while ((idx = str.IndexOf(fragment, idx)) != -1)
+				while ((idx = str.IndexOf(fragment, idx, StringComparison.Ordinal)) != -1)
 				{
 					cnt++;
 					idx++;

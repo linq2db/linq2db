@@ -82,7 +82,7 @@ namespace LinqToDB.Internal.Remote
 			if (to == _stringType)
 				return value;
 
-			to = to.ToNullableUnderlying();
+			to = to.UnwrapNullableType();
 
 			var converter = _deserializeConverters.GetOrCreate(
 				(to, ((IConfigurationID)ms).ConfigurationID),

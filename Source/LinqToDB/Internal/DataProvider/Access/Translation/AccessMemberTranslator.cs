@@ -15,6 +15,36 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 		{
 		}
 
+		protected override IMemberTranslator CreateSqlTypesTranslator()
+		{
+			return new SqlTypesTranslation();
+		}
+
+		protected override IMemberTranslator CreateDateMemberTranslator()
+		{
+			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new MathMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new AccessStringMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateAggregateFunctionsMemberTranslator()
+		{
+			return new AccessAggregateFunctionsMemberTranslator();
+		}
+
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
@@ -33,7 +63,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 					Sql.DateParts.Hour      => "h",
 					Sql.DateParts.Minute    => "n",
 					Sql.DateParts.Second    => "s",
-					_ => null,
+					_                       => null,
 				};
 
 				if (partStr == null)
@@ -126,16 +156,16 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 					var yearString  = CastToLength(year, 4);
 					var monthString = PartExpression(month, 2);
-					var dayString   = PartExpression(day, 2);
+					var dayString   = PartExpression(day,   2);
 
-					hour          ??= factory.Value(intDataType, 0);
-					minute        ??= factory.Value(intDataType, 0);
-					second        ??= factory.Value(intDataType, 0);
+					hour   ??= factory.Value(intDataType, 0);
+					minute ??= factory.Value(intDataType, 0);
+					second ??= factory.Value(intDataType, 0);
 
 					resultExpression = factory.Concat(
-						yearString, factory.Value(stringDataType, "-"),
-						monthString, factory.Value(stringDataType, "-"), dayString, factory.Value(stringDataType, " "),
-						PartExpression(hour, 2), factory.Value(stringDataType, ":"),
+						yearString, factory.Value(stringDataType,                "-"),
+						monthString, factory.Value(stringDataType,               "-"), dayString, factory.Value(stringDataType, " "),
+						PartExpression(hour,   2), factory.Value(stringDataType, ":"),
 						PartExpression(minute, 2), factory.Value(stringDataType, ":"),
 						PartExpression(second, 2)
 					);
@@ -183,8 +213,8 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 				if (precision == null || precision is SqlValue { Value: 0 })
 				{
 					/*
-					 IIf(Abs([Value] * 10 Mod 10) = 5 And Int([Value]) Mod 2 = 0, 
-						Int([Value]), 
+					 IIf(Abs([Value] * 10 Mod 10) = 5 And Int([Value]) Mod 2 = 0,
+						Int([Value]),
 						Round([Value]))
 					*/
 
@@ -192,9 +222,9 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 					var mod10   = factory.Mod(value10, factory.Value(10));
 
 					var absMod10 = factory.Function(factory.GetDbDataType(typeof(int)), "ABS", mod10);
-					var intCast = factory.Cast(value, intType);
+					var intCast  = factory.Cast(value, intType);
 
-					var is5    = factory.Equal(absMod10, factory.Value(5));
+					var is5    = factory.Equal(absMod10,                               factory.Value(5));
 					var isEven = factory.Equal(factory.Mod(intCast, factory.Value(2)), factory.Value(2));
 
 					var condition = factory.SearchCondition()
@@ -209,6 +239,68 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 				else
 				{
 					result = base.TranslateRoundToEven(translationContext, methodCall, value, precision);
+				}
+
+				return result;
+			}
+
+			protected override ISqlExpression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+				var intType   = factory.GetDbDataType(typeof(int));
+
+				ISqlExpression result;
+
+				if (precision is null or SqlValue { Value: 0 })
+				{
+					/*
+					IIf([Value] >= 0, Int([Value] + 0.5), Int([Value] - 0.5))
+					 */
+
+					// Create condition: [Value] >= 0
+					var isPositive = factory.GreaterOrEqual(value, factory.Value(valueType, 0));
+
+					// True branch: Int([Value] + 0.5)
+					var addHalf        = factory.Add(valueType, value, factory.Value(valueType, 0.5));
+					var positiveResult = factory.Function(intType, "Int", addHalf);
+
+					// False branch: Int([Value] - 0.5)
+					var subtractHalf   = factory.Sub(valueType, value, factory.Value(valueType, 0.5));
+					var negativeResult = factory.Function(intType, "Int", subtractHalf);
+
+					// IIf condition
+					var condition = factory.SearchCondition().Add(isPositive);
+					result = factory.Condition(condition, positiveResult, negativeResult);
+				}
+				else
+				{
+					/*
+					Int([Value] * (10 ^ [Precision]) + IIf([Value] >= 0, 0.5, -0.5)) / (10 ^ [Precision])
+					 */
+
+					// Calculate 10 ^ [Precision]
+					var ten   = factory.Value(valueType, 10);
+					var power = factory.Binary(valueType, ten, "^", precision);
+
+					// [Value] * (10 ^ [Precision])
+					var scaled = factory.Multiply(valueType, value, power);
+
+					// IIf([Value] >= 0, 0.5, -0.5)
+					var isPositive = factory.GreaterOrEqual(value, factory.Value(valueType, 0));
+					var condition  = factory.SearchCondition().Add(isPositive);
+					var adjustment = factory.Condition(condition,
+						factory.Value(valueType, 0.5),
+						factory.Value(valueType, -0.5));
+
+					// [Value] * (10 ^ [Precision]) + IIf([Value] >= 0, 0.5, -0.5)
+					var adjusted = factory.Add(valueType, scaled, adjustment);
+
+					// Int(...)
+					var truncated = factory.Function(valueType, "Int", adjusted);
+
+					// Int(...) / (10 ^ [Precision])
+					result = factory.Div(valueType, truncated, power);
 				}
 
 				return result;
@@ -246,7 +338,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 		}
 
-		protected class StringMemberTranslator : StringMemberTranslatorBase
+		protected class AccessStringMemberTranslator : StringMemberTranslatorBase
 		{
 			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 			{
@@ -264,11 +356,29 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 
 				return factory.Concat(fillingString, value);
 			}
+
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			{
+				var builder = new AggregateFunctionBuilder();
+
+				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+				{
+					var intDbType = factory.GetDbDataType(typeof(int));
+					var substring = factory.Function(valueType, "Mid",
+						valuesExpr,
+						factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)));
+
+					return substring;
+				});
+
+				return builder.Build(translationContext, methodCall);
+			}
 		}
 
 		protected class GuidMemberTranslator : GuidMemberTranslatorBase
 		{
-			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr,
+				TranslationFlags                                                          translationFlags)
 			{
 				// LCase(Mid(CStr({0}), 2, 36))
 
@@ -276,36 +386,17 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 				var stringDbType = factory.GetDbDataType(typeof(string));
 
 				var cStrExpression = factory.Function(stringDbType, "CStr", guidExpr);
-				var midExpression  = factory.Function(stringDbType, "Mid", cStrExpression, factory.Value(2), factory.Value(36));
+				var midExpression  = factory.Function(stringDbType, "Mid",  cStrExpression, factory.Value(2), factory.Value(36));
 				var toLower        = factory.ToLower(midExpression);
 
 				return toLower;
 			}
 		}
 
-		protected override IMemberTranslator CreateSqlTypesTranslator()
+		protected class AccessAggregateFunctionsMemberTranslator : AggregateFunctionsMemberTranslatorBase
 		{
-			return new SqlTypesTranslation();
-		}
-
-		protected override IMemberTranslator CreateDateMemberTranslator()
-		{
-			return new DateFunctionsTranslator();
-		}
-
-		protected override IMemberTranslator CreateMathMemberTranslator()
-		{
-			return new MathMemberTranslator();
-		}
-
-		protected override IMemberTranslator CreateStringMemberTranslator()
-		{
-			return new StringMemberTranslator();
-		}
-
-		protected override IMemberTranslator CreateGuidMemberTranslator()
-		{
-			return new GuidMemberTranslator();
+			protected override bool IsCountDistinctSupported       => false;
+			protected override bool IsAggregationDistinctSupported => false;
 		}
 	}
 }

@@ -22,7 +22,19 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		[Test]
 		public void TestInheritanceBulkCopy([EFDataSources] string provider, [Values] BulkCopyType copyType)
 		{
-			using var ctx = CreateContext(provider);
+			//using var ctx = CreateContext(provider);
+			// workaround for https://github.com/npgsql/efcore.pg/issues/3671
+			InheritanceContext x;
+			try
+			{
+				x = CreateContext(provider);
+			}
+			catch
+			{
+				x = CreateContext(provider);
+			}
+
+			using var ctx = x;
 
 			var data = new BlogBase[] { new Blog() { Url = "BlogUrl" }, new RssBlog() { Url = "RssUrl" } };
 

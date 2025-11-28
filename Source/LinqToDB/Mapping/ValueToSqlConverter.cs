@@ -25,7 +25,7 @@ namespace LinqToDB.Mapping
 
 		public bool CanConvert(Type type)
 		{
-			type = type.ToNullableUnderlying();
+			type = type.UnwrapNullableType();
 
 			if (_converters?.ContainsKey(type) == true)
 				return true;
@@ -170,7 +170,7 @@ namespace LinqToDB.Mapping
 
 		public bool TryConvert(StringBuilder stringBuilder, MappingSchema mappingSchema, DbDataType? dataType, DataOptions options, object? value)
 		{
-			if (value == null || value is INullable nullable && nullable.IsNull)
+			if (value.IsNullValue())
 			{
 				stringBuilder.Append("NULL");
 				return true;
@@ -186,7 +186,7 @@ namespace LinqToDB.Mapping
 
 		bool TryConvertImpl(StringBuilder? stringBuilder, DbDataType dataType, DataOptions options, object? value, bool tryBase)
 		{
-			if (value is null or INullable { IsNull: true })
+			if (value.IsNullValue())
 			{
 				stringBuilder?.Append("NULL");
 				return true;
@@ -200,7 +200,7 @@ namespace LinqToDB.Mapping
 			{
 				if (!_converters.TryGetValue(type, out converter))
 				{
-					switch (type.GetTypeCodeEx())
+					switch (type.TypeCode)
 					{
 						case TypeCode.DBNull  : stringBuilder?.Append("NULL")  ; return true;
 						case TypeCode.Boolean : converter = _booleanConverter ; break;
@@ -263,7 +263,7 @@ namespace LinqToDB.Mapping
 
 				if (!type.IsEnum)
 				{
-					switch (type.GetTypeCodeEx())
+					switch (type.TypeCode)
 					{
 						case TypeCode.Boolean : _booleanConverter  = converter; return;
 						case TypeCode.Char    : _charConverter     = converter; return;

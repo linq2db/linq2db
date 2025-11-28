@@ -1,10 +1,13 @@
 ﻿using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 {
@@ -28,6 +31,11 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 		protected override IMemberTranslator CreateGuidMemberTranslator()
 		{
 			return new GuidMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslator();
 		}
 
 		protected class SqlTypesTranslation : SqlTypesTranslationDefault
@@ -202,13 +210,13 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 					return factory.Function(stringDataType, "LPad",
 						ParametersNullabilityType.SameAsFirstParameter,
 						expression,
-						factory.Value(intDataType, padSize),
+						factory.Value(intDataType,    padSize),
 						factory.Value(stringDataType, "0"));
 				}
 
-				var yearString  = PartExpression(year, 4);
+				var yearString  = PartExpression(year,  4);
 				var monthString = PartExpression(month, 2);
-				var dayString   = PartExpression(day, 2);
+				var dayString   = PartExpression(day,   2);
 
 				hour        ??= factory.Value(intDataType, 0);
 				minute      ??= factory.Value(intDataType, 0);
@@ -216,11 +224,11 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 				millisecond ??= factory.Value(intDataType, 0);
 
 				var resultExpression = factory.Concat(
-					yearString, factory.Value(stringDataType, "-"),
-					monthString, factory.Value(stringDataType, "-"), dayString, factory.Value(stringDataType, " "),
-					PartExpression(hour, 2), factory.Value(stringDataType, ":"),
-					PartExpression(minute, 2), factory.Value(stringDataType, ":"),
-					PartExpression(second, 2), factory.Value(stringDataType, "."),
+					yearString, factory.Value(stringDataType,                     "-"),
+					monthString, factory.Value(stringDataType,                    "-"), dayString, factory.Value(stringDataType, " "),
+					PartExpression(hour,        2), factory.Value(stringDataType, ":"),
+					PartExpression(minute,      2), factory.Value(stringDataType, ":"),
+					PartExpression(second,      2), factory.Value(stringDataType, "."),
 					PartExpression(millisecond, 3)
 				);
 
@@ -289,6 +297,95 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 				var toLower = factory.ToLower(cast);
 
 				return toLower;
+			}
+		}
+
+		protected class StringMemberTranslator : StringMemberTranslatorBase
+		{
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			{
+				var builder = new AggregateFunctionBuilder()
+					.ConfigureAggregate(c => c
+						.HasSequenceIndex(1)
+						.AllowOrderBy()
+						.AllowFilter()
+						.AllowNotNullCheck(true)
+						.TranslateArguments(0)
+						.OnBuildFunction(composer =>
+						{
+							var info = composer.BuildInfo;
+							if (info.Value == null || info.Argument(0) == null)
+							{
+								return;
+							}
+
+							var factory   = info.Factory;
+							var separator = info.Argument(0)!;
+							var valueType = factory.GetDbDataType(info.Value);
+
+							var value = info.Value;
+							if (!info.IsNullFiltered && nullValuesAsEmptyString)
+								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
+
+							ISqlExpression? suffix = null;
+							if (info.OrderBySql.Length > 0)
+							{
+								using var sb = Pools.StringBuilder.Allocate();
+
+								var args = info.OrderBySql.Select(o => o.expr).ToArray();
+
+								sb.Value.Append("ORDER BY ");
+								for (int i = 0; i < info.OrderBySql.Length; i++)
+								{
+									if (i > 0) sb.Value.Append(", ");
+									sb.Value.Append('{').Append(i).Append('}');
+									if (info.OrderBySql[i].desc) sb.Value.Append(" DESC");
+
+									if (!info.IsNullFiltered)
+									{
+										sb.Value.Append(" NULLS ");
+										sb.Value.Append(info.OrderBySql[i].nulls is Sql.NullsPosition.First or Sql.NullsPosition.None ? "FIRST" : "LAST");
+									}
+								}
+
+								suffix = factory.Fragment(sb.Value.ToString(), args);
+							}
+
+							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
+							{
+								if (!info.IsGroupBy)
+								{
+									composer.SetFallback(f => f.AllowFilter(false));
+									return;
+								}
+
+								value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
+							}
+
+							var fn = factory.Function(valueType, "STRING_AGG",
+								[new SqlFunctionArgument(value), new SqlFunctionArgument(separator, suffix : suffix)],
+								[true, true],
+								isAggregate : true,
+								canBeAffectedByOrderBy : true
+							);
+
+							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+
+							composer.SetResult(result);
+						}));
+
+				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+				{
+					var intDbType = factory.GetDbDataType(typeof(int));
+					var substring = factory.Function(valueType, "SUBSTRING",
+						valuesExpr,
+						factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1))
+					);
+
+					return substring;
+				});
+
+				return builder.Build(translationContext, methodCall);
 			}
 		}
 	}

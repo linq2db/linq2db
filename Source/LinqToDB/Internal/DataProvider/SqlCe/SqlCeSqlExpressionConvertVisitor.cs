@@ -32,7 +32,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 				{
 					var exprType = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
 
-					if (!exprType.SystemType.IsIntegerType())
+					if (!exprType.SystemType.IsIntegerType)
 					{
 						return new SqlBinaryExpression(
 							typeof(int),
@@ -162,7 +162,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 				{
 					var argumentType = QueryHelper.GetDbDataType(argument, MappingSchema);
 
-					if (argumentType.SystemType.IsFloatType())
+					if (argumentType.SystemType.IsFloatType)
 					{
 						return PseudoFunctions.MakeCast(new SqlFunction(cast.Type, "Floor", argument), toType);
 					}

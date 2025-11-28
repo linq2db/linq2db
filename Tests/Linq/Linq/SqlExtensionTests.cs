@@ -598,7 +598,7 @@ namespace Tests.Linq
 
 		sealed class Entry : IKeyProvider<IEntryKey>, IEntryKey
 		{
-			public Guid Id { get; set; }
+			[PrimaryKey] public Guid Id { get; set; }
 			public string RecSrc { get; set; } = "default";
 			public int Value { get; set; }
 

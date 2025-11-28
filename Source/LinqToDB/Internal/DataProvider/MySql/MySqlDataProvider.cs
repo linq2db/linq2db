@@ -49,7 +49,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			SqlProviderFlags.IsWindowFunctionsSupported        = Version >= MySqlVersion.MySql80;
 
 			SqlProviderFlags.IsSubqueryWithParentReferenceInJoinConditionSupported = false;
-			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel                    = 1;
+			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel                    = (version > MySqlVersion.MySql57) && version != MySqlVersion.MariaDB10 ? null : 1;
+			SqlProviderFlags.CalculateSupportedCorrelatedLevelWithAggregateQueries = true;
 			SqlProviderFlags.RowConstructorSupport                                 = RowFeature.Equality | RowFeature.Comparisons | RowFeature.CompareToSelect | RowFeature.In;
 
 			SqlProviderFlags.IsUpdateTakeSupported     = true;
@@ -137,9 +138,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			// facepalm, MySql.Data needs byte[] as parameter value
-			if (value is float[] vector
-				&& (Provider is MySqlProvider.MySqlData
-					|| (Provider is MySqlProvider.MySqlConnector && parameter is BulkCopyReader.Parameter)))
+			if (value is float[] vector && Provider is MySqlProvider.MySqlData)
 			{
 				var bytes = new byte[vector.Length * 4];
 				Buffer.BlockCopy(vector, 0, bytes, 0, bytes.Length);

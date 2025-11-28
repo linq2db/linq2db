@@ -772,8 +772,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestDisposeFlagCloning962Test1(
-			[DataSources(false)] string context, [Values] bool withScope)
+		public void TestDisposeFlagCloning962Test1([DataSources(false)] string context, [Values] bool withScope)
 		{
 			if (context.IsAnyOf(ProviderName.ClickHouseOctonica))
 			{

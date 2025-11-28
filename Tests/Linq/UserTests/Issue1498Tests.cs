@@ -15,7 +15,7 @@ namespace Tests.UserTests
 	{
 		public class Topic
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			public string? Title { get; set; }
 
@@ -41,7 +41,7 @@ namespace Tests.UserTests
 
 		public class Message
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			public int TopicId { get; set; }
 

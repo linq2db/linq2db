@@ -60,27 +60,17 @@ namespace LinqToDB
 			return newTable;
 		}
 
-		abstract class LoadWithQueryableBase<TEntity> : IExpressionQuery
+		abstract class LoadWithQueryableBase<TEntity>(IQueryable<TEntity> query) : IExpressionQuery
 		{
-			protected LoadWithQueryableBase(IQueryable<TEntity> query)
-			{
-				Query = query;
-			}
-
-			public IQueryable<TEntity> Query { get; }
+			public IQueryable<TEntity> Query { get; } = query;
 
 			Expression              IExpressionQuery.Expression                                   => Query.Expression;
 			IDataContext            IExpressionQuery.DataContext                                  => ((IExpressionQuery)Query.GetLinqToDBSource()).DataContext;
 			IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options) => ((IExpressionQuery)Query.GetLinqToDBSource()).GetSqlQueries(options);
 		}
 
-		sealed class LoadWithQueryable<TEntity, TProperty> : LoadWithQueryableBase<TEntity>, ILoadWithQueryable<TEntity, TProperty>, IAsyncEnumerable<TEntity>
+		sealed class LoadWithQueryable<TEntity, TProperty>(IQueryable<TEntity> query) : LoadWithQueryableBase<TEntity>(query), ILoadWithQueryable<TEntity, TProperty>, IAsyncEnumerable<TEntity>
 		{
-			public LoadWithQueryable(IQueryable<TEntity> query)
-				: base(query)
-			{
-			}
-
 			Type           IQueryable.ElementType => Query.ElementType;
 			Expression     IQueryable.Expression  => Query.Expression;
 			IQueryProvider IQueryable.Provider    => Query.Provider;

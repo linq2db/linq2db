@@ -34,8 +34,6 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			SqlProviderFlags.IsInsertOrUpdateSupported           = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported    = false;
 			SqlProviderFlags.IsUpdateFromSupported               = false;
-			SqlProviderFlags.IsCountDistinctSupported            = false;
-			SqlProviderFlags.IsAggregationDistinctSupported      = false;
 			SqlProviderFlags.SupportsBooleanType                 = false;
 			SqlProviderFlags.IsWindowFunctionsSupported          = false;
 			SqlProviderFlags.IsOrderByAggregateFunctionSupported = false;

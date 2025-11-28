@@ -95,11 +95,10 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override Type SystemType => Type.SystemType;
 
-		string? _physicalName;
 		public  string   PhysicalName
 		{
-			get => _physicalName ?? Name;
-			set => _physicalName = value;
+			get => field ?? Name;
+			set;
 		}
 
 		#region ISqlExpression Members

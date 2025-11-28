@@ -43,6 +43,7 @@
     <Project Path="Remote/Wcf/WcfHost/WcfHost.csproj" />
   </Folder>
   <Folder Name="/Source/">
+    <Project Path="../Source/CodeGenerators/CodeGenerators.csproj" />
     <Project Path="../Source/LinqToDB.Compat/LinqToDB.Compat.csproj" />
     <Project Path="../Source/LinqToDB.Extensions/LinqToDB.Extensions.csproj" />
     <Project Path="../Source/LinqToDB.Remote.Grpc/LinqToDB.Remote.Grpc.csproj" />

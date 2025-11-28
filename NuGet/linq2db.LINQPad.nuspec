@@ -11,23 +11,22 @@
 
 				<dependency id="LINQPad.Reference"                         version="1.3.1"         />
 
-				<dependency id="System.Configuration.ConfigurationManager" version="9.0.10"        />
-				<dependency id="Microsoft.CodeAnalysis.CSharp"             version="4.14.0"        />
+				<dependency id="Microsoft.CodeAnalysis.CSharp"             version="5.0.0"         />
 
-				<dependency id="FirebirdSql.Data.FirebirdClient"           version="10.3.3"        />
-				<dependency id="MySqlConnector"                            version="2.4.0"         />
+				<dependency id="FirebirdSql.Data.FirebirdClient"           version="10.3.4"        />
+				<dependency id="MySqlConnector"                            version="2.5.0"         />
 				<dependency id="AdoNetCore.AseClient"                      version="0.19.2"        />
 				<dependency id="System.Data.SQLite"                        version="2.0.2"         />
-				<dependency id="SourceGear.sqlite3"                        version="3.50.4.2"      />
-				<dependency id="Microsoft.Data.SqlClient"                  version="6.1.2"         />
-				<dependency id="Microsoft.Data.Sqlite"                     version="9.0.10"        />
-				<dependency id="Microsoft.SqlServer.Types"                 version="160.1000.6"    />
-				<dependency id="System.Data.Odbc"                          version="9.0.10"        />
-				<dependency id="System.Data.OleDb"                         version="9.0.10"        />
-				<dependency id="Npgsql"                                    version="9.0.4"         />
+				<dependency id="SourceGear.sqlite3"                        version="3.50.4.5"      />
+				<dependency id="Microsoft.Data.SqlClient"                  version="6.1.3"         />
+				<dependency id="Microsoft.Data.Sqlite"                     version="10.0.0"        />
+				<dependency id="Microsoft.SqlServer.Types"                 version="170.1000.7"    />
+				<dependency id="System.Data.Odbc"                          version="10.0.0"        />
+				<dependency id="System.Data.OleDb"                         version="10.0.0"        />
+				<dependency id="Npgsql"                                    version="10.0.0"        />
 				<dependency id="Oracle.ManagedDataAccess.Core"             version="23.26.0"       />
 				<dependency id="Net.IBM.Data.Db2"                          version="9.0.0.400"     />
-				<dependency id="ClickHouse.Driver"                         version="0.7.20"        />
+				<dependency id="ClickHouse.Driver"                         version="0.8.1"         />
 				<dependency id="Octonica.ClickHouseClient"                 version="3.1.3"         />
 				<!--<dependency id="linq2db4iSeries"                           version="6.0.0"      />-->
 			</group>

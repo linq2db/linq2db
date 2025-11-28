@@ -103,7 +103,7 @@ namespace LinqToDB.CodeModel
 			/// <summary>
 			/// <see cref="IEquatable{T}.Equals(T)"/> method reference.
 			/// </summary>
-			public static CodeIdentifier IEquatable_Equals  { get; } = new CodeIdentifier(nameof(IEquatable<int>.Equals), true);
+			public static CodeIdentifier IEquatable_Equals  { get; } = new CodeIdentifier(nameof(IEquatable<>.Equals), true);
 
 			/// <summary>
 			/// <see cref="IEquatable{T}.Equals(T)"/> parameter name.
@@ -295,12 +295,12 @@ namespace LinqToDB.CodeModel
 					/// <summary>
 					/// <see cref="IEqualityComparer{T}.GetHashCode(T)"/> method reference.
 					/// </summary>
-					public static CodeIdentifier IEqualityComparer_GetHashCode { get; } = new CodeIdentifier(nameof(IEqualityComparer<int>.GetHashCode), true);
+					public static CodeIdentifier IEqualityComparer_GetHashCode { get; } = new CodeIdentifier(nameof(IEqualityComparer<>.GetHashCode), true);
 
 					/// <summary>
 					/// <see cref="IEqualityComparer{T}.Equals(T, T)"/> method reference.
 					/// </summary>
-					public static CodeIdentifier IEqualityComparer_Equals { get; } = new CodeIdentifier(nameof(IEqualityComparer<int>.Equals), true);
+					public static CodeIdentifier IEqualityComparer_Equals { get; } = new CodeIdentifier(nameof(IEqualityComparer<>.Equals), true);
 				}
 			}
 
@@ -563,17 +563,17 @@ namespace LinqToDB.CodeModel
 				/// <summary>
 				/// <see cref="EntityMappingBuilder{TEntity}.HasAttribute(MappingAttribute)"/> method reference.
 				/// </summary>
-				public static CodeIdentifier EntityMappingBuilder_HasAttribute { get; } = new CodeIdentifier(nameof(EntityMappingBuilder<string>.HasAttribute), true);
+				public static CodeIdentifier EntityMappingBuilder_HasAttribute { get; } = new CodeIdentifier(nameof(EntityMappingBuilder<>.HasAttribute), true);
 
 				/// <summary>
 				/// <see cref="EntityMappingBuilder{TEntity}.Member{TProperty}(Expression{Func{TEntity, TProperty}})"/> method reference.
 				/// </summary>
-				public static CodeIdentifier EntityMappingBuilder_Member { get; } = new CodeIdentifier(nameof(EntityMappingBuilder<string>.Member), true);
+				public static CodeIdentifier EntityMappingBuilder_Member { get; } = new CodeIdentifier(nameof(EntityMappingBuilder<>.Member), true);
 
 				/// <summary>
 				/// <see cref="PropertyMappingBuilder{TEntity, TProperty}.IsNotColumn"/> method reference.
 				/// </summary>
-				public static CodeIdentifier PropertyMappingBuilder_IsNotColumn { get; } = new CodeIdentifier(nameof(PropertyMappingBuilder<string, string>.IsNotColumn), true);
+				public static CodeIdentifier PropertyMappingBuilder_IsNotColumn { get; } = new CodeIdentifier(nameof(PropertyMappingBuilder<,>.IsNotColumn), true);
 
 				/// <summary>
 				/// <see cref="global::LinqToDB.Mapping.AssociationAttribute"/> type descriptor.

@@ -97,7 +97,7 @@ namespace LinqToDB.Internal.Expressions
 		static Expression GetColumnReader(
 			IDataContext dataContext, MappingSchema mappingSchema, DbDataReader dataReader, Type type, IValueConverter? converter, int idx, Expression dataReaderExpr, bool forceNullCheck)
 		{
-			var toType = type.ToNullableUnderlying();
+			var toType = type.UnwrapNullableType();
 
 			Expression ex;
 			Type? mapType = null;
@@ -112,7 +112,7 @@ namespace LinqToDB.Internal.Expressions
 			}
 			else
 			{
-				ex = dataContext.GetReaderExpression(dataReader, idx, dataReaderExpr, mapType?.ToNullableUnderlying() ?? toType);
+				ex = dataContext.GetReaderExpression(dataReader, idx, dataReaderExpr, mapType?.UnwrapNullableType() ?? toType);
 			}
 
 			if (ex.NodeType == ExpressionType.Lambda)
@@ -346,14 +346,14 @@ namespace LinqToDB.Internal.Expressions
 		public override string ToString()
 		{
 			var result = $"ConvertFromDataReaderExpression[{_type.ShortDisplayName()}]({_idx})";
-			if (CanBeNull == true || Type.IsNullable())
+			if (CanBeNull == true || Type.IsNullableType)
 				result += "?";
 			return result;
 		}
 
 		public ConvertFromDataReaderExpression MakeNullable()
 		{
-			if (!Type.IsNullableType())
+			if (!Type.IsNullableOrReferenceType())
 			{
 				var type = Type.AsNullable();
 				return new ConvertFromDataReaderExpression(type, _idx, Converter, DataContextParam, _dataReaderParam, true);
@@ -364,7 +364,7 @@ namespace LinqToDB.Internal.Expressions
 
 		public ConvertFromDataReaderExpression MakeNotNullable()
 		{
-			if (Type.IsNullable())
+			if (Type.IsNullableType)
 			{
 				var type = Type.GetGenericArguments()[0];
 				return new ConvertFromDataReaderExpression(type, _idx, Converter, DataContextParam, _dataReaderParam, (bool?)null);

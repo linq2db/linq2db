@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -29,39 +30,38 @@ namespace Tests.UserTests
 
 		public class Test
 		{
-			public int    Id   { get; set; }
+			[PrimaryKey] public int    Id   { get; set; }
 			public string Name { get; set; } = default!;
 		}
 
 		public class Executant
 		{
-			public int Id     { get; set; }
+			[PrimaryKey] public int Id     { get; set; }
 			public int TestId { get; set; }
 		}
 
 		public class Testee
 		{
-			public int Id          { get; set; }
+			[PrimaryKey] public int Id          { get; set; }
 			public int WorkblankId { get; set; }
 		}
 
 		public class Outfit
 		{
-			public int Id          { get; set; }
-			public int WorkblankId { get; set; }
-			public int AccountId   { get; set; }
+			[PrimaryKey] public int WorkblankId { get; set; }
+			[PrimaryKey] public int AccountId   { get; set; }
 		}
 
 		public class Account
 		{
-			public int    Id      { get; set; }
+			[PrimaryKey] public int    Id      { get; set; }
 			public string Name    { get; set; } = default!;
 			public string Surname { get; set; } = default!;
 		}
 
 		public class Coverage
 		{
-			public int     Id          { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			public int     TestId      { get; set; }
 			public int     TesteeId    { get; set; }
 			public int     StructureId { get; set; }

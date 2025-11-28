@@ -84,8 +84,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override SqlTableType SqlTableType => SqlTableType.MergeSource;
 
-		SqlField?                _all;
-		public override SqlField All => _all ??= SqlField.All(this);
+		public override SqlField All => field ??= SqlField.All(this);
 
 		#endregion
 

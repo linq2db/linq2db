@@ -20,11 +20,9 @@ namespace LinqToDB.Internal.SqlQuery
 		private SqlInsertClause? _insert;
 		public  SqlInsertClause   Insert
 		{
-			get => _insert ??= new SqlInsertClause();
+			get => _insert ??= new();
 			set => _insert = value;
 		}
-
-		internal bool HasInsert => _insert != null;
 
 		#endregion
 

@@ -190,8 +190,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					StringBuilder.Append(CultureInfo.InvariantCulture, $"VARCHAR({type.Length}) CHARACTER SET OCTETS");
 					break;
 
-				case DataType.Boolean       : StringBuilder.Append("BOOLEAN");                            break;
-				default: base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);                 break;
+				case DataType.Boolean       : StringBuilder.Append("BOOLEAN");                           break;
+				case DataType.Double        : StringBuilder.Append("DOUBLE PRECISION");                  break;
+				default: base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);                break;
 			}
 		}
 

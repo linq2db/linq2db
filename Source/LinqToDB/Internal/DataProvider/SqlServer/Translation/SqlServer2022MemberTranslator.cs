@@ -6,8 +6,13 @@ using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 {
-	public class SqlServer2022MemberTranslator : SqlServer2012MemberTranslator
+	public class SqlServer2022MemberTranslator : SqlServer2017MemberTranslator
 	{
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new SqlServer2022MathMemberTranslator();
+		}
+
 		protected class SqlServer2022MathMemberTranslator : SqlServerMathMemberTranslator
 		{
 			protected override ISqlExpression? TranslateMaxMethod(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
@@ -27,11 +32,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 				return factory.Function(dbType, "LEAST", ParametersNullabilityType.IfAllParametersNullable, xValue, yValue);
 			}
-		}
-
-		protected override IMemberTranslator CreateMathMemberTranslator()
-		{
-			return new SqlServer2022MathMemberTranslator();
 		}
 	}
 }

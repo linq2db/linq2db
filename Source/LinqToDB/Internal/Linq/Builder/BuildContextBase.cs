@@ -34,6 +34,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		public          SelectQuery       SelectQuery   { get; protected set; }
 		public          IBuildContext?    Parent        { get; set; }
 
+		public virtual SelectQuery GetResultQuery() => SelectQuery;
+
 		public          TranslationModifier TranslationModifier { get; }
 		public virtual  Type                ElementType         { get; }
 		public abstract Expression          MakeExpression(Expression path, ProjectFlags flags);

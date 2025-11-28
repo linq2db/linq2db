@@ -117,13 +117,23 @@ namespace LinqToDB.Internal.SqlQuery
 					}
 				}
 			}
+			else
+			{
+				// columns are not used, but cardinality must be preserved
+				foreach (var record in source)
+				{
+					if (record == null)
+						throw new LinqToDBException("Merge source cannot hold null records");
+
+					rows.Add([]);
+				}
+			}
 
 			return rows;
 		}
 
 		#region ISqlTableSource
-		private SqlField? _all;
-		SqlField ISqlTableSource.All => _all ??= SqlField.All(this);
+		SqlField ISqlTableSource.All => field ??= SqlField.All(this);
 
 		public int SourceID { get; }
 

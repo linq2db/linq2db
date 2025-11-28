@@ -705,7 +705,7 @@ namespace Tests.DataProvider
 			[Column(DataType = DataType.NVarChar      , Length = 40)  , Nullable                            ] public string?         nvarcharDataType       { get; set; } // NVARCHAR2(40)
 			[Column(DataType = DataType.NText         , Length = 4000), Nullable                            ] public string?         ntextDataType          { get; set; } // NCLOB
 			[Column(DataType = DataType.Blob          , Length = 4000), Nullable                            ] public byte[]?         binaryDataType         { get; set; } // BLOB
-			[Column(DataType = DataType.VarBinary     , Length = 530) , Nullable                            ] public byte[]?         bfileDataType          { get; set; } // BFILE
+			[Column(DataType = DataType.BFile)                                                              ] public byte[]?         bfileDataType          { get; set; } // BFILE
 			[Column(DataType = DataType.Binary        , Length = 16)  , Nullable                            ] public byte[]?         guidDataType           { get; set; } // RAW(16)
 			[Column(DataType = DataType.Long)         , Nullable                                            ] public string?         longDataType           { get; set; } // LONG
 			[Column(DataType = DataType.Xml           , Length = 2000), Nullable                            ] public string?         xmlDataType            { get; set; } // XMLTYPE
@@ -4445,5 +4445,100 @@ END convert_bool;");
 
 		[Sql.Extension("{field} IN {values}", ServerSideOnly = true, IsPredicate = true)]
 		static bool IsIn<T>([ExprParameter] T field, [ExprParameter] T[] values) => throw new ServerSideOnlyException(nameof(IsIn));
+
+		sealed class BlobsTable
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.NText)                   ] public string? NClob { get; set; }
+			[Column(DataType = DataType.Text)                    ] public string? Clob  { get; set; }
+			[Column(DataType = DataType.Binary)                  ] public byte[]? Blob  { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4661")]
+		public void BlobLiteralsLimit([IncludeDataSources(TestProvName.AllOracle)] string context, [Values] bool inline)
+		{
+			using var _  = new DisableBaseline("big sad sql");
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<BlobsTable>();
+
+			const int blobLimit  = 2000;
+			const int clobLimit  = 4000;
+			const int nclobLimit = 2000;
+
+			db.InlineParameters = inline;
+
+			var blob = new byte[blobLimit + 1];
+
+			for (var i = 0; i < blob.Length; i++)
+				blob[i] = (byte)(i % 256);
+
+			var clob = new string(Enumerable.Range(0, clobLimit + 1).Select(i => (char)('a' + i % 28)).ToArray());
+			var nclob = new string(Enumerable.Range(0, nclobLimit + 1).Select(i => (char)('а' + i % 33)).ToArray());
+
+			var records = new BlobsTable[]
+			{
+				new BlobsTable()
+				{
+					Id    = 1,
+					NClob = nclob,
+					Clob  = clob,
+					Blob  = blob,
+				},
+				new BlobsTable()
+				{
+					Id    = 2,
+					NClob = nclob.Substring(0, nclobLimit),
+					Clob  = clob.Substring(0, clobLimit),
+					Blob  = blob.Take(blobLimit).ToArray(),
+				}
+			};
+
+			db.BulkCopy(new BulkCopyOptions(BulkCopyType: BulkCopyType.RowByRow), records);
+			AssertRecord();
+
+			db.BulkCopy(new BulkCopyOptions(BulkCopyType: BulkCopyType.MultipleRows), records);
+			AssertRecord();
+
+			db.BulkCopy(new BulkCopyOptions(BulkCopyType: BulkCopyType.ProviderSpecific), records);
+			AssertRecord();
+
+			using (var db1 = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertAll })))
+			{
+				db1.BulkCopy(new BulkCopyOptions(BulkCopyType: BulkCopyType.MultipleRows), records);
+				AssertRecord();
+			}
+
+			using (var db1 = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertDual })))
+			{
+				db1.BulkCopy(new BulkCopyOptions(BulkCopyType: BulkCopyType.MultipleRows), records);
+				AssertRecord();
+			}
+
+			using (var db1 = GetDataContext(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertInto })))
+			{
+				db1.BulkCopy(new BulkCopyOptions(BulkCopyType: BulkCopyType.MultipleRows), records);
+				AssertRecord();
+			}
+
+			tb.Merge().Using(records).OnTargetKey().InsertWhenNotMatched().Merge();
+			AssertRecord();
+
+			void AssertRecord()
+			{
+				var results = tb.OrderBy(r => r.Id).ToArray();
+				tb.Delete();
+
+				Assert.That(results, Has.Length.EqualTo(2));
+
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(results[0].Blob, Is.EqualTo(blob));
+					Assert.That(results[0].Clob, Is.EqualTo(clob));
+					Assert.That(results[0].NClob, Is.EqualTo(nclob));
+				}
+
+			}
+		}
 	}
 }

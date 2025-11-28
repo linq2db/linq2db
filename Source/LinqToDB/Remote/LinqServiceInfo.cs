@@ -19,5 +19,7 @@ namespace LinqToDB.Remote
 		public TableOptions     SupportedTableOptions    { get; set; }
 		[DataMember(Order = 6)]
 		public string           MethodCallTranslatorType { get; set; } = null!;
+		[DataMember(Order = 7)]
+		public string MemberConverterType                { get; set; } = null!;
 	}
 }

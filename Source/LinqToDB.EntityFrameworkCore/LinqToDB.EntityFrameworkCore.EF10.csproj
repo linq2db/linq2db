@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	
+	<Import Project="LinqToDB.EntityFrameworkCore.props" />
+
+	<PropertyGroup>
+		<TargetFrameworks>net10.0</TargetFrameworks>
+		<AssemblyVersion>$(EF10Version)</AssemblyVersion>
+		<DefineConstants>EF10;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
+
+</Project>

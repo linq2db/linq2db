@@ -249,6 +249,7 @@ namespace Tests.Linq
 
 		sealed class Src
 		{
+			[PrimaryKey]
 			public int            Id    { get; set; }
 			public int?           Int   { get; set; }
 			public ContainsEnum?  Enum  { get; set; }

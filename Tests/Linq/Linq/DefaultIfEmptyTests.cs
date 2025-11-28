@@ -51,10 +51,8 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var defaultValue = new Child{ Parent1 = new Parent1()};
-
 			var query =
-				from p in db.Parent
+				from p in db.Parent.LoadWith(p => p.Children)
 				select new
 				{
 					Sum = p.Children.DefaultIfEmpty(new Child { ParentID = -100 })
@@ -62,16 +60,7 @@ namespace Tests.Linq
 						.Sum()
 				};
 
-			var exptected = 
-				from p in Parent
-				select new
-				{
-					Sum = p.Children.DefaultIfEmpty(new Child { ParentID = -100 })
-						.Select(c => c.ParentID)
-						.Sum()
-				};
-
-			AreEqual(exptected, query);
+			AssertQuery(query);
 		}
 
 		[Test]

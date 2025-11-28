@@ -38,8 +38,8 @@ namespace Tests.UserTests
 		[Table]
 		public class PumpLineChainTest<TChain> where TChain : IChainTest
 		{
-			[Column("LINE_ID")]  public int LineId  { get; set; }
-			[Column("CHAIN_ID")] public int ChainId { get; set; }
+			[PrimaryKey, Column("LINE_ID")]  public int LineId  { get; set; }
+			[PrimaryKey, Column("CHAIN_ID")] public int ChainId { get; set; }
 
 			[Association(ThisKey = nameof(ChainId), OtherKey = nameof(IChainTest.Id))]
 			public TChain Chain { get; set; } = default!;
@@ -50,7 +50,7 @@ namespace Tests.UserTests
 			where TChain : IChainTest
 			where TPumpLineChain : PumpLineChainTest<TChain>
 		{
-			[Association(ThisKey = nameof(Id), OtherKey = nameof(PumpLineChainTest<TChain>.LineId), CanBeNull = false)]
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(PumpLineChainTest<>.LineId), CanBeNull = false)]
 			public IEnumerable<TPumpLineChain> PipeLineChains { get; set; } = null!;
 		}
 

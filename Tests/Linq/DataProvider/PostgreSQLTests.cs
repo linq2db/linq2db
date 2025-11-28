@@ -926,7 +926,7 @@ namespace Tests.DataProvider
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL10)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL11)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL12)]
-			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL13)]
+			[Column(DbType = "macaddr8", Configuration = ProviderName.PostgreSQL13)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL14)]
 			[Column(DbType = "macaddr8", Configuration = ProviderName.PostgreSQL15)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL16)]

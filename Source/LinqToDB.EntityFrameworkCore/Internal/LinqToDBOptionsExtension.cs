@@ -62,8 +62,6 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 
 		private sealed class LinqToDBExtensionInfo : DbContextOptionsExtensionInfo
 		{
-			private string? _logFragment;
-
 			public LinqToDBExtensionInfo(IDbContextOptionsExtension extension)
 				: base(extension)
 			{
@@ -79,7 +77,9 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 			{
 				get
 				{
-					if (_logFragment == null)
+					return field ??= BuildField();
+
+					string BuildField()
 					{
 						string logFragment = string.Empty;
 
@@ -88,10 +88,8 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 							logFragment += $"Interceptors count: {Extension.Options.DataContextOptions.Interceptors.Count}";
 						}
 
-						_logFragment = logFragment;
+						return logFragment;
 					}
-
-					return _logFragment;
 				}
 			}
 

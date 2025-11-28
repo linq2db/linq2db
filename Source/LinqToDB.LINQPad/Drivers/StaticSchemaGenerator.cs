@@ -194,8 +194,8 @@ internal static class StaticSchemaGenerator
 		if (type.IsArray)
 			return GetTypeName(type.GetElementType()!) + "[]";
 
-		if (type.IsNullable())
-			return GetTypeName(type.ToNullableUnderlying()) + '?';
+		if (type.IsNullableType)
+			return GetTypeName(type.UnwrapNullableType()) + '?';
 
 		if (type.IsGenericType)
 		{
