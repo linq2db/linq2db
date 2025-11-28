@@ -649,40 +649,39 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue(Configurations = [ProviderName.ClickHouseDriver, ProviderName.ClickHouseOctonica])]
+		[ActiveIssue(Configuration = ProviderName.ClickHouseOctonica, Details = "The type \"JSON\" is not supported")]
 		[Test]
 		public async ValueTask TestJSONType([ClickHouseDataSources(false)] string context)
 		{
 			// https://clickhouse.com/docs/en/sql-reference/data-types/json/
-			// currently JSON type looks completely unusable
 
 			// JSON
 
-			// cannot even insert (with nonsense message):
-			// Subcolumn '' already exists
+			// server doesn't like primitive JSON?
 			//await TestType<string, string?>(context, new(typeof(string), DataType.Json), "true", "false", filterByValue: false, filterByNullableValue: false);
 			//await TestType<string, string?>(context, new(typeof(string), DataType.Json), "12", "-34", filterByValue: false, filterByNullableValue: false);
+			//await TestType<string, string?>(
+			//	context, new(typeof(string), DataType.Json), string.Empty, default,
+			//	filterByValue: false, filterByNullableValue: false,
+			//	getExpectedValue: _ => "{}", getExpectedNullableValue: _ => "{}");
 
-			// provider errors not reported as JSON type is not yet unusable - nothing to fix on client side
-			// Client: ArgumentException: 'Unknown type: JSON'
-			// Octonica: ClickHouseException : The type "JSON" is not supported
-			//if (!context.IsAnyOf(ProviderName.ClickHouseDriver, ProviderName.ClickHouseOctonica))
+			if (!context.IsAnyOf(ProviderName.ClickHouseDriver))
 			{
-				// WTF is (0)
 				await TestType<string, string?>(context, new(typeof(string), DataType.Json), "null", "null",
 					filterByValue: false, filterByNullableValue: false,
-					getExpectedValue: _ => "{}", getExpectedNullableValue: _ => "(0)");
-
-				//await TestType<string, string?>(
-				//	context, new(typeof(string), DataType.Json), string.Empty, default,
-				//	filterByValue: false, filterByNullableValue: false,
-				//	getExpectedValue: _ => "(0)", getExpectedNullableValue: _ => "(0)");
-
-				await TestType<string, string?>(context, new(typeof(string), DataType.Json),
-					/*lang=json,strict*/ "{ \"prop\": 333 }", /*lang=json,strict*/ "{ \"prop\": 123 }",
-					filterByValue: false, filterByNullableValue: false,
-					getExpectedValue: _ => /*lang=json,strict*/ "{\"prop\":333}", getExpectedNullableValue: _ => "(123)");
+					getExpectedValue: _ => "{}", getExpectedNullableValue: _ => "{}");
 			}
+
+			var expected = context.IsAnyOf(ProviderName.ClickHouseMySql)
+				? /*lang=json,strict*/ "{\"prop\":333}"
+				: /*lang=json,strict*/ "{\r\n  \"prop\": 333\r\n}";
+			var expectedNullable = context.IsAnyOf(ProviderName.ClickHouseMySql)
+				? /*lang=json,strict*/ "{\"prop\":-123}"
+				: /*lang=json,strict*/ "{\r\n  \"prop\": -123\r\n}";
+			await TestType<string, string?>(context, new(typeof(string), DataType.Json),
+				/*lang=json,strict*/ "{ \"prop\": 333 }", /*lang=json,strict*/ "{ \"prop\": -123 }",
+				filterByValue: false, filterByNullableValue: false,
+				getExpectedValue: _ => expected, getExpectedNullableValue: _ => expectedNullable);
 		}
 
 		[Test]
