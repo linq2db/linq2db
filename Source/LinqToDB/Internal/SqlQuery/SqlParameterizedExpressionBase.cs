@@ -9,34 +9,34 @@ namespace LinqToDB.Internal.SqlQuery
 	public abstract class SqlParameterizedExpressionBase : SqlExpressionBase
 	{
 		protected SqlParameterizedExpressionBase(
-			DbDataType type,
-			string exprOrName,
-			int precedence,
-			SqlFlags flags,
+			DbDataType                type,
+			string                    exprOrName,
+			int                       precedence,
+			SqlFlags                  flags,
 			ParametersNullabilityType nullabilityType,
-			bool? canBeNull,
-			params ISqlExpression[] parameters)
+			bool?                     canBeNull,
+			params ISqlExpression[]   parameters)
 		{
-			Type = type;
-			ExprOrName = exprOrName;
-			Precedence = precedence;
-			Flags = flags;
-			NullabilityType = nullabilityType;
+			Type              = type;
+			ExprOrName        = exprOrName;
+			Precedence        = precedence;
+			Flags             = flags;
+			NullabilityType   = nullabilityType;
 			CanBeNullNullable = canBeNull;
-			Parameters = parameters;
+			Parameters        = parameters;
 		}
 
 		protected string ExprOrName { get; }
 
-		public DbDataType Type { get; }
-		public ISqlExpression[] Parameters { get; }
-		public SqlFlags Flags { get; }
-		public bool? CanBeNullNullable { get; private set; }
-		public ParametersNullabilityType NullabilityType { get; }
+		public DbDataType                Type              { get; }
+		public ISqlExpression[]          Parameters        { get; }
+		public SqlFlags                  Flags             { get; }
+		public bool?                     CanBeNullNullable { get; private set; }
+		public ParametersNullabilityType NullabilityType   { get; }
 
-		public bool IsAggregate => (Flags & SqlFlags.IsAggregate) != 0;
-		public bool IsPure => (Flags & SqlFlags.IsPure) != 0;
-		public bool IsPredicate => (Flags & SqlFlags.IsPredicate) != 0;
+		public bool IsAggregate      => (Flags & SqlFlags.IsAggregate) != 0;
+		public bool IsPure           => (Flags & SqlFlags.IsPure) != 0;
+		public bool IsPredicate      => (Flags & SqlFlags.IsPredicate) != 0;
 		public bool IsWindowFunction => (Flags & SqlFlags.IsWindowFunction) != 0;
 
 		public bool CanBeNull
@@ -79,12 +79,12 @@ namespace LinqToDB.Internal.SqlQuery
 				return true;
 
 			if (other is not SqlParameterizedExpressionBase expr
-				|| GetType() != other.GetType()
-				|| Type != expr.Type
-				|| ExprOrName != expr.ExprOrName
-				|| Precedence != expr.Precedence
-				|| Flags != expr.Flags
-				|| NullabilityType != expr.NullabilityType
+				|| GetType()         != other.GetType()
+				|| Type              != expr.Type
+				|| ExprOrName        != expr.ExprOrName
+				|| Precedence        != expr.Precedence
+				|| Flags             != expr.Flags
+				|| NullabilityType   != expr.NullabilityType
 				|| CanBeNullNullable != expr.CanBeNullNullable
 				|| Parameters.Length != expr.Parameters.Length)
 				return false;

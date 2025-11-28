@@ -22,7 +22,7 @@ namespace Tests.Linq
 		// https://github.com/linq2db/linq2db/issues/38
 		//
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Issue38Test([DataSources(false)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -94,7 +94,7 @@ namespace Tests.Linq
 		// https://github.com/linq2db/linq2db/issues/67
 		//
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Issue67Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -114,7 +114,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Issue75Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -849,16 +849,16 @@ namespace Tests.Linq
 		[Table]
 		public sealed class Transition
 		{
-			[PrimaryKey] public int ThingId { get; set; }
-			[PrimaryKey] public DateTimeOffset CreatedDate { get; set; }
-			[Column(CanBeNull = false)] public string TransitionType { get; set; } = null!;
+			[PrimaryKey]                public int      ThingId        { get; set; }
+			[PrimaryKey]                public DateTime CreatedDate    { get; set; }
+			[Column(CanBeNull = false)] public string   TransitionType { get; set; } = null!;
 		}
 
 		[Table]
 		public sealed class ThingState
 		{
-			[Column] public int ThingId { get; set; }
-			[Column] public DateTimeOffset? LastTransitionDate { get; set; }
+			[Column] public int       ThingId            { get; set; }
+			[Column] public DateTime? LastTransitionDate { get; set; }
 		}
 
 		[Table]
@@ -868,6 +868,8 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5193")]
+		[ThrowsRequiresCorrelatedSubquery]
+		[ThrowsRequiredOuterJoins(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllSQLite, TestProvName.AllInformix, TestProvName.AllMariaDB, TestProvName.AllFirebirdLess4, TestProvName.AllDB2, TestProvName.AllMySql57, TestProvName.AllOracle11)]
 		public void IncorrectNesting([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -898,6 +900,8 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5193")]
+		[ThrowsRequiresCorrelatedSubquery]
+		[ThrowsRequiredOuterJoins(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllSQLite, TestProvName.AllInformix, TestProvName.AllMariaDB, TestProvName.AllFirebirdLess4, TestProvName.AllDB2, TestProvName.AllMySql57, TestProvName.AllOracle11)]
 		public void IncorrectNesting_Merged([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

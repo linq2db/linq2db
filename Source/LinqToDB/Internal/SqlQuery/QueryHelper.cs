@@ -571,6 +571,13 @@ namespace LinqToDB.Internal.SqlQuery
 				case QueryElementType.SqlParameter:
 					return true;
 
+				case QueryElementType.SqlCast:
+				{
+					var sqlCast = (SqlCastExpression) expr;
+
+					return IsConstant(sqlCast.Expression);
+				}
+
 				case QueryElementType.Column:
 				{
 					var sqlColumn = (SqlColumn) expr;
@@ -586,19 +593,12 @@ namespace LinqToDB.Internal.SqlQuery
 				}
 
 				case QueryElementType.SqlExpression:
+				case QueryElementType.SqlFunction  :
 				{
-					var sqlExpr = (SqlExpression) expr;
+					var sqlExpr = (SqlParameterizedExpressionBase) expr;
 					if (!sqlExpr.IsPure || (sqlExpr.Flags & (SqlFlags.IsAggregate | SqlFlags.IsWindowFunction)) != 0)
 						return false;
 					return sqlExpr.Parameters.All(static p => IsConstant(p));
-				}
-
-				case QueryElementType.SqlFunction:
-				{
-					var sqlFunc = (SqlFunction) expr;
-					if (!sqlFunc.IsPure || (sqlFunc.Flags & (SqlFlags.IsAggregate | SqlFlags.IsWindowFunction)) != 0)
-						return false;
-					return sqlFunc.Parameters.All(static p => IsConstant(p));
 				}
 			}
 
