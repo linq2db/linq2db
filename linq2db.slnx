@@ -7,6 +7,7 @@
   </Configurations>
   <Folder Name="/.github/">
     <File Path=".github/CODEOWNERS" />
+    <File Path=".github/copilot-instructions.md" />
   </Folder>
   <Folder Name="/.github/ISSUE_TEMPLATE/">
     <File Path=".github/ISSUE_TEMPLATE/01_bug_report_linq2db.yml" />
