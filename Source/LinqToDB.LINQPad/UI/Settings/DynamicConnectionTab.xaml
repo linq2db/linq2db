@@ -34,6 +34,10 @@
 
 				<TextBlock Margin="0 5 0 0" Visibility="{Binding ProviderDownloadUrlVisibility}">You can download provider <Hyperlink NavigateUri="{Binding ProviderDownloadUrl}" RequestNavigate="Url_Click">here</Hyperlink>.</TextBlock>
 
+				<DockPanel Margin="0 5 0 0" Visibility="{Binding ProviderPathVisibility}">
+					<TextBlock Text="{Binding ProviderPathLabel}" TextWrapping="Wrap" />
+				</DockPanel>
+				
 				<DockPanel Margin="0 5 0 0" ToolTip="Specify path to ADO.NET provider location" Visibility="{Binding ProviderPathVisibility}">
 					<Button DockPanel.Dock="Right" Margin="5 0 0 0" Padding="10 5" Content="Select" Click="Click_SelectProvider" />
 					<TextBox Padding="5" Text="{Binding ProviderPath}" />
