@@ -674,10 +674,10 @@ namespace Tests.DataProvider
 
 			var expected = context.IsAnyOf(ProviderName.ClickHouseMySql)
 				? /*lang=json,strict*/ "{\"prop\":333}"
-				: /*lang=json,strict*/ "{\r\n  \"prop\": 333\r\n}";
+				: /*lang=json,strict*/ $"{{{Environment.NewLine}  \"prop\": 333{Environment.NewLine}}}";
 			var expectedNullable = context.IsAnyOf(ProviderName.ClickHouseMySql)
 				? /*lang=json,strict*/ "{\"prop\":-123}"
-				: /*lang=json,strict*/ "{\r\n  \"prop\": -123\r\n}";
+				: /*lang=json,strict*/ $"{{{Environment.NewLine}  \"prop\": -123{Environment.NewLine}}";
 			await TestType<string, string?>(context, new(typeof(string), DataType.Json),
 				/*lang=json,strict*/ "{ \"prop\": 333 }", /*lang=json,strict*/ "{ \"prop\": -123 }",
 				filterByValue: false, filterByNullableValue: false,
