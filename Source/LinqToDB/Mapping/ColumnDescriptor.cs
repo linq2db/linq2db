@@ -95,7 +95,7 @@ namespace LinqToDB.Mapping
 			{
 				IsIdentity = columnAttribute.IsIdentity;
 			}
-			else if (MemberName.IndexOf(".") < 0)
+			else if (MemberName.IndexOf('.') < 0)
 			{
 				var hasIdentity = mappingSchema.HasAttribute<IdentityAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
 				if (hasIdentity)
@@ -114,7 +114,7 @@ namespace LinqToDB.Mapping
 
 			if (columnAttribute?.HasIsPrimaryKey() == true)
 				IsPrimaryKey = columnAttribute.IsPrimaryKey;
-			else if (MemberName.IndexOf(".") < 0)
+			else if (MemberName.IndexOf('.') < 0)
 			{
 				var a = mappingSchema.GetAttribute<PrimaryKeyAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
 

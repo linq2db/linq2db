@@ -1129,14 +1129,17 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				var whereToIgnore = new List<IQueryElement> { sql.Where, sql.Select };
 
-				// add join conditions
-				// Check SelectManyTests.Basic9 for Access
-				foreach (var join in sql.From.Tables.SelectMany(t => t.Joins))
+				if (joinTable.JoinType == JoinType.CrossApply)
 				{
-					if (join.JoinType == JoinType.Inner && join.Table.Source is SqlTable)
-						whereToIgnore.Add(join.Condition);
-					else
-						break;
+					// add join conditions
+					// Check SelectManyTests.Basic9 for Access
+					foreach (var join in sql.From.Tables.SelectMany(t => t.Joins))
+					{
+						if (join.JoinType == JoinType.Inner && join.Table.Source is SqlTable)
+							whereToIgnore.Add(join.Condition);
+						else
+							break;
+					}
 				}
 
 				// we cannot optimize apply because reference to parent sources are used inside the query
@@ -1949,15 +1952,21 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					if (joinTable.JoinType == JoinType.OuterApply)
 					{
-						if (_providerFlags.IsOuterApplyJoinSupportsCondition)
-							moveConditionToQuery = false;
-						else
+						if (!_providerFlags.IsOuterApplyJoinSupportsCondition)
+							return false;
+
+						// Should remain LATERAL
+						if (QueryHelper.IsDependsOnOuterSources(subQuery, [subQuery.Where]))
 							return false;
 					}
 					else if (joinTable.JoinType == JoinType.CrossApply)
 					{
 						if (_providerFlags.IsCrossApplyJoinSupportsCondition)
 							moveConditionToQuery = false;
+
+						// Should remain LATERAL
+						if (QueryHelper.IsDependsOnOuterSources(subQuery, [subQuery.Where]))
+							return false;
 					}
 					else if (joinTable.JoinType == JoinType.Left)
 					{

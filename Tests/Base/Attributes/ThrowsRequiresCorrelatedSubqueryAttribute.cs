@@ -3,9 +3,9 @@ using LinqToDB.Internal.Common;
 
 namespace Tests
 {
-	public sealed class RequiresCorrelatedSubqueryAttribute: ThrowsForProviderAttribute
+	public sealed class ThrowsRequiresCorrelatedSubqueryAttribute: ThrowsForProviderAttribute
 	{
-		public RequiresCorrelatedSubqueryAttribute()
+		public ThrowsRequiresCorrelatedSubqueryAttribute()
 			: base(typeof(LinqToDBException),
 			TestProvName.AllClickHouse)
 		{
