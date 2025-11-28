@@ -48,7 +48,7 @@ internal sealed partial class DynamicConnectionTab
 			DefaultExt       = ".dll",
 			FileName         = Model.ProviderPath,
 			CheckPathExists  = true,
-			Filter           = $"Sap.Data.Hana|{string.Join(";", assemblyNames)}|All Files(*.*)|*.*",
+			Filter           = $"Provider File(s)|{string.Join(";", assemblyNames)}|All Files(*.*)|*.*",
 			InitialDirectory = startPath == null ? null : Path.GetDirectoryName(startPath)
 		};
 
