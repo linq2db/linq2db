@@ -7,3 +7,5 @@ namespace System.Net
 	{
 	}
 }
+
+#endif
