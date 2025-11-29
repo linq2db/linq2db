@@ -58,6 +58,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			var protoValue   = protosAsembly.GetType("Ydb.Value", true)!;
 			var protoType    = protosAsembly.GetType("Ydb.Type", true)!;
 			var decimalType  = protosAsembly.GetType("Ydb.DecimalType", true)!;
+			// TODO: YdbStruct
 
 			var typeMapper = new TypeMapper();
 

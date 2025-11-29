@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 {
@@ -98,6 +100,130 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				var searchCondition = factory.SearchCondition().Add(predicate);
 
 				return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, searchCondition, methodCall);
+			}
+
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			{
+				var builder = new AggregateFunctionBuilder()
+					.ConfigureAggregate(c => c
+						.HasSequenceIndex(1)
+						.AllowOrderBy()
+						.AllowFilter()
+						.AllowDistinct()
+						.AllowNotNullCheck(true)
+						.TranslateArguments(0)
+						.OnBuildFunction(composer =>
+						{
+							var info = composer.BuildInfo;
+							if (info.Value == null || info.Argument(0) == null)
+							{
+								return;
+							}
+
+							var factory   = info.Factory;
+							var separator = info.Argument(0)!;
+							var valueType = factory.GetDbDataType(info.Value);
+
+							var value = info.Value;
+							if (!info.IsNullFiltered && nullValuesAsEmptyString)
+								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
+
+							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
+							{
+								value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
+
+								if (!info.IsGroupBy)
+								{
+									composer.SetFallback(f => f.AllowFilter(false));
+									return;
+								}
+							}
+
+							var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
+
+							var withinGroup = info.OrderBySql.Length > 0 ? info.OrderBySql.Select(o => new SqlWindowOrderItem(o.expr, o.desc, o.nulls)) : null;
+
+							var fn = factory.Function(valueType, "AGGREGATE_LIST",
+								[new SqlFunctionArgument(value, modifier : aggregateModifier)],
+								[true],
+								isAggregate : true,
+								withinGroup : withinGroup,
+								canBeAffectedByOrderBy : false);
+
+							fn = factory.Function(factory.GetDbDataType(typeof(string)), "Unicode::JoinFromList", fn, separator);
+
+							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+
+							composer.SetResult(result);
+						}));
+
+				ConfigureConcat(builder, nullValuesAsEmptyString, isNullableResult);
+
+				return builder.Build(translationContext, methodCall);
+			}
+
+			protected void ConfigureConcat(AggregateFunctionBuilder builder, bool nullValuesAsEmptyString, bool isNullableResult, Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression[], ISqlExpression>? functionFactory = null)
+			{
+				builder
+					.ConfigurePlain(c => c
+						.HasSequenceIndex(1)
+						.TranslateArguments(0)
+						.AllowFilter()
+						.AllowNotNullCheck(true)
+						.OnBuildFunction(composer =>
+						{
+							var info = composer.BuildInfo;
+							if (info.Values.Length == 0 || info.Argument(0) == null)
+							{
+								composer.SetResult(info.Factory.Value(info.Factory.GetDbDataType(typeof(string)), string.Empty));
+								return;
+							}
+
+							var factory   = info.Factory;
+							var separator = info.Argument(0)!;
+							var dataType  = factory.GetDbDataType(info.Values[0]);
+
+							if (info.Values is [var singleValue])
+							{
+								singleValue = isNullableResult && !nullValuesAsEmptyString ? singleValue : factory.Coalesce(singleValue, factory.Value(dataType, string.Empty));
+								composer.SetResult(singleValue);
+								return;
+							}
+
+							if (!composer.GetFilteredToNullValues(out ICollection<ISqlExpression>? values, out var error))
+							{
+								composer.SetError(error);
+								return;
+							}
+
+							var items = !info.IsNullFiltered && nullValuesAsEmptyString
+							? values.Select(i => factory.Coalesce(i, factory.Value(factory.GetDbDataType(i), ""))).ToArray()
+							: values;
+
+							ISqlExpression result;
+
+							if (functionFactory != null)
+							{
+								result = functionFactory(factory, dataType, separator, items.ToArray());
+							}
+							else
+							{
+								result = factory.Function(dataType, "ListConcat",
+									parametersNullability: ParametersNullabilityType.SameAsFirstParameter,
+									[.. items, separator]);
+							}
+
+							if (isNullableResult)
+							{
+								var condition = factory.SearchCondition();
+								condition.AddRange(values.Select(v => factory.IsNull(v)));
+
+								result = factory.Condition(condition, factory.Null(dataType), result);
+							}
+
+							composer.SetResult(result);
+
+						}));
 			}
 		}
 

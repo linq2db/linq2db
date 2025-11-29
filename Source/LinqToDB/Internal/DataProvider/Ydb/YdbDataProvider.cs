@@ -79,6 +79,12 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			SetProviderField<DbDataReader, DateOnly, DateTime>((rd, idx) => rd.GetFieldValue<DateOnly>(idx), "Date32", dataReaderType: Adapter.DataReaderType);
 #endif
 
+			// raw
+			SetProviderField<DbDataReader, int,  DateTime>((rd, idx) => rd.GetInt32(idx), "Date32",      dataReaderType: Adapter.DataReaderType);
+			SetProviderField<DbDataReader, long, DateTime>((rd, idx) => rd.GetInt64(idx), "Datetime64",  dataReaderType: Adapter.DataReaderType);
+			SetProviderField<DbDataReader, long, DateTime>((rd, idx) => rd.GetInt64(idx), "Timestamp64", dataReaderType: Adapter.DataReaderType);
+			SetProviderField<DbDataReader, long, TimeSpan>((rd, idx) => rd.GetInt64(idx), "Interval64",  dataReaderType: Adapter.DataReaderType);
+
 			_sqlOptimizer = new YdbSqlOptimizer(SqlProviderFlags);
 		}
 

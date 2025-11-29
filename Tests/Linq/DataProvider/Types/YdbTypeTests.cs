@@ -16,6 +16,7 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public sealed class YdbTypeTests : TypeTestsBase
 	{
+		// TODO: YdbStruct type support
 		private static readonly string TestEscapingString = string.Join("", Enumerable.Range(0, 255).Select(i => (char)i));
 
 		sealed class YdbDataSourcesAttribute : IncludeDataSourcesAttribute
@@ -592,23 +593,6 @@ namespace Tests.DataProvider
 			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset)), new DateTimeOffset(min, default), default);
 			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset)), new DateTimeOffset(min, default), new DateTimeOffset(max, default));
 			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset)), new DateTimeOffset(minWithTime, default), new DateTimeOffset(maxWithTime, default));
-
-			//var min = new DateTime(1970, 1, 1);
-			//var max = new DateTime(2105, 12, 31);
-
-			//var minWithTime = min.AddTicks(10);
-			//var maxWithtime = max.AddTicks(-10);
-
-			//await TestType<DateTime, DateTime?>(context, new(typeof(DateTime)), TestData.Date, default);
-			//await TestType<DateTime, DateTime?>(context, new(typeof(DateTime)), min, max);
-			//await TestType<DateTime, DateTime?>(context, new(typeof(DateTime)), minWithTime, maxWithtime);
-
-			//var minDto = new DateTimeOffset(min, default);
-			//var maxDto = new DateTimeOffset(max, default);
-
-			//await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset)), new DateTimeOffset(TestData.Date, default), default);
-			//await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset)), minDto, maxDto);
-			//await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset)), maxDto, minDto);
 		}
 
 		[Test]
@@ -650,11 +634,11 @@ namespace Tests.DataProvider
 			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.Date32), new DateTimeOffset(max, default), default, getExpectedValue: _ => expectedDtoMax);
 			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.Date32), new DateTimeOffset(min, default), new DateTimeOffset(max, default), getExpectedValue: _ => expectedDtoMin, getExpectedNullableValue: _ => expectedDtoMax);
 
-			// TODO: we can write values to database, but cannot read it
-			// raw
-			//var intMin = int.MinValue;
-			//var intMax = int.MaxValue;
-			//await TestType<int, int?>(context, new(typeof(int), DataType.Date32), default, default, expectedParamCount: 0);
+			// raw: those are min/max values, accepted by server
+			//var intMin = -53375809;
+			//var intMax = 53375807;
+			await TestType<int, int?>(context, new(typeof(int), DataType.Date32), default, default, expectedParamCount: 0);
+			// TODO: server(?) error
 			//await TestType<int, int?>(context, new(typeof(int), DataType.Date32), intMin, intMax, expectedParamCount: 0);
 		}
 
@@ -681,11 +665,11 @@ namespace Tests.DataProvider
 			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.DateTime64), new DateTimeOffset(min, default), default);
 			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.DateTime64), new DateTimeOffset(min, default), new DateTimeOffset(max, default));
 
-			// TODO: we can write values to database, but cannot read it
-			//// raw
-			//var intMin = long.MinValue;
-			//var intMax = long.MaxValue;
-			//await TestType<long, long?>(context, new(typeof(long), DataType.DateTime64), default, default, expectedParamCount: 0);
+			// raw: those are min/max values, accepted by server
+			//var intMin = -4611669897600;
+			//var intMax = 4611669811199;
+			await TestType<long, long?>(context, new(typeof(long), DataType.DateTime64), default, default, expectedParamCount: 0);
+			// TODO: server(?) error
 			//await TestType<long, long?>(context, new(typeof(long), DataType.DateTime64), intMin, intMax, expectedParamCount: 0);
 		}
 
@@ -712,11 +696,11 @@ namespace Tests.DataProvider
 			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.Timestamp64), new DateTimeOffset(min, default), default);
 			await TestType<DateTimeOffset, DateTimeOffset?>(context, new(typeof(DateTimeOffset), DataType.Timestamp64), new DateTimeOffset(min, default), new DateTimeOffset(max, default));
 
-			// TODO: we can write values to database, but cannot read it
-			//// raw
-			//var intMin = long.MinValue;
-			//var intMax = long.MaxValue;
-			//await TestType<long, long?>(context, new(typeof(long), DataType.Timestamp64), default, default, expectedParamCount: 0);
+			// raw
+			//var intMin = -4611669897600000000;
+			//var intMax =  4611669811199999999;
+			await TestType<long, long?>(context, new(typeof(long), DataType.Timestamp64), default, default, expectedParamCount: 0);
+			// TODO: server(?) error
 			//await TestType<long, long?>(context, new(typeof(long), DataType.Timestamp64), intMin, intMax, expectedParamCount: 0);
 		}
 
@@ -731,11 +715,11 @@ namespace Tests.DataProvider
 			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan), DataType.Interval64), max, default);
 			await TestType<TimeSpan, TimeSpan?>(context, new(typeof(TimeSpan), DataType.Interval64), min, max);
 
-			// TODO: we can write values to database, but cannot read it
-			//// raw. no idea why such min/max used
+			// raw. no idea why such min/max used
 			//var intMin = -9223339708799999999;
 			//var intMax = 9223339708799999999;
-			//await TestType<long, long?>(context, new(typeof(long), DataType.Interval64), default, default, expectedParamCount: 0);
+			await TestType<long, long?>(context, new(typeof(long), DataType.Interval64), default, default, expectedParamCount: 0);
+			// TODO: server(?) error
 			//await TestType<long, long?>(context, new(typeof(long), DataType.Interval64), intMin, intMax, expectedParamCount: 0);
 		}
 	}
