@@ -79,7 +79,7 @@ internal static class DatabaseProviders
 		return GetDataProvider(settings).CreateConnection(settings.Connection.GetFullConnectionString()!);
 	}
 
-	public static DbProviderFactory GetProviderFactory(ConnectionSettings settings) => GetProviderByName(settings.Connection.Provider!).GetProviderFactory(settings.Connection.Provider!);
+	public static DbProviderFactory? GetProviderFactory(ConnectionSettings settings) => GetProviderByName(settings.Connection.Provider!).GetProviderFactory(settings.Connection.Provider!);
 
 	public static IDataProvider GetDataProvider(ConnectionSettings settings)
 	{

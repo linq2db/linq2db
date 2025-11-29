@@ -39,6 +39,9 @@
 			<TabItem Header = "Linq To DB">
 				<us:LinqToDBTab          DataContext="{Binding LinqToDB}" />
 			</TabItem>
+			<TabItem Header = "Troubleshoot" Visibility="{Binding Troubleshoot.Visibility}">
+				<us:TroubleshootTab      DataContext="{Binding Troubleshoot}" />
+			</TabItem>
 			<TabItem Header = "About">
 				<us:AboutTab             DataContext="{Binding About}" />
 			</TabItem>

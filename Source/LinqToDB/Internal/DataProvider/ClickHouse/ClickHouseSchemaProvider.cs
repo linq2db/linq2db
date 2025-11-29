@@ -154,16 +154,6 @@ WHERE database = database() and default_kind <> 'ALIAS'")
 			if (isNullable)
 				type = type.Substring(9, type.Length - 10);
 
-			// some special cases
-			if (type == "Object('json')")
-				type = "JSON";
-
-			if (type == "Object(Nullable('json'))")
-			{
-				type = "JSON";
-				isNullable = true;
-			}
-
 			return (type, isNullable, lowCardinality);
 		}
 

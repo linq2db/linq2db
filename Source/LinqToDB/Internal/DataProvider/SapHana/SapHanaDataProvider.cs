@@ -276,8 +276,8 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		static class MappingSchemaInstance
 		{
-			public static readonly MappingSchema NativeMappingSchema = new SapHanaMappingSchema.NativeMappingSchema();
-			public static readonly MappingSchema OdbcMappingSchema   = new SapHanaMappingSchema.OdbcMappingSchema();
+			static MappingSchema NativeMappingSchema => field ??= new SapHanaMappingSchema.NativeMappingSchema();
+			static MappingSchema OdbcMappingSchema   => field ??= new SapHanaMappingSchema.OdbcMappingSchema();
 
 			public static MappingSchema Get(SapHanaProvider provider) => provider == SapHanaProvider.Unmanaged ? NativeMappingSchema : OdbcMappingSchema;
 		}
