@@ -18,6 +18,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class ComplexTests : TestBase
 	{
+		[YdbTableNotFound]
 		[Test]
 		public void Contains1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -61,6 +62,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Contains2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -119,6 +121,7 @@ namespace Tests.Linq
 			return value ?? 777;
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Contains3([DataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -162,6 +165,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Contains4([DataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -203,6 +207,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Contains5([DataSources(TestProvName.AllAccess, TestProvName.AllSybase)] string context)
 		{
@@ -215,6 +220,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void Contains6([DataSources] string context)
 		{
@@ -479,6 +485,7 @@ namespace Tests.Linq
 			[Column, PrimaryKey] public int IndexId { get; set; }
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Issue413Test([DataSources(false)] string context)
 		{

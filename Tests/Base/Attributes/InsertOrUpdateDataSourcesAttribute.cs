@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB;
+
 namespace Tests
 {
 	[AttributeUsage(AttributeTargets.Parameter)]
@@ -9,7 +11,8 @@ namespace Tests
 	{
 		public static List<string> Unsupported = new List<string>
 		{
-			TestProvName.AllClickHouse
+			TestProvName.AllClickHouse,
+			ProviderName.Ydb
 		}.SelectMany(_ => _.Split(',')).ToList();
 
 		public InsertOrUpdateDataSourcesAttribute(params string[] except)

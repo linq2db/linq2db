@@ -1373,6 +1373,7 @@ namespace Tests.Linq
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
+			ProviderName.Ydb,
 			TestProvName.AllAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllMySql57,
@@ -1419,6 +1420,7 @@ namespace Tests.Linq
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
+			ProviderName.Ydb,
 			TestProvName.AllAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllMySql57,
@@ -1601,6 +1603,7 @@ namespace Tests.Linq
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
+			ProviderName.Ydb,
 			TestProvName.AllAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllSQLite,
@@ -1826,6 +1829,7 @@ namespace Tests.Linq
 			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			ProviderName.SqlCe,
+			ProviderName.Ydb,
 			TestProvName.AllAccess,
 			ProviderName.Firebird25,
 			TestProvName.AllMySql57,
@@ -2000,6 +2004,7 @@ namespace Tests.Linq
 		// This will require additional asserts for results and tests to ensure expected behavior
 		[ActiveIssue(Configurations = [ProviderName.SqlCe, TestProvName.AllSqlServer2016Minus, TestProvName.AllAccess, TestProvName.AllInformix, TestProvName.AllSybase])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4626")]
+		[YdbTableNotFound]
 		public void EmptySequenceTest([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

@@ -393,6 +393,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void ToSqlQuery_ILoadWithQueryable([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

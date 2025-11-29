@@ -39,6 +39,7 @@ namespace LinqToDB.Internal.SqlQuery
 					var newQuery = new SelectQuery
 					{
 						IsParameterDependent = selectQuery.IsParameterDependent,
+						DoNotRemove          = true
 					};
 					queries.Add(newQuery);
 				}

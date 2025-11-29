@@ -502,10 +502,14 @@ namespace Tests.Linq
 
 				query.ToArray();
 
+				if (context.IsAnyOf(ProviderName.Ydb))
+					Assert.That(str, Does.Contain("$CTE"));
+				else
 					Assert.That(str, Does.Contain("WITH"));
 			}
 		}
 
+		[YdbMemberNotFound]
 		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, ProviderName.InformixDB2])]
 		[Test]
 		public void TestInsert([CteContextSource(true, ProviderName.DB2)] string context)
@@ -543,6 +547,7 @@ namespace Tests.Linq
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
 		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, ProviderName.InformixDB2])]
 		[Test]
+		[YdbMemberNotFound]
 		public void TestDelete([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllMariaDB, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db  = GetDataContext(context))
@@ -562,6 +567,7 @@ namespace Tests.Linq
 		}
 
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
+		[YdbTableNotFound]
 		[ActiveIssue(3015, Configurations = [TestProvName.AllOracle, TestProvName.AllSapHana, ProviderName.InformixDB2], Details = "Oracle needs special syntax for CTE + UPDATE")]
 		[Test]
 		public void TestUpdate(
@@ -938,6 +944,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void TestEmbedded([CteContextSource] string context)
 		{
@@ -2022,6 +2029,7 @@ namespace Tests.Linq
 			};
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Issue4167([CteContextSource] string context, [Values] bool withCte)
 		{
@@ -2111,6 +2119,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3407")]
 		public void Issue3407Test([CteContextSource] string context)
 		{
@@ -2584,6 +2593,7 @@ namespace Tests.Linq
 			var result = query.ToArray();
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Issue_SequenceBuildFailed_2([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{

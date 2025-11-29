@@ -59,6 +59,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Delete3([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -79,6 +80,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Delete4([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -126,6 +128,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void AlterDelete([DataSources(false, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -142,6 +145,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedDelete)]
 		public void DeleteMany1([DataSources(false)] string context)
@@ -210,6 +214,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedDelete)]
 		[Test]
 		public void DeleteMany3([DataSources] string context)
@@ -256,6 +261,7 @@ namespace Tests.xUpdate
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSapHana,
 			ProviderName.SqlCe,
+			ProviderName.Ydb,
 			TestProvName.AllSQLite
 			)]
 			string context)
@@ -290,6 +296,7 @@ namespace Tests.xUpdate
 			TestProvName.AllClickHouse,
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
+			ProviderName.Ydb,
 			TestProvName.AllSQLite,
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSapHana,
@@ -335,6 +342,7 @@ namespace Tests.xUpdate
 			TestProvName.AllClickHouse,
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
+			ProviderName.Ydb,
 			TestProvName.AllSQLite,
 			TestProvName.AllMySql,
 			TestProvName.AllPostgreSQL,
@@ -382,6 +390,7 @@ namespace Tests.xUpdate
 			TestProvName.AllClickHouse,
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
+			ProviderName.Ydb,
 			TestProvName.AllSQLite,
 			TestProvName.AllMySql,
 			TestProvName.AllPostgreSQL,
@@ -424,6 +433,7 @@ namespace Tests.xUpdate
 			TestProvName.AllAccess,
 			TestProvName.AllClickHouse,
 			ProviderName.SqlCe,
+			ProviderName.Ydb,
 			TestProvName.AllDB2,
 			TestProvName.AllInformix,
 			TestProvName.AllSQLite,
@@ -479,6 +489,7 @@ namespace Tests.xUpdate
 			return db.LastQuery!;
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void ContainsJoin1([DataSources(false, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -532,31 +543,31 @@ namespace Tests.xUpdate
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<Person>(tableName);
 
-			var iTable = (ITable<Person>)table;
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(iTable.TableName, Is.EqualTo(tableName));
-				Assert.That(iTable.SchemaName, Is.Null);
+				var iTable = (ITable<Person>)table;
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(iTable.TableName, Is.EqualTo(tableName));
+					Assert.That(iTable.SchemaName, Is.Null);
+				}
+
+				var person = new Person()
+				{
+					FirstName = "Steven",
+					LastName = "King",
+					Gender = Gender.Male,
+				};
+
+				// insert a row into the table
+				db.Insert(person, tableName);
+				var newCount = table.Count();
+				Assert.That(newCount, Is.EqualTo(1));
+
+				var personForDelete = table.Single();
+
+				db.Delete(personForDelete, tableName);
+
+				Assert.That(table.Count(), Is.Zero);
 			}
-
-			var person = new Person()
-			{
-				FirstName = "Steven",
-				LastName = "King",
-				Gender = Gender.Male,
-			};
-
-			// insert a row into the table
-			db.Insert(person, tableName);
-			var newCount = table.Count();
-			Assert.That(newCount, Is.EqualTo(1));
-
-			var personForDelete = table.Single();
-
-			db.Delete(personForDelete, tableName);
-
-			Assert.That(table.Count(), Is.Zero);
-		}
 
 		[Test]
 		public async Task DeleteByTableNameAsync([DataSources] string context)
@@ -567,31 +578,32 @@ namespace Tests.xUpdate
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<Person>(tableName, schemaName: schemaName);
 
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(table.TableName, Is.EqualTo(tableName));
-				Assert.That(table.SchemaName, Is.EqualTo(schemaName));
-			}
+					using (Assert.EnterMultipleScope())
+					{
+						Assert.That(table.TableName, Is.EqualTo(tableName));
+						Assert.That(table.SchemaName, Is.EqualTo(schemaName));
+					}
 
-			var person = new Person()
-			{
-				FirstName = "Steven",
-				LastName  = "King",
-				Gender    = Gender.Male,
-			};
+					var person = new Person()
+					{
+						FirstName = "Steven",
+						LastName  = "King",
+						Gender    = Gender.Male,
+					};
 
-			// insert a row into the table
-			await db.InsertAsync(person, tableName: tableName, schemaName: schemaName);
-			var newCount = await table.CountAsync();
-			Assert.That(newCount, Is.EqualTo(1));
+					// insert a row into the table
+					await db.InsertAsync(person, tableName: tableName, schemaName: schemaName);
+					var newCount = await table.CountAsync();
+					Assert.That(newCount, Is.EqualTo(1));
 
-			var personForDelete = await table.SingleAsync();
+					var personForDelete = await table.SingleAsync();
 
-			await db.DeleteAsync(personForDelete, tableName: tableName, schemaName: schemaName);
+					await db.DeleteAsync(personForDelete, tableName: tableName, schemaName: schemaName);
 
-			Assert.That(await table.CountAsync(), Is.Zero);
+					Assert.That(await table.CountAsync(), Is.Zero);
 		}
 
+		[YdbTableNotFound]
 		// based on TestDeleteFrom test in EFCore tests project, it should be reenabled after fix
 		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite])]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
@@ -622,6 +634,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSybase])]
 		[Test]
 		public void DeleteFromWithTake_NoSort([DataSources] string context)

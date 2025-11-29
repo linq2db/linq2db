@@ -184,6 +184,7 @@ namespace Tests.Linq
 				select p.Child!.Parent!.Children.OrderBy(c => c.ChildID).FirstOrDefault());
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void NestedSingleOrDefault1([DataSources(TestProvName.AllClickHouse)] string context)
 		{

@@ -102,6 +102,7 @@ JSON file example:
 					new (false, false, DatabaseType.SQLite         .ToString(), "SQLite"                                                    ),
 					new (false, false, DatabaseType.Sybase         .ToString(), "SAP/Sybase ASE"                                            ),
 					new (false, false, DatabaseType.SapHana        .ToString(), "SAP HANA"                                                  ),
+					new (false, false, DatabaseType.Ydb            .ToString(), "YDB (Yandex Database)"                                     ),
 					new (false, false, DatabaseType.ClickHouseMySql.ToString(), "ClickHouse (MySql interface)"                              ),
 					new (false, false, DatabaseType.ClickHouseHttp .ToString(), "ClickHouse (HTTP(S) interface)"                            ),
 					new (false, false, DatabaseType.ClickHouseTcp  .ToString(), "ClickHouse (TCP/binary interface)"                         ));
@@ -1942,6 +1943,7 @@ string // also you can put aggregate function name as string directly to list
 			SQLite,
 			Sybase,
 			SapHana,
+			Ydb,
 			// all three ClickHouse clients used as we don't know which protocol available for user
 			ClickHouseMySql,
 			ClickHouseHttp,
