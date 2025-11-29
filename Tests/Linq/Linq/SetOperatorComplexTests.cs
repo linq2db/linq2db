@@ -260,6 +260,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void ExceptInheritance([DataSources] string context)
 		{
 			using var db       = GetDataContext(context);
@@ -283,6 +284,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void IntersectInheritance([DataSources] string context)
 		{
 			using var db       = GetDataContext(context);
@@ -335,6 +337,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void EagerSameDetails([DataSources] string context, [Values] SetOperation operation)
 		{
 			using var db       = GetDataContext(context);
@@ -368,6 +371,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void EagerDifferentDetails([DataSources] string context, [Values(SetOperation.UnionAll, SetOperation.Except, SetOperation.ExceptAll)] SetOperation operation)
 		{
 			using var db       = GetDataContext(context);
@@ -401,6 +405,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void ConcatEagerDifferentDetails([DataSources] string context)
 		{
 			using var db       = GetDataContext(context);
@@ -434,6 +439,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void UsingDictionary([DataSources] string context, [Values] SetOperation operation)
 		{
 			using var db       = GetDataContext(context);

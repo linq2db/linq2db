@@ -208,6 +208,7 @@ namespace LinqToDB.Data
 			AddProviderDetector(LinqToDB.DataProvider.SqlServer .SqlServerTools .ProviderDetector.DetectProvider);
 			AddProviderDetector(LinqToDB.DataProvider.Sybase    .SybaseTools    .ProviderDetector.DetectProvider);
 			AddProviderDetector(LinqToDB.DataProvider.ClickHouse.ClickHouseTools.ProviderDetector.DetectProvider);
+			AddProviderDetector(LinqToDB.DataProvider.Ydb       .YdbTools       .ProviderDetector);
 
 			var section = DefaultSettings;
 

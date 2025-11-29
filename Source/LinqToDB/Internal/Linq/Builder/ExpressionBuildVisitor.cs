@@ -991,6 +991,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							newArguments[j] = node.Arguments[j];
 						}
+
 						newArguments[i] = newArgument;
 					}
 				}
