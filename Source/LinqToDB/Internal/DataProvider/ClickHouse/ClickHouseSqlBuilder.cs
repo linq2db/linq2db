@@ -167,7 +167,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				case DataType.IntervalQuarter                                   : sb.Append("IntervalQuarter");                                                                                                             break;
 				case DataType.IntervalYear                                      : sb.Append("IntervalYear");                                                                                                                break;
 				// that's kinda sad
-				case DataType.Json                                              : sb.Append(nullable ? "Object(Nullable('json'))" : "JSON");                                                                                break;
+				case DataType.Json                                              : sb.Append("JSON");                                                                                                                        break;
 				// TODO                                                         : implement type generation at some point
 				case DataType.Enum8                                             :
 				case DataType.Enum16                                            : throw new LinqToDBException($"Enum type name generation in not supported yet. Use {nameof(ColumnAttribute.DbType)} property to specify enum type explicitly");

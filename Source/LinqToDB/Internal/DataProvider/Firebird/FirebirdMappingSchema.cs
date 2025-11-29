@@ -225,10 +225,10 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		internal static MappingSchema Instance { get; } = new FirebirdMappingSchema();
 
-		public sealed class Firebird25MappingSchema : LockedMappingSchema
+		public class Firebird25MappingSchemaBase : LockedMappingSchema
 		{
-			public Firebird25MappingSchema()
-				: base(ProviderName.Firebird25, FirebirdProviderAdapter.Instance.MappingSchema, Instance)
+			public Firebird25MappingSchemaBase(params MappingSchema[] schemata)
+				: base(ProviderName.Firebird25, schemata)
 			{
 				// setup bool to "1"/"0" conversions
 				var booleanType = new SqlDataType(DataType.Char, typeof(bool), length: 1, null, null, dbType: "CHAR(1)");
@@ -248,6 +248,13 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			}
 		}
 
+		public sealed class Firebird25MappingSchema : Firebird25MappingSchemaBase
+		{
+			public Firebird25MappingSchema() : base(FirebirdProviderAdapter.Instance.MappingSchema, Instance)
+			{
+			}
+		}
+
 		public sealed class Firebird3MappingSchema() : LockedMappingSchema(ProviderName.Firebird3, FirebirdProviderAdapter.Instance.MappingSchema, Instance)
 		{
 		}
@@ -258,6 +265,23 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		public sealed class Firebird5MappingSchema() : LockedMappingSchema(ProviderName.Firebird5, FirebirdProviderAdapter.Instance.MappingSchema, Instance)
 		{
+		}
+
+		sealed class FirebirdRemoteMappingSchema(string configuration) : LockedMappingSchema(configuration, Instance);
+
+		static readonly Firebird25MappingSchemaBase _firebird25MappingSchema = new (Instance);
+		static readonly FirebirdRemoteMappingSchema _firebird3MappingSchema  = new (ProviderName.Firebird3);
+		static readonly FirebirdRemoteMappingSchema _firebird4MappingSchema  = new (ProviderName.Firebird4);
+		static readonly FirebirdRemoteMappingSchema _firebird5MappingSchema  = new (ProviderName.Firebird5);
+
+		internal static MappingSchema GetRemoteMappingSchema(Type type)
+		{
+			if (type == typeof(Firebird25MappingSchema)) return _firebird25MappingSchema;
+			if (type == typeof(Firebird3MappingSchema))  return _firebird3MappingSchema;
+			if (type == typeof(Firebird4MappingSchema))  return _firebird4MappingSchema;
+			if (type == typeof(Firebird5MappingSchema))  return _firebird5MappingSchema;
+
+			throw new InvalidOperationException($"Unknown Firebird mapping schema type: {type.FullName}");
 		}
 	}
 }

@@ -9,6 +9,13 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.SignalR.Client\LinqToDB.Remote.SignalR.Client.csproj" />
 
+		<PackageReference Include="Octonica.ClickHouseClient" />
+		<PackageReference Include="ClickHouse.Driver" />
+		<PackageReference Include="MySqlConnector" />
+		<PackageReference Include="Net.IBM.Data.Db2" />
+		<PackageReference Include="Npgsql" />
+		<PackageReference Include="AdoNetCore.AseClient" />
+
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" />
 	</ItemGroup>
