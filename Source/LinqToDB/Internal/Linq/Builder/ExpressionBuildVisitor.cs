@@ -204,6 +204,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public StateHolder<BuildFlags> UsingBuildFlags(BuildFlags buildFlags)
 		{
+			return new StateHolder<BuildFlags>(this, buildFlags, static v => v._buildFlags, static (v, f) => v._buildFlags = f);
+		}
+
+		public StateHolder<BuildFlags> CombineBuildFlags(BuildFlags buildFlags)
+		{
 			return new StateHolder<BuildFlags>(this, CombineFlags(_buildFlags, buildFlags), static v => v._buildFlags, static (v, f) => v._buildFlags = f);
 		}
 
@@ -246,7 +251,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			using (UsingBuildPurpose(buildPurpose))
 			using (UsingBuildContext(buildContext))
 			using (UsingAlias(alias ?? Alias))
-			using (UsingBuildFlags(buildFlags))
+			using (CombineBuildFlags(buildFlags))
 			{
 				var result = Visit(expression);
 
@@ -260,7 +265,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			using (UsingBuildContext(buildContext))
 			using (UsingAlias(alias ?? Alias))
-			using (UsingBuildFlags(buildFlags))
+			using (CombineBuildFlags(buildFlags))
 			{
 				var result = Visit(expression);
 
@@ -273,7 +278,7 @@ namespace LinqToDB.Internal.Linq.Builder
 #pragma warning restore RS0059 // Do not add multiple public overloads with optional parameters
 		{
 			using (UsingBuildPurpose(buildPurpose))
-			using (UsingBuildFlags(buildFlags ?? _buildFlags))
+			using (CombineBuildFlags(buildFlags ?? _buildFlags))
 			{
 				var result = Visit(expression);
 
@@ -783,7 +788,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					case nameof(Sql.Parameter) when IsSqlOrExpression():
 					{
-						using (UsingBuildFlags(BuildFlags.ForceParameter))
+						using (CombineBuildFlags(BuildFlags.ForceParameter))
 						{
 							var translated = Visit(node.Arguments[0]);
 							return RegisterTranslatedSql(translated, node);
@@ -792,7 +797,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					case nameof(Sql.Constant) when IsSqlOrExpression():
 					{
-						using (UsingBuildFlags(BuildFlags.ForceParameter))
+						using (CombineBuildFlags(BuildFlags.ForceParameter))
 						{
 							if (HandleValue(node.Arguments[0], out var translated))
 							{
@@ -1425,7 +1430,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (node.Expression != null)
 			{
 				Expression root;
-				using (UsingBuildFlags(BuildFlags.ForMemberRoot))
+				using (CombineBuildFlags(BuildFlags.ForMemberRoot))
 				{
 					root = _buildPurpose is BuildPurpose.Expression or BuildPurpose.Sql or BuildPurpose.SubQuery or BuildPurpose.Extract or BuildPurpose.Table
 						? BuildRoot(node.Expression)
@@ -1895,7 +1900,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				Expression test;
 
 				// is scope correct here?
-				using var saveFlags = UsingBuildFlags(BuildFlags.ForceOuter);
+				using var saveFlags = CombineBuildFlags(BuildFlags.ForceOuter);
 
 				using (UsingColumnDescriptor(null))
 				using (UsingAlias("test"))
@@ -5019,7 +5024,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return newExpr;
 		}
 
-		int            _gettingSubquery;
+		int _gettingSubquery;
 
 		public IBuildContext? GetSubQuery(Expression expr, out bool isSequence, out string? errorMessage)
 		{
@@ -5135,16 +5140,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public void Init(ExpressionBuildVisitor visitor, IBuildContext? currentContext, string? currentAlias)
 			{
-				Visitor = visitor;
+				Visitor        = visitor;
 				CurrentContext = currentContext;
-				CurrentAlias = currentAlias;
+				CurrentAlias   = currentAlias;
 			}
 
 			public void Cleanup()
 			{
-				Visitor = default!;
+				Visitor        = default!;
 				CurrentContext = default!;
-				CurrentAlias = default!;
+				CurrentAlias   = default!;
 			}
 
 			public TranslationContext()
@@ -5154,11 +5159,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public ISqlExpressionFactory ExpressionFactory { get; }
 
-			public ExpressionBuildVisitor Visitor { get; private set; } = default!;
-			public ExpressionBuilder Builder => Visitor.Builder;
-			public IBuildContext? CurrentContext { get; private set; }
-			public ColumnDescriptor? CurrentColumnDescriptor => Visitor.CurrentDescriptor;
-			public string? CurrentAlias { get; private set; }
+			public ExpressionBuildVisitor Visitor                 { get; private set; } = default!;
+			public ExpressionBuilder      Builder                 => Visitor.Builder;
+			public IBuildContext?         CurrentContext          { get; private set; }
+			public ColumnDescriptor?      CurrentColumnDescriptor => Visitor.CurrentDescriptor;
+			public string?                CurrentAlias            { get; private set; }
 
 			static BuildPurpose GetBuildPurpose(TranslationFlags translationFlags)
 			{
@@ -5277,9 +5282,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			public Expression? BuildArrayAggregationFunction(
-				int sequenceExpressionIndex,
-				Expression functionExpression,
-				AllowedAggregationOperators allowedOperations,
+				int                                                       sequenceExpressionIndex,
+				Expression                                                functionExpression,
+				AllowedAggregationOperators                               allowedOperations,
 				Func<IAggregationContext, BuildAggregationFunctionResult> functionFactory
 				)
 			{
@@ -5287,9 +5292,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			public Expression? BuildAggregationFunction(
-				int sequenceExpressionIndex,
-				Expression functionExpression,
-				AllowedAggregationOperators allowedOperations,
+				int                                                       sequenceExpressionIndex,
+				Expression                                                functionExpression,
+				AllowedAggregationOperators                               allowedOperations,
 				Func<IAggregationContext, BuildAggregationFunctionResult> functionFactory
 				)
 			{
@@ -5343,9 +5348,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				public CurrentContextScope(TranslationContext translationContext, IBuildContext newContext)
 				{
-					_translationContext = translationContext;
-					_oldContext = translationContext.CurrentContext;
-					_disposable = translationContext.Visitor.UsingBuildContext(newContext);
+					_translationContext               = translationContext;
+					_oldContext                       = translationContext.CurrentContext;
+					_disposable                       = translationContext.Visitor.UsingBuildContext(newContext);
 					translationContext.CurrentContext = newContext;
 				}
 
@@ -5499,24 +5504,24 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			public ColumnCacheKey(Expression? expression, Type resultType, SelectQuery selectQuery, SelectQuery? parentQuery)
 			{
-				Expression = expression;
-				ResultType = resultType;
+				Expression  = expression;
+				ResultType  = resultType;
 				SelectQuery = selectQuery;
 				ParentQuery = parentQuery;
 			}
 
-			public Expression? Expression { get; }
-			public Type ResultType { get; }
-			public SelectQuery SelectQuery { get; }
+			public Expression?  Expression  { get; }
+			public Type         ResultType  { get; }
+			public SelectQuery  SelectQuery { get; }
 			public SelectQuery? ParentQuery { get; }
 
 			private sealed class ColumnCacheKeyEqualityComparer : IEqualityComparer<ColumnCacheKey>
 			{
 				public bool Equals(ColumnCacheKey x, ColumnCacheKey y)
 				{
-					return x.ResultType == y.ResultType &&
+					return x.ResultType == y.ResultType                                           &&
 						   ExpressionEqualityComparer.Instance.Equals(x.Expression, y.Expression) &&
-						   ReferenceEquals(x.SelectQuery, y.SelectQuery) &&
+						   ReferenceEquals(x.SelectQuery, y.SelectQuery)                          &&
 						   ReferenceEquals(x.ParentQuery, y.ParentQuery);
 				}
 
@@ -5539,27 +5544,27 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			public ExprCacheKey(Expression expression, IBuildContext? context, ColumnDescriptor? columnDescriptor, SelectQuery? selectQuery, ProjectFlags flags)
 			{
-				Expression = expression;
-				Context = context;
+				Expression       = expression;
+				Context          = context;
 				ColumnDescriptor = columnDescriptor;
-				SelectQuery = selectQuery;
-				Flags = flags;
+				SelectQuery      = selectQuery;
+				Flags            = flags;
 			}
 
-			public Expression Expression { get; }
-			public IBuildContext? Context { get; }
+			public Expression        Expression       { get; }
+			public IBuildContext?    Context          { get; }
 			public ColumnDescriptor? ColumnDescriptor { get; }
-			public SelectQuery? SelectQuery { get; }
-			public ProjectFlags Flags { get; }
+			public SelectQuery?      SelectQuery      { get; }
+			public ProjectFlags      Flags            { get; }
 
 			sealed class ExprCacheKeyEqualityComparer : IEqualityComparer<ExprCacheKey>
 			{
 				public bool Equals(ExprCacheKey x, ExprCacheKey y)
 				{
 					return ExpressionEqualityComparer.Instance.Equals(x.Expression, y.Expression) &&
-						   Equals(x.Context, y.Context) &&
-						   Equals(x.SelectQuery, y.SelectQuery) &&
-						   Equals(x.ColumnDescriptor, y.ColumnDescriptor) &&
+						   Equals(x.Context, y.Context)                                           &&
+						   Equals(x.SelectQuery, y.SelectQuery)                                   &&
+						   Equals(x.ColumnDescriptor, y.ColumnDescriptor)                         &&
 						   x.Flags == y.Flags;
 				}
 
