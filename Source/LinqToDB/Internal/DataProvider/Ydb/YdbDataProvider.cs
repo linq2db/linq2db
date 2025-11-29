@@ -105,7 +105,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		private readonly ISqlOptimizer _sqlOptimizer;
 		public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions) => _sqlOptimizer;
 
-		public override ISchemaProvider GetSchemaProvider() => new YdbSchemaProvider();
+		public override ISchemaProvider GetSchemaProvider() => throw new NotImplementedException("Not implemented yet");
 
 		// GetSchemaTable not implemented by provider
 		public override bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx) => true;

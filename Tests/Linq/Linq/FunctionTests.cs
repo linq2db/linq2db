@@ -420,6 +420,7 @@ namespace Tests.Linq
 		public void NewGuid1(
 			[DataSources(
 				ProviderName.DB2,
+				ProviderName.Ydb,
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL12Minus,
 				TestProvName.AllSQLite,
