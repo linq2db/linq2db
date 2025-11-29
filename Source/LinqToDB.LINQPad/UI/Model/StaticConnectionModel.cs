@@ -72,7 +72,7 @@ internal sealed class StaticConnectionModel(ConnectionSettings settings, bool en
 				value = value!.Trim();
 
 #if NETFRAMEWORK
-			Settings.StaticContext.ConfigurationPath      = null;
+			Settings.StaticContext.ConfigurationPath = null;
 			Settings.StaticContext.LocalConfigurationPath = null;
 
 			if (value != null && value.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
@@ -111,7 +111,7 @@ internal sealed class StaticConnectionModel(ConnectionSettings settings, bool en
 		}
 	}
 
-	public ObservableCollection<string> ContextTypes   { get; } = new();
+	public ObservableCollection<string> ContextTypes { get; } = new();
 
 	public ObservableCollection<string> Configurations { get; } = new();
 

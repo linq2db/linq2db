@@ -167,7 +167,7 @@ public sealed class LinqToDBStaticDriver : StaticDataContextDriver
 	}
 
 	/// <inheritdoc/>
-	public override DbProviderFactory GetProviderFactory(IConnectionInfo cxInfo)
+	public override DbProviderFactory? GetProviderFactory(IConnectionInfo cxInfo)
 	{
 		try
 		{

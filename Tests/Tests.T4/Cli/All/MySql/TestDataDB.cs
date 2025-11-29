@@ -60,6 +60,7 @@ namespace Cli.All.MySql
 		public ITable<InheritanceChild>  InheritanceChildren => this.GetTable<InheritanceChild>();
 		public ITable<InheritanceParent> InheritanceParents  => this.GetTable<InheritanceParent>();
 		public ITable<Issue1993>         Issue1993           => this.GetTable<Issue1993>();
+		public ITable<KeepIdentityTest>  KeepIdentityTests   => this.GetTable<KeepIdentityTest>();
 		public ITable<LinqDataType>      LinqDataTypes       => this.GetTable<LinqDataType>();
 		public ITable<Parent>            Parents             => this.GetTable<Parent>();
 		public ITable<Patient>           Patients            => this.GetTable<Patient>();
@@ -555,6 +556,66 @@ namespace Cli.All.MySql
 		public static IQueryable<Issue1993> FindQuery(this TestDataDB db, Issue1993 @record)
 		{
 			return db.GetTable<Issue1993>().Where(e => e.Id == @record.Id);
+		}
+
+		public static KeepIdentityTest? Find(this ITable<KeepIdentityTest> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static Task<KeepIdentityTest?> FindAsync(this ITable<KeepIdentityTest> table, int id, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+		}
+
+		public static IQueryable<KeepIdentityTest> FindQuery(this ITable<KeepIdentityTest> table, int id)
+		{
+			return table.Where(e => e.Id == id);
+		}
+
+		public static KeepIdentityTest? Find(this ITable<KeepIdentityTest> table, KeepIdentityTest @record)
+		{
+			return table.FirstOrDefault(e => e.Id == @record.Id);
+		}
+
+		public static Task<KeepIdentityTest?> FindAsync(this ITable<KeepIdentityTest> table, KeepIdentityTest @record, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.Id == @record.Id, cancellationToken);
+		}
+
+		public static IQueryable<KeepIdentityTest> FindQuery(this ITable<KeepIdentityTest> table, KeepIdentityTest @record)
+		{
+			return table.Where(e => e.Id == @record.Id);
+		}
+
+		public static KeepIdentityTest? FindKeepIdentityTest(this TestDataDB db, int id)
+		{
+			return db.GetTable<KeepIdentityTest>().FirstOrDefault(e => e.Id == id);
+		}
+
+		public static Task<KeepIdentityTest?> FindKeepIdentityTestAsync(this TestDataDB db, int id, CancellationToken cancellationToken = default)
+		{
+			return db.GetTable<KeepIdentityTest>().FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+		}
+
+		public static IQueryable<KeepIdentityTest> FindKeepIdentityTestQuery(this TestDataDB db, int id)
+		{
+			return db.GetTable<KeepIdentityTest>().Where(e => e.Id == id);
+		}
+
+		public static KeepIdentityTest? Find(this TestDataDB db, KeepIdentityTest @record)
+		{
+			return db.GetTable<KeepIdentityTest>().FirstOrDefault(e => e.Id == @record.Id);
+		}
+
+		public static Task<KeepIdentityTest?> FindAsync(this TestDataDB db, KeepIdentityTest @record, CancellationToken cancellationToken = default)
+		{
+			return db.GetTable<KeepIdentityTest>().FirstOrDefaultAsync(e => e.Id == @record.Id, cancellationToken);
+		}
+
+		public static IQueryable<KeepIdentityTest> FindQuery(this TestDataDB db, KeepIdentityTest @record)
+		{
+			return db.GetTable<KeepIdentityTest>().Where(e => e.Id == @record.Id);
 		}
 
 		public static Patient? Find(this ITable<Patient> table, int personId)
