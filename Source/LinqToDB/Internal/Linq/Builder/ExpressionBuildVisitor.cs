@@ -503,32 +503,17 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public ContextRefExpression? GetCacheRootContext(Expression expression)
 		{
-			if (expression is MemberExpression { Expression: { } expr })
+			return expression switch
 			{
-				return GetCacheRootContext(expr);
-			}
+				MemberExpression { Expression: { } expr } => GetCacheRootContext(expr),
 
-			if (expression is MethodCallExpression methodCallExpression && methodCallExpression.IsQueryable())
-			{
-				return GetCacheRootContext(methodCallExpression.Arguments[0]);
-			}
+				MethodCallExpression methodCallExpression when methodCallExpression.IsQueryable() =>
+					GetCacheRootContext(methodCallExpression.Arguments[0]),
 
-			return expression as ContextRefExpression;
-		}
+				ContextRefExpression cre => cre,
 
-		public ContextRefExpression? GetAggregationRootContext(Expression expression)
-		{
-			if (expression is MemberExpression { Expression: { } expr })
-			{
-				return GetCacheRootContext(expr);
-			}
-
-			if (expression is MethodCallExpression methodCallExpression && methodCallExpression.IsQueryable())
-			{
-				return GetCacheRootContext(methodCallExpression.Arguments[0]);
-			}
-
-			return expression as ContextRefExpression;
+				_ => null,
+			};
 		}
 
 		[Conditional("DEBUG")]
@@ -552,12 +537,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		Expression RegisterTranslatedSql(Expression translated, Expression path)
 		{
-			if (FoundRoot != null)
-			{
-				translated = RegisterTranslatedSql(FoundRoot.BuildContext.SelectQuery, translated, path);
-			}
-
-			return translated;
+			return FoundRoot != null
+				? RegisterTranslatedSql(FoundRoot.BuildContext.SelectQuery, translated, path)
+				: translated;
 		}
 
 		static bool HasConstant(Expression expression)
@@ -580,9 +562,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (!(placeholder.Sql.HasParameter() && HasConstant(placeholder.Path)))
 				{
-				if (!_translationCache.ContainsKey(cacheKey))
-					_translationCache.Add(cacheKey, translated);
-			}
+					if (!_translationCache.ContainsKey(cacheKey))
+						_translationCache.Add(cacheKey, translated);
+				}
 			}
 
 			return translated;
@@ -976,7 +958,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (newArguments != null)
 					{
 						newArguments[i] = newArgument;
-		}
+					}
 					else if (!ReferenceEquals(newArgument, nodeArgument))
 					{
 						newArguments = new Expression[n];
@@ -984,6 +966,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							newArguments[j] = node.Arguments[j];
 						}
+
 						newArguments[i] = newArgument;
 					}
 				}
@@ -1210,7 +1193,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var rootContext     = context;
 			var rootSelectQuery = context.SelectQuery;
 
-			var root = GetAggregationRootContext(expr);
+			var root = GetCacheRootContext(expr);
 			if (root != null)
 			{
 				rootContext = root.BuildContext;
