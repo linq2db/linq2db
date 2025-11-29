@@ -89,41 +89,32 @@ csharp_style_var_for_built_in_types = true:suggestion
 csharp_style_var_when_type_is_apparent = true:suggestion
 csharp_style_var_elsewhere = true:suggestion
 
-# Prefer method-like constructs to have a block body
-csharp_style_expression_bodied_methods = false:none
-csharp_style_expression_bodied_constructors = false:none
-csharp_style_expression_bodied_operators = false:none
-
-# Prefer property-like constructs to have an expression-body
-# to enable see https://github.com/linq2db/linq2db/pull/4433
-# csharp_style_expression_bodied_properties = true:warning
-# to enable see https://github.com/linq2db/linq2db/pull/4433
-# csharp_style_expression_bodied_indexers = true:warning
-# to enable see https://github.com/linq2db/linq2db/pull/4433
-# csharp_style_expression_bodied_accessors = true:warning
-
-# Suggest more modern language features when available
-# to enable see https://github.com/linq2db/linq2db/pull/4433
-#csharp_style_pattern_matching_over_is_with_cast_check = true:warning
-# to enable see https://github.com/linq2db/linq2db/pull/4433
-#csharp_style_pattern_matching_over_as_with_null_check = true:warning
-csharp_style_inlined_variable_declaration = true:suggestion
-csharp_style_throw_expression = true:suggestion
-csharp_style_conditional_delegate_call = true:suggestion
-
 # Blocks are allowed
 csharp_prefer_braces = true:silent
 csharp_preserve_single_line_blocks = true
 csharp_preserve_single_line_statements = true
 
-csharp_prefer_simple_using_statement = false:silent
-# to enable see https://github.com/linq2db/linq2db/pull/4433
-#csharp_style_prefer_switch_expression = true:warning
+# Prefer method-like constructs to have a block body
+csharp_style_expression_bodied_methods = false:none
+csharp_style_expression_bodied_constructors = false:none
+csharp_style_expression_bodied_operators = false:none
 
+# Prefer property-like constructs to have an expression body
+csharp_style_expression_bodied_properties = true:warning
+csharp_style_expression_bodied_indexers = true:warning
+csharp_style_expression_bodied_accessors = true:warning
+
+# Suggest more modern language features when available
+csharp_style_pattern_matching_over_is_with_cast_check = true:warning
+csharp_style_pattern_matching_over_as_with_null_check = true:warning
+csharp_style_prefer_switch_expression = true:warning
+csharp_style_inlined_variable_declaration = true:suggestion
+csharp_style_throw_expression = true:suggestion
+csharp_style_conditional_delegate_call = true:suggestion
 csharp_style_prefer_unbound_generic_type_in_nameof = true:warning
+csharp_prefer_simple_using_statement = true:warning
 
-# to enable see https://github.com/linq2db/linq2db/pull/4433
-#dotnet_style_prefer_compound_assignment = true:warning
+dotnet_style_prefer_compound_assignment = true:warning
 
 [*.{cs,vb}]
 #############
@@ -180,6 +171,8 @@ dotnet_diagnostic.CA2016.severity = error # CA2016: Forward the CancellationToke
 dotnet_diagnostic.CA1018.severity = error # CA1018: Mark attributes with AttributeUsageAttribute
 dotnet_diagnostic.CA1200.severity = error # CA1200: Avoid using cref tags with a prefix
 dotnet_diagnostic.CA1507.severity = error # CA1507: Use nameof in place of string
+# Excessively slow on l2db code; possibly reenable in the future
+dotnet_diagnostic.CA1508.severity = none # CA1508: Avoid dead conditional code 
 dotnet_diagnostic.CA1725.severity = error # CA1725: Parameter names should match base declaration
 dotnet_diagnostic.CA1805.severity = error # CA1805: Do not initialize unnecessarily
 # not interested
@@ -192,8 +185,6 @@ dotnet_diagnostic.CA1829.severity = none # CA1829: Use Length/Count property ins
 dotnet_diagnostic.CA1830.severity = error # CA1830: Prefer strongly-typed Append and Insert method overloads on StringBuilder
 dotnet_diagnostic.CA1834.severity = error # CA1834: Use StringBuilder.Append(char) for single character strings
 dotnet_diagnostic.CA1836.severity = error # CA1836: Prefer IsEmpty over Count when available
-# missing from .net framework
-dotnet_diagnostic.CA1847.severity = none # CA1847: Use string.Contains(char)
 dotnet_diagnostic.CA2101.severity = error # CA2101: Specify marshaling for P/Invoke string arguments
 dotnet_diagnostic.CA2200.severity = error # CA2200: Rethrow to preserve stack details
 dotnet_diagnostic.CA2201.severity = error # CA2201: Do not raise reserved exception types
@@ -201,8 +192,6 @@ dotnet_diagnostic.CA2208.severity = error # CA2208: Instantiate argument excepti
 dotnet_diagnostic.CA2215.severity = error # CA2215: Dispose methods should call base class dispose
 # not interested
 dotnet_diagnostic.CA2231.severity = none # CA2231: Overload operator equals on overriding ValueType.Equals
-# disabled, as NETFX doesn't have string.Contains overloads with comparison type
-dotnet_diagnostic.CA2249.severity = none # CA2249: Consider using String.Contains instead of String.IndexOf
 dotnet_diagnostic.CA3075.severity = error # CA3075: Insecure DTD Processing
 # very slow (https://github.com/dotnet/roslyn-analyzers/issues/4754)
 # also we don't have code that could be targeted by it
@@ -240,8 +229,6 @@ dotnet_diagnostic.CA1067.severity = none # CA1067: Override Equals when implemen
 dotnet_diagnostic.CA1068.severity = none # CA1068: CancellationToken parameters must come last
 dotnet_diagnostic.CA1069.severity = none # CA1069: Enums should not have duplicate values
 dotnet_diagnostic.CA1303.severity = none # CA1303: Do not pass literals as localized parameters
-dotnet_diagnostic.CA1304.severity = none # CA1304: Specify CultureInfo
-dotnet_diagnostic.CA1305.severity = none # CA1305: Specify IFormatProvider
 dotnet_diagnostic.CA1307.severity = none # CA1307: Specify StringComparison for clarity
 dotnet_diagnostic.CA1308.severity = none # CA1308: Normalize strings to uppercase
 dotnet_diagnostic.CA1309.severity = none # CA1309: Use ordinal StringComparison
@@ -249,14 +236,11 @@ dotnet_diagnostic.CA1310.severity = none # CA1310: Specify StringComparison for 
 dotnet_diagnostic.CA1311.severity = none # CA1311: Specify a culture or use an invariant version
 dotnet_diagnostic.CA1416.severity = none # CA1416: Validate platform compatibility
 dotnet_diagnostic.CA1422.severity = none # CA1422: Validate platform compatibility - obsoleted APIs
-dotnet_diagnostic.CA1508.severity = none # CA1508: Avoid dead conditional code (Excessively slow on l2db code; reenable in the future)
-dotnet_diagnostic.CA1510.severity = none # CA1510: use throw helpers
-dotnet_diagnostic.CA1511.severity = none # CA1511: use throw helpers
-dotnet_diagnostic.CA1512.severity = none # CA1512: use throw helpers
-dotnet_diagnostic.CA1513.severity = none # CA1513: use throw helpers
+dotnet_diagnostic.CA1510.severity = error # CA1510: use throw helpers
+dotnet_diagnostic.CA1511.severity = error # CA1511: use throw helpers
+dotnet_diagnostic.CA1512.severity = error # CA1512: use throw helpers
+dotnet_diagnostic.CA1513.severity = error # CA1513: use throw helpers
 dotnet_diagnostic.CA1863.severity = none # CA1863: use CompositeFormat
-dotnet_diagnostic.CA1864.severity = none # CA1864: Prefer the 'IDictionary.TryAdd(TKey, TValue)' method
-dotnet_diagnostic.CA1866.severity = none # CA1866: Use 'string.Method(char)' instead of 'string.Method(string)' for string with single char
 dotnet_diagnostic.CA1700.severity = none # CA1700: Do not name enum values 'Reserved'
 dotnet_diagnostic.CA1707.severity = none # CA1707: Identifiers should not contain underscores
 dotnet_diagnostic.CA1708.severity = none # CA1708: Identifiers should differ by more than case
@@ -267,14 +251,11 @@ dotnet_diagnostic.CA1720.severity = none # CA1720: Identifiers should not contai
 dotnet_diagnostic.CA1721.severity = none # CA1721: Property names should not match get methods
 dotnet_diagnostic.CA1724.severity = none # CA1724: Type names should not match namespaces
 dotnet_diagnostic.CA1806.severity = none # CA1806: Do not ignore method results
-dotnet_diagnostic.CA1810.severity = none # CA1810: Initialize reference type static fields inline
 dotnet_diagnostic.CA1812.severity = none # CA1812: Avoid uninstantiated internal classes
 dotnet_diagnostic.CA1813.severity = none # CA1813: Avoid unsealed attributes
 dotnet_diagnostic.CA1815.severity = none # CA1815: Override equals and operator equals on value types
 dotnet_diagnostic.CA1819.severity = none # CA1819: Properties should not return arrays
 dotnet_diagnostic.CA1822.severity = none # CA1822: Mark members as static TODO: V6 - fix remaining errors
-dotnet_diagnostic.CA1845.severity = none # CA1845: Use span-based string.Concat and AsSpan instead of Substring
-dotnet_diagnostic.CA1846.severity = none # CA1846: Prefer AsSpan over Substring
 dotnet_diagnostic.CA1859.severity = none # CA1859: Use concrete types when possible for improved performance
 dotnet_diagnostic.CA1862.severity = none # CA1862: Prefer the 'StringComparison' method overloads to perform case-insensitive string comparisons
 dotnet_diagnostic.CA2100.severity = none # CA2100: Review SQL queries for security vulnerabilities
@@ -338,6 +319,9 @@ dotnet_style_qualification_for_event = false:refactoring
 dotnet_diagnostic.IDE0004.severity = none # IDE0004: Remove unnecessary cast
 dotnet_diagnostic.IDE0005.severity = none # IDE0005: Remove unnecessary import
 
+# IDE0370: too many false positives; probably due to net462
+dotnet_diagnostic.IDE0370.severity = none # IDE0370: Remove unnecessary suppression
+
 # not reviewed yet rules
 dotnet_diagnostic.IDE0007.severity = none # IDE0007: Use 'var' instead of explicit type
 dotnet_diagnostic.IDE0008.severity = none # IDE0008: Use explicit type
@@ -347,7 +331,6 @@ dotnet_diagnostic.IDE0011.severity = none # IDE0011: Add braces
 dotnet_diagnostic.IDE0016.severity = none # IDE0016: Use throw expression
 dotnet_diagnostic.IDE0017.severity = none # IDE0017: Use object initializers
 dotnet_diagnostic.IDE0018.severity = none # IDE0018: Inline variable declaration
-dotnet_diagnostic.IDE0019.severity = none # IDE0019: Use pattern matching to avoid 'as' followed by a 'null' check
 dotnet_diagnostic.IDE0021.severity = none # IDE0021: Use expression body for
 dotnet_diagnostic.IDE0022.severity = none # IDE0022: Use expression body for
 dotnet_diagnostic.IDE0023.severity = none # IDE0023: Use expression body for
@@ -364,7 +347,6 @@ dotnet_diagnostic.IDE0034.severity = none # IDE0034: Simplify 'default' expressi
 dotnet_diagnostic.IDE0035.severity = none # IDE0035: Remove unreachable code
 dotnet_diagnostic.IDE0036.severity = none # IDE0036: Order modifiers
 dotnet_diagnostic.IDE0037.severity = none # IDE0037: Use inferred member name
-dotnet_diagnostic.IDE0038.severity = none # IDE0038: Use pattern matching to avoid 'is' check followed by a cast
 dotnet_diagnostic.IDE0040.severity = none # IDE0040: Add accessibility modifiers
 dotnet_diagnostic.IDE0041.severity = none # IDE0041: Use is null check
 dotnet_diagnostic.IDE0044.severity = none # IDE0044: Add readonly modifier
@@ -376,7 +358,6 @@ dotnet_diagnostic.IDE0049.severity = none # IDE0049: Use language keywords inste
 dotnet_diagnostic.IDE0050.severity = none # IDE0050: Convert to tuple
 dotnet_diagnostic.IDE0051.severity = none # IDE0051: Remove unused private members
 dotnet_diagnostic.IDE0052.severity = none # IDE0052: Remove unread private member
-dotnet_diagnostic.IDE0054.severity = none # IDE0054: Use compound assignment
 dotnet_diagnostic.IDE0055.severity = none # IDE0055: Formatting rules
 dotnet_diagnostic.IDE0056.severity = none # IDE0056: Use index operator
 dotnet_diagnostic.IDE0057.severity = none # IDE0057: Use range operator
@@ -385,16 +366,12 @@ dotnet_diagnostic.IDE0059.severity = none # IDE0059: Remove unnecessary value as
 dotnet_diagnostic.IDE0060.severity = none # IDE0060: Remove unused parameter
 dotnet_diagnostic.IDE0061.severity = none # IDE0061: Use expression body for local functions
 dotnet_diagnostic.IDE0062.severity = none # IDE0062: Make local function static
-dotnet_diagnostic.IDE0066.severity = none # IDE0066: Convert switch statement to expression
 dotnet_diagnostic.IDE0070.severity = none # IDE0070: Use 'System.HashCode.Combine'
 dotnet_diagnostic.IDE0072.severity = none # IDE0072: Add missing cases
-dotnet_diagnostic.IDE0074.severity = none # IDE0074: Use compound assignment
 dotnet_diagnostic.IDE0075.severity = none # IDE0075: Simplify conditional expression
-dotnet_diagnostic.IDE0078.severity = none # IDE0078: Use pattern matching
 dotnet_diagnostic.IDE0079.severity = none # IDE0079: Remove unnecessary suppression
 dotnet_diagnostic.IDE0080.severity = none # IDE0080: Remove unnecessary suppression operator
 dotnet_diagnostic.IDE0081.severity = none # IDE0081: Remove ByVal
-dotnet_diagnostic.IDE0083.severity = none # IDE0083: Use pattern matching (not operator)
 dotnet_diagnostic.IDE0090.severity = none # IDE0090: new expression can be simplified
 dotnet_diagnostic.IDE0100.severity = none # IDE0100: remove redundant equality
 dotnet_diagnostic.IDE0120.severity = none # IDE0120: Simplify LINQ expression
@@ -678,7 +655,7 @@ dotnet_diagnostic.MA0128.severity = none
 # MA0129: Await task in using statement
 dotnet_diagnostic.MA0129.severity = none
 # MA0130: GetType() should not be used on System.Type instances
-dotnet_diagnostic.MA0130.severity = none
+dotnet_diagnostic.MA0130.severity = error
 # MA0131: ArgumentNullException.ThrowIfNull should not be used with non-nullable types
 dotnet_diagnostic.MA0131.severity = none
 # MA0132: Do not convert implicitly to DateTimeOffset

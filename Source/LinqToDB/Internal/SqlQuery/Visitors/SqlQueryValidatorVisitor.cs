@@ -321,10 +321,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (!_providerFlags.IsApplyJoinSupported)
 			{
 				// No apply joins are allowed
-				if (element.JoinType == JoinType.CrossApply ||
-				    element.JoinType == JoinType.OuterApply ||
-				    element.JoinType == JoinType.FullApply  ||
-				    element.JoinType == JoinType.RightApply)
+				if (element.JoinType
+						is JoinType.CrossApply 
+						or JoinType.OuterApply
+						or JoinType.FullApply
+						or JoinType.RightApply)
 				{
 					if (_providerFlags.SupportedCorrelatedSubqueriesLevel == 0)
 					{

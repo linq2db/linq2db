@@ -828,7 +828,7 @@ namespace LinqToDB.Internal.Remote
 							var v      = pValue.ProviderValue;
 							var t      = v == null ? pValue.DbDataType.SystemType : v.GetType();
 
-							if (v == null || t.IsArray || t == typeof(string) || !(v is IEnumerable))
+							if (v == null || t.IsArray || t == typeof(string) || v is not IEnumerable)
 							{
 								GetType(t);
 							}
@@ -919,7 +919,7 @@ namespace LinqToDB.Internal.Remote
 							var value = paramValue.ProviderValue;
 							var type  = value == null ? paramValue.DbDataType.SystemType : value.GetType();
 
-							if (value == null || type.IsEnum || type.IsArray || type == typeof(string) || !(value is IEnumerable))
+							if (value == null || type.IsEnum || type.IsArray || type == typeof(string) || value is not IEnumerable)
 							{
 								Append(type, value);
 							}

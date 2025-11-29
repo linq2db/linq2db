@@ -156,10 +156,10 @@ namespace LinqToDB.Linq
 			Type             rightType,
 			LambdaExpression expression)
 		{
-			if (providerName == null) throw new ArgumentNullException(nameof(providerName));
-			if (leftType     == null) throw new ArgumentNullException(nameof(leftType));
-			if (rightType    == null) throw new ArgumentNullException(nameof(rightType));
-			if (expression   == null) throw new ArgumentNullException(nameof(expression));
+			ArgumentNullException.ThrowIfNull(providerName);
+			ArgumentNullException.ThrowIfNull(leftType);
+			ArgumentNullException.ThrowIfNull(rightType);
+			ArgumentNullException.ThrowIfNull(expression);
 
 			if (!_binaries.Value.TryGetValue(providerName, out var dic))
 				_binaries.Value.Add(providerName, dic = new Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>());
@@ -438,13 +438,7 @@ namespace LinqToDB.Linq
 
 			// Startup optimization.
 			//
-			switch (root)
-			{
-				case "LinqToDB" :
-				case "System"   :
-				case "Microsoft": return false;
-				default         : return true;
-			}
+			return root is not ("LinqToDB" or "System" or "Microsoft");
 		}
 
 		public static MemberHelper.MemberInfoWithType M<T>(Expression<Func<T,object?>> func)

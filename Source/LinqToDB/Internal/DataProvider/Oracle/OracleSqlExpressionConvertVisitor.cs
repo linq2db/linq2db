@@ -103,25 +103,30 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
-			switch (element.Operation)
+			return element.Operation switch
 			{
-				case "%": return new SqlFunction(element.Type, "MOD", element.Expr1, element.Expr2);
-				case "&": return new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2);
-				case "|": // (a + b) - BITAND(a, b)
-					return Sub(
-						Add(element.Expr1, element.Expr2, element.SystemType),
-						new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2),
-						element.SystemType);
+				"%" => new SqlFunction(element.Type, "MOD", element.Expr1, element.Expr2),
+				"&" => new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2),
 
-				case "^": // (a + b) - BITAND(a, b) * 2
-					return Sub(
-						Add(element.Expr1, element.Expr2, element.SystemType),
-						Mul(new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2), 2),
-						element.SystemType);
-				case "+": return element.SystemType == typeof(string) ? new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence) : element;
-			}
+				// (a + b) - BITAND(a, b)
+				"|" => Sub(
+					Add(element.Expr1, element.Expr2, element.SystemType),
+					new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2),
+					element.SystemType
+				),
 
-			return base.ConvertSqlBinaryExpression(element);
+				// (a + b) - BITAND(a, b) * 2
+				"^" => Sub(
+					Add(element.Expr1, element.Expr2, element.SystemType),
+					Mul(new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2), 2),
+					element.SystemType
+				),
+
+				"+" when element.SystemType == typeof(string) => new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
+				"+" => element,
+
+				_ => base.ConvertSqlBinaryExpression(element),
+			};
 		}
 
 		public override ISqlExpression ConvertSqlExpression(SqlExpression element)
@@ -134,24 +139,21 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func)
+			return func switch
 			{
-				case {
+				{
 					Name: "CharIndex",
 					Parameters: [var p0, var p1],
 					Type: var type,
-				}:
-					return new SqlFunction(type, "InStr", p1, p0);
+				} => new SqlFunction(type, "InStr", p1, p0),
 
-				case {
+				{
 					Name: "CharIndex",
 					Parameters: [var p0, var p1, var p2],
 					Type: var type,
-				}:
-					return new SqlFunction(type, "InStr", p1, p0, p2);
+				} => new SqlFunction(type, "InStr", p1, p0, p2),
 
-				default:
-					return base.ConvertSqlFunction(func);
+				_ => base.ConvertSqlFunction(func),
 			};
 		}
 

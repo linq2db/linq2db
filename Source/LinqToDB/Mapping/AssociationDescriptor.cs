@@ -52,9 +52,9 @@ namespace LinqToDB.Mapping
 			bool?         canBeNull,
 			string?       aliasName)
 		{
-			if (memberInfo == null) throw new ArgumentNullException(nameof(memberInfo));
-			if (thisKey    == null) throw new ArgumentNullException(nameof(thisKey));
-			if (otherKey   == null) throw new ArgumentNullException(nameof(otherKey));
+			ArgumentNullException.ThrowIfNull(memberInfo);
+			ArgumentNullException.ThrowIfNull(thisKey);
+			ArgumentNullException.ThrowIfNull(otherKey);
 
 			if (thisKey.Length == 0 && string.IsNullOrEmpty(expressionPredicate) && predicate == null && string.IsNullOrEmpty(expressionQueryMethod) && expressionQuery == null)
 				throw new ArgumentOutOfRangeException(
@@ -249,20 +249,27 @@ namespace LinqToDB.Mapping
 				}
 
 				if (predicate == null)
+				{
 					throw new LinqToDBException(
 						$"Member '{ExpressionPredicate}' for type '{type.ShortDisplayName()}' should be static property or method");
+			}
 			}
 			else
 				predicate = Predicate;
 
-			var lambda = predicate as LambdaExpression;
-			if (lambda == null || lambda.Parameters.Count != 2)
+			if (predicate is not LambdaExpression { Parameters.Count: 2 } lambda)
+			{
 				if (!string.IsNullOrEmpty(ExpressionPredicate))
+				{
 					throw new LinqToDBException(
-						$"Invalid predicate expression in {type.ShortDisplayName()}.{ExpressionPredicate}. Expected: Expression<Func<{parentType.ShortDisplayName()}, {objectType.ShortDisplayName()}, bool>>");
+						$"Invalid predicate expression in {type.Name}.{ExpressionPredicate}. Expected: Expression<Func<{parentType.ShortDisplayName()}, {objectType.ShortDisplayName()}, bool>>");
+				}
 				else
+				{
 					throw new LinqToDBException(
-						$"Invalid predicate expression in {type.ShortDisplayName()}. Expected: Expression<Func<{parentType.ShortDisplayName()}, {objectType.ShortDisplayName()}, bool>>");
+						$"Invalid predicate expression in {type.Name}. Expected: Expression<Func<{parentType.ShortDisplayName()}, {objectType.ShortDisplayName()}, bool>>");
+				}
+			}
 
 			var firstParameter = lambda.Parameters[0];
 			if (!firstParameter.Type.IsSameOrParentOf(parentType) && !parentType.IsSameOrParentOf(firstParameter.Type))
@@ -309,13 +316,18 @@ namespace LinqToDB.Mapping
 				queryExpression = ExpressionQuery!;
 
 			var lambda = queryExpression as LambdaExpression;
-			if (lambda == null || lambda.Parameters.Count < 1)
+			if (lambda is null or { Parameters.Count: < 1 })
 			{
 				if (!string.IsNullOrEmpty(ExpressionQueryMethod))
+				{
 					throw new LinqToDBException(
 						$"Invalid predicate expression in {type.ShortDisplayName()}.{ExpressionQueryMethod}. Expected: Expression<Func<{parentType.ShortDisplayName()}, IDataContext, IQueryable<{objectType.ShortDisplayName()}>>>");
-				throw new LinqToDBException(
-					$"Invalid predicate expression in {type.ShortDisplayName()}. Expected: Expression<Func<{parentType.ShortDisplayName()}, IDataContext, IQueryable<{objectType.ShortDisplayName()}>>>");
+				}
+				else
+				{
+					throw new LinqToDBException(
+						$"Invalid predicate expression in {type.ShortDisplayName()}. Expected: Expression<Func<{parentType.ShortDisplayName()}, IDataContext, IQueryable<{objectType.Name}>>>");
+				}
 			}
 
 			if (!lambda.Parameters[0].Type.IsSameOrParentOf(parentType))
@@ -371,13 +383,19 @@ namespace LinqToDB.Mapping
 				setExpression = AssociationSetterExpression!;
 
 			var lambda = setExpression as LambdaExpression;
-			if (lambda == null || lambda.Parameters.Count != 2)
+			if (lambda is null or { Parameters.Count: not 2 })
+			{
 				if (!string.IsNullOrEmpty(AssociationSetterExpressionMethod))
+				{
 					throw new LinqToDBException(
 						$"Invalid setter expression in {type.ShortDisplayName()}.{AssociationSetterExpressionMethod}. Expected: Expression<Action<{memberType.ShortDisplayName()}, {objectType.ShortDisplayName()}>>");
+				}
 				else
+				{
 					throw new LinqToDBException(
 						$"Invalid setter expression in {type.ShortDisplayName()}. Expected: Expression<Action<{memberType.ShortDisplayName()}, {objectType.ShortDisplayName()}>>");
+				}
+			}
 
 			if (!lambda.Parameters[0].Type.IsSameOrParentOf(memberType))
 				throw new LinqToDBException($"First parameter of setter expression should be '{memberType.ShortDisplayName()}'");

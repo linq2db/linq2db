@@ -2387,7 +2387,7 @@ namespace LinqToDB.Data
 		public static BulkCopyRowsCopied BulkCopy<T>(this IDataContext dataContext, BulkCopyOptions options, IEnumerable<T> source)
 			where T : class
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 
 			using var _ = ActivityService.Start(ActivityID.BulkCopy);
 
@@ -2408,7 +2408,7 @@ namespace LinqToDB.Data
 		public static BulkCopyRowsCopied BulkCopy<T>(this IDataContext dataContext, int maxBatchSize, IEnumerable<T> source)
 			where T : class
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 
 			using var _ = ActivityService.Start(ActivityID.BulkCopy);
 
@@ -2428,7 +2428,7 @@ namespace LinqToDB.Data
 		public static BulkCopyRowsCopied BulkCopy<T>(this IDataContext dataContext, IEnumerable<T> source)
 			where T : class
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 
 			using var _ = ActivityService.Start(ActivityID.BulkCopy);
 
@@ -2449,7 +2449,7 @@ namespace LinqToDB.Data
 		public static BulkCopyRowsCopied BulkCopy<T>(this ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 			where T : notnull
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			ArgumentNullException.ThrowIfNull(table);
 
 			using var _ = ActivityService.Start(ActivityID.BulkCopy);
 
@@ -2483,7 +2483,7 @@ namespace LinqToDB.Data
 		public static BulkCopyRowsCopied BulkCopy<T>(this ITable<T> table, int maxBatchSize, IEnumerable<T> source)
 			where T : notnull
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			ArgumentNullException.ThrowIfNull(table);
 
 			using var _ = ActivityService.Start(ActivityID.BulkCopy);
 
@@ -2505,7 +2505,7 @@ namespace LinqToDB.Data
 		public static BulkCopyRowsCopied BulkCopy<T>(this ITable<T> table, IEnumerable<T> source)
 			where T : notnull
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			ArgumentNullException.ThrowIfNull(table);
 
 			using var _ = ActivityService.Start(ActivityID.BulkCopy);
 
@@ -2542,8 +2542,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this IDataContext dataContext, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			if (source      == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(dataContext);
+			ArgumentNullException.ThrowIfNull(source);
 
 			return CallMetrics(() =>
 				dataContext.GetDataProvider().BulkCopyAsync(
@@ -2565,8 +2565,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this IDataContext dataContext, int maxBatchSize, IEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			if (source      == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(dataContext);
+			ArgumentNullException.ThrowIfNull(source);
 
 			return CallMetrics(() =>
 				dataContext.GetDataProvider().BulkCopyAsync(
@@ -2587,8 +2587,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this IDataContext dataContext, IEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			if (source      == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(dataContext);
+			ArgumentNullException.ThrowIfNull(source);
 
 			return CallMetrics(() =>
 				dataContext.GetDataProvider().BulkCopyAsync(
@@ -2610,8 +2610,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : notnull
 		{
-			if (table  == null) throw new ArgumentNullException(nameof(table));
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(table);
+			ArgumentNullException.ThrowIfNull(source);
 
 			DataConnection? dataConnection = null;
 
@@ -2648,8 +2648,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, int maxBatchSize, IEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : notnull
 		{
-			if (table  == null) throw new ArgumentNullException(nameof(table));
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(table);
+			ArgumentNullException.ThrowIfNull(source);
 
 			var dataConnection = table.GetDataConnection();
 
@@ -2672,8 +2672,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, IEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : notnull
 		{
-			if (table  == null) throw new ArgumentNullException(nameof(table));
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(table);
+			ArgumentNullException.ThrowIfNull(source);
 
 			var dataConnection = table.GetDataConnection();
 
@@ -2701,8 +2701,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this IDataContext dataContext, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			if (source      == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(dataContext);
+			ArgumentNullException.ThrowIfNull(source);
 
 			return CallMetrics(() =>
 				dataContext.GetDataProvider().BulkCopyAsync(
@@ -2724,8 +2724,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this IDataContext dataContext, int maxBatchSize, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			if (source      == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(dataContext);
+			ArgumentNullException.ThrowIfNull(source);
 
 			return CallMetrics(() =>
 				dataContext.GetDataProvider().BulkCopyAsync(
@@ -2746,8 +2746,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this IDataContext dataContext, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
-			if (source      == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(dataContext);
+			ArgumentNullException.ThrowIfNull(source);
 
 			return CallMetrics(() =>
 				dataContext.GetDataProvider().BulkCopyAsync(
@@ -2769,8 +2769,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
 		where T: notnull
 		{
-			if (table  == null) throw new ArgumentNullException(nameof(table));
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(table);
+			ArgumentNullException.ThrowIfNull(source);
 
 			var dataConnection = table.GetDataConnection();
 
@@ -2794,8 +2794,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, int maxBatchSize, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
 		where T: notnull
 		{
-			if (table  == null) throw new ArgumentNullException(nameof(table));
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(table);
+			ArgumentNullException.ThrowIfNull(source);
 
 			var dataConnection = table.GetDataConnection();
 
@@ -2818,8 +2818,8 @@ namespace LinqToDB.Data
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
 		where T: notnull
 		{
-			if (table  == null) throw new ArgumentNullException(nameof(table));
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(table);
+			ArgumentNullException.ThrowIfNull(source);
 
 			var dataConnection = table.GetDataConnection();
 

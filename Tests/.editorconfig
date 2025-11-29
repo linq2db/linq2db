@@ -3,9 +3,10 @@
 dotnet_diagnostic.ide0001.severity = none # IDE0001: Simplify name
 # casts used a lot in test linq expressions
 dotnet_diagnostic.ide0004.severity = none # IDE0004: Remove unnecessary cast
-dotnet_diagnostic.CA1852.severity = none # CA1852: Type can be sealed
 
-dotnet_diagnostic.CA1852.severity = none # CA1852: Seal internal types
+# pattern matching cannot be used in expression trees, so allow local linq and db linq to look the same
+dotnet_diagnostic.IDE0078.severity = none # IDE0078: Use pattern matching
+dotnet_diagnostic.IDE0083.severity = none # IDE0083: Use pattern matching (not operator)
 
 # ReSharper properties
 resharper_space_before_new_parentheses = true
@@ -21,6 +22,7 @@ dotnet_diagnostic.CA1814.severity = none # CA1814: Prefer jagged arrays over mul
 dotnet_diagnostic.CA1849.severity = none # CA1849: Call async methods when in an async method
 dotnet_diagnostic.CA1851.severity = none # CA1851: Possible multiple enumerations of IEnumerable collection
 dotnet_diagnostic.CA1858.severity = none # CA1858: Use StartsWith instead of IndexOf
+dotnet_diagnostic.CA1852.severity = none # CA1852: Type can be sealed
 dotnet_diagnostic.CA1860.severity = none # CA1860: Avoid using 'Enumerable.Any()' extension method
 dotnet_diagnostic.CA1861.severity = none # CA1861: Avoid constant arrays as arguments
 dotnet_diagnostic.CA1862.severity = none # CA1862: prefer the string comparison method with StringComparison argument

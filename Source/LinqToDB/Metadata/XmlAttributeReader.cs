@@ -61,9 +61,9 @@ namespace LinqToDB.Metadata
 
 		readonly Dictionary<string,MetaTypeInfo> _types;
 
-		static readonly IReadOnlyDictionary<string,Type> _mappingAttributes;
+		static readonly IReadOnlyDictionary<string,Type> _mappingAttributes = BuildMappingAttributes();
 
-		static XmlAttributeReader()
+		private static IReadOnlyDictionary<string, Type> BuildMappingAttributes()
 		{
 			var baseType = typeof(MappingAttribute);
 			var lookup   = new Dictionary<string,Type>();
@@ -83,7 +83,7 @@ namespace LinqToDB.Metadata
 				}
 			}
 
-			_mappingAttributes = lookup;
+			return lookup;
 		}
 
 		/// <summary>
@@ -121,8 +121,8 @@ namespace LinqToDB.Metadata
 		/// </param>
 		public XmlAttributeReader(string xmlFile, Assembly assembly)
 		{
-			if (xmlFile  == null) throw new ArgumentNullException(nameof(xmlFile));
-			if (assembly == null) throw new ArgumentNullException(nameof(assembly));
+			ArgumentNullException.ThrowIfNull(xmlFile);
+			ArgumentNullException.ThrowIfNull(assembly);
 
 			StreamReader? streamReader = null;
 			Stream?       stream       = null;
@@ -184,7 +184,7 @@ namespace LinqToDB.Metadata
 		/// <param name="xmlDocStream">Stream with XML document.</param>
 		public XmlAttributeReader(Stream xmlDocStream)
 		{
-			if (xmlDocStream == null) throw new ArgumentNullException(nameof(xmlDocStream));
+			ArgumentNullException.ThrowIfNull(xmlDocStream);
 
 			_types    = LoadStream(xmlDocStream, null);
 			_objectId = xmlDocStream.GetHashCode().ToString(NumberFormatInfo.InvariantInfo);

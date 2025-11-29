@@ -32,7 +32,7 @@ namespace LinqToDB.Internal.SqlQuery
 		void Add(ISqlExpression expr, bool isDescending, bool isPositioned)
 		{
 			foreach (var item in Items)
-				if (item.Expression.Equals(expr, (x, y) => !(x is SqlColumn col) || !col.Parent!.HasSetOperators || x == y))
+				if (item.Expression.Equals(expr, (x, y) => x is not SqlColumn col || !col.Parent!.HasSetOperators || x == y))
 					return;
 
 			Items.Add(new SqlOrderByItem(expr, isDescending, isPositioned));

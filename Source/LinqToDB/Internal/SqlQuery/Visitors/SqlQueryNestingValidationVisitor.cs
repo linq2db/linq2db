@@ -312,8 +312,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		protected override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
 		{
-			if (element.JoinType == JoinType.CrossApply || element.JoinType == JoinType.OuterApply ||
-			    element.JoinType == JoinType.RightApply || element.JoinType == JoinType.FullApply)
+			if (element.JoinType
+					is JoinType.CrossApply
+					or JoinType.OuterApply
+					or JoinType.RightApply
+					or JoinType.FullApply)
 			{
 				var saveOuterApply   = _outerSources;
 

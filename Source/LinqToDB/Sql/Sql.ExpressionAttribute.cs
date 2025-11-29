@@ -174,13 +174,12 @@ namespace LinqToDB
 				set => СonfiguredCanBeNull = value;
 			}
 
-			const  string MatchParamPattern = @"{([0-9a-z_A-Z?]*)(,\s'(.*)')?}";
-			static Regex  _matchParamRegEx  = new (MatchParamPattern, RegexOptions.Compiled);
+			static readonly Regex _matchParamRegEx = new(@"{([0-9a-z_A-Z?]*)(,\s'(.*)')?}", RegexOptions.Compiled);
 
 			public static string ResolveExpressionValues<TContext>(TContext context, string expression, Func<TContext, string, string?, string?> valueProvider, out Expression? error)
 			{
-				if (expression    == null) throw new ArgumentNullException(nameof(expression));
-				if (valueProvider == null) throw new ArgumentNullException(nameof(valueProvider));
+				ArgumentNullException.ThrowIfNull(expression);
+				ArgumentNullException.ThrowIfNull(valueProvider);
 
 				int  prevMatch         = -1;
 				int  prevNotEmptyMatch = -1;
@@ -191,7 +190,7 @@ namespace LinqToDB
 				var str = _matchParamRegEx.Replace(expression, match =>
 				{
 					var paramName     = match.Groups[1].Value;
-					var canBeOptional = paramName.EndsWith("?");
+					var canBeOptional = paramName.EndsWith('?');
 					if (canBeOptional)
 						paramName = paramName.TrimEnd('?');
 

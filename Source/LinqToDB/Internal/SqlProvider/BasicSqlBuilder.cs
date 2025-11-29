@@ -1466,8 +1466,10 @@ namespace LinqToDB.Internal.SqlProvider
 					if (field.Field.CreateFormat != null)
 					{
 						var sb = field.StringBuilder;
+						sb.Length = field.Name.Length;
+						sb.Append(' ');
 
-						field.Type = sb.ToString().Substring(field.Name.Length) + ' ';
+						field.Type = sb.ToString();
 						sb.Length = 0;
 					}
 				}
@@ -3483,18 +3485,17 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 				case SqlAnchor.AnchorKindEnum.TableSource:
 				{
-					var sqlField = anchor.SqlExpression as SqlField;
-					if (sqlField == null || sqlField.Table == null)
+					if (anchor.SqlExpression is not SqlField { Table: { } fieldTable })
 						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
-					var ts = Statement.GetTableSource(sqlField.Table, out var noAlias);
+					var ts = Statement.GetTableSource(fieldTable, out var noAlias);
 					if (ts == null)
 						throw new LinqToDBException("Cannot find Table Source for table.");
 
 					var table = noAlias ? null : GetTableAlias(ts);
 
 					if (table == null)
-						StringBuilder.Append(GetPhysicalTableName(sqlField.Table, null, ignoreTableExpression : true));
+						StringBuilder.Append(GetPhysicalTableName(fieldTable, null, ignoreTableExpression: true));
 					else
 						Convert(StringBuilder, table, ConvertType.NameToQueryTableAlias);
 
@@ -3502,20 +3503,18 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 				case SqlAnchor.AnchorKindEnum.TableName:
 				{
-					var sqlField = anchor.SqlExpression as SqlField;
-					if (sqlField == null || sqlField.Table == null)
+					if (anchor.SqlExpression is not SqlField { Table: { } fieldTable })
 						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
-					BuildPhysicalTable(sqlField.Table, null);
+					BuildPhysicalTable(fieldTable, null);
 					return;
 				}
 				case SqlAnchor.AnchorKindEnum.TableAsSelfColumn:
 				{
-					var sqlField = anchor.SqlExpression as SqlField;
-					if (sqlField == null || sqlField.Table == null)
+					if (anchor.SqlExpression is not SqlField { Table: { } fieldTable })
 						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
-					var table = FindTable(sqlField.Table);
+					var table = FindTable(fieldTable);
 					if (table == null)
 						throw new LinqToDBException("Cannot find table.");
 
@@ -3525,15 +3524,13 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 				case SqlAnchor.AnchorKindEnum.TableAsSelfColumnOrField:
 				{
-					var sqlField = anchor.SqlExpression as SqlField;
-					if (sqlField == null || sqlField.Table == null)
+					if (anchor.SqlExpression is not SqlField { Table: { } fieldTable } sqlField)
 						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
-					var table = FindTable(sqlField.Table);
-					if (table == null)
+					if (FindTable(fieldTable) is not { } table)
 						throw new LinqToDBException("Cannot find table.");
 
-					if (sqlField == sqlField.Table.All)
+					if (sqlField == fieldTable.All)
 					{
 						BuildExpression(new SqlField(table, table.TableName.Name));
 					}
@@ -4129,7 +4126,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void PrintParameterName(StringBuilder sb, DbParameter parameter)
 		{
-			if (!parameter.ParameterName.StartsWith("@"))
+			if (!parameter.ParameterName.StartsWith('@'))
 				sb.Append('@');
 			sb.Append(parameter.ParameterName);
 		}

@@ -201,10 +201,7 @@ namespace LinqToDB.Linq.Translation
 					return BuildAggregationFunctionResult.Error(error);
 				}
 
-				if (filterSql == null)
-				{
-					filterSql = new SqlSearchCondition();
-				}
+				filterSql ??= new SqlSearchCondition();
 
 				if (filterExprSql is not ISqlPredicate predicate)
 				{

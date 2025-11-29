@@ -164,22 +164,16 @@ namespace LinqToDB.Linq.Translation
 						case nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenBy):
 						case nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenByDesc):
 						{
-							var isDesc = mc.Method.Name == nameof(WindowFunctionBuilder.IOrderByPart<>.OrderByDesc) ||
-									 mc.Method.Name == nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenByDesc);
+							var isDesc = mc.Method.Name 
+								is nameof(WindowFunctionBuilder.IOrderByPart<>.OrderByDesc)
+								or nameof(WindowFunctionBuilder.IThenOrderPart<>.ThenByDesc);
 
 							orderByList ??= new();
 
-							var        nulls = Sql.NullsPosition.None;
-							Expression argument;
-							if (mc.Arguments.Count == 2)
-							{
-								argument = mc.Arguments[0];
-								nulls = (Sql.NullsPosition)mc.Arguments[1].EvaluateExpression()!;
-							}
-							else
-							{
-								argument = mc.Arguments[0];
-							}
+							var argument = mc.Arguments[0];
+							var nulls    = mc.Arguments.Count == 2
+								? (Sql.NullsPosition)mc.Arguments[1].EvaluateExpression()!
+								: Sql.NullsPosition.None;
 
 							orderByList.Insert(0, new(argument, isDesc, nulls));
 

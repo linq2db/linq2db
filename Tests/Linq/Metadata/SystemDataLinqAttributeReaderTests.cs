@@ -123,14 +123,12 @@ namespace Tests.Metadata
 		[Test]
 		public void SmokeSelect([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			var query =
 					from s in db.GetTable<Shipper>()
 					orderby s.CompanyName
 					select new { s.CompanyName, s.Phone };
-				var records = query.ToArray();
-			}
+			var records = query.ToArray();
 		}
 	}
 }

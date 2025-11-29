@@ -27,22 +27,22 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static ISqlExpression ApplyNullability(ISqlExpression sqlExpression, bool canBeNull)
 		{
-			switch (sqlExpression)
+			return sqlExpression switch
 			{
-				case SqlSearchCondition:
-					return sqlExpression;
-				case SqlRowExpression row:
-					return new SqlRowExpression(row.Values.Select(v => ApplyNullability(v, canBeNull)).ToArray());
+				SqlSearchCondition =>
+					sqlExpression,
 
-				case SqlNullabilityExpression nullabilityExpression
-						when nullabilityExpression.CanBeNull == canBeNull:
-					return nullabilityExpression;
-				case SqlNullabilityExpression nullabilityExpression:
-					return new SqlNullabilityExpression(nullabilityExpression.SqlExpression, canBeNull);
-					
-				default:
-					return new SqlNullabilityExpression(sqlExpression, canBeNull);
-			}
+				SqlRowExpression row =>
+					new SqlRowExpression(row.Values.Select(v => ApplyNullability(v, canBeNull)).ToArray()),
+
+				SqlNullabilityExpression nullabilityExpression when nullabilityExpression.CanBeNull == canBeNull =>
+					nullabilityExpression,
+
+				SqlNullabilityExpression nullabilityExpression =>
+					new SqlNullabilityExpression(nullabilityExpression.SqlExpression, canBeNull),
+
+				_ => new SqlNullabilityExpression(sqlExpression, canBeNull),
+			};
 		}
 
 		public void Modify(ISqlExpression sqlExpression)

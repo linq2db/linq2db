@@ -135,7 +135,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				case DataType.DateTimeOffset: StringBuilder.Append("TIMESTAMP WITH TIME ZONE");           break;
 				case DataType.DecFloat      :
 					StringBuilder.Append("DECFLOAT");
-					if (type.Precision != null && type.Precision <= 16)
+					if (type.Precision is not null and <= 16)
 						StringBuilder.Append("(16)");
 					break;
 
@@ -156,7 +156,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					// 10921 is implementation limit for UNICODE_FSS encoding
 					// use 255 as default length, because FB have 64k row-size limits
 					// also it is not good to depend on implementation limits
-					if (type.Length == null || type.Length < 1)
+					if (type.Length is null or < 1)
 						StringBuilder.Append("(255)");
 					else
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Length})");
@@ -174,7 +174,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 						base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 					break;
 
-				case DataType.Binary when type.Length == null || type.Length < 1:
+				case DataType.Binary when type.Length is null or < 1:
 					StringBuilder.Append("CHAR CHARACTER SET OCTETS");
 					break;
 
@@ -182,7 +182,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					StringBuilder.Append(CultureInfo.InvariantCulture, $"CHAR({type.Length}) CHARACTER SET OCTETS");
 					break;
 
-				case DataType.VarBinary when type.Length == null || type.Length > 32_765:
+				case DataType.VarBinary when type.Length is null or > 32_765:
 					StringBuilder.Append("BLOB");
 					break;
 
@@ -208,12 +208,13 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 		{
 			// https://firebirdsql.org/file/documentation/reference_manuals/fblangref25-en/html/fblangref25-structure-identifiers.html
 			return !IsReserved(name) &&
-				name[0] >= 'A' && name[0] <= 'Z' &&
-				name.All(c =>
-					(c >= 'A' && c <= 'Z') ||
-					(c >= '0' && c <= '9') ||
-					c == '$' ||
-					c == '_');
+				name[0] is >= 'A' and <= 'Z' &&
+				name.All(c => c is
+					(>= 'A' and <= 'Z') or
+					(>= '0' and <= '9') or
+					'$' or
+					'_'
+				);
 		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
@@ -244,7 +245,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 				case ConvertType.SprocParameterToName  :
 					return value.Length > 0 && value[0] == '@'
-						? sb.Append(value.Substring(1))
+						? sb.Append(value.AsSpan(1))
 						: sb.Append(value);
 			}
 
@@ -316,13 +317,12 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			switch (statement)
+			return statement switch
 			{
-				case SqlTruncateTableStatement truncate:
-					return truncate.ResetIdentity && truncate.Table!.IdentityFields.Count > 0 ? 2 : 1;
-			}
+				SqlTruncateTableStatement truncate => truncate.ResetIdentity && truncate.Table!.IdentityFields.Count > 0 ? 2 : 1,
 
-			return base.CommandCount(statement);
+				_ => base.CommandCount(statement),
+			};
 		}
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
@@ -447,31 +447,25 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			string command;
+			var command = table.TableOptions.TemporaryOptionValue switch
+			{
+				TableOptions.IsTemporary                                                                                     or
+				TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData       or
+				TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure                                           or
+				TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       or
+																					 TableOptions.IsLocalTemporaryData       or
+																					 TableOptions.IsTransactionTemporaryData or
+										   TableOptions.IsGlobalTemporaryStructure                                           or
+										   TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       or
+										   TableOptions.IsGlobalTemporaryStructure | TableOptions.IsTransactionTemporaryData =>
+					"CREATE GLOBAL TEMPORARY TABLE ",
 
-			if (table.TableOptions.IsTemporaryOptionSet())
-			{
-				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-				{
-					case TableOptions.IsTemporary                                                                                     :
-					case TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData       :
-					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure                                           :
-					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
-					case                                                                      TableOptions.IsLocalTemporaryData       :
-					case                                                                      TableOptions.IsTransactionTemporaryData :
-					case                            TableOptions.IsGlobalTemporaryStructure                                           :
-					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
-					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsTransactionTemporaryData :
-						command = "CREATE GLOBAL TEMPORARY TABLE ";
-						break;
-					case var value :
-						throw new InvalidOperationException($"Incompatible table options '{value}'");
-				}
-			}
-			else
-			{
-				command = "CREATE TABLE ";
-			}
+				0 =>
+					"CREATE TABLE ",
+
+				var value =>
+					throw new InvalidOperationException($"Incompatible table options '{value}'"),
+			};
 
 			StringBuilder.Append(command);
 		}

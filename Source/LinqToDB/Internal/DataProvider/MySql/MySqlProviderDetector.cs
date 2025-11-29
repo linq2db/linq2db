@@ -129,9 +129,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			using var cmd = connection.CreateCommand();
 
 			cmd.CommandText = "SELECT VERSION()";
-			var versionString = cmd.ExecuteScalar() as string;
 
-			if (versionString == null)
+			if (cmd.ExecuteScalar() is not string versionString)
 				return null;
 
 			// format

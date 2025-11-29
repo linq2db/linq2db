@@ -155,32 +155,26 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func)
-			{ 
-				case { Name: PseudoFunctions.TO_LOWER }:
-					return func.WithName("LCase");
-				case { Name: PseudoFunctions.TO_UPPER }:
-					return func.WithName("UCase");
-				case { Name: PseudoFunctions.LENGTH }:
-					return func.WithName("Len");
+			return func switch
+			{
+				{ Name: PseudoFunctions.TO_LOWER } => func.WithName("LCase"),
+				{ Name: PseudoFunctions.TO_UPPER } => func.WithName("UCase"),
+				{ Name: PseudoFunctions.LENGTH } => func.WithName("Len"),
 
-				case {
+				{
 					Name: "CharIndex",
 					Parameters: [var p0, var p1],
 					Type: var type,
-				}:
-					return new SqlFunction(type, "InStr", new SqlValue(1), p1, p0, new SqlValue(1));
+				} => new SqlFunction(type, "InStr", new SqlValue(1), p1, p0, new SqlValue(1)),
 
-				case {
+				{
 					Name: "CharIndex",
 					Parameters: [var p0, var p1, var p2],
 					Type: var type,
-				}:
-					return new SqlFunction(type, "InStr", p2, p1, p0, new SqlValue(1));
+				} => new SqlFunction(type, "InStr", p2, p1, p0, new SqlValue(1)),
 
-				default:
-					return base.ConvertSqlFunction(func);
-			}
+				_ => base.ConvertSqlFunction(func),
+			};
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)

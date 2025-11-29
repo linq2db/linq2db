@@ -219,31 +219,25 @@ namespace LinqToDB.Internal.Expressions
 					case ExpressionType.Call           :
 					case ExpressionType.MemberAccess   :
 					case ExpressionType.New            :
-						if (!accessors.ContainsKey(e))
-							accessors.Add(e, p);
+						accessors.TryAdd(e, p);
 						break;
 
 					case ExpressionType.Constant       :
-						if (!accessors.ContainsKey(e))
-							accessors.Add(e, Expression.Property(p, ReflectionHelper.Constant.Value));
+						accessors.TryAdd(e, Expression.Property(p, ReflectionHelper.Constant.Value));
 						break;
 
 					case ExpressionType.ConvertChecked :
 					case ExpressionType.Convert        :
-						if (!accessors.ContainsKey(e))
+						var ue = (UnaryExpression)e;
+
+						switch (ue.Operand.NodeType)
 						{
-							var ue = (UnaryExpression)e;
-
-							switch (ue.Operand.NodeType)
-							{
-								case ExpressionType.Call        :
-								case ExpressionType.MemberAccess:
-								case ExpressionType.New         :
-								case ExpressionType.Constant    :
-
-									accessors.Add(e, p);
-									break;
-							}
+							case ExpressionType.Call        :
+							case ExpressionType.MemberAccess:
+							case ExpressionType.New         :
+							case ExpressionType.Constant    :
+								accessors.TryAdd(e, p);
+								break;
 						}
 
 						break;

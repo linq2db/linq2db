@@ -35,9 +35,8 @@ namespace Tests.UserTests
 		[Test]
 		public void TestTake([TestDataContextSource(TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q = db.Patient
+			using var db = GetDataContext(context);
+			var q = db.Patient
 					.Where(pat => db.Person
 						.Where(per => per.ID == pat.PersonID)
 						.OrderByDescending(per => per.FirstName)
@@ -45,7 +44,7 @@ namespace Tests.UserTests
 						.Take(1)
 						.Any(_ => _.Contains("with")));
 
-				var e = Patient
+			var e = Patient
 					.Where(pat => Person
 						.Where(per => per.ID == pat.PersonID)
 						.OrderByDescending(per => per.FirstName)
@@ -53,16 +52,14 @@ namespace Tests.UserTests
 						.Take(1)
 						.Any(_ => _.Contains("with")));
 
-				AreEqual(e, q);
-			}
+			AreEqual(e, q);
 		}
 
 		[Test]
 		public void TestDistinct([TestDataContextSource(TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q = db.Patient
+			using var db = GetDataContext(context);
+			var q = db.Patient
 					.Where(pat => db.Person
 						.Where(per => per.ID == pat.PersonID)
 						.OrderByDescending(per => per.FirstName)
@@ -70,10 +67,10 @@ namespace Tests.UserTests
 						.Distinct()
 						.Any(_ => _.Contains("with")));
 
-				// DISTINCT should be optimized out
-				Assert.That(q.EnumQueries().All(x => !x.Select.IsDistinct), Is.True);
+			// DISTINCT should be optimized out
+			Assert.That(q.EnumQueries().All(x => !x.Select.IsDistinct), Is.True);
 
-				var e = Patient
+			var e = Patient
 					.Where(pat => Person
 						.Where(per => per.ID == pat.PersonID)
 						.OrderByDescending(per => per.FirstName)
@@ -81,16 +78,14 @@ namespace Tests.UserTests
 						.Distinct()
 						.Any(_ => _.Contains("with")));
 
-				AreEqual(e, q);
-			}
+			AreEqual(e, q);
 		}
 
 		[Test]
 		public void TestSkipDistinct([TestDataContextSource(TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q = db.Patient
+			using var db = GetDataContext(context);
+			var q = db.Patient
 					.Where(pat => db.Person
 						.Where(per => per.ID == pat.PersonID)
 						.OrderByDescending(per => per.FirstName)
@@ -99,7 +94,7 @@ namespace Tests.UserTests
 						.Distinct()
 						.Any(_ => _.Contains("with")));
 
-				var e = Patient
+			var e = Patient
 					.Where(pat => Person
 						.Where(per => per.ID == pat.PersonID)
 						.OrderByDescending(per => per.FirstName)
@@ -108,16 +103,14 @@ namespace Tests.UserTests
 						.Distinct()
 						.Any(_ => _.Contains("with")));
 
-				AreEqual(e, q);
-			}
+			AreEqual(e, q);
 		}
 
 		[Test]
 		public void TestDistinctSkip([TestDataContextSource(TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q = db.Patient
+			using var db = GetDataContext(context);
+			var q = db.Patient
 					.Where(pat => db.Person
 						.Where(per => per.ID == pat.PersonID)
 						.OrderByDescending(per => per.FirstName)
@@ -126,7 +119,7 @@ namespace Tests.UserTests
 						.Skip(0)
 						.Any(_ => _.Contains("with")));
 
-				var e = Patient
+			var e = Patient
 					.Where(pat => Person
 						.Where(per => per.ID == pat.PersonID)
 						.OrderByDescending(per => per.FirstName)
@@ -135,16 +128,14 @@ namespace Tests.UserTests
 						.Skip(0)
 						.Any(_ => _.Contains("with")));
 
-				AreEqual(e, q);
-			}
+			AreEqual(e, q);
 		}
 
 		[Test]
 		public void TestSkip([TestDataContextSource(TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q = db.Patient
+			using var db = GetDataContext(context);
+			var q = db.Patient
 					.Where(pat => db.Person
 						.Where(per => per.ID == pat.PersonID)
 						.OrderByDescending(per => per.FirstName)
@@ -152,7 +143,7 @@ namespace Tests.UserTests
 						.Skip(0)
 						.Any(_ => _.Contains("with")));
 
-				var e = Patient
+			var e = Patient
 					.Where(pat => Person
 						.Where(per => per.ID == pat.PersonID)
 						.OrderByDescending(per => per.FirstName)
@@ -160,8 +151,7 @@ namespace Tests.UserTests
 						.Skip(0)
 						.Any(_ => _.Contains("with")));
 
-				AreEqual(e, q);
-			}
+			AreEqual(e, q);
 		}
 	}
 }

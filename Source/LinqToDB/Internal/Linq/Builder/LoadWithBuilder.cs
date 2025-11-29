@@ -93,10 +93,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				table = extractResult.Value.context ?? throw new LinqToDBException("Unable to find table for LoadWith association.");
 
-				if (table.LoadWithRoot == null)
-					table.LoadWithRoot = new();
-
-				var tableLoadWith = table.LoadWithRoot;
+				var tableLoadWith = table.LoadWithRoot ??= new();
 
 				if (methodCall.Method.Name == "ThenLoad")
 				{
@@ -116,7 +113,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							CheckFilterFunc(lastElement.MemberInfo.GetMemberType(), lastElement.FilterFunc!.Type, sequence.MappingSchema);
 					}
 				}
-				else if (methodCall.Method.Name == "LoadWith" || methodCall.Method.Name == "LoadWithAsTable")
+				else if (methodCall.Method.Name is "LoadWith" or "LoadWithAsTable")
 				{
 					lastLoadWith = tableLoadWith ?? throw new InvalidOperationException();
 

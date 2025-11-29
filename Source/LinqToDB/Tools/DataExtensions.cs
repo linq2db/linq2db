@@ -37,8 +37,8 @@ namespace LinqToDB.Tools
 			bool                useIdentity     = false)
 			where T: notnull
 		{
-			if (source  == null) throw new ArgumentNullException(nameof(source));
-			if (context == null) throw new ArgumentNullException(nameof(context));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(context);
 
 			var dataProvider = context.GetDataProvider();
 
@@ -108,8 +108,8 @@ namespace LinqToDB.Tools
 			CancellationToken   cancellationToken = default)
 			where T : notnull
 		{
-			if (source  == null) throw new ArgumentNullException(nameof(source));
-			if (context == null) throw new ArgumentNullException(nameof(context));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(context);
 
 			var dataProvider = context.GetDataProvider();
 

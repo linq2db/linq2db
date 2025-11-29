@@ -42,10 +42,8 @@ namespace LinqToDB.Benchmarks.Queries
 		[Benchmark(Baseline = true)]
 		public BulkCopyRowsCopied Test()
 		{
-			using (var db = new Db(_provider, _result))
-			{
-				return db.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows, MaxBatchSize = _batchSize }, _data);
-			}
+			using var db = new Db(_provider, _result);
+			return db.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows, MaxBatchSize = _batchSize }, _data);
 		}
 	}
 }

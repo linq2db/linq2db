@@ -53,10 +53,7 @@ namespace LinqToDB.Internal.Cache
 			IChangeToken expirationToken)
 			where TKey : notnull
 		{
-			if (expirationToken == null)
-			{
-				throw new ArgumentNullException(nameof(expirationToken));
-			}
+			ArgumentNullException.ThrowIfNull(expirationToken);
 
 			options.ExpirationTokens.Add(expirationToken);
 			return options;
@@ -119,10 +116,7 @@ namespace LinqToDB.Internal.Cache
 			PostEvictionDelegate<TKey> callback)
 			where TKey : notnull
 		{
-			if (callback == null)
-			{
-				throw new ArgumentNullException(nameof(callback));
-			}
+			ArgumentNullException.ThrowIfNull(callback);
 
 			return options.RegisterPostEvictionCallback(callback, state: null);
 		}
@@ -140,10 +134,7 @@ namespace LinqToDB.Internal.Cache
 			object? state)
 			where TKey : notnull
 		{
-			if (callback == null)
-			{
-				throw new ArgumentNullException(nameof(callback));
-			}
+			ArgumentNullException.ThrowIfNull(callback);
 
 			options.PostEvictionCallbacks.Add(new PostEvictionCallbackRegistration<TKey>()
 			{

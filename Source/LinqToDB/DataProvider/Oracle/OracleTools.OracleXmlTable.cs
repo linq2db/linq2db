@@ -101,11 +101,7 @@ namespace LinqToDB.DataProvider.Oracle
 							var str = conv.Convert(sbv.Value, mappingSchema, null!, value).ToString();
 
 							if (str.Length > 2)
-							{
-								str = str.Substring(1);
-								str = str.Substring(0, str.Length - 1);
-								sb.Append(str);
-							}
+								sb.Append(str.AsSpan(1, str.Length - 2));
 						}
 						else
 							conv.Convert(sb, mappingSchema, null!, value);

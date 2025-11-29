@@ -607,7 +607,7 @@ namespace LinqToDB.Internal.Linq
 
 		public void RegisterSqlValue(Expression constantExpr, SqlValue value)
 		{
-			_bySqlValueCompare = _bySqlValueCompare ?? new();
+			_bySqlValueCompare ??= new();
 			_bySqlValueCompare.Add((value, constantExpr));
 		}
 

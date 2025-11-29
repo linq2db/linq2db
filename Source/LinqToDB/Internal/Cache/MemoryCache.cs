@@ -476,10 +476,7 @@ namespace LinqToDB.Internal.Cache
 
 		private void CheckDisposed()
 		{
-			if (_disposed)
-			{
-				throw new ObjectDisposedException(typeof(MemoryCache<TKey,TEntry>).FullName);
-			}
+			ObjectDisposedException.ThrowIf(_disposed, typeof(MemoryCache<TKey,TEntry>));
 		}
 	}
 }

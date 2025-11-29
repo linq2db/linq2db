@@ -696,7 +696,7 @@ namespace LinqToDB.EntityFrameworkCore
 				Sql.ExpressionAttribute? result = null;
 
 				if ((ctx.propInfo.GetMethod?.IsStatic != true)
-					&& !(mi is DynamicColumnInfo)
+					&& mi is not DynamicColumnInfo
 					&& !mi.HasAttribute<Sql.ExpressionAttribute>())
 				{
 					var objExpr = new SqlTransparentExpression(Expression.Constant(DefaultValue.GetValue(ctx.type), ctx.type), ctx.this_._mappingSource?.FindMapping(ctx.propInfo));
@@ -706,6 +706,7 @@ namespace LinqToDB.EntityFrameworkCore
 #else
 					var newExpression = ctx.this_._dependencies!.MemberTranslatorProvider.Translate(objExpr, ctx.propInfo, ctx.propInfo.GetMemberType());
 #endif
+
 					if (newExpression?.Equals(objExpr) == false)
 					{
 						var parametersArray = new Expression[] { objExpr };
@@ -808,12 +809,10 @@ namespace LinqToDB.EntityFrameworkCore
 					var operandExpr = operand switch
 					{
 						"Contains"
-							when left.Type.Name == "NpgsqlInetTypeMapping" ||
-								 left.Type.Name == "NpgsqlCidrTypeMapping"
+							when left.Type.Name is "NpgsqlInetTypeMapping" or "NpgsqlCidrTypeMapping"
 							=> ">>",
 						"ContainedBy"
-							when left.Type.Name == "NpgsqlInetTypeMapping" ||
-								 left.Type.Name == "NpgsqlCidrTypeMapping"
+							when left.Type.Name is "NpgsqlInetTypeMapping" or "NpgsqlCidrTypeMapping"
 							=> "<<",
 						"Contains"                      => "@>",
 						"ContainedBy"                   => "<@",

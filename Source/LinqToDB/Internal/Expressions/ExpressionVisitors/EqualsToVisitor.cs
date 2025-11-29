@@ -46,9 +46,7 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 		internal static bool EqualsTo(this Expression? expr1, Expression? expr2, EqualsToInfo info)
 		{
 			if (expr1 == expr2)
-			{
 				return true;
-			}
 
 			if (expr1 == null || expr2 == null || expr1.Type != expr2.Type)
 				return false;
@@ -64,90 +62,85 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 				return false;
 			}
 
-			switch (expr1.NodeType)
+			return expr1.NodeType switch
 			{
-				case ExpressionType.Add               :
-				case ExpressionType.AddChecked        :
-				case ExpressionType.And               :
-				case ExpressionType.AndAlso           :
-				case ExpressionType.ArrayIndex        :
-				case ExpressionType.Assign            :
-				case ExpressionType.Coalesce          :
-				case ExpressionType.Divide            :
-				case ExpressionType.Equal             :
-				case ExpressionType.ExclusiveOr       :
-				case ExpressionType.GreaterThan       :
-				case ExpressionType.GreaterThanOrEqual:
-				case ExpressionType.LeftShift         :
-				case ExpressionType.LessThan          :
-				case ExpressionType.LessThanOrEqual   :
-				case ExpressionType.Modulo            :
-				case ExpressionType.Multiply          :
-				case ExpressionType.MultiplyChecked   :
-				case ExpressionType.NotEqual          :
-				case ExpressionType.Or                :
-				case ExpressionType.OrElse            :
-				case ExpressionType.Power             :
-				case ExpressionType.RightShift        :
-				case ExpressionType.Subtract          :
-				case ExpressionType.SubtractChecked   :
-					return
-						((BinaryExpression)expr1).Method == ((BinaryExpression)expr2).Method                      &&
-						((BinaryExpression)expr1).Conversion.EqualsTo(((BinaryExpression)expr2).Conversion, info) &&
-						((BinaryExpression)expr1).Left.EqualsTo(((BinaryExpression)expr2).Left, info)             &&
-						((BinaryExpression)expr1).Right.EqualsTo(((BinaryExpression)expr2).Right, info);
+				ExpressionType.Add or
+				ExpressionType.AddChecked or
+				ExpressionType.And or
+				ExpressionType.AndAlso or
+				ExpressionType.ArrayIndex or
+				ExpressionType.Assign or
+				ExpressionType.Coalesce or
+				ExpressionType.Divide or
+				ExpressionType.Equal or
+				ExpressionType.ExclusiveOr or
+				ExpressionType.GreaterThan or
+				ExpressionType.GreaterThanOrEqual or
+				ExpressionType.LeftShift or
+				ExpressionType.LessThan or
+				ExpressionType.LessThanOrEqual or
+				ExpressionType.Modulo or
+				ExpressionType.Multiply or
+				ExpressionType.MultiplyChecked or
+				ExpressionType.NotEqual or
+				ExpressionType.Or or
+				ExpressionType.OrElse or
+				ExpressionType.Power or
+				ExpressionType.RightShift or
+				ExpressionType.Subtract or
+				ExpressionType.SubtractChecked =>
+					((BinaryExpression)expr1).Method == ((BinaryExpression)expr2).Method &&
+					((BinaryExpression)expr1).Conversion.EqualsTo(((BinaryExpression)expr2).Conversion, info) &&
+					((BinaryExpression)expr1).Left.EqualsTo(((BinaryExpression)expr2).Left, info) &&
+					((BinaryExpression)expr1).Right.EqualsTo(((BinaryExpression)expr2).Right, info),
 
-				case ExpressionType.ArrayLength   :
-				case ExpressionType.Convert       :
-				case ExpressionType.ConvertChecked:
-				case ExpressionType.Negate        :
-				case ExpressionType.NegateChecked :
-				case ExpressionType.Not           :
-				case ExpressionType.Quote         :
-				case ExpressionType.TypeAs        :
-				case ExpressionType.UnaryPlus     :
-					return
-						((UnaryExpression)expr1).Method == ((UnaryExpression)expr2).Method &&
-						((UnaryExpression)expr1).Operand.EqualsTo(((UnaryExpression)expr2).Operand, info);
+				ExpressionType.ArrayLength or
+				ExpressionType.Convert or
+				ExpressionType.ConvertChecked or
+				ExpressionType.Negate or
+				ExpressionType.NegateChecked or
+				ExpressionType.Not or
+				ExpressionType.Quote or
+				ExpressionType.TypeAs or
+				ExpressionType.UnaryPlus =>
+					((UnaryExpression)expr1).Method == ((UnaryExpression)expr2).Method &&
+					((UnaryExpression)expr1).Operand.EqualsTo(((UnaryExpression)expr2).Operand, info),
 
-				case ExpressionType.Conditional:
-					return
-						((ConditionalExpression)expr1).Test.EqualsTo(((ConditionalExpression)expr2).Test, info)     &&
-						((ConditionalExpression)expr1).IfTrue.EqualsTo(((ConditionalExpression)expr2).IfTrue, info) &&
-						((ConditionalExpression)expr1).IfFalse.EqualsTo(((ConditionalExpression)expr2).IfFalse, info);
+				ExpressionType.Conditional =>
+					((ConditionalExpression)expr1).Test.EqualsTo(((ConditionalExpression)expr2).Test, info) &&
+					((ConditionalExpression)expr1).IfTrue.EqualsTo(((ConditionalExpression)expr2).IfTrue, info) &&
+					((ConditionalExpression)expr1).IfFalse.EqualsTo(((ConditionalExpression)expr2).IfFalse, info),
 
-				case ExpressionType.Call          : return EqualsToX((MethodCallExpression)expr1, (MethodCallExpression        )expr2, info);
-				case ExpressionType.Constant      : return EqualsToX((ConstantExpression  )expr1, (ConstantExpression          )expr2);
-				case ExpressionType.Invoke        : return EqualsToX((InvocationExpression)expr1, (InvocationExpression        )expr2, info);
-				case ExpressionType.Lambda        : return EqualsToX((LambdaExpression    )expr1, (LambdaExpression            )expr2, info);
-				case ExpressionType.ListInit      : return EqualsToX((ListInitExpression  )expr1, (ListInitExpression          )expr2, info);
-				case ExpressionType.MemberAccess  : return EqualsToX((MemberExpression    )expr1, (MemberExpression            )expr2, info);
-				case ExpressionType.MemberInit    : return EqualsToX((MemberInitExpression)expr1, (MemberInitExpression        )expr2, info);
-				case ExpressionType.New           : return EqualsToX((NewExpression       )expr1, (NewExpression               )expr2, info);
-				case ExpressionType.NewArrayBounds:
-				case ExpressionType.NewArrayInit  : return EqualsToX((NewArrayExpression  )expr1, (NewArrayExpression          )expr2, info);
-				case ExpressionType.Default       : return true;
-				case ExpressionType.Parameter     : return ((ParameterExpression          )expr1).Name == ((ParameterExpression)expr2).Name;
+				ExpressionType.Call         => EqualsToX((MethodCallExpression)expr1, (MethodCallExpression)expr2, info),
+				ExpressionType.Constant     => EqualsToX((ConstantExpression)expr1, (ConstantExpression)expr2),
+				ExpressionType.Invoke       => EqualsToX((InvocationExpression)expr1, (InvocationExpression)expr2, info),
+				ExpressionType.Lambda       => EqualsToX((LambdaExpression)expr1, (LambdaExpression)expr2, info),
+				ExpressionType.ListInit     => EqualsToX((ListInitExpression)expr1, (ListInitExpression)expr2, info),
+				ExpressionType.MemberAccess => EqualsToX((MemberExpression)expr1, (MemberExpression)expr2, info),
+				ExpressionType.MemberInit   => EqualsToX((MemberInitExpression)expr1, (MemberInitExpression)expr2, info),
+				ExpressionType.New          => EqualsToX((NewExpression)expr1, (NewExpression)expr2, info),
 
-				case ExpressionType.TypeIs:
-					return
-						((TypeBinaryExpression)expr1).TypeOperand == ((TypeBinaryExpression)expr2).TypeOperand &&
-						((TypeBinaryExpression)expr1).Expression.EqualsTo(((TypeBinaryExpression)expr2).Expression, info);
+				ExpressionType.NewArrayBounds or
+				ExpressionType.NewArrayInit =>
+					EqualsToX((NewArrayExpression)expr1, (NewArrayExpression)expr2, info),
 
-				case ExpressionType.Block:
-					return EqualsToX((BlockExpression)expr1, (BlockExpression)expr2, info);
+				ExpressionType.Default   => true,
+				ExpressionType.Parameter => ((ParameterExpression)expr1).Name == ((ParameterExpression)expr2).Name,
 
-				case ChangeTypeExpression.ChangeTypeType:
-					return
-						((ChangeTypeExpression)expr1).Type == ((ChangeTypeExpression)expr2).Type &&
-						((ChangeTypeExpression)expr1).Expression.EqualsTo(((ChangeTypeExpression)expr2).Expression, info);
+				ExpressionType.TypeIs =>
+					((TypeBinaryExpression)expr1).TypeOperand == ((TypeBinaryExpression)expr2).TypeOperand &&
+					((TypeBinaryExpression)expr1).Expression.EqualsTo(((TypeBinaryExpression)expr2).Expression, info),
 
-				case ExpressionType.Extension:
-					return EqualsExtensions(expr1, expr2);
+				ExpressionType.Block => EqualsToX((BlockExpression)expr1, (BlockExpression)expr2, info),
 
-				default:
-					throw new NotImplementedException($"Unhandled expression type: {expr1.NodeType}");
-			}
+				ChangeTypeExpression.ChangeTypeType =>
+					((ChangeTypeExpression)expr1).Type == ((ChangeTypeExpression)expr2).Type &&
+					((ChangeTypeExpression)expr1).Expression.EqualsTo(((ChangeTypeExpression)expr2).Expression, info),
+
+				ExpressionType.Extension => EqualsExtensions(expr1, expr2),
+
+				_ => throw new NotImplementedException($"Unhandled expression type: {expr1.NodeType}"),
+			};
 		}
 
 		static bool EqualsExtensions(Expression expr1, Expression expr2)

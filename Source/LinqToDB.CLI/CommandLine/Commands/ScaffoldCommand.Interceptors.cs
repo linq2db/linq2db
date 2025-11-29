@@ -279,8 +279,7 @@ namespace LinqToDB.CommandLine
 				return (StatusCodes.EXPECTED_ERROR, null);
 			}
 
-			var instance = ActivatorExt.CreateInstance(type) as LinqToDBHost;
-			if (instance == null)
+			if (ActivatorExt.CreateInstance(type) is not LinqToDBHost instance)
 			{
 				Console.Error.WriteLine("Cannot create template object. Make sure you didn't changed @template directive");
 				return (StatusCodes.EXPECTED_ERROR, null);

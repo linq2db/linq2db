@@ -46,7 +46,7 @@ namespace LinqToDB.Internal.SqlQuery
 			if (ReferenceEquals(this, other))
 				return true;
 
-			if (!(other is SqlGroupingSet otherSet))
+			if (other is not SqlGroupingSet otherSet)
 				return false;
 
 			if (Items.Count != otherSet.Items.Count)
@@ -66,7 +66,7 @@ namespace LinqToDB.Internal.SqlQuery
 			if (this == other)
 				return true;
 
-			if (!(other is SqlGroupingSet otherSet))
+			if (other is not SqlGroupingSet otherSet)
 				return false;
 
 			if (Items.Count != otherSet.Items.Count)

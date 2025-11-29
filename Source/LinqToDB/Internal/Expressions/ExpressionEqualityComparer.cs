@@ -115,9 +115,9 @@ namespace LinqToDB.Internal.Expressions
 				{
 					var constantExpression = (ConstantExpression)obj;
 
-					if (constantExpression.Value != null
-						&& constantExpression.Value is not IQueryable 
-						&& (constantExpression.Value is string or not IEnumerable))
+					if (constantExpression.Value is not null
+							and not IQueryable
+							and (string or not IEnumerable))
 					{
 						hashCode.Add(constantExpression.Value);
 					}
@@ -371,85 +371,72 @@ namespace LinqToDB.Internal.Expressions
 					return false;
 				}
 
-				switch (a.NodeType)
+				return a.NodeType switch
 				{
-					case ExpressionType.Negate:
-					case ExpressionType.NegateChecked:
-					case ExpressionType.Not:
-					case ExpressionType.Convert:
-					case ExpressionType.ConvertChecked:
-					case ExpressionType.ArrayLength:
-					case ExpressionType.Quote:
-					case ExpressionType.TypeAs:
-					case ExpressionType.UnaryPlus:
-						return CompareUnary((UnaryExpression)a, (UnaryExpression)b);
-					case ExpressionType.Add:
-					case ExpressionType.AddChecked:
-					case ExpressionType.Subtract:
-					case ExpressionType.SubtractChecked:
-					case ExpressionType.Multiply:
-					case ExpressionType.MultiplyChecked:
-					case ExpressionType.Divide:
-					case ExpressionType.Modulo:
-					case ExpressionType.And:
-					case ExpressionType.AndAlso:
-					case ExpressionType.Or:
-					case ExpressionType.OrElse:
-					case ExpressionType.LessThan:
-					case ExpressionType.LessThanOrEqual:
-					case ExpressionType.GreaterThan:
-					case ExpressionType.GreaterThanOrEqual:
-					case ExpressionType.Equal:
-					case ExpressionType.NotEqual:
-					case ExpressionType.Coalesce:
-					case ExpressionType.ArrayIndex:
-					case ExpressionType.RightShift:
-					case ExpressionType.LeftShift:
-					case ExpressionType.ExclusiveOr:
-					case ExpressionType.Power:
-					case ExpressionType.Assign:
-						return CompareBinary((BinaryExpression)a, (BinaryExpression)b);
-					case ExpressionType.TypeIs:
-						return CompareTypeIs((TypeBinaryExpression)a, (TypeBinaryExpression)b);
-					case ExpressionType.Conditional:
-						return CompareConditional((ConditionalExpression)a, (ConditionalExpression)b);
-					case ExpressionType.Default: return true;
-					case ExpressionType.Constant:
-						return CompareConstant((ConstantExpression)a, (ConstantExpression)b);
-					case ExpressionType.Parameter:
-						return CompareParameter((ParameterExpression)a, (ParameterExpression)b);
-					case ExpressionType.MemberAccess:
-						return CompareMemberAccess((MemberExpression)a, (MemberExpression)b);
-					case ExpressionType.Call:
-						return CompareMethodCall((MethodCallExpression)a, (MethodCallExpression)b);
-					case ExpressionType.Lambda:
-						return CompareLambda((LambdaExpression)a, (LambdaExpression)b);
-					case ExpressionType.New:
-						return CompareNew((NewExpression)a, (NewExpression)b);
-					case ExpressionType.NewArrayInit:
-					case ExpressionType.NewArrayBounds:
-						return CompareNewArray((NewArrayExpression)a, (NewArrayExpression)b);
-					case ExpressionType.Invoke:
-						return CompareInvocation((InvocationExpression)a, (InvocationExpression)b);
-					case ExpressionType.MemberInit:
-						return CompareMemberInit((MemberInitExpression)a, (MemberInitExpression)b);
-					case ExpressionType.ListInit:
-						return CompareListInit((ListInitExpression)a, (ListInitExpression)b);
-					case ExpressionType.Extension:
-						return CompareExtension(a, b);
-					case ChangeTypeExpression.ChangeTypeType:
-						return a.Equals(b);
-					case ExpressionType.Block:
-						return CompareBlock((BlockExpression)a, (BlockExpression)b);
-					case ExpressionType.Throw:
-						return CompareUnary((UnaryExpression)a, (UnaryExpression)b);
-					case ExpressionType.Index:
-						return CompareIndex((IndexExpression)a, (IndexExpression)b);
-					case ExpressionType.Switch:
-						return CompareSwitch((SwitchExpression)a, (SwitchExpression)b);
-					default:
-						throw new NotImplementedException();
-				}
+					ExpressionType.Negate or
+					ExpressionType.NegateChecked or
+					ExpressionType.Not or
+					ExpressionType.Convert or
+					ExpressionType.ConvertChecked or
+					ExpressionType.ArrayLength or
+					ExpressionType.Quote or
+					ExpressionType.TypeAs or
+					ExpressionType.UnaryPlus =>
+						CompareUnary((UnaryExpression)a, (UnaryExpression)b),
+
+					ExpressionType.Add or
+					ExpressionType.AddChecked or
+					ExpressionType.Subtract or
+					ExpressionType.SubtractChecked or
+					ExpressionType.Multiply or
+					ExpressionType.MultiplyChecked or
+					ExpressionType.Divide or
+					ExpressionType.Modulo or
+					ExpressionType.And or
+					ExpressionType.AndAlso or
+					ExpressionType.Or or
+					ExpressionType.OrElse or
+					ExpressionType.LessThan or
+					ExpressionType.LessThanOrEqual or
+					ExpressionType.GreaterThan or
+					ExpressionType.GreaterThanOrEqual or
+					ExpressionType.Equal or
+					ExpressionType.NotEqual or
+					ExpressionType.Coalesce or
+					ExpressionType.ArrayIndex or
+					ExpressionType.RightShift or
+					ExpressionType.LeftShift or
+					ExpressionType.ExclusiveOr or
+					ExpressionType.Power or
+					ExpressionType.Assign =>
+						CompareBinary((BinaryExpression)a, (BinaryExpression)b),
+
+					ExpressionType.TypeIs => CompareTypeIs((TypeBinaryExpression)a, (TypeBinaryExpression)b),
+					ExpressionType.Conditional => CompareConditional((ConditionalExpression)a, (ConditionalExpression)b),
+					ExpressionType.Default => true,
+					ExpressionType.Constant => CompareConstant((ConstantExpression)a, (ConstantExpression)b),
+					ExpressionType.Parameter => CompareParameter((ParameterExpression)a, (ParameterExpression)b),
+					ExpressionType.MemberAccess => CompareMemberAccess((MemberExpression)a, (MemberExpression)b),
+					ExpressionType.Call => CompareMethodCall((MethodCallExpression)a, (MethodCallExpression)b),
+					ExpressionType.Lambda => CompareLambda((LambdaExpression)a, (LambdaExpression)b),
+					ExpressionType.New => CompareNew((NewExpression)a, (NewExpression)b),
+
+					ExpressionType.NewArrayInit or
+					ExpressionType.NewArrayBounds =>
+						CompareNewArray((NewArrayExpression)a, (NewArrayExpression)b),
+
+					ExpressionType.Invoke => CompareInvocation((InvocationExpression)a, (InvocationExpression)b),
+					ExpressionType.MemberInit => CompareMemberInit((MemberInitExpression)a, (MemberInitExpression)b),
+					ExpressionType.ListInit => CompareListInit((ListInitExpression)a, (ListInitExpression)b),
+					ExpressionType.Extension => CompareExtension(a, b),
+					ChangeTypeExpression.ChangeTypeType => a.Equals(b),
+					ExpressionType.Block => CompareBlock((BlockExpression)a, (BlockExpression)b),
+					ExpressionType.Throw => CompareUnary((UnaryExpression)a, (UnaryExpression)b),
+					ExpressionType.Index => CompareIndex((IndexExpression)a, (IndexExpression)b),
+					ExpressionType.Switch => CompareSwitch((SwitchExpression)a, (SwitchExpression)b),
+
+					_ => throw new NotImplementedException(),
+				};
 			}
 
 			bool CompareIndex(IndexExpression a, IndexExpression b)

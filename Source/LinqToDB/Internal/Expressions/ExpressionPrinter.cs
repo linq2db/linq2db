@@ -561,10 +561,7 @@ namespace LinqToDB.Internal.Expressions
 
 			foreach (var parameter in lambdaExpression.Parameters)
 			{
-				var parameterName = parameter.Name;
-
-				if (!_parametersInScope.ContainsKey(parameter))
-					_parametersInScope.Add(parameter, parameterName);
+				_parametersInScope.TryAdd(parameter, parameter.Name);
 
 				Visit(parameter);
 
