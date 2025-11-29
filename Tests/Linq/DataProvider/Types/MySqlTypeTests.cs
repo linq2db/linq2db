@@ -24,7 +24,7 @@ namespace Tests.DataProvider
 
 			var mariaDB = context.IsAnyOf(TestProvName.AllMariaDB);
 
-			var dt = DataType.Array | DataType.Single;
+			var dt = DataType.Vector32;
 
 			var asArray1 = new float[] { 1.2f, -1.1f };
 			var asArray2 = new float[] { 5.2f, -3.1f };

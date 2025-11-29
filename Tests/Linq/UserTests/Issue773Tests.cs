@@ -18,7 +18,7 @@ namespace Tests.UserTests
 		{
 			sealed class MatchBuilder : Sql.IExtensionCallBuilder
 			{
-				public void Build(Sql.ISqExtensionBuilder builder)
+				public void Build(Sql.ISqlExtensionBuilder builder)
 				{
 					var method = (MethodInfo) builder.Member;
 					var arg = method.GetGenericArguments().Single();

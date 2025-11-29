@@ -140,7 +140,7 @@ namespace LinqToDB
 				};
 			}
 
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var part      = builder.GetValue<DateParts>(0);
 				var startdate = builder.GetExpression(1);
@@ -160,7 +160,7 @@ namespace LinqToDB
 
 		sealed class DateDiffBuilderSapHana : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var part       = builder.GetValue<DateParts>(0);
 				var startdate  = builder.GetExpression(1);
@@ -195,7 +195,7 @@ namespace LinqToDB
 
 		sealed class DateDiffBuilderDB2 : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var part       = builder.GetValue<DateParts>(0);
 				var startDate  = builder.GetExpression(1);
@@ -243,7 +243,7 @@ namespace LinqToDB
 
 		sealed class DateDiffBuilderSQLite : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var part = builder.GetValue<DateParts>(0);
 				var startDate = builder.GetExpression(1);
@@ -271,7 +271,7 @@ namespace LinqToDB
 
 		sealed class DateDiffBuilderPostgreSql : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var part = builder.GetValue<DateParts>(0);
 				var startDate = builder.GetExpression(1)!;
@@ -294,7 +294,7 @@ namespace LinqToDB
 
 		sealed class DateDiffBuilderAccess : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var part = builder.GetValue<DateParts>(0);
 				var startDate = builder.GetExpression(1);
@@ -334,7 +334,7 @@ namespace LinqToDB
 
 		sealed class DateDiffBuilderOracle : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var part = builder.GetValue<DateParts>(0);
 				var startDate = builder.GetExpression(1);
@@ -372,7 +372,7 @@ namespace LinqToDB
 
 		sealed class DateDiffBuilderClickHouse : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var part       = builder.GetValue<DateParts>(0);
 				var startDate  = builder.GetExpression(1);
