@@ -929,7 +929,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public static Expression MakeNotNullCondition(Expression expr)
 		{
-			if (expr.Type.IsValueType && !expr.Type.IsNullable())
+			if (expr.Type.IsValueType && !expr.Type.IsNullableType)
 			{
 				if (expr is SqlPlaceholderExpression placeholder)
 					expr = placeholder.MakeNullable();
@@ -971,6 +971,34 @@ namespace LinqToDB.Internal.Linq.Builder
 			var unwrapped = UnwrapConstantAndParameter(expression);
 
 			return Expression.Call(Methods.LinqToDB.SqlParameter.MakeGenericMethod(unwrapped.Type), unwrapped);
+		}
+
+		public static IBuildContext? GetOrderSequence(IBuildContext context)
+		{
+			var prevSequence = context;
+			while (true)
+			{
+				if (prevSequence.SelectQuery.Select.HasModifier)
+				{
+					return null;
+				}
+
+				if (!prevSequence.SelectQuery.OrderBy.IsEmpty)
+					break;
+
+				if (prevSequence is SubQueryContext { IsSelectWrapper: true } subQuery)
+				{
+					prevSequence = subQuery.SubQuery;
+				}
+				else if (prevSequence is SelectContext { InnerContext: not null } selectContext)
+				{
+					prevSequence = selectContext.InnerContext;
+				}
+				else
+					break;
+			}
+
+			return prevSequence.SelectQuery.OrderBy.IsEmpty ? null : prevSequence;
 		}
 
 		#region Special fields helpers

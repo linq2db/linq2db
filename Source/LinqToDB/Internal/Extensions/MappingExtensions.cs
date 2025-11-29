@@ -39,7 +39,7 @@ namespace LinqToDB.Internal.Extensions
 			if (originalValue is DataParameter p)
 				return new SqlValue(p.Value == null ? p.GetOrSetDbDataType(columnType) : p.DbDataType, p.Value);
 
-			var underlyingType = systemType.ToNullableUnderlying();
+			var underlyingType = systemType.UnwrapNullableType();
 
 			if (!mappingSchema.ValueToSqlConverter.CanConvert(underlyingType))
 			{
@@ -81,7 +81,7 @@ namespace LinqToDB.Internal.Extensions
 			}
 
 			var systemType     = value.GetType();
-			var underlyingType = systemType.ToNullableUnderlying();
+			var underlyingType = systemType.UnwrapNullableType();
 
 			if (!mappingSchema.ValueToSqlConverter.CanConvert(underlyingType))
 			{

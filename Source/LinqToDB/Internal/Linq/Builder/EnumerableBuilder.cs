@@ -50,7 +50,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					return BuildSequenceResult.Error(buildInfo.Expression);
 
 				var expressions = ((NewArrayExpression)buildInfo.Expression).Expressions.Select(e =>
-						builder.UpdateNesting(buildInfo.Parent!, builder.BuildExtractExpression(buildInfo.Parent, e)))
+						builder.UpdateNesting(buildInfo.Parent!, builder.BuildSqlExpression(buildInfo.Parent, e)))
 					.ToArray();
 				
 				var dynamicContext = new EnumerableContextDynamic(

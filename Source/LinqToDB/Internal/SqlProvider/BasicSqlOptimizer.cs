@@ -1648,7 +1648,7 @@ namespace LinqToDB.Internal.SqlProvider
 					if (param.NeedsCast)
 						return true;
 
-					if (param.Type.SystemType.IsNullableType())
+					if (param.Type.SystemType.IsNullableOrReferenceType())
 						return true;
 
 					return false;

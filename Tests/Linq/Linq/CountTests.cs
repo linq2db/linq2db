@@ -47,7 +47,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Count3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -83,7 +83,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Count7([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -454,7 +454,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void SubQuery1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -468,7 +468,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void SubQuery2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -482,7 +482,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void SubQuery3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -496,7 +496,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void SubQuery4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -506,7 +506,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void SubQuery5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -516,7 +516,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void SubQuery6([DataSources(ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -526,7 +526,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void SubQuery7([DataSources(ProviderName.SqlCe, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -560,7 +560,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void GroupJoin1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -584,7 +584,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void GroupJoin2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -612,7 +612,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void GroupJoin3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -632,7 +632,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void GroupJoin4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

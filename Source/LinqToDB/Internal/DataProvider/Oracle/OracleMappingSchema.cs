@@ -9,6 +9,7 @@ using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Mapping;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
@@ -73,7 +74,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			SetValueToSqlConverter(typeof(Guid),           (sb, _,_,v) => ConvertBinaryToSql  (sb,     ((Guid)   v).ToByteArray()));
 			SetValueToSqlConverter(typeof(DateTime),       (sb,dt,_,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
 			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeToSql(sb, dt, ((DateTimeOffset)v).UtcDateTime));
-			SetValueToSqlConverter(typeof(string)        , (sb, _,_,v) => ConvertStringToSql  (sb,     (string)v));
+			SetValueToSqlConverter(typeof(string)        , (sb,dt,_,v) => ConvertStringToSql  (sb, dt, (string)v));
 			SetValueToSqlConverter(typeof(char)          , (sb, _,_,v) => ConvertCharToSql    (sb,     (char)v));
 			SetValueToSqlConverter(typeof(byte[]),         (sb, _,_,v) => ConvertBinaryToSql  (sb,     (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),         (sb, _,_,v) => ConvertBinaryToSql  (sb,     ((Binary)v).ToArray()));
@@ -125,9 +126,21 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			stringBuilder.Append(CultureInfo.InvariantCulture, $"chr({value})");
 		}
 
-		internal static void ConvertStringToSql(StringBuilder stringBuilder, string value)
+		internal static void ConvertStringToSql(StringBuilder stringBuilder, SqlDataType type, string value)
 		{
+			switch (type.Type.DataType)
+			{
+				case DataType.Text : stringBuilder.Append("TO_CLOB(");  break;
+				case DataType.NText: stringBuilder.Append("TO_NCLOB("); break;
+			}
+
 			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversionAction, value, null);
+
+			switch (type.Type.DataType)
+			{
+				case DataType.Text :
+				case DataType.NText: stringBuilder.Append(')'); break;
+			}
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
@@ -257,6 +270,27 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			public Devart11MappingSchema() : base(ProviderName.Oracle11Devart, OracleProviderAdapter.GetInstance(OracleProvider.Devart).MappingSchema, Instance)
 			{
 			}
+		}
+
+		sealed class OracleRemoteMappingSchema(string configuration) : LockedMappingSchema(configuration, Instance);
+
+		static readonly OracleRemoteMappingSchema _oracleNativeMappingSchema    = new (ProviderName.OracleNative);
+		static readonly OracleRemoteMappingSchema _oracleManagedMappingSchema   = new (ProviderName.OracleManaged);
+		static readonly OracleRemoteMappingSchema _oracleDevartMappingSchema    = new (ProviderName.OracleDevart);
+		static readonly OracleRemoteMappingSchema _oracleNative11MappingSchema  = new (ProviderName.Oracle11Native);
+		static readonly OracleRemoteMappingSchema _oracleManaged11MappingSchema = new (ProviderName.Oracle11Managed);
+		static readonly OracleRemoteMappingSchema _oracleDevart11MappingSchema  = new (ProviderName.Oracle11Devart);
+
+		internal static MappingSchema GetRemoteMappingSchema(Type type)
+		{
+			if (type == typeof(NativeMappingSchema))    return _oracleNativeMappingSchema;
+			if (type == typeof(ManagedMappingSchema))   return _oracleManagedMappingSchema;
+			if (type == typeof(DevartMappingSchema))    return _oracleDevartMappingSchema;
+			if (type == typeof(Native11MappingSchema))  return _oracleNative11MappingSchema;
+			if (type == typeof(Managed11MappingSchema)) return _oracleManaged11MappingSchema;
+			if (type == typeof(Devart11MappingSchema))  return _oracleDevart11MappingSchema;
+
+			throw new InvalidOperationException($"Unknown Oracle mapping schema type: {type.FullName}");
 		}
 	}
 }

@@ -400,7 +400,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void OrderBySubQuery([DataSources] string context)
 		{

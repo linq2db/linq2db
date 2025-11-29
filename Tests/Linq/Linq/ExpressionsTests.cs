@@ -156,7 +156,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void MethodExpression4([DataSources] string context)
 		{
 			var n = 3;
@@ -181,7 +181,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void MethodExpression5([DataSources(ProviderName.SqlCe)] string context, [Values(1, 2) ]int n)
 		{
 			using (var db = GetDataContext(context))
@@ -204,7 +204,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void MethodExpression6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -227,7 +227,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void MethodExpression7([DataSources(ProviderName.SqlCe)] string context)
 		{
 			var n = 2;
@@ -400,7 +400,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void AssociationMethodExpression([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -412,7 +412,7 @@ namespace Tests.Linq
 					select GrandChildren(p).Count());
 		}
 
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public async Task AssociationMethodExpressionAsync([DataSources] string context)
 		{
@@ -1042,7 +1042,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Issue3472Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

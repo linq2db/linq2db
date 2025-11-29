@@ -13,7 +13,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Internal.Expressions;
@@ -72,7 +71,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			Func<DbConnection, SqlBulkCopyOptions, DbTransaction?, SqlBulkCopy> createBulkCopy,
 			Func<int, string, SqlBulkCopyColumnMapping>                         createBulkCopyColumnMapping,
-			
+
 			MappingSchema? mappingSchema,
 
 			Type? jsonDocumentType,
@@ -119,7 +118,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		public SqlServerProvider Provider { get; }
 
-#region IDynamicProviderAdapter
+		#region IDynamicProviderAdapter
 
 		public Type ConnectionType  { get; }
 		public Type DataReaderType  { get; }
@@ -130,7 +129,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		readonly Func<string, DbConnection> _connectionFactory;
 		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
 
-#endregion
+		#endregion
 
 		public Type SqlDataRecordType { get; }
 		public Type SqlExceptionType  { get; }
@@ -212,7 +211,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			var isSystem = assemblyName == SystemAssemblyName;
 
-			Assembly? assembly;
+			Assembly?  assembly;
+			Exception? exception = null;
+
 #if NETFRAMEWORK
 			if (isSystem)
 			{
@@ -221,11 +222,11 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			else
 #endif
 			{
-				assembly = Common.Tools.TryLoadAssembly(assemblyName, factoryName);
+				assembly = Common.Tools.TryLoadAssembly(assemblyName, factoryName, out exception);
 			}
 
 			if (assembly == null)
-				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
+				throw new InvalidOperationException($"Cannot load assembly {assemblyName}", exception);
 
 			var connectionType                 = assembly.GetType($"{clientNamespace}.SqlConnection"             , true)!;
 			var parameterType                  = assembly.GetType($"{clientNamespace}.SqlParameter"              , true)!;

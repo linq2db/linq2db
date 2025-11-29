@@ -17,7 +17,7 @@ namespace Tests.Linq
 	public class SubQueryTests : TestBase
 	{
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Test1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -31,7 +31,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Test2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -75,7 +75,7 @@ namespace Tests.Linq
 		static int _testValue = 3;
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Test5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -113,7 +113,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Test6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -154,7 +154,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Test7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -287,7 +287,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void SubSub1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -323,7 +323,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void SubSub2([DataSources(
 			TestProvName.AllAccess,
 			ProviderName.DB2,
@@ -416,7 +416,7 @@ namespace Tests.Linq
 		//}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void SubSub21([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -460,7 +460,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void SubSub211([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -506,7 +506,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void SubSub212([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -550,7 +550,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void SubSub22([DataSources(
 			ProviderName.SqlCe, ProviderName.DB2,
 			TestProvName.AllOracle, TestProvName.AllSapHana)]
@@ -599,7 +599,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Count1([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -650,7 +650,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Count3([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -983,7 +983,7 @@ namespace Tests.Linq
 			public IEnumerable<Review> Reviews { get; set; } = null!;
 		}
 
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4458")]
 		public void Issue4458Test1([DataSources] string context)
 		{
@@ -1000,22 +1000,15 @@ namespace Tests.Linq
 						{
 							ItemId = item.Id,
 							TotalAvailable = stock.Sum(s => s.QuantityAvailable),
-							Reviews = t3.Where(r => r.ItemId == item.Id)
+							Reviews = t3.Where(r => r.ItemId == item.Id).OrderBy(r => r.ItemId).ThenBy(r => r.UserId)
 						};
 
 			var filteredByScore = query.Where(i => i.Reviews.Any(r => r.Score > 95));
 
-			var result = filteredByScore.ToArray();
-			Assert.That(result, Has.Length.EqualTo(1));
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(result[0].ItemId, Is.EqualTo("1"));
-				Assert.That(result[0].TotalAvailable, Is.EqualTo(10));
-				Assert.That(result[0].Reviews.Count(), Is.EqualTo(2));
-			}
+			AssertQuery(filteredByScore);
 		}
 
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4458")]
 		public void Issue4458Test2([DataSources] string context)
 		{

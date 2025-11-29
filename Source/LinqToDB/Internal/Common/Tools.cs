@@ -90,6 +90,13 @@ namespace LinqToDB.Internal.Common
 
 		public static Assembly? TryLoadAssembly(string? assemblyName, string? providerFactory)
 		{
+			return TryLoadAssembly(assemblyName, providerFactory, out _);
+		}
+
+		internal static Assembly? TryLoadAssembly(string? assemblyName, string? providerFactory, out Exception? exception)
+		{
+			exception = null;
+
 			if (assemblyName != null)
 			{
 				try
@@ -99,9 +106,12 @@ namespace LinqToDB.Internal.Common
 					// doesn't make sense and actually breaks T4 templates
 					// https://github.com/linq2db/linq2db/issues/3218
 					return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == assemblyName)
-						?? Assembly.Load(assemblyName);
+					       ?? Assembly.Load(assemblyName);
 				}
-				catch {}
+				catch (Exception ex)
+				{
+					exception = ex;
+				}
 			}
 
 #if !NETSTANDARD2_0
@@ -110,7 +120,10 @@ namespace LinqToDB.Internal.Common
 				if (providerFactory != null)
 					return DbProviderFactories.GetFactory(providerFactory).GetType().Assembly;
 			}
-			catch {}
+			catch (Exception ex)
+			{
+				exception = ex;
+			}
 #endif
 
 			return null;

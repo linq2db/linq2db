@@ -94,8 +94,6 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 			list.Add(new DataTypeInfo { TypeName = "inet"                       , DataType = provider.Adapter.NpgsqlInetType.    AssemblyQualifiedName!, ProviderSpecific = true });
 
-			list.Add(new DataTypeInfo { TypeName = "cidr"                       , DataType = provider.Adapter.NpgsqlInetType.AssemblyQualifiedName!, ProviderSpecific = true });
-
 			list.Add(new DataTypeInfo { TypeName = "point"                      , DataType = provider.Adapter.NpgsqlPointType.   AssemblyQualifiedName!, ProviderSpecific = true });
 			list.Add(new DataTypeInfo { TypeName = "line"                       , DataType = provider.Adapter.NpgsqlLineType.    AssemblyQualifiedName!, ProviderSpecific = true });
 			list.Add(new DataTypeInfo { TypeName = "lseg"                       , DataType = provider.Adapter.NpgsqlLSegType.    AssemblyQualifiedName!, ProviderSpecific = true });
@@ -111,6 +109,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			if (provider.Adapter.NpgsqlIntervalType != null)
 				list.Add(new DataTypeInfo { TypeName = "interval", DataType = provider.Adapter.NpgsqlIntervalType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "interval({0})", CreateParameters = "precision" });
 
+			if (provider.Adapter.NpgsqlCubeType != null)
+				list.Add(new DataTypeInfo { TypeName = "cube",     DataType = provider.Adapter.NpgsqlCubeType.AssemblyQualifiedName!,     ProviderSpecific = true });
+
 			if (provider.Adapter.NpgsqlDateTimeType != null)
 			{
 				list.Add(new DataTypeInfo { TypeName = "timestamptz"                , DataType = provider.Adapter.NpgsqlDateTimeType.AssemblyQualifiedName!, ProviderSpecific = true, CreateFormat = "timestamp ({0}) with time zone"   , CreateParameters = "precision" });
@@ -120,10 +121,14 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			}
 
 			list.Add(new DataTypeInfo { TypeName = "inet"                   , DataType = typeof(IPAddress).      AssemblyQualifiedName! });
+
 #if NET8_0_OR_GREATER
 			list.Add(new DataTypeInfo { TypeName = "cidr"                   , DataType = typeof(IPNetwork).      AssemblyQualifiedName! });
 #else
-			list.Add(new DataTypeInfo { TypeName = "cidr"                   , DataType = "System.ValueTuple`2[[System.Net.IPAddress, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" });
+			if (provider.Adapter.NpgsqlCidrType != null)
+				list.Add(new DataTypeInfo { TypeName = "cidr"               , DataType = "System.ValueTuple`2[[System.Net.IPAddress, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Byte, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" });
+			else
+				list.Add(new DataTypeInfo { TypeName = "cidr"               , DataType = "System.ValueTuple`2[[System.Net.IPAddress, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" });
 #endif
 
 			list.Add(new DataTypeInfo { TypeName = "date"                   , DataType = typeof(DateTime).       AssemblyQualifiedName! });
@@ -608,6 +613,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				case "line"                        : return _provider.Adapter.NpgsqlLineType     .Name;
 				case "cidr"                        :
 				case "inet"                        : return _provider.Adapter.NpgsqlInetType     .Name;
+				case "cube"                        : return _provider.Adapter.NpgsqlCubeType?    .Name;
 				case "geometry"                    : return "PostgisGeometry";
 			}
 

@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 	<PropertyGroup>
-		<TargetFramework>net9.0</TargetFramework>
+		<TargetFrameworks>net10.0</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 	</PropertyGroup>
 
@@ -8,6 +8,16 @@
 		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Extensions\LinqToDB.Extensions.csproj" />
 		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.SignalR.Server\LinqToDB.Remote.SignalR.Server.csproj" />
 		<ProjectReference Include="..\SignalRClient\SignalRClient.csproj" />
+
+		<PackageReference Include="Microsoft.Data.SqlClient" />
+		<PackageReference Include="Octonica.ClickHouseClient" />
+		<PackageReference Include="ClickHouse.Driver" />
+		<PackageReference Include="MySqlConnector" />
+		<PackageReference Include="Net.IBM.Data.Db2" />
+		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
+		<PackageReference Include="Npgsql" />
+		<PackageReference Include="AdoNetCore.AseClient" />
 
 		<PackageReference Include="Microsoft.Data.Sqlite" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />

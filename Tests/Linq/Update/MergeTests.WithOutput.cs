@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -744,6 +745,66 @@ namespace Tests.xUpdate
 					})
 					.MergeWithOutput((a, d, i) => i.Gender)
 					.ToArray();
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5194")]
+		public void MergeWithOutputAsTupleFactory([IncludeDataSources(true, SIMPLE_OUTPUT)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var outputRows = table
+					.Merge()
+					.Using(GetSource1(db).Where(_ => _.Id == 5))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.MergeWithOutput((a, deleted, inserted, source)
+						=> Tuple.Create(
+							source.Field1,
+							Sql.AsSql(source.Field1.ToString()),
+							Sql.AsSql(inserted.Id.ToString())));
+
+				var result = outputRows.ToArray();
+
+				result.Length.ShouldBe(1);
+
+				var record = result[0];
+
+				record.Item3.ShouldBe("5");
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5194")]
+		public void MergeWithOutputAsTupleConstructor([IncludeDataSources(true, SIMPLE_OUTPUT)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var outputRows = table
+					.Merge()
+					.Using(GetSource1(db).Where(_ => _.Id == 5))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.MergeWithOutput((a, deleted, inserted, source)
+						=> new Tuple<int?, string, string>(
+							source.Field1,
+							Sql.AsSql(source.Field1.ToString()!),
+							Sql.AsSql(inserted.Id.ToString())));
+
+				var result = outputRows.ToArray();
+
+				result.Length.ShouldBe(1);
+
+				var record = result[0];
+
+				record.Item3.ShouldBe("5");
 			}
 		}
 	}

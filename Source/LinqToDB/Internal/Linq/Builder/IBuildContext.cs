@@ -21,6 +21,8 @@ namespace LinqToDB.Internal.Linq.Builder
 		IBuildContext?      Parent              { get; set; } // TODO: probably not needed
 		TranslationModifier TranslationModifier { get; }
 
+		SelectQuery GetResultQuery();
+
 		Type ElementType { get; }
 
 		Expression    MakeExpression(Expression path, ProjectFlags flags);

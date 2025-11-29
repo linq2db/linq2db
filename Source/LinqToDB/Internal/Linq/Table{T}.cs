@@ -26,8 +26,8 @@ namespace LinqToDB.Internal.Linq
 		internal Table(IDataContext dataContext, Table<T> basedOn)
 		{
 			Init(dataContext, basedOn.Expression);
-			_tableOptions   = basedOn.TableOptions;
-			_tableID        = basedOn.TableID;
+			TableOptions    = basedOn.TableOptions;
+			TableID         = basedOn.TableID;
 			_name           = basedOn._name;
 			TableDescriptor = basedOn.TableDescriptor;
 		}
@@ -70,7 +70,7 @@ namespace LinqToDB.Internal.Linq
 			var ed = tableDescriptor ?? dataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
 			_name         = ed.Name;
-			_tableOptions = ed.TableOptions;
+			TableOptions  = ed.TableOptions;
 		}
 
 		internal EntityDescriptor? TableDescriptor { get; set; }
@@ -139,7 +139,7 @@ namespace LinqToDB.Internal.Linq
 			return expression;
 		}
 
-		static Expression ApplyTaleId(Expression expression, string? id)
+		static Expression ApplyTableId(Expression expression, string? id)
 		{
 			expression = Expression.Call(
 				null,
@@ -151,7 +151,7 @@ namespace LinqToDB.Internal.Linq
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		private SqlObjectName _name;
 
-		public  string?  ServerName
+		public string? ServerName
 		{
 			get => _name.Server;
 			set
@@ -165,7 +165,7 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
-		public  string?  DatabaseName
+		public string? DatabaseName
 		{
 			get => _name.Database;
 			set
@@ -179,7 +179,7 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
-		public  string?  SchemaName
+		public string? SchemaName
 		{
 			get => _name.Schema;
 			set
@@ -193,23 +193,21 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
-		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		private TableOptions _tableOptions;
-		public  TableOptions  TableOptions
+		public TableOptions TableOptions
 		{
-			get => _tableOptions;
+			get;
 			set
 			{
-				if (_tableOptions != value)
+				if (field != value)
 				{
 					Expression = ApplyTableOptions(Expression, value);
 
-					_tableOptions = value;
+					field = value;
 				}
 			}
 		}
 
-		public  string  TableName
+		public string TableName
 		{
 			get => _name.Name;
 			set
@@ -223,18 +221,16 @@ namespace LinqToDB.Internal.Linq
 			}
 		}
 
-		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		private string? _tableID;
-		public string?   TableID
+		public string? TableID
 		{
-			get => _tableID;
+			get;
 			set
 			{
-				if (_tableID != value)
+				if (field != value)
 				{
-					Expression = ApplyTaleId(Expression, value);
+					Expression = ApplyTableId(Expression, value);
 
-					_tableID = value;
+					field = value;
 				}
 			}
 		}

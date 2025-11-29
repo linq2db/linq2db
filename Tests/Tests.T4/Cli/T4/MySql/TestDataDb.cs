@@ -57,6 +57,7 @@ namespace Cli.T4.MySql
 		public ITable<InheritanceChild>  InheritanceChildren => this.GetTable<InheritanceChild>();
 		public ITable<InheritanceParent> InheritanceParents  => this.GetTable<InheritanceParent>();
 		public ITable<Issue1993>         Issue1993           => this.GetTable<Issue1993>();
+		public ITable<KeepIdentityTest>  KeepIdentityTests   => this.GetTable<KeepIdentityTest>();
 		public ITable<LinqDataType>      LinqDataTypes       => this.GetTable<LinqDataType>();
 		public ITable<Parent>            Parents             => this.GetTable<Parent>();
 		public ITable<Patient>           Patients            => this.GetTable<Patient>();
@@ -144,6 +145,11 @@ namespace Cli.T4.MySql
 		public static Issue1993? Find(this ITable<Issue1993> table, uint id)
 		{
 			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static KeepIdentityTest? Find(this ITable<KeepIdentityTest> table, int id)
+		{
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static Patient? Find(this ITable<Patient> table, int personId)
@@ -686,6 +692,13 @@ namespace Cli.T4.MySql
 	{
 		[Column("id"         , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public uint    Id          { get; set; } // int unsigned
 		[Column("description"                                                                                  )] public string? Description { get; set; } // varchar(100)
+	}
+
+	[Table("KeepIdentityTest")]
+	public partial class KeepIdentityTest
+	{
+		[Column("ID"   , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  ID    { get; set; } // int
+		[Column("Value"                                                                                  )] public int? Value { get; set; } // int
 	}
 
 	[Table("LinqDataTypes")]

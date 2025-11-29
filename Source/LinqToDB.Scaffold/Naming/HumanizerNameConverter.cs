@@ -17,7 +17,7 @@ namespace LinqToDB.Naming
 
 		static HumanizerNameConverter()
 		{
-			Humanizer.Inflections.Vocabularies.Default.AddUncountable("all");
+			Vocabularies.Default.AddUncountable("all");
 		}
 
 		private HumanizerNameConverter()

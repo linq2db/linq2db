@@ -12,11 +12,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	[PublicAPI]
 	public static class PostgreSQLTools
 	{
-		private  static PostgreSQLProviderDetector? _providerDetector;
 		internal static PostgreSQLProviderDetector   ProviderDetector
 		{
-			get => _providerDetector ??= new();
-			set => _providerDetector = value;
+			get => field ??= new();
+			set;
 		}
 
 		public static bool AutoDetectProvider

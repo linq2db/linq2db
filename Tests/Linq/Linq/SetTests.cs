@@ -128,7 +128,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Contains701([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -358,7 +358,7 @@ namespace Tests.Linq
 		[Test]
 		public void Contains15([DataSources] string context)
 		{
-			var arr = Parent1.Take(2).ToArray();
+			var arr = Parent1.Take(2).ToArray().AsEnumerable();
 
 			using (var db = GetDataContext(context))
 				AreEqual(

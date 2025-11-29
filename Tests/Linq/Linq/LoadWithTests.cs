@@ -100,7 +100,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void LoadWith3([DataSources] string context)
 		{
 			var ms = new MappingSchema();
@@ -123,7 +123,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void LoadWithAsTable3([DataSources] string context)
 		{
 			var ms = new MappingSchema();
@@ -156,7 +156,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void LoadWith4([DataSources] string context)
 		{
 			var ms = new MappingSchema();
@@ -179,7 +179,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void LoadWith5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -201,7 +201,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void LoadWith6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

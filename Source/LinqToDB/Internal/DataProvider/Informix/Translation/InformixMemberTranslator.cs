@@ -338,6 +338,24 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 
 		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			{
+				var builder = new AggregateFunctionBuilder();
+
+				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+				{
+					var intDbType = factory.GetDbDataType(typeof(int));
+					var substring = factory.Function(valueType, "SUBSTRING",
+						[new SqlFunctionArgument(valuesExpr, suffix: factory.Fragment("FROM {0}", factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1))))],
+						[true],
+						canBeNull: true
+					);
+
+					return substring;
+				});
+
+				return builder.Build(translationContext, methodCall);
+			}
 		}
 
 		protected class GuidMemberTranslator : GuidMemberTranslatorBase

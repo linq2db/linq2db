@@ -114,7 +114,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 					break;
 					case DataType.Interval   : StringBuilder.Append("interval");       break;
 				case DataType.Udt            :
-					var udtType = type.SystemType.ToNullableUnderlying();
+					var udtType = type.SystemType.UnwrapNullableType();
 
 					var provider = DataProvider as PostgreSQLDataProvider;
 
@@ -129,6 +129,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 					else if (udtType == provider?.Adapter.NpgsqlDateTimeType) StringBuilder.Append("timestamp");
 					else if (udtType == provider?.Adapter.NpgsqlIntervalType) StringBuilder.Append("interval");
 					else if (udtType == provider?.Adapter.NpgsqlCidrType    ) StringBuilder.Append("cidr");
+					else if (udtType == provider?.Adapter.NpgsqlCubeType    ) StringBuilder.Append("cube");
 					else if (udtType == typeof(PhysicalAddress) && provider != null && !provider.HasMacAddr8) StringBuilder.Append("macaddr");
 					else if (udtType == typeof(IPAddress)) StringBuilder.Append("inet");
 					else base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);

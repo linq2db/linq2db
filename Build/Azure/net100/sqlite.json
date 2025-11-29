@@ -1,0 +1,12 @@
+﻿{
+	"NET100.Azure": {
+		"Providers": [
+			// not sqlite, but should go somewhere
+			"TestNoopProvider",
+			"SQLite.Classic",
+			"Northwind.SQLite",
+			"SQLite.MS",
+			"Northwind.SQLite.MS"
+		]
+	}
+}

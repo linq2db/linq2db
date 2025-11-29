@@ -7,8 +7,10 @@
 		<tags>SqlServer</tags>
 	</metadata>
 	<files>
-		<file src="t4bin\Microsoft.SqlServer.Types.dll" target="tools"     />
-		<file src="t4bin\x86\SqlServerSpatial160.dll"   target="tools\x86" />
-		<file src="t4bin\x64\SqlServerSpatial160.dll"   target="tools\x64" />
+		<file src="t4bin\Microsoft.SqlServer.Types.dll"  target="tools"       />
+		<file src="t4bin\Microsoft.SqlServer.Server.dll" target="tools"       />
+		<file src="t4bin\x86\SqlServerSpatial170.dll"    target="tools\x86"   />
+		<file src="t4bin\x64\SqlServerSpatial170.dll"    target="tools\x64"   />
+		<file src="t4bin\arm64\SqlServerSpatial170.dll"  target="tools\arm64" />
 	</files>
 </package>

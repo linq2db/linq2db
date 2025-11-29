@@ -48,9 +48,9 @@ internal sealed class SqlCeProvider : DatabaseProviderBase
 		return true;
 	}
 
-	public override string? GetProviderAssemblyName(string providerName)
+	public override IEnumerable<string> GetProviderAssemblyNames(string providerName)
 	{
-		return "System.Data.SqlServerCe.dll";
+		yield return "System.Data.SqlServerCe.dll";
 	}
 
 	public override string? TryGetDefaultPath(string providerName)

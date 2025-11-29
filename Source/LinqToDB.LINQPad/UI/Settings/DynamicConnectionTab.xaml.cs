@@ -35,20 +35,20 @@ internal sealed partial class DynamicConnectionTab
 
 		var provider = Model.Database;
 
-		if (provider == null || Model.Provider == null || provider.IsProviderPathSupported(Model.Provider.Name))
+		if (provider == null || Model.Provider == null || !provider.IsProviderPathSupported(Model.Provider.Name))
 			return;
 
-		var assemblyName = provider.GetProviderAssemblyName(Model.Provider.Name);
-		var defaultPath  = provider.TryGetDefaultPath(Model.Provider.Name);
-		var startPath    = Model.ProviderPath ?? defaultPath;
+		var assemblyNames = provider.GetProviderAssemblyNames(Model.Provider.Name);
+		var defaultPath   = provider.TryGetDefaultPath(Model.Provider.Name);
+		var startPath     = Model.ProviderPath ?? defaultPath;
 
 		var dialog = new OpenFileDialog()
 		{
-			Title            = $"Choose {assemblyName} provider assembly",
-			DefaultExt       = Path.GetExtension(assemblyName),
+			Title            = $"Choose {string.Join("/", assemblyNames)} provider assembly",
+			DefaultExt       = ".dll",
 			FileName         = Model.ProviderPath,
 			CheckPathExists  = true,
-			Filter           = $"{assemblyName}|{assemblyName}|All Files(*.*)|*.*",
+			Filter           = $"Provider File(s)|{string.Join(";", assemblyNames)}|All Files(*.*)|*.*",
 			InitialDirectory = startPath == null ? null : Path.GetDirectoryName(startPath)
 		};
 

@@ -489,21 +489,18 @@ namespace LinqToDB.Linq
 		{
 			get
 			{
-				if (_members == null)
+				if (field == null)
 				{
 					lock (_memberSync)
-#pragma warning disable CA1508 // Avoid dead conditional code
-						_members ??= LoadMembers();
-#pragma warning restore CA1508 // Avoid dead conditional code
+						field ??= LoadMembers();
 				}
 
-				return _members;
+				return field;
 			}
 		}
 
 		#region Mapping
 
-		private static          Dictionary<string, Dictionary<MemberHelper.MemberInfoWithType, IExpressionInfo>>? _members;
 		private static readonly Lock _memberSync = new();
 
 		static readonly Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>> _binaries =
@@ -518,6 +515,7 @@ namespace LinqToDB.Linq
 
 			{ M(() => "".Substring  (0)       ), N(() => L<string?,int,string?>            ((obj,p0)       => Sql.Substring(obj, p0 + 1, obj!.Length - p0))) },
 			{ M(() => "".Substring  (0,0)     ), N(() => L<string?,int,int,string?>        ((obj,p0,p1)    => Sql.Substring(obj, p0 + 1, p1))) },
+#pragma warning disable RS0030 // Do not used banned APIs
 			{ M(() => "".IndexOf    ("")      ), N(() => L<string,string,int>              ((obj,p0)       => p0.Length == 0                    ? 0  : (Sql.CharIndex(p0, obj)!                      .Value) - 1)) },
 			{ M(() => "".IndexOf    ("",0)    ), N(() => L<string,string,int,int>          ((obj,p0,p1)    => p0.Length == 0 && obj.Length > p1 ? p1 : (Sql.CharIndex(p0, obj,               p1 + 1)!.Value) - 1)) },
 			{ M(() => "".IndexOf    ("",0,0)  ), N(() => L<string,string,int,int,int>      ((obj,p0,p1,p2) => p0.Length == 0 && obj.Length > p1 ? p1 : (Sql.CharIndex(p0, Sql.Left(obj, p2), p1)!    .Value) - 1)) },
@@ -534,6 +532,7 @@ namespace LinqToDB.Linq
 			{ M(() => "".LastIndexOf(' ',0)   ), N(() => L<string,char,int,int>            ((obj,p0,p1)    => (Sql.CharIndex(p0, obj, p1 + 1)!                   .Value) == 0 ? -1 : obj.Length - (Sql.CharIndex(p0, Sql.Reverse(obj.Substring(p1, obj.Length - p1)))!.Value))) },
 #pragma warning restore CA1514 // CA1514: Avoid redundant length argument
 			{ M(() => "".LastIndexOf(' ',0,0) ), N(() => L<string,char,int,int,int>        ((obj,p0,p1,p2) => (Sql.CharIndex(p0, Sql.Left(obj, p1 + p2), p1 + 1)!.Value) == 0 ? -1 : p1 + p2    - (Sql.CharIndex(p0, Sql.Reverse(obj.Substring(p1, p2)))!             .Value))) },
+#pragma warning restore RS0030 // Do not used banned APIs
 			{ M(() => "".Insert     (0,"")    ), N(() => L<string?,int,string?,string?>    ((obj,p0,p1)    => obj!.Length == p0 ? obj + p1 : Sql.Stuff(obj, p0 + 1, 0, p1))) },
 			{ M(() => "".Remove     (0)       ), N(() => L<string?,int,string?>            ((obj,p0)       => Sql.Left     (obj, p0))) },
 			{ M(() => "".Remove     (0,0)     ), N(() => L<string?,int,int,string?>        ((obj,p0,p1)    => Sql.Stuff    (obj, p0 + 1, p1, ""))) },

@@ -1,7 +1,8 @@
-<#@ assembly name="System.Data.dll"                                               #>
-<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude"       once="true" #>
-<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude" once="true" #>
-<#@ import namespace="LinqToDB.DataProvider.SqlServer"                            #>
+<#@ assembly name="System.Data.dll"                                                            #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude"                    once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude"              once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.SqlServer.SqlTypes.ttinclude" once="true" #>
+<#@ import namespace="LinqToDB.DataProvider.SqlServer"                                         #>
 <#
 	{
 		var _ = typeof(System.Data.SqlClient.SqlConnection).Assembly;

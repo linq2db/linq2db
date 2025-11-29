@@ -175,7 +175,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				(DataType.Double,         _,                   _,                  _                   ) => "DOUBLE",
 				(DataType.Single,         _,                   _,                  _                   ) => "FLOAT",
 				(DataType.BitArray,       _,                   _,                  null                ) =>
-					type.SystemType.ToNullableUnderlying()
+					type.SystemType.UnwrapNullableType()
 					switch
 					{
 						var t when t == typeof(byte)  || t == typeof(sbyte)  =>  8,
@@ -400,7 +400,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			else
 			{
 				var sql = StringBuilder.ToString();
-				var insertIndex = sql.IndexOf("INSERT", position);
+				var insertIndex = sql.IndexOf("INSERT", position, StringComparison.Ordinal);
 
 				StringBuilder.Clear()
 					.Append(sql.Substring(0, insertIndex))

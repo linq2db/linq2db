@@ -204,7 +204,9 @@ namespace Tests
 			TestProvName.AllSqlServer2016PlusMS,
 			// latest tested ef.core doesn't support older versions, leading to too many failing tests to disable
 			TestProvName.AllPostgreSQL13Plus,
+#if !NET10_0 // provider need update for v10
 			TestProvName.AllMySqlConnector,
+#endif
 
 #if NETFRAMEWORK
 			// test providers with .net framework provider only

@@ -538,7 +538,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var isUserName = IsUserType(type);
 			var name       = MangleName(isUserName, type.Name, "T");
-			var idx        = name.LastIndexOf("`");
+			var idx        = name.LastIndexOf('`');
 
 			if (idx > 0)
 				name = name.Substring(0, idx);
@@ -585,7 +585,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					string.Join(", ", ps));
 			}).ToList();
 
-			if (ctors.Count == 1 && ctors[0].IndexOf("()") >= 0)
+			if (ctors.Count == 1 && ctors[0].IndexOf("()", StringComparison.Ordinal) >= 0)
 				ctors.Clear();
 
 			var members = type.GetFields().Intersect(_usedMembers.OfType<FieldInfo>()).Select(f =>
@@ -815,12 +815,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				name += type.Name;
 
-				var idx = name.LastIndexOf("`");
+				var idx = name.LastIndexOf('`');
 
 				if (idx > 0)
 					name = name.Substring(0, idx);
 
-				if (type.IsNullable())
+				if (type.IsNullableType)
 				{
 					name = $"{GetTypeName(args[0])}?";
 				}

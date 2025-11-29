@@ -434,5 +434,39 @@ namespace Tests.Linq
 				Assert.That(db.Person.Where(r => !(GetValue(Wrap<int?>(null)) != null)).Count(), Is.EqualTo(4));
 			}
 		}
+
+		[Sql.Expression("PersonID", IsPure = true, ServerSideOnly = true)]
+		static int PureRandom() => throw new InvalidOperationException();
+
+		[Sql.Expression("PersonID", IsPure = false, ServerSideOnly = true)]
+		static int ImpureRandom() => throw new InvalidOperationException();
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5166")]
+		public void PureExpressionDetection([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			_ = db.Person
+				.Select(s => new { Entity = s, Random = (double)PureRandom() })
+				.OrderByDescending(s => s.Random)
+				.Take(10)
+				.ToList();
+
+			Assert.That(db.LastQuery, Does.Not.Contain("ORDER"));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5166")]
+		public void ImpureExpressionDetection([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			_ = db.Person
+				.Select(s => new { Entity = s, Random = (double)ImpureRandom() })
+				.OrderByDescending(s => s.Random)
+				.Take(10)
+				.ToList();
+
+			Assert.That(db.LastQuery, Does.Contain("ORDER"));
+		}
 	}
 }

@@ -32,7 +32,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				ProviderName.DB2,
 				TestProvName.AllInformix,
-				TestProvName.AllPostgreSQL,
+				TestProvName.AllPostgreSQL12Minus,
 				TestProvName.AllSQLite,
 				TestProvName.AllAccess)]
 			string context)
@@ -77,7 +77,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				ProviderName.DB2,
 				TestProvName.AllInformix,
-				TestProvName.AllPostgreSQL,
+				TestProvName.AllPostgreSQL12Minus,
 				TestProvName.AllSQLite,
 				TestProvName.AllAccess)]
 			string context)
@@ -2506,6 +2506,54 @@ namespace Tests.xUpdate
 			db.BulkCopy(new BulkCopyOptions { KeepIdentity = true }, records.RetrieveIdentity(db, useSequence));
 			tb.Insert(() => new Issue4702Table() { Text = "Text 3" });
 		}
+		#endregion
+
+		#region Set with Coalesce
+		[Table]
+		public partial class Thing
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public string? ThingSequence { get; set; }
+			[Column] public int ThingCounter { get; set; }
+			[Column] public string? UserFacingId { get; set; }
+		}
+
+		[Test]
+		public void InsertFromWithCoalesce([IncludeDataSources(
+			true,
+			// native oracle provider crashes with AV
+			TestProvName.AllOracleManaged,
+			TestProvName.AllOracleDevart,
+			TestProvName.AllSqlServer2012Plus,
+			TestProvName.AllClickHouse,
+			TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Thing>();
+
+			var nextCounterQuery =
+				from thingSequence in db.SelectQuery(() => "test")
+				from lastThingInSequence in tb
+					.Where(thing => thing.ThingSequence == thingSequence)
+					.DefaultIfEmpty()
+				select Sql.ToNullable(
+					Sql.Ext
+						.Max(lastThingInSequence.ThingCounter)
+						.Over()
+						.PartitionBy(lastThingInSequence.ThingSequence)
+						.ToValue());
+
+			_ = nextCounterQuery
+				.Distinct()
+				.Insert(
+					tb,
+					lastCounter => new()
+					{
+						Id = 1,
+						ThingCounter = (lastCounter ?? 0) + 1,
+					});
+		}
+
 		#endregion
 	}
 }
