@@ -10,6 +10,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue928Tests : TestBase
 	{
+		[YdbCteAsSource]
 		[Test]
 		public void Test1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -30,6 +31,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void Test2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -50,6 +52,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void Test3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -70,6 +73,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void Test4([DataSources(TestProvName.AllClickHouse)] string context)
 		{

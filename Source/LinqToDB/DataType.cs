@@ -177,6 +177,11 @@ namespace LinqToDB
 		Date,
 
 		/// <summary>
+		/// A type representing a date value with timezone.
+		/// </summary>
+		DateTz,
+
+		/// <summary>
 		/// Date32 ClickHouse type.
 		/// </summary>
 		Date32,
@@ -199,6 +204,16 @@ namespace LinqToDB
 		DateTime2,
 
 		/// <summary>
+		/// Date and time data with timezone information with low precision.
+		/// </summary>
+		DateTimeTz,
+
+		/// <summary>
+		/// Date and time data with timezone information with high precision.
+		/// </summary>
+		DateTime2Tz,
+
+		/// <summary>
 		/// Date and time data ranging in value from January 1, 1900 to June 6, 2079 to an accuracy of one minute.
 		/// </summary>
 		SmallDateTime,
@@ -212,7 +227,7 @@ namespace LinqToDB
 		DateTimeOffset,
 
 		/// <summary>
-		/// DateTime64 ClickHouse type.
+		/// DateTime64 ClickHouse/YDB type.
 		/// </summary>
 		DateTime64,
 
@@ -222,6 +237,11 @@ namespace LinqToDB
 		/// timestamp is used typically as a mechanism for version-stamping table rows. The storage size is 8 bytes.
 		/// </summary>
 		Timestamp,
+
+		/// <summary>
+		/// Timestamp64 YDB type.
+		/// </summary>
+		Timestamp64,
 
 		/// <summary>
 		/// An XML value. Obtain the XML as a string using the GetValue method or Value property,
@@ -270,6 +290,11 @@ namespace LinqToDB
 		BinaryJson,
 
 		/// <summary>
+		/// Yandex YSON type.
+		/// </summary>
+		Yson,
+
+		/// <summary>
 		/// SQL Server 2008+ table-valued parameter type (TVP).
 		/// </summary>
 		Structured,
@@ -288,6 +313,11 @@ namespace LinqToDB
 		/// PostgreSQL interval type.
 		/// </summary>
 		Interval,
+
+		/// <summary>
+		/// YDB Interval64 type.
+		/// </summary>
+		Interval64,
 
 		/// <summary>
 		/// PostgreSQL Enum type.

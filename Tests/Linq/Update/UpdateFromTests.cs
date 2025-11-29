@@ -79,6 +79,7 @@ namespace Tests.xUpdate
 			};
 		}
 
+		[YdbTableNotFound]
 		[Obsolete("Remove test after API removed")]
 		[Test]
 		public void UpdateTestWhereOld(
@@ -131,6 +132,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void UpdateTestWhere(
 			[DataSources(TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
@@ -182,6 +184,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void UpdateTestJoin(
 			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
@@ -285,6 +288,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_UpdateWithTopOrderBy)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql, ErrorMessage = ErrorHelper.MySql.Error_SkipInUpdate)]
@@ -337,6 +341,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void UpdateTestJoinTake(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005, TestProvName.AllMySql, TestProvName.AllClickHouse, ProviderName.SqlCe)]
@@ -387,6 +392,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void UpdateTestAssociation(
 			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
@@ -411,6 +417,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void UpdateTestAssociationAsUpdatable(
 			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
@@ -438,6 +445,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void UpdateTestAssociationSimple(
 			[DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)]
@@ -470,6 +478,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void UpdateTestAssociationSimpleAsUpdatable(
 			[DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)]
@@ -505,6 +514,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 		[Obsolete("Remove test after API removed")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2330")]
 		public void Issue2330TestOld([DataSources(TestProvName.AllClickHouse, ProviderName.SqlCe)] string context)
@@ -524,6 +534,7 @@ namespace Tests.xUpdate
 			});
 		}
 
+		[YdbTableNotFound]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2330")]
 		public void Issue2330Test([DataSources(TestProvName.AllClickHouse, ProviderName.SqlCe)] string context)
 		{
@@ -575,6 +586,7 @@ namespace Tests.xUpdate
 			});
 		}
 
+		[YdbTableNotFound]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
 		public void Issue2815Test2([DataSources(false, ProviderName.SqlCe, TestProvName.AllAccess)] string context)

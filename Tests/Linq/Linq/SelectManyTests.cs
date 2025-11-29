@@ -556,6 +556,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void Test9([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

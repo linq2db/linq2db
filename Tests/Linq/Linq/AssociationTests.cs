@@ -116,6 +116,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void SelectMany3([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
@@ -131,6 +132,7 @@ namespace Tests.Linq
 						.SelectMany(g => g.Select(ch => ch.Parent)));
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void SelectMany4([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
@@ -182,6 +184,7 @@ namespace Tests.Linq
 					from ch in db.Child group ch by ch.Parent into g select g.Key);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void GroupBy2([DataSources] string context)
 		{
@@ -192,6 +195,7 @@ namespace Tests.Linq
 				(from ch in db.Child group ch by ch.Parent1).ToList().Select(g => g.Key));
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public async Task GroupBy2Async([DataSources] string context)
 		{
@@ -201,6 +205,7 @@ namespace Tests.Linq
 				(await (from ch in db.Child group ch by ch.Parent1).ToListAsync()).Select(g => g.Key));
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void GroupBy3([DataSources] string context)
 		{
@@ -210,6 +215,7 @@ namespace Tests.Linq
 					from p in db.Parent group p by p.Types!.DateTimeValue.Year into g select g.Key);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void GroupBy4([DataSources] string context)
 		{
@@ -560,6 +566,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Issue148Test([DataSources] string context)
 		{
@@ -756,6 +763,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Issue3975Test([DataSources] string context)
 		{
@@ -1022,6 +1030,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void DistinctSelect([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -1317,6 +1326,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void Issue1711Test1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
@@ -1337,6 +1347,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Issue1711Test2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
@@ -1673,6 +1684,7 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		[YdbTableNotFound]
 		[Test]
 		public void Issue3809Test([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -1767,6 +1779,7 @@ namespace Tests.Linq
 			};
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void OptionalAssociationNonNullCorrelation([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -1785,6 +1798,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void OptionalAssociationNonNullCorrelationWithProjection([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -1928,6 +1942,7 @@ namespace Tests.Linq
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2933")]
+		[YdbTableNotFound]
 		public void Issue2933Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2054,6 +2069,7 @@ namespace Tests.Linq
 
 		#region Issue 3822
 
+		[YdbTableNotFound]
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess], ErrorMessage = ErrorHelper.Error_Join_Without_Condition)]
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3822")]
@@ -2134,6 +2150,7 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		[YdbMemberNotFound]
 		[Test]
 		public void ManyAssociationEmptyCheck1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -2145,6 +2162,7 @@ namespace Tests.Linq
 			Assert.That(parents.Any(p => p.ParentID == 5), Is.False);
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void ManyAssociationEmptyCheck2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -2158,6 +2176,7 @@ namespace Tests.Linq
 
 		#region issue 4274
 
+		[YdbTableNotFound]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4274")]
 		public void Issue4274Test([DataSources(false)] string context)
 		{

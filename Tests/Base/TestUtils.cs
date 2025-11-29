@@ -41,6 +41,7 @@ namespace Tests
 			return Interlocked.Increment(ref _cnt);
 		}
 
+		public const string NO_SERVER_NAME   = "UNUSED_SERVER";
 		public const string NO_SCHEMA_NAME   = "UNUSED_SCHEMA";
 		public const string NO_DATABASE_NAME = "UNUSED_DB";
 
@@ -88,6 +89,8 @@ namespace Tests
 		{
 			switch (context)
 			{
+				case string when context.IsAnyOf(ProviderName.Ydb)          :
+					return "test/fqn/names";
 				case string when context.IsAnyOf(TestProvName.AllInformix)  :
 				case string when context.IsAnyOf(TestProvName.AllOracle)    :
 				case string when context.IsAnyOf(TestProvName.AllPostgreSQL):
@@ -132,7 +135,7 @@ namespace Tests
 					return "LINKED_DB";
 			}
 
-			return NO_SCHEMA_NAME;
+			return NO_SERVER_NAME;
 		}
 
 		/// <summary>
@@ -143,6 +146,7 @@ namespace Tests
 		{
 			return context switch
 			{
+				string when context.IsAnyOf(ProviderName.Ydb)            => "local",
 				string when context.IsAnyOf(TestProvName.AllSQLite)      => "main",
 				// Access adds extension automatically to database name, but if there are
 				// dots in name, extension not added as dot treated as extension separator by Access
@@ -180,8 +184,8 @@ namespace Tests
 		sealed class FirebirdTempTable<T> : TestTempTable<T>
 			where T : notnull
 		{
-			public FirebirdTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, TableOptions tableOptions = TableOptions.NotSet)
-				: base(db, tableName, databaseName, schemaName, tableOptions : tableOptions)
+			public FirebirdTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, string? serverName = null, TableOptions tableOptions = TableOptions.NotSet)
+				: base(db, tableName, databaseName, schemaName, serverName, tableOptions : tableOptions)
 			{
 			}
 
@@ -214,8 +218,8 @@ namespace Tests
 		class TestTempTable<T> : TempTable<T>
 			where T : notnull
 		{
-			public TestTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, TableOptions tableOptions = TableOptions.NotSet)
-				: base(db, tableName: tableName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions)
+			public TestTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, string? serverName = null, TableOptions tableOptions = TableOptions.NotSet)
+				: base(db, tableName: tableName, databaseName: databaseName, schemaName: schemaName, serverName: serverName, tableOptions: tableOptions)
 			{
 			}
 
@@ -232,11 +236,11 @@ namespace Tests
 			}
 		}
 
-		static TempTable<T> CreateTable<T>(IDataContext db, string? tableName, string? schemaName = null, TableOptions tableOptions = TableOptions.NotSet)
+		static TempTable<T> CreateTable<T>(IDataContext db, string? tableName, string? schemaName = null, string? databaseName = null, string? serverName = null, TableOptions tableOptions = TableOptions.NotSet)
 			where T : notnull =>
 			db.ConfigurationString?.IsAnyOf(TestProvName.AllFirebird) == true ?
-				new FirebirdTempTable<T>(db, tableName, schemaName: schemaName, tableOptions : tableOptions) :
-				new     TestTempTable<T>(db, tableName, schemaName: schemaName, tableOptions : tableOptions);
+				new FirebirdTempTable<T>(db, tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, tableOptions : tableOptions) :
+				new     TestTempTable<T>(db, tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, tableOptions : tableOptions);
 
 		static void ClearDataContext(IDataContext db)
 		{
@@ -253,21 +257,21 @@ namespace Tests
 			return new Version(version);
 		}
 
-		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, string? schemaName = null, TableOptions tableOptions = TableOptions.CheckExistence)
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, string? schemaName = null, string? databaseName = null, string? serverName = null, TableOptions tableOptions = TableOptions.CheckExistence)
 			where T : notnull
 		{
 			using var _ = new DisableBaseline("Test setup");
 			try
 			{
 				if ((tableOptions & TableOptions.CheckExistence) == TableOptions.CheckExistence)
-					db.DropTable<T>(tableName, schemaName: schemaName, tableOptions:tableOptions);
-				return CreateTable<T>(db, tableName, schemaName: schemaName, tableOptions: tableOptions);
+					db.DropTable<T>(tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, tableOptions:tableOptions);
+				return CreateTable<T>(db, tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, tableOptions: tableOptions);
 			}
 			catch
 			{
 				ClearDataContext(db);
-				db.DropTable<T>(tableName, schemaName: schemaName, throwExceptionIfNotExists:false);
-				return CreateTable<T>(db, tableName, schemaName: schemaName, tableOptions: tableOptions);
+				db.DropTable<T>(tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, throwExceptionIfNotExists:false);
+				return CreateTable<T>(db, tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, tableOptions: tableOptions);
 			}
 		}
 

@@ -450,6 +450,7 @@ namespace Tests.Linq
 		public void NewGuidOrder(
 			[DataSources(false,
 				ProviderName.DB2,
+				ProviderName.Ydb,
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,

@@ -33,6 +33,7 @@ namespace Tests.UserTests
 			public List<Child> Children { get; set; } = null!;
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Test1([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -46,6 +47,7 @@ namespace Tests.UserTests
 					.Update();
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Test2([DataSources(TestProvName.AllAccess, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
