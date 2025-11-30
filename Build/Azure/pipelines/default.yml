@@ -23,9 +23,9 @@ stages:
     parameters:
       with_nugets: true
       with_examples: true
-      with_tests: eq(variables['System.PullRequest.TargetBranch'], variables['release_branch'])
-      with_api_analyzers: eq(variables['System.PullRequest.TargetBranch'], variables['release_branch'])
-      with_release: eq(variables['Build.SourceBranchName'], variables['release_branch'])
+      with_tests: ${{ eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']) }}
+      with_api_analyzers: ${{ eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']) }}
+      with_release: ${{ eq(variables['Build.SourceBranchName'], variables['release_branch']) }}
       with_analyzers: false # true disabled till https://github.com/dotnet/roslyn/pull/80621 shipped
 
 #############
@@ -34,14 +34,14 @@ stages:
   - template: templates/nuget-job.yml
     parameters:
       publish: true
-      release: eq(variables['Build.SourceBranchName'], variables['release_branch'])
+      release: ${{ eq(variables['Build.SourceBranchName'], variables['release_branch']) }}
 
 #############
 # TEST JOBS #
 #############
   - template: templates/test-matrix.yml
     parameters:
-      enabled: and(eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']), succeeded())
+      enabled: ${{ and(eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']), succeeded()) }}
       with_baselines: true
       mac_enabled: false
       full_run: true
