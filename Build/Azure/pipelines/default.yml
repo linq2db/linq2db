@@ -45,8 +45,8 @@ stages:
 #############
   - template: templates/test-matrix.yml
     parameters:
-      ${{ if and(eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']), succeeded()) }}:
-        enabled: true
+      ${{ if eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']) }}:
+        enabled: succeeded()
       with_baselines: true
       mac_enabled: false
       full_run: true
