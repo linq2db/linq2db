@@ -20,7 +20,6 @@ namespace Tests.UserTests
 			[Column] public int Value { get; set; }
 		}
 
-		[ActiveIssue("Looks like ClickHouse processes query wrong", Configurations = [TestProvName.AllClickHouse])]
 		[Test]
 		public async Task AggregationWithNull([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
