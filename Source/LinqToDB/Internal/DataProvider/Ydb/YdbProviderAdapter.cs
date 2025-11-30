@@ -12,6 +12,10 @@ using System.Threading.Tasks;
 using LinqToDB.Common;
 using LinqToDB.Internal.Expressions.Types;
 
+#if !NET8_0_OR_GREATER
+using System.Numerics;
+#endif
+
 namespace LinqToDB.Internal.DataProvider.Ydb
 {
 	/*
@@ -44,10 +48,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			var protosAsembly = Common.Tools.TryLoadAssembly(ProtosAssemblyName, null)
 				?? throw new InvalidOperationException($"Cannot load assembly {ProtosAssemblyName}.");
 
-			ConnectionType  = assembly.GetType($"{ClientNamespace}.YdbConnection",  true)!;
-			CommandType     = assembly.GetType($"{ClientNamespace}.YdbCommand",     true)!;
-			ParameterType   = assembly.GetType($"{ClientNamespace}.YdbParameter",   true)!;
-			DataReaderType  = assembly.GetType($"{ClientNamespace}.YdbDataReader",  true)!;
+			ConnectionType = assembly.GetType($"{ClientNamespace}.YdbConnection", true)!;
+			CommandType = assembly.GetType($"{ClientNamespace}.YdbCommand", true)!;
+			ParameterType = assembly.GetType($"{ClientNamespace}.YdbParameter", true)!;
+			DataReaderType = assembly.GetType($"{ClientNamespace}.YdbDataReader", true)!;
 			TransactionType = assembly.GetType($"{ClientNamespace}.YdbTransaction", true)!;
 
 			var parameterType = assembly.GetType($"{ClientNamespace}.YdbParameter"           , true)!;
@@ -74,13 +78,13 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			typeMapper.FinalizeMappings();
 
 			_connectionFactory = typeMapper.BuildTypedFactory<string, YdbConnection, DbConnection>(connectionString => new YdbConnection(connectionString));
-			ClearAllPools      = typeMapper.BuildFunc<Task>(typeMapper.MapLambda(() => YdbConnection.ClearAllPools()));
-			ClearPool          = typeMapper.BuildFunc<DbConnection, Task>(typeMapper.MapLambda((YdbConnection connection) => YdbConnection.ClearPool(connection)));
+			ClearAllPools = typeMapper.BuildFunc<Task>(typeMapper.MapLambda(() => YdbConnection.ClearAllPools()));
+			ClearPool = typeMapper.BuildFunc<DbConnection, Task>(typeMapper.MapLambda((YdbConnection connection) => YdbConnection.ClearPool(connection)));
 
 			var paramMapper   = typeMapper.Type<YdbParameter>();
 			var dbTypeBuilder = paramMapper.Member(p => p.YdbDbType);
-			SetDbType         = dbTypeBuilder.BuildSetter<DbParameter>();
-			GetDbType         = dbTypeBuilder.BuildGetter<DbParameter>();
+			SetDbType = dbTypeBuilder.BuildSetter<DbParameter>();
+			GetDbType = dbTypeBuilder.BuildGetter<DbParameter>();
 
 			var makeDecimal = typeMapper.BuildFunc<DecimalValue, object>(
 				typeMapper.MapLambda((DecimalValue value) => new YdbValue(
@@ -157,10 +161,10 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		#region IDynamicProviderAdapter
 
-		public Type ConnectionType  { get; }
-		public Type DataReaderType  { get; }
-		public Type ParameterType   { get; }
-		public Type CommandType     { get; }
+		public Type ConnectionType { get; }
+		public Type DataReaderType { get; }
+		public Type ParameterType { get; }
+		public Type CommandType { get; }
 		public Type TransactionType { get; }
 
 		readonly Func<string, DbConnection> _connectionFactory;
@@ -168,11 +172,11 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		#endregion
 
-		public Func<Task>               ClearAllPools { get; }
-		public Func<DbConnection, Task> ClearPool     { get; }
+		public Func<Task> ClearAllPools { get; }
+		public Func<DbConnection, Task> ClearPool { get; }
 
 		public Action<DbParameter, YdbDbType> SetDbType { get; }
-		public Func  <DbParameter, YdbDbType> GetDbType { get; }
+		public Func<DbParameter, YdbDbType> GetDbType { get; }
 
 		internal Func<string, int, int, object> MakeDecimalFromString { get; }
 
