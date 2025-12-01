@@ -51,7 +51,6 @@ namespace Tests.UserTests
 			public int ProductAttributeId { get; set; }
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void IssueTest([DataSources(TestProvName.AllClickHouse)] string context)
 		{

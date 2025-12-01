@@ -16,7 +16,6 @@ namespace Tests.Extensions
 			throw new NotImplementedException();
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TableTest([DataSources(TestProvName.AllAccess)] string context)
 		{

@@ -12,7 +12,6 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue781Tests : TestBase
 	{
-		[YdbTableNotFound]
 		[Test]
 		public void TestCount([DataSources(false)] string context)
 		{
@@ -33,7 +32,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestLongCount([DataSources(false)] string context)
 		{
@@ -54,7 +52,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestHavingCount([DataSources(false, TestProvName.AllAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql, ProviderName.SqlCe)] string context)
 		{
@@ -77,7 +74,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestHavingLongCount([DataSources(false, TestProvName.AllAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql, ProviderName.SqlCe)] string context)
 		{
@@ -100,7 +96,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestCountWithSelect([DataSources(false)] string context)
 		{
@@ -123,7 +118,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestLongCountWithSelect([DataSources(false)] string context)
 		{
@@ -146,7 +140,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestHavingCountWithSelect([DataSources(false, TestProvName.AllAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql, ProviderName.SqlCe)] string context)
 		{
@@ -171,7 +164,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestHavingLongCountWithSelect([DataSources(false,
 				TestProvName.AllAccess, TestProvName.AllOracle, TestProvName.AllSybase,

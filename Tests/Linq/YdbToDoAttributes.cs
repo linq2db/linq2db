@@ -8,16 +8,6 @@ using Ydb.Sdk.Ado;
 
 namespace Tests
 {
-	public sealed class YdbTableNotFoundAttribute : ThrowsForProviderAttribute
-	{
-		public YdbTableNotFoundAttribute()
-			: base(typeof(LinqToDBException),
-			ProviderName.Ydb)
-		{
-			ErrorMessage = "Table not found for";
-		}
-	}
-
 	public sealed class YdbUnexpectedSqlQueryAttribute : ThrowsForProviderAttribute
 	{
 		public YdbUnexpectedSqlQueryAttribute()

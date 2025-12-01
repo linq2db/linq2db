@@ -1181,7 +1181,6 @@ namespace Tests.Linq
 					where p.p.ParentID == 1 && p.Value > 0 select new { p.p.Value1, p.Value, p.p, p1 = p });
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void SubQuery1([DataSources] string context)
 		{
@@ -2264,7 +2263,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void Issue_Filter_Checked([DataSources(
 			TestProvName.AllAccess,

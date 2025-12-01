@@ -706,7 +706,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void UpdateTest(
 			[DataSources(

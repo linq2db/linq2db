@@ -567,7 +567,6 @@ namespace Tests.Linq
 		}
 
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
-		[YdbTableNotFound]
 		[ActiveIssue(3015, Configurations = [TestProvName.AllOracle, TestProvName.AllSapHana, ProviderName.InformixDB2], Details = "Oracle needs special syntax for CTE + UPDATE")]
 		[Test]
 		public void TestUpdate(
@@ -2029,7 +2028,6 @@ namespace Tests.Linq
 			};
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void Issue4167([CteContextSource] string context, [Values] bool withCte)
 		{
@@ -2593,7 +2591,6 @@ namespace Tests.Linq
 			var result = query.ToArray();
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void Issue_SequenceBuildFailed_2([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{

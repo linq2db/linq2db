@@ -114,7 +114,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void Test2([DataSources] string context)
 		{
@@ -147,7 +146,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void Test4([DataSources] string context)
 		{

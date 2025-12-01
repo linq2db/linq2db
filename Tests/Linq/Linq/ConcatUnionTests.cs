@@ -350,7 +350,6 @@ namespace Tests.Linq
 					(from ch in db.Child      join p  in db.Parent on ch.ParentID equals p.ParentID select ch)));
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void Union2([DataSources] string context)
 		{
@@ -754,7 +753,6 @@ namespace Tests.Linq
 					select c.Parent!.ParentID);
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void AssociationConcat2([DataSources] string context)
 		{
@@ -766,7 +764,6 @@ namespace Tests.Linq
 					select c.Parent!.ParentID);
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void ConcatToString([DataSources] string context)
 		{
@@ -781,7 +778,6 @@ namespace Tests.Linq
 					(from p in db.Person where p.ID.ToString().Contains(pattern) select p.FirstName)).Take(10));
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void ConcatWithUnion([DataSources] string context)
 		{
@@ -804,7 +800,6 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		[YdbTableNotFound]
 		public void ConcatDefaultIfEmpty([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1236,7 +1231,6 @@ namespace Tests.Linq
 			act.ShouldNotThrow();
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void SelectWithToString([DataSources] string context)
 		{
@@ -2327,7 +2321,6 @@ namespace Tests.Linq
 			Assert.That(q1, Is.EqualTo(q2));
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void ConcatCountExt_ShouldNotRemoveSingleColumn([DataSources] string context)
 		{
@@ -2345,7 +2338,6 @@ namespace Tests.Linq
 			Assert.That(q1, Is.EqualTo(q2));
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void ConcatSumTest([DataSources] string context)
 		{

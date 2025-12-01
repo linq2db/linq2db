@@ -121,7 +121,6 @@ namespace Tests.UserTests
 			#endregion
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void UpdateTest([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{

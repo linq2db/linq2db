@@ -38,7 +38,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void UpdateViaSqlProperty([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -63,7 +62,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void UpdateViaSqlPropertyValue([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{

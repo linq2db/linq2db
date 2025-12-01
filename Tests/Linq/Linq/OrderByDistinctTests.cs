@@ -436,7 +436,6 @@ namespace Tests.Linq
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		[Test]
-		[YdbTableNotFound]
 		public void DoubleOrderBy([DataSources] string context)
 		{
 			var testData = GetTestData();

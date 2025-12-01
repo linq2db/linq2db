@@ -74,7 +74,6 @@ namespace Tests.Linq
 					from p in from t in db.Types select (long)t.MoneyValue where p > 0 select p);
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void ConvertToInt64([DataSources(ProviderName.SQLiteMS)] string context)
 		{
@@ -102,7 +101,6 @@ namespace Tests.Linq
 					from p in from t in db.Types select (int)t.MoneyValue where p > 0 select p);
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void ConvertToInt32([DataSources(ProviderName.SQLiteMS)] string context)
 		{
@@ -130,7 +128,6 @@ namespace Tests.Linq
 					from p in from t in db.Types select (short)t.MoneyValue where p > 0 select p);
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void ConvertToInt16([DataSources(ProviderName.SQLiteMS)] string context)
 		{
@@ -158,7 +155,6 @@ namespace Tests.Linq
 					from p in from t in db.Types select (sbyte)t.MoneyValue where p > 0 select p);
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void ConvertToSByte([DataSources(ProviderName.SQLiteMS)] string context)
 		{
@@ -199,7 +195,6 @@ namespace Tests.Linq
 					from p in from t in db.Types select (ulong)t.MoneyValue where p > 0 select p);
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void ConvertToUInt64([DataSources(ProviderName.SQLiteMS)] string context)
 		{
@@ -218,7 +213,6 @@ namespace Tests.Linq
 					from p in from t in db.Types select (uint)t.MoneyValue where p > 0 select p);
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void ConvertToUInt32([DataSources(ProviderName.SQLiteMS)] string context)
 		{
@@ -237,7 +231,6 @@ namespace Tests.Linq
 					from p in from t in db.Types select (ushort)t.MoneyValue where p > 0 select p);
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void ConvertToUInt16([DataSources(ProviderName.SQLiteMS)] string context)
 		{
@@ -256,7 +249,6 @@ namespace Tests.Linq
 					from p in from t in db.Types select (byte)t.MoneyValue where p > 0 select p);
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void ConvertToByte([DataSources(ProviderName.SQLiteMS)] string context)
 		{
@@ -309,7 +301,6 @@ namespace Tests.Linq
 		// providers disabled due to change in
 		// https://github.com/linq2db/linq2db/pull/3690
 		[Test]
-		[YdbTableNotFound]
 		public void ConvertToDecimal([DataSources(
 			ProviderName.DB2,
 			TestProvName.AllFirebird,
@@ -362,7 +353,6 @@ namespace Tests.Linq
 					from p in from t in db.Types select (int)(double)t.MoneyValue where p > 0 select p);
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void ConvertToDouble([DataSources] string context)
 		{
@@ -390,7 +380,6 @@ namespace Tests.Linq
 					from p in from t in db.Types select (Single)t.MoneyValue where p > 0 select p);
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void ConvertToSingle([DataSources] string context)
 		{
@@ -634,7 +623,6 @@ namespace Tests.Linq
 					select t);
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void ConvertToBoolean1([DataSources] string context)
 		{
@@ -644,7 +632,6 @@ namespace Tests.Linq
 					from p in from t in db.Types select Convert.ToBoolean(t.MoneyValue) where p == true select p);
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void ConvertToBoolean2([DataSources] string context)
 		{

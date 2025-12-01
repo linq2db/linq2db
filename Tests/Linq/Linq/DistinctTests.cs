@@ -127,7 +127,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbTableNotFound]
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		[Test]
 		public void TakeDistinct([DataSources] string context)
@@ -138,7 +137,6 @@ namespace Tests.Linq
 					(from ch in db.Child orderby ch.ParentID select ch.ParentID).Take(4).Distinct());
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void DistinctOrderBy([DataSources] string context)
 		{

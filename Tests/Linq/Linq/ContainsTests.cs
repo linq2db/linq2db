@@ -327,7 +327,6 @@ namespace Tests.Linq
 			Assert.That(result[0].ID, Is.EqualTo(4));
 		}
 
-		[YdbTableNotFound]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2608")]
 		public void Issue2608Test([DataSources(TestProvName.AllSapHana)] string context)
 		{

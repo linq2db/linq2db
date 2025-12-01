@@ -23,7 +23,6 @@ namespace Tests.xUpdate
 	[Order(10000)]
 	public class InsertTests : TestBase
 	{
-		[YdbTableNotFound]
 #if AZURE
 		[ActiveIssue("Error from Azure runs (db encoding issue?): FbException : Malformed string", Configuration = TestProvName.AllFirebird)]
 #endif
@@ -68,7 +67,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbTableNotFound]
 #if AZURE
 		[ActiveIssue("Error from Azure runs (db encoding issue?): FbException : Malformed string", Configuration = TestProvName.AllFirebird)]
 #endif

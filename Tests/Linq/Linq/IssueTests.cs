@@ -250,7 +250,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbTableNotFound]
 		public void Issue528Test1([DataSources] string context)
 		{
 			//using (new AllowMultipleQuery())
@@ -269,7 +268,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbTableNotFound]
 		public void Issue528Test2([DataSources] string context)
 		{
 			//using (new AllowMultipleQuery())
@@ -287,7 +285,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void Issue528Test3([DataSources] string context)
 		{
@@ -662,7 +659,6 @@ namespace Tests.Linq
 			];
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void InsertFromSelectWithNullableFilter([DataSources] string context)
 		{

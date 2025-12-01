@@ -60,7 +60,6 @@ namespace Tests.UserTests
 		}
 
 		// excluded providers don't support cloning and remove credentials from connection string
-		[YdbTableNotFound]
 		[Test]
 		public void TestConnectionStringCopy(
 			[DataSources(
@@ -76,7 +75,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestFactory([DataSources(false)] string context)
 		{

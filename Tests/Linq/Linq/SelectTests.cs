@@ -1485,7 +1485,6 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
-		[YdbTableNotFound]
 		public void SelectWithIndexerAfterGroupBy([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

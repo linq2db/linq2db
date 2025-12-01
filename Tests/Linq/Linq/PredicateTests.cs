@@ -1356,7 +1356,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbTableNotFound]
 		public void Test_PredicateAsNonConditionBooleanValue_Test2([DataSources] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);

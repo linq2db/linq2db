@@ -1129,7 +1129,6 @@ FROM
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestSkipTake([DataSources] string context)
 		{
@@ -1761,7 +1760,6 @@ FROM
 			};
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue3799Test([DataSources] string context)
@@ -1774,7 +1772,6 @@ FROM
 		#endregion
 
 		#region Issue 4057
-		[YdbTableNotFound]
 		[Test]
 		public async Task Issue4057_Async([DataSources] string context)
 		{
@@ -1807,7 +1804,6 @@ FROM
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void Issue4057_Sync([DataSources] string context)
 		{
@@ -1840,7 +1836,6 @@ FROM
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public async Task Issue4057_Async_ExplicitTransaction([DataSources] string context)
 		{
@@ -1876,7 +1871,6 @@ FROM
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void Issue4057_Sync_ExplicitTransaction([DataSources] string context)
 		{
@@ -2392,7 +2386,6 @@ FROM
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestCardinalityEagerLoad2([DataSources] string context, [Values(1, 2, 3)] int testCase)
 		{
@@ -2467,7 +2460,6 @@ FROM
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestCardinalityProjected2([DataSources] string context, [Values(1, 2, 3)] int testCase)
 		{
@@ -2543,7 +2535,6 @@ FROM
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestCardinalityEagerLoadOptional1([DataSources] string context, [Values(1, 2, 3)] int testCase)
 		{
@@ -2633,7 +2624,6 @@ FROM
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestCardinalityProjectedOptional1([DataSources] string context, [Values(1, 2, 3)] int testCase)
 		{
@@ -2726,7 +2716,6 @@ FROM
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestCardinalityEagerLoadOptional2([DataSources] string context, [Values(1, 2, 3)] int testCase)
 		{
@@ -2801,7 +2790,6 @@ FROM
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestCardinalityProjectedOptional2([DataSources] string context, [Values(1, 2, 3)] int testCase)
 		{
@@ -2876,7 +2864,6 @@ FROM
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestCardinalityEagerLoadOptional3([DataSources] string context, [Values(1, 2, 3)] int testCase)
 		{
@@ -2970,7 +2957,6 @@ FROM
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestCardinalityProjectedOptional3([DataSources] string context, [Values(1, 2, 3)] int testCase)
 		{
@@ -3229,7 +3215,6 @@ FROM
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4588")]
-		[YdbTableNotFound]
 		public void Issue4588Test([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -3339,7 +3324,6 @@ FROM
 			query.ToArray();
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void CteCloning_Simple([CteContextSource] string context)
 		{
@@ -3370,7 +3354,6 @@ FROM
 			query.ToArray();
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void CteCloning_SimpleChain([CteContextSource] string context)
 		{

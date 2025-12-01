@@ -23,7 +23,6 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Is.Not.Contains("(SELECT /* PARENT */").And.Not.Contains("(SELECT /*+ QB_NAME(PARENT) */"));
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void FromTest([DataSources] string context)
 		{

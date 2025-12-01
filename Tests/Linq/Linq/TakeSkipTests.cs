@@ -588,7 +588,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbTableNotFound]
 		public void SkipTake6([DataSources(
 			ProviderName.SqlCe,
 			TestProvName.AllSybase,
@@ -825,7 +824,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbTableNotFound]
 		public void TakeSkipJoin([DataSources(TestProvName.AllSybase)] string context, [Values] bool withParameters)
 		{
 			// orderby needed to preserve stable test results

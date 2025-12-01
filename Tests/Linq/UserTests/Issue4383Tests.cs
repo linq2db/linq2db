@@ -64,7 +64,6 @@ namespace Tests.UserTests
 		{
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void Test([DataSources(TestProvName.AllAccess)] string context)
 		{

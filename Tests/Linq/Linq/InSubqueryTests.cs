@@ -114,7 +114,6 @@ namespace Tests.Linq
 			AssertTest(query, preferExists);
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void InWithTakeTest([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{

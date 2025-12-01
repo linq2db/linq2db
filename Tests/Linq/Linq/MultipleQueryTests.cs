@@ -37,7 +37,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbTableNotFound]
 		public void Test4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -49,7 +48,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbTableNotFound]
 		public void Test5([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))

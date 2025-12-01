@@ -199,7 +199,6 @@ namespace Tests.Linq
 			Assert.That(GetCurrentBaselines(), Does.Not.Contain("JOIN"));
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void InnerJoin7([DataSources] string context)
 		{
@@ -220,7 +219,6 @@ namespace Tests.Linq
 					select t);
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void InnerJoin8([DataSources] string context)
 		{
@@ -285,7 +283,6 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void GroupJoin2([DataSources] string context)
 		{
@@ -315,7 +312,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void GroupJoin3([DataSources] string context)
 		{
@@ -354,7 +350,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void GroupJoin4([DataSources] string context)
 		{
@@ -415,7 +410,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbTableNotFound]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void GroupJoin51([DataSources] string context)
 		{
@@ -494,7 +488,6 @@ namespace Tests.Linq
 					select new { p1 = lj1.Count(), p2 = lj1.First() });
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void GroupJoin6([DataSources] string context)
 		{
@@ -535,7 +528,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void GroupJoin7([DataSources(TestProvName.AllFirebird)] string context)
 		{
@@ -1471,7 +1463,6 @@ namespace Tests.Linq
 		[ActiveIssue(
 			Configuration = TestProvName.AllSybase,
 			Details       = "Cross-join doesn't work in Sybase")]
-		[YdbTableNotFound]
 		[Test]
 		public void SqlLinqCrossJoinSubQuery([DataSources] string context)
 		{
@@ -1510,7 +1501,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void SqlFullJoinWithCount2([DataSources(
 			TestProvName.AllSQLite,
@@ -1534,7 +1524,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void SqlFullJoinWithCount3([DataSources(
 			TestProvName.AllSQLite,
@@ -1558,7 +1547,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void SqlFullJoinWithCount4([DataSources(
 			TestProvName.AllSQLite,
@@ -1583,7 +1571,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void SqlFullJoinWithCount5([DataSources(
 			TestProvName.AllSQLite,
@@ -1607,7 +1594,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void SqlFullJoinWithBothFilters([DataSources(
 			TestProvName.AllSQLite,
@@ -1643,7 +1629,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void SqlFullJoinWithBothFiltersAlternative([DataSources(
 			TestProvName.AllSQLite,
@@ -1961,7 +1946,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void SqlRightJoinWithInnerJoinOnLeftWithConditions([DataSources(TestProvName.AllSQLite)] string context)
 		{
@@ -2940,7 +2924,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbTableNotFound]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue1455Test1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -3000,7 +2983,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbTableNotFound]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue1455Test2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -3477,7 +3459,6 @@ namespace Tests.Linq
 			public decimal SelectionProperty { get; set; }
 		}
 
-		[YdbTableNotFound]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4714")]
 		public void Issue4714Test([DataSources] string context)
 		{

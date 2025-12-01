@@ -51,7 +51,6 @@ namespace Tests.UserTests
 			public string? Text { get; set; }
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestAttributesByKey([DataSources] string context)
 		{
@@ -72,7 +71,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestAttributesByExpression([DataSources] string context)
 		{
@@ -93,7 +91,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestAttributesByQuery([DataSources] string context)
 		{
@@ -114,7 +111,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestFluentAssociationByExpression([DataSources] string context)
 		{
@@ -151,7 +147,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestFluentAssociationByKeys([DataSources] string context)
 		{
@@ -188,7 +183,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestFluentAssociationByQuery([DataSources] string context)
 		{
@@ -230,7 +224,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void TestFluentAssociationByQueryWithKeys([DataSources] string context)
 		{

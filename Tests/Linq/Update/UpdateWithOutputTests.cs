@@ -304,7 +304,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void UpdateITableWithProjectionOutputTestWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite)] string context)
 		{
@@ -340,7 +339,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void UpdateITableWithProjectionOutputTestWithoutOldAlternateUpdate([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultiple)] string context)
 		{
@@ -374,7 +372,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void UpdateITableWithProjectionOutputTestWithoutOldAlternateUpdateSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
@@ -519,7 +516,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public async Task UpdateITableWithProjectionOutputTestAsyncWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite)] string context)
 		{
@@ -555,7 +551,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public async Task UpdateITableWithProjectionOutputTestAsyncWithoutOldAlternateUpdate([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultiple)] string context)
 		{
@@ -589,7 +584,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public async Task UpdateITableWithProjectionOutputTestAsyncWithoutOldAlternateUpdateSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
@@ -1098,7 +1092,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void UpdateExpressionWithProjectionOutputTestWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite)] string context)
 		{
@@ -1134,7 +1127,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void UpdateExpressionWithProjectionOutputTestWithoutOldAlternateUpdate([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultiple)] string context)
 		{
@@ -1168,7 +1160,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public void UpdateExpressionWithProjectionOutputTestWithoutOldAlternateUpdateSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
@@ -1313,7 +1304,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public async Task UpdateExpressionWithProjectionOutputTestAsyncWithoutOld([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingleNoAlternateRewrite)] string context)
 		{
@@ -1349,7 +1339,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public async Task UpdateExpressionWithProjectionOutputTestAsyncWithoutOldAlternateUpdate([IncludeDataSources(true, FeatureUpdateOutputWithoutOldMultiple)] string context)
 		{
@@ -1383,7 +1372,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test]
 		public async Task UpdateExpressionWithProjectionOutputTestAsyncWithoutOldAlternateUpdateSingleRecord([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
@@ -3125,7 +3113,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbTableNotFound]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4253")]
 		public void Issue4253Test([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{

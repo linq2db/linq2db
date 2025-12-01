@@ -603,7 +603,6 @@ namespace Tests.xUpdate
 			Assert.That(await table.CountAsync(), Is.Zero);
 		}
 
-		[YdbTableNotFound]
 		// based on TestDeleteFrom test in EFCore tests project, it should be reenabled after fix
 		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite])]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
@@ -634,7 +633,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[YdbTableNotFound]
 		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSybase])]
 		[Test]
 		public void DeleteFromWithTake_NoSort([DataSources] string context)
