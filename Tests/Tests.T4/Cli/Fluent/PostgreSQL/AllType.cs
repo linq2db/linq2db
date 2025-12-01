@@ -18,52 +18,52 @@ namespace Cli.Fluent.PostgreSQL
 {
 	public class AllType
 	{
-		public int                          Id                  { get; set; } // integer
-		public long?                        BigintDataType      { get; set; } // bigint
-		public decimal?                     NumericDataType     { get; set; } // numeric
-		public short?                       SmallintDataType    { get; set; } // smallint
-		public int?                         IntDataType         { get; set; } // integer
-		public decimal?                     MoneyDataType       { get; set; } // money
-		public double?                      DoubleDataType      { get; set; } // double precision
-		public float?                       RealDataType        { get; set; } // real
-		public DateTime?                    TimestampDataType   { get; set; } // timestamp (6) without time zone
-		public DateTimeOffset?              TimestampTzDataType { get; set; } // timestamp (6) with time zone
-		public DateTime?                    DateDataType        { get; set; } // date
-		public TimeSpan?                    TimeDataType        { get; set; } // time without time zone
-		public DateTimeOffset?              TimeTzDataType      { get; set; } // time with time zone
-		public TimeSpan?                    IntervalDataType    { get; set; } // interval
-		public TimeSpan?                    IntervalDataType2   { get; set; } // interval
-		public char?                        CharDataType        { get; set; } // character(1)
-		public string?                      Char20DataType      { get; set; } // character(20)
-		public string?                      VarcharDataType     { get; set; } // character varying(20)
-		public string?                      TextDataType        { get; set; } // text
-		public byte[]?                      BinaryDataType      { get; set; } // bytea
-		public Guid?                        UuidDataType        { get; set; } // uuid
-		public BitArray?                    BitDataType         { get; set; } // bit(3)
-		public bool?                        BooleanDataType     { get; set; } // boolean
-		public string?                      ColorDataType       { get; set; } // color
-		public NpgsqlPoint?                 PointDataType       { get; set; } // point
-		public NpgsqlLSeg?                  LsegDataType        { get; set; } // lseg
-		public NpgsqlBox?                   BoxDataType         { get; set; } // box
-		public NpgsqlPath?                  PathDataType        { get; set; } // path
-		public NpgsqlPolygon?               PolygonDataType     { get; set; } // polygon
-		public NpgsqlCircle?                CircleDataType      { get; set; } // circle
-		public NpgsqlLine?                  LineDataType        { get; set; } // line
-		public IPAddress?                   InetDataType        { get; set; } // inet
-		public ValueTuple<IPAddress, byte>? CidrDataType        { get; set; } // cidr
-		public PhysicalAddress?             MacaddrDataType     { get; set; } // macaddr
-		public PhysicalAddress?             Macaddr8DataType    { get; set; } // macaddr8
-		public string?                      JsonDataType        { get; set; } // json
-		public string?                      JsonbDataType       { get; set; } // jsonb
-		public string?                      XmlDataType         { get; set; } // xml
-		public BitArray?                    VarBitDataType      { get; set; } // bit varying
-		public string[]?                    Strarray            { get; set; } // text[]
-		public int[]?                       Intarray            { get; set; } // integer[]
-		public int[][]?                     Int2Darray          { get; set; } // integer[][]
-		public long[]?                      Longarray           { get; set; } // bigint[]
-		public TimeSpan[]?                  Intervalarray       { get; set; } // interval[]
-		public double[]?                    Doublearray         { get; set; } // double precision[]
-		public decimal[]?                   Numericarray        { get; set; } // numeric[]
-		public decimal[]?                   Decimalarray        { get; set; } // numeric[]
+		public int              Id                  { get; set; } // integer
+		public long?            BigintDataType      { get; set; } // bigint
+		public decimal?         NumericDataType     { get; set; } // numeric
+		public short?           SmallintDataType    { get; set; } // smallint
+		public int?             IntDataType         { get; set; } // integer
+		public decimal?         MoneyDataType       { get; set; } // money
+		public double?          DoubleDataType      { get; set; } // double precision
+		public float?           RealDataType        { get; set; } // real
+		public DateTime?        TimestampDataType   { get; set; } // timestamp (6) without time zone
+		public DateTimeOffset?  TimestampTzDataType { get; set; } // timestamp (6) with time zone
+		public DateTime?        DateDataType        { get; set; } // date
+		public TimeSpan?        TimeDataType        { get; set; } // time without time zone
+		public DateTimeOffset?  TimeTzDataType      { get; set; } // time with time zone
+		public TimeSpan?        IntervalDataType    { get; set; } // interval
+		public TimeSpan?        IntervalDataType2   { get; set; } // interval
+		public char?            CharDataType        { get; set; } // character(1)
+		public string?          Char20DataType      { get; set; } // character(20)
+		public string?          VarcharDataType     { get; set; } // character varying(20)
+		public string?          TextDataType        { get; set; } // text
+		public byte[]?          BinaryDataType      { get; set; } // bytea
+		public Guid?            UuidDataType        { get; set; } // uuid
+		public BitArray?        BitDataType         { get; set; } // bit(3)
+		public bool?            BooleanDataType     { get; set; } // boolean
+		public string?          ColorDataType       { get; set; } // color
+		public NpgsqlPoint?     PointDataType       { get; set; } // point
+		public NpgsqlLSeg?      LsegDataType        { get; set; } // lseg
+		public NpgsqlBox?       BoxDataType         { get; set; } // box
+		public NpgsqlPath?      PathDataType        { get; set; } // path
+		public NpgsqlPolygon?   PolygonDataType     { get; set; } // polygon
+		public NpgsqlCircle?    CircleDataType      { get; set; } // circle
+		public NpgsqlLine?      LineDataType        { get; set; } // line
+		public IPAddress?       InetDataType        { get; set; } // inet
+		public IPNetwork?       CidrDataType        { get; set; } // cidr
+		public PhysicalAddress? MacaddrDataType     { get; set; } // macaddr
+		public PhysicalAddress? Macaddr8DataType    { get; set; } // macaddr8
+		public string?          JsonDataType        { get; set; } // json
+		public string?          JsonbDataType       { get; set; } // jsonb
+		public string?          XmlDataType         { get; set; } // xml
+		public BitArray?        VarBitDataType      { get; set; } // bit varying
+		public string[]?        Strarray            { get; set; } // text[]
+		public int[]?           Intarray            { get; set; } // integer[]
+		public int[][]?         Int2Darray          { get; set; } // integer[][]
+		public long[]?          Longarray           { get; set; } // bigint[]
+		public TimeSpan[]?      Intervalarray       { get; set; } // interval[]
+		public double[]?        Doublearray         { get; set; } // double precision[]
+		public decimal[]?       Numericarray        { get; set; } // numeric[]
+		public decimal[]?       Decimalarray        { get; set; } // numeric[]
 	}
 }

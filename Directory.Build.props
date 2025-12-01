@@ -133,7 +133,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup Label="Properties for templates">
-		<LinqToDBT4SharedTools>$(MSBuildThisFileDirectory).build\bin\NuGet\Debug\</LinqToDBT4SharedTools>
+		<LinqToDBT4SharedTools>$(MSBuildThisFileDirectory).build\bin\NuGet\Debug\net462\</LinqToDBT4SharedTools>
 		<LinqToDBT4DatabasesPath>$(LinqToDBT4SharedTools)Database\</LinqToDBT4DatabasesPath>
 		<LinqToDBT4TemplatesPath>$(MSBuildThisFileDirectory)Source\LinqToDB.Templates\</LinqToDBT4TemplatesPath>
 

@@ -58,9 +58,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
+			if (flags.IsSubquery() || flags.IsMemberRoot())
+				return path;
+
 			if (SequenceHelper.IsSameContext(path, this))
 			{
-				if (flags.IsRoot() || flags.IsTable() || flags.IsAssociationRoot() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsMemberRoot())
+				if (flags.IsRoot() || flags.IsTable() || flags.IsAssociationRoot() || flags.IsTraverse() || flags.IsAggregationRoot())
 					return path;
 
 				if (MappingSchema.IsScalarType(ElementType) || Builder.CurrentDescriptor != null)

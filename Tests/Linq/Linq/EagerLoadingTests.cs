@@ -1150,7 +1150,7 @@ FROM
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllOracle11, TestProvName.AllMariaDB, TestProvName.AllDB2, TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void TestAggregate([DataSources] string context)
 		{
@@ -1181,7 +1181,7 @@ FROM
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllOracle11, TestProvName.AllMariaDB, TestProvName.AllDB2, TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void TestAggregateAverage([DataSources] string context)
 		{
@@ -1937,7 +1937,7 @@ FROM
 			[Column] public decimal Value { get; set; }
 		}
 
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
 		public void Issue3226Test1([DataSources] string context)
 		{
@@ -1970,7 +1970,7 @@ FROM
 				.ToList();
 		}
 
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
 		public void Issue3226Test3([DataSources] string context)
 		{
@@ -1988,7 +1988,7 @@ FROM
 				.ToList();
 		}
 
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
 		public void Issue3226Test4([DataSources] string context)
 		{

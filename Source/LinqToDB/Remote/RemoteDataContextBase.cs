@@ -118,8 +118,21 @@ namespace LinqToDB.Remote
 					static entry =>
 					{
 						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-						return new RemoteMappingSchema(entry.Key.contextIDPrefix, ActivatorExt.CreateInstance<MappingSchema>(entry.Key.mappingSchemaType));
+						return new RemoteMappingSchema(entry.Key.contextIDPrefix, GetMappingSchema(entry.Key.mappingSchemaType));
 					});
+			}
+
+			static readonly string _sqlServerMappingSchemaNamespaceName = typeof(Internal.DataProvider.SqlServer.SqlServerMappingSchema).Namespace!;
+			static readonly string _firebirdMappingSchemaNamespaceName  = typeof(Internal.DataProvider.Firebird.FirebirdMappingSchema).  Namespace!;
+			static readonly string _oracleMappingSchemaNamespaceName    = typeof(Internal.DataProvider.Oracle.OracleMappingSchema).      Namespace!;
+
+			static MappingSchema GetMappingSchema(Type type)
+			{
+				if (type.Namespace == _sqlServerMappingSchemaNamespaceName) return Internal.DataProvider.SqlServer.SqlServerMappingSchema.GetRemoteMappingSchema(type);
+				if (type.Namespace == _firebirdMappingSchemaNamespaceName)  return Internal.DataProvider.Firebird. FirebirdMappingSchema. GetRemoteMappingSchema(type);
+				if (type.Namespace == _oracleMappingSchemaNamespaceName)    return Internal.DataProvider.Oracle.   OracleMappingSchema.   GetRemoteMappingSchema(type);
+
+				return ActivatorExt.CreateInstance<MappingSchema>(type);
 			}
 
 			private RemoteMappingSchema(string configuration, MappingSchema mappingSchema)
@@ -499,7 +512,7 @@ namespace LinqToDB.Remote
 		}
 
 		public void CommitBatch() => SafeAwaiter.Run(CommitBatchAsync);
-		
+
 		public async Task CommitBatchAsync(CancellationToken cancellationToken = default)
 		{
 			ThrowOnDisposed();

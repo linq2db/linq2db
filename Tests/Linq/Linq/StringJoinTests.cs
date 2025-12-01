@@ -125,7 +125,7 @@ namespace Tests.Linq
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void JoinWithGroupingAndUnsupportedMethod([DataSources(TestProvName.AllOracle)] string context)
 		{
@@ -149,7 +149,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void JoinWithGroupingOrdered([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
 		{
@@ -347,7 +347,7 @@ namespace Tests.Linq
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void JoinAggregateArray([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql57)] string context)
 		{
@@ -378,7 +378,7 @@ namespace Tests.Linq
 
 		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)]
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllOracle11, TestProvName.AllOracle11, TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void JoinAggregateArrayNotNull([DataSources(TestProvName.AllMariaDB, TestProvName.AllMySql57)] string context)
 		{

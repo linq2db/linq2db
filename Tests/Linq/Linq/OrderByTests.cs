@@ -379,7 +379,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void OrderByContinuous([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

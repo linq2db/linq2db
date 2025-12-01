@@ -276,3 +276,12 @@ M:System.Activator.CreateInstance``1; Use CreateInstanceExt extension (TODO 27:i
 M:System.Data.Common.DbCommand.DisposeAsync; use IDataProvider.DisposeCommandAsync
 M:System.ComponentModel.Component.Dispose; use IDataProvider.DisposeCommand
 M:AdoAsyncDispose.DisposeAsync(System.Data.Common.DbCommand); use IDataProvider.DisposeCommandAsync
+
+# https://github.com/linq2db/linq2db/issues/5188
+# avoid calls to CurrentCulture IndexOf overloads
+M:System.String.IndexOf(System.String,System.Int32,System.Int32); Use overload with char parameter or specify StringComparison
+M:System.String.IndexOf(System.String,System.Int32); Use overload with char parameter or specify StringComparison
+M:System.String.IndexOf(System.String); Use overload with char parameter or specify StringComparison
+M:System.String.LastIndexOf(System.String,System.Int32,System.Int32); Use overload with char parameter or specify StringComparison
+M:System.String.LastIndexOf(System.String,System.Int32); Use overload with char parameter or specify StringComparison
+M:System.String.LastIndexOf(System.String); Use overload with char parameter or specify StringComparison

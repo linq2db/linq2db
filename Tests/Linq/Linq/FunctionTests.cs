@@ -509,7 +509,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Sum2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

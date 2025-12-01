@@ -111,7 +111,25 @@ namespace LinqToDB.Internal.Expressions
 				case ExpressionType.Extension
 					when ex is SqlAdjustTypeExpression adjustType:
 				{
-					return adjustType.Expression.Unwrap();
+					return adjustType.Expression.UnwrapConvert();
+				}
+			}
+
+			return ex;
+		}
+
+		[return: NotNullIfNotNull(nameof(ex))]
+		public static Expression? UnwrapAdjustType(this Expression? ex)
+		{
+			if (ex == null)
+				return null;
+
+			switch (ex.NodeType)
+			{
+				case ExpressionType.Extension
+					when ex is SqlAdjustTypeExpression adjustType:
+				{
+					return adjustType.Expression.UnwrapAdjustType();
 				}
 			}
 

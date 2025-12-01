@@ -2625,12 +2625,12 @@ $function$
 			var tenantidColumn = multiTenantTable.Columns.Find(c => c.ColumnName == "tenantid");
 			tenantidColumn.ShouldNotBeNull();
 
-			tenantidColumn!.IsPrimaryKey.ShouldBeTrue();
+			tenantidColumn!.IsPrimaryKey.ShouldBe(!context.IsAnyOf(TestProvName.PostgreSQL10));
 
 			var idColumn = multiTenantTable.Columns.Find(c => c.ColumnName == "id");
 			idColumn.ShouldNotBeNull();
 
-			idColumn!.IsPrimaryKey.ShouldBeTrue();
+			idColumn!.IsPrimaryKey.ShouldBe(!context.IsAnyOf(TestProvName.PostgreSQL10));
 		}
 
 		#region Issue 4556

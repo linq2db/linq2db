@@ -35,8 +35,8 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		public  static readonly IEnumerable<string> UnmanagedAssemblyNames = ["Sap.Data.Hana.Core.v2.1"];
 #endif
 
-		public  const string UnmanagedClientNamespace     = "Sap.Data.Hana";
-		private const string UnmanagedProviderFactoryName = "Sap.Data.Hana";
+		public const string UnmanagedClientNamespace     = "Sap.Data.Hana";
+		public const string UnmanagedProviderFactoryName = "Sap.Data.Hana";
 
 		private SapHanaProviderAdapter(
 			Type connectionType,

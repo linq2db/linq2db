@@ -494,9 +494,7 @@ namespace Tests.Linq
 		[ThrowsForProvider("Microsoft.Data.SqlClient.SqlException", TestProvName.AllSqlServer2019MinusMS)]
 		[ThrowsForProvider("AdoNetCore.AseClient.AseException", ProviderName.SybaseManaged)]
 		[ThrowsForProvider("Oracle.ManagedDataAccess.Client.OracleException", TestProvName.AllOracleManaged)]
-		[ThrowsForProvider("ClickHouse.Driver.ClickHouseServerException", ProviderName.ClickHouseDriver)]
-		[ThrowsForProvider("MySqlConnector.MySqlException", ProviderName.ClickHouseMySql, TestProvName.AllMySqlConnector)]
-		[ThrowsForProvider("Octonica.ClickHouseClient.Exceptions.ClickHouseServerException", ProviderName.ClickHouseOctonica)]
+		[ThrowsForProvider("MySqlConnector.MySqlException", TestProvName.AllMySqlConnector)]
 		[ThrowsForProvider("IBM.Data.Db2.DB2Exception", ProviderName.InformixDB2)]
 		[ThrowsForProvider("MySql.Data.MySqlClient.MySqlException", TestProvName.AllMySqlData)]
 		public void Test_Feature_DistinctFrom([DataSources(false)] string context)

@@ -1,0 +1,18 @@
+﻿<UserControl
+	x:Class         = "LinqToDB.LINQPad.UI.TroubleshootTab"
+	x:ClassModifier = "internal"
+	xmlns           = "http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x         = "http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:d         = "http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:mc        = "http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:us        = "clr-namespace:LinqToDB.LINQPad.UI"
+	mc:Ignorable    = "d"
+	d:DataContext   = "{d:DesignInstance us:TroubleshootModel, IsDesignTimeCreatable=true}"
+	>
+
+	<GroupBox Header="Troubleshooting">
+		<StackPanel Margin="5">
+			<TextBox Padding="5" IsReadOnly="True" TextWrapping="Wrap" Text="{Binding HelpText}"/>
+		</StackPanel>
+	</GroupBox>
+</UserControl>

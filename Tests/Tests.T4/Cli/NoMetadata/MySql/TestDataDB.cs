@@ -47,6 +47,7 @@ namespace Cli.NoMetadata.MySql
 		public ITable<InheritanceChild>  InheritanceChildren => this.GetTable<InheritanceChild>();
 		public ITable<InheritanceParent> InheritanceParents  => this.GetTable<InheritanceParent>();
 		public ITable<Issue1993>         Issue1993           => this.GetTable<Issue1993>();
+		public ITable<KeepIdentityTest>  KeepIdentityTests   => this.GetTable<KeepIdentityTest>();
 		public ITable<LinqDataType>      LinqDataTypes       => this.GetTable<LinqDataType>();
 		public ITable<Parent>            Parents             => this.GetTable<Parent>();
 		public ITable<Patient>           Patients            => this.GetTable<Patient>();

@@ -70,7 +70,7 @@ internal interface IDatabaseProvider
 	/// If provider supports assembly path configuration, method
 	/// returns help text for configuration UI to help user locate and/or install provider.
 	/// </summary>
-	string? GetProviderAssemblyName(string providerName);
+	IEnumerable<string> GetProviderAssemblyNames(string providerName);
 
 	/// <summary>
 	/// If provider supports assembly path configuration, method could return URL to provider download page.
@@ -96,7 +96,7 @@ internal interface IDatabaseProvider
 	/// <summary>
 	/// Returns ADO.NET provider classes factory.
 	/// </summary>
-	DbProviderFactory GetProviderFactory(string providerName);
+	DbProviderFactory? GetProviderFactory(string providerName);
 
 	/// <summary>
 	/// Returns linq2db data provider.

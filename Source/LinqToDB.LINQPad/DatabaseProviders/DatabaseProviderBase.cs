@@ -18,7 +18,7 @@ internal abstract class DatabaseProviderBase(string database, string description
 	public virtual bool AutomaticProviderSelection  { get; }
 
 	public virtual IReadOnlyCollection<Assembly> GetAdditionalReferences      (string providerName                     ) => [];
-	public virtual string?                       GetProviderAssemblyName      (string providerName                     ) => null;
+	public virtual IEnumerable<string>           GetProviderAssemblyNames     (string providerName                     ) => [];
 	public virtual ProviderInfo?                 GetProviderByConnectionString(string connectionString                 ) => null;
 #pragma warning disable CA1055 // URI-like return values should not be strings
 	public virtual string?                       GetProviderDownloadUrl       (string? providerName                    ) => null;
@@ -30,9 +30,9 @@ internal abstract class DatabaseProviderBase(string database, string description
 	public virtual void                          Unload                       (                                        ) { }
 #endif
 
-	public abstract void              ClearAllPools      (string providerName        );
-	public abstract DateTime?         GetLastSchemaUpdate(ConnectionSettings settings);
-	public abstract DbProviderFactory GetProviderFactory (string providerName        );
+	public abstract void               ClearAllPools      (string providerName        );
+	public abstract DateTime?          GetLastSchemaUpdate(ConnectionSettings settings);
+	public abstract DbProviderFactory? GetProviderFactory (string providerName        );
 
 	/// <param name="providerName">Provider name.</param>
 	/// <param name="connectionString">Connection string must be resolved against password manager already.</param>
