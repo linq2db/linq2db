@@ -1,13 +1,13 @@
-﻿using System;
+﻿#if NET8_0_OR_GREATER
+using System;
 
 using LinqToDB;
-using LinqToDB.Internal.Common;
 
 using Ydb.Sdk.Ado;
 
 namespace Tests
 {
-	public sealed class YdbTableNotFoundAttribute: ThrowsForProviderAttribute
+	public sealed class YdbTableNotFoundAttribute : ThrowsForProviderAttribute
 	{
 		public YdbTableNotFoundAttribute()
 			: base(typeof(LinqToDBException),
@@ -57,3 +57,4 @@ namespace Tests
 		}
 	}
 }
+#endif
