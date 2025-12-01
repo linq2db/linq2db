@@ -2194,7 +2194,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		private void MoveJoinConditionsToWhere(SqlTableSource left, SqlJoinedTable join, SqlWhereClause where, NullabilityContext nullabilityContext)
 		{
-			if (join.JoinType is not (JoinType.Inner or JoinType.Left) || join.Condition.IsOr || join.Condition.Predicates.Count == 0)
+			if (_root is not SqlStatement root || join.JoinType is not (JoinType.Inner or JoinType.Left) || join.Condition.IsOr || join.Condition.Predicates.Count == 0)
 				return;
 
 			var isLeft = join.JoinType == JoinType.Left;
@@ -2222,7 +2222,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						{
 							if (join.Table.Source is SelectQuery sq)
 							{
-								QueryHelper.WrapQuery((SqlStatement)_root, sq, true);
+								QueryHelper.WrapQuery(root, sq, true);
 								nestedWhereCond = ((SelectQuery)join.Table.Source).Where.EnsureConjunction();
 							}
 							else if (join.Table.Source is SqlTable t)
