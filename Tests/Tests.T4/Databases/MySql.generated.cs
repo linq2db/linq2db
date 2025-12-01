@@ -36,6 +36,7 @@ namespace MySqlDataContext
 		public ITable<InheritanceChild>  InheritanceChildren { get { return this.GetTable<InheritanceChild>(); } }
 		public ITable<InheritanceParent> InheritanceParents  { get { return this.GetTable<InheritanceParent>(); } }
 		public ITable<Issue1993>         Issue1993           { get { return this.GetTable<Issue1993>(); } }
+		public ITable<KeepIdentityTest>  KeepIdentityTests   { get { return this.GetTable<KeepIdentityTest>(); } }
 		public ITable<LinqDataType>      LinqDataTypes       { get { return this.GetTable<LinqDataType>(); } }
 		public ITable<Parent>            Parents             { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>           Patients            { get { return this.GetTable<Patient>(); } }
@@ -246,6 +247,13 @@ namespace MySqlDataContext
 	{
 		[Column("id"),          PrimaryKey, Identity] public uint    Id          { get; set; } // int unsigned
 		[Column("description"), Nullable            ] public string? Description { get; set; } // varchar(100)
+	}
+
+	[Table("KeepIdentityTest")]
+	public partial class KeepIdentityTest
+	{
+		[PrimaryKey, Identity] public int  ID    { get; set; } // int
+		[Column,     Nullable] public int? Value { get; set; } // int
 	}
 
 	[Table("LinqDataTypes")]
@@ -727,6 +735,12 @@ namespace MySqlDataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
+		}
+
+		public static KeepIdentityTest? Find(this ITable<KeepIdentityTest> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
 		}
 
 		public static Patient? Find(this ITable<Patient> table, int PersonID)

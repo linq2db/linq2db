@@ -449,10 +449,10 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 			// detect arrays
 			var isArray = false;
-			var idx = dbType.IndexOf("array");
+			var idx = dbType.IndexOf("array", StringComparison.Ordinal);
 
 			if (idx == -1)
-				idx = dbType.IndexOf("[");
+				idx = dbType.IndexOf('[');
 
 			if (idx != -1)
 			{

@@ -80,7 +80,7 @@ foreach (var xmlPath in GetFiles(path))
 {
 	WriteLine($"Processing '{xmlPath}'...");
 
-	var isT4 = File.ReadAllText(xmlPath).IndexOf("%T4%") > 0;
+	var isT4 = File.ReadAllText(xmlPath).IndexOf("%T4%", StringComparison.Ordinal) > 0;
 	var xml  = new XmlDocument();
 
 	xml.PreserveWhitespace = true;

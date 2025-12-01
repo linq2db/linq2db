@@ -49,6 +49,7 @@ namespace Cli.Default.MySql
 		public ITable<InheritanceChild>  InheritanceChildren => this.GetTable<InheritanceChild>();
 		public ITable<InheritanceParent> InheritanceParents  => this.GetTable<InheritanceParent>();
 		public ITable<Issue1993>         Issue1993           => this.GetTable<Issue1993>();
+		public ITable<KeepIdentityTest>  KeepIdentityTests   => this.GetTable<KeepIdentityTest>();
 		public ITable<LinqDataType>      LinqDataTypes       => this.GetTable<LinqDataType>();
 		public ITable<Parent>            Parents             => this.GetTable<Parent>();
 		public ITable<Patient>           Patients            => this.GetTable<Patient>();
@@ -142,6 +143,16 @@ namespace Cli.Default.MySql
 		}
 
 		public static Task<Issue1993?> FindAsync(this ITable<Issue1993> table, uint id, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+		}
+
+		public static KeepIdentityTest? Find(this ITable<KeepIdentityTest> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static Task<KeepIdentityTest?> FindAsync(this ITable<KeepIdentityTest> table, int id, CancellationToken cancellationToken = default)
 		{
 			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 		}

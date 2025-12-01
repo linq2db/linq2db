@@ -920,17 +920,49 @@ namespace LinqToDB
 
 				// TODO: Really not precise nullability calculation. In the future move to window functions to MemberTranslator
 				var canBeNull = mainExtension.CanBeNull;
-				if (canBeNull == null)
+				foreach (var c in ordered)
 				{
-					foreach (var c in ordered)
+					if (c.Extension != null)
 					{
-						if (c.Extension != null && c.Extension.CanBeNull != null)
+						bool?[] toTest = [c.Extension.CanBeNull, ..c.Extension.NamedParameters.Values.SelectMany(p => p).Select(x => x.Extension?.CanBeNull)];
+
+						foreach (var n in toTest)
 						{
-							canBeNull = c.Extension.CanBeNull;
-							break;
+							canBeNull = (n, canBeNull) switch
+							{
+								(true, _) => true,
+								(_, null) => n,
+								_         => canBeNull
+							};
 						}
+
+						break;
 					}
 				}
+
+				var isNullable = mainExtension.IsNullable;
+				foreach (var c in ordered)
+				{
+					if (c.Extension != null)
+					{
+						IsNullableType[] toTest = [c.Extension.IsNullable, ..c.Extension.NamedParameters.Values.SelectMany(p => p.Where(x => x.Extension != null)).Select(x => x.Extension!.IsNullable)];
+
+						foreach (var n in toTest)
+						{
+							//TODO: not precise calculation, in chain we have mess with nullability
+							isNullable = (n, isNullable) switch
+							{
+								(IsNullableType.Nullable, _)                          => IsNullableType.Nullable,
+								(IsNullableType.NotNullable, IsNullableType.Nullable) => IsNullableType.Nullable,
+								(IsNullableType.Undefined, _)                         => isNullable,
+								_                                                     => IsNullableType.IfAnyParameterNullable
+							};
+						}
+
+						break;
+					}
+				}
+
 
 				//TODO: Precedence calculation
 				var res = BuildSqlExpression(dataContext.MappingSchema, query, mainExtension, mainExtension.SystemType,
@@ -939,7 +971,7 @@ namespace LinqToDB
 					(isPure       ? SqlFlags.IsPure           : SqlFlags.None) |
 					(isPredicate  ? SqlFlags.IsPredicate      : SqlFlags.None) |
 					(isWindowFunc ? SqlFlags.IsWindowFunction : SqlFlags.None),
-					canBeNull, IsNullable);
+					canBeNull, isNullable);
 
 				return res;
 			}

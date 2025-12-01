@@ -321,6 +321,20 @@ namespace Cli.Fluent.MariaDB
 						.HasAttribute(new ColumnAttribute("description"));
 
 			builder
+				.Entity<KeepIdentityTest>()
+					.HasAttribute(new TableAttribute("KeepIdentityTest"))
+					.Member(e => e.Id)
+						.HasAttribute(new ColumnAttribute("ID")
+						{
+							IsPrimaryKey = true,
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
+						})
+					.Member(e => e.Value)
+						.HasAttribute(new ColumnAttribute("Value"));
+
+			builder
 				.Entity<LinqDataType>()
 					.HasAttribute(new TableAttribute("LinqDataTypes"))
 					.Member(e => e.Id)
@@ -846,6 +860,7 @@ namespace Cli.Fluent.MariaDB
 		public ITable<InheritanceChild>  InheritanceChildren => this.GetTable<InheritanceChild>();
 		public ITable<InheritanceParent> InheritanceParents  => this.GetTable<InheritanceParent>();
 		public ITable<Issue1993>         Issue1993           => this.GetTable<Issue1993>();
+		public ITable<KeepIdentityTest>  KeepIdentityTests   => this.GetTable<KeepIdentityTest>();
 		public ITable<LinqDataType>      LinqDataTypes       => this.GetTable<LinqDataType>();
 		public ITable<Parent>            Parents             => this.GetTable<Parent>();
 		public ITable<Patient>           Patients            => this.GetTable<Patient>();

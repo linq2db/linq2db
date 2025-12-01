@@ -13,6 +13,7 @@ internal sealed class SettingsModel(ConnectionSettings settings, bool staticConn
 	public ScaffoldModel          Scaffold          { get; } = new ScaffoldModel(settings, !staticConnection);
 	public SchemaModel            Schema            { get; } = new SchemaModel(settings, !staticConnection);
 	public LinqToDBModel          LinqToDB          { get; } = new LinqToDBModel(settings);
+	public TroubleshootModel      Troubleshoot               => field ??= new TroubleshootModel(DynamicConnection, settings);
 	public AboutModel             About                      => AboutModel.Instance;
 
 	public void Save()

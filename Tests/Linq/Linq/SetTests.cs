@@ -118,7 +118,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Contains701([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

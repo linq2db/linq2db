@@ -20,7 +20,7 @@
 	var sqliteNwCN    = $"Data Source={databasesPath}Northwind.sqlite";
 	var sqlceCN       = $"Data Source={databasesPath}TestData.sdf";
 
-	var db2ProviderLocation = $@"{artifactsPath}\bin\Tests\Debug\net9.0\IBM.Data.Db2.dll";
+	var db2ProviderLocation = $@"{artifactsPath}\bin\Tests\Debug\net10.0\IBM.Data.Db2.dll";
 #>
 <#+
 #nullable enable

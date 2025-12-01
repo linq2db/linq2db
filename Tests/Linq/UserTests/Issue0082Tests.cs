@@ -45,7 +45,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void Test2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

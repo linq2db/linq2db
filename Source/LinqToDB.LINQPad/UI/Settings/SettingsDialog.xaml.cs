@@ -35,6 +35,9 @@ internal sealed partial class SettingsDialog
 			case nameof(Model.DynamicConnection.Database):
 				Model.Scaffold.UpdateClickHouseVisibility();
 				break;
+			case nameof(Model.DynamicConnection.Provider):
+				Model.Troubleshoot.UpdateVisibility();
+				break;
 		}
 	}
 

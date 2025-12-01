@@ -266,7 +266,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void StackOverflow2([DataSources(ProviderName.SqlCe)] string context)
 		{
@@ -276,7 +276,7 @@ namespace Tests.Linq
 					from p in db.Parent5 where p.Children.Count != 0 select p);
 		}
 
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void StackOverflow3([DataSources(ProviderName.SqlCe)] string context)
 		{
@@ -287,7 +287,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		public void StackOverflow4([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -475,7 +475,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void LetTest1([DataSources] string context)
 		{
@@ -489,7 +489,7 @@ namespace Tests.Linq
 					select new { p.ParentID, Count = chs.Count() });
 		}
 
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void LetTest2([DataSources] string context)
 		{
@@ -871,7 +871,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void TestGenericAssociation3([DataSources(ProviderName.SqlCe)] string context)
 		{
@@ -1840,7 +1840,7 @@ namespace Tests.Linq
 			return query.Where(x => x.SubEntities.Any());
 		}
 
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void ViaInterfaceAndExtension([DataSources] string context)
 		{
@@ -1858,7 +1858,7 @@ namespace Tests.Linq
 			var result = query.ToArray();
 		}
 
-		[RequiresCorrelatedSubquery]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void ViaInterfaceOfType([DataSources] string context)
 		{

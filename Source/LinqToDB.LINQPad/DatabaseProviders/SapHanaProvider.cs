@@ -7,6 +7,7 @@ using System.Reflection;
 
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider.SapHana;
 
 #if !NETFRAMEWORK
 using System.IO;
@@ -32,22 +33,17 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 		return "https://tools.hana.ondemand.com/#hanatools";
 	}
 
-#if NETFRAMEWORK
-	private const string UnmanagedAssemblyName       = "Sap.Data.Hana.v4.5";
-#else
-	private const string UnmanagedAssemblyName       = "Sap.Data.Hana.Core.v2.1";
-#endif
-
 	public override void ClearAllPools(string providerName)
 	{
 		if (providerName == ProviderName.SapHanaOdbc)
 			OdbcConnection.ReleaseObjectPool();
 		else if (providerName == ProviderName.SapHanaNative)
 		{
-			// TODO: restore in next version
-			//var typeName = $"{SapHanaProviderAdapter.UnmanagedClientNamespace}.HanaConnection, {SapHanaProviderAdapter.UnmanagedAssemblyName}";
-			var typeName = $"Sap.Data.Hana.HanaConnection, {UnmanagedAssemblyName}";
-			Type.GetType(typeName, false)?.GetMethod("ClearAllPools", BindingFlags.Public | BindingFlags.Static)?.InvokeExt(null, null);
+			foreach (var assemblyName in SapHanaProviderAdapter.UnmanagedAssemblyNames)
+			{
+				var typeName = $"{SapHanaProviderAdapter.UnmanagedClientNamespace}.HanaConnection, {assemblyName}";
+				Type.GetType(typeName, false)?.GetMethod("ClearAllPools", BindingFlags.Public | BindingFlags.Static)?.InvokeExt(null, null);
+			}
 		}
 	}
 
@@ -57,15 +53,21 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 		return db.Query<DateTime?>("SELECT MAX(time) FROM (SELECT MAX(CREATE_TIME) AS time FROM M_CS_TABLES UNION SELECT MAX(MODIFY_TIME) FROM M_CS_TABLES UNION SELECT MAX(CREATE_TIME) FROM M_RS_TABLES UNION SELECT MAX(CREATE_TIME) FROM PROCEDURES UNION SELECT MAX(CREATE_TIME) FROM FUNCTIONS)").FirstOrDefault();
 	}
 
-	public override DbProviderFactory GetProviderFactory(string providerName)
+	public override DbProviderFactory? GetProviderFactory(string providerName)
 	{
 		if (providerName == ProviderName.SapHanaOdbc)
 			return OdbcFactory.Instance;
 
-		// TODO: restore in next version
-		//var typeName = $"{SapHanaProviderAdapter.UnmanagedClientNamespace}.HanaFactory, {SapHanaProviderAdapter.UnmanagedAssemblyName}";
-		var typeName = $"Sap.Data.Hana.HanaFactory, {UnmanagedAssemblyName}";
-		return (DbProviderFactory)Type.GetType(typeName, false)?.GetField("Instance", BindingFlags.Public | BindingFlags.Static)?.GetValue(null)!;
+		foreach (var assemblyName in SapHanaProviderAdapter.UnmanagedAssemblyNames)
+		{
+			var typeName = $"{SapHanaProviderAdapter.UnmanagedProviderFactoryName}.HanaFactory, {assemblyName}";
+			var instance = (DbProviderFactory?)Type.GetType(typeName, false)?.GetField("Instance", BindingFlags.Public | BindingFlags.Static)?.GetValue(null);
+
+			if (instance != null)
+				return instance;
+		}
+
+		return null;
 	}
 
 #if !NETFRAMEWORK
@@ -74,9 +76,15 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 		return providerName == ProviderName.SapHanaNative;
 	}
 
-	public override string? GetProviderAssemblyName(string providerName)
+	public override IEnumerable<string> GetProviderAssemblyNames(string providerName)
 	{
-		return providerName == ProviderName.SapHanaNative ? "Sap.Data.Hana.Core.v2.1.dll" : null;
+		if (providerName == ProviderName.SapHanaNative)
+		{
+			foreach (var assemblyName in SapHanaProviderAdapter.UnmanagedAssemblyNames)
+			{
+				yield return $"{assemblyName}.dll";
+			}
+		}
 	}
 
 	public override string? TryGetDefaultPath(string providerName)
@@ -87,11 +95,15 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 
 			if (!string.IsNullOrEmpty(programFiles))
 			{
+				foreach (var assemblyName in SapHanaProviderAdapter.UnmanagedAssemblyNames)
+				{
+					var version = assemblyName.Substring(assemblyName.IndexOf(".v", StringComparison.Ordinal) + 1);
 
-				var path = Path.Combine(programFiles, "sap\\hdbclient\\dotnetcore\\v2.1\\Sap.Data.Hana.Core.v2.1.dll");
+					var path = Path.Combine(programFiles, $"sap\\hdbclient\\dotnetcore\\{version}\\{assemblyName}.dll");
 
-				if (File.Exists(path))
-					return path;
+					if (File.Exists(path))
+						return path;
+				}
 			}
 		}
 
