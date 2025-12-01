@@ -40,7 +40,6 @@ internal static class DatabaseProviders
 		Register(providers, providersByName, new OracleProvider    ());
 		Register(providers, providersByName, new SqlServerProvider ());
 		Register(providers, providersByName, new ClickHouseProvider());
-		Register(providers, providersByName, new YdbProvider       ());
 
 		Providers               = providers.ToFrozenDictionary();
 		ProvidersByProviderName = providersByName.ToFrozenDictionary();
