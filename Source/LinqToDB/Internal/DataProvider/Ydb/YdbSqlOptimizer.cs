@@ -96,6 +96,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 						if (visitor.Stack?.Count > 1
 							// in column or predicate
+							&& visitor.Stack[^2] is not ISqlTableSource
 							&& visitor.Stack[^2] is SqlSelectClause
 								or ISqlPredicate
 								or SqlExpressionBase

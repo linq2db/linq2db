@@ -2208,7 +2208,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				var predicate = join.Condition.Predicates[i];
 
 				var move = predicate is not SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr
-					|| exprExpr != exprExpr.Reduce(nullabilityContext, _evaluationContext, false, _dataOptions.LinqOptions)
+					//|| exprExpr != exprExpr.Reduce(nullabilityContext, _evaluationContext, false, _dataOptions.LinqOptions)
 					|| exprExpr.Expr1 is SqlValue || exprExpr.Expr2 is SqlValue;
 
 				if (move && isLeft)
