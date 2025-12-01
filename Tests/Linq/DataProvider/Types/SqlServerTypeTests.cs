@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
-using System.Linq.Dynamic.Core;
 using System.Text.Json;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Async;
-using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.Tools;
 
 using Microsoft.Data.SqlTypes;
 
@@ -113,9 +108,9 @@ namespace Tests.DataProvider
 
 				await TestType<SqlVector<float>, SqlVector<float>?>(context, type, sqlVector1, default,               filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector1.Memory.ToArray()));
 
-//				await TestType<SqlVector<float>, SqlVector<float>?>(context, type, sqlVector2, SqlVector<float>.Null, filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector2.Memory.ToArray()));
-//
-//				await TestType<SqlVector<float>, SqlVector<float>?>(context, type, sqlVector3, sqlVector2,            filterByValue: false, filterByNullableValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector3.Memory.ToArray()), isExpectedNullableValue: v => v != null && Enumerable.SequenceEqual(v.Value.Memory.ToArray(), sqlVector2.Memory.ToArray()));
+				await TestType<SqlVector<float>, SqlVector<float>?>(context, type, sqlVector2, SqlVector<float>.Null, filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector2.Memory.ToArray()));
+
+				await TestType<SqlVector<float>, SqlVector<float>?>(context, type, sqlVector3, sqlVector2,            filterByValue: false, filterByNullableValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector3.Memory.ToArray()), isExpectedNullableValue: v => v != null && Enumerable.SequenceEqual(v.Value.Memory.ToArray(), sqlVector2.Memory.ToArray()));
 
 				await TestType<float[],          float[]?>         (context, type, asArray1,   default,               filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v, asArray1));
 
