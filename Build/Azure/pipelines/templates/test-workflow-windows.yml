@@ -396,6 +396,13 @@ steps:
   condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net100, 'true'), variables.psscript_local, succeeded())
   displayName: Execute NET 10 (x86) PowerShell Setup Script
 
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(pre_test_win_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, variables.pre_test_win_local, succeeded())
+  displayName: Execute Pre-test Script
+
 - script: dotnet test net10.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net10.0 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (.NET 10 x64): $(title)'
   condition: and(eq(variables.net100, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
@@ -421,6 +428,13 @@ steps:
 - script: dotnet test net10.0/efcore/x86/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net10.0 -l trx --blame-hang-timeout 5m
   displayName: 'EF.Core Tests (.NET 10 x86): $(title)'
   condition: and(eq(variables.net100, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(post_test_win_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, variables.post_test_win_local, succeeded())
+  displayName: Execute Post-test Script
 
 - task: CmdLine@2
   inputs:
