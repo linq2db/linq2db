@@ -371,6 +371,12 @@ steps:
 
 - task: CmdLine@2
   inputs:
+    script: 'copy $(System.DefaultWorkingDirectory)\configs\net100\$(config).json $(System.DefaultWorkingDirectory)\net10.0\UserDataProviders.json'
+  displayName: Copy .NET 10 test config
+  condition: and(variables.title, eq(variables.net100, 'true'), succeeded())
+
+- task: CmdLine@2
+  inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net10.0/main/x86'
   condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net100, 'true'), variables.script_local, succeeded())
