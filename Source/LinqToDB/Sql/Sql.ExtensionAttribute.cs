@@ -7,7 +7,6 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Reflection.Emit;
 
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
@@ -963,7 +962,6 @@ namespace LinqToDB
 						break;
 					}
 				}
-
 
 				//TODO: Precedence calculation
 				var res = BuildSqlExpression(dataContext.MappingSchema, query, mainExtension, mainExtension.SystemType,

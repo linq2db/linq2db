@@ -11,9 +11,6 @@ using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
-using static LinqToDB.Common.Configuration;
-using static LinqToDB.DataProvider.SqlServer.SqlFn;
-
 namespace LinqToDB.DataProvider.SqlServer
 {
 	[PublicAPI]
