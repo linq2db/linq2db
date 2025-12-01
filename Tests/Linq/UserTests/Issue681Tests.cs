@@ -135,12 +135,19 @@ namespace Tests.UserTests
 			{
 				try
 				{
-					db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
+					if (context.IsAnyOf(ProviderName.Ydb))
+						db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
+					else
+						db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
+
 					db.CreateTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
 				}
 				finally
 				{
-					db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
+					if (context.IsAnyOf(ProviderName.Ydb))
+						db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
+					else
+						db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
 				}
 
 				return Task.CompletedTask;
@@ -159,12 +166,19 @@ namespace Tests.UserTests
 			{
 				try
 				{
-					db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
+					if (context.IsAnyOf(ProviderName.Ydb))
+						db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
+					else
+						db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
+
 					await db.CreateTableAsync<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
 				}
 				finally
 				{
-					await db.DropTableAsync<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
+					if (context.IsAnyOf(ProviderName.Ydb))
+						await db.DropTableAsync<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
+					else
+						await db.DropTableAsync<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
 				}
 				// not allowed for remote server
 			}, $"{TestProvName.AllSqlServer},{TestProvName.AllOracle}", ddl: true);
@@ -181,8 +195,16 @@ namespace Tests.UserTests
 			{
 				try
 				{
-					db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
-					db.CreateTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
+					if (context.IsAnyOf(ProviderName.Ydb))
+					{
+						db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u, throwExceptionIfNotExists: false);
+						db.CreateTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
+					}
+					else
+					{
+						db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
+						db.CreateTable<TestTable>(tableName: "Issue681Table2");
+					}
 				}
 				finally
 				{
@@ -269,7 +291,9 @@ namespace Tests.UserTests
 				schemaName = withSchema   ? TestUtils.GetSchemaName  (db, context) : null;
 			}
 
-			using var t  = db.CreateLocalTable<TTable>(databaseName: dbName, serverName: serverName, schemaName: schemaName);
+			using var t  = context.IsAnyOf(ProviderName.Ydb)
+				? db.CreateLocalTable<TTable>(databaseName: dbName, serverName: serverName, schemaName: schemaName)
+				: db.CreateLocalTable<TTable>();
 
 			var table = db.GetTable<TTable>();
 
