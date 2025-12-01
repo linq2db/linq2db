@@ -32,11 +32,11 @@ namespace Tests.xUpdate
 				db.Delete(parent);
 				db.Insert(parent);
 
-				Assert.That(db.Parent.Count (p => p.ParentID == parent.ParentID), Is.EqualTo(1));
+				Assert.That(db.Parent.Count(p => p.ParentID == parent.ParentID), Is.EqualTo(1));
 				var cnt = db.Parent.Delete(p => p.ParentID == parent.ParentID);
 				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
-				Assert.That(db.Parent.Count (p => p.ParentID == parent.ParentID), Is.Zero);
+				Assert.That(db.Parent.Count(p => p.ParentID == parent.ParentID), Is.Zero);
 			}
 		}
 
@@ -136,8 +136,8 @@ namespace Tests.xUpdate
 			{
 				var q =
 					from p in db.Parent
-						join ch in db.Child on p.ParentID equals ch.ParentID into lj1
-						from ch in lj1.DefaultIfEmpty()
+					join ch in db.Child on p.ParentID equals ch.ParentID into lj1
+					from ch in lj1.DefaultIfEmpty()
 					where ch != null && ch.ParentID == -1 || ch == null && p.ParentID == -1
 					select p;
 
@@ -153,8 +153,8 @@ namespace Tests.xUpdate
 			using (var db = GetDataContext(context))
 			{
 				db.Parent.Insert(() => new Parent { ParentID = 1001 });
-				db.Child. Insert(() => new Child  { ParentID = 1001, ChildID = 1 });
-				db.Child. Insert(() => new Child  { ParentID = 1001, ChildID = 2 });
+				db.Child.Insert(() => new Child { ParentID = 1001, ChildID = 1 });
+				db.Child.Insert(() => new Child { ParentID = 1001, ChildID = 2 });
 
 				try
 				{
@@ -169,7 +169,7 @@ namespace Tests.xUpdate
 				}
 				finally
 				{
-					db.Child. Delete(c => c.ParentID >= 1000);
+					db.Child.Delete(c => c.ParentID >= 1000);
 					db.Parent.Delete(c => c.ParentID >= 1000);
 				}
 			}
@@ -180,15 +180,15 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.Parent.    Insert(() => new Parent     { ParentID = 1001 });
-				db.Child.     Insert(() => new Child      { ParentID = 1001, ChildID = 1 });
-				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 1});
-				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 2});
-				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 3});
-				db.Child.     Insert(() => new Child      { ParentID = 1001, ChildID = 2 });
-				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 2, GrandChildID = 1});
-				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 2, GrandChildID = 2});
-				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 2, GrandChildID = 3});
+				db.Parent.Insert(() => new Parent { ParentID = 1001 });
+				db.Child.Insert(() => new Child { ParentID = 1001, ChildID = 1 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 1 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 2 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 3 });
+				db.Child.Insert(() => new Child { ParentID = 1001, ChildID = 2 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 2, GrandChildID = 1 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 2, GrandChildID = 2 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 2, GrandChildID = 3 });
 
 				try
 				{
@@ -208,8 +208,8 @@ namespace Tests.xUpdate
 				finally
 				{
 					db.GrandChild.Delete(c => c.ParentID >= 1000);
-					db.Child.     Delete(c => c.ParentID >= 1000);
-					db.Parent.    Delete(c => c.ParentID >= 1000);
+					db.Child.Delete(c => c.ParentID >= 1000);
+					db.Parent.Delete(c => c.ParentID >= 1000);
 				}
 			}
 		}
@@ -224,13 +224,13 @@ namespace Tests.xUpdate
 			using (var db = GetDataContext(context))
 			{
 				db.GrandChild.Delete(c => c.ParentID >= 1000);
-				db.Child.     Delete(c => c.ParentID >= 1000);
-				db.Parent.    Delete(c => c.ParentID >= 1000);
+				db.Child.Delete(c => c.ParentID >= 1000);
+				db.Parent.Delete(c => c.ParentID >= 1000);
 
-				db.Parent.    Insert(() => new Parent     { ParentID = 1001 });
-				db.Child.     Insert(() => new Child      { ParentID = 1001, ChildID = 1 });
-				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 1});
-				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 2});
+				db.Parent.Insert(() => new Parent { ParentID = 1001 });
+				db.Child.Insert(() => new Child { ParentID = 1001, ChildID = 1 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 1 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 2 });
 
 				try
 				{
@@ -246,8 +246,8 @@ namespace Tests.xUpdate
 				finally
 				{
 					db.GrandChild.Delete(c => c.ParentID >= 1000);
-					db.Child.     Delete(c => c.ParentID >= 1000);
-					db.Parent.    Delete(c => c.ParentID >= 1000);
+					db.Child.Delete(c => c.ParentID >= 1000);
+					db.Parent.Delete(c => c.ParentID >= 1000);
 				}
 			}
 		}
@@ -543,31 +543,31 @@ namespace Tests.xUpdate
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<Person>(tableName);
 
-				var iTable = (ITable<Person>)table;
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(iTable.TableName, Is.EqualTo(tableName));
-					Assert.That(iTable.SchemaName, Is.Null);
-				}
-
-				var person = new Person()
-				{
-					FirstName = "Steven",
-					LastName = "King",
-					Gender = Gender.Male,
-				};
-
-				// insert a row into the table
-				db.Insert(person, tableName);
-				var newCount = table.Count();
-				Assert.That(newCount, Is.EqualTo(1));
-
-				var personForDelete = table.Single();
-
-				db.Delete(personForDelete, tableName);
-
-				Assert.That(table.Count(), Is.Zero);
+			var iTable = (ITable<Person>)table;
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(iTable.TableName, Is.EqualTo(tableName));
+				Assert.That(iTable.SchemaName, Is.Null);
 			}
+
+			var person = new Person()
+			{
+				FirstName = "Steven",
+				LastName = "King",
+				Gender = Gender.Male,
+			};
+
+			// insert a row into the table
+			db.Insert(person, tableName);
+			var newCount = table.Count();
+			Assert.That(newCount, Is.EqualTo(1));
+
+			var personForDelete = table.Single();
+
+			db.Delete(personForDelete, tableName);
+
+			Assert.That(table.Count(), Is.Zero);
+		}
 
 		[Test]
 		public async Task DeleteByTableNameAsync([DataSources] string context)
@@ -578,29 +578,29 @@ namespace Tests.xUpdate
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<Person>(tableName, schemaName: schemaName);
 
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(table.TableName, Is.EqualTo(tableName));
-						Assert.That(table.SchemaName, Is.EqualTo(schemaName));
-					}
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(table.TableName, Is.EqualTo(tableName));
+				Assert.That(table.SchemaName, Is.EqualTo(schemaName));
+			}
 
-					var person = new Person()
-					{
-						FirstName = "Steven",
-						LastName  = "King",
-						Gender    = Gender.Male,
-					};
+			var person = new Person()
+			{
+				FirstName = "Steven",
+				LastName  = "King",
+				Gender    = Gender.Male,
+			};
 
-					// insert a row into the table
-					await db.InsertAsync(person, tableName: tableName, schemaName: schemaName);
-					var newCount = await table.CountAsync();
-					Assert.That(newCount, Is.EqualTo(1));
+			// insert a row into the table
+			await db.InsertAsync(person, tableName: tableName, schemaName: schemaName);
+			var newCount = await table.CountAsync();
+			Assert.That(newCount, Is.EqualTo(1));
 
-					var personForDelete = await table.SingleAsync();
+			var personForDelete = await table.SingleAsync();
 
-					await db.DeleteAsync(personForDelete, tableName: tableName, schemaName: schemaName);
+			await db.DeleteAsync(personForDelete, tableName: tableName, schemaName: schemaName);
 
-					Assert.That(await table.CountAsync(), Is.Zero);
+			Assert.That(await table.CountAsync(), Is.Zero);
 		}
 
 		[YdbTableNotFound]

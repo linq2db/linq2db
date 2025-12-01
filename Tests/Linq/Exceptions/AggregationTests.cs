@@ -18,7 +18,7 @@ namespace Tests.Exceptions
 		}
 
 		[Test]
-		public void NonNullableMin2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void NonNullableMin2([DataSources(TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
