@@ -174,5 +174,14 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		//	cast = FloorBeforeConvert(cast);
 		//	return base.ConvertConversion(cast);
 		//}
+
+		protected override ISqlExpression ConvertSqlCaseExpression(SqlCaseExpression element)
+		{
+			// ELSE required
+			if (element.ElseExpression == null)
+				return new SqlCaseExpression(element.Type, element.Cases, new SqlValue(element.Type, null));
+
+			return base.ConvertSqlCaseExpression(element);
+		}
 	}
 }
