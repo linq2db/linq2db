@@ -476,8 +476,7 @@ namespace LinqToDB.Tools.ModelGeneration
 			where TForeignKey : ForeignKey<TForeignKey>, new()
 			where TColumn     : IColumn,                 new()
 		{
-			if (DataContextObject == null)
-				DataContextObject = new Class<TTable>();
+			DataContextObject ??= new Class<TTable>();
 
 			SqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, dataConnection.Options);
 
