@@ -1130,7 +1130,7 @@ namespace LinqToDB
 		{
 			return options.WithOptions<DataContextOptions>(o =>
 			{
-				var list = new List<IMemberTranslator>(o.MemberTranslators?.Count ?? 0 + 1);
+				var list = new List<IMemberTranslator>((o.MemberTranslators?.Count ?? 0) + 1);
 
 				if (o.MemberTranslators != null)
 					list.AddRange(o.MemberTranslators);
@@ -1274,7 +1274,7 @@ namespace LinqToDB
 		{
 			return options.WithOptions<DataContextOptions>(o =>
 			{
-				var list = new List<IBinaryTranslator>(o.BinaryTranslators?.Count ?? 0 + 1);
+				var list = new List<IBinaryTranslator>((o.BinaryTranslators?.Count ?? 0) + 1);
 
 				if (o.BinaryTranslators != null)
 					list.AddRange(o.BinaryTranslators);
