@@ -1202,7 +1202,7 @@ namespace LinqToDB
 		{
 			return options.WithOptions<DataContextOptions>(o =>
 			{
-				var list = new List<IUnaryTranslator>(o.UnaryTranslators?.Count ?? 0 + 1);
+				var list = new List<IUnaryTranslator>((o.UnaryTranslators?.Count ?? 0) + 1);
 
 				if (o.UnaryTranslators != null)
 					list.AddRange(o.UnaryTranslators);
