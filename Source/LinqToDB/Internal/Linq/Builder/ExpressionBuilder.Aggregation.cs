@@ -49,15 +49,19 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var builder = SqlContext.BuildContext.Builder;
 
-				Expression translated;
+				var contextToUse          = SqlContext.BuildContext;
+				var expressionToTranslate = expression;
+
 				if (expression is ContextRefExpression { BuildContext: GroupByBuilder.GroupByContext groupByContext })
 				{
-					translated = builder.BuildSqlExpression(SqlContext.BuildContext, SequenceHelper.CreateRef(groupByContext.Element));
+					expressionToTranslate = SequenceHelper.CreateRef(groupByContext.Element);
 				}
-				else
+				else if (RootContext?.BuildContext is GroupByBuilder.GroupByContext rootGroup)
 				{
-					translated = builder.BuildSqlExpression(SqlContext.BuildContext, expression);
+					contextToUse = rootGroup.Element;
 				}
+
+				var translated = builder.BuildSqlExpression(contextToUse, expressionToTranslate);
 
 				if (translated is not SqlPlaceholderExpression placeholder)
 				{
@@ -72,7 +76,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var optimizer         = new SqlExpressionOptimizerVisitor(true);
 					var evaluationContext = new EvaluationContext();
 					var nullability       = NullabilityContext.GetContext(SqlContext?.BuildContext.SelectQuery);
-					var optimized = optimizer.Optimize(evaluationContext, nullability, null, builder.DataOptions, RootContext?.BuildContext.MappingSchema ?? builder.MappingSchema, sql, true, true);
+					var optimized         = optimizer.Optimize(evaluationContext, nullability, null, builder.DataOptions, contextToUse.MappingSchema, sql, true, true);
 					sql = (ISqlExpression)optimized;
 				}
 
