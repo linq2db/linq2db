@@ -2259,10 +2259,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 									nestedWhereCond = subQuery.Where.EnsureConjunction();
 									subQuery.From.Table(t);
 
-									var tableSources = new HashSet<ISqlTableSource>() { t };
+									var tableSources = new HashSet<ISqlTableSource>(1) { t };
 									var foundFields  = new HashSet<ISqlExpression>();
 
-									QueryHelper.CollectDependencies(_rootElement, sources, foundFields);
+									QueryHelper.CollectDependencies(_rootElement, tableSources, foundFields, ignore: join.Table.Joins);
 
 									if (foundFields.Count > 0)
 									{
