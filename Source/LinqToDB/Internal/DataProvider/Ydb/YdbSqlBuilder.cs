@@ -487,7 +487,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				fqn = fullName.Value.ToString()!;
 			}
 
-			return Convert(sb, fqn, ConvertType.NameToQueryTable);
+			return Convert(sb, fqn, objectType);
 		}
 
 		protected override void BuildSqlCastExpression(SqlCastExpression castExpression)
