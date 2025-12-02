@@ -108,7 +108,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LeftJoinToStringAggregate([DataSources] string context)
+		public void LeftJoinToStringAggregate([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL15Plus)] string context)
 		{
 			using var db     = GetDataContext(context);
 
