@@ -1,4 +1,4 @@
-<Project>
+﻿<Project>
 	<PropertyGroup>
 		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
 	</PropertyGroup>
@@ -112,6 +112,7 @@
 		<PackageVersion Include="System.Data.SqlClient"                                 Version="4.9.0"                        />
 		<PackageVersion Include="System.Data.SQLite"                                    Version="2.0.2"                        />
 		<PackageVersion Include="SourceGear.sqlite3"                                    Version="3.50.4.5"                     />
+		<PackageVersion Include="Ydb.Sdk"                                               Version="0.26.0"                       />
 	</ItemGroup>
 
 	<ItemGroup Label="Remote">

@@ -144,6 +144,7 @@
     <File Path="Build/Azure/net80/sqlserver.extras.json" />
     <File Path="Build/Azure/net80/sqlserver.fts.2019.json" />
     <File Path="Build/Azure/net80/sybase.json" />
+    <File Path="Build/Azure/net80/ydb.json" />
   </Folder>
   <Folder Name="/Build/Azure/net90/">
     <File Path="Build/Azure/net90/access.ace.json" />
@@ -190,6 +191,7 @@
     <File Path="Build/Azure/net90/sqlserver.extras.json" />
     <File Path="Build/Azure/net90/sqlserver.fts.2019.json" />
     <File Path="Build/Azure/net90/sybase.json" />
+    <File Path="Build/Azure/net90/ydb.json" />
   </Folder>
   <Folder Name="/Build/Azure/netfx/">
     <File Path="Build/Azure/netfx/access.ace.json" />
@@ -287,6 +289,7 @@
     <File Path="Build/Azure/scripts/sybase.sh" />
     <File Path="Build/Azure/scripts/tls11_disable.reg" />
     <File Path="Build/Azure/scripts/tls11_enable.reg" />
+    <File Path="Build/Azure/scripts/ydb.sh" />
   </Folder>
   <Folder Name="/Build/Local/">
     <File Path="Data/Setup Scripts/all.cmd" />
@@ -339,6 +342,7 @@
     <File Path="Data/Setup Scripts/wait-err.cmd" />
     <File Path="Data/Setup Scripts/wait-exit.cmd" />
     <File Path="Data/Setup Scripts/wait.cmd" />
+    <File Path="Data/Setup Scripts/ydb.cmd" />
   </Folder>
   <Folder Name="/Build/Redist/">
     <File Path="Redist/Readme.md" />

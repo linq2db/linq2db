@@ -35,6 +35,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ydb-platform/ydb/issues/22493", Configuration = ProviderName.Ydb)]
 		[Test]
 		public void TestUnorderedTakeSkip([DataSources] string context)
 		{

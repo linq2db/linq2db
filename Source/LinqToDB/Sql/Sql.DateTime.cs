@@ -37,6 +37,7 @@ namespace LinqToDB
 			/// <item>SQL Server</item>
 			/// <item>SAP/Sybase ASE</item>
 			/// <item>Informix</item>
+			/// <item>Ydb</item>
 			/// </list>
 			/// </item>
 			/// <item>US 0-based numbering schema used by MySQL database</item>
@@ -414,6 +415,46 @@ namespace LinqToDB
 			}
 		}
 
+		sealed class DateDiffBuilderYdb : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var part       = builder.GetValue<DateParts>(0);
+				var startDate  = builder.GetExpression(1);
+				var endDate    = builder.GetExpression(2);
+
+				if (startDate is null || endDate is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
+
+				long divisor;
+				switch (part)
+				{
+					case DateParts.Week        : divisor = 1_000_000L * 60 * 60 * 24 * 7; break;
+					case DateParts.Day         : divisor = 1_000_000L * 60 * 60 * 24; break;
+					case DateParts.Hour        : divisor = 1_000_000L * 60 * 60; break;
+					case DateParts.Minute      : divisor = 1_000_000L * 60; break;
+					case DateParts.Second      : divisor = 1_000_000L ; break;
+					case DateParts.Millisecond : divisor = 1_000L ; break;
+
+					default:
+						throw new InvalidOperationException($"Unexpected datepart: {part}");
+				}
+
+				builder.ResultExpression = new SqlBinaryExpression(
+					builder.Mapping.GetDbDataType(typeof(long)),
+					new SqlBinaryExpression(
+						builder.Mapping.GetDbDataType(typeof(int)),
+						startDate,
+						"-",
+						endDate),
+					"/",
+					new SqlValue(divisor));
+			}
+		}
+
 		[CLSCompliant(false)]
 		[Extension(               "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
 		[Extension(PN.MySql,      "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
@@ -424,6 +465,7 @@ namespace LinqToDB
 		[Extension(PN.PostgreSQL, "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
 		[Extension(PN.Access,     "",              BuilderType = typeof(DateDiffBuilderAccess))]
 		[Extension(PN.ClickHouse, "",              BuilderType = typeof(DateDiffBuilderClickHouse))]
+		[Extension(PN.Ydb,        "",              BuilderType = typeof(DateDiffBuilderYdb))]
 		public static int? DateDiff(DateParts part, DateTime? startDate, DateTime? endDate)
 		{
 			if (startDate == null || endDate == null)

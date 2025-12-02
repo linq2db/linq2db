@@ -30,7 +30,7 @@ namespace Tests
 		/// </summary>
 		public static bool SupportsRowcount(this string context)
 		{
-			return !context.IsAnyOf(TestProvName.AllClickHouse);
+			return !context.IsAnyOf(TestProvName.AllClickHouse, ProviderName.Ydb);
 		}
 
 		public static bool IsUseParameters(this string context)

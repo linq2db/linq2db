@@ -41,6 +41,7 @@ Contains database setup scripts for local testing
 - `sqlserver2022.cmd` : Windows script to create or update docker container with SQL Server 2022 (Linux-based) instance
 - `sqlserver2025.cmd` : Windows script to create or update docker container with SQL Server 2025 (Linux-based) instance
 - `sybase-ase.cmd` : Windows script to create or update docker container with SAP ASE 16 instance
+- `ydb.cmd` : Windows script to create or update docker container with YDB instance
 
 ### Windows images
 

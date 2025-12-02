@@ -23,6 +23,7 @@ namespace Tests.xUpdate
 	[Order(10000)]
 	public class InsertTests : TestBase
 	{
+		[YdbTableNotFound]
 #if AZURE
 		[ActiveIssue("Error from Azure runs (db encoding issue?): FbException : Malformed string", Configuration = TestProvName.AllFirebird)]
 #endif
@@ -67,6 +68,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbTableNotFound]
 #if AZURE
 		[ActiveIssue("Error from Azure runs (db encoding issue?): FbException : Malformed string", Configuration = TestProvName.AllFirebird)]
 #endif
@@ -1596,7 +1598,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// Access, SQLite, Firebird before v4, Informix and SAP Hana do not support DEFAULT in inserted values,
+		// YDB, Access, SQLite, Firebird before v4, Informix and SAP Hana do not support DEFAULT in inserted values,
 		// see https://github.com/linq2db/linq2db/pull/2954#issuecomment-821798021
 		[Test]
 		public void InsertDefault([DataSources(
@@ -1604,6 +1606,7 @@ namespace Tests.xUpdate
 			TestProvName.AllFirebirdLess4,
 			TestProvName.AllInformix,
 			TestProvName.AllSapHana,
+			ProviderName.Ydb,
 			TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2488,7 +2491,7 @@ namespace Tests.xUpdate
 
 		[ActiveIssue(
 			Details = "Update test to test different RetrieveIdentity modes for all providers with sequences",
-			Configurations = [TestProvName.AllFirebird, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllPostgreSQL, ProviderName.SqlCe, TestProvName.AllSapHana])]
+			Configurations = [TestProvName.AllFirebird, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllPostgreSQL, ProviderName.SqlCe, TestProvName.AllSapHana, ProviderName.Ydb])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4702")]
 		public void Issue4702Test([DataSources(false)] string context, [Values] bool useSequence)
 		{

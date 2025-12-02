@@ -63,6 +63,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void WithDefaultInSelectMany([DataSources(TestProvName.AllClickHouse)] string context)
 		{

@@ -234,6 +234,7 @@ namespace Tests.UserTests
 		{
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void TestLoadWithInfiniteLoop([DataSources] string context)
 		{

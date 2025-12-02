@@ -2149,10 +2149,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				if (tableSource.Joins.Count > 0)
 				{
-					foreach (var join in tableSource.Joins)
+					for (var j = 0; j < tableSource.Joins.Count; j++)
 					{
+						var join = tableSource.Joins[j];
 						if (!_providerFlags.IsComplexJoinConditionSupported)
-							MoveJoinConditionsToWhere(join, selectQuery.Where, NullabilityContext.GetContext(selectQuery));
+							MoveJoinConditionsToWhere(tableSource, join, selectQuery.Where, NullabilityContext.GetContext(selectQuery));
 
 						if (JoinMoveSubQueryUp(selectQuery, join))
 							replaced = true;
@@ -2191,12 +2192,17 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return replaced;
 		}
 
-		private void MoveJoinConditionsToWhere(SqlJoinedTable join, SqlWhereClause where, NullabilityContext nullabilityContext)
+		private void MoveJoinConditionsToWhere(SqlTableSource left, SqlJoinedTable join, SqlWhereClause where, NullabilityContext nullabilityContext)
 		{
-			if (join.JoinType != JoinType.Inner || join.Condition.IsOr || join.Condition.Predicates.Count == 0)
+			if (join.JoinType is not (JoinType.Inner or JoinType.Left) || join.Condition.IsOr || join.Condition.Predicates.Count == 0)
 				return;
 
-			SqlSearchCondition? whereCond = null;
+			var isLeft = join.JoinType == JoinType.Left;
+			List<ISqlTableSource>? sources = null;
+
+			SqlSearchCondition? whereCond       = null;
+			SqlSearchCondition? nestedWhereCond = null;
+
 			for (var i = 0; i < join.Condition.Predicates.Count; i++)
 			{
 				var predicate = join.Condition.Predicates[i];
@@ -2204,6 +2210,65 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				var move = predicate is not SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr
 					|| exprExpr != exprExpr.Reduce(nullabilityContext, _evaluationContext, false, _dataOptions.LinqOptions)
 					|| exprExpr.Expr1 is SqlValue || exprExpr.Expr2 is SqlValue;
+
+				if (move && isLeft)
+				{
+					sources ??= QueryHelper.EnumerateAccessibleSources(join.Table).ToList();
+					move = !QueryHelper.IsDependsOnSources(predicate, sources);
+
+					if (!move && !QueryHelper.IsDependsOnSources(predicate, [left]))
+					{
+						if (nestedWhereCond == null)
+						{
+							if (join.Table.Source is SelectQuery sq)
+							{
+								QueryHelper.WrapQuery((SqlStatement)_root, sq, true);
+								nestedWhereCond = ((SelectQuery)join.Table.Source).Where.EnsureConjunction();
+							}
+							else if (join.Table.Source is SqlTable t)
+							{
+								var subQuery      = new SelectQuery() { DoNotRemove = true };
+								join.Table.Source = subQuery;
+								nestedWhereCond   = subQuery.Where.EnsureConjunction();
+								subQuery.From.Table(t);
+
+								var tableSources = new HashSet<ISqlTableSource>() { t };
+								var foundFields  = new HashSet<ISqlExpression>();
+
+								QueryHelper.CollectDependencies(_rootElement, sources, foundFields);
+
+								if (foundFields.Count > 0)
+								{
+									var toReplace = new Dictionary<IQueryElement, IQueryElement>(foundFields.Count);
+									foreach (var expr in foundFields)
+										toReplace.Add(expr, subQuery.Select.AddColumn(expr));
+
+									_rootElement.Replace(toReplace, subQuery.Select);
+								}
+							}
+						}
+
+						if (nestedWhereCond != null)
+						{
+							// update references
+							var foundFields = new HashSet<ISqlExpression>();
+							QueryHelper.CollectDependencies(predicate, [join.Table.Source], foundFields);
+
+							if (foundFields.Count > 0)
+							{
+								var toReplace = new Dictionary<IQueryElement, IQueryElement>(foundFields.Count);
+								foreach (var expr in foundFields)
+									toReplace.Add(expr, ((SqlColumn)expr).Expression);
+								predicate.Replace(toReplace);
+							}
+
+							nestedWhereCond.Predicates.Add(predicate);
+							join.Condition.Predicates.RemoveAt(i);
+							i--;
+							continue;
+						}
+					}
+				}
 
 				if (move)
 				{
@@ -2950,7 +3015,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			var saveParent = _parentSelect;
 			_parentSelect = null;
 			_currentCteClause = element;
-
+			
 			var newElement = base.VisitCteClause(element);
 
 			_parentSelect = saveParent;

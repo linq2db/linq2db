@@ -12,6 +12,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class MathFunctionTests : TestBase
 	{
+		[YdbTableNotFound]
 		[Test]
 		public void Abs([DataSources] string context)
 		{
@@ -21,6 +22,7 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Abs(p.MoneyValue) where t > 0 select t);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Acos([DataSources(TestProvName.AllAccess)] string context)
 		{
@@ -30,6 +32,7 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Acos((double)p.MoneyValue / 15) * 15) where t != 0.1 select t);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Asin([DataSources(TestProvName.AllAccess)] string context)
 		{
@@ -39,6 +42,7 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Asin((double)p.MoneyValue / 15) * 15) where t != 0.1 select t);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Atan([DataSources] string context)
 		{
@@ -48,6 +52,7 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Atan((double)p.MoneyValue / 15) * 15) where t != 0.1 select t);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Atan2([DataSources(TestProvName.AllAccess)] string context)
 		{
@@ -57,6 +62,7 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Atan2((double)p.MoneyValue / 15, 0) * 15) where t != 0.1 select t);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Ceiling1([DataSources] string context)
 		{
@@ -66,6 +72,7 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Ceiling(-(p.MoneyValue + 1)) where t != 0 select t);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Ceiling2([DataSources] string context)
 		{
@@ -75,6 +82,7 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Ceiling(p.MoneyValue) where t != 0 select t);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Cos([DataSources] string context)
 		{
@@ -84,6 +92,7 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Cos((double)p.MoneyValue / 15) * 15) where t != 0.1 select t);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Cosh([DataSources] string context)
 		{
@@ -93,6 +102,7 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Cosh((double)p.MoneyValue / 15) * 15) where t != 0.1 select t);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Cot([DataSources] string context)
 		{
@@ -102,6 +112,7 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Sql.Cot((double)p.MoneyValue / 15)!.Value * 15) where t != 0.1 select t);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Degrees1([DataSources] string context)
 		{
@@ -113,6 +124,7 @@ namespace Tests.Linq
 					comparer: DecimalComparerInstance);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Degrees2([DataSources] string context)
 		{
@@ -122,6 +134,7 @@ namespace Tests.Linq
 					from t in from p in db.Types select Sql.Degrees((double)p.MoneyValue)!.Value where t != 0.1 select Math.Floor(t));
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Degrees3([DataSources] string context)
 		{
@@ -132,6 +145,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void Exp([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -140,6 +154,7 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Exp((double)p.MoneyValue)) where t != 0.1 select t);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Floor([DataSources(ProviderName.SQLiteMS)] string context)
 		{
@@ -149,6 +164,7 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(-(p.MoneyValue + 1)) where t != 0 select t);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Log([DataSources] string context)
 		{
@@ -159,6 +175,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void Log2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -167,6 +184,7 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Log((double)p.MoneyValue, 2)) where t != 0.1 select t);
 		}
 
+		[YdbTableNotFound]
 		[Test]
 		public void Log10([DataSources] string context)
 		{
@@ -177,6 +195,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void Max([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -186,6 +205,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void Min([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -195,6 +215,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void Pow([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -205,6 +226,7 @@ namespace Tests.Linq
 
 		// Sybase: https://stackoverflow.com/questions/25281843
 		[Test]
+		[YdbTableNotFound]
 		public void PowDecimal([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -261,6 +283,7 @@ namespace Tests.Linq
 
 		[ActiveIssue("Wrong DB2 implementation", Configuration = TestProvName.AllDB2)]
 		[Test]
+		[YdbTableNotFound]
 		public void Round4Sql([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -369,7 +392,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Sign([DataSources] string context)
+		public void Sign([DataSources(ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -378,6 +401,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void Sin([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -387,6 +411,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void Sinh([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -396,6 +421,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void Sqrt([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -405,6 +431,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void Tan([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -414,6 +441,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void Tanh([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -423,6 +451,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void Truncate1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -432,6 +461,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbTableNotFound]
 		public void Truncate2([DataSources] string context)
 		{
 			using var _ = context.IsAnyOf(TestProvName.AllAccess) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
