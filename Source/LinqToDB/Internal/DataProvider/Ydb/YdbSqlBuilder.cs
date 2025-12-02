@@ -289,6 +289,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
 		{
 			BuildExpression(expr, _buildTableName, true, alias, ref addAlias, true);
+			addAlias = true;
 		}
 
 		protected override bool IsCteColumnListSupported => false;
