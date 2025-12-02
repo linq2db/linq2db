@@ -2312,7 +2312,7 @@ namespace Tests.Linq
 				if (guard)
 					act.ShouldThrow<LinqToDBException>();
 				else
-					act.ShouldNotThrow();
+					act();
 			}
 		}
 

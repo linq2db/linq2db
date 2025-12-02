@@ -40,6 +40,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[YdbNotImplementedYet]
 		public void TestWithoutTransaction([DataSources(false,
 			// those providers doesn't support stored procedures
 			ProviderName.SqlCe,
@@ -83,6 +84,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[YdbNotImplementedYet]
 		public void TestWithTransaction([DataSources(false,
 			// those providers doesn't support stored procedures
 			ProviderName.SqlCe,

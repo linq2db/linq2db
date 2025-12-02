@@ -168,8 +168,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			using var context = CreateContext(provider);
 
-			var act = () =>  context.WithDuplicateProperties.Where(x => x.Value == 1).ToArray();
-			act.ShouldNotThrow();
+			context.WithDuplicateProperties.Where(x => x.Value == 1).ToArray();
 		}
 
 		[Test]

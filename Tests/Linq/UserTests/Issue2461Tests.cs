@@ -40,7 +40,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void AssociationConcat([DataSources] string context)
+		public void AssociationConcat([DataSources(ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<TestReceipt>())
@@ -53,8 +53,7 @@ namespace Tests.UserTests
 						i =>
 							new { i.ReceiptNo, a = TestCustomer.GetName(i.Customer.BillingGroup) });
 
-				var act = () => query.ToArray();
-				act.ShouldNotThrow();
+				query.ToArray();
 			}
 		}
 	}

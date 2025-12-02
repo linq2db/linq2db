@@ -94,8 +94,7 @@ namespace Tests.Linq
 
 				if (!db.SqlProviderFlags.IsCTESupportsOrdering)
 				{
-					var act = () => query.ToArray();
-					act.ShouldNotThrow();
+					query.ToArray();
 				}
 				else
 				{

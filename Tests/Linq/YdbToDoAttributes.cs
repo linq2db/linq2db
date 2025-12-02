@@ -18,6 +18,16 @@ namespace Tests
 		}
 	}
 
+	public sealed class YdbNotImplementedYetAttribute : ThrowsForProviderAttribute
+	{
+		public YdbNotImplementedYetAttribute()
+			: base(typeof(NotImplementedException),
+			ProviderName.Ydb)
+		{
+			ErrorMessage = "Not implemented yet";
+		}
+	}
+
 	public sealed class YdbMemberNotFoundAttribute : ThrowsForProviderAttribute
 	{
 		public YdbMemberNotFoundAttribute()

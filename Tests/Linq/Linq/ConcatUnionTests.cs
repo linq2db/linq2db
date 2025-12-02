@@ -1196,8 +1196,7 @@ namespace Tests.Linq
 
 			var query = query1.UnionAll(query2);
 
-			var act = () => query.ToArray();
-			act.ShouldNotThrow();
+			query.ToArray();
 		}
 
 		[Test]
@@ -1210,8 +1209,7 @@ namespace Tests.Linq
 
 			var query = query1.UnionAll(query2);
 
-			var act = () => query.ToArray();
-			act.ShouldNotThrow();
+			query.ToArray();
 		}
 
 		[Test]
@@ -1227,8 +1225,7 @@ namespace Tests.Linq
 
 			var query = query1.UnionAll(query2);
 
-			var act = () => query.ToArray();
-			act.ShouldNotThrow();
+			query.ToArray();
 		}
 
 		[Test]
@@ -1255,8 +1252,7 @@ namespace Tests.Linq
 
 			query = query.Where(x => x.StrValue != null);
 
-			var act = () => query.ToArray();
-			act.ShouldNotThrow();
+			query.ToArray();
 		}
 
 		[Test(Description = "Test that we generate plain UNION without sub-queries")]
