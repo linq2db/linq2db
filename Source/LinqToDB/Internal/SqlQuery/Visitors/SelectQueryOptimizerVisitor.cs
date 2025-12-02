@@ -2222,7 +2222,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						{
 							if (join.Table.Source is SelectQuery sq)
 							{
-								QueryHelper.WrapQuery(root, sq, true);
+								QueryHelper.WrapQuery(root, sq, true, doNotRemove: true);
 								nestedWhereCond = ((SelectQuery)join.Table.Source).Where.EnsureConjunction();
 							}
 							else if (join.Table.Source is SqlTable t)
