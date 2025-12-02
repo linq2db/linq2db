@@ -85,5 +85,83 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		class User
+		{
+			public int    Id   { get; set; }
+			public string Name { get; set; } = null!;
+		}
+
+		class UserMachineAssignment
+		{
+			public int    UserId    { get; set; }
+			public string MachineId { get; set; } = null!;
+
+			[Association(ThisKey = nameof(MachineId), OtherKey = nameof(Machine.Id), CanBeNull = false)]
+			public Machine Machine { get; set; } = null!;
+		}
+
+		class Machine
+		{
+			public string Id   { get; set; } = null!;
+			public string Name { get; set; } = null!;
+		}
+
+		[Test]
+		public void LeftJoinToStringAggregate([DataSources] string context)
+		{
+			using var db     = GetDataContext(context);
+
+			var users = new[]
+			{
+				new User { Id = 1, Name = "User1" },
+				new User { Id = 2, Name = "User2" },
+			};
+
+			var userMachineAssignments = new[]
+			{
+				new UserMachineAssignment { UserId = 1, MachineId = "M1" },
+				new UserMachineAssignment { UserId = 1, MachineId = "M2" },
+				new UserMachineAssignment { UserId = 2, MachineId = "M3" },
+			};
+
+			var machines = new[]
+			{
+				new Machine { Id = "M1", Name = "Machine1" },
+				new Machine { Id = "M2", Name = "Machine2" },
+				new Machine { Id = "M3", Name = "Machine3" },
+			};
+
+			using var usersTable                  = db.CreateLocalTable(users);
+			using var userMachineAssignmentsTable = db.CreateLocalTable(userMachineAssignments);
+			using var machinesTable               = db.CreateLocalTable(machines);
+
+			var aggregatedQuery = 
+				from uma in userMachineAssignmentsTable.LoadWith(x => x.Machine)
+				group uma by uma.UserId into g
+				select new
+				{
+					UserId = g.Key, 
+					MachineNames = g.StringAggregate(", ", m => m.Machine.Name)
+						.OrderBy(x => x.Machine.Name)
+						.ToValue(),
+					Count = g.Count()
+				};
+
+			var query =
+				from u in usersTable
+				from aq in aggregatedQuery.Where(aq => aq.UserId == u.Id)
+					.DefaultIfEmpty()
+				select new
+				{
+					u.Id,
+					u.Name,
+					aq.MachineNames,
+					aq.Count
+				};
+
+			AssertQuery(query);
+		}
+
 	}
 }
