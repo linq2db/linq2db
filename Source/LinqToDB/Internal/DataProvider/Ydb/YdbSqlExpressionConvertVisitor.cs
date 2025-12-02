@@ -63,28 +63,52 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					or DataType.Blob:
 					return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
 
-					//case "%":
-					//{
-					//	var dbType = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
+				case "&" or "|" or "^":
+				{
+					var expr1Type = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
+					var expr2Type = QueryHelper.GetDbDataType(element.Expr2, MappingSchema);
+					var expr1     = expr1Type.IsUnsignedType() ? element.Expr1 : new SqlCastExpression(element.Expr1, expr1Type.ToUnsigned(), null, false);
+					var expr2     = expr2Type.IsUnsignedType() ? element.Expr2 : new SqlCastExpression(element.Expr2, expr2Type.ToUnsigned(), null, false);
 
-					//	if (dbType.SystemType.ToNullableUnderlying() != typeof(decimal))
-					//	{
-					//		var toType   = MappingSchema.GetDbDataType(typeof(decimal));
-					//		var newLeft  = PseudoFunctions.MakeCast(element.Expr1, toType);
+					if (expr1 != element.Expr1 || expr2 != element.Expr2)
+					{
+						ISqlExpression expr = new SqlBinaryExpression(element.SystemType, expr1, element.Operation, expr2, element.Precedence);
+						var oldType         = QueryHelper.GetDbDataType(element, MappingSchema);
+						var newType         = QueryHelper.GetDbDataType(element, MappingSchema);
 
-					//		var sysType  = dbType.SystemType?.IsNullable() == true
-					//			? typeof(decimal?)
-					//			: typeof(decimal);
+						if (!oldType.EqualsDbOnly(newType))
+						{
+							expr = new SqlCastExpression(expr, oldType, null, false);
+						}
 
-					//		var newExpr  = PseudoFunctions.MakeMandatoryCast(
-					//			new SqlBinaryExpression(sysType, newLeft, "%", element.Expr2),
-					//			toType);
+						return expr;
+					}
 
-					//		return Visit(Optimize(newExpr));
-					//	}
+					break;
+				}
 
-					//	break;
-					//}
+				//case "%":
+				//{
+				//	var dbType = QueryHelper.GetDbDataType(element.Expr1, MappingSchema);
+
+				//	if (dbType.SystemType.ToNullableUnderlying() != typeof(decimal))
+				//	{
+				//		var toType   = MappingSchema.GetDbDataType(typeof(decimal));
+				//		var newLeft  = PseudoFunctions.MakeCast(element.Expr1, toType);
+
+				//		var sysType  = dbType.SystemType?.IsNullable() == true
+				//			? typeof(decimal?)
+				//			: typeof(decimal);
+
+				//		var newExpr  = PseudoFunctions.MakeMandatoryCast(
+				//			new SqlBinaryExpression(sysType, newLeft, "%", element.Expr2),
+				//			toType);
+
+				//		return Visit(Optimize(newExpr));
+				//	}
+
+				//	break;
+				//}
 			}
 
 			return base.ConvertSqlBinaryExpression(element);
