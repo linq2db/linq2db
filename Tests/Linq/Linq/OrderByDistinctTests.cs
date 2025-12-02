@@ -461,7 +461,26 @@ namespace Tests.Linq
 
 				var result = query.ToArray();
 			}
+		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5103")]
+		public void OrderByDistinctAll1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Person.OrderBy(p => p.FirstName).Distinct().Select(r => new { r.ID, r.LastName }).Skip(1).Take(2);
+
+			AssertQuery(result);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5103")]
+		public void OrderByDistinctAll2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Person.OrderBy(p => p.FirstName).Distinct().Select(r => new { r.ID, r.LastName, r.FirstName }).Skip(1).Take(2);
+
+			AssertQuery(result);
 		}
 	}
 }
