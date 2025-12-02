@@ -13,7 +13,7 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	public sealed  class SqlServerVectorTypeTests : TypeTestsBase
+	public sealed  class SqlServerVectorTypeTests : TestBase
 	{
 		[Test]
 		public async ValueTask VectorDistanceSqlTest([IncludeDataSources(TestProvName.SqlServer2025MS)] string context)
@@ -313,6 +313,52 @@ namespace Tests.DataProvider
 			{
 				Assert.That(result.Dimensions1, Is.EqualTo(result.Dimensions2.ToString()));
 				Assert.That(result.BaseType1,   Is.EqualTo(result.BaseType2));
+			}
+		}
+
+		[Test]
+		public async ValueTask VectorPrintParameterSqlTest([IncludeDataSources(TestProvName.SqlServer2025MS)] string context)
+		{
+			var maxBinaryLogging = LinqToDB.Common.Configuration.MaxBinaryParameterLengthLogging;
+
+			try
+			{
+				LinqToDB.Common.Configuration.MaxBinaryParameterLengthLogging = 2;
+
+				await using var db = GetDataContext(context);
+
+				var vector = new SqlVector<float>(new[] { 1.0f, 2.0f, 3.0f }.AsMemory());
+
+				_ = db.Select(() => vector.VectorDimensionsProperty());
+
+				Assert.That(LastQuery, Contains.Substring(" ... "));
+			}
+			finally
+			{
+				LinqToDB.Common.Configuration.MaxBinaryParameterLengthLogging = maxBinaryLogging;
+			}
+		}
+
+		[Test]
+		public async ValueTask VectorPrintParameterFloatTest([IncludeDataSources(TestProvName.SqlServer2025MS)] string context)
+		{
+			var maxBinaryLogging = LinqToDB.Common.Configuration.MaxBinaryParameterLengthLogging;
+
+			try
+			{
+				LinqToDB.Common.Configuration.MaxBinaryParameterLengthLogging = 2;
+
+				await using var db = GetDataContext(context);
+
+				var vector = new[] { 1.0f, 2.0f, 3.0f };
+
+				_ = db.Select(() => vector.VectorDimensionsProperty());
+
+				Assert.That(LastQuery, Contains.Substring(" ... "));
+			}
+			finally
+			{
+				LinqToDB.Common.Configuration.MaxBinaryParameterLengthLogging = maxBinaryLogging;
 			}
 		}
 	}

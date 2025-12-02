@@ -10,6 +10,7 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Internal.Common;
@@ -139,6 +140,18 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					Expression.Lambda(Expression.Call(ExpressionHelper.Property(methodCall, "Memory"), "ToArray", Array.Empty<Type>()), dataReaderParameter, indexParameter);
 
 				SetField<DbDataReader, string>("vector", typeof(byte[]), (r, i) => r.GetString(i));
+
+				var vectorParameter = Expression.Parameter(typeof(object), "v");
+
+				Adapter.VectorToFloatConverter = Expression.Lambda<Func<object,float[]>>(
+					Expression.Call(
+						ExpressionHelper.Property(
+							Expression.Convert(vectorParameter, Adapter.SqlVectorType),
+							"Memory"),
+						"ToArray",
+						Array.Empty<Type>()),
+					vectorParameter)
+					.CompileExpression();
 			}
 
 #if NET8_0_OR_GREATER

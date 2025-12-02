@@ -137,7 +137,7 @@ namespace Tests.DataProvider
 
 			var msClient = context.IsAnyOf(TestProvName.AllSqlServerMS);
 
-			//var dt = DataType.Vector32;
+			//var dt = DataType.Vector16;
 
 			//const string asString1 = /*lang=json,strict*/ "[1.1, -1.2]";
 			//const string asString2 = /*lang=json,strict*/ "[2.1, -3.2]";

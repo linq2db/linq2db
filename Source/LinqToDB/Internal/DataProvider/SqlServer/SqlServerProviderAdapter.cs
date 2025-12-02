@@ -152,6 +152,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		public string?   GetSqlVectorReaderMethod => SqlVectorType == null ? null : "GetSqlVector";
 		public SqlDbType VectorDbType             => SqlVectorType == null ? SqlDbType.VarBinary : (SqlDbType)36;
 
+		public Func<object,float[]>? VectorToFloatConverter { get; set; }
+
 		// TODO: review implementation after SqlClient adds support for this type
 		// e.g. do we need different SqlDbType value?
 		public Type?     SqlHalfVectorType        { get; }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using System.Linq;
@@ -413,7 +414,13 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			{
 				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
-					return provider.Adapter.GetDbType(param).ToString();
+				{
+					var type = provider.Adapter.GetDbType(param);
+
+					if (type == provider.Adapter.VectorDbType)
+						return $"VECTOR({param.Size.ToString(NumberFormatInfo.InvariantInfo)})";
+					return type.ToString();
+				}
 			}
 
 			return base.GetProviderTypeName(dataContext, parameter);
@@ -565,6 +572,28 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			}
 
 			return false;
+		}
+
+		protected override bool PrintParameterValue(StringBuilder sb, object? value)
+		{
+			if (value != null && DataProvider is SqlServerDataProvider { Adapter.VectorToFloatConverter: {} converter } provider && provider.Adapter.SqlVectorType == value.GetType())
+			{
+				var maxBinaryLogging = LinqToDB.Common.Configuration.MaxBinaryParameterLengthLogging;
+				var floats           = converter(value);
+
+				if (maxBinaryLogging >= 0               &&
+				    floats.Length    > maxBinaryLogging &&
+				    MappingSchema.ValueToSqlConverter.CanConvert(typeof(byte[])))
+				{
+					var trimmed = new float[maxBinaryLogging];
+					Array.Copy(floats, 0, trimmed, 0, maxBinaryLogging);
+					MappingSchema.ValueToSqlConverter.TryConvert(sb, MappingSchema, DataOptions, trimmed);
+					sb.Insert(sb.Length - 2, " ... ");
+					return true;
+				}
+			}
+
+			return base.PrintParameterValue(sb, value);
 		}
 	}
 }
