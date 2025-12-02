@@ -92,7 +92,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					if (!_orderByOptimizer.IsOptimized)
 						break;
 
-					if (_orderByOptimizer.NeedsNestingUpdate) 
+					if (_orderByOptimizer.NeedsNestingUpdate)
 						CorrectColumnsNesting();
 
 				} while (true);
@@ -250,6 +250,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 
 					if (CorrectMultiTables(selectQuery))
+					{
+						isModified = true;
+					}
+
+					if (!_providerFlags.IsComplexJoinConditionSupported && OptimizeJoinConditions(selectQuery))
 					{
 						isModified = true;
 					}
@@ -2152,8 +2157,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					for (var j = 0; j < tableSource.Joins.Count; j++)
 					{
 						var join = tableSource.Joins[j];
-						if (!_providerFlags.IsComplexJoinConditionSupported)
-							MoveJoinConditionsToWhere(tableSource, join, selectQuery.Where, NullabilityContext.GetContext(selectQuery));
 
 						if (JoinMoveSubQueryUp(selectQuery, join))
 							replaced = true;
@@ -2192,93 +2195,121 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return replaced;
 		}
 
-		private void MoveJoinConditionsToWhere(SqlTableSource left, SqlJoinedTable join, SqlWhereClause where, NullabilityContext nullabilityContext)
+		private bool OptimizeJoinConditions(SelectQuery selectQuery)
 		{
-			if (_root is not SqlStatement root || join.JoinType is not (JoinType.Inner or JoinType.Left) || join.Condition.IsOr || join.Condition.Predicates.Count == 0)
-				return;
+			if (_root is not SqlStatement root)
+				return false;
 
-			var isLeft = join.JoinType == JoinType.Left;
-			List<ISqlTableSource>? sources = null;
+			var modified = false;
 
-			SqlSearchCondition? whereCond       = null;
-			SqlSearchCondition? nestedWhereCond = null;
-
-			for (var i = 0; i < join.Condition.Predicates.Count; i++)
+			for (var i = 0; i < selectQuery.From.Tables.Count; i++)
 			{
-				var predicate = join.Condition.Predicates[i];
+				var tableSource = selectQuery.From.Tables[i];
 
-				var move = predicate is not SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr
-					|| exprExpr != exprExpr.Reduce(nullabilityContext.WithJoinSource(join.Table.Source), _evaluationContext, false, _dataOptions.LinqOptions)
-					|| exprExpr.Expr1 is SqlValue || exprExpr.Expr2 is SqlValue;
-
-				if (move && isLeft)
+				if (tableSource.Joins.Count > 0)
 				{
-					sources ??= QueryHelper.EnumerateAccessibleSources(join.Table).ToList();
-					move = !QueryHelper.IsDependsOnSources(predicate, sources);
-
-					if (!move && !QueryHelper.IsDependsOnSources(predicate, [left]))
+					for (var j = 0; j < tableSource.Joins.Count; j++)
 					{
-						if (nestedWhereCond == null)
+						var join = tableSource.Joins[j];
+
+						if (join.JoinType is (JoinType.Inner or JoinType.Left) && !join.Condition.IsOr && join.Condition.Predicates.Count != 0)
+							modified |= MoveJoinConditionsToWhere(root, tableSource, join, selectQuery.Where, NullabilityContext.GetContext(selectQuery));
+					}
+				}
+			}
+
+			return modified;
+
+			bool MoveJoinConditionsToWhere(SqlStatement root, SqlTableSource left, SqlJoinedTable join, SqlWhereClause where, NullabilityContext nullabilityContext)
+			{
+				var modified                   = false;
+				var isLeft                     = join.JoinType == JoinType.Left;
+				List<ISqlTableSource>? sources = null;
+
+				SqlSearchCondition? whereCond       = null;
+				SqlSearchCondition? nestedWhereCond = null;
+
+				for (var i = 0; i < join.Condition.Predicates.Count; i++)
+				{
+					var predicate = join.Condition.Predicates[i];
+
+					var move = predicate is not SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr
+						|| exprExpr.Reduce(nullabilityContext.WithJoinSource(join.Table.Source), _evaluationContext, false, _dataOptions.LinqOptions) is not SqlPredicate.ExprExpr
+						|| exprExpr.Expr1 is SqlValue || exprExpr.Expr2 is SqlValue;
+
+					if (move && isLeft)
+					{
+						sources ??= QueryHelper.EnumerateAccessibleSources(join.Table).ToList();
+						move = !QueryHelper.IsDependsOnSources(predicate, sources);
+
+						if (!move && !QueryHelper.IsDependsOnSources(predicate, [left]))
 						{
-							if (join.Table.Source is SelectQuery sq)
+							if (nestedWhereCond == null)
 							{
-								QueryHelper.WrapQuery(root, sq, true, doNotRemove: true);
-								nestedWhereCond = ((SelectQuery)join.Table.Source).Where.EnsureConjunction();
+								if (join.Table.Source is SelectQuery sq)
+								{
+									QueryHelper.WrapQuery(root, sq, true, doNotRemove: true);
+									nestedWhereCond = ((SelectQuery)join.Table.Source).Where.EnsureConjunction();
+									modified = true;
+								}
+								else if (join.Table.Source is SqlTable t)
+								{
+									var subQuery      = new SelectQuery() { DoNotRemove = true };
+									join.Table.Source = subQuery;
+									nestedWhereCond = subQuery.Where.EnsureConjunction();
+									subQuery.From.Table(t);
+
+									var tableSources = new HashSet<ISqlTableSource>() { t };
+									var foundFields  = new HashSet<ISqlExpression>();
+
+									QueryHelper.CollectDependencies(_rootElement, sources, foundFields);
+
+									if (foundFields.Count > 0)
+									{
+										var toReplace = new Dictionary<IQueryElement, IQueryElement>(foundFields.Count);
+										foreach (var expr in foundFields)
+											toReplace.Add(expr, subQuery.Select.AddColumn(expr));
+
+										_rootElement.Replace(toReplace, subQuery.Select);
+									}
+
+									modified = true;
+								}
 							}
-							else if (join.Table.Source is SqlTable t)
+
+							if (nestedWhereCond != null)
 							{
-								var subQuery      = new SelectQuery() { DoNotRemove = true };
-								join.Table.Source = subQuery;
-								nestedWhereCond   = subQuery.Where.EnsureConjunction();
-								subQuery.From.Table(t);
-
-								var tableSources = new HashSet<ISqlTableSource>() { t };
-								var foundFields  = new HashSet<ISqlExpression>();
-
-								QueryHelper.CollectDependencies(_rootElement, sources, foundFields);
+								// update references
+								var foundFields = new HashSet<ISqlExpression>();
+								QueryHelper.CollectDependencies(predicate, [join.Table.Source], foundFields);
 
 								if (foundFields.Count > 0)
 								{
 									var toReplace = new Dictionary<IQueryElement, IQueryElement>(foundFields.Count);
 									foreach (var expr in foundFields)
-										toReplace.Add(expr, subQuery.Select.AddColumn(expr));
-
-									_rootElement.Replace(toReplace, subQuery.Select);
+										toReplace.Add(expr, ((SqlColumn)expr).Expression);
+									predicate.Replace(toReplace);
 								}
+
+								nestedWhereCond.Predicates.Add(predicate);
+								join.Condition.Predicates.RemoveAt(i);
+								i--;
+								continue;
 							}
 						}
+					}
 
-						if (nestedWhereCond != null)
-						{
-							// update references
-							var foundFields = new HashSet<ISqlExpression>();
-							QueryHelper.CollectDependencies(predicate, [join.Table.Source], foundFields);
-
-							if (foundFields.Count > 0)
-							{
-								var toReplace = new Dictionary<IQueryElement, IQueryElement>(foundFields.Count);
-								foreach (var expr in foundFields)
-									toReplace.Add(expr, ((SqlColumn)expr).Expression);
-								predicate.Replace(toReplace);
-							}
-
-							nestedWhereCond.Predicates.Add(predicate);
-							join.Condition.Predicates.RemoveAt(i);
-							i--;
-							continue;
-						}
+					if (move)
+					{
+						(whereCond ??= where.EnsureConjunction()).Predicates.Add(predicate);
+						join.Condition.Predicates.RemoveAt(i);
+						i--;
 					}
 				}
 
-				if (move)
-				{
-					(whereCond ??= where.EnsureConjunction()).Predicates.Add(predicate);
-					join.Condition.Predicates.RemoveAt(i);
-					i--;
-				}
+				// this could result in empty condition, but it is fine - user created unsupported query
+				return modified;
 			}
-
-			// this could result in empty condition, but it is fine - user created unsupported query
 		}
 
 		bool CorrectRecursiveCteJoins(SelectQuery selectQuery)
