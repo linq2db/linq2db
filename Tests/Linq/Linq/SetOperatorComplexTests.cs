@@ -436,7 +436,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbMemberNotFound]
 		public void UsingDictionary([DataSources] string context, [Values] SetOperation operation)
 		{
 			using var db       = GetDataContext(context);

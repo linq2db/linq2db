@@ -511,7 +511,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbMemberNotFound]
 		public void Distinct([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -528,7 +527,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbMemberNotFound]
 		public void Take([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

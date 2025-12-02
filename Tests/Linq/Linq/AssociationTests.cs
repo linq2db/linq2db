@@ -116,7 +116,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbMemberNotFound]
 		[Test]
 		public void SelectMany3([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
@@ -132,7 +131,6 @@ namespace Tests.Linq
 						.SelectMany(g => g.Select(ch => ch.Parent)));
 		}
 
-		[YdbMemberNotFound]
 		[Test]
 		public void SelectMany4([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
@@ -1024,7 +1022,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbMemberNotFound]
 		[Test]
 		public void DistinctSelect([DataSources(TestProvName.AllClickHouse)] string context)
 		{

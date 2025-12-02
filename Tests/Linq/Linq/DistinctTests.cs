@@ -105,7 +105,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbMemberNotFound]
 		[Test]
 		public void DistinctMax([DataSources] string context)
 		{

@@ -152,7 +152,6 @@ namespace Tests.Linq
 					Where(c => c.ParentID == 1));
 		}
 
-		[YdbMemberNotFound]
 		[Test]
 		public void Concat502([DataSources(TestProvName.AllInformix)] string context)
 		{
@@ -1967,7 +1966,6 @@ namespace Tests.Linq
 			query.ToList();
 		}
 
-		[YdbMemberNotFound]
 		[Test(Description = "ArgumentOutOfRangeException : Index was out of range. Must be non-negative and less than the size of the collection.")]
 		public void Issue2511_Query1([DataSources] string context)
 		{
@@ -1985,7 +1983,6 @@ namespace Tests.Linq
 			Assert.That(pat.Patient!.Diagnosis, Is.EqualTo("Hallucination with Paranoid Bugs' Delirium of Persecution"));
 		}
 
-		[YdbMemberNotFound]
 		[Test(Description = "Associations with Concat/Union or other Set operations are not supported")]
 		public void Issue2511_Query2([DataSources] string context)
 		{
@@ -2512,7 +2509,6 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4620")]
-		[YdbMemberNotFound]
 		public void Issue4620Test2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

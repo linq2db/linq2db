@@ -858,8 +858,8 @@ namespace Tests.Linq
 		[Table]
 		public sealed class ThingState
 		{
-			[Column] public int       ThingId            { get; set; }
-			[Column] public DateTime? LastTransitionDate { get; set; }
+			[PrimaryKey] public int       ThingId            { get; set; }
+			[Column]     public DateTime? LastTransitionDate { get; set; }
 		}
 
 		[Table]

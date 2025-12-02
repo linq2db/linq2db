@@ -550,7 +550,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[YdbMemberNotFound]
 		public void Index([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

@@ -18,13 +18,13 @@ namespace Tests.Linq
 		[Table]
 		sealed class SampleClass
 		{
-			[Column]                                                              public int     Id               { get; set; }
+			[PrimaryKey]                                                          public int     Id               { get; set; }
 			[Column(Length = 50, CanBeNull = true)]                               public string? NullableValue    { get; set; }
 			[Column(Length = 50, CanBeNull = false)]                              public string  NotNullableValue { get; set; } = string.Empty;
 			[Column(Length = 50, CanBeNull = true, DataType = DataType.VarChar)]  public string? VarcharValue     { get; set; }
 			[Column(Length = 50, CanBeNull = true, DataType = DataType.NVarChar)] public string? NVarcharValue    { get; set; }
 
-			public static SampleClass[] GenerateDataUniquerId()
+			public static SampleClass[] GenerateDataUniqueId()
 			{
 				var data = new[]
 				{
@@ -36,7 +36,7 @@ namespace Tests.Linq
 				return data;
 			}
 
-			public static SampleClass[] GenerateDataNotUniquerId()
+			public static SampleClass[] GenerateDataNotUniqueId()
 			{
 				var data = new[]
 				{
@@ -52,7 +52,7 @@ namespace Tests.Linq
 		[Test]
 		public void JoinWithGrouping([DataSources] string context)
 		{
-			var       data  = SampleClass.GenerateDataUniquerId();
+			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
@@ -75,7 +75,7 @@ namespace Tests.Linq
 		[Test]
 		public void JoinWithGroupingParameter([DataSources] string context, [Values(", ", ": ")]string separator)
 		{
-			var       data  = SampleClass.GenerateDataUniquerId();
+			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
@@ -99,7 +99,7 @@ namespace Tests.Linq
 		[Test]
 		public void JoinWithGroupingVarious([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
 		{
-			var       data  = SampleClass.GenerateDataUniquerId();
+			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
@@ -129,7 +129,7 @@ namespace Tests.Linq
 		[Test]
 		public void JoinWithGroupingAndUnsupportedMethod([DataSources(TestProvName.AllOracle)] string context)
 		{
-			var       data  = SampleClass.GenerateDataUniquerId();
+			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
@@ -153,7 +153,7 @@ namespace Tests.Linq
 		[Test]
 		public void JoinWithGroupingOrdered([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
 		{
-			var       data  = SampleClass.GenerateDataNotUniquerId();
+			var       data  = SampleClass.GenerateDataNotUniqueId();
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
@@ -214,7 +214,7 @@ namespace Tests.Linq
 		[Test]
 		public void JoinWithGroupingOrderSimple([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle, TestProvName.AllDB2)] string context)
 		{
-			var       data  = SampleClass.GenerateDataNotUniquerId();
+			var       data  = SampleClass.GenerateDataNotUniqueId();
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
@@ -246,7 +246,7 @@ namespace Tests.Linq
 		[Test]
 		public void JoinWithGroupingDistinctSimple([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllSapHana, TestProvName.AllOracle, TestProvName.AllSybase)] string context)
 		{
-			var       data  = SampleClass.GenerateDataNotUniquerId();
+			var       data  = SampleClass.GenerateDataNotUniqueId();
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
@@ -280,7 +280,7 @@ namespace Tests.Linq
 		[Test]
 		public void JoinAggregateExecuteNullable([DataSources(TestProvName.AllOracle)] string context)
 		{
-			var       data  = SampleClass.GenerateDataUniquerId();
+			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
@@ -293,7 +293,7 @@ namespace Tests.Linq
 		[Test]
 		public void JoinAggregateExecuteNullableButFiltered([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			var       data  = SampleClass.GenerateDataUniquerId();
+			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
@@ -307,7 +307,7 @@ namespace Tests.Linq
 		[Test]
 		public void JoinAggregateExecuteFiltered([DataSources(true)] string context)
 		{
-			var       data  = SampleClass.GenerateDataUniquerId();
+			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
@@ -321,7 +321,7 @@ namespace Tests.Linq
 		[Test]
 		public async Task JoinAggregateExecuteNullableButFilteredAsync([DataSources] string context)
 		{
-			var       data  = SampleClass.GenerateDataUniquerId();
+			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
@@ -335,7 +335,7 @@ namespace Tests.Linq
 		[Test]
 		public void JoinAggregateExecuteNullableOnlyNotNull([DataSources] string context)
 		{
-			var       data  = SampleClass.GenerateDataUniquerId();
+			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
@@ -351,7 +351,7 @@ namespace Tests.Linq
 		[Test]
 		public void JoinAggregateArray([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql57)] string context)
 		{
-			var       data  = SampleClass.GenerateDataUniquerId();
+			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
@@ -382,7 +382,7 @@ namespace Tests.Linq
 		[Test]
 		public void JoinAggregateArrayNotNull([DataSources(TestProvName.AllMariaDB, TestProvName.AllMySql57)] string context)
 		{
-			var       data  = SampleClass.GenerateDataUniquerId();
+			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
@@ -401,7 +401,7 @@ namespace Tests.Linq
 		[Test]
 		public void JoinAggregateArrayNotNullAndFilter([DataSources(true, TestProvName.AllOracle11, TestProvName.AllSybase)] string context)
 		{
-			var       data  = SampleClass.GenerateDataUniquerId();
+			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
@@ -417,7 +417,7 @@ namespace Tests.Linq
 		[Test]
 		public void JoinOnClient([DataSources(true)] string context)
 		{
-			var       data  = SampleClass.GenerateDataUniquerId();
+			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 

@@ -508,7 +508,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbMemberNotFound]
 		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, ProviderName.InformixDB2])]
 		[Test]
 		public void TestInsert([CteContextSource(true, ProviderName.DB2)] string context)
@@ -2116,7 +2115,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[YdbMemberNotFound]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3407")]
 		public void Issue3407Test([CteContextSource] string context)
 		{

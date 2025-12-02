@@ -1275,7 +1275,6 @@ namespace Tests.Linq
 					select g.Key.Value1);
 		}
 
-		[YdbMemberNotFound]
 		[Test]
 		public void GroupByAssociation2([DataSources] string context)
 		{
