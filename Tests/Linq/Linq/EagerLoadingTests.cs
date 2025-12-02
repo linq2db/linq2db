@@ -1117,9 +1117,9 @@ FROM
 					Details = x.Details.Select(d => d.DetailValue)
 				});
 
-				query.FirstOrDefaultAsync(x => x.Id1 == 1);
-				query.FirstAsync(x => x.Id1          == 1);
-				query.SingleAsync(x => x.Id1         == 1);
+				_ = await query.FirstOrDefaultAsync(x => x.Id1 == 1);
+				_ = await query.FirstAsync(x => x.Id1          == 1);
+				_ = await query.SingleAsync(x => x.Id1         == 1);
 			}
 		}
 

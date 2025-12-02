@@ -280,13 +280,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				case VisitMode.Modify:
 				{
-					element.Modify((ISqlExpression)this.Visit(element.Expression), this.Visit(element.Suffix) as ISqlExpression);
+					element.Modify((ISqlExpression)Visit(element.Expression), Visit(element.Suffix) as ISqlExpression);
 					break;
 				}
 				case VisitMode.Transform:
 				{
-					var expression = (ISqlExpression)this.Visit(element.Expression);
-					var suffix     = this.Visit(element.Suffix) as ISqlExpression;
+					var expression = (ISqlExpression)Visit(element.Expression);
+					var suffix     = Visit(element.Suffix) as ISqlExpression;
 
 					if (ShouldReplace(element) 
 					    || !ReferenceEquals(element.Expression, expression)
