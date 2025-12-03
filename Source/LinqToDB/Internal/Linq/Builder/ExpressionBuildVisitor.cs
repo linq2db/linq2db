@@ -553,7 +553,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		[Conditional("DEBUG")]
 		void DebugCacheHit(ExprCacheKey cacheKey, Expression translated)
 		{
-			Debug.WriteLine($"Cache hit: {cacheKey.Expression} ({cacheKey.Flags}) => {translated}");
+			//Debug.WriteLine($"Cache hit: {cacheKey.Expression} ({cacheKey.Flags}) => {translated}");
 		}
 
 		ExprCacheKey GetSqlCacheKey(Expression path)
@@ -653,7 +653,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		[Conditional("DEBUG")]
 		public void LogVisit(Expression node, [CallerMemberName] string callerName = "")
 		{
-			Debug.WriteLine($"{callerName}: {_buildPurpose}, {_buildFlags}, {node}");
+			//Debug.WriteLine($"{callerName}: {_buildPurpose}, {_buildFlags}, {node}");
 		}
 
 		protected override Expression VisitLambda<T>(Expression<T> node)
@@ -675,10 +675,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override MemberAssignment VisitMemberAssignment(MemberAssignment node)
 		{
-			if (_buildPurpose is BuildPurpose.Table or BuildPurpose.AggregationRoot or BuildPurpose.AssociationRoot)
-			{
+			if (IsRootExpression())
 				return node;
-			}
 
 			var columnDescriptor = node.Member.DeclaringType != null
 				? MappingSchema.GetEntityDescriptor(node.Member.DeclaringType).FindColumnDescriptor(node.Member)
@@ -700,6 +698,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		internal override SqlGenericConstructorExpression.Assignment VisitSqlGenericAssignment(SqlGenericConstructorExpression.Assignment assignment)
 		{
+			if (IsRootExpression())
+				return assignment;
+
 			var columnDescriptor = assignment.MemberInfo.DeclaringType != null
 				? MappingSchema.GetEntityDescriptor(assignment.MemberInfo.DeclaringType).FindColumnDescriptor(assignment.MemberInfo)
 				: CurrentDescriptor;
@@ -964,7 +965,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			if (_buildPurpose is BuildPurpose.Root or BuildPurpose.AggregationRoot or BuildPurpose.AssociationRoot or BuildPurpose.Table)
+			if (IsRootExpression())
 				return node;
 
 			using var saveDescriptor = UsingColumnDescriptor(null);
@@ -1858,9 +1859,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			return node.Update(innerExpression, node.NotNullExpressions);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		bool IsSqlOrExpression()
 		{
 			return _buildPurpose is BuildPurpose.Sql or BuildPurpose.Expression;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		bool IsRootExpression()
+		{
+			return _buildPurpose is BuildPurpose.Root or BuildPurpose.Table or BuildPurpose.AggregationRoot or BuildPurpose.AssociationRoot;
 		}
 
 		protected override Expression VisitConditional(ConditionalExpression node)
