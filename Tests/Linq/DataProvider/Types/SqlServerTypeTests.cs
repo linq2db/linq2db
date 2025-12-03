@@ -99,25 +99,26 @@ namespace Tests.DataProvider
 			//await TestType<float[], float[]?>(context, new(typeof(float[]), dt, null, length: 2), asArray1, default, filterByValue: false);
 			//await TestType<float[], float[]?>(context, new(typeof(float[]), dt, null, length: 2), asArray2, asArray1, filterByValue: false, filterByNullableValue: false);
 
+			var type = new DbDataType(typeof(SqlVector<float>)).WithLength(2);
+
 			if (msClient)
 			{
-				var type = new DbDataType(typeof(SqlVector<float>)).WithLength(2);
 				var sqlVector1 = new SqlVector<float>(asArray1.AsMemory());
 				var sqlVector2 = new SqlVector<float>(asArray2.AsMemory());
 				var sqlVector3 = new SqlVector<float>(asArray3.AsMemory());
 
-				await TestType<SqlVector<float>, SqlVector<float>?>(context, type, sqlVector1, default,               filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector1.Memory.ToArray()));
+				await TestType<SqlVector<float>, SqlVector<float>?>(context, type, sqlVector1, default, filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector1.Memory.ToArray()));
 
 				await TestType<SqlVector<float>, SqlVector<float>?>(context, type, sqlVector2, SqlVector<float>.Null, filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector2.Memory.ToArray()));
 
-				await TestType<SqlVector<float>, SqlVector<float>?>(context, type, sqlVector3, sqlVector2,            filterByValue: false, filterByNullableValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector3.Memory.ToArray()), isExpectedNullableValue: v => v != null && Enumerable.SequenceEqual(v.Value.Memory.ToArray(), sqlVector2.Memory.ToArray()));
-
-				await TestType<float[],          float[]?>         (context, type, asArray1,   default,               filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v, asArray1));
-
-				await TestType<float[],          float[]?>         (context, type, asArray2,   null,                  filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v, asArray2));
-
-				await TestType<float[],          float[]?>         (context, type, asArray3,   asArray2,              filterByValue: false, filterByNullableValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v, asArray3), isExpectedNullableValue: v => v != null && Enumerable.SequenceEqual(v, asArray2));
+				await TestType<SqlVector<float>, SqlVector<float>?>(context, type, sqlVector3, sqlVector2, filterByValue: false, filterByNullableValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector3.Memory.ToArray()), isExpectedNullableValue: v => v != null && Enumerable.SequenceEqual(v.Value.Memory.ToArray(), sqlVector2.Memory.ToArray()));
 			}
+
+			await TestType<float[],          float[]?>         (context, type, asArray1,   default,               filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v, asArray1));
+
+			await TestType<float[],          float[]?>         (context, type, asArray2,   null,                  filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v, asArray2));
+
+			await TestType<float[],          float[]?>         (context, type, asArray3,   asArray2,              filterByValue: false, filterByNullableValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v, asArray3), isExpectedNullableValue: v => v != null && Enumerable.SequenceEqual(v, asArray2));
 		}
 
 		[ActiveIssue("Waiting for SqlClient support")]

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Data.Linq;
 using System.Globalization;
 
@@ -39,6 +40,10 @@ namespace LinqToDB.Internal.Remote
 			SetConvertExpression<TimeSpan      , string>(value => value.Ticks.ToString(CultureInfo.InvariantCulture));
 			SetConvertExpression<Binary        , string>(value => Convert.ToBase64String(value.ToArray()));
 			SetConvertExpression<byte[]        , string>(value => Convert.ToBase64String(value));
+			SetConvertExpression<float[]       , string>(value => ConvertToString(value));
+#if NET8_0_OR_GREATER
+			SetConvertExpression<Half[]        , string>(value => ConvertToString(value));
+#endif
 
 			SetConvertExpression<string, bool          >(value => value == "1");
 			SetConvertExpression<string, int           >(value => int     .Parse(value, CultureInfo.InvariantCulture));
@@ -62,6 +67,10 @@ namespace LinqToDB.Internal.Remote
 			SetConvertExpression<string, TimeSpan      >(value => TimeSpan.FromTicks(long.Parse(value, CultureInfo.InvariantCulture)));
 			SetConvertExpression<string, Binary        >(value => new Binary(Convert.FromBase64String(value)));
 			SetConvertExpression<string, byte[]        >(value => Convert.FromBase64String(value));
+			SetConvertExpression<string, float[]       >(value => ReadSingleVector(value));
+#if NET8_0_OR_GREATER
+			SetConvertExpression<string, Half[]        >(value => ReadHalfVector(value));
+#endif
 		}
 
 		// DTO serialized as two fields to preserve offset information
@@ -70,5 +79,40 @@ namespace LinqToDB.Internal.Remote
 			var parts = data.Split(':');
 			return new DateTimeOffset(long.Parse(parts[0], CultureInfo.InvariantCulture), TimeSpan.FromTicks(long.Parse(parts[1], CultureInfo.InvariantCulture)));
 		}
+
+		// TODO: in future implement generic collection converters
+		private static string ConvertToString(float[] vector)
+		{
+			var arr = new byte[vector.Length * 4];
+			Buffer.BlockCopy(vector, 0, arr, 0, arr.Length);
+			return Convert.ToBase64String(arr);
+		}
+
+		private static float[] ReadSingleVector(string value)
+		{
+			var arr = Convert.FromBase64String(value);
+
+			var result = new float[arr.Length / 4];
+			Buffer.BlockCopy(arr, 0, result, 0, arr.Length);
+			return result;
+		}
+
+#if NET8_0_OR_GREATER
+		private static string ConvertToString(Half[] vector)
+		{
+			var arr = new byte[vector.Length * 2];
+			Buffer.BlockCopy(vector, 0, arr, 0, arr.Length);
+			return Convert.ToBase64String(arr);
+		}
+
+		private static Half[] ReadHalfVector(string value)
+		{
+			var arr = Convert.FromBase64String(value);
+
+			var result = new Half[arr.Length / 2];
+			Buffer.BlockCopy(arr, 0, result, 0, arr.Length);
+			return result;
+		}
+#endif
 	}
 }

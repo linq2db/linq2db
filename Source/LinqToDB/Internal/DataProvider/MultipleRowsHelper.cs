@@ -72,23 +72,20 @@ namespace LinqToDB.Internal.DataProvider
 
 		public bool SuppressCloseAfterUse { get; set; }
 
+		public Func<DataOptions, ColumnDescriptor, object?, bool> ConvertToParameter { get; set; } = (o, _, _) => o.BulkCopyOptions.UseParameters;
+
 		public void SetHeader()
 		{
 			HeaderSize = StringBuilder.Length;
 		}
 
-		static readonly Func<ColumnDescriptor,object?, bool> _defaultSkipConvert = (_, _) => false;
-
 		public virtual void BuildColumns(
 			object                                 item,
-			Func<ColumnDescriptor, object?, bool>? skipConvert                   = null,
 			bool                                   castParameters                = false,
 			bool                                   castAllRows                   = false,
 			bool                                   castFirstRowLiteralOnUnionAll = false,
 			Func<ColumnDescriptor, bool>?          castLiteral                   = null)
 		{
-			skipConvert ??= _defaultSkipConvert;
-
 			for (var i = 0; i < Columns.Length; i++)
 			{
 				var column = Columns[i];
@@ -97,7 +94,7 @@ namespace LinqToDB.Internal.DataProvider
 
 				var position = StringBuilder.Length;
 
-				if (Options.BulkCopyOptions.UseParameters || skipConvert(column, value) || !MappingSchema.TryConvertToSql(StringBuilder, type, Options, value))
+				if (ConvertToParameter(Options, column, value) || !MappingSchema.TryConvertToSql(StringBuilder, type, Options, value))
 				{
 					var name = SqlBuilder.ConvertInline(ParameterName == "?" ? ParameterName : FormattableString.Invariant($"{ParameterName}{++ParameterIndex}"), ConvertType.NameToQueryParameter);
 

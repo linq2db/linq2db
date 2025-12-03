@@ -6,6 +6,8 @@ using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Internal.DataProvider.SqlServer;
+using LinqToDB.Mapping;
 
 using Microsoft.Data.SqlTypes;
 
@@ -15,25 +17,41 @@ namespace Tests.DataProvider
 {
 	public sealed  class SqlServerVectorTypeTests : TestBase
 	{
-		[Test]
-		public async ValueTask VectorDistanceSqlTest([IncludeDataSources(TestProvName.SqlServer2025MS)] string context)
+		sealed class SqlVectorTable
 		{
-			await using var db = GetDataContext(context);
+			[Column(Length = 3, DataType = DataType.Vector32)]
+			public SqlVector<float> Vector { get; set; }
 
-			var vectors = new[]
-			{
-				new { Vector = new SqlVector<float>(new[] { 1.0f, 2.0f, 3.0f }.AsMemory()) },
-				new { Vector = new SqlVector<float>(new[] { 4.0f, 5.0f, 6.0f }.AsMemory()) }
-			};
+			public static readonly SqlVectorTable[] Data =
+			[
+				new() { Vector = new SqlVector<float>(new[] { 1.0f, 2.0f, 3.0f }.AsMemory()) },
+				new() { Vector = new SqlVector<float>(new[] { 4.0f, 5.0f, 6.0f }.AsMemory()) }
+			];
+		}
 
-			await using var tmp = db.CreateTempTable(
-				vectors,
-				fmb => fmb
-					.Property(t => t.Vector)
-						.HasLength(3));
+		sealed class VectorTable
+		{
+			[Column(Length = 3)]
+			public float[] Vector { get; set; } = null!;
+
+			public static readonly VectorTable[] Data =
+			[
+				new() { Vector = new[] { 1.0f, 2.0f, 3.0f } },
+				new() { Vector = new[] { 4.0f, 5.0f, 6.0f } }
+			];
+		}
+
+		[Test]
+		public async ValueTask VectorDistanceSqlTest([IncludeDataSources(true, TestProvName.AllSqlServer2025PlusMS)] string context)
+		{
+			var vectors = SqlVectorTable.Data;
+
+			// TODO: instead of passing schema explicitly in future we need to implement out-of-box support for custom serialization
+			await using var db = GetDataContext(context, SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema);
+			await using var tb = db.CreateLocalTable(vectors);
 
 			var q =
-				from t in tmp
+				from t in tb
 				orderby SqlFn.VectorDistance(SqlFn.DistanceMetric.Cosine, t.Vector, vectors[0].Vector)
 				select new
 				{
@@ -59,24 +77,15 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public async ValueTask VectorDistanceFloatTest([IncludeDataSources(TestProvName.SqlServer2025MS)] string context)
+		public async ValueTask VectorDistanceFloatTest([IncludeDataSources(true, TestProvName.AllSqlServer2025Plus)] string context)
 		{
+			var vectors = VectorTable.Data;
+
 			await using var db = GetDataContext(context);
-
-			var vectors = new[]
-			{
-				new { Vector = new[] { 1.0f, 2.0f, 3.0f } },
-				new { Vector = new[] { 4.0f, 5.0f, 6.0f } }
-			};
-
-			await using var tmp = db.CreateTempTable(
-				vectors,
-				fmb => fmb
-					.Property(t => t.Vector)
-						.HasLength(3));
+			await using var tb = db.CreateLocalTable(vectors);
 
 			var q =
-				from t in tmp
+				from t in tb
 				orderby
 					SqlFn.VectorDistance   (SqlFn.DistanceMetric.Cosine, t.Vector, vectors[0].Vector),
 					t.Vector.VectorDistance(SqlFn.DistanceMetric.Cosine, vectors[0].Vector)
@@ -104,24 +113,16 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public async ValueTask VectorNormSqlTest([IncludeDataSources(TestProvName.SqlServer2025MS)] string context)
+		public async ValueTask VectorNormSqlTest([IncludeDataSources(true, TestProvName.AllSqlServer2025PlusMS)] string context)
 		{
-			await using var db = GetDataContext(context);
+			var vectors = SqlVectorTable.Data;
 
-			var vectors = new[]
-			{
-				new { Vector = new SqlVector<float>(new[] { 1.0f, 2.0f, 3.0f }.AsMemory()) },
-				new { Vector = new SqlVector<float>(new[] { 4.0f, 5.0f, 6.0f }.AsMemory()) }
-			};
-
-			await using var tmp = db.CreateTempTable(
-				vectors,
-				fmb => fmb
-					.Property(t => t.Vector)
-					.HasLength(3));
+			// TODO: instead of passing schema explicitly in future we need to implement out-of-box support for custom serialization
+			await using var db = GetDataContext(context, SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema);
+			await using var tb = db.CreateLocalTable(vectors);
 
 			var q =
-				from t in tmp
+				from t in tb
 				orderby t.Vector.CosineVectorDistance(vectors[0].Vector)
 				select new
 				{
@@ -146,24 +147,15 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public async ValueTask VectorNormFloatTest([IncludeDataSources(TestProvName.SqlServer2025MS)] string context)
+		public async ValueTask VectorNormFloatTest([IncludeDataSources(true, TestProvName.AllSqlServer2025Plus)] string context)
 		{
+			var vectors = VectorTable.Data;
+
 			await using var db = GetDataContext(context);
-
-			var vectors = new[]
-			{
-				new { Vector = new[] { 1.0f, 2.0f, 3.0f }},
-				new { Vector = new[] { 4.0f, 5.0f, 6.0f }}
-			};
-
-			await using var tmp = db.CreateTempTable(
-				vectors,
-				fmb => fmb
-					.Property(t => t.Vector)
-					.HasLength(3));
+			await using var tb = db.CreateLocalTable(vectors);
 
 			var q =
-				from t in tmp
+				from t in tb
 				orderby t.Vector.CosineVectorDistance(vectors[0].Vector)
 				select new
 				{
@@ -188,25 +180,16 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public async ValueTask VectorNormalizeSqlTest([IncludeDataSources(TestProvName.SqlServer2025MS)] string context)
+		public async ValueTask VectorNormalizeSqlTest([IncludeDataSources(true, TestProvName.AllSqlServer2025PlusMS)] string context)
 		{
-			await using var db = GetDataContext(context);
+			var vectors = SqlVectorTable.Data;
 
-			var vectors = new[]
-			{
-				new { Vector = new SqlVector<float>(new[] { 1.0f, 2.0f, 3.0f }.AsMemory()) },
-				new { Vector = new SqlVector<float>(new[] { 4.0f, 5.0f, 6.0f }.AsMemory()) }
-			};
-
-			await using var tmp = db.CreateTempTable(
-				vectors,
-				fmb => fmb
-					.Property(t => t.Vector)
-					.HasLength(3),
-				new BulkCopyOptions(BulkCopyType:BulkCopyType.MultipleRows));
+			// TODO: instead of passing schema explicitly in future we need to implement out-of-box support for custom serialization
+			await using var db = GetDataContext(context, SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema);
+			await using var tb = db.CreateLocalTable(vectors);
 
 			var q =
-				from t in tmp
+				from t in tb
 				orderby t.Vector.CosineVectorDistance(vectors[0].Vector)
 				select new
 				{
@@ -231,24 +214,15 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public async ValueTask VectorNormalizeFloatTest([IncludeDataSources(TestProvName.SqlServer2025MS)] string context)
+		public async ValueTask VectorNormalizeFloatTest([IncludeDataSources(true, TestProvName.AllSqlServer2025Plus)] string context)
 		{
+			var vectors = VectorTable.Data;
+
 			await using var db = GetDataContext(context);
-
-			var vectors = new[]
-			{
-				new { Vector = new[] { 1.0f, 2.0f, 3.0f }},
-				new { Vector = new[] { 4.0f, 5.0f, 6.0f }}
-			};
-
-			await using var tmp = db.CreateTempTable(
-				vectors,
-				fmb => fmb
-					.Property(t => t.Vector)
-					.HasLength(3));
+			await using var tb = db.CreateLocalTable(vectors);
 
 			var q =
-				from t in tmp
+				from t in tb
 				orderby t.Vector.CosineVectorDistance(vectors[0].Vector)
 				select new
 				{
@@ -273,9 +247,10 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public async ValueTask VectorPropertySqlTest([IncludeDataSources(TestProvName.SqlServer2025MS)] string context)
+		public async ValueTask VectorPropertySqlTest([IncludeDataSources(true, TestProvName.AllSqlServer2025PlusMS)] string context)
 		{
-			await using var db = GetDataContext(context);
+			// TODO: instead of passing schema explicitly in future we need to implement out-of-box support for custom serialization
+			await using var db = GetDataContext(context, SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema);
 
 			var vector = new SqlVector<float>(new[] { 1.0f, 2.0f, 3.0f }.AsMemory());
 
@@ -295,7 +270,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public async ValueTask VectorPropertyFloatTest([IncludeDataSources(TestProvName.SqlServer2025MS)] string context)
+		public async ValueTask VectorPropertyFloatTest([IncludeDataSources(true, TestProvName.AllSqlServer2025Plus)] string context)
 		{
 			await using var db = GetDataContext(context);
 
@@ -317,7 +292,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public async ValueTask VectorPrintParameterSqlTest([IncludeDataSources(TestProvName.SqlServer2025MS)] string context)
+		public async ValueTask VectorPrintParameterSqlTest([IncludeDataSources(true, TestProvName.AllSqlServer2025PlusMS)] string context)
 		{
 			var maxBinaryLogging = LinqToDB.Common.Configuration.MaxBinaryParameterLengthLogging;
 
@@ -325,7 +300,8 @@ namespace Tests.DataProvider
 			{
 				LinqToDB.Common.Configuration.MaxBinaryParameterLengthLogging = 2;
 
-				await using var db = GetDataContext(context);
+				// TODO: instead of passing schema explicitly in future we need to implement out-of-box support for custom serialization
+				await using var db = GetDataContext(context, SqlServerProviderAdapter.GetInstance(SqlServerProvider.MicrosoftDataSqlClient).MappingSchema);
 
 				var vector = new SqlVector<float>(new[] { 1.0f, 2.0f, 3.0f }.AsMemory());
 
@@ -340,7 +316,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public async ValueTask VectorPrintParameterFloatTest([IncludeDataSources(TestProvName.SqlServer2025MS)] string context)
+		public async ValueTask VectorPrintParameterFloatTest([IncludeDataSources(true, TestProvName.AllSqlServer2025PlusMS)] string context)
 		{
 			var maxBinaryLogging = LinqToDB.Common.Configuration.MaxBinaryParameterLengthLogging;
 

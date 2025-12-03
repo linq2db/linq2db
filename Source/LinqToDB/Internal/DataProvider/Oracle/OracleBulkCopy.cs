@@ -192,6 +192,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		static void OracleMultipleRowsCopy1Add(MultipleRowsHelper helper, object item, string? from)
 		{
+			helper.ConvertToParameter = static (o, cd, v) => v != null && (o.BulkCopyOptions.UseParameters || cd.DataType is DataType.Text or DataType.NText or DataType.Binary or DataType.VarBinary);
 			helper.StringBuilder.Append(CultureInfo.InvariantCulture, $"\tINTO {helper.TableName} (");
 
 			foreach (var column in helper.Columns)
@@ -203,7 +204,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			helper.StringBuilder.Length -= 2;
 
 			helper.StringBuilder.Append(") VALUES (");
-			helper.BuildColumns(item, (cd, v) => v != null && cd.DataType is DataType.Text or DataType.NText or DataType.Binary or DataType.VarBinary);
+			helper.BuildColumns(item);
 			helper.StringBuilder.AppendLine(")");
 
 			helper.RowsCopied.RowsCopied++;
@@ -448,10 +449,12 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		static void OracleMultipleRowsCopy3Add(MultipleRowsHelper helper, object item, string? from)
 		{
+			helper.ConvertToParameter = static (o, cd, v) => v != null && (o.BulkCopyOptions.UseParameters || cd.DataType is DataType.Text or DataType.NText or DataType.Binary or DataType.VarBinary);
+
 			helper.StringBuilder
 				.AppendLine()
 				.Append("\tSELECT ");
-			helper.BuildColumns(item, (cd, v) => v != null && cd.DataType is DataType.Text or DataType.NText or DataType.Binary or DataType.VarBinary);
+			helper.BuildColumns(item);
 			helper.StringBuilder.Append(" FROM DUAL ");
 			helper.StringBuilder.Append(" UNION ALL");
 

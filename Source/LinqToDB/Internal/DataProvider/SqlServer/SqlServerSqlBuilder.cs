@@ -576,21 +576,42 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		protected override bool PrintParameterValue(StringBuilder sb, object? value)
 		{
-			if (value != null && DataProvider is SqlServerDataProvider { Adapter.VectorToFloatConverter: {} converter } provider && provider.Adapter.SqlVectorType == value.GetType())
+			if (value != null)
 			{
-				var maxBinaryLogging = LinqToDB.Common.Configuration.MaxBinaryParameterLengthLogging;
-				var floats           = converter(value);
-
-				if (maxBinaryLogging >= 0               &&
-				    floats.Length    > maxBinaryLogging &&
-				    MappingSchema.ValueToSqlConverter.CanConvert(typeof(byte[])))
+				if (DataProvider is SqlServerDataProvider { Adapter.VectorToFloatConverter: { } converter } provider && provider.Adapter.SqlVectorType == value.GetType())
 				{
-					var trimmed = new float[maxBinaryLogging];
-					Array.Copy(floats, 0, trimmed, 0, maxBinaryLogging);
-					MappingSchema.ValueToSqlConverter.TryConvert(sb, MappingSchema, DataOptions, trimmed);
-					sb.Insert(sb.Length - 2, " ... ");
-					return true;
+					var maxBinaryLogging = LinqToDB.Common.Configuration.MaxBinaryParameterLengthLogging;
+					var floats           = converter(value);
+
+					if (maxBinaryLogging >= 0 &&
+						floats.Length > maxBinaryLogging &&
+						MappingSchema.ValueToSqlConverter.CanConvert(typeof(byte[])))
+					{
+						var trimmed = new float[maxBinaryLogging];
+						Array.Copy(floats, 0, trimmed, 0, maxBinaryLogging);
+						MappingSchema.ValueToSqlConverter.TryConvert(sb, MappingSchema, DataOptions, trimmed);
+						sb.Insert(sb.Length - 2, " ... ");
+						return true;
+					}
 				}
+#if NET8_0_OR_GREATER
+				else if (DataProvider is SqlServerDataProvider { Adapter.VectorToHalfConverter: { } halfConverter } provider2 && provider2.Adapter.SqlVectorType == value.GetType())
+				{
+					var maxBinaryLogging = LinqToDB.Common.Configuration.MaxBinaryParameterLengthLogging;
+					var array            = halfConverter(value);
+
+					if (maxBinaryLogging >= 0 &&
+						array.Length > maxBinaryLogging &&
+						MappingSchema.ValueToSqlConverter.CanConvert(typeof(byte[])))
+					{
+						var trimmed = new Half[maxBinaryLogging];
+						Array.Copy(array, 0, trimmed, 0, maxBinaryLogging);
+						MappingSchema.ValueToSqlConverter.TryConvert(sb, MappingSchema, DataOptions, trimmed);
+						sb.Insert(sb.Length - 2, " ... ");
+						return true;
+					}
+				}
+#endif
 			}
 
 			return base.PrintParameterValue(sb, value);

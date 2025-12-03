@@ -232,9 +232,9 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void ConvertVectorTest([IncludeDataSources(TestProvName.SqlServer2025MS)] string context)
+		public void ConvertVectorTest([IncludeDataSources(true, TestProvName.AllSqlServer2025Plus)] string context)
 		{
-			using var db = new SystemDB(context);
+			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.Convert(SqlType.Vector32(3), "[1, 2, 3]"));
 
 			Assert.That(result, Is.EquivalentTo([1f, 2f, 3f]));
