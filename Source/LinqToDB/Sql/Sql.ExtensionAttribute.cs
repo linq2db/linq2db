@@ -980,20 +980,5 @@ namespace LinqToDB
 				return FormattableString.Invariant($"{base.GetObjectID()}.{TokenName}.{IdentifierBuilder.GetObjectID(BuilderType)}.{BuilderValue}.{ChainPrecedence}.");
 			}
 		}
-
-		[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
-		public class ExtensionAttribute<T> : ExtensionAttribute
-		where T : IExtensionCallBuilder
-		{
-			public ExtensionAttribute(string expression) : base(expression)
-			{
-				BuilderType = typeof(T);
-			}
-
-			public ExtensionAttribute(string configuration, string expression) : base(configuration, expression)
-			{
-				BuilderType = typeof(T);
-			}
-		}
 	}
 }

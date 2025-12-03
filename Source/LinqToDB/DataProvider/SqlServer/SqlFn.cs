@@ -3844,7 +3844,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// The function returns a scalar <b>float</b> value that represents the distance between the two vectors using the specified distance metric.
 		/// </returns>
 		/// <exception cref="NotImplementedException"></exception>
-		[Sql.Extension<DistanceMetricBuilder>(ProviderName.SqlServer, "VECTOR_DISTANCE({distanceMetric}, {vector1}, {vector2})", ServerSideOnly=true)]
+		[Sql.Extension(ProviderName.SqlServer, "VECTOR_DISTANCE({distanceMetric}, {vector1}, {vector2})", ServerSideOnly=true, BuilderType = typeof(DistanceMetricBuilder))]
 		public static float VectorDistance([SqlQueryDependent] DistanceMetric distanceMetric, [ExprParameter] float[] vector1, [ExprParameter] float[] vector2)
 		{
 			throw new NotImplementedException();
@@ -3953,7 +3953,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// The function returns a scalar <b>float</b> value that represents the distance between the two vectors using the specified distance metric.
 		/// </returns>
 		/// <exception cref="NotImplementedException"></exception>
-		[Sql.Extension<DistanceMetricBuilder>(ProviderName.SqlServer, "VECTOR_DISTANCE({distanceMetric}, {vector1}, {vector2})", ServerSideOnly = true)]
+		[Sql.Extension(ProviderName.SqlServer, "VECTOR_DISTANCE({distanceMetric}, {vector1}, {vector2})", ServerSideOnly = true, BuilderType = typeof(DistanceMetricBuilder))]
 		public static float VectorDistance<T>([SqlQueryDependent] DistanceMetric distanceMetric, [ExprParameter] T vector1, [ExprParameter] T vector2)
 			where T : unmanaged
 		{
@@ -4131,7 +4131,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			/// An error is returned if <c>norm_type</c> isn't a valid norm type and if the vector isn't of the <a href="https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type">vector data type</a>.
 			/// </returns>
 			/// <exception cref="NotImplementedException"></exception>
-			[Sql.Extension<NormTypeBuilder>(ProviderName.SqlServer, "VECTOR_NORM({vector}, {normType})", ServerSideOnly = true)]
+			[Sql.Extension(ProviderName.SqlServer, "VECTOR_NORM({vector}, {normType})", ServerSideOnly = true, BuilderType = typeof(NormTypeBuilder))]
 			public float VectorNorm([SqlQueryDependent] NormType normType)
 			{
 				throw new NotImplementedException();
@@ -4209,7 +4209,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			/// An error is returned if <c>norm_type</c> isn't a valid norm type and if the vector isn't of the <a href="https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type">vector data type</a>.
 			/// </returns>
 			/// <exception cref="NotImplementedException"></exception>
-			[Sql.Extension<NormTypeBuilder>(ProviderName.SqlServer, "VECTOR_NORMALIZE({vector}, {normType})", ServerSideOnly = true)]
+			[Sql.Extension(ProviderName.SqlServer, "VECTOR_NORMALIZE({vector}, {normType})", ServerSideOnly = true, BuilderType = typeof(NormTypeBuilder))]
 			public float[] VectorNormalize([SqlQueryDependent] NormType normType)
 			{
 				throw new NotImplementedException();
@@ -4288,7 +4288,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			/// </list>
 			/// </returns>
 			/// <exception cref="NotImplementedException"></exception>
-			[Sql.Extension<VectorPropertyBuilder>(ProviderName.SqlServer, "VECTORPROPERTY({vector}, {property})", ServerSideOnly = true)]
+			[Sql.Extension(ProviderName.SqlServer, "VECTORPROPERTY({vector}, {property})", ServerSideOnly = true, BuilderType = typeof(VectorPropertyBuilder))]
 			public string VectorProperty([SqlQueryDependent] VectorPropertyType property)
 			{
 				throw new NotImplementedException();
@@ -4348,7 +4348,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			/// An error is returned if <c>norm_type</c> isn't a valid norm type and if the vector isn't of the <a href="https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type">vector data type</a>.
 			/// </returns>
 			/// <exception cref="NotImplementedException"></exception>
-			[Sql.Extension<NormTypeBuilder>(ProviderName.SqlServer, "VECTOR_NORM({vector}, {normType})", ServerSideOnly = true)]
+			[Sql.Extension(ProviderName.SqlServer, "VECTOR_NORM({vector}, {normType})", ServerSideOnly = true, BuilderType = typeof(NormTypeBuilder))]
 			public float VectorNorm([SqlQueryDependent] NormType normType)
 			{
 				throw new NotImplementedException();
@@ -4426,7 +4426,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			/// An error is returned if <c>norm_type</c> isn't a valid norm type and if the vector isn't of the <a href="https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type">vector data type</a>.
 			/// </returns>
 			/// <exception cref="NotImplementedException"></exception>
-			[Sql.Extension<NormTypeBuilder>(ProviderName.SqlServer, "VECTOR_NORMALIZE({vector}, {normType})", ServerSideOnly = true)]
+			[Sql.Extension(ProviderName.SqlServer, "VECTOR_NORMALIZE({vector}, {normType})", ServerSideOnly = true, BuilderType = typeof(NormTypeBuilder))]
 			public T VectorNormalize([SqlQueryDependent] NormType normType)
 			{
 				throw new NotImplementedException();
@@ -4505,7 +4505,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			/// </list>
 			/// </returns>
 			/// <exception cref="NotImplementedException"></exception>
-			[Sql.Extension<VectorPropertyBuilder>(ProviderName.SqlServer, "VECTORPROPERTY({vector}, {property})", ServerSideOnly = true)]
+			[Sql.Extension(ProviderName.SqlServer, "VECTORPROPERTY({vector}, {property})", ServerSideOnly = true, BuilderType = typeof(VectorPropertyBuilder))]
 			public string VectorProperty([SqlQueryDependent] VectorPropertyType property)
 			{
 				throw new NotImplementedException();
