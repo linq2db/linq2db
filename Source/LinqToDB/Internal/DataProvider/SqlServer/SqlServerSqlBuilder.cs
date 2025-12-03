@@ -417,7 +417,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				{
 					var type = provider.Adapter.GetDbType(param);
 
-					if (type == provider.Adapter.VectorDbType)
+					if (type == provider.Adapter.VectorDbType && provider.Adapter.SqlVectorType is not null)
 						return $"VECTOR({param.Size.ToString(NumberFormatInfo.InvariantInfo)})";
 					return type.ToString();
 				}

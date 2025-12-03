@@ -293,7 +293,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			Func<object, string?>? jsdocToStringConverter = null;
 
-			if (provider == SqlServerProvider.MicrosoftDataSqlClient)
+			if (provider is SqlServerProvider.MicrosoftDataSqlClient or SqlServerProvider.AutoDetect)
 			{
 				sqlJsonType   = LoadType("SqlJson", DataType.Json, null, true, true);
 
