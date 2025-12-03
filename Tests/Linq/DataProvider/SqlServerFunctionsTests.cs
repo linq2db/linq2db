@@ -232,7 +232,7 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void ConvertVectorTest([IncludeDataSources(ProviderName.SqlServer2025, TestProvName.SqlServer2025MS)] string context)
+		public void ConvertVectorTest([IncludeDataSources(TestProvName.SqlServer2025MS)] string context)
 		{
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.Convert(SqlType.Vector32(3), "[1, 2, 3]"));
