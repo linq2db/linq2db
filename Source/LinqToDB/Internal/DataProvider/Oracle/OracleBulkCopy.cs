@@ -190,9 +190,11 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			helper.SetHeader();
 		}
 
+		private static readonly Func<DataOptions, LinqToDB.Mapping.ColumnDescriptor, object?, bool> _convertToParameter = static (o, cd, v) => v != null && (o.BulkCopyOptions.UseParameters || cd.DataType is DataType.Text or DataType.NText or DataType.Binary or DataType.VarBinary);
+
 		static void OracleMultipleRowsCopy1Add(MultipleRowsHelper helper, object item, string? from)
 		{
-			helper.ConvertToParameter = static (o, cd, v) => v != null && (o.BulkCopyOptions.UseParameters || cd.DataType is DataType.Text or DataType.NText or DataType.Binary or DataType.VarBinary);
+			helper.ConvertToParameter = _convertToParameter;
 			helper.StringBuilder.Append(CultureInfo.InvariantCulture, $"\tINTO {helper.TableName} (");
 
 			foreach (var column in helper.Columns)
@@ -449,7 +451,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		static void OracleMultipleRowsCopy3Add(MultipleRowsHelper helper, object item, string? from)
 		{
-			helper.ConvertToParameter = static (o, cd, v) => v != null && (o.BulkCopyOptions.UseParameters || cd.DataType is DataType.Text or DataType.NText or DataType.Binary or DataType.VarBinary);
+			helper.ConvertToParameter = _convertToParameter;
 
 			helper.StringBuilder
 				.AppendLine()

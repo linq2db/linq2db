@@ -20,8 +20,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			if (element is SqlParameter p)
 			{
-				// TimeSpan parameters created for IDS provider and must be converted to literal as IDS doesn't support
-				// intervals explicitly
 				if (p.Type.SystemType == typeof(float[])
 #if NET8_0_OR_GREATER
 					|| p.Type.SystemType == typeof(Half[])

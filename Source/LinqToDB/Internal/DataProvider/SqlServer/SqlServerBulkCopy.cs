@@ -377,17 +377,18 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			return ret;
 		}
 
-		private MultipleRowsHelper<T> CreateRowsHelper<T>(ITable<T> table, DataOptions options) where T : notnull
-		{
-			var helper = new MultipleRowsHelper<T>(table, options);
-			if (_provider.Provider == SqlServerProvider.SystemDataSqlClient)
-			{
-				helper.ConvertToParameter = (options, cd, v) => options.BulkCopyOptions.UseParameters && cd.StorageType != typeof(float[])
+		private static readonly Func<DataOptions, LinqToDB.Mapping.ColumnDescriptor, object?, bool> _convertToParameter = static (options, cd, v) => options.BulkCopyOptions.UseParameters && cd.StorageType != typeof(float[])
 #if NET8_0_OR_GREATER
 				&& cd.StorageType != typeof(Half[])
 #endif
 				;
-			}
+
+		private MultipleRowsHelper<T> CreateRowsHelper<T>(ITable<T> table, DataOptions options) where T : notnull
+		{
+			var helper = new MultipleRowsHelper<T>(table, options);
+
+			if (_provider.Provider == SqlServerProvider.SystemDataSqlClient)
+				helper.ConvertToParameter = _convertToParameter;
 
 			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
 

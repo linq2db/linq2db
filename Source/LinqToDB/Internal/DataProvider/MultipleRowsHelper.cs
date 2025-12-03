@@ -70,9 +70,11 @@ namespace LinqToDB.Internal.DataProvider
 		public int LastRowStringIndex;
 		public int LastRowParameterIndex;
 
+		private static readonly Func<DataOptions, ColumnDescriptor, object?, bool> _defaultConvertToParameter = (o, _, _) => o.BulkCopyOptions.UseParameters;
+
 		public bool SuppressCloseAfterUse { get; set; }
 
-		public Func<DataOptions, ColumnDescriptor, object?, bool> ConvertToParameter { get; set; } = (o, _, _) => o.BulkCopyOptions.UseParameters;
+		public Func<DataOptions, ColumnDescriptor, object?, bool> ConvertToParameter { get; set; } = _defaultConvertToParameter;
 
 		public void SetHeader()
 		{
