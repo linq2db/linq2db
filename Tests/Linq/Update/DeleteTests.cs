@@ -32,11 +32,11 @@ namespace Tests.xUpdate
 				db.Delete(parent);
 				db.Insert(parent);
 
-				Assert.That(db.Parent.Count (p => p.ParentID == parent.ParentID), Is.EqualTo(1));
+				Assert.That(db.Parent.Count(p => p.ParentID == parent.ParentID), Is.EqualTo(1));
 				var cnt = db.Parent.Delete(p => p.ParentID == parent.ParentID);
 				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
-				Assert.That(db.Parent.Count (p => p.ParentID == parent.ParentID), Is.Zero);
+				Assert.That(db.Parent.Count(p => p.ParentID == parent.ParentID), Is.Zero);
 			}
 		}
 
@@ -59,6 +59,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Delete3([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -79,6 +80,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Delete4([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -126,6 +128,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void AlterDelete([DataSources(false, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -133,8 +136,8 @@ namespace Tests.xUpdate
 			{
 				var q =
 					from p in db.Parent
-						join ch in db.Child on p.ParentID equals ch.ParentID into lj1
-						from ch in lj1.DefaultIfEmpty()
+					join ch in db.Child on p.ParentID equals ch.ParentID into lj1
+					from ch in lj1.DefaultIfEmpty()
 					where ch != null && ch.ParentID == -1 || ch == null && p.ParentID == -1
 					select p;
 
@@ -142,6 +145,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedDelete)]
 		public void DeleteMany1([DataSources(false)] string context)
@@ -149,8 +153,8 @@ namespace Tests.xUpdate
 			using (var db = GetDataContext(context))
 			{
 				db.Parent.Insert(() => new Parent { ParentID = 1001 });
-				db.Child. Insert(() => new Child  { ParentID = 1001, ChildID = 1 });
-				db.Child. Insert(() => new Child  { ParentID = 1001, ChildID = 2 });
+				db.Child.Insert(() => new Child { ParentID = 1001, ChildID = 1 });
+				db.Child.Insert(() => new Child { ParentID = 1001, ChildID = 2 });
 
 				try
 				{
@@ -165,7 +169,7 @@ namespace Tests.xUpdate
 				}
 				finally
 				{
-					db.Child. Delete(c => c.ParentID >= 1000);
+					db.Child.Delete(c => c.ParentID >= 1000);
 					db.Parent.Delete(c => c.ParentID >= 1000);
 				}
 			}
@@ -176,15 +180,15 @@ namespace Tests.xUpdate
 		{
 			using (var db = GetDataContext(context))
 			{
-				db.Parent.    Insert(() => new Parent     { ParentID = 1001 });
-				db.Child.     Insert(() => new Child      { ParentID = 1001, ChildID = 1 });
-				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 1});
-				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 2});
-				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 3});
-				db.Child.     Insert(() => new Child      { ParentID = 1001, ChildID = 2 });
-				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 2, GrandChildID = 1});
-				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 2, GrandChildID = 2});
-				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 2, GrandChildID = 3});
+				db.Parent.Insert(() => new Parent { ParentID = 1001 });
+				db.Child.Insert(() => new Child { ParentID = 1001, ChildID = 1 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 1 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 2 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 3 });
+				db.Child.Insert(() => new Child { ParentID = 1001, ChildID = 2 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 2, GrandChildID = 1 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 2, GrandChildID = 2 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 2, GrandChildID = 3 });
 
 				try
 				{
@@ -204,12 +208,13 @@ namespace Tests.xUpdate
 				finally
 				{
 					db.GrandChild.Delete(c => c.ParentID >= 1000);
-					db.Child.     Delete(c => c.ParentID >= 1000);
-					db.Parent.    Delete(c => c.ParentID >= 1000);
+					db.Child.Delete(c => c.ParentID >= 1000);
+					db.Parent.Delete(c => c.ParentID >= 1000);
 				}
 			}
 		}
 
+		[YdbMemberNotFound]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedDelete)]
 		[Test]
 		public void DeleteMany3([DataSources] string context)
@@ -219,13 +224,13 @@ namespace Tests.xUpdate
 			using (var db = GetDataContext(context))
 			{
 				db.GrandChild.Delete(c => c.ParentID >= 1000);
-				db.Child.     Delete(c => c.ParentID >= 1000);
-				db.Parent.    Delete(c => c.ParentID >= 1000);
+				db.Child.Delete(c => c.ParentID >= 1000);
+				db.Parent.Delete(c => c.ParentID >= 1000);
 
-				db.Parent.    Insert(() => new Parent     { ParentID = 1001 });
-				db.Child.     Insert(() => new Child      { ParentID = 1001, ChildID = 1 });
-				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 1});
-				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 2});
+				db.Parent.Insert(() => new Parent { ParentID = 1001 });
+				db.Child.Insert(() => new Child { ParentID = 1001, ChildID = 1 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 1 });
+				db.GrandChild.Insert(() => new GrandChild { ParentID = 1001, ChildID = 1, GrandChildID = 2 });
 
 				try
 				{
@@ -241,8 +246,8 @@ namespace Tests.xUpdate
 				finally
 				{
 					db.GrandChild.Delete(c => c.ParentID >= 1000);
-					db.Child.     Delete(c => c.ParentID >= 1000);
-					db.Parent.    Delete(c => c.ParentID >= 1000);
+					db.Child.Delete(c => c.ParentID >= 1000);
+					db.Parent.Delete(c => c.ParentID >= 1000);
 				}
 			}
 		}
@@ -256,6 +261,7 @@ namespace Tests.xUpdate
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSapHana,
 			ProviderName.SqlCe,
+			ProviderName.Ydb,
 			TestProvName.AllSQLite
 			)]
 			string context)
@@ -290,6 +296,7 @@ namespace Tests.xUpdate
 			TestProvName.AllClickHouse,
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
+			ProviderName.Ydb,
 			TestProvName.AllSQLite,
 			TestProvName.AllPostgreSQL,
 			TestProvName.AllSapHana,
@@ -335,6 +342,7 @@ namespace Tests.xUpdate
 			TestProvName.AllClickHouse,
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
+			ProviderName.Ydb,
 			TestProvName.AllSQLite,
 			TestProvName.AllMySql,
 			TestProvName.AllPostgreSQL,
@@ -382,6 +390,7 @@ namespace Tests.xUpdate
 			TestProvName.AllClickHouse,
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
+			ProviderName.Ydb,
 			TestProvName.AllSQLite,
 			TestProvName.AllMySql,
 			TestProvName.AllPostgreSQL,
@@ -424,6 +433,7 @@ namespace Tests.xUpdate
 			TestProvName.AllAccess,
 			TestProvName.AllClickHouse,
 			ProviderName.SqlCe,
+			ProviderName.Ydb,
 			TestProvName.AllDB2,
 			TestProvName.AllInformix,
 			TestProvName.AllSQLite,
@@ -479,6 +489,7 @@ namespace Tests.xUpdate
 			return db.LastQuery!;
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void ContainsJoin1([DataSources(false, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{

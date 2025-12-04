@@ -339,6 +339,7 @@
     <File Path="Data/Setup Scripts/wait-err.cmd" />
     <File Path="Data/Setup Scripts/wait-exit.cmd" />
     <File Path="Data/Setup Scripts/wait.cmd" />
+    <File Path="Data/Setup Scripts/ydb.cmd" />
   </Folder>
   <Folder Name="/Build/Redist/">
     <File Path="Redist/Readme.md" />

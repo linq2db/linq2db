@@ -135,7 +135,7 @@ namespace Tests.UserTests
 		[Table]
 		class SampleClass
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			[Column(DataType = DataType.NVarChar, Length = 50)] public MySpecialStringClass? MyString { get; set; }
 

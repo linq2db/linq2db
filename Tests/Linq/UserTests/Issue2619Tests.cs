@@ -26,8 +26,7 @@ namespace Tests.UserTests
 
 				sql.ShouldNotContain("ORDER");
 
-				var act = () => union.ToArray();
-				act.ShouldNotThrow();
+				union.ToArray();
 			}
 		}
 
@@ -46,8 +45,7 @@ namespace Tests.UserTests
 
 				sql.ShouldContain("ORDER", Exactly.Twice());
 
-				var act = () => union.ToArray();
-				act.ShouldNotThrow();
+				union.ToArray();
 			}
 		}
 
@@ -66,8 +64,7 @@ namespace Tests.UserTests
 
 				sql.ShouldContain("ORDER", Exactly.Twice());
 
-				var act = () => concat.ToArray();
-				act.ShouldNotThrow();
+				concat.ToArray();
 			}
 		}
 
@@ -86,11 +83,11 @@ namespace Tests.UserTests
 
 				sql.ShouldContain("ORDER", Exactly.Twice());
 
-				var act = () => concat.ToArray();
-				act.ShouldNotThrow();
+				concat.ToArray();
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void OrderByExcept([DataSources(TestProvName.AllSybase, TestProvName.AllSqlServer, TestProvName.AllAccess)] string context)
 		{
@@ -107,8 +104,7 @@ namespace Tests.UserTests
 				if (!sql.Contains("EXISTS"))
 					sql.ShouldNotContain("ORDER");
 
-				var act = () => concat.ToArray();
-				act.ShouldNotThrow();
+				concat.ToArray();
 			}
 		}
 
@@ -128,8 +124,7 @@ namespace Tests.UserTests
 
 				sql.ShouldContain("ORDER");
 
-				var act = () => except.ToArray();
-				act.ShouldNotThrow();
+				except.ToArray();
 			}
 		}
 

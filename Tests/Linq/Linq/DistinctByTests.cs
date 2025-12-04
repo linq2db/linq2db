@@ -6,6 +6,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -25,7 +26,7 @@ namespace Tests.Linq
 
 			public static List<TestData> Seed()
 			{
-				return 
+				return
 				[
 					new TestData { Id = 1, Name = "Alice", Group   = "A", Date = new DateTime(2023, 1, 1), Amount  = 100.0m, IsActive = true },
 					new TestData { Id = 2, Name = "Bob", Group     = "B", Date = new DateTime(2023, 1, 2), Amount  = 200.0m, IsActive = false },

@@ -613,6 +613,8 @@ namespace Tests.Linq
 				AssertQuery(query);
 			}
 		}
+
+		[YdbMemberNotFound]
 		[Test]
 		public void Issue909Subquery([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -856,8 +858,8 @@ namespace Tests.Linq
 		[Table]
 		public sealed class ThingState
 		{
-			[Column] public int       ThingId            { get; set; }
-			[Column] public DateTime? LastTransitionDate { get; set; }
+			[PrimaryKey] public int       ThingId            { get; set; }
+			[Column]     public DateTime? LastTransitionDate { get; set; }
 		}
 
 		[Table]

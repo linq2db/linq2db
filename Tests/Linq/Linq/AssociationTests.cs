@@ -1317,6 +1317,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void Issue1711Test1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
@@ -1337,6 +1338,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Issue1711Test2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
@@ -1785,6 +1787,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void OptionalAssociationNonNullCorrelationWithProjection([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -2134,6 +2137,7 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		[YdbMemberNotFound]
 		[Test]
 		public void ManyAssociationEmptyCheck1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -2145,6 +2149,7 @@ namespace Tests.Linq
 			Assert.That(parents.Any(p => p.ParentID == 5), Is.False);
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void ManyAssociationEmptyCheck2([DataSources(TestProvName.AllClickHouse)] string context)
 		{

@@ -17,6 +17,7 @@ namespace LinqToDB.Internal.DataProvider
 			_reservedWords[ProviderName.Oracle]        = _reservedWordsOracle;
 			_reservedWords[ProviderName.Firebird]      = _reservedWordsFirebird;
 			_reservedWords[ProviderName.Informix]      = _reservedWordsInformix;
+			_reservedWords[ProviderName.Ydb]           = _reservedWordsYdb;
 
 			var assembly = typeof(SelectQuery).Assembly;
 			var name = assembly.GetManifestResourceNames().Single(_ => _.EndsWith("ReservedWords.txt"));
@@ -31,6 +32,7 @@ namespace LinqToDB.Internal.DataProvider
 					{
 						_reservedWordsAll     .Add(s);
 						_reservedWordsInformix.Add(s);
+						_reservedWordsYdb     .Add(s);
 					}
 				}
 			}
@@ -83,6 +85,8 @@ namespace LinqToDB.Internal.DataProvider
 				}
 			}
 
+			_reservedWordsYdb     .Add("enum");
+
 			_reservedWordsInformix.Add("item");
 			_reservedWordsAll     .Add("item");
 		}
@@ -92,6 +96,7 @@ namespace LinqToDB.Internal.DataProvider
 		static readonly HashSet<string> _reservedWordsOracle   = new (StringComparer.OrdinalIgnoreCase);
 		static readonly HashSet<string> _reservedWordsFirebird = new (StringComparer.OrdinalIgnoreCase);
 		static readonly HashSet<string> _reservedWordsInformix = new (StringComparer.OrdinalIgnoreCase);
+		static readonly HashSet<string> _reservedWordsYdb      = new (StringComparer.OrdinalIgnoreCase);
 
 		static readonly ConcurrentDictionary<string,HashSet<string>> _reservedWords = new (StringComparer.OrdinalIgnoreCase);
 

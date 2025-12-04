@@ -260,6 +260,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void ExceptInheritance([DataSources] string context)
 		{
 			using var db       = GetDataContext(context);
@@ -283,6 +284,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void IntersectInheritance([DataSources] string context)
 		{
 			using var db       = GetDataContext(context);

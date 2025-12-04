@@ -14,6 +14,7 @@ namespace Tests
 				TestProvName.AllFirebird,
 				TestProvName.AllPostgreSQL,
 				ProviderName.DB2,
+				ProviderName.Ydb,
 				TestProvName.AllSQLite,
 				TestProvName.AllOracle,
 				TestProvName.AllClickHouse,

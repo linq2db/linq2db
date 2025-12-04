@@ -19,6 +19,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class AllAnyTests : TestBase
 	{
+		[YdbMemberNotFound]
 		[Test]
 		public void Any1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -28,6 +29,7 @@ namespace Tests.Linq
 					db.Parent.Where(p => db.Child.Where(c => c.ParentID == p.ParentID).Any(c => c.ParentID > 3)));
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Any2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -37,6 +39,7 @@ namespace Tests.Linq
 					db.Parent.Where(p => db.Child.Where(c => c.ParentID == p.ParentID).Any()));
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Any3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -46,6 +49,7 @@ namespace Tests.Linq
 					db.Parent.Where(p => p.Children.Any(c => c.ParentID > 3)));
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Any31([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -66,6 +70,7 @@ namespace Tests.Linq
 			return p => p.Children.Any(c => c.ParentID > 0 && c.ParentID > 3);
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Any32([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -75,6 +80,7 @@ namespace Tests.Linq
 					db.Parent.Where(p => p.ParentID > 0 && SelectAny(p)));
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Any4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -84,6 +90,7 @@ namespace Tests.Linq
 					db.Parent.Where(p => p.Children.Any()));
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Any5([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -108,6 +115,7 @@ namespace Tests.Linq
 				Assert.That(db.Child.Any(), Is.EqualTo(Child.Any()));
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Any8([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -117,6 +125,7 @@ namespace Tests.Linq
 					from p in db.Parent select db.Child.Select(c => c.Parent).Any(c => c == p));
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Any9([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -138,6 +147,7 @@ namespace Tests.Linq
 					select p);
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Any10([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -159,6 +169,7 @@ namespace Tests.Linq
 					select p);
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Any11([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -182,6 +193,7 @@ namespace Tests.Linq
 					select p);
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Any12([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -191,6 +203,7 @@ namespace Tests.Linq
 					from p in db.GetTable<Parent>() where db.GetTable<Child>().Any(c => p.ParentID == c.ParentID && c.ChildID > 3) select p);
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void All1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -200,6 +213,7 @@ namespace Tests.Linq
 					db.Parent.Where(p => db.Child.Where(c => c.ParentID == p.ParentID).All(c => c.ParentID > 3)));
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void All2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -209,6 +223,7 @@ namespace Tests.Linq
 					db.Parent.Where(p => p.Children.All(c => c.ParentID > 3)));
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void All3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -245,6 +260,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void SubQueryAllAny([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -305,6 +321,7 @@ namespace Tests.Linq
 
 		sealed record Filter(string[]? NamesProp);
 
+		[YdbMemberNotFound]
 		// Access: unsupported syntax for enumerable subquery
 		[ActiveIssue(Configuration = TestProvName.AllAccess)]
 		[Test]

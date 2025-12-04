@@ -1717,6 +1717,41 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		/// <summary>
+		/// Returns true, if type represents signed integer type.
+		/// </summary>
+		internal static bool IsSignedType(this DbDataType type)
+		{
+			return type.DataType.IsSignedType();
+		}
+
+		/// <summary>
+		/// Returns true, if type represents signed integer type.
+		/// </summary>
+		internal static bool IsUnsignedType(this DbDataType type)
+		{
+			return type.DataType.IsUnsignedType();
+		}
+
+		/// <summary>
+		/// Converts signed numeric type to unsigned type.
+		/// </summary>
+		internal static DbDataType ToUnsigned(this DbDataType type)
+		{
+			var newType = type.DataType switch
+			{
+				DataType.SByte => DataType.Byte,
+				DataType.Int16 => DataType.UInt16,
+				DataType.Int32 => DataType.UInt32,
+				DataType.Int64 => DataType.UInt64,
+				DataType.Int128 => DataType.UInt128,
+				DataType.Int256 => DataType.UInt256,
+				_ => throw new InvalidOperationException($"Unsigned DB type expected: {type}")
+			};
+
+			return type.WithDataType(newType);
+		}
+
+		/// <summary>
 		/// Returns true, if type represents text/string database type.
 		/// </summary>
 		internal static bool IsTextType(this DbDataType type)
@@ -1737,6 +1772,34 @@ namespace LinqToDB.Internal.SqlQuery
 				or DataType.NChar
 				or DataType.NVarChar
 				or DataType.NText
+				;
+		}
+
+		/// <summary>
+		/// Returns true, if type represents signed integer type.
+		/// </summary>
+		internal static bool IsSignedType(this DataType type)
+		{
+			return type is DataType.SByte
+				or DataType.Int16
+				or DataType.Int32
+				or DataType.Int64
+				or DataType.Int128
+				or DataType.Int256
+				;
+		}
+
+		/// <summary>
+		/// Returns true, if type represents unsigned integer type.
+		/// </summary>
+		internal static bool IsUnsignedType(this DataType type)
+		{
+			return type is DataType.Byte
+				or DataType.UInt16
+				or DataType.UInt32
+				or DataType.UInt64
+				or DataType.UInt128
+				or DataType.UInt256
 				;
 		}
 	}

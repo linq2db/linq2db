@@ -713,17 +713,17 @@ namespace LinqToDB.Internal.SqlProvider
 				public HashSet<CteClause>? DependsOn { get; private set; }
 
 				public CteDependencyHolder(CteClause cteClause)
-				{
+		{
 					CteClause = cteClause;
 				}
 
 				public bool AddDependency(CteClause cteClause)
-				{
+			{
 					if (ReferenceEquals(CteClause, cteClause))
-					{
+				{
 						CteClause.IsRecursive = true;
 						return false;
-					}
+				}
 
 					DependsOn ??= new HashSet<CteClause>();
 					DependsOn.Add(cteClause);
@@ -745,10 +745,10 @@ namespace LinqToDB.Internal.SqlProvider
 				_currentCteStack = null;
 				Visit(statement);
 				return _foundCtes;
-			}
+		}
 
 			public override void Cleanup()
-			{
+		{
 				base.Cleanup();
 
 				_foundCtes       = null;
@@ -761,31 +761,31 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			protected override IQueryElement VisitSqlCteTable(SqlCteTable element)
-			{
+				{
 				var cteClause = element.Cte;
 
 				CteDependencyHolder? holder    = null;
 
 				if (cteClause != null)
-				{
+						{
 					_foundCtes ??= new();
 					if (!_foundCtes.TryGetValue(cteClause, out holder))
-					{
+							{
 						cteClause.IsRecursive = false;
 						holder                = new CteDependencyHolder(cteClause);
 						_foundCtes.Add(cteClause, holder);
-					}
-				}
+							}
+						}
 
 				_currentCteStack ??= new Stack<CteDependencyHolder>();
 				if (holder != null)
-				{
+						{
 					foreach (var h in _currentCteStack)
-					{
+							{
 						// recursion found
 						if (!h.AddDependency(holder.CteClause))
 							return element;
-					}
+							}
 
 					_currentCteStack.Push(holder);
 				}
@@ -796,41 +796,41 @@ namespace LinqToDB.Internal.SqlProvider
 					_currentCteStack.Pop();
 
 				return element;
-			}
-		}
+						}
+				}
 
 		protected void FinalizeCte(SqlStatement statement)
-		{
+				{
 			if (statement is not SqlStatementWithQueryBase select)
 				return;
 
 			IDictionary<CteClause, CteCollectorVisitor.CteDependencyHolder>? foundCtes;
 
 			using (var cteCollector = _cteCollectorVisitorPool.Allocate())
-			{
+						{
 				foundCtes = cteCollector.Value.FindCtes(statement);
-			}
+				}
 
 			if (foundCtes == null)
 			{
-				select.With = null;
+					select.With = null;
 			}
-			else
-			{
-				// TODO: Ideally if there is no recursive CTEs we can convert them to SubQueries
-				if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
-					throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");
+				else
+				{
+					// TODO: Ideally if there is no recursive CTEs we can convert them to SubQueries
+					if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
+						throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");
 
 				var ordered = TopoSorting.TopoSort(foundCtes.Keys, foundCtes, static (ctes, cteClause) => (ctes.TryGetValue(cteClause, out var h) ? h.DependsOn ?? [] : []))
 					.ToList();
 
-				Utils.MakeUniqueNames(ordered, null, static (n, a) => !ReservedWords.IsReserved(n), static c => c.Name, static (c, n, a) => c.Name = n,
-					static c => string.IsNullOrEmpty(c.Name) ? "CTE_1" : c.Name, StringComparer.OrdinalIgnoreCase);
+					Utils.MakeUniqueNames(ordered, null, static (n, a) => !ReservedWords.IsReserved(n), static c => c.Name, static (c, n, a) => c.Name = n,
+						static c => string.IsNullOrEmpty(c.Name) ? "CTE_1" : c.Name, StringComparer.OrdinalIgnoreCase);
 
-				select.With = new SqlWithClause();
-				select.With.Clauses.AddRange(ordered);
+					select.With = new SqlWithClause();
+					select.With.Clauses.AddRange(ordered);
+				}
 			}
-		}
 
 		protected static bool HasParameters(ISqlExpression expr)
 		{

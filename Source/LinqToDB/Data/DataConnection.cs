@@ -490,7 +490,9 @@ namespace LinqToDB.Data
 			DataProvider!.InitContext(this);
 		}
 #if DEBUG
+#pragma warning disable IDE0052 // Remove unread private members
 		int _dataConnectionID;
+#pragma warning restore IDE0052 // Remove unread private members
 		static int _dataConnectionIDCounter;
 		static int _dataConnectionCount;
 #endif
