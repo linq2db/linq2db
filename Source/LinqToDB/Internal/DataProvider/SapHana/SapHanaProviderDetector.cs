@@ -9,7 +9,7 @@ using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.DataProvider.SapHana
 {
-	public sealed class SapHanaProviderDetector() : ProviderDetectorBase<SapHanaProvider>()
+	public sealed class SapHanaProviderDetector : ProviderDetectorBase<SapHanaProvider>
 	{
 		static readonly Lazy<IDataProvider> _hanaDataProvider     = CreateDataProvider<SapHanaNativeDataProvider>();
 		static readonly Lazy<IDataProvider> _hanaOdbcDataProvider = CreateDataProvider<SapHanaOdbcDataProvider>();

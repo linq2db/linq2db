@@ -9,7 +9,7 @@ using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.DataProvider.Sybase
 {
-	public class SybaseProviderDetector() : ProviderDetectorBase<SybaseProvider>()
+	public class SybaseProviderDetector : ProviderDetectorBase<SybaseProvider>
 	{
 		static readonly Lazy<IDataProvider> _sybaseNativeDataProvider  = CreateDataProvider<SybaseDataProviderNative>();
 		static readonly Lazy<IDataProvider> _sybaseManagedDataProvider = CreateDataProvider<SybaseDataProviderManaged>();

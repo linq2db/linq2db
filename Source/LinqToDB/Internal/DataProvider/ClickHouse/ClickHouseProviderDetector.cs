@@ -10,7 +10,7 @@ using LinqToDB.Internal.DataProvider.MySql;
 
 namespace LinqToDB.Internal.DataProvider.ClickHouse
 {
-	public class ClickHouseProviderDetector() : ProviderDetectorBase<ClickHouseProvider>()
+	public class ClickHouseProviderDetector : ProviderDetectorBase<ClickHouseProvider>
 	{
 		static readonly Lazy<IDataProvider> _octonicaDataProvider = CreateDataProvider<ClickHouseOctonicaDataProvider>();
 		static readonly Lazy<IDataProvider> _clientDataProvider   = CreateDataProvider<ClickHouseDriverDataProvider>();
