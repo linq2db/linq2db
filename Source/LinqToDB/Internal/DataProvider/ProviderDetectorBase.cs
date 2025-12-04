@@ -120,7 +120,7 @@ namespace LinqToDB.Internal.DataProvider
 			}
 		}
 
-		public DataOptions CreateOptions(DataOptions options, TVersion dialect, TProviderTProvider provider)
+		public DataOptions CreateOptions(DataOptions options, TVersion dialect, TProvider provider)
 		{
 			if (_hasVersioning && dialect.Equals(AutoDetectVersion))
 			{

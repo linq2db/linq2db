@@ -307,7 +307,7 @@ namespace Tests.DataProvider
 
 				_ = db.Select(() => vector.VectorDimensionsProperty());
 
-				Assert.That(LastQuery, Contains.Substring(" ... "));
+				Assert.That(LastQuery, Contains.Substring("-- value above truncated for logging"));
 			}
 			finally
 			{
@@ -330,7 +330,7 @@ namespace Tests.DataProvider
 
 				_ = db.Select(() => vector.VectorDimensionsProperty());
 
-				Assert.That(LastQuery, Contains.Substring(" ... "));
+				Assert.That(LastQuery, Contains.Substring("-- value above truncated for logging"));
 			}
 			finally
 			{
