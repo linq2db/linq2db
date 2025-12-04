@@ -13,6 +13,7 @@ using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
 {
@@ -190,7 +191,10 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			helper.SetHeader();
 		}
 
-		private static readonly Func<DataOptions, LinqToDB.Mapping.ColumnDescriptor, object?, bool> _convertToParameter = static (o, cd, v) => v != null && (o.BulkCopyOptions.UseParameters || cd.DataType is DataType.Text or DataType.NText or DataType.Binary or DataType.VarBinary);
+		private static readonly Func<DataOptions, ColumnDescriptor, object?, bool> _convertToParameter =
+			static (o, cd, v) => v != null
+				&& (o.BulkCopyOptions.UseParameters
+					|| cd.DataType is DataType.Text or DataType.NText or DataType.Binary or DataType.VarBinary);
 
 		static void OracleMultipleRowsCopy1Add(MultipleRowsHelper helper, object item, string? from)
 		{

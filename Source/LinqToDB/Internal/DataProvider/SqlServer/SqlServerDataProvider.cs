@@ -29,15 +29,15 @@ using System.Text.Json;
 namespace LinqToDB.Internal.DataProvider.SqlServer
 {
 #pragma warning disable MA0048 // File name must match type name
-	sealed class SqlServerDataProvider2005SystemDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2005SystemDataSqlClient() : base(ProviderName.SqlServer2005, SqlServerVersion.v2005, SqlServerProvider.SystemDataSqlClient) { } }
-	sealed class SqlServerDataProvider2008SystemDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2008SystemDataSqlClient() : base(ProviderName.SqlServer2008, SqlServerVersion.v2008, SqlServerProvider.SystemDataSqlClient) { } }
-	sealed class SqlServerDataProvider2012SystemDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2012SystemDataSqlClient() : base(ProviderName.SqlServer2012, SqlServerVersion.v2012, SqlServerProvider.SystemDataSqlClient) { } }
-	sealed class SqlServerDataProvider2014SystemDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2014SystemDataSqlClient() : base(ProviderName.SqlServer2014, SqlServerVersion.v2014, SqlServerProvider.SystemDataSqlClient) { } }
-	sealed class SqlServerDataProvider2016SystemDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2016SystemDataSqlClient() : base(ProviderName.SqlServer2016, SqlServerVersion.v2016, SqlServerProvider.SystemDataSqlClient) { } }
-	sealed class SqlServerDataProvider2017SystemDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2017SystemDataSqlClient() : base(ProviderName.SqlServer2017, SqlServerVersion.v2017, SqlServerProvider.SystemDataSqlClient) { } }
-	sealed class SqlServerDataProvider2019SystemDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2019SystemDataSqlClient() : base(ProviderName.SqlServer2019, SqlServerVersion.v2019, SqlServerProvider.SystemDataSqlClient) { } }
-	sealed class SqlServerDataProvider2022SystemDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2022SystemDataSqlClient() : base(ProviderName.SqlServer2022, SqlServerVersion.v2022, SqlServerProvider.SystemDataSqlClient) { } }
-	sealed class SqlServerDataProvider2025SystemDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2025SystemDataSqlClient() : base(ProviderName.SqlServer2025, SqlServerVersion.v2025, SqlServerProvider.SystemDataSqlClient) { } }
+	sealed class SqlServerDataProvider2005SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2005SystemDataSqlClient() : base(ProviderName.SqlServer2005, SqlServerVersion.v2005, SqlServerProvider.SystemDataSqlClient) { } }
+	sealed class SqlServerDataProvider2008SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2008SystemDataSqlClient() : base(ProviderName.SqlServer2008, SqlServerVersion.v2008, SqlServerProvider.SystemDataSqlClient) { } }
+	sealed class SqlServerDataProvider2012SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2012SystemDataSqlClient() : base(ProviderName.SqlServer2012, SqlServerVersion.v2012, SqlServerProvider.SystemDataSqlClient) { } }
+	sealed class SqlServerDataProvider2014SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2014SystemDataSqlClient() : base(ProviderName.SqlServer2014, SqlServerVersion.v2014, SqlServerProvider.SystemDataSqlClient) { } }
+	sealed class SqlServerDataProvider2016SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2016SystemDataSqlClient() : base(ProviderName.SqlServer2016, SqlServerVersion.v2016, SqlServerProvider.SystemDataSqlClient) { } }
+	sealed class SqlServerDataProvider2017SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2017SystemDataSqlClient() : base(ProviderName.SqlServer2017, SqlServerVersion.v2017, SqlServerProvider.SystemDataSqlClient) { } }
+	sealed class SqlServerDataProvider2019SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2019SystemDataSqlClient() : base(ProviderName.SqlServer2019, SqlServerVersion.v2019, SqlServerProvider.SystemDataSqlClient) { } }
+	sealed class SqlServerDataProvider2022SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2022SystemDataSqlClient() : base(ProviderName.SqlServer2022, SqlServerVersion.v2022, SqlServerProvider.SystemDataSqlClient) { } }
+	sealed class SqlServerDataProvider2025SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2025SystemDataSqlClient() : base(ProviderName.SqlServer2025, SqlServerVersion.v2025, SqlServerProvider.SystemDataSqlClient) { } }
 	sealed class SqlServerDataProvider2005MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2005MicrosoftDataSqlClient() : base(ProviderName.SqlServer2005, SqlServerVersion.v2005, SqlServerProvider.MicrosoftDataSqlClient) { } }
 	sealed class SqlServerDataProvider2008MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2008MicrosoftDataSqlClient() : base(ProviderName.SqlServer2008, SqlServerVersion.v2008, SqlServerProvider.MicrosoftDataSqlClient) { } }
 	sealed class SqlServerDataProvider2012MicrosoftDataSqlClient : SqlServerDataProvider { public SqlServerDataProvider2012MicrosoftDataSqlClient() : base(ProviderName.SqlServer2012, SqlServerVersion.v2012, SqlServerProvider.MicrosoftDataSqlClient) { } }
@@ -67,19 +67,19 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			Version = version;
 			Provider = provider;
 
-			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
-			SqlProviderFlags.OutputDeleteUseSpecialTable = true;
-			SqlProviderFlags.OutputInsertUseSpecialTable = true;
-			SqlProviderFlags.OutputUpdateUseSpecialTables = true;
-			SqlProviderFlags.OutputMergeUseSpecialTables = true;
-			SqlProviderFlags.IsApplyJoinSupported = true;
-			SqlProviderFlags.TakeHintsSupported = TakeHints.Percent | TakeHints.WithTies;
-			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
+			SqlProviderFlags.AcceptsOuterExpressionInAggregate  = false;
+			SqlProviderFlags.OutputDeleteUseSpecialTable        = true;
+			SqlProviderFlags.OutputInsertUseSpecialTable        = true;
+			SqlProviderFlags.OutputUpdateUseSpecialTables       = true;
+			SqlProviderFlags.OutputMergeUseSpecialTables        = true;
+			SqlProviderFlags.IsApplyJoinSupported               = true;
+			SqlProviderFlags.TakeHintsSupported                 = TakeHints.Percent | TakeHints.WithTies;
+			SqlProviderFlags.IsCommonTableExpressionsSupported  = true;
 			SqlProviderFlags.IsRowNumberWithoutOrderBySupported = false;
-			SqlProviderFlags.IsCTESupportsOrdering = false;
-			SqlProviderFlags.IsUpdateTakeSupported = true;
-			SqlProviderFlags.IsDistinctFromSupported = Version >= SqlServerVersion.v2022;
-			SqlProviderFlags.SupportsBooleanType = false;
+			SqlProviderFlags.IsCTESupportsOrdering              = false;
+			SqlProviderFlags.IsUpdateTakeSupported              = true;
+			SqlProviderFlags.IsDistinctFromSupported            = Version >= SqlServerVersion.v2022;
+			SqlProviderFlags.SupportsBooleanType                = false;
 
 			SetCharField("char", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r, i) => r.GetString(i).TrimEnd(' '));
@@ -96,27 +96,27 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				(SqlServerVersion.v2019, _) => new SqlServer2019SqlOptimizer(SqlProviderFlags),
 				(SqlServerVersion.v2022, _) => new SqlServer2022SqlOptimizer(SqlProviderFlags),
 				(SqlServerVersion.v2025, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServer2022SqlOptimizer(SqlProviderFlags),
-				(SqlServerVersion.v2025, SqlServerProvider.SystemDataSqlClient) => new SqlServerSystem2025SqlOptimizer(SqlProviderFlags),
+				(SqlServerVersion.v2025, SqlServerProvider.SystemDataSqlClient)    => new SqlServerSystem2025SqlOptimizer(SqlProviderFlags),
 				_ => new SqlServer2008SqlOptimizer(SqlProviderFlags),
 			};
 
 			// missing:
 			// GetSqlBytes
-			SetProviderField<SqlChars, SqlChars>(SqlTypes.GetSqlCharsReaderMethod, dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlBinary, SqlBinary>(SqlTypes.GetSqlBinaryReaderMethod, dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlBoolean, SqlBoolean>(SqlTypes.GetSqlBooleanReaderMethod, dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlByte, SqlByte>(SqlTypes.GetSqlByteReaderMethod, dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlChars   , SqlChars   >(SqlTypes.GetSqlCharsReaderMethod   , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlBinary  , SqlBinary  >(SqlTypes.GetSqlBinaryReaderMethod  , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlBoolean , SqlBoolean >(SqlTypes.GetSqlBooleanReaderMethod , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlByte    , SqlByte    >(SqlTypes.GetSqlByteReaderMethod    , dataReaderType: Adapter.DataReaderType);
 			SetProviderField<SqlDateTime, SqlDateTime>(SqlTypes.GetSqlDateTimeReaderMethod, dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlDecimal, SqlDecimal>(SqlTypes.GetSqlDecimalReaderMethod, dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlDouble, SqlDouble>(SqlTypes.GetSqlDoubleReaderMethod, dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlGuid, SqlGuid>(SqlTypes.GetSqlGuidReaderMethod, dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlInt16, SqlInt16>(SqlTypes.GetSqlInt16ReaderMethod, dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlInt32, SqlInt32>(SqlTypes.GetSqlInt32ReaderMethod, dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlInt64, SqlInt64>(SqlTypes.GetSqlInt64ReaderMethod, dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlMoney, SqlMoney>(SqlTypes.GetSqlMoneyReaderMethod, dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlSingle, SqlSingle>(SqlTypes.GetSqlSingleReaderMethod, dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlString, SqlString>(SqlTypes.GetSqlStringReaderMethod, dataReaderType: Adapter.DataReaderType);
-			SetProviderField<SqlXml, SqlXml>(Adapter.GetSqlXmlReaderMethod, dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlDecimal , SqlDecimal >(SqlTypes.GetSqlDecimalReaderMethod , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlDouble  , SqlDouble  >(SqlTypes.GetSqlDoubleReaderMethod  , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlGuid    , SqlGuid    >(SqlTypes.GetSqlGuidReaderMethod    , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlInt16   , SqlInt16   >(SqlTypes.GetSqlInt16ReaderMethod   , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlInt32   , SqlInt32   >(SqlTypes.GetSqlInt32ReaderMethod   , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlInt64   , SqlInt64   >(SqlTypes.GetSqlInt64ReaderMethod   , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlMoney   , SqlMoney   >(SqlTypes.GetSqlMoneyReaderMethod   , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlSingle  , SqlSingle  >(SqlTypes.GetSqlSingleReaderMethod  , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlString  , SqlString  >(SqlTypes.GetSqlStringReaderMethod  , dataReaderType: Adapter.DataReaderType);
+			SetProviderField<SqlXml     , SqlXml     >(Adapter.GetSqlXmlReaderMethod      , dataReaderType: Adapter.DataReaderType);
 
 			if (Adapter.SqlJsonType != null)
 			{
@@ -193,8 +193,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 								jsonSerializerType.GetMethod("Deserialize", [typeof(string), jsonSerializerOptionsType]).MakeGenericMethod(typeof(float[])),
 								Expression.Call(dataReaderParameter, "GetString", null, indexParameter),
 								Expression.Constant(null, jsonSerializerOptionsType)),
-					dataReaderParameter,
-					indexParameter);
+							dataReaderParameter,
+							indexParameter);
 				}
 #endif
 			}

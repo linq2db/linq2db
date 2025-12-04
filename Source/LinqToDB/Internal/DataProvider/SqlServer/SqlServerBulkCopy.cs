@@ -377,7 +377,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			return ret;
 		}
 
-		private static readonly Func<DataOptions, LinqToDB.Mapping.ColumnDescriptor, object?, bool> _convertToParameter = static (options, cd, v) => options.BulkCopyOptions.UseParameters && cd.StorageType != typeof(float[])
+		private static readonly Func<DataOptions, ColumnDescriptor, object?, bool> _convertToParameter =
+			static (options, cd, v) => options.BulkCopyOptions.UseParameters && cd.StorageType != typeof(float[])
 #if NET8_0_OR_GREATER
 				&& cd.StorageType != typeof(Half[])
 #endif

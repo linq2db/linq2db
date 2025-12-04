@@ -421,9 +421,12 @@ namespace LinqToDB
 		Decimal256,
 
 		/// <summary>
-		/// Represents a vector data type that is designed to store vector data optimized for operations such as similarity search and machine learning applications.
+		/// Vector (array) of <see cref="Single"/> values.
 		/// </summary>
 		Vector32 = Array | Single,
+		/// <summary>
+		/// Vector (array) of Half values.
+		/// </summary>
 		Vector16 = Array | Half,
 
 		/// <summary>
