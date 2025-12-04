@@ -421,6 +421,15 @@ namespace LinqToDB
 		Decimal256,
 
 		/// <summary>
+		/// Vector (array) of <see cref="Single"/> values.
+		/// </summary>
+		Vector32 = Array | Single,
+		/// <summary>
+		/// Vector (array) of Half values.
+		/// </summary>
+		Vector16 = Array | Half,
+
+		/// <summary>
 		/// Array type flag.
 		/// </summary>
 		Array = unchecked((int)0x8000_0000),

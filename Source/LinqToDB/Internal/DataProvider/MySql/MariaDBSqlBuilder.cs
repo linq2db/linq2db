@@ -28,7 +28,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			if (type.DataType is (DataType.Array | DataType.Single))
+			if (type.DataType is DataType.Vector32)
 			{
 				// MariaDB doesn't have default size, let it fail if user didn't specify size
 				if (type.Length != null)

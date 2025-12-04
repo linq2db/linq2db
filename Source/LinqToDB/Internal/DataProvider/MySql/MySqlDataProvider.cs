@@ -180,7 +180,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			object? type = null;
 			switch (dataType.DataType)
 			{
-				case DataType.Array | DataType.Single:
+				case DataType.Vector32:
 					type = Provider == MySqlProvider.MySqlConnector
 						? MySqlProviderAdapter.MySqlConnector.MySqlDbType.Vector
 						: MySqlProviderAdapter.MySqlData.MySqlDbType.Vector;

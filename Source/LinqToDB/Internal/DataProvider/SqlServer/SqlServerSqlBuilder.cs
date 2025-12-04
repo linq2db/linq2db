@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Globalization;
 using System.Linq;
@@ -338,16 +339,16 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 					break;
 
-				case DataType.Array | DataType.Single:
+				case DataType.Vector32  :
 					StringBuilder
 						.Append("VECTOR(")
 						// length is required and in 1-1998 range
 						// we use default 0 to produce error when user didn't specify length
 						.Append(CultureInfo.InvariantCulture, $"{type.Length ?? 0}")
-						.Append(')');
+						.Append(", float32)");
 					return;
 
-				case DataType.Array | DataType.Half:
+				case DataType.Vector16  :
 					StringBuilder
 						.Append("VECTOR(")
 						// length is required and in 1-3996 range
@@ -413,7 +414,13 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			{
 				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
-					return provider.Adapter.GetDbType(param).ToString();
+				{
+					var type = provider.Adapter.GetDbType(param);
+
+					if (type == provider.Adapter.VectorDbType && provider.Adapter.SqlVectorType is not null)
+						return $"VECTOR({param.Size.ToString(NumberFormatInfo.InvariantInfo)})";
+					return type.ToString();
+				}
 			}
 
 			return base.GetProviderTypeName(dataContext, parameter);
@@ -565,6 +572,47 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			}
 
 			return false;
+		}
+
+		protected override bool PrintParameterValue(StringBuilder sb, object? value)
+		{
+			if (value != null)
+			{
+				if (DataProvider is SqlServerDataProvider { Adapter.VectorToFloatConverter: { } converter } provider && provider.Adapter.SqlVectorType == value.GetType())
+				{
+					var array = converter(value);
+					if (LogVector(sb, array))
+					{
+						return true;
+					}
+				}
+#if NET8_0_OR_GREATER
+				else if (DataProvider is SqlServerDataProvider { Adapter.VectorToHalfConverter: { } halfConverter } provider2 && provider2.Adapter.SqlVectorType == value.GetType())
+				{
+					var array = halfConverter(value);
+					if (LogVector(sb, array))
+					{
+						return true;
+					}
+				}
+#endif
+			}
+
+			return base.PrintParameterValue(sb, value);
+
+			bool LogVector<T>(StringBuilder sb, T[] vector)
+			{
+				var maxBinaryLogging = LinqToDB.Common.Configuration.MaxBinaryParameterLengthLogging;
+				if (maxBinaryLogging >= 0 && vector.Length > maxBinaryLogging)
+				{
+					var trimmed = new T[maxBinaryLogging];
+					Array.Copy(vector, 0, trimmed, 0, maxBinaryLogging);
+					MappingSchema.ValueToSqlConverter.TryConvert(sb, MappingSchema, DataOptions, trimmed);
+					return true;
+				}
+
+				return false;
+			}
 		}
 	}
 }

@@ -36,7 +36,7 @@ namespace LinqToDB
 
 		private sealed class BetweenBuilder : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var args = Array.ConvertAll(builder.Arguments, x => builder.ConvertExpressionToSql(x)!);
 				builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.Between(args[0], false, args[1], args[2]));
@@ -45,7 +45,7 @@ namespace LinqToDB
 
 		private sealed class NotBetweenBuilder : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var args = Array.ConvertAll(builder.Arguments, x => builder.ConvertExpressionToSql(x)!);
 				builder.ResultExpression = new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.Between(args[0], true, args[1], args[2]));

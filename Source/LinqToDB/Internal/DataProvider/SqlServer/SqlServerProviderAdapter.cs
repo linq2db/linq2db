@@ -14,7 +14,9 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Common;
+using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.Types;
 using LinqToDB.Internal.Mapping;
@@ -78,7 +80,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			Func<object, string?>? jsdocToStringConverter,
 			Type? sqlJsonType,
 			Type? sqlVectorType,
-			Type? sqlHalfVectorType)
+			Type? sqlHalfVectorType,
+
+#if NET8_0_OR_GREATER
+			Func<object, Half[]>? vectorToHalfConverter,
+			Func<Half[], object>? halfToVectorConverter,
+#endif
+			Func<object, float[]>? vectorToFloatConverter,
+			Func<float[], object>? floatToVectorConverter)
 		{
 			Provider = provider;
 
@@ -114,6 +123,13 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			SqlJsonType       = sqlJsonType;
 			SqlVectorType     = sqlVectorType;
 			SqlHalfVectorType = sqlHalfVectorType;
+
+#if NET8_0_OR_GREATER
+			VectorToHalfConverter = vectorToHalfConverter;
+			HalfToVectorConverter = halfToVectorConverter;
+#endif
+			VectorToFloatConverter = vectorToFloatConverter;
+			FloatToVectorConverter = floatToVectorConverter;
 		}
 
 		public SqlServerProvider Provider { get; }
@@ -150,6 +166,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		public Type?     SqlVectorType            { get; }
 		public string?   GetSqlVectorReaderMethod => SqlVectorType == null ? null : "GetSqlVector";
 		public SqlDbType VectorDbType             => SqlVectorType == null ? SqlDbType.VarBinary : (SqlDbType)36;
+
+		public Func<object,float[]>? VectorToFloatConverter { get; }
+		public Func<float[],object>? FloatToVectorConverter { get; }
+
+#if NET8_0_OR_GREATER
+		public Func<object, Half[]>? VectorToHalfConverter { get; }
+		public Func<Half[], object>? HalfToVectorConverter { get; }
+#endif
 
 		// TODO: review implementation after SqlClient adds support for this type
 		// e.g. do we need different SqlDbType value?
@@ -292,7 +316,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			Func<object, string?>? jsdocToStringConverter = null;
 
-			if (provider == SqlServerProvider.MicrosoftDataSqlClient)
+#if NET8_0_OR_GREATER
+			Func<object, Half[]>? vectorToHalfConverter = null;
+			Func<Half[], object>? halfToVectorConverter = null;
+#endif
+			Func<object, float[]>? vectorToFloatConverter = null;
+			Func<float[], object>? floatToVectorConverter = null;
+
+			if (provider is SqlServerProvider.MicrosoftDataSqlClient)
 			{
 				sqlJsonType   = LoadType("SqlJson", DataType.Json, null, true, true);
 
@@ -347,7 +378,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					}
 				}
 
-				sqlVectorType = LoadType("SqlVector`1", DataType.Array | DataType.Single, null, true, true, length: 1, typeArguments: [typeof(float)]);
+				sqlVectorType = LoadType("SqlVector`1", DataType.Vector32, null, true, true, length: 1, typeArguments: [typeof(float)]);
 
 				if (sqlVectorType != null)
 				{
@@ -360,21 +391,106 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					var converter = Expression.Lambda<Action<StringBuilder,SqlDataType,DataOptions,object>>(
 						Expression.Call(
 							null,
-							BuildVectorLiteralMethod,
+							SqlServerMappingSchema.SqlServer2025MappingSchema.BuildVectorLiteralMethod,
 							sb,
 #if !SUPPORTS_SPAN
-							Expression.Call(ExpressionHelper.Property(Expression.Convert(v, sqlVectorType), "Memory"), "ToArray", Array.Empty<Type>())
+							Expression.Call(ExpressionHelper.Property(Expression.Convert(v, sqlVectorType), "Memory"), "ToArray", Array.Empty<Type>()),
 #else
-							ExpressionHelper.Property(ExpressionHelper.Property(Expression.Convert(v, sqlVectorType), "Memory"), "Span")
+							ExpressionHelper.Property(ExpressionHelper.Property(Expression.Convert(v, sqlVectorType), "Memory"), "Span"),
 #endif
+							Expression.Coalesce(Expression.Property(Expression.Property(dt, "Type"), "Length"), Expression.Constant(0))
 							), sb, dt, op, v)
 						.CompileExpression();
 
 					mappingSchema!.SetValueToSqlConverter(sqlVectorType, converter);
+
+					// value => new DataParameter(null, value == null ? SqlVector.Null : new SqlVector<float>(value))
+					//
+#if NET8_0_OR_GREATER
+					var readOnlyMemoryType = typeof(ReadOnlyMemory<float>);
+#else
+					var ctors              = sqlVectorType.GetConstructors();
+					var readOnlyMemoryType = ctors[0].GetParameters()[0].ParameterType;
+#endif
+
+					var p = Expression.Parameter(typeof(float[]), "value");
+
+					var ln = Expression.Lambda<Func<float[],DataParameter>>(
+						Expression.New(
+							typeof(DataParameter).GetConstructor([typeof(string), typeof(object)])!,
+							Expression.Constant(null, typeof(string)),
+							Expression.Condition(
+								Expression.Equal(p, Expression.Constant(null, typeof(float[]))),
+								Expression.Convert(ExpressionHelper.Property(sqlVectorType, "Null"), typeof(object)),
+								Expression.Convert(
+									Expression.New(
+										sqlVectorType.GetConstructor([readOnlyMemoryType])!,
+										Expression.New(readOnlyMemoryType.GetConstructor([typeof(float[])])!, p)),
+									typeof(object)))),
+						p);
+
+					var l = Expression.Lambda<Func<float[],DataParameter>>(
+						Expression.New(
+							typeof(DataParameter).GetConstructor([typeof(string), typeof(object)])!,
+							Expression.Constant(null, typeof(string)),
+							Expression.Convert(
+								Expression.New(
+									sqlVectorType.GetConstructor([readOnlyMemoryType])!,
+									Expression.New(readOnlyMemoryType.GetConstructor([typeof(float[])])!, p)),
+								typeof(object))),
+						p);
+
+					mappingSchema.SetConvertExpression(ln, l);
+
+					var vectorParameter = Expression.Parameter(typeof(object), "v");
+
+					vectorToFloatConverter = Expression.Lambda<Func<object, float[]>>(
+						Expression.Call(
+							ExpressionHelper.Property(
+								Expression.Convert(vectorParameter, sqlVectorType),
+								"Memory"),
+							"ToArray",
+							Array.Empty<Type>()),
+						vectorParameter)
+						.CompileExpression();
+
+					var arrayParameter = Expression.Parameter(typeof(float[]), "v");
+
+					floatToVectorConverter = Expression.Lambda<Func<float[], object>>(
+						Expression.Convert(
+							Expression.New(
+								sqlVectorType.GetConstructor([readOnlyMemoryType])!,
+								Expression.New(readOnlyMemoryType.GetConstructor([typeof(float[])])!, arrayParameter)),
+							typeof(object)),
+						arrayParameter)
+						.CompileExpression();
+
+					var typedVectorParameter = Expression.Parameter(sqlVectorType, "v");
+					mappingSchema.SetConvertExpression(sqlVectorType, typeof(string), Expression.Lambda(
+						Expression.Call(
+							MemberHelper.MethodOf(() => ConvertVectorToString(Array.Empty<float>(), default)),
+							Expression.Call(
+								ExpressionHelper.Property(typedVectorParameter, "Memory"),
+								"ToArray",
+								Array.Empty<Type>()),
+							Expression.Constant(4)),
+						typedVectorParameter));
+
+					var stringParameter = Expression.Parameter(typeof(string), "v");
+					mappingSchema.SetConvertExpression(typeof(string), sqlVectorType, Expression.Lambda(
+						Expression.New(
+								sqlVectorType.GetConstructor([readOnlyMemoryType])!,
+								Expression.New(
+									readOnlyMemoryType.GetConstructor([typeof(float[])])!,
+									Expression.Call(
+										MemberHelper.MethodOf(() => ReadVector<float>(string.Empty, default)),
+										stringParameter,
+										Expression.Constant(4)))),
+						stringParameter));
 				}
 
 #if NET8_0_OR_GREATER
-				sqlHalfVectorType = LoadType("SqlVector`1", DataType.Array | DataType.Half, null, true, true, length: 1, typeArguments: [typeof(Half)]);
+				sqlHalfVectorType = LoadType("SqlVector`1", DataType.Vector16, null, true, true, length: 1, typeArguments: [typeof(Half)]);
 
 				if (sqlHalfVectorType != null)
 				{
@@ -387,13 +503,60 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					var converter = Expression.Lambda<Action<StringBuilder,SqlDataType,DataOptions,object>>(
 						Expression.Call(
 							null,
-							BuildHalfVectorLiteralMethod,
+							SqlServerMappingSchema.SqlServer2025MappingSchema.BuildHalfVectorLiteralMethod,
 							sb,
-							ExpressionHelper.Property(ExpressionHelper.Property(Expression.Convert(v, sqlHalfVectorType), "Memory"), "Span")
+							ExpressionHelper.Property(ExpressionHelper.Property(Expression.Convert(v, sqlHalfVectorType), "Memory"), "Span"),
+							Expression.Coalesce(Expression.Property(Expression.Property(dt, "Type"), "Length"), Expression.Constant(0))
 							), sb, dt, op, v)
 						.CompileExpression();
 
 					mappingSchema!.SetValueToSqlConverter(sqlHalfVectorType, converter);
+
+					var vectorParameter = Expression.Parameter(typeof(object), "v");
+
+					vectorToHalfConverter = Expression.Lambda<Func<object, Half[]>>(
+						Expression.Call(
+							ExpressionHelper.Property(
+								Expression.Convert(vectorParameter, sqlHalfVectorType),
+								"Memory"),
+							"ToArray",
+							Array.Empty<Type>()),
+						vectorParameter)
+						.CompileExpression();
+
+					var arrayParameter = Expression.Parameter(typeof(Half[]), "v");
+
+					halfToVectorConverter = Expression.Lambda<Func<Half[], object>>(
+						Expression.Convert(
+							Expression.New(
+								sqlHalfVectorType.GetConstructor([typeof(ReadOnlyMemory<Half>)])!,
+								Expression.New(typeof(ReadOnlyMemory<Half>).GetConstructor([typeof(Half[])])!, arrayParameter)),
+							typeof(object)),
+						arrayParameter)
+						.CompileExpression();
+
+					var typedVectorParameter = Expression.Parameter(sqlHalfVectorType, "v");
+					mappingSchema.SetConvertExpression(sqlHalfVectorType, typeof(string), Expression.Lambda(
+						Expression.Call(
+							MemberHelper.MethodOf(() => ConvertVectorToString(Array.Empty<Half>(), default)),
+							Expression.Call(
+								ExpressionHelper.Property(typedVectorParameter, "Memory"),
+								"ToArray",
+								Array.Empty<Type>()),
+							Expression.Constant(4)),
+						typedVectorParameter));
+
+					var stringParameter = Expression.Parameter(typeof(string), "v");
+					mappingSchema.SetConvertExpression(typeof(string), sqlHalfVectorType, Expression.Lambda(
+						Expression.New(
+								sqlHalfVectorType.GetConstructor([typeof(ReadOnlyMemory<Half>)])!,
+								Expression.New(
+									typeof(ReadOnlyMemory<Half>).GetConstructor([typeof(Half[])])!,
+									Expression.Call(
+										MemberHelper.MethodOf(() => ReadVector<Half>(string.Empty, default)),
+										stringParameter,
+										Expression.Constant(4)))),
+						stringParameter));
 				}
 #endif
 			}
@@ -430,7 +593,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				jsdocToStringConverter,
 				sqlJsonType,
 				sqlVectorType,
-				sqlHalfVectorType);
+				sqlHalfVectorType,
+#if NET8_0_OR_GREATER
+				vectorToHalfConverter,
+				halfToVectorConverter,
+#endif
+				vectorToFloatConverter,
+				floatToVectorConverter
+				);
 
 			IEnumerable<int> exceptionErrorsGettter(Exception ex) => typeMapper.Wrap<SqlException>(ex).Errors.Errors.Select(err => err.Number);
 
@@ -446,12 +616,18 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 				if (register)
 				{
-					var getNullValue = Expression.Lambda<Func<object>>(Expression.Convert(ExpressionHelper.Property(type, "Null"), typeof(object))).CompileExpression();
+					var nullValueProp  = ExpressionHelper.Property(type, "Null");
+					var getNullValue   = Expression.Lambda<Func<object?>>(Expression.Convert(nullValueProp, typeof(object))).CompileExpression();
 
 					mappingSchema ??= new SqlServerAdapterMappingSchema(provider);
 
-					mappingSchema.SetDefaultValue(type, getNullValue());
-					mappingSchema.SetCanBeNull(type, true);
+					var value     = getNullValue();
+					var canBeNull = value is not null && nullValueProp.Type == type;
+
+					if (canBeNull)
+						mappingSchema.SetDefaultValue(type, getNullValue());
+
+					mappingSchema.SetCanBeNull (type, canBeNull);
 					mappingSchema.AddScalarType(type, new SqlDataType(new DbDataType(type, dataType, dbType, length: length)));
 				}
 
@@ -459,49 +635,21 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			}
 		}
 
-		static readonly MethodInfo BuildVectorLiteralMethod     = typeof(SqlServerProviderAdapter).GetMethod(nameof(BuildVectorLiteral), BindingFlags.Static | BindingFlags.NonPublic)!;
-
-#if !SUPPORTS_SPAN
-		// we need System.Memory dep otherwise
-		static void BuildVectorLiteral(StringBuilder sb, float[] data)
-			=> BuildAnyVectorLiteral(sb, data);
-
-		static void BuildAnyVectorLiteral<T>(StringBuilder sb, T[] data)
+		static string ConvertVectorToString<T>(T[] vector, int size)
 		{
-			sb.Append("JSON_ARRAY(");
-
-			for (var i = 0; i < data.Length; i++)
-			{
-				if (i > 0)
-					sb.Append(", ");
-
-				sb.Append(CultureInfo.InvariantCulture, $"{data[i]}");
-			}
-
-			sb.Append(')');
+			var arr = new byte[vector.Length * size];
+			Buffer.BlockCopy(vector, 0, arr, 0, arr.Length);
+			return Convert.ToBase64String(arr);
 		}
-#else
-		static readonly MethodInfo BuildHalfVectorLiteralMethod = typeof(SqlServerProviderAdapter).GetMethod(nameof(BuildHalfVectorLiteral), BindingFlags.Static | BindingFlags.NonPublic)!;
 
-		static void BuildVectorLiteral(StringBuilder sb, ReadOnlySpan<float> data) => BuildAnyVectorLiteral(sb, data);
-
-		static void BuildHalfVectorLiteral(StringBuilder sb, ReadOnlySpan<Half> data) => BuildAnyVectorLiteral(sb, data);
-
-		static void BuildAnyVectorLiteral<T>(StringBuilder sb, ReadOnlySpan<T> data)
+		static T[] ReadVector<T>(string value, int size)
 		{
-			sb.Append("JSON_ARRAY(");
+			var arr = Convert.FromBase64String(value);
 
-			for (var i = 0; i < data.Length; i++)
-			{
-				if (i > 0)
-					sb.Append(", ");
-
-				sb.Append(CultureInfo.InvariantCulture, $"{data[i]}");
-			}
-
-			sb.Append(')');
+			var result = new T[arr.Length / size];
+			Buffer.BlockCopy(arr, 0, result, 0, arr.Length);
+			return result;
 		}
-#endif
 
 		sealed class SqlServerAdapterMappingSchema : LockedMappingSchema
 		{

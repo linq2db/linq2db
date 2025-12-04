@@ -117,7 +117,7 @@ namespace Tests.Samples
 	{
 		sealed class JsonValueBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var pathExpr = builder.Arguments[0];
 				if (pathExpr.NodeType != ExpressionType.MemberAccess)
