@@ -99,7 +99,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 					|| File.Exists(Path.Combine(dirName ?? ".", DB2ProviderAdapter.AssemblyNameOld + ".dll"))
 					? InformixProvider.DB2
 #if NETFRAMEWORK
-					: InformixProvider.Informix
+					: InformixProvider.Informix;
 #else
 					: InformixProvider.DB2;
 #endif
