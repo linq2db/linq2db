@@ -124,9 +124,11 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				: MySqlProvider.MySqlConnector;
 		}
 
-		public override MySqlVersion? DetectServerVersion(DbConnection connection)
+		public override MySqlVersion? DetectServerVersion(DbConnection connection, DbTransaction? transaction)
 		{
 			using var cmd = connection.CreateCommand();
+			if (transaction != null)
+				cmd.Transaction = transaction;
 
 			cmd.CommandText = "SELECT VERSION()";
 			var versionString = cmd.ExecuteScalar() as string;

@@ -112,7 +112,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 				: AccessProvider.OleDb;
 		}
 
-		public override AccessVersion? DetectServerVersion(DbConnection connection)
+		public override AccessVersion? DetectServerVersion(DbConnection connection, DbTransaction? transaction)
 		{
 			// we don't know connection type, so we probe both
 			try

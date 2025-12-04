@@ -142,7 +142,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			return canBeOracle ? OracleProvider.Managed : OracleProvider.Devart;
 		}
 
-		public override OracleVersion? DetectServerVersion(DbConnection connection)
+		public override OracleVersion? DetectServerVersion(DbConnection connection, DbTransaction? transaction)
 		{
 			var command = connection.CreateCommand();
 

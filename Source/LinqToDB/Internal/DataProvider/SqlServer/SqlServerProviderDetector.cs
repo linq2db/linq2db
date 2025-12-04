@@ -165,7 +165,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				: SqlServerProvider.SystemDataSqlClient;
 		}
 
-		public override SqlServerVersion? DetectServerVersion(DbConnection connection)
+		public override SqlServerVersion? DetectServerVersion(DbConnection connection, DbTransaction? transaction)
 		{
 			if (!int.TryParse(connection.ServerVersion.Split('.')[0], NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var version))
 				return null;
@@ -175,6 +175,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				return null;
 
 			using var cmd = connection.CreateCommand();
+
+			if (transaction != null)
+				cmd.Transaction = transaction;
 
 			cmd.CommandText = "SELECT compatibility_level FROM sys.databases WHERE name = db_name()";
 
