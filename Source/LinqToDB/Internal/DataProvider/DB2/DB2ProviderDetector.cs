@@ -72,7 +72,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			};
 		}
 
-		protected override DB2Version? DetectServerVersion(DbConnection connection)
+		protected override DB2Version? DetectServerVersion(DbConnection connection, DbTransaction? transaction)
 		{
 			return DB2ProviderAdapter.Instance.ConnectionWrapper(connection).eServerType switch
 			{

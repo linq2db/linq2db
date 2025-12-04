@@ -82,7 +82,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 			};
 		}
 
-		protected override AccessVersion? DetectServerVersion(DbConnection connection)
+		protected override AccessVersion? DetectServerVersion(DbConnection connection, DbTransaction? transaction)
 		{
 			// we don't know connection type, so we probe both
 			try

@@ -79,9 +79,11 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			};
 		}
 
-		protected override FirebirdVersion? DetectServerVersion(DbConnection connection)
+		protected override FirebirdVersion? DetectServerVersion(DbConnection connection, DbTransaction? transaction)
 		{
 			using var cmd = connection.CreateCommand();
+			if (transaction != null)
+				cmd.Transaction = transaction;
 
 			// note: query requires FB 2.1+, for older versions user should specify 2.5 provider explicitly
 			cmd.CommandText = "SELECT rdb$get_context('SYSTEM', 'ENGINE_VERSION') from rdb$database";

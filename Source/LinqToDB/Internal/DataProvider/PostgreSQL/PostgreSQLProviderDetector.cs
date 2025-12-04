@@ -102,7 +102,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			};
 		}
 
-		protected override PostgreSQLVersion? DetectServerVersion(DbConnection connection)
+		protected override PostgreSQLVersion? DetectServerVersion(DbConnection connection, DbTransaction? transaction)
 		{
 			var postgreSqlVersion = NpgsqlProviderAdapter.GetInstance().ConnectionWrapper(connection).PostgreSqlVersion;
 

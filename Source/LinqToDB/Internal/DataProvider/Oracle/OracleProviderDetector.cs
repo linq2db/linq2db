@@ -91,7 +91,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			};
 		}
 
-		protected override OracleVersion? DetectServerVersion(DbConnection connection)
+		protected override OracleVersion? DetectServerVersion(DbConnection connection, DbTransaction? transaction)
 		{
 			var command = connection.CreateCommand();
 

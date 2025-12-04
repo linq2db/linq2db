@@ -18,12 +18,13 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		public static IDataProvider GetDataProvider(
-			MySqlVersion  version          = MySqlVersion.AutoDetect,
-			MySqlProvider provider         = MySqlProvider.AutoDetect,
-			string?       connectionString = null,
-			DbConnection? connection       = null)
+			MySqlVersion   version          = MySqlVersion.AutoDetect,
+			MySqlProvider  provider         = MySqlProvider.AutoDetect,
+			string?        connectionString = null,
+			DbConnection?  connection       = null,
+			DbTransaction? transaction      = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString, DbConnection: connection), provider, version);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString, DbConnection: connection, DbTransaction: transaction), provider, version);
 		}
 
 		public static void ResolveMySql(string path, string? assemblyName)

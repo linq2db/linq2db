@@ -15,9 +15,9 @@ namespace LinqToDB.DataProvider.Informix
 			set => ProviderDetector.AutoDetectProvider = value;
 		}
 
-		public static IDataProvider GetDataProvider(InformixProvider provider = InformixProvider.AutoDetect, string? connectionString = null, DbConnection? connection = null)
+		public static IDataProvider GetDataProvider(InformixProvider provider = InformixProvider.AutoDetect, string? connectionString = null, DbConnection? connection = null, DbTransaction? transaction = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString, DbConnection: connection), provider, default);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString, DbConnection: connection, DbTransaction: transaction), provider, default);
 		}
 
 		#region CreateDataConnection
