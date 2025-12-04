@@ -76,7 +76,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			};
 		}
 
-		public override DB2Version? DetectServerVersion(DbConnection connection)
+		public override DB2Version? DetectServerVersion(DbConnection connection, DbTransaction? transaction)
 		{
 			return DB2ProviderAdapter.Instance.ConnectionWrapper(connection).eServerType switch
 			{
