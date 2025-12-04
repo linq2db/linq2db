@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -731,6 +732,33 @@ namespace Tests.Infrastructure
 			Assert.Throws<LinqToDBException>(
 				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithOnEntityDescriptorCreated((schema, descriptor) => { })))) { } },
 				"OnEntityDescriptorCreated cannot be changed.");
+		}
+
+		[Test]
+		public void TestProviderAutoDetect([DataSources(false)] string context)
+		{
+			var connectionString = GetConnectionString(context);
+
+			using var db = new DataConnection(
+				context switch
+				{
+					var ctx when ctx.IsAnyOf(TestProvName.AllAccess)     => new DataOptions().UseAccess      (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllClickHouse) => new DataOptions().UseClickHouse  (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllDB2)        => new DataOptions().UseDB2         (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllFirebird)   => new DataOptions().UseFirebird    (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllInformix)   => new DataOptions().UseInformix    (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllMySql)      => new DataOptions().UseMySql       (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllOracle)     => new DataOptions().UseOracle      (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllPostgreSQL) => new DataOptions().UsePostgreSQL  (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllSapHana)    => new DataOptions().UseSapHana     (connectionString),
+					var ctx when ctx.IsAnyOf(ProviderName.SqlCe)         => new DataOptions().UseSqlCe       (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllSQLite)     => new DataOptions().UseSQLite      (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllSqlServer)  => new DataOptions().UseSqlServer   (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllSybase)     => new DataOptions().UseAse         (connectionString),
+					_                                                    => throw new NotImplementedException($"Missing case for provider {context}")
+				});
+
+			db.GetTable<Person>().ToArray();
 		}
 	}
 }
