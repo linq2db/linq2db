@@ -16,7 +16,8 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
-			// don't merge DetectProvider and DetectProvider logic and later could return inconclusive
+			// don't merge this method and DetectProvider(provider type) logic because this method could return null
+			// and other method returns default provider type
 			switch (options.ProviderName)
 			{
 				case SQLiteProviderAdapter.SystemDataSQLiteClientNamespace   :

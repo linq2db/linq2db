@@ -18,7 +18,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
-			// don't merge DetectProvider and DetectProvider logic and later could return inconclusive
+			// don't merge this method and DetectProvider(provider type) logic because this method could return null
+			// and other method returns default provider type
 			if ((options.ProviderName?.Contains("Octonica") == true && options.ProviderName?.Contains("ClickHouse") == true)
 				|| (options.ConfigurationString?.Contains("Octonica") == true && options.ConfigurationString?.Contains("ClickHouse") == true))
 				return _octonicaDataProvider.Value;

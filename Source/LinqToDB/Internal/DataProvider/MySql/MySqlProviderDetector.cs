@@ -20,7 +20,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
-			// don't merge DetectProvider and DetectProvider logic and later could return inconclusive
+			// don't merge this method and DetectProvider(provider type) logic because this method could return null
+			// and other method returns default provider type
 
 			// ensure ClickHouse configuration over mysql protocol is not detected as mysql
 			if (options.ProviderName?.Contains("ClickHouse") == true || options.ConfigurationString?.Contains("ClickHouse") == true)

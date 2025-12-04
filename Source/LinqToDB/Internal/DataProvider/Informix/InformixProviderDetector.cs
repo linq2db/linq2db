@@ -17,7 +17,8 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
-			// don't merge DetectProvider and DetectProvider logic and later could return inconclusive
+			// don't merge this method and DetectProvider(provider type) logic because this method could return null
+			// and other method returns default provider type
 			switch (options.ProviderName)
 			{
 				case ProviderName.InformixDB2                  :
@@ -73,8 +74,8 @@ namespace LinqToDB.Internal.DataProvider.Informix
 #if !NETFRAMEWORK
 				case DB2ProviderAdapter.ClientNamespaceOld
 					when options.ProviderName is not null      :
-#endif
 				case DB2ProviderAdapter.ClientNamespace        :
+#endif
 				case DB2ProviderAdapter.NetFxClientNamespace   :
 				case DB2ProviderAdapter.CoreClientNamespace    :
 				case ProviderName.InformixDB2                  :
@@ -96,7 +97,9 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return File.Exists(Path.Combine(dirName ?? ".", InformixProviderAdapter.IfxAssemblyName + ".dll"))
 				? InformixProvider.Informix
 				: File.Exists(Path.Combine(dirName ?? ".", DB2ProviderAdapter.AssemblyName + ".dll"))
+#if !NETFRAMEWORK
 					|| File.Exists(Path.Combine(dirName ?? ".", DB2ProviderAdapter.AssemblyNameOld + ".dll"))
+#endif
 					? InformixProvider.DB2
 #if NETFRAMEWORK
 					: InformixProvider.Informix;

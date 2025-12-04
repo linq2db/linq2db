@@ -19,7 +19,8 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			if (options.ConnectionString?.IndexOf("HDBODBC", StringComparison.OrdinalIgnoreCase) >= 0)
 				return _hanaOdbcDataProvider.Value;
 
-			// don't merge DetectProvider and DetectProvider logic and later could return inconclusive
+			// don't merge this method and DetectProvider(provider type) logic because this method could return null
+			// and other method returns default provider type
 			switch (options.ProviderName)
 			{
 				case SapHanaProviderAdapter.UnmanagedClientNamespace:
