@@ -29,16 +29,17 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				case QueryType.Update:
 					// disable table alias
 					statement.SelectQuery!.From.Tables[0].Alias = "$";
+					statement = GetAlternativeUpdate((SqlUpdateStatement)statement, dataOptions, mappingSchema);
 					break;
 				case QueryType.Insert:
-					statement = CorrectUpdateStatement((SqlInsertStatement)statement);
+					statement = CorrectInsertStatement((SqlInsertStatement)statement);
 					break;
 			}
 
 			return statement;
 		}
 
-		private SqlStatement CorrectUpdateStatement(SqlInsertStatement statement)
+		private SqlStatement CorrectInsertStatement(SqlInsertStatement statement)
 		{
 			if (statement.SelectQuery != null
 				&& statement.SelectQuery.Select.Columns.Count == statement.Insert.Items.Count)
