@@ -10,12 +10,8 @@ using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
 {
-	public class OracleProviderDetector : ProviderDetectorBase<OracleProvider,OracleVersion>
+	public class OracleProviderDetector() : ProviderDetectorBase<OracleProvider,OracleVersion>(OracleVersion.AutoDetect, OracleVersion.v12)
 	{
-		public OracleProviderDetector() : base(OracleVersion.AutoDetect, OracleVersion.v12)
-		{
-		}
-
 		static readonly Lazy<IDataProvider> _oracleNativeDataProvider11  = CreateDataProvider<OracleDataProviderNative11>();
 		static readonly Lazy<IDataProvider> _oracleNativeDataProvider12  = CreateDataProvider<OracleDataProviderNative12>();
 
@@ -27,50 +23,30 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
-			var provider = options.ProviderName switch
-			{
-				OracleProviderAdapter.ManagedClientNamespace => OracleProvider.Managed,
-				OracleProviderAdapter.DevartClientNamespace  => OracleProvider.Devart,
-				OracleProviderAdapter.NativeClientNamespace  => OracleProvider.Native,
-				_                                            => DetectProvider(options.ConnectionString)
-			};
-
+			// don't merge this method and DetectProvider(provider type) logic because this method could return null
+			// and other method returns default provider type
 			switch (options.ProviderName)
 			{
-				case OracleProviderAdapter.NativeAssemblyName    :
-				case OracleProviderAdapter.NativeClientNamespace :
-				case ProviderName.OracleNative                   :
-				case ProviderName.Oracle11Native                 :
-					provider = OracleProvider.Native;
-					goto case ProviderName.Oracle;
-				case OracleProviderAdapter.DevartAssemblyName    :
-				case ProviderName.OracleDevart                   :
-				case ProviderName.Oracle11Devart                 :
-					provider = OracleProvider.Devart;
-					goto case ProviderName.Oracle;
-				case OracleProviderAdapter.ManagedAssemblyName   :
-				case OracleProviderAdapter.ManagedClientNamespace:
-				case "Oracle.ManagedDataAccess.Core"             :
-				case ProviderName.OracleManaged                  :
-				case ProviderName.Oracle11Managed                :
-					provider = OracleProvider.Managed;
-					goto case ProviderName.Oracle;
 				case ""                                          :
 				case null                                        :
 
 					if (options.ConfigurationString?.Contains("Oracle") == true)
 						goto case ProviderName.Oracle;
 					break;
+				case OracleProviderAdapter.NativeAssemblyName    :
+				case OracleProviderAdapter.NativeClientNamespace :
+				case ProviderName.OracleNative                   :
+				case ProviderName.Oracle11Native                 :
+				case OracleProviderAdapter.DevartAssemblyName    :
+				case ProviderName.OracleDevart                   :
+				case ProviderName.Oracle11Devart                 :
+				case OracleProviderAdapter.ManagedAssemblyName   :
+				case OracleProviderAdapter.ManagedClientNamespace:
+				case "Oracle.ManagedDataAccess.Core"             :
+				case ProviderName.OracleManaged                  :
+				case ProviderName.Oracle11Managed                :
 				case ProviderName.Oracle                         :
-					if (provider == OracleProvider.AutoDetect)
-					{
-						if (options.ConfigurationString?.Contains("Native") == true || options.ProviderName?.Contains("Native") == true)
-							provider = OracleProvider.Native;
-						else if (options.ConfigurationString?.Contains("Devart") == true || options.ProviderName?.Contains("Devart") == true)
-							provider = OracleProvider.Devart;
-						else
-							provider = OracleProvider.Managed;
-					}
+					var provider = DetectProvider(options, OracleProvider.AutoDetect);
 
 					if (options.ConfigurationString?.Contains("11") == true || options.ProviderName?.Contains("11") == true) return GetDataProvider(options, provider, OracleVersion.v11);
 					if (options.ConfigurationString?.Contains("12") == true || options.ProviderName?.Contains("12") == true) return GetDataProvider(options, provider, OracleVersion.v12);
@@ -100,12 +76,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		public override IDataProvider GetDataProvider(ConnectionOptions options, OracleProvider provider, OracleVersion version)
 		{
-			if (provider == OracleProvider.AutoDetect)
-			{
-				var canBeDevart = options.ConnectionString?.IndexOf("SERVER", StringComparison.OrdinalIgnoreCase) != -1;
-				var canBeOracle = options.ConnectionString?.IndexOf("DATA SOURCE", StringComparison.OrdinalIgnoreCase) != -1;
-				provider = DetectProvider(options.ConnectionString);
-			}
+			provider = DetectProvider(options, provider);
 
 			return (provider, version) switch
 			{
@@ -120,29 +91,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			};
 		}
 
-		private static OracleProvider DetectProvider(string? connectionString)
-		{
-			// as connection string for DevArt has own (and actually more sane) format
-			// we cannot try to use incompatible provider
-			var canBeDevart = connectionString?.IndexOf("SERVER", StringComparison.OrdinalIgnoreCase) != -1;
-			var canBeOracle = connectionString?.IndexOf("DATA SOURCE", StringComparison.OrdinalIgnoreCase) != -1;
-
-			var fileName = typeof(OracleProviderDetector).Assembly.GetFileName();
-			var dirName  = Path.GetDirectoryName(fileName);
-
-			if (canBeOracle && File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.ManagedAssemblyName + ".dll")))
-				return OracleProvider.Managed;
-
-			if (canBeDevart && File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.DevartAssemblyName + ".dll")))
-				return OracleProvider.Devart;
-
-			if (canBeOracle && File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.NativeAssemblyName + ".dll")))
-				return OracleProvider.Native;
-
-			return canBeOracle ? OracleProvider.Managed : OracleProvider.Devart;
-		}
-
-		public override OracleVersion? DetectServerVersion(DbConnection connection, DbTransaction? transaction)
+		protected override OracleVersion? DetectServerVersion(DbConnection connection, DbTransaction? transaction)
 		{
 			var command = connection.CreateCommand();
 
@@ -163,10 +112,58 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		protected override DbConnection CreateConnection(OracleProvider provider, string connectionString)
 		{
-			if (provider == OracleProvider.AutoDetect)
-				provider = DetectProvider(connectionString);
-
 			return OracleProviderAdapter.GetInstance(provider).CreateConnection(connectionString);
+		}
+
+		protected override OracleProvider DetectProvider(ConnectionOptions options, OracleProvider provider)
+		{
+			if (provider is OracleProvider.Devart or OracleProvider.Managed or OracleProvider.Native)
+				return provider;
+
+			switch (options.ProviderName)
+			{
+				case OracleProviderAdapter.NativeAssemblyName    :
+				case OracleProviderAdapter.NativeClientNamespace :
+				case ProviderName.OracleNative                   :
+				case ProviderName.Oracle11Native                 :
+					return OracleProvider.Native;
+
+				case OracleProviderAdapter.DevartAssemblyName    :
+				case ProviderName.OracleDevart                   :
+				case ProviderName.Oracle11Devart                 :
+					return OracleProvider.Devart;
+
+				case OracleProviderAdapter.ManagedAssemblyName   :
+				case OracleProviderAdapter.ManagedClientNamespace:
+				case "Oracle.ManagedDataAccess.Core"             :
+				case ProviderName.OracleManaged                  :
+				case ProviderName.Oracle11Managed                :
+					return OracleProvider.Managed;
+			}
+
+			if (options.ConfigurationString?.Contains("Native") == true || options.ProviderName?.Contains("Native") == true)
+				return OracleProvider.Native;
+			else if (options.ConfigurationString?.Contains("Devart") == true || options.ProviderName?.Contains("Devart") == true)
+				return OracleProvider.Devart;
+
+			// as connection string for DevArt has own (and actually more sane) format
+			// we cannot try to use incompatible provider
+			var canBeDevart = options.ConnectionString?.IndexOf("SERVER", StringComparison.OrdinalIgnoreCase) != -1;
+			var canBeOracle = options.ConnectionString?.IndexOf("DATA SOURCE", StringComparison.OrdinalIgnoreCase) != -1;
+
+			var fileName = typeof(OracleProviderDetector).Assembly.GetFileName();
+			var dirName  = Path.GetDirectoryName(fileName);
+
+			if (canBeOracle && File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.ManagedAssemblyName + ".dll")))
+				return OracleProvider.Managed;
+
+			if (canBeDevart && File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.DevartAssemblyName + ".dll")))
+				return OracleProvider.Devart;
+
+			if (canBeOracle && File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.NativeAssemblyName + ".dll")))
+				return OracleProvider.Native;
+
+			return canBeOracle ? OracleProvider.Managed : OracleProvider.Devart;
 		}
 	}
 }

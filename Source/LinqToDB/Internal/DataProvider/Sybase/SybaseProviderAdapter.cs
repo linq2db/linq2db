@@ -96,7 +96,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 				return _nativeInstance;
 			}
-			else
+			else if (provider == SybaseProvider.DataAction)
 			{
 				if (_managedInstance == null)
 				{
@@ -108,6 +108,8 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 				return _managedInstance;
 			}
+
+			throw new InvalidOperationException($"Unsupported provider type: {provider}");
 		}
 
 		private static SybaseProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string? dbFactoryName, bool supportsBulkCopy)

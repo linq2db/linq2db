@@ -193,7 +193,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 				return _systemAdapter;
 			}
-			else
+			else if (provider == SqlServerProvider.MicrosoftDataSqlClient)
 			{
 				if (_microsoftAdapter == null)
 				{
@@ -205,6 +205,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 				return _microsoftAdapter;
 			}
+
+			throw new InvalidOperationException($"Unsupported provider type: {provider}");
 		}
 
 		private static SqlServerProviderAdapter CreateAdapter(SqlServerProvider provider, string assemblyName, string clientNamespace, string factoryName)

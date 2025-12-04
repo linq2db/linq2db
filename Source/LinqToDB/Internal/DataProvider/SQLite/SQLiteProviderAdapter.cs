@@ -142,7 +142,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 				return _systemDataSQLite;
 			}
-			else
+			else if (provider == SQLiteProvider.Microsoft)
 			{
 				if (_microsoftDataSQLite == null)
 				{
@@ -154,6 +154,8 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 				return _microsoftDataSQLite;
 			}
+
+			throw new InvalidOperationException($"Unsupported provider type: {provider}");
 		}
 
 		#region wrappers

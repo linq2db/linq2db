@@ -177,7 +177,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 				return _mysqlAdapter;
 			}
-			else
+			else if (provider == ClickHouseProvider.ClickHouseDriver)
 			{
 				if (_driverAdapter == null)
 				{
@@ -190,6 +190,8 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 				return _driverAdapter;
 			}
+
+			throw new InvalidOperationException($"Unsupported provider type: {provider}");
 		}
 
 		private static ClickHouseProviderAdapter CreateDriverAdapter()
