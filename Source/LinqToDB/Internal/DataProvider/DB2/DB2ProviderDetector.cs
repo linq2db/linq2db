@@ -7,13 +7,9 @@ using LinqToDB.DataProvider.DB2;
 
 namespace LinqToDB.Internal.DataProvider.DB2
 {
-	public class DB2ProviderDetector : ProviderDetectorBase<DB2ProviderDetector.Provider, DB2Version>
+	public class DB2ProviderDetector() : ProviderDetectorBase<DB2ProviderDetector.Provider, DB2Version>(DB2Version.AutoDetect, DB2Version.LUW)
 	{
 		public enum Provider { }
-
-		public DB2ProviderDetector() : base(DB2Version.AutoDetect, DB2Version.LUW)
-		{
-		}
 
 		static readonly Lazy<IDataProvider> _db2DataProviderzOS = CreateDataProvider<DB2zOSDataProvider>();
 		static readonly Lazy<IDataProvider> _db2DataProviderLUW = CreateDataProvider<DB2LUWDataProvider>();
@@ -76,7 +72,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			};
 		}
 
-		public override DB2Version? DetectServerVersion(DbConnection connection)
+		protected override DB2Version? DetectServerVersion(DbConnection connection)
 		{
 			return DB2ProviderAdapter.Instance.ConnectionWrapper(connection).eServerType switch
 			{

@@ -9,24 +9,14 @@ using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.DataProvider.Sybase
 {
-	public class SybaseProviderDetector : ProviderDetectorBase<SybaseProvider>
+	public class SybaseProviderDetector() : ProviderDetectorBase<SybaseProvider>()
 	{
-		public SybaseProviderDetector() : base()
-		{
-		}
-
 		static readonly Lazy<IDataProvider> _sybaseNativeDataProvider  = CreateDataProvider<SybaseDataProviderNative>();
 		static readonly Lazy<IDataProvider> _sybaseManagedDataProvider = CreateDataProvider<SybaseDataProviderManaged>();
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
-			var provider = options.ProviderName switch
-			{
-				SybaseProviderAdapter.ManagedClientNamespace => SybaseProvider.DataAction,
-				SybaseProviderAdapter.NativeClientNamespace  => SybaseProvider.Unmanaged,
-				_                                            => DetectProvider()
-			};
-
+			// don't merge DetectProvider and DetectProvider logic and later could return inconclusive
 			switch (options.ProviderName)
 			{
 				case SybaseProviderAdapter.ManagedClientNamespace:
@@ -44,7 +34,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 						return _sybaseManagedDataProvider.Value;
 					if (options.ConfigurationString?.Contains("Native") == true)
 						return _sybaseNativeDataProvider.Value;
-					return GetDataProvider(options, provider, default);
+					return GetDataProvider(options, DetectProvider(options, SybaseProvider.AutoDetect), default);
 			}
 
 			return null;
@@ -52,8 +42,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		public override IDataProvider GetDataProvider(ConnectionOptions options, SybaseProvider provider, NoDialect version)
 		{
-			if (provider == SybaseProvider.AutoDetect)
-				provider = DetectProvider();
+			provider = DetectProvider(options, SybaseProvider.AutoDetect);
 
 			return provider switch
 			{
@@ -62,19 +51,41 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			};
 		}
 
-		public static SybaseProvider DetectProvider()
+		protected override DbConnection CreateConnection(SybaseProvider provider, string connectionString)
 		{
+			return SybaseProviderAdapter.GetInstance(provider).CreateConnection(connectionString);
+		}
+
+		protected override SybaseProvider DetectProvider(ConnectionOptions options, SybaseProvider provider)
+		{
+			if (provider is SybaseProvider.DataAction or SybaseProvider.Unmanaged)
+				return provider;
+
+			switch (options.ProviderName)
+			{
+				case SybaseProviderAdapter.ManagedClientNamespace:
+				case ProviderName.SybaseManaged                  :
+					return SybaseProvider.DataAction;
+
+				case "Sybase.Native"                             :
+				case SybaseProviderAdapter.NativeClientNamespace :
+				case SybaseProviderAdapter.NativeAssemblyName    :
+					return SybaseProvider.Unmanaged;
+
+				default                                          :
+					if (options.ConfigurationString?.Contains("Managed") == true)
+						return SybaseProvider.DataAction;
+					if (options.ConfigurationString?.Contains("Native") == true)
+						return SybaseProvider.Unmanaged;
+					break;
+			}
+
 			var fileName = typeof(SybaseProviderDetector).Assembly.GetFileName();
 			var dirName  = Path.GetDirectoryName(fileName);
 
 			return File.Exists(Path.Combine(dirName ?? ".", SybaseProviderAdapter.NativeAssemblyName + ".dll"))
 				? SybaseProvider.Unmanaged
 				: SybaseProvider.DataAction;
-		}
-
-		protected override DbConnection CreateConnection(SybaseProvider provider, string connectionString)
-		{
-			return SybaseProviderAdapter.GetInstance(provider).CreateConnection(connectionString);
 		}
 	}
 }

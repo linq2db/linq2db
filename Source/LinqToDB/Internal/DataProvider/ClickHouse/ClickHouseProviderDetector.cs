@@ -10,18 +10,15 @@ using LinqToDB.Internal.DataProvider.MySql;
 
 namespace LinqToDB.Internal.DataProvider.ClickHouse
 {
-	public class ClickHouseProviderDetector : ProviderDetectorBase<ClickHouseProvider>
+	public class ClickHouseProviderDetector() : ProviderDetectorBase<ClickHouseProvider>()
 	{
-		public ClickHouseProviderDetector() : base()
-		{
-		}
-
 		static readonly Lazy<IDataProvider> _octonicaDataProvider = CreateDataProvider<ClickHouseOctonicaDataProvider>();
 		static readonly Lazy<IDataProvider> _clientDataProvider   = CreateDataProvider<ClickHouseDriverDataProvider>();
 		static readonly Lazy<IDataProvider> _mysqlDataProvider    = CreateDataProvider<ClickHouseMySqlDataProvider>();
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
+			// don't merge DetectProvider and DetectProvider logic and later could return inconclusive
 			if ((options.ProviderName?.Contains("Octonica") == true && options.ProviderName?.Contains("ClickHouse") == true)
 				|| (options.ConfigurationString?.Contains("Octonica") == true && options.ConfigurationString?.Contains("ClickHouse") == true))
 				return _octonicaDataProvider.Value;
@@ -38,8 +35,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		public override IDataProvider GetDataProvider(ConnectionOptions options, ClickHouseProvider provider, NoDialect version)
 		{
-			if (provider == ClickHouseProvider.AutoDetect)
-				provider = DetectProvider();
+			provider = DetectProvider(options, provider);
 
 			return provider switch
 			{
@@ -49,8 +45,27 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			};
 		}
 
-		public static ClickHouseProvider DetectProvider()
+		protected override DbConnection CreateConnection(ClickHouseProvider provider, string connectionString)
 		{
+			return ClickHouseProviderAdapter.GetInstance(provider).CreateConnection(connectionString);
+		}
+
+		protected override ClickHouseProvider DetectProvider(ConnectionOptions options, ClickHouseProvider provider)
+		{
+			if (provider is ClickHouseProvider.ClickHouseDriver or ClickHouseProvider.MySqlConnector or ClickHouseProvider.Octonica)
+				return provider;
+
+			if ((options.ProviderName?.Contains("Octonica") == true && options.ProviderName?.Contains("ClickHouse") == true)
+				|| (options.ConfigurationString?.Contains("Octonica") == true && options.ConfigurationString?.Contains("ClickHouse") == true))
+				return ClickHouseProvider.Octonica;
+
+			if ((options.ProviderName?.Contains("ClickHouse") == true && options.ProviderName?.Contains("MySql") == true)
+				|| (options.ConfigurationString?.Contains("ClickHouse") == true && options.ConfigurationString?.Contains("MySql") == true))
+				return ClickHouseProvider.MySqlConnector;
+
+			if (options.ProviderName?.Contains("ClickHouse.Driver") == true || options.ConfigurationString?.Contains("ClickHouse.Driver") == true)
+				return ClickHouseProvider.ClickHouseDriver;
+
 			var fileName = typeof(ClickHouseProviderDetector).Assembly.GetFileName();
 			var dirName  = Path.GetDirectoryName(fileName);
 
@@ -61,11 +76,6 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					: File.Exists(Path.Combine(dirName ?? ".", MySqlProviderAdapter.MySqlConnectorAssemblyName + ".dll"))
 						? ClickHouseProvider.MySqlConnector
 						: ClickHouseProvider.Octonica;
-		}
-
-		protected override DbConnection CreateConnection(ClickHouseProvider provider, string connectionString)
-		{
-			return ClickHouseProviderAdapter.GetInstance(provider).CreateConnection(connectionString);
 		}
 	}
 }
