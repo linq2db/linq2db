@@ -9,7 +9,7 @@ using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.DataProvider.SQLite
 {
-	public class SQLiteProviderDetector() : ProviderDetectorBase<SQLiteProvider>()
+	public class SQLiteProviderDetector : ProviderDetectorBase<SQLiteProvider>
 	{
 		internal static readonly Lazy<IDataProvider> _SQLiteClassicDataProvider = CreateDataProvider<SQLiteDataProviderClassic>();
 		internal static readonly Lazy<IDataProvider> _SQLiteMSDataProvider      = CreateDataProvider<SQLiteDataProviderMS>();

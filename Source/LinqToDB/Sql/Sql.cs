@@ -753,7 +753,7 @@ namespace LinqToDB
 		// {0} IS NULL OR LENGTH(Unicode::Strip({ 0})) == 0
 		internal sealed class IsNullOrWhiteSpaceYdbBuilder : IExtensionCallBuilder
 		{
-			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
+			void IExtensionCallBuilder.Build(ISqlExtensionBuilder builder)
 			{
 				var str = builder.GetExpression("str")!;
 

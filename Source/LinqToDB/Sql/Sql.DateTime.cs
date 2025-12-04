@@ -417,7 +417,7 @@ namespace LinqToDB
 
 		sealed class DateDiffBuilderYdb : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var part       = builder.GetValue<DateParts>(0);
 				var startDate  = builder.GetExpression(1);

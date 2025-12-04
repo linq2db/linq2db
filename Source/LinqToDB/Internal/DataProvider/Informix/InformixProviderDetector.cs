@@ -10,7 +10,7 @@ using LinqToDB.Internal.DataProvider.DB2;
 
 namespace LinqToDB.Internal.DataProvider.Informix
 {
-	public class InformixProviderDetector() : ProviderDetectorBase<InformixProvider>()
+	public class InformixProviderDetector : ProviderDetectorBase<InformixProvider>
 	{
 		static readonly Lazy<IDataProvider> _informixDataProvider    = CreateDataProvider<InformixDataProviderInformix>();
 		static readonly Lazy<IDataProvider> _informixDB2DataProvider = CreateDataProvider<InformixDataProviderDB2>();
