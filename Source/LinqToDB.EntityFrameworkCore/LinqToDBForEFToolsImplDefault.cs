@@ -293,7 +293,7 @@ namespace LinqToDB.EntityFrameworkCore
 		/// <param name="version">SQL Server dialect.</param>
 		/// <param name="connectionString">Connection string.</param>
 		/// <param name="connection">Connection.</param>
-		/// /// <param name="transaction">Transaction.</param>
+		/// <param name="transaction">Transaction.</param>
 		/// <returns>Linq To DB SQL Server provider instance.</returns>
 		protected virtual IDataProvider CreateSqlServerProvider(SqlServerVersion version, string? connectionString, DbConnection? connection, DbTransaction? transaction)
 		{
