@@ -23,6 +23,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 	sealed class PostgreSQLDataProvider92 : PostgreSQLDataProvider { public PostgreSQLDataProvider92() : base(ProviderName.PostgreSQL92, PostgreSQLVersion.v92) {} }
 	sealed class PostgreSQLDataProvider93 : PostgreSQLDataProvider { public PostgreSQLDataProvider93() : base(ProviderName.PostgreSQL93, PostgreSQLVersion.v93) {} }
 	sealed class PostgreSQLDataProvider95 : PostgreSQLDataProvider { public PostgreSQLDataProvider95() : base(ProviderName.PostgreSQL95, PostgreSQLVersion.v95) {} }
+	sealed class PostgreSQLDataProvider13 : PostgreSQLDataProvider { public PostgreSQLDataProvider13() : base(ProviderName.PostgreSQL13, PostgreSQLVersion.v13) {} }
 	sealed class PostgreSQLDataProvider15 : PostgreSQLDataProvider { public PostgreSQLDataProvider15() : base(ProviderName.PostgreSQL15, PostgreSQLVersion.v15) {} }
 	sealed class PostgreSQLDataProvider18 : PostgreSQLDataProvider { public PostgreSQLDataProvider18() : base(ProviderName.PostgreSQL18, PostgreSQLVersion.v18) {} }
 #pragma warning restore MA0048 // File name must match type name
@@ -70,6 +71,14 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			if (Adapter.SupportsBigInteger)
 				SetProviderField<DbDataReader, BigInteger, decimal>((rd, idx) => rd.GetFieldValue<BigInteger>(idx));
 
+#if SUPPORTS_DATEONLY
+			SetProviderField<DbDataReader, TimeSpan, TimeOnly>((rd, idx) => rd.GetFieldValue<TimeSpan>(idx));
+
+			var rangeDateTime = Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateTime));
+			var rangeDateOnly = Adapter.NpgsqlRangeTType.MakeGenericType(typeof(DateOnly));
+			SetGetFieldValueReader(rangeDateTime, rangeDateOnly, Adapter.DataReaderType);
+#endif
+
 			_sqlOptimizer = new PostgreSQLSqlOptimizer(SqlProviderFlags);
 
 			ConfigureTypes();
@@ -90,7 +99,11 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		protected override IMemberTranslator CreateMemberTranslator()
 		{
-			return new PostgreSQLMemberTranslator();
+			return Version switch
+			{
+				>= PostgreSQLVersion.v13 => new PostgreSQL13MemberTranslator(),
+				_ => new PostgreSQLMemberTranslator(),
+			};
 		}
 
 		private void ConfigureTypes()
@@ -227,6 +240,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			return version switch
 			{
 				PostgreSQLVersion.v18 => ProviderName.PostgreSQL18,
+				PostgreSQLVersion.v13 => ProviderName.PostgreSQL13,
 				PostgreSQLVersion.v15 => ProviderName.PostgreSQL15,
 				PostgreSQLVersion.v92 => ProviderName.PostgreSQL92,
 				PostgreSQLVersion.v93 => ProviderName.PostgreSQL93,
@@ -435,10 +449,10 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 			// detect arrays
 			var isArray = false;
-			var idx = dbType.IndexOf("array");
+			var idx = dbType.IndexOf("array", StringComparison.Ordinal);
 
 			if (idx == -1)
-				idx = dbType.IndexOf("[");
+				idx = dbType.IndexOf('[');
 
 			if (idx != -1)
 			{

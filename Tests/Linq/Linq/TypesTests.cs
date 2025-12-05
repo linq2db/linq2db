@@ -201,7 +201,6 @@ namespace Tests.Linq
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				TestProvName.AllAccess,
 				TestProvName.AllSapHana)]
@@ -372,7 +371,7 @@ namespace Tests.Linq
 
 				db.Types2.Update(t => t.ID == 1, t => new LinqDataTypes2 { DateTimeValue2 = pdt });
 
-				if (context.IsAnyOf(ProviderName.ClickHouseMySql))
+				if (context.IsAnyOf(ProviderName.ClickHouseMySql, ProviderName.Ydb))
 					dt = dt.AddTicks(-dt.Ticks % 10);
 
 				Assert.That(dt2, Is.EqualTo(dt));
@@ -410,7 +409,7 @@ namespace Tests.Linq
 
 				db.Types2.Update(t => t.ID == 1, t => new LinqDataTypes2 { DateTimeValue2 = pdt });
 
-				if (context.IsAnyOf(ProviderName.ClickHouseMySql))
+				if (context.IsAnyOf(ProviderName.ClickHouseMySql, ProviderName.Ydb))
 					dt = dt.AddTicks(-dt.Ticks % 10);
 
 				Assert.That(dt2, Is.EqualTo(dt));
@@ -448,7 +447,7 @@ namespace Tests.Linq
 
 				db.Types2.Update(t => t.ID == 1, t => new LinqDataTypes2 { DateTimeValue2 = pdt });
 
-				if (context.IsAnyOf(ProviderName.ClickHouseMySql))
+				if (context.IsAnyOf(ProviderName.ClickHouseMySql, ProviderName.Ydb))
 					dt = dt.AddTicks(-dt.Ticks % 10);
 
 				Assert.That(dt2, Is.EqualTo(dt));
@@ -985,7 +984,7 @@ namespace Tests.Linq
 
 		sealed class Issue4469Table
 		{
-			public int Integer { get; set; }
+			[PrimaryKey] public int Integer { get; set; }
 			[Column(Precision = 10, Scale = 5)] public decimal Decimal { get; set; }
 			public double Double { get; set; }
 

@@ -26,14 +26,10 @@ namespace LinqToDB.Internal.SqlProvider
 		readonly Func<IQueryParametersNormalizer>           _parametersNormalizerFactory;
 
 		public SqlQueryVisitor.IVisitorTransformationInfo TransformationInfo => 
-			_transformationInfo ??= new SqlQueryVisitor.VisitorTransformationInfo();
-
-		SqlQueryVisitor.IVisitorTransformationInfo? _transformationInfo;
+			field ??= new SqlQueryVisitor.VisitorTransformationInfo();
 
 		public SqlQueryVisitor.IVisitorTransformationInfo TransformationInfoConvert => 
-			_transformationInfoConvert ??= new SqlQueryVisitor.VisitorTransformationInfo();
-
-		SqlQueryVisitor.IVisitorTransformationInfo? _transformationInfoConvert;
+			field ??= new SqlQueryVisitor.VisitorTransformationInfo();
 
 		public OptimizationContext(
 			EvaluationContext                evaluationContext,

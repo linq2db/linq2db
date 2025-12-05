@@ -24,38 +24,41 @@ using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
+using static LinqToDB.Linq.Translation.ITranslationContext;
+
 namespace LinqToDB.Internal.Linq.Builder
 {
 	sealed class ExpressionBuildVisitor : ExpressionVisitorBase
 	{
-		public   ExpressionBuilder Builder { get; }
+		public ExpressionBuilder Builder { get; }
+
 		BuildPurpose               _buildPurpose;
 		BuildFlags                 _buildFlags;
-		IBuildContext?             _buildContext;
-		ColumnDescriptor?          _columnDescriptor;
-		string?                    _alias;
-		Stack<Expression>          _disableSubqueries = new();
+		readonly Stack<Expression> _disableSubqueries = new();
 		NewExpression?             _disableNew;
 		bool                       _preferClientSide;
+		NullabilityContext?        _nullabilityContext;
 
-		NullabilityContext? _nullabilityContext;
+		public string?           Alias             { get; private set; }
+		public ColumnDescriptor? CurrentDescriptor { get; private set; }
 
 		public IBuildContext? BuildContext
 		{
-			get => _buildContext;
+			get;
 			private set
 			{
-				if (ReferenceEquals(_buildContext, value))
+				if (ReferenceEquals(field, value))
 					return;
-				_buildContext       = value;
+
+				field = value;
 				_nullabilityContext = null;
 			}
 		}
 
 		// Caches
 		SnapshotDictionary<ExprCacheKey, Expression>?                _associations;
-		SnapshotDictionary<ExprCacheKey, Expression>                 _translationCache = new(ExprCacheKey.SqlCacheKeyComparer);
-		SnapshotDictionary<ColumnCacheKey, SqlPlaceholderExpression> _columnCache      = new(ColumnCacheKey.ColumnCacheKeyComparer);
+		SnapshotDictionary<ExprCacheKey, Expression>                 _translationCache             = new(ExprCacheKey.SqlCacheKeyComparer);
+		SnapshotDictionary<ColumnCacheKey, SqlPlaceholderExpression> _columnCache                  = new(ColumnCacheKey.ColumnCacheKeyComparer);
 
 		public ExpressionBuildVisitor(ExpressionBuilder builder)
 		{
@@ -63,16 +66,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			_buildPurpose = BuildPurpose.Expression;
 		}
 
-		public MappingSchema     MappingSchema     => BuildContext?.MappingSchema ?? Builder.MappingSchema;
-		public DataOptions       DataOptions       => Builder.DataOptions;
-		public ColumnDescriptor? CurrentDescriptor => _columnDescriptor;
+		public MappingSchema MappingSchema => BuildContext?.MappingSchema ?? Builder.MappingSchema;
+		public DataOptions DataOptions => Builder.DataOptions;
 
 		ContextRefExpression? FoundRoot { get; set; }
 
 		static bool HasClonedContext(Expression? expression, CloningContext cloningContext)
 		{
 			return expression != null &&
-			       null       != expression.Find(cloningContext, static (cc, e) => e is ContextRefExpression contextRef && cc.IsCloned(contextRef.BuildContext));
+				   null != expression.Find(cloningContext, static (cc, e) => e is ContextRefExpression contextRef && cc.IsCloned(contextRef.BuildContext));
 		}
 
 		public ExpressionBuildVisitor Clone(CloningContext cloningContext)
@@ -116,9 +118,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				);
 
 			var newVisitor = new ExpressionBuildVisitor(Builder);
-			newVisitor._associations     = associations == null ? null : new SnapshotDictionary<ExprCacheKey, Expression>(associations);
-			newVisitor._translationCache = new (translationCache);
-			newVisitor._columnCache      = new (columnCache);
+			newVisitor._associations = associations == null ? null : new SnapshotDictionary<ExprCacheKey, Expression>(associations);
+			newVisitor._translationCache = new(translationCache);
+			newVisitor._columnCache = new(columnCache);
 
 			return newVisitor;
 		}
@@ -136,9 +138,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				_visitor = visitor;
 
-				_savedAssociations     = visitor._associations;
+				_savedAssociations = visitor._associations;
 				_savedTranslationCache = visitor._translationCache;
-				_savedColumnCache      = visitor._columnCache;
+				_savedColumnCache = visitor._columnCache;
 
 				_savedAssociations?.TakeSnapshot();
 				_savedTranslationCache.TakeSnapshot();
@@ -182,9 +184,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			[DebuggerStepThrough]
 			public StateHolder(ExpressionBuildVisitor visitor, TState state, Func<ExpressionBuildVisitor, TState> stateAccessor, Action<ExpressionBuildVisitor, TState> stateSetter)
 			{
-				_visitor     = visitor;
+				_visitor = visitor;
 				_stateSetter = stateSetter;
-				_savedState  = stateAccessor(visitor);
+				_savedState = stateAccessor(visitor);
 				_stateSetter(visitor, state);
 			}
 
@@ -202,12 +204,17 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public StateHolder<BuildFlags> UsingBuildFlags(BuildFlags buildFlags)
 		{
+			return new StateHolder<BuildFlags>(this, buildFlags, static v => v._buildFlags, static (v, f) => v._buildFlags = f);
+		}
+
+		public StateHolder<BuildFlags> CombineBuildFlags(BuildFlags buildFlags)
+		{
 			return new StateHolder<BuildFlags>(this, CombineFlags(_buildFlags, buildFlags), static v => v._buildFlags, static (v, f) => v._buildFlags = f);
 		}
 
 		public StateHolder<string?> UsingAlias(string? alias)
 		{
-			return new StateHolder<string?>(this, alias, static v => v._alias, static (v, f) => v._alias = f);
+			return new StateHolder<string?>(this, alias, static v => v.Alias, static (v, f) => v.Alias = f);
 		}
 
 		public StateHolder<IBuildContext?> UsingBuildContext(IBuildContext? buildContext)
@@ -217,10 +224,20 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public StateHolder<ColumnDescriptor?> UsingColumnDescriptor(ColumnDescriptor? columnDescriptor)
 		{
-			return new StateHolder<ColumnDescriptor?>(this, columnDescriptor, static v => v._columnDescriptor, static (v, f) => v._columnDescriptor = f);
+			return new StateHolder<ColumnDescriptor?>(this, columnDescriptor, static v => v.CurrentDescriptor, static (v, f) => v.CurrentDescriptor = f);
 		}
 
-		static BuildFlags CombineFlags (BuildFlags currentFlags, BuildFlags additional)
+		public StateHolder<NewExpression?> UsingDisableNew(NewExpression? disableNew)
+		{
+			return new StateHolder<NewExpression?>(this, disableNew, static v => v._disableNew, static (v, f) => v._disableNew = f);
+		}
+
+		public StateHolder<bool> UsingPreferClientSide(bool preferClientSide)
+		{
+			return new StateHolder<bool>(this, preferClientSide, static v => v._preferClientSide, static (v, f) => v._preferClientSide = f);
+		}
+
+		static BuildFlags CombineFlags(BuildFlags currentFlags, BuildFlags additional)
 		{
 			if (additional.HasFlag(BuildFlags.ResetPrevious))
 				return additional & ~BuildFlags.ResetPrevious;
@@ -231,48 +248,52 @@ namespace LinqToDB.Internal.Linq.Builder
 		public Expression BuildExpression(IBuildContext? buildContext, Expression expression, BuildPurpose buildPurpose, BuildFlags buildFlags = BuildFlags.None, string? alias = null)
 #pragma warning restore RS0059 // Do not add multiple public overloads with optional parameters
 		{
-			using var savePurpose      = UsingBuildPurpose(buildPurpose);
-			using var saveBuildContext = UsingBuildContext(buildContext);
-			using var saveAlias        = UsingAlias(alias ?? _alias);
-			using var saveBuildFlags   = UsingBuildFlags(buildFlags);
+			using (UsingBuildPurpose(buildPurpose))
+			using (UsingBuildContext(buildContext))
+			using (UsingAlias(alias ?? Alias))
+			using (CombineBuildFlags(buildFlags))
+			{
+				var result = Visit(expression);
 
-			var result = Visit(expression);
-
-			return result;
+				return result;
+			}
 		}
 
 #pragma warning disable RS0059 // Do not add multiple public overloads with optional parameters
 		public Expression BuildExpression(IBuildContext? buildContext, Expression expression, BuildFlags buildFlags = BuildFlags.None, string? alias = null)
 #pragma warning restore RS0059 // Do not add multiple public overloads with optional parameters
 		{
-			using var saveBuildContext = UsingBuildContext(buildContext);
-			using var saveAlias        = UsingAlias(alias ?? _alias);
-			using var saveBuildFlags   = UsingBuildFlags(buildFlags);
+			using (UsingBuildContext(buildContext))
+			using (UsingAlias(alias ?? Alias))
+			using (CombineBuildFlags(buildFlags))
+			{
+				var result = Visit(expression);
 
-			var result = Visit(expression);
-
-			return result;
+				return result;
+			}
 		}
 
 #pragma warning disable RS0059 // Do not add multiple public overloads with optional parameters
 		public Expression BuildExpression(Expression expression, BuildPurpose buildPurpose, BuildFlags? buildFlags = null)
 #pragma warning restore RS0059 // Do not add multiple public overloads with optional parameters
 		{
-			using var savePurpose    = UsingBuildPurpose(buildPurpose);
-			using var saveBuildFlags = UsingBuildFlags(buildFlags ?? _buildFlags);
+			using (UsingBuildPurpose(buildPurpose))
+			using (CombineBuildFlags(buildFlags ?? _buildFlags))
+			{
+				var result = Visit(expression);
 
-			var result = Visit(expression);
-
-			return result;
+				return result;
+			}
 		}
 
 		public Expression BuildExpression(Expression expression, BuildPurpose buildPurpose)
 		{
-			using var saveBuildPurpose = UsingBuildPurpose(buildPurpose);
+			using (UsingBuildPurpose(buildPurpose))
+			{
+				var result = Visit(expression);
 
-			var result = Visit(expression);
-
-			return result;
+				return result;
+			}
 		}
 
 		public Expression BuildSqlExpression(Expression expression)
@@ -292,21 +313,23 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public Expression BuildExpression(IBuildContext? context, Expression expression)
 		{
-			using var saveBuildContext = UsingBuildContext(context);
+			using (UsingBuildContext(context))
+			{
+				var result = Visit(expression);
 
-			var result = Visit(expression);
-
-			return result;
+				return result;
+			}
 		}
 
 		public Expression BuildExpression(IBuildContext? context, Expression expression, BuildPurpose buildPurpose)
 		{
-			using var savePurpose      = UsingBuildPurpose(buildPurpose);
-			using var saveBuildContext = UsingBuildContext(context);
+			using (UsingBuildPurpose(buildPurpose))
+			using (UsingBuildContext(context))
+			{
+				var result = Visit(expression);
 
-			var result = Visit(expression);
-
-			return result;
+				return result;
+			}
 		}
 
 		public Expression BuildRoot(Expression expression)
@@ -368,7 +391,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (sql != null)
 			{
-				translated = ExpressionBuilder.CreatePlaceholder(BuildContext, sql, node, alias : _alias);
+				translated = ExpressionBuilder.CreatePlaceholder(BuildContext, sql, node, alias: Alias);
 				return true;
 			}
 
@@ -407,7 +430,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var flags = GetProjectFlags();
 
 			var cacheKey = new ExprCacheKey(expression, context, null, null, flags);
-			
+
 			if (GetAlreadyTranslated(cacheKey, out var translated))
 			{
 				return translated;
@@ -530,7 +553,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		[Conditional("DEBUG")]
 		void DebugCacheHit(ExprCacheKey cacheKey, Expression translated)
 		{
-			Debug.WriteLine($"Cache hit: {cacheKey.Expression} => {translated}");
+			//Debug.WriteLine($"Cache hit: {cacheKey.Expression} ({cacheKey.Flags}) => {translated}");
 		}
 
 		ExprCacheKey GetSqlCacheKey(Expression path)
@@ -543,7 +566,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		ExprCacheKey GetSqlCacheKey(Expression path, SelectQuery selectQuery)
 		{
-			return new ExprCacheKey(path, null, _columnDescriptor, selectQuery, ProjectFlags.SQL);
+			return new ExprCacheKey(path, null, CurrentDescriptor, selectQuery, ProjectFlags.SQL);
 		}
 
 		Expression RegisterTranslatedSql(Expression translated, Expression path)
@@ -556,19 +579,29 @@ namespace LinqToDB.Internal.Linq.Builder
 			return translated;
 		}
 
+		static bool HasConstant(Expression expression)
+		{
+			return expression.Find(1, static (_, e) => e.NodeType == ExpressionType.Constant) != null;
+		}
+
 		Expression RegisterTranslatedSql(SelectQuery selectQuery, Expression translated, Expression path)
 		{
 			if (translated is SqlPlaceholderExpression placeholder)
 			{
-				if (_alias != null)
-					placeholder = placeholder.WithAlias(_alias);
+				if (Alias != null)
+				{
+					placeholder = placeholder.WithAlias(Alias);
+				}
 
 				translated = placeholder.WithTrackingPath(path);
 
 				var cacheKey = GetSqlCacheKey(path, selectQuery);
 
-				if (!_translationCache.ContainsKey(cacheKey))
-					_translationCache.Add(cacheKey, translated);
+				if (!(placeholder.Sql.HasParameter() && HasConstant(placeholder.Path)))
+				{
+					if (!_translationCache.ContainsKey(cacheKey))
+						_translationCache.Add(cacheKey, translated);
+				}
 			}
 
 			return translated;
@@ -620,7 +653,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		[Conditional("DEBUG")]
 		public void LogVisit(Expression node, [CallerMemberName] string callerName = "")
 		{
-			Debug.WriteLine($"{callerName}: {_buildPurpose}, {_buildFlags}, {node}");
+			//Debug.WriteLine($"{callerName}: {_buildPurpose}, {_buildFlags}, {node}");
 		}
 
 		protected override Expression VisitLambda<T>(Expression<T> node)
@@ -630,96 +663,84 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!shouldProcess)
 				return node;
 
-			var saveDescriptor = _columnDescriptor;
-			_columnDescriptor = null;
+			using (UsingColumnDescriptor(null))
+			{
+				var newNode = base.VisitLambda(node);
 
-			var newNode = base.VisitLambda(node);
+				FoundRoot = null;
 
-			_columnDescriptor = saveDescriptor;
-			return newNode;
+				return newNode;
+			}
 		}
 
 		protected override MemberAssignment VisitMemberAssignment(MemberAssignment node)
 		{
-			if (_buildPurpose is BuildPurpose.Table or BuildPurpose.AggregationRoot or BuildPurpose.AssociationRoot)
-			{
+			if (IsRootExpression())
 				return node;
-			}
 
-			var saveDescriptor = _columnDescriptor;
-			var saveAlias      = _alias;
+			var columnDescriptor = node.Member.DeclaringType != null
+				? MappingSchema.GetEntityDescriptor(node.Member.DeclaringType).FindColumnDescriptor(node.Member)
+				: CurrentDescriptor;
 
-			if (node.Member.DeclaringType != null)
+			using (UsingAlias(node.Member.Name))
+			using (UsingColumnDescriptor(columnDescriptor))
 			{
-				_columnDescriptor = MappingSchema.GetEntityDescriptor(node.Member.DeclaringType).FindColumnDescriptor(node.Member);
+				var newNode = base.VisitMemberAssignment(node);
+
+				if (newNode.Expression is SqlPlaceholderExpression { Alias: null } placeholder)
+				{
+					newNode = newNode.Update(placeholder.WithAlias(Alias));
+				}
+
+				return newNode;
 			}
-
-			_alias = node.Member.Name;
-
-			var newNode = base.VisitMemberAssignment(node);
-
-			if (newNode.Expression is SqlPlaceholderExpression { Alias: null } placeholder)
-			{
-				newNode = newNode.Update(placeholder.WithAlias(_alias));
-			}
-
-			_alias            = saveAlias;
-			_columnDescriptor = saveDescriptor;
-
-			return newNode;
 		}
 
 		internal override SqlGenericConstructorExpression.Assignment VisitSqlGenericAssignment(SqlGenericConstructorExpression.Assignment assignment)
 		{
-			var saveDescriptor = _columnDescriptor;
-			var saveAlias      = _alias;
+			if (IsRootExpression())
+				return assignment;
 
-			if (assignment.MemberInfo.DeclaringType != null)
+			var columnDescriptor = assignment.MemberInfo.DeclaringType != null
+				? MappingSchema.GetEntityDescriptor(assignment.MemberInfo.DeclaringType).FindColumnDescriptor(assignment.MemberInfo)
+				: CurrentDescriptor;
+
+			using (UsingAlias(assignment.MemberInfo.Name))
+			using (UsingColumnDescriptor(columnDescriptor))
 			{
-				_columnDescriptor = MappingSchema.GetEntityDescriptor(assignment.MemberInfo.DeclaringType).FindColumnDescriptor(assignment.MemberInfo);
-			}
-
-			_alias = assignment.MemberInfo.Name;
-
-			SqlGenericConstructorExpression.Assignment? newNode = null;
-			if (BuildContext != null && IsSqlOrExpression())
-			{
-				if (TryConvertToSql(assignment.Expression, out var translated))
+				SqlGenericConstructorExpression.Assignment? newNode = null;
+				if (BuildContext != null && IsSqlOrExpression())
 				{
-					newNode = assignment.WithExpression(Visit(translated));
+					if (TryConvertToSql(assignment.Expression, out var translated))
+					{
+						newNode = assignment.WithExpression(Visit(translated));
+					}
 				}
-			}
-			
-			if (newNode == null)
-			{
-				newNode = base.VisitSqlGenericAssignment(assignment);
-			}
 
-			_alias            = saveAlias;
-			_columnDescriptor = saveDescriptor;
+				if (newNode == null)
+				{
+					newNode = base.VisitSqlGenericAssignment(assignment);
+				}
 
-			return newNode;
+				return newNode;
+			}
 		}
 
 		protected override Expression VisitListInit(ListInitExpression node)
 		{
-			FoundRoot = null;
+			using (UsingDisableNew(node.NewExpression))
+			{
+				var newExpression = base.VisitListInit(node);
+				FoundRoot = null;
 
-			var saveDisableNew = _disableNew;
-			_disableNew = node.NewExpression;
-
-			var newExpression = base.VisitListInit(node);
-
-			_disableNew = saveDisableNew;
-
-			return newExpression;
+				return newExpression;
+			}
 		}
 
 		public override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
 		{
-			FoundRoot = null;
-
 			var newNode = base.VisitSqlGenericConstructorExpression(node);
+			FoundRoot = null;
 
 			if (!IsSame(newNode, node))
 				return Visit(newNode);
@@ -729,75 +750,71 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		internal override SqlGenericConstructorExpression.Parameter VisitSqlGenericParameter(SqlGenericConstructorExpression.Parameter parameter)
 		{
-			var saveDescriptor = _columnDescriptor;
-			var saveAlias      = _alias;
+			var columnDescriptor = parameter.MemberInfo?.DeclaringType != null
+				? MappingSchema.GetEntityDescriptor(parameter.MemberInfo.DeclaringType).FindColumnDescriptor(parameter.MemberInfo)
+				: CurrentDescriptor;
 
-			if (parameter.MemberInfo?.DeclaringType != null)
+			using (UsingAlias(parameter.MemberInfo?.Name ?? parameter.ParameterInfo.Name))
+			using (UsingColumnDescriptor(columnDescriptor))
 			{
-				_columnDescriptor = MappingSchema.GetEntityDescriptor(parameter.MemberInfo.DeclaringType).FindColumnDescriptor(parameter.MemberInfo);
+				var newNode = base.VisitSqlGenericParameter(parameter);
+
+				return newNode;
 			}
-
-			_alias = parameter.MemberInfo?.Name ?? parameter.ParameterInfo.Name;
-
-			var newNode = base.VisitSqlGenericParameter(parameter);
-
-			_alias            = saveAlias;
-			_columnDescriptor = saveDescriptor;
-
-			return newNode;
-
 		}
 
 		protected override Expression VisitMethodCall(MethodCallExpression node)
 		{
 			LogVisit(node);
 
-			if (_buildPurpose == BuildPurpose.Traverse)
+			if (_buildPurpose is BuildPurpose.Traverse)
 			{
 				var newNode = base.VisitMethodCall(node);
 				FoundRoot = null;
 				return newNode;
 			}
 
-			if (node.Method.Name == nameof(Sql.Alias) && node.Method.DeclaringType == typeof(Sql))
+			if (node.Method.DeclaringType == typeof(Sql))
 			{
-				using var saveAlias = UsingAlias(Builder.EvaluateExpression<string>(node.Arguments[1]));
-
-				var translated = Visit(node.Arguments[0]);
-
-				translated = RegisterTranslatedSql(translated, node);
-
-				return translated;
-			}
-
-			if (IsSqlOrExpression() && node.Method.Name == nameof(Sql.Parameter) && node.Method.DeclaringType == typeof(Sql))
-			{
-				using var saveFlags = UsingBuildFlags(BuildFlags.ForceParameter);
-
-				var translated = Visit(node.Arguments[0]);
-
-				translated = RegisterTranslatedSql(translated, node);
-
-				return translated;
-			}
-
-			if (IsSqlOrExpression() && node.Method.Name == nameof(Sql.Constant) && node.Method.DeclaringType == typeof(Sql))
-			{
-				using var saveFlags = UsingBuildFlags(BuildFlags.ForceParameter);
-
-				if (HandleValue(node.Arguments[0], out var translated))
+				switch (node.Method.Name)
 				{
-					if (translated is SqlPlaceholderExpression { Sql: SqlParameter sqlParameter })
+					case nameof(Sql.Alias):
 					{
-						sqlParameter.IsQueryParameter = false;
+						using (UsingAlias(Builder.EvaluateExpression<string>(node.Arguments[1])))
+						{
+							var translated = Visit(node.Arguments[0]);
+							return RegisterTranslatedSql(translated, node);
+						}
 					}
 
-					translated = RegisterTranslatedSql(translated, node);
+					case nameof(Sql.Parameter) when IsSqlOrExpression():
+					{
+						using (CombineBuildFlags(BuildFlags.ForceParameter))
+						{
+							var translated = Visit(node.Arguments[0]);
+							return RegisterTranslatedSql(translated, node);
+						}
+					}
 
-					return translated;
+					case nameof(Sql.Constant) when IsSqlOrExpression():
+					{
+						using (CombineBuildFlags(BuildFlags.ForceParameter))
+						{
+							if (HandleValue(node.Arguments[0], out var translated))
+							{
+								if (translated is SqlPlaceholderExpression { Sql: SqlParameter sqlParameter })
+								{
+									sqlParameter.IsQueryParameter = false;
+								}
+
+								translated = RegisterTranslatedSql(translated, node);
+								return translated;
+							}
+
+							return node;
+						}
+					}
 				}
-
-				return node;
 			}
 
 			if (Builder.IsAssociation(node, out _))
@@ -863,15 +880,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					return Visit(translatedMember);
 				}
 
-				if (HandleExtension(BuildContext, node, out var attribute, out translatedMember))
+				if (HandleExtension(BuildContext, node, out translatedMember))
 				{
-					if (node.Type == typeof(bool) && translatedMember is SqlPlaceholderExpression { Sql: var sql } && attribute.IsPredicate)
-					{
-						var predicate = ConvertExpressionToPredicate(sql);
-						var searchCondition = new SqlSearchCondition().Add(predicate);
-						return CreatePlaceholder(searchCondition, node);
-					}
-
 					return Visit(translatedMember);
 				}
 
@@ -895,9 +905,18 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (HandleSqlRelated(node, out var translatedSqlRelated))
 				return translatedSqlRelated;
 
+			if (_buildPurpose is BuildPurpose.Sql || _buildFlags.HasFlag(BuildFlags.ForSetProjection))
+			{
+				var generic = Builder.ParseGenericConstructor(node, ProjectFlags.SQL, CurrentDescriptor);
+				if (!IsSame(generic, node))
+					return Visit(generic);
+			}
+
 			if (_buildPurpose is BuildPurpose.Expression or BuildPurpose.Traverse or BuildPurpose.Expand or BuildPurpose.Extract or BuildPurpose.SubQuery)
 			{
-				return base.VisitMethodCall(node);
+				var newNode = base.VisitMethodCall(node);
+				FoundRoot = null;
+				return newNode;
 			}
 
 			FoundRoot = null;
@@ -912,9 +931,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					return Visit(translated);
 			}
 
+			var newNode = base.VisitNewArray(node);
 			FoundRoot = null;
-
-			return base.VisitNewArray(node);
+			return newNode;
 		}
 
 		protected override Expression VisitNew(NewExpression node)
@@ -936,7 +955,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (_buildPurpose is BuildPurpose.Sql || _buildFlags.HasFlag(BuildFlags.ForSetProjection))
 					{
-						var generic = Builder.ParseGenericConstructor(node, ProjectFlags.SQL, _columnDescriptor);
+						var generic = Builder.ParseGenericConstructor(node, ProjectFlags.SQL, CurrentDescriptor);
 						if (!IsSame(generic, node))
 							return Visit(generic);
 					}
@@ -946,13 +965,50 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			if (_buildPurpose is BuildPurpose.Root or BuildPurpose.AggregationRoot or BuildPurpose.AssociationRoot or BuildPurpose.Table)
+			if (IsRootExpression())
 				return node;
 
 			using var saveDescriptor = UsingColumnDescriptor(null);
-			using var saveAlias      = UsingAlias(null);
 
 			FoundRoot = null;
+
+			if (node.Members?.Count > 0)
+			{
+				Expression[]? newArguments = null;
+				for (int i = 0, n = node.Members.Count; i < n; i++)
+				{
+					var memberInfo   = node.Members[i];
+
+					using var saveAlias = UsingAlias(memberInfo.Name);
+
+					var nodeArgument = node.Arguments[i];
+					var newArgument  = Visit(nodeArgument);
+
+					if (newArguments != null)
+					{
+						newArguments[i] = newArgument;
+					}
+					else if (!ReferenceEquals(newArgument, nodeArgument))
+					{
+						newArguments = new Expression[n];
+						for (int j = 0; j < i; j++)
+						{
+							newArguments[j] = node.Arguments[j];
+						}
+
+						newArguments[i] = newArgument;
+					}
+				}
+
+				if (newArguments != null)
+				{
+					var newNode = node.Update(newArguments);
+					return newNode;
+				}
+
+				return node;
+			}
+
 			return base.VisitNew(node);
 		}
 
@@ -968,7 +1024,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				using (UsingColumnDescriptor(null))
 				{
-					var generic = Builder.ParseGenericConstructor(node, ProjectFlags.SQL, _columnDescriptor);
+					var generic = Builder.ParseGenericConstructor(node, ProjectFlags.SQL, CurrentDescriptor);
 					if (!IsSame(generic, node))
 						return Visit(generic);
 				}
@@ -976,16 +1032,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			using var saveDescriptor = UsingColumnDescriptor(null);
 
-			var saveDisableNew = _disableNew;
-			var saveAlias      = _alias;
-
-			_disableNew = node.NewExpression;
-			_alias      = null;
-
-			var newExpression = base.VisitMemberInit(node);
-
-			_disableNew = saveDisableNew;
-			_alias      = saveAlias;
+			Expression newExpression;
+			using (UsingDisableNew(node.NewExpression))
+			using (UsingAlias(null))
+			{
+				newExpression = base.VisitMemberInit(node);
+			}
 
 			if (!IsSame(newExpression, node))
 				return Visit(newExpression);
@@ -1027,7 +1079,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					sc.Add(new SqlPredicate.ExprExpr(sv, SqlPredicate.Operator.Equal, sql, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null));
 				}
 
-				ps[i * 2]     = sc;
+				ps[i * 2] = sc;
 
 				var caseExpr = Visit(node.Cases[i].Body);
 				if (caseExpr is not SqlPlaceholderExpression casePlaceholder)
@@ -1055,7 +1107,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (caseExpr is not SqlSearchCondition sc)
 					return base.VisitSwitch(node);
-				
+
 				cases.Add(new SqlCaseExpression.CaseItem(sc, value));
 			}
 
@@ -1079,8 +1131,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (translated is SqlPlaceholderExpression sqlPlaceholder)
 					{
-						var dbDataType = _columnDescriptor?.MemberType == translated.Type
-							? _columnDescriptor.GetDbDataType(true)
+						var dbDataType = CurrentDescriptor?.MemberType == translated.Type
+							? CurrentDescriptor.GetDbDataType(true)
 							: MappingSchema.GetDbDataType(node.Type);
 
 						var sql = new SqlCastExpression(sqlPlaceholder.Sql, dbDataType, null);
@@ -1103,7 +1155,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return base.VisitInvocation(node);
 		}
 
-		public bool HandleExtension(IBuildContext context, Expression expr, [NotNullWhen(true)] out Sql.ExpressionAttribute? attribute, [NotNullWhen(true)] out Expression? translated)
+		public bool HandleExtension(IBuildContext context, Expression expr, [NotNullWhen(true)] out Expression? translated)
 		{
 			// Handling ExpressionAttribute
 			//
@@ -1119,7 +1171,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					memberInfo = ((MemberExpression)expr).Member;
 				}
 
-				attribute = memberInfo.GetExpressionAttribute(MappingSchema);
+				var attribute = memberInfo.GetExpressionAttribute(MappingSchema);
 
 				if (attribute != null)
 				{
@@ -1133,14 +1185,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (!attribute.ServerSideOnly && !attribute.PreferServerSide && Builder.CanBeEvaluatedOnClient(expr))
 					{
-						attribute  = null;
+						attribute = null;
 						translated = null;
 						return false;
 					}
 
 					translated = ConvertExtension(attribute, context, expr);
 
-					if (translated is not SqlPlaceholderExpression)
+					if (translated is not SqlPlaceholderExpression placeholder)
 					{
 						if (attribute.ServerSideOnly)
 						{
@@ -1156,7 +1208,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			attribute  = null;
 			translated = null;
 			return false;
 		}
@@ -1174,7 +1225,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			else
 			{
 				var findAggregationRoot = attr.IsAggregate || attr.IsWindowFunction;
-				
+
 				if (!findAggregationRoot)
 				{
 					// handling old stuff of backward compatibility
@@ -1219,16 +1270,21 @@ namespace LinqToDB.Internal.Linq.Builder
 				rootSelectQuery = groupBy.SubQuery.SelectQuery;
 			}
 
+			Expression transformed;
 			if (GetAlreadyTranslated(rootSelectQuery, expr, out var translated))
-				return translated;
-
-			var transformed = attr.GetExpression((buildVisitor: this, context: rootContext),
-				Builder.DataContext,
-				Builder,
-				rootSelectQuery,
-				expr,
-				static (context, e, descriptor, inline) =>
-					context.buildVisitor.ConvertToExtensionSql(context.context, e, descriptor, inline));
+			{
+				transformed = translated;
+			}
+			else
+			{
+				transformed = attr.GetExpression((buildVisitor: this, context: rootContext),
+					Builder.DataContext,
+					Builder,
+					rootSelectQuery,
+					expr,
+					static (context, e, descriptor, inline) =>
+						context.buildVisitor.ConvertToExtensionSql(context.context, e, descriptor, inline));
+			}
 
 			if (transformed is SqlPlaceholderExpression placeholder)
 			{
@@ -1236,6 +1292,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				placeholder = placeholder.WithSql(Builder.PosProcessCustomExpression(placeholder.Sql, NullabilityContext.GetContext(placeholder.SelectQuery)));
 				placeholder = placeholder.WithPath(expr);
+
+				if (placeholder.Type == typeof(bool) && attr.IsPredicate)
+				{
+					if (placeholder.Sql is not ISqlPredicate)
+					{
+						var predicate       = ConvertExpressionToPredicate(placeholder.Sql);
+						var searchCondition = new SqlSearchCondition().Add(predicate);
+						placeholder = placeholder.WithSql(searchCondition);
+					}
+				}
 
 				placeholder = (SqlPlaceholderExpression)RegisterTranslatedSql(rootSelectQuery, placeholder, expr);
 
@@ -1260,13 +1326,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			Builder.PushTranslationModifier(translationModifier, true);
 
-			var saveFlags            = _buildFlags;
-			var saveColumnDescriptor = _columnDescriptor;
+			using var saveFlags      = UsingBuildFlags(_buildFlags | BuildFlags.ForExtension);
+			using var saveDescriptor = UsingColumnDescriptor(columnDescriptor);
 			try
 			{
-				_buildFlags       |= BuildFlags.ForExtension;
-				_columnDescriptor  = columnDescriptor;
-
 				expression = expression.UnwrapConvertToObject();
 				var unwrapped = expression.Unwrap();
 
@@ -1298,7 +1361,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						return result;
 					}
 
-					if (HandleGenericConstructor(result, out var translated))
+					if (HandleTableContextForExtension(expression, out var translated))
 						return translated;
 				}
 				else
@@ -1310,7 +1373,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						return converted;
 					}
 
-					if (HandleGenericConstructor(converted, out var translated))
+					if (HandleTableContextForExtension(expression, out var translated))
 						return translated;
 
 					// Weird case, see Stuff2 test
@@ -1336,32 +1399,22 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 			finally
 			{
-				_buildFlags       = saveFlags;
-				_columnDescriptor = saveColumnDescriptor;
 				Builder.PopTranslationModifier();
 			}
+		}
 
-			bool HandleGenericConstructor(Expression expr, [NotNullWhen(true)] out Expression? translated)
+		bool HandleTableContextForExtension(Expression expr, [NotNullWhen(true)] out Expression? translated)
+		{
+			var table = SequenceHelper.GetTableOrCteContext(Builder, expr);
+			if (table != null)
 			{
-				if (expr is SqlGenericConstructorExpression generic)
-				{
-					var placeholders = CollectPlaceholders(generic);
-					var usedSources  = new HashSet<ISqlTableSource>();
-
-					foreach (var p in placeholders)
-						QueryHelper.GetUsedSources(p.Sql, usedSources);
-
-					if (usedSources.Count == 1)
-					{
-						var source = usedSources.First();
-						translated = CreatePlaceholder(source.All, expression);
-						return true;
-					}
-				}
-
-				translated = null;
-				return false;
+				var allPlaceholder = CreatePlaceholder(table.SqlTable.All, expr);
+				translated = allPlaceholder;
+				return true;
 			}
+
+			translated = null;
+			return false;
 		}
 
 		protected override Expression VisitMember(MemberExpression node)
@@ -1378,7 +1431,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (node.Expression != null)
 			{
 				Expression root;
-				using (var savedFlags = UsingBuildFlags(BuildFlags.ForMemberRoot))
+				using (CombineBuildFlags(BuildFlags.ForMemberRoot))
 				{
 					root = _buildPurpose is BuildPurpose.Expression or BuildPurpose.Sql or BuildPurpose.SubQuery or BuildPurpose.Extract or BuildPurpose.Table
 						? BuildRoot(node.Expression)
@@ -1416,180 +1469,167 @@ namespace LinqToDB.Internal.Linq.Builder
 				FoundRoot = null;
 			}
 
-			var saveAlias = _alias;
-			try
+			using var saveAlias = UsingAlias(node.Member.Name);
+
+			var context = FoundRoot;
+
+			if (node.Expression != null)
 			{
-				_alias = node.Member.Name;
-				var context = FoundRoot;
-
-				if (node.Expression != null)
+				if (node.Member.IsNullableValueMember())
 				{
-					if (node.Member.IsNullableValueMember())
+					var translatedExpr = Visit(node.Expression!);
+
+					if (translatedExpr is SqlPlaceholderExpression placeholder)
 					{
-						var translatedExpr = Visit(node.Expression!);
-
-						if (translatedExpr is SqlPlaceholderExpression placeholder)
-						{
-							return Visit(placeholder.WithType(node.Type));
-						}
-
-						return node.Update(translatedExpr);
+						return Visit(placeholder.WithType(node.Type));
 					}
 
-					if (node.Member.IsNullableHasValueMember())
-					{
-						var translatedExpr = Visit(node.Expression!);
+					return node.Update(translatedExpr);
+				}
 
-						if (translatedExpr is SqlPlaceholderExpression)
-						{
-							var hasValue = SequenceHelper.MakeNotNullCondition(translatedExpr);
-							return Visit(hasValue);
-						}
+				if (node.Member.IsNullableHasValueMember())
+				{
+					var translatedExpr = Visit(node.Expression!);
+
+					if (translatedExpr is SqlPlaceholderExpression)
+					{
+						var hasValue = SequenceHelper.MakeNotNullCondition(translatedExpr);
+						return Visit(hasValue);
+					}
+				}
+			}
+
+			if (context != null)
+			{
+				if (_buildPurpose is BuildPurpose.Expression or BuildPurpose.Sql)
+				{
+					var exprCacheKey = GetSqlCacheKey(node);
+					if (GetAlreadyTranslated(exprCacheKey, out var alreadyTranslated))
+					{
+						return Visit(alreadyTranslated);
 					}
 				}
 
-				if (context != null)
+				// Should be called before any other checks. SetOperationContext, TableLikeQueryContext, CteContext may intercept this call
+				//
+				var translated = MakeWithCache(context.BuildContext, node);
+				if (!IsSame(translated, node) && translated is not SqlErrorExpression)
 				{
-					if (_buildPurpose is BuildPurpose.Expression or BuildPurpose.Sql)
+					if (translated is DefaultValueExpression && _buildPurpose is BuildPurpose.Expression)
 					{
-						var exprCacheKey = GetSqlCacheKey(node);
-						if (GetAlreadyTranslated(exprCacheKey, out var alreadyTranslated))
-						{
-							return Visit(alreadyTranslated);
-						}
+						// skip DefaultValueExpression in expression mode, it should be result from SelectContext that projection is wrong.
 					}
-
-					// Should be called before any other checks. SetOperationContext, TableLikeQueryContext, CteContext may intercept this call
-					//
-					var translated = MakeWithCache(context.BuildContext, node);
-					if (!IsSame(translated, node) && translated is not SqlErrorExpression)
+					else
 					{
-						if (translated is DefaultValueExpression && _buildPurpose is BuildPurpose.Expression)
-						{
-							// skip DefaultValueExpression in expression mode, it should be result from SelectContext that projection is wrong.
-						}
-						else
-						{
-							translated = RegisterTranslatedSql(translated, node);
+						translated = RegisterTranslatedSql(translated, node);
 
-							translated = Visit(translated);
-							return translated;
-						}
-					}
-
-					if (_buildPurpose is BuildPurpose.Traverse)
-						return node;
-
-					if (Builder.IsAssociation(node, out _))
-					{
-						Expression associationRoot;
-						{
-							using var saveBuildPurpose = UsingBuildPurpose(BuildPurpose.AssociationRoot);
-							associationRoot = MakeWithCache(context.BuildContext, node);
-						}
-
-						if (!IsSame(associationRoot, node) && associationRoot is not SqlErrorExpression)
-						{
-							return Visit(associationRoot);
-						}
-
-						if (node.Expression != null)
-						{
-							var testExpression = UnwrapExpressionForAssociation(node.Expression);
-
-							if (testExpression is ContextRefExpression { BuildContext.AutomaticAssociations: true })
-							{
-								var association = TryCreateAssociation(node, context, BuildContext);
-								if (!IsSame(association, node))
-									return Visit(association);
-							}
-						}
-					}
-
-					if (_buildPurpose is BuildPurpose.Sql && translated is SqlErrorExpression)
+						translated = Visit(translated);
 						return translated;
-				}
-
-				if (BuildContext != null && _buildPurpose is not BuildPurpose.Traverse)
-				{
-					var rootContext = context?.BuildContext ?? BuildContext;
-
-					if (_buildPurpose is BuildPurpose.Sql or BuildPurpose.Expression)
-					{
-						var cacheKey = new ExprCacheKey(node, null, _columnDescriptor, rootContext.SelectQuery, ProjectFlags.SQL);
-
-						if (GetAlreadyTranslated(cacheKey, out var translatedLocal))
-							return translatedLocal;
-
-						if (TranslateMember(BuildContext, memberExpression : node, translated : out translatedLocal))
-						{
-							translatedLocal = RegisterTranslatedSql(translatedLocal, node);
-							
-							if (!_translationCache.ContainsKey(cacheKey))
-								_translationCache[cacheKey] = translatedLocal;
-
-							return Visit(translatedLocal);
-						}
-
-						if (HandleValue(node, out var translated))
-							return Visit(translated);
-
-						if (HandleExtension(BuildContext, node, out var attribute, out translated))
-						{
-							if (node.Type == typeof(bool) && translated is SqlPlaceholderExpression placeholder && !attribute.IsPredicate)
-							{
-								var isTruePredicate = MakeIsTrueCheck(placeholder.Sql);
-								if (isTruePredicate == null)
-									return node;
-
-								var searchCondition = new SqlSearchCondition().Add(isTruePredicate);
-								return CreatePlaceholder(searchCondition, node);
-							}
-
-							return Visit(translated);
-						}
-
-						var exposed = Builder.ConvertSingleExpression(node);
-
-						if (!IsSame(exposed, node))
-						{
-							var translatedExposed = Visit(exposed);
-							if (SequenceHelper.HasError(translatedExposed))
-								return node;
-							return translatedExposed;
-						}
-
-						if (HandleSubquery(node, out translated))
-							return Visit(translated);
-
-						if (node.Expression is ContextRefExpression contextRef)
-						{
-							// Handling case when implementation of interface refers to ExpressionMethod
-							if (contextRef is { ElementType.IsInterface: true, BuildContext: ITableContext tableContext } && tableContext.ObjectType != contextRef.ElementType)
-							{
-								var newMember = tableContext.ObjectType.GetImplementation(node.Member);
-								if (newMember != null)
-								{
-									var newMemberAccess = Expression.MakeMemberAccess(contextRef.WithType(tableContext.ObjectType), newMember);
-									return Visit(newMemberAccess);
-								}
-							}
-						}
-
 					}
 				}
 
-				if (_buildPurpose == BuildPurpose.Expression && node.Expression != null)
+				if (_buildPurpose is BuildPurpose.Traverse)
+					return node;
+
+				if (Builder.IsAssociation(node, out _))
 				{
-					return base.VisitMember(node);
+					Expression associationRoot;
+					using (UsingBuildPurpose(BuildPurpose.AssociationRoot))
+					{
+						associationRoot = MakeWithCache(context.BuildContext, node);
+					}
+
+					if (!IsSame(associationRoot, node) && associationRoot is not SqlErrorExpression)
+					{
+						return Visit(associationRoot);
+					}
+
+					if (node.Expression != null)
+					{
+						var testExpression = UnwrapExpressionForAssociation(node.Expression);
+
+						if (testExpression is ContextRefExpression { BuildContext.AutomaticAssociations: true })
+						{
+							var association = TryCreateAssociation(node, context, BuildContext);
+							if (!IsSame(association, node))
+								return Visit(association);
+						}
+					}
 				}
 
-				return node;
+				if (_buildPurpose is BuildPurpose.Sql && translated is SqlErrorExpression)
+					return translated;
 			}
-			finally
+
+			if (BuildContext != null && _buildPurpose is not BuildPurpose.Traverse)
 			{
-				_alias = saveAlias;
+				var rootContext = context?.BuildContext ?? BuildContext;
+
+				if (_buildPurpose is BuildPurpose.Sql or BuildPurpose.Expression)
+				{
+					var cacheKey = new ExprCacheKey(node, null, CurrentDescriptor, rootContext.SelectQuery, ProjectFlags.SQL);
+
+					if (GetAlreadyTranslated(cacheKey, out var translatedLocal))
+						return translatedLocal;
+
+					if (TranslateMember(BuildContext, memberExpression: node, translated: out translatedLocal))
+					{
+						translatedLocal = RegisterTranslatedSql(translatedLocal, node);
+
+						if (!_translationCache.ContainsKey(cacheKey))
+							_translationCache[cacheKey] = translatedLocal;
+
+						return Visit(translatedLocal);
+					}
+
+					if (HandleValue(node, out var translated))
+						return Visit(translated);
+
+					if (HandleExtension(BuildContext, node, out translated))
+						return Visit(translated);
+
+					var exposed = Builder.ConvertSingleExpression(node);
+
+					if (!IsSame(exposed, node))
+					{
+						var translatedExposed = Visit(exposed);
+						if (SequenceHelper.HasError(translatedExposed))
+							return node;
+						return translatedExposed;
+					}
+
+					if (HandleSubquery(node, out translated))
+						return Visit(translated);
+
+					if (node.Expression is ContextRefExpression contextRef)
+					{
+						// Handling case when implementation of interface refers to ExpressionMethod
+						if (contextRef is { ElementType.IsInterface: true, BuildContext: ITableContext tableContext } && tableContext.ObjectType != contextRef.ElementType)
+						{
+							var newMember = tableContext.ObjectType.GetImplementation(node.Member);
+							if (newMember != null)
+							{
+								var newMemberAccess = Expression.MakeMemberAccess(contextRef.WithType(tableContext.ObjectType), newMember);
+								return Visit(newMemberAccess);
+							}
+						}
+					}
+
+				}
 			}
+
+			if (_buildPurpose is BuildPurpose.Expression && node.Expression != null)
+			{
+				return base.VisitMember(node);
+			}
+
+			return node;
+		}
+
+		protected override Expression VisitParameter(ParameterExpression node)
+		{
+			FoundRoot = null;
+			return base.VisitParameter(node);
 		}
 
 		static Expression UnwrapExpressionForAssociation(Expression expression)
@@ -1622,7 +1662,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var associationRoot = rootContext;
 
-			_associations ??= new (ExprCacheKey.SqlCacheKeyComparer);
+			_associations ??= new(ExprCacheKey.SqlCacheKeyComparer);
 
 			var cacheFlags = ProjectFlags.Root;
 
@@ -1764,7 +1804,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var notNullPath = notNull.Path;
 
-			if (notNullPath.Type.IsValueType && !notNullPath.Type.IsNullable())
+			if (!notNullPath.Type.IsNullableOrReferenceType())
 			{
 				notNullPath = Expression.Convert(notNullPath, typeof(Nullable<>).MakeGenericType(notNullPath.Type));
 			}
@@ -1819,9 +1859,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			return node.Update(innerExpression, node.NotNullExpressions);
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		bool IsSqlOrExpression()
 		{
 			return _buildPurpose is BuildPurpose.Sql or BuildPurpose.Expression;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		bool IsRootExpression()
+		{
+			return _buildPurpose is BuildPurpose.Root or BuildPurpose.Table or BuildPurpose.AggregationRoot or BuildPurpose.AssociationRoot;
 		}
 
 		protected override Expression VisitConditional(ConditionalExpression node)
@@ -1858,24 +1905,22 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			{
-				using var saveFlags = UsingBuildFlags(BuildFlags.ForceOuter);
+				Expression test;
 
-				var saveDescriptor = _columnDescriptor;
-				var saveAlias      = _alias;
+				// is scope correct here?
+				using var saveFlags = CombineBuildFlags(BuildFlags.ForceOuter);
 
-				_columnDescriptor = null;
-				_alias            = "test";
-
-				var test = Visit(node.Test);
-
-				_columnDescriptor = saveDescriptor;
-				_alias            = saveAlias;
+				using (UsingColumnDescriptor(null))
+				using (UsingAlias("test"))
+				{
+					test = Visit(node.Test);
+				}
 
 				if (test.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
 				{
 					var binary = (BinaryExpression)test;
-					if (HandleDefaultIfEmptyInBinary(binary.Left, binary.Right, out var newTest) 
-					    || HandleDefaultIfEmptyInBinary(binary.Right, binary.Left, out newTest))
+					if (HandleDefaultIfEmptyInBinary(binary.Left, binary.Right, out var newTest)
+						|| HandleDefaultIfEmptyInBinary(binary.Right, binary.Left, out newTest))
 					{
 						if (binary.NodeType == ExpressionType.Equal)
 						{
@@ -1899,9 +1944,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (_buildPurpose is BuildPurpose.Sql)
 				{
 					if (test is SqlPlaceholderExpression testPlaceholder
-					    && ifTrue is SqlPlaceholderExpression truePlaceholder
-					    && ifFalse is SqlPlaceholderExpression falsePlaceholder)
+						&& ifTrue is SqlPlaceholderExpression truePlaceholder
+						&& ifFalse is SqlPlaceholderExpression falsePlaceholder)
 					{
+						testPlaceholder = UpdateNesting(testPlaceholder);
+						truePlaceholder = UpdateNesting(truePlaceholder);
+						falsePlaceholder = UpdateNesting(falsePlaceholder);
+
 						return Visit(CreatePlaceholder(new SqlConditionExpression(ConvertExpressionToPredicate(testPlaceholder.Sql), truePlaceholder.Sql, falsePlaceholder.Sql), node));
 					}
 				}
@@ -2046,7 +2095,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			// Trying to convert whole expression
-			if (_buildPurpose != BuildPurpose.Sql && node is BinaryExpression or UnaryExpression or ConditionalExpression)
+			if (_buildPurpose is not BuildPurpose.Sql && node is BinaryExpression or UnaryExpression or ConditionalExpression)
 			{
 				translated = BuildSqlExpression(node);
 				//if (!SequenceHelper.HasError(translated))
@@ -2099,7 +2148,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							var predicate = placeholder.Sql as ISqlPredicate;
 							if (predicate is null)
 							{
-								var withNull = !node.Operand.Type.IsNullable();
+								var withNull = !node.Operand.Type.IsNullableType;
 
 								predicate = ConvertExpressionToPredicate(
 									placeholder.Sql,
@@ -2143,18 +2192,18 @@ namespace LinqToDB.Internal.Linq.Builder
 				case ExpressionType.Convert:
 				case ExpressionType.ConvertChecked:
 				{
-					if (node.Type != typeof(object) && 
-					    (HandleSqlRelated(node, out var translated) || HandleValue(node, out translated)))
+					if (node.Type != typeof(object) &&
+						(HandleSqlRelated(node, out var translated) || HandleValue(node, out translated)))
 					{
 						return Visit(translated);
 					}
 
-					if ((_buildPurpose == BuildPurpose.Root || _buildFlags.HasFlag(BuildFlags.ForMemberRoot)) && node.Operand is ContextRefExpression contextRef)
+					if ((_buildPurpose is BuildPurpose.Root || _buildFlags.HasFlag(BuildFlags.ForMemberRoot)) && node.Operand is ContextRefExpression contextRef)
 					{
 						return Visit(contextRef.WithType(node.Type));
 					}
 
-					if (_buildPurpose == BuildPurpose.Expression && !_buildFlags.HasFlag(BuildFlags.ForSetProjection))
+					if (_buildPurpose is BuildPurpose.Expression && !_buildFlags.HasFlag(BuildFlags.ForSetProjection))
 					{
 						return base.VisitUnary(node);
 					}
@@ -2200,9 +2249,9 @@ namespace LinqToDB.Internal.Linq.Builder
 								s = MappingSchema.GetDataType(t);
 							}
 
-							if (node.Type == t                                                     ||
-							    t.IsEnum         && Enum.GetUnderlyingType(t)         == node.Type ||
-							    node.Type.IsEnum && Enum.GetUnderlyingType(node.Type) == t)
+							if (node.Type == t ||
+								t.IsEnum && Enum.GetUnderlyingType(t) == node.Type ||
+								node.Type.IsEnum && Enum.GetUnderlyingType(node.Type) == t)
 							{
 								return Visit(placeholder.WithType(node.Type));
 							}
@@ -2236,7 +2285,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override Expression VisitDefaultValueExpression(DefaultValueExpression node)
 		{
-			if (_buildPurpose is BuildPurpose.Sql && _buildContext is not null)
+			if (_buildPurpose is BuildPurpose.Sql && BuildContext is not null)
 			{
 				if (node.IsNull)
 				{
@@ -2276,13 +2325,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			if (node.MarkerType == MarkerType.PreferClientSide)
 			{
-				var savePreferClientSide = _preferClientSide;
-
-				_preferClientSide = true;
-
-				var inner = Visit(node.InnerExpression);
-
-				_preferClientSide = savePreferClientSide;
+				Expression inner;
+				using (UsingPreferClientSide(true))
+				{
+					inner = Visit(node.InnerExpression);
+				}
 
 				if (inner is SqlPlaceholderExpression or SqlErrorExpression)
 					return inner;
@@ -2290,6 +2337,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return node.Update(inner);
 			}
 
+			// MarkerType.AggregationFallback or MarkerType.None
 			return node;
 		}
 
@@ -2297,7 +2345,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			if (_buildPurpose is BuildPurpose.Sql or BuildPurpose.Expression && Builder.CanBeEvaluatedOnClient(node))
 			{
-				var sqlParam = Builder.ParametersContext.BuildParameter(BuildContext, node, _columnDescriptor, alias : _alias);
+				var sqlParam = Builder.ParametersContext.BuildParameter(BuildContext, node, CurrentDescriptor, alias: Alias);
 
 				if (sqlParam != null)
 				{
@@ -2325,7 +2373,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var (inputArguments, startIndex) = node.Arguments switch
 					{
 						[_, NewArrayExpression arrayExpr] => (arrayExpr.Expressions, 0),
-						_                                 => (node.Arguments, 1),
+						_ => (node.Arguments, 1),
 					};
 
 					var arguments = new ISqlExpression[inputArguments.Count - startIndex];
@@ -2386,7 +2434,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (!Builder.PreferServerSide(node, false))
 				{
-					var preferConvert = _buildPurpose is BuildPurpose.Sql || (_buildPurpose == BuildPurpose.Expression && _buildFlags.HasFlag(BuildFlags.ForSetProjection));
+					var preferConvert = _buildPurpose is BuildPurpose.Sql || (_buildPurpose is BuildPurpose.Expression && _buildFlags.HasFlag(BuildFlags.ForSetProjection));
 
 					if (!preferConvert)
 					{
@@ -2406,9 +2454,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				ISqlExpression? sql = null;
 
-				if (_columnDescriptor?.ValueConverter == null && Builder.CanBeConstant(node) && Builder.CanBeEvaluatedOnClient(node) && !_buildFlags.HasFlag(BuildFlags.ForceParameter))
+				if (CurrentDescriptor?.ValueConverter == null && Builder.CanBeConstant(node) && Builder.CanBeEvaluatedOnClient(node) && !_buildFlags.HasFlag(BuildFlags.ForceParameter))
 				{
-					sql = Builder.BuildConstant(MappingSchema, node, _columnDescriptor);
+					sql = Builder.BuildConstant(MappingSchema, node, CurrentDescriptor);
 				}
 
 				var needParameter = sql == null;
@@ -2422,18 +2470,18 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					var toTranslate = node;
 					if (_buildFlags.HasFlag(BuildFlags.ForKeys))
-						toTranslate = Builder.ParseGenericConstructor(node, ProjectFlags.SQL | ProjectFlags.Expression, _columnDescriptor);
+						toTranslate = Builder.ParseGenericConstructor(node, ProjectFlags.SQL | ProjectFlags.Expression, CurrentDescriptor);
 
 					if (toTranslate is not SqlGenericConstructorExpression)
 					{
-						sql = Builder.ParametersContext.BuildParameter(BuildContext, toTranslate, _columnDescriptor, alias : _alias);
+						sql = Builder.ParametersContext.BuildParameter(BuildContext, toTranslate, CurrentDescriptor, alias: Alias);
 					}
 				}
 
 				if (sql != null)
 				{
 					var path = new SqlPathExpression([SequenceHelper.CreateRef(BuildContext), node], node.Type);
-					translated = CreatePlaceholder(sql, path).WithAlias(_alias);
+					translated = CreatePlaceholder(sql, path).WithAlias(Alias);
 					return true;
 				}
 			}
@@ -2552,14 +2600,18 @@ namespace LinqToDB.Internal.Linq.Builder
 					ctx = new ScopeContext(ctx, calculatedContext);
 				}
 
-				subqueryExpression = new ContextRefExpression(node.Type, ctx, alias : _alias);
+				subqueryExpression = new ContextRefExpression(node.Type, ctx, alias: Alias);
 
 				if (_buildFlags.HasFlag(BuildFlags.ForExpanding))
 				{
+					Expression testExpression;
+
 					// Translate subqueries only if they are SQL
-					_buildFlags &= ~BuildFlags.ForExpanding;
-					var testExpression = BuildSqlExpression(subqueryExpression);
-					_buildFlags |= BuildFlags.ForExpanding;
+					using (UsingBuildFlags(_buildFlags & ~BuildFlags.ForExpanding))
+					{
+						testExpression = BuildSqlExpression(subqueryExpression);
+					}
+
 					if (testExpression is SqlPlaceholderExpression placeholder)
 					{
 						//snapshot.Accept();
@@ -2568,6 +2620,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 
 					ctx.Detach();
+
 					return false;
 				}
 			}
@@ -2582,10 +2635,10 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			if (BuildContext != null && node.SelectQuery != BuildContext?.SelectQuery)
 			{
-				if (_alias != null)
-					node = node.WithAlias(_alias);
+				if (Alias != null)
+					node = node.WithAlias(Alias);
 
-				//return Builder.UpdateNesting(_buildContext!, node);
+				//return Builder.UpdateNesting(BuildContext!, node);
 				return node;
 			}
 
@@ -2650,12 +2703,12 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			expr = expr.Unwrap();
 
-			var saveColumnDescriptor = _columnDescriptor;
-			_columnDescriptor = null;
+			Expression converted;
 
-			var converted = Visit(expr);
-
-			_columnDescriptor = saveColumnDescriptor;
+			using (UsingColumnDescriptor(null))
+			{
+				converted = Visit(expr);
+			}
 
 			if (converted is not SqlPlaceholderExpression placeholderTest)
 				return null;
@@ -2672,9 +2725,9 @@ namespace LinqToDB.Internal.Linq.Builder
 		public SqlPlaceholderExpression CreatePlaceholder(ISqlExpression sqlExpression, Expression path)
 		{
 			if (BuildContext == null)
-				throw new InvalidOperationException("_buildContext is not initialized");
+				throw new InvalidOperationException("BuildContext is not initialized");
 
-			var placeholder = ExpressionBuilder.CreatePlaceholder(BuildContext, sqlExpression, path, alias: _alias);
+			var placeholder = ExpressionBuilder.CreatePlaceholder(BuildContext, sqlExpression, path, alias: Alias);
 			return placeholder;
 		}
 
@@ -2742,7 +2795,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (!IsSame(exposed, node))
 				return Visit(exposed);
-			
+
 			return base.VisitBinary(node);
 		}
 
@@ -2815,26 +2868,20 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			translated = node;
 
-			var saveColumnDescriptor = _columnDescriptor;
-			var saveAlias            = _alias;
-			_columnDescriptor        = null;
-			_alias                   = null;
-
-			var saveFlags = _buildFlags;
-			_buildFlags |= BuildFlags.ForKeys;
-
-			var left  = Visit(node.Left);
-			var right = Visit(node.Right);
-
-			_buildFlags = saveFlags;
-
-			_columnDescriptor = saveColumnDescriptor;
-			_alias            = saveAlias;
+			Expression left;
+			Expression right;
+			using (UsingAlias(null))
+			using (UsingBuildFlags(_buildFlags | BuildFlags.ForKeys))
+			using (UsingColumnDescriptor(null))
+			{
+				left = Visit(node.Left);
+				right = Visit(node.Right);
+			}
 
 			if (node.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
 			{
 				if (HandleEquality(node.NodeType is ExpressionType.NotEqual, left, right, out var optimized)
-				    || HandleEquality(node.NodeType is ExpressionType.NotEqual, right, left, out optimized))
+					|| HandleEquality(node.NodeType is ExpressionType.NotEqual, right, left, out optimized))
 
 				{
 					optimized = Visit(optimized);
@@ -2846,11 +2893,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			_alias = "cond";
-			_columnDescriptor = null;
-			var compareExpr = ConvertCompareExpression(node.NodeType, node.Left, node.Right, node);
-			_alias = saveAlias;
-			_columnDescriptor = saveColumnDescriptor;
+			Expression compareExpr;
+			using (UsingAlias("cond"))
+			using (UsingColumnDescriptor(null))
+			{
+				compareExpr = ConvertCompareExpression(node.NodeType, node.Left, node.Right, node);
+			}
 
 			if (!IsSame(compareExpr, node))
 			{
@@ -2867,7 +2915,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						return true;
 					}
 				}
-			
+
 				translated = Visit(compareExpr);
 				return true;
 			}
@@ -2917,7 +2965,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var predicates = new List<ISqlPredicate?>(items.Count + clientItems?.Count > 0 ? 1 : 0);
 			var hasError   = false;
 
-			using var saveAlias = UsingAlias("cond");
+			using var saveAlias            = UsingAlias("cond");
 			using var saveColumnDescriptor = UsingColumnDescriptor(null);
 
 			var errorOffset = 0;
@@ -3019,7 +3067,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var left  = node.Left;
 			var right = node.Right;
 
-			var shouldCheckColumn = node.Left.Type.ToNullableUnderlying() == node.Right.Type.ToNullableUnderlying();
+			var shouldCheckColumn = node.Left.Type.UnwrapNullableType() == node.Right.Type.UnwrapNullableType();
 
 			if (shouldCheckColumn)
 			{
@@ -3027,7 +3075,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 			else
 			{
-				left  = left.Unwrap();
+				left = left.Unwrap();
 				right = right.Unwrap();
 			}
 
@@ -3066,17 +3114,18 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					// do nothing
 				}
-				else if (left.Type.ToNullableUnderlying() != right.Type.ToNullableUnderlying())
+				else if (left.Type.UnwrapNullableType() != right.Type.UnwrapNullableType())
 					columnDescriptor = null;
 			}
 
-			var saveColumnDescriptor = _columnDescriptor;
-			_columnDescriptor = columnDescriptor;
+			Expression leftExpr;
+			Expression rightExpr;
 
-			var leftExpr  = UpdateNesting(Visit(left));
-			var rightExpr = UpdateNesting(Visit(right));
-
-			_columnDescriptor = saveColumnDescriptor;
+			using (UsingColumnDescriptor(columnDescriptor))
+			{
+				leftExpr = UpdateNesting(Visit(left));
+				rightExpr = UpdateNesting(Visit(right));
+			}
 
 			if (leftExpr is not SqlPlaceholderExpression leftPlaceholder || rightExpr is not SqlPlaceholderExpression rightPlaceholder)
 			{
@@ -3097,23 +3146,34 @@ namespace LinqToDB.Internal.Linq.Builder
 			switch (node.NodeType)
 			{
 				case ExpressionType.Add:
-				case ExpressionType.AddChecked:      translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "+", r, Precedence.Additive), node); break;
-				case ExpressionType.And:             translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "&", r, Precedence.Bitwise), node); break;
-				case ExpressionType.Divide:          translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "/", r, Precedence.Multiplicative), node); break;
-				case ExpressionType.ExclusiveOr:     translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "^", r, Precedence.Bitwise), node); break;
-				case ExpressionType.Modulo:          translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "%", r, Precedence.Multiplicative), node); break;
+				case ExpressionType.AddChecked: translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "+", r, Precedence.Additive), node); break;
+				case ExpressionType.And: translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "&", r, Precedence.Bitwise), node); break;
+				case ExpressionType.Divide: translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "/", r, Precedence.Multiplicative), node); break;
+				case ExpressionType.ExclusiveOr: translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "^", r, Precedence.Bitwise), node); break;
+				case ExpressionType.Modulo: translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "%", r, Precedence.Multiplicative), node); break;
 				case ExpressionType.Multiply:
 				case ExpressionType.MultiplyChecked: translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "*", r, Precedence.Multiplicative), node); break;
-				case ExpressionType.Or:              translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "|", r, Precedence.Bitwise), node); break;
-				case ExpressionType.Power:           translated = CreatePlaceholder(new SqlFunction(MappingSchema.GetDbDataType(t), "Power", l, r), node); break;
+				case ExpressionType.Or: translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "|", r, Precedence.Bitwise), node); break;
+				case ExpressionType.Power: translated = CreatePlaceholder(new SqlFunction(MappingSchema.GetDbDataType(t), "Power", l, r), node); break;
 				case ExpressionType.Subtract:
 				case ExpressionType.SubtractChecked: translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "-", r, Precedence.Subtraction), node); break;
-				case ExpressionType.Coalesce:        translated = CreatePlaceholder(new SqlCoalesceExpression(l, r), node); break;
+				case ExpressionType.Coalesce: translated = CreatePlaceholder(new SqlCoalesceExpression(l, r), node); break;
 				default:
 					return false;
 			}
 
 			return true;
+		}
+
+		public override Expression VisitSqlValidateExpression(SqlValidateExpression node)
+		{
+			if (_buildPurpose == BuildPurpose.Sql && _buildFlags.HasFlag(BuildFlags.ForKeys))
+			{
+				if (node.InnerExpression is SqlPlaceholderExpression)
+					return node.InnerExpression;
+			}
+
+			return base.VisitSqlValidateExpression(node);
 		}
 
 		static Expression SimplifyConvert(Expression expression)
@@ -3228,40 +3288,51 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static Expression? GetSearchConditionError(Expression expression)
 		{
-			if (expression is BinaryExpression binary)
+			var found = SequenceHelper.FindError(expression);
+
+			if (found != null)
+				return found;
+
+			return FindErrorExpression(expression);
+
+			static Expression? FindErrorExpression(Expression expression)
 			{
-				if (binary.Left is not SqlPlaceholderExpression && binary.Right is not SqlPlaceholderExpression)
-					return expression;
+				if (expression is BinaryExpression binary)
+				{
+					if (binary.Left is not SqlPlaceholderExpression && binary.Right is not SqlPlaceholderExpression)
+						return expression;
 
-				return GetSearchConditionError(binary.Left) ?? GetSearchConditionError(binary.Right);
+					return FindErrorExpression(binary.Left) ?? FindErrorExpression(binary.Right);
+				}
+
+				if (expression is SqlPlaceholderExpression)
+					return null;
+
+				return expression;
 			}
-
-			if (expression is SqlPlaceholderExpression)
-				return null;
-
-			return expression;
 		}
 
 		public bool BuildSearchCondition(IBuildContext? context, Expression expression, SqlSearchCondition searchCondition, [NotNullWhen(false)] out SqlErrorExpression? error)
 		{
-			using var saveContext = UsingBuildContext(context ?? _buildContext);
-			using var savePurpose = UsingBuildPurpose(BuildPurpose.Sql);
-
-			var result = Visit(expression);
-
-			if (result is SqlPlaceholderExpression placeholder)
+			using (UsingBuildContext(context ?? BuildContext))
+			using (UsingBuildPurpose(BuildPurpose.Sql))
 			{
-				searchCondition.Add(ConvertExpressionToPredicate(placeholder.Sql));
-				error = null;
-				return true;
-			}
+				var result = Visit(expression);
 
-			var errorExpr = GetSearchConditionError(result);
-			if (errorExpr != null)
-				error = SqlErrorExpression.EnsureError(errorExpr, expression.Type);
-			else
-				error = SqlErrorExpression.EnsureError(result, expression.Type);
-			return false;
+				if (result is SqlPlaceholderExpression placeholder)
+				{
+					searchCondition.Add(ConvertExpressionToPredicate(placeholder.Sql));
+					error = null;
+					return true;
+				}
+
+				var errorExpr = GetSearchConditionError(result);
+				if (errorExpr != null)
+					error = SqlErrorExpression.EnsureError(errorExpr, expression.Type);
+				else
+					error = SqlErrorExpression.EnsureError(result, expression.Type);
+				return false;
+			}
 		}
 
 		#endregion
@@ -3304,66 +3375,77 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			ISqlPredicate? predicate = null;
 
-			if (node.Method.Name == "Equals" && node.Object != null && node.Arguments.Count == 1)
+			if (node is { Method.Name: "Equals", Object: { }, Arguments.Count: 1 })
 				return ConvertCompareExpression(ExpressionType.Equal, node.Object, node.Arguments[0]);
 
-			var saveFlags = _buildFlags;
-			_buildFlags |= BuildFlags.ForKeys;
-			_buildFlags &= ~BuildFlags.ForMemberRoot;
-
-			if (node.Method.DeclaringType == typeof(string))
+			using (UsingBuildFlags((_buildFlags | BuildFlags.ForKeys) & ~BuildFlags.ForMemberRoot))
 			{
-				switch (node.Method.Name)
+				switch (node)
 				{
-					case "Contains"  : predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.Contains,   IsCaseSensitive(node)); break;
-					case "StartsWith": predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.StartsWith, IsCaseSensitive(node)); break;
-					case "EndsWith"  : predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.EndsWith,   IsCaseSensitive(node)); break;
+					case { Method: { DeclaringType.IsStringType: true, Name: nameof(string.Contains) } }:
+						predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.Contains, IsCaseSensitive(node));
+						break;
+
+					case { Method: { DeclaringType.IsStringType: true, Name: nameof(string.StartsWith) } }:
+						predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.StartsWith, IsCaseSensitive(node));
+						break;
+
+					case { Method: { DeclaringType.IsStringType: true, Name: nameof(string.EndsWith) } }:
+						predicate = CreateStringPredicate(node, SqlPredicate.SearchString.SearchKind.EndsWith, IsCaseSensitive(node));
+						break;
+
+					// static Contains(this src, item) extension methods
+					case { Method: { DeclaringType: { } type, Name: nameof(Enumerable.Contains) } } when (
+						type == typeof(Enumerable) ||
+						(type == typeof(Queryable) && node.Arguments.Count == 2 && Builder.CanBeEvaluatedOnClient(node.Arguments[0]))
+					):
+						predicate = ConvertInPredicate(node.Arguments[1], node.Arguments[0]);
+						break;
+
+					// src.Contains(item) instance methods
+					case { Method: { DeclaringType: { } type, Name: nameof(IList.Contains) } } when (
+						typeof(IList).IsSameOrParentOf(type) ||
+						typeof(ICollection<>).IsSameOrParentOf(type) ||
+						// IReadOnlyCollection<> doesn't declare Contains(), but derived (readonly) collection classes could.
+						typeof(IReadOnlyCollection<>).IsSameOrParentOf(type)
+					):
+						predicate = ConvertInPredicate(node.Arguments[0], node.Object!);
+						break;
+
+#if NET8_0_OR_GREATER
+					case
+					{
+						Method: { DeclaringType.IsMemoryExtensionsType: true, Name: nameof(MemoryExtensions.Contains) },
+						Arguments:
+						[
+							MethodCallExpression
+						{
+							Method.Name: "op_Implicit",
+							Type.Name: "ReadOnlySpan`1" or "Span`1",
+							Arguments: [var spanSource],
+						},
+							var value,
+							..
+						]
+					}:
+						predicate = ConvertInPredicate(value, spanSource!.UnwrapConvertToSelf());
+						break;
+#endif
+
+					case { Method: { DeclaringType: { } type, Name: nameof(Dictionary<,>.ContainsValue) } } when (
+						typeof(Dictionary<,>).IsSameOrParentOf(type)
+					):
+						predicate = ConvertInPredicate(node.Arguments[0], ExpressionHelper.PropertyOrField(node.Object!, "Values"));
+						break;
+
+					case { Method: { DeclaringType: { } type, Name: nameof(IDictionary<,>.ContainsKey) } } when (
+						typeof(IDictionary<,>).IsSameOrParentOf(type) ||
+						typeof(IReadOnlyDictionary<,>).IsSameOrParentOf(type)
+					):
+						predicate = ConvertInPredicate(node.Arguments[0], ExpressionHelper.PropertyOrField(node.Object!, "Keys"));
+						break;
 				}
 			}
-			else if (node.Method.Name == "Contains")
-			{
-				if (node.Method.DeclaringType == typeof(Enumerable) ||
-					(node.Method.DeclaringType == typeof(Queryable) && node.Arguments.Count == 2 && Builder.CanBeEvaluatedOnClient(node.Arguments[0])) ||
-					typeof(IList).IsSameOrParentOf(node.Method.DeclaringType!) ||
-					typeof(ICollection<>).IsSameOrParentOf(node.Method.DeclaringType!) ||
-					typeof(IReadOnlyCollection<>).IsSameOrParentOf(node.Method.DeclaringType!))
-				{
-					predicate = ConvertInPredicate(node);
-				}
-			}
-			else if (node.Method.Name == "ContainsValue" && typeof(Dictionary<,>).IsSameOrParentOf(node.Method.DeclaringType!))
-			{
-				var args = node.Method.DeclaringType!.GetGenericArguments(typeof(Dictionary<,>))!;
-				var minf = ExpressionBuilder.EnumerableMethods
-								.First(static m => m.Name == "Contains" && m.GetParameters().Length == 2)
-								.MakeGenericMethod(args[1]);
-
-				var expr = Expression.Call(
-								minf,
-								ExpressionHelper.PropertyOrField(node.Object!, "Values"),
-								node.Arguments[0]);
-
-				predicate = ConvertInPredicate(expr);
-			}
-			else if (node.Method.Name == "ContainsKey" &&
-				(typeof(IDictionary<,>).IsSameOrParentOf(node.Method.DeclaringType!) ||
-				 typeof(IReadOnlyDictionary<,>).IsSameOrParentOf(node.Method.DeclaringType!)))
-			{
-				var type = typeof(IDictionary<,>).IsSameOrParentOf(node.Method.DeclaringType!) ? typeof(IDictionary<,>) : typeof(IReadOnlyDictionary<,>);
-				var args = node.Method.DeclaringType!.GetGenericArguments(type)!;
-				var minf = ExpressionBuilder.EnumerableMethods
-								.First(static m => m.Name == "Contains" && m.GetParameters().Length == 2)
-								.MakeGenericMethod(args[0]);
-
-				var expr = Expression.Call(
-								minf,
-								ExpressionHelper.PropertyOrField(node.Object!, "Keys"),
-								node.Arguments[0]);
-
-				predicate = ConvertInPredicate(expr);
-			}
-
-			_buildFlags = saveFlags;
 
 			if (predicate != null)
 			{
@@ -3401,21 +3483,26 @@ namespace LinqToDB.Internal.Linq.Builder
 				|| valueConverter != null
 				|| (columnDescriptor != null && columnDescriptor.GetDbDataType(true).DataType is not DataType.Boolean))
 			{
-				using var descriptorSaver = UsingColumnDescriptor(columnDescriptor);
-
-				var saveAlias = _alias;
-
-				_alias = "true_value";
-				var trueValue  = Visit(ExpressionInstances.True) as SqlPlaceholderExpression;
-				_alias = "false_value";
-				var falseValue = Visit(ExpressionInstances.False) as SqlPlaceholderExpression;
-
-				_alias = saveAlias;
-
-				if (trueValue != null && falseValue != null)
+				using (UsingColumnDescriptor(columnDescriptor))
 				{
-					predicate = new SqlPredicate.IsTrue(sqlExpression, trueValue.Sql, falseValue.Sql, withNull && DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false);
-					return predicate;
+					SqlPlaceholderExpression? trueValue;
+					SqlPlaceholderExpression? falseValue;
+
+					using (UsingAlias("true_value"))
+					{
+						trueValue = Visit(ExpressionInstances.True) as SqlPlaceholderExpression;
+					}
+
+					using (UsingAlias("false_value"))
+					{
+						falseValue = Visit(ExpressionInstances.False) as SqlPlaceholderExpression;
+					}
+
+					if (trueValue != null && falseValue != null)
+					{
+						predicate = new SqlPredicate.IsTrue(sqlExpression, trueValue.Sql, falseValue.Sql, withNull && DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false);
+						return predicate;
+					}
 				}
 			}
 
@@ -3428,18 +3515,16 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var descriptor = QueryHelper.GetColumnDescriptor(sqlExpression);
 
-			var saveDescriptor = _columnDescriptor;
-			_columnDescriptor = descriptor;
+			using (UsingColumnDescriptor(descriptor))
+			{
+				var trueValue  = UpdateNesting(Visit(ExpressionInstances.True));
+				var falseValue = UpdateNesting(Visit(ExpressionInstances.False));
 
-			var trueValue  = UpdateNesting(Visit(ExpressionInstances.True));
-			var falseValue = UpdateNesting(Visit(ExpressionInstances.False));
+				if (trueValue is not SqlPlaceholderExpression trueSql || falseValue is not SqlPlaceholderExpression falseSql)
+					return null;
 
-			_columnDescriptor = saveDescriptor;
-
-			if (trueValue is not SqlPlaceholderExpression trueSql || falseValue is not SqlPlaceholderExpression falseSql)
-				return null;
-
-			return new SqlPredicate.IsTrue(sqlExpression, trueSql.Sql, falseSql.Sql, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false);
+				return new SqlPredicate.IsTrue(sqlExpression, trueSql.Sql, falseSql.Sql, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false);
+			}
 		}
 
 		static bool IsNullExpression(Expression expression)
@@ -3454,49 +3539,51 @@ namespace LinqToDB.Internal.Linq.Builder
 		#region ConvertCompare
 
 		public bool TryGenerateComparison(
-			IBuildContext?                               context, 
-			Expression                                   left,
-			Expression                                   right,
-			[NotNullWhen(true)] out  SqlSearchCondition? searchCondition,
+			IBuildContext? context,
+			Expression left,
+			Expression right,
+			[NotNullWhen(true)] out SqlSearchCondition? searchCondition,
 			[NotNullWhen(false)] out SqlErrorExpression? error,
-			BuildPurpose?                                buildPurpose = default)
+			BuildPurpose? buildPurpose = default)
 		{
-			using var saveBuildContext = UsingBuildContext(context);
-			using var saveBuildPurpose = UsingBuildPurpose(buildPurpose ?? _buildPurpose);
-
-			var expr = ConvertCompareExpression(ExpressionType.Equal, left, right);
-
-			if (expr is SqlPlaceholderExpression { Sql: SqlSearchCondition sc })
+			using (UsingBuildContext(context))
+			using (UsingBuildPurpose(buildPurpose ?? _buildPurpose))
 			{
-				searchCondition = sc;
-				error           = null;
-				return true;
+				var expr = ConvertCompareExpression(ExpressionType.Equal, left, right);
+
+				if (expr is SqlPlaceholderExpression { Sql: SqlSearchCondition sc })
+				{
+					searchCondition = sc;
+					error = null;
+					return true;
+				}
+
+				searchCondition = null;
+				error = SqlErrorExpression.EnsureError(expr, typeof(bool));
+
+				return false;
 			}
-
-			searchCondition = null;
-			error           = SqlErrorExpression.EnsureError(expr, typeof(bool));
-
-			return false;
 		}
 
 		public SqlSearchCondition GenerateComparison(
 			IBuildContext? context,
-			Expression     left,
-			Expression     right,
-			BuildPurpose?  buildPurpose = default)
+			Expression left,
+			Expression right,
+			BuildPurpose? buildPurpose = default)
 		{
-			using var saveBuildContext = UsingBuildContext(context);
-			using var saveBuildPurpose = UsingBuildPurpose(buildPurpose ?? _buildPurpose);
+			using (UsingBuildContext(context))
+			using (UsingBuildPurpose(buildPurpose ?? _buildPurpose))
+			{
+				var expr = ConvertCompareExpression(ExpressionType.Equal, left, right);
 
-			var expr = ConvertCompareExpression(ExpressionType.Equal, left, right);
+				if (expr is SqlPlaceholderExpression { Sql: SqlSearchCondition sc })
+					return sc;
 
-			if (expr is SqlPlaceholderExpression { Sql: SqlSearchCondition sc })
-				return sc;
+				if (expr is SqlErrorExpression error)
+					throw error.CreateException();
 
-			if (expr is SqlErrorExpression error)
-				throw error.CreateException();
-
-			throw new SqlErrorExpression($"Could not compare '{SqlErrorExpression.PrepareExpressionString(left)}' with {SqlErrorExpression.PrepareExpressionString(right)}", typeof(bool)).CreateException();
+				throw new SqlErrorExpression($"Could not compare '{SqlErrorExpression.PrepareExpressionString(left)}' with {SqlErrorExpression.PrepareExpressionString(right)}", typeof(bool)).CreateException();
+			}
 		}
 
 		Expression ConvertCompareExpression(ExpressionType nodeType, Expression left, Expression right, Expression? originalExpression = null)
@@ -3822,255 +3909,246 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var nullability = NullabilityContext.GetContext(BuildContext.SelectQuery);
 
-			var saveFlags            = _buildFlags;
-			var saveBuildPurpose     = _buildPurpose;
-			var saveColumnDescriptor = _columnDescriptor;
+			using var saveFlags      = UsingBuildFlags((_buildFlags | BuildFlags.ForKeys) & ~BuildFlags.ForMemberRoot);
+			using var saveDescriptor = UsingColumnDescriptor(SuggestColumnDescriptor(left, right));
 
-			try
+			var leftExpr = Visit(left);
+			if (leftExpr is SqlErrorExpression errorLeft)
+				return errorLeft.WithType(typeof(bool));
+
+			var rightExpr = Visit(right);
+			if (rightExpr is SqlErrorExpression errorRight)
+				return errorRight.WithType(typeof(bool));
+
+			leftExpr = Builder.UpdateNesting(BuildContext, leftExpr);
+			rightExpr = Builder.UpdateNesting(BuildContext, rightExpr);
+
+			var compareNullsAsValues = Builder.CompareNulls is CompareNulls.LikeClr or CompareNulls.LikeSqlExceptParameters;
+
+			//SQLRow case when needs to add Single
+			//
+			if (leftExpr is SqlPlaceholderExpression { Sql: SqlRowExpression } && rightExpr is not SqlPlaceholderExpression)
 			{
-				_buildFlags |= BuildFlags.ForKeys;
-				_buildFlags &= ~BuildFlags.ForMemberRoot;
+				var elementType = TypeHelper.GetEnumerableElementType(rightExpr.Type);
+				var singleCall  = Expression.Call(Methods.Enumerable.Single.MakeGenericMethod(elementType), right);
+				rightExpr = Visit(singleCall);
+			}
+			else if (rightExpr is SqlPlaceholderExpression { Sql: SqlRowExpression } &&
+					 leftExpr is not SqlPlaceholderExpression)
+			{
+				var elementType = TypeHelper.GetEnumerableElementType(leftExpr.Type);
+				var singleCall  = Expression.Call(Methods.Enumerable.Single.MakeGenericMethod(elementType), left);
+				leftExpr = Visit(singleCall);
+			}
 
-				var columnDescriptor = SuggestColumnDescriptor(left, right);
+			leftExpr = RemoveNullPropagation(leftExpr, toSql: true);
+			rightExpr = RemoveNullPropagation(rightExpr, toSql: true);
 
-				_columnDescriptor = columnDescriptor;
+			if (leftExpr is SqlErrorExpression leftError)
+				return leftError.WithType(typeof(bool));
 
-				var leftExpr = Visit(left);
-				if (leftExpr is SqlErrorExpression errorLeft)
-					return errorLeft.WithType(typeof(bool));
+			if (rightExpr is SqlErrorExpression rightError)
+				return rightError.WithType(typeof(bool));
 
-				var rightExpr = Visit(right);
-				if (rightExpr is SqlErrorExpression errorRight)
-					return errorRight.WithType(typeof(bool));
+			if (leftExpr is SqlPlaceholderExpression placeholderLeft)
+			{
+				l = placeholderLeft.Sql;
+			}
 
-				leftExpr = Builder.UpdateNesting(BuildContext, leftExpr);
-				rightExpr = Builder.UpdateNesting(BuildContext, rightExpr);
+			if (rightExpr is SqlPlaceholderExpression placeholderRight)
+			{
+				r = placeholderRight.Sql;
+			}
 
-				var compareNullsAsValues = Builder.CompareNulls is CompareNulls.LikeClr or CompareNulls.LikeSqlExceptParameters;
+			switch (nodeType)
+			{
+				case ExpressionType.Equal:
+				case ExpressionType.NotEqual:
 
-				//SQLRow case when needs to add Single
-				//
-				if (leftExpr is SqlPlaceholderExpression { Sql: SqlRowExpression } && rightExpr is not SqlPlaceholderExpression)
-				{
-					var elementType = TypeHelper.GetEnumerableElementType(rightExpr.Type);
-					var singleCall  = Expression.Call(Methods.Enumerable.Single.MakeGenericMethod(elementType), right);
-					rightExpr = Visit(singleCall);
-				}
-				else if (rightExpr is SqlPlaceholderExpression { Sql: SqlRowExpression } &&
-						 leftExpr is not SqlPlaceholderExpression)
-				{
-					var elementType = TypeHelper.GetEnumerableElementType(leftExpr.Type);
-					var singleCall  = Expression.Call(Methods.Enumerable.Single.MakeGenericMethod(elementType), left);
-					leftExpr = Visit(singleCall);
-				}
+					var isNot = nodeType == ExpressionType.NotEqual;
 
-				leftExpr = RemoveNullPropagation(leftExpr, toSql: true);
-				rightExpr = RemoveNullPropagation(rightExpr, toSql: true);
-
-				if (leftExpr is SqlErrorExpression leftError)
-					return leftError.WithType(typeof(bool));
-
-				if (rightExpr is SqlErrorExpression rightError)
-					return rightError.WithType(typeof(bool));
-
-				if (leftExpr is SqlPlaceholderExpression placeholderLeft)
-				{
-					l = placeholderLeft.Sql;
-				}
-
-				if (rightExpr is SqlPlaceholderExpression placeholderRight)
-				{
-					r = placeholderRight.Sql;
-				}
-
-				switch (nodeType)
-				{
-					case ExpressionType.Equal:
-					case ExpressionType.NotEqual:
-
-						var isNot = nodeType == ExpressionType.NotEqual;
-
-						if (l != null && r != null)
-							break;
-
-						leftExpr  = Builder.ParseGenericConstructor(leftExpr, ProjectFlags.SQL  | ProjectFlags.Keys, columnDescriptor);
-						rightExpr = Builder.ParseGenericConstructor(rightExpr, ProjectFlags.SQL | ProjectFlags.Keys, columnDescriptor);
-
-						if (SequenceHelper.UnwrapDefaultIfEmpty(leftExpr) is SqlGenericConstructorExpression leftGenericConstructor &&
-						    SequenceHelper.UnwrapDefaultIfEmpty(rightExpr) is SqlGenericConstructorExpression rightGenericConstructor)
-						{
-							return GenerateConstructorComparison(leftGenericConstructor, rightGenericConstructor);
-						}
-
-						if (IsNullExpression(left))
-						{
-							rightExpr = Visit(rightExpr);
-
-							if (rightExpr is ConditionalExpression { Test: SqlPlaceholderExpression { Sql: SqlSearchCondition rightSearchCond } } && rightSearchCond.Predicates.Count == 1)
-							{
-								var rightPredicate  = rightSearchCond.Predicates[0];
-								var localIsNot = isNot;
-
-								if (rightPredicate is SqlPredicate.IsNull isnull)
-								{
-									if (isnull.IsNot == localIsNot)
-										return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, isnull), GetOriginalExpression());
-
-									return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.IsNull(isnull.Expr1, !isnull.IsNot)), GetOriginalExpression());
-								}
-							}
-
-							return GenerateNullComparison(rightExpr, isNot);
-						}
-
-						if (IsNullExpression(right))
-						{
-							leftExpr = Visit(leftExpr);
-
-							if (leftExpr is ConditionalExpression { Test: SqlPlaceholderExpression { Sql: SqlSearchCondition leftSearchCond } } && leftSearchCond.Predicates.Count == 1)
-							{
-								var leftPredicate  = leftSearchCond.Predicates[0];
-								var localIsNot = isNot;
-
-								if (leftPredicate is SqlPredicate.IsNull isnull)
-								{
-									if (isnull.IsNot == localIsNot)
-										return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, isnull), GetOriginalExpression());
-
-									return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.IsNull(isnull.Expr1, !isnull.IsNot)), GetOriginalExpression());
-								}
-							}
-
-							return GenerateNullComparison(leftExpr, isNot);
-						}
-
-						if (l == null || r == null)
-						{
-							var pathComparison = GeneratePathComparison(left, SequenceHelper.UnwrapDefaultIfEmpty(leftExpr), right, SequenceHelper.UnwrapDefaultIfEmpty(rightExpr));
-
-							return pathComparison;
-						}
-
+					if (l != null && r != null)
 						break;
-				}
 
-				var op = nodeType switch
-				{
-					ExpressionType.Equal              => SqlPredicate.Operator.Equal,
-					ExpressionType.NotEqual           => SqlPredicate.Operator.NotEqual,
-					ExpressionType.GreaterThan        => SqlPredicate.Operator.Greater,
-					ExpressionType.GreaterThanOrEqual => SqlPredicate.Operator.GreaterOrEqual,
-					ExpressionType.LessThan           => SqlPredicate.Operator.Less,
-					ExpressionType.LessThanOrEqual    => SqlPredicate.Operator.LessOrEqual,
-					_                                 => throw new InvalidOperationException(),
-				};
+					leftExpr  = Builder.ParseGenericConstructor(leftExpr.UnwrapAdjustType(),  ProjectFlags.SQL | ProjectFlags.Keys, CurrentDescriptor);
+					rightExpr = Builder.ParseGenericConstructor(rightExpr.UnwrapAdjustType(), ProjectFlags.SQL | ProjectFlags.Keys, CurrentDescriptor);
 
-				if ((left.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked || right.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked) && (op == SqlPredicate.Operator.Equal || op == SqlPredicate.Operator.NotEqual))
-				{
-					var p = ConvertEnumConversion(left, op, right);
-					if (p != null)
-						return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, p), GetOriginalExpression());
-				}
+					if (SequenceHelper.UnwrapDefaultIfEmpty(leftExpr) is SqlGenericConstructorExpression leftGenericConstructor &&
+						SequenceHelper.UnwrapDefaultIfEmpty(rightExpr) is SqlGenericConstructorExpression rightGenericConstructor)
+					{
+						return GenerateConstructorComparison(leftGenericConstructor, rightGenericConstructor);
+					}
 
-				if (l is null)
-				{
-					if (Visit(left) is not SqlPlaceholderExpression leftPlaceholder)
-						return GetOriginalExpression();
-					l = leftPlaceholder.Sql;
-				}
+					if (IsNullExpression(left))
+					{
+						rightExpr = Visit(rightExpr);
 
-				if (r is null)
-				{
-					if (Visit(right) is not SqlPlaceholderExpression rightPlaceholder)
-						return GetOriginalExpression();
-					r = rightPlaceholder.Sql;
-				}
-
-				var lOriginal = l;
-				var rOriginal = r;
-
-				l = QueryHelper.UnwrapExpression(l, checkNullability: true);
-				r = QueryHelper.UnwrapExpression(r, checkNullability: true);
-
-				if (l is SqlValue lValue)
-					lValue.ValueType = GetDataType(r, lValue.ValueType, MappingSchema);
-
-				if (r is SqlValue rValue)
-					rValue.ValueType = GetDataType(l, rValue.ValueType, MappingSchema);
-
-				/*switch (nodeType)
-				{
-					case ExpressionType.Equal:
-					case ExpressionType.NotEqual:
-
-						if (!_buildContext!.SelectQuery.IsParameterDependent &&
-							(l is SqlParameter && lOriginal.CanBeNullable(nullability) || r is SqlParameter && r.CanBeNullable(nullability)))
+						if (rightExpr is ConditionalExpression { Test: SqlPlaceholderExpression { Sql: SqlSearchCondition rightSearchCond } } && rightSearchCond.Predicates.Count == 1)
 						{
-							_buildContext.SelectQuery.IsParameterDependent = true;
+							var rightPredicate  = rightSearchCond.Predicates[0];
+							var localIsNot = isNot;
+
+							if (rightPredicate is SqlPredicate.IsNull isnull)
+							{
+								if (isnull.IsNot == localIsNot)
+									return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, isnull), GetOriginalExpression());
+
+								return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.IsNull(isnull.Expr1, !isnull.IsNot)), GetOriginalExpression());
+							}
 						}
 
-						break;
-				}*/
+						return GenerateNullComparison(rightExpr, isNot);
+					}
 
-				ISqlPredicate? predicate = null;
+					if (IsNullExpression(right))
+					{
+						leftExpr = Visit(leftExpr);
 
-				var isEquality = op == SqlPredicate.Operator.Equal || op == SqlPredicate.Operator.NotEqual
+						if (leftExpr is ConditionalExpression { Test: SqlPlaceholderExpression { Sql: SqlSearchCondition leftSearchCond } } && leftSearchCond.Predicates.Count == 1)
+						{
+							var leftPredicate  = leftSearchCond.Predicates[0];
+							var localIsNot = isNot;
+
+							if (leftPredicate is SqlPredicate.IsNull isnull)
+							{
+								if (isnull.IsNot == localIsNot)
+									return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, isnull), GetOriginalExpression());
+
+								return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.IsNull(isnull.Expr1, !isnull.IsNot)), GetOriginalExpression());
+							}
+						}
+
+						return GenerateNullComparison(leftExpr, isNot);
+					}
+
+					if (l == null || r == null)
+					{
+						var pathComparison = GeneratePathComparison(left, SequenceHelper.UnwrapDefaultIfEmpty(leftExpr), right, SequenceHelper.UnwrapDefaultIfEmpty(rightExpr));
+
+						return pathComparison;
+					}
+
+					break;
+			}
+
+			var op = nodeType switch
+			{
+				ExpressionType.Equal              => SqlPredicate.Operator.Equal,
+				ExpressionType.NotEqual           => SqlPredicate.Operator.NotEqual,
+				ExpressionType.GreaterThan        => SqlPredicate.Operator.Greater,
+				ExpressionType.GreaterThanOrEqual => SqlPredicate.Operator.GreaterOrEqual,
+				ExpressionType.LessThan           => SqlPredicate.Operator.Less,
+				ExpressionType.LessThanOrEqual    => SqlPredicate.Operator.LessOrEqual,
+				_                                 => throw new InvalidOperationException(),
+			};
+
+			if ((left.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked || right.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked) && (op == SqlPredicate.Operator.Equal || op == SqlPredicate.Operator.NotEqual))
+			{
+				var p = ConvertEnumConversion(left, op, right);
+				if (p != null)
+					return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, p), GetOriginalExpression());
+			}
+
+			if (l is null)
+			{
+				if (Visit(left) is not SqlPlaceholderExpression leftPlaceholder)
+					return GetOriginalExpression();
+				l = leftPlaceholder.Sql;
+			}
+
+			if (r is null)
+			{
+				if (Visit(right) is not SqlPlaceholderExpression rightPlaceholder)
+					return GetOriginalExpression();
+				r = rightPlaceholder.Sql;
+			}
+
+			var lOriginal = l;
+			var rOriginal = r;
+
+			l = QueryHelper.UnwrapExpression(l, checkNullability: true);
+			r = QueryHelper.UnwrapExpression(r, checkNullability: true);
+
+			if (l is SqlValue lValue)
+				lValue.ValueType = GetDataType(r, lValue.ValueType, MappingSchema);
+
+			if (r is SqlValue rValue)
+				rValue.ValueType = GetDataType(l, rValue.ValueType, MappingSchema);
+
+			/*switch (nodeType)
+			{
+				case ExpressionType.Equal:
+				case ExpressionType.NotEqual:
+
+					if (!BuildContext!.SelectQuery.IsParameterDependent &&
+						(l is SqlParameter && lOriginal.CanBeNullable(nullability) || r is SqlParameter && r.CanBeNullable(nullability)))
+					{
+						BuildContext.SelectQuery.IsParameterDependent = true;
+					}
+
+					break;
+			}*/
+
+			ISqlPredicate? predicate = null;
+
+			var isEquality = op == SqlPredicate.Operator.Equal || op == SqlPredicate.Operator.NotEqual
 				? op == SqlPredicate.Operator.Equal
 				: (bool?)null;
 
-				// TODO: maybe remove
-				if (l is SqlSearchCondition lsc)
+			// TODO: maybe remove
+			if (l is SqlSearchCondition lsc)
+			{
+				if (isEquality != null & IsBooleanConstant(rightExpr, out var boolRight) && boolRight != null)
 				{
-					if (isEquality != null & IsBooleanConstant(rightExpr, out var boolRight) && boolRight != null)
-					{
-						predicate = lsc.MakeNot(boolRight != isEquality);
-					}
+					predicate = lsc.MakeNot(boolRight != isEquality);
 				}
+			}
 
-				// TODO: maybe remove
-				if (r is SqlSearchCondition rsc)
+			// TODO: maybe remove
+			if (r is SqlSearchCondition rsc)
+			{
+				if (isEquality != null & IsBooleanConstant(rightExpr, out var boolLeft) && boolLeft != null)
 				{
-					if (isEquality != null & IsBooleanConstant(rightExpr, out var boolLeft) && boolLeft != null)
-					{
-						predicate = rsc.MakeNot(boolLeft != isEquality);
-					}
+					predicate = rsc.MakeNot(boolLeft != isEquality);
 				}
+			}
 
-				if (predicate == null)
+			if (predicate == null)
+			{
+				if (isEquality != null)
 				{
-					if (isEquality != null)
+					bool?           value;
+					ISqlExpression? expression  = null;
+
+					if (IsBooleanConstant(left, out value))
 					{
-						bool?           value;
-						ISqlExpression? expression  = null;
-
-						if (IsBooleanConstant(left, out value))
+						if (l.ElementType != QueryElementType.SqlParameter)
 						{
-							if (l.ElementType != QueryElementType.SqlParameter)
-							{
-								expression = rOriginal;
-							}
+							expression = rOriginal;
 						}
-						else if (IsBooleanConstant(right, out value))
+					}
+					else if (IsBooleanConstant(right, out value))
+					{
+						if (r.ElementType != QueryElementType.SqlParameter)
 						{
-							if (r.ElementType != QueryElementType.SqlParameter)
-							{
-								expression = lOriginal;
-							}
+							expression = lOriginal;
+						}
+					}
+
+					if (value != null
+						&& expression != null
+						&& !(expression.ElementType == QueryElementType.SqlValue && ((SqlValue)expression).Value == null))
+					{
+						var isNot = !value.Value;
+						var withNull = false;
+						if (op == SqlPredicate.Operator.NotEqual)
+						{
+							isNot = !isNot;
+							withNull = true;
 						}
 
-						if (value != null
-							&& expression != null
-							&& !(expression.ElementType == QueryElementType.SqlValue && ((SqlValue)expression).Value == null))
+						using (UsingColumnDescriptor(QueryHelper.GetColumnDescriptor(expression)))
 						{
-							var isNot = !value.Value;
-							var withNull = false;
-							if (op == SqlPredicate.Operator.NotEqual)
-							{
-								isNot = !isNot;
-								withNull = true;
-							}
-
-							_columnDescriptor = QueryHelper.GetColumnDescriptor(expression);
 							var trueValue  = ((SqlPlaceholderExpression)Visit(ExpressionInstances.True)).Sql;
 							var falseValue = ((SqlPlaceholderExpression)Visit(ExpressionInstances.False)).Sql;
 
@@ -4093,25 +4171,18 @@ namespace LinqToDB.Internal.Linq.Builder
 							}
 						}
 					}
-
-					if (predicate == null)
-					{
-						predicate = new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
-							compareNullsAsValues && (lOriginal.CanBeNullable(nullability) || rOriginal.CanBeNullable(nullability))
-								? op == SqlPredicate.Operator.Equal
-								: null);
-					}
 				}
 
-				return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, predicate), GetOriginalExpression());
+				if (predicate == null)
+				{
+					predicate = new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
+						compareNullsAsValues && (lOriginal.CanBeNullable(nullability) || rOriginal.CanBeNullable(nullability))
+							? op == SqlPredicate.Operator.Equal
+							: null);
+				}
+			}
 
-			}
-			finally
-			{
-				_buildFlags       = saveFlags;
-				_columnDescriptor = saveColumnDescriptor;
-				_buildPurpose     = saveBuildPurpose;
-			}
+			return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, predicate), GetOriginalExpression());
 		}
 
 		public static List<SqlPlaceholderExpression> CollectPlaceholders(Expression expression)
@@ -4154,7 +4225,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						Collect(parameter.Expression);
 					}
-				} 
+				}
 				else if (expr is MemberInitExpression memberInit)
 				{
 					foreach (var binding in memberInit.Bindings)
@@ -4183,7 +4254,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			correctedExpression = expression.Transform(replacement, (r, e) =>
 			{
-				if (r.TryGetValue(e, out var newExpr)) 
+				if (r.TryGetValue(e, out var newExpr))
 					return newExpr;
 				return e;
 			});
@@ -4435,7 +4506,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 				// here underlying type used
 				// (int?)enum? op (int?)enum
-				else if (op1conv.Operand.Type.IsNullable() && Nullable.GetUnderlyingType(op1conv.Operand.Type)!.IsEnum
+				else if (op1conv.Operand.Type.IsNullableType && Nullable.GetUnderlyingType(op1conv.Operand.Type)!.IsEnum
 					&& op2.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked
 					&& op2 is UnaryExpression op2conv2
 					&& op2conv2.Operand.NodeType == ExpressionType.Constant
@@ -4535,7 +4606,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var type = operand.Type;
 
-			if (!type.ToNullableUnderlying().IsEnum)
+			if (!type.UnwrapNullableType().IsEnum)
 				return null;
 
 			var dic = new Dictionary<object, object?>();
@@ -4602,13 +4673,14 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					value = ((UnaryExpression)value).Operand;
 
-					var saveColumnDescriptor = _columnDescriptor;
-					_columnDescriptor = SuggestColumnDescriptor(operand, value);
+					SqlPlaceholderExpression? leftPlaceholder;
+					SqlPlaceholderExpression? rightPlaceholder;
 
-					var leftPlaceholder = Visit(operand) as SqlPlaceholderExpression;
-					var rightPlaceholder = Visit(value) as SqlPlaceholderExpression;
-
-					_columnDescriptor = saveColumnDescriptor;
+					using (UsingColumnDescriptor(SuggestColumnDescriptor(operand, value)))
+					{
+						leftPlaceholder = Visit(operand) as SqlPlaceholderExpression;
+						rightPlaceholder = Visit(value) as SqlPlaceholderExpression;
+					}
 
 					if (leftPlaceholder == null || rightPlaceholder == null)
 						return null;
@@ -4748,46 +4820,37 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		private ISqlPredicate? ConvertInPredicate(MethodCallExpression expression)
+		private ISqlPredicate? ConvertInPredicate(Expression value, Expression arr)
 		{
-			var e        = expression;
-			var argIndex = e.Object != null ? 0 : 1;
-			var arr      = e.Object ?? e.Arguments[0];
-			var arg      = e.Arguments[argIndex];
-
 			ISqlExpression? expr = null;
 
-			var saveFlags            = _buildFlags;
-			var saveColumnDescriptor = _columnDescriptor;
+			Expression builtExpr;
 
-			try
+			using (UsingBuildFlags(_buildFlags | BuildFlags.ForKeys))
 			{
-				_buildFlags |= BuildFlags.ForKeys;
+				builtExpr = Visit(value);
+			}
 
-				var builtExpr = Visit(arg);
+			if (builtExpr is SqlPlaceholderExpression placeholder)
+			{
+				expr = placeholder.Sql;
+			}
+			else if (SequenceHelper.UnwrapDefaultIfEmpty(builtExpr) is SqlGenericConstructorExpression constructor)
+			{
+				var objParam = Expression.Parameter(typeof(object));
 
-				_buildFlags = saveFlags;
+				var getters = new List<SqlGetValue>();
+				BuildObjectGetters(constructor, objParam, Expression.Convert(objParam, constructor.ObjectType),
+					getters);
 
-				if (builtExpr is SqlPlaceholderExpression placeholder)
-				{
-					expr = placeholder.Sql;
-				}
-				else if (SequenceHelper.UnwrapDefaultIfEmpty(builtExpr) is SqlGenericConstructorExpression constructor)
-				{
-					var objParam = Expression.Parameter(typeof(object));
+				expr = new SqlObjectExpression(MappingSchema, getters.ToArray());
+			}
 
-					var getters = new List<SqlGetValue>();
-					BuildObjectGetters(constructor, objParam, Expression.Convert(objParam, constructor.ObjectType),
-						getters);
+			if (expr == null)
+				return null;
 
-					expr = new SqlObjectExpression(MappingSchema, getters.ToArray());
-				}
-
-				if (expr == null)
-					return null;
-
-				_columnDescriptor = QueryHelper.GetColumnDescriptor(expr);
-
+			using (UsingColumnDescriptor(QueryHelper.GetColumnDescriptor(expr)))
+			{
 				switch (arr.NodeType)
 				{
 					case ExpressionType.NewArrayInit:
@@ -4814,7 +4877,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						if (Builder.CanBeEvaluatedOnClient(arr))
 						{
-							var parameter = Builder.ParametersContext.BuildParameter(BuildContext, arr, _columnDescriptor, buildParameterType : ParametersContext.BuildParameterType.InPredicate);
+							var parameter = Builder.ParametersContext.BuildParameter(BuildContext, arr, CurrentDescriptor, buildParameterType : ParametersContext.BuildParameterType.InPredicate);
 
 							if (parameter != null)
 							{
@@ -4825,14 +4888,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						break;
 				}
+			}
 
-				return null;
-			}
-			finally
-			{
-				_columnDescriptor = saveColumnDescriptor;
-				_buildFlags       = saveFlags;
-			}
+			return null;
 		}
 
 		#endregion
@@ -4848,13 +4906,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var descriptor = SuggestColumnDescriptor(e.Object, e.Arguments[0]);
 
-			var saveColumnDescriptor = _columnDescriptor;
-			_columnDescriptor = descriptor;
+			SqlPlaceholderExpression? objExpr;
+			SqlPlaceholderExpression? argExpr;
 
-			var objExpr = Visit(e.Object) as SqlPlaceholderExpression;
-			var argExpr = Visit(e.Arguments[0]) as SqlPlaceholderExpression;
-
-			_columnDescriptor = saveColumnDescriptor;
+			using (UsingColumnDescriptor(descriptor))
+			{
+				objExpr = Visit(e.Object) as SqlPlaceholderExpression;
+				argExpr = Visit(e.Arguments[0]) as SqlPlaceholderExpression;
+			}
 
 			if (objExpr == null || argExpr == null)
 				return null;
@@ -4973,7 +5032,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return newExpr;
 		}
 
-		int            _gettingSubquery;
+		int _gettingSubquery;
 
 		public IBuildContext? GetSubQuery(Expression expr, out bool isSequence, out string? errorMessage)
 		{
@@ -4997,7 +5056,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (expr is ContextRefExpression contextRef && ReferenceEquals(contextRef.BuildContext, buildResult.BuildContext))
 			{
 				errorMessage = null;
-				isSequence   = false;
+				isSequence = false;
 				return null;
 			}
 
@@ -5114,7 +5173,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			public ColumnDescriptor?      CurrentColumnDescriptor => Visitor.CurrentDescriptor;
 			public string?                CurrentAlias            { get; private set; }
 
-			static BuildPurpose  GetBuildPurpose(TranslationFlags translationFlags)
+			static BuildPurpose GetBuildPurpose(TranslationFlags translationFlags)
 			{
 				var result = BuildPurpose.None;
 
@@ -5128,6 +5187,16 @@ namespace LinqToDB.Internal.Linq.Builder
 					result = BuildPurpose.Sql;
 				}
 
+				if (translationFlags.HasFlag(TranslationFlags.Expand))
+				{
+					result = BuildPurpose.Expand;
+				}
+
+				if (translationFlags.HasFlag(TranslationFlags.Traverse))
+				{
+					result = BuildPurpose.Traverse;
+				}
+
 				return result;
 			}
 
@@ -5137,6 +5206,28 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (CurrentContext == null)
 					throw new InvalidOperationException("CurrentContext not initialized");
 				return Builder.BuildSqlExpression(CurrentContext, expression, buildPurpose, BuildFlags.None, alias: CurrentAlias);
+			}
+
+			public bool TranslateExpression(Expression expression, [NotNullWhen(true)] out ISqlExpression? sql, [NotNullWhen(false)] out SqlErrorExpression? error)
+			{
+				var translated = Translate(expression, TranslationFlags.Sql);
+				if (translated is SqlPlaceholderExpression placeholder)
+				{
+					sql = placeholder.Sql;
+					error = null;
+					return true;
+				}
+
+				if (translated is SqlErrorExpression sqlError)
+				{
+					sql = null;
+					error = sqlError;
+					return false;
+				}
+
+				sql = null;
+				error = CreateErrorExpression(expression);
+				return false;
 			}
 
 			public MappingSchema MappingSchema => CurrentContext?.MappingSchema ?? throw new InvalidOperationException();
@@ -5152,6 +5243,70 @@ namespace LinqToDB.Internal.Linq.Builder
 			public SqlErrorExpression CreateErrorExpression(Expression basedOn, string? message = null, Type? type = null)
 			{
 				return new SqlErrorExpression(basedOn, message, type ?? basedOn.Type);
+			}
+
+			public Expression? GetAggregationContext(Expression expression)
+			{
+				var result = Builder.BuildTraverseExpression(expression);
+				if (result is ContextRefExpression contextRef)
+				{
+					if (contextRef.BuildContext is AggregateExecuteBuilder.AggregateRootContext)
+						return result;
+					if (contextRef.BuildContext is GroupByBuilder.GroupByContext groupByContext)
+						return SequenceHelper.CreateRef(groupByContext.SubQuery);
+				}
+
+				var elementType = TypeHelper.GetEnumerableElementType(expression.Type);
+				var param       = Expression.Parameter(typeof(IEnumerable<>).MakeGenericType(elementType), "source");
+				var emptyLambda = Expression.Lambda(Expression.Constant(1, typeof(int)), param);
+				var queryable   = expression;
+
+				if (!typeof(IQueryable<>).IsSameOrParentOf(queryable.Type))
+				{
+					queryable = Expression.Call(typeof(Queryable), nameof(Queryable.AsQueryable), [elementType], queryable);
+				}
+
+				var executorCall = Expression.Call(typeof(LinqExtensions), nameof(LinqExtensions.AggregateExecute), [elementType, typeof(int)], queryable, emptyLambda);
+
+				var buildResult = Builder.TryBuildSequence(new BuildInfo(CurrentContext, executorCall, CurrentSelectQuery) { CreateSubQuery = true, IsAggregation = true });
+				if (buildResult.BuildContext is not null)
+				{
+					return SequenceHelper.CreateRef(buildResult.BuildContext).WithType(expression.Type);
+				}
+
+				return null;
+			}
+
+			public SelectQuery GetAggregationSelectQuery(Expression enumerableContext)
+			{
+				if (enumerableContext is ContextRefExpression contextRef)
+				{
+					if (contextRef.BuildContext is GroupByBuilder.GroupByContext groupByContext)
+						return groupByContext.SubQuery.SelectQuery;
+					return contextRef.BuildContext.SelectQuery;
+				}
+
+				throw new InvalidOperationException("Invalid enumerable context");
+			}
+
+			public Expression? BuildArrayAggregationFunction(
+				int                                                       sequenceExpressionIndex,
+				Expression                                                functionExpression,
+				AllowedAggregationOperators                               allowedOperations,
+				Func<IAggregationContext, BuildAggregationFunctionResult> functionFactory
+				)
+			{
+				return Builder.BuildArrayAggregationFunction(sequenceExpressionIndex, functionExpression, allowedOperations, functionFactory);
+			}
+
+			public Expression? BuildAggregationFunction(
+				int                                                       sequenceExpressionIndex,
+				Expression                                                functionExpression,
+				AllowedAggregationOperators                               allowedOperations,
+				Func<IAggregationContext, BuildAggregationFunctionResult> functionFactory
+				)
+			{
+				return Builder.BuildAggregationFunction(sequenceExpressionIndex, functionExpression, allowedOperations, functionFactory);
 			}
 
 			public bool CanBeEvaluatedOnClient(Expression expression)
@@ -5184,6 +5339,35 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				return Visitor.UsingColumnDescriptor(columnDescriptor);
 			}
+
+			public IDisposable UsingCurrentAggregationContext(Expression basedOn)
+			{
+				if (basedOn is not ContextRefExpression contextRef)
+					throw new InvalidOperationException("Invalid context reference");
+
+				return new CurrentContextScope(this, contextRef.BuildContext);
+			}
+
+			sealed class CurrentContextScope : IDisposable
+			{
+				readonly IBuildContext?     _oldContext;
+				readonly IDisposable        _disposable;
+				readonly TranslationContext _translationContext;
+
+				public CurrentContextScope(TranslationContext translationContext, IBuildContext newContext)
+				{
+					_translationContext               = translationContext;
+					_oldContext                       = translationContext.CurrentContext;
+					_disposable                       = translationContext.Visitor.UsingBuildContext(newContext);
+					translationContext.CurrentContext = newContext;
+				}
+
+				public void Dispose()
+				{
+					_translationContext.CurrentContext = _oldContext;
+					_disposable.Dispose();
+				}
+			}
 		}
 
 		static ObjectPool<TranslationContext> _translationContexts = new(() => new TranslationContext(), c => c.Cleanup(), 100);
@@ -5203,15 +5387,15 @@ namespace LinqToDB.Internal.Linq.Builder
 					result |= TranslationFlags.Expression;
 			}
 
+			if (result == TranslationFlags.None)
+				result = TranslationFlags.Sql;
+
 			return result;
 		}
 
 		public bool TranslateMember(IBuildContext? context, Expression memberExpression, [NotNullWhen(true)] out Expression? translated)
 		{
 			translated = null;
-
-			if (context == null)
-				return false;
 
 			if (memberExpression is MethodCallExpression || memberExpression is MemberExpression || memberExpression is NewExpression)
 			{
@@ -5222,9 +5406,15 @@ namespace LinqToDB.Internal.Linq.Builder
 					return false;
 				}
 
+				if (context?.SelectQuery != null)
+				{
+					if (GetAlreadyTranslated(context.SelectQuery, memberExpression, out translated))
+						return true;
+				}
+
 				using var translationContext = _translationContexts.Allocate();
 
-				translationContext.Value.Init(this, context, _alias);
+				translationContext.Value.Init(this, context, Alias);
 
 				translated = Builder._memberTranslator.Translate(translationContext.Value, memberExpression, GetTranslationFlags());
 
@@ -5232,7 +5422,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					return false;
 
 				if (!IsSame(translated, memberExpression))
+				{
+					if (context?.SelectQuery != null)
+						RegisterTranslatedSql(context.SelectQuery, translated, memberExpression);
 					return true;
+				}
 			}
 
 			return false;
@@ -5244,7 +5438,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				throw new InvalidOperationException();
 
 			var placeholderType = sqlPlaceholder.Type;
-			if (placeholderType.IsNullable())
+			if (placeholderType.IsNullableType)
 				placeholderType = placeholderType.UnwrapNullableType();
 
 			if (sqlPlaceholder.SelectQuery == null)
@@ -5309,7 +5503,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		NullabilityContext GetNullabilityContext()
 		{
-			_nullabilityContext ??= NullabilityContext.GetContext(_buildContext?.SelectQuery);
+			_nullabilityContext ??= NullabilityContext.GetContext(BuildContext?.SelectQuery);
 			return _nullabilityContext;
 		}
 
@@ -5334,9 +5528,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				public bool Equals(ColumnCacheKey x, ColumnCacheKey y)
 				{
 					return x.ResultType == y.ResultType                                           &&
-					       ExpressionEqualityComparer.Instance.Equals(x.Expression, y.Expression) &&
-					       ReferenceEquals(x.SelectQuery, y.SelectQuery)                          &&
-					       ReferenceEquals(x.ParentQuery, y.ParentQuery);
+						   ExpressionEqualityComparer.Instance.Equals(x.Expression, y.Expression) &&
+						   ReferenceEquals(x.SelectQuery, y.SelectQuery)                          &&
+						   ReferenceEquals(x.ParentQuery, y.ParentQuery);
 				}
 
 				public int GetHashCode(ColumnCacheKey obj)
@@ -5376,10 +5570,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				public bool Equals(ExprCacheKey x, ExprCacheKey y)
 				{
 					return ExpressionEqualityComparer.Instance.Equals(x.Expression, y.Expression) &&
-					       Equals(x.Context, y.Context)                                           &&
-					       Equals(x.SelectQuery, y.SelectQuery)                                   &&
-					       Equals(x.ColumnDescriptor, y.ColumnDescriptor)                         &&
-					       x.Flags == y.Flags;
+						   Equals(x.Context, y.Context)                                           &&
+						   Equals(x.SelectQuery, y.SelectQuery)                                   &&
+						   Equals(x.ColumnDescriptor, y.ColumnDescriptor)                         &&
+						   x.Flags == y.Flags;
 				}
 
 				public int GetHashCode(ExprCacheKey obj)

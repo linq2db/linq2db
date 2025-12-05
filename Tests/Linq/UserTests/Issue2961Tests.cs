@@ -98,8 +98,7 @@ namespace Tests.UserTests
 						LocationId      = l.Id
 					};
 
-				var act = () => sqlCondos.ToList();
-				act.ShouldNotThrow();
+				sqlCondos.ToList();
 
 				sqlCondos.ToSqlQuery().Sql.ShouldContain("COUNT(*)", AtLeast.Twice());
 			}

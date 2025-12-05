@@ -19,10 +19,10 @@ namespace Cli.All.SQLite
 	[Table("FKTestPosition")]
 	public class FkTestPosition : IEquatable<FkTestPosition>
 	{
-		[Column("Company"   , DataType  = DataType.Int64, DbType   = "integer"        , Length = 8             , Precision = 19, Scale     = 0, IsPrimaryKey = true, PrimaryKeyOrder = 0)] public long   Company    { get; set; } // integer
-		[Column("Department", DataType  = DataType.Int64, DbType   = "integer"        , Length = 8             , Precision = 19, Scale     = 0, IsPrimaryKey = true, PrimaryKeyOrder = 1)] public long   Department { get; set; } // integer
-		[Column("PositionID", DataType  = DataType.Int64, DbType   = "integer"        , Length = 8             , Precision = 19, Scale     = 0, IsPrimaryKey = true, PrimaryKeyOrder = 2)] public long   PositionId { get; set; } // integer
-		[Column("Name"      , CanBeNull = false         , DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length    = 50, Precision = 0, Scale        = 0                        )] public string Name       { get; set; } = null!; // nvarchar(50)
+		[Column("Company"   , DataType  = DataType.Int64, DbType   = "INTEGER"        , IsPrimaryKey = true          , PrimaryKeyOrder = 0 )] public long   Company    { get; set; } // INTEGER
+		[Column("Department", DataType  = DataType.Int64, DbType   = "INTEGER"        , IsPrimaryKey = true          , PrimaryKeyOrder = 1 )] public long   Department { get; set; } // INTEGER
+		[Column("PositionID", DataType  = DataType.Int64, DbType   = "INTEGER"        , IsPrimaryKey = true          , PrimaryKeyOrder = 2 )] public long   PositionId { get; set; } // INTEGER
+		[Column("Name"      , CanBeNull = false         , DataType = DataType.NVarChar, DbType       = "nvarchar(50)", Length          = 50)] public string Name       { get; set; } = null!; // nvarchar(50)
 
 		#region IEquatable<T> support
 		private static readonly IEqualityComparer<FkTestPosition> _equalityComparer = ComparerBuilder.GetEqualityComparer<FkTestPosition>(c => c.Company, c => c.Department, c => c.PositionId);

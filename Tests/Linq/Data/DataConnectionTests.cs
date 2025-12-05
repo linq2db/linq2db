@@ -579,7 +579,7 @@ namespace Tests.Data
 		[Test]
 		public async Task DataConnectionCloseAsync([DataSources(false)] string context)
 		{
-			var db = GetDataConnection(context);
+			var db = GetDataContext(context);
 
 			try
 			{
@@ -601,7 +601,7 @@ namespace Tests.Data
 		[Test]
 		public async Task DataConnectionDisposeAsync([DataSources(false)] string context)
 		{
-			var db = GetDataConnection(context);
+			var db = GetDataContext(context);
 
 			try
 			{
@@ -627,25 +627,27 @@ namespace Tests.Data
 			{
 				conn.AddInterceptor(new TestConnectionInterceptor(
 					(args, cn) =>
-				{
-					if (cn.State == ConnectionState.Closed)
-						open = true;
+					{
+						if (cn.State == ConnectionState.Closed)
+							open = true;
 					},
 					null,
 					async (args, cn, ct) => await Task.Run(() =>
-				{
-					if (cn.State == ConnectionState.Closed)
-						openAsync = true;
+					{
+						if (cn.State == ConnectionState.Closed)
+							openAsync = true;
 					}, ct),
-					null));
+					null)
+				);
+
 				using (Assert.EnterMultipleScope())
 				{
-					Assert.That(open, Is.False);
+					Assert.That(open,      Is.False);
 					Assert.That(openAsync, Is.False);
 					var connection = conn.OpenDbConnection();
 					Assert.That(connection!.State, Is.EqualTo(ConnectionState.Open));
-					Assert.That(open, Is.True);
-					Assert.That(openAsync, Is.False);
+					Assert.That(open,              Is.True);
+					Assert.That(openAsync,         Is.False);
 				}
 			}
 		}
@@ -665,11 +667,13 @@ namespace Tests.Data
 					},
 					null,
 					async (args, cn, ct) => await Task.Run(() =>
-						{
-							if (cn.State == ConnectionState.Closed)
-								openAsync = true;
+					{
+						if (cn.State == ConnectionState.Closed)
+							openAsync = true;
 					}, ct),
-					null));
+					null)
+				);
+
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(open, Is.False);
@@ -734,8 +738,8 @@ namespace Tests.Data
 		public class Category
 		{
 			[PrimaryKey, Identity] public int     CategoryID;
-			[Column, NotNull]      public string  CategoryName = null!;
-			[Column]               public string? Description;
+			[Column, NotNull] public string  CategoryName = null!;
+			[Column]          public string? Description;
 
 			[Association(ThisKey = "CategoryID", OtherKey = "CategoryID")]
 			public List<Product> Products = null!;
@@ -768,8 +772,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestDisposeFlagCloning962Test1(
-			[DataSources(false)] string context, [Values] bool withScope)
+		public void TestDisposeFlagCloning962Test1([DataSources(false)] string context, [Values] bool withScope)
 		{
 			if (context.IsAnyOf(ProviderName.ClickHouseOctonica))
 			{
@@ -824,7 +827,7 @@ namespace Tests.Data
 		[Test]
 		public void Issue2676TransactionScopeTest1([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
 				db.CreateTable<TransactionScopeTable>();
@@ -832,7 +835,7 @@ namespace Tests.Data
 
 			try
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					db.GetTable<TransactionScopeTable>().Insert(() => new TransactionScopeTable() { Id = 1 });
 					using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
@@ -853,7 +856,7 @@ namespace Tests.Data
 			}
 			finally
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
 				}
@@ -863,7 +866,7 @@ namespace Tests.Data
 		[Test]
 		public void Issue2676TransactionScopeTest2([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
 				db.CreateTable<TransactionScopeTable>();
@@ -871,7 +874,7 @@ namespace Tests.Data
 
 			try
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					using (var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled))
 					{
@@ -890,7 +893,7 @@ namespace Tests.Data
 			}
 			finally
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
 				}
@@ -900,7 +903,7 @@ namespace Tests.Data
 		[Test]
 		public void Issue2676TransactionScopeTest3([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
 				db.CreateTable<TransactionScopeTable>();
@@ -933,7 +936,7 @@ namespace Tests.Data
 			}
 			finally
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					db.DropTable<TransactionScopeTable>(throwExceptionIfNotExists: false);
 				}
@@ -1337,6 +1340,7 @@ namespace Tests.Data
 		public void MARS_Supported(
 			[DataSources(false,
 				TestProvName.AllMySql,
+				ProviderName.Ydb,
 				ProviderName.ClickHouseMySql,
 				// depends on connection pool size
 				ProviderName.ClickHouseDriver,
@@ -1368,6 +1372,7 @@ namespace Tests.Data
 		public void MARS_Unsupported(
 			[IncludeDataSources(false,
 				TestProvName.AllMySql,
+				ProviderName.Ydb,
 				ProviderName.ClickHouseMySql,
 				ProviderName.ClickHouseOctonica,
 				TestProvName.AllPostgreSQL)] string context)
@@ -1393,7 +1398,7 @@ namespace Tests.Data
 		[Test]
 		public void MARS_ParametersPreservedAfterDispose([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var commandInterceptor = new SaveCommandInterceptor();
 				db.AddInterceptor(commandInterceptor);
@@ -1409,7 +1414,7 @@ namespace Tests.Data
 		[Test]
 		public async Task MARS_ParametersPreservedAfterDisposeAsync([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var commandInterceptor = new SaveCommandInterceptor();
 				db.AddInterceptor(commandInterceptor);
@@ -1428,6 +1433,7 @@ namespace Tests.Data
 		public async Task MARS_SupportedAsync(
 			[DataSources(false,
 				TestProvName.AllMySql,
+				ProviderName.Ydb,
 				ProviderName.ClickHouseMySql,
 				// depends on connection pool size
 				ProviderName.ClickHouseDriver,
@@ -1459,6 +1465,7 @@ namespace Tests.Data
 		public async Task MARS_UnsupportedAsync(
 			[IncludeDataSources(false,
 				TestProvName.AllMySql,
+				ProviderName.Ydb,
 				TestProvName.AllPostgreSQL,
 				ProviderName.ClickHouseMySql,
 				ProviderName.ClickHouseOctonica)] string context)

@@ -44,11 +44,11 @@ if (clean.ToLower() is "1" or "true" && Directory.Exists(buildPath))
 if (!Directory.Exists(buildPath))
 	Directory.CreateDirectory(buildPath);
 
-string? IfExists(string config) => File.Exists(Path.Combine(buildPath, "..", "bin", "NuGet", config, "linq2db.dll")) ? config : null;
+string? IfExists(string config) => File.Exists(Path.Combine(buildPath, "..", "bin", "NuGet", config, "net462", "linq2db.dll")) ? config : null;
 
 var releasePath = IfExists("Azure") ?? IfExists("Release") ?? IfExists("Debug") ?? "Azure";
 var binPath     = @"..\bin";
-var t4binPath   = @"..\bin\NuGet\" + releasePath;
+var t4binPath   = $@"..\bin\NuGet\{releasePath}\net462";
 
 Console.WriteLine($"releasePath: {releasePath}");
 
@@ -80,7 +80,7 @@ foreach (var xmlPath in GetFiles(path))
 {
 	WriteLine($"Processing '{xmlPath}'...");
 
-	var isT4 = File.ReadAllText(xmlPath).IndexOf("%T4%") > 0;
+	var isT4 = File.ReadAllText(xmlPath).IndexOf("%T4%", StringComparison.Ordinal) > 0;
 	var xml  = new XmlDocument();
 
 	xml.PreserveWhitespace = true;
@@ -105,6 +105,7 @@ foreach (var xmlPath in GetFiles(path))
 	SetMetadata  ("version",                  version,        true);
 	SetDependency("linq2db",                  linq2DbVersion);
 	SetDependency("linq2db.Tools",            linq2DbVersion);
+	SetDependency("linq2db.Scaffold",         linq2DbVersion);
 	SetDependency("linq2db.t4models",         linq2DbVersion);
 	SetMetadata  ("releaseNotes",             "https://github.com/linq2db/linq2db/wiki/releases-and-roadmap#release-" + version.Replace(".", ""), true);
 	SetMetadata  ("copyright",                "Copyright © 2025 " + authors, true);

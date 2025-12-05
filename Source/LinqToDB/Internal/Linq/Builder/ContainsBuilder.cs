@@ -35,7 +35,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var innerQuery = new SelectQuery();
 
-			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], innerQuery));
+			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], innerQuery)  { IgnoreOrderBy = true } );
 			if (buildResult.BuildContext == null)
 				return buildResult;
 

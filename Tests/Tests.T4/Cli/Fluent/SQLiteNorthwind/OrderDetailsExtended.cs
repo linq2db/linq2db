@@ -13,12 +13,12 @@ namespace Cli.Fluent.SQLiteNorthwind
 {
 	public class OrderDetailsExtended
 	{
-		public int     OrderId       { get; set; } // int
-		public int     ProductId     { get; set; } // int
+		public int?    OrderId       { get; set; } // INT
+		public int?    ProductId     { get; set; } // INT
 		public string  ProductName   { get; set; } = null!; // varchar(40)
-		public double? UnitPrice     { get; set; } // float
-		public int?    Quantity      { get; set; } // int
-		public double? Discount      { get; set; } // float
-		public object? ExtendedPrice { get; set; } // NUMERIC
+		public double? UnitPrice     { get; set; } // float(26)
+		public int?    Quantity      { get; set; } // INT
+		public double? Discount      { get; set; } // float(13)
+		public double? ExtendedPrice { get; set; } // REAL
 	}
 }

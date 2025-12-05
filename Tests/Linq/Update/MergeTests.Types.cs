@@ -455,7 +455,7 @@ namespace Tests.xUpdate
 					while (expected.Length > 1 && expected[expected.Length - 1] == 0)
 						expected = expected.Take(expected.Length - 1).ToArray();
 
-					 if (expected.Length == 0)
+					if (expected.Length == 0)
 						expected = new byte[] { 0 };
 				}
 
@@ -644,6 +644,8 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSybase)]
 			string context)
 		{
+			using var _ = context.IsAnyOf(TestProvName.AllPostgreSQL) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
+
 			var isIDS = IsIDSProvider(context);
 
 			using (var db = GetDataContext(context))

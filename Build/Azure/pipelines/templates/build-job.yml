@@ -4,12 +4,16 @@ parameters:
   with_tests: false
   with_analyzers: false
   with_api_analyzers: false
+  with_release: false
 
 jobs:
 - job: build_job
   pool:
     vmImage: 'windows-2025'
   displayName: 'Build'
+  variables:
+    with_analyzers: false # ${{ parameters.with_analyzers }}
+    with_api_analyzers: false # ${{ parameters.with_api_analyzers }}
 
   steps:
 
@@ -19,6 +23,12 @@ jobs:
     inputs:
       packageType: sdk
       version: 9.x
+
+  - task: UseDotNet@2
+    displayName: 'Use latest .NET SDK'
+    inputs:
+      packageType: sdk
+      version: 10.x
 
   - task: PowerShell@2
     inputs:
@@ -48,6 +58,13 @@ jobs:
       arguments: -path $(Build.SourcesDirectory)/Directory.Build.props -version $(ef9AssemblyVersion) -prop EF9Version
     displayName: Update EF.Core 9 integration assembly version
 
+  - task: PowerShell@2
+    inputs:
+      filePath: '$(Build.SourcesDirectory)/Build/SetVersion.ps1'
+      workingDirectory: '$(Build.SourcesDirectory)'
+      arguments: -path $(Build.SourcesDirectory)/Directory.Build.props -version $(ef10AssemblyVersion) -prop EF10Version
+    displayName: Update EF.Core 10 integration assembly version
+
   - task: DotNetCoreCLI@2
     inputs:
       command: build
@@ -70,40 +87,49 @@ jobs:
       script: |
         ECHO ON
         REM publish main and ef.core tests for all TFMs (without architecture!)
-        FOR %%f IN ($(netfx_tfm) net8.0 net9.0) DO (
+        FOR %%f IN ($(netfx_tfm) net8.0 net9.0 net10.0) DO (
             dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -o .build/publish/Tests/$(test_configuration)/%%f_x64
             if %errorlevel% neq 0 exit
-
-            IF %%f EQU net9.0 (
-                dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.STS.csproj -f %%f -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/%%f_x64
-            ) ELSE (
-                dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.csproj -f %%f -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/%%f_x64
             )
-            if %errorlevel% neq 0 exit
-        )
+
+        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF3.csproj -f net462 -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/net462_x64
+        if %errorlevel% neq 0 exit
+
+        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF8.csproj -f net8.0 -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/net8.0_x64
+        if %errorlevel% neq 0 exit
+        
+        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF9.csproj -f net9.0 -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/net9.0_x64
+        if %errorlevel% neq 0 exit
+        
+        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF10.csproj -f net10.0 -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/net10.0_x64
+        if %errorlevel% neq 0 exit
 
         REM publish main and ef.core tests for all TFMs for win-x86
-        FOR %%f IN ($(netfx_tfm) net8.0 net9.0) DO (
-            IF %%f EQU $(netfx_tfm) (
-                dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -a x86 -o .build/publish/Tests/$(test_configuration)/%%f_x86
-            ) ELSE (
-                dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -a x86 /p:DB2STUB=True -o .build/publish/Tests/$(test_configuration)/%%f_x86
-            )
-            if %errorlevel% neq 0 exit
-
-            IF %%f EQU net9.0 (
-                dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.STS.csproj -f %%f -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/%%f_x86
-            ) ELSE (
-                dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.csproj -f %%f -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/%%f_x86
-            )
+        dotnet publish Tests/Linq/Tests.csproj -f net462 -c $(test_configuration) -a x86 -o .build/publish/Tests/$(test_configuration)/net462_x86
+        if %errorlevel% neq 0 exit
+    
+        FOR %%f IN (net8.0 net9.0 net10.0) DO (
+            dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -a x86 /p:DB2STUB=True -o .build/publish/Tests/$(test_configuration)/%%f_x86
             if %errorlevel% neq 0 exit
         )
+
+        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF3.csproj -f net462 -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/net462_x86
+        if %errorlevel% neq 0 exit
+
+        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF8.csproj -f net8.0 -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/net8.0_x86
+        if %errorlevel% neq 0 exit
+
+        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF9.csproj -f net9.0 -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/net9.0_x86
+        if %errorlevel% neq 0 exit
+        
+        dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF10.csproj -f net10.0 -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/net10.0_x86
+        if %errorlevel% neq 0 exit
 
         mkdir testing
         if %errorlevel% neq 0 exit
 
         REM prepare test artifacts with binaries and test configs
-        FOR %%f IN ($(netfx_tfm) net8.0 net9.0) DO (
+        FOR %%f IN ($(netfx_tfm) net8.0 net9.0 net10.0) DO (
             FOR %%a IN (x86 x64) DO (
                 xcopy /i /s .build\publish\Tests\$(test_configuration)\%%f_%%a testing\%%f\main\%%a
                 if %errorlevel% neq 0 exit
@@ -116,13 +142,7 @@ jobs:
             )
         )
 
-        REM copy sqlite.interop.dll runtime, missing from publish for NETFX
-        copy .build\bin\Tests\$(test_configuration)\$(netfx_tfm)\x86\SQLite.Interop.dll testing\$(netfx_tfm)\main\x86\x86\SQLite.Interop.dll
-        if %errorlevel% neq 0 exit
-        copy .build\bin\Tests\$(test_configuration)\$(netfx_tfm)\x64\SQLite.Interop.dll testing\$(netfx_tfm)\main\x64\x64\SQLite.Interop.dll
-        if %errorlevel% neq 0 exit
-
-        FOR %%c IN (netfx net80 net90) DO (
+        FOR %%c IN (netfx net80 net90 net100) DO (
             xcopy /i Build\$(test_configuration)\%%c testing\configs\%%c
             if %errorlevel% neq 0 exit
         )
@@ -137,10 +157,45 @@ jobs:
 
   - task: PublishPipelineArtifact@1
     inputs:
-      path: '$(Build.SourcesDirectory)/testing'
-      artifact: $(artifact_test_binaries)
+      path: '$(Build.SourcesDirectory)/testing/configs'
+      artifact: $(artifact_test_configs)
     condition: and(succeeded(), ${{ parameters.with_tests }})
-    displayName: Publish Test Artifacts
+    displayName: Publish Test Configs
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/testing/scripts'
+      artifact: $(artifact_test_scripts)
+    condition: and(succeeded(), ${{ parameters.with_tests }})
+    displayName: Publish Test Scripts
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/testing/net462'
+      artifact: $(artifact_test_netfx_binaries)
+    condition: and(succeeded(), ${{ parameters.with_tests }})
+    displayName: Publish NETFX Test Binaries
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/testing/net8.0'
+      artifact: $(artifact_test_net80_binaries)
+    condition: and(succeeded(), ${{ parameters.with_tests }})
+    displayName: Publish NET 8.0 Test Binaries
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/testing/net9.0'
+      artifact: $(artifact_test_net90_binaries)
+    condition: and(succeeded(), ${{ parameters.with_tests }})
+    displayName: Publish NET 9.0 Test Binaries
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/testing/net10.0'
+      artifact: $(artifact_test_net100_binaries)
+    condition: and(succeeded(), ${{ parameters.with_tests }})
+    displayName: Publish NET 10.0 Test Binaries
 
 # we shouldn't care about CI cleanup in general, but it's about limited disk space we need for next tasks
   - task: CmdLine@2
@@ -156,7 +211,7 @@ jobs:
     inputs:
       command: build
       projects: $(solution)
-      arguments: -property:ContinuousIntegrationBuild=true -property:RunAnalyzersDuringBuild=$(with_analyzers) -property:RunApiAnalyzersDuringBuild=$(with_api_analyzers) --configuration $(release_configuration)
+      arguments: -property:RunAnalyzersDuringBuild=${{ variables['with_analyzers'] }} -property:RunApiAnalyzersDuringBuild=${{ variables['with_api_analyzers'] }} --configuration $(release_configuration)
     displayName: Build Solution for Release and Nuget
     condition: and(succeeded(), ${{ parameters.with_nugets }})
 
@@ -253,21 +308,77 @@ jobs:
 
   - task: PublishPipelineArtifact@1
     inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore/Release'
-      artifact: '$(artifact_linq2db_efcore_binaries)'
+      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.EF3/Release'
+      artifact: '$(artifact_linq2db_efcore_3_binaries)'
     displayName: Publish linq2db.EntityFrameworkCore build results
     condition: and(succeeded(), ${{ parameters.with_nugets }})
 
   - task: PublishPipelineArtifact@1
     inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.STS/Release'
-      artifact: '$(artifact_linq2db_efcore_sts_binaries)'
-    displayName: Publish linq2db.EntityFrameworkCore.STS build results
+      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.EF8/Release'
+      artifact: '$(artifact_linq2db_efcore_8_binaries)'
+    displayName: Publish linq2db.EntityFrameworkCore build results
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.EF9/Release'
+      artifact: '$(artifact_linq2db_efcore_9_binaries)'
+    displayName: Publish linq2db.EntityFrameworkCore build results
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.EF10/Release'
+      artifact: '$(artifact_linq2db_efcore_10_binaries)'
+    displayName: Publish linq2db.EntityFrameworkCore build results
     condition: and(succeeded(), ${{ parameters.with_nugets }})
 
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/.build/bin/NuGet/$(release_configuration)'
       artifact: '$(artifact_t4_binaries)'
-    displayName: Publish nuget artifacts part 1
+    displayName: Publish T4 nuget artifacts
     condition: and(succeeded(), ${{ parameters.with_nugets }})
+
+  - task: CmdLine@2
+    inputs:
+      script: |
+        ECHO ON
+        RD $(Build.SourcesDirectory)\.build\bin\LinqToDB.LINQPad\Release\net472 /S /Q
+        RD $(Build.SourcesDirectory)\.build\bin\LinqToDB.LINQPad\Release\net8.0-windows\clidriver /S /Q
+        CD $(Build.SourcesDirectory)\.build\bin\LinqToDB.LINQPad\Release\net8.0-windows
+        FOR %%f IN (*) DO IF NOT "%%f"=="linq2db.LINQPad.dll" DEL "%%f" /Q
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
+    displayName: Cleanup LINQPad artifacts
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.LINQPad/Release'
+      artifact: '$(artifact_linq2db_linqpad_binaries)'
+    displayName: Publish linq2db.LINQPad build results
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathToPublish: '$(Build.SourcesDirectory)/.build/lpx'
+      artifactName: '$(artifact_linq2db_linqpad_lpx)'
+    displayName: Publish LPX to artifacts
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
+
+  - task: PowerShell@2
+    inputs:
+      targetType: 'inline'
+      script: |
+        $relnotesVersion = '$(assemblyVersion)' -replace '\.',''
+        Write-Host "Create release v$(assemblyVersion) draft"
+        $output = gh release create v$(assemblyVersion) "$(Build.SourcesDirectory)/.build/lpx/linq2db.LINQPad.lpx" "$(Build.SourcesDirectory)/.build/lpx/linq2db.LINQPad.lpx6" --draft --fail-on-no-commits --generate-notes --latest --notes "[Release notes](https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap#release-$relnotesVersion) [Nugets](https://www.nuget.org/profiles/LinqToDB)" --title "Release $(assemblyVersion)"
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Command failed. Error code ${LASTEXITCODE}, output: ${output}"
+            exit 1
+        }
+      workingDirectory: '$(System.DefaultWorkingDirectory)'
+    displayName: Create Release Draft
+    condition: and(succeeded(), ${{ parameters.with_release }})
+    env:
+      GITHUB_TOKEN: $(RELEASES_GH_PAT)

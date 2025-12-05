@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 
 using LinqToDB.DataProvider;
 using LinqToDB.Internal.SqlProvider;
@@ -46,6 +47,20 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			}
 
 			return base.BuildJoinType(join, condition);
+		}
+
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
+		{
+			if (type.DataType is DataType.Vector32)
+			{
+				if (type.Length == null)
+					StringBuilder.Append("VECTOR");
+				else
+					StringBuilder.AppendFormat(CultureInfo.InvariantCulture, "VECTOR({0})", type.Length);
+				return;
+			}
+
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 	}
 }

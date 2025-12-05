@@ -49,7 +49,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			SqlProviderFlags.IsWindowFunctionsSupported        = Version >= MySqlVersion.MySql80;
 
 			SqlProviderFlags.IsSubqueryWithParentReferenceInJoinConditionSupported = false;
-			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel                    = 1;
+			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel                    = (version > MySqlVersion.MySql57) && version != MySqlVersion.MariaDB10 ? null : 1;
+			SqlProviderFlags.CalculateSupportedCorrelatedLevelWithAggregateQueries = true;
 			SqlProviderFlags.RowConstructorSupport                                 = RowFeature.Equality | RowFeature.Comparisons | RowFeature.CompareToSelect | RowFeature.In;
 
 			SqlProviderFlags.IsUpdateTakeSupported     = true;
@@ -110,7 +111,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			if (Version == MySqlVersion.MySql80)
 				return new MySql80SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 
-			return new MySqlSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
+			return new MariaDBSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 		}
 
 		private static MappingSchema GetMappingSchema(MySqlProvider provider, MySqlVersion version)
@@ -136,6 +137,14 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
+			// facepalm, MySql.Data needs byte[] as parameter value
+			if (value is float[] vector && Provider is MySqlProvider.MySqlData)
+			{
+				var bytes = new byte[vector.Length * 4];
+				Buffer.BlockCopy(vector, 0, bytes, 0, bytes.Length);
+				value = bytes;
+			}
+
 			// mysql.data bugs workaround
 			if (Adapter.MySqlDecimalType != null && Adapter.MySqlDecimalGetter != null && value?.GetType() == Adapter.MySqlDecimalType)
 			{
@@ -166,6 +175,26 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				case DataType.Date:
 				case DataType.DateTime2 : parameter.DbType = DbType.DateTime; return;
 				case DataType.BitArray  : parameter.DbType = DbType.UInt64;   return;
+			}
+
+			object? type = null;
+			switch (dataType.DataType)
+			{
+				case DataType.Vector32:
+					type = Provider == MySqlProvider.MySqlConnector
+						? MySqlProviderAdapter.MySqlConnector.MySqlDbType.Vector
+						: MySqlProviderAdapter.MySqlData.MySqlDbType.Vector;
+					break;
+			}
+
+			if (type != null)
+			{
+				var param = TryGetProviderParameter(dataConnection, parameter);
+				if (param != null)
+				{
+					Adapter.SetDbType(param, type);
+					return;
+				}
 			}
 
 			base.SetParameterType(dataConnection, parameter, dataType);

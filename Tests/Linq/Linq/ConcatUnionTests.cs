@@ -166,8 +166,9 @@ namespace Tests.Linq
 					Where(p => p.Value1!.Value != 2));
 		}
 
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
-		public void Concat6([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void Concat6([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -522,7 +523,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Union54([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -549,7 +550,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Union541([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -692,8 +693,8 @@ namespace Tests.Linq
 			}
 		}
 
-		public class TestEntity1 { public int Id; public string? Field1; }
-		public class TestEntity2 { public int Id; public string? Field1; }
+		public class TestEntity1 { [PrimaryKey] public int Id; public string? Field1; }
+		public class TestEntity2 { [PrimaryKey] public int Id; public string? Field1; }
 
 		[Test]
 		public void Concat90([DataSources] string context)
@@ -946,6 +947,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbCteAsSource]
 		[ActiveIssue("UNION in subquery not supported by Access. We should transform it if we want to support such cases", Configuration = TestProvName.AllAccess)]
 		[Test]
 		public void ConcatInAny([DataSources] string context)
@@ -1193,8 +1195,7 @@ namespace Tests.Linq
 
 			var query = query1.UnionAll(query2);
 
-			var act = () => query.ToArray();
-			act.ShouldNotThrow();
+			query.ToArray();
 		}
 
 		[Test]
@@ -1207,8 +1208,7 @@ namespace Tests.Linq
 
 			var query = query1.UnionAll(query2);
 
-			var act = () => query.ToArray();
-			act.ShouldNotThrow();
+			query.ToArray();
 		}
 
 		[Test]
@@ -1224,8 +1224,7 @@ namespace Tests.Linq
 
 			var query = query1.UnionAll(query2);
 
-			var act = () => query.ToArray();
-			act.ShouldNotThrow();
+			query.ToArray();
 		}
 
 		[Test]
@@ -1252,8 +1251,7 @@ namespace Tests.Linq
 
 			query = query.Where(x => x.StrValue != null);
 
-			var act = () => query.ToArray();
-			act.ShouldNotThrow();
+			query.ToArray();
 		}
 
 		[Test(Description = "Test that we generate plain UNION without sub-queries")]
@@ -1403,15 +1401,15 @@ namespace Tests.Linq
 		[Table]
 		public class Issue3323Table
 		{
-			[PrimaryKey                      ] public int     Id       { get; set; }
-			[Column(SkipOnEntityFetch = true)] public string? FistName { get; set; }
-			[Column(SkipOnEntityFetch = true)] public string? LastName { get; set; }
-			[Column(CanBeNull = false)       ] public string  Text     { get; set; } = null!;
+			[PrimaryKey                      ] public int     Id        { get; set; }
+			[Column(SkipOnEntityFetch = true)] public string? FirstName { get; set; }
+			[Column(SkipOnEntityFetch = true)] public string? LastName  { get; set; }
+			[Column(CanBeNull = false)       ] public string  Text      { get; set; } = null!;
 
 			[ExpressionMethod(nameof(FullNameExpr), IsColumn = true)]
 			public string FullName { get; set; } = null!;
 
-			private static Expression<Func<Issue3323Table, string>> FullNameExpr() => entity => entity.FistName + " " + entity.LastName;
+			private static Expression<Func<Issue3323Table, string>> FullNameExpr() => entity => entity.FirstName + " " + entity.LastName;
 		}
 
 		[Test(Description = "calculated column in set select")]
@@ -1421,10 +1419,10 @@ namespace Tests.Linq
 			using var tb = db.CreateLocalTable<Issue3323Table>();
 			tb.Insert(() => new Issue3323Table()
 			{
-				Id       = 1,
-				FistName = "one",
-				LastName = "two",
-				Text     = "text"
+				Id        = 1,
+				FirstName = "one",
+				LastName  = "two",
+				Text      = "text"
 			});
 
 			var res = tb.Concat(tb).ToArray();
@@ -1444,10 +1442,10 @@ namespace Tests.Linq
 			using var tb = db.CreateLocalTable<Issue3323Table>();
 			tb.Insert(() => new Issue3323Table()
 			{
-				Id       = 1,
-				FistName = "one",
-				LastName = "two",
-				Text     = "text"
+				Id        = 1,
+				FirstName = "one",
+				LastName  = "two",
+				Text      = "text"
 			});
 
 			var query1 = tb.Select(r => new { r.Id, Text = r.FullName });
@@ -1877,6 +1875,7 @@ namespace Tests.Linq
 			res[0].Name.ShouldBe("John");
 		}
 
+		[YdbMemberNotFound]
 		[Test(Description = "invalid SQL for Any() subquery")]
 		public void Issue2932_Broken([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -1887,6 +1886,7 @@ namespace Tests.Linq
 			query.Concat(query).ToArray();
 		}
 
+		[YdbMemberNotFound]
 		[Test(Description = "invalid SQL for Any() subquery")]
 		public void Issue2932_Works([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -2282,6 +2282,71 @@ namespace Tests.Linq
 			var q = query1.UnionAll(query2).ToList();
 		}
 
+		[Test]
+		public void ConcatCount_ShouldNotRemoveSingleColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q1 = db.Person.Select(_ => _.ID)
+				.Concat(db.Parent.Select(_ => _.ParentID))
+				.Count();
+
+			var q2 = Person.Select(_ => _.ID)
+				.Concat(Parent.Select(_ => _.ParentID))
+				.Count();
+
+			Assert.That(q1, Is.EqualTo(q2));
+		}
+
+		[Test]
+		public void UnionCount_ShouldNotRemoveSingleColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q1 = db.Person.Select(_ => _.ID)
+				.Union(db.Parent.Select(_ => _.ParentID))
+				.Count();
+
+			var q2 = Person.Select(_ => _.ID)
+				.Union(Parent.Select(_ => _.ParentID))
+				.Count();
+
+			Assert.That(q1, Is.EqualTo(q2));
+		}
+
+		[Test]
+		public void ConcatCountExt_ShouldNotRemoveSingleColumn([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q1 = db.Person.Select(_ => _.ID)
+				.Concat(db.Parent.Select(_ => _.ParentID))
+				.Select(_ => _)
+				.CountExt(_ => _);
+
+			var q2 = Person.Select(_ => _.ID)
+				.Concat(Parent.Select(_ => _.ParentID))
+				.Count();
+
+			Assert.That(q1, Is.EqualTo(q2));
+		}
+
+		[Test]
+		public void ConcatSumTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q1 = db.Person.Select(_ => _.ID)
+				.Concat(db.Parent.Select(_ => _.ParentID))
+				.Sum();
+
+			var q2 = Person.Select(_ => _.ID)
+				.Concat(Parent.Select(_ => _.ParentID))
+				.Sum();
+
+			Assert.That(q1, Is.EqualTo(q2));
+		}
+
 		#region Issue 4220
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4220")]
 		public void Issue4220Test([DataSources] string context)
@@ -2334,7 +2399,7 @@ namespace Tests.Linq
 		#region Issue 4620
 		class Issue4620Client
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			public string? Name { get; set; }
 
 			public static readonly Issue4620Client[] Data =
@@ -2346,7 +2411,7 @@ namespace Tests.Linq
 
 		class Issue4620Contract
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			public int IdClient { get; set; }
 
 			public static readonly Issue4620Contract[] Data =
@@ -2359,7 +2424,7 @@ namespace Tests.Linq
 		[Table("Issue4620Table")]
 		class Issue4620Bill
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			// either IdContract or IdClient will be null
 			[Column] public int? IdContract { get; set; }

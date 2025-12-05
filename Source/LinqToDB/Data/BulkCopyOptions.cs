@@ -24,7 +24,7 @@ namespace LinqToDB.Data
 	/// </list>
 	/// </param>
 	/// <param name="BulkCopyType">
-	/// Default bulk copy mode, used by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>
+	/// Default bulk copy mode, used by <see cref="DataContextExtensions.BulkCopy{T}(IDataContext, IEnumerable{T})"/>
 	/// methods, if mode is not specified explicitly.
 	/// </param>
 	/// <param name="CheckConstraints">
@@ -123,7 +123,7 @@ namespace LinqToDB.Data
 	/// Note that session-less connections cannot be used with session-bound functionality like temporary tables.
 	/// </param>
 	/// <summary>
-	/// Defines behavior of <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, BulkCopyOptions, IEnumerable{T})"/> method.
+	/// Defines behavior of <see cref="DataContextExtensions.BulkCopy{T}(IDataContext, BulkCopyOptions, IEnumerable{T})"/> method.
 	/// </summary>
 	public sealed record BulkCopyOptions
 	(
@@ -218,21 +218,19 @@ namespace LinqToDB.Data
 
 		#region Default Options
 
-		static BulkCopyOptions _default = new();
-
 		/// <summary>
 		/// Gets default <see cref="BulkCopyOptions"/> instance.
 		/// </summary>
 		public static BulkCopyOptions Default
 		{
-			get => _default;
+			get;
 			set
 			{
-				_default = value;
+				field = value;
 				DataConnection.ResetDefaultOptions();
 				DataConnection.ConnectionOptionsByConfigurationString.Clear();
 			}
-		}
+		} = new();
 
 		/// <inheritdoc />
 		IOptionSet IOptionSet.Default => Default;

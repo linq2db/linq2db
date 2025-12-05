@@ -6,6 +6,7 @@ using LinqToDB;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Informix.Translation
 {
@@ -323,10 +324,38 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 				var currentTimeStamp = factory.NotNullExpression(factory.GetDbDataType(typeof(DateTime)), "CURRENT");
 				return currentTimeStamp;
 			}
+
+			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				// "datetime(1970-01-01 00:00:00) year to second + (dbinfo('utc_current')/86400)::int::char(9)::interval day(9) to day + (mod(dbinfo('utc_current'), 86400))::char(5)::interval second(5) to second
+
+				var factory = translationContext.ExpressionFactory;
+
+				return factory.Expression(dbDataType,
+					"datetime(1970-01-01 00:00:00) year to second + (dbinfo('utc_current')/86400)::int::char(9)::interval day(9) to day + (mod(dbinfo('utc_current'), 86400))::char(5)::interval second(5) to second", Precedence.Additive);
+			}
 		}
 
 		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			{
+				var builder = new AggregateFunctionBuilder();
+
+				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+				{
+					var intDbType = factory.GetDbDataType(typeof(int));
+					var substring = factory.Function(valueType, "SUBSTRING",
+						[new SqlFunctionArgument(valuesExpr, suffix: factory.Fragment("FROM {0}", factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1))))],
+						[true],
+						canBeNull: true
+					);
+
+					return substring;
+				});
+
+				return builder.Build(translationContext, methodCall);
+			}
 		}
 
 		protected class GuidMemberTranslator : GuidMemberTranslatorBase

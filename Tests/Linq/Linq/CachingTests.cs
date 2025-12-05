@@ -22,7 +22,7 @@ namespace Tests.Linq
 	{
 		sealed class AggregateFuncBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				builder.AddFragment("funcName",  builder.GetValue<string>("funcName"));
 				builder.AddFragment("fieldName", builder.GetValue<string>("fieldName"));
@@ -249,7 +249,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266")]
 		public void TestExtensionCollectionParameterSameQuery([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 
 			db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
 			db.Execute("CREATE TYPE IntTableType AS TABLE(Id INT)");
@@ -286,7 +286,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4266")]
 		public void TestExtensionCollectionParameterEqualQuery([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 
 			db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
 			db.Execute("CREATE TYPE IntTableType AS TABLE(Id INT)");
@@ -333,7 +333,7 @@ namespace Tests.Linq
 
 		public sealed class InExtExpressionItemBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var parameterName = (builder.Arguments[1] as MemberExpression)?.Member.Name ?? "p";
 
@@ -376,7 +376,7 @@ namespace Tests.Linq
 			ms.SetConverter<IntArrayClass, DataParameter>(v => v.CreateParameter());
 			ms.AddScalarType(typeof(IntArrayClass), new SqlDataType(IntArrayClass.Type));
 
-			using var db = GetDataConnection(context, ms);
+			using var db = GetDataContext(context, ms);
 
 			db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
 			db.Execute("CREATE TYPE IntTableType AS TABLE(Id INT)");
@@ -415,7 +415,7 @@ namespace Tests.Linq
 			ms.SetConverter<IntArrayStruct, DataParameter>(v => v.CreateParameter());
 			ms.SetDataType(typeof(IntArrayStruct), new SqlDataType(IntArrayStruct.Type));
 
-			using var db = GetDataConnection(context, ms);
+			using var db = GetDataContext(context, ms);
 
 			db.Execute("IF EXISTS (SELECT * FROM sys.types WHERE name = 'IntTableType') DROP TYPE IntTableType");
 			db.Execute("CREATE TYPE IntTableType AS TABLE(Id INT)");

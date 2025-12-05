@@ -186,7 +186,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				// other types handled in provider's SetParameter method
 				if (columnTypes[i].DataType == DataType.VarBinary && columns[i].MemberType == typeof(byte[]))
 					bc.ConfigureColumn(i, _provider.Adapter.OctonicaColumnSettings!(typeof(byte[])));
-				else if (columnTypes[i].DataType is DataType.Char or DataType.NChar && (columns[i].MemberType == typeof(string) || columns[i].MemberType.ToNullableUnderlying().IsEnum))
+				else if (columnTypes[i].DataType is DataType.Char or DataType.NChar && (columns[i].MemberType == typeof(string) || columns[i].MemberType.UnwrapNullableType().IsEnum))
 					bc.ConfigureColumn(i, _provider.Adapter.OctonicaColumnSettings!(typeof(string)));
 			}
 
@@ -232,8 +232,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					options.RowsCopiedCallback(rc);
 					if (rc.Abort)
 					{
-						if (table.DataContext.CloseAfterUse)
-							table.DataContext.Close();
+						CloseConnectionIfNecessary(table.DataContext);
 
 						return rc;
 					}
@@ -247,8 +246,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 				options.RowsCopiedCallback(rc);
 
-			if (table.DataContext.CloseAfterUse)
-				table.DataContext.Close();
+			CloseConnectionIfNecessary(table.DataContext);
 
 			return rc;
 		}
@@ -300,7 +298,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					// other types handled in provider's SetParameter method
 					if (columnTypes[i].DataType == DataType.VarBinary && columns[i].MemberType == typeof(byte[]))
 						bc.ConfigureColumn(i, _provider.Adapter.OctonicaColumnSettings!(typeof(byte[])));
-					else if (columnTypes[i].DataType is DataType.Char or DataType.NChar && (columns[i].MemberType == typeof(string) || columns[i].MemberType.ToNullableUnderlying().IsEnum))
+					else if (columnTypes[i].DataType is DataType.Char or DataType.NChar && (columns[i].MemberType == typeof(string) || columns[i].MemberType.UnwrapNullableType().IsEnum))
 						bc.ConfigureColumn(i, _provider.Adapter.OctonicaColumnSettings!(typeof(string)));
 				}
 
@@ -346,8 +344,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 						options.RowsCopiedCallback(rc);
 						if (rc.Abort)
 						{
-							if (table.DataContext.CloseAfterUse)
-								await table.DataContext.CloseAsync().ConfigureAwait(false);
+							await CloseConnectionIfNecessaryAsync(table.DataContext).ConfigureAwait(false);
 
 							return rc;
 						}
@@ -361,8 +358,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 					options.RowsCopiedCallback(rc);
 
-				if (table.DataContext.CloseAfterUse)
-					await table.DataContext.CloseAsync().ConfigureAwait(false);
+				await CloseConnectionIfNecessaryAsync(table.DataContext).ConfigureAwait(false);
 
 				return rc;
 			}
@@ -416,7 +412,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					// other types handled in provider's SetParameter method
 					if (columnTypes[i].DataType == DataType.VarBinary && columns[i].MemberType == typeof(byte[]))
 						bc.ConfigureColumn(i, _provider.Adapter.OctonicaColumnSettings!(typeof(byte[])));
-					else if (columnTypes[i].DataType is DataType.Char or DataType.NChar && (columns[i].MemberType == typeof(string) || columns[i].MemberType.ToNullableUnderlying().IsEnum))
+					else if (columnTypes[i].DataType is DataType.Char or DataType.NChar && (columns[i].MemberType == typeof(string) || columns[i].MemberType.UnwrapNullableType().IsEnum))
 						bc.ConfigureColumn(i, _provider.Adapter.OctonicaColumnSettings!(typeof(string)));
 				}
 
@@ -464,8 +460,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 						options.RowsCopiedCallback(rc);
 						if (rc.Abort)
 						{
-							if (table.DataContext.CloseAfterUse)
-								await table.DataContext.CloseAsync().ConfigureAwait(false);
+							await CloseConnectionIfNecessaryAsync(table.DataContext).ConfigureAwait(false);
 
 							return rc;
 						}
@@ -479,8 +474,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 					options.RowsCopiedCallback(rc);
 
-				if (table.DataContext.CloseAfterUse)
-					await table.DataContext.CloseAsync().ConfigureAwait(false);
+				await CloseConnectionIfNecessaryAsync(table.DataContext).ConfigureAwait(false);
 
 				return rc;
 			}
@@ -583,8 +577,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				}
 			}
 
-			if (table.DataContext.CloseAfterUse)
-				await table.DataContext.CloseAsync().ConfigureAwait(false);
+			await CloseConnectionIfNecessaryAsync(table.DataContext).ConfigureAwait(false);
 
 			return rc;
 		}

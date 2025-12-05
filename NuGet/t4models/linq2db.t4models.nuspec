@@ -8,9 +8,11 @@
 		<tags></tags>
 	</metadata>
 	<files>
-		<file src="t4bin\*.*"    exclude="**\linq2db.*;**\Humanizer.*;**\Microsoft.Bcl.AsyncInterfaces.*" target="tools" />
+		<file src="t4bin\*.*" exclude="**\NuGet.dll;**\*.pdb;**\*.xml;**\linq2db.dll;**\linq2db.Tools.dll;**\linq2db.Scaffold.dll;**\Humanizer.dll;**\Microsoft.Bcl.AsyncInterfaces.dll;" target="tools" />
+
 		<file src="t4bin\clidriver\**"                                  target="tools\clidriver"                         />
 		<file src="t4bin\amd64\**"                                      target="tools\amd64"                             />
+		<file src="t4bin\arm64\**"                                      target="tools\arm64"                             />
 		<file src="t4bin\x86\**"                                        target="tools\x86"                               />
 		<file src="t4bin\x64\**"                                        target="tools\x64"                               />
 

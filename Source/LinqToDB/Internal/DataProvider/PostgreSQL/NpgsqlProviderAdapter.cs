@@ -59,6 +59,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			Type? npgsqlDateTimeType,
 			Type  npgsqlRangeTType,
 			Type? npgsqlIntervalType,
+			Type? npgsqlCubeType,
 
 			bool supportsBigInteger,
 
@@ -93,6 +94,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			NpgsqlDateTimeType = npgsqlDateTimeType;
 			NpgsqlRangeTType   = npgsqlRangeTType;
 			NpgsqlIntervalType = npgsqlIntervalType;
+			NpgsqlCubeType     = npgsqlCubeType;
 
 			SupportsBigInteger = supportsBigInteger;
 
@@ -159,6 +161,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		public Type  NpgsqlInetType    { get; }
 		public Type? NpgsqlCidrType    { get; }
 		public Type  NpgsqlRangeTType  { get; }
+		public Type? NpgsqlCubeType    { get; }
 
 		public string? GetIntervalReaderMethod  => NpgsqlTimeSpanType != null ? "GetInterval"  : null;
 		public string? GetTimeStampReaderMethod => NpgsqlDateTimeType != null ? "GetTimeStamp" : null;
@@ -232,6 +235,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 						var npgsqlDateTimeType = assembly.GetType($"{TypesNamespace}.NpgsqlDateTime"     , false);
 						var npgsqlRangeTType   = assembly.GetType($"{TypesNamespace}.NpgsqlRange`1"      , true)!;
 						var npgsqlIntervalType = assembly.GetType($"{TypesNamespace}.NpgsqlInterval"     , false);
+						var npgsqlCubeType     = assembly.GetType($"{TypesNamespace}.NpgsqlCube"         , false);
 
 						var npgsqlBinaryImporterType = assembly.GetType($"{ClientNamespace}.NpgsqlBinaryImporter", true)!;
 
@@ -328,7 +332,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 							{
 								// v8 switched from int to byte for NpgsqlInet.Netmask
 								var netmaskType = typeof(byte);
-								var ctor = npgsqlInetType.GetConstructor(BindingFlags.ExactBinding | BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(IPAddress), netmaskType }, null);
+								var ctor = npgsqlInetType.GetConstructor(BindingFlags.ExactBinding | BindingFlags.Public | BindingFlags.Instance, new[] { typeof(IPAddress), netmaskType });
 								if (ctor == null)
 								{
 									netmaskType = typeof(int);
@@ -377,6 +381,8 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 						// ranges
 						AddUdtType(npgsqlRangeTType);
+
+						// Range To Parameter conversons
 						{
 							void SetRangeConversion<T>(string? fromDbType = null, DataType fromDataType = DataType.Undefined, string? toDbType = null, DataType toDataType = DataType.Undefined)
 							{
@@ -424,6 +430,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 						AddUdtType(npgsqlPolygonType);
 						AddUdtType(npgsqlLineType);
 
+						if (npgsqlCubeType != null)
+							AddUdtType(npgsqlCubeType);
+
 						var connectionFactory = typeMapper.BuildTypedFactory<string, NpgsqlConnection, DbConnection>(connectionString => new NpgsqlConnection(connectionString));
 
 						_instance = new NpgsqlProviderAdapter(
@@ -452,6 +461,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 							npgsqlDateTimeType,
 							npgsqlRangeTType,
 							npgsqlIntervalType,
+							npgsqlCubeType,
 
 							supportsBigInteger,
 
@@ -616,6 +626,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			Range      = 0x40000000,
 			// v6.0.0+
 			Multirange = 0x20000000,
+
+			// v10
+			Cube                           = 63,
 		}
 
 		[Wrapper]

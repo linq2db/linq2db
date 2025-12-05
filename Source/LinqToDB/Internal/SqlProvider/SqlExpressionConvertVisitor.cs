@@ -25,25 +25,26 @@ namespace LinqToDB.Internal.SqlProvider
 		protected ISqlExpressionFactory Factory => OptimizationContext.Factory;
 
 		protected EvaluationContext EvaluationContext => OptimizationContext.EvaluationContext;
-		protected DataOptions       DataOptions       => OptimizationContext.DataOptions;
-		protected MappingSchema     MappingSchema     => OptimizationContext.MappingSchema;
-		protected SqlProviderFlags  SqlProviderFlags  => OptimizationContext.SqlProviderFlags;
+		protected DataOptions DataOptions => OptimizationContext.DataOptions;
+		protected MappingSchema MappingSchema => OptimizationContext.MappingSchema;
+		protected SqlProviderFlags SqlProviderFlags => OptimizationContext.SqlProviderFlags;
 
 		public SqlExpressionConvertVisitor(bool allowModify) : base(allowModify ? VisitMode.Modify : VisitMode.Transform, null)
 		{
 		}
 
-		protected virtual bool SupportsBooleanInColumn           => false;
-		protected virtual bool SupportsNullInColumn              => true;
+		protected virtual bool SupportsBooleanInColumn => false;
+		protected virtual bool SupportsNullInColumn => true;
 		protected virtual bool SupportsDistinctAsExistsIntersect => false;
+		protected virtual bool SupportsNullIf => true;
 
 		public virtual IQueryElement Convert(OptimizationContext optimizationContext, NullabilityContext nullabilityContext, IQueryElement element, bool visitQueries)
 		{
 			Cleanup();
 
 			OptimizationContext = optimizationContext;
-			NullabilityContext  = nullabilityContext;
-			VisitQueries        = visitQueries;
+			NullabilityContext = nullabilityContext;
+			VisitQueries = visitQueries;
 			SetTransformationInfo(optimizationContext.TransformationInfoConvert);
 
 			var newElement = ProcessElement(element);
@@ -56,9 +57,9 @@ namespace LinqToDB.Internal.SqlProvider
 			base.Cleanup();
 
 			OptimizationContext = default!;
-			NullabilityContext  = default!;
-			VisitQueries        = default;
-			IsInsidePredicate   = false;
+			NullabilityContext = default!;
+			VisitQueries = default;
+			IsInsidePredicate = false;
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
@@ -131,6 +132,19 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 			{
 				return Visit(NotifyReplaced(newElement, element));
+			}
+
+			if (SupportsNullIf)
+			{
+				if (element.Condition is SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr
+					&& element.TrueValue.IsNullValue())
+				{
+					if (element.FalseValue.Equals(exprExpr.Expr1, SqlQuery.SqlExtensions.DefaultComparer))
+						return NotifyReplaced(new SqlFunction(QueryHelper.GetDbDataType(element.FalseValue, MappingSchema), "NULLIF", false, true, exprExpr.Expr1, exprExpr.Expr2), element);
+
+					if (element.FalseValue.Equals(exprExpr.Expr2, SqlQuery.SqlExtensions.DefaultComparer))
+						return NotifyReplaced(new SqlFunction(QueryHelper.GetDbDataType(element.FalseValue, MappingSchema), "NULLIF", false, true, exprExpr.Expr2, exprExpr.Expr1), element);
+				}
 			}
 
 			return element;
@@ -283,15 +297,15 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected IQueryElement Optimize(IQueryElement element)
 		{
-			return OptimizationContext.OptimizerVisitor.Optimize(EvaluationContext, NullabilityContext, OptimizationContext.TransformationInfo, DataOptions, OptimizationContext.MappingSchema, element, VisitQueries, reducePredicates : false);
+			return OptimizationContext.OptimizerVisitor.Optimize(EvaluationContext, NullabilityContext, OptimizationContext.TransformationInfo, DataOptions, OptimizationContext.MappingSchema, element, VisitQueries, reducePredicates: false);
 		}
 
 		protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 		{
 			var saveInsidePredicate = IsInsidePredicate;
-			IsInsidePredicate       = true;
+			IsInsidePredicate = true;
 			var newElement          = base.VisitExprExprPredicate(predicate);
-			IsInsidePredicate       = saveInsidePredicate;
+			IsInsidePredicate = saveInsidePredicate;
 
 			if (!ReferenceEquals(newElement, predicate))
 			{
@@ -696,15 +710,17 @@ namespace LinqToDB.Internal.SqlProvider
 		/// Escape sequence/character to escape special characters in LIKE predicate (defined by <see cref="LikeCharactersToEscape"/>).
 		/// Default: <c>"~"</c>.
 		/// </summary>
-		public virtual string LikeEscapeCharacter         => "~";
-		public virtual string LikeWildcardCharacter       => "%";
-		public virtual bool   LikePatternParameterSupport => true;
-		public virtual bool   LikeValueParameterSupport   => true;
+		public virtual string LikeEscapeCharacter => "~";
+		public virtual string LikeWildcardCharacter => "%";
+		public virtual bool LikePatternParameterSupport => true;
+		public virtual bool LikeValueParameterSupport => true;
 		/// <summary>
 		/// Should be <c>true</c> for provider with <c>LIKE ... ESCAPE</c> modifier support.
 		/// Default: <c>true</c>.
 		/// </summary>
-		public virtual bool   LikeIsEscapeSupported       => true;
+		public virtual bool LikeIsEscapeSupported => true;
+
+		public virtual ISqlExpression CreateLikeEscapeCharacter() => new SqlValue(LikeEscapeCharacter);
 
 		protected static string[] StandardLikeCharactersToEscape = {"%", "_", "?", "*", "#", "[", "]"};
 
@@ -753,7 +769,7 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			var newExpr = expression;
 
-			escape ??= new SqlValue(LikeEscapeCharacter);
+			escape ??= CreateLikeEscapeCharacter();
 
 			newExpr = GenerateEscapeReplacement(newExpr, escape, escape);
 
@@ -781,8 +797,8 @@ namespace LinqToDB.Internal.SqlProvider
 				patternValue = predicate.Kind switch
 				{
 					SqlPredicate.SearchString.SearchKind.StartsWith => patternValue + LikeWildcardCharacter,
-					SqlPredicate.SearchString.SearchKind.EndsWith   => LikeWildcardCharacter + patternValue,
-					SqlPredicate.SearchString.SearchKind.Contains   => LikeWildcardCharacter + patternValue + LikeWildcardCharacter,
+					SqlPredicate.SearchString.SearchKind.EndsWith => LikeWildcardCharacter + patternValue,
+					SqlPredicate.SearchString.SearchKind.Contains => LikeWildcardCharacter + patternValue + LikeWildcardCharacter,
 					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}")
 				};
 
@@ -801,7 +817,7 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 
 				return new SqlPredicate.Like(valueExpr, predicate.IsNot, patternExpr,
-					LikeIsEscapeSupported && (patternValue != patternRawValue) ? new SqlValue(LikeEscapeCharacter) : null);
+					LikeIsEscapeSupported && (patternValue != patternRawValue) ? CreateLikeEscapeCharacter() : null);
 			}
 			else
 			{
@@ -814,8 +830,8 @@ namespace LinqToDB.Internal.SqlProvider
 				patternExpr = predicate.Kind switch
 				{
 					SqlPredicate.SearchString.SearchKind.StartsWith => new SqlBinaryExpression(typeof(string), patternExpr, "+", anyCharacterExpr, Precedence.Additive),
-					SqlPredicate.SearchString.SearchKind.EndsWith   => new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive),
-					SqlPredicate.SearchString.SearchKind.Contains   => new SqlBinaryExpression(typeof(string), new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive), "+", anyCharacterExpr, Precedence.Additive),
+					SqlPredicate.SearchString.SearchKind.EndsWith => new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive),
+					SqlPredicate.SearchString.SearchKind.Contains => new SqlBinaryExpression(typeof(string), new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive), "+", anyCharacterExpr, Precedence.Additive),
 					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}")
 				};
 
@@ -856,6 +872,20 @@ namespace LinqToDB.Internal.SqlProvider
 				return Visit(newElement);
 
 			newElement = ConvertSqlFunction(element);
+			if (!ReferenceEquals(newElement, element))
+				return Visit(Optimize(newElement));
+
+			return element;
+		}
+
+		protected override IQueryElement VisitSqlExtendedFunction(SqlExtendedFunction element)
+		{
+			var newElement = base.VisitSqlExtendedFunction(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			newElement = ConvertSqlExtendedFunction(element);
 			if (!ReferenceEquals(newElement, element))
 				return Visit(Optimize(newElement));
 
@@ -1050,7 +1080,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				if (GetVisitMode(newElement) == VisitMode.Modify)
 				{
-					newElement.Column     = newColumn;
+					newElement.Column = newColumn;
 					newElement.Expression = newValue;
 				}
 				else
@@ -1172,6 +1202,33 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
+		public virtual ISqlExpression ConvertSqlExtendedFunction(SqlExtendedFunction func)
+		{
+			switch (func.FunctionName)
+			{
+				case "MAX":
+				case "MIN":
+				{
+					if (func.SystemType == typeof(bool) || func.SystemType == typeof(bool?))
+					{
+						if (func.Arguments[0].Expression is not ISqlPredicate predicate)
+						{
+							predicate = new SqlPredicate.Expr(func.Arguments[0].Expression);
+						}
+
+						var argument = func.Arguments[0].WithExpression(new SqlConditionExpression(predicate, new SqlValue(1), new SqlValue(0)));
+						var newFunc  = func.WithArguments(new[] { argument }, func.ArgumentsNullability);
+						newFunc = newFunc.WithType(MappingSchema.GetDbDataType(typeof(int)));
+						return newFunc;
+					}
+
+					break;
+				}
+			}
+
+			return func;
+		}
+
 		public virtual ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
 			switch (func.Name)
@@ -1199,8 +1256,8 @@ namespace LinqToDB.Internal.SqlProvider
 
 				case PseudoFunctions.TO_LOWER: return func.WithName("Lower");
 				case PseudoFunctions.TO_UPPER: return func.WithName("Upper");
-				case PseudoFunctions.REPLACE : return func.WithName("Replace");
-				case PseudoFunctions.LENGTH  : return func.WithName("Length");
+				case PseudoFunctions.REPLACE: return func.WithName("Replace");
+				case PseudoFunctions.LENGTH: return func.WithName("Length");
 			}
 
 			return func;
@@ -1483,9 +1540,9 @@ namespace LinqToDB.Internal.SqlProvider
 
 		#region DataTypes
 
-		protected virtual int? GetMaxLength(DbDataType      type) { return SqlDataType.GetMaxLength(type.DataType); }
-		protected virtual int? GetMaxPrecision(DbDataType   type) { return SqlDataType.GetMaxPrecision(type.DataType); }
-		protected virtual int? GetMaxScale(DbDataType       type) { return SqlDataType.GetMaxScale(type.DataType); }
+		protected virtual int? GetMaxLength(DbDataType type) { return SqlDataType.GetMaxLength(type.DataType); }
+		protected virtual int? GetMaxPrecision(DbDataType type) { return SqlDataType.GetMaxPrecision(type.DataType); }
+		protected virtual int? GetMaxScale(DbDataType type) { return SqlDataType.GetMaxScale(type.DataType); }
 		protected virtual int? GetMaxDisplaySize(DbDataType type) { return SqlDataType.GetMaxDisplaySize(type.DataType); }
 
 		/// <summary>
@@ -1509,7 +1566,7 @@ namespace LinqToDB.Internal.SqlProvider
 				var newLength = maxLength != null && maxLength >= 0 ? Math.Min(toDataType.Length ?? 0, maxLength.Value) : fromDbType.Length;
 
 				var newDataType = toDataType.WithLength(newLength);
-				if (!newDataType.Equals(toDataType))
+				if (!newDataType.EqualsDbOnly(toDataType))
 				{
 					return new SqlCastExpression(cast.Expression, newDataType, cast.FromType);
 				}
@@ -1565,7 +1622,7 @@ namespace LinqToDB.Internal.SqlProvider
 				case SelectQuery:
 				{
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(feature) ||
-					    !SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.CompareToSelect))
+						!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.CompareToSelect))
 						throw new LinqToDBException("SqlRow comparisons to SELECT are not supported by this DB provider");
 					break;
 				}
@@ -1642,7 +1699,7 @@ namespace LinqToDB.Internal.SqlProvider
 					// Reducing to `false` is an inaccuracy that causes problems when composed in more complicated ways,
 					// e.g. the NOT IN SqlRow tests fail.
 					SqlPredicate.Operator nullSafeOp = a.TryEvaluateExpression(context, out var val) && val == null ||
-					                                   b.TryEvaluateExpression(context, out     val) && val == null
+													   b.TryEvaluateExpression(context, out     val) && val == null
 						? SqlPredicate.Operator.GreaterOrEqual
 						: op;
 					return new SqlPredicate.ExprExpr(a, nullSafeOp, b, unknownAsValue: null);
@@ -1807,7 +1864,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			ISqlPredicate predicate;
 			var dbType = QueryHelper.GetDbDataType(expression, MappingSchema);
-			if (dbType.SystemType.ToNullableUnderlying() == typeof(bool) || dbType.DataType == DataType.Boolean)
+			if (dbType.SystemType.UnwrapNullableType() == typeof(bool) || dbType.DataType == DataType.Boolean)
 			{
 				predicate = new SqlPredicate.IsTrue(expression, new SqlValue(true), new SqlValue(false), DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false);
 			}
@@ -1824,13 +1881,14 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected ISqlExpression ConvertBooleanToCase(ISqlExpression expr, DbDataType toType)
 		{
-			var caseExpr = new SqlCaseExpression(toType,
-				new SqlCaseExpression.CaseItem[]
-				{
+			var caseExpr = new SqlCaseExpression(
+				toType,
+				[
 					new(new SqlPredicate.IsNull(expr, false), new SqlValue(toType, null)),
-					new(new SqlPredicate.ExprExpr(expr, SqlPredicate.Operator.NotEqual, new SqlValue(0), null), new SqlValue(toType, true))
-				}, new SqlValue(toType, false));
-			
+					new(new SqlPredicate.ExprExpr(expr, SqlPredicate.Operator.NotEqual, new SqlValue(0), null), new SqlValue(toType, true)),
+				],
+				new SqlValue(toType, false)
+			);
 
 			return caseExpr;
 		}
@@ -1895,15 +1953,15 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected SqlCastExpression FloorBeforeConvert(SqlCastExpression cast)
 		{
-			if (cast.Expression.SystemType!.IsFloatType() && cast.SystemType.IsIntegerType())
+			return cast switch
 			{
-				if (cast.Expression is SqlFunction { Name: "Floor" })
-					return cast;
+				{
+					Expression: { SystemType.IsFloatType: true } and not SqlFunction { Name: "Floor" },
+					SystemType.IsIntegerType: true,
+				} => cast.WithExpression(new SqlFunction(QueryHelper.GetDbDataType(cast.Expression, MappingSchema), "Floor", cast.Expression)),
 
-				return cast.WithExpression(new SqlFunction(QueryHelper.GetDbDataType(cast.Expression, MappingSchema), "Floor", cast.Expression));
-			}
-
-			return cast;
+				_ => cast,
+			};
 		}
 
 		protected ISqlExpression TryConvertToValue(ISqlExpression expr, EvaluationContext context)

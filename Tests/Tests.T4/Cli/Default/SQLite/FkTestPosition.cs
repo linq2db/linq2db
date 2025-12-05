@@ -15,9 +15,9 @@ namespace Cli.Default.SQLite
 	[Table("FKTestPosition")]
 	public class FkTestPosition
 	{
-		[Column("Company"   , IsPrimaryKey = true , PrimaryKeyOrder = 0)] public long   Company    { get; set; } // integer
-		[Column("Department", IsPrimaryKey = true , PrimaryKeyOrder = 1)] public long   Department { get; set; } // integer
-		[Column("PositionID", IsPrimaryKey = true , PrimaryKeyOrder = 2)] public long   PositionId { get; set; } // integer
+		[Column("Company"   , IsPrimaryKey = true , PrimaryKeyOrder = 0)] public long   Company    { get; set; } // INTEGER
+		[Column("Department", IsPrimaryKey = true , PrimaryKeyOrder = 1)] public long   Department { get; set; } // INTEGER
+		[Column("PositionID", IsPrimaryKey = true , PrimaryKeyOrder = 2)] public long   PositionId { get; set; } // INTEGER
 		[Column("Name"      , CanBeNull    = false                     )] public string Name       { get; set; } = null!; // nvarchar(50)
 	}
 }

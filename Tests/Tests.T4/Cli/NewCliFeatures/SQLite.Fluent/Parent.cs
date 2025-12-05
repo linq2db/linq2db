@@ -13,7 +13,7 @@ namespace Cli.NewCliFeatures.FluentSQLite
 {
 	public class Parent
 	{
-		public int? ParentId { get; set; } // int
-		public int? Value1   { get; set; } // int
+		public int? ParentId { get; set; } // INT
+		public int? Value1   { get; set; } // INT
 	}
 }

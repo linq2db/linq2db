@@ -27,15 +27,10 @@ LinqToDB.Remote.Grpc.GrpcLinqService.GrpcLinqService(LinqToDB.Remote.ILinqServic
 LinqToDB.Remote.Grpc.GrpcLinqServiceClient
 LinqToDB.Remote.Grpc.GrpcLinqServiceClient.GrpcLinqServiceClient(Grpc.Net.Client.GrpcChannel! channel) -> void
 LinqToDB.Remote.Grpc.IGrpcLinqService
-LinqToDB.Remote.Grpc.IGrpcLinqService.ExecuteBatch(LinqToDB.Remote.Grpc.Dto.GrpcConfigurationQuery! caq, ProtoBuf.Grpc.CallContext context = default(ProtoBuf.Grpc.CallContext)) -> LinqToDB.Remote.Grpc.Dto.GrpcInt!
 LinqToDB.Remote.Grpc.IGrpcLinqService.ExecuteBatchAsync(LinqToDB.Remote.Grpc.Dto.GrpcConfigurationQuery! caq, ProtoBuf.Grpc.CallContext context = default(ProtoBuf.Grpc.CallContext)) -> System.Threading.Tasks.Task<LinqToDB.Remote.Grpc.Dto.GrpcInt!>!
-LinqToDB.Remote.Grpc.IGrpcLinqService.ExecuteNonQuery(LinqToDB.Remote.Grpc.Dto.GrpcConfigurationQuery! caq, ProtoBuf.Grpc.CallContext context = default(ProtoBuf.Grpc.CallContext)) -> LinqToDB.Remote.Grpc.Dto.GrpcInt!
 LinqToDB.Remote.Grpc.IGrpcLinqService.ExecuteNonQueryAsync(LinqToDB.Remote.Grpc.Dto.GrpcConfigurationQuery! caq, ProtoBuf.Grpc.CallContext context = default(ProtoBuf.Grpc.CallContext)) -> System.Threading.Tasks.Task<LinqToDB.Remote.Grpc.Dto.GrpcInt!>!
-LinqToDB.Remote.Grpc.IGrpcLinqService.ExecuteReader(LinqToDB.Remote.Grpc.Dto.GrpcConfigurationQuery! caq, ProtoBuf.Grpc.CallContext context = default(ProtoBuf.Grpc.CallContext)) -> LinqToDB.Remote.Grpc.Dto.GrpcString!
 LinqToDB.Remote.Grpc.IGrpcLinqService.ExecuteReaderAsync(LinqToDB.Remote.Grpc.Dto.GrpcConfigurationQuery! caq, ProtoBuf.Grpc.CallContext context = default(ProtoBuf.Grpc.CallContext)) -> System.Threading.Tasks.Task<LinqToDB.Remote.Grpc.Dto.GrpcString!>!
-LinqToDB.Remote.Grpc.IGrpcLinqService.ExecuteScalar(LinqToDB.Remote.Grpc.Dto.GrpcConfigurationQuery! caq, ProtoBuf.Grpc.CallContext context = default(ProtoBuf.Grpc.CallContext)) -> LinqToDB.Remote.Grpc.Dto.GrpcString!
 LinqToDB.Remote.Grpc.IGrpcLinqService.ExecuteScalarAsync(LinqToDB.Remote.Grpc.Dto.GrpcConfigurationQuery! caq, ProtoBuf.Grpc.CallContext context = default(ProtoBuf.Grpc.CallContext)) -> System.Threading.Tasks.Task<LinqToDB.Remote.Grpc.Dto.GrpcString!>!
-LinqToDB.Remote.Grpc.IGrpcLinqService.GetInfo(LinqToDB.Remote.Grpc.Dto.GrpcConfiguration! configuration, ProtoBuf.Grpc.CallContext context = default(ProtoBuf.Grpc.CallContext)) -> LinqToDB.Remote.LinqServiceInfo!
 LinqToDB.Remote.Grpc.IGrpcLinqService.GetInfoAsync(LinqToDB.Remote.Grpc.Dto.GrpcConfiguration! configuration, ProtoBuf.Grpc.CallContext context = default(ProtoBuf.Grpc.CallContext)) -> System.Threading.Tasks.Task<LinqToDB.Remote.LinqServiceInfo!>!
 override LinqToDB.Remote.Grpc.GrpcDataContext.ContextIDPrefix.get -> string!
 override LinqToDB.Remote.Grpc.GrpcDataContext.GetClient() -> LinqToDB.Remote.ILinqService!

@@ -16,15 +16,15 @@ namespace Cli.Default.SQLite
 	[Table("LinqDataTypes")]
 	public class LinqDataType
 	{
-		[Column("ID"            )] public int?      Id             { get; set; } // int
-		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; set; } // decimal
+		[Column("ID"            )] public int?      Id             { get; set; } // INT
+		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; set; } // decimal(10,4)
 		[Column("DateTimeValue" )] public DateTime? DateTimeValue  { get; set; } // datetime
 		[Column("DateTimeValue2")] public DateTime? DateTimeValue2 { get; set; } // datetime2
 		[Column("BoolValue"     )] public bool?     BoolValue      { get; set; } // boolean
 		[Column("GuidValue"     )] public Guid?     GuidValue      { get; set; } // uniqueidentifier
-		[Column("BinaryValue"   )] public byte[]?   BinaryValue    { get; set; } // binary
+		[Column("BinaryValue"   )] public byte[]?   BinaryValue    { get; set; } // binary(5000)
 		[Column("SmallIntValue" )] public short?    SmallIntValue  { get; set; } // smallint
-		[Column("IntValue"      )] public int?      IntValue       { get; set; } // int
+		[Column("IntValue"      )] public int?      IntValue       { get; set; } // INT
 		[Column("BigIntValue"   )] public long?     BigIntValue    { get; set; } // bigint
 		[Column("StringValue"   )] public string?   StringValue    { get; set; } // nvarchar(50)
 	}

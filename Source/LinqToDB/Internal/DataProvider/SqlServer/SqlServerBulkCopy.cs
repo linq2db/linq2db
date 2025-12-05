@@ -203,8 +203,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					options.RowsCopiedCallback(rc);
 			}
 
-			if (table.DataContext.CloseAfterUse)
-				await table.DataContext.CloseAsync().ConfigureAwait(false);
+			await CloseConnectionIfNecessaryAsync(table.DataContext).ConfigureAwait(false);
 
 			return rc;
 		}
@@ -279,8 +278,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					options.RowsCopiedCallback(rc);
 			}
 
-			if (table.DataContext.CloseAfterUse)
-				table.DataContext.Close();
+			CloseConnectionIfNecessary(table.DataContext);
 
 			return rc;
 		}
@@ -290,8 +288,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			BulkCopyRowsCopied ret;
 
-			var helper = new MultipleRowsHelper<T>(table, options);
-			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
+			var helper = CreateRowsHelper(table, options);
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " ON");
@@ -306,8 +303,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			{
 				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " OFF");
 
-				if (helper.OriginalContext.CloseAfterUse)
-					helper.OriginalContext.Close();
+				CloseConnectionIfNecessary(helper.OriginalContext);
 			}
 
 			return ret;
@@ -318,8 +314,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			BulkCopyRowsCopied ret;
 
-			var helper = new MultipleRowsHelper<T>(table, options);
-			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
+			var helper = CreateRowsHelper(table, options);
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
@@ -342,8 +337,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
 					.ConfigureAwait(false);
 
-				if (helper.OriginalContext.CloseAfterUse)
-					await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+				await CloseConnectionIfNecessaryAsync(helper.OriginalContext).ConfigureAwait(false);
 			}
 
 			return ret;
@@ -354,8 +348,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			BulkCopyRowsCopied ret;
 
-			var helper = new MultipleRowsHelper<T>(table, options);
-			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
+			var helper = CreateRowsHelper(table, options);
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
@@ -378,11 +371,29 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
 					.ConfigureAwait(false);
 
-				if (helper.OriginalContext.CloseAfterUse)
-					await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+				await CloseConnectionIfNecessaryAsync(helper.OriginalContext).ConfigureAwait(false);
 			}
 
 			return ret;
+		}
+
+		private static readonly Func<DataOptions, ColumnDescriptor, object?, bool> _convertToParameter =
+			static (options, cd, v) => options.BulkCopyOptions.UseParameters && cd.StorageType != typeof(float[])
+#if NET8_0_OR_GREATER
+				&& cd.StorageType != typeof(Half[])
+#endif
+				;
+
+		private MultipleRowsHelper<T> CreateRowsHelper<T>(ITable<T> table, DataOptions options) where T : notnull
+		{
+			var helper = new MultipleRowsHelper<T>(table, options);
+
+			if (_provider.Provider == SqlServerProvider.SystemDataSqlClient)
+				helper.ConvertToParameter = _convertToParameter;
+
+			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
+
+			return helper;
 		}
 	}
 }

@@ -7,6 +7,7 @@ indent_style = tab
 indent_size = 4
 insert_final_newline = true
 end_of_line = crlf
+align_columns = true
 
 [*.fs]
 indent_style = space
@@ -118,6 +119,8 @@ csharp_preserve_single_line_statements = true
 csharp_prefer_simple_using_statement = false:silent
 # to enable see https://github.com/linq2db/linq2db/pull/4433
 #csharp_style_prefer_switch_expression = true:warning
+
+csharp_style_prefer_unbound_generic_type_in_nameof = true:warning
 
 # to enable see https://github.com/linq2db/linq2db/pull/4433
 #dotnet_style_prefer_compound_assignment = true:warning
@@ -756,6 +759,8 @@ dotnet_diagnostic.MA0168.severity = error
 dotnet_diagnostic.MA0169.severity = none
 # MA0170: Type cannot be used as an attribute argument
 dotnet_diagnostic.MA0170.severity = none
+# MA0176: Optimize guid creation
+dotnet_diagnostic.MA0176.severity = none
 ################################################################################################
 # LindhartAnalyserMissingAwaitWarningVariable: Possible unwanted Task returned from method.
 dotnet_diagnostic.LindhartAnalyserMissingAwaitWarningVariable.severity = error

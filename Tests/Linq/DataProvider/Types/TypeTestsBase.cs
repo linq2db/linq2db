@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -17,8 +18,10 @@ namespace Tests.DataProvider
 	public abstract class TypeTestsBase : TestBase
 	{
 		// Mapping for single type configuration testing for both nullable and non-nullable database columns
-		private sealed class TypeTable<TType, TNullableType>
+		protected sealed class TypeTable<TType, TNullableType>
 		{
+			[PrimaryKey]
+			public int Id { get; set; }
 			public TType          Column         { get; set; } = default!;
 			public TNullableType? ColumnNullable { get; set; }
 		}
@@ -84,7 +87,9 @@ namespace Tests.DataProvider
 			Func<TType, bool>? isExpectedValue = null,
 			Func<TNullableType?, bool>? isExpectedNullableValue = null,
 			Func<DataOptions, DataOptions>? optionsBuilder = null,
-			Func<BulkCopyType, bool>? testBulkCopyType = null)
+			Func<BulkCopyType, bool>? testBulkCopyType = null,
+			int? expectedParamCount = null,
+			bool testListParameter = false)
 		{
 			testParameters ??= TestParameters;
 
@@ -92,6 +97,8 @@ namespace Tests.DataProvider
 			var ms = new MappingSchema();
 
 			var ent = new FluentMappingBuilder(ms).Entity<TypeTable<TType, TNullableType>>();
+
+			ent.Property(e => e.Id).IsPrimaryKey();
 
 			var prop = ent.Property(e => e.Column).IsNullable(false);
 
@@ -119,7 +126,16 @@ namespace Tests.DataProvider
 			// start testing
 			using var db = GetDataConnection(context, o => optionsBuilder == null ? o.UseMappingSchema(ms) : optionsBuilder(o.UseMappingSchema(ms)));
 
-			var data = new[] { new TypeTable<TType, TNullableType> { Column = value, ColumnNullable = nullableValue } };
+			var data = new[]
+			{
+				new TypeTable<TType,TNullableType>
+				{
+					Id             = 1,
+					Column         = value,
+					ColumnNullable = nullableValue
+				}
+			};
+			
 			using var table = db.CreateLocalTable(data);
 
 			// test parameter
@@ -127,7 +143,7 @@ namespace Tests.DataProvider
 			{
 				db.InlineParameters = false;
 
-				var expectedParamCount = (filterByValue ? 1 : 0) + (filterByNullableValue && nullableValue != null ? 1 : 0);
+				expectedParamCount ??= (filterByValue ? 1 : 0) + (filterByNullableValue && nullableValue != null ? 1 : 0);
 
 				db.OnNextCommandInitialized((_, cmd) =>
 				{
@@ -135,7 +151,7 @@ namespace Tests.DataProvider
 					return cmd;
 				});
 
-				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue);
+				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue, filterWithList: false);
 			}
 
 			// test literal
@@ -147,42 +163,85 @@ namespace Tests.DataProvider
 					return cmd;
 				});
 
-				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue);
+				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue, filterWithList: false);
 				db.InlineParameters = false;
+			}
+
+			if (testListParameter)
+			{
+				// test parameter
+				if (testParameters == true)
+				{
+					db.InlineParameters = false;
+
+					expectedParamCount ??= filterByValue || (filterByNullableValue && nullableValue != null) ? 1 : 0;
+
+					db.OnNextCommandInitialized((_, cmd) =>
+					{
+						Assert.That(cmd.Parameters, Has.Count.EqualTo(expectedParamCount));
+						return cmd;
+					});
+
+					AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue, filterWithList: true);
+				}
+
+				// test literal
+				{
+					db.InlineParameters = true;
+					db.OnNextCommandInitialized((_, cmd) =>
+					{
+						Assert.That(cmd.Parameters, Is.Empty);
+						return cmd;
+					});
+
+					AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue, filterWithList: true);
+					db.InlineParameters = false;
+				}
 			}
 
 			var options = GetDefaultBulkCopyOptions(context);
 
+			if (testParameters == false)
+				db.InlineParameters = true;
+
 			// test bulk copy modes
 			if (testBulkCopyType?.Invoke(BulkCopyType.RowByRow) != false)
 			{
-				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.RowByRow };
+				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.RowByRow, UseParameters = testParameters != false };
 				table.Delete();
 				db.BulkCopy(options, data);
-				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue);
+				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue, filterWithList: false);
 			}
 
 			if (testBulkCopyType?.Invoke(BulkCopyType.MultipleRows) != false)
 			{
-				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
+				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows, UseParameters = testParameters != false };
 				table.Delete();
 				db.BulkCopy(options, data);
-				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue);
+				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue, filterWithList: false);
 			}
 
 			if (testBulkCopyType?.Invoke(BulkCopyType.ProviderSpecific) != false)
 			{
-				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.ProviderSpecific };
+				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.ProviderSpecific, UseParameters = testParameters != false };
 				table.Delete();
 				db.BulkCopy(options, data);
-				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue);
+				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue, filterWithList: false);
 
 				// test async provider-specific bulk copy as it often has own implementation
-				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.ProviderSpecific };
+				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.ProviderSpecific, UseParameters = testParameters != false };
 				await table.DeleteAsync();
 				await db.BulkCopyAsync(options, data);
-				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue);
+				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue, filterWithList: false);
 			}
+		}
+
+		protected virtual IQueryable<TypeTable<TType, TNullableType>> MakeListFilter<TType, TNullableType>(
+			TempTable<TypeTable<TType, TNullableType>> table,
+			object? columnValue,
+			object? nullableColumnValue)
+		{
+			throw new InvalidOperationException("List filter not implemented");
 		}
 
 		/// <summary>
@@ -202,7 +261,7 @@ namespace Tests.DataProvider
 		/// <param name="filterByNullableValue">Enable/disable selection filter by nullable column (default: <c>true</c>).</param>
 		/// <param name="getExpectedValue">Optional expected non-nullable value provider to use when value doesn't roundtrip.</param>
 		/// <param name="getExpectedNullableValue">Optional expected nullable value provider to use when value doesn't roundtrip.</param>
-		private static void AssertData<TType, TNullableType>(
+		private void AssertData<TType, TNullableType>(
 			TempTable<TypeTable<TType, TNullableType>> table,
 			TType                                      value,
 			TNullableType?                             nullableValue,
@@ -212,7 +271,8 @@ namespace Tests.DataProvider
 			Func<TType, TType>?                        getExpectedValue,
 			Func<TNullableType?, TNullableType?>?      getExpectedNullableValue,
 			Func<TType, bool>?                         isExpectedValue,
-			Func<TNullableType?, bool>?                isExpectedNullableValue)
+			Func<TNullableType?, bool>?                isExpectedNullableValue,
+			bool                                       filterWithList)
 		{
 			filterByNullableValue = filterByNullableValue && !skipNullable;
 
@@ -220,7 +280,15 @@ namespace Tests.DataProvider
 			// cast to object used to make comparison not complain in C# due to missing operator== implementation on tested types
 			// and at the same time preserve value type inference and = operator generation in SQL
 			var records =
-					filterByValue && filterByNullableValue
+				filterWithList
+				? filterByValue && filterByNullableValue
+					? MakeListFilter(table, value, nullableValue).ToArray()
+					: filterByValue
+						? MakeListFilter(table, value, null).ToArray()
+						: filterByNullableValue
+							? MakeListFilter(table, null, nullableValue).ToArray()
+							: table.ToArray()
+				: filterByValue && filterByNullableValue
 					? table.Where(r => (object)r.Column! == (object)value! && (object?)r.ColumnNullable == (object?)nullableValue).ToArray()
 					: filterByValue
 						? table.Where(r => (object)r.Column! == (object)value!).ToArray()

@@ -1,0 +1,15 @@
+﻿name: "💡 Feature Request: LINQPad Driver"
+description: Linq To DB T4 template feature request
+labels: ["area: linqpad"]
+type: Feature
+body:
+  - type: textarea
+    id: details
+    attributes:
+      label: Description
+      description: |
+        * Add background details on what kind of problem you want to solve with new feature
+        * Propose feature designs
+      placeholder: Description
+    validations:
+      required: true

@@ -60,7 +60,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestParameters([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var conn = GetDataConnection(context, suppressSequentialAccess: true))
+			using (var conn = GetDataContext(context, suppressSequentialAccess: true))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -223,7 +223,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		static void TestNumeric<T>(DataConnection conn, T expectedValue, DataType dataType, string skip = "")
+		static void TestNumeric<T>(IDataContext conn, T expectedValue, DataType dataType, string skip = "")
 		{
 			var skipTypes = skip.Split(' ');
 
@@ -266,7 +266,7 @@ namespace Tests.DataProvider
 		//[Test]
 		//public void TestNumerics([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		//{
-		//	using (var conn = GetDataConnection(context))
+		//	using (var conn = GetDataContext(context))
 		//	{
 		//		TestSimple<short> (conn, 1,   DataType.Int16);
 		//		TestSimple        (conn, 1,   DataType.Int32);
@@ -315,7 +315,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDate([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12);
 				using (Assert.EnterMultipleScope())
@@ -335,7 +335,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestJson([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var testJson = /*lang=json,strict*/ "{\"name\":\"bob\", \"age\":10}";
 
@@ -351,7 +351,7 @@ namespace Tests.DataProvider
 		public void TestJsonb([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			var json = new { name = "bob", age = 10 };
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				//properties come back out in potentially diff order as its being
 				//converted between a binary json format and the string representation
@@ -368,7 +368,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDateTime([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 				using (Assert.EnterMultipleScope())
@@ -386,7 +386,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestChar([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -425,7 +425,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestString([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -457,7 +457,7 @@ namespace Tests.DataProvider
 		{
 			var arr1 = new byte[] { 48, 57 };
 
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -479,7 +479,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestGuid([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -504,7 +504,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestXml([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -536,7 +536,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum1([IncludeDataSources(TestProvName.AllPostgreSQL10Plus)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -551,7 +551,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum2([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -618,7 +618,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void SequenceInsertWithIdentity_CustomNaming([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				db.GetTable<PostgreSQLSpecific.SequenceCustomNamingTest>().Where(_ => _.Value == "SeqValue").Delete();
 
@@ -759,7 +759,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					try
 					{
@@ -790,7 +790,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					try
 					{
@@ -825,7 +825,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Issue140([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var list = db.Query<TestTeamplate>("select 1 as cdni_cd_cod_numero_item1").ToList();
 
@@ -914,7 +914,11 @@ namespace Tests.DataProvider
 			[Column]                                   public NpgsqlLine?    lineDataType               { get; set; }
 			// inet types
 			[Column]                                   public IPAddress?       inetDataType             { get; set; }
+#if NET8_0_OR_GREATER
+			[Column]                                   public IPNetwork?       cidrDataType             { get; set; }
+#else
 			[Column]                                   public NpgsqlCidr?      cidrDataType             { get; set; }
+#endif
 			[Column  (DbType = "macaddr")]             public PhysicalAddress? macaddrDataType          { get; set; }
 			// PGSQL10+
 			// also supported by ProviderName.PostgreSQL, but it is hard to setup...
@@ -922,7 +926,7 @@ namespace Tests.DataProvider
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL10)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL11)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL12)]
-			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL13)]
+			[Column(DbType = "macaddr8", Configuration = ProviderName.PostgreSQL13)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL14)]
 			[Column(DbType = "macaddr8", Configuration = ProviderName.PostgreSQL15)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL16)]
@@ -998,7 +1002,11 @@ namespace Tests.DataProvider
 					lineDataType        = new NpgsqlLine(3.3, 4.4, 5.5),
 
 					inetDataType        = IPAddress.Parse("2001:0db8:0000:0042:0000:8a2e:0370:7334"),
+#if NET8_0_OR_GREATER
+					cidrDataType        = IPNetwork.Parse("::ffff:1.2.3.0/120"),
+#else
 					cidrDataType        = new NpgsqlCidr("::ffff:1.2.3.0/120"),
+#endif
 					macaddrDataType     = PhysicalAddress.Parse("08-00-2B-01-02-03"),
 					macaddr8DataType    = PhysicalAddress.Parse("08-00-2B-FF-FE-01-02-03"),
 
@@ -1142,7 +1150,11 @@ namespace Tests.DataProvider
 					lineDataType        = new NpgsqlLine(3.3, 4.4, 5.5),
 
 					inetDataType        = IPAddress.Parse("2001:0db8:0000:0042:0000:8a2e:0370:7334"),
+#if NET8_0_OR_GREATER
+					cidrDataType        = IPNetwork.Parse("::ffff:1.2.3.0/120"),
+#else
 					cidrDataType        = new NpgsqlCidr("::ffff:1.2.3.0/120"),
+#endif
 					macaddrDataType     = PhysicalAddress.Parse("08-00-2B-01-02-03"),
 					macaddr8DataType    = PhysicalAddress.Parse("08-00-2B-FF-FE-01-02-03"),
 
@@ -1251,7 +1263,7 @@ namespace Tests.DataProvider
 		{
 				var data = Enumerable.Range(1, 40).Select(i => new SequenceTest { Value = $"SeqValue{i}" }).ToArray();
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				try
 				{
@@ -1343,7 +1355,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestTableFunction([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				// needed for proper AllTypes columns mapping
 				db.AddMappingSchema(new MappingSchema(context));
@@ -2379,9 +2391,12 @@ $function$
 
 			// test bulk copy
 			if (db is DataConnection dc)
+			{
+				using var _ = new DisableBaseline("Makes baselines differ for remote context");
 				dc.BulkCopy(
 					new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific },
 					new[] { new BigIntegerTable() { Id = 2, Value1 = value2, Value2 = value1 } });
+			}
 
 			// test read
 			var data = table.OrderBy(r => r.Id).ToArray();
@@ -2421,7 +2436,7 @@ $function$
 
 			ms.SetConverter<object?,DataParameter>(o => new(null, o is PersonCategory pc ? (int)pc : o, DataType.Undefined));
 
-			using var db = GetDataConnection(context, o => o.UseMappingSchema(ms));
+			using var db = GetDataContext(context, o => o.UseMappingSchema(ms));
 
 			object categoryParam = PersonCategory.Friends;
 
@@ -2438,7 +2453,7 @@ $function$
 
 			ms.SetConverter<object?,object?>(o => o is PersonCategory pc ? (int)pc : o);
 
-			using var db = GetDataConnection(context, o => o.UseMappingSchema(ms));
+			using var db = GetDataContext(context, o => o.UseMappingSchema(ms));
 
 			object categoryParam = PersonCategory.Friends;
 
@@ -2455,7 +2470,7 @@ $function$
 
 			ms.SetConverter<object?,object?>(o => o is Enum e ? Convert.ChangeType(e, Enum.GetUnderlyingType(e.GetType())) : o);
 
-			using var db = GetDataConnection(context, o => o.UseMappingSchema(ms));
+			using var db = GetDataContext(context, o => o.UseMappingSchema(ms));
 
 			object categoryParam = PersonCategory.Friends;
 
@@ -2468,7 +2483,7 @@ $function$
 		[Test]
 		public void ObjectParamTest4([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 
 			object categoryParam = PersonCategory.Friends;
 
@@ -2486,7 +2501,7 @@ $function$
 
 			ms.SetConverter<object?,object?>(o => o is Enum e ? ms.EnumToValue(e) : o);
 
-			using var db = GetDataConnection(context, o => o.UseMappingSchema(ms));
+			using var db = GetDataContext(context, o => o.UseMappingSchema(ms));
 
 			object categoryParam = PersonCategory.Friends;
 
@@ -2503,7 +2518,7 @@ $function$
 
 			ms.SetConverter<object?,DataParameter>(o => new(null, o is Enum e ? ms.EnumToValue(e) : o, DataType.Undefined));
 
-			using var db = GetDataConnection(context, o => o.UseMappingSchema(ms));
+			using var db = GetDataContext(context, o => o.UseMappingSchema(ms));
 
 			object categoryParam = PersonCategory.Friends;
 
@@ -2542,7 +2557,7 @@ $function$
 		{
 			var tableName = "TestIssue3895BulkCopy";
 
-			using var db  = GetDataConnection(context);
+			using var db  = GetDataContext(context);
 			using var t   = db.CreateLocalTable<Issue3895Table>(tableName: tableName);
 			var dt        = new DateTime(TestData.DateTime.Ticks, kind);
 
@@ -2610,12 +2625,12 @@ $function$
 			var tenantidColumn = multiTenantTable.Columns.Find(c => c.ColumnName == "tenantid");
 			tenantidColumn.ShouldNotBeNull();
 
-			tenantidColumn!.IsPrimaryKey.ShouldBeTrue();
+			tenantidColumn!.IsPrimaryKey.ShouldBe(!context.IsAnyOf(TestProvName.PostgreSQL10));
 
 			var idColumn = multiTenantTable.Columns.Find(c => c.ColumnName == "id");
 			idColumn.ShouldNotBeNull();
 
-			idColumn!.IsPrimaryKey.ShouldBeTrue();
+			idColumn!.IsPrimaryKey.ShouldBe(!context.IsAnyOf(TestProvName.PostgreSQL10));
 		}
 
 		#region Issue 4556
@@ -2782,7 +2797,7 @@ $function$
 				connectionString = db.ConnectionString;
 			}
 
-			using (var db1 = GetDataConnection(context))
+			using (var db1 = GetDataContext(context))
 			{
 				try
 				{
@@ -2798,7 +2813,7 @@ $function$
 					builder.MapEnum<Issue4487Enum>("item_type_enum");
 					var dataSource = builder.Build();
 
-					using var db = GetDataConnection(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()));
+					using var db = GetDataContext(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()));
 
 					db.GetTable<Issue4487Table>()
 						.Value(x => x.Id, 1)
@@ -2935,7 +2950,7 @@ $function$
 				connectionString = db.ConnectionString;
 			}
 
-			using (var db1 = GetDataConnection(context))
+			using (var db1 = GetDataContext(context))
 			{
 				try
 				{
@@ -2946,7 +2961,7 @@ $function$
 					builder.MapEnum<Issue4780Enum>("item_type_enum");
 					var dataSource = builder.Build();
 
-					using var db = GetDataConnection(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()));
+					using var db = GetDataContext(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()));
 
 					db.Insert(new Issue4780Table() {Bar = Issue4780Enum.ItemOne });
 					db.Insert(new Issue4780Table() {Bar = Issue4780Enum.ItemTwo });
@@ -2977,7 +2992,7 @@ $function$
 				connectionString = db.ConnectionString;
 			}
 
-			using (var db1 = GetDataConnection(context))
+			using (var db1 = GetDataContext(context))
 			{
 				try
 				{
@@ -2988,7 +3003,7 @@ $function$
 					builder.MapEnum<Issue4780Enum>("item_type_enum");
 					var dataSource = builder.Build();
 
-					using var db = GetDataConnection(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()));
+					using var db = GetDataContext(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()));
 
 					db.Insert(new Issue4780Table() { Bar = Issue4780Enum.ItemOne });
 					db.Insert(new Issue4780Table() { Bar = Issue4780Enum.ItemTwo });
@@ -3119,7 +3134,7 @@ $function$
 			builder.UseNodaTime();
 			var dataSource = builder.Build();
 
-			using var db = GetDataConnection(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()));
+			using var db = GetDataContext(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()));
 			using var tb = db.CreateLocalTable<Issue4672Table>();
 
 			db.InlineParameters = inline;

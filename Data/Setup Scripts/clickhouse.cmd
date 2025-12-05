@@ -14,7 +14,7 @@ docker restart clickhouse
 
 ECHO pause to wait for ClickHouse startup completion
 call wait clickhouse "create new user"
-timeout 5
+timeout 10
 
 REM create test databases for all providers
 docker exec clickhouse clickhouse-client --multiquery --host 127.0.0.1 -u testuser --password testuser -q "CREATE DATABASE testdb1"

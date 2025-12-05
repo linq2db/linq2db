@@ -516,6 +516,7 @@ namespace Tests.Linq
 			AreEqual(groups1, groups2);
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void ParameterTest1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -566,6 +567,7 @@ namespace Tests.Linq
 
 		sealed class User
 		{
+			[PrimaryKey] public int Id { get; set; }
 			public string? FirstName;
 			public int?    Status;
 		}

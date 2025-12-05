@@ -18,7 +18,7 @@ namespace Tests.UserTests
 		{
 			sealed class MatchBuilder : Sql.IExtensionCallBuilder
 			{
-				public void Build(Sql.ISqExtensionBuilder builder)
+				public void Build(Sql.ISqlExtensionBuilder builder)
 				{
 					var method = (MethodInfo) builder.Member;
 					var arg = method.GetGenericArguments().Single();
@@ -47,7 +47,7 @@ namespace Tests.UserTests
 		[Test]
 		public void TestAnonymous([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				db.Execute(@"
 DROP TABLE IF EXISTS dataFTS;
@@ -78,7 +78,7 @@ CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastNam
 		[Test]
 		public void TestDirect([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				db.Execute(@"
 DROP TABLE IF EXISTS dataFTS;

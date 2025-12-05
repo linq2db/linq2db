@@ -16,29 +16,29 @@ namespace Cli.Default.SQLite
 	[Table("AllTypes")]
 	public class AllType
 	{
-		[Column("ID"                      , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long      Id                       { get; set; } // integer
+		[Column("ID"                      , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public long      Id                       { get; set; } // INTEGER
 		[Column("bigintDataType"                                                                                            )] public long?     BigintDataType           { get; set; } // bigint
 		[Column("numericDataType"                                                                                           )] public decimal?  NumericDataType          { get; set; } // numeric
 		[Column("bitDataType"                                                                                               )] public bool?     BitDataType              { get; set; } // bit
 		[Column("smallintDataType"                                                                                          )] public short?    SmallintDataType         { get; set; } // smallint
 		[Column("decimalDataType"                                                                                           )] public decimal?  DecimalDataType          { get; set; } // decimal
-		[Column("intDataType"                                                                                               )] public int?      IntDataType              { get; set; } // int
+		[Column("intDataType"                                                                                               )] public int?      IntDataType              { get; set; } // INT
 		[Column("tinyintDataType"                                                                                           )] public byte?     TinyintDataType          { get; set; } // tinyint
 		[Column("moneyDataType"                                                                                             )] public decimal?  MoneyDataType            { get; set; } // money
 		[Column("floatDataType"                                                                                             )] public double?   FloatDataType            { get; set; } // float
-		[Column("realDataType"                                                                                              )] public double?   RealDataType             { get; set; } // real
+		[Column("realDataType"                                                                                              )] public double?   RealDataType             { get; set; } // REAL
 		[Column("datetimeDataType"                                                                                          )] public DateTime? DatetimeDataType         { get; set; } // datetime
 		[Column("charDataType"                                                                                              )] public char?     CharDataType             { get; set; } // char(1)
 		[Column("char20DataType"                                                                                            )] public string?   Char20DataType           { get; set; } // char(20)
 		[Column("varcharDataType"                                                                                           )] public string?   VarcharDataType          { get; set; } // varchar(20)
-		[Column("textDataType"                                                                                              )] public string?   TextDataType             { get; set; } // text(max)
-		[Column("ncharDataType"                                                                                             )] public string?   NcharDataType            { get; set; } // char(20)
+		[Column("textDataType"                                                                                              )] public string?   TextDataType             { get; set; } // TEXT
+		[Column("ncharDataType"                                                                                             )] public string?   NcharDataType            { get; set; } // nchar(20)
 		[Column("nvarcharDataType"                                                                                          )] public string?   NvarcharDataType         { get; set; } // nvarchar(20)
-		[Column("ntextDataType"                                                                                             )] public string?   NtextDataType            { get; set; } // ntext(max)
+		[Column("ntextDataType"                                                                                             )] public string?   NtextDataType            { get; set; } // ntext
 		[Column("binaryDataType"                                                                                            )] public byte[]?   BinaryDataType           { get; set; } // binary
 		[Column("varbinaryDataType"                                                                                         )] public byte[]?   VarbinaryDataType        { get; set; } // varbinary
 		[Column("imageDataType"                                                                                             )] public byte[]?   ImageDataType            { get; set; } // image
 		[Column("uniqueidentifierDataType"                                                                                  )] public Guid?     UniqueidentifierDataType { get; set; } // uniqueidentifier
-		[Column("objectDataType"                                                                                            )] public object?   ObjectDataType           { get; set; } // object
+		[Column("objectDataType"                                                                                            )] public object?   ObjectDataType           { get; set; } // Object
 	}
 }

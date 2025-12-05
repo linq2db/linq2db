@@ -490,7 +490,9 @@ namespace LinqToDB.Data
 			DataProvider!.InitContext(this);
 		}
 #if DEBUG
+#pragma warning disable IDE0052 // Remove unread private members
 		int _dataConnectionID;
+#pragma warning restore IDE0052 // Remove unread private members
 		static int _dataConnectionIDCounter;
 		static int _dataConnectionCount;
 #endif
@@ -1718,7 +1720,6 @@ namespace LinqToDB.Data
 		/// </summary>
 		public bool InlineParameters { get; set; }
 
-		private List<string>? _queryHints;
 		/// <summary>
 		/// Gets list of query hints (writable collection), that will be used for all queries, executed through current connection.
 		/// </summary>
@@ -1728,11 +1729,10 @@ namespace LinqToDB.Data
 			{
 				CheckAndThrowOnDisposed();
 
-				return _queryHints ??= new();
+				return field ??= new();
 			}
 		}
 
-		private List<string>? _nextQueryHints;
 		/// <summary>
 		/// Gets list of query hints (writable collection), that will be used only for next query, executed through current connection.
 		/// </summary>
@@ -1742,7 +1742,7 @@ namespace LinqToDB.Data
 			{
 				CheckAndThrowOnDisposed();
 
-				return _nextQueryHints ??= new();
+				return field ??= new();
 			}
 		}
 

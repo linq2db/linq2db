@@ -21,10 +21,12 @@ using NUnit.Framework;
 
 using Tests;
 
+#if !NET10_0
 #if NETFRAMEWORK
 using MySqlConnectionStringBuilder = MySql.Data.MySqlClient.MySqlConnectionStringBuilder;
 #else
 using MySqlConnectionStringBuilder = MySqlConnector.MySqlConnectionStringBuilder;
+#endif
 #endif
 
 namespace LinqToDB.EntityFrameworkCore.Tests
@@ -79,11 +81,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			// as EF generates SQL differently, we cannot share baselines
 #if NETFRAMEWORK
-			BaselinesManager.Dump(".EF31");
+			BaselinesManager.Dump(false, ".EF31");
 #elif NET8_0
-			BaselinesManager.Dump(".EF8");
+			BaselinesManager.Dump(false, ".EF8");
 #elif NET9_0
-			BaselinesManager.Dump(".EF9");
+			BaselinesManager.Dump(false, ".EF9");
+#elif NET10_0
+			BaselinesManager.Dump(false, ".EF10");
 #else
 #error Unknown framework
 #endif
@@ -160,6 +164,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		private const string DB_SUFFIX = "ef8";
 #elif NET9_0
 		private const string DB_SUFFIX = "ef9";
+#elif NET10_0
+		private const string DB_SUFFIX = "ef10";
 #else
 #error Unknown framework
 #endif
@@ -192,6 +198,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 						connectionString = cnb.ConnectionString;
 						break;
 					}
+#if !NET10_0
 					case var _ when provider.IsAnyOf(TestProvName.AllMySql):
 					{
 						var cnb = new MySqlConnectionStringBuilder(connectionString);
@@ -200,6 +207,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 						connectionString = cnb.ConnectionString;
 						break;
 					}
+#endif
 					case var _ when provider.IsAnyOf(TestProvName.AllSQLite):
 					{
 						var cnb = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(connectionString);

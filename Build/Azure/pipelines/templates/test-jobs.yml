@@ -152,10 +152,13 @@ jobs:
             psscript_global: ${{ test_config.psscript_win_global }}
             script_local: ${{ test_config.script_win_local }}
             psscript_local: ${{ test_config.psscript_win_local }}
+            pre_test_win_local: ${{ test_config.pre_test_win_local }}
+            post_test_win_local: ${{ test_config.post_test_win_local }}
             extra: ${{ test_config.extra }}
             netfx: ${{ test_config.enable_fw_netfx }}
             net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
+            net100: ${{ test_config.enable_fw_net100 }}
             x86: ${{ test_config.x86 }}
             retry: ${{ test_config.retry }}
 
@@ -190,6 +193,7 @@ jobs:
             extra: ${{ test_config.extra }}
             net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
+            net100: ${{ test_config.enable_fw_net100 }}
             retry: ${{ test_config.retry }}
 
   steps:
@@ -224,6 +228,7 @@ jobs:
             extra: ${{ test_config.extra }}
             net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
+            net100: ${{ test_config.enable_fw_net100 }}
             retry: ${{ test_config.retry }}
 
   steps:

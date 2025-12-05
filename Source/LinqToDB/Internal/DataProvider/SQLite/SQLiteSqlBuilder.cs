@@ -81,6 +81,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 				case ConvertType.NameToDatabase  :
 				case ConvertType.NameToSchema    :
 				case ConvertType.NameToQueryTable:
+				case ConvertType.NameToCteName   :
 				case ConvertType.NameToProcedure :
 					if (value.Length > 0 && value[0] == '[')
 						return sb.Append(value);
@@ -103,6 +104,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		{
 			switch (type.DataType)
 			{
+				case DataType.Int64 :
 				case DataType.Int32 : StringBuilder.Append("INTEGER");                                 break;
 				default             : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
 			}
@@ -218,7 +220,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 				StringBuilder.AppendLine();
 				AppendIndent();
-				BuildEmptyValues(valuesTable);
+				BuildEmptyValues(valuesTable, useTypedExpression: false);
 				StringBuilder.AppendLine();
 
 				AppendIndent();

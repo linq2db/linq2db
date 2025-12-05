@@ -31,7 +31,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				ProviderName.DB2,
 				TestProvName.AllInformix,
-				TestProvName.AllPostgreSQL,
+				TestProvName.AllPostgreSQL12Minus,
 				TestProvName.AllSQLite,
 				TestProvName.AllAccess)]
 			string context)
@@ -56,7 +56,7 @@ namespace Tests.xUpdate
 							BoolValue = true
 						});
 
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(
 							cnt, Is.EqualTo(Types.Select(_ => _.ID / 3).Distinct().Count()));
 				}
@@ -75,7 +75,7 @@ namespace Tests.xUpdate
 			[DataSources(
 				ProviderName.DB2,
 				TestProvName.AllInformix,
-				TestProvName.AllPostgreSQL,
+				TestProvName.AllPostgreSQL12Minus,
 				TestProvName.AllSQLite,
 				TestProvName.AllAccess)]
 			string context)
@@ -96,7 +96,7 @@ namespace Tests.xUpdate
 							.Value(t => t.BoolValue, t => true)
 						.Insert();
 
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(
 							cnt, Is.EqualTo(Types.Select(_ => _.ID / 3).Distinct().Count()));
 				}
@@ -124,7 +124,7 @@ namespace Tests.xUpdate
 							ParentID = 1,
 							ChildID  = id
 						});
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
@@ -152,7 +152,7 @@ namespace Tests.xUpdate
 								.Value(c => c.ParentID, () => 1)
 								.Value(c => c.ChildID,  () => id)
 							.Insert();
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
@@ -180,7 +180,7 @@ namespace Tests.xUpdate
 								.Value(c => c.ParentID, () => 1)
 								.Value(c => c.ChildID,  () => id)
 							.InsertAsync();
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(await db.Child.CountAsync(c => c.ChildID == id), Is.EqualTo(1));
@@ -210,7 +210,7 @@ namespace Tests.xUpdate
 								ParentID = c.ParentID,
 								ChildID  = id
 							});
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
@@ -240,7 +240,7 @@ namespace Tests.xUpdate
 								ParentID = c.ParentID,
 								ChildID  = id
 							});
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(await db.Child.CountAsync(c => c.ChildID == id), Is.EqualTo(1));
@@ -271,7 +271,7 @@ namespace Tests.xUpdate
 							ChildID  = id
 						})
 						.Insert(db.Child, c => c);
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
@@ -300,7 +300,7 @@ namespace Tests.xUpdate
 								.Value(c => c.ParentID, c  => c.ParentID)
 								.Value(c => c.ChildID,  () => id)
 							.Insert();
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
@@ -346,7 +346,7 @@ namespace Tests.xUpdate
 								.Value(c => c.ParentID, c  => c.ParentID)
 								.Value(c => c.ChildID,  () => id)
 							.InsertAsync();
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(await db.Child.CountAsync(c => c.ChildID == id), Is.EqualTo(1));
@@ -375,7 +375,7 @@ namespace Tests.xUpdate
 								.Value(c => c.ParentID, c => c.ParentID)
 								.Value(c => c.ChildID,  id)
 							.Insert();
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
@@ -402,7 +402,7 @@ namespace Tests.xUpdate
 								.Value(p => p.ParentID, c => c.ParentID + 1000)
 								.Value(p => p.Value1,   c => (int?)c.ChildID)
 							.Insert();
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Parent.Count(p => p.Value1 == 11), Is.EqualTo(1));
@@ -442,7 +442,7 @@ namespace Tests.xUpdate
 					.Value(p => p.ModifiedOn, c => Sql.CurrentTimestamp)
 					.Insert();
 
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(affected, Is.EqualTo(2));
 			}
 		}
@@ -463,7 +463,7 @@ namespace Tests.xUpdate
 							.Value(c => c.ChildID,  () => id)
 							.Value(c => c.ParentID, 1)
 						.Insert();
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
@@ -491,7 +491,7 @@ namespace Tests.xUpdate
 							.Value(c => c.ParentID, 1)
 							.Value(c => c.ChildID,  () => id)
 						.Insert();
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
@@ -524,7 +524,7 @@ namespace Tests.xUpdate
 							ParentID = p.ParentID,
 							ChildID  = p.ParentID,
 						});
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Child.Count(c => c.ParentID == id), Is.EqualTo(1));
@@ -703,7 +703,7 @@ namespace Tests.xUpdate
 							ParentID = 1001,
 							Value1   = p.Value1
 						});
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Parent4.Count(_ => _.ParentID == id && _.Value1 == p.Value1), Is.EqualTo(1));
@@ -730,7 +730,7 @@ namespace Tests.xUpdate
 							.Value(_ => _.ParentID, id)
 							.Value(_ => _.Value1,   TypeValue.Value1)
 						.Insert();
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Parent4.Count(_ => _.ParentID == id), Is.EqualTo(1));
@@ -757,7 +757,7 @@ namespace Tests.xUpdate
 							.Value(_ => _.ParentID, id)
 							.Value(_ => _.Value1,   () => TypeValue.Value1)
 						.Insert();
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					if (context.SupportsRowcount())
 						Assert.That(cnt, Is.EqualTo(1));
 
 					Assert.That(db.Parent4.Count(_ => _.ParentID == id), Is.EqualTo(1));
@@ -780,7 +780,7 @@ namespace Tests.xUpdate
 						.Value(p => p.ParentID, 1001)
 						.Value(p => p.Value1,   (int?)null)
 					.Insert();
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 
 				Assert.That(db.Parent.Count(p => p.ParentID == 1001), Is.EqualTo(1));
@@ -989,7 +989,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertWithGuidIdentity([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var id = (Guid)db.InsertWithIdentity(new GuidID { Field1 = 1 });
 				Assert.That(id, Is.Not.EqualTo(Guid.Empty));
@@ -999,7 +999,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertWithGuidIdentityOutput([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using var db = GetDataConnection(context, o => o.UseSqlServer(o => o with { GenerateScopeIdentity = false }));
+			using var db = GetDataContext(context, o => o.UseSqlServer(o => o with { GenerateScopeIdentity = false }));
 
 			var id = (Guid) db.InsertWithIdentity(new GuidID {Field1 = 1});
 			Assert.That(id, Is.Not.EqualTo(Guid.Empty));
@@ -1008,7 +1008,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertWithIdentityOutput([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using var db = GetDataConnection(context, o => o.UseSqlServer(o => o with { GenerateScopeIdentity = false }));
+			using var db = GetDataContext(context, o => o.UseSqlServer(o => o with { GenerateScopeIdentity = false }));
 			using (new DeletePerson(db))
 			{
 
@@ -1041,7 +1041,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertWithGuidIdentity2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var id = (Guid)db.InsertWithIdentity(new GuidID2 {});
 			}
@@ -1596,7 +1596,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// Access, SQLite, Firebird before v4, Informix and SAP Hana do not support DEFAULT in inserted values,
+		// YDB, Access, SQLite, Firebird before v4, Informix and SAP Hana do not support DEFAULT in inserted values,
 		// see https://github.com/linq2db/linq2db/pull/2954#issuecomment-821798021
 		[Test]
 		public void InsertDefault([DataSources(
@@ -1604,6 +1604,7 @@ namespace Tests.xUpdate
 			TestProvName.AllFirebirdLess4,
 			TestProvName.AllInformix,
 			TestProvName.AllSapHana,
+			ProviderName.Ydb,
 			TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1730,53 +1731,41 @@ namespace Tests.xUpdate
 		public void InsertByTableName([DataSources] string context)
 		{
 			const string? schemaName = null;
-			var tableName  = TestUtils.GetTableName(context, "35");
+			var tableName  = "xxPerson";
 
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<Person>(tableName, schemaName: schemaName);
+
+			using (Assert.EnterMultipleScope())
 			{
-				try
+				Assert.That(table.TableName, Is.EqualTo(tableName));
+				Assert.That(table.SchemaName, Is.EqualTo(schemaName));
+			}
+
+			var person = new Person()
+			{
+				FirstName = "Steven",
+				LastName = "King",
+				Gender = Gender.Male,
+			};
+
+			// insert a row into the table
+			db.Insert(person, tableName: tableName, schemaName: schemaName);
+			if (!context.IsAnyOf(TestProvName.AllClickHouse))
+			{
+				var newId1 = db.InsertWithInt32Identity(person, tableName: tableName, schemaName: schemaName);
+				var newId2 = db.InsertWithIdentity(person, tableName: tableName, schemaName: schemaName);
+
+				var newCount = table.Count();
+				using (Assert.EnterMultipleScope())
 				{
-					db.DropTable<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
+					Assert.That(newCount, Is.EqualTo(3));
 
-					var table = db.CreateTable<Person>(tableName, schemaName: schemaName);
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(table.TableName, Is.EqualTo(tableName));
-						Assert.That(table.SchemaName, Is.EqualTo(schemaName));
-					}
-
-					var person = new Person()
-					{
-						FirstName = "Steven",
-						LastName = "King",
-						Gender = Gender.Male,
-					};
-
-					// insert a row into the table
-					db.Insert(person, tableName: tableName, schemaName: schemaName);
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					{
-						var newId1 = db.InsertWithInt32Identity(person, tableName: tableName, schemaName: schemaName);
-						var newId2 = db.InsertWithIdentity(person, tableName: tableName, schemaName: schemaName);
-
-						var newCount = table.Count();
-						using (Assert.EnterMultipleScope())
-						{
-							Assert.That(newCount, Is.EqualTo(3));
-
-							Assert.That(newId2, Is.Not.EqualTo(newId1));
-						}
-
-						var integritycount = table.Where(p => p.FirstName == "Steven" && p.LastName == "King" && p.Gender == Gender.Male).Count();
-						Assert.That(integritycount, Is.EqualTo(3));
-					}
-
-					table.Drop();
+					Assert.That(newId2, Is.Not.EqualTo(newId1));
 				}
-				finally
-				{
-					db.DropTable<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
-				}
+
+				var integritycount = table.Where(p => p.FirstName == "Steven" && p.LastName == "King" && p.Gender == Gender.Male).Count();
+				Assert.That(integritycount, Is.EqualTo(3));
 			}
 		}
 
@@ -1784,51 +1773,41 @@ namespace Tests.xUpdate
 		public async Task InsertByTableNameAsync([DataSources] string context)
 		{
 			const string? schemaName = null;
-			var tableName  = TestUtils.GetTableName(context, "31");
+			var tableName  = "xxPerson";
 
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<Person>(tableName, schemaName: schemaName);
+
+			using (Assert.EnterMultipleScope())
 			{
-				try
+				Assert.That(table.TableName, Is.EqualTo(tableName));
+				Assert.That(table.SchemaName, Is.EqualTo(schemaName));
+			}
+
+			var person = new Person()
+			{
+				FirstName = "Steven",
+				LastName = "King",
+				Gender = Gender.Male,
+			};
+
+			// insert a row into the table
+			await db.InsertAsync(person, tableName: tableName, schemaName: schemaName);
+			if (!context.IsAnyOf(TestProvName.AllClickHouse))
+			{
+				var newId1 = await db.InsertWithInt32IdentityAsync(person, tableName: tableName, schemaName: schemaName);
+				var newId2 = await db.InsertWithIdentityAsync(person, tableName: tableName, schemaName: schemaName);
+
+				var newCount = await table.CountAsync();
+				using (Assert.EnterMultipleScope())
 				{
-					var table = await db.CreateTableAsync<Person>(tableName, schemaName: schemaName);
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(table.TableName, Is.EqualTo(tableName));
-						Assert.That(table.SchemaName, Is.EqualTo(schemaName));
-					}
+					Assert.That(newCount, Is.EqualTo(3));
 
-					var person = new Person()
-					{
-						FirstName = "Steven",
-						LastName = "King",
-						Gender = Gender.Male,
-					};
-
-					// insert a row into the table
-					await db.InsertAsync(person, tableName: tableName, schemaName: schemaName);
-					if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					{
-						var newId1 = await db.InsertWithInt32IdentityAsync(person, tableName: tableName, schemaName: schemaName);
-						var newId2 = await db.InsertWithIdentityAsync(person, tableName: tableName, schemaName: schemaName);
-
-						var newCount = await table.CountAsync();
-						using (Assert.EnterMultipleScope())
-						{
-							Assert.That(newCount, Is.EqualTo(3));
-
-							Assert.That(newId2, Is.Not.EqualTo(newId1));
-						}
-
-						var integritycount = await table.Where(p => p.FirstName == "Steven" && p.LastName == "King" && p.Gender == Gender.Male).CountAsync();
-						Assert.That(integritycount, Is.EqualTo(3));
-					}
-
-					await table.DropAsync();
+					Assert.That(newId2, Is.Not.EqualTo(newId1));
 				}
-				finally
-				{
-					await db.DropTableAsync<Person>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
-				}
+
+				var integritycount = await table.Where(p => p.FirstName == "Steven" && p.LastName == "King" && p.Gender == Gender.Male).CountAsync();
+				Assert.That(integritycount, Is.EqualTo(3));
 			}
 		}
 
@@ -1836,95 +1815,74 @@ namespace Tests.xUpdate
 		public void InsertOrReplaceByTableName([InsertOrUpdateDataSources] string context)
 		{
 			const string? schemaName = null;
-			var tableName  = "xxPatient" + (context.IsAnyOf(TestProvName.AllFirebird) ? TestUtils.GetNext().ToString() : string.Empty);
+			var tableName  = "xxPatient";
 
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<Patient>(tableName, schemaName: schemaName);
+			using (Assert.EnterMultipleScope())
 			{
-				db.DropTable<Patient>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
-				var table = db.CreateTable<Patient>(tableName, schemaName: schemaName);
-
-				try
-				{
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(table.TableName, Is.EqualTo(tableName));
-						Assert.That(table.SchemaName, Is.EqualTo(schemaName));
-					}
-
-					var person1 = new Patient()
-					{
-						PersonID = 1,
-						Diagnosis = "ABC1",
-					};
-
-					var person2 = new Patient()
-					{
-						PersonID = 2,
-						Diagnosis = "ABC2",
-					};
-
-					db.InsertOrReplace(person1, tableName: tableName, schemaName: schemaName);
-					db.InsertOrReplace(person2, tableName: tableName, schemaName: schemaName);
-
-					Assert.That(table.Count(), Is.EqualTo(2));
-
-					db.InsertOrReplace(person1, tableName: tableName, schemaName: schemaName);
-					db.InsertOrReplace(person2, tableName: tableName, schemaName: schemaName);
-
-					Assert.That(table.Count(), Is.EqualTo(2));
-				}
-				finally
-				{
-					table.Drop(throwExceptionIfNotExists: false);
-				}
+				Assert.That(table.TableName, Is.EqualTo(tableName));
+				Assert.That(table.SchemaName, Is.EqualTo(schemaName));
 			}
+
+			var person1 = new Patient()
+			{
+				PersonID = 1,
+				Diagnosis = "ABC1",
+			};
+
+			var person2 = new Patient()
+			{
+				PersonID = 2,
+				Diagnosis = "ABC2",
+			};
+
+			db.InsertOrReplace(person1, tableName: tableName, schemaName: schemaName);
+			db.InsertOrReplace(person2, tableName: tableName, schemaName: schemaName);
+
+			Assert.That(table.Count(), Is.EqualTo(2));
+
+			db.InsertOrReplace(person1, tableName: tableName, schemaName: schemaName);
+			db.InsertOrReplace(person2, tableName: tableName, schemaName: schemaName);
+
+			Assert.That(table.Count(), Is.EqualTo(2));
 		}
 
 		[Test]
 		public async Task InsertOrReplaceByTableNameAsync([InsertOrUpdateDataSources] string context)
 		{
 			const string? schemaName = null;
-			var tableName  = "xxPatient" + (context.IsAnyOf(TestProvName.AllFirebird) ? TestUtils.GetNext().ToString() : string.Empty);
+			var tableName  = "xxPatient";
 
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<Patient>(tableName, schemaName: schemaName);
+			using (Assert.EnterMultipleScope())
 			{
-				await db.DropTableAsync<Patient>(tableName, schemaName: schemaName, throwExceptionIfNotExists: false);
-				var table = await db.CreateTableAsync<Patient>(tableName, schemaName: schemaName);
-				try
-				{
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(table.TableName, Is.EqualTo(tableName));
-						Assert.That(table.SchemaName, Is.EqualTo(schemaName));
-					}
-
-					var person1 = new Patient()
-					{
-						PersonID = 1,
-						Diagnosis = "ABC1",
-					};
-
-					var person2 = new Patient()
-					{
-						PersonID = 2,
-						Diagnosis = "ABC2",
-					};
-
-					await db.InsertOrReplaceAsync(person1, tableName: tableName, schemaName: schemaName);
-					await db.InsertOrReplaceAsync(person2, tableName: tableName, schemaName: schemaName);
-
-					Assert.That(await table.CountAsync(), Is.EqualTo(2));
-
-					await db.InsertOrReplaceAsync(person1, tableName: tableName, schemaName: schemaName);
-					await db.InsertOrReplaceAsync(person2, tableName: tableName, schemaName: schemaName);
-
-					Assert.That(await table.CountAsync(), Is.EqualTo(2));
-				}
-				finally
-				{
-					await table.DropAsync(throwExceptionIfNotExists: false);
-				}
+				Assert.That(table.TableName, Is.EqualTo(tableName));
+				Assert.That(table.SchemaName, Is.EqualTo(schemaName));
 			}
+
+			var person1 = new Patient()
+			{
+				PersonID = 1,
+				Diagnosis = "ABC1",
+			};
+
+			var person2 = new Patient()
+			{
+				PersonID = 2,
+				Diagnosis = "ABC2",
+			};
+
+			await db.InsertOrReplaceAsync(person1, tableName: tableName, schemaName: schemaName);
+			await db.InsertOrReplaceAsync(person2, tableName: tableName, schemaName: schemaName);
+
+			Assert.That(await table.CountAsync(), Is.EqualTo(2));
+
+			await db.InsertOrReplaceAsync(person1, tableName: tableName, schemaName: schemaName);
+			await db.InsertOrReplaceAsync(person2, tableName: tableName, schemaName: schemaName);
+
+			Assert.That(await table.CountAsync(), Is.EqualTo(2));
 		}
 
 		[Test]
@@ -2047,7 +2005,7 @@ namespace Tests.xUpdate
 				vi = vi.Value(x => x.ID, 123).Value(x => x.FirstName, "John");
 
 				var cnt = vi.Insert();
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(1));
 				Assert.That(table.Count(x => x.ID == 123 && x.FirstName == "John"), Is.EqualTo(1));
 			}
@@ -2531,11 +2489,11 @@ namespace Tests.xUpdate
 
 		[ActiveIssue(
 			Details = "Update test to test different RetrieveIdentity modes for all providers with sequences",
-			Configurations = [TestProvName.AllFirebird, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllPostgreSQL, ProviderName.SqlCe, TestProvName.AllSapHana])]
+			Configurations = [TestProvName.AllFirebird, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllPostgreSQL, ProviderName.SqlCe, TestProvName.AllSapHana, ProviderName.Ydb])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4702")]
 		public void Issue4702Test([DataSources(false)] string context, [Values] bool useSequence)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue4702Table>();
 
 			List<Issue4702Table> records = [
@@ -2546,6 +2504,54 @@ namespace Tests.xUpdate
 			db.BulkCopy(new BulkCopyOptions { KeepIdentity = true }, records.RetrieveIdentity(db, useSequence));
 			tb.Insert(() => new Issue4702Table() { Text = "Text 3" });
 		}
+		#endregion
+
+		#region Set with Coalesce
+		[Table]
+		public partial class Thing
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public string? ThingSequence { get; set; }
+			[Column] public int ThingCounter { get; set; }
+			[Column] public string? UserFacingId { get; set; }
+		}
+
+		[Test]
+		public void InsertFromWithCoalesce([IncludeDataSources(
+			true,
+			// native oracle provider crashes with AV
+			TestProvName.AllOracleManaged,
+			TestProvName.AllOracleDevart,
+			TestProvName.AllSqlServer2012Plus,
+			TestProvName.AllClickHouse,
+			TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Thing>();
+
+			var nextCounterQuery =
+				from thingSequence in db.SelectQuery(() => "test")
+				from lastThingInSequence in tb
+					.Where(thing => thing.ThingSequence == thingSequence)
+					.DefaultIfEmpty()
+				select Sql.ToNullable(
+					Sql.Ext
+						.Max(lastThingInSequence.ThingCounter)
+						.Over()
+						.PartitionBy(lastThingInSequence.ThingSequence)
+						.ToValue());
+
+			_ = nextCounterQuery
+				.Distinct()
+				.Insert(
+					tb,
+					lastCounter => new()
+					{
+						Id = 1,
+						ThingCounter = (lastCounter ?? 0) + 1,
+					});
+		}
+
 		#endregion
 	}
 }

@@ -4,8 +4,6 @@ using System.Text.Json;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
 
 using Microsoft.Data.SqlTypes;
 
@@ -76,7 +74,7 @@ namespace Tests.DataProvider
 
 			var msClient = context.IsAnyOf(TestProvName.AllSqlServerMS);
 
-			//var dt = DataType.Array | DataType.Single;
+			//var dt = DataType.Vector32;
 
 			//const string asString1 = /*lang=json,strict*/ "[1.1, -1.2]";
 			//const string asString2 = /*lang=json,strict*/ "[2.1, -3.2]";
@@ -85,9 +83,9 @@ namespace Tests.DataProvider
 			//var asString2Expected = msClient ? /*lang=json,strict*/ "[2.1,-3.2]" : /*lang=json,strict*/ "[2.1, -3.2]";
 			//var asBinary1 = BitConverter.GetBytes(1.1f).Concat(BitConverter.GetBytes(-1.2f)).ToArray();
 			//var asBinary2 = BitConverter.GetBytes(-7.1f).Concat(BitConverter.GetBytes(-4.2f)).ToArray();
-			var asArray1 = new float[] { 1.2f, -1.1f };
-			var asArray2 = new float[] { 5.2f, -3.1f };
-			var asArray3 = new float[] { 11.2f, -4.1f };
+			var asArray1 = new[] {  1.2f, -1.1f };
+			var asArray2 = new[] {  5.2f, -3.1f };
+			var asArray3 = new[] { 11.2f, -4.1f };
 
 			// string
 			//await TestType<string, string?>(context, new(typeof(string), dt, null, length: 2), asString1, default, filterByValue: false, getExpectedValue: _ => asString1Expected);
@@ -101,20 +99,87 @@ namespace Tests.DataProvider
 			//await TestType<float[], float[]?>(context, new(typeof(float[]), dt, null, length: 2), asArray1, default, filterByValue: false);
 			//await TestType<float[], float[]?>(context, new(typeof(float[]), dt, null, length: 2), asArray2, asArray1, filterByValue: false, filterByNullableValue: false);
 
+			var type = new DbDataType(typeof(SqlVector<float>)).WithLength(2);
+
 			if (msClient)
 			{
-				var type = new DbDataType(typeof(SqlVector<float>)).WithLength(2);
 				var sqlVector1 = new SqlVector<float>(asArray1.AsMemory());
 				var sqlVector2 = new SqlVector<float>(asArray2.AsMemory());
 				var sqlVector3 = new SqlVector<float>(asArray3.AsMemory());
 
 				await TestType<SqlVector<float>, SqlVector<float>?>(context, type, sqlVector1, default, filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector1.Memory.ToArray()));
 
-				// temporary workaround for https://github.com/dotnet/SqlClient/issues/3520
-				await TestType<SqlVector<float>, SqlVector<float>?>(context, type, sqlVector2, null, filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector2.Memory.ToArray()));
-				//await TestType<SqlVector<float>, SqlVector<float>?>(context, type, sqlVector2, SqlVector<float>.Null, filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector2.Memory.ToArray()));
+				await TestType<SqlVector<float>, SqlVector<float>?>(context, type, sqlVector2, SqlVector<float>.Null, filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector2.Memory.ToArray()));
 
 				await TestType<SqlVector<float>, SqlVector<float>?>(context, type, sqlVector3, sqlVector2, filterByValue: false, filterByNullableValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector3.Memory.ToArray()), isExpectedNullableValue: v => v != null && Enumerable.SequenceEqual(v.Value.Memory.ToArray(), sqlVector2.Memory.ToArray()));
+			}
+
+			await TestType<float[],          float[]?>         (context, type, asArray1,   default,               filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v, asArray1));
+
+			await TestType<float[],          float[]?>         (context, type, asArray2,   null,                  filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v, asArray2));
+
+			await TestType<float[],          float[]?>         (context, type, asArray3,   asArray2,              filterByValue: false, filterByNullableValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v, asArray3), isExpectedNullableValue: v => v != null && Enumerable.SequenceEqual(v, asArray2));
+		}
+
+		[ActiveIssue("Waiting for SqlClient support")]
+		[Test]
+		public async ValueTask TestHalfVectorType([IncludeDataSources(TestProvName.AllSqlServer2025Plus)] string context)
+		{
+			// https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type
+
+			// type limitations:
+			// - comparison not supported
+
+			// mappings support currently limited to SqlVector type (and MDS provider)
+			// as support for other mappings require some efforts and could be done on request
+			// (or will be added to newer MDS/SQL Server releases):
+			// - string: requires custom parameter conversion
+			// - Half[], byte[]: require both parameter and reader conversions
+
+			var msClient = context.IsAnyOf(TestProvName.AllSqlServerMS);
+
+			//var dt = DataType.Vector16;
+
+			//const string asString1 = /*lang=json,strict*/ "[1.1, -1.2]";
+			//const string asString2 = /*lang=json,strict*/ "[2.1, -3.2]";
+			// ???
+			//var asString1Expected = msClient ? /*lang=json,strict*/ "[1.1,-1.2]" : /*lang=json,strict*/ "[1.1000000e+000,-1.2000000e+000]";
+			//var asString2Expected = msClient ? /*lang=json,strict*/ "[2.1,-3.2]" : /*lang=json,strict*/ "[2.1, -3.2]";
+			//var asBinary1 = BitConverter.GetBytes(1.1f).Concat(BitConverter.GetBytes(-1.2f)).ToArray();
+			//var asBinary2 = BitConverter.GetBytes(-7.1f).Concat(BitConverter.GetBytes(-4.2f)).ToArray();
+#if !NETFRAMEWORK
+			var asArray1 = new Half[] { (Half)1.2f, (Half)(-1.1f) };
+			var asArray2 = new Half[] { (Half)5.2f, (Half)(-3.1f) };
+			var asArray3 = new Half[] { (Half)11.2f, (Half)(-4.1f) };
+#endif
+
+			// string
+			//await TestType<string, string?>(context, new(typeof(string), dt, null, length: 2), asString1, default, filterByValue: false, getExpectedValue: _ => asString1Expected);
+			//await TestType<string, string?>(context, new(typeof(string), dt, null, length: 2), asString2, asString1, filterByValue: false, filterByNullableValue: false, getExpectedValue: _ => asString2Expected, getExpectedNullableValue: _ => asString1Expected);
+
+			// byte[]
+			//await TestType<byte[], byte[]?>(context, new(typeof(byte[]), dt, null, length: 2), asBinary1, default, filterByValue: false);
+			//await TestType<byte[], byte[]?>(context, new(typeof(byte[]), dt, null, length: 2), asBinary2, asBinary1, filterByValue: false, filterByNullableValue: false);
+
+			// Half[]
+			//await TestType<Half[], Half[]?>(context, new(typeof(Half[]), dt, null, length: 2), asArray1, default, filterByValue: false);
+			//await TestType<Half[], Half[]?>(context, new(typeof(Half[]), dt, null, length: 2), asArray2, asArray1, filterByValue: false, filterByNullableValue: false);
+
+			if (msClient)
+			{
+#if !NETFRAMEWORK
+				var type = new DbDataType(typeof(SqlVector<Half>)).WithLength(2);
+				var sqlVector1 = new SqlVector<Half>(asArray1.AsMemory());
+				var sqlVector2 = new SqlVector<Half>(asArray2.AsMemory());
+				var sqlVector3 = new SqlVector<Half>(asArray3.AsMemory());
+
+				await TestType<SqlVector<Half>, SqlVector<Half>?>(context, type, sqlVector1, default, filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector1.Memory.ToArray()));
+
+				await TestType<SqlVector<Half>, SqlVector<Half>?>(context, type, sqlVector2, SqlVector<Half>.Null, filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector2.Memory.ToArray()));
+
+				await TestType<SqlVector<Half>, SqlVector<Half>?>(context, type, sqlVector3, sqlVector2, filterByValue: false, filterByNullableValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector3.Memory.ToArray()), isExpectedNullableValue: v => v != null && Enumerable.SequenceEqual(v.Value.Memory.ToArray(), sqlVector2.Memory.ToArray()));
+#endif
+				await Task.CompletedTask;
 			}
 		}
 	}

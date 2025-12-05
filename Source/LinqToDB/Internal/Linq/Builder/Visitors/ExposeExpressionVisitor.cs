@@ -10,9 +10,12 @@ using System.Reflection;
 using LinqToDB;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Reflection;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder.Visitors
@@ -22,6 +25,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 		static ObjectPool<IsCompilableVisitor> _isCompilableVisitorPool = new(() => new IsCompilableVisitor(), v => v.Cleanup(), 100);
 
 		IDataContext                      _dataContext         = default!;
+		IMemberConverter                  _memberConverter     = default!;
 		ExpressionTreeOptimizationContext _optimizationContext = default!;
 		object?[]?                        _parameterValues;
 		bool                              _includeConvert;
@@ -50,6 +54,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			_optimizeConditions  = optimizeConditions;
 			_compactBinary       = compactBinary;
 			_isSingleConvert     = isSingleConvert;
+			_memberConverter     = ((IInfrastructure<IServiceProvider>)dataContext).Instance.GetRequiredService<IMemberConverter>();
 
 			return Visit(expression);
 		}
@@ -58,6 +63,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 		{
 			_dataContext         = default!;
 			_includeConvert      = default;
+			_memberConverter     = default!;
 			_optimizationContext = default!;
 			_optimizeConditions  = default;
 			_compactBinary       = false;
@@ -74,21 +80,17 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			if (node == null)
 				return null;
 
-			if (node.NodeType != ExpressionType.Quote && typeof(Expression<>).IsSameOrParentOf(node.Type))
-			{
-				if (IsCompilable(node))
-				{
-					var evaluated = EvaluateExpression(node);
-					if (evaluated is Expression evaluatedExpr)
-						return Visit(evaluatedExpr);
-				}
-			}
-
 			return base.Visit(node);
 		}
 
 		protected override Expression VisitMethodCall(MethodCallExpression node)
 		{
+			var convertedMember = _memberConverter.Convert(node, out var handled);
+			if (handled && !ReferenceEquals(node, convertedMember))
+			{
+				return Visit(convertedMember);
+			}
+
 			var l = ConvertExpressionMethodAttribute(node.Object?.Type ?? node.Method.ReflectedType!, node.Method, out var alias);
 
 			if (l != null)
@@ -221,6 +223,34 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 			if (_isSingleConvert)
 				return node;
+
+			Expression[]? newEvaluatedArguments = null;
+
+			for (var i = 0; i < node.Arguments.Count; i++)
+			{
+				var argument = node.Arguments[i];
+
+				if (argument.NodeType != ExpressionType.Quote && typeof(Expression<>).IsSameOrParentOf(argument.Type))
+				{
+					if (IsCompilable(argument))
+					{
+						var evaluated = EvaluateExpression(argument);
+						if (evaluated is Expression evaluatedExpr)
+						{
+							if (newEvaluatedArguments == null)
+							{
+								newEvaluatedArguments    ??= node.Arguments.ToArray();
+								newEvaluatedArguments[i] =   evaluatedExpr;
+							}
+						}
+					}
+				}
+			}
+
+			if (newEvaluatedArguments != null)
+			{
+				return Visit(node.Update(node.Object, newEvaluatedArguments));
+			}
 
 			var result = base.VisitMethodCall(node);
 			return result;
@@ -415,6 +445,12 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		protected override Expression VisitMember(MemberExpression node)
 		{
+			var convertedMember = _memberConverter.Convert(node, out var handled);
+			if (handled && !ReferenceEquals(node, convertedMember))
+			{
+				return Visit(convertedMember);
+			}
+
 			if (!IsCompilable(node))
 			{
 				var l = ConvertExpressionMethodAttribute(node.Expression?.Type ?? node.Member.ReflectedType!,
@@ -478,8 +514,8 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 				if (isList)
 				{
-					var mi = ExpressionBuilder.EnumerableMethods
-						.First(static m => m.Name == "Count" && m.GetParameters().Length == 1)
+					var mi = ExpressionBuilder.EnumerableMethods["Count"]
+						.First(static m => m.GetParameters().Length == 1)
 						.MakeGenericMethod(node.Expression!.Type.GetItemType()!);
 
 					return Visit(Expression.Call(null, mi, node.Expression));
@@ -725,7 +761,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				case ExpressionType.Coalesce:
 				{
 					if (node.Left is BinaryExpression equalityLeft && node.Right is ConstantExpression constantRight)
-						if (equalityLeft.Type.IsNullable())
+						if (equalityLeft.Type.IsNullableType)
 							if (equalityLeft.NodeType == ExpressionType.Equal && equalityLeft.Left.Type == equalityLeft.Right.Type)
 								if (constantRight.Value is bool val && val == false)
 								{

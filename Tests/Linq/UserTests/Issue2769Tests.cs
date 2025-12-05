@@ -13,7 +13,7 @@ namespace Tests.UserTests
 		[Table]
 		sealed class SampleClass
 		{
-			[Column] public int Id    { get; set; }
+			[PrimaryKey] public int Id    { get; set; }
 			[Column] public int? NullValue { get; set; }
 		}
 

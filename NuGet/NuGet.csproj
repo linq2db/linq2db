@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFramework>net462</TargetFramework>
+		<TargetFrameworks>net462</TargetFrameworks>
 		<PlatformTarget>x64</PlatformTarget>
 	</PropertyGroup>
 
@@ -16,8 +16,9 @@
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
 		<PackageReference Include="Oracle.ManagedDataAccess" />
 		<PackageReference Include="Npgsql" />
-		<PackageReference Include="System.Data.SQLite.Core" />
-		<PackageReference Include="Microsoft.SqlServer.Types" />
+		<PackageReference Include="System.Data.SQLite" />
+		<PackageReference Include="SourceGear.sqlite3" GeneratePathProperty="true" />
+		<PackageReference Include="Microsoft.SqlServer.Types" GeneratePathProperty="true" />
 
 		<None Include="..\Data\*">
 			<Link>Database/%(FileName)%(Extension)</Link>
@@ -37,8 +38,6 @@
 			<Link>x86\%(RecursiveDir)%(FileName)%(Extension)</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Include="empty/empty.csproj" />
-		<None Include="empty/Directory.Build.props" />
 
 		<Reference Include="Sap.Data.Hana.v4.5">
 			<HintPath>$(SolutionDir)\Redist\SapHana\v4.5\Sap.Data.Hana.v4.5.dll</HintPath>
@@ -52,4 +51,13 @@
 			<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x86\IBM.Data.DB2.dll</HintPath>
 		</Reference>
 	</ItemGroup>
+
+	<Target Name="CopySQLServerTypes" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' == 'net462'">
+		<!--copy manually as package contains only net472 copy instructions-->
+		<Copy SourceFiles="$(PkgMicrosoft_SqlServer_Types)\runtimes\win-x86\native\SqlServerSpatial170.dll"   DestinationFiles="$(TargetDir)\x86\SqlServerSpatial170.dll" />
+		<Copy SourceFiles="$(PkgMicrosoft_SqlServer_Types)\runtimes\win-x64\native\SqlServerSpatial170.dll"   DestinationFiles="$(TargetDir)\x64\SqlServerSpatial170.dll" />
+		<Copy SourceFiles="$(PkgMicrosoft_SqlServer_Types)\runtimes\win-arm64\native\SqlServerSpatial170.dll" DestinationFiles="$(TargetDir)\arm64\SqlServerSpatial170.dll" />
+	</Target>
+	
+	<Import Project="$(MSBuildThisFileDirectory)\..\SQLite.Runtime.props" />
 </Project>

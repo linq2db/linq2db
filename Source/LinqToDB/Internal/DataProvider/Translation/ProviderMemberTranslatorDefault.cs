@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Globalization;
 using System.Linq.Expressions;
 
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
@@ -33,11 +35,26 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return new GuidMemberTranslatorBase();
 		}
 
+		protected virtual IMemberTranslator CreateSqlFunctionsMemberTranslator()
+		{
+			return new SqlFunctionsMemberTranslatorBase();
+		}
+
+		protected virtual IMemberTranslator? CreateWindowFunctionsMemberTranslator()
+		{
+			return new WindowFunctionsMemberTranslator();
+		}
+
+		protected virtual IMemberTranslator CreateAggregateFunctionsMemberTranslator()
+		{
+			return new AggregateFunctionsMemberTranslatorBase();
+		}
+
 		protected ProviderMemberTranslatorDefault()
 		{
 			InitDefaultTranslators();
 
-			Registration.RegisterMethod(() => Sql.NewGuid(), TranslateNewGuidMethod);
+			Registration.RegisterMethod(() => Sql.NewGuid(),  TranslateNewGuidMethod);
 			Registration.RegisterMethod(() => Guid.NewGuid(), TranslateNewGuidMethod);
 		}
 
@@ -57,6 +74,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			CombinedMemberTranslator.Add(CreateMathMemberTranslator());
 			CombinedMemberTranslator.Add(CreateStringMemberTranslator());
 			CombinedMemberTranslator.Add(CreateGuidMemberTranslator());
+			CombinedMemberTranslator.Add(CreateSqlFunctionsMemberTranslator());
+			CombinedMemberTranslator.Add(CreateAggregateFunctionsMemberTranslator());
+
+			var windowFunctionsTranslator = CreateWindowFunctionsMemberTranslator();
+			if (windowFunctionsTranslator != null)
+				CombinedMemberTranslator.Add(windowFunctionsTranslator);
 		}
 
 		protected SqlPlaceholderExpression? TranslateNoRequiredObjectExpression(ITranslationContext translationContext, Expression? objExpression)
@@ -86,6 +109,14 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			if (objPlaceholder == null)
 				return null;
+
+			var fromType = translationContext.ExpressionFactory.GetDbDataType(objPlaceholder.Sql);
+
+			// ToString called on custom type already mapped to text-based db type or string
+			if (fromType.IsTextType())
+			{
+				return objPlaceholder.WithType(typeof(string));
+			}
 
 			DbDataType toType;
 
@@ -218,7 +249,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (nullableType == null || !typeof(Nullable<>).IsSameOrParentOf(nullableType))
 				return false;
 
-			if (methodCall.Method.Name != nameof(Nullable<int>.GetValueOrDefault))
+			if (methodCall.Method.Name != nameof(Nullable<>.GetValueOrDefault))
 				return false;
 
 			var argumentPlaceholder = TranslateNoRequiredObjectExpression(translationContext, methodCall.Object);
@@ -243,7 +274,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			}
 			else
 			{
-				defaultValueExpression = factory.Value(argumentType, translationContext.MappingSchema.GetDefaultValue(argumentType.SystemType.ToNullableUnderlying()));
+				defaultValueExpression = factory.Value(argumentType, translationContext.MappingSchema.GetDefaultValue(argumentType.SystemType.UnwrapNullableType()));
 			}
 
 			var caseExpression = factory.Condition(factory.IsNull(sqlExpression, true), sqlExpression, defaultValueExpression);

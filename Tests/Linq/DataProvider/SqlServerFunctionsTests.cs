@@ -232,6 +232,15 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
+		public void ConvertVectorTest([IncludeDataSources(true, TestProvName.AllSqlServer2025Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			var result = db.Select(() => SqlFn.Convert(SqlType.Vector32(3), "[1, 2, 3]"));
+
+			Assert.That(result, Is.EquivalentTo([1f, 2f, 3f]));
+		}
+
+		[Test]
 		public void ConvertWithStyleTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using var db = new SystemDB(context);
@@ -1564,7 +1573,7 @@ namespace Tests.DataProvider
 			})
 			{
 				var result = db.Select(() => SqlFn.ColumnProperty(SqlFn.ObjectID("dbo.Person"), "PersonID", item.Parameter));
-	
+
 				Assert.That(result, Is.EqualTo(item.Result));
 			}
 		}

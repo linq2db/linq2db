@@ -37,23 +37,6 @@ namespace LinqToDB.Internal.Extensions
 			{ typeof(void), "void" }
 		};
 
-		public static Type MakeNullable(this Type type, bool nullable = true)
-			=> type.IsNullableType() == nullable
-				? type
-				: nullable
-					? typeof(Nullable<>).MakeGenericType(type)
-					: type.UnwrapNullableType();
-
-		public static bool IsNumeric(this Type type)
-		{
-			type = type.UnwrapNullableType();
-
-			return type.IsInteger()
-				|| type == typeof(decimal)
-				|| type == typeof(float)
-				|| type == typeof(double);
-		}
-
 		public static bool IsAnonymousType(this Type type)
 			=> type.Name.StartsWith("<>", StringComparison.Ordinal)
 			   && type.GetCustomAttributes(typeof(CompilerGeneratedAttribute), inherit: false).Length > 0
@@ -144,12 +127,6 @@ namespace LinqToDB.Internal.Extensions
 			}
 		}
 
-		/// <summary>
-		///     This is an internal API that supports the Entity Framework Core infrastructure and not subject to
-		///     the same compatibility standards as public APIs. It may be changed or removed without notice in
-		///     any release. You should only use it directly in your code with extreme caution and knowing that
-		///     doing so can result in application failures when updating to a new Entity Framework Core release.
-		/// </summary>
 		public static string DisplayName(this Type type, bool fullName = true, bool compilable = false)
 		{
 			var stringBuilder = new StringBuilder();

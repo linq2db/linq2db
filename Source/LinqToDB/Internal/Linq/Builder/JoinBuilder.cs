@@ -94,9 +94,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			return BuildSequenceResult.FromContext(new SelectContext(outerContext.TranslationModifier, buildInfo.Parent, builder, null, body, outerContext.SelectQuery, buildInfo.IsSubQuery)
 #if DEBUG
-				{
-					Debug_MethodCall = methodCall
-				}
+			{
+				Debug_MethodCall = methodCall
+			}
 #endif
 				);
 		}

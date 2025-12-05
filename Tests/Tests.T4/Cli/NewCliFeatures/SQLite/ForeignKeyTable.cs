@@ -15,12 +15,12 @@ namespace Cli.NewCliFeatures.SQLite
 	[Table("ForeignKeyTable")]
 	public class ForeignKeyTable
 	{
-		[Column("PrimaryKeyTableID"                   )] public long   PrimaryKeyTableId { get; internal set; } // integer
+		[Column("PrimaryKeyTableID"                   )] public long   PrimaryKeyTableId { get; internal set; } // INTEGER
 		[Column("Name"             , CanBeNull = false)] public string Name              { get; internal set; } = null!; // nvarchar(50)
 
 		#region Associations
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0
+		/// FK_ForeignKeyTable_0
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(PrimaryKeyTableId), OtherKey = nameof(SQLite.PrimaryKeyTable.Id))]
 		public PrimaryKeyTable PrimaryKeyTable { get; set; } = null!;

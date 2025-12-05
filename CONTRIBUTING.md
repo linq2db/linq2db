@@ -1,6 +1,7 @@
 ---
 uid: contributing
 ---
+
 # Contributing guide
 
 ## Project structure
@@ -20,7 +21,12 @@ uid: contributing
 |.\Source\LinqToDB.EntityFrameworkCore| LINQ to DB integration with Entity Framework Core source code|
 |.\Source\LinqToDB.Extensions| LINQ to DB Dependency Injection and Logging extensions library source code|
 |.\Source\LinqToDB.FSharp | F# support extension for Linq To DB|
+|.\Source\LinqToDB.LINQPad | LINQPad driver for Linq To DB|
 |.\Source\LinqToDB.Remote.Grpc| LINQ to DB Remote Context GRPC client/server source code|
+|.\Source\LinqToDB.Remote.HttpClient.Client| LINQ to DB Remote Context HttpClient client source code|
+|.\Source\LinqToDB.Remote.HttpClient.Server| LINQ to DB Remote Context HttpClient server source code|
+|.\Source\LinqToDB.Remote.SignalR.Client| LINQ to DB Remote Context Signal/R client source code|
+|.\Source\LinqToDB.Remote.SignalR.Server| LINQ to DB Remote Context Signal/R server source code|
 |.\Source\LinqToDB.Remote.Wcf| LINQ to DB Remote Context WCF client/server source code|
 |.\Source\LinqToDB.Scaffold| LINQ to DB scaffold framework for cli and T4|
 |.\Source\LinqToDB.Templates| LINQ to DB t4models source code|
@@ -57,7 +63,7 @@ Custom debugging symbols:
 
 #### Test projects
 
-Tests targets: `net462`, `net8.0`, `net9.0`. In general we test 3 configurations: lowest supported .NET Framework, lowest supported .NET version, highest supported .NET version.
+Tests targets: `net462`, `net8.0`, `net9.0`, `net10.0`. In general we test 3 configurations: lowest supported .NET Framework, lowest supported .NET version, highest supported .NET version.
 
 Custom symbols:
 
@@ -70,12 +76,12 @@ You can use solution to build and run tests. Also you can build whole solution o
 * `.\Build.cmd` - builds all the projects in the solution for Debug, Release and Azure configurations
 * `.\Compile.cmd` - builds LinqToDB project for Debug and Release configurations
 * `.\Clean.cmd` - cleanups solution projects for Debug, Release and Azure configurations
-* `.\Test.cmd` - build `Debug` configuration and run tests for `net462`, `net8.0` and `net9.0` targets. You can set other configuration by passing it as first parameter, disable test targets by passing 0 to second (for `net462`), third (for `net8.0`) or fourth (for `net9.0`) parameter and format (default:html) as fifth parameter.
+* `.\Test.cmd` - builds and runs tests with `Debug` configuration for all supported TFMs and produce HTML report. Parameters supported to change build configuration, logger type and executed TFMs
 
 Example of running `Release` build tests for `net9.0` only with `trx` as output:
 
 ```cmd
-test.cmd Release 0 0 1 trx
+test.cmd Release 0 0 1 0 trx
 ```
 
 ### Different platforms support
@@ -236,6 +242,28 @@ The `[User]DataProviders.json` is a regular JSON file:
         ]
     },
 
+    // .net 10.0 test configuration
+    "NET100" :
+    {
+        "BasedOn"              : "LocalConnectionStrings",
+        "Providers"            :
+        [
+            "SQLite.MS",
+            "Northwind.SQLite.MS",
+            "SqlServer.2014",
+            "SqlServer.2012",
+            "SqlServer.2008",
+            "SqlServer.2005",
+            "SqlServer.Azure",
+            "Firebird.5",
+            "MySql.8.0",
+            "MariaDB.11",
+            "PostgreSQL",
+            "SqlServer.Northwind",
+            "TestNoopProvider"
+        ]
+    },
+
     // list of connection strings for all providers
     "LocalConnectionStrings":
     {
@@ -266,9 +294,10 @@ We do run builds and tests with:
 
 * [Azure Pipelines](https://dev.azure.com/linq2db/linq2db/_build?definitionId=3) [pipelines/default.yml](https://github.com/linq2db/linq2db/blob/master/Build/Azure/pipelines/default.yml).
 It builds solution, generate and publish nugets and runs tests for:
-  * .Net 4.6.2
-  * .Net 8.0 (Windows, Linux and MacOS)
-  * .Net 9.0 (Windows, Linux and MacOS)
+  * .NET Framework 4.6.2
+  * .NET 8 (Windows, Linux and MacOS)
+  * .NET 9 (Windows, Linux and MacOS)
+  * .NET 10 (Windows, Linux and MacOS)
 For more details check [readme](https://github.com/linq2db/linq2db/blob/master/Build/Azure/README.md)
 
 CI builds are done for all branches and PRs.
@@ -307,3 +336,14 @@ In general you should follow simple rules:
 * Do not add new public classes, properties, methods without XML documentation on them
 * Read issues and help users
 * Do not EF :)
+
+## Other Topics
+
+### LINQPad Testing
+
+To test LINQPad nuget you need to build it and add test nuget source to LINQPad, but because LINQPad expects driver to have tags, it cannot be file-based source.
+
+1. Install local nuget server using [this guide](https://learn.microsoft.com/en-us/nuget/hosting-packages/nuget-server)
+2. Build nugets using command `nuget\packlocal.cmd <version>` where version should be release version (e.g. `1.2.3`) as LINQPad ignores non-release versions
+3. Push built nugets to your custom nuget server using this command `dotnet nuget push .build/nugets/*.nupkg -s https://<your local nuget server addres>/nuget --skip-duplicate`. If will produce 406 error for some unsupported nugets - you need to remove them and rerun command
+4. add your feed (`https://<your local nuget server addres>/nuget`) to LINQPad

@@ -1,10 +1,13 @@
-﻿namespace LinqToDB
+﻿using System;
+
+namespace LinqToDB
 {
 	/// <summary>
 	/// List of data types, supported by linq2db.
 	/// Provider-level support depends on database capabilities and current implementation
 	/// support level and could vary for different providers.
 	/// </summary>
+	[Flags]
 	public enum DataType
 	{
 		/// <summary>
@@ -137,6 +140,11 @@
 		UInt64,
 
 		/// <summary>
+		/// A half-size floating point number.
+		/// </summary>
+		Half,
+
+		/// <summary>
 		/// A floating point number within the range of -3.40E +38 through 3.40E +38.
 		/// </summary>
 		Single,
@@ -169,6 +177,11 @@
 		Date,
 
 		/// <summary>
+		/// A type representing a date value with timezone.
+		/// </summary>
+		DateTz,
+
+		/// <summary>
 		/// Date32 ClickHouse type.
 		/// </summary>
 		Date32,
@@ -191,12 +204,22 @@
 		DateTime2,
 
 		/// <summary>
+		/// Date and time data with timezone information with low precision.
+		/// </summary>
+		DateTimeTz,
+
+		/// <summary>
+		/// Date and time data with timezone information with high precision.
+		/// </summary>
+		DateTime2Tz,
+
+		/// <summary>
 		/// Date and time data ranging in value from January 1, 1900 to June 6, 2079 to an accuracy of one minute.
 		/// </summary>
 		SmallDateTime,
 
 		/// <summary>
-		/// Date and time data with time zone awareness.
+		/// Date and time data with DST offset awareness.
 		/// Date value range is from January 1,1 AD through December 31, 9999 AD.
 		/// Time value range is 00:00:00 through 23:59:59.9999999 with an accuracy of 100 nanoseconds.
 		/// Time zone value range is -14:00 through +14:00.
@@ -204,7 +227,7 @@
 		DateTimeOffset,
 
 		/// <summary>
-		/// DateTime64 ClickHouse type.
+		/// DateTime64 ClickHouse/YDB type.
 		/// </summary>
 		DateTime64,
 
@@ -214,6 +237,11 @@
 		/// timestamp is used typically as a mechanism for version-stamping table rows. The storage size is 8 bytes.
 		/// </summary>
 		Timestamp,
+
+		/// <summary>
+		/// Timestamp64 YDB type.
+		/// </summary>
+		Timestamp64,
 
 		/// <summary>
 		/// An XML value. Obtain the XML as a string using the GetValue method or Value property,
@@ -262,6 +290,11 @@
 		BinaryJson,
 
 		/// <summary>
+		/// Yandex YSON type.
+		/// </summary>
+		Yson,
+
+		/// <summary>
 		/// SQL Server 2008+ table-valued parameter type (TVP).
 		/// </summary>
 		Structured,
@@ -280,6 +313,11 @@
 		/// PostgreSQL interval type.
 		/// </summary>
 		Interval,
+
+		/// <summary>
+		/// YDB Interval64 type.
+		/// </summary>
+		Interval64,
 
 		/// <summary>
 		/// PostgreSQL Enum type.
@@ -411,6 +449,15 @@
 		/// Decimal256 ClickHouse type.
 		/// </summary>
 		Decimal256,
+
+		/// <summary>
+		/// Vector (array) of <see cref="Single"/> values.
+		/// </summary>
+		Vector32 = Array | Single,
+		/// <summary>
+		/// Vector (array) of Half values.
+		/// </summary>
+		Vector16 = Array | Half,
 
 		/// <summary>
 		/// Array type flag.

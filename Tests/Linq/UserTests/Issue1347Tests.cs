@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Runtime.Serialization;
 
 using LinqToDB;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -22,7 +23,7 @@ namespace Tests.UserTests
 	{
 		public class BasicDTO : BasicDTOwithoutID, IMccEntityState, IInterlinqDTO, IDTOWithId
 		{
-			public Guid Id { get; set; }
+			[PrimaryKey] public Guid Id { get; set; }
 		}
 	}
 

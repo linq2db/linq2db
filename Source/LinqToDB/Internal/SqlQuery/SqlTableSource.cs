@@ -6,7 +6,9 @@ namespace LinqToDB.Internal.SqlQuery
 	public sealed class SqlTableSource : SqlExpressionBase, ISqlTableSource
 	{
 #if DEBUG
+#pragma warning disable CA1823 // Avoid unused private fields
 		readonly int id = System.Threading.Interlocked.Increment(ref SelectQuery.SourceIDCounter);
+#pragma warning restore CA1823 // Avoid unused private fields
 #endif
 
 		public SqlTableSource(ISqlTableSource source, string? alias)
@@ -65,9 +67,9 @@ namespace LinqToDB.Internal.SqlQuery
 		/// Contains list of columns that build unique key for <see cref="Source"/>.
 		/// Used in JoinOptimizer for safely removing sub-query from resulting SQL.
 		/// </summary>
-		public  List<ISqlExpression[]>  UniqueKeys    => _uniqueKeys ??= new List<ISqlExpression[]>();
+		public  List<ISqlExpression[]>  UniqueKeys    => _uniqueKeys ??= [];
 
-		public  bool                    HasUniqueKeys => _uniqueKeys != null && _uniqueKeys.Count > 0;
+		public  bool                    HasUniqueKeys => _uniqueKeys?.Count > 0;
 
 		public void Modify(ISqlTableSource source)
 		{

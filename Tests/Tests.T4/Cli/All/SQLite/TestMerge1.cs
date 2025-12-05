@@ -17,25 +17,25 @@ namespace Cli.All.SQLite
 	[Table("TestMerge1")]
 	public class TestMerge1
 	{
-		[Column("Id"             , DataType = DataType.Int64    , DbType = "integer"         , Length = 8 , Precision = 19, Scale = 0)] public long      Id              { get; set; } // integer
-		[Column("Field1"         , DataType = DataType.Int64    , DbType = "integer"         , Length = 8 , Precision = 19, Scale = 0)] public long?     Field1          { get; set; } // integer
-		[Column("Field2"         , DataType = DataType.Int64    , DbType = "integer"         , Length = 8 , Precision = 19, Scale = 0)] public long?     Field2          { get; set; } // integer
-		[Column("Field3"         , DataType = DataType.Int64    , DbType = "integer"         , Length = 8 , Precision = 19, Scale = 0)] public long?     Field3          { get; set; } // integer
-		[Column("Field4"         , DataType = DataType.Int64    , DbType = "integer"         , Length = 8 , Precision = 19, Scale = 0)] public long?     Field4          { get; set; } // integer
-		[Column("Field5"         , DataType = DataType.Int64    , DbType = "integer"         , Length = 8 , Precision = 19, Scale = 0)] public long?     Field5          { get; set; } // integer
-		[Column("FieldInt64"     , DataType = DataType.Int64    , DbType = "bigint"          , Length = 8 , Precision = 19, Scale = 0)] public long?     FieldInt64      { get; set; } // bigint
-		[Column("FieldBoolean"   , DataType = DataType.Boolean  , DbType = "bit"             , Length = 1 , Precision = 0 , Scale = 0)] public bool?     FieldBoolean    { get; set; } // bit
-		[Column("FieldString"    , DataType = DataType.VarChar  , DbType = "varchar(20)"     , Length = 20, Precision = 0 , Scale = 0)] public string?   FieldString     { get; set; } // varchar(20)
-		[Column("FieldNString"   , DataType = DataType.NVarChar , DbType = "nvarchar(20)"    , Length = 20, Precision = 0 , Scale = 0)] public string?   FieldNString    { get; set; } // nvarchar(20)
-		[Column("FieldChar"      , DataType = DataType.NChar    , DbType = "char(1)"         , Length = 1 , Precision = 0 , Scale = 0)] public char?     FieldChar       { get; set; } // char(1)
-		[Column("FieldNChar"     , DataType = DataType.NChar    , DbType = "char(1)"         , Length = 1 , Precision = 0 , Scale = 0)] public char?     FieldNChar      { get; set; } // char(1)
-		[Column("FieldFloat"     , DataType = DataType.Double   , DbType = "float"           , Length = 8 , Precision = 24, Scale = 0)] public double?   FieldFloat      { get; set; } // float
-		[Column("FieldDouble"    , DataType = DataType.Double   , DbType = "float"           , Length = 8 , Precision = 53, Scale = 0)] public double?   FieldDouble     { get; set; } // float
-		[Column("FieldDateTime"  , DataType = DataType.DateTime , DbType = "datetime"        , Length = 8 , Precision = 0 , Scale = 0)] public DateTime? FieldDateTime   { get; set; } // datetime
-		[Column("FieldBinary"    , DataType = DataType.VarBinary, DbType = "varbinary"       , Length = 20, Precision = 0 , Scale = 0)] public byte[]?   FieldBinary     { get; set; } // varbinary
-		[Column("FieldGuid"      , DataType = DataType.Guid     , DbType = "uniqueidentifier", Length = 16, Precision = 0 , Scale = 0)] public Guid?     FieldGuid       { get; set; } // uniqueidentifier
-		[Column("FieldDate"      , DataType = DataType.Date     , DbType = "date"            , Length = 8 , Precision = 0 , Scale = 0)] public DateTime? FieldDate       { get; set; } // date
-		[Column("FieldEnumString", DataType = DataType.VarChar  , DbType = "varchar(20)"     , Length = 20, Precision = 0 , Scale = 0)] public string?   FieldEnumString { get; set; } // varchar(20)
-		[Column("FieldEnumNumber", DataType = DataType.Int32    , DbType = "int"             , Length = 4 , Precision = 10, Scale = 0)] public int?      FieldEnumNumber { get; set; } // int
+		[Column("Id"             , DataType = DataType.Int64    , DbType = "INTEGER"                      )] public long      Id              { get; set; } // INTEGER
+		[Column("Field1"         , DataType = DataType.Int64    , DbType = "INTEGER"                      )] public long?     Field1          { get; set; } // INTEGER
+		[Column("Field2"         , DataType = DataType.Int64    , DbType = "INTEGER"                      )] public long?     Field2          { get; set; } // INTEGER
+		[Column("Field3"         , DataType = DataType.Int64    , DbType = "INTEGER"                      )] public long?     Field3          { get; set; } // INTEGER
+		[Column("Field4"         , DataType = DataType.Int64    , DbType = "INTEGER"                      )] public long?     Field4          { get; set; } // INTEGER
+		[Column("Field5"         , DataType = DataType.Int64    , DbType = "INTEGER"                      )] public long?     Field5          { get; set; } // INTEGER
+		[Column("FieldInt64"     , DataType = DataType.Int64    , DbType = "BIGINT"                       )] public long?     FieldInt64      { get; set; } // BIGINT
+		[Column("FieldBoolean"   , DataType = DataType.Boolean  , DbType = "BIT"                          )] public bool?     FieldBoolean    { get; set; } // BIT
+		[Column("FieldString"    , DataType = DataType.NVarChar , DbType = "VARCHAR(20)"     , Length = 20)] public string?   FieldString     { get; set; } // VARCHAR(20)
+		[Column("FieldNString"   , DataType = DataType.NVarChar , DbType = "NVARCHAR(20)"    , Length = 20)] public string?   FieldNString    { get; set; } // NVARCHAR(20)
+		[Column("FieldChar"      , DataType = DataType.NVarChar , DbType = "CHAR(1)"         , Length = 1 )] public char?     FieldChar       { get; set; } // CHAR(1)
+		[Column("FieldNChar"     , DataType = DataType.NVarChar , DbType = "NCHAR(1)"        , Length = 1 )] public char?     FieldNChar      { get; set; } // NCHAR(1)
+		[Column("FieldFloat"     , DataType = DataType.Double   , DbType = "FLOAT(24)"                    )] public double?   FieldFloat      { get; set; } // FLOAT(24)
+		[Column("FieldDouble"    , DataType = DataType.Double   , DbType = "FLOAT(53)"                    )] public double?   FieldDouble     { get; set; } // FLOAT(53)
+		[Column("FieldDateTime"  , DataType = DataType.DateTime2, DbType = "DATETIME"                     )] public DateTime? FieldDateTime   { get; set; } // DATETIME
+		[Column("FieldBinary"    , DataType = DataType.VarBinary, DbType = "VARBINARY(20)"   , Length = 20)] public byte[]?   FieldBinary     { get; set; } // VARBINARY(20)
+		[Column("FieldGuid"      , DataType = DataType.Guid     , DbType = "UNIQUEIDENTIFIER"             )] public Guid?     FieldGuid       { get; set; } // UNIQUEIDENTIFIER
+		[Column("FieldDate"      , DataType = DataType.Date     , DbType = "DATE"                         )] public DateTime? FieldDate       { get; set; } // DATE
+		[Column("FieldEnumString", DataType = DataType.NVarChar , DbType = "VARCHAR(20)"     , Length = 20)] public string?   FieldEnumString { get; set; } // VARCHAR(20)
+		[Column("FieldEnumNumber", DataType = DataType.Int32    , DbType = "INT"                          )] public int?      FieldEnumNumber { get; set; } // INT
 	}
 }

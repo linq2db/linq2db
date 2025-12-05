@@ -13,6 +13,7 @@ using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal;
 using LinqToDB.Internal.Remote;
+using LinqToDB.Internal.Async;
 
 namespace LinqToDB.Remote
 {
@@ -94,6 +95,7 @@ namespace LinqToDB.Remote
 
 							querySql = sqlBuilder.ApplyQueryHints(querySql, queryHints);
 
+							sqlStringBuilder.Value.Clear();
 							sqlStringBuilder.Value.Append(querySql);
 						}
 					}
@@ -140,72 +142,32 @@ namespace LinqToDB.Remote
 				await base.DisposeAsync().ConfigureAwait(false);
 			}
 
-			public override int ExecuteNonQuery()
+			public override int ExecuteNonQuery() => SafeAwaiter.Run(ExecuteNonQueryAsync);
+
+			public override object? ExecuteScalar() => SafeAwaiter.Run(ExecuteScalarAsync);
+
+			public override IDataReaderAsync ExecuteReader() => SafeAwaiter.Run(ExecuteReaderAsync);
+
+			sealed class DataReaderAsync : IDataReaderAsync
 			{
-				SetCommand(false);
-
-				var queryContext = Query.Queries[QueryNumber];
-
-				var q = _dataContext.GetSqlOptimizer(_dataContext.Options).PrepareStatementForRemoting(
-					queryContext.Statement, ((IDataContext)_dataContext).SqlProviderFlags, _dataContext.MappingSchema, _dataContext.Options, _evaluationContext);
-
-				var data = LinqServiceSerializer.Serialize(
-					_dataContext.SerializationMappingSchema,
-					q,
-					_evaluationContext.ParameterValues,
-					_dataContext.GetNextCommandHints(true),
-					_dataContext.Options);
-
-				if (_dataContext._batchCounter > 0)
+				private readonly RemoteDataReader _reader;
+				public DataReaderAsync(RemoteDataReader dataReader)
 				{
-					_dataContext._queryBatch!.Add(data);
-					return -1;
+					_reader = dataReader;
 				}
 
-				_client = _dataContext.GetClient();
+				DbDataReader IDataReaderAsync.DataReader => _reader;
 
-				return _client.ExecuteNonQuery(_dataContext.ConfigurationString, data);
+				Task<bool> IDataReaderAsync.ReadAsync(CancellationToken cancellationToken) => _reader.ReadAsync(cancellationToken);
+
+				void IDisposable.Dispose() => _reader.Dispose();
+
+				ValueTask IAsyncDisposable.DisposeAsync() => _reader.DisposeAsync();
+
+				bool IDataReaderAsync.Read() => _reader.Read();
 			}
 
-			public override object? ExecuteScalar()
-			{
-				if (_dataContext._batchCounter > 0)
-					throw new LinqToDBException("Incompatible batch operation.");
-
-				SetCommand(false);
-
-				var queryContext = Query.Queries[QueryNumber];
-
-				var sqlOptimizer = _dataContext.GetSqlOptimizer(_dataContext.Options);
-				var q            = sqlOptimizer.PrepareStatementForRemoting(queryContext.Statement, ((IDataContext)_dataContext).SqlProviderFlags, _dataContext.MappingSchema, _dataContext.Options, _evaluationContext);
-
-				var data = LinqServiceSerializer.Serialize(
-					_dataContext.SerializationMappingSchema,
-					q,
-					_evaluationContext.ParameterValues,
-					_dataContext.GetNextCommandHints(true),
-					_dataContext.Options);
-
-				_client = _dataContext.GetClient();
-
-				var ret = _client.ExecuteScalar(_dataContext.ConfigurationString, data);
-
-				object? result = null;
-				if (ret != null)
-				{
-					var lsr = LinqServiceSerializer.DeserializeResult(_dataContext.SerializationMappingSchema, _dataContext.MappingSchema, _dataContext.Options, ret);
-					var value = lsr.Data[0][0];
-
-					if (!string.IsNullOrEmpty(value))
-					{
-						result = SerializationConverter.Deserialize(_dataContext.SerializationMappingSchema, lsr.FieldTypes[0], value);
-					}
-				}
-
-				return result;
-			}
-
-			public override DataReaderWrapper ExecuteReader()
+			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)
 			{
 				_dataContext.ThrowOnDisposed();
 
@@ -216,62 +178,9 @@ namespace LinqToDB.Remote
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer(_dataContext.Options).PrepareStatementForRemoting(queryContext.Statement, ((IDataContext)_dataContext).SqlProviderFlags, _dataContext.MappingSchema, _dataContext.Options, _evaluationContext);
+				await _dataContext.PreloadConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
 
-				var data = LinqServiceSerializer.Serialize(
-					_dataContext.SerializationMappingSchema,
-					q,
-					_evaluationContext.ParameterValues,
-					_dataContext.GetNextCommandHints(true),
-					_dataContext.Options);
-
-				_client = _dataContext.GetClient();
-
-				var ret = _client.ExecuteReader(_dataContext.ConfigurationString, data);
-
-				var result = LinqServiceSerializer.DeserializeResult(_dataContext.SerializationMappingSchema, _dataContext.MappingSchema, _dataContext.Options, ret);
-
-				return new DataReaderWrapper(new RemoteDataReader(_dataContext.SerializationMappingSchema, result));
-			}
-
-			sealed class DataReaderAsync : IDataReaderAsync
-			{
-				public DataReaderAsync(RemoteDataReader dataReader)
-				{
-					DataReader = dataReader;
-				}
-
-				public DbDataReader DataReader { get; }
-
-				public Task<bool> ReadAsync(CancellationToken cancellationToken)
-				{
-					return DataReader.ReadAsync(cancellationToken);
-				}
-
-				public void Dispose()
-				{
-					DataReader.Dispose();
-				}
-
-				public ValueTask DisposeAsync()
-				{
-					return DataReader.DisposeAsync();
-				}
-			}
-
-			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)
-			{
-				if (_dataContext._batchCounter > 0)
-					throw new LinqToDBException("Incompatible batch operation.");
-
-				// preload _configurationInfo asynchronously if needed
-				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
-
-				SetCommand(false);
-
-				var queryContext = Query.Queries[QueryNumber];
-
-				var q = _dataContext.GetSqlOptimizer(_dataContext.Options).PrepareStatementForRemoting(queryContext.Statement, ((IDataContext)_dataContext).SqlProviderFlags, _dataContext.MappingSchema, _dataContext.Options, _evaluationContext);
+				var q = ((IDataContext)_dataContext).GetSqlOptimizer(_dataContext.Options).PrepareStatementForRemoting(queryContext.Statement, ((IDataContext)_dataContext).SqlProviderFlags, _dataContext.MappingSchema, _dataContext.Options, _evaluationContext);
 
 				var data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
@@ -292,17 +201,18 @@ namespace LinqToDB.Remote
 
 			public override async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
 			{
+				_dataContext.ThrowOnDisposed();
+
 				if (_dataContext._batchCounter > 0)
 					throw new LinqToDBException("Incompatible batch operation.");
-
-				// preload _configurationInfo asynchronously if needed
-				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
 
 				SetCommand(false);
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer(_dataContext.Options).PrepareStatementForRemoting(queryContext.Statement, ((IDataContext)_dataContext).SqlProviderFlags, _dataContext.MappingSchema, _dataContext.Options, _evaluationContext);
+				await _dataContext.PreloadConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
+
+				var q = ((IDataContext)_dataContext).GetSqlOptimizer(_dataContext.Options).PrepareStatementForRemoting(queryContext.Statement, ((IDataContext)_dataContext).SqlProviderFlags, _dataContext.MappingSchema, _dataContext.Options, _evaluationContext);
 
 				var data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
@@ -329,14 +239,15 @@ namespace LinqToDB.Remote
 
 			public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 			{
-				// preload _configurationInfo asynchronously if needed
-				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
+				_dataContext.ThrowOnDisposed();
 
 				SetCommand(false);
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer(_dataContext.Options).PrepareStatementForRemoting(queryContext.Statement, ((IDataContext)_dataContext).SqlProviderFlags, _dataContext.MappingSchema, _dataContext.Options, _evaluationContext);
+				await _dataContext.PreloadConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
+
+				var q = ((IDataContext)_dataContext).GetSqlOptimizer(_dataContext.Options).PrepareStatementForRemoting(queryContext.Statement, ((IDataContext)_dataContext).SqlProviderFlags, _dataContext.MappingSchema, _dataContext.Options, _evaluationContext);
 
 				var data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,

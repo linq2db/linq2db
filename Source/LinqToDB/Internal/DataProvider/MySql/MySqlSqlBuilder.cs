@@ -14,20 +14,15 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.MySql
 {
-	public class MySqlSqlBuilder : BasicSqlBuilder<MySqlOptions>
+	public abstract class MySqlSqlBuilder : BasicSqlBuilder<MySqlOptions>
 	{
-		public MySqlSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		protected MySqlSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
 		protected MySqlSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
-		}
-
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new MySqlSqlBuilder(this) { HintBuilder = HintBuilder };
 		}
 
 		protected override bool IsRecursiveCteKeywordRequired   => true;
@@ -180,7 +175,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				(DataType.Double,         _,                   _,                  _                   ) => "DOUBLE",
 				(DataType.Single,         _,                   _,                  _                   ) => "FLOAT",
 				(DataType.BitArray,       _,                   _,                  null                ) =>
-					type.SystemType.ToNullableUnderlying()
+					type.SystemType.UnwrapNullableType()
 					switch
 					{
 						var t when t == typeof(byte)  || t == typeof(sbyte)  =>  8,
@@ -333,6 +328,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				case ConvertType.NameToSchema         :
 				case ConvertType.NameToPackage        :
 				case ConvertType.NameToQueryTable     :
+				case ConvertType.NameToCteName        :
 				case ConvertType.NameToProcedure      :
 					// https://dev.mysql.com/doc/refman/8.0/en/identifiers.html
 					if (value.Contains("`"))
@@ -404,7 +400,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			else
 			{
 				var sql = StringBuilder.ToString();
-				var insertIndex = sql.IndexOf("INSERT", position);
+				var insertIndex = sql.IndexOf("INSERT", position, StringComparison.Ordinal);
 
 				StringBuilder.Clear()
 					.Append(sql.Substring(0, insertIndex))

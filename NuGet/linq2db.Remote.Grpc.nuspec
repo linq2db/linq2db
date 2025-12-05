@@ -30,23 +30,27 @@
 				<dependency id="protobuf-net.Grpc" version="1.2.2"  />
 				<dependency id="protobuf-net"      version="3.2.56" />
 			</group>
+			<group targetFramework="net10.0">
+				<dependency id="linq2db"           version="6.0.0"  />
+				<dependency id="Grpc.Net.Client"   version="2.71.0" />
+				<dependency id="protobuf-net.Grpc" version="1.2.2"  />
+				<dependency id="protobuf-net"      version="3.2.56" />
+			</group>
 		</dependencies>
 	</metadata>
 
 	<files>
 		<file src="NuGet\README.Remote.Grpc.md"                                         target="README.md"           />
 
-		<file src="bin\LinqToDB.Remote.Grpc\{0}\net462\linq2db.Remote.Grpc.pdb"         target="lib\net462\"         />
 		<file src="bin\LinqToDB.Remote.Grpc\{0}\net462\linq2db.Remote.Grpc.xml"         target="lib\net462\"         />
 		<file src="bin\LinqToDB.Remote.Grpc\{0}\net462\linq2db.Remote.Grpc.dll"         target="lib\net462\"         />
-		<file src="bin\LinqToDB.Remote.Grpc\{0}\netstandard2.0\linq2db.Remote.Grpc.pdb" target="lib\netstandard2.0\" />
 		<file src="bin\LinqToDB.Remote.Grpc\{0}\netstandard2.0\linq2db.Remote.Grpc.xml" target="lib\netstandard2.0\" />
 		<file src="bin\LinqToDB.Remote.Grpc\{0}\netstandard2.0\linq2db.Remote.Grpc.dll" target="lib\netstandard2.0\" />
-		<file src="bin\LinqToDB.Remote.Grpc\{0}\net8.0\linq2db.Remote.Grpc.pdb"         target="lib\net8.0\"         />
 		<file src="bin\LinqToDB.Remote.Grpc\{0}\net8.0\linq2db.Remote.Grpc.xml"         target="lib\net8.0\"         />
 		<file src="bin\LinqToDB.Remote.Grpc\{0}\net8.0\linq2db.Remote.Grpc.dll"         target="lib\net8.0\"         />
-		<file src="bin\LinqToDB.Remote.Grpc\{0}\net9.0\linq2db.Remote.Grpc.pdb"         target="lib\net9.0\"         />
 		<file src="bin\LinqToDB.Remote.Grpc\{0}\net9.0\linq2db.Remote.Grpc.xml"         target="lib\net9.0\"         />
 		<file src="bin\LinqToDB.Remote.Grpc\{0}\net9.0\linq2db.Remote.Grpc.dll"         target="lib\net9.0\"         />
+		<file src="bin\LinqToDB.Remote.Grpc\{0}\net10.0\linq2db.Remote.Grpc.xml"        target="lib\net10.0\"        />
+		<file src="bin\LinqToDB.Remote.Grpc\{0}\net10.0\linq2db.Remote.Grpc.dll"        target="lib\net10.0\"        />
 	</files>
 </package>

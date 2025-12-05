@@ -35,8 +35,8 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		public  static readonly IEnumerable<string> UnmanagedAssemblyNames = ["Sap.Data.Hana.Core.v2.1"];
 #endif
 
-		public  const string UnmanagedClientNamespace     = "Sap.Data.Hana";
-		private const string UnmanagedProviderFactoryName = "Sap.Data.Hana";
+		public const string UnmanagedClientNamespace     = "Sap.Data.Hana";
+		public const string UnmanagedProviderFactoryName = "Sap.Data.Hana";
 
 		private SapHanaProviderAdapter(
 			Type connectionType,
@@ -140,7 +140,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 				return _odbcProvider;
 			}
-			else
+			else if (provider == SapHanaProvider.Unmanaged)
 			{
 				if (_unmanagedProvider == null)
 				{
@@ -260,6 +260,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				return _unmanagedProvider;
 			}
 
+			throw new InvalidOperationException($"Unsupported provider type: {provider}");
 		}
 
 		[Wrapper]

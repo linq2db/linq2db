@@ -23,7 +23,7 @@ namespace Tests.Linq
 		{
 			var data = new[]
 			{
-				new Ints { One = 1, Two = 2, Three = 3, Four = 4, Five = 5, Nil = (int?)null }
+				new Ints { Id = 1, One = 1, Two = 2, Three = 3, Four = 4, Five = 5, Nil = (int?)null }
 			};
 
 			return db.CreateLocalTable(tableName, data);
@@ -541,12 +541,13 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void MixedTypes([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			var data = new[]
 			{
-				new Mixed { Int = 1, Str = "One", Date = new DateTime(2001, 1, 1), Double = 1.0, Bool = true },
-				new Mixed { Int = 2, Str = "Two", Date = new DateTime(2002, 2, 2), Double = 2.0, Bool = false },
+				new Mixed { Id = 1, Int = 1, Str = "One", Date = new DateTime(2001, 1, 1), Double = 1.0, Bool = true },
+				new Mixed { Id = 2, Int = 2, Str = "Two", Date = new DateTime(2002, 2, 2), Double = 2.0, Bool = false },
 			};
 
 			using var db    = GetDataContext(context);
@@ -565,8 +566,8 @@ namespace Tests.Linq
 		{
 			var data = new[]
 			{
-				new Ints { One = 1,  Two = 2,  Three = 3,  Four = 4,  Five = 5,  Nil = (int?)null },
-				new Ints { One = 10, Two = 20, Three = 30, Four = 40, Five = 50, Nil = (int?)null },
+				new Ints { Id = 1, One = 1,  Two = 2,  Three = 3,  Four = 4,  Five = 5,  Nil = (int?)null },
+				new Ints { Id = 2, One = 10, Two = 20, Three = 30, Four = 40, Five = 50, Nil = (int?)null },
 			};
 
 			using var db   = GetDataContext(context);
@@ -583,8 +584,8 @@ namespace Tests.Linq
 				.ShouldBeEquivalentTo(
 				new Ints[]
 				{
-					new Ints { One = 1,   Two = 2,   Three = 3,   Four = 4,   Five = 5,  Nil = (int?)null },
-					new Ints { One = 100, Two = 200, Three = 300, Four = 400, Five = 50, Nil = 600 }
+					new Ints { Id = 1, One = 1,   Two = 2,   Three = 3,   Four = 4,   Five = 5,  Nil = (int?)null },
+					new Ints { Id = 2, One = 100, Two = 200, Three = 300, Four = 400, Five = 50, Nil = 600 }
 				});
 		}
 
@@ -599,8 +600,8 @@ namespace Tests.Linq
 		{
 			var data = new[]
 			{
-				new Ints { One = 1,  Two = 2,  Three = 3,  Four = 4,  Five = 5,  Nil = (int?)null },
-				new Ints { One = 10, Two = 20, Three = 30, Four = 40, Five = 50, Nil = (int?)null },
+				new Ints { Id = 1, One = 1,  Two = 2,  Three = 3,  Four = 4,  Five = 5,  Nil = (int?)null },
+				new Ints { Id = 2, One = 10, Two = 20, Three = 30, Four = 40, Five = 50, Nil = (int?)null },
 			};
 
 			using var db   = GetDataContext(context);
@@ -625,14 +626,16 @@ namespace Tests.Linq
 				.ShouldBeEquivalentTo(
 				new Ints[]
 				{
-					new Ints { One = 1,   Two = 2,   Three = 3,   Four = 4,   Five = 5,  Nil = (int?)null },
-					new Ints { One = 100, Two = 200, Three = 300, Four = 400, Five = 50, Nil = 600 }
+					new Ints { Id = 1, One = 1,   Two = 2,   Three = 3,   Four = 4,   Five = 5,  Nil = (int?)null },
+					new Ints { Id = 2, One = 100, Two = 200, Three = 300, Four = 400, Five = 50, Nil = 600 }
 				});
 		}
 
 		sealed class Ints : IEquatable<Ints>
 		{
-			public int  One   { get; set; }
+			[PrimaryKey]
+			public int  Id   { get; set; }
+			public int  One { get; set; }
 			public int  Two   { get; set; }
 			public int  Three { get; set; }
 			public int  Four  { get; set; }
@@ -653,6 +656,7 @@ namespace Tests.Linq
 
 		sealed class Mixed
 		{
+			[PrimaryKey] public int Id { get; set; }
 			public int      Int    { get; set; }
 			public string?  Str    { get; set; }
 			public DateTime Date   { get; set; }
@@ -723,20 +727,21 @@ namespace Tests.Linq
 		[Table]
 		sealed class Issue3631Table
 		{
+			[PrimaryKey] public int Id { get; set; }
 			[Column(Length = 2), NotNull] public string Country { get; set; } = null!;
 			[Column(Length = 2), NotNull] public string State { get; set; } = null!;
 
 			public static readonly Issue3631Table[] Data = new[]
 			{
-				new Issue3631Table() { Country = "US", State = "AL" },
-				new Issue3631Table() { Country = "US", State = "AZ" },
-				new Issue3631Table() { Country = "US", State = "CA" },
-				new Issue3631Table() { Country = "US", State = "FL" },
-				new Issue3631Table() { Country = "US", State = "IN" },
-				new Issue3631Table() { Country = "US", State = "OH" },
-				new Issue3631Table() { Country = "US", State = "NY" },
-				new Issue3631Table() { Country = "CA", State = "AB" },
-				new Issue3631Table() { Country = "CA", State = "ON" },
+				new Issue3631Table() { Id = 1, Country = "US", State = "AL" },
+				new Issue3631Table() { Id = 2, Country = "US", State = "AZ" },
+				new Issue3631Table() { Id = 3, Country = "US", State = "CA" },
+				new Issue3631Table() { Id = 4, Country = "US", State = "FL" },
+				new Issue3631Table() { Id = 5, Country = "US", State = "IN" },
+				new Issue3631Table() { Id = 6, Country = "US", State = "OH" },
+				new Issue3631Table() { Id = 7, Country = "US", State = "NY" },
+				new Issue3631Table() { Id = 8, Country = "CA", State = "AB" },
+				new Issue3631Table() { Id = 9, Country = "CA", State = "ON" },
 			};
 		}
 		#endregion

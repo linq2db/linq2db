@@ -165,7 +165,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			groupingSubquery.SelectQuery.GroupBy.GroupingType = groupingKind;
 
 			var groupContextRef = new ContextRefExpression(groupBy.GetInterfaceGroupingType(), groupBy);
-			var keyExpr         = Expression.PropertyOrField(groupContextRef, nameof(IGrouping<int, int>.Key));
+			var keyExpr         = Expression.PropertyOrField(groupContextRef, nameof(IGrouping<,>.Key));
 
 			var groupingKeys = builder.BuildSqlExpression(groupBy, keyExpr, BuildPurpose.Sql, BuildFlags.ForKeys);
 
@@ -454,6 +454,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
+				if (flags.IsTraverse())
+					return path;
+
 				var isSameContext = SequenceHelper.IsSameContext(path, this);
 
 				if (isSameContext)
@@ -498,13 +501,13 @@ namespace LinqToDB.Internal.Linq.Builder
 					var assignments = new List<SqlGenericConstructorExpression.Assignment>(2);
 
 					assignments.Add(new SqlGenericConstructorExpression.Assignment(
-						groupingType.GetProperty(nameof(Grouping<int, int>.Key))!,
-						Expression.Property(groupingPath, nameof(IGrouping<int, int>.Key)), true, false));
+						groupingType.GetProperty(nameof(Grouping<,>.Key))!,
+						Expression.Property(groupingPath, nameof(IGrouping<,>.Key)), true, false));
 
 					var eagerLoadingExpression = MakeSubQueryExpression(new ContextRefExpression(groupingType, this));
 
 					assignments.Add(new SqlGenericConstructorExpression.Assignment(
-						groupingType.GetProperty(nameof(Grouping<int, int>.Items))!,
+						groupingType.GetProperty(nameof(Grouping<,>.Items))!,
 						eagerLoadingExpression, true, false));
 
 					return new SqlGenericConstructorExpression(
@@ -730,8 +733,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					public async ValueTask<bool> MoveNextAsync()
 					{
-						_grouped ??= (await _elements.ToListAsync(_cancellationToken)
-								.ConfigureAwait(false))
+						_grouped ??= (await _elements.ToListAsync(_cancellationToken).ConfigureAwait(false))
 							.GroupBy(_groupingKey)
 							.GetEnumerator();
 

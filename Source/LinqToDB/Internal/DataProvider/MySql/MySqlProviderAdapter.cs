@@ -92,7 +92,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		/// <summary>
 		/// Returns object, because both providers use different enums and we anyway don't need typed value.
 		/// </summary>
-		public Func<DbParameter,object> GetDbType   { get; protected set; } = null!;
+		public Func<DbParameter,object>   GetDbType { get; protected set; } = null!;
+		public Action<DbParameter,object> SetDbType { get; protected set; } = null!;
 		public BulkCopyAdapter? BulkCopy            { get; protected set; }
 		public bool             IsDateOnlySupported { get; protected set; }
 
@@ -128,7 +129,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 					return _mysqlConnectorInstance;
 				}
-				default:
+				case MySqlProvider.MySqlData:
 				{
 					if (_mysqlDataInstance == null)
 					{
@@ -141,11 +142,13 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					return _mysqlDataInstance;
 				}
 			}
+
+			throw new InvalidOperationException($"Unsupported provider type: {provider}");
 		}
 
 		private static void AppendAction(StringBuilder sb, string value) => sb.Append(value);
 
-		sealed class MySqlData
+		internal sealed class MySqlData
 		{
 			public sealed class MySqlDataProviderAdapter : MySqlProviderAdapter
 			{
@@ -175,7 +178,9 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					typeMapper.RegisterTypeWrapper<MySqlDecimal>(mySqlDecimalType);
 					typeMapper.FinalizeMappings();
 
-					var dbTypeGetter       = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<DbParameter>();
+					var dbtypeMember       = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType);
+					var dbTypeGetter       = dbtypeMember.BuildGetter<DbParameter>();
+					var dbTypeSetter       = dbtypeMember.BuildSetter<DbParameter>();
 					var decimalGetter      = typeMapper.BuildFunc<object, string>(typeMapper.MapLambda((object value) => ((MySqlDecimal)value).ToString()));
 					var toDecimalConverter = typeMapper.MapLambda((MySqlDecimal d) => d.Value);
 					var toDoubleConverter  = typeMapper.MapLambda((MySqlDecimal d) => d.ToDouble());
@@ -206,6 +211,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					MySqlGeometryType           = mySqlGeometryType;
 					MySqlDecimalGetter          = decimalGetter;
 					GetDbType                   = p => dbTypeGetter(p);
+					SetDbType                   = (p, v) => dbTypeSetter(p, (MySqlDbType)v);
 					GetMySqlDecimalMethodName   = "GetMySqlDecimal";
 					GetDateTimeOffsetMethodName = null;
 					GetSByteMethodName          = dataReaderType.GetMethod("GetSByte",  _ordinalParameters)?.Name;
@@ -289,6 +295,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				VarBinary  = 753,
 				VarChar    = 253,
 				VarString  = 15,
+				Vector     = 242,
 				Year       = 13
 			}
 		}
@@ -365,7 +372,9 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 					_connectionFactory = typeMapper.BuildTypedFactory<string, MySqlConnection, DbConnection>(connectionString => new MySqlConnection(connectionString));
 
-					var typeGetter        = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<DbParameter>();
+					var dbTypeMember      = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType);
+					var typeGetter        = dbTypeMember.BuildGetter<DbParameter>();
+					var typeSetter        = dbTypeMember.BuildSetter<DbParameter>();
 					var dateTimeConverter = typeMapper.MapLambda((MySqlDateTime dt) => dt.GetDateTime());
 
 					var mappingSchema = new MySqlConnectorAdapterMappingSchema();
@@ -398,6 +407,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					MySqlGeometryType           = mySqlGeometryType;
 					MySqlDecimalGetter          = null;
 					GetDbType                   = p => typeGetter(p);
+					SetDbType                   = (p, v) => typeSetter(p, (MySqlDbType)v);
 					GetMySqlDecimalMethodName   = mySqlDecimalType != null ? "GetMySqlDecimal" : null;
 					GetDateTimeOffsetMethodName = "GetDateTimeOffset";
 					GetMySqlDateTimeMethodName  = "GetMySqlDateTime";
@@ -487,6 +497,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				VarBinary  = 601,
 				VarChar    = 253,
 				VarString  = 15,
+				Vector     = 242,
 				Year       = 13
 			}
 

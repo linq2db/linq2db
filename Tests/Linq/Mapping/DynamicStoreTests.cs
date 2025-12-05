@@ -27,6 +27,7 @@ namespace Tests.Mapping
 		[Table("DynamicColumnsTestTable")]
 		sealed class FluentMetadataBasedStore
 		{
+			[PrimaryKey]
 			public int Id { get; set; }
 
 			public Dictionary<string, object> Values { get; set; } = new Dictionary<string, object>();
@@ -1009,7 +1010,7 @@ namespace Tests.Mapping
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2953")]
 		public void Issue2953Test2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 
 			var result = db.Query<DbEntity>("SELECT * FROM Person WHERE PersonID = 1").ToArray();
 

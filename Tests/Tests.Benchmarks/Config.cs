@@ -20,6 +20,7 @@ namespace LinqToDB.Benchmarks
 			var netfx = Job.Default.WithRuntime(ClrRuntime.Net462).WithDefault().AsBaseline();
 			var net80 = Job.Default.WithRuntime(CoreRuntime.Core80).WithDefault();
 			var net90 = Job.Default.WithRuntime(CoreRuntime.Core90).WithDefault();
+			var net10 = Job.Default.WithRuntime(CoreRuntime.Core10_0).WithDefault();
 
 			return new ManualConfig()
 				.AddLogger         (DefaultConfig.Instance.GetLoggers        ().ToArray())
@@ -30,7 +31,7 @@ namespace LinqToDB.Benchmarks
 				.AddExporter       (MarkdownExporter.GitHub)
 				.AddDiagnoser      (MemoryDiagnoser.Default)
 				.WithArtifactsPath (@"..\..\..\..\..\Tests\Tests.Benchmarks")
-				.AddJob            (netfx, net80, net90);
+				.AddJob            (netfx, net80, net90, net10);
 		}
 
 		private static Job WithDefault(this Job job)

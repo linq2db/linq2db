@@ -19,6 +19,8 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		public override string[] LikeCharactersToEscape => AccessLikeCharactersToEscape;
 
+		protected override bool SupportsNullIf => false;
+
 		public override ISqlPredicate ConvertLikePredicate(SqlPredicate.Like predicate)
 		{
 			if (predicate.Escape != null)
@@ -186,7 +188,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 			var expression = cast.Expression;
 			var funcName   = string.Empty;
 
-			switch (cast.SystemType.ToUnderlying().GetTypeCodeEx())
+			switch (cast.SystemType.ToUnderlying().TypeCode)
 			{
 				case TypeCode.String   : funcName = "CStr";  break;
 				case TypeCode.Boolean  : funcName = "CBool"; break;
@@ -209,7 +211,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 			if (!string.IsNullOrEmpty(funcName))
 			{
 				var isNotNull = new SqlPredicate.IsNull(expression, true);
-				var funcCall = new SqlFunction(cast.Type, funcName, parametersNullability: ParametersNullabilityType.NotNullable, canBeNull : false, expression);
+				var funcCall = new SqlFunction(cast.Type, funcName, parametersNullability: ParametersNullabilityType.NotNullable, canBeNull: false, expression);
 				return new SqlConditionExpression(isNotNull, funcCall, new SqlValue(cast.Type, null));
 			}
 

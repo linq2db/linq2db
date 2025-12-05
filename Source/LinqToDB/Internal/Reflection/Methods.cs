@@ -39,8 +39,9 @@ namespace LinqToDB.Internal.Reflection
 
 		public static class Enumerable
 		{
-			public static readonly MethodInfo ToArray     = MemberHelper.MethodOfGeneric<IEnumerable<int>>(e => e.ToArray());
-			public static readonly MethodInfo ToList      = MemberHelper.MethodOfGeneric<IEnumerable<int>>(e => e.ToList());
+			public static readonly MethodInfo ToArray      = MemberHelper.MethodOfGeneric<IEnumerable<int>>(e => e.ToArray());
+			public static readonly MethodInfo ToList       = MemberHelper.MethodOfGeneric<IEnumerable<int>>(e => e.ToList());
+			public static readonly MethodInfo AsEnumerable = MemberHelper.MethodOfGeneric<IQueryable<int>>(e => e.AsEnumerable());
 
 			public static readonly MethodInfo Select      = MemberHelper.MethodOfGeneric<IEnumerable<int>>(e => e.Select(p => p));
 			public static readonly MethodInfo Where       = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.Where((Func<int, bool>)null!));
@@ -71,13 +72,18 @@ namespace LinqToDB.Internal.Reflection
 			public static readonly MethodInfo GroupJoin = MemberHelper.MethodOfGeneric<IEnumerable<LW1>, IEnumerable<LW2>>((m, d) => m.GroupJoin(d, _ => _.Value1, _ => _.Value2, (m, d) => d));
 
 			public static readonly MethodInfo Distinct    = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.Distinct());
+
+#if NET8_0_OR_GREATER
+			public static readonly MethodInfo DistinctBy = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.DistinctBy(x => 1));
+			public static readonly MethodInfo MinBy      = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.MinBy(x => 1));
+			public static readonly MethodInfo MaxBy      = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.MaxBy(x => 1));
+#endif
 		}
 
 		public static class Queryable
 		{
 			public static readonly MethodInfo ToArray      = MemberHelper.MethodOfGeneric<IQueryable<int>>(e => e.ToArray());
 			public static readonly MethodInfo ToList       = MemberHelper.MethodOfGeneric<IQueryable<int>>(e => e.ToList());
-			public static readonly MethodInfo AsEnumerable = MemberHelper.MethodOfGeneric<IQueryable<int>>(e => e.AsEnumerable());
 			public static readonly MethodInfo AsQueryable  = MemberHelper.MethodOfGeneric<IEnumerable<int>>(e => e.AsQueryable());
 
 			public static readonly MethodInfo Select   = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.Select(p => p));
@@ -111,6 +117,14 @@ namespace LinqToDB.Internal.Reflection
 			public static readonly MethodInfo GroupJoin = MemberHelper.MethodOfGeneric<IQueryable<LW1>, IQueryable<LW2>>((m, d) => m.GroupJoin(d, _ => _.Value1, _ => _.Value2, (m, d) => d));
 
 			public static readonly MethodInfo Distinct    = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.Distinct());
+
+			public static readonly MethodInfo OrderBy = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.OrderBy(x => 1));
+
+#if NET8_0_OR_GREATER
+			public static readonly MethodInfo DistinctBy = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.DistinctBy(x => 1));
+			public static readonly MethodInfo MinBy      = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.MinBy(x => 1));
+			public static readonly MethodInfo MaxBy      = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.MaxBy(x => 1));
+#endif
 		}
 
 		public static class LinqToDB
@@ -162,6 +176,7 @@ namespace LinqToDB.Internal.Reflection
 			internal static readonly MethodInfo AssociationRecord         = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.AssociationRecord());
 			internal static readonly MethodInfo AssociationOptionalRecord = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.AssociationOptionalRecord());
 			internal static readonly MethodInfo SelectDistinct            = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.SelectDistinct());
+			internal static readonly MethodInfo AggregateExecute          = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AggregateExecute(e => 1));
 
 			#endregion
 
@@ -360,7 +375,7 @@ namespace LinqToDB.Internal.Reflection
 
 			public static class Tools
 			{
-				public static readonly MethodInfo CreateEmptyQuery  = MemberHelper.MethodOfGeneric(() => Internal.Common.Tools.CreateEmptyQuery<int>());
+				public static readonly MethodInfo CreateEmptyQuery  = MemberHelper.MethodOfGeneric(() => Common.Tools.CreateEmptyQuery<int>());
 			}
 
 			public static class ColumnReader
@@ -379,7 +394,7 @@ namespace LinqToDB.Internal.Reflection
 
 			internal static class Exceptions
 			{
-				public static readonly MethodInfo DefaultInheritanceMappingException = MemberHelper.MethodOf(() => Internal.Linq.Exceptions.DefaultInheritanceMappingException(null!, null!));
+				public static readonly MethodInfo DefaultInheritanceMappingException = MemberHelper.MethodOf(() => Linq.Exceptions.DefaultInheritanceMappingException(null!, null!));
 			}
 
 			internal static class Sql

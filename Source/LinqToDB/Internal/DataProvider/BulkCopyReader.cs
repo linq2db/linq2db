@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Internal.Async;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider
@@ -106,7 +107,7 @@ namespace LinqToDB.Internal.DataProvider
 		{
 			public override DbType             DbType                  { get; set; }
 			public override ParameterDirection Direction               { get; set; }
-			public override bool               IsNullable              { get => Value == null || Value is DBNull; set { } }
+			public override bool               IsNullable              { get => Value.IsNullValue(); set { } }
 			[AllowNull]
 			public override string             ParameterName           { get; set; }
 			public override int                Size                    { get; set; }
@@ -152,6 +153,22 @@ namespace LinqToDB.Internal.DataProvider
 				var value = _columns[it].GetProviderValue(obj);
 				_dataConnection.DataProvider.SetParameter(_dataConnection, _valueConverter, string.Empty, _columnTypes[it], value);
 				values[it] = _valueConverter.Value;
+			}
+
+			return count;
+		}
+
+		public int GetAsParameters(Func<DbParameter> parameterFactory, object?[] values)
+		{
+			var count = _columns.Count;
+			var obj   = Current;
+
+			for (var it = 0; it < count; ++it)
+			{
+				var parameter = parameterFactory();
+				var value     = _columns[it].GetProviderValue(obj);
+				_dataConnection.DataProvider.SetParameter(_dataConnection, parameter, string.Empty, _columnTypes[it], value);
+				values[it]    = parameter;
 			}
 
 			return count;

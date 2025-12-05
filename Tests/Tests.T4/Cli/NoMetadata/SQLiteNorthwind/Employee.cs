@@ -14,7 +14,7 @@ namespace Cli.NoMetadata.SQLiteNorthwind
 {
 	public class Employee
 	{
-		public int       EmployeeId      { get; set; } // int
+		public int       EmployeeId      { get; set; } // INT
 		public string    LastName        { get; set; } = null!; // varchar(20)
 		public string    FirstName       { get; set; } = null!; // varchar(10)
 		public string?   Title           { get; set; } // varchar(30)
@@ -28,9 +28,9 @@ namespace Cli.NoMetadata.SQLiteNorthwind
 		public string?   Country         { get; set; } // varchar(15)
 		public string?   HomePhone       { get; set; } // varchar(24)
 		public string?   Extension       { get; set; } // varchar(4)
-		public byte[]?   Photo           { get; set; } // blob
-		public string?   Notes           { get; set; } // text(max)
-		public int?      ReportsTo       { get; set; } // int
+		public byte[]?   Photo           { get; set; } // BLOB
+		public string?   Notes           { get; set; } // TEXT
+		public int?      ReportsTo       { get; set; } // INT
 		public string?   PhotoPath       { get; set; } // varchar(255)
 	}
 }

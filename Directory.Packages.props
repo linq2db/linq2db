@@ -1,4 +1,8 @@
 ﻿<Project>
+	<PropertyGroup>
+		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+	</PropertyGroup>
+
 	<!--
 	When multiple versions of same nuget references, don't put it to unconditional ItemGroup
 	as while it works fine in Visual Studio in general there are still issues with tooling (dotnet publish, testing)
@@ -10,83 +14,105 @@
 	-->
 	<PropertyGroup>
 		<!--initial version for .NET LATEST packages, referenced from nuspec-->
-		<NetPreLatestForNuget>8.0.0</NetPreLatestForNuget>
-		<NetLatestForNuget>9.0.0</NetLatestForNuget>
+		<Net8LatestForNuget>8.0.0</Net8LatestForNuget>
+		<Net9LatestForNuget>9.0.0</Net9LatestForNuget>
+		<Net10LatestForNuget>10.0.0</Net10LatestForNuget>
+		
 		<!--latest version for .NET LATEST packages (not referenced from nuspec)-->
-		<NetLatest>9.0.8</NetLatest>
-		<NetPreLatest>8.0.19</NetPreLatest>
-		<!--EF 3.1 vesions for netfx support-->
-		<EF3Latest>3.1.32</EF3Latest>
+		<Net8Latest>8.0.22</Net8Latest>
+		<Net9Latest>9.0.11</Net9Latest>
+		<Net10Latest>10.0.0</Net10Latest>
+		
+		<!--EF 3.1 versions for netfx support-->
 		<EF3LatestNuget>3.1.0</EF3LatestNuget>
+		<EF3Latest>3.1.32</EF3Latest>
+		<!--used by VersionOverride in project files-->
+		<EF3NpgsqlVersion>4.1.14</EF3NpgsqlVersion>
+		
+		<!--used by VersionOverride in project files-->
+		<OracleManagedLinqPadVersion>23.26.0</OracleManagedLinqPadVersion>
 	</PropertyGroup>
 	
 	<ItemGroup Label="Build: Analyzers and Tools">
-		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.212"                      />
-		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.49"                       />
+		<PackageVersion Include="DotNet.ReproducibleBuilds"                             Version="1.2.39"                       />
+		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.257"                      />
+		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.68"                       />
 		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                      Version="5.0.0-1.25277.114"            />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="5.0.0-1.25277.114"            />
-		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"                   Version="10.0.0-preview.25358.103"     />
 		<PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers"             Version="5.0.0-1.25277.114"            />
-		<PackageVersion Include="Microsoft.SourceLink.GitHub"                           Version="8.0.0"                        />
 		<PackageVersion Include="Lindhart.Analyser.MissingAwaitWarning"                 Version="3.1.0-beta"                   />
 	</ItemGroup>
 
 	<ItemGroup Label="Polyfills">
-		<PackageVersion Include="Microsoft.Bcl.AsyncInterfaces"                         Version="$(NetLatestForNuget)"         />
+		<PackageVersion Include="Microsoft.Bcl.AsyncInterfaces"                         Version="$(Net8LatestForNuget)"        />
 		<PackageVersion Include="Microsoft.CSharp"                                      Version="4.7.0"                        />
 		<PackageVersion Include="Nullability.Source"                                    Version="2.3.0"                        />
-		<PackageVersion Include="System.Collections.Immutable"                          Version="$(NetLatest)"                 />
+		<PackageVersion Include="System.Collections.Immutable"                          Version="$(Net10Latest)"                />
 		<PackageVersion Include="System.ComponentModel.Annotations"                     Version="5.0.0"                        />
 		<PackageVersion Include="System.Data.DataSetExtensions"                         Version="4.5.0"                        />
 		<PackageVersion Include="System.ValueTuple"                                     Version="4.6.1"                        />
 	</ItemGroup>
 
 	<ItemGroup Label="Released Dependencies">
-		<PackageVersion Include="Humanizer.Core"                                        Version="2.14.1"                       />
-		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="4.14.0"                       />
-		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="$(NetLatest)"                 />
+		<PackageVersion Include="Humanizer.Core"                                        Version="3.0.1"                        />
+		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="5.0.0"                        />
+		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="$(Net10Latest)"               />
 		<PackageVersion Include="Mono.TextTemplating"                                   Version="3.0.0"                        />
 		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.2.2"                        />
 		<PackageVersion Include="protobuf-net"                                          Version="3.2.56"                       />
 
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="$(EF3LatestNuget)"            Condition="'$(TargetFramework)'=='netstandard2.0'" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="$(NetPreLatestForNuget)"      Condition="'$(TargetFramework)'=='net8.0'"         />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="$(EF3LatestNuget)"            Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="$(Net8LatestForNuget)"        Condition="'$(TargetFramework)'=='net8.0'"         />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="$(Net9LatestForNuget)"        Condition="'$(TargetFramework)'=='net9.0'"         />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="$(Net10LatestForNuget)"       Condition="'$(TargetFramework)'=='net10.0'"        />
 
 		<!-- pin abstractions packages to lowest supported runtime (.net 8 currently) : https://github.com/linq2db/linq2db/issues/3953 -->
-		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"              Version="$(NetPreLatestForNuget)"      Condition="'$(TargetFramework)'!='net9.0'" />
-		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"              Version="$(NetLatestForNuget)"         Condition="'$(TargetFramework)'=='net9.0'" />
-		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="$(NetPreLatestForNuget)"      Condition="'$(TargetFramework)'!='net9.0'" />
-		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="$(NetLatestForNuget)"         Condition="'$(TargetFramework)'=='net9.0'" />
+		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"              Version="$(Net8LatestForNuget)"        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))"  />
+		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"              Version="$(Net9LatestForNuget)"        Condition="'$(TargetFramework)'=='net9.0'"  />
+		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"              Version="$(Net10LatestForNuget)"       Condition="'$(TargetFramework)'=='net10.0'" />
+		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="$(Net8LatestForNuget)"        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))"  />
+		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="$(Net9LatestForNuget)"        Condition="'$(TargetFramework)'=='net9.0'"  />
+		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="$(Net10LatestForNuget)"       Condition="'$(TargetFramework)'=='net10.0'" />
+	</ItemGroup>
+
+	<ItemGroup Label="LINQPad-only">
+		<PackageVersion Include="LINQPad.Reference"                                     Version="1.3.1"                        />
+		<PackageVersion Include="System.Threading.Tasks.Extensions"                     Version="4.6.3"                        />
+		<PackageVersion Include="System.Runtime.CompilerServices.Unsafe"                Version="6.1.2"                        />
+		<PackageVersion Include="System.Memory"                                         Version="4.6.3"                        />
+		<PackageVersion Include="System.Buffers"                                        Version="4.6.1"                        />
 	</ItemGroup>
 
 	<ItemGroup Label="Database Providers">
-		<PackageVersion Include="AdoNetCore.AseClient"                                  Version="0.19.3-beta.1"                />
-		<PackageVersion Include="ClickHouse.Driver"                                     Version="0.7.18"                       />
+		<PackageVersion Include="AdoNetCore.AseClient"                                  Version="0.19.2"                       />
+		<PackageVersion Include="ClickHouse.Driver"                                     Version="0.8.1"                        />
 		<PackageVersion Include="Devart.Data.Oracle"                                    Version="10.4.290"                     />
-		<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="1.5.0"                        />
+		<PackageVersion Include="dotMorten.Microsoft.SqlServer.TNET.Testypes"                   Version="1.5.0"                        />
 		<!--<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="2.5.0"                 />-->
-		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"                       Version="10.3.3"                       />
+		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"                       Version="10.3.4"                       />
 		<PackageVersion Include="IBM.Data.DB.Provider"                                  Version="11.5.9000.4"                  />
-		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="6.1.0"                        />
-		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="$(NetLatest)"                 />
-		<PackageVersion Include="Microsoft.SqlServer.Types"                             Version="160.1000.6"                   />
-		<PackageVersion Include="MySqlConnector"                                        Version="2.4.0"                        />
-		<PackageVersion Include="MySql.Data"                                            Version="9.4.0"                        />
-		<PackageVersion Include="Net.IBM.Data.Db2"                                      Version="9.0.0.300"                    />
-		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="9.0.0.300"                    />
-		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="9.0.0.300"                    />
-		<PackageVersion Include="Npgsql"                                                Version="9.0.3"                        Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
-		<PackageVersion Include="Npgsql"                                                Version="8.0.7"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
-		<PackageVersion Include="Npgsql.NodaTime"                                       Version="9.0.3"                        Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
-		<PackageVersion Include="Npgsql.NodaTime"                                       Version="8.0.7"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
+		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="6.1.3"                        />
+		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="$(Net10Latest)"               />
+		<PackageVersion Include="Microsoft.SqlServer.Types"                             Version="170.1000.7"                   />
+		<PackageVersion Include="MySqlConnector"                                        Version="2.5.0"                        />
+		<PackageVersion Include="MySql.Data"                                            Version="9.5.0"                        />
+		<PackageVersion Include="Net.IBM.Data.Db2"                                      Version="9.0.0.400"                    />
+		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="9.0.0.400"                    />
+		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="9.0.0.400"                    />
+		<PackageVersion Include="Npgsql"                                                Version="8.0.8"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
+		<PackageVersion Include="Npgsql"                                                Version="10.0.0"                       Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
+		<PackageVersion Include="Npgsql.NodaTime"                                       Version="8.0.8"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
+		<PackageVersion Include="Npgsql.NodaTime"                                       Version="10.0.0"                       Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
 		<!--as of 3.1.1 multiple introduced issues blocks update-->
 		<PackageVersion Include="Octonica.ClickHouseClient"                             Version="3.1.3"                        />
-		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.19.0"                      />
-		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="23.9.1"                       />
-		<PackageVersion Include="System.Data.Odbc"                                      Version="$(NetLatest)"                 />
-		<PackageVersion Include="System.Data.OleDb"                                     Version="$(NetLatest)"                 />
+		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.20.0"                      />
+		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="23.26.0"                      />
+		<PackageVersion Include="System.Data.Odbc"                                      Version="$(Net10Latest)"                />
+		<PackageVersion Include="System.Data.OleDb"                                     Version="$(Net10Latest)"                />
 		<PackageVersion Include="System.Data.SqlClient"                                 Version="4.9.0"                        />
-		<PackageVersion Include="System.Data.SQLite.Core"                               Version="1.0.119"                      />
+		<PackageVersion Include="System.Data.SQLite"                                    Version="2.0.2"                        />
+		<PackageVersion Include="SourceGear.sqlite3"                                    Version="3.50.4.5"                     />
+		<PackageVersion Include="Ydb.Sdk"                                               Version="0.26.0"                       />
 	</ItemGroup>
 
 	<ItemGroup Label="Remote">
@@ -95,77 +121,101 @@
 		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Core"                     Version="1.2.0"                        />
 
 		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Client"                   Version="1.2.0"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
-		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Client"                   Version="$(NetPreLatestForNuget)"      Condition="'$(TargetFramework)'=='net8.0'" />
-		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Client"                   Version="$(NetLatestForNuget)"         Condition="'$(TargetFramework)'=='net9.0'" />
+		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Client"                   Version="$(Net8LatestForNuget)"        Condition="'$(TargetFramework)'=='net8.0'"  />
+		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Client"                   Version="$(Net9LatestForNuget)"        Condition="'$(TargetFramework)'=='net9.0'"  />
+		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Client"                   Version="$(Net10LatestForNuget)"       Condition="'$(TargetFramework)'=='net10.0'" />
 
-		<PackageVersion Include="System.Net.Http.Json"                                  Version="$(NetLatestForNuget)"         />
-		<PackageVersion Include="Microsoft.Extensions.Http"                             Version="$(NetPreLatestForNuget)"      Condition="'$(TargetFramework)'=='net8.0'" />
-		<PackageVersion Include="Microsoft.Extensions.Http"                             Version="$(NetLatestForNuget)"         Condition="'$(TargetFramework)'!='net8.0'" />
+		<PackageVersion Include="System.Net.Http.Json"                                  Version="$(Net8LatestForNuget)"        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" />
+		<PackageVersion Include="System.Net.Http.Json"                                  Version="$(Net9LatestForNuget)"        Condition="'$(TargetFramework)'=='net9.0'"  />
+		<PackageVersion Include="System.Net.Http.Json"                                  Version="$(Net10LatestForNuget)"       Condition="'$(TargetFramework)'=='net10.0'" />
+		<PackageVersion Include="Microsoft.Extensions.Http"                             Version="$(Net8LatestForNuget)"        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" />
+		<PackageVersion Include="Microsoft.Extensions.Http"                             Version="$(Net9LatestForNuget)"        Condition="'$(TargetFramework)'=='net9.0'"  />
+		<PackageVersion Include="Microsoft.Extensions.Http"                             Version="$(Net10LatestForNuget)"       Condition="'$(TargetFramework)'=='net10.0'" />
 	</ItemGroup>
 
 	<ItemGroup Label="Testing">
 		<PackageVersion Include="Shouldly"                                              Version="4.3.0"                        />
-		<PackageVersion Include="Microsoft.NET.Test.Sdk"                                Version="17.14.1"                      />
+		<PackageVersion Include="Microsoft.NET.Test.Sdk"                                Version="18.0.1"                       />
 		<PackageVersion Include="NUnit"                                                 Version="4.4.0"                        />
-		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.10.0"                       />
-		<PackageVersion Include="NUnit3TestAdapter"                                     Version="5.1.0"                        />
+		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.11.2"                       />
+		<PackageVersion Include="NUnit3TestAdapter"                                     Version="5.2.0"                        />
 
-		<PackageVersion Include="Microsoft.AspNet.OData"                                Version="7.7.8"                        />
+		<PackageVersion Include="Microsoft.AspNet.OData"                                Version="7.7.9"                        />
 		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="8.3.1"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
-		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="9.3.2"                        Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))"  />
+		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="9.4.1"                        Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))"  />
 		<PackageVersion Include="MiniProfiler.Shared"                                   Version="4.5.4"                        />
 		<PackageVersion Include="MiniProfiler.Minimal"                                  Version="4.5.4"                        />
 		<PackageVersion Include="NodaTime"                                              Version="3.2.2"                        />
 		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.2.2"                        />
-		<PackageVersion Include="System.Linq.Dynamic.Core"                              Version="1.6.7"                        />
-		<PackageVersion Include="FSharp.Core"                                           Version="9.0.303"                      Condition="'$(TargetFramework)'=='net9.0' OR  '$(TargetFramework)'=='net462'" />
-		<PackageVersion Include="FSharp.Core"                                           Version="8.0.403"                      Condition="'$(TargetFramework)'!='net9.0' AND '$(TargetFramework)'!='net462'" />
-		<PackageVersion Include="LinqKit"                                               Version="1.3.8"                        />
+		<PackageVersion Include="System.Linq.Dynamic.Core"                              Version="1.7.0"                        />
+		<PackageVersion Include="FSharp.Core"                                           Version="9.0.303"                      Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
+		<PackageVersion Include="FSharp.Core"                                           Version="10.0.100"                     Condition="'$(TargetFramework)'=='net10.0'" />
+		<PackageVersion Include="LinqKit"                                               Version="1.3.9"                        />
 
-		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                  Version="$(NetLatest)"                 Condition="'$(TargetFramework)'=='net9.0'" />
-		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                  Version="8.0.1"                        Condition="'$(TargetFramework)'!='net9.0'" />
+		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                  Version="8.0.1"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" />
+		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                  Version="$(Net9Latest)"                Condition="'$(TargetFramework)'=='net9.0'" />
+		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                  Version="$(Net10Latest)"               Condition="'$(TargetFramework)'=='net10.0'" />
 		<PackageVersion Include="EntityFrameworkCore.FSharp"                            Version="6.0.7"                        />
 
-		<PackageVersion Include="Pomelo.EntityFrameworkCore.MySql"                      Version="3.2.7"                        Condition="'$(TargetFramework)'=='net462'" />
-		<PackageVersion Include="Pomelo.EntityFrameworkCore.MySql"                      Version="8.0.3"                        Condition="'$(TargetFramework)'=='net8.0'" />
-		<PackageVersion Include="Pomelo.EntityFrameworkCore.MySql"                      Version="9.0.0-rc.1.efcore.9.0.0"      Condition="'$(TargetFramework)'=='net9.0'" />
-		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="3.1.18"                       Condition="'$(TargetFramework)'=='net462'" />
-		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="8.0.11"                       Condition="'$(TargetFramework)'=='net8.0'" />
-		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="9.0.4"                        Condition="'$(TargetFramework)'=='net9.0'" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite"                  Version="$(EF3Latest)"                 Condition="'$(TargetFramework)'=='net462'" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite"                  Version="$(NetPreLatest)"              Condition="'$(TargetFramework)'=='net8.0'" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite"                  Version="$(NetLatest)"                 Condition="'$(TargetFramework)'=='net9.0'" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer"               Version="$(EF3Latest)"                 Condition="'$(TargetFramework)'=='net462'" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer"               Version="$(NetPreLatest)"              Condition="'$(TargetFramework)'=='net8.0'" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer"               Version="$(NetLatest)"                 Condition="'$(TargetFramework)'=='net9.0'" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory"                Version="$(EF3Latest)"                 Condition="'$(TargetFramework)'=='net462'" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory"                Version="$(NetPreLatest)"              Condition="'$(TargetFramework)'=='net8.0'" />
-		<PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory"                Version="$(NetLatest)"                 Condition="'$(TargetFramework)'=='net9.0'" />
+		<PackageVersion Include="Pomelo.EntityFrameworkCore.MySql"                      Version="3.2.7"                        Condition="'$(TargetFramework)'=='net462'"  />
+		<PackageVersion Include="Pomelo.EntityFrameworkCore.MySql"                      Version="8.0.3"                        Condition="'$(TargetFramework)'=='net8.0'"  />
+		<PackageVersion Include="Pomelo.EntityFrameworkCore.MySql"                      Version="9.0.0"                        Condition="'$(TargetFramework)'=='net9.0'"  />
+		<PackageVersion Include="Pomelo.EntityFrameworkCore.MySql"                      Version="9.0.0"                        Condition="'$(TargetFramework)'=='net10.0'" />
+		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="3.1.18"                       Condition="'$(TargetFramework)'=='net462'"  />
+		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="8.0.11"                       Condition="'$(TargetFramework)'=='net8.0'"  />
+		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="9.0.4"                        Condition="'$(TargetFramework)'=='net9.0'"  />
+		<PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime"        Version="10.0.0"                       Condition="'$(TargetFramework)'=='net10.0'" />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite"                  Version="$(EF3Latest)"                 Condition="'$(TargetFramework)'=='net462'"  />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite"                  Version="$(Net8Latest)"                Condition="'$(TargetFramework)'=='net8.0'"  />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite"                  Version="$(Net9Latest)"                Condition="'$(TargetFramework)'=='net9.0'"  />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite"                  Version="$(Net10Latest)"               Condition="'$(TargetFramework)'=='net10.0'" />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer"               Version="$(EF3Latest)"                 Condition="'$(TargetFramework)'=='net462'"  />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer"               Version="$(Net8Latest)"                Condition="'$(TargetFramework)'=='net8.0'"  />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer"               Version="$(Net9Latest)"                Condition="'$(TargetFramework)'=='net9.0'"  />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer"               Version="$(Net10Latest)"               Condition="'$(TargetFramework)'=='net10.0'" />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory"                Version="$(EF3Latest)"                 Condition="'$(TargetFramework)'=='net462'"  />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory"                Version="$(Net8Latest)"                Condition="'$(TargetFramework)'=='net8.0'"  />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory"                Version="$(Net9Latest)"                Condition="'$(TargetFramework)'=='net9.0'"  />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory"                Version="$(Net10Latest)"               Condition="'$(TargetFramework)'=='net10.0'" />
 
-		<PackageVersion Include="System.Text.Json"                                      Version="$(NetLatest)"                 Condition="'$(TargetFramework)'=='net462'" />
-		<PackageVersion Include="Microsoft.AspNetCore.SignalR"                          Version="1.2.0"                        Condition="'$(TargetFramework)'=='net462'" />
+		<PackageVersion Include="System.Text.Json"                                      Version="8.0.5"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
 		<PackageVersion Include="Microsoft.AspNetCore"                                  Version="2.3.0"                        Condition="'$(TargetFramework)'=='net462'" />
+		<PackageVersion Include="Microsoft.AspNetCore.SignalR"                          Version="1.2.0"                        Condition="'$(TargetFramework)'=='net462'" />
 	</ItemGroup>
 
 	<ItemGroup Label="Benchmarks">
-		<PackageVersion Include="BenchmarkDotNet"                                       Version="0.15.2"                       />
+		<PackageVersion Include="BenchmarkDotNet"                                       Version="0.15.6"                       />
 		<PackageVersion Include="JetBrains.Profiler.Api"                                Version="1.4.10"                       />
 	</ItemGroup>
 
 	<ItemGroup Label="Examples">
-		<PackageVersion Include="linq2db.t4models"                                      Version="6.0.0-rc.2"                   />
-		<PackageVersion Include="Microsoft.Extensions.ObjectPool"                       Version="$(NetLatest)"                 />
-		<PackageVersion Include="OpenTelemetry"                                         Version="1.12.0"                       />
-		<PackageVersion Include="OpenTelemetry.Exporter.Console"                        Version="1.12.0"                       />
+		<PackageVersion Include="linq2db.t4models"                                      Version="6.0.0-rc.3"                   />
+		<PackageVersion Include="Microsoft.Extensions.ObjectPool"                       Version="$(Net10Latest)"               />
+		<PackageVersion Include="OpenTelemetry"                                         Version="1.14.0"                       />
+		<PackageVersion Include="OpenTelemetry.Exporter.Console"                        Version="1.14.0"                       />
 		<PackageVersion Include="System.Runtime.InteropServices.RuntimeInformation"     Version="4.3.0"                        />
 	
-		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly"           Version="$(NetLatest)"                 />
-		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server"    Version="$(NetLatest)"                 />
-		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="$(NetLatest)"                 />
+		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly"           Version="$(Net10Latest)"               />
+		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server"    Version="$(Net10Latest)"               />
+		<PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="$(Net10Latest)"               />
 	</ItemGroup>
 
 	<ItemGroup Label="Compat">
-		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="$(NetLatestForNuget)"         />
+		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="$(Net8LatestForNuget)"        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net9.0'))" />
+		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="$(Net9LatestForNuget)"        Condition="'$(TargetFramework)'=='net9.0'"  />
+		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="$(Net10LatestForNuget)"       Condition="'$(TargetFramework)'=='net10.0'" />
+	</ItemGroup>
+
+	<ItemGroup Label="Manage Transient Packages with Vulnerabilities">
+		<!--suppress invalid System.Private.Uri errors : https://github.com/dotnet/sdk/issues/42651-->
+		<NuGetAuditSuppress
+			Include="
+			https://github.com/advisories/GHSA-5f2m-466j-3848;
+			https://github.com/advisories/GHSA-x5qj-9vmx-7g6g;
+			https://github.com/advisories/GHSA-xhfc-gr8f-ffwc" />
+
+		<PackageVersion Include="Newtonsoft.Json"                                       Version="13.0.1"                       />
+		<PackageVersion Include="Microsoft.AspNetCore.Server.Kestrel.Core"              Version="2.3.6"                        Condition="'$(TargetFramework)'=='net462'" />
 	</ItemGroup>
 
 </Project>

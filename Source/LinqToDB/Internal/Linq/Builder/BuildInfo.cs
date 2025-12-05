@@ -17,15 +17,17 @@ namespace LinqToDB.Internal.Linq.Builder
 		public BuildInfo(BuildInfo buildInfo, Expression expression)
 			: this(buildInfo.Parent, expression, buildInfo.SelectQuery)
 		{
-			SequenceInfo         = buildInfo;
-			CreateSubQuery       = buildInfo.CreateSubQuery;
+			SequenceInfo   = buildInfo;
+			CreateSubQuery = buildInfo.CreateSubQuery;
+			IgnoreOrderBy  = buildInfo.IgnoreOrderBy;
 		}
 
 		public BuildInfo(BuildInfo buildInfo, Expression expression, SelectQuery selectQuery)
 			: this(buildInfo.Parent, expression, selectQuery)
 		{
-			SequenceInfo         = buildInfo;
-			CreateSubQuery       = buildInfo.CreateSubQuery;
+			SequenceInfo   = buildInfo;
+			CreateSubQuery = buildInfo.CreateSubQuery;
+			IgnoreOrderBy  = buildInfo.IgnoreOrderBy;
 		}
 
 		public BuildInfo?     SequenceInfo             { get; set; }
@@ -37,48 +39,45 @@ namespace LinqToDB.Internal.Linq.Builder
 		public bool           IsAssociation            { get; set; }
 		public JoinType       JoinType                 { get; set; }
 		public bool           IsSubQuery               => Parent != null;
+		public bool           IgnoreOrderBy            { get; set; }
 
-		bool _isAssociationBuilt;
 		public bool   IsAssociationBuilt
 		{
-			get => _isAssociationBuilt;
+			get;
 			set
 			{
-				_isAssociationBuilt = value;
+				field = value;
 
 				if (SequenceInfo != null)
 					SequenceInfo.IsAssociationBuilt = value;
 			}
 		}
 
-		SourceCardinality _sourceCardinality;
 		public SourceCardinality SourceCardinality
 		{
 			get
 			{
 				if (SequenceInfo == null)
-					return _sourceCardinality;
+					return field;
 				var parent = SequenceInfo.SourceCardinality;
 				if (parent == SourceCardinality.Unknown)
-					return _sourceCardinality;
+					return field;
 				return parent;
 			}
 
-			set => _sourceCardinality = value;
+			set;
 		}
-
-		bool _isAggregation;
 
 		public bool IsAggregation
 		{
 			get
 			{
-				if (_isAggregation || SequenceInfo == null)
-					return _isAggregation;
+				if (field || SequenceInfo == null)
+					return field;
 				return SequenceInfo.IsAggregation;
 			}
 
-			set => _isAggregation = value;
+			set;
 		}
 
 		public bool IsSubqueryExpression { get; set; }

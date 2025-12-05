@@ -47,12 +47,15 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			SqlProviderFlags.SupportsPredicatesComparison      = true;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
 
+			// This is commented, because runtime for SDS 2 has this flag disabled
+			// and there is no value in supporting it for v1 as it doesn't add any additional value
+			//
 			// this actually requires compilation flag set
 			// System.Data.Sqlite enabled it in 2021
 			// MS use different runtime build without it enabled yet:
 			// https://github.com/ericsink/SQLitePCL.raw/issues/377
-			SqlProviderFlags.IsUpdateTakeSupported     = Provider == SQLiteProvider.System;
-			SqlProviderFlags.IsUpdateSkipTakeSupported = Provider == SQLiteProvider.System;
+			//SqlProviderFlags.IsUpdateTakeSupported     = Provider == SQLiteProvider.System;
+			//SqlProviderFlags.IsUpdateSkipTakeSupported = Provider == SQLiteProvider.System;
 
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel = null;
 
@@ -159,7 +162,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			SetCharFieldToType<char>("nchar", DataTools.GetCharExpression);
 		}
 
-		private SQLiteProvider Provider { get; }
+		protected SQLiteProvider Provider { get; }
 
 		private void SetSqliteField<T>(Expression<Func<DbDataReader, int, T>> expr, Type[] fieldTypes, params string[] typeNames)
 		{
@@ -254,6 +257,9 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 						if (Name == ProviderName.SQLiteClassic)
 							dataType = dataType.WithDataType(DataType.Text);
 
+						break;
+					case (DataType.Binary, _) when Name is ProviderName.SQLiteClassic:
+						value = guid.ToByteArray();
 						break;
 					default:
 						if (Name == ProviderName.SQLiteMS)

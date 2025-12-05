@@ -19,24 +19,24 @@ namespace Cli.All.SQLiteNorthwind
 	[Table("Employees")]
 	public class Employee : IEquatable<Employee>
 	{
-		[Column("EmployeeID"     , DataType  = DataType.Int32    , DbType   = "int"           , Length = 4            , Precision = 10, Scale     = 0, IsPrimaryKey = true)] public int       EmployeeId      { get; set; } // int
-		[Column("LastName"       , CanBeNull = false             , DataType = DataType.VarChar, DbType = "varchar(20)", Length    = 20, Precision = 0, Scale        = 0   )] public string    LastName        { get; set; } = null!; // varchar(20)
-		[Column("FirstName"      , CanBeNull = false             , DataType = DataType.VarChar, DbType = "varchar(10)", Length    = 10, Precision = 0, Scale        = 0   )] public string    FirstName       { get; set; } = null!; // varchar(10)
-		[Column("Title"          , DataType  = DataType.VarChar  , DbType   = "varchar(30)"   , Length = 30           , Precision = 0 , Scale     = 0                     )] public string?   Title           { get; set; } // varchar(30)
-		[Column("TitleOfCourtesy", DataType  = DataType.VarChar  , DbType   = "varchar(25)"   , Length = 25           , Precision = 0 , Scale     = 0                     )] public string?   TitleOfCourtesy { get; set; } // varchar(25)
-		[Column("BirthDate"      , DataType  = DataType.Timestamp, DbType   = "timestamp"     , Length = 8            , Precision = 0 , Scale     = 0                     )] public DateTime? BirthDate       { get; set; } // timestamp
-		[Column("HireDate"       , DataType  = DataType.Timestamp, DbType   = "timestamp"     , Length = 8            , Precision = 0 , Scale     = 0                     )] public DateTime? HireDate        { get; set; } // timestamp
-		[Column("Address"        , DataType  = DataType.VarChar  , DbType   = "varchar(60)"   , Length = 60           , Precision = 0 , Scale     = 0                     )] public string?   Address         { get; set; } // varchar(60)
-		[Column("City"           , DataType  = DataType.VarChar  , DbType   = "varchar(15)"   , Length = 15           , Precision = 0 , Scale     = 0                     )] public string?   City            { get; set; } // varchar(15)
-		[Column("Region"         , DataType  = DataType.VarChar  , DbType   = "varchar(15)"   , Length = 15           , Precision = 0 , Scale     = 0                     )] public string?   Region          { get; set; } // varchar(15)
-		[Column("PostalCode"     , DataType  = DataType.VarChar  , DbType   = "varchar(10)"   , Length = 10           , Precision = 0 , Scale     = 0                     )] public string?   PostalCode      { get; set; } // varchar(10)
-		[Column("Country"        , DataType  = DataType.VarChar  , DbType   = "varchar(15)"   , Length = 15           , Precision = 0 , Scale     = 0                     )] public string?   Country         { get; set; } // varchar(15)
-		[Column("HomePhone"      , DataType  = DataType.VarChar  , DbType   = "varchar(24)"   , Length = 24           , Precision = 0 , Scale     = 0                     )] public string?   HomePhone       { get; set; } // varchar(24)
-		[Column("Extension"      , DataType  = DataType.VarChar  , DbType   = "varchar(4)"    , Length = 4            , Precision = 0 , Scale     = 0                     )] public string?   Extension       { get; set; } // varchar(4)
-		[Column("Photo"          , DataType  = DataType.VarBinary, DbType   = "blob"          , Length = 2147483647   , Precision = 0 , Scale     = 0                     )] public byte[]?   Photo           { get; set; } // blob
-		[Column("Notes"          , DataType  = DataType.Text     , DbType   = "text(max)"     , Length = 2147483647   , Precision = 0 , Scale     = 0                     )] public string?   Notes           { get; set; } // text(max)
-		[Column("ReportsTo"      , DataType  = DataType.Int32    , DbType   = "int"           , Length = 4            , Precision = 10, Scale     = 0                     )] public int?      ReportsTo       { get; set; } // int
-		[Column("PhotoPath"      , DataType  = DataType.VarChar  , DbType   = "varchar(255)"  , Length = 255          , Precision = 0 , Scale     = 0                     )] public string?   PhotoPath       { get; set; } // varchar(255)
+		[Column("EmployeeID"     , DataType  = DataType.Int32    , DbType   = "INT"            , IsPrimaryKey = true                      )] public int       EmployeeId      { get; set; } // INT
+		[Column("LastName"       , CanBeNull = false             , DataType = DataType.NVarChar, DbType       = "varchar(20)", Length = 20)] public string    LastName        { get; set; } = null!; // varchar(20)
+		[Column("FirstName"      , CanBeNull = false             , DataType = DataType.NVarChar, DbType       = "varchar(10)", Length = 10)] public string    FirstName       { get; set; } = null!; // varchar(10)
+		[Column("Title"          , DataType  = DataType.NVarChar , DbType   = "varchar(30)"    , Length       = 30                        )] public string?   Title           { get; set; } // varchar(30)
+		[Column("TitleOfCourtesy", DataType  = DataType.NVarChar , DbType   = "varchar(25)"    , Length       = 25                        )] public string?   TitleOfCourtesy { get; set; } // varchar(25)
+		[Column("BirthDate"      , DataType  = DataType.DateTime2, DbType   = "timestamp"                                                 )] public DateTime? BirthDate       { get; set; } // timestamp
+		[Column("HireDate"       , DataType  = DataType.DateTime2, DbType   = "timestamp"                                                 )] public DateTime? HireDate        { get; set; } // timestamp
+		[Column("Address"        , DataType  = DataType.NVarChar , DbType   = "varchar(60)"    , Length       = 60                        )] public string?   Address         { get; set; } // varchar(60)
+		[Column("City"           , DataType  = DataType.NVarChar , DbType   = "varchar(15)"    , Length       = 15                        )] public string?   City            { get; set; } // varchar(15)
+		[Column("Region"         , DataType  = DataType.NVarChar , DbType   = "varchar(15)"    , Length       = 15                        )] public string?   Region          { get; set; } // varchar(15)
+		[Column("PostalCode"     , DataType  = DataType.NVarChar , DbType   = "varchar(10)"    , Length       = 10                        )] public string?   PostalCode      { get; set; } // varchar(10)
+		[Column("Country"        , DataType  = DataType.NVarChar , DbType   = "varchar(15)"    , Length       = 15                        )] public string?   Country         { get; set; } // varchar(15)
+		[Column("HomePhone"      , DataType  = DataType.NVarChar , DbType   = "varchar(24)"    , Length       = 24                        )] public string?   HomePhone       { get; set; } // varchar(24)
+		[Column("Extension"      , DataType  = DataType.NVarChar , DbType   = "varchar(4)"     , Length       = 4                         )] public string?   Extension       { get; set; } // varchar(4)
+		[Column("Photo"          , DataType  = DataType.VarBinary, DbType   = "BLOB"                                                      )] public byte[]?   Photo           { get; set; } // BLOB
+		[Column("Notes"          , DataType  = DataType.NVarChar , DbType   = "TEXT"                                                      )] public string?   Notes           { get; set; } // TEXT
+		[Column("ReportsTo"      , DataType  = DataType.Int32    , DbType   = "INT"                                                       )] public int?      ReportsTo       { get; set; } // INT
+		[Column("PhotoPath"      , DataType  = DataType.NVarChar , DbType   = "varchar(255)"   , Length       = 255                       )] public string?   PhotoPath       { get; set; } // varchar(255)
 
 		#region IEquatable<T> support
 		private static readonly IEqualityComparer<Employee> _equalityComparer = ComparerBuilder.GetEqualityComparer<Employee>(c => c.EmployeeId);

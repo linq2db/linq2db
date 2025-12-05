@@ -12,11 +12,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	[PublicAPI]
 	public static class PostgreSQLTools
 	{
-		private  static PostgreSQLProviderDetector? _providerDetector;
 		internal static PostgreSQLProviderDetector   ProviderDetector
 		{
-			get => _providerDetector ??= new();
-			set => _providerDetector = value;
+			get => field ??= new();
+			set;
 		}
 
 		public static bool AutoDetectProvider
@@ -25,9 +24,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			set => ProviderDetector.AutoDetectProvider = value;
 		}
 
-		public static IDataProvider GetDataProvider(PostgreSQLVersion version = PostgreSQLVersion.AutoDetect, string? connectionString = null, DbConnection? connection = null)
+		public static IDataProvider GetDataProvider(PostgreSQLVersion version = PostgreSQLVersion.AutoDetect, string? connectionString = null, DbConnection? connection = null, DbTransaction? transaction = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection, ConnectionString: connectionString), default, version);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection, ConnectionString: connectionString, DbTransaction: transaction), default, version);
 		}
 
 		public static void ResolvePostgreSQL(string path)

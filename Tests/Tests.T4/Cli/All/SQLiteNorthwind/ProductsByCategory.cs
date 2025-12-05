@@ -16,10 +16,10 @@ namespace Cli.All.SQLiteNorthwind
 	[Table("Products by Category", IsView = true)]
 	public class ProductsByCategory
 	{
-		[Column("CategoryName"   , CanBeNull = false           , DataType = DataType.VarChar, DbType = "varchar(15)", Length    = 15, Precision = 0, Scale = 0)] public string  CategoryName    { get; set; } = null!; // varchar(15)
-		[Column("ProductName"    , CanBeNull = false           , DataType = DataType.VarChar, DbType = "varchar(40)", Length    = 40, Precision = 0, Scale = 0)] public string  ProductName     { get; set; } = null!; // varchar(40)
-		[Column("QuantityPerUnit", DataType  = DataType.VarChar, DbType   = "varchar(20)"   , Length = 20           , Precision = 0 , Scale     = 0           )] public string? QuantityPerUnit { get; set; } // varchar(20)
-		[Column("UnitsInStock"   , DataType  = DataType.Int32  , DbType   = "int"           , Length = 4            , Precision = 10, Scale     = 0           )] public int?    UnitsInStock    { get; set; } // int
-		[Column("Discontinued"   , DataType  = DataType.Int32  , DbType   = "int"           , Length = 4            , Precision = 10, Scale     = 0           )] public int     Discontinued    { get; set; } // int
+		[Column("CategoryName"   , CanBeNull = false            , DataType = DataType.NVarChar, DbType = "varchar(15)", Length = 15)] public string  CategoryName    { get; set; } = null!; // varchar(15)
+		[Column("ProductName"    , CanBeNull = false            , DataType = DataType.NVarChar, DbType = "varchar(40)", Length = 40)] public string  ProductName     { get; set; } = null!; // varchar(40)
+		[Column("QuantityPerUnit", DataType  = DataType.NVarChar, DbType   = "varchar(20)"    , Length = 20                        )] public string? QuantityPerUnit { get; set; } // varchar(20)
+		[Column("UnitsInStock"   , DataType  = DataType.Int32   , DbType   = "INT"                                                 )] public int?    UnitsInStock    { get; set; } // INT
+		[Column("Discontinued"   , DataType  = DataType.Int32   , DbType   = "INT"                                                 )] public int     Discontinued    { get; set; } // INT
 	}
 }

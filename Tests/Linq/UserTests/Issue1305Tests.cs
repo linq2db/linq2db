@@ -63,7 +63,8 @@ namespace Tests.UserTests
 		/// </summary>
 		/// <param name="context">Configuration string for test context.</param>
 		[Test]
-		public void TestAttributeMapping([DataSources(false, ProviderName.SQLiteMS)] string context)
+		[YdbNotImplementedYet]
+		public void TestAttributeMapping([DataSources(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (var __ = db.CreateLocalTable<ColumnOrderTest>())
@@ -96,7 +97,8 @@ namespace Tests.UserTests
 		/// </summary>
 		/// <param name="context">Configuration string for test context.</param>
 		[Test]
-		public void TestFluentMapping([DataSources(false, ProviderName.SQLiteMS)] string context)
+		[YdbNotImplementedYet]
+		public void TestFluentMapping([DataSources(false)] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -104,7 +106,7 @@ namespace Tests.UserTests
 				.Entity<FluentMapping>()
 				.Property(t => t.Audit1ID).HasOrder(-10)
 				.Property(t => t.Audit2ID).HasOrder(-1)
-				.Property(t => t.RecordID).HasOrder(1)
+				.Property(t => t.RecordID).HasOrder(1).IsPrimaryKey()
 				.Property(t => t.EffectiveEnd).HasOrder(3)
 				.Property(t => t.EffectiveStart).HasOrder(2)
 				.Property(t => t.Key).HasOrder(4)

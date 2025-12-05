@@ -17,15 +17,17 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class InsertWithOutputTests : TestBase
 	{
-		private const string FeatureInsertOutputSingle     = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
-		private const string FeatureInsertOutputMultiple   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
-		private const string FeatureInsertOutputWithSchema = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllSQLite}";
+		private const string FeatureInsertOutputSingleWithExpressions   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureInsertOutputSingle                  = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{ProviderName.Ydb}";
+		private const string FeatureInsertOutputMultipleWithExpressions = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureInsertOutputMultiple                = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite},{ProviderName.Ydb}";
+		private const string FeatureInsertOutputWithSchema              = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllSQLite},{ProviderName.Ydb}";
 		private const string FeatureInsertOutputInto       = $"{TestProvName.AllSqlServer}";
 
 		[Table]
 		sealed class TableWithData
 		{
-			[Column]              public int     Id       { get; set; }
+			[PrimaryKey]          public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
 			[Column(Length = 50)] public string? ValueStr { get; set; }
 		}
@@ -33,7 +35,7 @@ namespace Tests.xUpdate
 		[Table(Schema = "TestSchema")]
 		sealed class TableWithDataAndSchema
 		{
-			[Column]              public int     Id       { get; set; }
+			[PrimaryKey]          public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
 			[Column(Length = 50)] public string? ValueStr { get; set; }
 		}
@@ -41,7 +43,7 @@ namespace Tests.xUpdate
 		[Table]
 		sealed class DestinationTable
 		{
-			[Column]              public int     Id       { get; set; }
+			[PrimaryKey]          public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
 			[Column(Length = 50)] public string? ValueStr { get; set; }
 		}
@@ -54,7 +56,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithOutputProjectionFromQueryTest([IncludeDataSources(true, FeatureInsertOutputMultiple)] string context, [Values(100, 200)] int param)
+		public void InsertWithOutputProjectionFromQueryTest([IncludeDataSources(true, FeatureInsertOutputMultipleWithExpressions)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
 			using (var db     = GetDataContext(context))
@@ -88,7 +90,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5192")]
 		public void InsertWithOutputFromQueryTest([IncludeDataSources(true, FeatureInsertOutputMultiple)] string context, [Values(100, 200)] int param)
 		{
 			var sourceData    = GetSourceData();
@@ -209,7 +211,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithOutputTest3([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(100, 200)] int param)
+		public void InsertWithOutputTest3([IncludeDataSources(true, FeatureInsertOutputSingleWithExpressions)] string context, [Values(100, 200)] int param)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -248,7 +250,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWithOutputTest4([IncludeDataSources(true, FeatureInsertOutputSingle)] string context, [Values(100, 200)] int param)
+		public void InsertWithOutputTest4([IncludeDataSources(true, FeatureInsertOutputSingleWithExpressions)] string context, [Values(100, 200)] int param)
 		{
 			using (var db = GetDataContext(context))
 			{

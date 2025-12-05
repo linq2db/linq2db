@@ -572,6 +572,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					ParseSet(builder, sourceRef.BuildContext, memberAccess, memberAccess, assignment.Expression, envelopes, false);
 				}
+
+				foreach (var parameter in generic.Parameters)
+				{
+					if (parameter.MemberInfo != null)
+					{
+						var memberAccess = Expression.MakeMemberAccess(targetRef, parameter.MemberInfo);
+
+						ParseSet(builder, sourceRef.BuildContext, memberAccess, memberAccess, parameter.Expression, envelopes, false);
+					}
+				}
 			}
 			else
 			{
@@ -606,8 +616,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public sealed class UpdateContext : PassThroughContext
 		{
-			ITableContext? _targetTable;
-
 			public UpdateContext(IBuildContext querySequence, UpdateTypeEnum updateType, SqlUpdateStatement updateStatement, bool createColumns)
 				: base(querySequence, querySequence.SelectQuery)
 			{
@@ -624,12 +632,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public ITableContext? TargetTable
 			{
-				get => _targetTable;
+				get;
 				set
 				{
-					_targetTable = value;
+					field = value;
 
-					UpdateStatement.Update.Table = _targetTable?.SqlTable;
+					UpdateStatement.Update.Table = value?.SqlTable;
 				}
 			}
 
@@ -726,8 +734,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					// new UpdateOutput<T> { Deleted = deleted, Inserted = inserted, }
 					Expression.MemberInit(
 						Expression.New(returnType),
-						Expression.Bind(returnType.GetProperty(nameof(UpdateOutput<object>.Deleted))!, deletedExpr),
-						Expression.Bind(returnType.GetProperty(nameof(UpdateOutput<object>.Inserted))!, insertedExpr));
+						Expression.Bind(returnType.GetProperty(nameof(UpdateOutput<>.Deleted))!, deletedExpr),
+						Expression.Bind(returnType.GetProperty(nameof(UpdateOutput<>.Inserted))!, insertedExpr));
 			}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)

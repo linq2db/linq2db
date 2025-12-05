@@ -75,8 +75,8 @@ namespace Tests.Linq
 				{
 					Assert.That(query.GetStatement().CollectParameters(), Has.Length.EqualTo(1));
 					Assert.That(queryInlined.GetStatement().CollectParameters(), Is.Empty);
+				}
 			}
-		}
 		}
 
 		[Test]
@@ -95,8 +95,8 @@ namespace Tests.Linq
 				{
 					Assert.That(query.GetStatement().CollectParameters(), Has.Length.EqualTo(3));
 					Assert.That(queryInlined.GetStatement().CollectParameters(), Is.Empty);
+				}
 			}
-		}
 		}
 
 		[ActiveIssue(
@@ -217,9 +217,10 @@ namespace Tests.Linq
 
 		// Excluded providers inline such parameter or miss mappings
 		[Test]
+		[YdbMemberNotFound]
 		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var p   = 123.456m;
 				db.GetTable<AllTypes>().Where(t => t.DecimalDataType == p).ToArray();
@@ -232,9 +233,10 @@ namespace Tests.Linq
 
 		// Excluded providers inline such parameter or miss mappings
 		[Test]
+		[YdbMemberNotFound]
 		public void ExposeSqlBinaryParameter([DataSources(false, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllInformix, TestProvName.AllFirebird, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var p   = new byte[] { 0, 1, 2 };
 				db.GetTable<AllTypes>().Where(t => t.BinaryDataType == p).ToArray();
@@ -313,6 +315,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbCteAsSource]
 		public void TestQueryableCall([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -322,6 +325,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbCteAsSource]
 		public void TestQueryableCallWithParameters([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// baselines could be affected by cache
@@ -330,6 +334,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbCteAsSource]
 		public void TestQueryableCallWithParametersWorkaround([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// baselines could be affected by cache
@@ -354,6 +359,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbCteAsSource]
 		public void TestQueryableCallWithParametersWorkaround2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -403,7 +409,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class Table404One
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			public static readonly Table404One[] Data = new[]
 			{
@@ -415,7 +421,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class Table404Two
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			[Column] public Issue404 Usage { get; set; }
 
@@ -524,7 +530,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class TestEqualsTable1
 		{
-			[Column]
+			[PrimaryKey]
 			public int Id { get; set; }
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(TestEqualsTable2.FK), CanBeNull = true)]
@@ -534,7 +540,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class TestEqualsTable2
 		{
-			[Column]
+			[PrimaryKey]
 			public int Id { get; set; }
 
 			[Column]
@@ -1334,6 +1340,7 @@ namespace Tests.Linq
 		private int _param;
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
+		[YdbCteAsSource]
 		public void TestIQueryableParameterEvaluation([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			// cached queries affect cnt values due to extra comparisons in cache
@@ -1435,7 +1442,7 @@ namespace Tests.Linq
 					Assert.That(_cnt1, Is.EqualTo(1));
 					Assert.That(_cnt2, Is.EqualTo(1));
 					Assert.That(_cnt3, Is.EqualTo(1));
-			}
+				}
 			}
 
 			List<Person> Query(ITestDataContext db)
@@ -1480,6 +1487,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3450")]
+		[YdbCteAsSource]
 		public void TestIQueryableParameterEvaluationCaching([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1672,7 +1680,7 @@ namespace Tests.Linq
 				{
 					Assert.That(persons.All(p => p.ID != _param), Is.True);
 					Assert.That(_cnt, Is.EqualTo(1));
-			}
+				}
 			}
 
 			List<Person> Query(ITestDataContext db)
@@ -1856,7 +1864,7 @@ namespace Tests.Linq
 
 		sealed class TestBool
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			[Column(Configuration = ProviderName.Sybase, CanBeNull = false)]
 			public bool? Value { get; set; }
 		}
@@ -1886,7 +1894,6 @@ namespace Tests.Linq
 			// test field
 			tb.Update(r => new TestBool()
 			{
-				Id = 1,
 				Value = !r.Value
 			});
 
@@ -1956,7 +1963,7 @@ namespace Tests.Linq
 				if (iteration > 1)
 				{
 					Assert.That(tb.GetCacheMissCount(), Is.EqualTo(cacheMissCount));
-		}
+				}
 
 				var record = tb.Single();
 				using (Assert.EnterMultipleScope())
@@ -1966,8 +1973,8 @@ namespace Tests.Linq
 					Assert.That(record.Value3, Is.EqualTo(f3.Value));
 					Assert.That(record.Value4, Is.EqualTo(f4.Value));
 					Assert.That(record.Value5, Is.EqualTo(f5.Value));
-	}
-}
+				}
+			}
 		}
 
 		readonly struct Wrap<TValue>
@@ -1990,8 +1997,22 @@ namespace Tests.Linq
 			AssertQuery(db.Parent.Where(r => r.ParentID == valueGetter()));
 		}
 
+		[Test]
+		public void LambdaBodyInQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Expression<Func<Parent, int>> valueGetter = p => p.ParentID;
+
+			var query = db.Parent
+				.Select(p => (valueGetter.Body as MemberExpression)!.Member.Name);
+
+			AssertQuery(query);
+		}
+
 		sealed class Issue4963Table
 		{
+			[PrimaryKey] public int Id { get; set; }
 			public byte Field { get; set; }
 		}
 
@@ -1999,7 +2020,7 @@ namespace Tests.Linq
 		public void Issue4963([DataSources] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(new[] { new Issue4963Table() { Field = 2 } });
+			using var tb = db.CreateLocalTable(new[] { new Issue4963Table() { Id = 1, Field = 2 } });
 
 			db.InlineParameters = inline;
 			var offset = -1;

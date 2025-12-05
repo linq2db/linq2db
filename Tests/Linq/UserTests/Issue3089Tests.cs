@@ -40,8 +40,7 @@ namespace Tests.UserTests
 					.Union(from x in table
 						select new TableTimeResult {Time = null});
 
-				var act = () => query.ToArray();
-				act.ShouldNotThrow();
+				query.ToArray();
 			}
 		}
 
@@ -60,8 +59,7 @@ namespace Tests.UserTests
 					.Union(from x in table
 					select new TableTimeResult {Time = null});
 
-				var act = () => query.ToArray();
-				act.ShouldNotThrow();
+				query.ToArray();
 			}
 		}
 
@@ -81,8 +79,7 @@ namespace Tests.UserTests
 					.Union(from x in table
 						select new TableTimeResult {Time = null});
 
-				var act = () => query.ToArray();
-				act.ShouldNotThrow();
+				query.ToArray();
 			}
 		}
 
@@ -102,8 +99,7 @@ namespace Tests.UserTests
 					.Union(from x in table
 						select new TableTimeResult {Time = x.Time});
 
-				var act = () => query.ToArray();
-				act.ShouldNotThrow();
+				query.ToArray();
 			}
 		}
 

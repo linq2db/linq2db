@@ -1,4 +1,6 @@
-﻿using System;
+﻿extern alias MySqlData;
+
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
@@ -8,6 +10,8 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Data;
+
+using MySqlData::MySql.Data.MySqlClient;
 
 using NUnit.Framework;
 
@@ -60,15 +64,17 @@ namespace Tests.Data
 			using (var db0 = (TestDataConnection)GetDataContext(context))
 			using (var db  = new DataContext(new DataOptions().UseConnectionString(db0.DataProvider.Name, "BAD")))
 			{
-				db.OnTraceConnection = e =>
+				using var scope = db.UseQueryTraceOptions(o => o.WithOnTrace(e =>
 				{
 					events[e.TraceInfoStep] = e;
 					counters[e.TraceInfoStep]++;
-				};
+				}));
 
 				Assert.That(
 					() => db.GetTable<Child>().ToList(),
-					Throws.TypeOf<ArgumentException>().Or.TypeOf<InvalidOperationException>());
+					Throws.TypeOf<ArgumentException>()
+						.Or.TypeOf<InvalidOperationException>()
+						.Or.TypeOf<MySqlException>());
 				using (Assert.EnterMultipleScope())
 				{
 					// steps called once
@@ -93,15 +99,18 @@ namespace Tests.Data
 			using (var db0 = (TestDataConnection)GetDataContext(context))
 			using (var db  = new DataContext(new DataOptions().UseConnectionString(db0.DataProvider.Name, "BAD")))
 			{
-				db.OnTraceConnection = e =>
+				using var scope = db.UseQueryTraceOptions(o => o.WithOnTrace(e =>
 				{
 					events[e.TraceInfoStep] = e;
 					counters[e.TraceInfoStep]++;
-				};
+				}));
 
 				Assert.That(
 					() => db.GetTable<Child>().ToListAsync(),
-					Throws.TypeOf<ArgumentException>().Or.TypeOf<InvalidOperationException>());
+					Throws.TypeOf<ArgumentException>()
+						.Or.TypeOf<InvalidOperationException>()
+						.Or.TypeOf<MySqlException>());
+
 				using (Assert.EnterMultipleScope())
 				{
 					// steps called once
@@ -122,7 +131,7 @@ namespace Tests.Data
 			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = GetDataConnection(context, o => o.UseTracing(e =>
+			using (var db = GetDataContext(context, o => o.UseTracing(e =>
 			{
 				events[e.TraceInfoStep] = e;
 				counters[e.TraceInfoStep]++;
@@ -156,7 +165,7 @@ namespace Tests.Data
 			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = GetDataConnection(context, o => o.UseTracing(e =>
+			using (var db = GetDataContext(context, o => o.UseTracing(e =>
 			{
 				events[e.TraceInfoStep] = e;
 				counters[e.TraceInfoStep]++;
@@ -198,7 +207,7 @@ namespace Tests.Data
 			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
 
-			using (var db = GetDataConnection(context, o => o.UseTracing(e =>
+			using (var db = GetDataContext(context, o => o.UseTracing(e =>
 			{
 				events[e.TraceInfoStep] = e;
 				counters[e.TraceInfoStep]++;

@@ -228,14 +228,7 @@ namespace LinqToDB.Internal.Extensions
 		{
 			return type.GetConstructor(
 				BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
-				null,
-				Type.EmptyTypes,
-				null);
-		}
-
-		public static TypeCode GetTypeCodeEx(this Type type)
-		{
-			return Type.GetTypeCode(type);
+				Type.EmptyTypes);
 		}
 
 		public static bool IsPropertyEx(this MemberInfo memberInfo)
@@ -382,17 +375,6 @@ namespace LinqToDB.Internal.Extensions
 		}
 
 		/// <summary>
-		/// Returns true, if type is <see cref="Nullable{T}"/> type.
-		/// </summary>
-		/// <param name="type">A <see cref="Type"/> instance. </param>
-		/// <returns><c>true</c>, if <paramref name="type"/> represents <see cref="Nullable{T}"/> type; otherwise, <c>false</c>.</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsNullable(this Type type)
-		{
-			return type.IsConstructedGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
-		}
-
-		/// <summary>
 		/// Returns the underlying type argument of the specified type.
 		/// </summary>
 		/// <param name="type">A <see cref="Type"/> instance. </param>
@@ -405,34 +387,15 @@ namespace LinqToDB.Internal.Extensions
 		/// </returns>
 		public static Type ToUnderlying(this Type type)
 		{
-			if (type == null) throw new ArgumentNullException(nameof(type));
+			if (type == null)
+				throw new ArgumentNullException(nameof(type));
 
-			if (type.IsNullable()) type = type.GetGenericArguments()[0];
-			if (type.IsEnum      ) type = Enum.GetUnderlyingType(type);
+			type = type.UnwrapNullableType();
+
+			if (type.IsEnum)
+				type = Enum.GetUnderlyingType(type);
 
 			return type;
-		}
-
-		public static Type ToNullableUnderlying(this Type type)
-		{
-			if (type == null) throw new ArgumentNullException(nameof(type));
-			//return type.IsNullable() ? type.GetGenericArguments()[0] : type;
-			return Nullable.GetUnderlyingType(type) ?? type;
-		}
-
-		/// <summary>
-		/// Wraps type into <see cref="Nullable{T}"/> class.
-		/// </summary>
-		/// <param name="type">Value type to wrap. Must be value type (except <see cref="Nullable{T}"/> itself).</param>
-		/// <returns>Type, wrapped by <see cref="Nullable{T}"/>.</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Type AsNullable(this Type type)
-		{
-			if (type == null)      throw new ArgumentNullException(nameof(type));
-			if (!type.IsValueType) throw new ArgumentException($"{type} is not a value type");
-			if (type.IsNullable()) throw new ArgumentException($"{type} is nullable type already");
-
-			return typeof(Nullable<>).MakeGenericType(type);
 		}
 
 		public static IEnumerable<Type> GetDefiningTypes(this Type child, MemberInfo member)
@@ -612,58 +575,6 @@ namespace LinqToDB.Internal.Extensions
 		}
 
 		///<summary>
-		/// Gets the type of list item.
-		///</summary>
-		/// <param name="list">A <see cref="System.Object"/> instance. </param>
-		///<returns>The Type instance that represents the exact runtime type of list item.</returns>
-		public static Type GetListItemType(this IEnumerable? list)
-		{
-			var typeOfObject = typeof(object);
-
-			if (list == null)
-				return typeOfObject;
-
-			if (list is Array)
-				return list.GetType().GetElementType()!;
-
-			if (list is IList or ITypedList or IListSource)
-			{
-				var type = list.GetType();
-
-				PropertyInfo? last = null;
-
-				foreach (var pi in type.GetPropertiesEx())
-				{
-					if (pi.GetIndexParameters().Length > 0 && pi.PropertyType != typeOfObject)
-					{
-						if (pi.Name == "Item")
-							return pi.PropertyType;
-
-						last = pi;
-					}
-				}
-
-				if (last != null)
-					return last.PropertyType;
-			}
-
-			if (list is IList list1)
-			{
-				foreach (var o in list1)
-					if (o != null && o.GetType() != typeOfObject)
-						return o.GetType();
-			}
-			else
-			{
-				foreach (var o in list)
-					if (o != null && o.GetType() != typeOfObject)
-						return o.GetType();
-			}
-
-			return typeOfObject;
-		}
-
-		///<summary>
 		/// Gets the Type of list item.
 		///</summary>
 		/// <param name="listType">A <see cref="Type"/> instance. </param>
@@ -806,45 +717,10 @@ namespace LinqToDB.Internal.Extensions
 			return null;
 		}
 
-		public static bool IsFloatType(this Type type)
-		{
-			if (type.IsNullable())
-				type = type.GetGenericArguments()[0];
-
-			switch (type.GetTypeCodeEx())
-			{
-				case TypeCode.Single  :
-				case TypeCode.Double  :
-				case TypeCode.Decimal : return true;
-			}
-
-			return false;
-		}
-
-		public static bool IsIntegerType(this Type type)
-		{
-			if (type.IsNullable())
-				type = type.GetGenericArguments()[0];
-
-			switch (type.GetTypeCodeEx())
-			{
-				case TypeCode.SByte  :
-				case TypeCode.Byte   :
-				case TypeCode.Int16  :
-				case TypeCode.UInt16 :
-				case TypeCode.Int32  :
-				case TypeCode.UInt32 :
-				case TypeCode.Int64  :
-				case TypeCode.UInt64 : return true;
-			}
-
-			return false;
-		}
-
 #if NET8_0_OR_GREATER
 		public static object? GetDefaultValue(this Type type)
 		{
-			if (type.IsNullableType())
+			if (type.IsNullableOrReferenceType())
 				return null;
 
 			return RuntimeHelpers.GetUninitializedObject(type);
@@ -865,7 +741,7 @@ namespace LinqToDB.Internal.Extensions
 
 		public static object? GetDefaultValue(this Type type)
 		{
-			if (type.IsNullableType())
+			if (type.IsNullableOrReferenceType())
 				return null;
 
 			var dtype  = typeof(GetDefaultValueHelper<>).MakeGenericType(type);
@@ -924,21 +800,21 @@ namespace LinqToDB.Internal.Extensions
 		{
 			return
 				member.Name == "Value" &&
-				member.DeclaringType!.IsNullable();
+				member.DeclaringType!.IsNullableType;
 		}
 
 		public static bool IsNullableHasValueMember(this MemberInfo member)
 		{
 			return
 				member.Name == "HasValue" &&
-				member.DeclaringType!.IsNullable();
+				member.DeclaringType!.IsNullableType;
 		}
 
 		public static bool IsNullableGetValueOrDefault(this MemberInfo member)
 		{
 			return
 				member.Name == "GetValueOrDefault" &&
-				member.DeclaringType!.IsNullable();
+				member.DeclaringType!.IsNullableType;
 		}
 
 		static readonly Dictionary<Type,HashSet<Type>> _castDic = new ()

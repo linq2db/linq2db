@@ -68,7 +68,7 @@ namespace Tests.Linq
 			return found[0].Expression;
 		}
 
-		public void Build(Sql.ISqExtensionBuilder builder)
+		public void Build(Sql.ISqlExtensionBuilder builder)
 		{
 			var method = builder.Member as MethodInfo;
 

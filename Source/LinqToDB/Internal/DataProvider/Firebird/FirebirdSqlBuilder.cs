@@ -190,8 +190,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					StringBuilder.Append(CultureInfo.InvariantCulture, $"VARCHAR({type.Length}) CHARACTER SET OCTETS");
 					break;
 
-				case DataType.Boolean       : StringBuilder.Append("BOOLEAN");                            break;
-				default: base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);                 break;
+				case DataType.Boolean       : StringBuilder.Append("BOOLEAN");                           break;
+				case DataType.Double        : StringBuilder.Append("DOUBLE PRECISION");                  break;
+				default: base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);                break;
 			}
 		}
 
@@ -223,6 +224,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				case ConvertType.NameToQueryTableAlias :
 				case ConvertType.NameToQueryField      :
 				case ConvertType.NameToQueryTable      :
+				case ConvertType.NameToCteName         :
 				case ConvertType.NameToProcedure       :
 				case ConvertType.NameToPackage         :
 				case ConvertType.SequenceName          :

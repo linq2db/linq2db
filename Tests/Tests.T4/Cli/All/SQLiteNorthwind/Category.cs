@@ -19,10 +19,10 @@ namespace Cli.All.SQLiteNorthwind
 	[Table("Categories")]
 	public class Category : IEquatable<Category>
 	{
-		[Column("CategoryID"  , DataType  = DataType.Int32    , DbType   = "int"           , Length = 4            , Precision = 10, Scale     = 0, IsPrimaryKey = true)] public int     CategoryId   { get; set; } // int
-		[Column("CategoryName", CanBeNull = false             , DataType = DataType.VarChar, DbType = "varchar(15)", Length    = 15, Precision = 0, Scale        = 0   )] public string  CategoryName { get; set; } = null!; // varchar(15)
-		[Column("Description" , DataType  = DataType.Text     , DbType   = "text(max)"     , Length = 2147483647   , Precision = 0 , Scale     = 0                     )] public string? Description  { get; set; } // text(max)
-		[Column("Picture"     , DataType  = DataType.VarBinary, DbType   = "blob"          , Length = 2147483647   , Precision = 0 , Scale     = 0                     )] public byte[]? Picture      { get; set; } // blob
+		[Column("CategoryID"  , DataType  = DataType.Int32    , DbType   = "INT"            , IsPrimaryKey = true                      )] public int     CategoryId   { get; set; } // INT
+		[Column("CategoryName", CanBeNull = false             , DataType = DataType.NVarChar, DbType       = "varchar(15)", Length = 15)] public string  CategoryName { get; set; } = null!; // varchar(15)
+		[Column("Description" , DataType  = DataType.NVarChar , DbType   = "TEXT"                                                      )] public string? Description  { get; set; } // TEXT
+		[Column("Picture"     , DataType  = DataType.VarBinary, DbType   = "BLOB"                                                      )] public byte[]? Picture      { get; set; } // BLOB
 
 		#region IEquatable<T> support
 		private static readonly IEqualityComparer<Category> _equalityComparer = ComparerBuilder.GetEqualityComparer<Category>(c => c.CategoryId);

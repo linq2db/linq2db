@@ -13,6 +13,7 @@ using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
 {
@@ -35,7 +36,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		public OracleBulkCopy(OracleDataProvider provider, AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			_provider                    = provider;
+			_provider               = provider;
 			_useAlternativeBulkCopy = useAlternativeBulkCopy;
 		}
 
@@ -123,8 +124,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 								opts.RowsCopiedCallback(rc);
 						}
 
-						if (table.DataContext.CloseAfterUse)
-							table.DataContext.Close();
+						CloseConnectionIfNecessary(table.DataContext);
 
 						return rc;
 					}
@@ -191,8 +191,14 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			helper.SetHeader();
 		}
 
+		private static readonly Func<DataOptions, ColumnDescriptor, object?, bool> _convertToParameter =
+			static (o, cd, v) => v != null
+				&& (o.BulkCopyOptions.UseParameters
+					|| cd.DataType is DataType.Text or DataType.NText or DataType.Binary or DataType.VarBinary);
+
 		static void OracleMultipleRowsCopy1Add(MultipleRowsHelper helper, object item, string? from)
 		{
+			helper.ConvertToParameter = _convertToParameter;
 			helper.StringBuilder.Append(CultureInfo.InvariantCulture, $"\tINTO {helper.TableName} (");
 
 			foreach (var column in helper.Columns)
@@ -204,7 +210,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			helper.StringBuilder.Length -= 2;
 
 			helper.StringBuilder.Append(") VALUES (");
-			helper.BuildColumns(item, _ => _.DataType == DataType.Text || _.DataType == DataType.NText);
+			helper.BuildColumns(item);
 			helper.StringBuilder.AppendLine(")");
 
 			helper.RowsCopied.RowsCopied++;
@@ -265,8 +271,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				{
 					if (!Execute(helper, list))
 					{
-						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-							helper.OriginalContext.Close();
+						if (!helper.SuppressCloseAfterUse)
+							CloseConnectionIfNecessary(helper.OriginalContext);
 
 						return helper.RowsCopied;
 					}
@@ -278,8 +284,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			if (helper.CurrentCount > 0)
 				Execute(helper, list);
 
-			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-				helper.OriginalContext.Close();
+			if (!helper.SuppressCloseAfterUse)
+				CloseConnectionIfNecessary(helper.OriginalContext);
 
 			return helper.RowsCopied;
 		}
@@ -299,8 +305,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				{
 					if (!await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(false))
 					{
-						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-							await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+						if (!helper.SuppressCloseAfterUse)
+							await CloseConnectionIfNecessaryAsync(helper.OriginalContext).ConfigureAwait(false);
 
 						return helper.RowsCopied;
 					}
@@ -314,8 +320,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(false);
 			}
 
-			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-				await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+			if (!helper.SuppressCloseAfterUse)
+				await CloseConnectionIfNecessaryAsync(helper.OriginalContext).ConfigureAwait(false);
 
 			return helper.RowsCopied;
 		}
@@ -335,8 +341,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				{
 					if (!await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(false))
 					{
-						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-							await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+						if (!helper.SuppressCloseAfterUse)
+							await CloseConnectionIfNecessaryAsync(helper.OriginalContext).ConfigureAwait(false);
 
 						return helper.RowsCopied;
 					}
@@ -350,8 +356,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(false);
 			}
 
-			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-				await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
+			if (!helper.SuppressCloseAfterUse)
+				await CloseConnectionIfNecessaryAsync(helper.OriginalContext).ConfigureAwait(false);
 
 			return helper.RowsCopied;
 		}
@@ -449,10 +455,12 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		static void OracleMultipleRowsCopy3Add(MultipleRowsHelper helper, object item, string? from)
 		{
+			helper.ConvertToParameter = _convertToParameter;
+
 			helper.StringBuilder
 				.AppendLine()
 				.Append("\tSELECT ");
-			helper.BuildColumns(item, _ => _.DataType == DataType.Text || _.DataType == DataType.NText);
+			helper.BuildColumns(item);
 			helper.StringBuilder.Append(" FROM DUAL ");
 			helper.StringBuilder.Append(" UNION ALL");
 

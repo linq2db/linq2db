@@ -103,7 +103,7 @@ namespace LinqToDB.CodeModel
 			/// <summary>
 			/// <see cref="IEquatable{T}.Equals(T)"/> method reference.
 			/// </summary>
-			public static CodeIdentifier IEquatable_Equals  { get; } = new CodeIdentifier(nameof(IEquatable<int>.Equals), true);
+			public static CodeIdentifier IEquatable_Equals  { get; } = new CodeIdentifier(nameof(IEquatable<>.Equals), true);
 
 			/// <summary>
 			/// <see cref="IEquatable{T}.Equals(T)"/> parameter name.
@@ -295,12 +295,12 @@ namespace LinqToDB.CodeModel
 					/// <summary>
 					/// <see cref="IEqualityComparer{T}.GetHashCode(T)"/> method reference.
 					/// </summary>
-					public static CodeIdentifier IEqualityComparer_GetHashCode { get; } = new CodeIdentifier(nameof(IEqualityComparer<int>.GetHashCode), true);
+					public static CodeIdentifier IEqualityComparer_GetHashCode { get; } = new CodeIdentifier(nameof(IEqualityComparer<>.GetHashCode), true);
 
 					/// <summary>
 					/// <see cref="IEqualityComparer{T}.Equals(T, T)"/> method reference.
 					/// </summary>
-					public static CodeIdentifier IEqualityComparer_Equals { get; } = new CodeIdentifier(nameof(IEqualityComparer<int>.Equals), true);
+					public static CodeIdentifier IEqualityComparer_Equals { get; } = new CodeIdentifier(nameof(IEqualityComparer<>.Equals), true);
 				}
 			}
 
@@ -365,6 +365,11 @@ namespace LinqToDB.CodeModel
 			/// <see cref="DataExtensions"/> type descriptor.
 			/// </summary>
 			public static IType DataExtensions            { get; } = Parser.Parse(typeof(DataExtensions));
+
+			/// <summary>
+			/// <see cref="global::LinqToDB.DataContext"/> type descriptor.
+			/// </summary>
+			public static IType DataContext { get; } = Parser.Parse<DataContext>();
 
 			/// <summary>
 			/// <see cref="Async.AsyncExtensions"/> type descriptor.
@@ -558,17 +563,17 @@ namespace LinqToDB.CodeModel
 				/// <summary>
 				/// <see cref="EntityMappingBuilder{TEntity}.HasAttribute(MappingAttribute)"/> method reference.
 				/// </summary>
-				public static CodeIdentifier EntityMappingBuilder_HasAttribute { get; } = new CodeIdentifier(nameof(EntityMappingBuilder<string>.HasAttribute), true);
+				public static CodeIdentifier EntityMappingBuilder_HasAttribute { get; } = new CodeIdentifier(nameof(EntityMappingBuilder<>.HasAttribute), true);
 
 				/// <summary>
 				/// <see cref="EntityMappingBuilder{TEntity}.Member{TProperty}(Expression{Func{TEntity, TProperty}})"/> method reference.
 				/// </summary>
-				public static CodeIdentifier EntityMappingBuilder_Member { get; } = new CodeIdentifier(nameof(EntityMappingBuilder<string>.Member), true);
+				public static CodeIdentifier EntityMappingBuilder_Member { get; } = new CodeIdentifier(nameof(EntityMappingBuilder<>.Member), true);
 
 				/// <summary>
 				/// <see cref="PropertyMappingBuilder{TEntity, TProperty}.IsNotColumn"/> method reference.
 				/// </summary>
-				public static CodeIdentifier PropertyMappingBuilder_IsNotColumn { get; } = new CodeIdentifier(nameof(PropertyMappingBuilder<string, string>.IsNotColumn), true);
+				public static CodeIdentifier PropertyMappingBuilder_IsNotColumn { get; } = new CodeIdentifier(nameof(PropertyMappingBuilder<,>.IsNotColumn), true);
 
 				/// <summary>
 				/// <see cref="global::LinqToDB.Mapping.AssociationAttribute"/> type descriptor.
@@ -744,30 +749,30 @@ namespace LinqToDB.CodeModel
 				/// </summary>
 				public static IType DataParameterArray       { get; } = new ArrayType(DataParameter, new int?[] { null }, false);
 				/// <summary>
-				/// <see cref="global::LinqToDB.Data.DataConnectionExtensions"/> type descriptor.
+				/// <see cref="global::LinqToDB.Data.DataContextExtensions"/> type descriptor.
 				/// </summary>
-				public static IType DataConnectionExtensions { get; } = Parser.Parse(typeof(DataConnectionExtensions));
+				public static IType DataContextExtensions { get; } = Parser.Parse(typeof(DataContextExtensions));
 				/// <summary>
 				/// <see cref="global::LinqToDB.Data.DataConnection"/> type descriptor.
 				/// </summary>
 				public static IType DataConnection           { get; } = Parser.Parse<DataConnection>();
 
 				/// <summary>
-				/// DataConnectionExtensions.ExecuteProc method reference.
+				/// DataContextExtensions.ExecuteProc method reference.
 				/// </summary>
-				public static CodeIdentifier DataConnectionExtensions_ExecuteProc      { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnectionExtensions.ExecuteProc), true);
+				public static CodeIdentifier DataContextExtensions_ExecuteProc { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataContextExtensions.ExecuteProc), true);
 				/// <summary>
-				/// DataConnectionExtensions.ExecuteProcAsync method reference.
+				/// DataContextExtensions.ExecuteProcAsync method reference.
 				/// </summary>
-				public static CodeIdentifier DataConnectionExtensions_ExecuteProcAsync { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnectionExtensions.ExecuteProcAsync), true);
+				public static CodeIdentifier DataContextExtensions_ExecuteProcAsync { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataContextExtensions.ExecuteProcAsync), true);
 				/// <summary>
-				/// DataConnectionExtensions.QueryProc method reference.
+				/// DataContextExtensions.QueryProc method reference.
 				/// </summary>
-				public static CodeIdentifier DataConnectionExtensions_QueryProc        { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnectionExtensions.QueryProc), true);
+				public static CodeIdentifier DataContextExtensions_QueryProc { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataContextExtensions.QueryProc), true);
 				/// <summary>
-				/// DataConnectionExtensions.QueryProcAsync method reference.
+				/// DataContextExtensions.QueryProcAsync method reference.
 				/// </summary>
-				public static CodeIdentifier DataConnectionExtensions_QueryProcAsync   { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataConnectionExtensions.QueryProcAsync), true);
+				public static CodeIdentifier DataContextExtensions_QueryProcAsync { get; } = new CodeIdentifier(nameof(global::LinqToDB.Data.DataContextExtensions.QueryProcAsync), true);
 
 				/// <summary>
 				/// <see cref="DataConnection.CommandTimeout"/> property reference.

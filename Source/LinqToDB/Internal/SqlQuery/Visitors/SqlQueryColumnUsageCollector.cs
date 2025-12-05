@@ -51,6 +51,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			column.Expression.VisitParentFirst(this, (v, e) =>
 			{
+				if (e is SqlFromClause or SqlJoinedTable)
+					return false;
+
 				if (e is SqlSelectClause selectClause)
 				{
 					foreach(var ec in selectClause.Columns)
@@ -66,14 +69,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					v.RegisterColumn(c);
 				}
 
-				if (e is SqlField f && f.Table is SqlCteTable cte)
+				if (e is SqlField { Table: SqlCteTable cte } f)
 				{
 					for (var i = 0; i < cte.Cte!.Fields.Count; i++)
 					{
 						if (cte.Cte!.Fields[i].Name == f.PhysicalName)
 						{
-							var column = cte.Cte.Body!.Select.Columns[i];
-							v.RegisterColumn(column);
+							var cteColumn = cte.Cte.Body!.Select.Columns[i];
+							v.RegisterColumn(cteColumn);
 							break;
 						}
 					}
@@ -206,7 +209,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (selectQuery.Select.IsDistinct
 				// we cannot remove unused columns for non-UNION ALL operators as it could affect result
-				|| (selectQuery.HasSetOperators && selectQuery.SetOperators.Any(o => o.Operation != SetOperation.UnionAll))
+				|| (selectQuery.HasSetOperators && (selectQuery.Select.Columns.Count == 1 || selectQuery.SetOperators.Any(o => o.Operation != SetOperation.UnionAll)))
 				|| (!isCteQuery && _parentSelectQuery == null))
 			{
 				foreach (var c in selectQuery.Select.Columns)

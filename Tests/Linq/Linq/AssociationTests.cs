@@ -266,8 +266,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
-		public void StackOverflow2([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void StackOverflow2([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -275,8 +276,9 @@ namespace Tests.Linq
 					from p in db.Parent5 where p.Children.Count != 0 select p);
 		}
 
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
-		public void StackOverflow3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void StackOverflow3([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -285,7 +287,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StackOverflow4([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		[ThrowsRequiresCorrelatedSubquery]
+		public void StackOverflow4([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -472,8 +475,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
-		public void LetTest1([DataSources(TestProvName.AllClickHouse)] string context)
+		public void LetTest1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -485,8 +489,9 @@ namespace Tests.Linq
 					select new { p.ParentID, Count = chs.Count() });
 		}
 
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
-		public void LetTest2([DataSources(TestProvName.AllClickHouse)] string context)
+		public void LetTest2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -866,8 +871,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
-		public void TestGenericAssociation3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void TestGenericAssociation3([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1037,7 +1043,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class NotNullParent
 		{
-			[Column] public int ID { get; set; }
+			[PrimaryKey] public int ID { get; set; }
 
 			[Association(ExpressionPredicate = nameof(ChildPredicate), CanBeNull = false)]
 			public NotNullChild  ChildInner { get; set; } = null!;
@@ -1057,7 +1063,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class NotNullChild
 		{
-			[Column] public int ParentID { get; set; }
+			[PrimaryKey] public int ParentID { get; set; }
 
 			public static readonly NotNullChild[] Data = new[]
 			{
@@ -1214,18 +1220,18 @@ namespace Tests.Linq
 
 		public class User
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 		}
 
 		public class Lookup
 		{
-			public int     Id   { get; set; }
+			[PrimaryKey] public int     Id   { get; set; }
 			public string? Type { get; set; }
 		}
 
 		public class Resource
 		{
-			public int  Id                 { get; set; }
+			[PrimaryKey] public int  Id    { get; set; }
 			public int  AssociatedObjectId { get; set; }
 			public int? AssociationTypeId  { get; set; }
 
@@ -1300,17 +1306,18 @@ namespace Tests.Linq
 
 		sealed class Entity1711
 		{
-			public long Id { get; set; }
+			[PrimaryKey] public long Id { get; set; }
 		}
 
 		sealed class Relationship1711
 		{
-			public long EntityId { get; set; }
+			[PrimaryKey] public long EntityId { get; set; }
 
 			public bool Deleted { get; set; }
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void Issue1711Test1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
@@ -1331,6 +1338,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Issue1711Test2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
@@ -1356,8 +1364,9 @@ namespace Tests.Linq
 		[Table]
 		sealed class Issue1096Task
 		{
-			[Column]
-			public int Id { get; set; }
+			[PrimaryKey] public int Pk { get; set; }
+
+			[Column] public int Id { get; set; }
 
 			[Column(IsDiscriminator = true)]
 			public string? TargetName { get; set; }
@@ -1389,8 +1398,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable<Issue1096Task>())
 			using (db.CreateLocalTable<Issue1096TaskStage>())
 			{
-				db.Insert(new Issue1096Task { Id = 1, TargetName = "bda.Requests" });
-				db.Insert(new Issue1096Task { Id = 1, TargetName = "bda.Requests" });
+				db.Insert(new Issue1096Task { Pk = 1, Id = 1, TargetName = "bda.Requests" });
 				db.Insert(new Issue1096TaskStage { Id = 1, TaskId = 1, Actual = true });
 
 				var query = db.GetTable<Issue1096Task>()
@@ -1522,7 +1530,8 @@ namespace Tests.Linq
 		[Table]
 		public class SubData2
 		{
-			[Column] public int     Id     { get; set; }
+			[PrimaryKey, Identity] public int  PK { get; set; }
+			[Column] public int     Id { get; set; }
 			[Column] public string? Reason { get; set; }
 
 			public static readonly SubData2[] Records = new[]
@@ -1535,7 +1544,7 @@ namespace Tests.Linq
 		[Table]
 		public class SubData1
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(SubData2.Id))]
 			public IEnumerable<SubData2> SubDatas { get; } = null!;
@@ -1550,7 +1559,7 @@ namespace Tests.Linq
 		[Table]
 		public class Data
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(SubData1.Id), CanBeNull = true)]
 			public SubData1? SubData { get; }
@@ -1778,6 +1787,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void OptionalAssociationNonNullCorrelationWithProjection([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -1820,7 +1830,7 @@ namespace Tests.Linq
 
 		public class SubEntity
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			public int MainEntityId { get; set; }
 
@@ -1833,8 +1843,9 @@ namespace Tests.Linq
 			return query.Where(x => x.SubEntities.Any());
 		}
 
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
-		public void ViaInterfaceAndExtension([DataSources(TestProvName.AllClickHouse)] string context)
+		public void ViaInterfaceAndExtension([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var main = db.CreateLocalTable<MainEntity>();
@@ -1850,8 +1861,9 @@ namespace Tests.Linq
 			var result = query.ToArray();
 		}
 
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
-		public void ViaInterfaceOfType([DataSources(TestProvName.AllClickHouse)] string context)
+		public void ViaInterfaceOfType([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var main = db.CreateLocalTable<MainEntity>();
@@ -1905,7 +1917,7 @@ namespace Tests.Linq
 			{
 				LinqToDB.Common.Configuration.Sql.AssociationAlias = "test.[aLыi`\",:!@#$%^&*()_'=as].{0}";
 
-				using var db = GetDataConnection(context);
+				using var db = GetDataContext(context);
 
 				db.Child.Select(c => new { c.ChildID, c.Parent!.Value1 }).ToArray();
 			}
@@ -2017,13 +2029,13 @@ namespace Tests.Linq
 
 		sealed class Issue4454Client
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			public string? Name { get; set; }
 		}
 
 		sealed class Issue4454Service
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			public int? IdClient { get; set; }
 
 			[Association(ExpressionPredicate = nameof(Client_ExprPr), CanBeNull = false)]
@@ -2068,7 +2080,7 @@ namespace Tests.Linq
 
 		public class Dog
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			public int OwnerId { get; set; }
 
@@ -2088,7 +2100,7 @@ namespace Tests.Linq
 
 		public class Human
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			public int HouseId { get; set; }
 
@@ -2098,7 +2110,7 @@ namespace Tests.Linq
 
 		public class House
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			[Association(QueryExpressionMethod = nameof(WindowAtPositionExpression), CanBeNull = true)]
 			public Window? WindowAtPosition(IDataContext db, int position)
@@ -2119,12 +2131,13 @@ namespace Tests.Linq
 
 		public class Window
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			public int Position { get; set; }
 		}
 		#endregion
 
+		[YdbMemberNotFound]
 		[Test]
 		public void ManyAssociationEmptyCheck1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -2136,6 +2149,7 @@ namespace Tests.Linq
 			Assert.That(parents.Any(p => p.ParentID == 5), Is.False);
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void ManyAssociationEmptyCheck2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -2152,7 +2166,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4274")]
 		public void Issue4274Test([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 
 			var query1 = (
 					from serv in db.Patient

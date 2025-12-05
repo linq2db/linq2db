@@ -41,6 +41,7 @@ namespace Tests
 			return Interlocked.Increment(ref _cnt);
 		}
 
+		public const string NO_SERVER_NAME   = "UNUSED_SERVER";
 		public const string NO_SCHEMA_NAME   = "UNUSED_SCHEMA";
 		public const string NO_DATABASE_NAME = "UNUSED_DB";
 
@@ -88,6 +89,8 @@ namespace Tests
 		{
 			switch (context)
 			{
+				case string when context.IsAnyOf(ProviderName.Ydb)          :
+					return "test/fqn/names";
 				case string when context.IsAnyOf(TestProvName.AllInformix)  :
 				case string when context.IsAnyOf(TestProvName.AllOracle)    :
 				case string when context.IsAnyOf(TestProvName.AllPostgreSQL):
@@ -132,7 +135,7 @@ namespace Tests
 					return "LINKED_DB";
 			}
 
-			return NO_SCHEMA_NAME;
+			return NO_SERVER_NAME;
 		}
 
 		/// <summary>
@@ -143,6 +146,7 @@ namespace Tests
 		{
 			return context switch
 			{
+				string when context.IsAnyOf(ProviderName.Ydb)            => "local",
 				string when context.IsAnyOf(TestProvName.AllSQLite)      => "main",
 				// Access adds extension automatically to database name, but if there are
 				// dots in name, extension not added as dot treated as extension separator by Access
@@ -180,8 +184,8 @@ namespace Tests
 		sealed class FirebirdTempTable<T> : TestTempTable<T>
 			where T : notnull
 		{
-			public FirebirdTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, TableOptions tableOptions = TableOptions.NotSet)
-				: base(db, tableName, databaseName, schemaName, tableOptions : tableOptions)
+			public FirebirdTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, string? serverName = null, TableOptions tableOptions = TableOptions.NotSet)
+				: base(db, tableName, databaseName, schemaName, serverName, tableOptions : tableOptions)
 			{
 			}
 
@@ -210,11 +214,12 @@ namespace Tests
 				return base.DisposeAsync();
 			}
 		}
+
 		class TestTempTable<T> : TempTable<T>
 			where T : notnull
 		{
-			public TestTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, TableOptions tableOptions = TableOptions.NotSet)
-				: base(db, tableName: tableName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions)
+			public TestTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, string? serverName = null, TableOptions tableOptions = TableOptions.NotSet)
+				: base(db, tableName: tableName, databaseName: databaseName, schemaName: schemaName, serverName: serverName, tableOptions: tableOptions)
 			{
 			}
 
@@ -231,11 +236,11 @@ namespace Tests
 			}
 		}
 
-		static TempTable<T> CreateTable<T>(IDataContext db, string? tableName, TableOptions tableOptions = TableOptions.NotSet)
+		static TempTable<T> CreateTable<T>(IDataContext db, string? tableName, string? schemaName = null, string? databaseName = null, string? serverName = null, TableOptions tableOptions = TableOptions.NotSet)
 			where T : notnull =>
 			db.ConfigurationString?.IsAnyOf(TestProvName.AllFirebird) == true ?
-				new FirebirdTempTable<T>(db, tableName, tableOptions : tableOptions) :
-				new     TestTempTable<T>(db, tableName, tableOptions : tableOptions);
+				new FirebirdTempTable<T>(db, tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, tableOptions : tableOptions) :
+				new     TestTempTable<T>(db, tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, tableOptions : tableOptions);
 
 		static void ClearDataContext(IDataContext db)
 		{
@@ -252,21 +257,21 @@ namespace Tests
 			return new Version(version);
 		}
 
-		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, TableOptions tableOptions = TableOptions.CheckExistence)
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, string? schemaName = null, string? databaseName = null, string? serverName = null, TableOptions tableOptions = TableOptions.CheckExistence)
 			where T : notnull
 		{
 			using var _ = new DisableBaseline("Test setup");
 			try
 			{
 				if ((tableOptions & TableOptions.CheckExistence) == TableOptions.CheckExistence)
-					db.DropTable<T>(tableName, tableOptions:tableOptions);
-				return CreateTable<T>(db, tableName, tableOptions);
+					db.DropTable<T>(tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, tableOptions:tableOptions);
+				return CreateTable<T>(db, tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, tableOptions: tableOptions);
 			}
 			catch
 			{
 				ClearDataContext(db);
-				db.DropTable<T>(tableName, throwExceptionIfNotExists:false);
-				return CreateTable<T>(db, tableName, tableOptions);
+				db.DropTable<T>(tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, throwExceptionIfNotExists:false);
+				return CreateTable<T>(db, tableName, schemaName: schemaName, databaseName: databaseName, serverName: serverName, tableOptions: tableOptions);
 			}
 		}
 
@@ -276,7 +281,7 @@ namespace Tests
 			using var _ = new DisableBaseline("Test setup");
 			using (new DisableLogging())
 			{
-				var table = CreateLocalTable<T>(db, tableName, TableOptions.CheckExistence);
+				var table = CreateLocalTable<T>(db, tableName, tableOptions: TableOptions.CheckExistence);
 
 				if (db is DataConnection dc)
 				{
@@ -338,6 +343,8 @@ namespace Tests
 			return "NET80";
 #elif NET9_0
 			return "NET90";
+#elif NET10_0
+			return "NET100";
 #else
 #error Unknown framework
 #endif
@@ -355,49 +362,12 @@ namespace Tests
 			File.AppendAllText(path + "linq2db.Tests." + GetConfigName() + ".log", (message ?? "") + Environment.NewLine);
 		}
 
-		public static string GetTableName(string context, [System.Runtime.CompilerServices.CallerMemberName] string? methodName = null)
-		{
-			var tableName  = "xxPerson";
-
-			if (context.IsAnyOf(TestProvName.AllFirebird))
-			{
-				tableName += "_f";
-
-				if (context.IsRemote())
-					tableName += "l";
-
-				tableName += "_" + methodName;
-			}
-
-			if (context.IsAnyOf(TestProvName.AllOracle))
-			{
-				tableName += "_o";
-
-				if (context.IsRemote())
-					tableName += "l";
-			}
-
-			return tableName;
-		}
-
 		public static void DeleteTestCases()
 		{
 			var fileName = GetTestFilePath();
 
 			if (File.Exists(fileName))
 				File.Delete(fileName);
-		}
-
-		public static string? GetLastTestCase()
-		{
-			var fileName = GetTestFilePath();
-
-			TestContext.Out.WriteLine($"Test expression file: {fileName} ({File.Exists(fileName)})");
-
-			if (File.Exists(fileName))
-				return File.ReadAllText(fileName);
-
-			return null;
 		}
 
 		// sync logic with ExpressionTestGenerator.GetTestFilePath

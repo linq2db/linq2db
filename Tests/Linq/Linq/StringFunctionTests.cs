@@ -33,7 +33,7 @@ namespace Tests.Linq
 				Assert.That(Sql.Length((string)null!), Is.Null);
 				Assert.That(Sql.Length(string.Empty), Is.Zero);
 				Assert.That(Sql.Length("test"), Is.EqualTo(4));
-		}
+			}
 		}
 
 		[Test]
@@ -52,7 +52,7 @@ namespace Tests.Linq
 				Assert.That(Sql.Substring("test", 3, 1), Is.EqualTo("s"));
 				Assert.That(Sql.Substring("test", 3, 2), Is.EqualTo("st"));
 				Assert.That(Sql.Substring("test", 3, 3), Is.EqualTo("st"));
-		}
+			}
 		}
 
 		[Test]
@@ -77,7 +77,7 @@ namespace Tests.Linq
 				Assert.That(Sql.CharIndex("", "test"), Is.Zero);
 				Assert.That(Sql.CharIndex("g", "test"), Is.Zero);
 				Assert.That(Sql.CharIndex("st", "test"), Is.EqualTo(3));
-		}
+			}
 		}
 
 		[Test]
@@ -95,7 +95,7 @@ namespace Tests.Linq
 				Assert.That(Sql.CharIndex("st", "test", 2), Is.EqualTo(3));
 				Assert.That(Sql.CharIndex("st", "test", 4), Is.Zero);
 				Assert.That(Sql.CharIndex("st", "test", 5), Is.Zero);
-		}
+			}
 		}
 
 		[Test]
@@ -109,7 +109,7 @@ namespace Tests.Linq
 				Assert.That(Sql.CharIndex(Char.MinValue, "test"), Is.Zero);
 				Assert.That(Sql.CharIndex('g', "test"), Is.Zero);
 				Assert.That(Sql.CharIndex('s', "test"), Is.EqualTo(3));
-		}
+			}
 		}
 
 		[Test]
@@ -127,7 +127,7 @@ namespace Tests.Linq
 				Assert.That(Sql.CharIndex('s', "test", 2), Is.EqualTo(3));
 				Assert.That(Sql.CharIndex('s', "test", 4), Is.Zero);
 				Assert.That(Sql.CharIndex('s', "test", 5), Is.Zero);
-		}
+			}
 		}
 
 		[Test]
@@ -138,7 +138,7 @@ namespace Tests.Linq
 				Assert.That(Sql.Reverse(null), Is.Null);
 				Assert.That(Sql.Reverse(string.Empty), Is.EqualTo(string.Empty));
 				Assert.That(Sql.Reverse("abcd"), Is.EqualTo("dcba"));
-		}
+			}
 		}
 
 		[Test]
@@ -152,7 +152,7 @@ namespace Tests.Linq
 				Assert.That(Sql.Left("test", 0), Is.EqualTo(""));
 				Assert.That(Sql.Left("test", 2), Is.EqualTo("te"));
 				Assert.That(Sql.Left("test", 5), Is.EqualTo("test"));
-		}
+			}
 		}
 
 		[Test]
@@ -166,7 +166,7 @@ namespace Tests.Linq
 				Assert.That(Sql.Right("test", 0), Is.EqualTo(""));
 				Assert.That(Sql.Right("test", 2), Is.EqualTo("st"));
 				Assert.That(Sql.Right("test", 5), Is.EqualTo("test"));
-		}
+			}
 		}
 
 		[Test]
@@ -195,7 +195,7 @@ namespace Tests.Linq
 
 				// Correct length
 				Assert.That(Sql.Stuff("1234", 3, 5, "5678"), Is.EqualTo("125678"));
-		}
+			}
 		}
 
 		[Test]
@@ -214,7 +214,7 @@ namespace Tests.Linq
 				Assert.That(Sql.Space(-1), Is.Null);
 				Assert.That(Sql.Space(0), Is.EqualTo(""));
 				Assert.That(Sql.Space(1), Is.EqualTo(" "));
-		}
+			}
 		}
 
 		[Test]
@@ -231,7 +231,7 @@ namespace Tests.Linq
 				Assert.That(Sql.PadLeft("test", 3, '.'), Is.EqualTo("tes"));
 				Assert.That(Sql.PadLeft("test", 4, '.'), Is.EqualTo("test"));
 				Assert.That(Sql.PadLeft("test", 5, '.'), Is.EqualTo(".test"));
-		}
+			}
 		}
 
 		[Test]
@@ -248,7 +248,7 @@ namespace Tests.Linq
 				Assert.That(Sql.PadRight("test", 3, '.'), Is.EqualTo("tes"));
 				Assert.That(Sql.PadRight("test", 4, '.'), Is.EqualTo("test"));
 				Assert.That(Sql.PadRight("test", 5, '.'), Is.EqualTo("test."));
-		}
+			}
 		}
 
 		[Test]
@@ -264,7 +264,7 @@ namespace Tests.Linq
 				Assert.That(Sql.Replace("test", "", "oa"), Is.EqualTo("test"));
 				Assert.That(Sql.Replace("test", "g", "oa"), Is.EqualTo("test"));
 				Assert.That(Sql.Replace("test", "e", "oa"), Is.EqualTo("toast"));
-		}
+			}
 		}
 
 		[Test]
@@ -279,7 +279,7 @@ namespace Tests.Linq
 				Assert.That(Sql.Replace("", 'e', 'o'), Is.EqualTo(""));
 				Assert.That(Sql.Replace("test", 'g', 'o'), Is.EqualTo("test"));
 				Assert.That(Sql.Replace("test", 'e', 'o'), Is.EqualTo("tost"));
-		}
+			}
 		}
 
 		#endregion
@@ -296,7 +296,7 @@ namespace Tests.Linq
 
 		class TestLengthModel
 		{
-			[Column] public int    Id  { get; set; }
+			[PrimaryKey] public int    Id  { get; set; }
 			[Column] public string Str { get; set; } = string.Empty;
 		}
 
@@ -487,8 +487,8 @@ namespace Tests.Linq
 				{
 					Assert.That(r.p.ID, Is.EqualTo(1));
 					Assert.That(r.str, Is.EqualTo(str));
+				}
 			}
-		}
 		}
 
 		[Test]
@@ -700,7 +700,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class StringTypesTable
 		{
-			[Column]                                                              public int    Id             { get; set; }
+			[PrimaryKey]                                                          public int    Id             { get; set; }
 			[Column(Length = 50, CanBeNull = true, DataType = DataType.Char)]     public string CharColumn     { get; set; } = null!;
 			[Column(Length = 50, CanBeNull = true, DataType = DataType.NChar)]    public string NCharColumn    { get; set; } = null!;
 			[Column(Length = 50, CanBeNull = true, DataType = DataType.VarChar)]  public string VarCharColumn  { get; set; } = null!;
@@ -914,7 +914,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IndexOf11([DataSources(ProviderName.SQLiteMS)] string context)
+		public void IndexOf11([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -924,7 +924,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IndexOf12([DataSources(ProviderName.SQLiteMS)] string context)
+		public void IndexOf12([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -934,7 +934,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IndexOf2([DataSources(ProviderName.SQLiteMS)] string context)
+		public void IndexOf2([DataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -953,12 +953,12 @@ namespace Tests.Linq
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSqlServer,
 				TestProvName.AllSybase,
-				TestProvName.AllSQLiteClassic,
+				TestProvName.AllSQLite,
 			])]
 		[Test]
 		public void IndexOf3([DataSources(
 			ProviderName.DB2, TestProvName.AllFirebird,
-			ProviderName.SqlCe, TestProvName.AllAccess, ProviderName.SQLiteMS)]
+			ProviderName.SqlCe, TestProvName.AllAccess)]
 			string context)
 		{
 			var s  = "e";
@@ -975,7 +975,7 @@ namespace Tests.Linq
 		[Test]
 		public void LastIndexOf1([DataSources(
 			ProviderName.DB2,
-			ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
+			ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllSQLite)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -988,7 +988,7 @@ namespace Tests.Linq
 		[Test]
 		public void LastIndexOf2([DataSources(
 			ProviderName.DB2, ProviderName.SqlCe,
-			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
+			TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllSQLite)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1002,7 +1002,7 @@ namespace Tests.Linq
 		[Test]
 		public void LastIndexOf3([DataSources(
 			ProviderName.DB2, ProviderName.SqlCe,
-			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
+			TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllSQLite)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1014,7 +1014,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CharIndex1([DataSources(ProviderName.SQLiteMS)] string context)
+		public void CharIndex1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1024,7 +1024,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CharIndex2([DataSources(ProviderName.SQLiteMS)] string context)
+		public void CharIndex2([DataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1034,7 +1034,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Left([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Left([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1044,7 +1044,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Right([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Right([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1054,7 +1054,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RightInSelect([DataSources(ProviderName.SQLiteMS)] string context)
+		public void RightInSelect([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1086,7 +1086,8 @@ namespace Tests.Linq
 		[Test]
 		public void Reverse([DataSources(
 			ProviderName.DB2, ProviderName.SqlCe,
-			TestProvName.AllAccess, TestProvName.AllSapHana, ProviderName.SQLiteMS)]
+			TestProvName.AllAccess, TestProvName.AllSapHana,
+			TestProvName.AllSQLite)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1097,7 +1098,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Stuff1([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Stuff1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1151,7 +1152,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Insert([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Insert([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1161,7 +1162,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Remove1([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Remove1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1171,7 +1172,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Remove2([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Remove2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1181,7 +1182,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Space([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Space([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1191,7 +1192,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void PadRight([DataSources(ProviderName.SQLiteMS)] string context)
+		public void PadRight([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1201,7 +1202,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void PadRight1([DataSources(ProviderName.SQLiteMS)] string context)
+		public void PadRight1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1211,7 +1212,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void PadRight2([DataSources(ProviderName.SQLiteMS)] string context)
+		public void PadRight2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1221,7 +1222,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void PadLeft([DataSources(ProviderName.SQLiteMS)] string context)
+		public void PadLeft([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1231,7 +1232,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void PadLeft1([DataSources(ProviderName.SQLiteMS)] string context)
+		public void PadLeft1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1241,7 +1242,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void PadLeft2([DataSources(ProviderName.SQLiteMS)] string context)
+		public void PadLeft2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1296,7 +1297,7 @@ namespace Tests.Linq
 				Assert.That(db.Select(() => Sql.AsSql("test".PadRight(4, '.'))), Is.EqualTo("test"));
 				Assert.That(db.Select(() => Sql.AsSql("test".PadRight(5, '.'))), Is.EqualTo("test."));
 				Assert.That(db.Select(() => Sql.AsSql("test".PadRight(6, '.'))), Is.EqualTo("test.."));
-		}
+			}
 		}
 
 		[Test]
@@ -1984,7 +1985,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class SampleClass
 		{
-			[Column]                                            public int      Id     { get; set; }
+			[PrimaryKey]                                        public int      Id     { get; set; }
 			[Column(DataType = DataType.NVarChar, Length = 50)] public MyClass? Value  { get; set; }
 			[Column]                                            public string?  Value2 { get; set; }
 		}
@@ -2035,8 +2036,8 @@ namespace Tests.Linq
 				{
 					Assert.That(table.Any(sampleClass => sampleClass.Value   == test || sampleClass.Value2!.Contains(test)), Is.True);
 					Assert.That(table.Count(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)), Is.EqualTo(1));
+				}
 			}
-		}
 		}
 		#endregion
 	}

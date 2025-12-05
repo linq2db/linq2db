@@ -261,6 +261,10 @@ namespace LinqToDB
 		/// </summary>
 		public const string PostgreSQL95  = "PostgreSQL.9.5";
 		/// <summary>
+		/// PostgreSQL 13+ data provider.
+		/// </summary>
+		public const string PostgreSQL13 = "PostgreSQL.13";
+		/// <summary>
 		/// PostgreSQL 15+ data provider.
 		/// </summary>
 		public const string PostgreSQL15 = "PostgreSQL.15";
@@ -327,5 +331,9 @@ namespace LinqToDB
 		/// ClickHouse provider using MySqlConnector ADO.NET provider.
 		/// </summary>
 		public const string ClickHouseMySql   = "ClickHouse.MySql";
+		/// <summary>
+		/// YDB provider.
+		/// </summary>
+		public const string Ydb        = "YDB";
 	}
 }

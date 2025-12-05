@@ -193,7 +193,7 @@ namespace Cli.All.PostgreSQL
 			[Column("circleDataType"     , DataType = DataType.Udt           , DbType = "circle"                         )] public NpgsqlCircle?     CircleDataType      { get; set; }
 			[Column("lineDataType"       , DataType = DataType.Udt           , DbType = "line"                           )] public NpgsqlLine?       LineDataType        { get; set; }
 			[Column("inetDataType"       , DataType = DataType.Udt           , DbType = "inet"                           )] public NpgsqlInet?       InetDataType        { get; set; }
-			[Column("cidrDataType"       , DataType = DataType.Udt           , DbType = "cidr"                           )] public NpgsqlCidr?       CidrDataType        { get; set; }
+			[Column("cidrDataType"       , DataType = DataType.Udt           , DbType = "cidr"                           )] public NpgsqlInet?       CidrDataType        { get; set; }
 			[Column("macaddrDataType"    , DataType = DataType.Udt           , DbType = "macaddr"                        )] public PhysicalAddress?  MacaddrDataType     { get; set; }
 			[Column("macaddr8DataType"   , DataType = DataType.Udt           , DbType = "macaddr8"                       )] public PhysicalAddress?  Macaddr8DataType    { get; set; }
 			[Column("jsonDataType"       , DataType = DataType.Json          , DbType = "json"                           )] public string?           JsonDataType        { get; set; }

@@ -52,13 +52,14 @@ namespace Tests.UserTests
 		[Table("InsertTable1398")]
 		internal sealed class InsertTable
 		{
-			[Column(CanBeNull = false)]
+			[Column(CanBeNull = false), PrimaryKey]
 			public int Value { get; set; }
 		}
 
 		// TODO: disabled providers lacks connections
+		// Access: works, but unstable due to lock conflicts in access
 		[Test]
-		public void TestInsert([DataSources(false, TestProvName.AllFirebird, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllOracle12, TestProvName.AllSQLiteClassic)] string context)
+		public void TestInsert([DataSources(false, TestProvName.AllAccess, TestProvName.AllFirebird, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllOracle12, TestProvName.AllSQLiteClassic)] string context)
 		{
 			const int recordsCount = 20;
 
@@ -66,7 +67,7 @@ namespace Tests.UserTests
 			SQLiteTools.ClearAllPools(provider: null);
 
 			using (new DisableBaseline("Multi-threading"))
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<InsertTable>())
 			{
 				var tasks = new List<Task>();
@@ -85,7 +86,7 @@ namespace Tests.UserTests
 
 		private void Insert(string context, int value)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				db.GetTable<InsertTable>().Insert(() => new InsertTable { Value = value });
 			}

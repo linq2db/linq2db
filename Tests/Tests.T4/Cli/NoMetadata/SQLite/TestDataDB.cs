@@ -56,9 +56,9 @@ namespace Cli.NoMetadata.SQLite
 		#region Associations
 		#region Doctor Associations
 		/// <summary>
-		/// FK_Doctor_0_0
+		/// FK_Doctor_0
 		/// </summary>
-		public static Person FkDoctor00(this Doctor obj, IDataContext db)
+		public static Person FkDoctor0(this Doctor obj, IDataContext db)
 		{
 			return db.GetTable<Person>().First(t => obj.PersonId == t.PersonId);
 		}
@@ -66,7 +66,7 @@ namespace Cli.NoMetadata.SQLite
 
 		#region Person Associations
 		/// <summary>
-		/// FK_Doctor_0_0 backreference
+		/// FK_Doctor_0 backreference
 		/// </summary>
 		public static Doctor? Doctor(this Person obj, IDataContext db)
 		{
@@ -74,7 +74,7 @@ namespace Cli.NoMetadata.SQLite
 		}
 
 		/// <summary>
-		/// FK_Patient_0_0 backreference
+		/// FK_Patient_0 backreference
 		/// </summary>
 		public static Patient? Patient(this Person obj, IDataContext db)
 		{
@@ -84,7 +84,7 @@ namespace Cli.NoMetadata.SQLite
 
 		#region ForeignKeyTable Associations
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0
+		/// FK_ForeignKeyTable_0
 		/// </summary>
 		public static PrimaryKeyTable PrimaryKeyTable(this ForeignKeyTable obj, IDataContext db)
 		{
@@ -94,7 +94,7 @@ namespace Cli.NoMetadata.SQLite
 
 		#region PrimaryKeyTable Associations
 		/// <summary>
-		/// FK_ForeignKeyTable_0_0 backreference
+		/// FK_ForeignKeyTable_0 backreference
 		/// </summary>
 		public static IQueryable<ForeignKeyTable> ForeignKeyTables(this PrimaryKeyTable obj, IDataContext db)
 		{
@@ -104,9 +104,9 @@ namespace Cli.NoMetadata.SQLite
 
 		#region Patient Associations
 		/// <summary>
-		/// FK_Patient_0_0
+		/// FK_Patient_0
 		/// </summary>
-		public static Person FkPatient00(this Patient obj, IDataContext db)
+		public static Person FkPatient0(this Patient obj, IDataContext db)
 		{
 			return db.GetTable<Person>().First(t => obj.PersonId == t.PersonId);
 		}

@@ -269,7 +269,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		public override Type ConvertParameterType(Type type, DbDataType dataType)
 		{
-			if (type.IsNullable())
+			if (type.IsNullableType)
 				type = type.ToUnderlying();
 
 			switch (dataType.DataType)

@@ -16,10 +16,24 @@ steps:
 
 - task: DownloadPipelineArtifact@2
   inputs:
-    artifactName: $(artifact_test_binaries)
-    targetPath: '$(System.DefaultWorkingDirectory)'
+    artifactName: $(artifact_test_configs)
+    targetPath: '$(System.DefaultWorkingDirectory)/configs'
   condition: and(variables.title, succeeded())
-  displayName: Extract test files
+  displayName: Extract test configs
+
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: $(artifact_test_scripts)
+    targetPath: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, succeeded())
+  displayName: Extract test scripts
+
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: $(artifact_test_net80_binaries)
+    targetPath: '$(System.DefaultWorkingDirectory)/net8.0'
+  condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
+  displayName: Extract NET 8 test binaries
 
 - task: CmdLine@2
   inputs:
@@ -27,13 +41,6 @@ steps:
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Copy .NET 8 test config
   condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
-
-- task: CmdLine@2
-  inputs:
-    script: 'cp $(System.DefaultWorkingDirectory)/configs/net90/$(config).json net9.0/UserDataProviders.json'
-    workingDirectory: '$(System.DefaultWorkingDirectory)'
-  displayName: Copy .NET 9 test config
-  condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
@@ -64,7 +71,7 @@ steps:
   displayName: Setup tests
 
 - task: UseDotNet@2
-  displayName: 'Install .NET 8'
+  displayName: 'Use .NET 8'
   inputs:
     packageType: sdk
     version: 8.x
@@ -75,20 +82,40 @@ steps:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net8.0/main/x64'
   condition: and(variables.title, variables.script_local, eq(variables.net80, 'true'), succeeded())
-  displayName: Setup tests
+  displayName: Setup .NET 8 tests
 
-- script: dotnet test ./net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra) --blame-hang-timeout 5m
+- script: dotnet test ./net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net8.0 -l trx $(extra) --blame-hang-timeout 5m
   condition: and(variables.title, eq(variables.net80, 'true'), succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
   displayName: 'Tests (.NET 8): $(title)'
 
-- script: dotnet test ./net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra) --blame-hang-timeout 5m
+- script: dotnet test ./net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net8.0 -l trx $(extra) --blame-hang-timeout 5m
   condition: and(variables.title, eq(variables.net80, 'true'), succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   displayName: 'Tests (.NET 8): $(title)'
   retryCountOnTaskFailure: 2
 
-- script: dotnet test ./net8.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra) --blame-hang-timeout 5m
+- script: dotnet test ./net8.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net8.0 -l trx $(extra) --blame-hang-timeout 5m
   condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
   displayName: 'EF.Core Tests (.NET 8): $(title)'
+
+- task: CmdLine@2
+  inputs:
+    script: 'rm -rf $(System.DefaultWorkingDirectory)/net8.0'
+  displayName: Remove NET 8 test binaries
+  condition: and(variables.title, eq(variables.net80, 'true'))
+
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: $(artifact_test_net90_binaries)
+    targetPath: '$(System.DefaultWorkingDirectory)/net9.0'
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
+  displayName: Extract NET 9 test binaries
+
+- task: CmdLine@2
+  inputs:
+    script: 'cp $(System.DefaultWorkingDirectory)/configs/net90/$(config).json net9.0/UserDataProviders.json'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  displayName: Copy .NET 9 test config
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
 
 - task: UseDotNet@2
   displayName: 'Use .NET 9'
@@ -104,18 +131,71 @@ steps:
   condition: and(variables.title, variables.script_local, eq(variables.net90, 'true'), succeeded())
   displayName: Setup .NET 9 tests
 
-- script: dotnet test ./net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx $(extra) --blame-hang-timeout 5m
-  condition: and(variables.title, eq(variables.net90, 'true'), succeeded(), ne(variables.retry, 'true'))
+- script: dotnet test ./net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net9.0 -l trx $(extra) --blame-hang-timeout 5m
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
   displayName: 'Tests (.NET 9): $(title)'
 
-- script: dotnet test ./net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx $(extra) --blame-hang-timeout 5m
-  condition: and(variables.title, eq(variables.net90, 'true'), succeeded(), eq(variables.retry, 'true'))
+- script: dotnet test ./net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net9.0 -l trx $(extra) --blame-hang-timeout 5m
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   displayName: 'Tests (.NET 9): $(title)'
   retryCountOnTaskFailure: 2
 
-- script: dotnet test ./net9.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx $(extra) --blame-hang-timeout 5m
+- script: dotnet test ./net9.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net9.0 -l trx $(extra) --blame-hang-timeout 5m
   condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
   displayName: 'EF.Core Tests (.NET 9): $(title)'
+
+- task: CmdLine@2
+  inputs:
+    script: 'rm -rf $(System.DefaultWorkingDirectory)/net9.0'
+  displayName: Remove NET 9 test binaries
+  condition: and(variables.title, eq(variables.net90, 'true'))
+
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifactName: $(artifact_test_net100_binaries)
+    targetPath: '$(System.DefaultWorkingDirectory)/net10.0'
+  condition: and(variables.title, eq(variables.net100, 'true'), succeeded())
+  displayName: Extract NET 10 test binaries
+
+- task: CmdLine@2
+  inputs:
+    script: 'cp $(System.DefaultWorkingDirectory)/configs/net100/$(config).json net10.0/UserDataProviders.json'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  displayName: Copy .NET 10 test config
+  condition: and(variables.title, eq(variables.net100, 'true'), succeeded())
+
+- task: UseDotNet@2
+  displayName: 'Use .NET 10'
+  inputs:
+    packageType: sdk
+    version: 10.x
+  condition: and(variables.title, eq(variables.net100, 'true'), succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net10.0/main/x64'
+  condition: and(variables.title, variables.script_local, eq(variables.net100, 'true'), succeeded())
+  displayName: Setup .NET 10 tests
+
+- script: dotnet test ./net10.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net10.0 -l trx $(extra) --blame-hang-timeout 5m
+  condition: and(variables.title, eq(variables.net100, 'true'), succeeded(), ne(variables.retry, 'true'))
+  displayName: 'Tests (.NET 10): $(title)'
+
+- script: dotnet test ./net10.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net10.0 -l trx $(extra) --blame-hang-timeout 5m
+  condition: and(variables.title, eq(variables.net100, 'true'), succeeded(), eq(variables.retry, 'true'))
+  displayName: 'Tests (.NET 10): $(title)'
+  retryCountOnTaskFailure: 2
+
+- script: dotnet test ./net10.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net10.0 -l trx $(extra) --blame-hang-timeout 5m
+  condition: and(variables.title, eq(variables.net100, 'true'), succeeded())
+  displayName: 'EF.Core Tests (.NET 10): $(title)'
+
+- task: CmdLine@2
+  inputs:
+    script: 'rm -rf $(System.DefaultWorkingDirectory)/net10.0'
+  displayName: Remove NET 10 test binaries
+  condition: and(variables.title, eq(variables.net100, 'true'))
 
 - task: PublishTestResults@2
   condition: and(variables.title, succeededOrFailed())

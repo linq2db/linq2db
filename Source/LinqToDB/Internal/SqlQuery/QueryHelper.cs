@@ -8,7 +8,6 @@ using System.Text.RegularExpressions;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
-using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -572,6 +571,13 @@ namespace LinqToDB.Internal.SqlQuery
 				case QueryElementType.SqlParameter:
 					return true;
 
+				case QueryElementType.SqlCast:
+				{
+					var sqlCast = (SqlCastExpression) expr;
+
+					return IsConstant(sqlCast.Expression);
+				}
+
 				case QueryElementType.Column:
 				{
 					var sqlColumn = (SqlColumn) expr;
@@ -587,19 +593,12 @@ namespace LinqToDB.Internal.SqlQuery
 				}
 
 				case QueryElementType.SqlExpression:
+				case QueryElementType.SqlFunction  :
 				{
-					var sqlExpr = (SqlExpression) expr;
+					var sqlExpr = (SqlParameterizedExpressionBase) expr;
 					if (!sqlExpr.IsPure || (sqlExpr.Flags & (SqlFlags.IsAggregate | SqlFlags.IsWindowFunction)) != 0)
 						return false;
 					return sqlExpr.Parameters.All(static p => IsConstant(p));
-				}
-
-				case QueryElementType.SqlFunction:
-				{
-					var sqlFunc = (SqlFunction) expr;
-					if (!sqlFunc.IsPure || (sqlFunc.Flags & (SqlFlags.IsAggregate | SqlFlags.IsWindowFunction)) != 0)
-						return false;
-					return sqlFunc.Parameters.All(static p => IsConstant(p));
 				}
 			}
 
@@ -698,6 +697,10 @@ namespace LinqToDB.Internal.SqlQuery
 		public static bool IsEqualTables([NotNullWhen(true)] SqlTable? table1, [NotNullWhen(true)] SqlTable? table2, bool withExtensions = true)
 		{
 			if (table1 == null || table2 == null)
+				return false;
+
+			// TODO: we should introduce better class hierarchy for tables
+			if (table1.GetType() != typeof(SqlTable) || table2.GetType() != typeof(SqlTable))
 				return false;
 
 			var result =
@@ -1101,17 +1104,20 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static bool IsAggregationFunction(IQueryElement expr)
 		{
-			if (expr is SqlParameterizedExpressionBase e)
-				return e.IsAggregate;
-
-			return false;
+			return expr switch
+			{
+				SqlParameterizedExpressionBase p => p.IsAggregate,
+				SqlExtendedFunction func         => func.IsAggregate,
+				_                                => false,
+			};
 		}
 
 		internal sealed class AggregationCheckVisitor : QueryElementVisitor
 		{
-			public bool IsAggregation { get; set; }
-			public bool IsWindow      { get; set; }
-			public bool HasReference  { get; set; }
+			public bool IsAggregation          { get; set; }
+			public bool IsWindow               { get; set; }
+			public bool HasReference           { get; set; }
+			public bool CanBeAffectedByOrderBy { get; set; }
 
 			public AggregationCheckVisitor() : base(VisitMode.ReadOnly)
 			{
@@ -1119,9 +1125,10 @@ namespace LinqToDB.Internal.SqlQuery
 
 			public void Cleanup()
 			{
-				IsAggregation = false;
-				IsWindow      = false;
-				HasReference  = false;
+				IsAggregation          = false;
+				IsWindow               = false;
+				HasReference           = false;
+				CanBeAffectedByOrderBy = false;
 			}
 
 			[return : NotNullIfNotNull(nameof(element))]
@@ -1148,6 +1155,25 @@ namespace LinqToDB.Internal.SqlQuery
 				}
 
 				return base.VisitSqlFunction(element);
+			}
+
+			protected override IQueryElement VisitSqlExtendedFunction(SqlExtendedFunction element)
+			{
+				var isAggregation = IsAggregationFunction(element);
+				var isWindow      = IsWindowFunction(element);
+
+				if (element.CanBeAffectedByOrderBy)
+					CanBeAffectedByOrderBy = true;
+
+				IsAggregation = IsAggregation || isAggregation;
+				IsWindow      = IsWindow      || isWindow;
+
+				if (isAggregation || isWindow)
+				{
+					return element;
+				}
+
+				return base.VisitSqlExtendedFunction(element);
 			}
 
 			protected override IQueryElement VisitSqlExpression(SqlExpression element)
@@ -1181,6 +1207,11 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static bool IsAggregationQuery(SelectQuery selectQuery)
 		{
+			return IsAggregationQuery(selectQuery, out _);
+		}
+
+		public static bool IsAggregationQuery(SelectQuery selectQuery, out bool needsOrderBy)
+		{
 			using var visitorRef = AggregationCheckVisitors.Allocate();
 
 			var visitor        = visitorRef.Value;
@@ -1191,7 +1222,10 @@ namespace LinqToDB.Internal.SqlQuery
 				visitor.Visit(column.Expression);
 
 				if (visitor.HasReference)
+				{
+					needsOrderBy = false;
 					return false;
+				}
 
 				if (visitor.IsAggregation)
 				{
@@ -1199,6 +1233,7 @@ namespace LinqToDB.Internal.SqlQuery
 				}
 			}
 
+			needsOrderBy = visitor.CanBeAffectedByOrderBy;
 			return hasAggregation;
 		}
 
@@ -1206,6 +1241,9 @@ namespace LinqToDB.Internal.SqlQuery
 		{
 			if (expr is SqlParameterizedExpressionBase expression)
 				return expression.IsWindowFunction;
+
+			if (expr is SqlExtendedFunction { IsWindowFunction: true })
+				return true;
 
 			return false;
 		}
@@ -1405,7 +1443,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		internal static bool TypeCanBeNull(Type type)
 		{
-			return type.IsNullableType() || type is INullable;
+			return type.IsNullableOrReferenceType() || type is INullable;
 		}
 
 		public static bool CalcCanBeNull(Type? type, bool? canBeNull, ParametersNullabilityType isNullable, IEnumerable<bool> nullInfo)
@@ -1426,12 +1464,13 @@ namespace LinqToDB.Internal.SqlQuery
 
 			bool? isNullableParameters = isNullable switch
 			{
-				ParametersNullabilityType.SameAsFirstParameter     => SameAs(0),
-				ParametersNullabilityType.SameAsSecondParameter    => SameAs(1),
-				ParametersNullabilityType.SameAsThirdParameter     => SameAs(2),
-				ParametersNullabilityType.SameAsLastParameter      => SameAs(parameters.Length - 1),
-				ParametersNullabilityType.IfAnyParameterNullable   => parameters.Any(static p => p),
-				ParametersNullabilityType.IfAllParametersNullable  => parameters.All(static p => p),
+				ParametersNullabilityType.SameAsFirstParameter         => SameAs(0),
+				ParametersNullabilityType.SameAsSecondParameter        => SameAs(1),
+				ParametersNullabilityType.SameAsThirdParameter         => SameAs(2),
+				ParametersNullabilityType.SameAsFirstOrSecondParameter => SameAs(0) || SameAs(1),
+				ParametersNullabilityType.SameAsLastParameter          => SameAs(parameters.Length - 1),
+				ParametersNullabilityType.IfAnyParameterNullable       => parameters.Any(static p => p),
+				ParametersNullabilityType.IfAllParametersNullable      => parameters.All(static p => p),
 				_ => null
 			};
 
@@ -1541,6 +1580,19 @@ namespace LinqToDB.Internal.SqlQuery
 			});
 		}
 
+		public static bool HasParameter(this IQueryElement root)
+		{
+			return null != root.Find(static e =>
+			{
+				if (e.ElementType == QueryElementType.SqlParameter)
+				{
+					return true;
+				}
+
+				return false;
+			});
+		}
+
 		public static void MarkAsNonQueryParameters(IQueryElement root)
 		{
 			root.VisitAll(static e =>
@@ -1588,8 +1640,6 @@ namespace LinqToDB.Internal.SqlQuery
 				}
 			});
 		}
-
-		
 
 		public static void CollectParametersAndValues(IQueryElement root, ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
 		{
@@ -1657,6 +1707,100 @@ namespace LinqToDB.Internal.SqlQuery
 				return true;
 
 			return false;
+		}
+
+		public static bool HasCteClauseReference(IQueryElement element, CteClause? clause)
+		{
+			if (clause == null)
+				return false;
+			return null != element.Find(clause, static (c, e) => e.ElementType == QueryElementType.SqlCteTable && ((SqlCteTable)e).Cte == c);
+		}
+
+		/// <summary>
+		/// Returns true, if type represents signed integer type.
+		/// </summary>
+		internal static bool IsSignedType(this DbDataType type)
+		{
+			return type.DataType.IsSignedType();
+		}
+
+		/// <summary>
+		/// Returns true, if type represents signed integer type.
+		/// </summary>
+		internal static bool IsUnsignedType(this DbDataType type)
+		{
+			return type.DataType.IsUnsignedType();
+		}
+
+		/// <summary>
+		/// Converts signed numeric type to unsigned type.
+		/// </summary>
+		internal static DbDataType ToUnsigned(this DbDataType type)
+		{
+			var newType = type.DataType switch
+			{
+				DataType.SByte => DataType.Byte,
+				DataType.Int16 => DataType.UInt16,
+				DataType.Int32 => DataType.UInt32,
+				DataType.Int64 => DataType.UInt64,
+				DataType.Int128 => DataType.UInt128,
+				DataType.Int256 => DataType.UInt256,
+				_ => throw new InvalidOperationException($"Unsigned DB type expected: {type}")
+			};
+
+			return type.WithDataType(newType);
+		}
+
+		/// <summary>
+		/// Returns true, if type represents text/string database type.
+		/// </summary>
+		internal static bool IsTextType(this DbDataType type)
+		{
+			// TODO: such information should be moved to type system in future probably
+			// and if needed handle type names too
+			return type.DataType.IsTextType();
+		}
+
+		/// <summary>
+		/// Returns true, if type represents text/string database type.
+		/// </summary>
+		internal static bool IsTextType(this DataType type)
+		{
+			return type is DataType.Char
+				or DataType.VarChar
+				or DataType.Text
+				or DataType.NChar
+				or DataType.NVarChar
+				or DataType.NText
+				;
+		}
+
+		/// <summary>
+		/// Returns true, if type represents signed integer type.
+		/// </summary>
+		internal static bool IsSignedType(this DataType type)
+		{
+			return type is DataType.SByte
+				or DataType.Int16
+				or DataType.Int32
+				or DataType.Int64
+				or DataType.Int128
+				or DataType.Int256
+				;
+		}
+
+		/// <summary>
+		/// Returns true, if type represents unsigned integer type.
+		/// </summary>
+		internal static bool IsUnsignedType(this DataType type)
+		{
+			return type is DataType.Byte
+				or DataType.UInt16
+				or DataType.UInt32
+				or DataType.UInt64
+				or DataType.UInt128
+				or DataType.UInt256
+				;
 		}
 	}
 }

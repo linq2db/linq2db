@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Linq;
-using System.Text;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
@@ -33,6 +31,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		SelectQuery?     _applySelect;
 		SelectQuery?     _inSubquery;
 		bool             _isInRecursiveCte;
+		CteClause?       _currentCteClause;
 		SelectQuery?     _updateQuery;
 		ISqlTableSource? _updateTable;
 
@@ -93,7 +92,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					if (!_orderByOptimizer.IsOptimized)
 						break;
 
-					if (_orderByOptimizer.NeedsNestingUpdate) 
+					if (_orderByOptimizer.NeedsNestingUpdate)
 						CorrectColumnsNesting();
 
 				} while (true);
@@ -138,6 +137,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_applySelect       = default!;
 			_version           = default;
 			_isInRecursiveCte  = false;
+			_currentCteClause  = null;
 			_updateQuery       = default;
 			_updateTable       = default;
 
@@ -250,6 +250,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 
 					if (CorrectMultiTables(selectQuery))
+					{
+						isModified = true;
+					}
+
+					if (!_providerFlags.IsComplexJoinConditionSupported && OptimizeJoinConditions(selectQuery))
 					{
 						isModified = true;
 					}
@@ -725,7 +730,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 								{
 									var dbType = QueryHelper.GetDbDataType(column.Expression, _mappingSchema);
 									var type   = dbType.SystemType;
-									if (!type.IsNullableType())
+									if (!type.IsNullableOrReferenceType())
 										type = type.AsNullable();
 									nullValue = new SqlValue(dbType.WithSystemType(type), null);
 								}
@@ -759,26 +764,139 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		static bool IsComplexQuery(SelectQuery query)
 		{
-			var accessibleSources = new HashSet<ISqlTableSource>();
-
-			var complexFound = false;
-			foreach (var source in QueryHelper.EnumerateAccessibleSources(query))
+			if (query.From.Tables.Count != 1)
 			{
-				accessibleSources.Add(source);
-				if (source is SelectQuery q && (q.From.Tables.Count != 1 || q.GroupBy.IsEmpty && QueryHelper.EnumerateJoins(q).Any()))
+				return true;
+			}
+
+			if (!query.GroupBy.IsEmpty)
+			{
+				return false;
+			}
+
+			var mainTable = query.From.Tables[0];
+
+			if (mainTable.Joins.Count == 0)
+			{
+				return false;
+			}
+
+			foreach (var join in mainTable.Joins)
+			{
+				if (join.JoinType is not (JoinType.Inner or JoinType.Left) || join.Table.Joins.Count > 0)
 				{
-					complexFound = true;
-					break;
+					return true;
 				}
 			}
 
-			if (complexFound)
-				return true;
+			var mainKeys = new List<IList<ISqlExpression>>();
+			QueryHelper.CollectUniqueKeys(mainTable.Source, includeDistinct: true, mainKeys);
 
-			var usedSources = new HashSet<ISqlTableSource>();
-			QueryHelper.CollectUsedSources(query, usedSources);
+			foreach (var join in mainTable.Joins)
+			{
+				if (join.Cardinality.HasFlag(SourceCardinality.One))
+					continue;
 
-			return usedSources.Count > accessibleSources.Count;
+				var joinKeys = new List<IList<ISqlExpression>>();
+				QueryHelper.CollectUniqueKeys(join.Table.Source, includeDistinct: true, joinKeys);
+
+				if (!IsUniqueCondition(mainKeys, joinKeys, join.Condition))
+					return true;
+
+			}
+
+			return false;
+		}
+
+		static bool IsUniqueCondition(List<IList<ISqlExpression>> keys1, List<IList<ISqlExpression>> keys2, SqlSearchCondition searchCondition)
+		{
+			if (searchCondition.IsOr)
+				return false;
+
+			if (keys1.Count == 0 || keys2.Count == 0)
+				return false;
+
+			// Collect all equality pairs (expr1 = expr2) from (AND-only) search condition recursively.
+			var equalityPairs = new List<(ISqlExpression Left, ISqlExpression Right)>();
+
+			void CollectCondition(SqlSearchCondition condition)
+			{
+				if (condition.IsOr)
+					return; // OR parts cannot produce unique join detection safely
+
+				foreach (var p in condition.Predicates)
+				{
+					switch (p)
+					{
+						case SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } ee:
+						{
+							var left  = QueryHelper.UnwrapNullablity(ee.Expr1);
+							var right = QueryHelper.UnwrapNullablity(ee.Expr2);
+							if (!ReferenceEquals(left, right))
+								equalityPairs.Add((left, right));
+							break;
+						}
+						case SqlSearchCondition nested:
+							CollectCondition(nested);
+							break;
+					}
+				}
+			}
+
+			CollectCondition(searchCondition);
+
+			if (equalityPairs.Count == 0)
+				return false;
+
+			bool SameExpr(ISqlExpression a, ISqlExpression b) =>
+				ReferenceEquals(a, b) || QueryHelper.SameWithoutNullablity(a, b);
+
+			// Helper to check that for two keys we have equality predicates covering all columns.
+			bool CoversKey(IList<ISqlExpression> keyA, IList<ISqlExpression> keyB)
+			{
+				if (keyA.Count != keyB.Count)
+					return false;
+
+				// Each element from keyA must be paired with exactly one element from keyB via equality
+				int matched = 0;
+
+				for (int i = 0; i < keyA.Count; i++)
+				{
+					var aExpr = keyA[i];
+					bool found = false;
+					for (int j = 0; j < keyB.Count; j++)
+					{
+						var bExpr = keyB[j];
+
+						// Search equality pair either direction
+						if (equalityPairs.Any(ep => (SameExpr(ep.Left, aExpr) && SameExpr(ep.Right, bExpr)) ||
+													(SameExpr(ep.Left, bExpr) && SameExpr(ep.Right, aExpr))))
+						{
+							found = true;
+							break;
+						}
+					}
+
+					if (!found)
+						return false;
+
+					matched++;
+				}
+
+				return matched == keyA.Count;
+			}
+
+			// We consider join unique if ANY unique key from side1 fully matches ANY unique key from side2.
+			foreach (var k1 in keys1)
+			{
+				foreach (var k2 in keys2)
+				{
+					if (CoversKey(k1, k2))
+						return true;
+				}
+			}
+
+			return false;
 		}
 
 		bool OptimizeDistinct(SelectQuery selectQuery)
@@ -991,22 +1109,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						partitionBy = found.ToList();
 					}
 
-					var rnBuilder = new StringBuilder();
-					rnBuilder.Append("ROW_NUMBER() OVER (");
-
-					if (partitionBy != null)
-					{
-						rnBuilder.Append("PARTITION BY ");
-						for (int i = 0; i < partitionBy.Count; i++)
-						{
-							if (i > 0)
-								rnBuilder.Append(", ");
-
-							rnBuilder.Append(CultureInfo.InvariantCulture, $"{{{parameters.Count}}}");
-							parameters.Add(partitionBy[i]);
-						}
-					}
-
 					var orderByItems = sql.OrderBy.Items.ToList();
 
 					if (sql.OrderBy.IsEmpty)
@@ -1024,42 +1126,25 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						}
 					}
 
-					if (orderByItems.Count > 0)
-					{
-						if (partitionBy != null)
-							rnBuilder.Append(' ');
+					var orderItems = orderByItems.Select(o => new SqlWindowOrderItem(o.Expression, o.IsDescending, Sql.NullsPosition.None));
 
-						rnBuilder.Append("ORDER BY ");
-						for (int i = 0; i < orderByItems.Count; i++)
-						{
-							if (i > 0)
-								rnBuilder.Append(", ");
-
-							var orderItem = orderByItems[i];
-							rnBuilder.Append(CultureInfo.InvariantCulture, $"{{{parameters.Count}}}");
-							if (orderItem.IsDescending)
-								rnBuilder.Append(" DESC");
-
-							parameters.Add(orderItem.Expression);
-						}
-					}
-
-					rnBuilder.Append(')');
-
-					rnExpression = new SqlExpression(_mappingSchema.GetDbDataType(typeof(long)), rnBuilder.ToString(), Precedence.Primary,
-						SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, parameters.ToArray());
+					var longType = _mappingSchema.GetDbDataType(typeof(long));
+					rnExpression = new SqlExtendedFunction(longType, "ROW_NUMBER", [], [], partitionBy : partitionBy, orderBy : orderItems);
 				}
 
 				var whereToIgnore = new List<IQueryElement> { sql.Where, sql.Select };
 
-				// add join conditions
-				// Check SelectManyTests.Basic9 for Access
-				foreach (var join in sql.From.Tables.SelectMany(t => t.Joins))
+				if (joinTable.JoinType == JoinType.CrossApply)
 				{
-					if (join.JoinType == JoinType.Inner && join.Table.Source is SqlTable)
-						whereToIgnore.Add(join.Condition);
-					else
-						break;
+					// add join conditions
+					// Check SelectManyTests.Basic9 for Access
+					foreach (var join in sql.From.Tables.SelectMany(t => t.Joins))
+					{
+						if (join.JoinType == JoinType.Inner && join.Table.Source is SqlTable)
+							whereToIgnore.Add(join.Condition);
+						else
+							break;
+					}
 				}
 
 				// we cannot optimize apply because reference to parent sources are used inside the query
@@ -1221,7 +1306,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (subQuery.DoNotRemove)
 				return false;
 
-			if (subQuery.From.Tables.Count == 0)
+			if (subQuery.From.Tables.Count == 0 && !subQuery.HasSetOperators)
 			{
 				// optimized in level up function
 				return false;
@@ -1446,6 +1531,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			var nullability = NullabilityContext.GetContext(parentQuery);
 
+			if (!subQuery.OrderBy.IsEmpty && QueryHelper.IsAggregationQuery(parentQuery, out var needsOrderBy) && needsOrderBy)
+			{
+				// not allowed to move to parent if it has aggregates
+				return false;
+			}
+		
 			// Check columns
 			//
 
@@ -1464,9 +1555,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					{
 						var isWindowFunction = QueryHelper.IsWindowFunction(sqlExpr);
 						var isAggregationFunction = QueryHelper.IsAggregationFunction(sqlExpr);
+
 						if (isWindowFunction || isAggregationFunction)
 						{
-							containsWindowFunction    = containsWindowFunction    || isWindowFunction;
+							containsWindowFunction = containsWindowFunction    || isWindowFunction;
 							containsAggregateFunction = containsAggregateFunction || isAggregationFunction;
 
 							sqlExpr.VisitAll(se =>
@@ -1532,7 +1624,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				if (QueryHelper.ContainsWindowFunction(column.Expression))
 				{
-					if (!parentQuery.IsSimpleOrSet)
+					if (!(!parentQuery.Select.HasModifier && parentQuery.Where.IsEmpty && parentQuery.GroupBy.IsEmpty && parentQuery.Having.IsEmpty && parentQuery.From.Tables is [{ Joins.Count: 0 }]))
 					{
 						// not allowed to break query window 
 						return false;
@@ -1560,7 +1652,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				else
 				{
-					if (!IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, column.Expression, ignoreWhere : false, inGrouping: !subQuery.GroupBy.IsEmpty))
+					if (!QueryHelper.HasCteClauseReference(subQuery, _currentCteClause) && !IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, column.Expression, ignoreWhere : false, inGrouping: !subQuery.GroupBy.IsEmpty))
 					{
 						// Column expression is complex and Column has more than one reference
 						return false;
@@ -1865,15 +1957,21 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					if (joinTable.JoinType == JoinType.OuterApply)
 					{
-						if (_providerFlags.IsOuterApplyJoinSupportsCondition)
-							moveConditionToQuery = false;
-						else
+						if (!_providerFlags.IsOuterApplyJoinSupportsCondition)
+							return false;
+
+						// Should remain LATERAL
+						if (QueryHelper.IsDependsOnOuterSources(subQuery, [subQuery.Where]))
 							return false;
 					}
 					else if (joinTable.JoinType == JoinType.CrossApply)
 					{
 						if (_providerFlags.IsCrossApplyJoinSupportsCondition)
 							moveConditionToQuery = false;
+
+						// Should remain LATERAL
+						if (QueryHelper.IsDependsOnOuterSources(subQuery, [subQuery.Where]))
+							return false;
 					}
 					else if (joinTable.JoinType == JoinType.Left)
 					{
@@ -2007,7 +2105,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			for (var i = 0; i < selectQuery.From.Tables.Count; i++)
 			{
 				var tableSource = selectQuery.From.Tables[i];
-				if (tableSource.Joins.Count == 0 && tableSource.Source is SelectQuery { From.Tables.Count: 0, Where.IsEmpty: true, HasSetOperators: false } subQuery)
+				if (tableSource.Joins.Count == 0 && tableSource.Source is SelectQuery { From.Tables.Count: 0, HasSetOperators: false } subQuery)
 				{
 					if (selectQuery.From.Tables.Count == 1)
 					{
@@ -2019,11 +2117,22 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						}
 					}
 
+					if (!subQuery.Where.IsEmpty)
+					{
+						if (!QueryHelper.IsAggregationQuery(selectQuery))
+							continue;
+					}
+
 					replaced = true;
 
 					foreach (var c in subQuery.Select.Columns)
 					{
 						NotifyReplaced(c.Expression, c);
+					}
+
+					if (!subQuery.Where.IsEmpty)
+					{
+						selectQuery.Where.SearchCondition = QueryHelper.MergeConditions(selectQuery.Where.SearchCondition, subQuery.Where.SearchCondition);
 					}
 
 					selectQuery.From.Tables.RemoveAt(i);
@@ -2045,8 +2154,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				if (tableSource.Joins.Count > 0)
 				{
-					foreach (var join in tableSource.Joins)
+					for (var j = 0; j < tableSource.Joins.Count; j++)
 					{
+						var join = tableSource.Joins[j];
+
 						if (JoinMoveSubQueryUp(selectQuery, join))
 							replaced = true;
 					}
@@ -2082,6 +2193,123 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 
 			return replaced;
+		}
+
+		private bool OptimizeJoinConditions(SelectQuery selectQuery)
+		{
+			if (_root is not SqlStatement root)
+				return false;
+
+			var modified = false;
+
+			for (var i = 0; i < selectQuery.From.Tables.Count; i++)
+			{
+				var tableSource = selectQuery.From.Tables[i];
+
+				if (tableSource.Joins.Count > 0)
+				{
+					for (var j = 0; j < tableSource.Joins.Count; j++)
+					{
+						var join = tableSource.Joins[j];
+
+						if (join.JoinType is (JoinType.Inner or JoinType.Left) && !join.Condition.IsOr && join.Condition.Predicates.Count != 0)
+							modified |= MoveJoinConditionsToWhere(root, tableSource, join, selectQuery.Where, NullabilityContext.GetContext(selectQuery));
+					}
+				}
+			}
+
+			return modified;
+
+			bool MoveJoinConditionsToWhere(SqlStatement root, SqlTableSource left, SqlJoinedTable join, SqlWhereClause where, NullabilityContext nullabilityContext)
+			{
+				var modified                   = false;
+				var isLeft                     = join.JoinType == JoinType.Left;
+				List<ISqlTableSource>? sources = null;
+
+				SqlSearchCondition? whereCond       = null;
+				SqlSearchCondition? nestedWhereCond = null;
+
+				for (var i = 0; i < join.Condition.Predicates.Count; i++)
+				{
+					var predicate = join.Condition.Predicates[i];
+
+					var move = predicate is not SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr
+						|| exprExpr.Reduce(nullabilityContext.WithJoinSource(join.Table.Source), _evaluationContext, false, _dataOptions.LinqOptions) is not SqlPredicate.ExprExpr
+						|| exprExpr.Expr1 is SqlValue || exprExpr.Expr2 is SqlValue;
+
+					if (move && isLeft)
+					{
+						sources ??= QueryHelper.EnumerateAccessibleSources(join.Table).ToList();
+						move = !QueryHelper.IsDependsOnSources(predicate, sources);
+
+						if (!move && !QueryHelper.IsDependsOnSources(predicate, [left]))
+						{
+							if (nestedWhereCond == null)
+							{
+								if (join.Table.Source is SelectQuery sq)
+								{
+									QueryHelper.WrapQuery(root, sq, true, doNotRemove: true);
+									nestedWhereCond = ((SelectQuery)join.Table.Source).Where.EnsureConjunction();
+									modified = true;
+								}
+								else if (join.Table.Source is SqlTable t)
+								{
+									var subQuery      = new SelectQuery() { DoNotRemove = true };
+									join.Table.Source = subQuery;
+									nestedWhereCond = subQuery.Where.EnsureConjunction();
+									subQuery.From.Table(t);
+
+									var tableSources = new HashSet<ISqlTableSource>() { t };
+									var foundFields  = new HashSet<ISqlExpression>();
+
+									QueryHelper.CollectDependencies(_rootElement, tableSources, foundFields, ignore: join.Table.Joins);
+
+									if (foundFields.Count > 0)
+									{
+										var toReplace = new Dictionary<IQueryElement, IQueryElement>(foundFields.Count);
+										foreach (var expr in foundFields)
+											toReplace.Add(expr, subQuery.Select.AddColumn(expr));
+
+										_rootElement.Replace(toReplace, subQuery.Select);
+									}
+
+									modified = true;
+								}
+							}
+
+							if (nestedWhereCond != null)
+							{
+								// update references
+								var foundFields = new HashSet<ISqlExpression>();
+								QueryHelper.CollectDependencies(predicate, [join.Table.Source], foundFields);
+
+								if (foundFields.Count > 0)
+								{
+									var toReplace = new Dictionary<IQueryElement, IQueryElement>(foundFields.Count);
+									foreach (var expr in foundFields)
+										toReplace.Add(expr, ((SqlColumn)expr).Expression);
+									predicate.Replace(toReplace);
+								}
+
+								nestedWhereCond.Predicates.Add(predicate);
+								join.Condition.Predicates.RemoveAt(i);
+								i--;
+								continue;
+							}
+						}
+					}
+
+					if (move)
+					{
+						(whereCond ??= where.EnsureConjunction()).Predicates.Add(predicate);
+						join.Condition.Predicates.RemoveAt(i);
+						i--;
+					}
+				}
+
+				// this could result in empty condition, but it is fine - user created unsupported query
+				return modified;
+			}
 		}
 
 		bool CorrectRecursiveCteJoins(SelectQuery selectQuery)
@@ -2391,7 +2619,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					var join = table.Joins[joinIndex];
 					if (join.JoinType == JoinType.Inner && join.Condition.IsTrue())
 					{
-						if (_providerFlags.IsCrossJoinSupported && (table.Joins.Count > 1 || !QueryHelper.IsDependsOnSource(selectQuery.Where, join.Table.Source)))
+						if (_providerFlags.IsCrossJoinSupported
+							&& (table.Joins.Count > (_providerFlags.IsCrossJoinSyntaxRequired ? 0 : 1)
+								|| !QueryHelper.IsDependsOnSource(selectQuery.Where, join.Table.Source)))
 						{
 							join.JoinType = JoinType.Cross;
 							if (join.Table.Joins.Count > 0)
@@ -2450,12 +2680,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
+			if (QueryHelper.IsAggregationQuery(selectQuery))
+				return true;
+
 			if (selectQuery.Select.Columns.Count == 1)
 			{
-				var column = selectQuery.Select.Columns[0];
-				if (QueryHelper.IsAggregationFunction(column.Expression) && !QueryHelper.IsWindowFunction(column.Expression))
-					return true;
-
 				if (selectQuery.Select.From.Tables.Count == 0)
 					return true;
 			}
@@ -2589,42 +2818,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_columnNestingCorrector.CorrectColumnNesting(query);
 		}
 
-		bool ProviderOuterCanHandleSeveralColumnsQuery(SelectQuery selectQuery)
-		{
-			if (_providerFlags.IsApplyJoinSupported)
-				return true;
-
-			if (_providerFlags.IsWindowFunctionsSupported)
-			{
-				if (!selectQuery.GroupBy.IsEmpty)
-				{
-					return false;
-				}
-
-				if (selectQuery.Select.TakeValue != null)
-				{
-					if (!selectQuery.Where.IsEmpty)
-					{
-						if (selectQuery.Where.SearchCondition.Predicates.Any(predicate => predicate is not SqlPredicate.ExprExpr expExpr || expExpr.Operator != SqlPredicate.Operator.Equal))
-						{
-							// OuterApply cannot be converted in this case
-							return false;
-						}
-					}
-				}
-
-				if (selectQuery.From.Tables is [{ Source: SelectQuery baseQuery }])
-				{
-					return ProviderOuterCanHandleSeveralColumnsQuery(baseQuery);
-				}
-
-				// provider can handle this query
-				return true;
-			}
-
-			return false;
-		}
-
 		bool MoveOuterJoinsToSubQuery(SelectQuery selectQuery, ref List<SelectQuery>? doNotRemoveQueries, bool processMultiColumn)
 		{
 			var currentVersion = _version;
@@ -2672,7 +2865,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							{
 								if (joinQuery.Select.Columns.Count > 1)
 								{
-									if (!processMultiColumn || ProviderOuterCanHandleSeveralColumnsQuery(joinQuery))
+									if (!processMultiColumn)
+										continue;
+
+									if (join.JoinType == JoinType.Left)
+									{
+										if (_providerFlags.IsSupportsJoinWithoutCondition || join.Condition.Predicates.Count > 0)
+											continue;
+									}
+
+									if (_providerFlags.IsApplyJoinSupported)
 									{
 										// provider can handle this query
 										continue;
@@ -2738,27 +2940,27 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 									if (QueryHelper.IsAggregationFunction(testedColumn.Expression))
 									{
-											if (!_providerFlags.AcceptsOuterExpressionInAggregate && IsInsideAggregate(sq.Select, testedColumn))
+										if (!_providerFlags.AcceptsOuterExpressionInAggregate && IsInsideAggregate(sq.Select, testedColumn))
+										{
+											if (_providerFlags.IsApplyJoinSupported)
 											{
-												if (_providerFlags.IsApplyJoinSupported)
-												{
-													// Well, provider can process this query as OUTER APPLY
-													isValid = false;
-													break;
-												}
-
-												MoveToSubQuery(sq);
-												// will be processed in the next step
-												ti      = -1;
+												// Well, provider can process this query as OUTER APPLY
 												isValid = false;
 												break;
 											}
 
-											if (!_providerFlags.IsCountSubQuerySupported)
-											{
-												isValid = false;
-												break;
-											}
+											MoveToSubQuery(sq);
+											// will be processed in the next step
+											ti      = -1;
+											isValid = false;
+											break;
+										}
+
+										if (!_providerFlags.IsCountSubQuerySupported)
+										{
+											isValid = false;
+											break;
+										}
 									}
 								}
 
@@ -2837,16 +3039,19 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		protected override IQueryElement VisitCteClause(CteClause element)
 		{
 			var saveIsInRecursiveCte = _isInRecursiveCte;
+			var saveCurrentCteClause = _currentCteClause;
 			if (element.IsRecursive)
 				_isInRecursiveCte = true;
 
 			var saveParent = _parentSelect;
 			_parentSelect = null;
+			_currentCteClause = element;
 			
 			var newElement = base.VisitCteClause(element);
 
 			_parentSelect = saveParent;
 
+			_currentCteClause = saveCurrentCteClause;
 			_isInRecursiveCte = saveIsInRecursiveCte;
 
 			return newElement;
@@ -2891,13 +3096,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			IQueryElement?[]              _ignore            = default!;
 			int                           _foundCount;
 			bool                          _notAllowedScope;
-			bool                          _doNotAllow;
 
-			public bool DoNotAllow
-			{
-				get => _doNotAllow;
-				private set => _doNotAllow = value;
-			}
+			public bool DoNotAllow { get; private set; }
 
 			public MovingComplexityVisitor() : base(VisitMode.ReadOnly)
 			{
@@ -2907,7 +3107,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				_ignore            = default!;
 				_expressionToCheck = default!;
-				_doNotAllow        = default;
+				DoNotAllow         = default;
 
 				_foundCount = 0;
 			}
@@ -2916,7 +3116,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				_ignore            = ignore;
 				_expressionToCheck = testExpression;
-				_doNotAllow        = default;
+				DoNotAllow         = default;
 				_foundCount        = 0;
 
 				Visit(parent);

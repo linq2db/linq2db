@@ -15,7 +15,7 @@ namespace Cli.Default.SQLiteNorthwind
 	[Table("Current Product List", IsView = true)]
 	public class CurrentProductList
 	{
-		[Column("ProductID"                     )] public int    ProductId   { get; set; } // int
+		[Column("ProductID"                     )] public int    ProductId   { get; set; } // INT
 		[Column("ProductName", CanBeNull = false)] public string ProductName { get; set; } = null!; // varchar(40)
 	}
 }

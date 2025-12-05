@@ -48,8 +48,8 @@ namespace LinqToDB.Internal.DataProvider
 				{
 					Utils.MakeUniqueNames(_tablesVisited,
 						_allAliases,
-						(n, a) => !a!.Contains(n) && IsValidAlias(n), 
-						GetCurrentAlias, 
+						(n, a) => !a!.Contains(n) && IsValidAlias(n),
+						GetCurrentAlias,
 						(ts, n, a) =>
 						{
 							ts.Alias = n;
@@ -233,6 +233,15 @@ namespace LinqToDB.Internal.DataProvider
 				}
 
 				_newAliases.RegisterAliased(element);
+
+				return element;
+			}
+
+			protected override IQueryElement VisitSqlTable(SqlTable element)
+			{
+				base.VisitSqlTable(element);
+
+				_allAliases.Add(element.TableName.Name);
 
 				return element;
 			}

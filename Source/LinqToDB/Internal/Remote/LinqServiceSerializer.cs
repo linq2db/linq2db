@@ -85,8 +85,7 @@ namespace LinqToDB.Internal.Remote
 				if (withType)
 					Append(type);
 
-				// TODO: should we preserve DBNull is AST?
-				if (value == null || value is DBNull)
+				if (value.IsNullValue())
 					Append((string?)null);
 				else if (!type.IsArray)
 				{
@@ -503,6 +502,21 @@ namespace LinqToDB.Internal.Remote
 
 				for (var i = 0; i < count; i++)
 					items[i] = Read<T>()!;
+
+				return items;
+			}
+
+			protected bool[]? ReadBoolArray()
+			{
+				var count = ReadCount();
+
+				if (count == null)
+					return null;
+
+				var items = new bool[count.Value];
+
+				for (var i = 0; i < count; i++)
+					items[i] = ReadBool();
 
 				return items;
 			}
@@ -1713,6 +1727,60 @@ namespace LinqToDB.Internal.Remote
 						break;
 					}
 
+					case QueryElementType.SqlExtendedFunction:
+					{
+						var elem = (SqlExtendedFunction)e;
+						Append(elem.Type);
+						Append(elem.FunctionName);
+						Append(elem.Arguments);
+						Append(elem.ArgumentsNullability);
+						Append(elem.IsAggregate);
+						Append(elem.CanBeAffectedByOrderBy);
+						Append(elem.CanBeNull);
+						Append(elem.WithinGroup);
+						Append(elem.Filter);
+						Append(elem.OrderBy);
+						Append(elem.PartitionBy);
+						Append(elem.FrameClause);
+						break;
+					}
+
+					case QueryElementType.SqlFunctionArgument:
+					{
+						var elem = (SqlFunctionArgument)e;
+						Append(elem.Expression);
+						Append(elem.Suffix);
+						Append((int)elem.Modifier);
+						break;
+					}
+
+					case QueryElementType.SqlWindowOrderItem:
+					{
+						var elem = (SqlWindowOrderItem)e;
+						Append(elem.Expression);
+						Append(elem.IsDescending);
+						Append((int)elem.NullsPosition);
+						break;
+					}
+
+					case QueryElementType.SqlFrameClause:
+					{
+						var elem = (SqlFrameClause)e;
+						Append(elem.Start);
+						Append((int)elem.FrameType);
+						Append(elem.End);
+						break;
+					}
+
+					case QueryElementType.SqlFrameBoundary:
+					{
+						var elem = (SqlFrameBoundary)e;
+						Append(elem.IsPreceding);
+						Append((int)elem.BoundaryType);
+						Append(elem.Offset);
+						break;
+					}
+
 					default:
 						throw new InvalidOperationException($"Serialize not implemented for element {e.ElementType}");
 				}
@@ -1731,6 +1799,19 @@ namespace LinqToDB.Internal.Remote
 
 					foreach (var e in exprs)
 						Append(ObjectIndices[e]);
+				}
+			}
+
+			void Append(bool[]? exprs)
+			{
+				if (exprs == null)
+					Builder.Append(" -");
+				else
+				{
+					Append(exprs.Length);
+
+					foreach (var e in exprs)
+						Append(e);
 				}
 			}
 		}
@@ -2812,6 +2893,71 @@ namespace LinqToDB.Internal.Remote
 						break;
 					}
 
+					case QueryElementType.SqlExtendedFunction:
+					{
+						var functionType           = ReadDbDataType();
+						var name                   = ReadString()!;
+						var arguments              = ReadArray<SqlFunctionArgument>()!;
+						var argumentsNullability   = ReadBoolArray()!;
+						var isAggregate            = ReadBool();
+						var canBeAffectedByOrderBy = ReadBool();
+						var canBeNull              = ReadNullableBool();
+						var withinGroup            = ReadArray<SqlWindowOrderItem>()!;
+						var filter                 = Read<SqlSearchCondition>();
+						var orderBy                = ReadArray<SqlWindowOrderItem>()!;
+						var partitionBy            = ReadArray<ISqlExpression>()!;
+						var frame                  = Read<SqlFrameClause>();
+
+						obj = new SqlExtendedFunction(functionType, name, arguments, argumentsNullability, withinGroup : withinGroup, partitionBy : partitionBy, orderBy : orderBy,
+							frameClause : frame, filter: filter, isAggregate : isAggregate, canBeNull: canBeNull, canBeAffectedByOrderBy: canBeAffectedByOrderBy);
+
+						break;
+					}
+
+					case QueryElementType.SqlFunctionArgument:
+					{
+						var expression = Read<ISqlExpression>()!;
+						var suffix     = Read<ISqlExpression>();
+						var modifier   = (Sql.AggregateModifier)ReadInt();
+
+						obj = new SqlFunctionArgument(expression, modifier, suffix);
+
+						break;
+					}
+
+					case QueryElementType.SqlWindowOrderItem:
+					{
+						var expression    = Read<ISqlExpression>()!;
+						var isDescending  = ReadBool();
+						var nullsPosition = (Sql.NullsPosition)ReadInt();
+
+						obj = new SqlWindowOrderItem(expression, isDescending, nullsPosition);
+
+						break;
+					}
+
+					case QueryElementType.SqlFrameClause:
+					{
+						var start     = Read<SqlFrameBoundary>()!;
+						var frameType = (SqlFrameClause.FrameTypeKind)ReadInt();
+						var end       = Read<SqlFrameBoundary>()!;
+
+						obj = new SqlFrameClause(frameType, start, end);
+
+						break;
+					}
+
+					case QueryElementType.SqlFrameBoundary:
+					{
+						var isPreceding  = ReadBool();
+						var boundaryType = (SqlFrameBoundary.FrameBoundaryType)ReadInt();
+						var offset       = Read<ISqlExpression>();
+
+						obj = new SqlFrameBoundary(isPreceding, boundaryType, offset);
+
+						break;
+					}
+
 					default:
 						throw new InvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");
 				}
@@ -2895,7 +3041,7 @@ namespace LinqToDB.Internal.Remote
 					QueryID      = new Guid(ReadString()!),
 					FieldNames   = new string[fieldCount],
 					FieldTypes   = new Type  [fieldCount],
-					Data         = new List<string[]>(),
+					Data         = new List<string?[]>(),
 				};
 
 				NextLine();

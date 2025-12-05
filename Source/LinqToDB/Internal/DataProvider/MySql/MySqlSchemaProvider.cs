@@ -126,6 +126,9 @@ SELECT
 					var scale      = Converter.ChangeTypeTo<long?>(rd[9]);
 					var extra      = rd.GetString(10);
 
+					if (dataType == "vector")
+						length = length / 4;
+
 					return new ColumnInfo()
 					{
 						TableID      = tableId,
@@ -236,6 +239,7 @@ SELECT
 				"longtext"          => DataType.Text,
 				"double"            => DataType.Double,
 				"float"             => DataType.Single,
+				"vector"            => DataType.Vector32,
 				"tinyint"           => columnType != null && columnType.Contains("unsigned") ? DataType.Byte   : DataType.SByte,
 				"smallint"          => columnType != null && columnType.Contains("unsigned") ? DataType.UInt16 : DataType.Int16,
 				"int"               => columnType != null && columnType.Contains("unsigned") ? DataType.UInt32 : DataType.Int32,
@@ -289,6 +293,9 @@ SELECT
 					var scale     = Converter.ChangeTypeTo<long?>(rd[6]);
 					var type      = rd.GetString(7).ToUpperInvariant();
 					var length    = Converter.ChangeTypeTo<long?>(rd[8]);
+
+					if (type == "VECTOR")
+						length = length / 4;
 
 					return new ProcedureParameterInfo()
 					{
@@ -350,9 +357,11 @@ SELECT
 				let dataType     = dt == null ? null : dt.TypeName
 				let columnName   = r.Field<string>("ColumnName")
 				let isNullable   = r.Field<bool>("AllowDBNull")
-				let length       = r.Field<int>("ColumnSize")
+				let len          = r.Field<int>("ColumnSize")
 				let precision    = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
 				let scale        = Converter.ChangeTypeTo<int>(r["NumericScale"])
+
+				let length = dataType == "vector" ? len / 4 : len
 
 				let systemType = GetSystemType(dataType, null, dt, length, precision, scale, options)
 
@@ -436,6 +445,7 @@ SELECT
 				case "geomcollection"    :
 				case "geometrycollection":
 				case "geometry"          : return typeof(byte[]);
+				case "vector"            : return typeof(float[]);
 			}
 
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);

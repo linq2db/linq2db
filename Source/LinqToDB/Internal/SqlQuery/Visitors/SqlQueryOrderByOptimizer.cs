@@ -52,7 +52,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				//     AVG(Value)
 				// FROM Table
 				// ORDER BY ...
-				if (QueryHelper.IsAggregationQuery(selectQuery))
+				if (QueryHelper.IsAggregationQuery(selectQuery, out var needsOrderBy) && !needsOrderBy)
 				{
 					selectQuery.OrderBy.Items.Clear();
 					_optimized = true;
@@ -133,6 +133,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					return true;
 				}
 
+				if (QueryHelper.IsAggregationQuery(selectQuery, out var needsOrderBy) && needsOrderBy)
+					return false;
+
 				if (selectQuery.From.GroupBy.IsEmpty && selectQuery.From.Tables is [{ Joins.Count: 0, Source: SelectQuery subQuery }])
 				{
 					return ExtractOrderBy(subQuery, out orderBy);
@@ -171,7 +174,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					if (selectQuery.OrderBy.IsEmpty && ExtractOrderBy(selectQuery, out var orderBy))
 					{
 						// we can preserve order in simple cases
-						selectQuery.OrderBy.Items.AddRange(orderBy.Items);
+						foreach(var item in orderBy.Items)
+						{
+							selectQuery.OrderBy.Items.Add(item.Clone());
+						}
+
 						orderBy.Items.Clear();
 
 						_optimized          = true;
@@ -203,16 +210,19 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return selectQuery;
 		}
 
-		protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
+		protected override IQueryElement VisitSqlFromClause(SqlFromClause element)
 		{
 			var saveDisableOrderBy = _disableOrderBy;
 
 			if (!_insideSetOperator)
 			{
-				_disableOrderBy = true;
+				if (!QueryHelper.IsAggregationQuery(element.SelectQuery, out var needsOrderBy) || !needsOrderBy)
+					_disableOrderBy = true;
+				else
+					_disableOrderBy = false;
 			}
 
-			var newElement = base.VisitSqlTableSource(element);
+			var newElement = base.VisitSqlFromClause(element);
 
 			_disableOrderBy = saveDisableOrderBy;
 

@@ -423,7 +423,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
-		public void Coalesce4([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void Coalesce4([DataSources(ProviderName.Ydb, ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -434,7 +434,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Coalesce5([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void Coalesce5([DataSources(ProviderName.Ydb, ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1039,7 +1039,7 @@ namespace Tests.Linq
 			if (context.IsAnyOf(TestProvName.AllOracle))
 				sql = "select \"PersonID\", \"FirstName\", \"MiddleName\", \"LastName\", \"Gender\" from \"Person\" where \"PersonID\" = 3";
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var person = db.Query<ComplexPerson>(sql).FirstOrDefault()!;
 
@@ -2161,6 +2161,8 @@ namespace Tests.Linq
 		[Table]
 		sealed class Issue4192TableNotNullable : IWithParent
 		{
+			[PrimaryKey] public int Id { get; set; }
+
 			[Column] public string? Name { get; set; }
 			[Column] public int ParentId { get; set; }
 
@@ -2170,6 +2172,8 @@ namespace Tests.Linq
 		[Table]
 		sealed class Issue4192TableNullable : IWithParent
 		{
+			[PrimaryKey] public int Id { get; set; }
+
 			[Column] public string? Name { get; set; }
 			[Column] public int? ParentId { get; set; }
 		}
@@ -2224,6 +2228,29 @@ namespace Tests.Linq
 				Assert.That(res.All(r => r.LastName == null), Is.True);
 				Assert.That(res.All(r => r.Gender == default), Is.True);
 			}
+		}
+
+		[Test]
+		public void SelectSimilarNames([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var parentId = Parent.First().ParentID;
+
+			// do not change names (!)
+			// SQLite fails between aliases [child] and [Child]
+			var parentsQry =
+					from child in db.Parent
+					from parent in db.Child.InnerJoin(_ => _.ParentID == child.ParentID)
+					where child.Value1 == parentId
+					select parent;
+
+			var parents =
+					from child in Parent
+					join parent in Child on child.ParentID equals parent.ParentID
+					where child.Value1 == parentId
+					select parent;
+
+			AreEqual(parentsQry, parents);
 		}
 	}
 }

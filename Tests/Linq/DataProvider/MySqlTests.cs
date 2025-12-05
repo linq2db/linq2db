@@ -40,7 +40,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestParameters([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -309,7 +309,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDate([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12);
 				using (Assert.EnterMultipleScope())
@@ -325,7 +325,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDateTime([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 				using (Assert.EnterMultipleScope())
@@ -343,7 +343,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestChar([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -377,7 +377,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestString([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -402,7 +402,7 @@ namespace Tests.DataProvider
 		{
 			var arr1 = new byte[] { 48, 57 };
 
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -422,7 +422,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestXml([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -453,7 +453,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum1([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -468,7 +468,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum2([IncludeDataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using (var conn = GetDataContext(context))
 			{
 				using (Assert.EnterMultipleScope())
 				{
@@ -768,7 +768,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyBinaryAndBitTypes([IncludeDataSources(TestProvName.AllMySql)] string context, [Values] BulkCopyType bulkCopyType)
 		{
-			using (var db    = GetDataConnection(context))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable<BinaryTypes>())
 			{
 				MySqlTestUtils.EnableNativeBulk(db, context);
@@ -820,7 +820,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task BulkCopyBinaryAndBitTypesAsync([IncludeDataSources(TestProvName.AllMySql)] string context, [Values] BulkCopyType bulkCopyType)
 		{
-			using (var db    = GetDataConnection(context))
+			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable<BinaryTypes>())
 			{
 				MySqlTestUtils.EnableNativeBulk(db, context);
@@ -874,7 +874,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					MySqlTestUtils.EnableNativeBulk(db, context);
 
@@ -906,7 +906,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataContext(context))
 				{
 					MySqlTestUtils.EnableNativeBulk(db, context);
 					try
@@ -943,7 +943,7 @@ namespace Tests.DataProvider
 				new Person { FirstName = "Psychiatry"     , LastName = "test"  }
 			};
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				MySqlTestUtils.EnableNativeBulk(db, context);
@@ -973,7 +973,7 @@ namespace Tests.DataProvider
 				new Person { FirstName = "Psychiatry"     , LastName = "test"  }
 			};
 
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				MySqlTestUtils.EnableNativeBulk(db, context);
@@ -2134,7 +2134,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestModule([IncludeDataSources(false, TestProvName.AllMariaDB)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				db.Execute("SET SQL_MODE='ORACLE'");
 
@@ -2229,6 +2229,115 @@ namespace Tests.DataProvider
 				Assert.That(sbyteColumn, Is.Not.Null);
 				Assert.That(byteColumn!.SystemType, Is.EqualTo(typeof(byte)));
 				Assert.That(sbyteColumn!.SystemType, Is.EqualTo(typeof(sbyte)));
+			}
+		}
+
+		[Table]
+		sealed class VectorTable
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(Length = 5, CanBeNull = false)] public float[]  Vector         { get; set; } = default!;
+			[Column(Length = 6)]                    public float[]? VectorNullable { get; set; }
+		}
+
+		// TODO: embedd schema testing into type tests
+		[Test]
+		public void TestVectorSchema([IncludeDataSources(false, TestProvName.AllMySql8Plus)] string context)
+		{
+			const string procName = "VectorProc";
+
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<VectorTable>();
+
+			db.Execute($"DROP PROCEDURE IF EXISTS {procName}");
+			db.Execute($@"CREATE PROCEDURE {procName} (IN vin VECTOR(3), OUT vout VECTOR(3))
+BEGIN
+	SELECT vin INTO vout;
+	SELECT @vin FROM Person;
+END");
+
+			var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions()
+			{
+				LoadTable = t => t.Name == nameof(VectorTable),
+				LoadProcedure = p => p.ProcedureName == procName
+			});
+
+			db.Execute($"DROP PROCEDURE IF EXISTS {procName}");
+
+			var table = schema.Tables.FirstOrDefault(t => t.TableName == nameof(VectorTable));
+			var proc  = schema.Procedures.FirstOrDefault(t => t.ProcedureName == procName);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(table, Is.Not.Null);
+				Assert.That(proc, Is.Not.Null);
+			}
+
+			var vectorColumn  = table!.Columns.FirstOrDefault(c => c.ColumnName == nameof(VectorTable.Vector));
+			var vectorNColumn = table.Columns.FirstOrDefault(c => c.ColumnName == nameof(VectorTable.VectorNullable));
+
+			var input  = proc.Parameters.FirstOrDefault(p => p.ParameterName == "vin");
+			var output = proc.Parameters.FirstOrDefault(p => p.ParameterName == "vout");
+			var procColumn = proc.ResultTable?.Columns.FirstOrDefault(p => p.ColumnName == "@vin");
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(vectorColumn, Is.Not.Null);
+				Assert.That(vectorNColumn, Is.Not.Null);
+
+				Assert.That(input, Is.Not.Null);
+				Assert.That(output, Is.Not.Null);
+				Assert.That(procColumn, Is.Not.Null);
+			}
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(vectorColumn!.SystemType, Is.EqualTo(typeof(float[])));
+				Assert.That(vectorNColumn!.SystemType, Is.EqualTo(typeof(float[])));
+
+				Assert.That(vectorColumn!.IsNullable, Is.False);
+				Assert.That(vectorNColumn!.IsNullable, Is.True);
+				
+				Assert.That(vectorColumn!.Length, Is.EqualTo(5));
+				Assert.That(vectorNColumn!.Length, Is.EqualTo(6));
+				
+				Assert.That(vectorColumn!.DataType, Is.EqualTo(DataType.Single | DataType.Array));
+				Assert.That(vectorNColumn!.DataType, Is.EqualTo(DataType.Single | DataType.Array));
+
+				Assert.That(input!.SystemType, Is.EqualTo(typeof(float[])));
+				Assert.That(output!.SystemType, Is.EqualTo(typeof(float[])));
+
+				Assert.That(input!.IsNullable, Is.True);
+				Assert.That(output!.IsNullable, Is.True);
+
+				Assert.That(input!.IsIn, Is.True);
+				Assert.That(input!.IsOut, Is.False);
+				Assert.That(input!.IsResult, Is.False);
+
+				Assert.That(output!.IsIn, Is.False);
+				Assert.That(output!.IsOut, Is.True);
+				Assert.That(output!.IsResult, Is.False);
+
+				Assert.That(input!.Size, Is.EqualTo(3));
+				Assert.That(output!.Size, Is.EqualTo(3));
+
+				Assert.That(input!.DataType, Is.EqualTo(DataType.Single | DataType.Array));
+				Assert.That(output!.DataType, Is.EqualTo(DataType.Single | DataType.Array));
+
+				Assert.That(procColumn!.IsNullable, Is.True);
+
+				// provider returns incorrect data
+				Assert.That(procColumn!.SystemType, Is.EqualTo(typeof(byte[])));
+				Assert.That(procColumn!.Length, Is.Null);
+				if (context.IsAnyOf(TestProvName.AllMariaDB))
+					Assert.That(procColumn!.DataType, Is.EqualTo(DataType.Blob));
+				else
+					Assert.That(procColumn!.DataType, Is.EqualTo(DataType.VarBinary));
+
+				//Assert.That(procColumn!.SystemType, Is.EqualTo(typeof(float[])));
+				//Assert.That(procColumn!.Length, Is.EqualTo(3));
+				//Assert.That(procColumn!.DataType, Is.EqualTo(DataType.Single | DataType.Array));
 			}
 		}
 
@@ -2333,7 +2442,7 @@ namespace Tests.DataProvider
 
 			fb.Build();
 
-			using var db = GetDataConnection(
+			using var db = GetDataContext(
 				context,
 				o => o.UseMappingSchema(fb.MappingSchema).UseConnectionString(dataProvider, connectionString + $";GuidFormat={format}"));
 
@@ -2477,7 +2586,7 @@ namespace Tests.DataProvider
 			return ret;
 		}
 
-		public static IEnumerable<Person> TestProcedure(this DataConnection dataConnection, int? param3, ref int? param2, out int? param1)
+		public static IEnumerable<Person> TestProcedure(this IDataContext dataConnection, int? param3, ref int? param2, out int? param1)
 		{
 			var parameters = new []
 			{

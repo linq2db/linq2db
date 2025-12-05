@@ -92,6 +92,12 @@ namespace LinqToDB.Internal.Linq.Builder
 					return node;
 				}
 
+				if (node.Method.IsGenericMethod && node.IsSameGenericMethod(Methods.LinqToDB.AggregateExecute))
+				{
+					_isServerSideOnly = true;
+					return node;
+				}
+
 				return base.VisitMethodCall(node);
 			}
 		}
@@ -212,6 +218,12 @@ namespace LinqToDB.Internal.Linq.Builder
 					return node;
 				}
 
+				if (node.Method.IsGenericMethod && node.IsSameGenericMethod(Methods.LinqToDB.AggregateExecute))
+				{
+					CanBeEvaluated = false;
+					return node;
+				}
+
 				return base.VisitMethodCall(node);
 			}
 
@@ -279,8 +291,58 @@ namespace LinqToDB.Internal.Linq.Builder
 				return base.Visit(node);
 			}
 
+			private static readonly HashSet<Type> _wholeImmutableTypes = new()
+			{
+				typeof(string),
+				typeof(bool),
+				typeof(sbyte),
+				typeof(byte),
+				typeof(short),
+				typeof(ushort),
+				typeof(int),
+				typeof(uint),
+				typeof(long),
+				typeof(ulong),
+				typeof(char),
+			};
+
+			static readonly HashSet<Type> _immutableInstanceMembers = new()
+			{
+				typeof(DateTime),
+				typeof(DateTimeOffset),
+				typeof(TimeSpan),
+				typeof(Guid),
+				typeof(Decimal),
+				typeof(Uri),
+				typeof(Version),
+				typeof(System.Numerics.BigInteger),
+#if NET5_0_OR_GREATER
+					typeof(nint),
+					typeof(nuint),
+#endif
+#if SUPPORTS_DATEONLY
+					typeof(DateOnly),
+					typeof(TimeOnly),
+#endif
+				typeof(Index),
+				typeof(Range),
+			};
+
 			bool IsReadOnlyProperty(PropertyInfo property)
 			{
+				if (property.DeclaringType != null)
+				{
+					if (_wholeImmutableTypes.Contains(property.DeclaringType))
+					{
+						return true;
+					}
+
+					if (_immutableInstanceMembers.Contains(property.DeclaringType) && property.GetMethod != null && !property.GetMethod.IsStatic)
+					{
+						return true;
+					}
+				}
+
 				var setMethod = property.SetMethod;
 				if (setMethod != null)
 				{
@@ -319,22 +381,37 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 				}
 #endif
-				if (method.DeclaringType == typeof(object) && method.Name == nameof(ToString))
+				if (method.DeclaringType != null)
 				{
-					return true;
-				}
-
-				if (method.IsStatic)
-				{
-					if (method.DeclaringType == typeof(Math))
+					if (_wholeImmutableTypes.Contains(method.DeclaringType))
 					{
 						return true;
 					}
 
-					if (method.DeclaringType != null)
+					if (method.IsStatic)
 					{
-						var attributes = _mappingSchema.GetAttributes<Sql.ExpressionAttribute>(method.DeclaringType, method);
-						if (attributes.Length > 0 && !attributes.Any(a => a.PreferServerSide || a.ServerSideOnly|| !a.IsPure))
+						if (method.DeclaringType == typeof(Math))
+						{
+							return true;
+						}
+
+						if (method.DeclaringType != null)
+						{
+							var attributes = _mappingSchema.GetAttributes<Sql.ExpressionAttribute>(method.DeclaringType, method);
+							if (attributes.Length > 0 && !attributes.Any(a => a.PreferServerSide || a.ServerSideOnly || !a.IsPure))
+							{
+								return true;
+							}
+						}
+					}
+					else
+					{
+						if (method.DeclaringType != null && _immutableInstanceMembers.Contains(method.DeclaringType))
+						{
+							return true;
+						}
+
+						if (method.DeclaringType == typeof(object) && method.Name == nameof(ToString))
 						{
 							return true;
 						}
@@ -374,6 +451,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (node.Expression.UnwrapConvert() is not ConstantExpression)
 						return base.VisitMember(node);
+
+					if (node.Member is PropertyInfo property && IsReadOnlyProperty(property))
+					{
+						Visit(node.Expression);
+						return node;
+					}
 
 					IsImmutable = false;
 				}

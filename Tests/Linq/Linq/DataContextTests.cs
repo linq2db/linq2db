@@ -1,4 +1,6 @@
-﻿using System;
+﻿extern alias MySqlData;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,6 +10,8 @@ using LinqToDB.Async;
 using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SQLite;
+
+using MySqlData::MySql.Data.MySqlClient;
 
 using NUnit.Framework;
 
@@ -176,7 +180,9 @@ namespace Tests.Linq
 			{
 				Assert.That(
 					() => db1.GetTable<Child>().ToList(),
-					Throws.TypeOf<ArgumentException>().Or.TypeOf<InvalidOperationException>());
+					Throws.TypeOf<ArgumentException>()
+						.Or.TypeOf<InvalidOperationException>()
+						.Or.TypeOf<MySqlException>());
 			}
 		}
 
@@ -334,7 +340,7 @@ namespace Tests.Linq
 			// default pool size for SqlClient is 100
 			for (var i = 0; i < 101; i++)
 			{
-				IDataContext db = GetDataConnection(context);
+				IDataContext db = GetDataContext(context);
 				db.CloseAfterUse = true;
 				dbs.Add(db);
 
@@ -380,7 +386,7 @@ namespace Tests.Linq
 			{
 				for (var i = 0; i < 101; i++)
 				{
-					IDataContext db = GetDataConnection(context);
+					IDataContext db = GetDataContext(context);
 					db.CloseAfterUse = false;
 					dbs.Add(db);
 
@@ -414,7 +420,7 @@ namespace Tests.Linq
 		public void Issue4729Test([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
 		{
 			var interceptor = new CountingContextInterceptor();
-			using var db = GetDataConnection(context, o => o.UseInterceptor(interceptor));
+			using var db = GetDataContext(context, o => o.UseInterceptor(interceptor));
 			((IDataContext)db).CloseAfterUse = closeAfterUse;
 
 			db.Query<int>("SELECT 1").SingleOrDefault();

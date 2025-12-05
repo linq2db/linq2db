@@ -65,8 +65,9 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		//TODO: Move everything to SQLBuilder
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
-			var toType   = cast.ToType;
-			var argument = cast.Expression;
+			var toType       = cast.ToType;
+			var argument     = cast.Expression;
+			var argumentType = QueryHelper.GetDbDataType(argument, MappingSchema);
 
 			var isNull = argument is SqlValue sqlValue && sqlValue.Value == null;
 
@@ -87,7 +88,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 							return new SqlFunction(cast.Type, "To_Char", argument, new SqlValue("%Y-%m-%d"));
 						}
 #endif
-						if (stype.IsNumeric())
+						if (stype.IsNumberType)
 						{
 							return new SqlFunction(cast.Type, "To_Char", argument);
 						}
@@ -96,11 +97,14 @@ namespace LinqToDB.Internal.DataProvider.Informix
 					}
 
 					case TypeCode.UInt64   :
-						if (argument.SystemType!.IsFloatType())
+						if (argument.SystemType!.IsFloatType)
 							argument = new SqlFunction(cast.Type, "Floor", argument);
 						break;
 
 					case TypeCode.DateTime :
+						if (argument.ElementType == QueryElementType.SqlParameter && argumentType.Equals(toType))
+							break;
+
 						if (IsDateDataType(toType, "Date"))
 						{
 							if (argument.SystemType == typeof(string))

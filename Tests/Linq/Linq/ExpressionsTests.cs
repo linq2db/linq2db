@@ -156,7 +156,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression4([DataSources(TestProvName.AllClickHouse)] string context)
+		[ThrowsRequiresCorrelatedSubquery]
+		public void MethodExpression4([DataSources] string context)
 		{
 			var n = 3;
 
@@ -180,7 +181,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression5([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context, [Values(1, 2) ]int n)
+		[ThrowsRequiresCorrelatedSubquery]
+		public void MethodExpression5([DataSources(ProviderName.SqlCe)] string context, [Values(1, 2) ]int n)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -202,7 +204,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression6([DataSources(TestProvName.AllClickHouse)] string context)
+		[ThrowsRequiresCorrelatedSubquery]
+		public void MethodExpression6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -224,7 +227,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MethodExpression7([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		[ThrowsRequiresCorrelatedSubquery]
+		public void MethodExpression7([DataSources(ProviderName.SqlCe)] string context)
 		{
 			var n = 2;
 
@@ -270,7 +274,7 @@ namespace Tests.Linq
 		[Test]
 		public void MethodExpression9([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 				AreEqual(
 					from ch in Child
 					from p in
@@ -396,7 +400,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AssociationMethodExpression([DataSources(TestProvName.AllClickHouse)] string context)
+		[ThrowsRequiresCorrelatedSubquery]
+		public void AssociationMethodExpression([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -407,8 +412,9 @@ namespace Tests.Linq
 					select GrandChildren(p).Count());
 		}
 
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
-		public async Task AssociationMethodExpressionAsync([DataSources(TestProvName.AllClickHouse)] string context)
+		public async Task AssociationMethodExpressionAsync([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -501,6 +507,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void LeftJoinTest2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -990,7 +997,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class Issue2434Table
 		{
-			[Column] public int     Id;
+			[PrimaryKey] public int     Id;
 			[Column] public string? FirstName;
 			[Column] public string? LastName;
 
@@ -1015,7 +1022,7 @@ namespace Tests.Linq
 		[Table]
 		public class Issue3472TableDC
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			[ExpressionMethod(nameof(PersonsCountExpr), IsColumn = true)]
 			public int PersonsCount { get; set; }
@@ -1023,10 +1030,10 @@ namespace Tests.Linq
 			private static Expression<Func<Issue3472TableDC, DataConnection, int>> PersonsCountExpr() => (r, db) => db.GetTable<Person>().Where(p => p.ID == r.Id).Count();
 		}
 
-		[Table]
+		[Table(nameof(Issue3472TableDC))]
 		public class Issue3472TableDCTX
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			[ExpressionMethod(nameof(PersonsCountExpr), IsColumn = true)]
 			public int PersonsCount { get; set; }
@@ -1035,7 +1042,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3472Test([DataSources(TestProvName.AllClickHouse)] string context)
+		[ThrowsRequiresCorrelatedSubquery]
+		public void Issue3472Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			if (db is DataConnection)
@@ -1114,6 +1122,7 @@ namespace Tests.Linq
 		#endregion
 
 		#region Regression: query comparison
+		[YdbCteAsSource]
 		[Test(Description = "Tests regression introduced in 3.5.2")]
 		public void ComparisonTest1([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context, [Values(1, 2)] int iteration)
 		{
@@ -1136,6 +1145,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test(Description = "Tests regression introduced in 3.5.2")]
 		public void ComparisonTest2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
@@ -1164,13 +1174,13 @@ namespace Tests.Linq
 		[Table]
 		class Issue4613Service
 		{
-			[Column] public int IdContract { get; set; }
+			[PrimaryKey] public int IdContract { get; set; }
 		}
 
 		[Table]
 		class Issue4613Contract
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 		}
 
 		class Issue4613ServiceProjection

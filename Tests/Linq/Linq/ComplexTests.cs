@@ -215,6 +215,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void Contains6([DataSources] string context)
 		{
@@ -467,16 +468,16 @@ namespace Tests.Linq
 		[Table("T2")]
 		public class T2
 		{
-			[Column] public int InstrumentId { get; set; }
-			[Column] public int IndexId { get; set; }
+			[Column, PrimaryKey] public int InstrumentId { get; set; }
+			[Column, PrimaryKey] public int IndexId { get; set; }
 
 		}
 
 		[Table("T3")]
 		public class T3
 		{
-			[Column] public int InstrumentId { get; set; }
-			[Column] public int IndexId { get; set; }
+			[Column, PrimaryKey] public int InstrumentId { get; set; }
+			[Column, PrimaryKey] public int IndexId { get; set; }
 		}
 
 		[Test]
@@ -530,6 +531,8 @@ namespace Tests.Linq
 		[Column("user_name", "Name")]
 		public class User
 		{
+			[PrimaryKey] public int Id { get; set; }
+
 			public string? Name;
 
 			[Column("street", ".Street")]
@@ -540,6 +543,7 @@ namespace Tests.Linq
 			{
 				new User()
 				{
+					Id = 1,
 					Name = "Freddy",
 					Residence = new Address()
 					{
@@ -647,6 +651,8 @@ namespace Tests.Linq
 		[Column("user_name", "Name")]
 		class UserStruct
 		{
+			[PrimaryKey] public int Id { get; set; }
+
 			public string? Name;
 
 			[Column("street", ".Street")]
@@ -657,6 +663,7 @@ namespace Tests.Linq
 			{
 				new UserStruct()
 				{
+					Id = 1,
 					Name = "Freddy",
 					Residence = new AddressStruct()
 					{
@@ -755,7 +762,7 @@ namespace Tests.Linq
 
 			var records = tb.LoadWith(t => t.Parent!.Parent).OrderBy(r => r.Id).ToArray();
 
-			Assert.That(records.Count, Is.EqualTo(2));
+			Assert.That(records.Count(), Is.EqualTo(2));
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(records[0].Parent, Is.Null);
@@ -770,7 +777,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class Issue4139Table
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 
 			[Column("ParentId", ".ParentId")]
 			// TODO: missing ctor

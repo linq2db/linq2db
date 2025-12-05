@@ -323,6 +323,10 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 			else if (expr is SqlPathExpression keyHolder)
 			{
 			}
+			else if (expr is SqlValidateExpression validateExpression)
+			{
+				Visit(validateExpression.InnerExpression);
+			}
 			else if (expr.CanReduce)
 			{
 				Visit(expr.Reduce());

@@ -197,7 +197,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void CrossToOuterApply([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -268,6 +268,5 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
-
 	}
 }

@@ -19,6 +19,8 @@ namespace LinqToDB.Internal.SqlProvider
 {
 	public abstract class BasicSqlOptimizer : ISqlOptimizer
 	{
+		static readonly ObjectPool<CteCollectorVisitor> _cteCollectorVisitorPool = new ObjectPool<CteCollectorVisitor>(() => new CteCollectorVisitor(), v => v.Cleanup(), 100);
+
 		#region Init
 
 		protected BasicSqlOptimizer(SqlProviderFlags sqlProviderFlags)
@@ -703,91 +705,124 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 		}
 
-		static void RegisterDependency(CteClause cteClause, Dictionary<CteClause, HashSet<CteClause>> foundCte)
+		sealed class CteCollectorVisitor : SqlQueryVisitor
 		{
-			if (foundCte.ContainsKey(cteClause))
-				return;
-
-			var dependsOn = new HashSet<CteClause>();
-			cteClause.Body!.Visit(dependsOn, static (dependsOn, ce) =>
+			public sealed class CteDependencyHolder
 			{
-				if (ce.ElementType == QueryElementType.SqlCteTable)
-				{
-					var subCte = ((SqlCteTable)ce).Cte!;
-					dependsOn.Add(subCte);
+				public CteClause           CteClause { get; }
+				public HashSet<CteClause>? DependsOn { get; private set; }
+
+				public CteDependencyHolder(CteClause cteClause)
+		{
+					CteClause = cteClause;
 				}
 
-			});
-
-			foundCte.Add(cteClause, dependsOn);
-
-			foreach (var clause in dependsOn)
+				public bool AddDependency(CteClause cteClause)
 			{
-				RegisterDependency(clause, foundCte);
+					if (ReferenceEquals(CteClause, cteClause))
+				{
+						CteClause.IsRecursive = true;
+						return false;
+				}
+
+					DependsOn ??= new HashSet<CteClause>();
+					DependsOn.Add(cteClause);
+
+					return true;
+				}
 			}
+
+			Dictionary<CteClause, CteDependencyHolder>? _foundCtes;
+			Stack<CteDependencyHolder>?                  _currentCteStack;
+
+			public CteCollectorVisitor() : base(VisitMode.ReadOnly, null)
+			{
+			}
+
+			public IDictionary<CteClause, CteDependencyHolder>? FindCtes(SqlStatement statement)
+			{
+				_foundCtes       = null;
+				_currentCteStack = null;
+				Visit(statement);
+				return _foundCtes;
 		}
 
-		void FinalizeCte(SqlStatement statement)
+			public override void Cleanup()
 		{
-			if (statement is SqlStatementWithQueryBase select)
+				base.Cleanup();
+
+				_foundCtes       = null;
+				_currentCteStack = null;
+			}
+
+			protected override IQueryElement VisitSqlWithClause(SqlWithClause element)
 			{
-				// one-field class is cheaper than dictionary instance
-				var cteHolder = new WritableContext<Dictionary<CteClause, HashSet<CteClause>>?>();
+				return element;
+			}
 
-				if (select is SqlMergeStatement merge)
+			protected override IQueryElement VisitSqlCteTable(SqlCteTable element)
 				{
-					merge.Target.Visit(cteHolder, static (foundCte, e) =>
+				var cteClause = element.Cte;
+
+				CteDependencyHolder? holder    = null;
+
+				if (cteClause != null)
 						{
-							if (e.ElementType == QueryElementType.SqlCteTable)
+					_foundCtes ??= new();
+					if (!_foundCtes.TryGetValue(cteClause, out holder))
 							{
-								var cte = ((SqlCteTable)e).Cte!;
-								RegisterDependency(cte, foundCte.WriteableValue ??= new());
+						cteClause.IsRecursive = false;
+						holder                = new CteDependencyHolder(cteClause);
+						_foundCtes.Add(cteClause, holder);
 							}
 						}
-					);
-					merge.Source.Visit(cteHolder, static (foundCte, e) =>
+
+				_currentCteStack ??= new Stack<CteDependencyHolder>();
+				if (holder != null)
 						{
-							if (e.ElementType == QueryElementType.SqlCteTable)
+					foreach (var h in _currentCteStack)
 							{
-								var cte = ((SqlCteTable)e).Cte!;
-								RegisterDependency(cte, foundCte.WriteableValue ??= new());
+						// recursion found
+						if (!h.AddDependency(holder.CteClause))
+							return element;
 							}
-						}
-					);
-				}
-				else
-				{
-					select.SelectQuery.Visit(cteHolder, static (foundCte, e) =>
-						{
-							if (e.ElementType == QueryElementType.SqlCteTable)
-							{
-								var cte = ((SqlCteTable)e).Cte!;
-								RegisterDependency(cte, foundCte.WriteableValue ??= new());
-							}
-						}
-					);
+
+					_currentCteStack.Push(holder);
 				}
 
-				if (cteHolder.WriteableValue == null || cteHolder.WriteableValue.Count == 0)
+				Visit(cteClause?.Body);
+
+				if (holder != null)
+					_currentCteStack.Pop();
+
+				return element;
+						}
+				}
+
+		protected void FinalizeCte(SqlStatement statement)
+				{
+			if (statement is not SqlStatementWithQueryBase select)
+				return;
+
+			IDictionary<CteClause, CteCollectorVisitor.CteDependencyHolder>? foundCtes;
+
+			using (var cteCollector = _cteCollectorVisitorPool.Allocate())
+						{
+				foundCtes = cteCollector.Value.FindCtes(statement);
+				}
+
+			if (foundCtes == null)
+			{
 					select.With = null;
+			}
 				else
 				{
 					// TODO: Ideally if there is no recursive CTEs we can convert them to SubQueries
 					if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
 						throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");
 
-					// basic detection of non-recursive CTEs
-					// for more complex cases we will need dependency cycles detection
-					foreach (var kvp in cteHolder.WriteableValue)
-					{
-						if (kvp.Value.Count == 0)
-							kvp.Key.IsRecursive = false;
-
-						// remove self-reference for topo-sort
-						kvp.Value.Remove(kvp.Key);
-					}
-
-					var ordered = TopoSorting.TopoSort(cteHolder.WriteableValue.Keys, cteHolder, static (cteHolder, i) => cteHolder.WriteableValue![i]).ToList();
+				var ordered = TopoSorting.TopoSort(foundCtes.Keys, foundCtes, static (ctes, cteClause) => (ctes.TryGetValue(cteClause, out var h) ? h.DependsOn ?? [] : []))
+					.ToList();
 
 					Utils.MakeUniqueNames(ordered, null, static (n, a) => !ReservedWords.IsReserved(n), static c => c.Name, static (c, n, a) => c.Name = n,
 						static c => string.IsNullOrEmpty(c.Name) ? "CTE_1" : c.Name, StringComparer.OrdinalIgnoreCase);
@@ -796,7 +831,6 @@ namespace LinqToDB.Internal.SqlProvider
 					select.With.Clauses.AddRange(ordered);
 				}
 			}
-		}
 
 		protected static bool HasParameters(ISqlExpression expr)
 		{
@@ -1614,7 +1648,7 @@ namespace LinqToDB.Internal.SqlProvider
 					if (param.NeedsCast)
 						return true;
 
-					if (param.Type.SystemType.IsNullableType())
+					if (param.Type.SystemType.IsNullableOrReferenceType())
 						return true;
 
 					return false;

@@ -420,8 +420,9 @@ namespace Tests.Linq
 		public void NewGuid1(
 			[DataSources(
 				ProviderName.DB2,
+				ProviderName.Ydb,
 				TestProvName.AllInformix,
-				TestProvName.AllPostgreSQL,
+				TestProvName.AllPostgreSQL12Minus,
 				TestProvName.AllSQLite,
 				TestProvName.AllSapHana,
 				TestProvName.AllAccess)]
@@ -438,7 +439,6 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.DB2,
 				TestProvName.AllInformix,
-				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
 				TestProvName.AllAccess)]
 			string context)
@@ -451,6 +451,7 @@ namespace Tests.Linq
 		public void NewGuidOrder(
 			[DataSources(false,
 				ProviderName.DB2,
+				ProviderName.Ydb,
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
@@ -510,7 +511,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Sum2([DataSources(TestProvName.AllClickHouse)] string context)
+		[ThrowsRequiresCorrelatedSubquery]
+		public void Sum2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -628,7 +630,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3543Test([IncludeDataSources(true, TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
+		public void Issue3543Test([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tags = db.CreateLocalTable<TagsTable>();
@@ -690,7 +692,7 @@ namespace Tests.Linq
 	{
 		sealed class MatchBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var srcExpr = builder.GetExpression("src");
 				if (srcExpr == null)

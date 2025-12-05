@@ -379,7 +379,7 @@ namespace Tests.Linq
 					db.GetTable<MyParent1>().Select(p => new { p.ParentID, Value = p.GetValue() }));
 		}
 
-		public class     Entity    { public int Id { get; set; } }
+		public class     Entity    { [PrimaryKey] public int Id { get; set; } }
 		public interface IDocument { int Id { get; set; } }
 		public class     Document : Entity, IDocument { }
 
@@ -401,7 +401,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue171Test([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
 			db.GetTable<Table171>()
 				.Where (t => t.Gender == Gender.Male)
 				.Select(t => new { value = (int)t.Gender })
@@ -782,6 +782,8 @@ namespace Tests.Linq
 
 			private int _field;
 
+			[PrimaryKey] public int Id;
+
 			[Column] public int Field => _field;
 
 			[NotColumn]
@@ -800,7 +802,7 @@ namespace Tests.Linq
 			using var tb = db.CreateLocalTable<StorageTable>();
 
 			// Insert + Select
-			db.Insert(new StorageTable() { TestAccess = 5 });
+			db.Insert(new StorageTable() { Id = 1, TestAccess = 5 });
 
 			var record = tb.Single();
 			Assert.That(record.TestAccess, Is.EqualTo(5));
@@ -1309,7 +1311,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4437")]
 		public void Issue4437Test1([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(new Issue4437Record[] { new("value") });
 
 			var result = db.GetTable<Issue4437Record>().ToArray();
@@ -1322,7 +1324,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4437")]
 		public void Issue4437Test2([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(new Issue4437Record[] { new("value") });
 
 			var result = db.Query<Issue4437Record>("select some_column from test4437").ToArray();
@@ -1334,7 +1336,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4437")]
 		public void Issue4437Test3([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
-			using var db = GetDataConnection(context);
+			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(new Issue4437Record[] { new("value") });
 
 			var result = db.Query<Issue4437Record>("select some_column as SomeColumn from test4437").ToArray();
@@ -1432,14 +1434,14 @@ namespace Tests.Linq
 		[Table("Issue2362Table")]
 		sealed class Issue2362Table
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			[Column] public bool Value { get; set; }
 		}
 
 		[Table("Issue2362Table")]
 		sealed class Issue2362Raw
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			[Column(DataType = DataType.Char, Length = 4)] public string? Value { get; set; }
 
 			public static readonly Issue2362Raw[] Data =
@@ -1549,6 +1551,8 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4955")]
 		public void MappingTypingByConstant_FromQuery_UInt64([DataSources(TestProvName.AllAccess)] string context, [Values] bool inline, [Values(null, 1ul)] ulong? first)
 		{
+			using var _ = inline && context.IsAnyOf(TestProvName.AllPostgreSQL) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
+
 			using var db = GetDataContext(context);
 			db.InlineParameters = inline;
 

@@ -7,18 +7,21 @@
   </Configurations>
   <Folder Name="/.github/">
     <File Path=".github/CODEOWNERS" />
+    <File Path=".github/copilot-instructions.md" />
   </Folder>
   <Folder Name="/.github/ISSUE_TEMPLATE/">
     <File Path=".github/ISSUE_TEMPLATE/01_bug_report_linq2db.yml" />
     <File Path=".github/ISSUE_TEMPLATE/02_bug_report_linq2db.efcore.yml" />
     <File Path=".github/ISSUE_TEMPLATE/03_bug_report_linq2db.cli.yml" />
     <File Path=".github/ISSUE_TEMPLATE/04_bug_report_linq2db.t4.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/05_bug_report_linq2db.other.yml" />
+    <File Path=".github/ISSUE_TEMPLATE/05_bug_report_linq2db.linqpad.yml" />
+    <File Path=".github/ISSUE_TEMPLATE/09_bug_report_linq2db.other.yml" />
     <File Path=".github/ISSUE_TEMPLATE/11_feture_request_linq2db.yml" />
     <File Path=".github/ISSUE_TEMPLATE/12_feture_request_linq2db.efcore.yml" />
     <File Path=".github/ISSUE_TEMPLATE/13_feture_request_linq2db.cli.yml" />
     <File Path=".github/ISSUE_TEMPLATE/14_feture_request_linq2db.t4.yml" />
-    <File Path=".github/ISSUE_TEMPLATE/15_feture_request_linq2db.other.yml" />
+    <File Path=".github/ISSUE_TEMPLATE/15_feture_request_linq2db.linqpad.yml" />
+    <File Path=".github/ISSUE_TEMPLATE/19_feture_request_linq2db.other.yml" />
     <File Path=".github/ISSUE_TEMPLATE/config.yml" />
   </Folder>
   <Folder Name="/.root/">
@@ -37,6 +40,7 @@
     <File Path="MIT-LICENSE.txt" />
     <File Path="nuget.config" />
     <File Path="README.md" />
+    <File Path="SQLite.Runtime.props" />
     <File Path="Test.cmd" />
   </Folder>
   <Folder Name="/Build/">
@@ -48,6 +52,52 @@
   </Folder>
   <Folder Name="/Build/Azure/">
     <File Path="Build/Azure/README.md" />
+  </Folder>
+  <Folder Name="/Build/Azure/net100/">
+    <File Path="Build/Azure/net100/access.ace.json" />
+    <File Path="Build/Azure/net100/access.ace.x64.json" />
+    <File Path="Build/Azure/net100/access.mdb.json" />
+    <File Path="Build/Azure/net100/clickhouse.driver.json" />
+    <File Path="Build/Azure/net100/clickhouse.mysql.json" />
+    <File Path="Build/Azure/net100/clickhouse.octonica.json" />
+    <File Path="Build/Azure/net100/db2.json" />
+    <File Path="Build/Azure/net100/firebird25.json" />
+    <File Path="Build/Azure/net100/firebird3.json" />
+    <File Path="Build/Azure/net100/firebird4.json" />
+    <File Path="Build/Azure/net100/firebird5.json" />
+    <File Path="Build/Azure/net100/hana2.json" />
+    <File Path="Build/Azure/net100/informix.json" />
+    <File Path="Build/Azure/net100/mariadb11.json" />
+    <File Path="Build/Azure/net100/mysql.json" />
+    <File Path="Build/Azure/net100/mysql57.json" />
+    <File Path="Build/Azure/net100/oracle11.json" />
+    <File Path="Build/Azure/net100/oracle12.json" />
+    <File Path="Build/Azure/net100/oracle18.json" />
+    <File Path="Build/Azure/net100/oracle19.json" />
+    <File Path="Build/Azure/net100/oracle21.json" />
+    <File Path="Build/Azure/net100/oracle23.json" />
+    <File Path="Build/Azure/net100/pgsql13.json" />
+    <File Path="Build/Azure/net100/pgsql14.json" />
+    <File Path="Build/Azure/net100/pgsql15.json" />
+    <File Path="Build/Azure/net100/pgsql16.json" />
+    <File Path="Build/Azure/net100/pgsql17.json" />
+    <File Path="Build/Azure/net100/pgsql18.json" />
+    <File Path="Build/Azure/net100/sqlce.json" />
+    <File Path="Build/Azure/net100/sqlite.extras.json" />
+    <File Path="Build/Azure/net100/sqlite.json" />
+    <File Path="Build/Azure/net100/sqlserver.2005.json" />
+    <File Path="Build/Azure/net100/sqlserver.2008.json" />
+    <File Path="Build/Azure/net100/sqlserver.2012.json" />
+    <File Path="Build/Azure/net100/sqlserver.2014.json" />
+    <File Path="Build/Azure/net100/sqlserver.2016.json" />
+    <File Path="Build/Azure/net100/sqlserver.2017.json" />
+    <File Path="Build/Azure/net100/sqlserver.2019.json" />
+    <File Path="Build/Azure/net100/sqlserver.2022.json" />
+    <File Path="Build/Azure/net100/sqlserver.2022.metrics.json" />
+    <File Path="Build/Azure/net100/sqlserver.2025.json" />
+    <File Path="Build/Azure/net100/sqlserver.extras.json" />
+    <File Path="Build/Azure/net100/sqlserver.fts.2019.json" />
+    <File Path="Build/Azure/net100/sybase.json" />
   </Folder>
   <Folder Name="/Build/Azure/net80/">
     <File Path="Build/Azure/net80/access.ace.json" />
@@ -181,6 +231,8 @@
     <File Path="Build/Azure/scripts/clickhouse.sh" />
     <File Path="Build/Azure/scripts/db2.provider.sh" />
     <File Path="Build/Azure/scripts/db2.sh" />
+    <File Path="Build/Azure/scripts/disable_tls11.cmd" />
+    <File Path="Build/Azure/scripts/enable_tls11.cmd" />
     <File Path="Build/Azure/scripts/firebird25.sh" />
     <File Path="Build/Azure/scripts/firebird3.sh" />
     <File Path="Build/Azure/scripts/firebird4.sh" />
@@ -233,6 +285,7 @@
     <File Path="Build/Azure/scripts/sqlserver.extras.cmd" />
     <File Path="Build/Azure/scripts/sqlserver.extras.sh" />
     <File Path="Build/Azure/scripts/sybase.sh" />
+    <File Path="Build/Azure/scripts/tls11_disable.reg" />
     <File Path="Build/Azure/scripts/tls11_enable.reg" />
   </Folder>
   <Folder Name="/Build/Local/">
@@ -257,6 +310,7 @@
     <File Path="Data/Setup Scripts/oracle19.cmd" />
     <File Path="Data/Setup Scripts/oracle21.cmd" />
     <File Path="Data/Setup Scripts/oracle23.cmd" />
+    <File Path="Data/Setup Scripts/pgsql-createdb.cmd" />
     <File Path="Data/Setup Scripts/pgsql10.cmd" />
     <File Path="Data/Setup Scripts/pgsql11.cmd" />
     <File Path="Data/Setup Scripts/pgsql12.cmd" />
@@ -285,6 +339,7 @@
     <File Path="Data/Setup Scripts/wait-err.cmd" />
     <File Path="Data/Setup Scripts/wait-exit.cmd" />
     <File Path="Data/Setup Scripts/wait.cmd" />
+    <File Path="Data/Setup Scripts/ydb.cmd" />
   </Folder>
   <Folder Name="/Build/Redist/">
     <File Path="Redist/Readme.md" />
@@ -300,12 +355,21 @@
     <Project Path="Source/LinqToDB.Compat/LinqToDB.Compat.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
-    <Project Path="Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.csproj">
+    <Project Path="Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.EF10.csproj" />
+    <Project Path="Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.EF3.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
-    <Project Path="Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.STS.csproj" />
+    <Project Path="Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.EF8.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
+    <Project Path="Source/LinqToDB.EntityFrameworkCore/LinqToDB.EntityFrameworkCore.EF9.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
     <Project Path="Source/LinqToDB.Extensions/LinqToDB.Extensions.csproj" />
     <Project Path="Source/LinqToDB.FSharp/LinqToDB.FSharp.fsproj" />
+    <Project Path="Source/LinqToDB.LINQPad/LinqToDB.LINQPad.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
     <Project Path="Source/LinqToDB.Remote.Grpc/LinqToDB.Remote.Grpc.csproj" />
     <Project Path="Source/LinqToDB.Remote.HttpClient.Client/LinqToDB.Remote.HttpClient.Client.csproj" />
     <Project Path="Source/LinqToDB.Remote.HttpClient.Server/LinqToDB.Remote.HttpClient.Server.csproj" />
@@ -353,10 +417,16 @@
     <Project Path="Tests/EntityFrameworkCore.FSharp/Tests.EntityFrameworkCore.FSharp.fsproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
-    <Project Path="Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.csproj">
+    <Project Path="Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF10.csproj" />
+    <Project Path="Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF3.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
-    <Project Path="Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.STS.csproj" />
+    <Project Path="Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF8.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
+    <Project Path="Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.EF9.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
     <Project Path="Tests/FSharp/Tests.FSharp.fsproj" />
     <Project Path="Tests/Linq/Tests.csproj" />
     <Project Path="Tests/Model/Tests.Model.csproj" />

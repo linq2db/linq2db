@@ -89,7 +89,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		public override Type ConvertParameterType(Type type, DbDataType dataType)
 		{
-			if (type.IsNullable())
+			if (type.IsNullableType)
 				type = type.ToUnderlying();
 
 #if SUPPORTS_DATEONLY
@@ -145,12 +145,12 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				SapHanaProviderAdapter.HanaDbType? type = null;
 				switch (dataType.DataType)
 				{
-					case DataType.Text                   : type = SapHanaProviderAdapter.HanaDbType.Text;         break;
-					case DataType.Image                  : type = SapHanaProviderAdapter.HanaDbType.Blob;         break;
-					case DataType.Decimal                :
-					case DataType.DecFloat               : type = SapHanaProviderAdapter.HanaDbType.Decimal;      break;
-					case DataType.SmallDecFloat          : type = SapHanaProviderAdapter.HanaDbType.SmallDecimal; break;
-					case DataType.Array | DataType.Single: type = SapHanaProviderAdapter.HanaDbType.RealVector;   break;
+					case DataType.Text          : type = SapHanaProviderAdapter.HanaDbType.Text;         break;
+					case DataType.Image         : type = SapHanaProviderAdapter.HanaDbType.Blob;         break;
+					case DataType.Decimal       :
+					case DataType.DecFloat      : type = SapHanaProviderAdapter.HanaDbType.Decimal;      break;
+					case DataType.SmallDecFloat : type = SapHanaProviderAdapter.HanaDbType.SmallDecimal; break;
+					case DataType.Vector32      : type = SapHanaProviderAdapter.HanaDbType.RealVector;   break;
 				}
 
 				if (type != null)
@@ -276,8 +276,8 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		static class MappingSchemaInstance
 		{
-			public static readonly MappingSchema NativeMappingSchema = new SapHanaMappingSchema.NativeMappingSchema();
-			public static readonly MappingSchema OdbcMappingSchema   = new SapHanaMappingSchema.OdbcMappingSchema();
+			static MappingSchema NativeMappingSchema => field ??= new SapHanaMappingSchema.NativeMappingSchema();
+			static MappingSchema OdbcMappingSchema   => field ??= new SapHanaMappingSchema.OdbcMappingSchema();
 
 			public static MappingSchema Get(SapHanaProvider provider) => provider == SapHanaProvider.Unmanaged ? NativeMappingSchema : OdbcMappingSchema;
 		}

@@ -4,6 +4,7 @@
 		<EF3Version>3.0.0.0</EF3Version>
 		<EF8Version>8.0.0.0</EF8Version>
 		<EF9Version>9.0.0.0</EF9Version>
+		<EF10Version>10.0.0.0</EF10Version>
 
 		<Configurations>Testing;Debug;Release;Azure</Configurations>
 
@@ -14,7 +15,7 @@
 		<RepositoryType>git</RepositoryType>
 
 		<AppDesignerFolder>Properties</AppDesignerFolder>
-		<LangVersion>latest</LangVersion>
+		<LangVersion>14</LangVersion>
 		<Nullable>enable</Nullable>
 		<WarningLevel>9999</WarningLevel>
 		<ErrorReport>prompt</ErrorReport>
@@ -37,13 +38,14 @@
 		<GenerateAssemblyFileVersionAttribute>true</GenerateAssemblyFileVersionAttribute>
 		<GenerateNeutralResourcesLanguageAttribute>false</GenerateNeutralResourcesLanguageAttribute>
 
-		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
-
 		<!--required for SkipLocalInit-->
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
 		<AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
 		<ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+
+		<!-- Temporary; remove with release of .net10, with completion of issue https://github.com/dotnet/sdk/issues/51265 -->
+		<RestoreEnablePackagePruning>false</RestoreEnablePackagePruning>
 
 		<!--feature flags to manage floating tfm in one place-->
 		<!--CompositeFormat type-->
@@ -62,6 +64,8 @@
 		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) OR $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net472')) ">SUPPORTS_READONLY;$(DefineConstants)</DefineConstants>
 		<!--regex generators-->
 		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_REGEX_GENERATORS;$(DefineConstants)</DefineConstants>
+		<!--(u)int128 types-->
+		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_INT128;$(DefineConstants)</DefineConstants>
 
 		<ArtifactsPath>$(MSBuildThisFileDirectory).build</ArtifactsPath>
 		<ArtifactsPivots>$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)</ArtifactsPivots>
@@ -86,17 +90,31 @@
 		<Polyfill>T:System.HashCode</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Index</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Range</Polyfill>
-		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices</Polyfill>
+		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices.CallerArgumentExpressionAttribute</Polyfill>
+		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices.CompilerFeatureRequiredAttribute</Polyfill>
+		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices.IsExternalInit</Polyfill>
+		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices.RequiredMemberAttribute</Polyfill>
+		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices.SkipLocalsInitAttribute</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Diagnostics.CodeAnalysis</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Threading.Lock</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd``1(`0,System.Func{`0,``0,`1},``0)</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.String.Contains(System.String,System.StringComparison)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Type.GetConstructor(System.Reflection.BindingFlags,System.Type[])</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.ToListAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.ToArrayAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.FirstOrDefaultAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.FirstOrDefaultAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},``0,System.Threading.CancellationToken)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.FirstAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.SingleOrDefaultAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.SingleOrDefaultAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},``0,System.Threading.CancellationToken)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.SingleAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
+		<!--wait till C# 14 migration-->
+		<!--<Polyfill>$(Polyfill)|M:M:System.Enum.GetNames``1</Polyfill>-->
 		<MeziantouPolyfill_IncludedPolyfills>$(Polyfill)</MeziantouPolyfill_IncludedPolyfills>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="All" />
-		<PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" PrivateAssets="All" />
 		<PackageReference Include="Meziantou.Analyzer" PrivateAssets="All" />
 		<PackageReference Include="Meziantou.Polyfill" PrivateAssets="All" />
 	</ItemGroup>
@@ -105,13 +123,17 @@
 		<Compile Include="$(MSBuildThisFileDirectory)/Source/Shared/*.cs" LinkBase="Compatibility" />
 	</ItemGroup>
 
+	<PropertyGroup>
+		<TargetFrameworks>net462;netstandard2.0;net8.0;net9.0;net10.0</TargetFrameworks>
+	</PropertyGroup>
+
 	<PropertyGroup Condition="'$(Configuration)'=='Testing'">
-		<TargetFrameworks>net9.0</TargetFrameworks>
+		<TargetFrameworks>net10.0</TargetFrameworks>
 		<DefineConstants>DEBUG;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Properties for templates">
-		<LinqToDBT4SharedTools>$(MSBuildThisFileDirectory).build\bin\NuGet\Debug\</LinqToDBT4SharedTools>
+		<LinqToDBT4SharedTools>$(MSBuildThisFileDirectory).build\bin\NuGet\Debug\net462\</LinqToDBT4SharedTools>
 		<LinqToDBT4DatabasesPath>$(LinqToDBT4SharedTools)Database\</LinqToDBT4DatabasesPath>
 		<LinqToDBT4TemplatesPath>$(MSBuildThisFileDirectory)Source\LinqToDB.Templates\</LinqToDBT4TemplatesPath>
 

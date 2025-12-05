@@ -56,7 +56,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (!enforceHaving)
 			{
-				if (buildSequence is not SubQueryContext subQuery || subQuery.NeedsSubqueryForComparison)
+				if (buildSequence is not SubQueryContext { NeedsSubqueryForComparison: false } subQuery)
 				{
 					buildSequence = new SubQueryContext(sequence);
 				}
@@ -367,7 +367,37 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// </summary>
 		public bool CanBeEvaluatedOnClient(Expression expr)
 		{
-			return _optimizationContext.CanBeEvaluatedOnClient(expr);
+			var result = _optimizationContext.CanBeEvaluatedOnClient(expr);
+			if (result && HasTranslation(expr))
+				result = false;
+			return result;
+		}
+
+		Expression? _currentlyTestingForTranslation;
+
+		public bool HasTranslation(Expression expression)
+		{
+			expression = expression.Unwrap();
+
+			if (expression == _currentlyTestingForTranslation)
+				return false;
+
+			var saved = _currentlyTestingForTranslation;
+			_currentlyTestingForTranslation = expression;
+			try
+			{
+				if (_buildVisitor.TranslateMember(_buildVisitor.BuildContext, expression, out _))
+					return true;
+
+				if (expression is BinaryExpression binary)
+					return HasTranslation(binary.Left) || HasTranslation(binary.Right);
+
+				return false;
+			}
+			finally
+			{
+				_currentlyTestingForTranslation = saved;
+			}
 		}
 
 		#endregion
@@ -826,7 +856,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			bool IsAcceptableType(Type type)
 			{
 				if (!forSearch)
-					return type.IsNullableType();
+					return type.IsNullableOrReferenceType();
 
 				if (MappingSchema.IsCollectionType(type))
 					return true;
@@ -1783,7 +1813,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public Expression ParseGenericConstructor(Expression createExpression, ProjectFlags flags, ColumnDescriptor? columnDescriptor)
 		{
-			if (createExpression.Type.IsNullable())
+			if (createExpression.Type.IsNullableType)
 				return createExpression;
 
 			if (MappingSchema.IsScalarType(createExpression.Type))

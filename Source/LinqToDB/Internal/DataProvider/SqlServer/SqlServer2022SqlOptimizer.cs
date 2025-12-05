@@ -8,5 +8,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		public SqlServer2022SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags, SqlServerVersion.v2022)
 		{
 		}
+
+		protected SqlServer2022SqlOptimizer(SqlProviderFlags sqlProviderFlags, SqlServerVersion version) : base(sqlProviderFlags, version)
+		{
+		}
 	}
 }

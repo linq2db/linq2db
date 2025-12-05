@@ -8,6 +8,7 @@ namespace LinqToDB.Internal.Linq
 	public interface IDataReaderAsync : IDisposable, IAsyncDisposable
 	{
 		DbDataReader DataReader { get; }
+		bool         Read();
 		Task<bool>   ReadAsync(CancellationToken cancellationToken);
 	}
 }

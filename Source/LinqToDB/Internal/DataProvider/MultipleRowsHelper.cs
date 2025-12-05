@@ -70,39 +70,39 @@ namespace LinqToDB.Internal.DataProvider
 		public int LastRowStringIndex;
 		public int LastRowParameterIndex;
 
+		private static readonly Func<DataOptions, ColumnDescriptor, object?, bool> _defaultConvertToParameter = (o, _, _) => o.BulkCopyOptions.UseParameters;
+
 		public bool SuppressCloseAfterUse { get; set; }
+
+		public Func<DataOptions, ColumnDescriptor, object?, bool> ConvertToParameter { get; set; } = _defaultConvertToParameter;
 
 		public void SetHeader()
 		{
 			HeaderSize = StringBuilder.Length;
 		}
 
-		static readonly Func<ColumnDescriptor, bool> _defaultSkipConvert = _ => false;
-
 		public virtual void BuildColumns(
-			object                        item,
-			Func<ColumnDescriptor, bool>? skipConvert                   = null,
-			bool                          castParameters                = false,
-			bool                          castAllRows                   = false,
-			bool                          castFirstRowLiteralOnUnionAll = false,
-			Func<ColumnDescriptor, bool>? castLiteral                   = null)
+			object                                 item,
+			bool                                   castParameters                = false,
+			bool                                   castAllRows                   = false,
+			bool                                   castFirstRowLiteralOnUnionAll = false,
+			Func<ColumnDescriptor, bool>?          castLiteral                   = null)
 		{
-			skipConvert ??= _defaultSkipConvert;
-
 			for (var i = 0; i < Columns.Length; i++)
 			{
 				var column = Columns[i];
+				var type   = ColumnTypes[i];
 				var value  = column.GetProviderValue(item);
 
 				var position = StringBuilder.Length;
 
-				if (Options.BulkCopyOptions.UseParameters || skipConvert(column) || !MappingSchema.TryConvertToSql(StringBuilder, ColumnTypes[i], Options, value))
+				if (ConvertToParameter(Options, column, value) || !MappingSchema.TryConvertToSql(StringBuilder, type, Options, value))
 				{
 					var name = SqlBuilder.ConvertInline(ParameterName == "?" ? ParameterName : FormattableString.Invariant($"{ParameterName}{++ParameterIndex}"), ConvertType.NameToQueryParameter);
 
 					if (castParameters && (CurrentCount == 0 || castAllRows))
 					{
-						AddValueCasted(name, ColumnTypes[i]);
+						AddValueCasted(name, type);
 					}
 					else
 					{
@@ -114,18 +114,18 @@ namespace LinqToDB.Internal.DataProvider
 
 					Parameters.Add(new DataParameter(
 						SqlBuilder.ConvertInline(ParameterName == "?" ? ParameterName : FormattableString.Invariant($"p{ParameterIndex}"), ConvertType.NameToQueryParameter),
-						value, column.DataType, column.DbType)
+						value, type.DataType, type.DbType)
 					{
-						Size      = column.Length,
-						Precision = column.Precision,
-						Scale     = column.Scale
+						Size      = type.Length,
+						Precision = type.Precision,
+						Scale     = type.Scale
 					});
 				}
 				else if (castFirstRowLiteralOnUnionAll && CurrentCount == 0 && castLiteral?.Invoke(Columns[i]) != false)
 				{
 					var literal          = StringBuilder.ToString(position, StringBuilder.Length - position);
 					StringBuilder.Length = position;
-					AddValueCasted(literal, ColumnTypes[i]);
+					AddValueCasted(literal, type);
 				}
 
 				StringBuilder.Append(',');

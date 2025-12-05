@@ -199,7 +199,7 @@ namespace LinqToDB.CommandLine
 				case ProviderName.SqlServer         :
 					break;
 				case ProviderName.SQLite            :
-					provider = ProviderName.SQLiteClassic;
+					provider = ProviderName.SQLiteMS;
 					break;
 				case ProviderName.Firebird          :
 					break;

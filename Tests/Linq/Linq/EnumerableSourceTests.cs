@@ -695,10 +695,10 @@ namespace Tests.Linq
 					select r;
 
 				var cnt = table.Insert(queryToInsert);
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.EqualTo(2));
 				cnt = table.Insert(queryToInsert);
-				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				if (context.SupportsRowcount())
 					Assert.That(cnt, Is.Zero);
 
 				if (iteration > 1)
@@ -749,6 +749,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void DeleteTest(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context,
@@ -830,7 +831,28 @@ namespace Tests.Linq
 					table.GetCacheMissCount().ShouldBe(cacheMiss);
 			}
 		}
+		
+		[Test]
+		public void EmptyValuesWithTypeSpecificUsage([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var records = Array.Empty<TableToInsert>().AsQueryable(db);
 
+				var queryToSelect =
+					from r in records
+					group r by r.Id into g
+					select new
+					{
+						Id = g.Key,
+						Count = g.Sum(r => r.Id)
+					};
+				
+				queryToSelect.ToArray().Length.ShouldBe(0);
+			}
+		}
+
+		[YdbMemberNotFound]
 		[Test]
 		public void SubQuery([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
@@ -881,6 +903,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void StringSubQuery(
 			[DataSources(
@@ -888,7 +911,6 @@ namespace Tests.Linq
 				TestProvName.AllClickHouse,
 				ProviderName.DB2,
 				TestProvName.AllSybase,
-				ProviderName.SQLiteMS,
 				TestProvName.AllSybase,
 				TestProvName.AllInformix)]
 			string context, [Values(1, 2)] int iteration)
@@ -927,6 +949,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void StaticEnumerable([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{

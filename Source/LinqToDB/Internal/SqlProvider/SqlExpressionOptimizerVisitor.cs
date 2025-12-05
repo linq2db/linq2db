@@ -23,6 +23,7 @@ namespace LinqToDB.Internal.SqlProvider
 		bool                        _visitQueries;
 		bool                        _isInsidePredicate;
 		bool                        _reducePredicates;
+		ISqlExpression?             _columnExpression;
 
 		protected DataOptions       DataOptions       { get; private set; } = default!;
 		protected EvaluationContext EvaluationContext { get; private set; } = default!;
@@ -68,6 +69,7 @@ namespace LinqToDB.Internal.SqlProvider
 			MappingSchema       = default!;
 			_allowOptimize      = default;
 			_allowOptimizeList  = default;
+			_columnExpression   = default;
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
@@ -621,6 +623,44 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 			}
 
+			// removing duplicates
+			if (element.Predicates.Count > 1)
+			{
+				var                     visitMode  = GetVisitMode(element);
+				HashSet<ISqlPredicate>? seen       = null;
+				List<ISqlPredicate>?    filtered   = null;
+				var                     predicates = element.Predicates;
+				for (int i = 0; i < predicates.Count; i++)
+				{
+					var p = predicates[i];
+					if ((seen ??= new HashSet<ISqlPredicate>(ObjectReferenceEqualityComparer<ISqlPredicate>.Default)).Add(p))
+					{
+						if (filtered != null)
+							filtered.Add(p);
+					}
+					else
+					{
+						// duplicate found
+						if (visitMode == VisitMode.Modify)
+						{
+							predicates.RemoveAt(i);
+							i--;
+						}
+						else
+						{
+							filtered ??= new List<ISqlPredicate>(predicates.Count - 1);
+							filtered.AddRange(predicates.Take(i));
+						}
+					}
+				}
+
+				if (visitMode == VisitMode.Transform && filtered != null)
+				{
+					var newSearchCondition = new SqlSearchCondition(element.IsOr, canBeUnknown: element.CanReturnUnknown, filtered);
+					return Visit(NotifyReplaced(newSearchCondition, element));
+				}
+			}
+
 			// Optimizations: PREDICATE vs PREDICATE:
 			// 1. A IS NOT NULL AND A = B => A = B, when B is not nullable
 			// 2. A OR B OR A => A OR B
@@ -995,7 +1035,7 @@ namespace LinqToDB.Internal.SqlProvider
 							{
 								var elementType = QueryHelper.GetDbDataType(element, MappingSchema);
 								var expr2Type   = QueryHelper.GetDbDataType(element.Expr2, MappingSchema);
-								if (!elementType.Equals(expr2Type))
+								if (!elementType.EqualsDbOnly(expr2Type))
 									return new SqlCastExpression(element.Expr2, elementType, null);
 								return element.Expr2;
 							}
@@ -1208,12 +1248,25 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (element.Expression is SelectQuery selectQuery && selectQuery.Select.Columns.Count == 1)
 			{
+				var columnExpression = selectQuery.Select.Columns[0].Expression;
+				var newExpression = (ISqlExpression)Visit(new SqlCastExpression(columnExpression, element.ToType, element.FromType, isMandatory: element.IsMandatory));
+
 				if (GetVisitMode(selectQuery) == VisitMode.Modify)
 				{
-					var columnExpression = selectQuery.Select.Columns[0].Expression;
-					selectQuery.Select.Columns[0].Expression = (ISqlExpression)Visit(new SqlCastExpression(columnExpression, element.ToType, element.FromType, isMandatory: element.IsMandatory));
+					selectQuery.Select.Columns[0].Expression = newExpression;
 
 					return selectQuery;
+				}
+				else
+				{
+					NotifyReplaced(newExpression, columnExpression);
+
+					var query = VisitSqlQuery(selectQuery);
+
+					// magic...
+					NotifyReplaced(columnExpression, columnExpression);
+
+					return query;
 				}
 			}
 
@@ -1282,12 +1335,28 @@ namespace LinqToDB.Internal.SqlProvider
 			return function;
 		}
 
+		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
+		{
+			var saveColumnExpression = _columnExpression;
+
+			if (column.Parent != null && QueryHelper.IsAggregationQuery(column.Parent))
+				_columnExpression = expression;
+
+			var result = base.VisitSqlColumnExpression(column, expression);
+
+			_columnExpression = saveColumnExpression;
+			return result;
+		}
+
 		protected override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
 		{
 			var newElement = base.VisitSqlCoalesceExpression(element);
 
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
+
+			if (ReferenceEquals(element, _columnExpression))
+				return element;
 
 			List<ISqlExpression>? newExpressions = null;
 
@@ -2003,31 +2072,13 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!_nullabilityContext.IsEmpty                       &&
 			    !exprExpr.Expr1.CanBeNullable(_nullabilityContext) &&
 			    !exprExpr.Expr2.CanBeNullable(_nullabilityContext) &&
-			    exprExpr.Expr1.SystemType.IsSignedType()           &&
-			    exprExpr.Expr2.SystemType.IsSignedType())
+			    exprExpr.Expr1.SystemType!.IsSignedNumberType      &&
+			    exprExpr.Expr2.SystemType!.IsSignedNumberType)
 			{
 				var unwrapped = (left, exprExpr.Operator, right);
 
 				var newExpr = unwrapped switch
 				{
-					(SqlBinaryExpression binary, var op, var v) when CanBeEvaluateNoParameters(v) =>
-
-						// binary < v
-						binary switch
-						{
-							// e + some < v ===> some < v - e
-							(var e, "+", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, v, "-", e), null),
-							// e - some < v ===>  e - v < some
-							(var e, "-", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, e, "-", v), op, some, null),
-
-							// some + e < v ===> some < v - e
-							(var some, "+", var e) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, v, "-", e), null),
-							// some - e < v ===> some < v + e
-							(var some, "-", var e) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, v, "+", e), null),
-
-							_ => null
-						},
-
 					(SqlBinaryExpression binary, var op, var v) when CanBeEvaluateNoParameters(v) =>
 
 						// binary < v

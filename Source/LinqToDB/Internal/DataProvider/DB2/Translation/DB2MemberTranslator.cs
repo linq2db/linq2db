@@ -1,10 +1,12 @@
 ﻿using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.DB2.Translation
 {
@@ -259,6 +261,13 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 
 				return dateFunction;
 			}
+
+			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				// For CURRENT TIMEZONE there is no type
+				return factory.Sub(dbDataType, factory.Expression(dbDataType, "CURRENT TIMESTAMP"), factory.Expression(factory.GetDbDataType(typeof(int)), "CURRENT TIMEZONE"));
+			}
 		}
 
 		protected class DB2MathMemberTranslator : MathMemberTranslatorBase
@@ -284,6 +293,72 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 
 		protected class StringMemberTranslator : StringMemberTranslatorBase
 		{
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			{
+				var builder = new AggregateFunctionBuilder()
+					.ConfigureAggregate(c => c
+						.HasSequenceIndex(1)
+						.AllowOrderBy()
+						.AllowFilter()
+						.AllowNotNullCheck(true)
+						.TranslateArguments(0)
+						.OnBuildFunction(composer =>
+						{
+							var info = composer.BuildInfo;
+							if (info.Value == null || info.Argument(0) == null)
+							{
+								return;
+							}
+
+							var factory   = info.Factory;
+							var separator = info.Argument(0)!;
+							var valueType = factory.GetDbDataType(info.Value);
+
+							var value = info.Value;
+							if (!info.IsNullFiltered && !isNullableResult)
+								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
+
+							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
+							{
+								if (!info.IsGroupBy)
+								{
+									composer.SetFallback(f => f.AllowFilter(false));
+									return;
+								}
+
+								value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
+							}
+
+							var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
+
+							var withinGroup = info.OrderBySql.Length > 0 ? info.OrderBySql.Select(o => new SqlWindowOrderItem(o.expr, o.desc, o.nulls)) : null;
+
+							var fn = factory.Function(valueType, "LISTAGG",
+								[new SqlFunctionArgument(value, modifier : aggregateModifier), new SqlFunctionArgument(separator)],
+								[true, true],
+								isAggregate : true,
+								withinGroup : withinGroup,
+								canBeAffectedByOrderBy : true);
+
+							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+
+							composer.SetResult(result);
+						}));
+
+				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+				{
+					var intDbType = factory.GetDbDataType(typeof(int));
+					var substring = factory.Function(valueType, "SUBSTRING",
+						valuesExpr,
+						factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1))
+					);
+
+					return substring;
+				});
+
+				return builder.Build(translationContext, methodCall);
+			}
+
 		}
 
 		// Same as SQLite

@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 {
@@ -29,6 +31,11 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 		protected override IMemberTranslator CreateGuidMemberTranslator()
 		{
 			return new GuidMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new OracleStringMemberTranslator();
 		}
 
 		protected class SqlTypesTranslation : SqlTypesTranslationDefault
@@ -219,6 +226,12 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 
 				return dateFunc;
 			}
+
+			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				var factory = translationContext.ExpressionFactory;
+				return factory.Function(dbDataType, "SYS_EXTRACT_UTC", factory.Fragment("SYSTIMESTAMP"));
+			}
 		}
 
 		protected class OracleMathMemberTranslator : MathMemberTranslatorBase
@@ -291,6 +304,72 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 					return factory.Function(stringDbType, "SUBSTR", expression, factory.Value(pos), factory.Value(length));
 				}
 			}
+		}
+
+		protected class OracleStringMemberTranslator : StringMemberTranslatorBase
+		{
+			protected virtual bool IsWithinGroupRequired => true;
+
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			{
+				var builder = new AggregateFunctionBuilder()
+					.ConfigureAggregate(c => c
+						.HasSequenceIndex(1)
+						.AllowOrderBy()
+						.AllowFilter()
+						.AllowNotNullCheck(true)
+						.TranslateArguments(0)
+						.OnBuildFunction(composer =>
+						{
+							var info = composer.BuildInfo;
+							if (info.Value == null || info.Argument(0) == null)
+							{
+								return;
+							}
+
+							var factory   = info.Factory;
+							var separator = info.Argument(0)!;
+							var valueType = factory.GetDbDataType(info.Value);
+
+							var value = info.Value;
+							if (!info.IsNullFiltered && nullValuesAsEmptyString)
+								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
+
+							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
+							{
+								if (!info.IsGroupBy)
+								{
+									composer.SetFallback(f => f.AllowFilter(false));
+									return;
+								}
+
+								value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
+							}
+
+							var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
+
+							var withinGroup = info.OrderBySql.Length > 0 ? info.OrderBySql.Select(o => new SqlWindowOrderItem(o.expr, o.desc, o.nulls)) : null;
+
+							if (IsWithinGroupRequired && withinGroup == null)
+							{
+								withinGroup = [new SqlWindowOrderItem(info.Value, false, Sql.NullsPosition.None)];
+							}
+
+							var fn = factory.Function(valueType, "LISTAGG",
+								[new SqlFunctionArgument(value, modifier : aggregateModifier), new SqlFunctionArgument(separator)],
+								[true, true],
+								isAggregate : true,
+								withinGroup : withinGroup,
+								canBeAffectedByOrderBy : true);
+
+							var result = isNullableResult ? fn : factory.Coalesce(fn, factory.Value(valueType, string.Empty));
+
+							composer.SetResult(result);
+						}));
+
+				return builder.Build(translationContext, methodCall);
+			}
+
 		}
 
 	}

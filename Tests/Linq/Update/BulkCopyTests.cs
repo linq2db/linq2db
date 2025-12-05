@@ -27,6 +27,7 @@ namespace Tests.xUpdate
 		// is silently treated as non-identity field
 		[Table("KeepIdentityTest", Configuration = ProviderName.DB2)]
 		[Table("KeepIdentityTest", Configuration = ProviderName.Sybase)]
+		[Table("KeepIdentityTest", Configuration = ProviderName.MySql)]
 		[Table("AllTypes")]
 		public class TestTable1
 		{
@@ -37,11 +38,13 @@ namespace Tests.xUpdate
 			[Column("intDataType")]
 			[Column("Value", Configuration = ProviderName.DB2)]
 			[Column("Value", Configuration = ProviderName.Sybase)]
+			[Column("Value", Configuration = ProviderName.MySql)]
 			public int Value { get; set; }
 		}
 
 		[Table("KeepIdentityTest", Configuration = ProviderName.DB2)]
 		[Table("KeepIdentityTest", Configuration = ProviderName.Sybase)]
+		[Table("KeepIdentityTest", Configuration = ProviderName.MySql)]
 		[Table("AllTypes")]
 		public class TestTable2
 		{
@@ -52,6 +55,7 @@ namespace Tests.xUpdate
 			[Column("intDataType")]
 			[Column("Value", Configuration = ProviderName.DB2)]
 			[Column("Value", Configuration = ProviderName.Sybase)]
+			[Column("Value", Configuration = ProviderName.MySql)]
 			public int Value { get; set; }
 		}
 
@@ -284,7 +288,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void ReuseOptionTest([DataSources(false, ProviderName.DB2)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
 			using (db.BeginTransaction())
 			{
@@ -317,13 +321,14 @@ namespace Tests.xUpdate
 		[Table]
 		public class SimpleBulkCopyTable
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 		}
 
 #if SUPPORTS_DATEONLY
 		[Table]
 		public class DateOnlyTable
 		{
+			[PrimaryKey, Identity] public int Id { get; set; }
 			[Column] public DateOnly Date { get; set; }
 		}
 #endif
@@ -331,7 +336,7 @@ namespace Tests.xUpdate
 		[Table]
 		public class IdentitySimpleBulkCopyTable
 		{
-			[Column, Identity] public int Id { get; set; }
+			[PrimaryKey, Identity] public int Id { get; set; }
 		}
 
 		[Test]
@@ -502,7 +507,7 @@ namespace Tests.xUpdate
 
 			((IDataContext)db).Close();
 			// TODO: uncomment after DataConnectionExtensions refactored to work with IDataContext
-			//MySqlTestUtils.EnableNativeBulk(db.GetDataConnection(), context);
+			//MySqlTestUtils.EnableNativeBulk(db.GetDataContext(), context);
 			db.CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 			db.DataProvider.BulkCopy(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } });
@@ -542,7 +547,7 @@ namespace Tests.xUpdate
 
 			((IDataContext)db).Close();
 			// TODO: uncomment after DataConnectionExtensions refactored to work with IDataContext
-			//MySqlTestUtils.EnableNativeBulk(db.GetDataConnection(), context);
+			//MySqlTestUtils.EnableNativeBulk(db.GetDataContext(), context);
 			db.CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } }, default);
@@ -583,7 +588,7 @@ namespace Tests.xUpdate
 
 			((IDataContext)db).Close();
 			// TODO: uncomment after DataConnectionExtensions refactored to work with IDataContext
-			//MySqlTestUtils.EnableNativeBulk(db.GetDataConnection(), context);
+			//MySqlTestUtils.EnableNativeBulk(db.GetDataContext(), context);
 			db.CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, AsyncEnumerableData(2, 1), default);
@@ -1160,7 +1165,7 @@ namespace Tests.xUpdate
 		[Table]
 		sealed class IdentityOnlyField
 		{
-			[Identity] public int Id { get; set; }
+			[PrimaryKey, Identity] public int Id { get; set; }
 		}
 
 		[Table]
@@ -1189,7 +1194,7 @@ namespace Tests.xUpdate
 			Assert.That(item.Id, Is.EqualTo(1));
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase])]
+		[ActiveIssue(Configurations = [ProviderName.Ydb, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
 		public void BulkCopySkipOnly([DataSources(false)] string context, [Values] BulkCopyType copyType)
 		{
@@ -1212,6 +1217,7 @@ namespace Tests.xUpdate
 		// add more test cases
 		sealed class MultipleRowsTable
 		{
+			[PrimaryKey]
 			public int Id { get; set; }
 
 			public decimal? DecimalValue1 { get; set; }

@@ -29,7 +29,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		#region Init
 
 		protected SybaseDataProvider(string name, SybaseProvider provider)
-			: this(name, SybaseProviderAdapter.GetInstance(provider == SybaseProvider.AutoDetect ? provider = SybaseProviderDetector.DetectProvider() : provider))
+			: this(name, SybaseProviderAdapter.GetInstance(provider))
 		{
 		}
 
@@ -83,7 +83,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			// AseBulkManager.IsWrongType
 			if (Name == ProviderName.Sybase)
 			{
-				type = type.ToNullableUnderlying();
+				type = type.UnwrapNullableType();
 				if (type == typeof(char) || type == typeof(Guid))
 					type = typeof(string);
 				else if (type == typeof(TimeSpan))

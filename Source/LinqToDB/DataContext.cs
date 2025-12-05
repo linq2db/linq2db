@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -180,7 +181,13 @@ namespace LinqToDB
 		/// <summary>
 		/// Gets or sets trace handler, used for data connection instance.
 		/// </summary>
-		public Action<TraceInfo>? OnTraceConnection { get; set; }
+		public Action<TraceInfo>? OnTraceConnection
+		{
+			get;
+			// TODO: Make private in v7 and remove obsoletion warning ignores from callers
+			[Obsolete("This API scheduled for removal in v7. Use DataOptions's UseTracing API"), EditorBrowsable(EditorBrowsableState.Never)]
+			set;
+		}
 
 		private bool _keepConnectionAlive;
 		/// <summary>
@@ -211,7 +218,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Sets connection management behavior to specify if context should dispose underlying connection after use or not.
 		/// </summary>
-		public Task SetKeepConnectionAliveAsync(bool keepAlive)
+		public ValueTask SetKeepConnectionAliveAsync(bool keepAlive)
 		{
 			AssertDisposed();
 
@@ -220,7 +227,7 @@ namespace LinqToDB
 			if (keepAlive == false)
 				return ReleaseQueryAsync();
 
-			return Task.CompletedTask;
+			return default;
 		}
 
 		// TODO: Remove in v7
@@ -250,11 +257,11 @@ namespace LinqToDB
 			set => _isMarsEnabled = value;
 		}
 
-		private List<string>? _queryHints;
 		/// <summary>
 		/// Gets list of query hints (writable collection), that will be used for all queries, executed through current context.
 		/// </summary>
-		public List<string>  QueryHints
+		[AllowNull]
+		public List<string> QueryHints
 		{
 			get
 			{
@@ -263,15 +270,16 @@ namespace LinqToDB
 				if (_dataConnection != null)
 					return _dataConnection.QueryHints;
 
-				return _queryHints ??= new List<string>();
+				return field ??= new List<string>();
 			}
+			private set;
 		}
 
-		private List<string>? _nextQueryHints;
 		/// <summary>
 		/// Gets list of query hints (writable collection), that will be used only for next query, executed through current context.
 		/// </summary>
-		public List<string>  NextQueryHints
+		[AllowNull]
+		public List<string> NextQueryHints
 		{
 			get
 			{
@@ -280,8 +288,9 @@ namespace LinqToDB
 				if (_dataConnection != null)
 					return _dataConnection.NextQueryHints;
 
-				return _nextQueryHints ??= new List<string>();
+				return field ??= new List<string>();
 			}
+			private set;
 		}
 
 		/// <summary>
@@ -292,7 +301,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Counts number of locks, put on underlying connection. Connection will not be released while counter is not zero.
 		/// </summary>
-		internal int LockDbManagerCounter;
+		private int _lockDbManagerCounter;
 
 		private int? _commandTimeout;
 
@@ -385,16 +394,16 @@ namespace LinqToDB
 				if (_commandTimeout != null)
 					_dataConnection.CommandTimeout = CommandTimeout;
 
-				if (_queryHints?.Count > 0)
+				if (QueryHints?.Count > 0)
 				{
-					_dataConnection.QueryHints.AddRange(_queryHints);
-					_queryHints = null;
+					_dataConnection.QueryHints.AddRange(QueryHints);
+					QueryHints = null;
 				}
 
-				if (_nextQueryHints?.Count > 0)
+				if (NextQueryHints?.Count > 0)
 				{
-					_dataConnection.NextQueryHints.AddRange(_nextQueryHints);
-					_nextQueryHints = null;
+					_dataConnection.NextQueryHints.AddRange(NextQueryHints);
+					NextQueryHints = null;
 				}
 
 				if (OnTraceConnection != null)
@@ -417,7 +426,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// For active underlying connection, updates information about last executed query <see cref="LastQuery"/> and
-		/// releases connection, if it is not locked (<see cref="LockDbManagerCounter"/>)
+		/// releases connection, if it is not locked (<see cref="_lockDbManagerCounter"/>)
 		/// and <see cref="KeepConnectionAlive"/> is <c>false</c>.
 		/// </summary>
 		internal void ReleaseQuery()
@@ -430,10 +439,10 @@ namespace LinqToDB
 				LastQuery = _dataConnection.LastQuery;
 #pragma warning restore CS0618 // Type or member is obsolete
 
-				if (LockDbManagerCounter == 0 && KeepConnectionAlive == false)
+				if (_lockDbManagerCounter == 0 && KeepConnectionAlive == false)
 				{
-					if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new()).AddRange(_dataConnection.QueryHints);
-					if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new()).AddRange(_dataConnection.NextQueryHints);
+					if (_dataConnection.QueryHints.    Count > 0) QueryHints    .AddRange(_dataConnection.QueryHints);
+					if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_dataConnection.NextQueryHints);
 
 					_dataConnection.OnRemoveInterceptor -= RemoveInterceptor;
 					_dataConnection.Dispose();
@@ -444,10 +453,10 @@ namespace LinqToDB
 
 		/// <summary>
 		/// For active underlying connection, updates information about last executed query <see cref="LastQuery"/> and
-		/// releases connection, if it is not locked (<see cref="LockDbManagerCounter"/>)
+		/// releases connection, if it is not locked (<see cref="_lockDbManagerCounter"/>)
 		/// and <see cref="KeepConnectionAlive"/> is <c>false</c>.
 		/// </summary>
-		internal async Task ReleaseQueryAsync()
+		internal async ValueTask ReleaseQueryAsync()
 		{
 			AssertDisposed();
 
@@ -457,10 +466,10 @@ namespace LinqToDB
 				LastQuery = _dataConnection.LastQuery;
 #pragma warning restore CS0618 // Type or member is obsolete
 
-				if (LockDbManagerCounter == 0 && KeepConnectionAlive == false)
+				if (_lockDbManagerCounter == 0 && KeepConnectionAlive == false)
 				{
-					if (_dataConnection.QueryHints.    Count > 0) QueryHints.    AddRange(_queryHints!);
-					if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints!);
+					if (_dataConnection.QueryHints.    Count > 0) QueryHints    .AddRange(_dataConnection.QueryHints);
+					if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_dataConnection.NextQueryHints);
 
 					_dataConnection.OnRemoveInterceptor -= RemoveInterceptor;
 					await _dataConnection.DisposeAsync().ConfigureAwait(false);
@@ -522,8 +531,8 @@ namespace LinqToDB
 
 			if (_dataConnection != null)
 			{
-				if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new ()).AddRange(_dataConnection.QueryHints);
-				if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new ()).AddRange(_dataConnection.NextQueryHints);
+				if (_dataConnection.QueryHints.    Count > 0) QueryHints    .AddRange(_dataConnection.QueryHints);
+				if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_dataConnection.NextQueryHints);
 
 				_dataConnection.OnRemoveInterceptor -= RemoveInterceptor;
 				_dataConnection.Dispose();
@@ -544,8 +553,8 @@ namespace LinqToDB
 
 			if (_dataConnection != null)
 			{
-				if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new ()).AddRange(_dataConnection.QueryHints);
-				if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new ()).AddRange(_dataConnection.NextQueryHints);
+				if (_dataConnection.QueryHints.    Count > 0) QueryHints    .AddRange(_dataConnection.QueryHints);
+				if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_dataConnection.NextQueryHints);
 
 				_dataConnection.OnRemoveInterceptor -= RemoveInterceptor;
 				await _dataConnection.DisposeAsync().ConfigureAwait(false);
@@ -675,7 +684,7 @@ namespace LinqToDB
 				return _queryRunner!.ExecuteScalar();
 			}
 
-			public DataReaderWrapper ExecuteReader()
+			public IDataReaderAsync ExecuteReader()
 			{
 				return _queryRunner!.ExecuteReader();
 			}
@@ -944,6 +953,34 @@ namespace LinqToDB
 				((IDataContext)this).SetMappingSchema(oldSchema);
 				_configurationID = configurationID;
 			});
+		}
+
+		/// <summary>
+		/// Increases connection lock counter on call and decrease on dispose.
+		/// </summary>
+		internal ConnectionLockScope AcquireLock() => new (this);
+
+		internal readonly struct ConnectionLockScope : IDisposable, IAsyncDisposable
+		{
+			private readonly DataContext _context;
+
+			public ConnectionLockScope(DataContext context)
+			{
+				_context = context;
+				_context._lockDbManagerCounter++;
+			}
+
+			public void Dispose()
+			{
+				_context._lockDbManagerCounter--;
+				_context.ReleaseQuery();
+			}
+
+			public ValueTask DisposeAsync()
+			{
+				_context._lockDbManagerCounter--;
+				return _context.ReleaseQueryAsync();
+			}
 		}
 	}
 }

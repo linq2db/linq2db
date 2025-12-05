@@ -1233,6 +1233,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void GroupBySubQquery2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -1252,6 +1253,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void GroupBySubQquery2In([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -1655,6 +1657,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void ExistsSqlTest1([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
@@ -1666,6 +1669,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void ExistsSqlTest2([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
@@ -1685,7 +1689,7 @@ namespace Tests.Linq
 		[Test]
 		public void OptionalObjectInCondition([DataSources(false)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			{
 				var p  = new Parameter() { Id = 1};
 				db.Person.Where(r => r.FirstName == (p != null ? p.Id.ToString() : null)).ToList();
@@ -1813,7 +1817,7 @@ namespace Tests.Linq
 
 		sealed class ComplexPredicate
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			public string? Value { get; set; }
 
 			public static ComplexPredicate[] Data =
@@ -1932,18 +1936,19 @@ namespace Tests.Linq
 		// TODO: add test case with non-constant expected result
 		sealed class Isue2424Table
 		{
+			[PrimaryKey               ] public int     Pk;
 			[Column                   ] public int     Id;
 			[Column(CanBeNull = false)] public string  StrValue = null!;
 			[Column                   ] public string? StrValueNullable;
 
 			public static readonly Isue2424Table[] Data = new[]
 			{
-				new Isue2424Table(){ Id = 0, StrValue = "0", StrValueNullable = null },
-				new Isue2424Table(){ Id = 1, StrValue = "1", StrValueNullable = "1" },
-				new Isue2424Table(){ Id = 2, StrValue = "2", StrValueNullable = "2" },
-				new Isue2424Table(){ Id = 2, StrValue = "3", StrValueNullable = "3" },
-				new Isue2424Table(){ Id = 2, StrValue = "4", StrValueNullable = "4" },
-				new Isue2424Table(){ Id = 2, StrValue = "5", StrValueNullable = "5" },
+				new Isue2424Table(){ Pk = 1, Id = 0, StrValue = "0", StrValueNullable = null },
+				new Isue2424Table(){ Pk = 2, Id = 1, StrValue = "1", StrValueNullable = "1" },
+				new Isue2424Table(){ Pk = 3, Id = 2, StrValue = "2", StrValueNullable = "2" },
+				new Isue2424Table(){ Pk = 4, Id = 2, StrValue = "3", StrValueNullable = "3" },
+				new Isue2424Table(){ Pk = 5, Id = 2, StrValue = "4", StrValueNullable = "4" },
+				new Isue2424Table(){ Pk = 6, Id = 2, StrValue = "5", StrValueNullable = "5" },
 			};
 		}
 
@@ -2132,6 +2137,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Issue_SubQueryFilter2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -2158,12 +2164,12 @@ namespace Tests.Linq
 
 		[Test]
 		public void Issue_SubQueryFilter3([DataSources(
-			TestProvName.AllClickHouse, 
-			TestProvName.AllAccess, 
-			TestProvName.AllSapHana, 
-			TestProvName.AllFirebirdLess4, 
-			TestProvName.AllOracle, 
-			TestProvName.AllMySql57, 
+			TestProvName.AllClickHouse,
+			TestProvName.AllAccess,
+			TestProvName.AllSapHana,
+			TestProvName.AllFirebirdLess4,
+			TestProvName.AllOracle,
+			TestProvName.AllMySql57,
 			TestProvName.AllSybase
 			)] string context)
 		{
@@ -2283,6 +2289,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void Issue_CompareQueries1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -2297,6 +2304,7 @@ namespace Tests.Linq
 			Assert.That(result1 && result2, Is.False);
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void Issue_CompareQueries2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -2483,7 +2491,7 @@ namespace Tests.Linq
 			using var db = GetDataConnection(context);
 			db.Types.Where(r => !r.BoolValue).ToList();
 
-			if (context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllFirebird3Plus, TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllDB2, TestProvName.AllClickHouse, TestProvName.AllAccess, TestProvName.AllInformix))
+			if (context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllFirebird3Plus, TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllDB2, TestProvName.AllClickHouse, TestProvName.AllAccess, TestProvName.AllInformix, ProviderName.Ydb))
 			{
 				Assert.That(db.LastQuery, Does.Not.Contain(" = "));
 				Assert.That(db.LastQuery, Does.Contain("NOT "));
@@ -2498,7 +2506,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class NullableBool
 		{
-			[Column] public int   ID   { get; set; }
+			[PrimaryKey] public int   ID   { get; set; }
 			[Column] public bool? Bool { get; set; }
 		}
 
@@ -2576,6 +2584,8 @@ namespace Tests.Linq
 
 		class WithMultipleDates
 		{
+			[PrimaryKey] public int PK { get; set; }
+
 			public int? Id { get; set; }
 
 			public DateTime? Date1 { get; set; }
@@ -2602,6 +2612,7 @@ namespace Tests.Linq
 			{
 				new WithMultipleDates
 				{
+					PK    = 1,
 					Id    = 1,
 					Date1 = new DateTime(2023, 1, 1),
 					Date2 = new DateTime(2023, 1, 2),
@@ -2610,6 +2621,7 @@ namespace Tests.Linq
 				},
 				new WithMultipleDates
 				{
+					PK    = 2,
 					Id    = 2,
 					Date1 = new DateTime(2023, 2, 1),
 					Date2 = new DateTime(2023, 2, 2),
@@ -2618,6 +2630,7 @@ namespace Tests.Linq
 				},
 				new WithMultipleDates
 				{
+					PK    = 3,
 					Id    = null,
 					Date1 = null,
 					Date2 = null,

@@ -84,7 +84,6 @@ namespace Tests
 		public const string PostgreSQL10      = "PostgreSQL.10";
 		public const string PostgreSQL11      = "PostgreSQL.11";
 		public const string PostgreSQL12      = "PostgreSQL.12";
-		public const string PostgreSQL13      = "PostgreSQL.13";
 		public const string PostgreSQL14      = "PostgreSQL.14";
 		public const string PostgreSQL16      = "PostgreSQL.16";
 		public const string PostgreSQL17      = "PostgreSQL.17";
@@ -93,12 +92,13 @@ namespace Tests
 		public const string AllPostgreSQL93Plus  = $"{ProviderName.PostgreSQL93},{AllPostgreSQL95Plus}";
 		public const string AllPostgreSQL95Plus  = $"{ProviderName.PostgreSQL95},{AllPostgreSQL10Plus}";
 		public const string AllPostgreSQL10Plus  = $"{PostgreSQL10},{PostgreSQL11},{PostgreSQL12},{AllPostgreSQL13Plus}";
-		public const string AllPostgreSQL13Plus  = $"{PostgreSQL13},{PostgreSQL14},{AllPostgreSQL15Plus}";
+		public const string AllPostgreSQL13Plus  = $"{ProviderName.PostgreSQL13},{PostgreSQL14},{AllPostgreSQL15Plus}";
 		public const string AllPostgreSQL15Plus  = $"{ProviderName.PostgreSQL15},{PostgreSQL16},{AllPostgreSQL17Plus}";
 		public const string AllPostgreSQL17Plus  = $"{PostgreSQL17},{AllPostgreSQL18Plus}";
 		public const string AllPostgreSQL18Plus  = ProviderName.PostgreSQL18;
 		public const string AllPostgreSQL        = $"{AllPostgreSQL9},{AllPostgreSQL10Plus}";
-		public const string AllPostgreSQL14Minus = $"{AllPostgreSQL9},{PostgreSQL10},{PostgreSQL11},{PostgreSQL12},{PostgreSQL13},{PostgreSQL14}";
+		public const string AllPostgreSQL12Minus = $"{AllPostgreSQL9},{PostgreSQL10},{PostgreSQL11},{PostgreSQL12}";
+		public const string AllPostgreSQL14Minus = $"{AllPostgreSQL12Minus},{ProviderName.PostgreSQL13},{PostgreSQL14}";
 		public const string AllPostgreSQL15Minus = $"{AllPostgreSQL14Minus},{ProviderName.PostgreSQL15}";
 		public const string AllPostgreSQL16Minus = $"{AllPostgreSQL15Minus},{PostgreSQL16}";
 		#endregion
@@ -107,6 +107,7 @@ namespace Tests
 		public const string AllFirebird5Plus = ProviderName.Firebird5;
 		public const string AllFirebird4Plus = $"{ProviderName.Firebird4},{AllFirebird5Plus}";
 		public const string AllFirebird3Plus = $"{ProviderName.Firebird3},{AllFirebird4Plus}";
+		public const string AllFirebirdLess3 = $"{ProviderName.Firebird25}";
 		public const string AllFirebirdLess4 = $"{ProviderName.Firebird25},{ProviderName.Firebird3}";
 		public const string AllFirebirdLess5 = $"{AllFirebirdLess4},{ProviderName.Firebird4}";
 		public const string AllFirebird      = $"{AllFirebirdLess5},{ProviderName.Firebird5}";
@@ -181,12 +182,14 @@ namespace Tests
 		public const string AllSqlServer2016PlusMS       = $"{SqlServer2016MS},{SqlServer2017MS},{SqlServer2019MS},{SqlServer2022MS},{SqlServer2025MS},{SqlServerSequentialAccessMS},{SqlServerContainedMS},{SqlAzureMS}";
 		public const string AllSqlServer2019MinusSystem  = $"{ProviderName.SqlServer2005},{ProviderName.SqlServer2008},{ProviderName.SqlServer2012},{ProviderName.SqlServer2014},{ProviderName.SqlServer2016},{ProviderName.SqlServer2017},{ProviderName.SqlServer2019},{SqlServerSequentialAccess},{SqlServerContained},{SqlAzure}";
 		public const string AllSqlServer2019MinusMS      = $"{SqlServer2005MS},{SqlServer2008MS},{SqlServer2012MS},{SqlServer2014MS},{SqlServer2016MS},{SqlServer2017MS},{SqlServer2019MS},{SqlServerSequentialAccessMS},{SqlServerContainedMS},{SqlAzureMS}";
+		public const string AllSqlServer2025PlusMS       = $"{SqlServer2025MS},{SqlAzureMiMS},{SqlAzureMS}";
 		#endregion
 
 		#region Access
 		public const string AllAccess      = $"{AllAccessOleDb},{AllAccessOdbc}";
 		public const string AllAccessOleDb = $"{ProviderName.AccessJetOleDb},{ProviderName.AccessAceOleDb}";
 		public const string AllAccessOdbc  = $"{ProviderName.AccessJetOdbc},{ProviderName.AccessAceOdbc}";
+		public const string AllAccessJet   = $"{ProviderName.AccessJetOdbc},{ProviderName.AccessJetOleDb}";
 		#endregion
 
 		#region Oracle

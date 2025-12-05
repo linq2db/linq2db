@@ -12,6 +12,7 @@ using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
@@ -195,7 +196,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				postProcessed = FinalizeConstructors(context, correctedEager);
 			}
 
-			var withColumns = ToColumns(context, postProcessed);
+			var withColumns = ToColumns(context.GetResultQuery(), postProcessed);
 			return withColumns;
 		}
 
@@ -553,14 +554,14 @@ namespace LinqToDB.Internal.Linq.Builder
 					var valueType = columnDescriptor?.GetDbDataType(true).SystemType
 					                ?? placeholder.Type;
 
-					var canBeNull = nullability.CanBeNull(placeholder.Sql) || placeholder.Type.IsNullable();
+					var canBeNull = nullability.CanBeNull(placeholder.Sql) || placeholder.Type.IsNullableType;
 
-					if (canBeNull && valueType != placeholder.Type && valueType.IsValueType && !valueType.IsNullable())
+					if (canBeNull && valueType != placeholder.Type && !valueType.IsNullableOrReferenceType())
 					{
 						valueType = valueType.AsNullable();
 					}
 
-					if (placeholder.Type != valueType && valueType.IsNullable() && placeholder.Type == valueType.ToNullableUnderlying())
+					if (placeholder.Type != valueType && valueType.IsNullableType && placeholder.Type == valueType.UnwrapNullableType())
 					{
 						// let ConvertFromDataReaderExpression handle default value
 						valueType = placeholder.Type;
@@ -571,7 +572,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (placeholder.Type != readerExpression.Type)
 					{
-						readerExpression = Expression.Convert(readerExpression, placeholder.Type);
+						var convertExpression = MappingSchema.GetConvertExpression(readerExpression.Type, placeholder.Type, false, true, ConversionType.FromDatabase);
+
+						if (convertExpression is null)
+							throw new InvalidOperationException($"No conversions defined from {readerExpression.Type} to {placeholder.Type}");
+
+						readerExpression = InternalExtensions.ApplyLambdaToExpression(convertExpression, readerExpression);
 					}
 
 					if (!canBeNull && readerExpression.Type == typeof(string) && DataContext.SqlProviderFlags.DoesProviderTreatsEmptyStringAsNull)

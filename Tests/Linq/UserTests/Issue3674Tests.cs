@@ -76,6 +76,7 @@ namespace Tests.UserTests
 		[Table("Issue3674Tests")]
 		sealed class Entity
 		{
+			[PrimaryKey] public int Id { get; set; }
 			[Column(Length = 30, CanBeNull = false)] public string Code { get; set; } = null!;
 			[Column(Length = 30)] public string? DIM_Company { get; set; }
 			[Column(Length = 30)] public string? DIM_Branch { get; set; }

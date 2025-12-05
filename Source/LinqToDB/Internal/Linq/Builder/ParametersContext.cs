@@ -194,7 +194,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (columnDescriptor != null && originalAccessor is not BinaryExpression)
 				{
-					if (paramType.IsNullable() && !paramDataType.SystemType.IsNullable())
+					if (paramType.IsNullableType && !paramDataType.SystemType.IsNullableType)
 						paramDataType = paramDataType.WithSystemType(paramDataType.SystemType.MakeNullable());
 
 					var updateType = true;
@@ -222,7 +222,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						}
 
 						if (providerValueGetter.Type != memberType
-							&& !(providerValueGetter.Type.IsNullable() && providerValueGetter.Type.ToNullableUnderlying() == memberType.ToNullableUnderlying()))
+							&& !(providerValueGetter.Type.IsNullableType && providerValueGetter.Type.UnwrapNullableType() == memberType.UnwrapNullableType()))
 						{
 							if (memberType.IsValueType ||
 								!memberType.IsSameOrParentOf(providerValueGetter.Type))
@@ -235,9 +235,9 @@ namespace LinqToDB.Internal.Linq.Builder
 								}
 							}
 
-							if (providerValueGetter.Type.IsNullable() && providerValueGetter.Type.ToNullableUnderlying() != memberType)
+							if (providerValueGetter.Type.IsNullableType && providerValueGetter.Type.UnwrapNullableType() != memberType)
 							{
-								var toType = memberType.IsValueType && !memberType.IsNullable()
+								var toType = memberType.IsValueType && !memberType.IsNullableType
 									? memberType.MakeNullable()
 									: memberType;
 
@@ -245,7 +245,7 @@ namespace LinqToDB.Internal.Linq.Builder
 								providerValueGetter = InternalExtensions.ApplyLambdaToExpression(convertLambda, providerValueGetter);
 							}
 
-							if (providerValueGetter.Type != memberType && memberType.IsNullableType() && providerValueGetter.Type.UnwrapNullableType() == memberType.UnwrapNullableType())
+							if (providerValueGetter.Type != memberType && memberType.IsNullableOrReferenceType() && providerValueGetter.Type.UnwrapNullableType() == memberType.UnwrapNullableType())
 							{
 								providerValueGetter = Expression.Convert(providerValueGetter, memberType);
 							}
@@ -345,7 +345,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				continuation
 			);
 
-			var underlying = toType.ToNullableUnderlying();
+			var underlying = toType.UnwrapNullableType();
 
 			if (underlying != toType)
 			{
@@ -410,7 +410,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (dataType.Type.DataType != DataType.Undefined)
 				return true;
 
-			var notNullable = testedType.ToNullableUnderlying();
+			var notNullable = testedType.UnwrapNullableType();
 
 			if (notNullable != testedType)
 				return HasDbMapping(mappingSchema, notNullable, out convertExpr);
@@ -520,7 +520,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					case ExpressionType.ConvertChecked:
 					{
 						var ce = (UnaryExpression) e;
-						if (ce.Operand.Type.IsNullable() && !ce.Type.IsNullable())
+						if (ce.Operand.Type.IsNullableType && !ce.Type.IsNullableType)
 						{
 							return Expression.Condition(
 								Expression.Equal(ce.Operand, Expression.Constant(null, ce.Operand.Type)),
@@ -567,6 +567,5 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			CacheManager.RegisterSqlValue(constantExpr, value);
 		}
-
 	}
 }

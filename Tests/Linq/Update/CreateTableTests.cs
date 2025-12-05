@@ -169,6 +169,104 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Test]
+		public void CreateLocalTempTable2([IncludeDataSources(TestProvName.AllSqlServer2008Plus/*, ProviderName.DB2*/)] string context)
+		{
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<TestTable>()
+					.Property(t => t.Field1)
+						.HasLength(50)
+				.Build();
+
+			using (var db = GetDataContext(context, ms))
+			{
+				const string tableName = "TestTable";
+
+				try
+				{
+					switch (context)
+					{
+						case string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus): db.DropTable<TestTable>("#" + tableName); break;
+						default: db.DropTable<TestTable>(tableName); break;
+					}
+				}
+				catch
+				{
+				}
+
+				ITable<TestTable> table;
+
+				switch (context)
+				{
+					case string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus):
+						table = db.CreateTable<TestTable>(new CreateTableOptions(TableName: "#" + tableName));
+						break;
+					case ProviderName.DB2:
+						table = db.CreateTable<TestTable>(new CreateTableOptions(StatementHeader: "DECLARE GLOBAL TEMPORARY TABLE SESSION.{0}"));
+						break;
+					default:
+						throw new InvalidOperationException();
+				}
+
+				var list = table.ToList();
+
+				table.Drop();
+			}
+		}
+
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/58", Configuration = ProviderName.ClickHouseOctonica)]
+		[Test]
+		public async Task CreateLocalTempTable2Async([IncludeDataSources(
+			TestProvName.AllSQLite,
+			TestProvName.AllClickHouse,
+			TestProvName.AllSqlServer2008Plus /*, ProviderName.DB2*/)]
+			string context)
+		{
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<TestTable>()
+					.Property(t => t.Field1)
+						.HasLength(50)
+				.Build();
+
+			using (var db = GetDataContext(context, ms))
+			{
+				const string tableName = "TestTable";
+
+				try
+				{
+					switch (context)
+					{
+						case string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus): await db.DropTableAsync<TestTable>("#" + tableName); break;
+						default: await db.DropTableAsync<TestTable>(tableName); break;
+					}
+				}
+				catch
+				{
+				}
+
+				ITable<TestTable> table;
+
+				switch (context)
+				{
+					case string when context.IsAnyOf(TestProvName.AllSqlServer2008Plus):
+						table = await db.CreateTableAsync<TestTable>(new CreateTableOptions(TableName: "#" + tableName));
+						break;
+					case ProviderName.DB2:
+						table = await db.CreateTableAsync<TestTable>(new CreateTableOptions(StatementHeader: "DECLARE GLOBAL TEMPORARY TABLE SESSION.{0}"));
+						break;
+					default:
+						table = await db.CreateTableAsync<TestTable>(new CreateTableOptions(TableName: tableName));
+						break;
+				}
+
+				var list = await table.ToListAsync();
+
+				await table.DropAsync();
+			}
+		}
+
 		enum FieldType1
 		{
 			[MapValue(1)] Value1,
@@ -363,14 +461,14 @@ namespace Tests.xUpdate
 		[Table("Issue3223Table")]
 		sealed class Issue3223Raw
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			[Column] public string? Value { get; set; }
 		}
 
 		[Table("Issue3223Table")]
 		sealed class Issue3223Table
 		{
-			[Column] public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			[Column] public Issue3223Enum? Value { get; set; }
 
 			public static readonly Issue3223Table[] Data =

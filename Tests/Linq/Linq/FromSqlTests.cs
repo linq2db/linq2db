@@ -6,7 +6,6 @@ using System.Runtime.CompilerServices;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Internal.Linq;
-using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -26,14 +25,13 @@ namespace Tests.Linq
 		[Table(Name = "sample_class")]
 		sealed class SampleClass
 		{
-			[Column("id")]
+			[Column("id"), PrimaryKey]
 			public int Id    { get; set; }
 
 			[Column("value", Length = 50)]
 			public string? Value { get; set; }
 
 			public SomeOtherClass? AssociatedOne { get; set; }
-
 		}
 
 		[Table(Name = "sample_other_class")]
@@ -1210,6 +1208,27 @@ namespace Tests.Linq
 						select p;
 
 			query.ToArray();
+		}
+
+		sealed record Projection1(int i1, int i2);
+
+		sealed record Projection2(int i);
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5176")]
+		public void InsertFromSql([IncludeDataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tempTable = db.CreateTempTable<Projection2>();
+
+			var tempRows = db.FromSql<Projection1>("(with Rows as (select 1 as i1, 2 as i2) select * from Rows)");
+
+			tempRows
+				.Select(t1 => new Projection2(t1.i1))
+				.Insert(tempTable, row => row);
+
+			var record = tempTable.Single();
+
+			Assert.That(record.i, Is.EqualTo(1));
 		}
 	}
 }

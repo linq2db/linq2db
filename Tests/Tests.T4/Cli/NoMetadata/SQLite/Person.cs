@@ -13,7 +13,7 @@ namespace Cli.NoMetadata.SQLite
 {
 	public class Person
 	{
-		public long    PersonId   { get; set; } // integer
+		public long    PersonId   { get; set; } // INTEGER
 		public string  FirstName  { get; set; } = null!; // nvarchar(50)
 		public string  LastName   { get; set; } = null!; // nvarchar(50)
 		public string? MiddleName { get; set; } // nvarchar(50)
@@ -21,12 +21,12 @@ namespace Cli.NoMetadata.SQLite
 
 		#region Associations
 		/// <summary>
-		/// FK_Doctor_0_0 backreference
+		/// FK_Doctor_0 backreference
 		/// </summary>
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// FK_Patient_0_0 backreference
+		/// FK_Patient_0 backreference
 		/// </summary>
 		public Patient? Patient { get; set; }
 		#endregion

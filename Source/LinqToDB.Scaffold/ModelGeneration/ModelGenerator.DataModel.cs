@@ -206,6 +206,8 @@ namespace LinqToDB.Tools.ModelGeneration
 				case "NpgsqlDateTime?":
 				case "NpgsqlCidr":
 				case "NpgsqlCidr?":
+				case "NpgsqlCube":
+				case "NpgsqlCube?":
 					return true;
 				case "object":
 				case "string":
@@ -474,6 +476,8 @@ namespace LinqToDB.Tools.ModelGeneration
 			where TForeignKey : ForeignKey<TForeignKey>, new()
 			where TColumn     : IColumn,                 new()
 		{
+			DataContextObject ??= new Class<TTable>();
+
 			SqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, dataConnection.Options);
 
 			var db = LoadDatabaseSchema(dataConnection, GetSchemaOptions);

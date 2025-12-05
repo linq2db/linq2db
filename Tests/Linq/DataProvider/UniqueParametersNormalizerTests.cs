@@ -241,7 +241,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async Task CalledWithCorrectNames([DataSources(false)] string context)
 		{
-			using var db = GetDataConnection(context, o => o.UseDataProvider(new WrapperProvider(GetDataProvider(context), (normalizerBase) => new ValidateOriginalNameNormalizer(normalizerBase))));
+			using var db = GetDataContext(context, o => o.UseDataProvider(new WrapperProvider(GetDataProvider(context), (normalizerBase) => new ValidateOriginalNameNormalizer(normalizerBase))));
 
 			await using var dbTable1 = db.CreateLocalTable<Table1>("table1");
 			await using var dbTable2 = db.CreateLocalTable<Table2>("table2");
@@ -273,7 +273,7 @@ namespace Tests.DataProvider
 		{
 			string? lastSql = null;
 
-			using var db = GetDataConnection(context, o => o.UseTracing(info =>
+			using var db = GetDataContext(context, o => o.UseTracing(info =>
 			{
 				if (info.TraceInfoStep == TraceInfoStep.BeforeExecute)
 				{
@@ -383,19 +383,19 @@ namespace Tests.DataProvider
 
 		public class Table1
 		{
-			public int Id { get; set; }
+			[PrimaryKey] public int Id { get; set; }
 			public string Field1 { get; set; } = null!;
 		}
 
 		public class Table2
 		{
-			public int Table1Id { get; set; }
+			[PrimaryKey] public int Table1Id { get; set; }
 			public string Field2 { get; set; } = null!;
 		}
 
 		public class Table3
 		{
-			public int Table1Id { get; set; }
+			[PrimaryKey] public int Table1Id { get; set; }
 			public string Field3 { get; set; } = null!;
 		}
 	}

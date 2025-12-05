@@ -74,8 +74,8 @@ namespace Tests.Linq
 
 		class BookAuthor
 		{
-			public int FkBookId   { get; set; }
-			public int FkAuthorId { get; set; }
+			[PrimaryKey] public int FkBookId   { get; set; }
+			[PrimaryKey] public int FkAuthorId { get; set; }
 
 			[Association(ThisKey = nameof(FkBookId), OtherKey = "BookId")]
 			public Book   Book   { get; set; } = default!;
@@ -260,6 +260,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void ExceptInheritance([DataSources] string context)
 		{
 			using var db       = GetDataContext(context);
@@ -283,6 +284,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void IntersectInheritance([DataSources] string context)
 		{
 			using var db       = GetDataContext(context);

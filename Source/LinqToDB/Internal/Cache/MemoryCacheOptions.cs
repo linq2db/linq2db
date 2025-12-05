@@ -7,9 +7,6 @@ namespace LinqToDB.Internal.Cache
 {
 	sealed class MemoryCacheOptions
 	{
-		private long? _sizeLimit;
-		private double _compactionPercentage = 0.05;
-
 		public ISystemClock? Clock { get; set; }
 
 		/// <summary>
@@ -22,7 +19,7 @@ namespace LinqToDB.Internal.Cache
 		/// </summary>
 		public long? SizeLimit
 		{
-			get => _sizeLimit;
+			get;
 			set
 			{
 				if (value < 0)
@@ -30,7 +27,7 @@ namespace LinqToDB.Internal.Cache
 					throw new ArgumentOutOfRangeException(nameof(value), value, $"{nameof(value)} must be non-negative.");
 				}
 
-				_sizeLimit = value;
+				field = value;
 			}
 		}
 
@@ -39,7 +36,7 @@ namespace LinqToDB.Internal.Cache
 		/// </summary>
 		public double CompactionPercentage
 		{
-			get => _compactionPercentage;
+			get;
 			set
 			{
 				if (value < 0 || value > 1)
@@ -47,9 +44,9 @@ namespace LinqToDB.Internal.Cache
 					throw new ArgumentOutOfRangeException(nameof(value), value, $"{nameof(value)} must be between 0 and 1 inclusive.");
 				}
 
-				_compactionPercentage = value;
+				field = value;
 			}
-		}
+		} = 0.05;
 
 	}
 }

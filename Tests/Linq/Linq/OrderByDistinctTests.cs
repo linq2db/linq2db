@@ -400,7 +400,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllClickHouse], ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void OrderBySubQuery([DataSources] string context)
 		{

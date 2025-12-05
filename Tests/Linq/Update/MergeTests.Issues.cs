@@ -32,7 +32,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Issue200InSource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<AllTypes2>().Delete();
@@ -77,7 +77,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Issue200InPredicate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<AllTypes2>().Delete();
@@ -120,7 +120,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Issue200InPredicate2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<AllTypes2>().Delete();
@@ -168,7 +168,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Issue200InInsert([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<AllTypes2>().Delete();
@@ -225,7 +225,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Issue200InUpdate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<AllTypes2>().Delete();
@@ -1019,7 +1019,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeSubquery([MergeDataContextSource(false, TestProvName.AllOracle, TestProvName.AllFirebird, TestProvName.AllSybase)] string context, [Values(1, 2)] int iteration)
 		{
-			using var db  = GetDataConnection(context);
+			using var db  = GetDataContext(context);
 
 			db.BeginTransaction();
 
@@ -1084,5 +1084,84 @@ namespace Tests.xUpdate
 				.Merge();
 		}
 		#endregion
+
+		public class UnusedSourceTable
+		{
+			[PrimaryKey]
+			public int Id    { get; set; }
+			public int Value { get; set; }
+
+			public static readonly UnusedSourceTable[] Data =
+			[
+				new UnusedSourceTable() { Id = 1, Value = 2 }
+			];
+		}
+
+		// Current Sybase version cannot handle such queries and crash with generic error
+		[ActiveIssue(TestProvName.AllSybase, Details = "ASE is terminating this process")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5181")]
+		public void UnusedSource_Query([MergeDataContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(UnusedSourceTable.Data);
+
+			tb.Merge()
+				.UsingTarget()
+				.On((x, y) => x.Value == 5)
+				.InsertWhenNotMatched(x => new UnusedSourceTable { Id = 2, Value = 5 })
+				.Merge();
+
+			var record = tb.Where(r => r.Id != 1).SingleOrDefault();
+
+			Assert.That(record, Is.Not.Null);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.Id, Is.EqualTo(2));
+				Assert.That(record.Value, Is.EqualTo(5));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5181")]
+		public void UnusedSource_Enumerable([MergeDataContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<UnusedSourceTable>();
+
+			tb.Merge()
+				.Using(UnusedSourceTable.Data)
+				.On((x, y) => x.Value == 5)
+				.InsertWhenNotMatched(x => new UnusedSourceTable { Id = 2, Value = 5 })
+				.Merge();
+
+			var record = tb.Where(r => r.Id != 1).SingleOrDefault();
+
+			Assert.That(record, Is.Not.Null);
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.Id, Is.EqualTo(2));
+				Assert.That(record.Value, Is.EqualTo(5));
+			}
+		}
+
+		// Oracle adds record ignoring fact that source set is empty
+		// this is a bug in oracle implementation as inserted data comes from source records without matching target record
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5181")]
+		public void UnusedSource_EmptyEnumerable([MergeDataContextSource(TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<UnusedSourceTable>();
+
+			tb.Merge()
+				.Using(Array.Empty<UnusedSourceTable>())
+				.On((x, y) => x.Value == 5)
+				.InsertWhenNotMatched(x => new UnusedSourceTable { Id = 2, Value = 5 })
+				.Merge();
+
+			var record = tb.Where(r => r.Id != 1).SingleOrDefault();
+
+			Assert.That(record, Is.Null);
+		}
 	}
 }

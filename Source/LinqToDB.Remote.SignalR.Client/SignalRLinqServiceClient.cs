@@ -28,31 +28,6 @@ namespace LinqToDB.Remote.SignalR
 			_hubConnection = hubConnection;
 		}
 
-		LinqServiceInfo ILinqService.GetInfo(string? configuration)
-		{
-			return _hubConnection.InvokeAsync<LinqServiceInfo>(nameof(ILinqService.GetInfoAsync), configuration, cancellationToken : default).Result;
-		}
-
-		int ILinqService.ExecuteNonQuery(string? configuration, string queryData)
-		{
-			return _hubConnection.InvokeAsync<int>(nameof(ILinqService.ExecuteNonQueryAsync), configuration, queryData, cancellationToken : default).Result;
-		}
-
-		string? ILinqService.ExecuteScalar(string? configuration, string queryData)
-		{
-			return _hubConnection.InvokeAsync<string?>(nameof(ILinqService.ExecuteScalarAsync), configuration, queryData, cancellationToken : default).Result;
-		}
-
-		string ILinqService.ExecuteReader(string? configuration, string queryData)
-		{
-			return _hubConnection.InvokeAsync<string>(nameof(ILinqService.ExecuteReaderAsync), configuration, queryData, cancellationToken: default).Result;
-		}
-
-		int ILinqService.ExecuteBatch(string? configuration, string queryData)
-		{
-			return _hubConnection.InvokeAsync<int>(nameof(ILinqService.ExecuteBatchAsync), configuration, queryData, cancellationToken: default).Result;
-		}
-
 		Task<LinqServiceInfo> ILinqService.GetInfoAsync(string? configuration, CancellationToken cancellationToken)
 		{
 			return _hubConnection.InvokeAsync<LinqServiceInfo>(nameof(ILinqService.GetInfoAsync), configuration, cancellationToken : cancellationToken);

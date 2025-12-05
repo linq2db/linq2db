@@ -28,7 +28,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			};
 
 			var sequenceArgument = methodCall.Arguments[0];
-			var sequence         = builder.BuildSequence(new BuildInfo(buildInfo, sequenceArgument));
+			var sequence         = builder.BuildSequence(new BuildInfo(buildInfo, sequenceArgument)  { IgnoreOrderBy = true } );
 
 			if (methodCall.Arguments.Count == 2 && deleteType == DeleteContext.DeleteTypeEnum.Delete)
 			{

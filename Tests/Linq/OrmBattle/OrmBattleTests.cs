@@ -1625,7 +1625,7 @@ namespace Tests.OrmBattle
 		}
 
 		[Test]
-		public void StringLastIndexOfTest([NorthwindDataContext(false, true)] string context)
+		public void StringLastIndexOfTest([NorthwindDataContext(true, true)] string context)
 		{
 			using var db = Setup(context);
 			var customer = db.Customer.Where(c => c.City!.LastIndexOf("t", 1, 3) == 3).First();

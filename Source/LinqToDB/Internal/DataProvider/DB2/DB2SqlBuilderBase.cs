@@ -203,6 +203,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				case ConvertType.NameToQueryField     :
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTable     :
+				case ConvertType.NameToCteName        :
 				case ConvertType.NameToProcedure      :
 				case ConvertType.NameToPackage        :
 				case ConvertType.NameToSchema         :

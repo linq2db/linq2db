@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
@@ -28,7 +30,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 		protected override IMemberTranslator CreateStringMemberTranslator()
 		{
-			return new StringMemberTranslator();
+			return new SqlServerStringMemberTranslator();
 		}
 
 		protected override IMemberTranslator CreateGuidMemberTranslator()
@@ -181,6 +183,11 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				var factory = translationContext.ExpressionFactory;
 				return factory.NotNullExpression(factory.GetDbDataType(typeof(DateTime)), "CURRENT_TIMESTAMP");
 			}
+
+			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
+			{
+				return translationContext.ExpressionFactory.Function(dbDataType, "SYSUTCDATETIME");
+			}
 		}
 
 		protected class SqlServerMathMemberTranslator : MathMemberTranslatorBase
@@ -196,7 +203,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 			}
 		}
 
-		protected class StringMemberTranslator : StringMemberTranslatorBase
+		protected class SqlServerStringMemberTranslator : StringMemberTranslatorBase
 		{
 			public override ISqlExpression? TranslateLPad(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression padding, ISqlExpression paddingChar)
 			{
@@ -215,6 +222,24 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				var stringToAdd  = factory.Function(valueTypeString, "REPLICATE", paddingChar, symbolsToAdd);
 				
 				return factory.Add(valueTypeString, stringToAdd, value);
+			}
+
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			{
+				var builder = new AggregateFunctionBuilder();
+				
+				ConfigureConcatWsEmulation(builder, nullValuesAsEmptyString, isNullableResult, (factory, valueType, separator, valuesExpr) =>
+				{
+					var intDbType = factory.GetDbDataType(typeof(int));
+					var substring = factory.Function(valueType, "SUBSTRING",
+						valuesExpr,
+						factory.Add(intDbType, factory.Length(separator), factory.Value(intDbType, 1)),
+						factory.Value(intDbType, int.MaxValue));
+
+					return substring;
+				}); 
+				
+				return builder.Build(translationContext, methodCall);
 			}
 		}
 

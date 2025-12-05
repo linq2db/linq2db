@@ -1019,6 +1019,29 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		#endregion
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5177")]
+		public void Issue5177Test([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			ctx.Add(new Issue5177Table() { Id = 1 });
+			ctx.SaveChanges();
+
+			var record = ctx.GetTable<Issue5177Table>().Where(r => r.Value == null).SingleOrDefault();
+
+			Assert.That(record, Is.Not.Null);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5225")]
+		public void AttachToExistingTransaction([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			ctx.Database.BeginTransaction();
+
+			using var db = ctx.CreateLinqToDBConnection();
+		}
 	}
 
 	#region Test Extensions

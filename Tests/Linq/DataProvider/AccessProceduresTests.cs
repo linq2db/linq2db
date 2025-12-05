@@ -175,7 +175,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_Person_Delete([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				var id = db.Person.Insert(() => new Person()
@@ -200,7 +200,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_Person_Update([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				var id = db.Person.Insert(() => new Person()
@@ -232,7 +232,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_Person_Insert([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				var maxId = db.Person.OrderByDescending(_ => _.ID).Select(_ => _.ID).FirstOrDefault();
@@ -255,7 +255,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_ThisProcedureNotVisibleFromODBC([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				Assert.That(db.GetTable<Issue792Tests.AllTypes>().Where(_ => _.char20DataType == "issue792").Count(), Is.Zero);
@@ -273,7 +273,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_AddIssue792Record([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				Assert.That(db.GetTable<Issue792Tests.AllTypes>().Where(_ => _.char20DataType == "issue792").Count(), Is.Zero);
@@ -291,7 +291,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_Scalar_DataReader([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				var res = Scalar_DataReader(db, context.IsAnyOf(TestProvName.AllAccessOdbc));
@@ -308,7 +308,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_Person_SelectAll([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				var res = Person_SelectAll(db, context.IsAnyOf(TestProvName.AllAccessOdbc));
@@ -320,7 +320,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_Person_SelectByKey([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				var id = db.Person.Select(_ => _.ID).Max();
@@ -333,7 +333,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_Person_SelectByName([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				var firstName = "Jürgen";
@@ -349,7 +349,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_Person_SelectListByName([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				var firstName = "e";
@@ -365,7 +365,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_Patient_SelectAll([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				var res = Patient_SelectAll(db, context.IsAnyOf(TestProvName.AllAccessOdbc));
@@ -388,7 +388,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Test_Patient_SelectByName([IncludeDataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataContext(context))
 			using (db.BeginTransaction())
 			{
 				var firstName = "Tester";
@@ -415,7 +415,7 @@ namespace Tests.DataProvider
 		}
 
 		#region Procedures
-		private static int Person_Delete(DataConnection dataConnection, int id, bool odbc)
+		private static int Person_Delete(IDataContext dataConnection, int id, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Person_Delete(?) }" : "[Person_Delete]";
 			return dataConnection.ExecuteProc(
@@ -423,7 +423,7 @@ namespace Tests.DataProvider
 				new DataParameter("@id", id, DataType.Int32));
 		}
 
-		private static int Person_Update(DataConnection dataConnection, int id, string firstName, string? midleName, string lastName, char gender, bool odbc)
+		private static int Person_Update(IDataContext dataConnection, int id, string firstName, string? midleName, string lastName, char gender, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Person_Update(?, ?, ?, ?, ?) }" : "Person_Update";
 			return dataConnection.ExecuteProc(
@@ -435,7 +435,7 @@ namespace Tests.DataProvider
 				new DataParameter("gender"   , gender   , DataType.Char));
 		}
 
-		private static int Person_Insert(DataConnection dataConnection, string firstName, string? midleName, string lastName, char gender, bool odbc)
+		private static int Person_Insert(IDataContext dataConnection, string firstName, string? midleName, string lastName, char gender, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Person_Insert(?, ?, ?, ?) }" : "Person_Insert";
 			return dataConnection.ExecuteProc(
@@ -446,13 +446,13 @@ namespace Tests.DataProvider
 				new DataParameter("gender"   , gender   , DataType.Char));
 		}
 
-		private static int ThisProcedureNotVisibleFromODBC(DataConnection dataConnection, bool odbc)
+		private static int ThisProcedureNotVisibleFromODBC(IDataContext dataConnection, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL ThisProcedureNotVisibleFromODBC() }" : "ThisProcedureNotVisibleFromODBC";
 			return dataConnection.ExecuteProc(commandText);
 		}
 
-		private static int AddIssue792Record(DataConnection dataConnection, int? unused, bool odbc)
+		private static int AddIssue792Record(IDataContext dataConnection, int? unused, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL AddIssue792Record(?) }" : "AddIssue792Record";
 			return dataConnection.ExecuteProc(
@@ -460,7 +460,7 @@ namespace Tests.DataProvider
 				new DataParameter("unused", unused, DataType.Int32));
 		}
 
-		private static List<Scalar_DataReaderResult> Scalar_DataReader(DataConnection dataConnection, bool odbc)
+		private static List<Scalar_DataReaderResult> Scalar_DataReader(IDataContext dataConnection, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Scalar_DataReader() }" : "Scalar_DataReader";
 			return dataConnection.QueryProc<Scalar_DataReaderResult>(commandText).ToList();
@@ -472,7 +472,7 @@ namespace Tests.DataProvider
 			public string? stringField { get; set; }
 		}
 
-		private static List<Person> Person_SelectByKey(DataConnection dataConnection, int id, bool odbc)
+		private static List<Person> Person_SelectByKey(IDataContext dataConnection, int id, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Person_SelectByKey(?) }" : "Person_SelectByKey";
 			return dataConnection.QueryProc<Person>(
@@ -480,13 +480,13 @@ namespace Tests.DataProvider
 				new DataParameter("id", id, DataType.Int32)).ToList();
 		}
 
-		private static List<Person> Person_SelectAll(DataConnection dataConnection, bool odbc)
+		private static List<Person> Person_SelectAll(IDataContext dataConnection, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Person_SelectAll() }" : "Person_SelectAll";
 			return dataConnection.QueryProc<Person>(commandText).ToList();
 		}
 
-		private static List<Person> Person_SelectByName(DataConnection dataConnection, string firstName, string lastName, bool odbc)
+		private static List<Person> Person_SelectByName(IDataContext dataConnection, string firstName, string lastName, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Person_SelectByName(?, ?) }" : "Person_SelectByName";
 			return dataConnection.QueryProc<Person>(
@@ -495,7 +495,7 @@ namespace Tests.DataProvider
 				new DataParameter("lastName" , lastName , DataType.VarChar)).ToList();
 		}
 
-		private static List<Person> Person_SelectListByName(DataConnection dataConnection, string firstName, string lastName, bool odbc)
+		private static List<Person> Person_SelectListByName(IDataContext dataConnection, string firstName, string lastName, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Person_SelectListByName(?, ?) }" : "Person_SelectListByName";
 			return dataConnection.QueryProc<Person>(
@@ -504,13 +504,13 @@ namespace Tests.DataProvider
 				new DataParameter("lastName" , lastName , DataType.VarChar)).ToList();
 		}
 
-		private static List<PatientResult> Patient_SelectAll(DataConnection dataConnection, bool odbc)
+		private static List<PatientResult> Patient_SelectAll(IDataContext dataConnection, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Patient_SelectAll() }" : "Patient_SelectAll";
 			return dataConnection.QueryProc<PatientResult>(commandText).ToList();
 		}
 
-		private static List<PatientResult> Patient_SelectByName(DataConnection dataConnection, string firstName, string lastName, bool odbc)
+		private static List<PatientResult> Patient_SelectByName(IDataContext dataConnection, string firstName, string lastName, bool odbc)
 		{
 			var commandText = odbc ? "{ CALL Patient_SelectByName(?, ?) }" : "Patient_SelectByName";
 			return dataConnection.QueryProc<PatientResult>(
