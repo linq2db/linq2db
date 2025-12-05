@@ -60,6 +60,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			var joinType = methodCall.Method.Name switch
+			{
 				"LeftJoin"  => JoinType.Left,
 				"RightJoin" => JoinType.Right,
 				_           =>  JoinType.Inner,
