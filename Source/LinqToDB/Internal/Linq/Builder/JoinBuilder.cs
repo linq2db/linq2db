@@ -59,12 +59,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				extensions   = jhc.Extensions;
 			}
 
-			var joinType = JoinType.Inner;
-			switch (methodCall.Method.Name)
-			{
-				case "LeftJoin"  : joinType = JoinType.Left;  break;
-				case "RightJoin" : joinType = JoinType.Right; break;
-			}
+			var joinType = methodCall.Method.Name switch
+				"LeftJoin"  => JoinType.Left,
+				"RightJoin" => JoinType.Right,
+				_           =>  JoinType.Inner,
+			};
 
 			if (joinType is JoinType.Right)
 			{
