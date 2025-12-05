@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -10,6 +11,10 @@ using LinqToDB.Internal.SqlQuery;
 namespace LinqToDB.Internal.Linq.Builder
 {
 	[BuildsMethodCall("Join")]
+#if NET10_0_OR_GREATER
+	[BuildsMethodCall("LeftJoin")]
+	[BuildsMethodCall("RightJoin")]
+#endif
 	sealed class JoinBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
@@ -55,19 +60,48 @@ namespace LinqToDB.Internal.Linq.Builder
 				extensions   = jhc.Extensions;
 			}
 
-			var join = innerContext.SelectQuery.InnerJoin();
+			var joinType = JoinType.Inner;
+			switch (methodCall.Method.Name)
+			{
+				case "LeftJoin"  : joinType = JoinType.Left;  break;
+				case "RightJoin" : joinType = JoinType.Right; break;
+			}
+
+			if (joinType is JoinType.Right)
+			{
+				outerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(
+					buildInfo.Parent,
+					outerContext,
+					outerContext,
+					defaultValue: null,
+					isNullValidationDisabled: false);
+			}
+
+			outerContext = new SubQueryContext(outerContext);
+
+			if (joinType is JoinType.Left)
+			{
+				innerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(
+					buildInfo.Parent,
+					innerContext,
+					innerContext,
+					defaultValue: null,
+					isNullValidationDisabled: false);
+			}
+
+			var outerKeyLambda = methodCall.Arguments[2].UnwrapLambda();
+			var innerKeyLambda = methodCall.Arguments[3].UnwrapLambda();
+
+			var join = new SqlJoinedTable(joinType, innerContext.SelectQuery, innerKeyLambda.Parameters[0].Name, false);
 			var sql  = outerContext.SelectQuery;
 
 			if (extensions != null)
-				join.JoinedTable.SqlQueryExtensions = extensions;
+				join.SqlQueryExtensions = extensions;
 
 			var selector = methodCall.Arguments[4].UnwrapLambda();
 
 			outerContext.SetAlias(selector.Parameters[0].Name);
 			innerContext.SetAlias(selector.Parameters[1].Name);
-
-			var outerKeyLambda = methodCall.Arguments[2].UnwrapLambda();
-			var innerKeyLambda = methodCall.Arguments[3].UnwrapLambda();
 
 			var innerKeyContext = innerContext;
 
@@ -80,7 +114,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			outerKeySelector = builder.BuildSqlExpression(outerContext, outerKeySelector, BuildPurpose.Sql, BuildFlags.ForKeys);
 			innerKeySelector = builder.BuildSqlExpression(outerContext, innerKeySelector, BuildPurpose.Sql, BuildFlags.ForKeys);
 
-			sql.From.Tables[0].Joins.Add(join.JoinedTable);
+			sql.From.Tables[0].Joins.Add(join);
 
 			bool allowNullComparison = outerKeySelector is SqlGenericConstructorExpression ||
 			                           innerKeySelector is SqlGenericConstructorExpression;
@@ -88,7 +122,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!allowNullComparison && builder.CompareNulls is CompareNulls.LikeClr or CompareNulls.LikeSqlExceptParameters)
 				compareSearchCondition = QueryHelper.CorrectComparisonForJoin(compareSearchCondition);
 
-			join.JoinedTable.Condition = compareSearchCondition;
+			join.Condition = compareSearchCondition;
 
 			var body = SequenceHelper.PrepareBody(selector, outerContext, new ScopeContext(innerContext, outerContext));
 
