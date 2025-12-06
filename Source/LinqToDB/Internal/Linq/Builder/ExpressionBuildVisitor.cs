@@ -5458,7 +5458,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			using var translationContext = _translationContexts.Allocate();
 
-			translationContext.Value.Init(this, context, _alias);
+			translationContext.Value.Init(this, context, Alias);
 
 			translated = Builder._unaryTranslator.Translate(translationContext.Value, unaryExpression, GetTranslationFlags());
 
@@ -5479,7 +5479,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			using var translationContext = _translationContexts.Allocate();
 
-			translationContext.Value.Init(this, context, _alias);
+			translationContext.Value.Init(this, context, Alias);
 
 			translated = Builder._binaryTranslator.Translate(translationContext.Value, binaryExpression, GetTranslationFlags());
 
