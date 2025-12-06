@@ -1747,5 +1747,13 @@ namespace Tests.Linq
 			Assert.That(res[0].Value, Is.EqualTo(value));
 		}
 		#endregion
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5236")]
+		public void NullValueConvertInMapper([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.Parent.Select(p => new { Value = (byte?)p.Value1 }).ToArray();
+		}
 	}
 }
