@@ -564,7 +564,14 @@ namespace LinqToDB.Internal.Conversion
 				ex = GetConverter(mappingSchema, cp, ufrom, uto);
 
 				if (ex != null)
-					ex = Tuple.Create(Expression.Convert(ex.Item1, to) as Expression, ex.Item2);
+				{
+					ex = Tuple.Create(
+						(Expression)Expression.Condition(
+							Expression.Equal(expr, Expression.Constant(null, from)),
+							new DefaultValueExpression(mappingSchema, to),
+							Expression.Convert(ex.Item1, to)),
+						ex.Item2);
+				}
 			}
 
 			return ex;
