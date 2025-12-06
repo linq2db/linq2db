@@ -493,32 +493,34 @@ namespace LinqToDB.Internal.Conversion
 			return null;
 		}
 
-		static Tuple<Expression,bool>? GetConverter(MappingSchema mappingSchema, Expression expr, Type from, Type to)
+		record struct Conversion(Expression Expression, bool IsLambda);
+
+		static Conversion? GetConverter(MappingSchema mappingSchema, Expression expr, Type from, Type to)
 		{
 			if (from == to)
-				return Tuple.Create(expr, false);
+				return new(expr, false);
 
 			var le = Converter.GetConverter(from, to);
 
 			if (le != null)
-				return Tuple.Create(le.GetBody(expr), false);
+				return new(le.GetBody(expr), false);
 
 			var lex = mappingSchema.TryGetConvertExpression(from, to);
 
 			if (lex != null)
-				return Tuple.Create(lex.GetBody(expr), true);
+				return new(lex.GetBody(expr), true);
 
 			var cex = mappingSchema.GetConvertExpression(from, to, false, false);
 
 			if (cex != null)
-				return Tuple.Create(cex.GetBody(expr), true);
+				return new(cex.GetBody(expr), true);
 
 			var ex =
 				GetFromEnum  (from, to, expr, mappingSchema) ??
 				GetToEnum    (from, to, expr, mappingSchema);
 
 			if (ex != null)
-				return Tuple.Create(ex, true);
+				return new(ex, true);
 
 			ex =
 				GetConversion       (from, to, expr) ??
@@ -531,16 +533,16 @@ namespace LinqToDB.Internal.Conversion
 				GetToString         (from, to, expr) ??
 				GetParseEnum        (from, to, expr);
 
-			return ex != null ? Tuple.Create(ex, false) : null;
+			return ex != null ? new(ex, false) : null;
 		}
 
-		static Tuple<Expression,bool>? ConvertUnderlying(
+		static Conversion? ConvertUnderlying(
 			MappingSchema mappingSchema,
 			Expression    expr,
 			Type from, Type ufrom,
 			Type to,   Type uto)
 		{
-			Tuple<Expression,bool>? ex = null;
+			Conversion? ex = null;
 
 			if (from != ufrom)
 			{
@@ -554,7 +556,7 @@ namespace LinqToDB.Internal.Conversion
 				ex = GetConverter(mappingSchema, expr, from, uto);
 
 				if (ex != null)
-					ex = Tuple.Create(Expression.Convert(ex.Item1, to) as Expression, ex.Item2);
+					ex = new(Expression.Convert(ex.Value.Expression, to), ex.Value.IsLambda);
 			}
 
 			if (ex == null && from != ufrom && to != uto)
@@ -565,18 +567,19 @@ namespace LinqToDB.Internal.Conversion
 
 				if (ex != null)
 				{
-					ex = Tuple.Create(
+					ex = new(
 						(Expression)Expression.Condition(
 							Expression.Equal(expr, Expression.Constant(null, from)),
 							new DefaultValueExpression(mappingSchema, to),
-							Expression.Convert(ex.Item1, to)),
-						ex.Item2);
+							Expression.Convert(ex.Value.Expression, to)),
+						ex.Value.IsLambda);
 				}
 			}
 
 			return ex;
 		}
 
+		// TODO: v7: migrate API to records
 		public static Tuple<LambdaExpression,LambdaExpression?,bool> GetConverter(MappingSchema? mappingSchema, Type from, Type to)
 		{
 			mappingSchema ??= MappingSchema.Default;
@@ -597,20 +600,20 @@ namespace LinqToDB.Internal.Conversion
 
 			if (ex != null)
 			{
-				ne = Expression.Lambda(ex.Item1, p);
+				ne = Expression.Lambda(ex.Value.Expression, p);
 
 				if (from.IsNullableType)
-					ex = Tuple.Create(
-						Expression.Condition(ExpressionHelper.Property(p, nameof(Nullable<>.HasValue)), ex.Item1, new DefaultValueExpression(mappingSchema, to)) as Expression,
-						ex.Item2);
+					ex = new(
+						Expression.Condition(ExpressionHelper.Property(p, nameof(Nullable<>.HasValue)), ex.Value.Expression, new DefaultValueExpression(mappingSchema, to)) as Expression,
+						ex.Value.IsLambda);
 				else if (from.IsClass)
-					ex = Tuple.Create(
-						Expression.Condition(Expression.NotEqual(p, Expression.Constant(null, from)), ex.Item1, new DefaultValueExpression(mappingSchema, to)) as Expression,
-						ex.Item2);
+					ex = new(
+						Expression.Condition(Expression.NotEqual(p, Expression.Constant(null, from)), ex.Value.Expression, new DefaultValueExpression(mappingSchema, to)) as Expression,
+						ex.Value.IsLambda);
 			}
 
 			if (ex != null)
-				return Tuple.Create(Expression.Lambda(ex.Item1, p), ne, ex.Item2);
+				return Tuple.Create(Expression.Lambda(ex.Value.Expression, p), ne, ex.Value.IsLambda);
 
 			if (to.IsNullableType)
 			{
