@@ -324,6 +324,7 @@ namespace Tests.Linq
 		public void SkipCount([DataSources(
 			TestProvName.AllSybase,
 			TestProvName.AllSQLite,
+			ProviderName.Ydb,
 			TestProvName.AllAccess)]
 			string context,
 			[Values] bool withParameters)
@@ -970,6 +971,7 @@ namespace Tests.Linq
 
 		// Sybase, Informix: doesn't support TOP/FIRST in subqueries
 		[Test]
+		[YdbCteAsSource]
 		public void GroupTakeAnyTest([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values] bool withParameters)
 		{
 			using (var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters)))

@@ -650,6 +650,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void GroupJoinAny1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -663,6 +664,7 @@ namespace Tests.Linq
 					select new { p.ParentID, n = t.Any() });
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void GroupJoinAny2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -676,6 +678,7 @@ namespace Tests.Linq
 					select new { p.ParentID, n = t.Select(t1 => t1.ChildID > 0).Any() });
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void GroupJoinAny3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -689,6 +692,7 @@ namespace Tests.Linq
 					select new { p.ParentID, n = c.Any() });
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void GroupJoinAny4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -700,6 +704,7 @@ namespace Tests.Linq
 					select new { p.ParentID, n = (from c in db.Child where p.ParentID == c.ParentID select c).Any() });
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void GroupJoinAny5([DataSources(TestProvName.AllClickHouse)] string context)
 		{

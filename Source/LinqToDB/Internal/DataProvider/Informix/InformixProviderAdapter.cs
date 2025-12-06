@@ -194,7 +194,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 				return _ifxAdapter;
 			}
-			else
+			else if (provider == InformixProvider.DB2)
 			{
 				if (_db2Adapter == null)
 				{
@@ -206,6 +206,8 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 				return _db2Adapter;
 			}
+
+			throw new InvalidOperationException($"Unsupported provider type: {provider}");
 		}
 
 		private static InformixProviderAdapter CreateIfxAdapter()

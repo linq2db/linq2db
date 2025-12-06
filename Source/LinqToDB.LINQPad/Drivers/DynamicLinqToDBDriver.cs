@@ -26,7 +26,7 @@ namespace LinqToDB.LINQPad;
 // 1. driver must be public or it will be missing from create connection dialog (existing connections will work)
 // 2. don't rename class or namespace as it is used by LINQPad as driver identifier. If renamed, old connections will disappear from UI
 /// <summary>
-/// Implements LINQPad driver for synamic (scaffolded from DB schema) model.
+/// Implements LINQPad driver for dynamic (scaffolded from DB schema) model.
 /// </summary>
 #pragma warning disable MA0048 // File name must match type name
 public sealed partial class LinqToDBDriver : DynamicDataContextDriver

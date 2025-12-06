@@ -154,7 +154,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		sealed class DataTypeBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var dataType = builder.GetObjectValue("data_type");
 				builder.AddFragment("data_type", dataType is SqlType ? string.Format(CultureInfo.InvariantCulture, "{0}", dataType) : ((Func<SqlType>)dataType)().ToString());
@@ -741,7 +741,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		sealed class DatePartBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var datepart = builder.GetValue<DateParts>("datepart");
 				builder.AddFragment("datepart", datepart.ToString());
@@ -2289,7 +2289,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		sealed class NextValueForBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				builder.AddFragment("sequence_name", builder.GetValue<string>("sequence_name"));
 			}
@@ -3267,7 +3267,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		sealed class CollateBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var collationName = builder.GetValue<string>("collation_name");
 				builder.AddFragment("collation_name", collationName);
@@ -3751,9 +3751,796 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#endregion
 
+		#region Vector Support
+
+		/// <summary>
+		/// A string with the name of the distance metric to use to calculate the distance between the two given vectors.
+		/// </summary>
+		[Sql.Enum]
+		public enum DistanceMetric
+		{
+			/// <summary>
+			/// Cosine (angular) distance.
+			/// <list type="table">
+			/// <listheader>
+			/// [0, 2]
+			/// </listheader>
+			/// <item>
+			/// <term>0</term>
+			/// <description>identical vectors</description>
+			/// </item>
+			/// <item>
+			/// <term>2</term>
+			/// <description>opposing vectors</description>
+			/// </item>
+			/// </list>
+			/// </summary>
+			Cosine,
+			/// <summary>
+			/// Euclidean distance.
+			/// <list type="table">
+			/// <listheader>
+			/// [0, +∞]
+			/// </listheader>
+			/// <item>
+			/// <term>0</term>
+			/// <description>identical vectors</description>
+			/// </item>
+			/// </list>
+			/// </summary>
+			Euclidean,
+			/// <summary>
+			/// Dot product-based indication of distance, obtained by calculating the negative dot product.
+			/// <list type="table">
+			/// <listheader>
+			/// [-∞, +∞]
+			/// </listheader>
+			/// <item>
+			/// <description>Smaller numbers indicate more similar vectors</description>
+			/// </item>
+			/// </list>
+			/// </summary>
+			Dot,
+		}
+
+		sealed class DistanceMetricBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				var distanceMetric = builder.GetValue<DistanceMetric>("distanceMetric");
+				builder.AddFragment("distanceMetric", distanceMetric switch
+				{
+					DistanceMetric.Cosine    => "'cosine'",
+					DistanceMetric.Euclidean => "'euclidean'",
+					DistanceMetric.Dot       => "'dot'",
+					_                        => throw new NotSupportedException($"Distance metric '{distanceMetric}' is not supported."),
+				});
+			}
+		}
+
+		/// <summary>
+		/// The <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-distance-transact-sql">VECTOR_DISTANCE</a> function calculates the distance between two vectors using a specified distance metric.
+		/// </summary>
+		/// <param name="distanceMetric">
+		/// A string with the name of the distance metric to use to calculate the distance between the two given vectors. The following distance metrics are supported:
+		/// <list type="table">
+		/// <item>
+		/// <term>cosine</term>
+		/// <description>Cosine distance</description>
+		/// </item>
+		/// <item>
+		/// <term>euclidean</term>
+		/// <description>Euclidean distance</description>
+		/// </item>
+		/// <item>
+		/// <term>dot</term>
+		/// <description>(Negative) Dot product</description>
+		/// </item>
+		/// </list>
+		/// </param>
+		/// <param name="vector1">An expression that evaluates to <b>vector</b> data type.</param>
+		/// <param name="vector2">An expression that evaluates to <b>vector</b> data type.</param>
+		/// <returns>
+		/// The function returns a scalar <b>float</b> value that represents the distance between the two vectors using the specified distance metric.
+		/// </returns>
+		/// <exception cref="NotImplementedException"></exception>
+		[Sql.Extension(ProviderName.SqlServer, "VECTOR_DISTANCE({distanceMetric}, {vector1}, {vector2})", ServerSideOnly=true, BuilderType = typeof(DistanceMetricBuilder))]
+		public static float VectorDistance([SqlQueryDependent] DistanceMetric distanceMetric, [ExprParameter] float[] vector1, [ExprParameter] float[] vector2)
+		{
+			throw new NotImplementedException();
+		}
+
+		/// <param name="vector1">An expression that evaluates to <b>vector</b> data type.</param>
+		extension([ExprParameter] float[] vector1)
+		{
+			/// <summary>
+			/// The <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-distance-transact-sql">VECTOR_DISTANCE</a> function calculates the distance between two vectors using a specified distance metric.
+			/// </summary>
+			/// <param name="distanceMetric">
+			/// A string with the name of the distance metric to use to calculate the distance between the two given vectors. The following distance metrics are supported:
+			/// <list type="table">
+			/// <item>
+			/// <term>cosine</term>
+			/// <description>Cosine distance</description>
+			/// </item>
+			/// <item>
+			/// <term>euclidean</term>
+			/// <description>Euclidean distance</description>
+			/// </item>
+			/// <item>
+			/// <term>dot</term>
+			/// <description>(Negative) Dot product</description>
+			/// </item>
+			/// </list>
+			/// </param>
+			/// <param name="vector2">An expression that evaluates to <b>vector</b> data type.</param>
+			/// <returns>
+			/// The function returns a scalar <b>float</b> value that represents the distance between the two vectors using the specified distance metric.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Extension(ProviderName.SqlServer, "VECTOR_DISTANCE({distanceMetric}, {vector1}, {vector2})", ServerSideOnly = true, BuilderType = typeof(DistanceMetricBuilder))]
+			public float VectorDistance([SqlQueryDependent] DistanceMetric distanceMetric, [ExprParameter] float[] vector2)
+			{
+				return VectorDistance(distanceMetric, vector1, vector2);
+			}
+
+			/// <summary>
+			/// The <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-distance-transact-sql">VECTOR_DISTANCE</a> function calculates the distance between two vectors using the <b>cosine</b> distance metric.
+			/// </summary>
+			/// <param name="vector2">An expression that evaluates to <b>vector</b> data type.</param>
+			/// <returns>
+			/// The function returns a scalar <b>float</b> value that represents the distance between the two vectors using the specified distance metric.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_DISTANCE('cosine', {0}, {1})", ServerSideOnly=true)]
+			public float CosineVectorDistance(float[] vector2)
+			{
+				return VectorDistance(DistanceMetric.Cosine, vector1, vector2);
+			}
+
+			/// <summary>
+			/// The <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-distance-transact-sql">VECTOR_DISTANCE</a> function calculates the distance between two vectors using the <b>Euclidean</b> distance metric.
+			/// </summary>
+			/// <param name="vector2">An expression that evaluates to <b>vector</b> data type.</param>
+			/// <returns>
+			/// The function returns a scalar <b>float</b> value that represents the distance between the two vectors using the specified distance metric.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_DISTANCE('euclidean', {0}, {1})", ServerSideOnly=true)]
+			public float EuclideanVectorDistance(float[] vector2)
+			{
+				return VectorDistance(DistanceMetric.Euclidean, vector1, vector2);
+			}
+
+			/// <summary>
+			/// The <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-distance-transact-sql">VECTOR_DISTANCE</a> function calculates the distance between two vectors using the <b>dot product-based indication of</b> distance metric.
+			/// </summary>
+			/// <param name="vector2">An expression that evaluates to <b>vector</b> data type.</param>
+			/// <returns>
+			/// The function returns a scalar <b>float</b> value that represents the distance between the two vectors using the specified distance metric.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_DISTANCE('dot', {0}, {1})", ServerSideOnly=true)]
+			public float DotVectorDistance(float[] vector2)
+			{
+				return VectorDistance(DistanceMetric.Dot, vector1, vector2);
+			}
+		}
+
+		/// <summary>
+		/// The <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-distance-transact-sql">VECTOR_DISTANCE</a> function calculates the distance between two vectors using a specified distance metric.
+		/// </summary>
+		/// <param name="distanceMetric">
+		/// A string with the name of the distance metric to use to calculate the distance between the two given vectors. The following distance metrics are supported:
+		/// <list type="table">
+		/// <item>
+		/// <term>cosine</term>
+		/// <description>Cosine distance</description>
+		/// </item>
+		/// <item>
+		/// <term>euclidean</term>
+		/// <description>Euclidean distance</description>
+		/// </item>
+		/// <item>
+		/// <term>dot</term>
+		/// <description>(Negative) Dot product</description>
+		/// </item>
+		/// </list>
+		/// </param>
+		/// <param name="vector1">An expression that evaluates to <b>vector</b> data type.</param>
+		/// <param name="vector2">An expression that evaluates to <b>vector</b> data type.</param>
+		/// <returns>
+		/// The function returns a scalar <b>float</b> value that represents the distance between the two vectors using the specified distance metric.
+		/// </returns>
+		/// <exception cref="NotImplementedException"></exception>
+		[Sql.Extension(ProviderName.SqlServer, "VECTOR_DISTANCE({distanceMetric}, {vector1}, {vector2})", ServerSideOnly = true, BuilderType = typeof(DistanceMetricBuilder))]
+		public static float VectorDistance<T>([SqlQueryDependent] DistanceMetric distanceMetric, [ExprParameter] T vector1, [ExprParameter] T vector2)
+			where T : unmanaged
+		{
+			throw new NotImplementedException();
+		}
+
+		/// <param name="vector1">An expression that evaluates to <b>vector</b> data type.</param>
+		extension<T>([ExprParameter] T vector1) where T : unmanaged
+		{
+			/// <summary>
+			/// The <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-distance-transact-sql">VECTOR_DISTANCE</a> function calculates the distance between two vectors using a specified distance metric.
+			/// </summary>
+			/// <param name="distanceMetric">
+			/// A string with the name of the distance metric to use to calculate the distance between the two given vectors. The following distance metrics are supported:
+			/// <list type="table">
+			/// <item>
+			/// <term>cosine</term>
+			/// <description>Cosine distance</description>
+			/// </item>
+			/// <item>
+			/// <term>euclidean</term>
+			/// <description>Euclidean distance</description>
+			/// </item>
+			/// <item>
+			/// <term>dot</term>
+			/// <description>(Negative) Dot product</description>
+			/// </item>
+			/// </list>
+			/// </param>
+			/// <param name="vector2">An expression that evaluates to <b>vector</b> data type.</param>
+			/// <returns>
+			/// The function returns a scalar <b>float</b> value that represents the distance between the two vectors using the specified distance metric.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Extension(ProviderName.SqlServer, "VECTOR_DISTANCE({distanceMetric}, {vector1}, {vector2})", ServerSideOnly = true, BuilderType = typeof(DistanceMetricBuilder))]
+			public float VectorDistance([SqlQueryDependent] DistanceMetric distanceMetric, [ExprParameter] T vector2)
+			{
+				return VectorDistance(distanceMetric, vector1, vector2);
+			}
+
+			/// <summary>
+			/// The <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-distance-transact-sql">VECTOR_DISTANCE</a> function calculates the distance between two vectors using the <b>cosine</b> distance metric.
+			/// </summary>
+			/// <param name="vector2">An expression that evaluates to <b>vector</b> data type.</param>
+			/// <returns>
+			/// The function returns a scalar <b>float</b> value that represents the distance between the two vectors using the specified distance metric.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_DISTANCE('cosine', {0}, {1})", ServerSideOnly=true)]
+			public float CosineVectorDistance(T vector2)
+			{
+				return VectorDistance(DistanceMetric.Cosine, vector1, vector2);
+			}
+
+			/// <summary>
+			/// The <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-distance-transact-sql">VECTOR_DISTANCE</a> function calculates the distance between two vectors using the <b>Euclidean</b> distance metric.
+			/// </summary>
+			/// <param name="vector2">An expression that evaluates to <b>vector</b> data type.</param>
+			/// <returns>
+			/// The function returns a scalar <b>float</b> value that represents the distance between the two vectors using the specified distance metric.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_DISTANCE('euclidean', {0}, {1})", ServerSideOnly = true)]
+			public float EuclideanVectorDistance(T vector2)
+			{
+				return VectorDistance(DistanceMetric.Euclidean, vector1, vector2);
+			}
+
+			/// <summary>
+			/// The <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-distance-transact-sql">VECTOR_DISTANCE</a> function calculates the distance between two vectors using the <b>dot product-based indication of</b> distance metric.
+			/// </summary>
+			/// <param name="vector2">An expression that evaluates to <b>vector</b> data type.</param>
+			/// <returns>
+			/// The function returns a scalar <b>float</b> value that represents the distance between the two vectors using the specified distance metric.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_DISTANCE('dot', {0}, {1})", ServerSideOnly = true)]
+			public float DotVectorDistance(T vector2)
+			{
+				return VectorDistance(DistanceMetric.Dot, vector1, vector2);
+			}
+		}
+
+		/// <summary>
+		/// A string with the name of the norm type to use to calculate the norm of the given vector.
+		/// </summary>
+		[Sql.Enum]
+		public enum NormType
+		{
+			/// <summary>
+			///  The 1-norm, which is the sum of the absolute values of the vector components.
+			/// </summary>
+			Norm1,
+			/// <summary>
+			/// The 2-norm, also known as the Euclidean Norm, which is the square root of the sum of the squares of the vector components.
+			/// </summary>
+			Norm2,
+			/// <summary>
+			/// The infinity norm, which is the maximum of the absolute values of the vector components.
+			/// </summary>
+			NormInf
+		}
+
+		sealed class NormTypeBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				var normType = builder.GetValue<NormType>("normType");
+				builder.AddFragment("normType", normType switch
+				{
+					NormType.Norm1   => "'norm1'",
+					NormType.Norm2   => "'norm2'",
+					NormType.NormInf => "'norminf'",
+					_                        => throw new NotSupportedException($"Norm type '{normType}' is not supported."),
+				});
+			}
+		}
+
+		/// <summary>
+		/// An expression specifying the name of the database property to return.
+		/// </summary>
+		[Sql.Enum]
+		public enum VectorPropertyType
+		{
+			/// <summary>
+			/// <b>Integer</b> value with dimension count.
+			/// </summary>
+			Dimensions,
+			/// <summary>
+			/// <b>sysname</b> with the name of the data type.
+			/// </summary>
+			BaseType
+		}
+
+		sealed class VectorPropertyBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqlExtensionBuilder builder)
+			{
+				var property = builder.GetValue<VectorPropertyType>("property");
+				builder.AddFragment("property", property switch
+				{
+					VectorPropertyType.Dimensions => "'Dimensions'",
+					VectorPropertyType.BaseType   => "'BaseType'",
+					_                             => throw new NotSupportedException($"Vector property type '{property}' is not supported."),
+				});
+			}
+		}
+
+		/// <param name="vector">An expression that evaluates to vector data type.</param>
+		extension([ExprParameter] float[] vector)
+		{
+			/// <summary>
+			/// Use <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-norm-transact-sql">VECTOR_NORM</a> to take a vector as an input and return the norm of the vector
+			/// (which is a measure of its length or magnitude) in a given norm type.
+			/// </summary>
+			/// <param name="normType">
+			/// A string with the name of the norm type to use to calculate the norm of the given vector. The following norm types are supported:
+			/// <list type="table">
+			/// <item>
+			/// <term>norm1</term>
+			/// <description>The 1-norm, which is the sum of the absolute values of the vector components.</description>
+			/// </item>
+			/// <item>
+			/// <term>norm2</term>
+			/// <description>The 2-norm, also known as the Euclidean Norm, which is the square root of the sum of the squares of the vector components.</description>
+			/// </item>
+			/// <item>
+			/// <term>norminf</term>
+			/// <description>The infinity norm, which is the maximum of the absolute values of the vector components.</description>
+			/// </item>
+			/// </list>
+			/// </param>
+			/// <returns>
+			/// The function returns a <b>float</b> value that represents the norm of the vector using the specified norm type.
+			/// An error is returned if <c>norm_type</c> isn't a valid norm type and if the vector isn't of the <a href="https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type">vector data type</a>.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Extension(ProviderName.SqlServer, "VECTOR_NORM({vector}, {normType})", ServerSideOnly = true, BuilderType = typeof(NormTypeBuilder))]
+			public float VectorNorm([SqlQueryDependent] NormType normType)
+			{
+				throw new NotImplementedException();
+			}
+
+			/// <summary>
+			/// Use <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-norm-transact-sql">VECTOR_NORM</a> to take a vector as an input and return the norm of the vector
+			/// (which is a measure of its length or magnitude) in the <b>norm1</b> type.
+			/// </summary>
+			/// <returns>
+			/// The function returns a <b>float</b> value that represents the norm of the vector using the specified norm type.
+			/// An error is returned if <c>norm_type</c> isn't a valid norm type and if the vector isn't of the <a href="https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type">vector data type</a>.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_NORM({0}, 'norm1')", ServerSideOnly = true)]
+			public float VectorNorm1()
+			{
+				return vector.VectorNorm(NormType.Norm1);
+			}
+
+			/// <summary>
+			/// Use <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-norm-transact-sql">VECTOR_NORM</a> to take a vector as an input and return the norm of the vector
+			/// (which is a measure of its length or magnitude) in the <b>norm2</b> type.
+			/// </summary>
+			/// <returns>
+			/// The function returns a <b>float</b> value that represents the norm of the vector using the specified norm type.
+			/// An error is returned if <c>norm_type</c> isn't a valid norm type and if the vector isn't of the <a href="https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type">vector data type</a>.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_NORM({0}, 'norm2')", ServerSideOnly = true)]
+			public float VectorNorm2()
+			{
+				return vector.VectorNorm(NormType.Norm2);
+			}
+
+			/// <summary>
+			/// Use <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-norm-transact-sql">VECTOR_NORM</a> to take a vector as an input and return the norm of the vector
+			/// (which is a measure of its length or magnitude) in the <b>norminf</b> type.
+			/// </summary>
+			/// <returns>
+			/// The function returns a <b>float</b> value that represents the norm of the vector using the specified norm type.
+			/// An error is returned if <c>norm_type</c> isn't a valid norm type and if the vector isn't of the <a href="https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type">vector data type</a>.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_NORM({0}, 'norminf')", ServerSideOnly = true)]
+			public float VectorNormInf()
+			{
+				return vector.VectorNorm(NormType.NormInf);
+			}
+
+			/// <summary>
+			/// Use <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-normalize-transact-sql">VECTOR_NORMALIZE</a> to take a vector as an input and return the normalized vector
+			/// scaled to have a length of 1 in a given norm type.
+			/// </summary>
+			/// <param name="normType">
+			/// A string with the name of the norm type to use to calculate the norm of the given vector. The following norm types are supported:
+			/// <list type="table">
+			/// <item>
+			/// <term>norm1</term>
+			/// <description>The 1-norm, which is the sum of the absolute values of the vector components.</description>
+			/// </item>
+			/// <item>
+			/// <term>norm2</term>
+			/// <description>The 2-norm, also known as the Euclidean Norm, which is the square root of the sum of the squares of the vector components.</description>
+			/// </item>
+			/// <item>
+			/// <term>norminf</term>
+			/// <description>The infinity norm, which is the maximum of the absolute values of the vector components.</description>
+			/// </item>
+			/// </list>
+			/// </param>
+			/// <returns>
+			/// The result is a vector with the same direction as the input vector but with a length of 1 according to the given norm.
+			/// If the input is <c>NULL</c>, the returned result is also <c>NULL</c>.
+			/// An error is returned if <c>norm_type</c> isn't a valid norm type and if the vector isn't of the <a href="https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type">vector data type</a>.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Extension(ProviderName.SqlServer, "VECTOR_NORMALIZE({vector}, {normType})", ServerSideOnly = true, BuilderType = typeof(NormTypeBuilder))]
+			public float[] VectorNormalize([SqlQueryDependent] NormType normType)
+			{
+				throw new NotImplementedException();
+			}
+
+			/// <summary>
+			/// Use <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-normalize-transact-sql">VECTOR_NORMALIZE</a> to take a vector as an input and return the normalized vector
+			/// scaled to have a length of 1 in the <b>norm1</b> type.
+			/// </summary>
+			/// <returns>
+			/// The result is a vector with the same direction as the input vector but with a length of 1 according to the given norm.
+			/// If the input is <c>NULL</c>, the returned result is also <c>NULL</c>.
+			/// An error is returned if <c>norm_type</c> isn't a valid norm type and if the vector isn't of the <a href="https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type">vector data type</a>.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_NORMALIZE({0}, 'norm1')", ServerSideOnly = true)]
+			public float[] VectorNormalize1()
+			{
+				return vector.VectorNormalize(NormType.Norm1);
+			}
+
+			/// <summary>
+			/// Use <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-normalize-transact-sql">VECTOR_NORMALIZE</a> to take a vector as an input and return the normalized vector
+			/// scaled to have a length of 1 in the <b>norm2</b> type.
+			/// </summary>
+			/// <returns>
+			/// The result is a vector with the same direction as the input vector but with a length of 1 according to the given norm.
+			/// If the input is <c>NULL</c>, the returned result is also <c>NULL</c>.
+			/// An error is returned if <c>norm_type</c> isn't a valid norm type and if the vector isn't of the <a href="https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type">vector data type</a>.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_NORMALIZE({0}, 'norm2')", ServerSideOnly = true)]
+			public float[] VectorNormalize2()
+			{
+				return vector.VectorNormalize(NormType.Norm2);
+			}
+
+			/// <summary>
+			/// Use <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-normalize-transact-sql">VECTOR_NORMALIZE</a> to take a vector as an input and return the normalized vector
+			/// scaled to have a length of 1 in the <b>norminf</b> type.
+			/// </summary>
+			/// <returns>
+			/// The result is a vector with the same direction as the input vector but with a length of 1 according to the given norm.
+			/// If the input is <c>NULL</c>, the returned result is also <c>NULL</c>.
+			/// An error is returned if <c>norm_type</c> isn't a valid norm type and if the vector isn't of the <a href="https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type">vector data type</a>.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_NORMALIZE({0}, 'norminf')", ServerSideOnly = true)]
+			public float[] VectorNormalizeInf()
+			{
+				return vector.VectorNormalize(NormType.NormInf);
+			}
+
+			/// <summary>
+			/// The <seealso href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vectorproperty-transact-sql">VECTORPROPERTY</seealso> function returns specific properties of a given vector.
+			/// The function requires two arguments: the vector itself and the property to be retrieved.
+			/// </summary>
+			/// <param name="property">
+			/// An expression specifying the name of the database property to return.
+			/// <list type="table">
+			/// <item>
+			/// <term>Dimensions</term>
+			/// <description>Return vector's dimensions count.</description>
+			/// </item>
+			/// <item>
+			/// <term>BaseType</term>
+			/// <description>Return vector's base type.</description>
+			/// </item>
+			/// </list>
+			/// </param>
+			/// <returns>
+			/// The function returns the specific properties of a given vector based on the property selected. For example:
+			/// <list type="">
+			/// <item>If the property is <c>Dimensions</c>, the function returns an <b>integer</b> value representing the dimension count of the vector.</item>
+			/// <item>If the property is <c>BaseType</c>, the function returns the name of the data type(<b>sysname</b>).</item>
+			/// </list>
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Extension(ProviderName.SqlServer, "VECTORPROPERTY({vector}, {property})", ServerSideOnly = true, BuilderType = typeof(VectorPropertyBuilder))]
+			public string VectorProperty([SqlQueryDependent] VectorPropertyType property)
+			{
+				throw new NotImplementedException();
+			}
+
+			/// <summary>
+			/// The <seealso href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vectorproperty-transact-sql">VECTORPROPERTY</seealso> function returns Dimensions of a given vector.
+			/// The function requires two arguments: the vector itself and the property to be retrieved.
+			/// </summary>
+			/// <returns><b>Integer</b> value with dimension count.</returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTORPROPERTY({0}, 'Dimensions')", ServerSideOnly = true)]
+			public int VectorDimensionsProperty()
+			{
+				throw new NotImplementedException();
+			}
+
+			/// <summary>
+			/// The <seealso href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vectorproperty-transact-sql">VECTORPROPERTY</seealso> function returns BaseType of a given vector.
+			/// The function requires two arguments: the vector itself and the property to be retrieved.
+			/// </summary>
+			/// <returns><b>sysname</b> with the name of the data type.</returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTORPROPERTY({0}, 'BaseType')", ServerSideOnly = true)]
+			public string VectorBaseTypeProperty()
+			{
+				throw new NotImplementedException();
+			}
+		}
+
+		/// <param name="vector">An expression that evaluates to vector data type.</param>
+		extension<T>([ExprParameter] T vector) where T : unmanaged
+		{
+			/// <summary>
+			/// Use <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-norm-transact-sql">VECTOR_NORM</a> to take a vector as an input and return the norm of the vector
+			/// (which is a measure of its length or magnitude) in a given norm type.
+			/// </summary>
+			/// <param name="normType">
+			/// A string with the name of the norm type to use to calculate the norm of the given vector. The following norm types are supported:
+			/// <list type="table">
+			/// <item>
+			/// <term>norm1</term>
+			/// <description>The 1-norm, which is the sum of the absolute values of the vector components.</description>
+			/// </item>
+			/// <item>
+			/// <term>norm2</term>
+			/// <description>The 2-norm, also known as the Euclidean Norm, which is the square root of the sum of the squares of the vector components.</description>
+			/// </item>
+			/// <item>
+			/// <term>norminf</term>
+			/// <description>The infinity norm, which is the maximum of the absolute values of the vector components.</description>
+			/// </item>
+			/// </list>
+			/// </param>
+			/// <returns>
+			/// The function returns a <b>float</b> value that represents the norm of the vector using the specified norm type.
+			/// An error is returned if <c>norm_type</c> isn't a valid norm type and if the vector isn't of the <a href="https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type">vector data type</a>.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Extension(ProviderName.SqlServer, "VECTOR_NORM({vector}, {normType})", ServerSideOnly = true, BuilderType = typeof(NormTypeBuilder))]
+			public float VectorNorm([SqlQueryDependent] NormType normType)
+			{
+				throw new NotImplementedException();
+			}
+
+			/// <summary>
+			/// Use <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-norm-transact-sql">VECTOR_NORM</a> to take a vector as an input and return the norm of the vector
+			/// (which is a measure of its length or magnitude) in the <b>norm1</b> type.
+			/// </summary>
+			/// <returns>
+			/// The function returns a <b>float</b> value that represents the norm of the vector using the specified norm type.
+			/// An error is returned if <c>norm_type</c> isn't a valid norm type and if the vector isn't of the <a href="https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type">vector data type</a>.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_NORM({0}, 'norm1')", ServerSideOnly = true)]
+			public float VectorNorm1()
+			{
+				return vector.VectorNorm(NormType.Norm1);
+			}
+
+			/// <summary>
+			/// Use <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-norm-transact-sql">VECTOR_NORM</a> to take a vector as an input and return the norm of the vector
+			/// (which is a measure of its length or magnitude) in the <b>norm2</b> type.
+			/// </summary>
+			/// <returns>
+			/// The function returns a <b>float</b> value that represents the norm of the vector using the specified norm type.
+			/// An error is returned if <c>norm_type</c> isn't a valid norm type and if the vector isn't of the <a href="https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type">vector data type</a>.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_NORM({0}, 'norm2')", ServerSideOnly = true)]
+			public float VectorNorm2()
+			{
+				return vector.VectorNorm(NormType.Norm2);
+			}
+
+			/// <summary>
+			/// Use <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-norm-transact-sql">VECTOR_NORM</a> to take a vector as an input and return the norm of the vector
+			/// (which is a measure of its length or magnitude) in the <b>norminf</b> type.
+			/// </summary>
+			/// <returns>
+			/// The function returns a <b>float</b> value that represents the norm of the vector using the specified norm type.
+			/// An error is returned if <c>norm_type</c> isn't a valid norm type and if the vector isn't of the <a href="https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type">vector data type</a>.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_NORM({0}, 'norminf')", ServerSideOnly = true)]
+			public float VectorNormInf()
+			{
+				return vector.VectorNorm(NormType.NormInf);
+			}
+
+			/// <summary>
+			/// Use <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-normalize-transact-sql">VECTOR_NORMALIZE</a> to take a vector as an input and return the normalized vector
+			/// scaled to have a length of 1 in a given norm type.
+			/// </summary>
+			/// <param name="normType">
+			/// A string with the name of the norm type to use to calculate the norm of the given vector. The following norm types are supported:
+			/// <list type="table">
+			/// <item>
+			/// <term>norm1</term>
+			/// <description>The 1-norm, which is the sum of the absolute values of the vector components.</description>
+			/// </item>
+			/// <item>
+			/// <term>norm2</term>
+			/// <description>The 2-norm, also known as the Euclidean Norm, which is the square root of the sum of the squares of the vector components.</description>
+			/// </item>
+			/// <item>
+			/// <term>norminf</term>
+			/// <description>The infinity norm, which is the maximum of the absolute values of the vector components.</description>
+			/// </item>
+			/// </list>
+			/// </param>
+			/// <returns>
+			/// The result is a vector with the same direction as the input vector but with a length of 1 according to the given norm.
+			/// If the input is <c>NULL</c>, the returned result is also <c>NULL</c>.
+			/// An error is returned if <c>norm_type</c> isn't a valid norm type and if the vector isn't of the <a href="https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type">vector data type</a>.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Extension(ProviderName.SqlServer, "VECTOR_NORMALIZE({vector}, {normType})", ServerSideOnly = true, BuilderType = typeof(NormTypeBuilder))]
+			public T VectorNormalize([SqlQueryDependent] NormType normType)
+			{
+				throw new NotImplementedException();
+			}
+
+			/// <summary>
+			/// Use <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-normalize-transact-sql">VECTOR_NORMALIZE</a> to take a vector as an input and return the normalized vector
+			/// scaled to have a length of 1 in the <b>norm1</b> type.
+			/// </summary>
+			/// <returns>
+			/// The result is a vector with the same direction as the input vector but with a length of 1 according to the given norm.
+			/// If the input is <c>NULL</c>, the returned result is also <c>NULL</c>.
+			/// An error is returned if <c>norm_type</c> isn't a valid norm type and if the vector isn't of the <a href="https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type">vector data type</a>.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_NORMALIZE({0}, 'norm1')", ServerSideOnly = true)]
+			public T VectorNormalize1()
+			{
+				return vector.VectorNormalize(NormType.Norm1);
+			}
+
+			/// <summary>
+			/// Use <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-normalize-transact-sql">VECTOR_NORMALIZE</a> to take a vector as an input and return the normalized vector
+			/// scaled to have a length of 1 in the <b>norm2</b> type.
+			/// </summary>
+			/// <returns>
+			/// The result is a vector with the same direction as the input vector but with a length of 1 according to the given norm.
+			/// If the input is <c>NULL</c>, the returned result is also <c>NULL</c>.
+			/// An error is returned if <c>norm_type</c> isn't a valid norm type and if the vector isn't of the <a href="https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type">vector data type</a>.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_NORMALIZE({0}, 'norm2')", ServerSideOnly = true)]
+			public T VectorNormalize2()
+			{
+				return vector.VectorNormalize(NormType.Norm2);
+			}
+
+			/// <summary>
+			/// Use <a href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vector-normalize-transact-sql">VECTOR_NORMALIZE</a> to take a vector as an input and return the normalized vector
+			/// scaled to have a length of 1 in the <b>norminf</b> type.
+			/// </summary>
+			/// <returns>
+			/// The result is a vector with the same direction as the input vector but with a length of 1 according to the given norm.
+			/// If the input is <c>NULL</c>, the returned result is also <c>NULL</c>.
+			/// An error is returned if <c>norm_type</c> isn't a valid norm type and if the vector isn't of the <a href="https://learn.microsoft.com/en-us/sql/t-sql/data-types/vector-data-type">vector data type</a>.
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTOR_NORMALIZE({0}, 'norminf')", ServerSideOnly = true)]
+			public T VectorNormalizeInf()
+			{
+				return vector.VectorNormalize(NormType.NormInf);
+			}
+
+			/// <summary>
+			/// The <seealso href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vectorproperty-transact-sql">VECTORPROPERTY</seealso> function returns specific properties of a given vector.
+			/// The function requires two arguments: the vector itself and the property to be retrieved.
+			/// </summary>
+			/// <param name="property">
+			/// An expression specifying the name of the database property to return.
+			/// <list type="table">
+			/// <item>
+			/// <term>Dimensions</term>
+			/// <description>Return vector's dimensions count.</description>
+			/// </item>
+			/// <item>
+			/// <term>BaseType</term>
+			/// <description>Return vector's base type.</description>
+			/// </item>
+			/// </list>
+			/// </param>
+			/// <returns>
+			/// The function returns the specific properties of a given vector based on the property selected. For example:
+			/// <list type="">
+			/// <item>If the property is <c>Dimensions</c>, the function returns an <b>integer</b> value representing the dimension count of the vector.</item>
+			/// <item>If the property is <c>BaseType</c>, the function returns the name of the data type(<b>sysname</b>).</item>
+			/// </list>
+			/// </returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Extension(ProviderName.SqlServer, "VECTORPROPERTY({vector}, {property})", ServerSideOnly = true, BuilderType = typeof(VectorPropertyBuilder))]
+			public string VectorProperty([SqlQueryDependent] VectorPropertyType property)
+			{
+				throw new NotImplementedException();
+			}
+
+			/// <summary>
+			/// The <seealso href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vectorproperty-transact-sql">VECTORPROPERTY</seealso> function returns Dimensions of a given vector.
+			/// The function requires two arguments: the vector itself and the property to be retrieved.
+			/// </summary>
+			/// <returns><b>Integer</b> value with dimension count.</returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTORPROPERTY({0}, 'Dimensions')", ServerSideOnly = true)]
+			public int VectorDimensionsProperty()
+			{
+				throw new NotImplementedException();
+			}
+
+			/// <summary>
+			/// The <seealso href="https://learn.microsoft.com/en-us/sql/t-sql/functions/vectorproperty-transact-sql">VECTORPROPERTY</seealso> function returns BaseType of a given vector.
+			/// The function requires two arguments: the vector itself and the property to be retrieved.
+			/// </summary>
+			/// <returns><b>sysname</b> with the name of the data type.</returns>
+			/// <exception cref="NotImplementedException"></exception>
+			[Sql.Expression(ProviderName.SqlServer, "VECTORPROPERTY({0}, 'BaseType')", ServerSideOnly = true)]
+			public string VectorBaseTypeProperty()
+			{
+				throw new NotImplementedException();
+			}
+		}
+
+		#endregion
+
 		sealed class PropertyBuilder<T> : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var method = (MethodInfo)builder.Member;
 				var props  = method.GetParameters();

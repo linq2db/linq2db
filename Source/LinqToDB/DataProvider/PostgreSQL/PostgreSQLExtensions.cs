@@ -20,7 +20,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		sealed class ApplyAggregateModifier : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var modifier = builder.GetValue<Sql.AggregateModifier>("modifier");
 				switch (modifier)

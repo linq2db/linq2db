@@ -1096,12 +1096,9 @@ FROM
 					Details = x.Details.Select(d => d.DetailValue)
 				});
 
-				var act1 = () => query.FirstOrDefault(x => x.Id1 == 1);
-				act1.ShouldNotThrow();
-				var act2 = () => query.First(x => x.Id1          == 1);
-				act2.ShouldNotThrow();
-				var act3 = () => query.Single(x => x.Id1         == 1);
-				act3.ShouldNotThrow();
+				query.FirstOrDefault(x => x.Id1 == 1);
+				query.First(x => x.Id1          == 1);
+				query.Single(x => x.Id1         == 1);
 			}
 		}
 
@@ -1120,12 +1117,9 @@ FROM
 					Details = x.Details.Select(d => d.DetailValue)
 				});
 
-				var act1 = () => query.FirstOrDefaultAsync(x => x.Id1 == 1);
-				await act1.ShouldNotThrowAsync();
-				var act2 = () => query.FirstAsync(x => x.Id1          == 1);
-				await act2.ShouldNotThrowAsync();
-				var act3 = () => query.SingleAsync(x => x.Id1         == 1);
-				await act3.ShouldNotThrowAsync();
+				_ = await query.FirstOrDefaultAsync(x => x.Id1 == 1);
+				_ = await query.FirstAsync(x => x.Id1          == 1);
+				_ = await query.SingleAsync(x => x.Id1         == 1);
 			}
 		}
 

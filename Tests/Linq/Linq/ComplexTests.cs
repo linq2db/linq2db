@@ -215,6 +215,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void Contains6([DataSources] string context)
 		{

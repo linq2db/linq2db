@@ -32,7 +32,7 @@ namespace LinqToDB
 
 		public interface IExtensionCallBuilder
 		{
-			void Build(ISqExtensionBuilder builder);
+			void Build(ISqlExtensionBuilder builder);
 		}
 
 		public interface IQueryableContainer
@@ -41,7 +41,7 @@ namespace LinqToDB
 			IQueryable Query { get; }
 		}
 
-		public interface ISqExtensionBuilder
+		public interface ISqlExtensionBuilder
 		{
 			string?         Configuration    { get; }
 			object?         BuilderValue     { get; }
@@ -218,7 +218,7 @@ namespace LinqToDB
 
 			public string? TokenName { get; set; }
 
-			protected class ExtensionBuilder<TContext>: ISqExtensionBuilder
+			protected class ExtensionBuilder<TContext>: ISqlExtensionBuilder
 			{
 				readonly TContext              _context;
 				readonly ConvertFunc<TContext> _convert;
@@ -962,7 +962,6 @@ namespace LinqToDB
 						break;
 					}
 				}
-
 
 				//TODO: Precedence calculation
 				var res = BuildSqlExpression(dataContext.MappingSchema, query, mainExtension, mainExtension.SystemType,

@@ -544,7 +544,7 @@ namespace Tests.xUpdate
 
 		#region Issue 2815
 
-		[ActiveIssue]
+		[ActiveIssue(Configurations = [ TestProvName.AllSqlServer, TestProvName.AllSQLite, ProviderName.SqlCe, TestProvName.AllPostgreSQL, TestProvName.AllOracle11, TestProvName.AllMySql, TestProvName.AllClickHouse, TestProvName.AllAccess ])]
 		[Obsolete("Remove test after API removed")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
 		public void Issue2815Test1([DataSources(false)] string context)

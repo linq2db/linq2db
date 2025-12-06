@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -731,6 +732,36 @@ namespace Tests.Infrastructure
 			Assert.Throws<LinqToDBException>(
 				() => { using (db.UseOptions(o => o.WithOptions<ConnectionOptions>(co => co.WithOnEntityDescriptorCreated((schema, descriptor) => { })))) { } },
 				"OnEntityDescriptorCreated cannot be changed.");
+		}
+
+		[Test]
+		public void TestProviderAutoDetect([DataSources(false)] string context)
+		{
+			var connectionString = GetConnectionString(context);
+
+			// .UseConfiguration(context)
+			// used to improve detection as using only connection string and assembly sniffing
+			// doesn't work good for some providers
+			using var db = new DataConnection(
+				context switch
+				{
+					var ctx when ctx.IsAnyOf(TestProvName.AllAccess)     => new DataOptions().UseConfiguration(context).UseAccess      (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllClickHouse) => new DataOptions().UseConfiguration(context).UseClickHouse  (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllDB2)        => new DataOptions().UseConfiguration(context).UseDB2         (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllFirebird)   => new DataOptions().UseConfiguration(context).UseFirebird    (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllInformix)   => new DataOptions().UseConfiguration(context).UseInformix    (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllMySql)      => new DataOptions().UseConfiguration(context).UseMySql       (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllOracle)     => new DataOptions().UseConfiguration(context).UseOracle      (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllPostgreSQL) => new DataOptions().UseConfiguration(context).UsePostgreSQL  (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllSapHana)    => new DataOptions().UseConfiguration(context).UseSapHana     (connectionString),
+					var ctx when ctx.IsAnyOf(ProviderName.SqlCe)         => new DataOptions().UseConfiguration(context).UseSqlCe       (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllSQLite)     => new DataOptions().UseConfiguration(context).UseSQLite      (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllSqlServer)  => new DataOptions().UseConfiguration(context).UseSqlServer   (connectionString),
+					var ctx when ctx.IsAnyOf(TestProvName.AllSybase)     => new DataOptions().UseConfiguration(context).UseAse         (connectionString),
+					_                                                    => throw new NotImplementedException($"Missing case for provider {context}")
+				});
+
+			db.GetTable<Person>().ToArray();
 		}
 	}
 }

@@ -24,7 +24,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 			SetDataType(typeof(string),  new SqlDataType(DataType.NVarChar, typeof(string)));
 			SetDataType(typeof(decimal), new SqlDataType(DataType.Decimal, typeof(decimal), 29, 10));
-			SetDataType(typeof(float[]), new SqlDataType(new DbDataType(typeof(float[]), DataType.Array | DataType.Single)));
+			SetDataType(typeof(float[]), new SqlDataType(new DbDataType(typeof(float[]), DataType.Vector32)));
 
 			// both providers doesn't support BitArray directly and map bit fields to ulong by default
 			SetConvertExpression<BitArray?, DataParameter>(ba => new DataParameter(null, ba == null ? null : GetBits(ba), DataType.UInt64), false);

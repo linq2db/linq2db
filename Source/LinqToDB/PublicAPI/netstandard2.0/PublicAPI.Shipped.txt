@@ -28,3 +28,17 @@ System.Data.Linq.Binary.Binary(byte[]? value) -> void
 System.Data.Linq.Binary.Equals(System.Data.Linq.Binary? other) -> bool
 System.Data.Linq.Binary.Length.get -> int
 System.Data.Linq.Binary.ToArray() -> byte[]!
+LinqToDB.CreateTempTableOptions.Deconstruct(out string? TableName, out string? DatabaseName, out string? SchemaName, out string? ServerName, out string? StatementHeader, out string? StatementFooter, out LinqToDB.TableOptions TableOptions, out LinqToDB.SqlQuery.DefaultNullable DefaultNullable) -> void
+LinqToDB.CreateTempTableOptions.Equals(LinqToDB.CreateTempTableOptions? other) -> bool
+LinqToDB.DataProvider.Ydb.YdbOptions.Deconstruct(out LinqToDB.Data.BulkCopyType BulkCopyType, out bool UseParametrizedDecimal) -> void
+override LinqToDB.CreateTempTableOptions.<Clone>$() -> LinqToDB.CreateTableOptions!
+override LinqToDB.CreateTempTableOptions.GetHashCode() -> int
+override LinqToDB.DataProvider.Ydb.YdbOptions.<Clone>$() -> LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Ydb.YdbOptions!>!
+override LinqToDB.DataProvider.Ydb.YdbOptions.ToString() -> string!
+override sealed LinqToDB.CreateTempTableOptions.Equals(LinqToDB.CreateTableOptions? other) -> bool
+override sealed LinqToDB.DataProvider.Ydb.YdbOptions.Equals(LinqToDB.Internal.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Ydb.YdbOptions!>? other) -> bool
+static LinqToDB.CreateTempTableOptions.operator !=(LinqToDB.CreateTempTableOptions? left, LinqToDB.CreateTempTableOptions? right) -> bool
+static LinqToDB.CreateTempTableOptions.operator ==(LinqToDB.CreateTempTableOptions? left, LinqToDB.CreateTempTableOptions? right) -> bool
+static LinqToDB.DataProvider.Ydb.YdbOptions.operator !=(LinqToDB.DataProvider.Ydb.YdbOptions? left, LinqToDB.DataProvider.Ydb.YdbOptions? right) -> bool
+static LinqToDB.DataProvider.Ydb.YdbOptions.operator ==(LinqToDB.DataProvider.Ydb.YdbOptions? left, LinqToDB.DataProvider.Ydb.YdbOptions? right) -> bool
+override LinqToDB.CreateTempTableOptions.ToString() -> string!

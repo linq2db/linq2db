@@ -541,6 +541,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[YdbMemberNotFound]
 		public void MixedTypes([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			var data = new[]

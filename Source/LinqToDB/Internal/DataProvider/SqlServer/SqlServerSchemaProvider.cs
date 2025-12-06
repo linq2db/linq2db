@@ -326,7 +326,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			switch (dataType)
 			{
 				case "json"             : return DataType.Json;
-				case "vector"           : return DataType.Array | DataType.Single;
+				case "vector"           : return DataType.Vector32;
 				case "image"            : return DataType.Image;
 				case "text"             : return DataType.Text;
 				case "binary"           : return DataType.Binary;

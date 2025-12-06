@@ -141,11 +141,11 @@ steps:
   displayName: Setup .NET 9 tests
 
 - script: dotnet test ./net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net9.0 -l trx $(extra) --blame-hang-timeout 5m
-  condition: and(variables.title, eq(variables.net90, 'true'), succeeded(), ne(variables.retry, 'true'))
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
   displayName: 'Tests (.NET 9): $(title)'
 
 - script: dotnet test ./net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net9.0 -l trx $(extra) --blame-hang-timeout 5m
-  condition: and(variables.title, eq(variables.net90, 'true'), succeeded(), eq(variables.retry, 'true'))
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   displayName: 'Tests (.NET 9): $(title)'
   retryCountOnTaskFailure: 2
 

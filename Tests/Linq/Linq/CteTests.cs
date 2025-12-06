@@ -94,8 +94,7 @@ namespace Tests.Linq
 
 				if (!db.SqlProviderFlags.IsCTESupportsOrdering)
 				{
-					var act = () => query.ToArray();
-					act.ShouldNotThrow();
+					query.ToArray();
 				}
 				else
 				{
@@ -502,6 +501,9 @@ namespace Tests.Linq
 
 				query.ToArray();
 
+				if (context.IsAnyOf(ProviderName.Ydb))
+					Assert.That(str, Does.Contain("$CTE"));
+				else
 					Assert.That(str, Does.Contain("WITH"));
 			}
 		}
@@ -543,6 +545,7 @@ namespace Tests.Linq
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
 		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, ProviderName.InformixDB2])]
 		[Test]
+		[YdbMemberNotFound]
 		public void TestDelete([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllMariaDB, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db  = GetDataContext(context))
@@ -938,6 +941,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void TestEmbedded([CteContextSource] string context)
 		{

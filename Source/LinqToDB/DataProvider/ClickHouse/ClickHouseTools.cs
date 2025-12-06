@@ -15,9 +15,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 			set => ProviderDetector.AutoDetectProvider = value;
 		}
 
-		public static IDataProvider GetDataProvider(ClickHouseProvider provider = ClickHouseProvider.AutoDetect, string? connectionString = null, DbConnection? connection = null)
+		public static IDataProvider GetDataProvider(ClickHouseProvider provider = ClickHouseProvider.AutoDetect, string? connectionString = null, DbConnection? connection = null, DbTransaction? transaction = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString, DbConnection: connection), provider, default);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString, DbConnection: connection, DbTransaction: transaction), provider, default);
 		}
 
 		public static DataConnection CreateDataConnection(string connectionString, ClickHouseProvider provider = ClickHouseProvider.AutoDetect)

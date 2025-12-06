@@ -14,7 +14,7 @@ namespace LinqToDB.Internal.DataProvider
 	{
 		public enum NoDialect { }
 
-		public override NoDialect? DetectServerVersion(DbConnection connection) => default(NoDialect);
+		protected override NoDialect? DetectServerVersion(DbConnection connection, DbTransaction? transaction) => default(NoDialect);
 	}
 
 	public abstract class ProviderDetectorBase<TProvider,TVersion>
@@ -75,11 +75,13 @@ namespace LinqToDB.Internal.DataProvider
 		/// <remarks>Uses cache to avoid unwanted connections to Database.</remarks>
 		public TVersion? DetectServerVersion(ConnectionOptions options, TProvider provider)
 		{
+			provider = DetectProvider(options, provider);
+
 			if (options.DbConnection != null)
-				return DetectVersion(options, options.DbConnection);
+				return DetectVersion(options, options.DbConnection, options.DbTransaction);
 
 			if (options.DbTransaction?.Connection != null)
-				return DetectVersion(options, options.DbTransaction.Connection);
+				return DetectVersion(options, options.DbTransaction.Connection, options.DbTransaction);
 
 			var connectionString = TryGetConnectionString(options);
 
@@ -91,12 +93,12 @@ namespace LinqToDB.Internal.DataProvider
 				entry.SlidingExpiration = LinqToDB.Common.Configuration.Linq.CacheSlidingExpiration;
 
 				using var conn = CreateConnection(provider, connectionString);
-				return DetectVersion(options, conn);
+				return DetectVersion(options, conn, null);
 			});
 
 			return version;
 
-			TVersion? DetectVersion(ConnectionOptions options, DbConnection cn)
+			TVersion? DetectVersion(ConnectionOptions options, DbConnection cn, DbTransaction? transaction)
 			{
 				if (cn.State != ConnectionState.Open)
 				{
@@ -116,12 +118,14 @@ namespace LinqToDB.Internal.DataProvider
 					}
 				}
 
-				return DetectServerVersion(cn);
+				return DetectServerVersion(cn, transaction);
 			}
 		}
 
 		public DataOptions CreateOptions(DataOptions options, TVersion dialect, TProvider provider)
 		{
+			provider = DetectProvider(options.ConnectionOptions, provider);
+
 			if (_hasVersioning && dialect.Equals(AutoDetectVersion))
 			{
 				var connectionString = TryGetConnectionString(options.ConnectionOptions);
@@ -155,7 +159,8 @@ namespace LinqToDB.Internal.DataProvider
 
 		public    abstract IDataProvider? DetectProvider     (ConnectionOptions options);
 		public    abstract IDataProvider  GetDataProvider    (ConnectionOptions options, TProvider provider, TVersion version);
-		public    abstract TVersion?      DetectServerVersion(DbConnection connection);
+		protected abstract TVersion?      DetectServerVersion(DbConnection connection, DbTransaction? transaction);
 		protected abstract DbConnection   CreateConnection   (TProvider provider, string connectionString);
+		protected virtual  TProvider      DetectProvider     (ConnectionOptions options, TProvider provider) => provider;
 	}
 }

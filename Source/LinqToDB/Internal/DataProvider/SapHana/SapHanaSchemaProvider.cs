@@ -492,7 +492,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				case "CLOB"         : return DataType.Text;
 				case "NCLOB"        :
 				case "BINTEXT"      : return DataType.NText;
-				case "REAL_VECTOR"  : return DataType.Array | DataType.Single;
+				case "REAL_VECTOR"  : return DataType.Vector32;
 
 				case "ST_GEOMETRY"          :
 				case "ST_GEOMETRYCOLLECTION":

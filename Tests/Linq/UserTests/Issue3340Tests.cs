@@ -35,7 +35,7 @@ namespace Tests.UserTests
 
 		public class JsonModifyExtensionCallBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				new JsonModifySample<SampleObject>().BuildSet(builder);
 			}
@@ -147,7 +147,7 @@ namespace Tests.UserTests
 
 			private const string DbObjectExpression = "JSON_MODIFY({source}, {path}, {value})";
 
-			public void BuildSet(Sql.ISqExtensionBuilder builder)
+			public void BuildSet(Sql.ISqlExtensionBuilder builder)
 			{
 				builder.Expression = DbObjectExpression;
 
@@ -159,7 +159,7 @@ namespace Tests.UserTests
 				builder.AddParameter("value", GetPropertyValueExpression(builder, lastMember));
 			}
 
-			private static (MemberInfo lastMember, string path) GetPropertyAccessPath(Sql.ISqExtensionBuilder builder)
+			private static (MemberInfo lastMember, string path) GetPropertyAccessPath(Sql.ISqlExtensionBuilder builder)
 			{
 				var currentExression = ((LambdaExpression) ((UnaryExpression) builder.Arguments[1]).Operand).Body;
 				var memberStack = new Stack<MemberInfo>();
@@ -196,7 +196,7 @@ namespace Tests.UserTests
 				return (lastMember: lastMember!, path: pathBuilder.ToString()!);
 			}
 
-			private static ISqlExpression GetPropertyValueExpression(Sql.ISqExtensionBuilder builder, MemberInfo member)
+			private static ISqlExpression GetPropertyValueExpression(Sql.ISqlExtensionBuilder builder, MemberInfo member)
 			{
 				ISqlExpression ConstantToSqlExpression(object? constantValue, Type valueType)
 				{

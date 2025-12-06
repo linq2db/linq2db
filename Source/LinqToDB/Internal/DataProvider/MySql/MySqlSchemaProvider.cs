@@ -239,7 +239,7 @@ SELECT
 				"longtext"          => DataType.Text,
 				"double"            => DataType.Double,
 				"float"             => DataType.Single,
-				"vector"            => DataType.Array | DataType.Single,
+				"vector"            => DataType.Vector32,
 				"tinyint"           => columnType != null && columnType.Contains("unsigned") ? DataType.Byte   : DataType.SByte,
 				"smallint"          => columnType != null && columnType.Contains("unsigned") ? DataType.UInt16 : DataType.Int16,
 				"int"               => columnType != null && columnType.Contains("unsigned") ? DataType.UInt32 : DataType.Int32,

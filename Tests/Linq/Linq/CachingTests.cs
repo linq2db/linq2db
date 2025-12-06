@@ -22,7 +22,7 @@ namespace Tests.Linq
 	{
 		sealed class AggregateFuncBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				builder.AddFragment("funcName",  builder.GetValue<string>("funcName"));
 				builder.AddFragment("fieldName", builder.GetValue<string>("fieldName"));
@@ -333,7 +333,7 @@ namespace Tests.Linq
 
 		public sealed class InExtExpressionItemBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var parameterName = (builder.Arguments[1] as MemberExpression)?.Member.Name ?? "p";
 

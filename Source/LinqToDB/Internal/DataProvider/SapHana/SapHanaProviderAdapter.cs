@@ -140,7 +140,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 				return _odbcProvider;
 			}
-			else
+			else if (provider == SapHanaProvider.Unmanaged)
 			{
 				if (_unmanagedProvider == null)
 				{
@@ -260,6 +260,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				return _unmanagedProvider;
 			}
 
+			throw new InvalidOperationException($"Unsupported provider type: {provider}");
 		}
 
 		[Wrapper]

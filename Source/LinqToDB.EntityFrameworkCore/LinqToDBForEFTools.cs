@@ -153,6 +153,7 @@ namespace LinqToDB.EntityFrameworkCore
 			var info = new EFProviderInfo
 			{
 				Connection = context.Database.GetDbConnection(),
+				Transaction = context.Database.CurrentTransaction?.GetDbTransaction(),
 				Context = context,
 				Options = GetContextOptions(context)
 			};
@@ -278,14 +279,14 @@ namespace LinqToDB.EntityFrameworkCore
 
 			DataConnection? dc = null;
 
-			transaction ??= context.Database.CurrentTransaction;
+			transaction     ??= context.Database.CurrentTransaction;
+			var dbTransaction = transaction?.GetDbTransaction() ?? info.Transaction;
 
-			var connectionInfo = GetConnectionInfo(info);
+			var connectionInfo = GetConnectionInfo(info, dbTransaction);
 			var provider       = GetDataProvider(options, info, connectionInfo);
 
-			if (transaction != null)
+			if (dbTransaction != null)
 			{
-				var dbTransaction = transaction.GetDbTransaction();
 				// TODO: we need API for testing current connection
 				//if (provider.IsCompatibleConnection(dbTransaction.Connection))
 				options = options.UseTransaction(provider, dbTransaction);
@@ -347,17 +348,16 @@ namespace LinqToDB.EntityFrameworkCore
 
 			DataConnection? dc = null;
 
-			transaction ??= context.Database.CurrentTransaction;
+			transaction     ??= context.Database.CurrentTransaction;
+			var dbTransaction = transaction?.GetDbTransaction() ?? info.Transaction;
 
-			var connectionInfo = GetConnectionInfo(info);
+			var connectionInfo = GetConnectionInfo(info, dbTransaction);
 			var provider       = GetDataProvider(options, info, connectionInfo);
 			var logger         = CreateLogger(info.Options);
 			options            = EnableTracing(options, logger);
 
-			if (transaction != null)
+			if (dbTransaction != null)
 			{
-				var dbTransaction = transaction.GetDbTransaction();
-
 				// TODO: we need API for testing current connection
 				// if (provider.IsCompatibleConnection(dbTransaction.Connection))
 				options = options.UseTransaction(provider, dbTransaction);
@@ -402,7 +402,7 @@ namespace LinqToDB.EntityFrameworkCore
 			ArgumentNullException.ThrowIfNull(context);
 
 			var info           = GetEFProviderInfo(context);
-			var connectionInfo = GetConnectionInfo(info);
+			var connectionInfo = GetConnectionInfo(info, null);
 			var options        = context.GetLinqToDBOptions() ?? new DataOptions();
 			var dataProvider   = GetDataProvider(options, info, connectionInfo);
 
@@ -422,8 +422,9 @@ namespace LinqToDB.EntityFrameworkCore
 		/// Extracts database connection information from EF Core provider data.
 		/// </summary>
 		/// <param name="info">EF Core database provider data.</param>
+		/// <param name="transaction">EF Core database transaction instance.</param>
 		/// <returns>Database connection information.</returns>
-		public static EFConnectionInfo GetConnectionInfo(EFProviderInfo info)
+		public static EFConnectionInfo GetConnectionInfo(EFProviderInfo info, DbTransaction? transaction)
 		{
 			var connection = info.Connection;
 
@@ -432,6 +433,7 @@ namespace LinqToDB.EntityFrameworkCore
 			return new EFConnectionInfo
 			{
 				Connection = connection ?? extracted?.Connection,
+				Transaction = transaction ?? info.Transaction ?? extracted?.Transaction,
 				ConnectionString = extracted?.ConnectionString
 			};
 		}
@@ -460,7 +462,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			DataConnection? dc = null;
 
-			var connectionInfo = GetConnectionInfo(info);
+			var connectionInfo = GetConnectionInfo(info, null);
 			var dataOptions    = options.GetLinqToDBOptions() ?? new DataOptions();
 			var dataProvider   = GetDataProvider(dataOptions, info, connectionInfo);
 			var model          = GetModel(options);

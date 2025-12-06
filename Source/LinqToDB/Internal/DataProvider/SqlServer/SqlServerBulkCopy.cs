@@ -288,8 +288,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			BulkCopyRowsCopied ret;
 
-			var helper = new MultipleRowsHelper<T>(table, options);
-			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
+			var helper = CreateRowsHelper(table, options);
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " ON");
@@ -315,8 +314,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			BulkCopyRowsCopied ret;
 
-			var helper = new MultipleRowsHelper<T>(table, options);
-			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
+			var helper = CreateRowsHelper(table, options);
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
@@ -350,8 +348,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			BulkCopyRowsCopied ret;
 
-			var helper = new MultipleRowsHelper<T>(table, options);
-			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
+			var helper = CreateRowsHelper(table, options);
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
@@ -378,6 +375,25 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			}
 
 			return ret;
+		}
+
+		private static readonly Func<DataOptions, ColumnDescriptor, object?, bool> _convertToParameter =
+			static (options, cd, v) => options.BulkCopyOptions.UseParameters && cd.StorageType != typeof(float[])
+#if NET8_0_OR_GREATER
+				&& cd.StorageType != typeof(Half[])
+#endif
+				;
+
+		private MultipleRowsHelper<T> CreateRowsHelper<T>(ITable<T> table, DataOptions options) where T : notnull
+		{
+			var helper = new MultipleRowsHelper<T>(table, options);
+
+			if (_provider.Provider == SqlServerProvider.SystemDataSqlClient)
+				helper.ConvertToParameter = _convertToParameter;
+
+			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
+
+			return helper;
 		}
 	}
 }

@@ -182,6 +182,7 @@ namespace Tests
 		public const string AllSqlServer2016PlusMS       = $"{SqlServer2016MS},{SqlServer2017MS},{SqlServer2019MS},{SqlServer2022MS},{SqlServer2025MS},{SqlServerSequentialAccessMS},{SqlServerContainedMS},{SqlAzureMS}";
 		public const string AllSqlServer2019MinusSystem  = $"{ProviderName.SqlServer2005},{ProviderName.SqlServer2008},{ProviderName.SqlServer2012},{ProviderName.SqlServer2014},{ProviderName.SqlServer2016},{ProviderName.SqlServer2017},{ProviderName.SqlServer2019},{SqlServerSequentialAccess},{SqlServerContained},{SqlAzure}";
 		public const string AllSqlServer2019MinusMS      = $"{SqlServer2005MS},{SqlServer2008MS},{SqlServer2012MS},{SqlServer2014MS},{SqlServer2016MS},{SqlServer2017MS},{SqlServer2019MS},{SqlServerSequentialAccessMS},{SqlServerContainedMS},{SqlAzureMS}";
+		public const string AllSqlServer2025PlusMS       = $"{SqlServer2025MS},{SqlAzureMiMS},{SqlAzureMS}";
 		#endregion
 
 		#region Access

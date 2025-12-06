@@ -167,6 +167,7 @@ namespace Tests.Linq
 		//				.Where (t => t.Any()));
 		//}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Any1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -179,6 +180,7 @@ namespace Tests.Linq
 						.Any(p => p.children1.Any())));
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Any2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -191,6 +193,7 @@ namespace Tests.Linq
 						.Any(p => p.Any())));
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Any3([DataSources(TestProvName.AllClickHouse)] string context)
 		{

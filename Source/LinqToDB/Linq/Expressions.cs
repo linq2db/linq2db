@@ -1463,7 +1463,7 @@ namespace LinqToDB.Linq
 
 		sealed class LTrimCharactersBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var stringExpression = builder.GetExpression("str")!;
 				var chars            = builder.GetValue<char[]>("trimChars");
@@ -1487,7 +1487,7 @@ namespace LinqToDB.Linq
 
 		sealed class TrailingRTrimCharactersBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var stringExpression = builder.GetExpression("str")!;
 				var chars            = builder.GetValue<char[]>("trimChars");
@@ -1519,7 +1519,7 @@ namespace LinqToDB.Linq
 
 		sealed class RTrimCharactersBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var stringExpression = builder.GetExpression("str")!;
 				var chars            = builder.GetValue<char[]>("trimChars");
@@ -1543,7 +1543,7 @@ namespace LinqToDB.Linq
 
 		sealed class RTrimCharactersBuilderNoTrimCharacters : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var stringExpression = builder.GetExpression("str")!;
 				var chars            = builder.GetValue<char[]>("trimChars");
@@ -1567,7 +1567,7 @@ namespace LinqToDB.Linq
 
 		sealed class ConvertToCaseCompareToBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var str   = builder.GetExpression("str")!;
 				var value = builder.GetExpression("value")!;

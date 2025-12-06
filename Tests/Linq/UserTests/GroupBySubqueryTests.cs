@@ -67,7 +67,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test([DataSources] string context)
+		public void Test([DataSources(ProviderName.Ydb)] string context)
 		{
 			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			using var t8 = db.CreateLocalTable<Table1>();

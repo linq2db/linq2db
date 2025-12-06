@@ -1,14 +1,9 @@
 ﻿#nullable enable
 LinqToDB.Remote.Wcf.IWcfLinqService
-LinqToDB.Remote.Wcf.IWcfLinqService.ExecuteBatch(string? configuration, string! queryData) -> int
 LinqToDB.Remote.Wcf.IWcfLinqService.ExecuteBatchAsync(string? configuration, string! queryData) -> System.Threading.Tasks.Task<int>!
-LinqToDB.Remote.Wcf.IWcfLinqService.ExecuteNonQuery(string? configuration, string! queryData) -> int
 LinqToDB.Remote.Wcf.IWcfLinqService.ExecuteNonQueryAsync(string? configuration, string! queryData) -> System.Threading.Tasks.Task<int>!
-LinqToDB.Remote.Wcf.IWcfLinqService.ExecuteReader(string? configuration, string! queryData) -> string!
 LinqToDB.Remote.Wcf.IWcfLinqService.ExecuteReaderAsync(string? configuration, string! queryData) -> System.Threading.Tasks.Task<string!>!
-LinqToDB.Remote.Wcf.IWcfLinqService.ExecuteScalar(string? configuration, string! queryData) -> string?
 LinqToDB.Remote.Wcf.IWcfLinqService.ExecuteScalarAsync(string? configuration, string! queryData) -> System.Threading.Tasks.Task<string?>!
-LinqToDB.Remote.Wcf.IWcfLinqService.GetInfo(string? configuration) -> LinqToDB.Remote.LinqServiceInfo!
 LinqToDB.Remote.Wcf.IWcfLinqService.GetInfoAsync(string? configuration) -> System.Threading.Tasks.Task<LinqToDB.Remote.LinqServiceInfo!>!
 LinqToDB.Remote.Wcf.WcfDataContext
 LinqToDB.Remote.Wcf.WcfDataContext.Binding.get -> System.ServiceModel.Channels.Binding?
