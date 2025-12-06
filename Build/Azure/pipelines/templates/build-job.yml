@@ -370,9 +370,9 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-        $relnotesVersion = '$(assemblyVersion)' -replace '\.',''
-        Write-Host "Create release v$(assemblyVersion) draft"
-        $output = gh release create v$(assemblyVersion) "$(Build.SourcesDirectory)/.build/lpx/linq2db.LINQPad.lpx" "$(Build.SourcesDirectory)/.build/lpx/linq2db.LINQPad.lpx6" --draft --fail-on-no-commits --generate-notes --latest --notes "[Release notes](https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap#release-$relnotesVersion) [Nugets](https://www.nuget.org/profiles/LinqToDB)" --title "Release $(assemblyVersion)"
+        $relnotesVersion = '$(packageVersion)' -replace '\.',''
+        Write-Host "Create release v$(packageVersion) draft"
+        $output = gh release create v$(packageVersion) "$(Build.SourcesDirectory)/.build/lpx/linq2db.LINQPad.lpx" "$(Build.SourcesDirectory)/.build/lpx/linq2db.LINQPad.lpx6" --draft --fail-on-no-commits --generate-notes --latest --notes "[Release notes](https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap#release-$relnotesVersion) [Nugets](https://www.nuget.org/profiles/LinqToDB)" --title "Release $(packageVersion)"
         if ($LASTEXITCODE -ne 0) {
             Write-Host "Command failed. Error code ${LASTEXITCODE}, output: ${output}"
             exit 1
