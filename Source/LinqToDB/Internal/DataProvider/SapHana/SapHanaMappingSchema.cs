@@ -17,7 +17,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		SapHanaMappingSchema() : base(ProviderName.SapHana)
 		{
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
-			SetDataType(typeof(float[]), new SqlDataType(new DbDataType(typeof(float[]), DataType.Array | DataType.Single, "REAL_VECTOR")));
+			SetDataType(typeof(float[]), new SqlDataType(new DbDataType(typeof(float[]), DataType.Vector32, "REAL_VECTOR")));
 
 			SetValueToSqlConverter(typeof(string), (sb,_,_,v) => ConvertStringToSql(sb, (string)v));
 			SetValueToSqlConverter(typeof(char)  , (sb,_,_,v) => ConvertCharToSql  (sb, (char)v));

@@ -123,7 +123,8 @@
 	<ItemGroup>
 		<Resource Include="..\..\NuGet\icon.png" Link="Resources\Logo.png" />
 
-		<AdditionalFiles Include="PublicAPI.*.txt" />
+		<AdditionalFiles Include="PublicAPI/PublicAPI.*.txt" />
+		<AdditionalFiles Include="PublicAPI/$(TargetFramework)/PublicAPI.*.txt" />
 	</ItemGroup>
 
 	<Import Project="$(MSBuildThisFileDirectory)\..\..\SQLite.Runtime.props" />

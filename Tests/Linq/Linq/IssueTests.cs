@@ -391,7 +391,6 @@ namespace Tests.Linq
 			Client
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/754", Configuration = TestProvName.AllOracle)]
 		[Test]
 		public void Issue535Test2([DataSources(TestProvName.AllSybase)] string context)
 		{
@@ -614,6 +613,8 @@ namespace Tests.Linq
 				AssertQuery(query);
 			}
 		}
+
+		[YdbMemberNotFound]
 		[Test]
 		public void Issue909Subquery([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -857,8 +858,8 @@ namespace Tests.Linq
 		[Table]
 		public sealed class ThingState
 		{
-			[Column] public int       ThingId            { get; set; }
-			[Column] public DateTime? LastTransitionDate { get; set; }
+			[PrimaryKey] public int       ThingId            { get; set; }
+			[Column]     public DateTime? LastTransitionDate { get; set; }
 		}
 
 		[Table]

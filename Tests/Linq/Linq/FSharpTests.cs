@@ -1,4 +1,5 @@
-﻿using LinqToDB.Data;
+﻿using LinqToDB;
+using LinqToDB.Data;
 
 using NUnit.Framework;
 
@@ -155,7 +156,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Insert1([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Insert1([DataSources(ProviderName.Ydb, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				FSharp.InsertTest.Insert1(db);
@@ -231,7 +232,6 @@ namespace Tests.Linq
 			FSharp.Issue3743.Issue3743Test2(db, 1);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4132")]
 		public void Issue4132Test1([DataSources] string context)
 		{
@@ -239,9 +239,8 @@ namespace Tests.Linq
 			FSharp.Issue4132.Issue4132Test1(db);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4132")]
-		public void Issue4132Test2([DataSources] string context)
+		public void Issue4132Test2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			FSharp.Issue4132.Issue4132Test2(db);

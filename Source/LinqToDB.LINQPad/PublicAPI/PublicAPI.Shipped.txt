@@ -1,0 +1,39 @@
+﻿#nullable enable
+LinqToDB.LINQPad.LINQPadDataConnection
+LinqToDB.LINQPad.LINQPadDataConnection.LINQPadDataConnection(string? providerName, string? providerPath, string? connectionString) -> void
+LinqToDB.LINQPad.LinqToDBDriver
+LinqToDB.LINQPad.LinqToDBDriver.LinqToDBDriver() -> void
+LinqToDB.LINQPad.LinqToDBLinqPadException
+LinqToDB.LINQPad.LinqToDBLinqPadException.LinqToDBLinqPadException(string! message) -> void
+LinqToDB.LINQPad.LinqToDBStaticDriver
+LinqToDB.LINQPad.LinqToDBStaticDriver.LinqToDBStaticDriver() -> void
+override LinqToDB.LINQPad.LinqToDBDriver.Author.get -> string!
+override LinqToDB.LINQPad.LinqToDBDriver.ClearConnectionPools(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo) -> void
+override LinqToDB.LINQPad.LinqToDBDriver.GetAssembliesToAdd(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo) -> System.Collections.Generic.IEnumerable<string!>!
+override LinqToDB.LINQPad.LinqToDBDriver.GetConnectionDescription(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo) -> string!
+override LinqToDB.LINQPad.LinqToDBDriver.GetContextConstructorArguments(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo) -> object?[]!
+override LinqToDB.LINQPad.LinqToDBDriver.GetContextConstructorParameters(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo) -> LINQPad.Extensibility.DataContext.ParameterDescriptor![]!
+override LinqToDB.LINQPad.LinqToDBDriver.GetIDbConnection(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo) -> System.Data.IDbConnection!
+override LinqToDB.LINQPad.LinqToDBDriver.GetLastSchemaUpdate(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo) -> System.DateTime?
+override LinqToDB.LINQPad.LinqToDBDriver.GetNamespacesToAdd(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo) -> System.Collections.Generic.IEnumerable<string!>!
+override LinqToDB.LINQPad.LinqToDBDriver.GetProviderFactory(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo) -> System.Data.Common.DbProviderFactory?
+override LinqToDB.LINQPad.LinqToDBDriver.GetSchemaAndBuildAssembly(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo, System.Reflection.AssemblyName! assemblyToBuild, ref string? nameSpace, ref string! typeName) -> System.Collections.Generic.List<LINQPad.Extensibility.DataContext.ExplorerItem!>!
+override LinqToDB.LINQPad.LinqToDBDriver.InitializeContext(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo, object! context, LINQPad.Extensibility.DataContext.QueryExecutionManager! executionManager) -> void
+override LinqToDB.LINQPad.LinqToDBDriver.Name.get -> string!
+override LinqToDB.LINQPad.LinqToDBDriver.PreprocessObjectToWrite(ref object! objectToWrite, LINQPad.Extensibility.DataContext.ObjectGraphInfo! info) -> void
+override LinqToDB.LINQPad.LinqToDBDriver.ShowConnectionDialog(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo, LINQPad.Extensibility.DataContext.ConnectionDialogOptions! dialogOptions) -> bool
+override LinqToDB.LINQPad.LinqToDBDriver.TearDownContext(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo, object! context, LINQPad.Extensibility.DataContext.QueryExecutionManager! executionManager, object![]! constructorArguments) -> void
+override LinqToDB.LINQPad.LinqToDBStaticDriver.Author.get -> string!
+override LinqToDB.LINQPad.LinqToDBStaticDriver.ClearConnectionPools(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo) -> void
+override LinqToDB.LINQPad.LinqToDBStaticDriver.GetConnectionDescription(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo) -> string!
+override LinqToDB.LINQPad.LinqToDBStaticDriver.GetContextConstructorArguments(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo) -> object![]!
+override LinqToDB.LINQPad.LinqToDBStaticDriver.GetContextConstructorParameters(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo) -> LINQPad.Extensibility.DataContext.ParameterDescriptor![]!
+override LinqToDB.LINQPad.LinqToDBStaticDriver.GetIDbConnection(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo) -> System.Data.IDbConnection!
+override LinqToDB.LINQPad.LinqToDBStaticDriver.GetNamespacesToAdd(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo) -> System.Collections.Generic.IEnumerable<string!>!
+override LinqToDB.LINQPad.LinqToDBStaticDriver.GetProviderFactory(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo) -> System.Data.Common.DbProviderFactory?
+override LinqToDB.LINQPad.LinqToDBStaticDriver.GetSchema(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo, System.Type? customType) -> System.Collections.Generic.List<LINQPad.Extensibility.DataContext.ExplorerItem!>!
+override LinqToDB.LINQPad.LinqToDBStaticDriver.InitializeContext(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo, object! context, LINQPad.Extensibility.DataContext.QueryExecutionManager! executionManager) -> void
+override LinqToDB.LINQPad.LinqToDBStaticDriver.Name.get -> string!
+override LinqToDB.LINQPad.LinqToDBStaticDriver.PreprocessObjectToWrite(ref object! objectToWrite, LINQPad.Extensibility.DataContext.ObjectGraphInfo! info) -> void
+override LinqToDB.LINQPad.LinqToDBStaticDriver.ShowConnectionDialog(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo, LINQPad.Extensibility.DataContext.ConnectionDialogOptions! dialogOptions) -> bool
+override LinqToDB.LINQPad.LinqToDBStaticDriver.TearDownContext(LINQPad.Extensibility.DataContext.IConnectionInfo! cxInfo, object! context, LINQPad.Extensibility.DataContext.QueryExecutionManager! executionManager, object![]! constructorArguments) -> void

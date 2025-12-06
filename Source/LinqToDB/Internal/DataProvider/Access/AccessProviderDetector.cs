@@ -9,12 +9,8 @@ using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.DataProvider.Access
 {
-	public class AccessProviderDetector : ProviderDetectorBase<AccessProvider, AccessVersion>
+	public class AccessProviderDetector() : ProviderDetectorBase<AccessProvider, AccessVersion>(AccessVersion.AutoDetect, AccessVersion.Jet)
 	{
-		public AccessProviderDetector() : base(AccessVersion.AutoDetect, AccessVersion.Jet)
-		{
-		}
-
 		static readonly Lazy<IDataProvider> _accessJetOleDbDataProvider = CreateDataProvider<AccessJetOleDbDataProvider>();
 		static readonly Lazy<IDataProvider> _accessJetODBCDataProvider  = CreateDataProvider<AccessJetODBCDataProvider>();
 		static readonly Lazy<IDataProvider> _accessAceOleDbDataProvider = CreateDataProvider<AccessAceOleDbDataProvider>();
@@ -22,6 +18,15 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
+			if (options.ProviderName != ProviderName.Access && options.ConfigurationString?.Contains("DataAccess") == true)
+			{
+				// when provider name is not set to known access provider name, we must check that we don't have detection
+				// conflict with providers that use very "unique" Access substring like Oracle*DataAccess providers
+				return null;
+			}
+
+			// don't merge this method and DetectProvider(provider type) logic because this method could return null
+			// and other method returns default provider type
 			if (options.ConnectionString?.Contains("Microsoft.ACE.OLEDB") == true)
 				return _accessAceOleDbDataProvider.Value;
 
@@ -36,40 +41,22 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 			switch (options.ProviderName)
 			{
-				case ProviderName.AccessJetOdbc: return _accessJetODBCDataProvider.Value;
-				case ProviderName.AccessAceOdbc: return _accessAceODBCDataProvider.Value;
+				case ProviderName.AccessJetOdbc : return _accessJetODBCDataProvider.Value;
+				case ProviderName.AccessAceOdbc : return _accessAceODBCDataProvider.Value;
 				case ProviderName.AccessJetOleDb: return _accessJetOleDbDataProvider.Value;
 				case ProviderName.AccessAceOleDb: return _accessAceOleDbDataProvider.Value;
 			}
 
-			var provider = AccessProvider.AutoDetect;
-			if (options.ProviderName == ProviderName.AccessOdbc)
-			{
-				provider = AccessProvider.ODBC;
-			}
-			else if (options.ProviderName != ProviderName.Access && options.ConfigurationString?.Contains("DataAccess") == true)
-			{
-				// when provider name is not set to known access provider name, we must check that we don't have detection
-				// conflict with providers that use very "unique" Access substring like Oracle*DataAccess providers
-				return null;
-			}
-
 			if (options.ConfigurationString?.Contains("Access") == true)
 			{
-				if (provider == AccessProvider.AutoDetect)
-				{
-					if (options.ConfigurationString.Contains("Access.Odbc"))
-						provider = AccessProvider.ODBC;
-					else if (options.ConfigurationString.Contains("Access.OleDb"))
-						provider = AccessProvider.OleDb;
-				}
-
 				var version = AccessVersion.AutoDetect;
 
 				if (options.ConfigurationString.Contains("Jet"))
 					version = AccessVersion.Jet;
 				else if (options.ConfigurationString.Contains("Ace"))
 					version = AccessVersion.Ace;
+
+				var provider = DetectProvider(options, AccessProvider.AutoDetect);
 
 				if (version == AccessVersion.AutoDetect && AutoDetectProvider)
 					version = DetectServerVersion(options, provider) ?? DefaultVersion;
@@ -82,37 +69,20 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		public override IDataProvider GetDataProvider(ConnectionOptions options, AccessProvider provider, AccessVersion version)
 		{
-			if (provider == AccessProvider.AutoDetect)
-			{
-				var providerImpl = DetectProvider(options);
-				if (providerImpl != null)
-					return providerImpl;
-
-				provider = DetectProvider();
-			}
+			provider = DetectProvider(options, provider);
 
 			return (provider, version) switch
 			{
-				(_, AccessVersion.AutoDetect)             => GetDataProvider(options, provider, DetectServerVersion(options, provider) ?? DefaultVersion),
-				(AccessProvider.ODBC, AccessVersion.Jet)  => _accessJetODBCDataProvider.Value,
-				(AccessProvider.ODBC, AccessVersion.Ace)  => _accessAceODBCDataProvider.Value,
-				(AccessProvider.OleDb, AccessVersion.Jet) => _accessJetOleDbDataProvider.Value,
-				(AccessProvider.OleDb, AccessVersion.Ace) => _accessAceOleDbDataProvider.Value,
-				_                                         => _accessJetOleDbDataProvider.Value,
+				(_                   , AccessVersion.AutoDetect) => GetDataProvider(options, provider, DetectServerVersion(options, provider) ?? DefaultVersion),
+				(AccessProvider.ODBC , AccessVersion.Jet       ) => _accessJetODBCDataProvider.Value,
+				(AccessProvider.ODBC , AccessVersion.Ace       ) => _accessAceODBCDataProvider.Value,
+				(AccessProvider.OleDb, AccessVersion.Jet       ) => _accessJetOleDbDataProvider.Value,
+				(AccessProvider.OleDb, AccessVersion.Ace       ) => _accessAceOleDbDataProvider.Value,
+				_                                                => _accessJetOleDbDataProvider.Value,
 			};
 		}
 
-		public static AccessProvider DetectProvider()
-		{
-			var fileName = typeof(AccessProviderDetector).Assembly.GetFileName();
-			var dirName  = Path.GetDirectoryName(fileName);
-
-			return File.Exists(Path.Combine(dirName ?? ".", OdbcProviderAdapter.AssemblyName + ".dll"))
-				? AccessProvider.ODBC
-				: AccessProvider.OleDb;
-		}
-
-		public override AccessVersion? DetectServerVersion(DbConnection connection)
+		protected override AccessVersion? DetectServerVersion(DbConnection connection, DbTransaction? transaction)
 		{
 			// we don't know connection type, so we probe both
 			try
@@ -152,6 +122,48 @@ namespace LinqToDB.Internal.DataProvider.Access
 				? (IDynamicProviderAdapter)OdbcProviderAdapter.GetInstance()
 				: OleDbProviderAdapter.GetInstance();
 			return adapter.CreateConnection(connectionString);
+		}
+
+		protected override AccessProvider DetectProvider(ConnectionOptions options, AccessProvider provider)
+		{
+			if (provider is AccessProvider.ODBC or AccessProvider.OleDb)
+				return provider;
+
+			if (options.ConnectionString?.Contains("Microsoft.ACE.OLEDB") == true)
+				return AccessProvider.OleDb;
+
+			if (options.ConnectionString?.Contains("Microsoft.Jet.OLEDB") == true)
+				return AccessProvider.OleDb;
+
+			if (options.ConnectionString?.Contains("(*.mdb, *.accdb)") == true)
+				return AccessProvider.ODBC;
+
+			if (options.ConnectionString?.Contains("(*.mdb)") == true)
+				return AccessProvider.ODBC;
+
+			switch (options.ProviderName)
+			{
+				case ProviderName.AccessOdbc:
+				case ProviderName.AccessJetOdbc:
+				case ProviderName.AccessAceOdbc: return AccessProvider.ODBC;
+				case ProviderName.AccessJetOleDb:
+				case ProviderName.AccessAceOleDb: return AccessProvider.OleDb;
+			}
+
+			if (options.ConfigurationString?.Contains("Access") == true)
+			{
+				if (options.ConfigurationString.Contains("Access.Odbc"))
+					return AccessProvider.ODBC;
+				else if (options.ConfigurationString.Contains("Access.OleDb"))
+					return AccessProvider.OleDb;
+			}
+
+			var fileName = typeof(AccessProviderDetector).Assembly.GetFileName();
+			var dirName  = Path.GetDirectoryName(fileName);
+
+			return File.Exists(Path.Combine(dirName ?? ".", OdbcProviderAdapter.AssemblyName + ".dll"))
+				? AccessProvider.ODBC
+				: AccessProvider.OleDb;
 		}
 	}
 }

@@ -29,7 +29,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		#region Init
 
 		protected SybaseDataProvider(string name, SybaseProvider provider)
-			: this(name, SybaseProviderAdapter.GetInstance(provider == SybaseProvider.AutoDetect ? provider = SybaseProviderDetector.DetectProvider() : provider))
+			: this(name, SybaseProviderAdapter.GetInstance(provider))
 		{
 		}
 

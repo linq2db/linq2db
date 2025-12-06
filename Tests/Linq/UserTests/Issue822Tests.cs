@@ -16,6 +16,7 @@ namespace Tests.UserTests
 
 		int? ID2;
 
+		[YdbCteAsSource]
 		[Test]
 		public void TestWrongValue([DataSources(TestProvName.AllClickHouse)] string context, [Values(1, 2)] int _)
 		{
@@ -40,6 +41,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void TestNullValue([DataSources(TestProvName.AllClickHouse)] string context, [Values(1, 2)] int _)
 		{

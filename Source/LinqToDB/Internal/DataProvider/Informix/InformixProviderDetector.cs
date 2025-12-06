@@ -12,25 +12,13 @@ namespace LinqToDB.Internal.DataProvider.Informix
 {
 	public class InformixProviderDetector : ProviderDetectorBase<InformixProvider>
 	{
-		public InformixProviderDetector() : base()
-		{
-		}
-
 		static readonly Lazy<IDataProvider> _informixDataProvider    = CreateDataProvider<InformixDataProviderInformix>();
 		static readonly Lazy<IDataProvider> _informixDB2DataProvider = CreateDataProvider<InformixDataProviderDB2>();
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
-			var provider = options.ProviderName switch
-			{
-				InformixProviderAdapter.IfxClientNamespace                                  => InformixProvider.Informix,
-				DB2ProviderAdapter.ClientNamespace                                          => InformixProvider.DB2,
-#if !NETFRAMEWORK
-				DB2ProviderAdapter.ClientNamespaceOld when options.ProviderName is not null => InformixProvider.DB2,
-#endif
-				_                                                                           => DetectProvider()
-			};
-
+			// don't merge this method and DetectProvider(provider type) logic because this method could return null
+			// and other method returns default provider type
 			switch (options.ProviderName)
 			{
 				case ProviderName.InformixDB2                  :
@@ -62,8 +50,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		public override IDataProvider GetDataProvider(ConnectionOptions options, InformixProvider provider, NoDialect version)
 		{
-			if (provider == InformixProvider.AutoDetect)
-				provider = DetectProvider();
+			provider = DetectProvider(options, provider);
 
 			return provider switch
 			{
@@ -72,19 +59,53 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			};
 		}
 
-		public static InformixProvider DetectProvider()
+		protected override DbConnection CreateConnection(InformixProvider provider, string connectionString)
 		{
+			return InformixProviderAdapter.GetInstance(provider).CreateConnection(connectionString);
+		}
+
+		protected override InformixProvider DetectProvider(ConnectionOptions options, InformixProvider provider)
+		{
+			if (provider is InformixProvider.DB2 or InformixProvider.Informix)
+				return provider;
+
+			switch (options.ProviderName)
+			{
+#if !NETFRAMEWORK
+				case DB2ProviderAdapter.ClientNamespaceOld
+					when options.ProviderName is not null      :
+				case DB2ProviderAdapter.ClientNamespace        :
+#endif
+				case DB2ProviderAdapter.NetFxClientNamespace   :
+				case DB2ProviderAdapter.CoreClientNamespace    :
+				case ProviderName.InformixDB2                  :
+					return InformixProvider.DB2;
+
+				case InformixProviderAdapter.IfxClientNamespace:
+					return InformixProvider.Informix;
+
+				default:
+					if (options.ConfigurationString?.Contains("DB2") == true)
+						return InformixProvider.DB2;
+
+					break;
+			}
+
 			var fileName = typeof(InformixProviderDetector).Assembly.GetFileName();
 			var dirName  = Path.GetDirectoryName(fileName);
 
 			return File.Exists(Path.Combine(dirName ?? ".", InformixProviderAdapter.IfxAssemblyName + ".dll"))
 				? InformixProvider.Informix
-				: InformixProvider.DB2;
-		}
-
-		protected override DbConnection CreateConnection(InformixProvider provider, string connectionString)
-		{
-			return InformixProviderAdapter.GetInstance(provider).CreateConnection(connectionString);
+				: File.Exists(Path.Combine(dirName ?? ".", DB2ProviderAdapter.AssemblyName + ".dll"))
+#if !NETFRAMEWORK
+					|| File.Exists(Path.Combine(dirName ?? ".", DB2ProviderAdapter.AssemblyNameOld + ".dll"))
+#endif
+					? InformixProvider.DB2
+#if NETFRAMEWORK
+					: InformixProvider.Informix;
+#else
+					: InformixProvider.DB2;
+#endif
 		}
 	}
 }

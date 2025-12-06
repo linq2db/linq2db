@@ -1032,6 +1032,16 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			Assert.That(record, Is.Not.Null);
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5225")]
+		public void AttachToExistingTransaction([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			ctx.Database.BeginTransaction();
+
+			using var db = ctx.CreateLinqToDBConnection();
+		}
 	}
 
 	#region Test Extensions

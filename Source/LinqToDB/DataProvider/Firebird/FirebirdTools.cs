@@ -21,9 +21,9 @@ namespace LinqToDB.DataProvider.Firebird
 			set => ProviderDetector.AutoDetectProvider = value;
 		}
 
-		public static IDataProvider GetDataProvider(FirebirdVersion version = FirebirdVersion.AutoDetect, string? connectionString = null, DbConnection? connection = null)
+		public static IDataProvider GetDataProvider(FirebirdVersion version = FirebirdVersion.AutoDetect, string? connectionString = null, DbConnection? connection = null, DbTransaction? transaction = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString, DbConnection: connection), default, version);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString, DbConnection: connection, DbTransaction: transaction), default, version);
 		}
 
 		public static void ResolveFirebird(string path)

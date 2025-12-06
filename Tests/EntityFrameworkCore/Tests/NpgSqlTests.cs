@@ -68,8 +68,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 						where Sql.Ext.PostgreSQL().Overlaps(m.Guids, guids)
 						select m;
 
-			var act = () => query.ToArray();
-			act.ShouldNotThrow();
+			query.ToArray();
 		}
 
 		[Test]
@@ -99,8 +98,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				where Sql.Ext.PostgreSQL().Overlaps(m.Guids, guids)
 				select m;
 
-			var act = () => query.ToArray();
-			act.ShouldNotThrow();
+			query.ToArray();
 		}
 
 		[Test]

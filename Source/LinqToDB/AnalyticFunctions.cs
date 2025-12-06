@@ -24,7 +24,7 @@ namespace LinqToDB
 
 		sealed class OrderItemBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var nulls = builder.GetValue<Sql.NullsPosition>("nulls");
 				switch (nulls)
@@ -45,7 +45,7 @@ namespace LinqToDB
 
 		sealed class ApplyAggregateModifier : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var modifier = builder.GetValue<Sql.AggregateModifier>("modifier");
 				switch (modifier)
@@ -66,7 +66,7 @@ namespace LinqToDB
 
 		sealed class ApplyNullsModifier : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var nulls = builder.GetValue<Sql.Nulls>("nulls");
 				var nullsStr = GetNullsStr(nulls, false);
@@ -77,7 +77,7 @@ namespace LinqToDB
 
 		sealed class ForceApplyNullsModifier : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var nulls = builder.GetValue<Sql.Nulls>("nulls");
 				var nullsStr = GetNullsStr(nulls, true);
@@ -121,7 +121,7 @@ namespace LinqToDB
 
 		sealed class ApplyFromAndNullsModifier : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var nulls = builder.GetValue<Sql.Nulls>("nulls");
 				var from  = builder.GetValue<Sql.From>("from");

@@ -7,13 +7,9 @@ using LinqToDB.DataProvider.Firebird;
 
 namespace LinqToDB.Internal.DataProvider.Firebird
 {
-	public class FirebirdProviderDetector : ProviderDetectorBase<FirebirdProviderDetector.Provider, FirebirdVersion>
+	public class FirebirdProviderDetector() : ProviderDetectorBase<FirebirdProviderDetector.Provider, FirebirdVersion>(FirebirdVersion.AutoDetect, FirebirdVersion.v25)
 	{
 		public enum Provider {}
-
-		public FirebirdProviderDetector() : base(FirebirdVersion.AutoDetect, FirebirdVersion.v25)
-		{
-		}
 
 		static readonly Lazy<IDataProvider> _firebirdDataProvider25 = CreateDataProvider<FirebirdDataProvider25>();
 		static readonly Lazy<IDataProvider> _firebirdDataProvider3  = CreateDataProvider<FirebirdDataProvider3 >();
@@ -83,9 +79,11 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			};
 		}
 
-		public override FirebirdVersion? DetectServerVersion(DbConnection connection)
+		protected override FirebirdVersion? DetectServerVersion(DbConnection connection, DbTransaction? transaction)
 		{
 			using var cmd = connection.CreateCommand();
+			if (transaction != null)
+				cmd.Transaction = transaction;
 
 			// note: query requires FB 2.1+, for older versions user should specify 2.5 provider explicitly
 			cmd.CommandText = "SELECT rdb$get_context('SYSTEM', 'ENGINE_VERSION') from rdb$database";

@@ -63,6 +63,7 @@ namespace Tests.UserTests
 		/// </summary>
 		/// <param name="context">Configuration string for test context.</param>
 		[Test]
+		[YdbNotImplementedYet]
 		public void TestAttributeMapping([DataSources(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -96,6 +97,7 @@ namespace Tests.UserTests
 		/// </summary>
 		/// <param name="context">Configuration string for test context.</param>
 		[Test]
+		[YdbNotImplementedYet]
 		public void TestFluentMapping([DataSources(false)] string context)
 		{
 			var ms = new MappingSchema();

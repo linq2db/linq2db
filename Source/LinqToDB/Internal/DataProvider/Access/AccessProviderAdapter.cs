@@ -80,7 +80,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 				return _odbcProvider;
 			}
-			else
+			else if (provider == AccessProvider.OleDb)
 			{
 				if (_oledbProvider == null)
 				{
@@ -93,6 +93,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 				return _oledbProvider;
 			}
 
+			throw new InvalidOperationException($"Unsupported provider type: {provider}");
 		}
 	}
 }

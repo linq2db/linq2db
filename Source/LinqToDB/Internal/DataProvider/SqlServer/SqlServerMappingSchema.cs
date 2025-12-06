@@ -5,6 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
@@ -784,12 +785,84 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 #if SUPPORTS_DATEONLY
 				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
+
+				SetValueToSqlConverter(typeof(Half[]), (s,dt, _, value) => BuildHalfVectorLiteral(s, (Half[])value, dt.Type.Length ?? ((Half[])value).Length));
+				SetDefaultValue       (typeof(Half[]), null);
+				SetCanBeNull          (typeof(Half[]), true);
+				AddScalarType         (typeof(Half[]), new SqlDataType(new DbDataType(typeof(Half[]), DataType.Vector16, null)));
 #endif
+
+				SetValueToSqlConverter(typeof(float[]), (s,dt, _, value) => BuildVectorLiteral(s, (float[])value, dt.Type.Length ?? ((float[])value).Length));
+				SetDefaultValue       (typeof(float[]), null);
+				SetCanBeNull          (typeof(float[]), true);
+				AddScalarType         (typeof(float[]), new SqlDataType(new DbDataType(typeof(float[]), DataType.Vector32, null)));
 			}
 
 			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
 			{
 				return Instance.TryGetConvertExpression(@from, to);
+			}
+
+			internal static readonly MethodInfo BuildVectorLiteralMethod     = typeof(SqlServer2025MappingSchema).GetMethod(nameof(BuildVectorLiteral), BindingFlags.Static | BindingFlags.NonPublic)!;
+
+#if !SUPPORTS_SPAN
+			// we need System.Memory dep otherwise
+			static void BuildVectorLiteral(StringBuilder sb, float[] data, int size)
+				=> BuildAnyVectorLiteral(sb, data, "float32", size);
+
+			static void BuildAnyVectorLiteral<T>(StringBuilder sb, T[] data, string typeName, int size)
+			{
+				sb.Append("CAST('");
+
+				BuildAnyVectorArrayRaw(sb, data);
+
+				sb.Append(FormattableString.Invariant($"' AS VECTOR({size}, {typeName}))"));
+			}
+#else
+			internal static readonly MethodInfo BuildHalfVectorLiteralMethod = typeof(SqlServer2025MappingSchema).GetMethod(nameof(BuildHalfVectorLiteral), BindingFlags.Static | BindingFlags.NonPublic)!;
+
+			static void BuildVectorLiteral(StringBuilder sb, ReadOnlySpan<float> data, int size) => BuildAnyVectorLiteral(sb, data, "float32", size);
+
+			static void BuildHalfVectorLiteral(StringBuilder sb, ReadOnlySpan<Half> data, int size) => BuildAnyVectorLiteral(sb, data, "float16", size);
+
+			static void BuildAnyVectorLiteral<T>(StringBuilder sb, ReadOnlySpan<T> data, string typeName, int size)
+			{
+				sb.Append("CAST('");
+
+				BuildAnyVectorRaw(sb, data);
+
+				sb.Append(FormattableString.Invariant($"' AS VECTOR({size}, {typeName}))"));
+			}
+
+			static void BuildAnyVectorRaw<T>(StringBuilder sb, ReadOnlySpan<T> data)
+			{
+				sb.Append('[');
+
+				for (var i = 0; i < data.Length; i++)
+				{
+					if (i > 0)
+						sb.Append(", ");
+
+					sb.Append(CultureInfo.InvariantCulture, $"{data[i]}");
+				}
+
+				sb.Append(']');
+			}
+#endif
+
+			internal static void BuildAnyVectorArrayRaw<T>(StringBuilder sb, T[] data)
+			{
+				sb.Append('[');
+
+				for (var i = 0; i < data.Length; i++)
+				{
+					if (i > 0)
+						sb.Append(", ");
+
+					sb.Append(CultureInfo.InvariantCulture, $"{data[i]}");
+				}
+
+				sb.Append(']');
 			}
 		}
 

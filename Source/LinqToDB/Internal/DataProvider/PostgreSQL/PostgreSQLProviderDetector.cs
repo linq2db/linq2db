@@ -7,13 +7,9 @@ using LinqToDB.DataProvider.PostgreSQL;
 
 namespace LinqToDB.Internal.DataProvider.PostgreSQL
 {
-	public class PostgreSQLProviderDetector : ProviderDetectorBase<PostgreSQLProviderDetector.Provider,PostgreSQLVersion>
+	public class PostgreSQLProviderDetector() : ProviderDetectorBase<PostgreSQLProviderDetector.Provider,PostgreSQLVersion>(PostgreSQLVersion.AutoDetect, PostgreSQLVersion.v92)
 	{
 		public enum Provider {}
-
-		public PostgreSQLProviderDetector() : base(PostgreSQLVersion.AutoDetect, PostgreSQLVersion.v92)
-		{
-		}
 
 		static readonly Lazy<IDataProvider> _postgreSQLDataProvider92 = CreateDataProvider<PostgreSQLDataProvider92>();
 		static readonly Lazy<IDataProvider> _postgreSQLDataProvider93 = CreateDataProvider<PostgreSQLDataProvider93>();
@@ -106,7 +102,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			};
 		}
 
-		public override PostgreSQLVersion? DetectServerVersion(DbConnection connection)
+		protected override PostgreSQLVersion? DetectServerVersion(DbConnection connection, DbTransaction? transaction)
 		{
 			var postgreSqlVersion = NpgsqlProviderAdapter.GetInstance().ConnectionWrapper(connection).PostgreSqlVersion;
 

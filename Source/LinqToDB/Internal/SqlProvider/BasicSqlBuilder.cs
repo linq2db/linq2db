@@ -4255,7 +4255,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return sb;
 		}
 
-		private bool PrintParameterValue(StringBuilder sb, object? value)
+		protected virtual bool PrintParameterValue(StringBuilder sb, object? value)
 		{
 			var maxBinaryLogging = LinqToDB.Common.Configuration.MaxBinaryParameterLengthLogging;
 			var maxStringLogging = LinqToDB.Common.Configuration.MaxStringParameterLengthLogging;

@@ -24,9 +24,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			set => ProviderDetector.AutoDetectProvider = value;
 		}
 
-		public static IDataProvider GetDataProvider(PostgreSQLVersion version = PostgreSQLVersion.AutoDetect, string? connectionString = null, DbConnection? connection = null)
+		public static IDataProvider GetDataProvider(PostgreSQLVersion version = PostgreSQLVersion.AutoDetect, string? connectionString = null, DbConnection? connection = null, DbTransaction? transaction = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection, ConnectionString: connectionString), default, version);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection, ConnectionString: connectionString, DbTransaction: transaction), default, version);
 		}
 
 		public static void ResolvePostgreSQL(string path)

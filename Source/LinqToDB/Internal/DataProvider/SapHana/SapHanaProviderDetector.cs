@@ -11,10 +11,6 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 {
 	public sealed class SapHanaProviderDetector : ProviderDetectorBase<SapHanaProvider>
 	{
-		public SapHanaProviderDetector() : base()
-		{
-		}
-
 		static readonly Lazy<IDataProvider> _hanaDataProvider     = CreateDataProvider<SapHanaNativeDataProvider>();
 		static readonly Lazy<IDataProvider> _hanaOdbcDataProvider = CreateDataProvider<SapHanaOdbcDataProvider>();
 
@@ -23,34 +19,29 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			if (options.ConnectionString?.IndexOf("HDBODBC", StringComparison.OrdinalIgnoreCase) >= 0)
 				return _hanaOdbcDataProvider.Value;
 
-			var provider = options.ProviderName switch
-			{
-				SapHanaProviderAdapter.UnmanagedClientNamespace => SapHanaProvider.Unmanaged,
-				OdbcProviderAdapter.ClientNamespace             => SapHanaProvider.ODBC,
-				_                                               => DetectProvider()
-			};
-
+			// don't merge this method and DetectProvider(provider type) logic because this method could return null
+			// and other method returns default provider type
 			switch (options.ProviderName)
 			{
 				case SapHanaProviderAdapter.UnmanagedClientNamespace:
-				case "Sap.Data.Hana.v4.5"                  :
-				case "Sap.Data.Hana.Core"                  :
-				case "Sap.Data.Hana.Core.v2.1"             :
-				case "Sap.Data.Hana.Net"                   :
-				case "Sap.Data.Hana.Net.v6.0"              :
-				case "Sap.Data.Hana.Net.v8.0"              :
-				case ProviderName.SapHanaNative            : return _hanaDataProvider.Value;
-				case ProviderName.SapHanaOdbc              : return _hanaOdbcDataProvider.Value;
-				case ""                                    :
-				case null                                  :
+				case "Sap.Data.Hana.v4.5"                           :
+				case "Sap.Data.Hana.Core"                           :
+				case "Sap.Data.Hana.Core.v2.1"                      :
+				case "Sap.Data.Hana.Net"                            :
+				case "Sap.Data.Hana.Net.v6.0"                       :
+				case "Sap.Data.Hana.Net.v8.0"                       :
+				case ProviderName.SapHanaNative                     : return _hanaDataProvider.Value;
+				case ProviderName.SapHanaOdbc                       : return _hanaOdbcDataProvider.Value;
+				case ""                                             :
+				case null                                           :
 					if (options.ConfigurationString?.Contains("Hana") == true)
 						goto case ProviderName.SapHana;
 					break;
-				case ProviderName.SapHana                  :
+				case ProviderName.SapHana                           :
 					if (options.ConfigurationString?.IndexOf("ODBC", StringComparison.OrdinalIgnoreCase) >= 0)
 						return _hanaOdbcDataProvider.Value;
 
-					return GetDataProvider(options, provider, default);
+					return GetDataProvider(options, DetectProvider(options, SapHanaProvider.AutoDetect), default);
 			}
 
 			return null;
@@ -58,8 +49,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		public override IDataProvider GetDataProvider(ConnectionOptions options, SapHanaProvider provider, NoDialect version)
 		{
-			if (provider == SapHanaProvider.AutoDetect)
-				provider = DetectProvider();
+			provider = DetectProvider(options, provider);
 
 			return provider switch
 			{
@@ -68,8 +58,35 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			};
 		}
 
-		public static SapHanaProvider DetectProvider()
+		protected override DbConnection CreateConnection(SapHanaProvider provider, string connectionString)
 		{
+			return SapHanaProviderAdapter.GetInstance(provider).CreateConnection(connectionString);
+		}
+		protected override SapHanaProvider DetectProvider(ConnectionOptions options, SapHanaProvider provider)
+		{
+			if (provider is SapHanaProvider.ODBC or SapHanaProvider.Unmanaged)
+				return provider;
+
+			switch (options.ProviderName)
+			{
+				case SapHanaProviderAdapter.UnmanagedClientNamespace:
+				case "Sap.Data.Hana.v4.5"                           :
+				case "Sap.Data.Hana.Core"                           :
+				case "Sap.Data.Hana.Core.v2.1"                      :
+				case "Sap.Data.Hana.Net"                            :
+				case "Sap.Data.Hana.Net.v6.0"                       :
+				case "Sap.Data.Hana.Net.v8.0"                       :
+				case ProviderName.SapHanaNative                     :
+					return SapHanaProvider.Unmanaged;
+
+				case OdbcProviderAdapter.ClientNamespace            :
+				case ProviderName.SapHanaOdbc                       :
+					return SapHanaProvider.ODBC;
+			}
+
+			if (options.ConfigurationString?.IndexOf("ODBC", StringComparison.OrdinalIgnoreCase) >= 0)
+				return SapHanaProvider.ODBC;
+
 			var fileName = typeof(SapHanaProviderDetector).Assembly.GetFileName();
 			var dirName  = Path.GetDirectoryName(fileName);
 
@@ -80,11 +97,6 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			}
 
 			return SapHanaProvider.ODBC;
-		}
-
-		protected override DbConnection CreateConnection(SapHanaProvider provider, string connectionString)
-		{
-			return SapHanaProviderAdapter.GetInstance(provider).CreateConnection(connectionString);
 		}
 	}
 }

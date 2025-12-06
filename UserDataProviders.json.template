@@ -248,6 +248,9 @@
 			//"ClickHouse.Octonica",
 			//"ClickHouse.Driver",
 			//"ClickHouse.MySql",
+
+			// YDB
+			//"YDB",
 		]
 	},
 
@@ -371,6 +374,9 @@
 			//"ClickHouse.Octonica",
 			//"ClickHouse.Driver",
 			//"ClickHouse.MySql",
+
+			// YDB
+			//"YDB",
 		]
 	},
 
@@ -838,6 +844,10 @@
 			"ClickHouse.MySql": {
 				"Provider": "MySqlConnector",
 				"ConnectionString": "Host=localhost;Port=9004;Database=testdb3;Username=testuser;Password=testuser;Pooling=false;"
+			},
+			"YDB": {
+				"Provider": "Ydb.Sdk",
+				"ConnectionString": "Host=localhost;Port=2136;Database=/local;UseTls=false;DisableDiscovery=true"
 			}
 		}
 	},

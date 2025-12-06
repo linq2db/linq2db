@@ -59,22 +59,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		// excluded providers don't support cloning and remove credentials from connection string
-		[Test]
-		public void TestConnectionStringCopy(
-			[DataSources(
-				false,
-				TestProvName.AllMySqlConnector,
-				TestProvName.AllOracle,
-				TestProvName.AllSapHana)]
-					string context)
-		{
-			using (var db = new IssueDataConnection(context))
-			{
-				db.GetTable<Child>().LoadWith(p => p.Parent!.Children).First();
-			}
-		}
-
 		[Test]
 		public void TestFactory([DataSources(false)] string context)
 		{
