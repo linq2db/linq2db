@@ -566,14 +566,7 @@ namespace LinqToDB.Internal.Conversion
 				ex = GetConverter(mappingSchema, cp, ufrom, uto);
 
 				if (ex != null)
-				{
-					ex = new(
-						(Expression)Expression.Condition(
-							Expression.Equal(expr, Expression.Constant(null, from)),
-							new DefaultValueExpression(mappingSchema, to),
-							Expression.Convert(ex.Value.Expression, to)),
-						ex.Value.IsLambda);
-				}
+					ex = new(Expression.Convert(ex.Value.Expression, to) as Expression, ex.Value.IsLambda);
 			}
 
 			return ex;

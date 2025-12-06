@@ -1753,7 +1753,15 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			db.Parent.Select(p => new { Value = (byte?)p.Value1 }).ToArray();
+			var result = db.Parent.Where(p => p.ParentID <= 2).OrderBy(p => p.ParentID).Select(p => new { Value = (byte?)p.Value1 }).ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(2));
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[0].Value, Is.EqualTo(1));
+				Assert.That(result[1].Value, Is.Null);
+			}
 		}
 	}
 }
