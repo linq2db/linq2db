@@ -579,24 +579,24 @@ namespace LinqToDB.Internal.Conversion
 			return ex;
 		}
 
-		// TODO: v7: migrate API to records
-		public static Tuple<LambdaExpression,LambdaExpression?,bool> GetConverter(MappingSchema? mappingSchema, Type from, Type to)
+		public static ConverterLambda GetConverter(MappingSchema? mappingSchema, Type from, Type to)
 		{
 			mappingSchema ??= MappingSchema.Default;
 
 			var p  = Expression.Parameter(from, "p");
-			var ne = null as LambdaExpression;
 
 			if (from == to)
-				return Tuple.Create(Expression.Lambda(p, p), ne, false);
+				return new(Expression.Lambda(p, p), null, false);
 
 			if (to == typeof(object))
-				return Tuple.Create(Expression.Lambda(Expression.Convert(p, typeof(object)), p), ne, false);
+				return new(Expression.Lambda(Expression.Convert(p, typeof(object)), p), null, false);
 
 			var ex =
 				GetConverter     (mappingSchema, p, from, to) ??
 				ConvertUnderlying(mappingSchema, p, from, from.UnwrapNullableType(), to, to.UnwrapNullableType()) ??
 				ConvertUnderlying(mappingSchema, p, from, from.ToUnderlying(),       to, to.ToUnderlying());
+
+			LambdaExpression? ne = null;
 
 			if (ex != null)
 			{
@@ -613,7 +613,7 @@ namespace LinqToDB.Internal.Conversion
 			}
 
 			if (ex != null)
-				return Tuple.Create(Expression.Lambda(ex.Value.Expression, p), ne, ex.Value.IsLambda);
+				return new(Expression.Lambda(ex.Value.Expression, p), ne, ex.Value.IsLambda);
 
 			if (to.IsNullableType)
 			{
@@ -628,7 +628,7 @@ namespace LinqToDB.Internal.Conversion
 
 				defex = GetCtor(uto, to, defex)!;
 
-				return Tuple.Create(Expression.Lambda(defex, p), ne, false);
+				return new(Expression.Lambda(defex, p), ne, false);
 			}
 			else
 			{
@@ -639,7 +639,7 @@ namespace LinqToDB.Internal.Conversion
 				if (defex.Type != to)
 					defex = Expression.Convert(defex, to);
 
-				return Tuple.Create(Expression.Lambda(defex, p), ne, false);
+				return new(Expression.Lambda(defex, p), ne, false);
 			}
 		}
 
