@@ -210,7 +210,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			return dataConnection.Query<PrimaryKeyInfo>(
-				$$"""
+				$"""
 					SELECT
 						current_database() || '.' || pg_namespace.nspname || '.' || pg_class.relname as TableID,
 						pg_constraint.conname                                                        as PrimaryKeyName,
