@@ -1,5 +1,7 @@
 ﻿extern alias MySqlConnector;
 
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -8,6 +10,9 @@ using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using static System.Net.Mime.MediaTypeNames;
+using static Tests.Linq.StringJoinTests;
 
 #pragma warning disable CA1820
 
@@ -47,6 +52,9 @@ namespace Tests.Linq
 				};
 				return data;
 			}
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Id), CanBeNull = true)]
+			public List<SampleClass> Children { get; set; } = null!;
 		}
 
 		[Test]
@@ -61,7 +69,7 @@ namespace Tests.Linq
 				into g
 				select new
 				{
-					Id = g.Key, 
+					Id = g.Key,
 					Nullable = string.Join(", ", g.Select(x => x.NullableValue)),
 					NotNullable = string.Join(", ", g.Select(x => x.NotNullableValue)),
 				}
@@ -84,7 +92,7 @@ namespace Tests.Linq
 				into g
 				select new
 				{
-					Id          = g.Key, 
+					Id          = g.Key,
 					Nullable    = string.Join(separator, g.Select(x => x.NullableValue)),
 					NotNullable = string.Join(separator, g.Select(x => x.NotNullableValue)),
 				}
@@ -97,7 +105,7 @@ namespace Tests.Linq
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
-		public void JoinWithGroupingVarious([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
+		public void JoinWithGroupingVarious([DataSources(TestProvName.AllSqlServer2016Minus, TestProvName.AllOracle)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
@@ -138,7 +146,7 @@ namespace Tests.Linq
 				into g
 				select new
 				{
-					Id          = g.Key, 
+					Id          = g.Key,
 					Nullable    = string.Join(", ", g.OrderBy(x => x.NotNullableValue).Select(x => x.NullableValue).Take(2)),
 					NotNullable = string.Join(", ", g.OrderBy(x => x.NotNullableValue).Select(x => x.NotNullableValue).Take(2)),
 				}
@@ -151,7 +159,7 @@ namespace Tests.Linq
 
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
-		public void JoinWithGroupingOrdered([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
+		public void JoinWithGroupingOrdered([DataSources(TestProvName.AllSqlServer2016Minus, TestProvName.AllOracle)] string context)
 		{
 			var       data  = SampleClass.GenerateDataNotUniqueId();
 			using var db    = GetDataContext(context);
@@ -165,7 +173,7 @@ namespace Tests.Linq
 				select new
 				{
 					Id          = g.Key,
-					
+
 					Nullable    = string.Join(", ", g
 						.OrderBy(x => x.NotNullableValue)
 						.ThenByDescending(x => x.NullableValue)
@@ -179,11 +187,11 @@ namespace Tests.Linq
 						.Where(x => x != null && x != "")
 					),
 
-                    NotNullable = string.Join(", ", g
+					NotNullable = string.Join(", ", g
 						.OrderByDescending(x => x.NotNullableValue)
 						.ThenByDescending(x => x.NullableValue)
 						.Select(x => x.NotNullableValue)),
-						
+
 
 					NullableDoubleOrder    = string.Join(", ", g
 						.OrderBy(x => x.NotNullableValue)
@@ -212,7 +220,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinWithGroupingOrderSimple([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle, TestProvName.AllDB2)] string context)
+		public void JoinWithGroupingOrderSimple([DataSources(TestProvName.AllSqlServer2016Minus, TestProvName.AllOracle, TestProvName.AllDB2)] string context)
 		{
 			var       data  = SampleClass.GenerateDataNotUniqueId();
 			using var db    = GetDataContext(context);
@@ -244,7 +252,7 @@ namespace Tests.Linq
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
-		public void JoinWithGroupingDistinctSimple([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllSapHana, TestProvName.AllOracle, TestProvName.AllSybase)] string context)
+		public void JoinWithGroupingDistinctSimple([DataSources(TestProvName.AllSqlServer2016Minus, TestProvName.AllSapHana, TestProvName.AllOracle, TestProvName.AllSybase)] string context)
 		{
 			var       data  = SampleClass.GenerateDataNotUniqueId();
 			using var db    = GetDataContext(context);
@@ -355,7 +363,7 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
-			var query = 
+			var query =
 				from t in table
 				select new
 				{
@@ -365,7 +373,7 @@ namespace Tests.Linq
 						.Where(x=> x != null)
 						.Distinct()
 						.OrderBy(x => x))),
-						
+
 					AggregatedFilteredDistinct = Sql.AsSql(string.Join(", ", new [] {t.NotNullableValue, t.NotNullableValue, t.NotNullableValue, t.NVarcharValue}
 						.Where(x=> x != "A")
 						.Distinct()
@@ -431,5 +439,54 @@ namespace Tests.Linq
 			Assert.DoesNotThrow(() => _ = query.ToList());
 		}
 
+		[Test]
+		public void JoinSubqueryTest1([DataSources] string context)
+		{
+			var       data  = SampleClass.GenerateDataUniqueId();
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				select new
+				{
+					t,
+					Result = t.Children.Select(ag => ag.VarcharValue).StringAggregate(" | ").ToValue(),
+				};
+
+			Assert.DoesNotThrow(() =>
+				query.Update(
+					t => t.t,
+					t => new SampleClass
+					{
+						VarcharValue  = t.Result,
+						NVarcharValue = t.Result
+					}));
+		}
+
+		[Test]
+		public void JoinSubqueryTest2([DataSources] string context)
+		{
+			var       data  = SampleClass.GenerateDataUniqueId();
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				select new
+				{
+					t,
+					Result = string.Join(", ", t.Children!.Select(x => x.VarcharValue))
+				};
+
+			Assert.DoesNotThrow(() =>
+				query.Update(
+					t => t.t,
+					t => new SampleClass
+					{
+						VarcharValue  = t.Result,
+						NVarcharValue = t.Result
+					}));
+		}
 	}
 }
