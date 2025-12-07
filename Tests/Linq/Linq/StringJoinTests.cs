@@ -11,9 +11,6 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-using static System.Net.Mime.MediaTypeNames;
-using static Tests.Linq.StringJoinTests;
-
 #pragma warning disable CA1820
 
 namespace Tests.Linq
