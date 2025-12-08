@@ -9,10 +9,10 @@ using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	[BuildsMethodCall("Join")]
+	[BuildsMethodCall(nameof(Enumerable.Join))]
 #if NET10_0_OR_GREATER
-	[BuildsMethodCall("LeftJoin")]
-	[BuildsMethodCall("RightJoin")]
+	[BuildsMethodCall(nameof(Enumerable.LeftJoin))]
+	[BuildsMethodCall(nameof(Enumerable.RightJoin))]
 #endif
 	sealed class JoinBuilder : MethodCallBuilder
 	{
@@ -21,23 +21,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (call.Method.DeclaringType == typeof(LinqExtensions) || !call.IsQueryable())
 				return false;
 
-			// other overload for Join
-			if (call.Arguments[2].Unwrap() is not LambdaExpression lambda)
+			if (call.Arguments.Count != 5)
 				return false;
-
-			var body = lambda.Body.Unwrap();
-			if (body.NodeType == ExpressionType.MemberInit)
-			{
-				var mi = (MemberInitExpression)body;
-
-				var throwExpr = 
-					mi.NewExpression.Arguments.Count > 0
-					|| mi.Bindings.Count == 0
-					|| mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment);
-
-				if (throwExpr)
-					throw new NotSupportedException($"Explicit construction of entity type '{body.Type}' in join is not allowed.");
-			}
 
 			return true;
 		}
@@ -59,11 +44,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				extensions   = jhc.Extensions;
 			}
 
+#if NET10_0_OR_GREATER
 			var joinType = methodCall.Method.Name switch
 			{
-				"LeftJoin"  => JoinType.Left,
-				"RightJoin" => JoinType.Right,
-				_           =>  JoinType.Inner,
+				nameof(Enumerable.LeftJoin)  => JoinType.Left,
+				nameof(Enumerable.RightJoin) => JoinType.Right,
+				_                            => JoinType.Inner,
 			};
 
 			if (joinType is JoinType.Right)
@@ -74,9 +60,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					outerContext,
 					defaultValue: null,
 					isNullValidationDisabled: false);
-			}
 
-			outerContext = new SubQueryContext(outerContext);
+				outerContext = new SubQueryContext(outerContext);
+			}
 
 			if (joinType is JoinType.Left)
 			{
@@ -86,12 +72,31 @@ namespace LinqToDB.Internal.Linq.Builder
 					innerContext,
 					defaultValue: null,
 					isNullValidationDisabled: false);
+
+				innerContext = new SubQueryContext(innerContext);
 			}
+#else
+			var joinType = JoinType.Inner;
+#endif
 
 			var outerKeyLambda = methodCall.Arguments[2].UnwrapLambda();
 			var innerKeyLambda = methodCall.Arguments[3].UnwrapLambda();
 
-			var join = new SqlJoinedTable(joinType, innerContext.SelectQuery, innerKeyLambda.Parameters[0].Name, false);
+			var outerBody = outerKeyLambda.Body.Unwrap();
+			if (outerBody.NodeType == ExpressionType.MemberInit)
+			{
+				var mi = (MemberInitExpression)outerBody;
+
+				var throwExpr =
+					mi.NewExpression.Arguments.Count > 0
+					|| mi.Bindings.Count             == 0
+					|| mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment);
+
+				if (throwExpr)
+					return BuildSequenceResult.Error(outerKeyLambda, $"Explicit construction of entity type '{outerBody.Type}' in join is not allowed.");
+			}
+
+			var join = new SqlJoinedTable(joinType, innerContext.SelectQuery, null, false);
 			var sql  = outerContext.SelectQuery;
 
 			if (extensions != null)
