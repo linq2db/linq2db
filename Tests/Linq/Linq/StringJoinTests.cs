@@ -102,7 +102,7 @@ namespace Tests.Linq
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
-		public void JoinWithGroupingVarious([DataSources(TestProvName.AllSqlServer2016Minus, TestProvName.AllOracle)] string context)
+		public void JoinWithGroupingVarious([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
@@ -156,7 +156,7 @@ namespace Tests.Linq
 
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
-		public void JoinWithGroupingOrdered([DataSources(TestProvName.AllSqlServer2016Minus, TestProvName.AllOracle)] string context)
+		public void JoinWithGroupingOrdered([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
 		{
 			var       data  = SampleClass.GenerateDataNotUniqueId();
 			using var db    = GetDataContext(context);
@@ -217,7 +217,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinWithGroupingOrderSimple([DataSources(TestProvName.AllSqlServer2016Minus, TestProvName.AllOracle, TestProvName.AllDB2)] string context)
+		public void JoinWithGroupingOrderSimple([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle, TestProvName.AllDB2)] string context)
 		{
 			var       data  = SampleClass.GenerateDataNotUniqueId();
 			using var db    = GetDataContext(context);
@@ -249,7 +249,7 @@ namespace Tests.Linq
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllDB2], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
-		public void JoinWithGroupingDistinctSimple([DataSources(TestProvName.AllSqlServer2016Minus, TestProvName.AllSapHana, TestProvName.AllOracle, TestProvName.AllSybase)] string context)
+		public void JoinWithGroupingDistinctSimple([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllSapHana, TestProvName.AllOracle, TestProvName.AllSybase)] string context)
 		{
 			var       data  = SampleClass.GenerateDataNotUniqueId();
 			using var db    = GetDataContext(context);
@@ -437,7 +437,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void JoinSubqueryTest1([DataSources] string context)
+		public void StringJoinAssociationSubqueryUpdate1([DataSources()] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
@@ -461,8 +461,9 @@ namespace Tests.Linq
 					}));
 		}
 
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)]
 		[Test]
-		public void JoinSubqueryTest2([DataSources] string context)
+		public void StringJoinAssociationSubqueryUpdate2([DataSources()] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);

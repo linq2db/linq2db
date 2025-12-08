@@ -1045,7 +1045,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (joinSource.Source.ElementType == QueryElementType.SqlQuery)
 			{
 				var sql   = (SelectQuery)joinSource.Source;
-				var isAgg = sql.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
+				var isAgg = QueryHelper.IsAggregationQuery(sql);
 
 				isApplySupported = isApplySupported && (joinTable.JoinType == JoinType.CrossApply ||
 				                                        joinTable.JoinType == JoinType.OuterApply);
@@ -2915,6 +2915,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 										if (_providerFlags.IsApplyJoinSupported)
 										{
+											if (_updateQuery == sq)
+											{
+												// updating query - cannot move multi column usage to subquery
+												isValid = false;
+												break;
+											}
+
 											MoveDuplicateUsageToSubQuery(sq, ref doNotRemoveQueries);
 											// will be processed in the next step
 											ti         = -1;
@@ -2971,8 +2978,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 								table.Joins.RemoveAt(j);
 								joinQuery.Where.ConcatSearchCondition(join.Condition);
-
-								var isNullable = join.JoinType is JoinType.Left or JoinType.OuterApply;
 
 								// replacing column with subquery
 

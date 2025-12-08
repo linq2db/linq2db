@@ -1593,16 +1593,20 @@ namespace LinqToDB.Internal.SqlQuery
 			});
 		}
 
-		public static void MarkAsNonQueryParameters(IQueryElement root)
+		public static TElement MarkAsNonQueryParameters<TElement>(TElement root)
+		where TElement : class, IQueryElement
 		{
-			root.VisitAll(static e =>
+			var newElement = root.Convert(1, static (_, e) =>
 			{
 				if (e.ElementType == QueryElementType.SqlParameter)
 				{
 					var param = (SqlParameter)e;
-					param.IsQueryParameter = false;
+					return param.WithIsQueryParameter(false);
 				}
+				return e;
 			});
+
+			return (TElement)newElement;
 		}
 
 		public static bool? GetBoolValue(IQueryElement element, EvaluationContext evaluationContext)

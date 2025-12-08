@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 using LinqToDB.Common;
+using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
@@ -1552,10 +1553,12 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			var toDataType = cast.ToType;
 
-			if (cast.SystemType == typeof(string) && cast.Expression is SqlValue value)
+			if (!cast.IsMandatory && cast.SystemType == typeof(string) && cast.Expression is SqlValue value)
 			{
 				if (value.Value is char charValue)
 					return new SqlValue(cast.Type, charValue.ToString());
+				if (value.Value is string stringValue)
+					return new SqlValue(cast.Type, stringValue);
 			}
 
 			var fromDbType = QueryHelper.GetDbDataType(cast.Expression, MappingSchema);
