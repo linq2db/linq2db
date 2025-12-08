@@ -493,7 +493,7 @@ namespace LinqToDB.Internal.Conversion
 			return null;
 		}
 
-		record struct Conversion(Expression Expression, bool IsLambda);
+		record struct Conversion(Expression Expression, bool IsSchemaSpecific);
 
 		static Conversion? GetConverter(MappingSchema mappingSchema, Expression expr, Type from, Type to)
 		{
@@ -556,7 +556,7 @@ namespace LinqToDB.Internal.Conversion
 				ex = GetConverter(mappingSchema, expr, from, uto);
 
 				if (ex != null)
-					ex = new(Expression.Convert(ex.Value.Expression, to), ex.Value.IsLambda);
+					ex = new(Expression.Convert(ex.Value.Expression, to), ex.Value.IsSchemaSpecific);
 			}
 
 			if (ex == null && from != ufrom && to != uto)
@@ -566,7 +566,7 @@ namespace LinqToDB.Internal.Conversion
 				ex = GetConverter(mappingSchema, cp, ufrom, uto);
 
 				if (ex != null)
-					ex = new(Expression.Convert(ex.Value.Expression, to) as Expression, ex.Value.IsLambda);
+					ex = new(Expression.Convert(ex.Value.Expression, to), ex.Value.IsSchemaSpecific);
 			}
 
 			return ex;
@@ -597,16 +597,16 @@ namespace LinqToDB.Internal.Conversion
 
 				if (from.IsNullableType)
 					ex = new(
-						Expression.Condition(ExpressionHelper.Property(p, nameof(Nullable<>.HasValue)), ex.Value.Expression, new DefaultValueExpression(mappingSchema, to)) as Expression,
-						ex.Value.IsLambda);
+						Expression.Condition(ExpressionHelper.Property(p, nameof(Nullable<>.HasValue)), ex.Value.Expression, new DefaultValueExpression(mappingSchema, to)),
+						ex.Value.IsSchemaSpecific);
 				else if (from.IsClass)
 					ex = new(
-						Expression.Condition(Expression.NotEqual(p, Expression.Constant(null, from)), ex.Value.Expression, new DefaultValueExpression(mappingSchema, to)) as Expression,
-						ex.Value.IsLambda);
+						Expression.Condition(Expression.NotEqual(p, Expression.Constant(null, from)), ex.Value.Expression, new DefaultValueExpression(mappingSchema, to)),
+						ex.Value.IsSchemaSpecific);
 			}
 
 			if (ex != null)
-				return new(Expression.Lambda(ex.Value.Expression, p), ne, ex.Value.IsLambda);
+				return new(Expression.Lambda(ex.Value.Expression, p), ne, ex.Value.IsSchemaSpecific);
 
 			if (to.IsNullableType)
 			{
