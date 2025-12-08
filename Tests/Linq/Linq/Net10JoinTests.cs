@@ -63,7 +63,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LeftJoinWithSubquery([DataSources] string context)
+		public void LeftJoinWithSubquery([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -81,7 +81,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RightJoinWithSubquery([DataSources()] string context)
+		public void RightJoinWithSubquery([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 
