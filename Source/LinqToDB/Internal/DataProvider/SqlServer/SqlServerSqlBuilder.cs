@@ -325,7 +325,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			switch (type.DataType)
 			{
-				case DataType.Json      : StringBuilder.Append("JSON");             return;
 				case DataType.Guid      : StringBuilder.Append("UniqueIdentifier"); return;
 				case DataType.Variant   : StringBuilder.Append("Sql_Variant");      return;
 				case DataType.Money     : StringBuilder.Append("MONEY");            return;

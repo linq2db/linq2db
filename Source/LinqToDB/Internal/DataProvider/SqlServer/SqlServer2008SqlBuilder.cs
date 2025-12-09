@@ -28,5 +28,16 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		}
 
 		public override string  Name => ProviderName.SqlServer2008;
+
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
+		{
+			if (type.DataType == DataType.Json)
+			{
+				StringBuilder.Append("NVARCHAR(MAX)");
+				return;
+			}
+
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
+		}
 	}
 }
