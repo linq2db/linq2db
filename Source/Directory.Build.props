@@ -3,6 +3,9 @@
 
 	<PropertyGroup>
 		<RunApiAnalyzersDuringBuild>false</RunApiAnalyzersDuringBuild>
+
+		<!--https://github.com/dotnet/sourcelink/issues/572-->
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
 	</PropertyGroup>
 
 	<ItemGroup>
