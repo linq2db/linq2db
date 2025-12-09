@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
+using LinqToDB.Schema;
 
 using NUnit.Framework;
 
@@ -20,7 +21,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class SampleClass
 		{
-			[Column]                                                              public int     Id               { get; set; }
+			[Column, PrimaryKey]                                                  public int     Id               { get; set; }
 			[Column(Length = 50, CanBeNull = true)]                               public string? NullableValue    { get; set; }
 			[Column(Length = 50, CanBeNull = false)]                              public string  NotNullableValue { get; set; } = string.Empty;
 			[Column(Length = 50, CanBeNull = true, DataType = DataType.VarChar)]  public string? VarcharValue     { get; set; }
@@ -436,8 +437,9 @@ namespace Tests.Linq
 			Assert.DoesNotThrow(() => _ = query.ToList());
 		}
 
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)]
 		[Test]
-		public void StringJoinAssociationSubqueryUpdate1([DataSources()] string context)
+		public void StringJoinAssociationSubqueryUpdate1([DataSources(TestProvName.AllClickHouse, TestProvName.AllMySql57)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
@@ -451,19 +453,18 @@ namespace Tests.Linq
 					Result = t.Children.Select(ag => ag.VarcharValue).StringAggregate(" | ").ToValue(),
 				};
 
-			Assert.DoesNotThrow(() =>
-				query.Update(
-					t => t.t,
-					t => new SampleClass
-					{
-						VarcharValue  = t.Result,
-						NVarcharValue = t.Result
-					}));
+			query.Update(
+				t => t.t,
+				t => new SampleClass
+				{
+					VarcharValue  = t.Result,
+					NVarcharValue = t.Result
+				});
 		}
 
 		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)]
 		[Test]
-		public void StringJoinAssociationSubqueryUpdate2([DataSources()] string context)
+		public void StringJoinAssociationSubqueryUpdate2([DataSources(TestProvName.AllClickHouse, TestProvName.AllMySql57)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
@@ -477,14 +478,13 @@ namespace Tests.Linq
 					Result = string.Join(", ", t.Children!.Select(x => x.VarcharValue))
 				};
 
-			Assert.DoesNotThrow(() =>
-				query.Update(
-					t => t.t,
-					t => new SampleClass
-					{
-						VarcharValue  = t.Result,
-						NVarcharValue = t.Result
-					}));
+			query.Update(
+				t => t.t,
+				t => new SampleClass
+				{
+					VarcharValue  = t.Result,
+					NVarcharValue = t.Result
+				});
 		}
 	}
 }
