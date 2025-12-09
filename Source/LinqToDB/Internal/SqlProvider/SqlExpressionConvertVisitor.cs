@@ -1553,11 +1553,17 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			var toDataType = cast.ToType;
 
-			if (!cast.IsMandatory && cast.SystemType == typeof(string) && cast.Expression is SqlValue value)
+			if (!cast.IsMandatory && cast.SystemType == typeof(string))
 			{
-				if (value.Value is char charValue)
+				object? value = cast.Expression is SqlValue sqlValue
+					? sqlValue.Value
+					: cast.Expression is SqlParameter { IsQueryParameter: false} param
+						? param.GetParameterValue(EvaluationContext.ParameterValues).ProviderValue
+						: null;
+
+				if (value is char charValue)
 					return new SqlValue(cast.Type, charValue.ToString());
-				if (value.Value is string stringValue)
+				if (value is string stringValue)
 					return new SqlValue(cast.Type, stringValue);
 			}
 
