@@ -26,7 +26,7 @@ namespace LinqToDB.Common
 		/// <summary>
 		/// Disables built-in datediff and timespanpart call conversions in ExposeExpressionVisitor to allow external conversion via ExtensionAttribute.
 		/// </summary>
-		[Obsolete("This API planned for removal when pull #3994 is merged"), EditorBrowsable(EditorBrowsableState.Never)]
+		[Obsolete("This API is planned for removal when pull #3994 is merged"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static bool DisableLegacySqlBuilderDateDiffCalls;
 
 		/// <summary>
