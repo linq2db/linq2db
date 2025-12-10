@@ -243,9 +243,9 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-        $relnotesVersion = '$(assemblyVersion)' -replace '\.',''
-        Write-Host "Add linqpad nuget to release v$(assemblyVersion) draft"
-        $output = gh release upload v$(assemblyVersion) "$(Build.SourcesDirectory)/.build/nugets/linq2db.LINQPad.$(assemblyVersion).nupkg"
+        $relnotesVersion = '$(packageVersion)' -replace '\.',''
+        Write-Host "Add linqpad nuget to release v$(packageVersion) draft"
+        $output = gh release upload v$(packageVersion) "$(Build.SourcesDirectory)/.build/nugets/linq2db.LINQPad.$(packageVersion).nupkg"
         if ($LASTEXITCODE -ne 0) {
             Write-Host "Command failed. Error code ${LASTEXITCODE}, output: ${output}"
             exit 1

@@ -166,8 +166,8 @@ namespace LinqToDB.Internal.Conversion
 		public LambdaInfo Create(MappingSchema? mappingSchema, DbDataType from, DbDataType to, ConversionType conversionType)
 		{
 			var ex  = ConvertBuilder.GetConverter(mappingSchema, from.SystemType, to.SystemType);
-			var lm  = ex.Item1.CompileExpression();
-			var ret = new LambdaInfo(ex.Item1, ex.Item2, lm, ex.Item3);
+			var lm  = ex.CheckNullLambda.CompileExpression();
+			var ret = new LambdaInfo(ex.CheckNullLambda, ex.Lambda, lm, ex.IsSchemaSpecific);
 
 			Set(GetForSetExpressions(conversionType), from, to , ret);
 

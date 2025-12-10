@@ -1747,5 +1747,21 @@ namespace Tests.Linq
 			Assert.That(res[0].Value, Is.EqualTo(value));
 		}
 		#endregion
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5236")]
+		public void NullValueConvertInMapper([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Parent.Where(p => p.ParentID <= 2).OrderBy(p => p.ParentID).Select(p => new { Value = (byte?)p.Value1 }).ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(2));
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[0].Value, Is.EqualTo(1));
+				Assert.That(result[1].Value, Is.Null);
+			}
+		}
 	}
 }
