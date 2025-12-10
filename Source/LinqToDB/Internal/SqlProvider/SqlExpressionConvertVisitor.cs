@@ -1557,7 +1557,7 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				object? value = cast.Expression is SqlValue sqlValue
 					? sqlValue.Value
-					: cast.Expression is SqlParameter { IsQueryParameter: false} param
+					: cast.Expression is SqlParameter { IsQueryParameter: false } param
 						? param.GetParameterValue(EvaluationContext.ParameterValues).ProviderValue
 						: null;
 
