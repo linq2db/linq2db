@@ -50,58 +50,66 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			// https://dev.mysql.com/doc/refman/8.0/en/tables-table.html
 			// all selected columns are not nullable
 			return dataConnection
-				.Query(rd =>
-				{
-					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					var catalog = rd.GetString(0);
-					var name    = rd.GetString(1);
-					// BASE TABLE/VIEW/SYSTEM VIEW
-					var type    = rd.GetString(2);
-					return new TableInfo()
+				.Query(
+					rd =>
 					{
-						// The latest MySql returns FK information with lowered schema names.
-						//
-						TableID            = catalog.ToLowerInvariant() + ".." + name,
-						CatalogName        = catalog,
-						TableName          = name,
-						IsDefaultSchema    = true,
-						IsView             = type == "VIEW" || type == "SYSTEM VIEW",
-						IsProviderSpecific = type == "SYSTEM VIEW" || catalog.Equals("sys", StringComparison.OrdinalIgnoreCase),
-						Description        = rd.GetString(3)
-					};
-				}, @"
-SELECT
-		TABLE_SCHEMA,
-		TABLE_NAME,
-		TABLE_TYPE,
-		TABLE_COMMENT
-	FROM INFORMATION_SCHEMA.TABLES
-	WHERE TABLE_SCHEMA = DATABASE()")
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						var catalog = rd.GetString(0);
+						var name    = rd.GetString(1);
+						// BASE TABLE/VIEW/SYSTEM VIEW
+						var type    = rd.GetString(2);
+						return new TableInfo()
+						{
+							// The latest MySql returns FK information with lowered schema names.
+							//
+							TableID            = catalog.ToLowerInvariant() + ".." + name,
+							CatalogName        = catalog,
+							TableName          = name,
+							IsDefaultSchema    = true,
+							IsView             = type is "VIEW" or "SYSTEM VIEW",
+							IsProviderSpecific = type == "SYSTEM VIEW" || catalog.Equals("sys", StringComparison.OrdinalIgnoreCase),
+							Description        = rd.GetString(3)
+						};
+					},
+					"""
+					SELECT
+						TABLE_SCHEMA,
+						TABLE_NAME,
+						TABLE_TYPE,
+						TABLE_COMMENT
+					FROM INFORMATION_SCHEMA.TABLES
+					WHERE TABLE_SCHEMA = DATABASE()
+					"""
+				)
 				.ToList();
 		}
 
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			return dataConnection.Query<PrimaryKeyInfo>(@"
-			SELECT
-					CONCAT(lower(k.CONSTRAINT_SCHEMA),'..',k.TABLE_NAME) as TableID,
-					k.CONSTRAINT_NAME                                    as PrimaryKeyName,
-					k.COLUMN_NAME                                        as ColumnName,
-					k.ORDINAL_POSITION                                   as Ordinal
-				FROM
-					INFORMATION_SCHEMA.KEY_COLUMN_USAGE k
-					JOIN
-						INFORMATION_SCHEMA.TABLE_CONSTRAINTS c
-					ON
-						k.CONSTRAINT_CATALOG = c.CONSTRAINT_CATALOG AND
-						k.CONSTRAINT_SCHEMA  = c.CONSTRAINT_SCHEMA AND
-						k.CONSTRAINT_NAME    = c.CONSTRAINT_NAME AND
-						k.TABLE_NAME         = c.TABLE_NAME
-				WHERE
-					c.CONSTRAINT_TYPE   ='PRIMARY KEY' AND
-					c.CONSTRAINT_SCHEMA = database()")
-			.ToList();
+			return dataConnection
+				.Query<PrimaryKeyInfo>(
+					"""
+					SELECT
+						CONCAT(lower(k.CONSTRAINT_SCHEMA),'..',k.TABLE_NAME) as TableID,
+						k.CONSTRAINT_NAME                                    as PrimaryKeyName,
+						k.COLUMN_NAME                                        as ColumnName,
+						k.ORDINAL_POSITION                                   as Ordinal
+					FROM
+						INFORMATION_SCHEMA.KEY_COLUMN_USAGE k
+						JOIN
+							INFORMATION_SCHEMA.TABLE_CONSTRAINTS c
+						ON
+							k.CONSTRAINT_CATALOG = c.CONSTRAINT_CATALOG AND
+							k.CONSTRAINT_SCHEMA  = c.CONSTRAINT_SCHEMA AND
+							k.CONSTRAINT_NAME    = c.CONSTRAINT_NAME AND
+							k.TABLE_NAME         = c.TABLE_NAME
+					WHERE
+						c.CONSTRAINT_TYPE   ='PRIMARY KEY' AND
+						c.CONSTRAINT_SCHEMA = database()
+					"""
+				)
+				.ToList();
 		}
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
@@ -112,58 +120,62 @@ SELECT
 			// NUMERIC_PRECISION
 			// NUMERIC_SCALE
 			return dataConnection
-				.Query(rd =>
-				{
-					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					var dataType   = rd.GetString(0);
-					var columnType = rd.GetString(1);
-					var tableId    = rd.GetString(2).ToLowerInvariant() + ".." + rd.GetString(3);
-					var name       = rd.GetString(4);
-					var isNullable = rd.GetString(5) == "YES";
-					var ordinal    = Converter.ChangeTypeTo<int>(rd[6]);
-					var length     = Converter.ChangeTypeTo<long?>(rd[7]);
-					var precision  = Converter.ChangeTypeTo<long?>(rd[8]);
-					var scale      = Converter.ChangeTypeTo<long?>(rd[9]);
-					var extra      = rd.GetString(10);
-
-					if (dataType == "vector")
-						length = length / 4;
-
-					return new ColumnInfo()
+				.Query(
+					rd =>
 					{
-						TableID      = tableId,
-						Name         = name,
-						IsNullable   = isNullable,
-						Ordinal      = ordinal,
-						DataType     = dataType,
-						// length could be > int.MaxLength for LONGBLOB/LONGTEXT types, but they always have fixed length and it cannot be used in type name
-						Length       = length > int.MaxValue ? null : (int?)length,
-						Precision    = (int?)precision,
-						Scale        = (int?)scale,
-						ColumnType   = columnType,
-						IsIdentity   = extra.Contains("auto_increment"),
-						Description  = rd.GetString(11),
-						// also starting from 5.1 we can utilise provileges column for skip properties
-						// but it sounds like a bad idea
-						SkipOnInsert = extra.Contains("VIRTUAL STORED") || extra.Contains("VIRTUAL GENERATED"),
-						SkipOnUpdate = extra.Contains("VIRTUAL STORED") || extra.Contains("VIRTUAL GENERATED")
-					};
-				}, @"
-SELECT
-		DATA_TYPE,
-		COLUMN_TYPE,
-		TABLE_SCHEMA,
-		TABLE_NAME,
-		COLUMN_NAME,
-		IS_NULLABLE,
-		ORDINAL_POSITION,
-		CHARACTER_MAXIMUM_LENGTH,
-		NUMERIC_PRECISION,
-		NUMERIC_SCALE,
-		EXTRA,
-		COLUMN_COMMENT
-	FROM INFORMATION_SCHEMA.COLUMNS
-	WHERE TABLE_SCHEMA = DATABASE()")
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						var dataType   = rd.GetString(0);
+						var columnType = rd.GetString(1);
+						var tableId    = rd.GetString(2).ToLowerInvariant() + ".." + rd.GetString(3);
+						var name       = rd.GetString(4);
+						var isNullable = rd.GetString(5) == "YES";
+						var ordinal    = Converter.ChangeTypeTo<int>(rd[6]);
+						var length     = Converter.ChangeTypeTo<long?>(rd[7]);
+						var precision  = Converter.ChangeTypeTo<long?>(rd[8]);
+						var scale      = Converter.ChangeTypeTo<long?>(rd[9]);
+						var extra      = rd.GetString(10);
+
+						if (dataType == "vector")
+							length /= 4;
+
+						return new ColumnInfo()
+						{
+							TableID      = tableId,
+							Name         = name,
+							IsNullable   = isNullable,
+							Ordinal      = ordinal,
+							DataType     = dataType,
+							// length could be > int.MaxLength for LONGBLOB/LONGTEXT types, but they always have fixed length and it cannot be used in type name
+							Length       = length > int.MaxValue ? null : (int?)length,
+							Precision    = (int?)precision,
+							Scale        = (int?)scale,
+							ColumnType   = columnType,
+							IsIdentity   = extra.Contains("auto_increment"),
+							Description  = rd.GetString(11),
+							// also starting from 5.1 we can utilise provileges column for skip properties
+							// but it sounds like a bad idea
+							SkipOnInsert = extra.Contains("VIRTUAL STORED") || extra.Contains("VIRTUAL GENERATED"),
+							SkipOnUpdate = extra.Contains("VIRTUAL STORED") || extra.Contains("VIRTUAL GENERATED")
+						};
+					},
+					"""
+					SELECT
+						DATA_TYPE,
+						COLUMN_TYPE,
+						TABLE_SCHEMA,
+						TABLE_NAME,
+						COLUMN_NAME,
+						IS_NULLABLE,
+						ORDINAL_POSITION,
+						CHARACTER_MAXIMUM_LENGTH,
+						NUMERIC_PRECISION,
+						NUMERIC_SCALE,
+						EXTRA,
+						COLUMN_COMMENT
+					FROM INFORMATION_SCHEMA.COLUMNS
+					WHERE TABLE_SCHEMA = DATABASE()
+					"""
+				)
 				.ToList();
 		}
 
@@ -175,36 +187,40 @@ SELECT
 			// nullable columns:
 			// REFERECED_* columns could be null, but not for FK
 			return dataConnection
-				.Query(rd =>
-				{
-					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					return new ForeignKeyInfo()
+				.Query(
+					rd =>
 					{
-						ThisTableID  = rd.GetString(0).ToLowerInvariant() + ".." + rd.GetString(1),
-						Name         = rd.GetString(2),
-						ThisColumn   = rd.GetString(3),
-						OtherTableID = rd.GetString(4).ToLowerInvariant() + ".." + rd.GetString(5),
-						OtherColumn  = rd.GetString(6),
-						Ordinal      = Converter.ChangeTypeTo<int>(rd[7]),
-					};
-				}, @"
-SELECT
-		c.TABLE_SCHEMA,
-		c.TABLE_NAME,
-		c.CONSTRAINT_NAME,
-		c.COLUMN_NAME,
-		c.REFERENCED_TABLE_SCHEMA,
-		c.REFERENCED_TABLE_NAME,
-		c.REFERENCED_COLUMN_NAME,
-		c.ORDINAL_POSITION
-	FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE c
-		INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
-			ON c.CONSTRAINT_SCHEMA    = tc.CONSTRAINT_SCHEMA
-				AND c.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
-				AND c.TABLE_SCHEMA    = tc.TABLE_SCHEMA
-				AND c.TABLE_NAME      = tc.TABLE_NAME
-	WHERE tc.CONSTRAINT_TYPE = 'FOREIGN KEY'
-		AND c.TABLE_SCHEMA   = DATABASE()")
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						return new ForeignKeyInfo()
+						{
+							ThisTableID  = rd.GetString(0).ToLowerInvariant() + ".." + rd.GetString(1),
+							Name         = rd.GetString(2),
+							ThisColumn   = rd.GetString(3),
+							OtherTableID = rd.GetString(4).ToLowerInvariant() + ".." + rd.GetString(5),
+							OtherColumn  = rd.GetString(6),
+							Ordinal      = Converter.ChangeTypeTo<int>(rd[7]),
+						};
+					},
+					"""
+					SELECT
+						c.TABLE_SCHEMA,
+						c.TABLE_NAME,
+						c.CONSTRAINT_NAME,
+						c.COLUMN_NAME,
+						c.REFERENCED_TABLE_SCHEMA,
+						c.REFERENCED_TABLE_NAME,
+						c.REFERENCED_COLUMN_NAME,
+						c.ORDINAL_POSITION
+					FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE c
+						INNER JOIN INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+							ON c.CONSTRAINT_SCHEMA    = tc.CONSTRAINT_SCHEMA
+								AND c.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
+								AND c.TABLE_SCHEMA    = tc.TABLE_SCHEMA
+								AND c.TABLE_NAME      = tc.TABLE_NAME
+					WHERE tc.CONSTRAINT_TYPE = 'FOREIGN KEY'
+						AND c.TABLE_SCHEMA   = DATABASE()
+					"""
+				)
 				.ToList();
 		}
 
@@ -257,23 +273,30 @@ SELECT
 			// GetSchema("PROCEDURES") not used, as for MySql 5.7 (but not mariadb/mysql 5.6) it returns procedures from
 			// sys database too
 			return dataConnection
-				.Query(rd =>
-				{
-					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					var catalog = Converter.ChangeTypeTo<string>(rd[0]);
-					var name    = Converter.ChangeTypeTo<string>(rd[1]);
-
-					return new ProcedureInfo()
+				.Query(
+					rd =>
 					{
-						ProcedureID         = catalog + "." + name,
-						CatalogName         = catalog,
-						ProcedureName       = name,
-						IsFunction          = Converter.ChangeTypeTo<string>(rd[2]) == "FUNCTION",
-						IsDefaultSchema     = true,
-						ProcedureDefinition = Converter.ChangeTypeTo<string>(rd[3]),
-						Description         = Converter.ChangeTypeTo<string>(rd[4]),
-					};
-				}, "SELECT ROUTINE_SCHEMA, ROUTINE_NAME, ROUTINE_TYPE, ROUTINE_DEFINITION, ROUTINE_COMMENT FROM INFORMATION_SCHEMA.routines WHERE ROUTINE_TYPE IN ('PROCEDURE', 'FUNCTION') AND ROUTINE_SCHEMA = database()")
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						var catalog = Converter.ChangeTypeTo<string>(rd[0]);
+						var name    = Converter.ChangeTypeTo<string>(rd[1]);
+
+						return new ProcedureInfo()
+						{
+							ProcedureID         = catalog + "." + name,
+							CatalogName         = catalog,
+							ProcedureName       = name,
+							IsFunction          = Converter.ChangeTypeTo<string>(rd[2]) == "FUNCTION",
+							IsDefaultSchema     = true,
+							ProcedureDefinition = Converter.ChangeTypeTo<string>(rd[3]),
+							Description         = Converter.ChangeTypeTo<string>(rd[4]),
+						};
+					}, 
+					"""
+					SELECT ROUTINE_SCHEMA, ROUTINE_NAME, ROUTINE_TYPE, ROUTINE_DEFINITION, ROUTINE_COMMENT
+					FROM INFORMATION_SCHEMA.routines
+					WHERE ROUTINE_TYPE IN ('PROCEDURE', 'FUNCTION') AND ROUTINE_SCHEMA = database()
+					"""
+				)
 				.ToList();
 		}
 
@@ -282,37 +305,44 @@ SELECT
 			// don't use GetSchema("PROCEDURE PARAMETERS") as MySql provider's implementation does strange stuff
 			// instead of just quering of INFORMATION_SCHEMA view. It returns incorrect results and breaks provider
 			return dataConnection
-				.Query(rd =>
-				{
-					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					var procId    = rd.GetString(0) + "." + rd.GetString(1);
-					var mode      = Converter.ChangeTypeTo<string>(rd[2]);
-					var ordinal   = Converter.ChangeTypeTo<int>(rd[3]);
-					var name      = Converter.ChangeTypeTo<string>(rd[4]);
-					var precision = Converter.ChangeTypeTo<int?>(rd[5]);
-					var scale     = Converter.ChangeTypeTo<long?>(rd[6]);
-					var type      = rd.GetString(7).ToUpperInvariant();
-					var length    = Converter.ChangeTypeTo<long?>(rd[8]);
-
-					if (type == "VECTOR")
-						length = length / 4;
-
-					return new ProcedureParameterInfo()
+				.Query(
+					rd =>
 					{
-						ProcedureID   = procId,
-						ParameterName = name,
-						IsIn          = mode == "IN"  || mode == "INOUT",
-						IsOut         = mode == "OUT" || mode == "INOUT",
-						Precision     = precision,
-						Scale         = (int?)scale,
-						Ordinal       = ordinal,
-						IsResult      = mode == null,
-						DataType      = type,
-						Length        = length > int.MaxValue ? null : (int?)length,
-						DataTypeExact = Converter.ChangeTypeTo<string>(rd[9]),
-						IsNullable    = true
-					};
-				}, "SELECT SPECIFIC_SCHEMA, SPECIFIC_NAME, PARAMETER_MODE, ORDINAL_POSITION, PARAMETER_NAME, NUMERIC_PRECISION, NUMERIC_SCALE, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, DTD_IDENTIFIER FROM INFORMATION_SCHEMA.parameters WHERE SPECIFIC_SCHEMA = database()")
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						var procId    = rd.GetString(0) + "." + rd.GetString(1);
+						var mode      = Converter.ChangeTypeTo<string>(rd[2]);
+						var ordinal   = Converter.ChangeTypeTo<int>(rd[3]);
+						var name      = Converter.ChangeTypeTo<string>(rd[4]);
+						var precision = Converter.ChangeTypeTo<int?>(rd[5]);
+						var scale     = Converter.ChangeTypeTo<long?>(rd[6]);
+						var type      = rd.GetString(7).ToUpperInvariant();
+						var length    = Converter.ChangeTypeTo<long?>(rd[8]);
+
+						if (type == "VECTOR")
+							length /= 4;
+
+						return new ProcedureParameterInfo()
+						{
+							ProcedureID   = procId,
+							ParameterName = name,
+							IsIn          = mode is "IN"  or "INOUT",
+							IsOut         = mode is "OUT" or "INOUT",
+							Precision     = precision,
+							Scale         = (int?)scale,
+							Ordinal       = ordinal,
+							IsResult      = mode == null,
+							DataType      = type,
+							Length        = length > int.MaxValue ? null : (int?)length,
+							DataTypeExact = Converter.ChangeTypeTo<string>(rd[9]),
+							IsNullable    = true
+						};
+					},
+					"""
+					SELECT SPECIFIC_SCHEMA, SPECIFIC_NAME, PARAMETER_MODE, ORDINAL_POSITION, PARAMETER_NAME, NUMERIC_PRECISION, NUMERIC_SCALE, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, DTD_IDENTIFIER
+					FROM INFORMATION_SCHEMA.parameters
+					WHERE SPECIFIC_SCHEMA = database()
+					"""
+				)
 				.ToList();
 		}
 
@@ -387,17 +417,15 @@ SELECT
 
 		protected override string? GetProviderSpecificType(string? dataType)
 		{
-			switch (dataType?.ToLowerInvariant())
+			return (dataType?.ToLowerInvariant()) switch
 			{
-				case "geometry"  : return _provider.Adapter.MySqlGeometryType.Name;
-				case "decimal"   : return _provider.Adapter.MySqlDecimalType?.Name;
-				case "date"      :
-				case "newdate"   :
-				case "datetime"  :
-				case "timestamp" : return _provider.Adapter.MySqlDateTimeType.Name;
-			}
+				"geometry" => _provider.Adapter.MySqlGeometryType.Name,
+				"decimal"  => _provider.Adapter.MySqlDecimalType?.Name,
 
-			return base.GetProviderSpecificType(dataType);
+				"date" or "newdate" or "datetime" or "timestamp" => _provider.Adapter.MySqlDateTimeType.Name,
+
+				_          => base.GetProviderSpecificType(dataType),
+			};
 		}
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
@@ -405,15 +433,16 @@ SELECT
 			switch (dataType?.ToLowerInvariant())
 			{
 				case "bit"               :
+					// C - "Consistency"
+					return (precision > 0 ? precision : length) switch
 					{
-						// C - "Consistency"
-						var size = precision > 0 ? precision : length;
-						if (size ==  1) return typeof(bool);
-						if (size <=  8) return typeof(byte);
-						if (size <= 16) return typeof(ushort);
-						if (size <= 32) return typeof(uint);
-						return typeof(ulong);
-					}
+						1     => typeof(bool),
+						<= 8  => typeof(byte),
+						<= 16 => typeof(ushort),
+						<= 32 => typeof(uint),
+						_     => typeof(ulong),
+					};
+
 				case "tinyint unsigned"  : return typeof(byte);
 				case "smallint unsigned" : return typeof(ushort);
 				case "mediumint unsigned": return typeof(uint);

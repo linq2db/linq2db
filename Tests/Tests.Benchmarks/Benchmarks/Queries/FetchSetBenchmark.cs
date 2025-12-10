@@ -38,17 +38,15 @@ namespace LinqToDB.Benchmarks.Queries
 		[Benchmark]
 		public List<SalesOrderHeader> Linq()
 		{
-			using (var db = new Db(_provider, _result))
-			{
-				return db.SalesOrderHeader.ToList();
-			}
+			using var db = new Db(_provider, _result);
+			return db.SalesOrderHeader.ToList();
 		}
 
 		[Benchmark]
 		public List<SalesOrderHeader> Compiled()
 		{
-			using (var db = new Db(_provider, _result))
-				return _compiled(db).ToList();
+			using var db = new Db(_provider, _result);
+			return _compiled(db).ToList();
 		}
 
 		[Benchmark(Baseline = true)]

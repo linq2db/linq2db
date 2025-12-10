@@ -108,9 +108,8 @@ namespace LinqToDB.CommandLine
 						hasErrors = true;
 					}
 				}
-				else if (args[i].StartsWith("-") && args[i].Length == 2)
+				else if (args[i] is ['-', var name])
 				{
-					var name = args[i][1];
 					option = command.GetOptionByShortName(name);
 					if (option == null)
 					{

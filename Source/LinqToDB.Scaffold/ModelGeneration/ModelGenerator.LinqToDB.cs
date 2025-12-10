@@ -955,7 +955,7 @@ namespace LinqToDB.Tools.ModelGeneration
 						if (param.IsResult && p.IsFunction)
 							returnsComments = CreateXmlCommentFromText(param.Description, "returns");
 						else
-							comments.AddRange(CreateXmlCommentFromText(param.Description, "param", $"name=\"{(param.ParameterName!.StartsWith("@") ? param.ParameterName?[1..] : param.ParameterName)}\""));
+							comments.AddRange(CreateXmlCommentFromText(param.Description, "param", $"name=\"{(param.ParameterName!.StartsWith('@') ? param.ParameterName?[1..] : param.ParameterName)}\""));
 					}
 
 					if (returnsComments != null)

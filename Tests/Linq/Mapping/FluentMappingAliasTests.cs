@@ -60,15 +60,13 @@ namespace Tests.Mapping
 			using (var db = GetDataContext(context, CreateMappingSchemaWithAlias()))
 			{
 				var testData = GenerateData();
-				using (var table = db.CreateLocalTable(testData))
-				{
-					IQueryable<IProjected> queryable = table;
+				using var table = db.CreateLocalTable(testData);
+				IQueryable<IProjected> queryable = table;
 
-					var items = queryable.Where(t => t.EntityId > 1 & t.EntityValue >= 104 && t.EntityValue <= 115 && t.EntityValueStr!.StartsWith("S")).ToArray();
-					var expected = table .Where(t => t.EntityId > 1 & t.EntityValue >= 104 && t.EntityValue <= 115 && t.EntityValueStr!.StartsWith("S")).OfType<IProjected>().ToArray();
+				var items = queryable.Where(t => t.EntityId > 1 & t.EntityValue >= 104 && t.EntityValue <= 115 && t.EntityValueStr!.StartsWith("S")).ToArray();
+				var expected = table .Where(t => t.EntityId > 1 & t.EntityValue >= 104 && t.EntityValue <= 115 && t.EntityValueStr!.StartsWith("S")).OfType<IProjected>().ToArray();
 
-					AreEqualWithComparer(expected, items);
-				}
+				AreEqualWithComparer(expected, items);
 			}
 		}
 	}

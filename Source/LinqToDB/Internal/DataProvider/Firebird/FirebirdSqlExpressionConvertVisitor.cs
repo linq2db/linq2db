@@ -29,34 +29,28 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
-			switch (element.Operation)
+			return element.Operation switch
 			{
-				case "%": return new SqlFunction(element.Type, "Mod", element.Expr1, element.Expr2);
-				case "&": return new SqlFunction(element.Type, "Bin_And", element.Expr1, element.Expr2);
-				case "|": return new SqlFunction(element.Type, "Bin_Or", element.Expr1, element.Expr2);
-				case "^": return new SqlFunction(element.Type, "Bin_Xor", element.Expr1, element.Expr2);
-				case "+": return element.SystemType == typeof(string) ? new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence) : element;
-			}
-
-			return element;
+				"%" => new SqlFunction(element.Type, "Mod", element.Expr1, element.Expr2),
+				"&" => new SqlFunction(element.Type, "Bin_And", element.Expr1, element.Expr2),
+				"|" => new SqlFunction(element.Type, "Bin_Or", element.Expr1, element.Expr2),
+				"^" => new SqlFunction(element.Type, "Bin_Xor", element.Expr1, element.Expr2),
+				"+" when element.SystemType == typeof(string) => new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
+				_ => element,
+			};
 		}
 
 		protected virtual bool? GetCaseSensitiveParameter(SqlPredicate.SearchString predicate)
 		{
 			var caseSensitive = predicate.CaseSensitive.EvaluateExpression(EvaluationContext);
 
-			if (caseSensitive is char chr)
+			return caseSensitive switch
 			{
-				if (chr == '0')
-					return false;
-
-				if (chr == '1')
-					return true;
-			}
-			else if (caseSensitive is bool boolValue)
-				return boolValue;
-
-			return null;
+				'0' => false,
+				'1' => true,
+				bool boolValue => boolValue,
+				_ => null,
+			};
 		}
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
@@ -185,25 +179,29 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		protected override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
 		{
-			if (predicate.ElementType == QueryElementType.ExprPredicate && predicate.Expr1 is SqlParameter p && p.Type.DataType != DataType.Boolean)
+			return predicate switch
 			{
-				predicate = new SqlPredicate.ExprExpr(p, SqlPredicate.Operator.Equal, MappingSchema.GetSqlValue(p.Type, true), DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null);
-				return Visit(predicate);
-			}
+				{ ElementType: QueryElementType.ExprPredicate, Expr1: SqlParameter { Type.DataType: not DataType.Boolean } p } =>
+					Visit(
+						new SqlPredicate.ExprExpr(
+							p,
+							SqlPredicate.Operator.Equal,
+							MappingSchema.GetSqlValue(p.Type, true),
+							DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null
+						)
+					),
 
-			return base.VisitExprPredicate(predicate);
+				_ => base.VisitExprPredicate(predicate),
+			};
 		}
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func)
+			return func switch
 			{
-				case { Name: PseudoFunctions.LENGTH }:
-					return func.WithName("CHAR_LENGTH");
-
-				default:
-					return base.ConvertSqlFunction(func);
-			}
+				{ Name: PseudoFunctions.LENGTH } => func.WithName("CHAR_LENGTH"),
+				_                                => base.ConvertSqlFunction(func),
+			};
 		}
 
 		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)

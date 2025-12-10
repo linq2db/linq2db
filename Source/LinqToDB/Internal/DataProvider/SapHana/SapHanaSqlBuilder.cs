@@ -127,7 +127,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				case DataType.NVarChar:
 				case DataType.VarChar:
 				case DataType.VarBinary:
-					if (type.Length == null || type.Length > 5000 || type.Length < 1)
+					if (type.Length is null or > 5000 or < 1)
 					{
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.DataType}(5000)");
 
@@ -251,33 +251,27 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			string command;
+			var command = table.TableOptions.TemporaryOptionValue switch
+			{
+				TableOptions.IsTemporary                                                                              or
+				TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData or
+																					TableOptions.IsLocalTemporaryData or
+										   TableOptions.IsLocalTemporaryStructure                                     or
+										   TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData =>
+					"CREATE LOCAL TEMPORARY TABLE ",
 
-			if (table.TableOptions.IsTemporaryOptionSet())
-			{
-				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-				{
-					case TableOptions.IsTemporary                                                                              :
-					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-					case                                                                     TableOptions.IsLocalTemporaryData :
-					case                            TableOptions.IsLocalTemporaryStructure                                     :
-					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-						command = "CREATE LOCAL TEMPORARY TABLE ";
-						break;
-					case TableOptions.IsGlobalTemporaryStructure                                                               :
-					case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData                           :
-						command = "CREATE GLOBAL TEMPORARY TABLE ";
-						break;
-					case var value :
-						throw new InvalidOperationException($"Incompatible table options '{value}'");
-				}
-			}
-			else
-			{
-				command = "CREATE TABLE ";
-			}
+				TableOptions.IsGlobalTemporaryStructure                                                               or
+				TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData                           =>
+					"CREATE GLOBAL TEMPORARY TABLE ",
+
+				0 =>
+					"CREATE TABLE ",
+
+				var value =>
+					throw new InvalidOperationException($"Incompatible table options '{value}'"),
+			};
 
 			StringBuilder.Append(command);
 		}

@@ -28,143 +28,124 @@ namespace Tests.Linq
 		[Test]
 		public void SqlPropertyWithNonDynamicColumn([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var result = db.GetTable<Person>()
+			using var db = GetDataContext(context);
+			var result = db.GetTable<Person>()
 					.Where(x => Sql.Property<int>(x, IDColumn) == 1)
 					.ToList();
 
-				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.That(result.Single().FirstName, Is.EqualTo("John"));
-			}
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.That(result.Single().FirstName, Is.EqualTo("John"));
 		}
 
 		[Test]
 		public void SqlPropertyWithNavigationalNonDynamicColumn([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var result = db.GetTable<Person>()
+			using var db = GetDataContext(context);
+			var result = db.GetTable<Person>()
 					.Where(x => Sql.Property<string>(x.Patient, DiagnosisColumn) ==
 								"Hallucination with Paranoid Bugs\' Delirium of Persecution")
 					.ToList();
 
-				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.That(result.Single().FirstName, Is.EqualTo("Tester"));
-			}
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.That(result.Single().FirstName, Is.EqualTo("Tester"));
 		}
 
 		[Test]
 		public void SqlPropertyWithNonDynamicAssociation([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var result = db.GetTable<Person>()
+			using var db = GetDataContext(context);
+			var result = db.GetTable<Person>()
 					.Where(x => Sql.Property<string>(Sql.Property<Patient>(x, PatientColumn), DiagnosisColumn) ==
 								"Hallucination with Paranoid Bugs\' Delirium of Persecution")
 					.ToList();
 
-				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.That(result.Single().FirstName, Is.EqualTo("Tester"));
-			}
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.That(result.Single().FirstName, Is.EqualTo("Tester"));
 		}
 
 		[Test]
 		public void SqlPropertyWithNonDynamicAssociationViaObject1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var result = db.GetTable<Person>()
+			using var db = GetDataContext(context);
+			var result = db.GetTable<Person>()
 					.Where(x => (string)Sql.Property<object>(Sql.Property<object>(x, PatientColumn), DiagnosisColumn) ==
 								"Hallucination with Paranoid Bugs\' Delirium of Persecution")
 					.ToList();
 
-				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.That(result.Single().FirstName, Is.EqualTo("Tester"));
-			}
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.That(result.Single().FirstName, Is.EqualTo("Tester"));
 		}
 
 		[Test]
 		public void SqlPropertyWithNonDynamicAssociationViaObject2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var expected = Person.Select(p => p.Patient?.Diagnosis).ToList();
-				var result = db.GetTable<Person>()
+			using var db = GetDataContext(context);
+			var expected = Person.Select(p => p.Patient?.Diagnosis).ToList();
+			var result = db.GetTable<Person>()
 					.Select(x => Sql.Property<object>(Sql.Property<object>(x, PatientColumn), DiagnosisColumn))
 					.ToList();
 
-				Assert.That(result.OrderBy(_ => _ as string).SequenceEqual(expected.OrderBy(_ => _)), Is.True);
-			}
+			Assert.That(result.OrderBy(_ => _ as string).SequenceEqual(expected.OrderBy(_ => _)), Is.True);
 		}
 
 		[Test]
 		public void SqlPropertyWithDynamicColumn([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicClass()))
-			{
-				var result = db.GetTable<PersonWithDynamicStore>()
+			using var db = GetDataContext(context, ConfigureDynamicClass());
+			var result = db.GetTable<PersonWithDynamicStore>()
 					.Where(x => Sql.Property<string>(x, "FirstName") == "John")
 					.ToList();
 
-				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.That(result.Single().ID, Is.EqualTo(1));
-			}
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.That(result.Single().ID, Is.EqualTo(1));
 		}
 
 		[Test]
 		public void SqlPropertyWithDynamicAssociation([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicClass()))
-			{
-				var result = db.GetTable<PersonWithDynamicStore>()
+			using var db = GetDataContext(context, ConfigureDynamicClass());
+			var result = db.GetTable<PersonWithDynamicStore>()
 					.Where(x => Sql.Property<string>(Sql.Property<Patient>(x, PatientColumn), DiagnosisColumn) ==
 								"Hallucination with Paranoid Bugs\' Delirium of Persecution")
 					.ToList();
 
-				Assert.That(result, Has.Count.EqualTo(1));
-				Assert.That(result.Single().ID, Is.EqualTo(2));
-			}
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.That(result.Single().ID, Is.EqualTo(2));
 		}
 
 		[Test]
 		public void SqlPropertySelectAll([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicClass()))
-			{
-				var expected = Person.Select(p => p.FirstName).ToList();
-				var result = db.GetTable<PersonWithDynamicStore>().ToList().Select(p => p.ExtendedProperties["FirstName"]).ToList();
+			using var db = GetDataContext(context, ConfigureDynamicClass());
+			var expected = Person.Select(p => p.FirstName).ToList();
+			var result = db.GetTable<PersonWithDynamicStore>().ToList().Select(p => p.ExtendedProperties["FirstName"]).ToList();
 
-				Assert.That(result.SequenceEqual(expected), Is.True);
-			}
+			Assert.That(result.SequenceEqual(expected), Is.True);
 		}
 
 		[Test]
 		public void SqlPropertySelectOne([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicClass()))
-			{
-				var expected = Person.Select(p => p.FirstName).ToList();
-				var result = db.GetTable<PersonWithDynamicStore>()
+			using var db = GetDataContext(context, ConfigureDynamicClass());
+			var expected = Person.Select(p => p.FirstName).ToList();
+			var result = db.GetTable<PersonWithDynamicStore>()
 					.Select(x => Sql.Property<string>(x, "FirstName"))
 					.ToList();
 
-				Assert.That(result.SequenceEqual(expected), Is.True);
-			}
+			Assert.That(result.SequenceEqual(expected), Is.True);
 		}
 
 		[Test]
 		public void SqlPropertySelectProject([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicClass()))
+			using var db = GetDataContext(context, ConfigureDynamicClass());
+			var expected = Person.Select(p => new
 			{
-				var expected = Person.Select(p => new
-				{
-					PersonId = p.ID,
-					Name = p.FirstName
-				}).ToList();
+				PersonId = p.ID,
+				Name = p.FirstName
+			}).ToList();
 
-				var result = db.GetTable<PersonWithDynamicStore>()
+			var result = db.GetTable<PersonWithDynamicStore>()
 					.Select(x => new
 					{
 						PersonId = x.ID,
@@ -172,156 +153,136 @@ namespace Tests.Linq
 					})
 					.ToList();
 
-				Assert.That(result.SequenceEqual(expected), Is.True);
-			}
+			Assert.That(result.SequenceEqual(expected), Is.True);
 		}
 
 		[Test]
 		public void SqlPropertySelectAssociated([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicClass()))
-			{
-				var expected = Person.Select(p => p.Patient?.Diagnosis).ToList();
+			using var db = GetDataContext(context, ConfigureDynamicClass());
+			var expected = Person.Select(p => p.Patient?.Diagnosis).ToList();
 
-				var result = db.GetTable<PersonWithDynamicStore>()
+			var result = db.GetTable<PersonWithDynamicStore>()
 					.Select(x => Sql.Property<string>(Sql.Property<Patient>(x, PatientColumn), DiagnosisColumn))
 					.ToList();
 
-				Assert.That(result.OrderBy(_ => _).SequenceEqual(expected.OrderBy(_ => _)), Is.True);
-			}
+			Assert.That(result.OrderBy(_ => _).SequenceEqual(expected.OrderBy(_ => _)), Is.True);
 		}
 
 		[Test]
 		public void SqlPropertyWhere([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicClass()))
-			{
-				var expected = Person.Where(p => p.FirstName == "John").Select(p => p.ID).ToList();
-				var result = db.GetTable<PersonWithDynamicStore>()
+			using var db = GetDataContext(context, ConfigureDynamicClass());
+			var expected = Person.Where(p => p.FirstName == "John").Select(p => p.ID).ToList();
+			var result = db.GetTable<PersonWithDynamicStore>()
 					.Where(x => Sql.Property<string>(x, "FirstName") == "John")
 					.Select(x => x.ID)
 					.ToList();
 
-				Assert.That(result.SequenceEqual(expected), Is.True);
-			}
+			Assert.That(result.SequenceEqual(expected), Is.True);
 		}
 
 		[Test]
 		public void SqlPropertyWhereAssociated([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicClass()))
-			{
-				var expected = Person.Where(p => p.Patient?.Diagnosis != null).Select(p => p.ID).ToList();
-				var result = db.GetTable<PersonWithDynamicStore>()
+			using var db = GetDataContext(context, ConfigureDynamicClass());
+			var expected = Person.Where(p => p.Patient?.Diagnosis != null).Select(p => p.ID).ToList();
+			var result = db.GetTable<PersonWithDynamicStore>()
 					.Where(x => Sql.Property<string>(Sql.Property<Patient>(x, PatientColumn), DiagnosisColumn) != null)
 					.Select(x => x.ID)
 					.ToList();
 
-				Assert.That(result.SequenceEqual(expected), Is.True);
-			}
+			Assert.That(result.SequenceEqual(expected), Is.True);
 		}
 
 		[Test]
 		public void SqlPropertyOrderBy([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicClass()))
-			{
-				var expected = Person.OrderByDescending(p => p.FirstName).Select(p => p.ID).ToList();
-				var result = db.GetTable<PersonWithDynamicStore>()
+			using var db = GetDataContext(context, ConfigureDynamicClass());
+			var expected = Person.OrderByDescending(p => p.FirstName).Select(p => p.ID).ToList();
+			var result = db.GetTable<PersonWithDynamicStore>()
 					.OrderByDescending(x => Sql.Property<string>(x, "FirstName"))
 					.Select(x => x.ID)
 					.ToList();
 
-				Assert.That(result.SequenceEqual(expected), Is.True);
-			}
+			Assert.That(result.SequenceEqual(expected), Is.True);
 		}
 
 		[Test]
 		public void SqlPropertyOrderByAssociated([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicClass()))
-			{
-				var expected = Person.OrderBy(p => p.Patient?.Diagnosis).Select(p => p.ID).ToList();
-				var result = db.GetTable<PersonWithDynamicStore>()
+			using var db = GetDataContext(context, ConfigureDynamicClass());
+			var expected = Person.OrderBy(p => p.Patient?.Diagnosis).Select(p => p.ID).ToList();
+			var result = db.GetTable<PersonWithDynamicStore>()
 					.OrderBy(x => Sql.Property<string>(Sql.Property<Patient>(x, PatientColumn), DiagnosisColumn))
 					.Select(x => x.ID)
 					.ToList();
 
-				Assert.That(result.OrderBy(_ => _).SequenceEqual(expected.OrderBy(_ => _)), Is.True);
-			}
+			Assert.That(result.OrderBy(_ => _).SequenceEqual(expected.OrderBy(_ => _)), Is.True);
 		}
 
 		[Test]
 		public void SqlPropertyGroupBy([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicClass()))
-			{
-				var expected = Person.GroupBy(p => p.FirstName).Select(p => new {p.Key, Count = p.Count()}).ToList();
-				var result = db.GetTable<PersonWithDynamicStore>()
+			using var db = GetDataContext(context, ConfigureDynamicClass());
+			var expected = Person.GroupBy(p => p.FirstName).Select(p => new {p.Key, Count = p.Count()}).ToList();
+			var result = db.GetTable<PersonWithDynamicStore>()
 					.GroupBy(x => Sql.Property<string>(x, "FirstName"))
 					.Select(p => new {p.Key, Count = p.Count()})
 					.ToList();
 
-				Assert.That(result.OrderBy(_ => _.Key).SequenceEqual(expected.OrderBy(_ => _.Key)), Is.True);
-			}
+			Assert.That(result.OrderBy(_ => _.Key).SequenceEqual(expected.OrderBy(_ => _.Key)), Is.True);
 		}
 
 		[Test]
 		public void SqlPropertyGroupByAssociated([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicClass()))
-			{
-				var expected = Person.GroupBy(p => p.Patient?.Diagnosis).Select(p => new {p.Key, Count = p.Count()}).ToList();
-				var result   = db.GetTable<PersonWithDynamicStore>()
+			using var db = GetDataContext(context, ConfigureDynamicClass());
+			var expected = Person.GroupBy(p => p.Patient?.Diagnosis).Select(p => new {p.Key, Count = p.Count()}).ToList();
+			var result   = db.GetTable<PersonWithDynamicStore>()
 					.GroupBy(x => Sql.Property<string?>(Sql.Property<Patient>(x, PatientColumn), DiagnosisColumn))
 					.Select(p => new { p.Key, Count = p.Count() })
 					.ToList();
 
-				Assert.That(result.OrderBy(_ => _.Key).SequenceEqual(expected.OrderBy(_ => _.Key)), Is.True);
-			}
+			Assert.That(result.OrderBy(_ => _.Key).SequenceEqual(expected.OrderBy(_ => _.Key)), Is.True);
 		}
 
 		[Test]
 		public void SqlPropertyJoin([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicClass()))
-			{
-				var expected =
+			using var db = GetDataContext(context, ConfigureDynamicClass());
+			var expected =
 					from p in Person
 					join pa in Patient on p.FirstName equals pa.Diagnosis
 					select p;
 
-				var result =
+			var result =
 					from p in db.Person
 					join pa in db.Patient on Sql.Property<string>(p, "FirstName") equals Sql.Property<string>(pa, DiagnosisColumn)
 					select p;
 
-				Assert.That(result.ToList().SequenceEqual(expected.ToList()), Is.True);
-			}
+			Assert.That(result.ToList().SequenceEqual(expected.ToList()), Is.True);
 		}
 
 		[Test]
 		public void SqlPropertyLoadWith([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicClass()))
-			{
-				var expected = Person.Select(p => p.Patient?.Diagnosis).ToList();
-				var result = db.GetTable<PersonWithDynamicStore>()
+			using var db = GetDataContext(context, ConfigureDynamicClass());
+			var expected = Person.Select(p => p.Patient?.Diagnosis).ToList();
+			var result = db.GetTable<PersonWithDynamicStore>()
 					.LoadWith(x => Sql.Property<Patient>(x, "Patient"))
 					.ToList()
 					.Select(p => ((Patient)p.ExtendedProperties[PatientColumn])?.Diagnosis)
 					.ToList();
 
-				Assert.That(result.OrderBy(_ => _).SequenceEqual(expected.OrderBy(_ => _)), Is.True);
-			}
+			Assert.That(result.OrderBy(_ => _).SequenceEqual(expected.OrderBy(_ => _)), Is.True);
 		}
 
 		[Test]
 		public void SqlPropertyNoStoreGrouping1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, ConfigureDynamicClass()))
-			{
-				var expected =
+			using var db = GetDataContext(context, ConfigureDynamicClass());
+			var expected =
 					from p in Person
 					group p by p.FirstName into g
 					select new
@@ -330,7 +291,7 @@ namespace Tests.Linq
 						Count = g.Count()
 					};
 
-				var result =
+			var result =
 					from p in db.GetTable<PersonWithDynamicStore>()
 					group p by Sql.Property<string>(p, "FirstName") into g
 					select new
@@ -339,16 +300,14 @@ namespace Tests.Linq
 						Count = g.Count()
 					};
 
-				AreEqual(result.OrderBy(_ => _.FirstName), expected.OrderBy(_ => _.FirstName));
-			}
+			AreEqual(result.OrderBy(_ => _.FirstName), expected.OrderBy(_ => _.FirstName));
 		}
 
 		[Test]
 		public void SqlPropertyNoStoreGrouping2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var expected =
+			using var db = GetDataContext(context);
+			var expected =
 					from p in Person
 					group p by new { p.FirstName, p.LastName } into g
 					select new
@@ -358,7 +317,7 @@ namespace Tests.Linq
 						Count = g.Count()
 					};
 
-				var result =
+			var result =
 					from p in db.GetTable<PersonWithoutDynamicStore>()
 					group p by new { FirstName = Sql.Property<string>(p, "FirstName"), LastName = Sql.Property<string>(p, "LastName")} into g
 					select new
@@ -368,8 +327,7 @@ namespace Tests.Linq
 						Count = g.Count()
 					};
 
-				AreEqual(result.OrderBy(_ => _.FirstName), expected.OrderBy(_ => _.FirstName));
-			}
+			AreEqual(result.OrderBy(_ => _.FirstName), expected.OrderBy(_ => _.FirstName));
 		}
 
 		[Test]
@@ -554,19 +512,17 @@ namespace Tests.Linq
 				new SomeClassWithDynamic{Description = "Desc4", ExtendedProperties = new Dictionary<string, object>{{"F066_00", "v4"}}},
 			};
 
-			using (var dataContext = GetDataContext(context, mappingSchema))
+			using var dataContext = GetDataContext(context, mappingSchema);
+			using (dataContext.CreateLocalTable("M998_T066", testData1))
+			using (dataContext.CreateLocalTable("M998_T000", testData2))
 			{
-				using (dataContext.CreateLocalTable("M998_T066", testData1))
-				using (dataContext.CreateLocalTable("M998_T000", testData2))
-				{
-					var expected = testData1.Concat(testData2);
-					var result =
+				var expected = testData1.Concat(testData2);
+				var result =
 						dataContext.GetTable<SomeClassWithDynamic>().TableName("M998_T066")
 							.Concat(dataContext.GetTable<SomeClassWithDynamic>().TableName("M998_T000"))
 							.ToList();
 
-					AreEqual(expected, result, SomeClassWithDynamic.SomeClassComparer);
-				}
+				AreEqual(expected, result, SomeClassWithDynamic.SomeClassComparer);
 			}
 		}
 
@@ -638,16 +594,15 @@ namespace Tests.Linq
 		[Test]
 		public void Issue3158([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			Assert.DoesNotThrow(() =>
 			{
-				Assert.DoesNotThrow(() => {
-					(from p in db.GetTable<PersonWithoutDynamicStore>()
-					 join d in db.Doctor on p.ID equals d.PersonID
-					 from pa in db.Patient.LeftJoin(pa => pa.Diagnosis == Sql.Property<string>(p, "FirstName"))
-					 select new { p.ID, pa.Diagnosis })
-					.ToList();
-				});
-			}
+				(from p in db.GetTable<PersonWithoutDynamicStore>()
+				 join d in db.Doctor on p.ID equals d.PersonID
+				 from pa in db.Patient.LeftJoin(pa => pa.Diagnosis == Sql.Property<string>(p, "FirstName"))
+				 select new { p.ID, pa.Diagnosis })
+				.ToList();
+			});
 		}
 
 		#region Issue 4483

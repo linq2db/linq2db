@@ -19,11 +19,10 @@ namespace LinqToDB.Data
 		{
 			static Configuration()
 			{
-				Info = new();
 				EnsureInit();
 			}
 
-			public static readonly ConcurrentDictionary<string,ConfigurationInfo> Info;
+			public static readonly ConcurrentDictionary<string,ConfigurationInfo> Info = new();
 
 			public static void EnsureInit()
 			{
@@ -271,8 +270,8 @@ namespace LinqToDB.Data
 			string        providerName,
 			IDataProvider dataProvider)
 		{
-			if (providerName == null) throw new ArgumentNullException(nameof(providerName));
-			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
+			ArgumentNullException.ThrowIfNull(providerName);
+			ArgumentNullException.ThrowIfNull(dataProvider);
 
 			if (string.IsNullOrEmpty(dataProvider.Name))
 				// temporary (?) suppression due to https://github.com/dotnet/roslyn-analyzers/issues/6863
@@ -289,7 +288,7 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation.</param>
 		public static void AddDataProvider(IDataProvider dataProvider)
 		{
-			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
+			ArgumentNullException.ThrowIfNull(dataProvider);
 
 			AddDataProvider(dataProvider.Name, dataProvider);
 		}
@@ -369,8 +368,8 @@ namespace LinqToDB.Data
 			string         connectionString,
 			IDataProvider? dataProvider = null)
 		{
-			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
-			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
+			ArgumentNullException.ThrowIfNull(configuration);
+			ArgumentNullException.ThrowIfNull(connectionString);
 
 			if (dataProvider == null)
 			{
@@ -397,9 +396,9 @@ namespace LinqToDB.Data
 			string connectionString,
 			string dataProvider)
 		{
-			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
-			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
-			if (dataProvider     == null) throw new ArgumentNullException(nameof(dataProvider));
+			ArgumentNullException.ThrowIfNull(configuration);
+			ArgumentNullException.ThrowIfNull(connectionString);
+			ArgumentNullException.ThrowIfNull(dataProvider);
 
 			var info = new ConfigurationInfo(
 				new ConnectionStringSettings(configuration, connectionString, dataProvider));
@@ -416,8 +415,8 @@ namespace LinqToDB.Data
 			string configuration,
 			string connectionString)
 		{
-			if (configuration    == null) throw new ArgumentNullException(nameof(configuration));
-			if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
+			ArgumentNullException.ThrowIfNull(configuration);
+			ArgumentNullException.ThrowIfNull(connectionString);
 
 			GetConfigurationInfo(configuration).ConnectionString = connectionString;
 		}

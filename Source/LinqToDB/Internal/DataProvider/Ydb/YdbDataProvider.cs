@@ -447,7 +447,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				if (param != null)
 				{
 					if (isArray)
-						type = type | YdbProviderAdapter.YdbDbType.List;
+						type |= YdbProviderAdapter.YdbDbType.List;
 
 					Adapter.SetDbType(param, type.Value);
 					return;

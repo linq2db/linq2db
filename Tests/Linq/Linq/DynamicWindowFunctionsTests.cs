@@ -18,22 +18,6 @@ namespace Tests.Linq
 	{
 		#region Helpers
 
-		static Expression? Unwrap(this Expression? ex)
-		{
-			if (ex == null)
-				return null;
-
-			switch (ex.NodeType)
-			{
-				case ExpressionType.Quote:
-				case ExpressionType.ConvertChecked:
-				case ExpressionType.Convert:
-					return ((UnaryExpression)ex).Operand.Unwrap();
-			}
-
-			return ex;
-		}
-
 		static MethodInfo? FindMethodInfoInType(Type type, string methodName, int paramCount)
 		{
 			var method = type.GetRuntimeMethods()
@@ -111,17 +95,20 @@ namespace Tests.Linq
 			for (int i = orderBy.Count - 1; i >= 0; i--)
 			{
 				var order = orderBy[i];
-				string methodName;
-				if (order.Item2)
-					methodName = isFirst ? "OrderByDesc" : "ThenByDesc";
-				else
-					methodName = isFirst ? "OrderBy" : "ThenBy";
+				var methodName = (order.Item2, isFirst) switch
+				{
+					(true, true) => "OrderByDesc",
+					(true, false) => "ThenByDesc",
+					(false, true) => "OrderBy",
+					(false, false) => "ThenBy",
+				};
+
 				isFirst = false;
 
 				var currentType = functionBody.Type;
 				var methodInfo = FindMethodInfo(currentType, methodName, 1).GetGenericMethodDefinition();
 
-				var arg = ((LambdaExpression)Unwrap(order.Item1)!).GetBody(entity);
+				var arg = ((LambdaExpression)order.Item1.Unwrap()!).GetBody(entity);
 
 				functionBody = Expression.Call(functionBody, methodInfo.MakeGenericMethod(arg.Type), arg);
 			}
@@ -204,12 +191,10 @@ namespace Tests.Linq
 		[Test]
 		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<SampleClass>())
-			{
-				var query = table.OrderBy(t => t.Id).ThenByDescending(t => t.Value1).SelectRanked(x => x.Value1);
-				var result = query.ToArray();
-			}
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<SampleClass>();
+			var query = table.OrderBy(t => t.Id).ThenByDescending(t => t.Value1).SelectRanked(x => x.Value1);
+			var result = query.ToArray();
 		}
 	}
 }

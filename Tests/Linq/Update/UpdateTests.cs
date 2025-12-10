@@ -147,17 +147,15 @@ namespace Tests.xUpdate
 		[Test]
 		public void Update4String([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var id = 1001;
+			using var db = GetDataContext(context);
+			var id = 1001;
 
-				var updatable =
+			var updatable =
 					db.Child
 						.Where(c => c.ChildID == id && c.Parent!.Value1 == 1)
 						.Set(c => c.ChildID, c => c.ChildID + 1);
 
-				updatable.Update();
-			}
+			updatable.Update();
 		}
 
 		[Test]
@@ -422,16 +420,14 @@ namespace Tests.xUpdate
 				TestProvName.AllSapHana)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				(
-					from p1 in db.Parent
-					join p2 in db.Parent on p1.ParentID equals p2.ParentID
-					where p1.ParentID < 3
-					select new { p1, p2 }
-				)
-				.Update(q => q.p1, q => new Parent { ParentID = q.p2.ParentID });
-			}
+			using var db = GetDataContext(context);
+			(
+				from p1 in db.Parent
+				join p2 in db.Parent on p1.ParentID equals p2.ParentID
+				where p1.ParentID < 3
+				select new { p1, p2 }
+			)
+			.Update(q => q.p1, q => new Parent { ParentID = q.p2.ParentID });
 		}
 
 		[Test]
@@ -444,16 +440,14 @@ namespace Tests.xUpdate
 				TestProvName.AllSapHana)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				await (
-					from p1 in db.Parent
-					join p2 in db.Parent on p1.ParentID equals p2.ParentID
-					where p1.ParentID < 3
-					select new { p1, p2 }
-				)
-				.UpdateAsync(q => q.p1, q => new Parent { ParentID = q.p2.ParentID });
-			}
+			using var db = GetDataContext(context);
+			await (
+				from p1 in db.Parent
+				join p2 in db.Parent on p1.ParentID equals p2.ParentID
+				where p1.ParentID < 3
+				select new { p1, p2 }
+			)
+			.UpdateAsync(q => q.p1, q => new Parent { ParentID = q.p2.ParentID });
 		}
 
 		[Test]
@@ -466,16 +460,14 @@ namespace Tests.xUpdate
 				TestProvName.AllSapHana)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				(
-					from p1 in db.Parent
-					join p2 in db.Parent on p1.ParentID equals p2.ParentID
-					where p1.ParentID < 3
-					select new { p1, p2 }
-				)
-				.Update(q => q.p2, q => new Parent { ParentID = q.p1.ParentID });
-			}
+			using var db = GetDataContext(context);
+			(
+				from p1 in db.Parent
+				join p2 in db.Parent on p1.ParentID equals p2.ParentID
+				where p1.ParentID < 3
+				select new { p1, p2 }
+			)
+			.Update(q => q.p2, q => new Parent { ParentID = q.p1.ParentID });
 		}
 
 		[Test]
@@ -909,10 +901,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void CompiledUpdate()
 		{
-			using (var ctx = new TestDataConnection())
-			{
-				_updateQuery(ctx, 12345, "54321");
-			}
+			using var ctx = new TestDataConnection();
+			_updateQuery(ctx, 12345, "54321");
 		}
 
 		[Table("LinqDataTypes")]
@@ -948,20 +938,18 @@ namespace Tests.xUpdate
 				TestProvName.AllSapHana)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				var ids = new[] { 10000, 20000 };
+			using var db = GetDataConnection(context);
+			var ids = new[] { 10000, 20000 };
 
-				db.GetTable<Table2>()
-					.Where (x => ids.Contains(x.ParentID))
-					.Select(x => x.Table1)
-					.Distinct()
-					.Set(y => y.BoolValue, y => y.Tables2.All(x => x.Value1 == 1))
-					.Update();
+			db.GetTable<Table2>()
+				.Where(x => ids.Contains(x.ParentID))
+				.Select(x => x.Table1)
+				.Distinct()
+				.Set(y => y.BoolValue, y => y.Tables2.All(x => x.Value1 == 1))
+				.Update();
 
-				db.LastQuery!.ShouldContain("INNER JOIN");
-				db.LastQuery!.ShouldContain("DISTINCT");
-			}
+			db.LastQuery!.ShouldContain("INNER JOIN");
+			db.LastQuery!.ShouldContain("DISTINCT");
 		}
 
 		[Test]
@@ -1050,18 +1038,16 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateNullablePrimaryKey([DataSources(ProviderName.Ydb)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.Update(new Table3 { ParentID = 10000, ChildID = null, GrandChildID = 1000 });
+			using var db = GetDataContext(context);
+			db.Update(new Table3 { ParentID = 10000, ChildID = null, GrandChildID = 1000 });
 
-				if (db is DataConnection)
-					Assert.That(((DataConnection)db).LastQuery!, Does.Contain("IS NULL"));
+			if (db is DataConnection)
+				Assert.That(((DataConnection)db).LastQuery!, Does.Contain("IS NULL"));
 
-				db.Update(new Table3 { ParentID = 10000, ChildID = 111, GrandChildID = 1000 });
+			db.Update(new Table3 { ParentID = 10000, ChildID = 111, GrandChildID = 1000 });
 
-				if (db is DataConnection)
-					Assert.That(((DataConnection)db).LastQuery!, Does.Not.Contain("IS NULL"));
-			}
+			if (db is DataConnection)
+				Assert.That(((DataConnection)db).LastQuery!, Does.Not.Contain("IS NULL"));
 		}
 
 		[Test]
@@ -1255,11 +1241,10 @@ namespace Tests.xUpdate
 			TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllInformix, ProviderName.SqlCe)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.Parent.Delete(_ => _.ParentID > 1000);
+			using var db = GetDataContext(context);
+			db.Parent.Delete(_ => _.ParentID > 1000);
 
-				var res =
+			var res =
 				(
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
@@ -1269,11 +1254,10 @@ namespace Tests.xUpdate
 				.Set(p => p.ParentID, p => db.Child.SingleOrDefault(c => c.ChildID == 11)!.ParentID + 1000)
 				.Update();
 
-				Assert.That(res, Is.EqualTo(1));
+			Assert.That(res, Is.EqualTo(1));
 
-				res = db.Parent.Where(_ => _.ParentID == 1001).Set(_ => _.ParentID, 1).Update();
-				Assert.That(res, Is.EqualTo(1));
-			}
+			res = db.Parent.Where(_ => _.ParentID == 1001).Set(_ => _.ParentID, 1).Update();
+			Assert.That(res, Is.EqualTo(1));
 		}
 
 		[Test]
@@ -1538,39 +1522,37 @@ namespace Tests.xUpdate
 			ProviderName.SqlCe,
 			TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var gt_s_one = db.CreateLocalTable(UpdateFromJoin.Data))
-			using (var access_mode = db.CreateLocalTable(AccessMode.Data))
-			{
-				gt_s_one
-					.GroupJoin(
-						access_mode,
-						l => l.col3!.Replace("auth.", "").ToUpper(),
-						am => am.code!.ToUpper(),
-						(l, am) => new
-						{
-							l,
-							am
-						})
-					.SelectMany(
-						x => x.am.DefaultIfEmpty(),
-						(x1, y1) => new
-						{
-							gt = x1.l,
-							theAM = y1!.id
-						})
-					.Update(
-						gt_s_one,
-						s => new UpdateFromJoin()
-						{
-							col1 = s.gt.col1,
-							col2 = s.gt.col2,
-							col3 = s.gt.col3!.Replace("auth.", ""),
-							col4 = s.gt.col4,
-							col5 = s.gt.col3 == "empty" ? "1" : "0",
-							col6 = s.gt.col3 == "empty" ? "" : s.theAM.ToString()
-						});
-			}
+			using var db = GetDataContext(context);
+			using var gt_s_one = db.CreateLocalTable(UpdateFromJoin.Data);
+			using var access_mode = db.CreateLocalTable(AccessMode.Data);
+			gt_s_one
+				.GroupJoin(
+					access_mode,
+					l => l.col3!.Replace("auth.", "").ToUpper(),
+					am => am.code!.ToUpper(),
+					(l, am) => new
+					{
+						l,
+						am
+					})
+				.SelectMany(
+					x => x.am.DefaultIfEmpty(),
+					(x1, y1) => new
+					{
+						gt = x1.l,
+						theAM = y1!.id
+					})
+				.Update(
+					gt_s_one,
+					s => new UpdateFromJoin()
+					{
+						col1 = s.gt.col1,
+						col2 = s.gt.col2,
+						col3 = s.gt.col3!.Replace("auth.", ""),
+						col4 = s.gt.col4,
+						col5 = s.gt.col3 == "empty" ? "1" : "0",
+						col6 = s.gt.col3 == "empty" ? "" : s.theAM.ToString()
+					});
 		}
 
 		// https://stackoverflow.com/questions/57115728/
@@ -1581,39 +1563,37 @@ namespace Tests.xUpdate
 			ProviderName.SqlCe,
 			TestProvName.AllInformix)] string context)
 		{
-			using (var db          = GetDataContext(context))
-			using (var gt_s_one    = db.CreateLocalTable(UpdateFromJoin.Data))
-			using (var access_mode = db.CreateLocalTable(AccessMode.Data))
-			{
-				gt_s_one
-					.GroupJoin(
-						access_mode,
-						l => l.col3!.Replace("auth.", "").ToUpper(),
-						am => am.code!.ToUpper(),
-						(l, am) => new
-						{
-							l,
-							am
-						})
-					.SelectMany(
-						x => x.am.DefaultIfEmpty(),
-						(x1, y1) => new
-						{
-							gt    = x1.l,
-							theAM = y1!.id
-						})
-					.Update(
-						q => q.gt,
-						s => new UpdateFromJoin()
-						{
-							col1 = s.gt.col1,
-							col2 = s.gt.col2,
-							col3 = s.gt.col3!.Replace("auth.", ""),
-							col4 = s.gt.col4,
-							col5 = s.gt.col3 == "empty" ? "1" : "0",
-							col6 = s.gt.col3 == "empty" ? "" : s.theAM.ToString()
-						});
-			}
+			using var db = GetDataContext(context);
+			using var gt_s_one = db.CreateLocalTable(UpdateFromJoin.Data);
+			using var access_mode = db.CreateLocalTable(AccessMode.Data);
+			gt_s_one
+				.GroupJoin(
+					access_mode,
+					l => l.col3!.Replace("auth.", "").ToUpper(),
+					am => am.code!.ToUpper(),
+					(l, am) => new
+					{
+						l,
+						am
+					})
+				.SelectMany(
+					x => x.am.DefaultIfEmpty(),
+					(x1, y1) => new
+					{
+						gt = x1.l,
+						theAM = y1!.id
+					})
+				.Update(
+					q => q.gt,
+					s => new UpdateFromJoin()
+					{
+						col1 = s.gt.col1,
+						col2 = s.gt.col2,
+						col3 = s.gt.col3!.Replace("auth.", ""),
+						col4 = s.gt.col4,
+						col5 = s.gt.col3 == "empty" ? "1" : "0",
+						col6 = s.gt.col3 == "empty" ? "" : s.theAM.ToString()
+					});
 		}
 
 		[Obsolete("Remove test after API removed")]
@@ -1624,42 +1604,40 @@ namespace Tests.xUpdate
 			ProviderName.SqlCe,
 			TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var gt_s_one = db.CreateLocalTable(UpdateFromJoin.Data))
-			using (var gt_s_one_target = db.CreateLocalTable(tableName: "gt_s_one_target", UpdateFromJoin.Data))
-			using (var access_mode = db.CreateLocalTable(AccessMode.Data))
-			{
+			using var db = GetDataContext(context);
+			using var gt_s_one = db.CreateLocalTable(UpdateFromJoin.Data);
+			using var gt_s_one_target = db.CreateLocalTable(tableName: "gt_s_one_target", UpdateFromJoin.Data);
+			using var access_mode = db.CreateLocalTable(AccessMode.Data);
 #pragma warning disable CA1311 // Specify a culture or use an invariant version
-				gt_s_one
-					.GroupJoin(
-						access_mode,
-						l => l.col3!.Replace("auth.", "").ToUpper(),
-						am => am.code!.ToUpper(),
-						(l, am) => new
-						{
-							l,
-							am
-						})
-					.SelectMany(
-						x => x.am.DefaultIfEmpty(),
-						(x1, y1) => new
-						{
-							gt = x1.l,
-							theAM = y1!.id
-						})
-					.Update(
-						gt_s_one.TableName("gt_s_one_target"),
-						s => new UpdateFromJoin()
-						{
-							col1 = s.gt.col1,
-							col2 = s.gt.col2,
-							col3 = s.gt.col3!.Replace("auth.", ""),
-							col4 = s.gt.col4,
-							col5 = s.gt.col3 == "empty" ? "1" : "0",
-							col6 = s.gt.col3 == "empty" ? "" : s.theAM.ToString()
-						});
+			gt_s_one
+				.GroupJoin(
+					access_mode,
+					l => l.col3!.Replace("auth.", "").ToUpper(),
+					am => am.code!.ToUpper(),
+					(l, am) => new
+					{
+						l,
+						am
+					})
+				.SelectMany(
+					x => x.am.DefaultIfEmpty(),
+					(x1, y1) => new
+					{
+						gt = x1.l,
+						theAM = y1!.id
+					})
+				.Update(
+					gt_s_one.TableName("gt_s_one_target"),
+					s => new UpdateFromJoin()
+					{
+						col1 = s.gt.col1,
+						col2 = s.gt.col2,
+						col3 = s.gt.col3!.Replace("auth.", ""),
+						col4 = s.gt.col4,
+						col5 = s.gt.col3 == "empty" ? "1" : "0",
+						col6 = s.gt.col3 == "empty" ? "" : s.theAM.ToString()
+					});
 #pragma warning restore CA1311 // Specify a culture or use an invariant version
-			}
 		}
 
 		[Test]
@@ -1669,42 +1647,40 @@ namespace Tests.xUpdate
 			ProviderName.SqlCe,
 			TestProvName.AllInformix)] string context)
 		{
-			using (var db          = GetDataContext(context))
-			using (var gt_s_one    = db.CreateLocalTable(UpdateFromJoin.Data))
-			using (var gt_s_one_target = db.CreateLocalTable(tableName: "gt_s_one_target", UpdateFromJoin.Data))
-			using (var access_mode = db.CreateLocalTable(AccessMode.Data))
-			{
+			using var db = GetDataContext(context);
+			using var gt_s_one = db.CreateLocalTable(UpdateFromJoin.Data);
+			using var gt_s_one_target = db.CreateLocalTable(tableName: "gt_s_one_target", UpdateFromJoin.Data);
+			using var access_mode = db.CreateLocalTable(AccessMode.Data);
 #pragma warning disable CA1311 // Specify a culture or use an invariant version
-				gt_s_one.InnerJoin(gt_s_one_target, (t1, t2) => t1.id == t2.id, (t1, t2) => new { t1, t2 })
-					.GroupJoin(
-						access_mode,
-						l => l.t1.col3!.Replace("auth.", "").ToUpper(),
-						am => am.code!.ToUpper(),
-						(l, am) => new
-						{
-							l,
-							am
-						})
-					.SelectMany(
-						x => x.am.DefaultIfEmpty(),
-						(x1, y1) => new
-						{
-							gt    = x1.l,
-							theAM = y1!.id
-						})
-					.Update(
-						q => q.gt.t2,
-						s => new UpdateFromJoin()
-						{
-							col1 = s.gt.t1.col1,
-							col2 = s.gt.t1.col2,
-							col3 = s.gt.t1.col3!.Replace("auth.", ""),
-							col4 = s.gt.t1.col4,
-							col5 = s.gt.t1.col3 == "empty" ? "1" : "0",
-							col6 = s.gt.t1.col3 == "empty" ? "" : s.theAM.ToString()
-						});
+			gt_s_one.InnerJoin(gt_s_one_target, (t1, t2) => t1.id == t2.id, (t1, t2) => new { t1, t2 })
+				.GroupJoin(
+					access_mode,
+					l => l.t1.col3!.Replace("auth.", "").ToUpper(),
+					am => am.code!.ToUpper(),
+					(l, am) => new
+					{
+						l,
+						am
+					})
+				.SelectMany(
+					x => x.am.DefaultIfEmpty(),
+					(x1, y1) => new
+					{
+						gt = x1.l,
+						theAM = y1!.id
+					})
+				.Update(
+					q => q.gt.t2,
+					s => new UpdateFromJoin()
+					{
+						col1 = s.gt.t1.col1,
+						col2 = s.gt.t1.col2,
+						col3 = s.gt.t1.col3!.Replace("auth.", ""),
+						col4 = s.gt.t1.col4,
+						col5 = s.gt.t1.col3 == "empty" ? "1" : "0",
+						col6 = s.gt.t1.col3 == "empty" ? "" : s.theAM.ToString()
+					});
 #pragma warning restore CA1311 // Specify a culture or use an invariant version
-			}
 		}
 
 		enum UpdateSetEnum
@@ -1741,25 +1717,23 @@ namespace Tests.xUpdate
 			ProviderName.DB2,
 			ProviderName.SqlCe)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(UpdateSetTest.Data))
-			{
-				var id = 1;
-				var value = TestData.Guid1;
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(UpdateSetTest.Data);
+			var id = 1;
+			var value = TestData.Guid1;
 
-				table.Where(_ => _.Id == id)
-					.Set(_ => _.Value1, value)
-					.Update();
+			table.Where(_ => _.Id == id)
+				.Set(_ => _.Value1, value)
+				.Update();
 
-				Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value1).Single(), Is.EqualTo(value));
+			Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value1).Single(), Is.EqualTo(value));
 
-				value = TestData.Guid2;
-				table.Where(_ => _.Id == id)
-					.Set(_ => _.Value1, value)
-					.Update();
+			value = TestData.Guid2;
+			table.Where(_ => _.Id == id)
+				.Set(_ => _.Value1, value)
+				.Update();
 
-				Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value1).Single(), Is.EqualTo(value));
-			}
+			Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value1).Single(), Is.EqualTo(value));
 		}
 
 		[Test]
@@ -1772,25 +1746,23 @@ namespace Tests.xUpdate
 			ProviderName.DB2,
 			ProviderName.SqlCe)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(UpdateSetTest.Data))
-			{
-				var id = 1;
-				var value = 11;
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(UpdateSetTest.Data);
+			var id = 1;
+			var value = 11;
 
-				table.Where(_ => _.Id == id)
-					.Set(_ => _.Value2, value)
-					.Update();
+			table.Where(_ => _.Id == id)
+				.Set(_ => _.Value2, value)
+				.Update();
 
-				Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value2).Single(), Is.EqualTo(value));
+			Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value2).Single(), Is.EqualTo(value));
 
-				value = 12;
-				table.Where(_ => _.Id == id)
-					.Set(_ => _.Value2, value)
-					.Update();
+			value = 12;
+			table.Where(_ => _.Id == id)
+				.Set(_ => _.Value2, value)
+				.Update();
 
-				Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value2).Single(), Is.EqualTo(value));
-			}
+			Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value2).Single(), Is.EqualTo(value));
 		}
 
 		[Test]
@@ -1803,25 +1775,23 @@ namespace Tests.xUpdate
 			ProviderName.DB2,
 			ProviderName.SqlCe)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(UpdateSetTest.Data))
-			{
-				var id = 1;
-				var value = UpdateSetEnum.Value2;
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(UpdateSetTest.Data);
+			var id = 1;
+			var value = UpdateSetEnum.Value2;
 
-				table.Where(_ => _.Id == id)
-					.Set(_ => _.Value3, value)
-					.Update();
+			table.Where(_ => _.Id == id)
+				.Set(_ => _.Value3, value)
+				.Update();
 
-				Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value3).Single(), Is.EqualTo(value));
+			Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value3).Single(), Is.EqualTo(value));
 
-				value = UpdateSetEnum.Value3;
-				table.Where(_ => _.Id == id)
-					.Set(_ => _.Value3, value)
-					.Update();
+			value = UpdateSetEnum.Value3;
+			table.Where(_ => _.Id == id)
+				.Set(_ => _.Value3, value)
+				.Update();
 
-				Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value3).Single(), Is.EqualTo(value));
-			}
+			Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value3).Single(), Is.EqualTo(value));
 		}
 
 		[Test]
@@ -1834,25 +1804,23 @@ namespace Tests.xUpdate
 			ProviderName.DB2,
 			ProviderName.SqlCe)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(UpdateSetTest.Data))
-			{
-				var id = 1;
-				var value = TestData.Guid1;
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(UpdateSetTest.Data);
+			var id = 1;
+			var value = TestData.Guid1;
 
-				table.Where(_ => _.Id == id)
-					.Set(_ => _.Value4, value)
-					.Update();
+			table.Where(_ => _.Id == id)
+				.Set(_ => _.Value4, value)
+				.Update();
 
-				Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value4).Single(), Is.EqualTo(value));
+			Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value4).Single(), Is.EqualTo(value));
 
-				value = TestData.Guid2;
-				table.Where(_ => _.Id == id)
-					.Set(_ => _.Value4, value)
-					.Update();
+			value = TestData.Guid2;
+			table.Where(_ => _.Id == id)
+				.Set(_ => _.Value4, value)
+				.Update();
 
-				Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value4).Single(), Is.EqualTo(value));
-			}
+			Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value4).Single(), Is.EqualTo(value));
 		}
 
 		[Test]
@@ -1865,25 +1833,23 @@ namespace Tests.xUpdate
 			ProviderName.DB2,
 			ProviderName.SqlCe)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(UpdateSetTest.Data))
-			{
-				var id = 1;
-				var value = 11;
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(UpdateSetTest.Data);
+			var id = 1;
+			var value = 11;
 
-				table.Where(_ => _.Id == id)
-					.Set(_ => _.Value5, value)
-					.Update();
+			table.Where(_ => _.Id == id)
+				.Set(_ => _.Value5, value)
+				.Update();
 
-				Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value5).Single(), Is.EqualTo(value));
+			Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value5).Single(), Is.EqualTo(value));
 
-				value = 12;
-				table.Where(_ => _.Id == id)
-					.Set(_ => _.Value5, value)
-					.Update();
+			value = 12;
+			table.Where(_ => _.Id == id)
+				.Set(_ => _.Value5, value)
+				.Update();
 
-				Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value5).Single(), Is.EqualTo(value));
-			}
+			Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value5).Single(), Is.EqualTo(value));
 		}
 
 		[Test]
@@ -1896,25 +1862,23 @@ namespace Tests.xUpdate
 			ProviderName.DB2,
 			ProviderName.SqlCe)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(UpdateSetTest.Data))
-			{
-				var id = 1;
-				var value = UpdateSetEnum.Value2;
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(UpdateSetTest.Data);
+			var id = 1;
+			var value = UpdateSetEnum.Value2;
 
-				table.Where(_ => _.Id == id)
-					.Set(_ => _.Value6, value)
-					.Update();
+			table.Where(_ => _.Id == id)
+				.Set(_ => _.Value6, value)
+				.Update();
 
-				Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value6).Single(), Is.EqualTo(value));
+			Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value6).Single(), Is.EqualTo(value));
 
-				value = UpdateSetEnum.Value3;
-				table.Where(_ => _.Id == id)
-					.Set(_ => _.Value6, value)
-					.Update();
+			value = UpdateSetEnum.Value3;
+			table.Where(_ => _.Id == id)
+				.Set(_ => _.Value6, value)
+				.Update();
 
-				Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value6).Single(), Is.EqualTo(value));
-			}
+			Assert.That(table.Where(_ => _.Id == id).Select(_ => _.Value6).Single(), Is.EqualTo(value));
 		}
 
 		sealed class TextData
@@ -1939,27 +1903,24 @@ namespace Tests.xUpdate
 				new TextData { Id = 2, Items1 = "T2", Items2 = "Z2" },
 			};
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var id = 1;
+
+			table.Where(_ => _.Id >= id)
+				.Set(x => $"{x.Items1} += {str}")
+				.Set(x => $"{x.Items2} += {str}")
+				//.Set(x => $"{x.Items}.WRITE({item}, {2}, {2})")
+				.Update();
+
+			var result = table.ToArray();
+			using (Assert.EnterMultipleScope())
 			{
-				var id = 1;
+				Assert.That(result[0].Items1, Is.EqualTo("T1" + str));
+				Assert.That(result[0].Items2, Is.EqualTo("Z1" + str));
 
-				table.Where(_ => _.Id >= id)
-					.Set(x => $"{x.Items1} += {str}")
-					.Set(x => $"{x.Items2} += {str}")
-					//.Set(x => $"{x.Items}.WRITE({item}, {2}, {2})")
-					.Update();
-
-				var result = table.ToArray();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[0].Items1, Is.EqualTo("T1" + str));
-					Assert.That(result[0].Items2, Is.EqualTo("Z1" + str));
-
-					Assert.That(result[1].Items1, Is.EqualTo("T2" + str));
-					Assert.That(result[1].Items2, Is.EqualTo("Z2" + str));
-				}
-
+				Assert.That(result[1].Items1, Is.EqualTo("T2" + str));
+				Assert.That(result[1].Items2, Is.EqualTo("Z2" + str));
 			}
 		}
 
@@ -1973,26 +1934,23 @@ namespace Tests.xUpdate
 				new TextData { Id = 2, Items1 = "T2", Items2 = "Z2" },
 			};
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var id = 1;
+
+			table.Where(_ => _.Id >= id)
+				.Set(x => x.Items1, x => $"{x.Items1}{str}")
+				.Set(x => x.Items2, x => $"{x.Items2}{str}")
+				.Update();
+
+			var result = table.OrderBy(_ => _.Id).ToArray();
+			using (Assert.EnterMultipleScope())
 			{
-				var id = 1;
+				Assert.That(result[0].Items1, Is.EqualTo("T1" + str));
+				Assert.That(result[0].Items2, Is.EqualTo("Z1" + str));
 
-				table.Where(_ => _.Id >= id)
-					.Set(x => x.Items1, x => $"{x.Items1}{str}")
-					.Set(x => x.Items2, x => $"{x.Items2}{str}")
-					.Update();
-
-				var result = table.OrderBy(_ => _.Id).ToArray();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[0].Items1, Is.EqualTo("T1" + str));
-					Assert.That(result[0].Items2, Is.EqualTo("Z1" + str));
-
-					Assert.That(result[1].Items1, Is.EqualTo("T2" + str));
-					Assert.That(result[1].Items2, Is.EqualTo("Z2" + str));
-				}
-
+				Assert.That(result[1].Items1, Is.EqualTo("T2" + str));
+				Assert.That(result[1].Items2, Is.EqualTo("Z2" + str));
 			}
 		}
 
@@ -2094,12 +2052,11 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateByAssociation2Optional([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db         = GetDataContext(context))
-			using (var main       = db.CreateLocalTable(MainTable.Data))
-			using (var associated = db.CreateLocalTable(AssociatedTable.Data))
-			{
-				var id = 3;
-				var cnt = associated
+			using var db = GetDataContext(context);
+			using var main = db.CreateLocalTable(MainTable.Data);
+			using var associated = db.CreateLocalTable(AssociatedTable.Data);
+			var id = 3;
+			var cnt = associated
 					.Where(pat => pat.Id == id)
 					.Select(p => p.MainOptional)
 					.Update(p => new MainTable()
@@ -2107,15 +2064,14 @@ namespace Tests.xUpdate
 						Field = "test"
 					});
 
-				var data = main.OrderBy(_ => _.Id).ToArray();
-				using (Assert.EnterMultipleScope())
-				{
-					if (context.SupportsRowcount())
-						Assert.That(cnt, Is.EqualTo(1));
-					Assert.That(data[0].Field, Is.EqualTo("value 1"));
-					Assert.That(data[1].Field, Is.EqualTo("value 2"));
-					Assert.That(data[2].Field, Is.EqualTo("test"));
-				}
+			var data = main.OrderBy(_ => _.Id).ToArray();
+			using (Assert.EnterMultipleScope())
+			{
+				if (context.SupportsRowcount())
+					Assert.That(cnt, Is.EqualTo(1));
+				Assert.That(data[0].Field, Is.EqualTo("value 1"));
+				Assert.That(data[1].Field, Is.EqualTo("value 2"));
+				Assert.That(data[2].Field, Is.EqualTo("test"));
 			}
 		}
 
@@ -2123,12 +2079,11 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateByAssociation2Required([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var main = db.CreateLocalTable(MainTable.Data))
-			using (var associated = db.CreateLocalTable(AssociatedTable.Data))
-			{
-				var id = 3;
-				var cnt = associated
+			using var db = GetDataContext(context);
+			using var main = db.CreateLocalTable(MainTable.Data);
+			using var associated = db.CreateLocalTable(AssociatedTable.Data);
+			var id = 3;
+			var cnt = associated
 					.Where(pat => pat.Id == id)
 					.Select(p => p.MainRequired)
 					.Update(p => new MainTable()
@@ -2136,28 +2091,25 @@ namespace Tests.xUpdate
 						Field = "test"
 					});
 
-				var data = main.OrderBy(_ => _.Id).ToArray();
-				using (Assert.EnterMultipleScope())
-				{
-					if (context.SupportsRowcount())
-						Assert.That(cnt, Is.EqualTo(1));
-					Assert.That(data[0].Field, Is.EqualTo("value 1"));
-					Assert.That(data[1].Field, Is.EqualTo("value 2"));
-					Assert.That(data[2].Field, Is.EqualTo("test"));
-				}
+			var data = main.OrderBy(_ => _.Id).ToArray();
+			using (Assert.EnterMultipleScope())
+			{
+				if (context.SupportsRowcount())
+					Assert.That(cnt, Is.EqualTo(1));
+				Assert.That(data[0].Field, Is.EqualTo("value 1"));
+				Assert.That(data[1].Field, Is.EqualTo("value 2"));
+				Assert.That(data[2].Field, Is.EqualTo("test"));
 			}
 		}
 
 		[Test]
 		public void AsUpdatableEmptyTest([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query = db.Person.AsUpdatable();
+			using var db = GetDataContext(context);
+			var query = db.Person.AsUpdatable();
 
-				var ex = Assert.Throws<LinqToDBException>(() => query.Update())!;
-				Assert.That(ex.Message, Is.EqualTo("Update query has no setters defined."));
-			}
+			var ex = Assert.Throws<LinqToDBException>(() => query.Update())!;
+			Assert.That(ex.Message, Is.EqualTo("Update query has no setters defined."));
 		}
 
 		[Test]

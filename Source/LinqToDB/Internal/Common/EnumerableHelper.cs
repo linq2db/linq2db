@@ -126,7 +126,8 @@ namespace LinqToDB.Internal.Common
 		/// <returns>New enumerable of batches.</returns>
 		public static IAsyncEnumerable<IAsyncEnumerable<T>> Batch<T>(IAsyncEnumerable<T> source, int batchSize)
 		{
-			if (batchSize <= 0) throw new ArgumentOutOfRangeException(nameof(batchSize));
+			ArgumentOutOfRangeException.ThrowIfNegativeOrZero(batchSize);
+
 			if (batchSize < Int32.MaxValue) return new AsyncBatchEnumerable<T>(source, batchSize);
 			return BatchSingle(source);
 		}

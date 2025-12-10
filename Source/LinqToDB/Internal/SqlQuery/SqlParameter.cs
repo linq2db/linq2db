@@ -123,7 +123,7 @@ namespace LinqToDB.Internal.SqlQuery
 			if (NeedsCast)
 				writer.Append("$Cast$(");
 
-			if (Name?.StartsWith("@") == false)
+			if (Name?.StartsWith('@') == false)
 				writer.Append('@');
 
 			writer

@@ -131,7 +131,7 @@ namespace LinqToDB.Tools.Comparers
 		[Pure]
 		public static IEqualityComparer<T> GetEqualityComparer<T>(params Expression<Func<T,object?>>[] membersToCompare)
 		{
-			if (membersToCompare == null) throw new ArgumentNullException(nameof(membersToCompare));
+			ArgumentNullException.ThrowIfNull(membersToCompare);
 			return new Comparer<T>(CreateEqualsFunc<T>(membersToCompare.Select(e => (Func<Expression, Expression>)e.GetBody)), CreateGetHashCodeFunc<T>(membersToCompare.Select(e => (Func<Expression, Expression>)e.GetBody)));
 		}
 
@@ -157,7 +157,7 @@ namespace LinqToDB.Tools.Comparers
 		public static IEqualityComparer<T> GetEqualityComparer<T>(
 			[InstantHandle] Func<TypeAccessor<T>,IEnumerable<MemberAccessor>> membersToCompare)
 		{
-			if (membersToCompare == null) throw new ArgumentNullException(nameof(membersToCompare));
+			ArgumentNullException.ThrowIfNull(membersToCompare);
 
 			var members = membersToCompare(TypeAccessor.GetAccessor<T>()).ToList();
 			return new Comparer<T>(GetEqualsFunc<T>(members), GetGetHashCodeFunc<T>(members));
@@ -174,7 +174,7 @@ namespace LinqToDB.Tools.Comparers
 		public static IEqualityComparer<T> GetEqualityComparer<T>(
 			[InstantHandle] Func<MemberAccessor,bool> memberPredicate)
 		{
-			if (memberPredicate == null) throw new ArgumentNullException(nameof(memberPredicate));
+			ArgumentNullException.ThrowIfNull(memberPredicate);
 
 			var members = TypeAccessor.GetAccessor<T>().Members.Where(memberPredicate).ToList();
 			return new Comparer<T>(GetEqualsFunc<T>(members), GetGetHashCodeFunc<T>(members));

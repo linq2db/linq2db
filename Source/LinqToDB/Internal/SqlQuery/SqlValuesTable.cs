@@ -96,7 +96,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 			// rows pre-build for remote context
 
-			if (!(Source?.EvaluateExpression(context) is IEnumerable source))
+			if (Source?.EvaluateExpression(context) is not IEnumerable source)
 				throw new LinqToDBException($"Source must be enumerable: {Source}");
 
 			var rows = new List<List<ISqlExpression>>();

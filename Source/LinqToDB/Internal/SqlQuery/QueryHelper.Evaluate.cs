@@ -185,7 +185,7 @@ namespace LinqToDB.Internal.SqlQuery
 						}
 						default:
 						{
-							if (!(value1 is IComparable comp1) || !(value2 is IComparable comp2))
+							if (value1 is not IComparable comp1 || value2 is not IComparable comp2)
 							{
 								result = false;
 								return true;

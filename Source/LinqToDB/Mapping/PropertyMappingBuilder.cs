@@ -439,7 +439,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns current column mapping builder.</returns>
 		public PropertyMappingBuilder<TEntity, TProperty> IsAlias(Expression<Func<TEntity, object>> aliasMember)
 		{
-			if (aliasMember == null) throw new ArgumentNullException(nameof(aliasMember));
+			ArgumentNullException.ThrowIfNull(aliasMember);
 
 			var memberInfo = MemberHelper.GetMemberInfo(aliasMember);
 
@@ -475,7 +475,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns current column mapping builder.</returns>
 		public PropertyMappingBuilder<TEntity, TProperty> IsExpression<TR>(Expression<Func<TEntity, TR>> expression, bool isColumn = false, string? alias = null)
 		{
-			if (expression == null) throw new ArgumentNullException(nameof(expression));
+			ArgumentNullException.ThrowIfNull(expression);
 
 			return HasAttribute(new ExpressionMethodAttribute(expression) { IsColumn = isColumn, Alias = alias }).IsNotColumn();
 		}

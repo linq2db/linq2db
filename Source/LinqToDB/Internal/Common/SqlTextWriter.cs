@@ -260,7 +260,7 @@ namespace LinqToDB.Internal.Common
 				for (var index = 0; index < split.Length; index++)
 				{
 					var line = split[index];
-					if (line.EndsWith("\r"))
+					if (line.EndsWith('\r'))
 						AppendLine(line.Substring(0, line.Length - 1));
 					else if (index == split.Length - 1)
 						Append(line);

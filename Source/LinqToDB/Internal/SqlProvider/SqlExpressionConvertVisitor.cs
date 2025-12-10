@@ -1384,7 +1384,7 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						var len = element.Expr2.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(MappingSchema.GetDataType(element.Expr2.SystemType).Type.DataType);
 
-						if (len == null || len <= 0)
+						if (len is null or <= 0)
 							len = 100;
 
 						return new SqlBinaryExpression(
@@ -1399,7 +1399,7 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						var len = element.Expr1.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(MappingSchema.GetDataType(element.Expr1.SystemType).Type.DataType);
 
-						if (len == null || len <= 0)
+						if (len is null or <= 0)
 							len = 100;
 
 						return new SqlBinaryExpression(
@@ -1572,7 +1572,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (toDataType.Length > 0)
 			{
 				var maxLength = toDataType.SystemType == typeof(string) ? GetMaxDisplaySize(fromDbType) : GetMaxLength(fromDbType);
-				var newLength = maxLength != null && maxLength >= 0 ? Math.Min(toDataType.Length ?? 0, maxLength.Value) : fromDbType.Length;
+				var newLength = maxLength is not null and >= 0 ? Math.Min(toDataType.Length ?? 0, maxLength.Value) : fromDbType.Length;
 
 				var newDataType = toDataType.WithLength(newLength);
 				if (!newDataType.EqualsDbOnly(toDataType))

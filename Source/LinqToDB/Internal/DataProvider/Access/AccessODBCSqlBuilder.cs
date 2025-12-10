@@ -28,20 +28,18 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
-			switch (convertType)
+			return convertType switch
 			{
-				case ConvertType.NameToQueryParameter:
-				case ConvertType.NameToCommandParameter:
-				case ConvertType.NameToSprocParameter:
-					return sb.Append('?');
-			}
+				ConvertType.NameToQueryParameter or ConvertType.NameToCommandParameter or ConvertType.NameToSprocParameter =>
+					sb.Append('?'),
 
-			return base.Convert(sb, value, convertType);
+				_ => base.Convert(sb, value, convertType),
+			};
 		}
 
 		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
-			if (DataProvider is AccessDataProvider provider && provider.Provider == AccessProvider.ODBC)
+			if (DataProvider is AccessDataProvider { Provider: AccessProvider.ODBC } provider)
 			{
 				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)

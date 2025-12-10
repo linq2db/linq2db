@@ -171,8 +171,8 @@ namespace LinqToDB
 			BulkCopyOptions?                bulkCopyOptions = default)
 			where T : class
 		{
-			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
-			
+			ArgumentNullException.ThrowIfNull(setTable);
+
 			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 			
 			return new TempTable<T>(db, tempTableDescriptor, createOptions, items, bulkCopyOptions);
@@ -370,7 +370,7 @@ namespace LinqToDB
 			Action<ITable<T>>?              action = default)
 			where T : class
 		{
-			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
+			ArgumentNullException.ThrowIfNull(setTable);
 
 			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
@@ -626,7 +626,7 @@ namespace LinqToDB
 			CancellationToken               cancellationToken = default)
 			where T : class
 		{
-			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
+			ArgumentNullException.ThrowIfNull(setTable);
 
 			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 
@@ -841,7 +841,7 @@ namespace LinqToDB
 			CancellationToken               cancellationToken = default)
 			 where T : class
 		{
-			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
+			ArgumentNullException.ThrowIfNull(setTable);
 
 			var tempTableDescriptor = GetTempTableDescriptor(db, setTable);
 

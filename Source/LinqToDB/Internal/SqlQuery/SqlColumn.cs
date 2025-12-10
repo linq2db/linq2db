@@ -164,7 +164,7 @@ namespace LinqToDB.Internal.SqlQuery
 			if (ReferenceEquals(this, other))
 				return true;
 
-			if (!(other is SqlColumn otherColumn))
+			if (other is not SqlColumn otherColumn)
 				return false;
 
 			if (Parent != otherColumn.Parent)

@@ -28,7 +28,7 @@ namespace LinqToDB.Internal.DataProvider
 				string? s;
 				while ((s = reader.ReadLine()) != null)
 				{
-					if (!s.StartsWith("#"))
+					if (!s.StartsWith('#'))
 					{
 						_reservedWordsAll     .Add(s);
 						_reservedWordsInformix.Add(s);
@@ -45,7 +45,7 @@ namespace LinqToDB.Internal.DataProvider
 				string? s;
 				while ((s = reader.ReadLine()) != null)
 				{
-					if (!s.StartsWith("#"))
+					if (!s.StartsWith('#'))
 					{
 						_reservedWordsPostgres.Add(s);
 						_reservedWordsAll     .Add(s);
@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.DataProvider
 				string? s;
 				while ((s = reader.ReadLine()) != null)
 				{
-					if(!s.StartsWith("#"))
+					if(!s.StartsWith('#'))
 					{
 						_reservedWordsOracle.Add(s);
 						_reservedWordsAll   .Add(s);
@@ -77,7 +77,7 @@ namespace LinqToDB.Internal.DataProvider
 				string? s;
 				while ((s = reader.ReadLine()) != null)
 				{
-					if (!s.StartsWith("#"))
+					if (!s.StartsWith('#'))
 					{
 						_reservedWordsFirebird.Add(s);
 						_reservedWordsAll     .Add(s);

@@ -64,7 +64,7 @@ namespace LinqToDB.DataProvider.Access
 		/// <param name="version">Access engine to use to create database. Default value: <see cref="AccessVersion.Ace"/>.</param>
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false, AccessVersion version = AccessVersion.Ace)
 		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+			ArgumentNullException.ThrowIfNull(databaseName);
 
 			databaseName = databaseName.Trim();
 
@@ -102,7 +102,7 @@ namespace LinqToDB.DataProvider.Access
 		[Obsolete("Use overload with 'AccessVersion version' argument. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false, string provider = "Microsoft.Jet.OLEDB.4.0")
 		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+			ArgumentNullException.ThrowIfNull(databaseName);
 
 			databaseName = databaseName.Trim();
 
@@ -126,9 +126,9 @@ namespace LinqToDB.DataProvider.Access
 		[SecuritySafeCritical]
 		private static void CreateAccessDB(string connectionString)
 		{
-			using (var catalog = ComWrapper.Create("ADOX.Catalog"))
-				using (var conn = ComWrapper.Wrap(catalog.Create(connectionString)))
-					conn.Close();
+			using var catalog = ComWrapper.Create("ADOX.Catalog");
+			using var conn = ComWrapper.Wrap(catalog.Create(connectionString));
+			conn.Close();
 		}
 
 		/// <summary>
@@ -137,7 +137,7 @@ namespace LinqToDB.DataProvider.Access
 		/// <param name="databaseName">Name of database to remove.</param>
 		public static void DropDatabase(string databaseName, string? extension = null)
 		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+			ArgumentNullException.ThrowIfNull(databaseName);
 
 			DataTools.DropFileDatabase(databaseName, extension ?? ".mdb");
 		}

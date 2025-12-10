@@ -60,22 +60,23 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func)
+			return func switch
 			{
-				case {
+				{
 					Name: "CharIndex",
 					Parameters: [var p0, var p1],
 					Type: var type,
-				}:
-					return new SqlExpression(type, "Position({0} in {1})", Precedence.Primary, p0, p1);
+				} => new SqlExpression(type, "Position({0} in {1})", Precedence.Primary, p0, p1),
 
-				case {
+				{
 					Name: "CharIndex",
 					Parameters: [var p0, var p1, var p2],
 					Type: var type,
-				}:
-					return Add<int>(
-						new SqlExpression(type, "Position({0} in {1})", Precedence.Primary,
+				} => Add<int>(
+						new SqlExpression(
+							type,
+							"Position({0} in {1})",
+							Precedence.Primary,
 							p0,
 							(ISqlExpression)Visit(
 								new SqlFunction(MappingSchema.GetDbDataType(typeof(string)), "Substring",
@@ -85,12 +86,14 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 										(ISqlExpression)Visit(
 											Factory.Length(p1)),
 										p2))
-							)),
-						Sub(p2, 1));
+							)
+						),
+						Sub(p2, 1)
+					),
 
-				default:
-					return base.ConvertSqlFunction(func);
+				_ => base.ConvertSqlFunction(func),
 			};
+			;
 		}
 
 		// TODO: remove and use DataType check when we implement DbType parsing to DbDataType

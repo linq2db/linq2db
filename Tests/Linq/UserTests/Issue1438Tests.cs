@@ -34,22 +34,18 @@ namespace Tests.UserTests
 						.IsIdentity()
 				.Build();
 
-			using (var db = GetDataContext(context, ms))
+			using var db = GetDataContext(context, ms);
+			using var tbl = db.CreateLocalTable<Client>();
+			var id = db.InsertWithInt32Identity(new Client()
 			{
-				using (var tbl = db.CreateLocalTable<Client>())
-				{
-					var id = db.InsertWithInt32Identity(new Client()
-					{
-						Has = true
-					});
+				Has = true
+			});
 
-					var record = tbl.Where(_ => _.Id == id).Single();
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(record.Id, Is.EqualTo(id));
-						Assert.That(record.Has, Is.True);
-					}
-				}
+			var record = tbl.Where(_ => _.Id == id).Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.Id, Is.EqualTo(id));
+				Assert.That(record.Has, Is.True);
 			}
 		}
 
@@ -68,24 +64,20 @@ namespace Tests.UserTests
 						.IsIdentity()
 				.Build();
 
-			using (var cn = new NpgsqlConnection(cs))
-			using (var db = new DataConnection(new DataOptions().UseConnection(provider, cn)))
+			using var cn = new NpgsqlConnection(cs);
+			using var db = new DataConnection(new DataOptions().UseConnection(provider, cn));
+			db.AddMappingSchema(ms);
+			using var tbl = db.CreateLocalTable<Client>();
+			var id = db.InsertWithInt32Identity(new Client()
 			{
-				db.AddMappingSchema(ms);
-				using (var tbl = db.CreateLocalTable<Client>())
-				{
-					var id = db.InsertWithInt32Identity(new Client()
-					{
-						Has = true
-					});
+				Has = true
+			});
 
-					var record = tbl.Where(_ => _.Id == id).Single();
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(record.Id, Is.EqualTo(id));
-						Assert.That(record.Has, Is.True);
-					}
-				}
+			var record = tbl.Where(_ => _.Id == id).Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.Id, Is.EqualTo(id));
+				Assert.That(record.Has, Is.True);
 			}
 		}
 	}

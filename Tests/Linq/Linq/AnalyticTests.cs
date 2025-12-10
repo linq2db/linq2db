@@ -33,9 +33,8 @@ namespace Tests.Linq
 				TestProvName.AllPostgreSQL)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -75,9 +74,8 @@ namespace Tests.Linq
 									  Sql.Ext.Count(p.ParentID, Sql.AggregateModifier.All).Over().PartitionBy(p.Value1).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue() +
 									  Sql.Ext.Count().Over().ToValue(),
 					};
-				var res = q.ToArray();
-				Assert.That(res, Is.Not.Empty);
-			}
+			var res = q.ToArray();
+			Assert.That(res, Is.Not.Empty);
 		}
 
 		[Test]
@@ -90,9 +88,8 @@ namespace Tests.Linq
 				TestProvName.AllPostgreSQL)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var subq =
+			using var db = GetDataContext(context);
+			var subq =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -102,13 +99,12 @@ namespace Tests.Linq
 						DenseRank = Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
 					};
 
-				var q = from sq in subq
+			var q = from sq in subq
 					where sq.Rank > 0
 					select sq;
 
-				var res = q.ToList();
-				Assert.That(res, Is.Not.Empty);
-			}
+			var res = q.ToList();
+			Assert.That(res, Is.Not.Empty);
 		}
 
 		[Test]
@@ -121,9 +117,8 @@ namespace Tests.Linq
 				TestProvName.AllPostgreSQL)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var subq =
+			using var db = GetDataContext(context);
+			var subq =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					let groupId = Sql.Ext.RowNumber().Over().PartitionBy(p.Value1, c.ChildID).OrderByDesc(p.Value1).ThenBy(c.ChildID).ThenByDesc(c.ParentID).ToValue()
@@ -132,20 +127,18 @@ namespace Tests.Linq
 						Sum = Sql.Ext.Sum(groupId).Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ThenBy(c.ParentID).ToValue(),
 					};
 
-				var q = from sq in subq
+			var q = from sq in subq
 					where sq.Sum > 0
 					select sq;
 
-				Assert.DoesNotThrow(() => _ = q.ToList());
-			}
+			Assert.DoesNotThrow(() => _ = q.ToList());
 		}
 
 		[Test]
 		public void TestAvg([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var qg =
+			using var db = GetDataContext(context);
+			var qg =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					group c by p.ParentID
@@ -158,22 +151,20 @@ namespace Tests.Linq
 						AverageDistinct = g.Average(a => a.ChildID, Sql.AggregateModifier.Distinct)
 					};
 
-				var res = qg.ToArray();
-				Assert.That(res, Is.Not.Empty);
+			var res = qg.ToArray();
+			Assert.That(res, Is.Not.Empty);
 
-				db.Child.Average(c => c.ParentID);
-				db.Child.Average(c => c.ParentID, Sql.AggregateModifier.All);
-				db.Child.Average(c => c.ParentID, Sql.AggregateModifier.Distinct);
-			}
+			db.Child.Average(c => c.ParentID);
+			db.Child.Average(c => c.ParentID, Sql.AggregateModifier.All);
+			db.Child.Average(c => c.ParentID, Sql.AggregateModifier.Distinct);
 		}
 
 		[Test]
 		public void TestAvgOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -242,18 +233,16 @@ namespace Tests.Linq
 						AvgDistinct2 = Sql.Ext.Average<long?>(p.Value1, Sql.AggregateModifier.Distinct).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
 
 					};
-				var res = q.ToArray();
-				Assert.That(res, Is.Not.Empty);
-			}
+			var res = q.ToArray();
+			Assert.That(res, Is.Not.Empty);
 		}
 
 		[Test]
 		public void TestCorrOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -270,10 +259,10 @@ namespace Tests.Linq
 						CorrPartitionNoOrder = Sql.Ext.Corr<decimal>(p.Value1, c.ChildID).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
 						CorrWithoutPartition = Sql.Ext.Corr<decimal>(p.Value1, c.ChildID).Over().OrderBy(p.Value1).ToValue(),
 					};
-				var res = q.ToArray();
-				Assert.That(res, Is.Not.Empty);
+			var res = q.ToArray();
+			Assert.That(res, Is.Not.Empty);
 
-				var qg =
+			var qg =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					group c by p.ParentID
@@ -283,19 +272,17 @@ namespace Tests.Linq
 						Corr = g.Corr(c => c.ParentID, c => c.ChildID),
 					};
 
-				var resg = qg.ToArray();
-				Assert.That(resg, Is.Not.Empty);
+			var resg = qg.ToArray();
+			Assert.That(resg, Is.Not.Empty);
 
-				db.Child.Corr(c => c.ParentID, c => c.ChildID);
-			}
+			db.Child.Corr(c => c.ParentID, c => c.ChildID);
 		}
 
 		[Test]
 		public void TestCountOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -314,17 +301,15 @@ namespace Tests.Linq
 
 						Count21   = Sql.Ext.Count(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(c.ChildID).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 					};
-				var res = q.ToArray();
-				Assert.That(res, Is.Not.Empty);
-			}
+			var res = q.ToArray();
+			Assert.That(res, Is.Not.Empty);
 		}
 
 		[Test]
 		public void TestCount([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var qg =
+			using var db = GetDataContext(context);
+			var qg =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					group c by p.ParentID
@@ -338,23 +323,21 @@ namespace Tests.Linq
 						CountDistinct = g.CountExt(a => a.ChildID, Sql.AggregateModifier.Distinct)
 					};
 
-				var res = qg.ToArray();
-				Assert.That(res, Is.Not.Empty);
+			var res = qg.ToArray();
+			Assert.That(res, Is.Not.Empty);
 
-				db.Child.Count();
-				db.Child.CountExt(c => c.ParentID);
-				db.Child.CountExt(c => c.ParentID, Sql.AggregateModifier.All);
-				db.Child.CountExt(c => c.ParentID, Sql.AggregateModifier.Distinct);
-			}
+			db.Child.Count();
+			db.Child.CountExt(c => c.ParentID);
+			db.Child.CountExt(c => c.ParentID, Sql.AggregateModifier.All);
+			db.Child.CountExt(c => c.ParentID, Sql.AggregateModifier.Distinct);
 		}
 
 		[Test]
 		public void TestCovarPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -365,10 +348,10 @@ namespace Tests.Linq
 
 						CovarPop4    = Sql.Ext.CovarPop(p.Value1, c.ChildID).Over().PartitionBy(c.ChildID).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 					};
-				var res = q.ToArray();
-				Assert.That(res, Is.Not.Empty);
+			var res = q.ToArray();
+			Assert.That(res, Is.Not.Empty);
 
-				var qg =
+			var qg =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					group c by p.ParentID
@@ -378,20 +361,18 @@ namespace Tests.Linq
 						CovarPop = g.CovarPop(c => c.ParentID, c => c.ChildID),
 					};
 
-				var resg = qg.ToArray();
-				Assert.That(resg, Is.Not.Empty);
+			var resg = qg.ToArray();
+			Assert.That(resg, Is.Not.Empty);
 
-				db.Child.CovarPop(c => c.ParentID, c => c.ChildID);
-			}
+			db.Child.CovarPop(c => c.ParentID, c => c.ChildID);
 		}
 
 		[Test]
 		public void TestCovarSampOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -402,10 +383,10 @@ namespace Tests.Linq
 
 						CovarSamp4   = Sql.Ext.CovarSamp(p.Value1, c.ChildID).Over().PartitionBy(c.ChildID).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 					};
-				var res = q.ToArray();
-				Assert.That(res, Is.Not.Empty);
+			var res = q.ToArray();
+			Assert.That(res, Is.Not.Empty);
 
-				var qg =
+			var qg =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					group c by p.ParentID
@@ -415,20 +396,18 @@ namespace Tests.Linq
 						CovarSamp = g.CovarSamp(c => c.ParentID, c => c.ChildID),
 					};
 
-				var resg = qg.ToArray();
-				Assert.That(resg, Is.Not.Empty);
+			var resg = qg.ToArray();
+			Assert.That(resg, Is.Not.Empty);
 
-				db.Child.CovarSamp(c => c.ParentID, c => c.ChildID);
-			}
+			db.Child.CovarSamp(c => c.ParentID, c => c.ChildID);
 		}
 
 		[Test]
 		public void TestCumeDistOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -436,9 +415,9 @@ namespace Tests.Linq
 						CumeDist1     = Sql.Ext.CumeDist<decimal>().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
 						CumeDist2     = Sql.Ext.CumeDist<decimal>().Over().OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 					};
-				Assert.That(q.ToArray(), Is.Not.Empty);
+			Assert.That(q.ToArray(), Is.Not.Empty);
 
-				var q2 =
+			var q2 =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -446,16 +425,14 @@ namespace Tests.Linq
 						CumeDist1     = Sql.Ext.CumeDist<decimal>(1, 2).WithinGroup.OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 						CumeDist2     = Sql.Ext.CumeDist<decimal>(2, 3).WithinGroup.OrderByDesc(p.Value1).ThenBy(c.ChildID).ToValue(),
 					};
-				Assert.That(q2.ToArray(), Is.Not.Empty);
-			}
+			Assert.That(q2.ToArray(), Is.Not.Empty);
 		}
 
 		[Test]
 		public void TestDenseRankOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -463,69 +440,63 @@ namespace Tests.Linq
 						DenseRank1     = Sql.Ext.DenseRank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
 						DenseRank2     = Sql.Ext.DenseRank().Over().OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 					};
-				Assert.That(q.ToArray(), Is.Not.Empty);
+			Assert.That(q.ToArray(), Is.Not.Empty);
 
-				var q2 =
+			var q2 =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						DenseRank1     = Sql.Ext.DenseRank(1, 2).WithinGroup.OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 					};
-				Assert.That(q2.ToArray(), Is.Not.Empty);
-			}
+			Assert.That(q2.ToArray(), Is.Not.Empty);
 		}
 
 		[Test]
 		public void TestDenseRankOracleSorting([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
-			using (var db = (TestDataConnection)GetDataContext(context))
-			{
-				var q =
+			using var db = (TestDataConnection)GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						DenseRank1     = Sql.Ext.DenseRank(1, 2).WithinGroup.OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 					};
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(q.ToArray(), Is.Not.Empty);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(q.ToArray(), Is.Not.Empty);
 
-					Assert.That(db.LastQuery, Does.Contain("(ORDER BY p.\"Value1\", c_1.\"ChildID\" DESC)"));
-				}
+				Assert.That(db.LastQuery, Does.Contain("(ORDER BY p.\"Value1\", c_1.\"ChildID\" DESC)"));
 			}
 		}
 
 		[Test]
 		public void TestRowNumberOracleSorting([IncludeDataSources(false, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = (TestDataConnection)GetDataContext(context))
-			{
-				var q =
+			using var db = (TestDataConnection)GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						DenseRank1     = Sql.Ext.RowNumber().Over().OrderBy(p.Value1).ThenByDesc(c.ChildID).ThenBy(p.ParentID).ToValue(),
 					};
-				Assert.That(q.ToArray(), Is.Not.Empty);
+			Assert.That(q.ToArray(), Is.Not.Empty);
 
-				if (context.IsAnyOf(TestProvName.AllOracle))
-					Assert.That(db.LastQuery, Does.Contain("(ORDER BY p.\"Value1\", c_1.\"ChildID\" DESC, p.\"ParentID\")"));
-				else if (context.IsAnyOf(TestProvName.AllClickHouse))
-					Assert.That(db.LastQuery, Does.Contain("ROW_NUMBER() OVER(ORDER BY p.Value1, c_1.ChildID DESC, p.ParentID)"));
-				else
-					Assert.Fail("Missing assertion");
-			}
+			if (context.IsAnyOf(TestProvName.AllOracle))
+				Assert.That(db.LastQuery, Does.Contain("(ORDER BY p.\"Value1\", c_1.\"ChildID\" DESC, p.\"ParentID\")"));
+			else if (context.IsAnyOf(TestProvName.AllClickHouse))
+				Assert.That(db.LastQuery, Does.Contain("ROW_NUMBER() OVER(ORDER BY p.Value1, c_1.ChildID DESC, p.ParentID)"));
+			else
+				Assert.Fail("Missing assertion");
 		}
 
 		[Test]
 		public void TestFirstValueOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values(Sql.Nulls.Ignore, Sql.Nulls.None)] Sql.Nulls nulls, [Values(1, 2)]int iteration)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -537,20 +508,18 @@ namespace Tests.Linq
 						FirstValue5     = Sql.Ext.FirstValue(p.Value1, Sql.Nulls.Respect).Over().OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 					};
 
-				var save = q.GetCacheMissCount();
-				Assert.That(q.ToArray(), Is.Not.Empty);
+			var save = q.GetCacheMissCount();
+			Assert.That(q.ToArray(), Is.Not.Empty);
 
-				if (iteration > 1)
-					q.GetCacheMissCount().ShouldBe(save);
-			}
+			if (iteration > 1)
+				q.GetCacheMissCount().ShouldBe(save);
 		}
 
 		[Test]
 		public void TestLastValueOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -561,16 +530,14 @@ namespace Tests.Linq
 						LastValue4     = Sql.Ext.LastValue(p.Value1, Sql.Nulls.Respect).Over().OrderBy(p.Value1).ToValue(),
 						LastValue5     = Sql.Ext.LastValue(p.Value1, Sql.Nulls.Respect).Over().OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 					};
-				Assert.That(q.ToArray(), Is.Not.Empty);
-			}
+			Assert.That(q.ToArray(), Is.Not.Empty);
 		}
 
 		[Test]
 		public void TestLagOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -580,16 +547,14 @@ namespace Tests.Linq
 						Lag3     = Sql.Ext.Lag(p.Value1, Sql.Nulls.None, 1, 0).Over().OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 						Lag4     = Sql.Ext.Lag(p.Value1, Sql.Nulls.Ignore).Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
 					};
-				Assert.That(q.ToArray(), Is.Not.Empty);
-			}
+			Assert.That(q.ToArray(), Is.Not.Empty);
 		}
 
 		[Test]
 		public void TestLeadOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -600,16 +565,14 @@ namespace Tests.Linq
 						Lead4     = Sql.Ext.Lead(p.Value1, Sql.Nulls.Respect, 1, null).Over().OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 						Lead5     = Sql.Ext.Lead(p.Value1, Sql.Nulls.Respect, 1, c.ChildID).Over().OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 					};
-				Assert.That(q.ToArray(), Is.Not.Empty);
-			}
+			Assert.That(q.ToArray(), Is.Not.Empty);
 		}
 
 		[Test]
 		public void TestListAggOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -623,17 +586,15 @@ namespace Tests.Linq
 						ListAgg6  = Sql.Ext.ListAgg(c.ChildID, "..").WithinGroup.OrderByDesc(p.Value1, Sql.NullsPosition.None).ThenBy(p.ParentTest.Value1).ThenByDesc(c.ParentID).ToValue(),
 					};
 
-				var res = q.ToArray();
-				Assert.That(res, Is.Not.Empty);
-			}
+			var res = q.ToArray();
+			Assert.That(res, Is.Not.Empty);
 		}
 
 		[Test]
 		public void TestMaxOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -651,27 +612,25 @@ namespace Tests.Linq
 
 						Max10  = Sql.Ext.Max(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(c.ChildID).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 					};
-				var res = q.ToArray();
-				Assert.That(res, Is.Not.Empty);
+			var res = q.ToArray();
+			Assert.That(res, Is.Not.Empty);
 
-				var q2 =
+			var q2 =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Max11  = Sql.Ext.Max(p.Value1, Sql.AggregateModifier.All).ToValue(),
 					};
-				var res2 = q2.ToArray();
-				Assert.That(res2, Is.Not.Empty);
-			}
+			var res2 = q2.ToArray();
+			Assert.That(res2, Is.Not.Empty);
 		}
 
 		[Test]
 		public void TestMax([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var qg =
+			using var db = GetDataContext(context);
+			var qg =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					group c by p.ParentID
@@ -684,21 +643,19 @@ namespace Tests.Linq
 						MaxDistinct = g.Max(a => a.ChildID, Sql.AggregateModifier.Distinct)
 					};
 
-				var res = qg.ToArray();
-				Assert.That(res, Is.Not.Empty);
+			var res = qg.ToArray();
+			Assert.That(res, Is.Not.Empty);
 
-				db.Child.Max(c => c.ParentID);
-				db.Child.Max(c => c.ParentID, Sql.AggregateModifier.All);
-				db.Child.Max(c => c.ParentID, Sql.AggregateModifier.Distinct);
-			}
+			db.Child.Max(c => c.ParentID);
+			db.Child.Max(c => c.ParentID, Sql.AggregateModifier.All);
+			db.Child.Max(c => c.ParentID, Sql.AggregateModifier.Distinct);
 		}
 
 		[Test]
 		public void TestMedianOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -706,10 +663,10 @@ namespace Tests.Linq
 						Median1 = Sql.Ext.Median(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
 						Median2 = Sql.Ext.Median(p.Value1).Over().ToValue(),
 					};
-				var res = q.ToArray();
-				Assert.That(res, Is.Not.Empty);
+			var res = q.ToArray();
+			Assert.That(res, Is.Not.Empty);
 
-				var qg =
+			var qg =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					group c by p.ParentID
@@ -719,19 +676,17 @@ namespace Tests.Linq
 						Median = g.Median(c => c.ParentID),
 					};
 
-				var resg = qg.ToArray();
-				Assert.That(resg, Is.Not.Empty);
+			var resg = qg.ToArray();
+			Assert.That(resg, Is.Not.Empty);
 
-				db.Child.Median(c => c.ParentID);
-			}
+			db.Child.Median(c => c.ParentID);
 		}
 
 		[Test]
 		public void TestMinOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -749,17 +704,15 @@ namespace Tests.Linq
 
 						Min10  = Sql.Ext.Min(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(c.ChildID).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 					};
-				var res = q.ToArray();
-				Assert.That(res, Is.Not.Empty);
-			}
+			var res = q.ToArray();
+			Assert.That(res, Is.Not.Empty);
 		}
 
 		[Test]
 		public void TestMin([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var qg =
+			using var db = GetDataContext(context);
+			var qg =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					group c by p.ParentID
@@ -772,21 +725,19 @@ namespace Tests.Linq
 						MinDistinct = g.Min(a => a.ChildID, Sql.AggregateModifier.Distinct)
 					};
 
-				var res = qg.ToArray();
-				Assert.That(res, Is.Not.Empty);
+			var res = qg.ToArray();
+			Assert.That(res, Is.Not.Empty);
 
-				db.Child.Min(c => c.ParentID);
-				db.Child.Min(c => c.ParentID, Sql.AggregateModifier.All);
-				db.Child.Min(c => c.ParentID, Sql.AggregateModifier.Distinct);
-			}
+			db.Child.Min(c => c.ParentID);
+			db.Child.Min(c => c.ParentID, Sql.AggregateModifier.All);
+			db.Child.Min(c => c.ParentID, Sql.AggregateModifier.Distinct);
 		}
 
 		[Test]
 		public void TestNthValueOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -803,18 +754,16 @@ namespace Tests.Linq
 
 						NthValue10  = Sql.Ext.NthValue(c.ChildID, 1).Over().PartitionBy(c.ChildID).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 					};
-				var res = q.ToArray();
-				Assert.That(res, Is.Not.Empty);
-			}
+			var res = q.ToArray();
+			Assert.That(res, Is.Not.Empty);
 		}
 
 		[Test]
 		public void TestNTileOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -823,16 +772,14 @@ namespace Tests.Linq
 						NTile2     = Sql.Ext.NTile(1).Over().OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 
 					};
-				Assert.That(q.ToArray(), Is.Not.Empty);
-			}
+			Assert.That(q.ToArray(), Is.Not.Empty);
 		}
 
 		[Test]
 		public void TestPercentileContOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -840,10 +787,10 @@ namespace Tests.Linq
 						PercentileCont1  = Sql.Ext.PercentileCont<double>(0.5).WithinGroup.OrderBy(p.Value1).Over().PartitionBy(p.Value1, p.ParentID).ToValue(),
 					};
 
-				var res = q.ToArray();
-				Assert.That(res, Is.Not.Empty);
+			var res = q.ToArray();
+			Assert.That(res, Is.Not.Empty);
 
-				var q2 =
+			var q2 =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -852,17 +799,15 @@ namespace Tests.Linq
 						PercentileCont2  = Sql.Ext.PercentileCont<double>(1).WithinGroup.OrderByDesc(p.Value1).ToValue(),
 					};
 
-				var res2 = q2.ToArray();
-				Assert.That(res2, Is.Not.Empty);
-			}
+			var res2 = q2.ToArray();
+			Assert.That(res2, Is.Not.Empty);
 		}
 
 		[Test]
 		public void TestPercentileDiscOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -870,10 +815,10 @@ namespace Tests.Linq
 						PercentileDisc1  = Sql.Ext.PercentileDisc<double>(0.5).WithinGroup.OrderBy(p.Value1).Over().PartitionBy(p.Value1, p.ParentID).ToValue(),
 					};
 
-				var res = q.ToArray();
-				Assert.That(res, Is.Not.Empty);
+			var res = q.ToArray();
+			Assert.That(res, Is.Not.Empty);
 
-				var q2 =
+			var q2 =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -882,18 +827,16 @@ namespace Tests.Linq
 						PercentileDisc2  = Sql.Ext.PercentileDisc<double>(1).WithinGroup.OrderByDesc(p.Value1).ToValue(),
 					};
 
-				var res2 = q2.ToArray();
-				Assert.That(res2, Is.Not.Empty);
-			}
+			var res2 = q2.ToArray();
+			Assert.That(res2, Is.Not.Empty);
 		}
 
 		[Test]
 		public void TestPercentRankOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -901,26 +844,24 @@ namespace Tests.Linq
 						PercentRank1     = Sql.Ext.PercentRank<double>().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
 						PercentRank2     = Sql.Ext.PercentRank<double>().Over().OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 					};
-				Assert.That(q.ToArray(), Is.Not.Empty);
+			Assert.That(q.ToArray(), Is.Not.Empty);
 
-				var q2 =
+			var q2 =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						PercentRank3     = Sql.Ext.PercentRank<double>(2, 3).WithinGroup.OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 					};
-				Assert.That(q2.ToArray(), Is.Not.Empty);
-			}
+			Assert.That(q2.ToArray(), Is.Not.Empty);
 		}
 
 		[Test]
 		public void TestPercentRatioToReportOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -928,17 +869,15 @@ namespace Tests.Linq
 						RatioToReport1     = Sql.Ext.RatioToReport<double>(1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
 						RatioToReport2     = Sql.Ext.RatioToReport<double>(c.ChildID).Over().ToValue(),
 					};
-				Assert.That(q.ToArray(), Is.Not.Empty);
-			}
+			Assert.That(q.ToArray(), Is.Not.Empty);
 		}
 
 		[Test]
 		public void TestRowNumberOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -946,17 +885,15 @@ namespace Tests.Linq
 						RowNumber1     = Sql.Ext.RowNumber().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
 						RowNumber2     = Sql.Ext.RowNumber().Over().OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 					};
-				Assert.That(q.ToArray(), Is.Not.Empty);
-			}
+			Assert.That(q.ToArray(), Is.Not.Empty);
 		}
 
 		[Test]
 		public void TestRankOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -964,9 +901,9 @@ namespace Tests.Linq
 						Rank1     = Sql.Ext.Rank().Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ToValue(),
 						Rank2     = Sql.Ext.Rank().Over().OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 					};
-				Assert.That(q.ToArray(), Is.Not.Empty);
+			Assert.That(q.ToArray(), Is.Not.Empty);
 
-				var q2 =
+			var q2 =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -974,17 +911,15 @@ namespace Tests.Linq
 						Rank1     = Sql.Ext.Rank(1000).WithinGroup.OrderBy(p.Value1).ToValue(),
 						Rank2     = Sql.Ext.Rank(0, 0.1).WithinGroup.OrderBy(p.Value1).ThenByDesc(c.ChildID).ToValue(),
 					};
-				Assert.That(q2.ToArray(), Is.Not.Empty);
-			}
+			Assert.That(q2.ToArray(), Is.Not.Empty);
 		}
 
 		[Test]
 		public void TestRegrOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -1000,18 +935,16 @@ namespace Tests.Linq
 						XYY       = Sql.Ext.RegrSYY<decimal>(p.Value1, c.ChildID).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
 						Slope     = Sql.Ext.RegrSlope<decimal>(p.Value1, c.ChildID).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
 					};
-				var res = q.ToArray();
-				Assert.That(res, Is.Not.Empty);
-			}
+			var res = q.ToArray();
+			Assert.That(res, Is.Not.Empty);
 		}
 
 		[Test]
 		public void TestStdDevOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -1029,17 +962,15 @@ namespace Tests.Linq
 						StdDev21   = Sql.Ext.StdDev<double>(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(c.ChildID).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 					};
 
-				var res = q.ToArray();
-				Assert.That(res, Is.Not.Empty);
-			}
+			var res = q.ToArray();
+			Assert.That(res, Is.Not.Empty);
 		}
 
 		[Test]
 		public void TestStdDev([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var qg =
+			using var db = GetDataContext(context);
+			var qg =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					group c by p.ParentID
@@ -1052,22 +983,20 @@ namespace Tests.Linq
 						StdDevDistinct = g.StdDev(a => a.ChildID, Sql.AggregateModifier.Distinct)
 					};
 
-				var res = qg.ToArray();
-				Assert.That(res, Is.Not.Empty);
+			var res = qg.ToArray();
+			Assert.That(res, Is.Not.Empty);
 
-				db.Child.StdDev(c => c.ParentID);
-				db.Child.StdDev(c => c.ParentID, Sql.AggregateModifier.All);
-				db.Child.StdDev(c => c.ParentID, Sql.AggregateModifier.Distinct);
-			}
+			db.Child.StdDev(c => c.ParentID);
+			db.Child.StdDev(c => c.ParentID, Sql.AggregateModifier.All);
+			db.Child.StdDev(c => c.ParentID, Sql.AggregateModifier.Distinct);
 		}
 
 		[Test]
 		public void TestStdDevPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -1077,10 +1006,10 @@ namespace Tests.Linq
 						StdDevPop3   = Sql.Ext.StdDevPop<double>(p.Value1).Over().ToValue(),
 						StdDevPop4   = Sql.Ext.StdDevPop<double>(p.Value1).Over().PartitionBy(c.ChildID).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 					};
-				var res = q.ToArray();
-				Assert.That(res, Is.Not.Empty);
+			var res = q.ToArray();
+			Assert.That(res, Is.Not.Empty);
 
-				var qg =
+			var qg =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					group c by p.ParentID
@@ -1090,20 +1019,18 @@ namespace Tests.Linq
 						StdDevPop = g.StdDevPop(c => c.ParentID),
 					};
 
-				var resg = qg.ToArray();
-				Assert.That(resg, Is.Not.Empty);
+			var resg = qg.ToArray();
+			Assert.That(resg, Is.Not.Empty);
 
-				db.Child.StdDevPop(c => c.ParentID);
-			}
+			db.Child.StdDevPop(c => c.ParentID);
 		}
 
 		[Test]
 		public void TestStdDevSampOracle([IncludeDataSources(true, TestProvName.AllOracle)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -1113,10 +1040,10 @@ namespace Tests.Linq
 						StdDevSamp3   = Sql.Ext.StdDevSamp<double>(p.Value1).Over().ToValue(),
 						StdDevSamp4   = Sql.Ext.StdDevSamp<double>(p.Value1).Over().PartitionBy(c.ChildID).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 					};
-				var res = q.ToArray();
-				Assert.That(res, Is.Not.Empty);
+			var res = q.ToArray();
+			Assert.That(res, Is.Not.Empty);
 
-				var qg =
+			var qg =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					group c by p.ParentID
@@ -1126,20 +1053,18 @@ namespace Tests.Linq
 						StdDevSamp = g.StdDevSamp(c => c.ParentID),
 					};
 
-				var resg = qg.ToArray();
-				Assert.That(resg, Is.Not.Empty);
+			var resg = qg.ToArray();
+			Assert.That(resg, Is.Not.Empty);
 
-				db.Child.StdDevSamp(c => c.ParentID);
-			}
+			db.Child.StdDevSamp(c => c.ParentID);
 		}
 
 		[Test]
 		public void TestSumOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -1149,28 +1074,26 @@ namespace Tests.Linq
 						Sum3   = Sql.Ext.Sum(p.Value1, Sql.AggregateModifier.Distinct).Over().ToValue(),
 						Sum4   = Sql.Ext.Sum(p.Value1, Sql.AggregateModifier.None).Over().PartitionBy(c.ChildID).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 					};
-				var res = q.ToArray();
-				Assert.That(res, Is.Not.Empty);
+			var res = q.ToArray();
+			Assert.That(res, Is.Not.Empty);
 
-				var q2 =
+			var q2 =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
 					{
 						Sum1   = Sql.Ext.Sum(p.Value1).ToValue(),
 					};
-				var res2 = q2.ToArray();
-				Assert.That(res2, Is.Not.Empty);
-			}
+			var res2 = q2.ToArray();
+			Assert.That(res2, Is.Not.Empty);
 		}
 
 		[Test]
 		public void TestVarPopOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -1180,10 +1103,10 @@ namespace Tests.Linq
 						VarPop3   = Sql.Ext.VarPop<double>(p.Value1).Over().ToValue(),
 						VarPop4   = Sql.Ext.VarPop<double>(p.Value1).Over().PartitionBy(c.ChildID).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 					};
-				var res = q.ToArray();
-				Assert.That(res, Is.Not.Empty);
+			var res = q.ToArray();
+			Assert.That(res, Is.Not.Empty);
 
-				var qg =
+			var qg =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					group c by p.ParentID
@@ -1193,20 +1116,18 @@ namespace Tests.Linq
 						VarPop = g.VarPop(c => c.ParentID),
 					};
 
-				var resg = qg.ToArray();
-				Assert.That(resg, Is.Not.Empty);
+			var resg = qg.ToArray();
+			Assert.That(resg, Is.Not.Empty);
 
-				db.Child.VarPop(c => c.ParentID);
-			}
+			db.Child.VarPop(c => c.ParentID);
 		}
 
 		[Test]
 		public void TestVarSampOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -1216,10 +1137,10 @@ namespace Tests.Linq
 						VarSamp3   = Sql.Ext.VarSamp<double>(p.Value1).Over().ToValue(),
 						VarSamp4   = Sql.Ext.VarSamp<double>(p.Value1).Over().PartitionBy(c.ChildID).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 					};
-				var res = q.ToArray();
-				Assert.That(res, Is.Not.Empty);
+			var res = q.ToArray();
+			Assert.That(res, Is.Not.Empty);
 
-				var qg =
+			var qg =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					group c by p.ParentID
@@ -1229,19 +1150,17 @@ namespace Tests.Linq
 						VarSamp = g.VarSamp(c => c.ParentID),
 					};
 
-				var resg = qg.ToArray();
-				Assert.That(resg, Is.Not.Empty);
+			var resg = qg.ToArray();
+			Assert.That(resg, Is.Not.Empty);
 
-				db.Child.VarSamp(c => c.ParentID);
-			}
+			db.Child.VarSamp(c => c.ParentID);
 		}
 
 		[Test]
 		public void TestVarianceOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -1258,10 +1177,10 @@ namespace Tests.Linq
 
 						Variance21   = Sql.Ext.Variance<double>(p.Value1, Sql.AggregateModifier.All).Over().PartitionBy(c.ChildID).OrderBy(p.Value1).Range.Between.UnboundedPreceding.And.CurrentRow.ToValue(),
 					};
-				var res = q.ToArray();
-				Assert.That(res, Is.Not.Empty);
+			var res = q.ToArray();
+			Assert.That(res, Is.Not.Empty);
 
-				var qg =
+			var qg =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					group c by p.ParentID
@@ -1274,21 +1193,19 @@ namespace Tests.Linq
 						VarianceDistinct = g.Variance(a => a.ChildID, Sql.AggregateModifier.Distinct)
 					};
 
-				var resg = qg.ToArray();
-				Assert.That(resg, Is.Not.Empty);
+			var resg = qg.ToArray();
+			Assert.That(resg, Is.Not.Empty);
 
-				db.Child.Variance(c => c.ParentID);
-				db.Child.Variance(c => c.ParentID, Sql.AggregateModifier.All);
-				db.Child.Variance(c => c.ParentID, Sql.AggregateModifier.Distinct);
-			}
+			db.Child.Variance(c => c.ParentID);
+			db.Child.Variance(c => c.ParentID, Sql.AggregateModifier.All);
+			db.Child.Variance(c => c.ParentID, Sql.AggregateModifier.Distinct);
 		}
 
 		[Test]
 		public void TestKeepFirstOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -1298,17 +1215,15 @@ namespace Tests.Linq
 						Sum         = Sql.Ext.Sum(p.Value1).KeepFirst().OrderBy(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
 						Variance    = Sql.Ext.Variance<double>(p.Value1).KeepFirst().OrderBy(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
 					};
-				var res = q.ToArray();
-				Assert.That(res, Is.Not.Empty);
-			}
+			var res = q.ToArray();
+			Assert.That(res, Is.Not.Empty);
 		}
 
 		[Test]
 		public void TestKeepLastOracle([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent
 					join c in db.Child on p.ParentID equals c.ParentID
 					select new
@@ -1318,17 +1233,15 @@ namespace Tests.Linq
 						Sum         = Sql.Ext.Sum(p.Value1).KeepLast().OrderBy(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
 						Variance    = Sql.Ext.Variance<double>(p.Value1).KeepLast().OrderBy(p.Value1).Over().PartitionBy(p.Value1, c.ChildID).ToValue(),
 					};
-				var res = q.ToArray();
-				Assert.That(res, Is.Not.Empty);
-			}
+			var res = q.ToArray();
+			Assert.That(res, Is.Not.Empty);
 		}
 
 		[Test]
 		public void NestedQueries([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle, TestProvName.AllClickHouse)]string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q1 =
+			using var db = GetDataContext(context);
+			var q1 =
 					from p in db.Parent.Where(p => p.ParentID > 0).AsSubQuery()
 					select new
 					{
@@ -1336,17 +1249,16 @@ namespace Tests.Linq
 						MaxValue = Sql.Ext.Max(p.Value1).Over().PartitionBy(p.ParentID).ToValue(),
 					};
 
-				var q2 = from q in q1.AsSubQuery()
-					select new
-					{
-						q.ParentID,
-						MaxValue = Sql.Ext.Min(q.MaxValue).Over().PartitionBy(q.ParentID).ToValue(),
-					};
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(q1.EnumQueries().Count(), Is.EqualTo(2));
-					Assert.That(q2.EnumQueries().Count(), Is.EqualTo(3));
-				}
+			var q2 = from q in q1.AsSubQuery()
+					 select new
+					 {
+						 q.ParentID,
+						 MaxValue = Sql.Ext.Min(q.MaxValue).Over().PartitionBy(q.ParentID).ToValue(),
+					 };
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(q1.EnumQueries().Count(), Is.EqualTo(2));
+				Assert.That(q2.EnumQueries().Count(), Is.EqualTo(3));
 			}
 		}
 
@@ -1380,12 +1292,11 @@ namespace Tests.Linq
 			// doesn't support LAG with 3 parameters
 			TestProvName.AllMariaDB)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(Position.TestData))
-			{
-				var group = 7;
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(Position.TestData);
+			var group = 7;
 
-				var q =
+			var q =
 					from p in db.GetTable<Position>()
 					where p.Group == @group
 					select new
@@ -1395,22 +1306,21 @@ namespace Tests.Linq
 
 					};
 
-				var res = q.ToArray();
+			var res = q.ToArray();
 
-				Assert.That(res, Has.Length.EqualTo(4));
-				using (Assert.EnterMultipleScope())
-				{
-					// BTW, order from original query behaves differently for
-					// Oracle, PostgreSQL, DB2 vs Informix, SQL Server
-					Assert.That(res[0].Id, Is.EqualTo(5));
-					Assert.That(res[0].PreviousId, Is.EqualTo(-1));
-					Assert.That(res[1].Id, Is.EqualTo(6));
-					Assert.That(res[1].PreviousId, Is.EqualTo(5));
-					Assert.That(res[2].Id, Is.Null);
-					Assert.That(res[2].PreviousId, Is.EqualTo(6));
-					Assert.That(res[3].Id, Is.Null);
-					Assert.That(res[3].PreviousId, Is.Null);
-				}
+			Assert.That(res, Has.Length.EqualTo(4));
+			using (Assert.EnterMultipleScope())
+			{
+				// BTW, order from original query behaves differently for
+				// Oracle, PostgreSQL, DB2 vs Informix, SQL Server
+				Assert.That(res[0].Id, Is.EqualTo(5));
+				Assert.That(res[0].PreviousId, Is.EqualTo(-1));
+				Assert.That(res[1].Id, Is.EqualTo(6));
+				Assert.That(res[1].PreviousId, Is.EqualTo(5));
+				Assert.That(res[2].Id, Is.Null);
+				Assert.That(res[2].PreviousId, Is.EqualTo(6));
+				Assert.That(res[3].Id, Is.Null);
+				Assert.That(res[3].PreviousId, Is.Null);
 			}
 		}
 
@@ -1427,12 +1337,11 @@ namespace Tests.Linq
 			// doesn't support 3-rd parameter for LEAD
 			TestProvName.AllMariaDB)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(Position.TestData))
-			{
-				var group = 7;
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(Position.TestData);
+			var group = 7;
 
-				var q =
+			var q =
 					from p in db.GetTable<Position>()
 					where p.Group == @group
 					select new
@@ -1442,20 +1351,19 @@ namespace Tests.Linq
 
 					};
 
-				var res = q.ToArray();
+			var res = q.ToArray();
 
-				Assert.That(res, Has.Length.EqualTo(4));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res[0].Id, Is.EqualTo(5));
-					Assert.That(res[0].PreviousId, Is.EqualTo(6));
-					Assert.That(res[1].Id, Is.EqualTo(6));
-					Assert.That(res[1].PreviousId, Is.Null);
-					Assert.That(res[2].Id, Is.Null);
-					Assert.That(res[2].PreviousId, Is.Null);
-					Assert.That(res[3].Id, Is.Null);
-					Assert.That(res[3].PreviousId, Is.EqualTo(-1));
-				}
+			Assert.That(res, Has.Length.EqualTo(4));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(res[0].Id, Is.EqualTo(5));
+				Assert.That(res[0].PreviousId, Is.EqualTo(6));
+				Assert.That(res[1].Id, Is.EqualTo(6));
+				Assert.That(res[1].PreviousId, Is.Null);
+				Assert.That(res[2].Id, Is.Null);
+				Assert.That(res[2].PreviousId, Is.Null);
+				Assert.That(res[3].Id, Is.Null);
+				Assert.That(res[3].PreviousId, Is.EqualTo(-1));
 			}
 		}
 
@@ -1464,12 +1372,11 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer2022Plus,
 			TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(Position.TestData))
-			{
-				var group = 7;
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(Position.TestData);
+			var group = 7;
 
-				var q =
+			var q =
 					from p in db.GetTable<Position>()
 					where p.Group == @group
 					select new
@@ -1481,35 +1388,34 @@ namespace Tests.Linq
 						LastIgnore = (int?)Sql.Ext.LastValue(p.Id, Sql.Nulls.Ignore).Over().OrderBy(p.Order).ToValue(),
 					};
 
-				var res = q.ToArray();
+			var res = q.ToArray();
 
-				Assert.That(res, Has.Length.EqualTo(4));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res[0].Id, Is.EqualTo(5));
-					Assert.That(res[0].FirstRespect, Is.Null);
-					Assert.That(res[0].FirstIgnore, Is.EqualTo(6));
-					Assert.That(res[0].LastRespect, Is.EqualTo(5));
-					Assert.That(res[0].LastIgnore, Is.EqualTo(5));
+			Assert.That(res, Has.Length.EqualTo(4));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(res[0].Id, Is.EqualTo(5));
+				Assert.That(res[0].FirstRespect, Is.Null);
+				Assert.That(res[0].FirstIgnore, Is.EqualTo(6));
+				Assert.That(res[0].LastRespect, Is.EqualTo(5));
+				Assert.That(res[0].LastIgnore, Is.EqualTo(5));
 
-					Assert.That(res[1].Id, Is.EqualTo(6));
-					Assert.That(res[1].FirstRespect, Is.Null);
-					Assert.That(res[1].FirstIgnore, Is.EqualTo(6));
-					Assert.That(res[1].LastRespect, Is.EqualTo(6));
-					Assert.That(res[1].LastIgnore, Is.EqualTo(6));
+				Assert.That(res[1].Id, Is.EqualTo(6));
+				Assert.That(res[1].FirstRespect, Is.Null);
+				Assert.That(res[1].FirstIgnore, Is.EqualTo(6));
+				Assert.That(res[1].LastRespect, Is.EqualTo(6));
+				Assert.That(res[1].LastIgnore, Is.EqualTo(6));
 
-					Assert.That(res[2].Id, Is.Null);
-					Assert.That(res[2].FirstRespect, Is.Null);
-					Assert.That(res[2].FirstIgnore, Is.Null);
-					Assert.That(res[2].LastRespect, Is.Null);
-					Assert.That(res[2].LastIgnore, Is.EqualTo(6));
+				Assert.That(res[2].Id, Is.Null);
+				Assert.That(res[2].FirstRespect, Is.Null);
+				Assert.That(res[2].FirstIgnore, Is.Null);
+				Assert.That(res[2].LastRespect, Is.Null);
+				Assert.That(res[2].LastIgnore, Is.EqualTo(6));
 
-					Assert.That(res[3].Id, Is.Null);
-					Assert.That(res[3].FirstRespect, Is.Null);
-					Assert.That(res[3].FirstIgnore, Is.Null);
-					Assert.That(res[3].LastRespect, Is.Null);
-					Assert.That(res[3].LastIgnore, Is.EqualTo(6));
-				}
+				Assert.That(res[3].Id, Is.Null);
+				Assert.That(res[3].FirstRespect, Is.Null);
+				Assert.That(res[3].FirstIgnore, Is.Null);
+				Assert.That(res[3].LastRespect, Is.Null);
+				Assert.That(res[3].LastIgnore, Is.EqualTo(6));
 			}
 		}
 
@@ -1522,12 +1428,11 @@ namespace Tests.Linq
 			ProviderName.Firebird25,
 			TestProvName.AllMySql57)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(Position.TestData))
-			{
-				var group = 7;
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(Position.TestData);
+			var group = 7;
 
-				var q =
+			var q =
 					from p in db.GetTable<Position>()
 					where p.Group == @group
 					select new
@@ -1537,20 +1442,19 @@ namespace Tests.Linq
 
 					};
 
-				var res = q.AsEnumerable().OrderBy(r => r.Id).ToArray();
+			var res = q.AsEnumerable().OrderBy(r => r.Id).ToArray();
 
-				Assert.That(res, Has.Length.EqualTo(4));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res[0].Id, Is.Null);
-					Assert.That(res[0].PreviousId, Is.Null);
-					Assert.That(res[1].Id, Is.Null);
-					Assert.That(res[1].PreviousId, Is.Null);
-					Assert.That(res[2].Id, Is.EqualTo(5));
-					Assert.That(res[2].PreviousId, Is.Null);
-					Assert.That(res[3].Id, Is.EqualTo(6));
-					Assert.That(res[3].PreviousId, Is.Null);
-				}
+			Assert.That(res, Has.Length.EqualTo(4));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(res[0].Id, Is.Null);
+				Assert.That(res[0].PreviousId, Is.Null);
+				Assert.That(res[1].Id, Is.Null);
+				Assert.That(res[1].PreviousId, Is.Null);
+				Assert.That(res[2].Id, Is.EqualTo(5));
+				Assert.That(res[2].PreviousId, Is.Null);
+				Assert.That(res[3].Id, Is.EqualTo(6));
+				Assert.That(res[3].PreviousId, Is.Null);
 			}
 		}
 
@@ -1563,12 +1467,11 @@ namespace Tests.Linq
 			ProviderName.Firebird25,
 			TestProvName.AllMySql57)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(Position.TestData))
-			{
-				var group = 7;
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(Position.TestData);
+			var group = 7;
 
-				var q =
+			var q =
 					from p in db.GetTable<Position>()
 					where p.Group == @group
 					select new
@@ -1578,20 +1481,19 @@ namespace Tests.Linq
 
 					};
 
-				var res = q.ToArray().OrderBy(r => r.Id).ToArray();
+			var res = q.ToArray().OrderBy(r => r.Id).ToArray();
 
-				Assert.That(res, Has.Length.EqualTo(4));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res[0].Id, Is.Null);
-					Assert.That(res[0].PreviousId, Is.Null);
-					Assert.That(res[1].Id, Is.Null);
-					Assert.That(res[1].PreviousId, Is.Null);
-					Assert.That(res[2].Id, Is.EqualTo(5));
-					Assert.That(res[2].PreviousId, Is.EqualTo(5));
-					Assert.That(res[3].Id, Is.EqualTo(6));
-					Assert.That(res[3].PreviousId, Is.EqualTo(6));
-				}
+			Assert.That(res, Has.Length.EqualTo(4));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(res[0].Id, Is.Null);
+				Assert.That(res[0].PreviousId, Is.Null);
+				Assert.That(res[1].Id, Is.Null);
+				Assert.That(res[1].PreviousId, Is.Null);
+				Assert.That(res[2].Id, Is.EqualTo(5));
+				Assert.That(res[2].PreviousId, Is.EqualTo(5));
+				Assert.That(res[3].Id, Is.EqualTo(6));
+				Assert.That(res[3].PreviousId, Is.EqualTo(6));
 			}
 		}
 
@@ -1611,12 +1513,11 @@ namespace Tests.Linq
 			TestProvName.AllMySql57,
 			TestProvName.AllMariaDB)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(Position.TestData))
-			{
-				var group = 7;
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(Position.TestData);
+			var group = 7;
 
-				var q =
+			var q =
 					from p in db.GetTable<Position>()
 					where p.Group == @group
 					select new
@@ -1626,20 +1527,19 @@ namespace Tests.Linq
 
 					};
 
-				var res = q.ToArray();
+			var res = q.ToArray();
 
-				Assert.That(res, Has.Length.EqualTo(4));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res[0].Id, Is.Null);
-					Assert.That(res[0].PreviousId, Is.Null);
-					Assert.That(res[1].Id, Is.Null);
-					Assert.That(res[1].PreviousId, Is.Null);
-					Assert.That(res[2].Id, Is.EqualTo(6));
-					Assert.That(res[2].PreviousId, Is.Null);
-					Assert.That(res[3].Id, Is.EqualTo(5));
-					Assert.That(res[3].PreviousId, Is.Null);
-				}
+			Assert.That(res, Has.Length.EqualTo(4));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(res[0].Id, Is.Null);
+				Assert.That(res[0].PreviousId, Is.Null);
+				Assert.That(res[1].Id, Is.Null);
+				Assert.That(res[1].PreviousId, Is.Null);
+				Assert.That(res[2].Id, Is.EqualTo(6));
+				Assert.That(res[2].PreviousId, Is.Null);
+				Assert.That(res[3].Id, Is.EqualTo(5));
+				Assert.That(res[3].PreviousId, Is.Null);
 			}
 		}
 
@@ -1729,9 +1629,8 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			var query =
 					from x in db.Person
 					select new
 					{
@@ -1739,9 +1638,8 @@ namespace Tests.Linq
 						rank = Sql.Ext.Rank().Over().OrderBy(x.ID == 2).ToValue()
 					};
 
-				query
-					.ToList();
-			}
+			query
+				.ToList();
 		}
 
 		[Test]
@@ -1752,9 +1650,8 @@ namespace Tests.Linq
 			ProviderName.SqlCe,
 			TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			var query =
 					from x in db.Person
 					select new
 					{
@@ -1762,9 +1659,8 @@ namespace Tests.Linq
 						rank = Sql.Ext.Rank().Over().OrderBy(x.ID == 2 ? 1 : 0).ToValue()
 					};
 
-				query
-					.ToList();
-			}
+			query
+				.ToList();
 		}
 
 		[Test]
@@ -1842,21 +1738,19 @@ namespace Tests.Linq
 				new() { ProcessID = 1, ProcessName = "One" },
 				new() { ProcessID = 2, ProcessName = "Two" },
 			};
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
-				var leads = table.Select(p => Sql.Ext.Lead(p.ProcessName, 1, "None")
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var leads = table.Select(p => Sql.Ext.Lead(p.ProcessName, 1, "None")
 												 	 .Over().OrderBy(p.ProcessID).ToValue())
 								 .ToArray();
 
-				Assert.That(leads, Is.EqualTo(new[] { "Two", "None" }).AsCollection);
+			Assert.That(leads, Is.EqualTo(new[] { "Two", "None" }).AsCollection);
 
-				var lags = table.Select(p => Sql.Ext.Lag(p.ProcessName, 1, "None")
+			var lags = table.Select(p => Sql.Ext.Lag(p.ProcessName, 1, "None")
 												 	.Over().OrderBy(p.ProcessID).ToValue())
 								.ToArray();
 
-				Assert.That(lags, Is.EqualTo(new[] { "None", "One" }).AsCollection);
-			}
+			Assert.That(lags, Is.EqualTo(new[] { "None", "One" }).AsCollection);
 		}
 
 		[Test]
@@ -1876,33 +1770,31 @@ namespace Tests.Linq
 				new() { ProcessID = 3, ProcessName = "Three" },
 				new() { ProcessID = 4, ProcessName = "Four" },
 			};
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
-				var leads = table.Select(p => Sql.Ext.Lead(p.ProcessName, 2)
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var leads = table.Select(p => Sql.Ext.Lead(p.ProcessName, 2)
 												 	 .Over().OrderBy(p.ProcessID).ToValue())
 								 .ToArray();
 
-				Assert.That(leads, Is.EqualTo(new string?[] { "Three", "Four", null, null }).AsCollection);
+			Assert.That(leads, Is.EqualTo(new string?[] { "Three", "Four", null, null }).AsCollection);
 
-				leads = table.Select(p => Sql.Ext.Lead(p.ProcessName)
-											 	 .Over().OrderBy(p.ProcessID).ToValue())
-							 .ToArray();
+			leads = table.Select(p => Sql.Ext.Lead(p.ProcessName)
+											  .Over().OrderBy(p.ProcessID).ToValue())
+						 .ToArray();
 
-				Assert.That(leads, Is.EqualTo(new string?[] { "Two", "Three", "Four", null }).AsCollection);
+			Assert.That(leads, Is.EqualTo(new string?[] { "Two", "Three", "Four", null }).AsCollection);
 
-				var lags = table.Select(p => Sql.Ext.Lag(p.ProcessName, 2)
+			var lags = table.Select(p => Sql.Ext.Lag(p.ProcessName, 2)
 												 	.Over().OrderBy(p.ProcessID).ToValue())
 								.ToArray();
 
-				Assert.That(lags, Is.EqualTo(new string?[] { null, null, "One", "Two" }).AsCollection);
+			Assert.That(lags, Is.EqualTo(new string?[] { null, null, "One", "Two" }).AsCollection);
 
-				lags = table.Select(p => Sql.Ext.Lag(p.ProcessName)
-										 	.Over().OrderBy(p.ProcessID).ToValue())
-							.ToArray();
+			lags = table.Select(p => Sql.Ext.Lag(p.ProcessName)
+										 .Over().OrderBy(p.ProcessID).ToValue())
+						.ToArray();
 
-				Assert.That(lags, Is.EqualTo(new string?[] { null, "One", "Two", "Three" }).AsCollection);
-			}
+			Assert.That(lags, Is.EqualTo(new string?[] { null, "One", "Two", "Three" }).AsCollection);
 		}
 
 		[Sql.Expression("COUNT(*) OVER()", IsWindowFunction = true, IsAggregate = true)]

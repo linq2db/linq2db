@@ -12,87 +12,78 @@ namespace Tests.UserTests
 		[Test]
 		public void TestCteExpressionIsNotATable([CteContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query = db.Person.Select(person => new { entry = person });
-				var cte   = query.AsCte();
+			using var db = GetDataContext(context);
+			var query = db.Person.Select(person => new { entry = person });
+			var cte   = query.AsCte();
 
-				var result   = cte.Where(x => x.entry.ID == 1).ToList();
-				var expected = query.Where(x => x.entry.ID == 1).ToList();
+			var result   = cte.Where(x => x.entry.ID == 1).ToList();
+			var expected = query.Where(x => x.entry.ID == 1).ToList();
 
-				AreEqual(expected, result);
-			}
+			AreEqual(expected, result);
 		}
 
 		[Test]
 		public void TestCteNoFieldList([CteContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query = db.Person
+			using var db = GetDataContext(context);
+			var query = db.Person
 					.Select(person => new { entry = person, rn = 1 })
 					.Where(x => x.rn == 1)
 					.Select(x => x.entry);
 
-				var cte = query
+			var cte = query
 					.AsCte("cte");
 
-				var expected = query;
+			var expected = query;
 
-				AreEqual(expected, cte);
-			}
+			AreEqual(expected, cte);
 		}
 
 		[Test]
 		public void TestCteInvalidMapping([CteContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query = db.Person
+			using var db = GetDataContext(context);
+			var query = db.Person
 					.Select(person => new { entry = person, rn = 1 })
 					.Where(x => x.rn == 1);
 
-				var cte = query
+			var cte = query
 					.AsCte();
 
-				var item = cte.First();
+			var item = cte.First();
 
-				var expected = query
+			var expected = query
 					.First();
 
-				Assert.That(item, Is.EqualTo(expected));
-			}
+			Assert.That(item, Is.EqualTo(expected));
 		}
 
 		[Test]
 		public void TestCteInvalidMappingUnion([CteContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query = db.Person
+			using var db = GetDataContext(context);
+			var query = db.Person
 					.Select(person => new { entry = person, rn = 1 })
 					.Concat(db.Person
 					.Select(person => new { entry = person, rn = 2 }))
 					.Where(x => x.rn == 1);
 
-				var cte = query
+			var cte = query
 					.AsCte();
 
-				var item = cte.First();
+			var item = cte.First();
 
-				var expected = query
+			var expected = query
 					.First();
 
-				Assert.That(item, Is.EqualTo(expected));
-			}
+			Assert.That(item, Is.EqualTo(expected));
 		}
 
 		[Test]
 		public void TestCteReservedWords([CteContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query = db.Person
+			using var db = GetDataContext(context);
+			var query = db.Person
 					.Select(person => new
 					{
 						x = new
@@ -105,14 +96,13 @@ namespace Tests.UserTests
 					})
 					.Select(x => x.x);
 
-				var cte = query
+			var cte = query
 					.AsCte();
 
-				var item = cte.FirstOrDefault();
-				var expected = query.FirstOrDefault();
+			var item = cte.FirstOrDefault();
+			var expected = query.FirstOrDefault();
 
-				Assert.That(item, Is.EqualTo(expected));
-			}
+			Assert.That(item, Is.EqualTo(expected));
 		}
 	}
 }

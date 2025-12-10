@@ -75,27 +75,25 @@ namespace Tests.UserTests
 
 		private void Test(string context, Action<ITestDataContext, byte[], int> testAction, int calls)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			db.Insert(new LinqDataTypes
 			{
-				db.Insert(new LinqDataTypes
-				{
-					ID            = 256,
-					BinaryValue   = new byte[] { 1, 2, 3 },
-					DateTimeValue = _date,
-					BoolValue     = false,
-					GuidValue     = Guid.Empty,
-					MoneyValue    = 0,
-					SmallIntValue = 0
-				});
+				ID = 256,
+				BinaryValue = new byte[] { 1, 2, 3 },
+				DateTimeValue = _date,
+				BoolValue = false,
+				GuidValue = Guid.Empty,
+				MoneyValue = 0,
+				SmallIntValue = 0
+			});
 
-				try
-				{
-					TestWrapper(db, testAction, calls);
-				}
-				finally
-				{
-					db.Types.Delete(_ => _.ID == 256);
-				}
+			try
+			{
+				TestWrapper(db, testAction, calls);
+			}
+			finally
+			{
+				db.Types.Delete(_ => _.ID == 256);
 			}
 		}
 

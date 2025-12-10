@@ -40,18 +40,15 @@ namespace LinqToDB.DataProvider.ClickHouse
 				// no idea which other codes indicate transient errors
 				// https://github.com/Octonica/ClickHouseClient/blob/master/src/Octonica.ClickHouseClient/Exceptions/ClickHouseErrorCodes.cs
 				foreach (var err in errors)
-					switch (err)
-					{
+				{
+					return err
 						// ClickHouseErrorCodes.InvalidConnectionState
-						case 2:
+						is 2
 						// ClickHouseErrorCodes.ConnectionClosed
-						case 3:
+						or 3
 						// ClickHouseErrorCodes.NetworkError
-						case 16:
-							return true;
-						default:
-							return false;
-					}
+						or 16;
+				}
 
 				return false;
 			}

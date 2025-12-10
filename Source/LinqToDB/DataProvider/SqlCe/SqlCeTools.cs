@@ -61,20 +61,20 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false)
 		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+			ArgumentNullException.ThrowIfNull(databaseName);
 
 			DataTools.CreateFileDatabase(
 				databaseName, deleteIfExists, ".sdf",
 				dbName =>
 				{
-					using (var engine = SqlCeProviderAdapter.GetInstance().CreateSqlCeEngine("Data Source=" + dbName))
-						engine.CreateDatabase();
+					using var engine = SqlCeProviderAdapter.GetInstance().CreateSqlCeEngine("Data Source=" + dbName);
+					engine.CreateDatabase();
 				});
 		}
 
 		public static void DropDatabase(string databaseName)
 		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+			ArgumentNullException.ThrowIfNull(databaseName);
 
 			DataTools.DropFileDatabase(databaseName, ".sdf");
 		}

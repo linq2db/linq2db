@@ -28,7 +28,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			var version = dataConnection.Execute<string>("select @@version");
 
-			IsAzure            = version.IndexOf("Azure", StringComparison.Ordinal) >= 0;
+			IsAzure            = version.Contains("Azure", StringComparison.Ordinal);
 			CompatibilityLevel = dataConnection.Execute<int>("SELECT compatibility_level FROM sys.databases WHERE name = db_name()");
 		}
 
@@ -323,49 +323,48 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
-			switch (dataType)
+			return dataType switch
 			{
-				case "json"             : return DataType.Json;
-				case "vector"           : return DataType.Vector32;
-				case "image"            : return DataType.Image;
-				case "text"             : return DataType.Text;
-				case "binary"           : return DataType.Binary;
-				case "tinyint"          : return DataType.Byte;
-				case "date"             : return DataType.Date;
-				case "time"             : return DataType.Time;
-				case "bit"              : return DataType.Boolean;
-				case "smallint"         : return DataType.Int16;
-				case "decimal"          : return DataType.Decimal;
-				case "int"              : return DataType.Int32;
-				case "smalldatetime"    : return DataType.SmallDateTime;
-				case "real"             : return DataType.Single;
-				case "money"            : return DataType.Money;
-				case "datetime"         : return DataType.DateTime;
-				case "float"            : return DataType.Double;
-				case "numeric"          : return DataType.Decimal;
-				case "smallmoney"       : return DataType.SmallMoney;
-				case "datetime2"        : return DataType.DateTime2;
-				case "bigint"           : return DataType.Int64;
-				case "varbinary"        : return DataType.VarBinary;
-				case "timestamp"        : return DataType.Timestamp;
-				case "sysname"          : return DataType.NVarChar;
-				case "nvarchar"         : return DataType.NVarChar;
-				case "varchar"          : return DataType.VarChar;
-				case "ntext"            : return DataType.NText;
-				case "uniqueidentifier" : return DataType.Guid;
-				case "datetimeoffset"   : return DataType.DateTimeOffset;
-				case "sql_variant"      : return DataType.Variant;
-				case "xml"              : return DataType.Xml;
-				case "char"             : return DataType.Char;
-				case "nchar"            : return DataType.NChar;
-				case "hierarchyid"      :
-				case "geography"        :
-				case "geometry"         : return DataType.Udt;
-				case "table type"       : return DataType.Structured;
+				"json"             => DataType.Json,
+				"vector"           => DataType.Vector32,
+				"image"            => DataType.Image,
+				"text"             => DataType.Text,
+				"binary"           => DataType.Binary,
+				"tinyint"          => DataType.Byte,
+				"date"             => DataType.Date,
+				"time"             => DataType.Time,
+				"bit"              => DataType.Boolean,
+				"smallint"         => DataType.Int16,
+				"decimal"          => DataType.Decimal,
+				"int"              => DataType.Int32,
+				"smalldatetime"    => DataType.SmallDateTime,
+				"real"             => DataType.Single,
+				"money"            => DataType.Money,
+				"datetime"         => DataType.DateTime,
+				"float"            => DataType.Double,
+				"numeric"          => DataType.Decimal,
+				"smallmoney"       => DataType.SmallMoney,
+				"datetime2"        => DataType.DateTime2,
+				"bigint"           => DataType.Int64,
+				"varbinary"        => DataType.VarBinary,
+				"timestamp"        => DataType.Timestamp,
+				"sysname"          => DataType.NVarChar,
+				"nvarchar"         => DataType.NVarChar,
+				"varchar"          => DataType.VarChar,
+				"ntext"            => DataType.NText,
+				"uniqueidentifier" => DataType.Guid,
+				"datetimeoffset"   => DataType.DateTimeOffset,
+				"sql_variant"      => DataType.Variant,
+				"xml"              => DataType.Xml,
+				"char"             => DataType.Char,
+				"nchar"            => DataType.NChar,
+				"hierarchyid"      or
+				"geography"        or
+				"geometry"         => DataType.Udt,
+				"table type"       => DataType.Structured,
+				_                  => DataType.Undefined,
+			};
 			}
-
-			return DataType.Undefined;
-		}
 
 		// TODO: we should support multiple namespaces, as e.g. sql server also could have
 		// spatial types (which is handled by T4 template for now)
@@ -373,62 +372,58 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		protected override string? GetProviderSpecificType(string? dataType)
 		{
-			switch (dataType)
+			return dataType switch
 			{
-				case "varbinary"        :
-				case "timestamp"        :
-				case "rowversion"       :
-				case "image"            :
-				case "binary"           : return nameof(SqlBinary);
-				case "tinyint"          : return nameof(SqlByte);
-				case "date"             :
-				case "smalldatetime"    :
-				case "datetime"         :
-				case "datetime2"        : return nameof(SqlDateTime);
-				case "bit"              : return nameof(SqlBoolean);
-				case "smallint"         : return nameof(SqlInt16);
-				case "numeric"          :
-				case "decimal"          : return nameof(SqlDecimal);
-				case "int"              : return nameof(SqlInt32);
-				case "real"             : return nameof(SqlSingle);
-				case "float"            : return nameof(SqlDouble);
-				case "smallmoney"       :
-				case "money"            : return nameof(SqlMoney);
-				case "bigint"           : return nameof(SqlInt64);
-				case "text"             :
-				case "nvarchar"         :
-				case "char"             :
-				case "nchar"            :
-				case "varchar"          :
-				case "ntext"            : return nameof(SqlString);
-				case "uniqueidentifier" : return nameof(SqlGuid);
-				case "xml"              : return nameof(SqlXml);
-				case "hierarchyid"      : return $"{SqlServerTypes.TypesNamespace}.{SqlServerTypes.SqlHierarchyIdType}";
-				case "geography"        : return $"{SqlServerTypes.TypesNamespace}.{SqlServerTypes.SqlGeographyType}";
-				case "geometry"         : return $"{SqlServerTypes.TypesNamespace}.{SqlServerTypes.SqlGeometryType}";
-				case "json"             : return $"{SqlServerProviderAdapter.TypesNamespace}.SqlJson";
-				case "vector"           : return $"{SqlServerProviderAdapter.TypesNamespace}.SqlVector<float>";
+				"varbinary"        or
+				"timestamp"        or
+				"rowversion"       or
+				"image"            or
+				"binary"           => nameof(SqlBinary),
+				"tinyint"          => nameof(SqlByte),
+				"date"             or
+				"smalldatetime"    or
+				"datetime"         or
+				"datetime2"        => nameof(SqlDateTime),
+				"bit"              => nameof(SqlBoolean),
+				"smallint"         => nameof(SqlInt16),
+				"numeric"          or
+				"decimal"          => nameof(SqlDecimal),
+				"int"              => nameof(SqlInt32),
+				"real"             => nameof(SqlSingle),
+				"float"            => nameof(SqlDouble),
+				"smallmoney"       or
+				"money"            => nameof(SqlMoney),
+				"bigint"           => nameof(SqlInt64),
+				"text"             or
+				"nvarchar"         or
+				"char"             or
+				"nchar"            or
+				"varchar"          or
+				"ntext"            => nameof(SqlString),
+				"uniqueidentifier" => nameof(SqlGuid),
+				"xml"              => nameof(SqlXml),
+				"hierarchyid"      => $"{SqlServerTypes.TypesNamespace}.{SqlServerTypes.SqlHierarchyIdType}",
+				"geography"        => $"{SqlServerTypes.TypesNamespace}.{SqlServerTypes.SqlGeographyType}",
+				"geometry"         => $"{SqlServerTypes.TypesNamespace}.{SqlServerTypes.SqlGeometryType}",
+				"json"             => $"{SqlServerProviderAdapter.TypesNamespace}.SqlJson",
+				"vector"           => $"{SqlServerProviderAdapter.TypesNamespace}.SqlVector<float>",
+				_                  => base.GetProviderSpecificType(dataType),
+			};
 			}
-
-			return base.GetProviderSpecificType(dataType);
-		}
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
-			switch (dataType)
+			return dataType switch
 			{
-				case "json"        : return typeof(string);
+				"json"       => typeof(string),
 				// TODO: currently string mapping is not usable
-				case "vector"      : return Provider.Adapter.SqlVectorType ?? typeof(string);
-				case "tinyint"     : return typeof(byte);
-				case "hierarchyid" :
-				case "geography"   :
-				case "geometry"    : return Provider.GetUdtTypeByName(dataType);
-				case "table type"  : return typeof(DataTable);
+				"vector"     => Provider.Adapter.SqlVectorType ?? typeof(string),
+				"tinyint"    => typeof(byte),
+				"hierarchyid" or "geography" or "geometry" => Provider.GetUdtTypeByName(dataType),
+				"table type" => typeof(DataTable),
+				_            => base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options),
+			};
 			}
-
-			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
-		}
 
 		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, int? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
@@ -445,6 +440,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		protected override DataParameter BuildProcedureParameter(ParameterSchema p)
 		{
 			if (p.DataType == DataType.Structured)
+			{
 				return new DataParameter
 				{
 					Name      = p.ParameterName,
@@ -457,6 +453,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 							ParameterDirection.Output,
 					DbType   = p.SchemaType
 				};
+			}
 
 			return base.BuildProcedureParameter(p);
 		}

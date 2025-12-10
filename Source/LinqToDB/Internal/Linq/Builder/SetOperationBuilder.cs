@@ -32,19 +32,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			var sequence1 = buildResult1.BuildContext;
 			var sequence2 = buildResult2.BuildContext;
 
-			SetOperation setOperation;
-			switch (methodCall.Method.Name)
+			var setOperation = methodCall.Method.Name switch
 			{
-				case "Concat"       :
-				case "UnionAll"     : setOperation = SetOperation.UnionAll;     break;
-				case "Union"        : setOperation = SetOperation.Union;        break;
-				case "Except"       : setOperation = SetOperation.Except;       break;
-				case "ExceptAll"    : setOperation = SetOperation.ExceptAll;    break;
-				case "Intersect"    : setOperation = SetOperation.Intersect;    break;
-				case "IntersectAll" : setOperation = SetOperation.IntersectAll; break;
-				default:
-					throw new ArgumentException($"Invalid method name {methodCall.Method.Name}.");
-			}
+				"Concat" or "UnionAll" => SetOperation.UnionAll,
+				"Union"                => SetOperation.Union,
+				"Except"               => SetOperation.Except,
+				"ExceptAll"            => SetOperation.ExceptAll,
+				"Intersect"            => SetOperation.Intersect,
+				"IntersectAll"         => SetOperation.IntersectAll,
+				_ => throw new ArgumentException($"Invalid method name {methodCall.Method.Name}."),
+			};
 
 			var elementType = methodCall.Method.GetGenericArguments()[0];
 
@@ -519,7 +516,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					pathMapping.Add(path, (column1, column2));
 				}
 
-				if (_setOperation != SetOperation.Except && _setOperation != SetOperation.ExceptAll)
+				if (_setOperation is not SetOperation.Except and not SetOperation.ExceptAll)
 				{
 					foreach (var (placeholder, path) in placeholders2)
 					{

@@ -37,21 +37,19 @@ namespace Tests.UserTests
 			});
 			ms.SetConverter<int, Table.VersionClass>(v => new Table.VersionClass() { Version = v });
 
-			using (var db = GetDataContext(context, ms))
-			using (var tb = db.CreateLocalTable<Table>())
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<Table>();
+			var data = new Table()
 			{
-				var data = new Table()
-				{
-					UserId = TestData.Guid1
-				};
+				UserId = TestData.Guid1
+			};
 
-				var query = tb.Merge()
+			var query = tb.Merge()
 					.Using(new[] {data })
 					.OnTargetKey()
 					.InsertWhenNotMatched();
 
-				query.Merge();
-			}
+			query.Merge();
 		}
 	}
 }

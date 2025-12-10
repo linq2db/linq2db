@@ -120,11 +120,9 @@ CREATE COLUMN TABLE ""Person"" (
 
 			if (sql != null)
 			{
-				using (var db = new DataConnection(provider))
-				{
-					foreach (var query in sql)
-						db.Execute(query);
-				}
+				using var db = new DataConnection(provider);
+				foreach (var query in sql)
+					db.Execute(query);
 			}
 		}
 
@@ -260,11 +258,9 @@ CREATE COLUMN TABLE ""AllTypes""
 
 			if (sql != null)
 			{
-				using (var db = new DataConnection(provider))
-				{
-					foreach (var query in sql)
-						db.Execute(query);
-				}
+				using var db = new DataConnection(provider);
+				foreach (var query in sql)
+					db.Execute(query);
 			}
 		}
 
@@ -290,11 +286,9 @@ CREATE COLUMN TABLE ""AllTypes""
 
 			if (sql != null)
 			{
-				using (var db = new DataConnection(provider))
-				{
-					foreach (var query in sql)
-						db.Execute(query);
-				}
+				using var db = new DataConnection(provider);
+				foreach (var query in sql)
+					db.Execute(query);
 			}
 		}
 	}

@@ -1216,20 +1216,12 @@ namespace LinqToDB.Internal.SqlProvider
 
 				var newUpdateStatement = new SqlUpdateStatement(sql);
 
-				if (clonedQuery == null)
-					clonedQuery = CloneQuery(updateStatement.SelectQuery, null, out replaceTree);
+				clonedQuery ??= CloneQuery(updateStatement.SelectQuery, null, out replaceTree);
 
-				SqlTable? tableToCompare = null;
 				if (replaceTree!.TryGetValue(updateStatement.Update.Table!, out var newTable))
 				{
-					tableToCompare = (SqlTable)newTable;
-				}
-
-				if (tableToCompare != null)
-				{
 					replaceTree = CorrectReplaceTree(replaceTree, updateStatement.Update.Table);
-
-					ApplyUpdateTableComparison(clonedQuery, updateStatement.Update, tableToCompare, dataOptions);
+					ApplyUpdateTableComparison(clonedQuery, updateStatement.Update, (SqlTable)newTable, dataOptions);
 				}
 
 				CorrectUpdateSetters(updateStatement);
@@ -1797,7 +1789,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				if (supportsParameter)
 				{
-					if (takeExpr.ElementType != QueryElementType.SqlParameter && takeExpr.ElementType != QueryElementType.SqlValue)
+					if (takeExpr.ElementType is not QueryElementType.SqlParameter and not QueryElementType.SqlValue)
 					{
 						var takeValue = takeExpr.EvaluateExpression(optimizationContext.EvaluationContext)!;
 						var takeParameter = new SqlParameter(new DbDataType(takeValue.GetType()), "take", takeValue)
@@ -1818,7 +1810,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				if (supportsParameter)
 				{
-					if (skipExpr.ElementType != QueryElementType.SqlParameter && skipExpr.ElementType != QueryElementType.SqlValue)
+					if (skipExpr.ElementType is not QueryElementType.SqlParameter and not QueryElementType.SqlValue)
 					{
 						var skipValue = skipExpr.EvaluateExpression(optimizationContext.EvaluationContext)!;
 						var skipParameter = new SqlParameter(new DbDataType(skipValue.GetType()), "skip", skipValue)

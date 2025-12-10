@@ -548,13 +548,13 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 					break;
 			}
 
-			if (dbType.StartsWith("float(") && dbType.EndsWith(")"))
+			if (dbType.StartsWith("float(") && dbType.EndsWith(')'))
 			{
-				if (int.TryParse(dbType.Substring("float(".Length, dbType.Length - "float(".Length - 1), NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var precision))
+				if (int.TryParse(dbType.AsSpan("float(".Length, dbType.Length - "float(".Length - 1), NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var precision))
 				{
-					if (precision >= 1 && precision <= 24)
+					if (precision is >= 1 and <= 24)
 						dbType = "real";
-					else if (precision >= 25 && precision <= 53)
+					else if (precision is >= 25 and <= 53)
 						dbType = "real";
 					// else bad type
 				}

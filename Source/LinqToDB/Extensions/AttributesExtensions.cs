@@ -103,7 +103,7 @@ namespace LinqToDB.Extensions
 		public static T[] GetAttributes<T>(this ICustomAttributeProvider source, bool inherit = true)
 			where T : Attribute
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(source);
 
 			if (inherit)
 				return InheritAttributeCache<T>.Cache.GetOrAdd(source, static source => GetAttributesInternal<T>(source, true));

@@ -183,8 +183,8 @@ namespace Tests
 			if (providerName == ProviderName.InformixDB2)
 				return true;
 
-			using (DataConnection dc = new TestDataConnection(GetProviderName(context, out var _)))
-				return ((InformixDataProvider)dc.DataProvider).Adapter.IsIDSProvider;
+			using DataConnection dc = new TestDataConnection(GetProviderName(context, out var _));
+			return ((InformixDataProvider)dc.DataProvider).Adapter.IsIDSProvider;
 		}
 
 		protected virtual BulkCopyOptions GetDefaultBulkCopyOptions(string configuration)

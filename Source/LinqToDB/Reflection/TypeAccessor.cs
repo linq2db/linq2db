@@ -17,7 +17,7 @@ namespace LinqToDB.Reflection
 
 		protected void AddMember(MemberAccessor member)
 		{
-			if (member == null) throw new ArgumentNullException(nameof(member));
+			ArgumentNullException.ThrowIfNull(member);
 
 			Members.Add(member);
 			_membersByName[member.MemberInfo.Name] = member;
@@ -99,7 +99,7 @@ namespace LinqToDB.Reflection
 
 		public static TypeAccessor GetAccessor(Type type)
 		{
-			if (type == null) throw new ArgumentNullException(nameof(type));
+			ArgumentNullException.ThrowIfNull(type);
 
 			if (_accessors.TryGetValue(type, out var accessor))
 				return accessor;

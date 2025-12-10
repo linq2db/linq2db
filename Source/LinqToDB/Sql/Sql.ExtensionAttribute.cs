@@ -89,7 +89,7 @@ namespace LinqToDB
 				bool? canBeNull,
 				params SqlExtensionParam[] parameters)
 			{
-				if (parameters == null) throw new ArgumentNullException(nameof(parameters));
+				ArgumentNullException.ThrowIfNull(parameters);
 
 				foreach (var value in parameters)
 					if (value == null) throw new ArgumentNullException(nameof(parameters));
@@ -590,16 +590,14 @@ namespace LinqToDB
 
 			SqlExtensionParam? BuildExtensionParam<TContext>(TContext context, Expression extensionExpression, IDataContext dataContext, IExpressionEvaluator evaluator, SelectQuery query, MemberInfo member, Expression[] arguments, ConvertFunc<TContext> converter, out Expression? error)
 			{
-				var method = member as MethodInfo;
 				var type   = member.GetMemberType();
+				var method = member as MethodInfo;
 				if (method != null)
 					type = method.ReturnType ?? type;
-				else if (member is PropertyInfo)
-					type = ((PropertyInfo)member).PropertyType;
+				else if (member is PropertyInfo propertyInfo)
+					type = propertyInfo.PropertyType;
 
 				var extension = new SqlExtension(type, Expression!, Precedence, ChainPrecedence, IsAggregate, IsWindowFunction, IsPure, IsPredicate, IsNullable, СonfiguredCanBeNull);
-
-				SqlExtensionParam? result = null;
 
 				if (method != null)
 				{
@@ -724,6 +722,8 @@ namespace LinqToDB
 						}
 					}
 				}
+
+				SqlExtensionParam? result = null;
 
 				if (BuilderType != null)
 				{

@@ -39,29 +39,25 @@ namespace Tests.Data
 		[Test]
 		public void TestColumnNameComparerCaseInsensivity([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var p1 = PersonSelectByKeyLowercaseColumns(db, context, 1).First();
+			var p2 = db.Query<Person>("SELECT PersonID, FirstName FROM Person WHERE PersonID = @id", new { id = 1 }).First();
+			var p3 = PersonSelectByKey(db, context, 1).First();
+			using (Assert.EnterMultipleScope())
 			{
-				var p1 = PersonSelectByKeyLowercaseColumns(db, context, 1).First();
-				var p2 = db.Query<Person>("SELECT PersonID, FirstName FROM Person WHERE PersonID = @id", new { id = 1 }).First();
-				var p3 = PersonSelectByKey(db, context, 1).First();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(p2.FirstName, Is.EqualTo(p1.FirstName));
-					Assert.That(p3.FirstName, Is.EqualTo(p1.FirstName));
-				}
+				Assert.That(p2.FirstName, Is.EqualTo(p1.FirstName));
+				Assert.That(p3.FirstName, Is.EqualTo(p1.FirstName));
 			}
 		}
 
 		[Test]
 		public void Test([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var p1 = PersonSelectByKey(db, context, 1).First();
-				var p2 = db.Query<Person>("SELECT * FROM Person WHERE PersonID = @id", new { id = 1 }).First();
+			using var db = GetDataContext(context);
+			var p1 = PersonSelectByKey(db, context, 1).First();
+			var p2 = db.Query<Person>("SELECT * FROM Person WHERE PersonID = @id", new { id = 1 }).First();
 
-				Assert.That(p2, Is.EqualTo(p1));
-			}
+			Assert.That(p2, Is.EqualTo(p1));
 		}
 
 		sealed class VariableResult
@@ -97,203 +93,187 @@ namespace Tests.Data
 		[Test]
 		public void VariableResultsTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var set1 = db.QueryProc<VariableResult>("[VariableResults]",
+					new DataParameter("@ReturnFullRow", 0)).First();
+
+			var set2 = db.QueryProc<VariableResult>("[VariableResults]",
+					new DataParameter("@ReturnFullRow", 1)).First();
+
+			var set11 = db.QueryProc<VariableResult>("[VariableResults]",
+					new DataParameter("@ReturnFullRow", 0)).First();
+
+			var set22 = db.QueryProc<VariableResult>("[VariableResults]",
+					new DataParameter("@ReturnFullRow", 1)).First();
+			using (Assert.EnterMultipleScope())
 			{
-				var set1 = db.QueryProc<VariableResult>("[VariableResults]",
-					new DataParameter("@ReturnFullRow", 0)).First();
+				Assert.That(set1.Code, Is.EqualTo(2));
+				Assert.That(set1.Value1, Is.EqualTo("v"));
+				Assert.That(set1.Value2, Is.Null);
 
-				var set2 = db.QueryProc<VariableResult>("[VariableResults]",
-					new DataParameter("@ReturnFullRow", 1)).First();
+				Assert.That(set2.Code, Is.EqualTo(1));
+				Assert.That(set2.Value1, Is.EqualTo("Val1"));
+				Assert.That(set2.Value2, Is.EqualTo("Val2"));
 
-				var set11 = db.QueryProc<VariableResult>("[VariableResults]",
-					new DataParameter("@ReturnFullRow", 0)).First();
-
-				var set22 = db.QueryProc<VariableResult>("[VariableResults]",
-					new DataParameter("@ReturnFullRow", 1)).First();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(set1.Code, Is.EqualTo(2));
-					Assert.That(set1.Value1, Is.EqualTo("v"));
-					Assert.That(set1.Value2, Is.Null);
-
-					Assert.That(set2.Code, Is.EqualTo(1));
-					Assert.That(set2.Value1, Is.EqualTo("Val1"));
-					Assert.That(set2.Value2, Is.EqualTo("Val2"));
-
-					Assert.That(set11, Is.EqualTo(set1));
-					Assert.That(set22, Is.EqualTo(set2));
-				}
+				Assert.That(set11, Is.EqualTo(set1));
+				Assert.That(set22, Is.EqualTo(set2));
 			}
 		}
 
 		[Test]
 		public void VariableResultsTestWithAnonymParam([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var set1 = db.QueryProc<VariableResult>("[VariableResults]",
+					new { ReturnFullRow = 0 }).First();
+
+			var set2 = db.QueryProc<VariableResult>("[VariableResults]",
+					new { ReturnFullRow = 1 }).First();
+
+			var set11 = db.QueryProc<VariableResult>("[VariableResults]",
+					new { ReturnFullRow = 0 }).First();
+
+			var set22 = db.QueryProc<VariableResult>("[VariableResults]",
+					new { ReturnFullRow = 1 }).First();
+			using (Assert.EnterMultipleScope())
 			{
-				var set1 = db.QueryProc<VariableResult>("[VariableResults]",
-					new { ReturnFullRow = 0 }).First();
+				Assert.That(set1.Code, Is.EqualTo(2));
+				Assert.That(set1.Value1, Is.EqualTo("v"));
+				Assert.That(set1.Value2, Is.Null);
 
-				var set2 = db.QueryProc<VariableResult>("[VariableResults]",
-					new { ReturnFullRow = 1 }).First();
+				Assert.That(set2.Code, Is.EqualTo(1));
+				Assert.That(set2.Value1, Is.EqualTo("Val1"));
+				Assert.That(set2.Value2, Is.EqualTo("Val2"));
 
-				var set11 = db.QueryProc<VariableResult>("[VariableResults]",
-					new { ReturnFullRow = 0 }).First();
-
-				var set22 = db.QueryProc<VariableResult>("[VariableResults]",
-					new { ReturnFullRow = 1 }).First();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(set1.Code, Is.EqualTo(2));
-					Assert.That(set1.Value1, Is.EqualTo("v"));
-					Assert.That(set1.Value2, Is.Null);
-
-					Assert.That(set2.Code, Is.EqualTo(1));
-					Assert.That(set2.Value1, Is.EqualTo("Val1"));
-					Assert.That(set2.Value2, Is.EqualTo("Val2"));
-
-					Assert.That(set11, Is.EqualTo(set1));
-					Assert.That(set22, Is.EqualTo(set2));
-				}
+				Assert.That(set11, Is.EqualTo(set1));
+				Assert.That(set22, Is.EqualTo(set2));
 			}
 		}
 
 		[Test]
 		public void TestQueryProcRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var input   = DataParameter.Int32("input", 1);
+			var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var persons = db.QueryProc<Person>("QueryProcParameters", input, output1, output2);
+			using (Assert.EnterMultipleScope())
 			{
-				var input   = DataParameter.Int32("input", 1);
-				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var persons = db.QueryProc<Person>("QueryProcParameters", input, output1, output2);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output1.Value, Is.Null);
-					Assert.That(output2.Value, Is.Null);
-				}
+				Assert.That(output1.Value, Is.Null);
+				Assert.That(output2.Value, Is.Null);
+			}
 
-				persons.ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output1.Value, Is.EqualTo(2));
-					Assert.That(output2.Value, Is.EqualTo(3));
-				}
+			persons.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(output1.Value, Is.EqualTo(2));
+				Assert.That(output2.Value, Is.EqualTo(3));
 			}
 		}
 
 		[Test]
 		public async Task TestQueryProcAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var input = DataParameter.Int32("input", 1);
+			var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var persons = await db.QueryProcAsync<Person>("QueryProcParameters", input, output1, output2);
+			using (Assert.EnterMultipleScope())
 			{
-				var input = DataParameter.Int32("input", 1);
-				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var persons = await db.QueryProcAsync<Person>("QueryProcParameters", input, output1, output2);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output1.Value, Is.Null);
-					Assert.That(output2.Value, Is.Null);
-				}
+				Assert.That(output1.Value, Is.Null);
+				Assert.That(output2.Value, Is.Null);
+			}
 
-				persons.ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output1.Value, Is.EqualTo(2));
-					Assert.That(output2.Value, Is.EqualTo(3));
-				}
+			persons.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(output1.Value, Is.EqualTo(2));
+				Assert.That(output2.Value, Is.EqualTo(3));
 			}
 		}
 
 		[Test]
 		public void TestQueryProcTemplateRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var input = DataParameter.Int32("input", 1);
-				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var persons = db.QueryProc(new Person(), "QueryProcParameters", input, output1, output2);
+			using var db = GetDataContext(context);
+			var input = DataParameter.Int32("input", 1);
+			var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var persons = db.QueryProc(new Person(), "QueryProcParameters", input, output1, output2);
 
-				persons.ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output1.Value, Is.EqualTo(2));
-					Assert.That(output2.Value, Is.EqualTo(3));
-				}
+			persons.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(output1.Value, Is.EqualTo(2));
+				Assert.That(output2.Value, Is.EqualTo(3));
 			}
 		}
 
 		[Test]
 		public async Task TestQueryProcAsyncTemplateRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var input = DataParameter.Int32("input", 1);
+			var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var persons = await db.QueryProcAsync(new Person(), "QueryProcParameters", input, output1, output2);
+			using (Assert.EnterMultipleScope())
 			{
-				var input = DataParameter.Int32("input", 1);
-				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var persons = await db.QueryProcAsync(new Person(), "QueryProcParameters", input, output1, output2);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output1.Value, Is.Null);
-					Assert.That(output2.Value, Is.Null);
-				}
+				Assert.That(output1.Value, Is.Null);
+				Assert.That(output2.Value, Is.Null);
+			}
 
-				persons.ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output1.Value, Is.EqualTo(2));
-					Assert.That(output2.Value, Is.EqualTo(3));
-				}
+			persons.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(output1.Value, Is.EqualTo(2));
+				Assert.That(output2.Value, Is.EqualTo(3));
 			}
 		}
 
 		[Test]
 		public void TestQueryProcReaderRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var input = DataParameter.Int32("input", 1);
+			var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var persons = db.QueryProc(reader => new Person(), "QueryProcParameters", input, output1, output2);
+			using (Assert.EnterMultipleScope())
 			{
-				var input = DataParameter.Int32("input", 1);
-				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var persons = db.QueryProc(reader => new Person(), "QueryProcParameters", input, output1, output2);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output1.Value, Is.Null);
-					Assert.That(output2.Value, Is.Null);
-				}
+				Assert.That(output1.Value, Is.Null);
+				Assert.That(output2.Value, Is.Null);
+			}
 
-				persons.ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output1.Value, Is.EqualTo(2));
-					Assert.That(output2.Value, Is.EqualTo(3));
-				}
+			persons.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(output1.Value, Is.EqualTo(2));
+				Assert.That(output2.Value, Is.EqualTo(3));
 			}
 		}
 
 		[Test]
 		public async Task TestQueryProcAsyncReaderRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var input = DataParameter.Int32("input", 1);
+			var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var persons = await db.QueryProcAsync(reader => new Person(), "QueryProcParameters", input, output1, output2);
+			using (Assert.EnterMultipleScope())
 			{
-				var input = DataParameter.Int32("input", 1);
-				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var persons = await db.QueryProcAsync(reader => new Person(), "QueryProcParameters", input, output1, output2);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output1.Value, Is.Null);
-					Assert.That(output2.Value, Is.Null);
-				}
+				Assert.That(output1.Value, Is.Null);
+				Assert.That(output2.Value, Is.Null);
+			}
 
-				persons.ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output1.Value, Is.EqualTo(2));
-					Assert.That(output2.Value, Is.EqualTo(3));
-				}
+			persons.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(output1.Value, Is.EqualTo(2));
+				Assert.That(output2.Value, Is.EqualTo(3));
 			}
 		}
 
@@ -306,158 +286,142 @@ namespace Tests.Data
 		[Test]
 		public void TestQueryProcMultipleRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var input = DataParameter.Int32("input", 1);
+			var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var output3 = new DataParameter("output3", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			db.QueryProcMultiple<Person>("QueryProcMultipleParameters", input, output1, output2, output3);
+			using (Assert.EnterMultipleScope())
 			{
-				var input = DataParameter.Int32("input", 1);
-				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var output3 = new DataParameter("output3", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				db.QueryProcMultiple<Person>("QueryProcMultipleParameters", input, output1, output2, output3);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output1.Value, Is.EqualTo(2));
-					Assert.That(output2.Value, Is.EqualTo(3));
-					Assert.That(output3.Value, Is.EqualTo(4));
-				}
+				Assert.That(output1.Value, Is.EqualTo(2));
+				Assert.That(output2.Value, Is.EqualTo(3));
+				Assert.That(output3.Value, Is.EqualTo(4));
 			}
 		}
 
 		[Test]
 		public async Task TestQueryProcMultipleAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var input = DataParameter.Int32("input", 1);
+			var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var output3 = new DataParameter("output3", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			await db.QueryProcMultipleAsync<Person>("QueryProcMultipleParameters", input, output1, output2, output3);
+			using (Assert.EnterMultipleScope())
 			{
-				var input = DataParameter.Int32("input", 1);
-				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var output3 = new DataParameter("output3", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				await db.QueryProcMultipleAsync<Person>("QueryProcMultipleParameters", input, output1, output2, output3);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output1.Value, Is.EqualTo(2));
-					Assert.That(output2.Value, Is.EqualTo(3));
-					Assert.That(output3.Value, Is.EqualTo(4));
-				}
+				Assert.That(output1.Value, Is.EqualTo(2));
+				Assert.That(output2.Value, Is.EqualTo(3));
+				Assert.That(output3.Value, Is.EqualTo(4));
 			}
 		}
 
 		[Test]
 		public void TestExecuteProcIntRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var input = DataParameter.Int32("input", 1);
+			var output = new DataParameter("output", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var result = db.ExecuteProc("ExecuteProcIntParameters", input, output);
+			using (Assert.EnterMultipleScope())
 			{
-				var input = DataParameter.Int32("input", 1);
-				var output = new DataParameter("output", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var result = db.ExecuteProc("ExecuteProcIntParameters", input, output);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output.Value, Is.EqualTo(2));
-					Assert.That(result, Is.EqualTo(1));
-				}
+				Assert.That(output.Value, Is.EqualTo(2));
+				Assert.That(result, Is.EqualTo(1));
 			}
 		}
 
 		[Test]
 		public async Task TestExecuteProcAsyncIntRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var input = DataParameter.Int32("input", 1);
+			var output = new DataParameter("output", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var result = await db.ExecuteProcAsync("ExecuteProcIntParameters", input, output);
+			using (Assert.EnterMultipleScope())
 			{
-				var input = DataParameter.Int32("input", 1);
-				var output = new DataParameter("output", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var result = await db.ExecuteProcAsync("ExecuteProcIntParameters", input, output);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output.Value, Is.EqualTo(2));
-					Assert.That(result, Is.EqualTo(1));
-				}
+				Assert.That(output.Value, Is.EqualTo(2));
+				Assert.That(result, Is.EqualTo(1));
 			}
 		}
 
 		[Test]
 		public void TestExecuteProcTRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var input = DataParameter.Int32("input", 1);
+			var output = new DataParameter("output", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var result = db.ExecuteProc<string>("ExecuteProcStringParameters", input, output);
+			using (Assert.EnterMultipleScope())
 			{
-				var input = DataParameter.Int32("input", 1);
-				var output = new DataParameter("output", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var result = db.ExecuteProc<string>("ExecuteProcStringParameters", input, output);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output.Value, Is.EqualTo(2));
-					Assert.That(result, Is.EqualTo("издрасте"));
-				}
+				Assert.That(output.Value, Is.EqualTo(2));
+				Assert.That(result, Is.EqualTo("издрасте"));
 			}
 		}
 
 		[Test]
 		public async Task TestExecuteProcAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var input = DataParameter.Int32("input", 1);
+			var output = new DataParameter("output", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var result = await db.ExecuteProcAsync<string>("ExecuteProcStringParameters", input, output);
+			using (Assert.EnterMultipleScope())
 			{
-				var input = DataParameter.Int32("input", 1);
-				var output = new DataParameter("output", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var result = await db.ExecuteProcAsync<string>("ExecuteProcStringParameters", input, output);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output.Value, Is.EqualTo(2));
-					Assert.That(result, Is.EqualTo("издрасте"));
-				}
+				Assert.That(output.Value, Is.EqualTo(2));
+				Assert.That(result, Is.EqualTo("издрасте"));
 			}
 		}
 
 		[Test]
 		public void TestExecuteReaderProcRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var input = DataParameter.Int32("input", 1);
+			var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var reader = new CommandInfo(db, "QueryProcParameters", input, output1, output2).ExecuteReaderProc();
+			using (Assert.EnterMultipleScope())
 			{
-				var input = DataParameter.Int32("input", 1);
-				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var reader = new CommandInfo(db, "QueryProcParameters", input, output1, output2).ExecuteReaderProc();
-				using (Assert.EnterMultipleScope())
+				Assert.That(output1.Value, Is.Null);
+				Assert.That(output2.Value, Is.Null);
+			}
+
+			using (reader)
+				while (reader.Reader!.Read())
 				{
-					Assert.That(output1.Value, Is.Null);
-					Assert.That(output2.Value, Is.Null);
 				}
 
-				using (reader)
-					while (reader.Reader!.Read())
-					{
-					}
-
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output1.Value, Is.EqualTo(2));
-					Assert.That(output2.Value, Is.EqualTo(3));
-				}
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(output1.Value, Is.EqualTo(2));
+				Assert.That(output2.Value, Is.EqualTo(3));
 			}
 		}
 
 		[Test]
 		public async Task TestExecuteReaderProcAsyncRebind([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var input = DataParameter.Int32("input", 1);
+			var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
+			var reader = await new CommandInfo(db, "QueryProcParameters", input, output1, output2).ExecuteReaderProcAsync();
+			using (Assert.EnterMultipleScope())
 			{
-				var input = DataParameter.Int32("input", 1);
-				var output1 = new DataParameter("output1", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var output2 = new DataParameter("output2", null, DataType.Int32) { Direction = ParameterDirection.Output };
-				var reader = await new CommandInfo(db, "QueryProcParameters", input, output1, output2).ExecuteReaderProcAsync();
-				using (Assert.EnterMultipleScope())
+				Assert.That(output1.Value, Is.Null);
+				Assert.That(output2.Value, Is.Null);
+			}
+
+			await using (reader)
+				while (await reader.Reader!.ReadAsync())
 				{
-					Assert.That(output1.Value, Is.Null);
-					Assert.That(output2.Value, Is.Null);
 				}
 
-				await using (reader)
-					while (await reader.Reader!.ReadAsync())
-					{
-					}
-
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(output1.Value, Is.EqualTo(2));
-					Assert.That(output2.Value, Is.EqualTo(3));
-				}
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(output1.Value, Is.EqualTo(2));
+				Assert.That(output2.Value, Is.EqualTo(3));
 			}
 		}
 

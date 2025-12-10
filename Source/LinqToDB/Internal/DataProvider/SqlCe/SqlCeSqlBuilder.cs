@@ -8,6 +8,7 @@ using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+using System;
 
 namespace LinqToDB.Internal.DataProvider.SqlCe
 {
@@ -98,7 +99,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 				case DataType.Date          :
 				case DataType.SmallDateTime : StringBuilder.Append("DateTime");                                                                                return;
 				case DataType.NVarChar:
-					if (type.Length == null || type.Length > 4000 || type.Length < 1)
+					if (type.Length is null or > 4000 or < 1)
 					{
 						StringBuilder.Append("NVarChar(4000)");
 						return;
@@ -108,12 +109,13 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 
 				case DataType.Binary:
 					StringBuilder.Append("BINARY");
-					if (type.Length > 1 && type.Length <= 8000)
+					if (type.Length is > 1 and <= 8000)
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Length})");
 					return;
+
 				case DataType.VarBinary:
 					StringBuilder.Append("VARBINARY");
-					if (type.Length > 1 && type.Length <= 8000)
+					if (type.Length is > 1 and <= 8000)
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Length})");
 					return;
 			}
@@ -152,7 +154,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 
 				case ConvertType.SprocParameterToName:
 					return value.Length > 0 && value[0] == '@'
-						? sb.Append(value.Substring(1))
+						? sb.Append(value.AsSpan(1))
 						: sb.Append(value);
 			}
 

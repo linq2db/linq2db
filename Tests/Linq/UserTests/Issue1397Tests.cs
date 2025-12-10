@@ -12,9 +12,8 @@ namespace Tests.UserTests
 		[Test]
 		public void ConcatJoinTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			var query =
 					from m in db.Parent
 					from id in
 						(
@@ -31,7 +30,7 @@ namespace Tests.UserTests
 						.InnerJoin(id => id == m.ParentID)
 					select m;
 
-				var expected =
+			var expected =
 					from m in db.Parent
 					from id in
 						(
@@ -48,22 +47,20 @@ namespace Tests.UserTests
 					where id == m.ParentID
 					select m;
 
-				AreEqual(expected, query);
-			}
+			AreEqual(expected, query);
 		}
 
 		[Test]
 		public void ConcatJoinTestChain([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			var query =
 					db.Parent.InnerJoin(
 						db.Parent.Where(t => t.ParentID == 1).Select(t => t.ParentID).Concat(
 						db.Parent.Where(t => t.ParentID == 2).Select(t => t.ParentID)),
 					(m, id) => m.ParentID == id, (m, id) => m);
 
-				var expected =
+			var expected =
 					from m in db.Parent
 					from id in
 						(
@@ -80,8 +77,7 @@ namespace Tests.UserTests
 					where id == m.ParentID
 					select m;
 
-				AreEqual(expected, query);
-			}
+			AreEqual(expected, query);
 		}
 	}
 }

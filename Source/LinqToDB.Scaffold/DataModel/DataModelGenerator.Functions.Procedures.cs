@@ -543,7 +543,7 @@ namespace LinqToDB.DataModel
 			ctorParams[0] = context.AST.Constant(parameterName ?? string.Format(CultureInfo.InvariantCulture, DataModelConstants.STORED_PROCEDURE_PARAMETER_TEMPLATE, parameterIndex), true);
 			// pass parameter value for in and inout parameters
 			// otherwise pass null
-			ctorParams[1] = direction == System.Data.ParameterDirection.Input || direction == System.Data.ParameterDirection.InputOutput
+			ctorParams[1] = direction is System.Data.ParameterDirection.Input or System.Data.ParameterDirection.InputOutput
 				? parameter!.Reference
 				: context.AST.Null(WellKnownTypes.System.ObjectNullable, true);
 			if (dataType != null)
@@ -558,7 +558,7 @@ namespace LinqToDB.DataModel
 			{
 				if (dbType.Name != null && context.Options.GenerateProcedureParameterDbType)
 					initializersCount++;
-				if (dbType.Length != null && dbType.Length >= int.MinValue && dbType.Length <= int.MaxValue)
+				if (dbType.Length is not null and >= int.MinValue and <= int.MaxValue)
 					initializersCount++;
 				if (dbType.Precision != null)
 					initializersCount++;

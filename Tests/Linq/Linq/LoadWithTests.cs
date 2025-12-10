@@ -24,78 +24,68 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from t in db.Child.LoadWith(p => p.Parent)
 					select t;
 
-				var ch = q.First();
+			var ch = q.First();
 
-				Assert.That(ch.Parent, Is.Not.Null);
-			}
+			Assert.That(ch.Parent, Is.Not.Null);
 		}
 
 		[Test]
 		public void LoadWithAsTable1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from t in db.Child.LoadWithAsTable(p => p.Parent)
 					select t;
 
-				var ch = q.First();
+			var ch = q.First();
 
-				Assert.That(ch.Parent, Is.Not.Null);
-			}
+			Assert.That(ch.Parent, Is.Not.Null);
 		}
 
 		[Test]
 		public void LoadWith2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from t in db.GrandChild.LoadWith(p => p.Child!.Parent)
 					select t;
 
-				var ch = q.First();
+			var ch = q.First();
 
-				Assert.That(ch.Child, Is.Not.Null);
-				Assert.That(ch.Child!.Parent, Is.Not.Null);
-			}
+			Assert.That(ch.Child, Is.Not.Null);
+			Assert.That(ch.Child!.Parent, Is.Not.Null);
 		}
 
 		[Test]
 		public void LoadWithAsTable2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from t in db.GrandChild.LoadWithAsTable(p => p.Child!.Parent)
 					select t;
 
-				var ch = q.First();
+			var ch = q.First();
 
-				Assert.That(ch.Child, Is.Not.Null);
-				Assert.That(ch.Child!.Parent, Is.Not.Null);
-			}
+			Assert.That(ch.Child, Is.Not.Null);
+			Assert.That(ch.Child!.Parent, Is.Not.Null);
 		}
 
 		[Test]
 		public void LoadWithAsTable4([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from t in db.Parent.LoadWithAsTable(p => p.Children.First().Parent)
 					select t;
 
-				var ch = q.FirstOrDefault()!;
+			var ch = q.FirstOrDefault()!;
 
-				Assert.That(ch.Children[0].Parent, Is.Not.Null);
-			}
+			Assert.That(ch.Children[0].Parent, Is.Not.Null);
 		}
 
 		[Test]
@@ -105,9 +95,8 @@ namespace Tests.Linq
 			var ms = new MappingSchema();
 			ms.SetConvertExpression<IEnumerable<Child>, ImmutableList<Child>>(t => ImmutableList.Create(t.ToArray()));
 
-			using (var db = GetDataContext(context, ms))
-			{
-				var q =
+			using var db = GetDataContext(context, ms);
+			var q =
 					from p in db.Parent.LoadWith(p => p.Children3)
 					select new
 					{
@@ -115,10 +104,9 @@ namespace Tests.Linq
 						p
 					};
 
-				var ch = q.ToList().Select(t => t.p).SelectMany(p => p.Children3).FirstOrDefault();
+			var ch = q.ToList().Select(t => t.p).SelectMany(p => p.Children3).FirstOrDefault();
 
-				Assert.That(ch, Is.Not.Null);
-			}
+			Assert.That(ch, Is.Not.Null);
 		}
 
 		[Test]
@@ -129,9 +117,8 @@ namespace Tests.Linq
 
 			ms.SetConvertExpression<IEnumerable<Child>, ImmutableList<Child>>(t => ImmutableList.Create(t.ToArray()));
 
-			using (var db = GetDataContext(context, ms))
-			{
-				var q =
+			using var db = GetDataContext(context, ms);
+			var q =
 					from p in db.Parent.LoadWithAsTable(p => p.Children3)
 					select new
 					{
@@ -139,10 +126,9 @@ namespace Tests.Linq
 						p
 					};
 
-				var ch = q.ToList().Select(t => t.p).SelectMany(p => p.Children3).FirstOrDefault();
+			var ch = q.ToList().Select(t => t.p).SelectMany(p => p.Children3).FirstOrDefault();
 
-				Assert.That(ch, Is.Not.Null);
-			}
+			Assert.That(ch, Is.Not.Null);
 		}
 
 		sealed class EnumerableToImmutableListConvertProvider<T> : IGenericInfoProvider
@@ -161,9 +147,8 @@ namespace Tests.Linq
 			var ms = new MappingSchema();
 			ms.SetGenericConvertProvider(typeof(EnumerableToImmutableListConvertProvider<>));
 
-			using (var db = GetDataContext(context, ms))
-			{
-				var q =
+			using var db = GetDataContext(context, ms);
+			var q =
 					from p in db.Parent.LoadWith(p => p.Children3)
 					select new
 					{
@@ -171,19 +156,17 @@ namespace Tests.Linq
 						p
 					};
 
-				var ch = q.ToList().Select(t => t.p).SelectMany(p => p.Children3).FirstOrDefault();
+			var ch = q.ToList().Select(t => t.p).SelectMany(p => p.Children3).FirstOrDefault();
 
-				Assert.That(ch, Is.Not.Null);
-			}
+			Assert.That(ch, Is.Not.Null);
 		}
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery]
 		public void LoadWith5([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent.LoadWith(p => p.Children.First().GrandChildren[0].Child!.Parent)
 					select new
 					{
@@ -191,21 +174,19 @@ namespace Tests.Linq
 						p
 					};
 
-				var ch = q.ToList().Select(t => t.p).SelectMany(p => p.Children).SelectMany(p => p.GrandChildren).FirstOrDefault()!;
+			var ch = q.ToList().Select(t => t.p).SelectMany(p => p.Children).SelectMany(p => p.GrandChildren).FirstOrDefault()!;
 
-				Assert.That(ch, Is.Not.Null);
-				Assert.That(ch.Child, Is.Not.Null);
-				Assert.That(ch.Child!.Parent, Is.Not.Null);
-			}
+			Assert.That(ch, Is.Not.Null);
+			Assert.That(ch.Child, Is.Not.Null);
+			Assert.That(ch.Child!.Parent, Is.Not.Null);
 		}
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery]
 		public void LoadWith6([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Child.LoadWith(p => p.GrandChildren2[0].Child!.Parent)
 					select new
 					{
@@ -213,20 +194,18 @@ namespace Tests.Linq
 						p
 					};
 
-				var ch = q.ToList().Select(t => t.p).SelectMany(p => p.GrandChildren2).FirstOrDefault()!;
+			var ch = q.ToList().Select(t => t.p).SelectMany(p => p.GrandChildren2).FirstOrDefault()!;
 
-				Assert.That(ch, Is.Not.Null);
-				Assert.That(ch.Child, Is.Not.Null);
-				Assert.That(ch.Child!.Parent, Is.Not.Null);
-			}
+			Assert.That(ch, Is.Not.Null);
+			Assert.That(ch.Child, Is.Not.Null);
+			Assert.That(ch.Child!.Parent, Is.Not.Null);
 		}
 
 		[Test]
 		public void LoadWith7([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Child.LoadWith(p => p.GrandChildren2[0].Child!.Parent)
 					select new
 					{
@@ -234,85 +213,76 @@ namespace Tests.Linq
 						p
 					};
 
-				var ch = q.Select(t => t.p).SelectMany(p => p.GrandChildren2).FirstOrDefault()!;
+			var ch = q.Select(t => t.p).SelectMany(p => p.GrandChildren2).FirstOrDefault()!;
 
-				Assert.That(ch, Is.Not.Null);
-				Assert.That(ch.Child, Is.Not.Null);
-				Assert.That(ch.Child!.Parent, Is.Not.Null);
-			}
+			Assert.That(ch, Is.Not.Null);
+			Assert.That(ch.Child, Is.Not.Null);
+			Assert.That(ch.Child!.Parent, Is.Not.Null);
 		}
 
 		[Test]
 		public void LoadWith8([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.GrandChild.LoadWith(p => p.Child!.GrandChildren[0].Child!.Parent)
 					select p;
 
-				var ch = q.SelectMany(p => p.Child!.GrandChildren).FirstOrDefault()!;
+			var ch = q.SelectMany(p => p.Child!.GrandChildren).FirstOrDefault()!;
 
-				Assert.That(ch, Is.Not.Null);
-				Assert.That(ch.Child, Is.Not.Null);
-				Assert.That(ch.Child!.Parent, Is.Not.Null);
-			}
+			Assert.That(ch, Is.Not.Null);
+			Assert.That(ch.Child, Is.Not.Null);
+			Assert.That(ch.Child!.Parent, Is.Not.Null);
 		}
 
 		[Test]
 		public void LoadWith9([DataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.GrandChild.LoadWith(p => p.Child!.GrandChildren)
 					select p;
 
-				var ch = q.SelectMany(p => p.Child!.GrandChildren).FirstOrDefault()!;
+			var ch = q.SelectMany(p => p.Child!.GrandChildren).FirstOrDefault()!;
 
-				Assert.That(ch, Is.Not.Null);
-				Assert.That(ch.Child, Is.Null);
-			}
+			Assert.That(ch, Is.Not.Null);
+			Assert.That(ch.Child, Is.Null);
 		}
 
 		[Test]
 //		[Timeout(15000)]
 		public void LoadWith10([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent.LoadWith(p => p.Children)
 					where p.ParentID < 2
 					select p;
 
-				for (var i = 0; i < 100; i++)
-				{
-					var _ = q.ToList();
-				}
+			for (var i = 0; i < 100; i++)
+			{
+				var _ = q.ToList();
 			}
 		}
 
 		[Test]
 		public void LoadWith11([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent.LoadWith(p => p.Children).LoadWith(p => p.GrandChildren)
 					where p.ParentID < 2
 					select p;
 
-				foreach (var parent in q)
+			foreach (var parent in q)
+			{
+				using (Assert.EnterMultipleScope())
 				{
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(parent.Children, Is.Not.Null);
-						Assert.That(parent.GrandChildren, Is.Not.Null);
-						Assert.That(parent.Children, Is.Not.Empty);
-						Assert.That(parent.GrandChildren, Is.Not.Empty);
-						Assert.That(parent.Children3, Is.Null);
-					}
+					Assert.That(parent.Children, Is.Not.Null);
+					Assert.That(parent.GrandChildren, Is.Not.Null);
+					Assert.That(parent.Children, Is.Not.Empty);
+					Assert.That(parent.GrandChildren, Is.Not.Empty);
+					Assert.That(parent.Children3, Is.Null);
 				}
 			}
 		}
@@ -320,45 +290,40 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith12([DataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q1 =
+			using var db = GetDataContext(context);
+			var q1 =
 					(from p in db.Parent.LoadWith(p => p.Children[0].Parent!.Children)
-					where p.ParentID < 2
-					select new
-					{
-						p,
-					});
+					 where p.ParentID < 2
+					 select new
+					 {
+						 p,
+					 });
 
-				var result = q1.FirstOrDefault()!;
+			var result = q1.FirstOrDefault()!;
 
-				Assert.DoesNotThrow(() => result.p.Children.Single().Parent!.Children.Single());
-			}
+			Assert.DoesNotThrow(() => result.p.Children.Single().Parent!.Children.Single());
 		}
 
 		[Test]
 		public void LoadWithFirstOrDefaultParameter([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(2, 3)] int id)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q1 = db.Parent
+			using var db = GetDataContext(context);
+			var q1 = db.Parent
 					.LoadWith(p => p.Children)
 					.ThenLoad(x => x.Parent)
 					.ThenLoad(x => x!.Children);
 
-				var result = q1.FirstOrDefault(p=> p.ParentID == id);
-				Assert.That(result, Is.Not.Null);
-				Assert.That(result!.Children[0].Parent!.Children[0].ParentID, Is.EqualTo(id));
-			}
+			var result = q1.FirstOrDefault(p=> p.ParentID == id);
+			Assert.That(result, Is.Not.Null);
+			Assert.That(result!.Children[0].Parent!.Children[0].ParentID, Is.EqualTo(id));
 		}
 
 		[Test]
 		public void TransactionScope([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var transaction = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.Serializable }, TransactionScopeAsyncFlowOption.Enabled))
-			{
-				var result = db.Parent
+			using var db = GetDataContext(context);
+			using var transaction = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.Serializable }, TransactionScopeAsyncFlowOption.Enabled);
+			var result = db.Parent
 					.Where(x => x.ParentID == 1)
 					.Select(p => new
 					{
@@ -370,17 +335,15 @@ namespace Tests.Linq
 					})
 					.FirstOrDefault();
 
-				transaction.Complete();
-			}
+			transaction.Complete();
 		}
 
 		[Test]
 		public async Task TransactionScopeAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var transaction = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.Serializable }, TransactionScopeAsyncFlowOption.Enabled))
-			{
-				var result = await db.Parent
+			using var db = GetDataContext(context);
+			using var transaction = new TransactionScope(TransactionScopeOption.Required, new TransactionOptions { IsolationLevel = IsolationLevel.Serializable }, TransactionScopeAsyncFlowOption.Enabled);
+			var result = await db.Parent
 					.Where(x => x.ParentID == 1)
 					.Select(p => new
 					{
@@ -392,8 +355,7 @@ namespace Tests.Linq
 					})
 					.FirstOrDefaultAsync();
 
-				transaction.Complete();
-			}
+			transaction.Complete();
 		}
 
 		sealed class MainItem

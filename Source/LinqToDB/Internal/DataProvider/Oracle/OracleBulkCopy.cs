@@ -166,23 +166,23 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			switch (_useAlternativeBulkCopy)
+			return _useAlternativeBulkCopy switch
 			{
-				case AlternativeBulkCopy.InsertInto: return OracleMultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
-				case AlternativeBulkCopy.InsertDual: return OracleMultipleRowsCopy3Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
-				default                            : return OracleMultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
-			}
+				AlternativeBulkCopy.InsertInto => OracleMultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken),
+				AlternativeBulkCopy.InsertDual => OracleMultipleRowsCopy3Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken),
+				_                              => OracleMultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken),
+			};
 		}
 
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			switch (_useAlternativeBulkCopy)
+			return _useAlternativeBulkCopy switch
 			{
-				case AlternativeBulkCopy.InsertInto: return OracleMultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
-				case AlternativeBulkCopy.InsertDual: return OracleMultipleRowsCopy3Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
-				default                            : return OracleMultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
-			}
+				AlternativeBulkCopy.InsertInto => OracleMultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken),
+				AlternativeBulkCopy.InsertDual => OracleMultipleRowsCopy3Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken),
+				_                              => OracleMultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken),
+			};
 		}
 
 		static void OracleMultipleRowsCopy1Prep(MultipleRowsHelper helper)

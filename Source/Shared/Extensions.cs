@@ -53,8 +53,10 @@ internal static class CharExtensions
 {
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool IsAsciiDigit(this char chr) => chr is (>= '0' and <= '9');
+
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsAsciiLetter(this char chr) => chr is >= 'a' and <= 'z' || chr is >= 'A' and <= 'Z';
+	public static bool IsAsciiLetter(this char chr) => chr is (>= 'a' and <= 'z') or (>= 'A' and <= 'Z');
+
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool IsAsciiLetterOrDigit(this char chr) => IsAsciiLetter(chr) || IsAsciiDigit(chr);
 }
@@ -117,7 +119,7 @@ internal static class StringBuilderExtensions
 	public static StringBuilder AppendJoinStrings(this StringBuilder sb, string? separator, IEnumerable<string> values)
 	{
 #pragma warning disable RS0030 // Do not use banned APIs
-		return sb.AppendJoin<string>(separator, values);
+		return sb.AppendJoin(separator, values);
 #pragma warning restore RS0030 // Do not use banned APIs
 	}
 }

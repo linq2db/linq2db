@@ -351,7 +351,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public static Expression BuildAggregateExecuteExpression(MethodCallExpression methodCall, int sequenceExpressionIndex, Expression dataSequence, IReadOnlyList<MethodCallExpression>? chain)
 		{
-			if (methodCall == null) throw new ArgumentNullException(nameof(methodCall));
+			ArgumentNullException.ThrowIfNull(methodCall);
 
 			var sequenceExpression = methodCall.Arguments[sequenceExpressionIndex];
 

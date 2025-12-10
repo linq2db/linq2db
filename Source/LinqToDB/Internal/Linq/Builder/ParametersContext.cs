@@ -117,7 +117,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (parameterName == null && columnDescriptor != null)
 			{
-				if (columnDescriptor.MemberName.Contains("."))
+				if (columnDescriptor.MemberName.Contains('.'))
 					parameterName = columnDescriptor.ColumnName;
 				else
 					parameterName = columnDescriptor.MemberName;

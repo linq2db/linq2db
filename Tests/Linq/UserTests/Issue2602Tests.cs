@@ -67,10 +67,8 @@ namespace Tests.UserTests
 
 			public Email? GetEmail(string context)
 			{
-				using (var db = new DataConnection(context))
-				{
-					return db.GetTable<Email>().LoadWith(c => c.Attachments).FirstOrDefault(c => c.Id == GetId());
-				}
+				using var db = new DataConnection(context);
+				return db.GetTable<Email>().LoadWith(c => c.Attachments).FirstOrDefault(c => c.Id == GetId());
 			}
 		}
 

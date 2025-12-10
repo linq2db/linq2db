@@ -36,13 +36,13 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 						if (options.ConfigurationString.Contains("2.5") || options.ConfigurationString.Contains("25"))
 							return _firebirdDataProvider25.Value;
 
-						if (options.ConfigurationString.Contains("5"))
+						if (options.ConfigurationString.Contains('5'))
 							return _firebirdDataProvider5.Value;
 
-						if (options.ConfigurationString.Contains("4"))
+						if (options.ConfigurationString.Contains('4'))
 							return _firebirdDataProvider4.Value;
 
-						if (options.ConfigurationString.Contains("3"))
+						if (options.ConfigurationString.Contains('3'))
 							return _firebirdDataProvider3.Value;
 					}
 
@@ -87,21 +87,17 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 			// note: query requires FB 2.1+, for older versions user should specify 2.5 provider explicitly
 			cmd.CommandText = "SELECT rdb$get_context('SYSTEM', 'ENGINE_VERSION') from rdb$database";
-			var versionString = cmd.ExecuteScalar() as string;
 
-			if (versionString == null || !Version.TryParse(versionString, out var version))
+			if (cmd.ExecuteScalar() is not string versionString || !Version.TryParse(versionString, out var version))
 				return null;
 
-			if (version.Major < 3)
-				return FirebirdVersion.v25;
-
-			if (version.Major < 4)
-				return FirebirdVersion.v3;
-
-			if (version.Major < 5)
-				return FirebirdVersion.v4;
-
-			return FirebirdVersion.v5;
+			return version.Major switch
+			{
+				< 3 => FirebirdVersion.v25,
+				< 4 => FirebirdVersion.v3,
+				< 5 => FirebirdVersion.v4,
+				_ => FirebirdVersion.v5,
+			};
 		}
 
 		protected override DbConnection CreateConnection(Provider provider, string connectionString)

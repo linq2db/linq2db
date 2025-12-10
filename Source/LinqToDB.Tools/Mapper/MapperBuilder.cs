@@ -103,9 +103,9 @@ namespace LinqToDB.Tools.Mapper
 		/// <returns>Returns this mapper.</returns>
 		public MapperBuilder<TFrom,TTo> FromMapping(Type type, string memberName, string mapName)
 		{
-			if (type       == null) throw new ArgumentNullException(nameof(type));
-			if (memberName == null) throw new ArgumentNullException(nameof(memberName));
-			if (mapName    == null) throw new ArgumentNullException(nameof(mapName));
+			ArgumentNullException.ThrowIfNull(type);
+			ArgumentNullException.ThrowIfNull(memberName);
+			ArgumentNullException.ThrowIfNull(mapName);
 
 			FromMappingDictionary ??= new Dictionary<Type,Dictionary<string,string>>();
 
@@ -146,8 +146,8 @@ namespace LinqToDB.Tools.Mapper
 		/// <returns>Returns this mapper.</returns>
 		public MapperBuilder<TFrom,TTo> FromMapping(Type type, IReadOnlyDictionary<string,string> mapping)
 		{
-			if (type    == null) throw new ArgumentNullException(nameof(type));
-			if (mapping == null) throw new ArgumentNullException(nameof(mapping));
+			ArgumentNullException.ThrowIfNull(type);
+			ArgumentNullException.ThrowIfNull(mapping);
 
 			foreach (var item in mapping)
 				FromMapping(type, item.Key, item.Value);
@@ -223,8 +223,8 @@ namespace LinqToDB.Tools.Mapper
 		/// <returns>Returns this mapper.</returns>
 		public MapperBuilder<TFrom,TTo> ToMapping(Type type, IReadOnlyDictionary<string,string> mapping)
 		{
-			if (type    == null) throw new ArgumentNullException(nameof(type));
-			if (mapping == null) throw new ArgumentNullException(nameof(mapping));
+			ArgumentNullException.ThrowIfNull(type);
+			ArgumentNullException.ThrowIfNull(mapping);
 
 			foreach (var item in mapping)
 				ToMapping(type, item.Key, item.Value);
@@ -286,8 +286,8 @@ namespace LinqToDB.Tools.Mapper
 		/// <returns>Returns this mapper.</returns>
 		public MapperBuilder<TFrom,TTo> Mapping(Type type, IReadOnlyDictionary<string,string> mapping)
 		{
-			if (type    == null) throw new ArgumentNullException(nameof(type));
-			if (mapping == null) throw new ArgumentNullException(nameof(mapping));
+			ArgumentNullException.ThrowIfNull(type);
+			ArgumentNullException.ThrowIfNull(mapping);
 
 			foreach (var item in mapping)
 				Mapping(type, item.Key, item.Value);
@@ -331,8 +331,8 @@ namespace LinqToDB.Tools.Mapper
 			Expression<Func<TTo,T>>   toMember,
 			Expression<Func<TFrom,T>> setter)
 		{
-			if (toMember == null) throw new ArgumentNullException(nameof(toMember));
-			if (setter   == null) throw new ArgumentNullException(nameof(setter));
+			ArgumentNullException.ThrowIfNull(toMember);
+			ArgumentNullException.ThrowIfNull(setter);
 
 			MemberMappers ??= new List<MemberMapperInfo>();
 
@@ -404,7 +404,7 @@ namespace LinqToDB.Tools.Mapper
 		[Pure]
 		internal static MemberInfo[] GetMembersInfo(LambdaExpression expression)
 		{
-			if (expression == null) throw new ArgumentNullException(nameof(expression));
+			ArgumentNullException.ThrowIfNull(expression);
 
 			var body = expression.Body;
 			if (body is UnaryExpression unary)

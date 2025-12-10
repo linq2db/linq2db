@@ -286,18 +286,16 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
-			BulkCopyRowsCopied ret;
-
 			var helper = CreateRowsHelper(table, options);
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " ON");
 
-			switch (((SqlServerDataProvider)helper.DataConnection.DataProvider).Version)
+			var ret = ((SqlServerDataProvider)helper.DataConnection.DataProvider).Version switch
 			{
-				case SqlServerVersion.v2005 : ret = MultipleRowsCopy2(helper, source, ""); break;
-				default                     : ret = MultipleRowsCopy1(helper, source);     break;
-			}
+				SqlServerVersion.v2005 => MultipleRowsCopy2(helper, source, ""),
+				_                      => MultipleRowsCopy1(helper, source),
+			};
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 			{
@@ -312,25 +310,21 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			BulkCopyRowsCopied ret;
-
 			var helper = CreateRowsHelper(table, options);
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
+			{
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
 					.ConfigureAwait(false);
-
-			switch (((SqlServerDataProvider)helper.DataConnection.DataProvider).Version)
-			{
-				case SqlServerVersion.v2005:
-					ret = await MultipleRowsCopy2Async(helper, source, "", cancellationToken)
-						.ConfigureAwait(false);
-					break;
-				default:
-					ret = await MultipleRowsCopy1Async(helper, source, cancellationToken)
-						.ConfigureAwait(false);
-					break;
 			}
+
+			var ret = ((SqlServerDataProvider)helper.DataConnection.DataProvider).Version switch
+			{
+				SqlServerVersion.v2005 => await MultipleRowsCopy2Async(helper, source, "", cancellationToken)
+										.ConfigureAwait(false),
+				_ => await MultipleRowsCopy1Async(helper, source, cancellationToken)
+										.ConfigureAwait(false),
+			};
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 			{
@@ -346,25 +340,22 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			BulkCopyRowsCopied ret;
-
 			var helper = CreateRowsHelper(table, options);
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
+			{
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
 					.ConfigureAwait(false);
-
-			switch (((SqlServerDataProvider)helper.DataConnection.DataProvider).Version)
-			{
-				case SqlServerVersion.v2005:
-					ret = await MultipleRowsCopy2Async(helper, source, "", cancellationToken)
-						.ConfigureAwait(false);
-					break;
-				default:
-					ret = await MultipleRowsCopy1Async(helper, source, cancellationToken)
-						.ConfigureAwait(false);
-					break;
 			}
+
+			var ret = ((SqlServerDataProvider)helper.DataConnection.DataProvider).Version switch
+			{
+				SqlServerVersion.v2005 =>
+					await MultipleRowsCopy2Async(helper, source, "", cancellationToken).ConfigureAwait(false),
+
+				_ =>
+					await MultipleRowsCopy1Async(helper, source, cancellationToken).ConfigureAwait(false),
+			};
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 			{
@@ -394,6 +385,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
 
 			return helper;
-		}
 	}
+}
 }

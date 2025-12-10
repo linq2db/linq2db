@@ -77,10 +77,8 @@ namespace Tests.UserTests
 		private static string GetCreateTableSQL<T>(DataConnection connection)
 			where T : class
 		{
-			using (var temp = connection.CreateTempTable<T>())
-			{
-				return connection.LastQuery!;
-			}
+			using var temp = connection.CreateTempTable<T>();
+			return connection.LastQuery!;
 		}
 
 		static Regex FieldRE = new Regex(@"^\s+\[?([^\] ]+)\]?\s+([^ ]*(?:Time|Date)[^ ]*)\s+(NOT NULL|NULL),?$", RegexOptions.Multiline | RegexOptions.IgnoreCase);

@@ -21,8 +21,7 @@ namespace LinqToDB.Mapping
 
 		protected SkipValuesByListAttribute(IEnumerable<object?> values)
 		{
-			if (values == null)
-				throw new ArgumentNullException(nameof(values));
+			ArgumentNullException.ThrowIfNull(values);
 
 			Values = [.. values];
 		}

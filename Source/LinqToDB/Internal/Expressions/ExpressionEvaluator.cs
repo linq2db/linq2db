@@ -22,38 +22,22 @@ namespace LinqToDB.Internal.Expressions
 
 		static bool IsSimpleEvaluatable(Expression? expr)
 		{
-			if (expr == null)
-				return true;
-
-			switch (expr.NodeType)
+			return expr switch
 			{
-				case ExpressionType.Default:
-					return true;
+				null => true,
 
-				case ExpressionType.Constant:
-					return true;
+				{ NodeType: ExpressionType.Default } => true,
+				{ NodeType: ExpressionType.Constant } => true,
 
-				case ExpressionType.MemberAccess:
-				{
-					var member = (MemberExpression) expr;
+				MemberExpression { NodeType: ExpressionType.MemberAccess } member =>
+					member.Member.MemberType is MemberTypes.Field or MemberTypes.Property
+					&& IsSimpleEvaluatable(member.Expression),
 
-					if (member.Member.MemberType != MemberTypes.Field &&
-						member.Member.MemberType != MemberTypes.Property)
-					{
-						return false;
-					}
+				MethodCallExpression { NodeType: ExpressionType.Call } mc =>
+					IsSimpleEvaluatable(mc.Object) && mc.Arguments.All(IsSimpleEvaluatable),
 
-					return IsSimpleEvaluatable(member.Expression);
-				}
-
-				case ExpressionType.Call:
-				{
-					var mc = (MethodCallExpression)expr;
-					return IsSimpleEvaluatable(mc.Object) && mc.Arguments.All(IsSimpleEvaluatable);
-				}
-			}
-
-			return false;
+				_ => false,
+			};
 		}
 
 		static object? EvaluateExpressionInternal(this Expression? expr)

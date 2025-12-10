@@ -11,6 +11,8 @@ using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
+using static LinqToDB.Internal.Reflection.Methods.LinqToDB;
+
 namespace LinqToDB.Internal.SqlQuery.Visitors
 {
 	public sealed class SelectQueryOptimizerVisitor : SqlQueryVisitor
@@ -159,10 +161,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			var saveQuery = _applySelect;
 
-			if (element.JoinType == JoinType.CrossApply || element.JoinType == JoinType.OuterApply)
-				_applySelect = element.Table.Source as SelectQuery;
-			else
-				_applySelect = null;
+			_applySelect = element.JoinType switch
+			{
+				JoinType.CrossApply or JoinType.OuterApply => element.Table.Source as SelectQuery,
+				_ => null,
+			};
 
 			var newElement = base.VisitSqlJoinedTable(element);
 
@@ -1839,8 +1842,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (subQuery.Select.HasModifier || !subQuery.Where.IsEmpty)
 			{
-				if (tableSource.Joins.Any(j => j.JoinType == JoinType.Right || j.JoinType == JoinType.RightApply ||
-				                               j.JoinType == JoinType.Full  || j.JoinType == JoinType.FullApply))
+				if (tableSource.Joins.Any(j => j.JoinType is JoinType.Right or JoinType.RightApply or JoinType.Full or JoinType.FullApply))
 				{
 					return false;
 				}
@@ -1949,7 +1951,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return true;
 			}
 
-			var moveConditionToQuery = joinTable.JoinType == JoinType.Inner || joinTable.JoinType == JoinType.CrossApply;
+			var moveConditionToQuery = joinTable.JoinType is JoinType.Inner or JoinType.CrossApply;
 
 			if (joinTable.JoinType != JoinType.Inner)
 			{
@@ -2585,7 +2587,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				foreach (var join in table.Joins)
 				{
-					if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply || join.JoinType == JoinType.FullApply || join.JoinType == JoinType.RightApply)
+					if (join.JoinType is JoinType.CrossApply or JoinType.OuterApply or JoinType.FullApply or JoinType.RightApply)
 					{
 						if (OptimizeApply(join, isApplySupported))
 						{
@@ -2837,11 +2839,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					for (int j = table.Joins.Count - 1; j >= 0; j--)
 					{
 						var join            = table.Joins[j];
-						var joinQuery       = join.Table.Source as SelectQuery;
 
-						if (join.JoinType == JoinType.OuterApply ||
-						    join.JoinType == JoinType.Left       ||
-						    join.JoinType == JoinType.CrossApply)
+						if (join.JoinType
+								is JoinType.OuterApply
+								or JoinType.Left
+								or JoinType.CrossApply)
 						{
 							bool? isSingleRecord = null;
 
@@ -2861,7 +2863,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 							evaluationContext ??= new EvaluationContext();
 
-							if (joinQuery != null && joinQuery.Select.Columns.Count > 0)
+							if (join.Table.Source is SelectQuery { Select.Columns.Count: > 0 } joinQuery)
 							{
 								if (joinQuery.Select.Columns.Count > 1)
 								{

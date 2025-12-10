@@ -575,9 +575,9 @@ namespace LinqToDB.Mapping
 			bool             addNullCheck   = true,
 			ConversionType   conversionType = ConversionType.Common)
 		{
-			if (fromType == null) throw new ArgumentNullException(nameof(fromType));
-			if (toType   == null) throw new ArgumentNullException(nameof(toType));
-			if (expr     == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(fromType);
+			ArgumentNullException.ThrowIfNull(toType);
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var ex = addNullCheck && toType != typeof(DataParameter) && Converter.IsDefaultValuePlaceHolderVisitor.Find(expr) == null?
 				AddNullCheck(expr) :
@@ -612,7 +612,7 @@ namespace LinqToDB.Mapping
 			bool             addNullCheck   = true,
 			ConversionType   conversionType = ConversionType.Common)
 		{
-			if (expr == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var ex = addNullCheck && toType.SystemType != typeof(DataParameter) && Converter.IsDefaultValuePlaceHolderVisitor.Find(expr) == null?
 				AddNullCheck(expr) :
@@ -645,7 +645,7 @@ namespace LinqToDB.Mapping
 			bool                        addNullCheck   = true,
 			ConversionType              conversionType = ConversionType.Common)
 		{
-			if (expr == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var ex = addNullCheck && typeof(TTo) != typeof(DataParameter) && Converter.IsDefaultValuePlaceHolderVisitor.Find(expr) == null?
 				AddNullCheck(expr) :
@@ -673,7 +673,7 @@ namespace LinqToDB.Mapping
 			Expression<Func<TFrom,TTo>> expr,
 			ConversionType              conversionType = ConversionType.Common)
 		{
-			if (expr == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(expr);
 
 			lock (_syncRoot)
 			{
@@ -695,7 +695,7 @@ namespace LinqToDB.Mapping
 			Func<TFrom,TTo> func,
 			ConversionType  conversionType = ConversionType.Common)
 		{
-			if (func == null) throw new ArgumentNullException(nameof(func));
+			ArgumentNullException.ThrowIfNull(func);
 
 			var p  = Expression.Parameter(typeof(TFrom), "p");
 			var ex = Expression.Lambda<Func<TFrom,TTo>>(Expression.Invoke(Expression.Constant(func), p), p);
@@ -724,7 +724,7 @@ namespace LinqToDB.Mapping
 			DbDataType      to,
 			ConversionType  conversionType = ConversionType.Common)
 		{
-			if (func == null) throw new ArgumentNullException(nameof(func));
+			ArgumentNullException.ThrowIfNull(func);
 
 			if (from.SystemType != typeof(TFrom))
 				throw new ArgumentException($"'{nameof(from)}' parameter expects the same SystemType as in generic definition.", nameof(from));
@@ -1721,7 +1721,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Mapping values for enum type and <c>null</c> for non-enum types.</returns>
 		public virtual MapValue[]? GetMapValues(Type type)
 		{
-			if (type == null) throw new ArgumentNullException(nameof(type));
+			ArgumentNullException.ThrowIfNull(type);
 
 			return (_mapValues ??= new ConcurrentDictionary<Type, MapValue[]?>())
 				.GetOrAdd(

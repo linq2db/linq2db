@@ -27,11 +27,9 @@ namespace Tests.UserTests
 		[Test]
 		public void TestRefTypeDoNotThrow([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<Entity>())
-			{
-				var result = table.ToArray();
-			}
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<Entity>();
+			var result = table.ToArray();
 		}
 	}
 }

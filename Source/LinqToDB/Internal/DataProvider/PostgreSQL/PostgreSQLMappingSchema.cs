@@ -151,45 +151,16 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		internal static MappingSchema Instance { get; } = new PostgreSQLMappingSchema();
 
-		public sealed class PostgreSQL92MappingSchema : LockedMappingSchema
-		{
-			public PostgreSQL92MappingSchema() : base(ProviderName.PostgreSQL92, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
-			{
+		public sealed class PostgreSQL92MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL92, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
+
+		public sealed class PostgreSQL93MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL93, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
+
+		public sealed class PostgreSQL95MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL95, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
+
+		public sealed class PostgreSQL13MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL13, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
+
+		public sealed class PostgreSQL15MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL15, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
+
+		public sealed class PostgreSQL18MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL18, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
 			}
 		}
-
-		public sealed class PostgreSQL93MappingSchema : LockedMappingSchema
-		{
-			public PostgreSQL93MappingSchema() : base(ProviderName.PostgreSQL93, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
-			{
-			}
-		}
-
-		public sealed class PostgreSQL95MappingSchema : LockedMappingSchema
-		{
-			public PostgreSQL95MappingSchema() : base(ProviderName.PostgreSQL95, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
-			{
-			}
-		}
-
-		public sealed class PostgreSQL13MappingSchema() : LockedMappingSchema(
-			ProviderName.PostgreSQL13,
-			NpgsqlProviderAdapter.GetInstance().MappingSchema,
-			Instance
-		);
-
-		public sealed class PostgreSQL15MappingSchema : LockedMappingSchema
-		{
-			public PostgreSQL15MappingSchema() : base(ProviderName.PostgreSQL15, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
-			{
-			}
-		}
-
-		public sealed class PostgreSQL18MappingSchema : LockedMappingSchema
-		{
-			public PostgreSQL18MappingSchema() : base(ProviderName.PostgreSQL18, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
-			{
-			}
-		}
-	}
-}

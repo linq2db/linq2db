@@ -73,24 +73,15 @@ namespace LinqToDB.Common
 
 		static bool ToBoolean(char ch)
 		{
-			switch (ch)
+			return ch switch
 			{
-				case '\x0' : // Allow int <=> Char <=> Boolean
-				case   '0' :
-				case   'n' :
-				case   'N' :
-				case   'f' :
-				case   'F' : return false;
+				// Allow int <=> Char <=> Boolean
+				'\x0' or '0' or 'n' or 'N' or 'f' or 'F' => false,
+				// Allow int <=> Char <=> Boolean
+				'\x1' or '1' or 'y' or 'Y' or 't' or 'T' => true,
 
-				case '\x1' : // Allow int <=> Char <=> Boolean
-				case   '1' :
-				case   'y' :
-				case   'Y' :
-				case   't' :
-				case   'T' : return true;
-			}
-
-			throw new InvalidCastException("Invalid cast from System.String to System.Bool");
+				_ => throw new InvalidCastException("Invalid cast from System.String to System.Bool"),
+			};
 		}
 
 		/// <summary>

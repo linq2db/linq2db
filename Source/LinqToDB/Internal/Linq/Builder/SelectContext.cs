@@ -216,7 +216,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override void SetAlias(string? alias)
 		{
-			if (!string.IsNullOrEmpty(alias) && !alias!.Contains("<") && SelectQuery.Select.From.Tables.Count == 1)
+			if (!string.IsNullOrEmpty(alias) && !alias!.Contains('<') && SelectQuery.Select.From.Tables.Count == 1)
 			{
 				var table = SelectQuery.Select.From.Tables[0];
 				if (table.RawAlias == null)

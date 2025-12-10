@@ -156,30 +156,18 @@ namespace LinqToDB.CommandLine
 		// <base_type>[ list] <(optional)|(required)>
 		private static string GetOptionTypeName(CliOption option)
 		{
-			string type;
-			switch (option.Type)
+			var type = option.Type switch
 			{
-				case OptionType.Boolean:
-					type = "bool";
-					break;
-				case OptionType.String:
-				case OptionType.StringEnum:
-				case OptionType.JSONImport:
-					type = "string";
-					break;
-				case OptionType.DatabaseObjectFilter:
-					type = "(string | object)";
-					break;
-				case OptionType.Naming:
-					type = "object";
-					break;
-				case OptionType.StringDictionary:
-					type = "[string]: string";
-					break;
-				default:
-					throw new NotImplementedException($"Option type {option.Type} not implemented");
-			}
+				OptionType.Boolean              => "bool",
+				OptionType.String               or
+				OptionType.StringEnum           or
+				OptionType.JSONImport           => "string",
+				OptionType.DatabaseObjectFilter => "(string | object)",
+				OptionType.Naming               => "object",
+				OptionType.StringDictionary     => "[string]: string",
 
+				_ => throw new NotImplementedException($"Option type {option.Type} not implemented"),
+			};
 			if (option.AllowMultiple && option.Type != OptionType.StringDictionary)
 				type += " list";
 
@@ -348,47 +336,44 @@ namespace LinqToDB.CommandLine
 		{
 			Console.Out.WriteLine("{0}   {1}: {{", indent, mode);
 
-			string value;
-
-			switch (options.Casing)
+			var value = options.Casing switch
 			{
-				case NameCasing.None                 : value = "\"none\""         ; break;
-				case NameCasing.Pascal               : value = "\"pascal_case\""  ; break;
-				case NameCasing.CamelCase            : value = "\"camel_case\""   ; break;
-				case NameCasing.SnakeCase            : value = "\"snake_case\""   ; break;
-				case NameCasing.LowerCase            : value = "\"lower_case\""   ; break;
-				case NameCasing.UpperCase            : value = "\"upper_case\""   ; break;
-				case NameCasing.T4CompatPluralized   : value = "\"t4_pluralized\""; break;
-				case NameCasing.T4CompatNonPluralized: value = "\"t4\""           ; break;
-				default                              :
-					throw new InvalidOperationException($"Unknown casing option: {options.Casing}");
-			}
+				NameCasing.None                  => "\"none\"",
+				NameCasing.Pascal                => "\"pascal_case\"",
+				NameCasing.CamelCase             => "\"camel_case\"",
+				NameCasing.SnakeCase             => "\"snake_case\"",
+				NameCasing.LowerCase             => "\"lower_case\"",
+				NameCasing.UpperCase             => "\"upper_case\"",
+				NameCasing.T4CompatPluralized    => "\"t4_pluralized\"",
+				NameCasing.T4CompatNonPluralized => "\"t4\"",
+
+				_ => throw new InvalidOperationException($"Unknown casing option: {options.Casing}"),
+			};
 
 			printJsonProperty(indent, "case", value);
 
-			switch (options.Pluralization)
+			value = options.Pluralization switch
 			{
-				case Pluralization.None                 : value = "\"none\""                      ; break;
-				case Pluralization.Singular             : value = "\"singular\""                  ; break;
-				case Pluralization.Plural               : value = "\"plural\""                    ; break;
-				case Pluralization.PluralIfLongerThanOne: value = "\"plural_multiple_characters\""; break;
-				default                                 :
-					throw new InvalidOperationException($"Unknown pluralization option: {options.Pluralization}");
-			}
+				Pluralization.None                  => "\"none\"",
+				Pluralization.Singular              => "\"singular\"",
+				Pluralization.Plural                => "\"plural\"",
+				Pluralization.PluralIfLongerThanOne => "\"plural_multiple_characters\"",
+				_ => throw new InvalidOperationException($"Unknown pluralization option: {options.Pluralization}"),
+			};
 
 			printJsonProperty(indent, "pluralization", value);
 
 			printJsonProperty(indent, "prefix", options.Prefix == null ? "null" : $"\"{options.Prefix}\"");
 			printJsonProperty(indent, "suffix", options.Suffix == null ? "null" : $"\"{options.Suffix}\"");
 
-			switch (options.Transformation)
+			value = options.Transformation switch
 			{
-				case NameTransformation.SplitByUnderscore: value = "\"split_by_underscore\""; break;
-				case NameTransformation.Association      : value = "\"association\""        ; break;
-				case NameTransformation.None             : value = "\"none\""               ; break;
-				default:
-					throw new InvalidOperationException($"Unknown transformation option: {options.Transformation}");
-			}
+				NameTransformation.None              => "\"none\"",
+				NameTransformation.Association       => "\"association\"",
+				NameTransformation.SplitByUnderscore => "\"split_by_underscore\"",
+
+				_ => throw new InvalidOperationException($"Unknown transformation option: {options.Transformation}"),
+			};
 
 			printJsonProperty(indent, "transformation", value);
 

@@ -543,19 +543,16 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static bool IsConstantFast(ISqlExpression expr)
 		{
-			if (expr.ElementType == QueryElementType.SqlValue || expr.ElementType == QueryElementType.SqlParameter)
-				return true;
-
-			if (expr.ElementType == QueryElementType.SqlBinaryExpression)
+			return expr switch
 			{
-				var be = (SqlBinaryExpression)expr;
-				return IsConstantFast(be.Expr1) && IsConstantFast(be.Expr2);
-			}
+				{ ElementType: QueryElementType.SqlValue or QueryElementType.SqlParameter } => true,
 
-			if (expr.ElementType == QueryElementType.SqlNullabilityExpression)
-				return IsConstantFast(((SqlNullabilityExpression)expr).SqlExpression);
+				SqlBinaryExpression { ElementType: QueryElementType.SqlBinaryExpression } be => IsConstantFast(be.Expr1) && IsConstantFast(be.Expr2),
 
-			return false;
+				SqlNullabilityExpression { ElementType: QueryElementType.SqlNullabilityExpression, SqlExpression: { } expression } => IsConstantFast(expression),
+
+				_ => false,
+			};
 		}
 
 		/// <summary>
@@ -946,7 +943,7 @@ namespace LinqToDB.Internal.SqlQuery
 		/// <param name="foundSources">Output container for detected sources/</param>
 		public static void GetUsedSources(ISqlExpression root, HashSet<ISqlTableSource> foundSources)
 		{
-			if (foundSources == null) throw new ArgumentNullException(nameof(foundSources));
+			ArgumentNullException.ThrowIfNull(foundSources);
 
 			root.Visit(foundSources, static (foundSources, e) =>
 			{
@@ -1012,8 +1009,8 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static string TransformExpressionIndexes<TContext>(TContext context, string expression, Func<TContext, int, int> transformFunc)
 		{
-			if (expression    == null) throw new ArgumentNullException(nameof(expression));
-			if (transformFunc == null) throw new ArgumentNullException(nameof(transformFunc));
+			ArgumentNullException.ThrowIfNull(expression);
+			ArgumentNullException.ThrowIfNull(transformFunc);
 
 			var str = ParamsRegex().Replace(expression, match =>
 			{
@@ -1039,8 +1036,8 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static ISqlExpression ConvertFormatToConcatenation(string format, IReadOnlyList<ISqlExpression> parameters)
 		{
-			if (format     == null) throw new ArgumentNullException(nameof(format));
-			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
+			ArgumentNullException.ThrowIfNull(format);
+			ArgumentNullException.ThrowIfNull(parameters);
 
 			string StripDoubleQuotes(string str)
 			{
@@ -1388,10 +1385,11 @@ namespace LinqToDB.Internal.SqlQuery
 			if (expr.ElementType == QueryElementType.SqlBinaryExpression)
 				return false;
 
-			if (expr.ElementType == QueryElementType.SqlField ||
-				expr.ElementType == QueryElementType.Column   ||
-				expr.ElementType == QueryElementType.SqlValue ||
-				expr.ElementType == QueryElementType.SqlParameter)
+			if (expr.ElementType
+					is QueryElementType.SqlField
+					or QueryElementType.Column
+					or QueryElementType.SqlValue
+					or QueryElementType.SqlParameter)
 				return true;
 
 			if ((expr.ElementType == QueryElementType.SqlFunction) && ((SqlFunction)expr).Parameters.Length == 1)
@@ -1409,18 +1407,16 @@ namespace LinqToDB.Internal.SqlQuery
 			if (sqlExpression == null)
 				return null;
 
-			switch (UnwrapNullablity(sqlExpression))
+			return UnwrapNullablity(sqlExpression) switch
 			{
-				case SelectQuery
+				SelectQuery
 				{
 					Select.Columns: [{ Expression: var expr }],
 					From.Tables: [],
 					HasSetOperators: false
-				}:
-					return SimplifyColumnExpression(expr);
+				} => SimplifyColumnExpression(expr),
 
-				default:
-					return sqlExpression;
+				_ => sqlExpression,
 			};
 		}
 

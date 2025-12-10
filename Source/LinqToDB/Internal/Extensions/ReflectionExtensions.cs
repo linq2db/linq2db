@@ -387,8 +387,7 @@ namespace LinqToDB.Internal.Extensions
 		/// </returns>
 		public static Type ToUnderlying(this Type type)
 		{
-			if (type == null)
-				throw new ArgumentNullException(nameof(type));
+			ArgumentNullException.ThrowIfNull(type);
 
 			type = type.UnwrapNullableType();
 
@@ -436,8 +435,8 @@ namespace LinqToDB.Internal.Extensions
 		/// aren't a parent and it's child.</remarks>
 		public static bool IsSameOrParentOf(this Type parent, Type child)
 		{
-			if (parent == null) throw new ArgumentNullException(nameof(parent));
-			if (child  == null) throw new ArgumentNullException(nameof(child));
+			ArgumentNullException.ThrowIfNull(parent);
+			ArgumentNullException.ThrowIfNull(child);
 
 			if (parent == child)
 				return true;
@@ -489,8 +488,8 @@ namespace LinqToDB.Internal.Extensions
 		[Pure]
 		public static bool IsSubClassOf(this Type type, Type check)
 		{
-			if (type  == null) throw new ArgumentNullException(nameof(type));
-			if (check == null) throw new ArgumentNullException(nameof(check));
+			ArgumentNullException.ThrowIfNull(type);
+			ArgumentNullException.ThrowIfNull(check);
 
 			if (type == check)
 				return false;
@@ -522,7 +521,7 @@ namespace LinqToDB.Internal.Extensions
 
 		public static Type? GetGenericType(this Type genericType, Type type)
 		{
-			if (genericType == null) throw new ArgumentNullException(nameof(genericType));
+			ArgumentNullException.ThrowIfNull(genericType);
 
 			while (type != typeof(object))
 			{
@@ -551,7 +550,7 @@ namespace LinqToDB.Internal.Extensions
 
 		public static IEnumerable<Type> GetGenericTypes(this Type genericType, Type type)
 		{
-			if (genericType == null) throw new ArgumentNullException(nameof(genericType));
+			ArgumentNullException.ThrowIfNull(genericType);
 
 			while (type != typeof(object))
 			{
@@ -948,7 +947,7 @@ namespace LinqToDB.Internal.Extensions
 
 		public static bool IsAnonymous(this Type type)
 		{
-			if (type == null) throw new ArgumentNullException(nameof(type));
+			ArgumentNullException.ThrowIfNull(type);
 
 			return
 				!type.IsPublic &&

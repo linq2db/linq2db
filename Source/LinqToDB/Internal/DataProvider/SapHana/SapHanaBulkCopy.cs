@@ -138,60 +138,59 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 			if (options.KeepIdentity == true) hanaOptions |= SapHanaProviderAdapter.HanaBulkCopyOptions.KeepIdentity;
 
-			using (var bc = _provider.Adapter.CreateBulkCopy!(connection, hanaOptions, transaction))
+			using var bc = _provider.Adapter.CreateBulkCopy!(connection, hanaOptions, transaction);
+
+			if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 			{
-				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
+				bc.NotifyAfter = options.NotifyAfter;
+
+				bc.HanaRowsCopied += (sender, args) =>
 				{
-					bc.NotifyAfter = options.NotifyAfter;
-
-					bc.HanaRowsCopied += (sender, args) =>
-					{
-						rc.RowsCopied = args.RowsCopied;
-						options.RowsCopiedCallback(rc);
-						if (rc.Abort)
-							args.Abort = true;
-					};
-				}
-
-				if (options.MaxBatchSize.HasValue)
-					bc.BatchSize = options.MaxBatchSize.Value;
-
-				if (options.BulkCopyTimeout.HasValue || LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
-					bc.BulkCopyTimeout = options.BulkCopyTimeout ?? dataConnection.CommandTimeout;
-
-				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
-				var tableName  = GetTableName(sqlBuilder, options, table);
-
-				bc.DestinationTableName = tableName;
-
-				for (var i = 0; i < columns.Count; i++)
-					bc.ColumnMappings.Add(_provider.Adapter.CreateBulkCopyColumnMapping!(i, columns[i].ColumnName));
-
-				var rd = createDataReader(columns);
-
-				await TraceActionAsync(
-					dataConnection,
-					() => (bc.CanWriteToServerAsync ? "INSERT ASYNC BULK " : "INSERT BULK ") + tableName + Environment.NewLine,
-					async () => {
-						if (bc.CanWriteToServerAsync)
-							await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(false);
-						else
-							bc.WriteToServer(rd);
-						return rd.Count;
-					}).ConfigureAwait(false);
-
-				if (rc.RowsCopied != rd.Count)
-				{
-					rc.RowsCopied = rd.Count;
-
-					if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
-						options.RowsCopiedCallback(rc);
-				}
-
-				await CloseConnectionIfNecessaryAsync(table.DataContext).ConfigureAwait(false);
-
-				return rc;
+					rc.RowsCopied = args.RowsCopied;
+					options.RowsCopiedCallback(rc);
+					if (rc.Abort)
+						args.Abort = true;
+				};
 			}
+
+			if (options.MaxBatchSize.HasValue)
+				bc.BatchSize = options.MaxBatchSize.Value;
+
+			if (options.BulkCopyTimeout.HasValue || LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+				bc.BulkCopyTimeout = options.BulkCopyTimeout ?? dataConnection.CommandTimeout;
+
+			var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
+			var tableName  = GetTableName(sqlBuilder, options, table);
+
+			bc.DestinationTableName = tableName;
+
+			for (var i = 0; i < columns.Count; i++)
+				bc.ColumnMappings.Add(_provider.Adapter.CreateBulkCopyColumnMapping!(i, columns[i].ColumnName));
+
+			var rd = createDataReader(columns);
+
+			await TraceActionAsync(
+				dataConnection,
+				() => (bc.CanWriteToServerAsync ? "INSERT ASYNC BULK " : "INSERT BULK ") + tableName + Environment.NewLine,
+				async () => {
+					if (bc.CanWriteToServerAsync)
+						await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(false);
+					else
+						bc.WriteToServer(rd);
+					return rd.Count;
+				}).ConfigureAwait(false);
+
+			if (rc.RowsCopied != rd.Count)
+			{
+				rc.RowsCopied = rd.Count;
+
+				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
+					options.RowsCopiedCallback(rc);
+			}
+
+			await CloseConnectionIfNecessaryAsync(table.DataContext).ConfigureAwait(false);
+
+			return rc;
 		}
 
 		private BulkCopyRowsCopied ProviderSpecificCopyInternal<T>(
@@ -212,57 +211,56 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 			if (options.KeepIdentity == true) hanaOptions |= SapHanaProviderAdapter.HanaBulkCopyOptions.KeepIdentity;
 
-			using (var bc = _provider.Adapter.CreateBulkCopy!(connection, hanaOptions, transaction))
+			using var bc = _provider.Adapter.CreateBulkCopy!(connection, hanaOptions, transaction);
+
+			if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 			{
-				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
+				bc.NotifyAfter = options.NotifyAfter;
+
+				bc.HanaRowsCopied += (sender, args) =>
 				{
-					bc.NotifyAfter = options.NotifyAfter;
-
-					bc.HanaRowsCopied += (sender, args) =>
-					{
-						rc.RowsCopied = args.RowsCopied;
-						options.RowsCopiedCallback(rc);
-						if (rc.Abort)
-							args.Abort = true;
-					};
-				}
-
-				if (options.MaxBatchSize.HasValue)
-					bc.BatchSize = options.MaxBatchSize.Value;
-
-				if (options.BulkCopyTimeout.HasValue || LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
-					bc.BulkCopyTimeout = options.BulkCopyTimeout ?? dataConnection.CommandTimeout;
-
-				var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
-				var tableName  = GetTableName(sqlBuilder, options, table);
-
-				bc.DestinationTableName = tableName;
-
-				for (var i = 0; i < columns.Count; i++)
-					bc.ColumnMappings.Add(_provider.Adapter.CreateBulkCopyColumnMapping!(i, columns[i].ColumnName));
-
-				var rd = createDataReader(columns);
-
-				TraceAction(
-					dataConnection,
-					() => "INSERT BULK " + tableName + Environment.NewLine,
-					() => {
-						bc.WriteToServer(rd);
-						return rd.Count;
-					});
-
-				if (rc.RowsCopied != rd.Count)
-				{
-					rc.RowsCopied = rd.Count;
-
-					if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
-						options.RowsCopiedCallback(rc);
-				}
-
-				CloseConnectionIfNecessary(table.DataContext);
-
-				return rc;
+					rc.RowsCopied = args.RowsCopied;
+					options.RowsCopiedCallback(rc);
+					if (rc.Abort)
+						args.Abort = true;
+				};
 			}
+
+			if (options.MaxBatchSize.HasValue)
+				bc.BatchSize = options.MaxBatchSize.Value;
+
+			if (options.BulkCopyTimeout.HasValue || LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+				bc.BulkCopyTimeout = options.BulkCopyTimeout ?? dataConnection.CommandTimeout;
+
+			var sqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
+			var tableName  = GetTableName(sqlBuilder, options, table);
+
+			bc.DestinationTableName = tableName;
+
+			for (var i = 0; i < columns.Count; i++)
+				bc.ColumnMappings.Add(_provider.Adapter.CreateBulkCopyColumnMapping!(i, columns[i].ColumnName));
+
+			var rd = createDataReader(columns);
+
+			TraceAction(
+				dataConnection,
+				() => "INSERT BULK " + tableName + Environment.NewLine,
+				() => {
+					bc.WriteToServer(rd);
+					return rd.Count;
+				});
+
+			if (rc.RowsCopied != rd.Count)
+			{
+				rc.RowsCopied = rd.Count;
+
+				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
+					options.RowsCopiedCallback(rc);
+			}
+
+			CloseConnectionIfNecessary(table.DataContext);
+
+			return rc;
 		}
 	}
 }

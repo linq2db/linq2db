@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 using LinqToDB.Metrics;
@@ -10,6 +11,11 @@ namespace LinqToDB.Tools.Activity
 	/// </summary>
 	public static class ActivityStatistics
 	{
+		[SuppressMessage(
+			"Performance",
+			"CA1810:Initialize reference type static fields inline",
+			Justification = "Too many referential fields to be easily initialized outside of static constructor"
+		)]
 		static ActivityStatistics()
 		{
 			All =

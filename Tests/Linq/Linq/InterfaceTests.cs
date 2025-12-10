@@ -22,9 +22,8 @@ namespace Tests.Linq
 		[Test]
 		public void Test([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p in db.Parent2
 					group p by p.ParentID into gr
 					select new
@@ -32,8 +31,7 @@ namespace Tests.Linq
 						Count = gr.Count()
 					};
 
-				var _ = q.ToList();
-			}
+			var _ = q.ToList();
 		}
 
 		#region Issue 4031

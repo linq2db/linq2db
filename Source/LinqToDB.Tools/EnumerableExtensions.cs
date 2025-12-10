@@ -35,8 +35,8 @@ namespace LinqToDB.Tools
 			StringBuilder stringBuilder,
 			bool addTableHeader = true)
 		{
-			if (source        == null) throw new ArgumentNullException(nameof(source));
-			if (stringBuilder == null) throw new ArgumentNullException(nameof(stringBuilder));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(stringBuilder);
 
 			if (MappingSchema.Default.IsScalarType(typeof(T)))
 				return source.Select(value => new ValueHolder<T> { Value = value }).ToDiagnosticString(stringBuilder);
@@ -166,7 +166,7 @@ namespace LinqToDB.Tools
 			string? header      = null,
 			bool addTableHeader = true)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(source);
 
 			var sb = new StringBuilder();
 

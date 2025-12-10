@@ -74,18 +74,8 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		internal static readonly SybaseMappingSchema Instance = new ();
 
-		public sealed class NativeMappingSchema : LockedMappingSchema
-		{
-			public NativeMappingSchema() : base(ProviderName.Sybase, Instance)
-			{
-			}
-		}
+		public sealed class NativeMappingSchema() : LockedMappingSchema(ProviderName.Sybase, Instance);
 
-		public sealed class ManagedMappingSchema : LockedMappingSchema
-		{
-			public ManagedMappingSchema() : base(ProviderName.SybaseManaged, Instance)
-			{
-			}
-		}
+		public sealed class ManagedMappingSchema() : LockedMappingSchema(ProviderName.SybaseManaged, Instance);
 	}
 }

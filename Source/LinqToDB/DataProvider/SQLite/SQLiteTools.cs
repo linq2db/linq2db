@@ -58,7 +58,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false, string extension = ".sqlite")
 		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+			ArgumentNullException.ThrowIfNull(databaseName);
 
 			DataTools.CreateFileDatabase(
 				databaseName, deleteIfExists, extension,
@@ -71,7 +71,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public static void DropDatabase(string databaseName)
 		{
-			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+			ArgumentNullException.ThrowIfNull(databaseName);
 
 			DataTools.DropFileDatabase(databaseName, ".sqlite");
 		}

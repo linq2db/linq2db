@@ -46,14 +46,12 @@ namespace Tests.UserTests
 		{
 			var harnessIds = new int[2];
 
-			using (var db = GetDataContext(context))
-			{
-				db.GetTable<Parent>()
-					.Where     (x => harnessIds.Contains(x.ParentID))
-					.SelectMany(x => x.Children)
-					.SelectMany(x => x.GrandChildren)
-					.Delete();
-			}
+			using var db = GetDataContext(context);
+			db.GetTable<Parent>()
+				.Where(x => harnessIds.Contains(x.ParentID))
+				.SelectMany(x => x.Children)
+				.SelectMany(x => x.GrandChildren)
+				.Delete();
 		}
 	}
 }

@@ -19,25 +19,26 @@ namespace LinqToDB.Tools.ModelGeneration
 			{
 				var p = prop.Parent!;
 
-				while (p != null && p is not IClass)
+				while (p is not null and not IClass)
 					p = p.Parent;
 
-				if (p != null)
+				if (p == null)
+					continue;
+				
+				var cl = (IClass)p;
+
+				if (!cl.Interfaces.Contains("INotifyDataErrorInfo"))
 				{
-					var cl = (IClass)p;
+					Model.Usings.Add("System.ComponentModel");
+					Model.Usings.Add("System.Collections");
+					Model.Usings.Add("System.Linq");
 
-					if (!cl.Interfaces.Contains("INotifyDataErrorInfo"))
+					cl.Interfaces.Add("INotifyDataErrorInfo");
+
+					cl.Members.Add(new TMemberGroup
 					{
-						Model.Usings.Add("System.ComponentModel");
-						Model.Usings.Add("System.Collections");
-						Model.Usings.Add("System.Linq");
-
-						cl.Interfaces.Add("INotifyDataErrorInfo");
-
-						cl.Members.Add(new TMemberGroup
-						{
-							Region  = "INotifyDataErrorInfo support",
-							Members =
+						Region = "INotifyDataErrorInfo support",
+						Members =
 							{
 								new TEvent
 								{
@@ -145,8 +146,7 @@ namespace LinqToDB.Tools.ModelGeneration
 								}
 								.InitGetter("_validationErrors.Values.Any(e => e.Count > 0)")
 							}
-						});
-					}
+					});
 				}
 			}
 		}

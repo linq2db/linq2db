@@ -12,9 +12,8 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([NorthwindDataContext] string context)
 		{
-			using (var db = new NorthwindDB(context))
-			{
-				var zz =
+			using var db = new NorthwindDB(context);
+			var zz =
 					from e in db.Employee
 					from et in db.EmployeeTerritory
 					where et.EmployeeID == e.EmployeeID
@@ -27,10 +26,9 @@ namespace Tests.UserTests
 						db.Employee.FirstOrDefault(em => em.EmployeeID == g.Key.EmployeeID)!.FirstName,
 					};
 
-				//    zz = zz.OrderBy(a => a.FirstName);
+			//    zz = zz.OrderBy(a => a.FirstName);
 
-				var res = zz.ToList();
-			}
+			var res = zz.ToList();
 		}
 	}
 }

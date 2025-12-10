@@ -23,8 +23,8 @@ namespace Tests.Linq
 		[Test]
 		public void Test1([DataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context))
-				Assert.That((from t in db.Types where t.MoneyValue * t.ID == 1.11m select t).Single().ID, Is.EqualTo(1));
+			using var db = GetDataContext(context);
+			Assert.That((from t in db.Types where t.MoneyValue * t.ID == 1.11m select t).Single().ID, Is.EqualTo(1));
 		}
 
 		#region Int
@@ -32,136 +32,136 @@ namespace Tests.Linq
 		[Test]
 		public void ToInt1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select           Sql.ConvertTo<int>.From(t.MoneyValue),
-					from t in db.Types select Sql.AsSql(Sql.ConvertTo<int>.From(t.MoneyValue)));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.ConvertTo<int>.From(t.MoneyValue),
+				from t in db.Types select Sql.AsSql(Sql.ConvertTo<int>.From(t.MoneyValue)));
 		}
 
 		[Test]
 		public void ToInt2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select           Sql.Convert<int,decimal>(t.MoneyValue),
-					from t in db.Types select Sql.AsSql(Sql.Convert<int,decimal>(t.MoneyValue)));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Convert<int, decimal>(t.MoneyValue),
+				from t in db.Types select Sql.AsSql(Sql.Convert<int, decimal>(t.MoneyValue)));
 		}
 
 		[Test]
 		public void ToBigInt([DataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select Sql.Convert(Sql.Types.BigInt, t.MoneyValue),
-					from t in db.Types select Sql.Convert(Sql.Types.BigInt, t.MoneyValue));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Convert(Sql.Types.BigInt, t.MoneyValue),
+				from t in db.Types select Sql.Convert(Sql.Types.BigInt, t.MoneyValue));
 		}
 
 		[Test]
 		public void ToBigInt2([DataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in Types select Sql.Convert(Sql.Types.BigInt, t.MoneyValue),
-					from t in db.Types select Sql.AsSql(Sql.Convert(Sql.Types.BigInt, t.MoneyValue)));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Convert(Sql.Types.BigInt, t.MoneyValue),
+				from t in db.Types select Sql.AsSql(Sql.Convert(Sql.Types.BigInt, t.MoneyValue)));
 		}
 
 		[Test]
 		public void ToInt64([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in Types select (long)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (long)t.MoneyValue where p > 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select (long)t.MoneyValue where p > 0 select p,
+				from p in from t in db.Types select (long)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
 		public void ConvertToInt64([DataSources(ProviderName.SQLiteMS)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in Types select Convert.ToInt64(t.MoneyValue) where p > 0 select p,
-					from p in from t in db.Types select Convert.ToInt64(t.MoneyValue) where p > 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select Convert.ToInt64(t.MoneyValue) where p > 0 select p,
+				from p in from t in db.Types select Convert.ToInt64(t.MoneyValue) where p > 0 select p);
 		}
 
 		[Test]
 		public void ToInt([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select Sql.Convert(Sql.Types.Int, t.MoneyValue),
-					from t in db.Types select Sql.Convert(Sql.Types.Int, t.MoneyValue));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Convert(Sql.Types.Int, t.MoneyValue),
+				from t in db.Types select Sql.Convert(Sql.Types.Int, t.MoneyValue));
 		}
 
 		[Test]
 		public void ToInt32([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in    Types select (int)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (int)t.MoneyValue where p > 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select (int)t.MoneyValue where p > 0 select p,
+				from p in from t in db.Types select (int)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
 		public void ConvertToInt32([DataSources(ProviderName.SQLiteMS)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in    Types select Convert.ToInt32(t.MoneyValue) where p > 0 select p,
-					from p in from t in db.Types select Convert.ToInt32(t.MoneyValue) where p > 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select Convert.ToInt32(t.MoneyValue) where p > 0 select p,
+				from p in from t in db.Types select Convert.ToInt32(t.MoneyValue) where p > 0 select p);
 		}
 
 		[Test]
 		public void ToSmallInt([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select Sql.Convert(Sql.Types.SmallInt, t.MoneyValue),
-					from t in db.Types select Sql.Convert(Sql.Types.SmallInt, t.MoneyValue));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Convert(Sql.Types.SmallInt, t.MoneyValue),
+				from t in db.Types select Sql.Convert(Sql.Types.SmallInt, t.MoneyValue));
 		}
 
 		[Test]
 		public void ToInt16([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in    Types select (short)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (short)t.MoneyValue where p > 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select (short)t.MoneyValue where p > 0 select p,
+				from p in from t in db.Types select (short)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
 		public void ConvertToInt16([DataSources(ProviderName.SQLiteMS)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in    Types select Convert.ToInt16(t.MoneyValue) where p > 0 select p,
-					from p in from t in db.Types select Convert.ToInt16(t.MoneyValue) where p > 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select Convert.ToInt16(t.MoneyValue) where p > 0 select p,
+				from p in from t in db.Types select Convert.ToInt16(t.MoneyValue) where p > 0 select p);
 		}
 
 		[Test]
 		public void ToTinyInt([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select Sql.Convert(Sql.Types.TinyInt, t.MoneyValue),
-					from t in db.Types select Sql.Convert(Sql.Types.TinyInt, t.MoneyValue));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Convert(Sql.Types.TinyInt, t.MoneyValue),
+				from t in db.Types select Sql.Convert(Sql.Types.TinyInt, t.MoneyValue));
 		}
 
 		[Test]
 		public void ToSByte([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in    Types select (sbyte)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (sbyte)t.MoneyValue where p > 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select (sbyte)t.MoneyValue where p > 0 select p,
+				from p in from t in db.Types select (sbyte)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
 		public void ConvertToSByte([DataSources(ProviderName.SQLiteMS)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in    Types select Convert.ToSByte(t.MoneyValue) where p > 0 select p,
-					from p in from t in db.Types select Convert.ToSByte(t.MoneyValue) where p > 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select Convert.ToSByte(t.MoneyValue) where p > 0 select p,
+				from p in from t in db.Types select Convert.ToSByte(t.MoneyValue) where p > 0 select p);
 		}
 
 		#endregion
@@ -171,91 +171,91 @@ namespace Tests.Linq
 		[Test]
 		public void ToUInt1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in Types select Sql.ConvertTo<uint>.From(t.MoneyValue),
-					from t in db.Types select Sql.AsSql(Sql.ConvertTo<uint>.From(t.MoneyValue)));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.ConvertTo<uint>.From(t.MoneyValue),
+				from t in db.Types select Sql.AsSql(Sql.ConvertTo<uint>.From(t.MoneyValue)));
 		}
 
 		[Test]
 		public void ToUInt2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in Types select Sql.Convert<uint, decimal>(t.MoneyValue),
-					from t in db.Types select Sql.AsSql(Sql.Convert<uint, decimal>(t.MoneyValue)));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Convert<uint, decimal>(t.MoneyValue),
+				from t in db.Types select Sql.AsSql(Sql.Convert<uint, decimal>(t.MoneyValue)));
 		}
 
 		[Test]
 		public void ToUInt64([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in Types select (ulong)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (ulong)t.MoneyValue where p > 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select (ulong)t.MoneyValue where p > 0 select p,
+				from p in from t in db.Types select (ulong)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
 		public void ConvertToUInt64([DataSources(ProviderName.SQLiteMS)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in Types select Convert.ToUInt64(t.MoneyValue) where p > 0 select p,
-					from p in from t in db.Types select Convert.ToUInt64(t.MoneyValue) where p > 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select Convert.ToUInt64(t.MoneyValue) where p > 0 select p,
+				from p in from t in db.Types select Convert.ToUInt64(t.MoneyValue) where p > 0 select p);
 		}
 
 		[Test]
 		public void ToUInt32([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in Types select (uint)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (uint)t.MoneyValue where p > 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select (uint)t.MoneyValue where p > 0 select p,
+				from p in from t in db.Types select (uint)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
 		public void ConvertToUInt32([DataSources(ProviderName.SQLiteMS)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in Types select Convert.ToUInt32(t.MoneyValue) where p > 0 select p,
-					from p in from t in db.Types select Convert.ToUInt32(t.MoneyValue) where p > 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select Convert.ToUInt32(t.MoneyValue) where p > 0 select p,
+				from p in from t in db.Types select Convert.ToUInt32(t.MoneyValue) where p > 0 select p);
 		}
 
 		[Test]
 		public void ToUInt16([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in    Types select (ushort)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (ushort)t.MoneyValue where p > 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select (ushort)t.MoneyValue where p > 0 select p,
+				from p in from t in db.Types select (ushort)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
 		public void ConvertToUInt16([DataSources(ProviderName.SQLiteMS)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in    Types select Convert.ToUInt16(t.MoneyValue) where p > 0 select p,
-					from p in from t in db.Types select Convert.ToUInt16(t.MoneyValue) where p > 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select Convert.ToUInt16(t.MoneyValue) where p > 0 select p,
+				from p in from t in db.Types select Convert.ToUInt16(t.MoneyValue) where p > 0 select p);
 		}
 
 		[Test]
 		public void ToByte([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in    Types select (byte)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (byte)t.MoneyValue where p > 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select (byte)t.MoneyValue where p > 0 select p,
+				from p in from t in db.Types select (byte)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
 		public void ConvertToByte([DataSources(ProviderName.SQLiteMS)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in    Types select Convert.ToByte(t.MoneyValue) where p > 0 select p,
-					from p in from t in db.Types select Convert.ToByte(t.MoneyValue) where p > 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select Convert.ToByte(t.MoneyValue) where p > 0 select p,
+				from p in from t in db.Types select Convert.ToByte(t.MoneyValue) where p > 0 select p);
 		}
 
 		#endregion
@@ -265,37 +265,37 @@ namespace Tests.Linq
 		[Test]
 		public void ToDefaultDecimal([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select Sql.Convert(Sql.Types.DefaultDecimal, t.MoneyValue * 1000),
-					from t in db.Types select Sql.Convert(Sql.Types.DefaultDecimal, t.MoneyValue * 1000));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Convert(Sql.Types.DefaultDecimal, t.MoneyValue * 1000),
+				from t in db.Types select Sql.Convert(Sql.Types.DefaultDecimal, t.MoneyValue * 1000));
 		}
 
 		[Test]
 		public void ToDecimal1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select Sql.Convert(Sql.Types.Decimal(10), t.MoneyValue * 1000),
-					from t in db.Types select Sql.Convert(Sql.Types.Decimal(10), t.MoneyValue * 1000));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Convert(Sql.Types.Decimal(10), t.MoneyValue * 1000),
+				from t in db.Types select Sql.Convert(Sql.Types.Decimal(10), t.MoneyValue * 1000));
 		}
 
 		[Test]
 		public void ToDecimal2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select Sql.Convert(Sql.Types.Decimal(10,4), t.MoneyValue),
-					from t in db.Types select Sql.Convert(Sql.Types.Decimal(10,4), t.MoneyValue));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Convert(Sql.Types.Decimal(10, 4), t.MoneyValue),
+				from t in db.Types select Sql.Convert(Sql.Types.Decimal(10, 4), t.MoneyValue));
 		}
 
 		[Test]
 		public void ToDecimal3([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in    Types select (decimal)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (decimal)t.MoneyValue where p > 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select (decimal)t.MoneyValue where p > 0 select p,
+				from p in from t in db.Types select (decimal)t.MoneyValue where p > 0 select p);
 		}
 
 		// providers disabled due to change in
@@ -311,82 +311,82 @@ namespace Tests.Linq
 			ProviderName.SqlCe
 			)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in    Types select Convert.ToDecimal(t.MoneyValue) where p > 0 select p,
-					from p in from t in db.Types select Convert.ToDecimal(t.MoneyValue) where p > 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select Convert.ToDecimal(t.MoneyValue) where p > 0 select p,
+				from p in from t in db.Types select Convert.ToDecimal(t.MoneyValue) where p > 0 select p);
 		}
 
 		[Test]
 		public void ToMoney([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select (int)Sql.Convert(Sql.Types.Money, t.MoneyValue),
-					from t in db.Types select (int)Sql.Convert(Sql.Types.Money, t.MoneyValue));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select (int)Sql.Convert(Sql.Types.Money, t.MoneyValue),
+				from t in db.Types select (int)Sql.Convert(Sql.Types.Money, t.MoneyValue));
 		}
 
 		[Test]
 		public void ToSmallMoney([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select (decimal)Sql.Convert(Sql.Types.SmallMoney, t.MoneyValue),
-					from t in db.Types select (decimal)Sql.Convert(Sql.Types.SmallMoney, t.MoneyValue));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select (decimal)Sql.Convert(Sql.Types.SmallMoney, t.MoneyValue),
+				from t in db.Types select (decimal)Sql.Convert(Sql.Types.SmallMoney, t.MoneyValue));
 		}
 
 		[Test]
 		public void ToSqlFloat([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select (int)Sql.Convert(Sql.Types.Float, t.MoneyValue),
-					from t in db.Types select (int)Sql.Convert(Sql.Types.Float, t.MoneyValue));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select (int)Sql.Convert(Sql.Types.Float, t.MoneyValue),
+				from t in db.Types select (int)Sql.Convert(Sql.Types.Float, t.MoneyValue));
 		}
 
 		[Test]
 		public void ToDouble([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in    Types select (int)(double)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (int)(double)t.MoneyValue where p > 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select (int)(double)t.MoneyValue where p > 0 select p,
+				from p in from t in db.Types select (int)(double)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
 		public void ConvertToDouble([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in    Types select Convert.ToDouble(t.MoneyValue) where p > 0 select (int)p,
-					from p in from t in db.Types select Convert.ToDouble(t.MoneyValue) where p > 0 select (int)p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select Convert.ToDouble(t.MoneyValue) where p > 0 select (int)p,
+				from p in from t in db.Types select Convert.ToDouble(t.MoneyValue) where p > 0 select (int)p);
 		}
 
 		[Test]
 		public void ToSqlReal([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select (int)Sql.Convert(Sql.Types.Real, t.MoneyValue),
-					from t in db.Types select (int)Sql.Convert(Sql.Types.Real, t.MoneyValue));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select (int)Sql.Convert(Sql.Types.Real, t.MoneyValue),
+				from t in db.Types select (int)Sql.Convert(Sql.Types.Real, t.MoneyValue));
 		}
 
 		[Test]
 		public void ToSingle([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in    Types select (Single)t.MoneyValue where p > 0 select p,
-					from p in from t in db.Types select (Single)t.MoneyValue where p > 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select (Single)t.MoneyValue where p > 0 select p,
+				from p in from t in db.Types select (Single)t.MoneyValue where p > 0 select p);
 		}
 
 		[Test]
 		public void ConvertToSingle([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in    Types select Convert.ToSingle(t.MoneyValue) where p > 0 select (int)p,
-					from p in from t in db.Types select Convert.ToSingle(t.MoneyValue) where p > 0 select (int)p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select Convert.ToSingle(t.MoneyValue) where p > 0 select (int)p,
+				from p in from t in db.Types select Convert.ToSingle(t.MoneyValue) where p > 0 select (int)p);
 		}
 
 		#endregion
@@ -396,55 +396,55 @@ namespace Tests.Linq
 		[Test]
 		public void ToSqlDateTime([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select Sql.Convert(Sql.Types.DateTime, t.DateTimeValue.Year + "-01-01 00:20:00"),
-					from t in db.Types select Sql.Convert(Sql.Types.DateTime, t.DateTimeValue.Year + "-01-01 00:20:00"));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Convert(Sql.Types.DateTime, t.DateTimeValue.Year + "-01-01 00:20:00"),
+				from t in db.Types select Sql.Convert(Sql.Types.DateTime, t.DateTimeValue.Year + "-01-01 00:20:00"));
 		}
 
 		[Test]
 		public void ToSqlDateTime2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select Sql.Convert(Sql.Types.DateTime2, t.DateTimeValue.Year + "-01-01 00:20:00"),
-					from t in db.Types select Sql.Convert(Sql.Types.DateTime2, t.DateTimeValue.Year + "-01-01 00:20:00"));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Convert(Sql.Types.DateTime2, t.DateTimeValue.Year + "-01-01 00:20:00"),
+				from t in db.Types select Sql.Convert(Sql.Types.DateTime2, t.DateTimeValue.Year + "-01-01 00:20:00"));
 		}
 
 		[Test]
 		public void ToSqlSmallDateTime([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select Sql.Convert(Sql.Types.SmallDateTime, t.DateTimeValue.Year + "-01-01 00:20:00"),
-					from t in db.Types select Sql.Convert(Sql.Types.SmallDateTime, t.DateTimeValue.Year + "-01-01 00:20:00"));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Convert(Sql.Types.SmallDateTime, t.DateTimeValue.Year + "-01-01 00:20:00"),
+				from t in db.Types select Sql.Convert(Sql.Types.SmallDateTime, t.DateTimeValue.Year + "-01-01 00:20:00"));
 		}
 
 		[Test]
 		public void ToSqlDate([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select Sql.Convert(Sql.Types.Date, t.DateTimeValue.Year + "-01-01"),
-					from t in db.Types select Sql.Convert(Sql.Types.Date, t.DateTimeValue.Year + "-01-01"));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Convert(Sql.Types.Date, t.DateTimeValue.Year + "-01-01"),
+				from t in db.Types select Sql.Convert(Sql.Types.Date, t.DateTimeValue.Year + "-01-01"));
 		}
 
 		[Test]
 		public void ToSqlTime([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select Sql.Convert(Sql.Types.Time, t.DateTimeValue.Hour + ":01:01"),
-					from t in db.Types select Sql.Convert(Sql.Types.Time, t.DateTimeValue.Hour + ":01:01"));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Convert(Sql.Types.Time, t.DateTimeValue.Hour + ":01:01"),
+				from t in db.Types select Sql.Convert(Sql.Types.Time, t.DateTimeValue.Hour + ":01:01"));
 		}
 
 		[Test]
 		public void ToSqlTimeSql([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select Sql.AsSql(Sql.Convert(Sql.Types.Time, t.DateTimeValue.Hour + ":01:01")),
-					from t in db.Types select Sql.AsSql(Sql.Convert(Sql.Types.Time, t.DateTimeValue.Hour + ":01:01")));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.AsSql(Sql.Convert(Sql.Types.Time, t.DateTimeValue.Hour + ":01:01")),
+				from t in db.Types select Sql.AsSql(Sql.Convert(Sql.Types.Time, t.DateTimeValue.Hour + ":01:01")));
 		}
 
 		DateTime ToDateTime(DateTimeOffset dto)
@@ -455,28 +455,28 @@ namespace Tests.Linq
 		[Test]
 		public void ToSqlDateTimeOffset([DataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select ToDateTime(Sql.Convert(Sql.Types.DateTimeOffset, t.DateTimeValue.Year + "-01-01 00:20:00")),
-					from t in db.Types select ToDateTime(Sql.Convert(Sql.Types.DateTimeOffset, t.DateTimeValue.Year + "-01-01 00:20:00")));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select ToDateTime(Sql.Convert(Sql.Types.DateTimeOffset, t.DateTimeValue.Year + "-01-01 00:20:00")),
+				from t in db.Types select ToDateTime(Sql.Convert(Sql.Types.DateTimeOffset, t.DateTimeValue.Year + "-01-01 00:20:00")));
 		}
 
 		[Test]
 		public void ToDateTime([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in    Types select DateTime.Parse(t.DateTimeValue.Year + "-01-01 00:00:00") where p.Day > 0 select p,
-					from p in from t in db.Types select DateTime.Parse(t.DateTimeValue.Year + "-01-01 00:00:00") where p.Day > 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select DateTime.Parse(t.DateTimeValue.Year + "-01-01 00:00:00") where p.Day > 0 select p,
+				from p in from t in db.Types select DateTime.Parse(t.DateTimeValue.Year + "-01-01 00:00:00") where p.Day > 0 select p);
 		}
 
 		[Test]
 		public void ConvertToDateTime([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in    Types select Convert.ToDateTime(t.DateTimeValue.Year + "-01-01 00:00:00") where p.Day > 0 select p,
-					from p in from t in db.Types select Convert.ToDateTime(t.DateTimeValue.Year + "-01-01 00:00:00") where p.Day > 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select Convert.ToDateTime(t.DateTimeValue.Year + "-01-01 00:00:00") where p.Day > 0 select p,
+				from p in from t in db.Types select Convert.ToDateTime(t.DateTimeValue.Year + "-01-01 00:00:00") where p.Day > 0 select p);
 		}
 
 		#endregion
@@ -486,102 +486,102 @@ namespace Tests.Linq
 		[Test]
 		public void ToChar([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select Sql.Convert(Sql.Types.Char(20), t.MoneyValue).ToInvariantString(),
-					from t in db.Types select Sql.Convert(Sql.Types.Char(20), t.MoneyValue).ToInvariantString());
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Convert(Sql.Types.Char(20), t.MoneyValue).ToInvariantString(),
+				from t in db.Types select Sql.Convert(Sql.Types.Char(20), t.MoneyValue).ToInvariantString());
 		}
 
 		[Test]
 		public void ToDefaultChar([DataSources(TestProvName.AllOracle, TestProvName.AllFirebird, TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select Sql.Convert(Sql.Types.DefaultChar, t.MoneyValue).ToInvariantString(),
-					from t in db.Types select Sql.Convert(Sql.Types.DefaultChar, t.MoneyValue).ToInvariantString());
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Convert(Sql.Types.DefaultChar, t.MoneyValue).ToInvariantString(),
+				from t in db.Types select Sql.Convert(Sql.Types.DefaultChar, t.MoneyValue).ToInvariantString());
 		}
 
 		[Test]
 		public void ToVarChar([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select Sql.Convert(Sql.Types.VarChar(20), t.MoneyValue).ToInvariantString(),
-					from t in db.Types select Sql.Convert(Sql.Types.VarChar(20), t.MoneyValue).ToInvariantString());
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Convert(Sql.Types.VarChar(20), t.MoneyValue).ToInvariantString(),
+				from t in db.Types select Sql.Convert(Sql.Types.VarChar(20), t.MoneyValue).ToInvariantString());
 		}
 
 		[Test]
 		public void ToDefaultVarChar([DataSources(TestProvName.AllOracle, TestProvName.AllFirebird)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select Sql.Convert(Sql.Types.DefaultVarChar, t.MoneyValue).ToInvariantString(),
-					from t in db.Types select Sql.Convert(Sql.Types.DefaultVarChar, t.MoneyValue).ToInvariantString());
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Convert(Sql.Types.DefaultVarChar, t.MoneyValue).ToInvariantString(),
+				from t in db.Types select Sql.Convert(Sql.Types.DefaultVarChar, t.MoneyValue).ToInvariantString());
 		}
 
 		[Test]
 		public void ToNChar([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select Sql.Convert(Sql.Types.NChar(20), t.MoneyValue).ToInvariantString(),
-					from t in db.Types select Sql.Convert(Sql.Types.NChar(20), t.MoneyValue).ToInvariantString());
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Convert(Sql.Types.NChar(20), t.MoneyValue).ToInvariantString(),
+				from t in db.Types select Sql.Convert(Sql.Types.NChar(20), t.MoneyValue).ToInvariantString());
 		}
 
 		[Test]
 		public void ToDefaultNChar([DataSources(TestProvName.AllOracle, TestProvName.AllFirebird, TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select Sql.Convert(Sql.Types.DefaultNChar, t.MoneyValue).ToInvariantString(),
-					from t in db.Types select Sql.Convert(Sql.Types.DefaultNChar, t.MoneyValue).ToInvariantString());
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Convert(Sql.Types.DefaultNChar, t.MoneyValue).ToInvariantString(),
+				from t in db.Types select Sql.Convert(Sql.Types.DefaultNChar, t.MoneyValue).ToInvariantString());
 		}
 
 		[Test]
 		public void ToNVarChar([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select Sql.Convert(Sql.Types.NVarChar(20), t.MoneyValue).ToInvariantString(),
-					from t in db.Types select Sql.Convert(Sql.Types.NVarChar(20), t.MoneyValue).ToInvariantString());
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Convert(Sql.Types.NVarChar(20), t.MoneyValue).ToInvariantString(),
+				from t in db.Types select Sql.Convert(Sql.Types.NVarChar(20), t.MoneyValue).ToInvariantString());
 		}
 
 		[Test]
 		public void ToDefaultNVarChar([DataSources(TestProvName.AllOracle, TestProvName.AllFirebird)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select Sql.Convert(Sql.Types.DefaultNVarChar, t.MoneyValue).ToInvariantString(),
-					from t in db.Types select Sql.Convert(Sql.Types.DefaultNVarChar, t.MoneyValue).ToInvariantString());
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.Convert(Sql.Types.DefaultNVarChar, t.MoneyValue).ToInvariantString(),
+				from t in db.Types select Sql.Convert(Sql.Types.DefaultNVarChar, t.MoneyValue).ToInvariantString());
 		}
 
 		[Test]
 		public void DecimalToString([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in    Types select Convert.ToString(t.MoneyValue) where p.Length > 0 select p.Replace(',', '.').TrimEnd('0', '.'),
-					from p in from t in db.Types select Convert.ToString(t.MoneyValue) where p.Length > 0 select p.Replace(',', '.').TrimEnd(new char[] { '0', '.' }));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select Convert.ToString(t.MoneyValue) where p.Length > 0 select p.Replace(',', '.').TrimEnd('0', '.'),
+				from p in from t in db.Types select Convert.ToString(t.MoneyValue) where p.Length > 0 select p.Replace(',', '.').TrimEnd(new char[] { '0', '.' }));
 		}
 
 		[Test]
 		public void ByteToString([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in    Types select ((byte)t.ID).ToString() where p.Length > 0 select p,
-					from p in from t in db.Types select ((byte)t.ID).ToString() where p.Length > 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select ((byte)t.ID).ToString() where p.Length > 0 select p,
+				from p in from t in db.Types select ((byte)t.ID).ToString() where p.Length > 0 select p);
 		}
 
 		[Test]
 		public void GuidToString([DataSources] string context)
 		{
 			var guid = "febe3eca-cb5f-40b2-ad39-2979d312afca";
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types where Sql.ConvertTo<string>.From(t.GuidValue).ToLower() == guid select t.GuidValue,
-					from t in db.Types where Sql.ConvertTo<string>.From(t.GuidValue).ToLower() == guid select t.GuidValue);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types where Sql.ConvertTo<string>.From(t.GuidValue).ToLower() == guid select t.GuidValue,
+				from t in db.Types where Sql.ConvertTo<string>.From(t.GuidValue).ToLower() == guid select t.GuidValue);
 		}
 
 		#endregion
@@ -591,54 +591,54 @@ namespace Tests.Linq
 		[Test]
 		public void ToBit1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in
-						from t in GetTypes(context)
-						where Sql.Convert(Sql.Types.Bit, t.MoneyValue)
-						select t
-					select t,
-					from t in
-						from t in db.Types
-						where Sql.Convert(Sql.Types.Bit, t.MoneyValue)
-						select t
-					select t);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in
+					from t in GetTypes(context)
+					where Sql.Convert(Sql.Types.Bit, t.MoneyValue)
+					select t
+				select t,
+				from t in
+					from t in db.Types
+					where Sql.Convert(Sql.Types.Bit, t.MoneyValue)
+					select t
+				select t);
 		}
 
 		[Test]
 		public void ToBit2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in
-						from t in GetTypes(context)
-						where !Sql.Convert(Sql.Types.Bit, t.MoneyValue - 4.5m)
-						select t
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in
+					from t in GetTypes(context)
+					where !Sql.Convert(Sql.Types.Bit, t.MoneyValue - 4.5m)
 					select t
-					,
-					from t in
-						from t in db.Types
-						where !Sql.Convert(Sql.Types.Bit, t.MoneyValue - 4.5m)
-						select t
-					select t);
+				select t
+				,
+				from t in
+					from t in db.Types
+					where !Sql.Convert(Sql.Types.Bit, t.MoneyValue - 4.5m)
+					select t
+				select t);
 		}
 
 		[Test]
 		public void ConvertToBoolean1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in    Types select Convert.ToBoolean(t.MoneyValue) where p == true select p,
-					from p in from t in db.Types select Convert.ToBoolean(t.MoneyValue) where p == true select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select Convert.ToBoolean(t.MoneyValue) where p == true select p,
+				from p in from t in db.Types select Convert.ToBoolean(t.MoneyValue) where p == true select p);
 		}
 
 		[Test]
 		public void ConvertToBoolean2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in from t in    Types select Convert.ToBoolean(t.MoneyValue - 4.5m) where !p select p,
-					from p in from t in db.Types select Convert.ToBoolean(t.MoneyValue - 4.5m) where !p select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in from t in Types select Convert.ToBoolean(t.MoneyValue - 4.5m) where !p select p,
+				from p in from t in db.Types select Convert.ToBoolean(t.MoneyValue - 4.5m) where !p select p);
 		}
 
 		#endregion
@@ -657,27 +657,25 @@ namespace Tests.Linq
 				ProviderName.SqlCe,
 				TestProvName.AllSqlServer);
 
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var decimalValue = 6579.64648m;
+			var floatValue   = 6579.64648f;
+			var doubleValue  = 6579.64648d;
+
+			if (!scaleLessDecimal)
 			{
-				var decimalValue = 6579.64648m;
-				var floatValue   = 6579.64648f;
-				var doubleValue  = 6579.64648d;
-
-				if (!scaleLessDecimal)
-				{
-					AssertConvert(db, decimalValue, decimalValue);
-					AssertConvert(db, decimalValue, floatValue);
-					AssertConvert(db, decimalValue, doubleValue);
-				}
-
-				AssertConvert(db, floatValue, decimalValue);
-				AssertConvert(db, floatValue, floatValue);
-				AssertConvert(db, floatValue, doubleValue);
-
-				AssertConvert(db, doubleValue, decimalValue);
-				AssertConvert(db, doubleValue, floatValue);
-				AssertConvert(db, doubleValue, doubleValue);
+				AssertConvert(db, decimalValue, decimalValue);
+				AssertConvert(db, decimalValue, floatValue);
+				AssertConvert(db, decimalValue, doubleValue);
 			}
+
+			AssertConvert(db, floatValue, decimalValue);
+			AssertConvert(db, floatValue, floatValue);
+			AssertConvert(db, floatValue, doubleValue);
+
+			AssertConvert(db, doubleValue, decimalValue);
+			AssertConvert(db, doubleValue, floatValue);
+			AssertConvert(db, doubleValue, doubleValue);
 		}
 
 		static void AssertConvert<TTo, TFrom>(Model.ITestDataContext db, TTo expected, TFrom value)
@@ -702,57 +700,53 @@ namespace Tests.Linq
 		[Test]
 		public void ConvertDataToDecimal([NorthwindDataContext] string context)
 		{
-			using (var db = new NorthwindDB(context))
-			{
-				var actual = (from od in db.OrderDetail
-							  select
+			using var db = new NorthwindDB(context);
+			var actual = (from od in db.OrderDetail
+						  select
 							  Sql.AsSql(od.UnitPrice * od.Quantity * (decimal)(1 - od.Discount))).ToArray();
 
-				var expected = (from od in db.OrderDetail
-								select
+			var expected = (from od in db.OrderDetail
+							select
 								od.UnitPrice * od.Quantity * (decimal)(1 - od.Discount)).ToArray();
 
-				Assert.That(expected, Has.Length.EqualTo(actual.Length));
+			Assert.That(expected, Has.Length.EqualTo(actual.Length));
 
-				for (var i = 0; i < actual.Length; i++)
-				{
-					Assert.That(Math.Abs(actual[i] - expected[i]), Is.LessThan(0.01m));
-				}
+			for (var i = 0; i < actual.Length; i++)
+			{
+				Assert.That(Math.Abs(actual[i] - expected[i]), Is.LessThan(0.01m));
 			}
 		}
 
 		[Test]
 		public void ConvertDataToDecimalNoConvert([NorthwindDataContext] string context)
 		{
-			using (var db = new NorthwindDB(context))
-			{
-				var qActual =
+			using var db = new NorthwindDB(context);
+			var qActual =
 					from od in db.OrderDetail
 					select
 						Sql.NoConvert(od.UnitPrice * od.Quantity * (decimal)(1 - od.Discount));
 
-				var qExpected =
+			var qExpected =
 					from od in db.OrderDetail
 					select
 						Sql.AsSql(od.UnitPrice * od.Quantity * (decimal)(1 - od.Discount));
 
-				var sqlActual   = qActual.ToSqlQuery().Sql;
-				var sqlExpected = qExpected.ToSqlQuery().Sql;
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(sqlActual, Is.Not.Contains("Convert").Or.Contains("Cast"));
-					Assert.That(sqlExpected, Is.Not.Contains("Convert").Or.Contains("Cast"));
-				}
+			var sqlActual   = qActual.ToSqlQuery().Sql;
+			var sqlExpected = qExpected.ToSqlQuery().Sql;
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(sqlActual, Is.Not.Contains("Convert").Or.Contains("Cast"));
+				Assert.That(sqlExpected, Is.Not.Contains("Convert").Or.Contains("Cast"));
+			}
 
-				var actual   = qActual.  ToArray();
-				var expected = qExpected.ToArray();
+			var actual   = qActual.  ToArray();
+			var expected = qExpected.ToArray();
 
-				Assert.That(expected, Has.Length.EqualTo(actual.Length));
+			Assert.That(expected, Has.Length.EqualTo(actual.Length));
 
-				for (var i = 0; i < actual.Length; i++)
-				{
-					Assert.That(Math.Abs(actual[i] - expected[i]), Is.LessThan(0.01m));
-				}
+			for (var i = 0; i < actual.Length; i++)
+			{
+				Assert.That(Math.Abs(actual[i] - expected[i]), Is.LessThan(0.01m));
 			}
 		}
 
@@ -1408,10 +1402,8 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer2012Plus
 			)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				Assert.That(db.Select(() => Sql.TryConvert("123", (int?)0)), Is.EqualTo(123));
-			}
+			using var db = GetDataContext(context);
+			Assert.That(db.Select(() => Sql.TryConvert("123", (int?)0)), Is.EqualTo(123));
 		}
 
 		[Test]
@@ -1421,37 +1413,29 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer2012Plus
 			)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				Assert.That(db.Select(() => Sql.TryConvert("burp", (int?)0)), Is.Null);
-			}
+			using var db = GetDataContext(context);
+			Assert.That(db.Select(() => Sql.TryConvert("burp", (int?)0)), Is.Null);
 		}
 
 		[Test]
 		public void TryConvertConvertedClass([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				Assert.That(db.Select(() => Sql.TryConvert(345, "")), Is.EqualTo("345"));
-			}
+			using var db = GetDataContext(context);
+			Assert.That(db.Select(() => Sql.TryConvert(345, "")), Is.EqualTo("345"));
 		}
 
 		[Test]
 		public void TryConvertOrDefaultConvertedStruct([IncludeDataSources(true, TestProvName.AllOracle12Plus, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				Assert.That(db.Select(() => Sql.TryConvertOrDefault("123", (int?)100500)), Is.EqualTo(123));
-			}
+			using var db = GetDataContext(context);
+			Assert.That(db.Select(() => Sql.TryConvertOrDefault("123", (int?)100500)), Is.EqualTo(123));
 		}
 
 		[Test]
 		public void TryConvertOrDefaultNotConvertedStruct([IncludeDataSources(true, TestProvName.AllOracle12Plus, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				Assert.That(db.Select(() => Sql.TryConvertOrDefault("burp", (int?)-10)), Is.EqualTo(-10));
-			}
+			using var db = GetDataContext(context);
+			Assert.That(db.Select(() => Sql.TryConvertOrDefault("burp", (int?)-10)), Is.EqualTo(-10));
 		}
 
 		#endregion
@@ -1535,81 +1519,79 @@ namespace Tests.Linq
 		[Test]
 		public void TestToStringConversion([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<ToStringConvertibleTypes>(ToStringConvertibleTypes.Seed()))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<ToStringConvertibleTypes>(ToStringConvertibleTypes.Seed());
+			var sqlConverted = table.Select(x => new
 			{
-				var sqlConverted = table.Select(x => new
-					{
-						Prop_bool             = Sql.AsSql(x.Prop_bool            .ToString(CultureInfo.InvariantCulture)),
-						Prop_byte             = Sql.AsSql(x.Prop_byte            .ToString()),
-						Prop_char             = Sql.AsSql(x.Prop_char            .ToString()),
-						Prop_decimal          = Sql.AsSql(x.Prop_decimal         .ToString()),
-						Prop_double           = Sql.AsSql(x.Prop_double          .ToString()),
-						Prop_short            = Sql.AsSql(x.Prop_short           .ToString()),
-						Prop_int              = Sql.AsSql(x.Prop_int             .ToString()),
-						Prop_long             = Sql.AsSql(x.Prop_long            .ToString()),
-						Prop_sbyte            = Sql.AsSql(x.Prop_sbyte           .ToString()),
-						Prop_float            = Sql.AsSql(x.Prop_float           .ToString()),
-						Prop_ushort           = Sql.AsSql(x.Prop_ushort          .ToString()),
-						Prop_uint             = Sql.AsSql(x.Prop_uint            .ToString()),
-						Prop_ulong            = Sql.AsSql(x.Prop_ulong           .ToString()),
-						Prop_Guid             = Sql.AsSql(x.Prop_Guid            .ToString()),
-						Prop_DateTime         = Sql.AsSql(x.Prop_DateTime        .ToString()),
-						NullableProp_bool     = Sql.AsSql(x.NullableProp_bool    .ToString()),
-						NullableProp_byte     = Sql.AsSql(x.NullableProp_byte    .ToString()),
-						NullableProp_char     = Sql.AsSql(x.NullableProp_char    .ToString()),
-						NullableProp_decimal  = Sql.AsSql(x.NullableProp_decimal .ToString()),
-						NullableProp_double   = Sql.AsSql(x.NullableProp_double  .ToString()),
-						NullableProp_short    = Sql.AsSql(x.NullableProp_short   .ToString()),
-						NullableProp_int      = Sql.AsSql(x.NullableProp_int     .ToString()),
-						NullableProp_long     = Sql.AsSql(x.NullableProp_long    .ToString()),
-						NullableProp_sbyte    = Sql.AsSql(x.NullableProp_sbyte   .ToString()),
-						NullableProp_float    = Sql.AsSql(x.NullableProp_float   .ToString()),
-						NullableProp_ushort   = Sql.AsSql(x.NullableProp_ushort  .ToString()),
-						NullableProp_uint     = Sql.AsSql(x.NullableProp_uint    .ToString()),
-						NullableProp_ulong    = Sql.AsSql(x.NullableProp_ulong   .ToString()),
-						NullableProp_Guid     = Sql.AsSql(x.NullableProp_Guid    .ToString()),
-						NullableProp_DateTime = Sql.AsSql(x.NullableProp_DateTime.ToString()),
-					})
+				Prop_bool             = Sql.AsSql(x.Prop_bool            .ToString(CultureInfo.InvariantCulture)),
+				Prop_byte             = Sql.AsSql(x.Prop_byte            .ToString()),
+				Prop_char             = Sql.AsSql(x.Prop_char            .ToString()),
+				Prop_decimal          = Sql.AsSql(x.Prop_decimal         .ToString()),
+				Prop_double           = Sql.AsSql(x.Prop_double          .ToString()),
+				Prop_short            = Sql.AsSql(x.Prop_short           .ToString()),
+				Prop_int              = Sql.AsSql(x.Prop_int             .ToString()),
+				Prop_long             = Sql.AsSql(x.Prop_long            .ToString()),
+				Prop_sbyte            = Sql.AsSql(x.Prop_sbyte           .ToString()),
+				Prop_float            = Sql.AsSql(x.Prop_float           .ToString()),
+				Prop_ushort           = Sql.AsSql(x.Prop_ushort          .ToString()),
+				Prop_uint             = Sql.AsSql(x.Prop_uint            .ToString()),
+				Prop_ulong            = Sql.AsSql(x.Prop_ulong           .ToString()),
+				Prop_Guid             = Sql.AsSql(x.Prop_Guid            .ToString()),
+				Prop_DateTime         = Sql.AsSql(x.Prop_DateTime        .ToString()),
+				NullableProp_bool     = Sql.AsSql(x.NullableProp_bool    .ToString()),
+				NullableProp_byte     = Sql.AsSql(x.NullableProp_byte    .ToString()),
+				NullableProp_char     = Sql.AsSql(x.NullableProp_char    .ToString()),
+				NullableProp_decimal  = Sql.AsSql(x.NullableProp_decimal .ToString()),
+				NullableProp_double   = Sql.AsSql(x.NullableProp_double  .ToString()),
+				NullableProp_short    = Sql.AsSql(x.NullableProp_short   .ToString()),
+				NullableProp_int      = Sql.AsSql(x.NullableProp_int     .ToString()),
+				NullableProp_long     = Sql.AsSql(x.NullableProp_long    .ToString()),
+				NullableProp_sbyte    = Sql.AsSql(x.NullableProp_sbyte   .ToString()),
+				NullableProp_float    = Sql.AsSql(x.NullableProp_float   .ToString()),
+				NullableProp_ushort   = Sql.AsSql(x.NullableProp_ushort  .ToString()),
+				NullableProp_uint     = Sql.AsSql(x.NullableProp_uint    .ToString()),
+				NullableProp_ulong    = Sql.AsSql(x.NullableProp_ulong   .ToString()),
+				NullableProp_Guid     = Sql.AsSql(x.NullableProp_Guid    .ToString()),
+				NullableProp_DateTime = Sql.AsSql(x.NullableProp_DateTime.ToString()),
+			})
 					.First();
 
-				var noSqlConverted = table.Select(x => new
-					{
-						Prop_bool             = x.Prop_bool ? "1" : "0",
-						Prop_byte             = x.Prop_byte            .ToString(CultureInfo.InvariantCulture),
-						Prop_char             = x.Prop_char            .ToString(CultureInfo.InvariantCulture),
-						Prop_decimal          = x.Prop_decimal         .ToString(CultureInfo.InvariantCulture),
-						Prop_double           = x.Prop_double          .ToString(CultureInfo.InvariantCulture),
-						Prop_short            = x.Prop_short           .ToString(CultureInfo.InvariantCulture),
-						Prop_int              = x.Prop_int             .ToString(CultureInfo.InvariantCulture),
-						Prop_long             = x.Prop_long            .ToString(CultureInfo.InvariantCulture),
-						Prop_sbyte            = x.Prop_sbyte           .ToString(CultureInfo.InvariantCulture),
-						Prop_float            = x.Prop_float           .ToString(CultureInfo.InvariantCulture),
-						Prop_ushort           = x.Prop_ushort          .ToString(CultureInfo.InvariantCulture),
-						Prop_uint             = x.Prop_uint            .ToString(CultureInfo.InvariantCulture),
-						Prop_ulong            = x.Prop_ulong           .ToString(CultureInfo.InvariantCulture),
-						Prop_Guid             = x.Prop_Guid            .ToString(),
-						Prop_DateTime         = x.Prop_DateTime        .ToString("yyyy-MM-dd HH:mm:ss.fffffff"),
-						NullableProp_bool     = x.NullableProp_bool == null ? "" : x.NullableProp_bool.Value ? "1" : "0",
-						NullableProp_byte     = x.NullableProp_byte    !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_char     = x.NullableProp_char    !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_decimal  = x.NullableProp_decimal !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_double   = x.NullableProp_double  !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_short    = x.NullableProp_short   !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_int      = x.NullableProp_int     !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_long     = x.NullableProp_long    !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_sbyte    = x.NullableProp_sbyte   !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_float    = x.NullableProp_float   !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_ushort   = x.NullableProp_ushort  !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_uint     = x.NullableProp_uint    !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_ulong    = x.NullableProp_ulong   !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_Guid     = x.NullableProp_Guid    !.Value.ToString(),
-						NullableProp_DateTime = x.NullableProp_DateTime!.Value.ToString("yyyy-MM-dd HH:mm:ss.fffffff"),
-					})
+			var noSqlConverted = table.Select(x => new
+			{
+				Prop_bool             = x.Prop_bool ? "1" : "0",
+				Prop_byte             = x.Prop_byte            .ToString(CultureInfo.InvariantCulture),
+				Prop_char             = x.Prop_char            .ToString(CultureInfo.InvariantCulture),
+				Prop_decimal          = x.Prop_decimal         .ToString(CultureInfo.InvariantCulture),
+				Prop_double           = x.Prop_double          .ToString(CultureInfo.InvariantCulture),
+				Prop_short            = x.Prop_short           .ToString(CultureInfo.InvariantCulture),
+				Prop_int              = x.Prop_int             .ToString(CultureInfo.InvariantCulture),
+				Prop_long             = x.Prop_long            .ToString(CultureInfo.InvariantCulture),
+				Prop_sbyte            = x.Prop_sbyte           .ToString(CultureInfo.InvariantCulture),
+				Prop_float            = x.Prop_float           .ToString(CultureInfo.InvariantCulture),
+				Prop_ushort           = x.Prop_ushort          .ToString(CultureInfo.InvariantCulture),
+				Prop_uint             = x.Prop_uint            .ToString(CultureInfo.InvariantCulture),
+				Prop_ulong            = x.Prop_ulong           .ToString(CultureInfo.InvariantCulture),
+				Prop_Guid             = x.Prop_Guid            .ToString(),
+				Prop_DateTime         = x.Prop_DateTime        .ToString("yyyy-MM-dd HH:mm:ss.fffffff"),
+				NullableProp_bool     = x.NullableProp_bool == null ? "" : x.NullableProp_bool.Value ? "1" : "0",
+				NullableProp_byte     = x.NullableProp_byte    !.Value.ToString(CultureInfo.InvariantCulture),
+				NullableProp_char     = x.NullableProp_char    !.Value.ToString(CultureInfo.InvariantCulture),
+				NullableProp_decimal  = x.NullableProp_decimal !.Value.ToString(CultureInfo.InvariantCulture),
+				NullableProp_double   = x.NullableProp_double  !.Value.ToString(CultureInfo.InvariantCulture),
+				NullableProp_short    = x.NullableProp_short   !.Value.ToString(CultureInfo.InvariantCulture),
+				NullableProp_int      = x.NullableProp_int     !.Value.ToString(CultureInfo.InvariantCulture),
+				NullableProp_long     = x.NullableProp_long    !.Value.ToString(CultureInfo.InvariantCulture),
+				NullableProp_sbyte    = x.NullableProp_sbyte   !.Value.ToString(CultureInfo.InvariantCulture),
+				NullableProp_float    = x.NullableProp_float   !.Value.ToString(CultureInfo.InvariantCulture),
+				NullableProp_ushort   = x.NullableProp_ushort  !.Value.ToString(CultureInfo.InvariantCulture),
+				NullableProp_uint     = x.NullableProp_uint    !.Value.ToString(CultureInfo.InvariantCulture),
+				NullableProp_ulong    = x.NullableProp_ulong   !.Value.ToString(CultureInfo.InvariantCulture),
+				NullableProp_Guid     = x.NullableProp_Guid    !.Value.ToString(),
+				NullableProp_DateTime = x.NullableProp_DateTime!.Value.ToString("yyyy-MM-dd HH:mm:ss.fffffff"),
+			})
 					.First();
 
-				sqlConverted.ShouldBeEquivalentTo(noSqlConverted);
-			}
+			sqlConverted.ShouldBeEquivalentTo(noSqlConverted);
 		}
 
 		#region Issue #4043

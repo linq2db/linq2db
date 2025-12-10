@@ -127,9 +127,9 @@ namespace LinqToDB.Internal.SqlQuery
 			bool                                             doNotRemove = false)
 			where TStatement : SqlStatement
 		{
-			if (statement == null) throw new ArgumentNullException(nameof(statement));
-			if (wrapTest  == null) throw new ArgumentNullException(nameof(wrapTest));
-			if (onWrap    == null) throw new ArgumentNullException(nameof(onWrap));
+			ArgumentNullException.ThrowIfNull(statement);
+			ArgumentNullException.ThrowIfNull(wrapTest);
+			ArgumentNullException.ThrowIfNull(onWrap);
 
 			var visitor = new WrapQueryVisitor<TContext>(allowMutation ? VisitMode.Modify : VisitMode.Transform, context, wrapTest, onWrap, doNotRemove);
 			var newStatement = (TStatement)visitor.ProcessElement(statement);
@@ -164,7 +164,7 @@ namespace LinqToDB.Internal.SqlQuery
 			bool        doNotRemove = false)
 			where TStatement : SqlStatement
 		{
-			if (statement == null) throw new ArgumentNullException(nameof(statement));
+			ArgumentNullException.ThrowIfNull(statement);
 
 			return WrapQuery(queryToWrap, statement, static (queryToWrap, q, _) => q == queryToWrap, null, allowMutation, doNotRemove);
 		}
@@ -190,8 +190,8 @@ namespace LinqToDB.Internal.SqlQuery
 			bool                                              doNotRemove = false)
 			where TStatement : SqlStatement
 		{
-			if (statement == null) throw new ArgumentNullException(nameof(statement));
-			if (wrapTest == null)  throw new ArgumentNullException(nameof(wrapTest));
+			ArgumentNullException.ThrowIfNull(statement);
+			ArgumentNullException.ThrowIfNull(wrapTest);
 
 			return WrapQuery(
 				(context, wrapTest, onWrap),

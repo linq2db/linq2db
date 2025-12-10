@@ -381,28 +381,23 @@ namespace LinqToDB.CodeModel
 		/// <returns>Base name to use for unique identifier generation.</returns>
 		private static string GetBaseIdentifierName(string identifierName, NameFixOptions? fixOptions, int? position)
 		{
-			var baseName = identifierName;
-			// if fix options specified for identifier - use them to generate base name to use for new identifier generation
-			if (fixOptions != null)
+			var baseName = fixOptions switch
 			{
-				switch (fixOptions.FixType)
-				{
-					case NameFixType.Replace:
-						baseName = fixOptions.DefaultValue;
-						break;
-					case NameFixType.ReplaceWithPosition:
-						baseName = fixOptions.DefaultValue + position?.ToString(NumberFormatInfo.InvariantInfo);
-						break;
-					case NameFixType.Suffix:
-						baseName = identifierName + fixOptions.DefaultValue;
-						break;
-					case NameFixType.SuffixWithPosition:
-						baseName = identifierName + fixOptions.DefaultValue + position?.ToString(NumberFormatInfo.InvariantInfo);
-						break;
-					default:
-						throw new NotImplementedException($"C# name validator doesn't implement {fixOptions.FixType} name fix strategy");
-				}
-			}
+				null => identifierName,
+
+				// if fix options specified for identifier - use them to generate base name to use for new identifier generation
+				{ FixType: NameFixType.Replace } =>
+					fixOptions.DefaultValue,
+				{ FixType: NameFixType.ReplaceWithPosition } =>
+					fixOptions.DefaultValue + position?.ToString(NumberFormatInfo.InvariantInfo),
+				{ FixType: NameFixType.Suffix } =>
+					identifierName + fixOptions.DefaultValue,
+				{ FixType: NameFixType.SuffixWithPosition } =>
+					identifierName + fixOptions.DefaultValue + position?.ToString(NumberFormatInfo.InvariantInfo),
+
+				_ => 
+					throw new NotImplementedException($"C# name validator doesn't implement {fixOptions.FixType} name fix strategy"),
+			};
 
 			if (string.IsNullOrEmpty(baseName))
 				baseName = "_";

@@ -21,13 +21,11 @@ namespace Tests.UserTests
 		[Test]
 		public void TestCaseGeneration([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = (DataConnection)GetDataContext(context))
-			using (var table = db.CreateLocalTable<SampleClass>())
-			{
-				table.Select(e => Sql.AsSql(Sql.Between(e.Value, 2, 5) ? 0 : 1))
-					.ToList(); 
-				Assert.That(db.LastQuery, Does.Not.Contain(" = "));
-			}
+			using var db = (DataConnection)GetDataContext(context);
+			using var table = db.CreateLocalTable<SampleClass>();
+			table.Select(e => Sql.AsSql(Sql.Between(e.Value, 2, 5) ? 0 : 1))
+				.ToList();
+			Assert.That(db.LastQuery, Does.Not.Contain(" = "));
 		}
 	}
 }

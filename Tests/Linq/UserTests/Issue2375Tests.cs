@@ -55,51 +55,47 @@ namespace Tests.UserTests
 		[Test]
 		public void Issue2375Test([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
+			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
+			using var itb = db.CreateLocalTable<InventoryResourceDTO>();
+			using var lctb = db.CreateLocalTable<WmsLoadCarrierDTO>();
+			var res = new WmsLoadCarrierDTO { Id = TestData.Guid1, ResourceLabel = "b" };
+			db.Insert(res);
+			var dto1 = new InventoryResourceDTO
 			{
-				using (var itb = db.CreateLocalTable<InventoryResourceDTO>())
-				using (var lctb = db.CreateLocalTable<WmsLoadCarrierDTO>())
-				{
-					var res = new WmsLoadCarrierDTO { Id = TestData.Guid1, ResourceLabel = "b" };
-					db.Insert(res);
-					var dto1 = new InventoryResourceDTO
-					{
-						ResourceID        = res.Id,
-						Status            = InventoryResourceStatus.Used,
-						ModifiedTimeStamp = TestData.DateTime - TimeSpan.FromHours(2),
-						Id                = TestData.Guid2
-					};
-					db.Insert(dto1);
-					var dto2 = new InventoryResourceDTO
-					{
-						ResourceID        = res.Id,
-						Status            = InventoryResourceStatus.Used,
-						ModifiedTimeStamp = TestData.DateTime- TimeSpan.FromHours(2),
-						Id                = TestData.Guid3
-					};
-					db.Insert(dto2);
+				ResourceID        = res.Id,
+				Status            = InventoryResourceStatus.Used,
+				ModifiedTimeStamp = TestData.DateTime - TimeSpan.FromHours(2),
+				Id                = TestData.Guid2
+			};
+			db.Insert(dto1);
+			var dto2 = new InventoryResourceDTO
+			{
+				ResourceID        = res.Id,
+				Status            = InventoryResourceStatus.Used,
+				ModifiedTimeStamp = TestData.DateTime- TimeSpan.FromHours(2),
+				Id                = TestData.Guid3
+			};
+			db.Insert(dto2);
 
-					var qry = from inventory in itb
-							   join lc in lctb on inventory.ResourceID equals lc.Id
-							   group inventory by new
-							   {
-								   inventory.Status,
-								   lc.ResourceLabel
-							   }
+			var qry = from inventory in itb
+					  join lc in lctb on inventory.ResourceID equals lc.Id
+					  group inventory by new
+					  {
+						  inventory.Status,
+						  lc.ResourceLabel
+					  }
 							into grp
-							   where grp.Count() > 1
-							   select grp;
+					  where grp.Count() > 1
+					  select grp;
 
-					var groups = new List<KeyValuePair<string,IEnumerable<InventoryResourceDTO>>>();
+			var groups = new List<KeyValuePair<string,IEnumerable<InventoryResourceDTO>>>();
 
-					foreach (var group in qry)
-					{
-						groups.Add(new KeyValuePair<string, IEnumerable<InventoryResourceDTO>>(group.Key.ResourceLabel, group.OrderBy(x => x.ModifiedTimeStamp).ToList()));
-					}
-
-					var sql = ((DataConnection)db).LastQuery;
-				}
+			foreach (var group in qry)
+			{
+				groups.Add(new KeyValuePair<string, IEnumerable<InventoryResourceDTO>>(group.Key.ResourceLabel, group.OrderBy(x => x.ModifiedTimeStamp).ToList()));
 			}
+
+			var sql = ((DataConnection)db).LastQuery;
 		}
 	}
 }

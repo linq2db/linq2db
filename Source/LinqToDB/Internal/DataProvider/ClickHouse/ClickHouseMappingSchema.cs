@@ -201,7 +201,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		{
 			if (dt.Type.DataType == DataType.IPv6)
 			{
-				if (value.Length != 4 && value.Length != 16)
+				if (value.Length is not 4 and not 16)
 					throw new LinqToDBConvertException($"IPv6 address should have 4 or 16 bytes, but got {value.Length}");
 
 				stringBuilder.Append('\'');

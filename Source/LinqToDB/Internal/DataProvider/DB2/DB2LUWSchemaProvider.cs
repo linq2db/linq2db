@@ -95,23 +95,27 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 			return
 			(
-				from pk in dataConnection.Query(
-					rd => new
-					{
-						// IMPORTANT: reader calls must be ordered to support SequentialAccess
-						id   = database + "." + rd.ToString(0) + "." + rd.ToString(1),
-						name = rd.ToString(2),
-						cols = rd.ToString(3)!.Split('+').Skip(1).ToArray(),
-					},@"
-SELECT
-	TABSCHEMA,
-	TABNAME,
-	INDNAME,
-	COLNAMES
-FROM
-	SYSCAT.INDEXES
-WHERE
-	UNIQUERULE = 'P' AND " + GetSchemaFilter("TABSCHEMA"))
+				from pk in dataConnection
+					.Query(
+						rd => new
+						{
+							// IMPORTANT: reader calls must be ordered to support SequentialAccess
+							id   = database + "." + rd.ToString(0) + "." + rd.ToString(1),
+							name = rd.ToString(2),
+							cols = rd.ToString(3)!.Split('+').Skip(1).ToArray(),
+						},
+						$"""
+						SELECT
+							TABSCHEMA,
+							TABNAME,
+							INDNAME,
+							COLNAMES
+						FROM
+							SYSCAT.INDEXES
+						WHERE
+							UNIQUERULE = 'P' AND {GetSchemaFilter("TABSCHEMA")}
+						"""
+					)
 				from col in pk.cols.Select((c,i) => new { c, i })
 				select new PrimaryKeyInfo
 				{
@@ -127,23 +131,24 @@ WHERE
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var sql = @"
-SELECT
-	TABSCHEMA,
-	TABNAME,
-	COLNAME,
-	LENGTH,
-	SCALE,
-	NULLS,
-	IDENTITY,
-	COLNO,
-	TYPENAME,
-	REMARKS,
-	CODEPAGE
-FROM
-	SYSCAT.COLUMNS
-WHERE
-	" + GetSchemaFilter("TABSCHEMA");
+			var sql =
+				$"""
+				SELECT
+					TABSCHEMA,
+					TABNAME,
+					COLNAME,
+					LENGTH,
+					SCALE,
+					NULLS,
+					IDENTITY,
+					COLNO,
+					TYPENAME,
+					REMARKS,
+					CODEPAGE
+				FROM
+					SYSCAT.COLUMNS
+				WHERE {GetSchemaFilter("TABSCHEMA")}
+				""";
 
 			var database = dataConnection.OpenDbConnection().Database;
 
@@ -218,27 +223,30 @@ WHERE
 			var database = dataConnection.OpenDbConnection().Database;
 
 			return dataConnection
-				.Query(rd => new
-				{
-					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					name         = rd.ToString(0)!,
-					thisTable    = database + "." + rd.ToString(1)  + "." + rd.ToString(2),
-					thisColumns  = rd.ToString(3)!,
-					otherTable   = database + "." + rd.ToString(4)  + "." + rd.ToString(5),
-					otherColumns = rd.ToString(6)!,
-				},@"
-SELECT
-	CONSTNAME,
-	TABSCHEMA,
-	TABNAME,
-	FK_COLNAMES,
-	REFTABSCHEMA,
-	REFTABNAME,
-	PK_COLNAMES
-FROM
-	SYSCAT.REFERENCES
-WHERE
-	" + GetSchemaFilter("TABSCHEMA"))
+				.Query(
+					rd => new
+					{
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						name         = rd.ToString(0)!,
+						thisTable    = database + "." + rd.ToString(1)  + "." + rd.ToString(2),
+						thisColumns  = rd.ToString(3)!,
+						otherTable   = database + "." + rd.ToString(4)  + "." + rd.ToString(5),
+						otherColumns = rd.ToString(6)!,
+					},
+					$"""
+					SELECT
+						CONSTNAME,
+						TABSCHEMA,
+						TABNAME,
+						FK_COLNAMES,
+						REFTABSCHEMA,
+						REFTABNAME,
+						PK_COLNAMES
+					FROM
+						SYSCAT.REFERENCES
+					WHERE {GetSchemaFilter("TABSCHEMA")}
+					"""
+				)
 				.SelectMany(fk =>
 				{
 					var thisTable    = _columns!.Where(c => c.TableID == fk.thisTable). OrderByDescending(c => c.Name.Length).ToList();
@@ -292,7 +300,7 @@ WHERE
 
 					if (type.CreateFormat == null)
 					{
-						if (type.TypeName.IndexOf("()", StringComparison.Ordinal) >= 0)
+						if (type.TypeName.Contains("()", StringComparison.Ordinal))
 						{
 							type.CreateFormat = type.TypeName.Replace("()", "({0})");
 						}
@@ -355,39 +363,38 @@ WHERE
 
 		protected override string? GetProviderSpecificType(string? dataType)
 		{
-			switch (dataType)
+			return dataType switch
 			{
-				case "XML"                       : return _provider.Adapter.DB2XmlType         .Name;
-				case "DECFLOAT"                  : return _provider.Adapter.DB2DecimalFloatType.Name;
-				case "DBCLOB"                    :
-				case "CLOB"                      : return _provider.Adapter.DB2ClobType        .Name;
-				case "BLOB"                      : return _provider.Adapter.DB2BlobType        .Name;
-				case "BIGINT"                    : return _provider.Adapter.DB2Int64Type       .Name;
-				case "LONG VARCHAR FOR BIT DATA" :
-				case "VARCHAR () FOR BIT DATA"   :
-				case "VARBIN"                    :
-				case "BINARY"                    :
-				case "CHAR () FOR BIT DATA"      : return _provider.Adapter.DB2BinaryType      .Name;
-				case "LONG VARGRAPHIC"           :
-				case "VARGRAPHIC"                :
-				case "GRAPHIC"                   :
-				case "LONG VARCHAR"              :
-				case "CHARACTER"                 :
-				case "VARCHAR"                   :
-				case "CHAR"                      : return _provider.Adapter.DB2StringType      .Name;
-				case "DECIMAL"                   : return _provider.Adapter.DB2DecimalType     .Name;
-				case "INTEGER"                   : return _provider.Adapter.DB2Int32Type       .Name;
-				case "SMALLINT"                  : return _provider.Adapter.DB2Int16Type       .Name;
-				case "REAL"                      : return _provider.Adapter.DB2RealType        .Name;
-				case "DOUBLE"                    : return _provider.Adapter.DB2DoubleType      .Name;
-				case "DATE"                      : return _provider.Adapter.DB2DateType        .Name;
-				case "TIME"                      : return _provider.Adapter.DB2TimeType        .Name;
-				case "TIMESTMP"                  :
-				case "TIMESTAMP"                 : return _provider.Adapter.DB2TimeStampType   .Name;
-				case "ROWID"                     : return _provider.Adapter.DB2RowIdType       .Name;
-			}
-
-			return base.GetProviderSpecificType(dataType);
+				"XML"                       => _provider.Adapter.DB2XmlType         .Name,
+				"DECFLOAT"                  => _provider.Adapter.DB2DecimalFloatType.Name,
+				"DBCLOB"                    or
+				"CLOB"                      => _provider.Adapter.DB2ClobType        .Name,
+				"BLOB"                      => _provider.Adapter.DB2BlobType        .Name,
+				"BIGINT"                    => _provider.Adapter.DB2Int64Type       .Name,
+				"LONG VARCHAR FOR BIT DATA" or
+				"VARCHAR () FOR BIT DATA"   or
+				"VARBIN"                    or
+				"BINARY"                    or
+				"CHAR () FOR BIT DATA"      => _provider.Adapter.DB2BinaryType      .Name,
+				"LONG VARGRAPHIC"           or
+				"VARGRAPHIC"                or
+				"GRAPHIC"                   or
+				"LONG VARCHAR"              or
+				"CHARACTER"                 or
+				"VARCHAR"                   or
+				"CHAR"                      => _provider.Adapter.DB2StringType      .Name,
+				"DECIMAL"                   => _provider.Adapter.DB2DecimalType     .Name,
+				"INTEGER"                   => _provider.Adapter.DB2Int32Type       .Name,
+				"SMALLINT"                  => _provider.Adapter.DB2Int16Type       .Name,
+				"REAL"                      => _provider.Adapter.DB2RealType        .Name,
+				"DOUBLE"                    => _provider.Adapter.DB2DoubleType      .Name,
+				"DATE"                      => _provider.Adapter.DB2DateType        .Name,
+				"TIME"                      => _provider.Adapter.DB2TimeType        .Name,
+				"TIMESTMP"                  or
+				"TIMESTAMP"                 => _provider.Adapter.DB2TimeStampType   .Name,
+				"ROWID"                     => _provider.Adapter.DB2RowIdType       .Name,
+				_							=> base.GetProviderSpecificType(dataType),
+			};
 		}
 
 		protected override string GetDataSourceName(DataConnection dbConnection)
@@ -412,49 +419,46 @@ WHERE
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var sql = @"
-SELECT * FROM (
-	SELECT
-		p.SPECIFICNAME,
-		p.PROCSCHEMA,
-		p.PROCNAME,
-		p.TEXT,
-		p.REMARKS,
-		'P' AS IS_PROCEDURE,
-		o.OBJECTMODULENAME,
-		CASE WHEN CURRENT SCHEMA = p.PROCSCHEMA THEN 1 ELSE 0 END,
-		p.PARM_COUNT
-	FROM
-		SYSCAT.PROCEDURES p
-		LEFT JOIN SYSCAT.MODULEOBJECTS o ON p.SPECIFICNAME = o.SPECIFICNAME
-	WHERE " + GetSchemaFilter("p.PROCSCHEMA")
-	+ (IncludedSchemas.Count == 0 ? " AND p.PROCSCHEMA NOT IN ('SYSPROC', 'SYSIBMADM', 'SQLJ', 'SYSIBM')" : null)
-	+ @"
-	UNION ALL
-	SELECT
-		f.SPECIFICNAME,
-		f.FUNCSCHEMA,
-		f.FUNCNAME,
-		f.BODY,
-		f.REMARKS,
-		f.TYPE,
-		o.OBJECTMODULENAME,
-		CASE WHEN CURRENT SCHEMA = f.FUNCSCHEMA THEN 1 ELSE 0 END,
-		f.PARM_COUNT
-	FROM
-		SYSCAT.FUNCTIONS f
-		LEFT JOIN SYSCAT.MODULEOBJECTS o ON f.SPECIFICNAME = o.SPECIFICNAME
-		WHERE " + GetSchemaFilter("f.FUNCSCHEMA")
-	+ (IncludedSchemas.Count == 0 ? " AND f.FUNCSCHEMA NOT IN ('SYSPROC', 'SYSIBMADM', 'SQLJ', 'SYSIBM')" : null);
-
-			if (IncludedSchemas.Count == 0)
-				sql += " AND f.FUNCSCHEMA NOT IN ('SYSPROC', 'SYSIBMADM', 'SQLJ', 'SYSIBM')";
-
-			sql += @")
-ORDER BY OBJECTMODULENAME, PROCSCHEMA, PROCNAME, PARM_COUNT";
+			var sql =
+				$"""
+				SELECT * FROM (
+					SELECT
+						p.SPECIFICNAME,
+						p.PROCSCHEMA,
+						p.PROCNAME,
+						p.TEXT,
+						p.REMARKS,
+						'P' AS IS_PROCEDURE,
+						o.OBJECTMODULENAME,
+						CASE WHEN CURRENT SCHEMA = p.PROCSCHEMA THEN 1 ELSE 0 END,
+						p.PARM_COUNT
+					FROM
+						SYSCAT.PROCEDURES p
+						LEFT JOIN SYSCAT.MODULEOBJECTS o ON p.SPECIFICNAME = o.SPECIFICNAME
+					WHERE {GetSchemaFilter("p.PROCSCHEMA")}
+					{(IncludedSchemas.Count == 0 ? " AND p.PROCSCHEMA NOT IN ('SYSPROC', 'SYSIBMADM', 'SQLJ', 'SYSIBM')" : "")}
+					UNION ALL
+					SELECT
+						f.SPECIFICNAME,
+						f.FUNCSCHEMA,
+						f.FUNCNAME,
+						f.BODY,
+						f.REMARKS,
+						f.TYPE,
+						o.OBJECTMODULENAME,
+						CASE WHEN CURRENT SCHEMA = f.FUNCSCHEMA THEN 1 ELSE 0 END,
+						f.PARM_COUNT
+					FROM
+						SYSCAT.FUNCTIONS f
+						LEFT JOIN SYSCAT.MODULEOBJECTS o ON f.SPECIFICNAME = o.SPECIFICNAME
+					WHERE {GetSchemaFilter("f.FUNCSCHEMA")}
+					{(IncludedSchemas.Count == 0 ? " AND f.FUNCSCHEMA NOT IN ('SYSPROC', 'SYSIBMADM', 'SQLJ', 'SYSIBM')" : "")})
+				ORDER BY OBJECTMODULENAME, PROCSCHEMA, PROCNAME, PARM_COUNT
+				""";
 
 			return dataConnection
-				.Query(rd =>
+				.Query(
+					rd =>
 					{
 						// IMPORTANT: reader calls must be ordered to support SequentialAccess
 						var id        = rd.ToString(0)!;
@@ -480,7 +484,8 @@ ORDER BY OBJECTMODULENAME, PROCSCHEMA, PROCNAME, PARM_COUNT";
 							IsDefaultSchema     = isDefault
 						};
 					},
-					sql)
+					sql
+				)
 				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || p.SchemaName == DefaultSchema)
 				.ToList();
 		}
@@ -488,72 +493,76 @@ ORDER BY OBJECTMODULENAME, PROCSCHEMA, PROCNAME, PARM_COUNT";
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			return dataConnection
-				.Query(rd =>
-				{
-					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					var id         = rd.ToString(0)!;
-					var schema     = rd.ToString(1)!;
-					var procname   = rd.ToString(2)!;
-					var pName      = rd.ToString(3);
-					var dataType   = rd.ToString(4)!;
-					// IN OUT INOUT RET
-					var mode       = rd.ToString(5)!;
-					var ordinal    = ConvertTo<int>.From(rd[6]);
-					var length     = ConvertTo<int>.From(rd[7]);
-					var scale      = ConvertTo<int>.From(rd[8]);
-					var isNullable = rd.ToString(9) == "Y";
-
-					var ppi = new ProcedureParameterInfo()
+				.Query(
+					rd =>
 					{
-						ProcedureID   = $"{schema}.{procname}({id})",
-						ParameterName = pName,
-						DataType      = dataType,
-						Ordinal       = ordinal,
-						IsIn          = mode.Contains("IN"),
-						IsOut         = mode.Contains("OUT"),
-						IsResult      = mode == "RET",
-						IsNullable    = isNullable
-					};
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						var id         = rd.ToString(0)!;
+						var schema     = rd.ToString(1)!;
+						var procname   = rd.ToString(2)!;
+						var pName      = rd.ToString(3);
+						var dataType   = rd.ToString(4)!;
+						// IN OUT INOUT RET
+						var mode       = rd.ToString(5)!;
+						var ordinal    = ConvertTo<int>.From(rd[6]);
+						var length     = ConvertTo<int>.From(rd[7]);
+						var scale      = ConvertTo<int>.From(rd[8]);
+						var isNullable = rd.ToString(9) == "Y";
 
-					var ci = new ColumnInfo { DataType = ppi.DataType };
+						var ppi = new ProcedureParameterInfo()
+						{
+							ProcedureID   = $"{schema}.{procname}({id})",
+							ParameterName = pName,
+							DataType      = dataType,
+							Ordinal       = ordinal,
+							IsIn          = mode.Contains("IN"),
+							IsOut         = mode.Contains("OUT"),
+							IsResult      = mode == "RET",
+							IsNullable    = isNullable
+						};
 
-					SetColumnParameters(ci, length, scale);
+						var ci = new ColumnInfo { DataType = ppi.DataType };
 
-					ppi.Length    = ci.Length;
-					ppi.Precision = ci.Precision;
-					ppi.Scale     = ci.Scale;
+						SetColumnParameters(ci, length, scale);
 
-					return ppi;
-				}, @"
-SELECT
-	SPECIFICNAME,
-	PROCSCHEMA,
-	PROCNAME,
-	PARMNAME,
-	TYPENAME,
-	PARM_MODE,
-	ORDINAL,
-	LENGTH,
-	SCALE,
-	NULLS
-FROM
-	SYSCAT.PROCPARMS
-WHERE " + GetSchemaFilter("PROCSCHEMA") + @"
-UNION ALL
-SELECT
-	SPECIFICNAME,
-	FUNCSCHEMA,
-	FUNCNAME,
-	PARMNAME,
-	TYPENAME,
-	CASE WHEN ORDINAL = 0 THEN 'RET' ELSE 'IN' END,
-	ORDINAL,
-	LENGTH,
-	SCALE,
-	'Y'
-FROM
-	SYSCAT.FUNCPARMS
-	WHERE ROWTYPE <> 'R' AND " + GetSchemaFilter("FUNCSCHEMA"))
+						ppi.Length    = ci.Length;
+						ppi.Precision = ci.Precision;
+						ppi.Scale     = ci.Scale;
+
+						return ppi;
+					},
+					$"""
+					SELECT
+						SPECIFICNAME,
+						PROCSCHEMA,
+						PROCNAME,
+						PARMNAME,
+						TYPENAME,
+						PARM_MODE,
+						ORDINAL,
+						LENGTH,
+						SCALE,
+						NULLS
+					FROM
+						SYSCAT.PROCPARMS
+					WHERE {GetSchemaFilter("PROCSCHEMA")}
+					UNION ALL
+					SELECT
+						SPECIFICNAME,
+						FUNCSCHEMA,
+						FUNCNAME,
+						PARMNAME,
+						TYPENAME,
+						CASE WHEN ORDINAL = 0 THEN 'RET' ELSE 'IN' END,
+						ORDINAL,
+						LENGTH,
+						SCALE,
+						'Y'
+					FROM
+						SYSCAT.FUNCPARMS
+						WHERE ROWTYPE <> 'R' AND {GetSchemaFilter("FUNCSCHEMA")}
+					"""
+				)
 				.ToList();
 		}
 

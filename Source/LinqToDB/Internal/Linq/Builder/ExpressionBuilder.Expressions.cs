@@ -109,12 +109,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			var aliasResult = BuildExpression(context, newPath);
 			_handlingAlias = false;
 
-			if (aliasResult is not SqlErrorExpression && aliasResult is not DefaultValueExpression)
+			return aliasResult switch
 			{
-				return aliasResult;
-			}
-
-			return memberExpression;
+				SqlErrorExpression or DefaultValueExpression => memberExpression,
+				_ => aliasResult,
+			};
 		}
 
 		public bool HandleAlias(IBuildContext context, Expression expression, [NotNullWhen(true)] out Expression? result)

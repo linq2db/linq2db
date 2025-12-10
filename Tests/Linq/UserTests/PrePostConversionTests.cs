@@ -29,24 +29,22 @@ namespace Tests.UserTests
 			var ms = new MappingSchema();
 
 			ms.SetConvertExpression<int, int>(v => v * 2);
-			
-			using (var db = GetDataContext(context, ms))
-			using (var t = db.CreateLocalTable<ValuesTable>())
-			{
-				var param = 1;
-				t.Insert(() => new ValuesTable()
-				{
-					Id = 1,
-					SomeValue1 = 1,
-					SomeValue2 = param,
-				});
 
-				var record = t.Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(record.SomeValue1, Is.EqualTo(4));
-					Assert.That(record.SomeValue2, Is.EqualTo(4));
-				}
+			using var db = GetDataContext(context, ms);
+			using var t = db.CreateLocalTable<ValuesTable>();
+			var param = 1;
+			t.Insert(() => new ValuesTable()
+			{
+				Id = 1,
+				SomeValue1 = 1,
+				SomeValue2 = param,
+			});
+
+			var record = t.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.SomeValue1, Is.EqualTo(4));
+				Assert.That(record.SomeValue2, Is.EqualTo(4));
 			}
 		}
 
@@ -56,24 +54,22 @@ namespace Tests.UserTests
 			var ms = new MappingSchema();
 
 			ms.SetConvertExpression<int, int>(v => v * 2);
-			
-			using (var db = GetDataContext(context, ms))
-			using (var t = db.CreateLocalTable<ValuesTable>())
-			{
-				var param = 1;
-				db.Insert(new ValuesTable
-				{
-					Id = 1,
-					SomeValue1 = 1,
-					SomeValue2 = param,
-				});
 
-				var record = t.Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(record.SomeValue1, Is.EqualTo(4));
-					Assert.That(record.SomeValue2, Is.EqualTo(4));
-				}
+			using var db = GetDataContext(context, ms);
+			using var t = db.CreateLocalTable<ValuesTable>();
+			var param = 1;
+			db.Insert(new ValuesTable
+			{
+				Id = 1,
+				SomeValue1 = 1,
+				SomeValue2 = param,
+			});
+
+			var record = t.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.SomeValue1, Is.EqualTo(4));
+				Assert.That(record.SomeValue2, Is.EqualTo(4));
 			}
 		}
 
@@ -83,27 +79,25 @@ namespace Tests.UserTests
 			var ms = new MappingSchema();
 
 			ms.SetConvertExpression<int, int>(v => v * 2);
-			
-			using (var db = GetDataContext(context, ms))
-			using (var t = db.CreateLocalTable<ValuesTable>())
+
+			using var db = GetDataContext(context, ms);
+			using var t = db.CreateLocalTable<ValuesTable>();
+			db.Insert(new ValuesTable
 			{
-				db.Insert(new ValuesTable
-				{
-					Id = 1,
-					SomeValue1 = 1,
-					SomeValue2 = 1,
-				});
+				Id = 1,
+				SomeValue1 = 1,
+				SomeValue2 = 1,
+			});
 
-				var record = t.Single();
+			var record = t.Single();
 
-				db.Update(record);
+			db.Update(record);
 
-				record = t.Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(record.SomeValue1, Is.EqualTo(16));
-					Assert.That(record.SomeValue2, Is.EqualTo(16));
-				}
+			record = t.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.SomeValue1, Is.EqualTo(16));
+				Assert.That(record.SomeValue2, Is.EqualTo(16));
 			}
 		}
 
@@ -113,38 +107,36 @@ namespace Tests.UserTests
 			var ms = new MappingSchema();
 
 			ms.SetConvertExpression<int, int>(v => v * 2);
-			
-			using (var db = GetDataContext(context, ms))
-			using (var t = db.CreateLocalTable<ValuesTable>())
+
+			using var db = GetDataContext(context, ms);
+			using var t = db.CreateLocalTable<ValuesTable>();
+			db.Insert(new ValuesTable
 			{
-				db.Insert(new ValuesTable
-				{
-					Id = 1,
-					SomeValue1 = 1,
-					SomeValue2 = 1,
-				});
+				Id = 1,
+				SomeValue1 = 1,
+				SomeValue2 = 1,
+			});
 
-				t.Set(r => r.SomeValue1, 4)
-					.Set(r => r.SomeValue2, () => 2)
-					.Update();
+			t.Set(r => r.SomeValue1, 4)
+				.Set(r => r.SomeValue2, () => 2)
+				.Update();
 
-				var record = t.Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(record.SomeValue1, Is.EqualTo(16));
-					Assert.That(record.SomeValue2, Is.EqualTo(8));
-				}
+			var record = t.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.SomeValue1, Is.EqualTo(16));
+				Assert.That(record.SomeValue2, Is.EqualTo(8));
+			}
 
-				var param = 4;
-				t.Set(r => r.SomeValue2, () => param)
-					.Update();
+			var param = 4;
+			t.Set(r => r.SomeValue2, () => param)
+				.Update();
 
-				record = t.Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(record.SomeValue1, Is.EqualTo(16));
-					Assert.That(record.SomeValue2, Is.EqualTo(16));
-				}
+			record = t.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(record.SomeValue1, Is.EqualTo(16));
+				Assert.That(record.SomeValue2, Is.EqualTo(16));
 			}
 		}
 	}

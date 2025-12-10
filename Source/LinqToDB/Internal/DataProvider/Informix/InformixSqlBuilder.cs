@@ -135,7 +135,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Precision}, {type.Scale})");
 					return;
 				case DataType.NVarChar:
-					if (type.Length == null || type.Length > 255 || type.Length < 1)
+					if (type.Length is null or > 255 or < 1)
 					{
 						StringBuilder.Append("NVarChar(255)");
 
@@ -158,13 +158,14 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			// TODO: Letter definitions is: In the default locale, must be an ASCII character in the range A to Z or a to z
 			// add support for other locales later
 			return !IsReserved(name) &&
-				((name[0] >= 'a' && name[0] <= 'z') || (name[0] >= 'A' && name[0] <= 'Z') || name[0] == '_') &&
-				name.All(c =>
-					(c >= 'a' && c <= 'z') ||
-					(c >= 'A' && c <= 'Z') ||
-					(c >= '0' && c <= '9') ||
-					c == '$' ||
-					c == '_');
+				name[0] is (>= 'a' and <= 'z') or (>= 'A' and <= 'Z') or '_' &&
+				name.All(c => c is
+					(>= 'a' and <= 'z') or
+					(>= 'A' and <= 'Z') or
+					(>= '0' and <= '9') or
+					'$' or
+					'_'
+				);
 		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
@@ -184,15 +185,20 @@ namespace LinqToDB.Internal.DataProvider.Informix
 						return sb.Append('"').Append(value).Append('"');
 
 					break;
+
 				case ConvertType.NameToQueryParameter   :
 					return SqlProviderFlags.IsParameterOrderDependent
 						? sb.Append('?')
 						: sb.Append('@').Append(value);
+
 				case ConvertType.NameToCommandParameter :
-				case ConvertType.NameToSprocParameter   : return sb.Append(':').Append(value);
+
+				case ConvertType.NameToSprocParameter   :
+					return sb.Append(':').Append(value);
+
 				case ConvertType.SprocParameterToName   :
 					return (value.Length > 0 && value[0] == ':')
-						? sb.Append(value.Substring(1))
+						? sb.Append(value.AsSpan(1))
 						: sb.Append(value);
 			}
 
@@ -294,29 +300,23 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			string command;
+			var command = table.TableOptions.TemporaryOptionValue switch
+			{
+				TableOptions.IsTemporary                                                                              or
+				TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData or
+																					TableOptions.IsLocalTemporaryData or
+										   TableOptions.IsLocalTemporaryStructure                                     or
+										   TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData =>
+					"CREATE TEMP TABLE ",
 
-			if (table.TableOptions.IsTemporaryOptionSet())
-			{
-				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-				{
-					case TableOptions.IsTemporary                                                                              :
-					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-					case                                                                     TableOptions.IsLocalTemporaryData :
-					case                            TableOptions.IsLocalTemporaryStructure                                     :
-					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-						command = "CREATE TEMP TABLE ";
-						break;
-					case var value :
-						throw new InvalidOperationException($"Incompatible table options '{value}'");
-				}
-			}
-			else
-			{
-				command = "CREATE TABLE ";
-			}
+				0 =>
+					"CREATE TABLE ",
+
+				var value =>
+					throw new InvalidOperationException($"Incompatible table options '{value}'"),
+			};
 
 			StringBuilder.Append(command);
 

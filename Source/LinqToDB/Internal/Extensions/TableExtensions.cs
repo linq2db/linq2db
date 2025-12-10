@@ -75,7 +75,7 @@ namespace LinqToDB.Internal.Extensions
 			CreateTableOptions createOptions)
 			where T: notnull
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 			return QueryRunner.CreateTable<T>.Query(
 				dataContext,
 				tableDescriptor: tableDescriptor,
@@ -100,7 +100,7 @@ namespace LinqToDB.Internal.Extensions
 			CancellationToken    token           = default)
 			where T : notnull
 		{
-			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			ArgumentNullException.ThrowIfNull(dataContext);
 			return QueryRunner.CreateTable<T>.QueryAsync(
 				dataContext,
 				tableDescriptor: tableDescriptor,

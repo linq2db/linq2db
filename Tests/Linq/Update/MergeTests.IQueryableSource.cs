@@ -13,61 +13,57 @@ namespace Tests.xUpdate
 		[ActiveIssue(2363)]
 		public void MergeIntoIQueryable([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = GetSource1(db)
+			var rows = GetSource1(db)
 					.MergeInto(table.Where(_ => _.Id >= 1))
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(6));
+			Assert.That(result, Has.Count.EqualTo(6));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				AssertRow(InitialSourceData[2], result[4], null, null);
-				AssertRow(InitialSourceData[3], result[5], null, 216);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialSourceData[2], result[4], null, null);
+			AssertRow(InitialSourceData[3], result[5], null, 216);
 		}
 
 		[Test]
 		public void MergeIntoCte([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = GetSource1(db)
+			var rows = GetSource1(db)
 					.MergeInto(table.Where(_ => _.Id >= 1).AsCte())
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(6));
+			Assert.That(result, Has.Count.EqualTo(6));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				AssertRow(InitialSourceData[2], result[4], null, null);
-				AssertRow(InitialSourceData[3], result[5], null, 216);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialSourceData[2], result[4], null, null);
+			AssertRow(InitialSourceData[3], result[5], null, 216);
 		}
 
 		[Test]
@@ -90,61 +86,57 @@ namespace Tests.xUpdate
 		[ActiveIssue(2363)]
 		public void MergeFromIQueryable([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table.Where(_ => _.Id >= 1)
+			var rows = table.Where(_ => _.Id >= 1)
 					.Merge().Using(GetSource1(db))
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(6));
+			Assert.That(result, Has.Count.EqualTo(6));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				AssertRow(InitialSourceData[2], result[4], null, null);
-				AssertRow(InitialSourceData[3], result[5], null, 216);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialSourceData[2], result[4], null, null);
+			AssertRow(InitialSourceData[3], result[5], null, 216);
 		}
 
 		[Test]
 		public void MergeFromCte([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table.Where(s => s.Id >= 1).AsCte()
+			var rows = table.Where(s => s.Id >= 1).AsCte()
 					.Merge().Using(GetSource1(db))
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(t => t.Id).ToList();
+			var result = table.OrderBy(t => t.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(6));
+			Assert.That(result, Has.Count.EqualTo(6));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				AssertRow(InitialSourceData[2], result[4], null, null);
-				AssertRow(InitialSourceData[3], result[5], null, 216);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialSourceData[2], result[4], null, null);
+			AssertRow(InitialSourceData[3], result[5], null, 216);
 		}
 
 		[Test]
@@ -158,31 +150,29 @@ namespace Tests.xUpdate
 		})]
 		public void MergeUsingCteJoin([MergeDataContextSource(TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge().Using(GetSource1(db).Where(_ => _.Id >= 1).AsCte())
 					.On(t => t.Id, s => s.Id)
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(6));
+			Assert.That(result, Has.Count.EqualTo(6));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				AssertRow(InitialSourceData[2], result[4], null, null);
-				AssertRow(InitialSourceData[3], result[5], null, 216);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialSourceData[2], result[4], null, null);
+			AssertRow(InitialSourceData[3], result[5], null, 216);
 		}
 
 		[Test]
@@ -196,31 +186,29 @@ namespace Tests.xUpdate
 		})]
 		public void MergeUsingCteWhere([MergeDataContextSource(TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge().Using(GetSource1(db).Where(_ => _.Id >= 1).AsCte())
 					.On((t, s) => t.Id == s.Id)
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(6));
+			Assert.That(result, Has.Count.EqualTo(6));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
-				AssertRow(InitialSourceData[2], result[4], null, null);
-				AssertRow(InitialSourceData[3], result[5], null, 216);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialSourceData[2], result[4], null, null);
+			AssertRow(InitialSourceData[3], result[5], null, 216);
 		}
 	}
 }

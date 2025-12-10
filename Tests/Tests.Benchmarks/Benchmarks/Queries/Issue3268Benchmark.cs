@@ -62,15 +62,13 @@ namespace LinqToDB.Benchmarks.Queries
 		{
 			for (var i = 0; i < _iterations; i++)
 			{
-				using (var db = new DataConnection(new DataOptions().UseConnection(SqlServerTools.GetDataProvider(SqlServerVersion.v2008, SqlServerProvider.MicrosoftDataSqlClient), _cn)))
-				{
-					db.GetTable<MyPOCON>()
-						.Where(p => p.Code == "A" + i && p.Currency == "SUR")
-						.Set(p => p.Weight, i * 10)
-						.Set(p => p.Currency, "SUR")
-						.Set(p => p.Value, i * i + 2)
-						.Update();
-				}
+				using var db = new DataConnection(new DataOptions().UseConnection(SqlServerTools.GetDataProvider(SqlServerVersion.v2008, SqlServerProvider.MicrosoftDataSqlClient), _cn));
+				db.GetTable<MyPOCON>()
+					.Where(p => p.Code == "A" + i && p.Currency == "SUR")
+					.Set(p => p.Weight, i * 10)
+					.Set(p => p.Currency, "SUR")
+					.Set(p => p.Value, i * i + 2)
+					.Update();
 			}
 		}
 
@@ -88,10 +86,8 @@ namespace LinqToDB.Benchmarks.Queries
 		{
 			for (var i = 0; i < _iterations; i++)
 			{
-				using (var db = new DataConnection(new DataOptions().UseConnection(SqlServerTools.GetDataProvider(SqlServerVersion.v2008, SqlServerProvider.MicrosoftDataSqlClient), _cn)))
-				{
-					_compiledNullable(db, i);
-				}
+				using var db = new DataConnection(new DataOptions().UseConnection(SqlServerTools.GetDataProvider(SqlServerVersion.v2008, SqlServerProvider.MicrosoftDataSqlClient), _cn));
+				_compiledNullable(db, i);
 			}
 		}
 
@@ -114,15 +110,13 @@ namespace LinqToDB.Benchmarks.Queries
 		{
 			for (var i = 0; i < _iterations; i++)
 			{
-				using (var db = new DataConnection(new DataOptions().UseConnection(SqlServerTools.GetDataProvider(SqlServerVersion.v2008, SqlServerProvider.MicrosoftDataSqlClient), _cn)))
-				{
-					db.GetTable<MyPOCO>()
-						.Where(p => p.Code == "A" + i && p.Currency == "SUR")
-						.Set(p => p.Weight, i * 10)
-						.Set(p => p.Currency, "SUR")
-						.Set(p => p.Value, i * i + 2)
-						.Update();
-				}
+				using var db = new DataConnection(new DataOptions().UseConnection(SqlServerTools.GetDataProvider(SqlServerVersion.v2008, SqlServerProvider.MicrosoftDataSqlClient), _cn));
+				db.GetTable<MyPOCO>()
+					.Where(p => p.Code == "A" + i && p.Currency == "SUR")
+					.Set(p => p.Weight, i * 10)
+					.Set(p => p.Currency, "SUR")
+					.Set(p => p.Value, i * i + 2)
+					.Update();
 			}
 		}
 
@@ -140,10 +134,8 @@ namespace LinqToDB.Benchmarks.Queries
 		{
 			for (var i = 0; i < _iterations; i++)
 			{
-				using (var db = new DataConnection(new DataOptions().UseConnection(SqlServerTools.GetDataProvider(SqlServerVersion.v2008, SqlServerProvider.MicrosoftDataSqlClient), _cn)))
-				{
-					_compiled(db, i);
-				}
+				using var db = new DataConnection(new DataOptions().UseConnection(SqlServerTools.GetDataProvider(SqlServerVersion.v2008, SqlServerProvider.MicrosoftDataSqlClient), _cn));
+				_compiled(db, i);
 			}
 		}
 

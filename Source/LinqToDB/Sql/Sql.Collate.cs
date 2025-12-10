@@ -26,7 +26,7 @@ namespace LinqToDB
 
 		internal sealed class NamedCollationBuilder : IExtensionCallBuilder
 		{
-			private static readonly Regex _collationValidator = new Regex(@"^[a-zA-Z0-9_\.\-@]+$", RegexOptions.Compiled);
+			private static readonly Regex _collationValidator = new(@"^[a-zA-Z0-9_\.\-@]+$", RegexOptions.Compiled);
 
 			public void Build(ISqlExtensionBuilder builder)
 			{

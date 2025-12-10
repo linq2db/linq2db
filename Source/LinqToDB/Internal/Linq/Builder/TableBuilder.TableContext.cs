@@ -403,7 +403,7 @@ namespace LinqToDB.Internal.Linq.Builder
 									foreach (var field in SqlTable.Fields)
 									{
 										var name = levelMember.Member.Name;
-										if (field.Name.IndexOf('.') >= 0)
+										if (field.Name.Contains('.'))
 										{
 											if (pathName == null)
 											{
