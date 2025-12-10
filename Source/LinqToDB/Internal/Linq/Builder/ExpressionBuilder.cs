@@ -494,20 +494,20 @@ namespace LinqToDB.Internal.Linq.Builder
 					left = Expression.Convert(left, rightType);
 				else
 				{
-					var rightConvert = ConvertBuilder.GetConverter(mappingSchema, rightType, leftType);
-					var leftConvert  = ConvertBuilder.GetConverter(mappingSchema, leftType, rightType);
+					var (_, rightConvert, _) = ConvertBuilder.GetConverter(mappingSchema, rightType, leftType);
+					var (_, leftConvert, _)  = ConvertBuilder.GetConverter(mappingSchema, leftType, rightType);
 
 					var leftIsPrimitive  = leftType.IsPrimitive;
 					var rightIsPrimitive = rightType.IsPrimitive;
 
-					if (leftIsPrimitive && !rightIsPrimitive && rightConvert.Item2 != null)
-						right = rightConvert.Item2.GetBody(right);
-					else if (!leftIsPrimitive && rightIsPrimitive && leftConvert.Item2 != null)
-						left = leftConvert.Item2.GetBody(left);
-					else if (rightConvert.Item2 != null)
-						right = rightConvert.Item2.GetBody(right);
-					else if (leftConvert.Item2 != null)
-						left = leftConvert.Item2.GetBody(left);
+					if (leftIsPrimitive && !rightIsPrimitive && rightConvert != null)
+						right = rightConvert.GetBody(right);
+					else if (!leftIsPrimitive && rightIsPrimitive && leftConvert != null)
+						left = leftConvert.GetBody(left);
+					else if (rightConvert != null)
+						right = rightConvert.GetBody(right);
+					else if (leftConvert != null)
+						left = leftConvert.GetBody(left);
 				}
 			}
 

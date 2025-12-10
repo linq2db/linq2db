@@ -4,7 +4,6 @@
 		<LangVersion>9</LangVersion>
 		<AssemblyName>linq2db.FSharp</AssemblyName>
 		<RootNamespace>LinqToDB.FSharp</RootNamespace>
-		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.FSharp.xml</DocumentationFile>
 		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 
 		<WarningLevel>5</WarningLevel>

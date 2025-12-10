@@ -26,6 +26,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			switch (type.DataType)
 			{
+				case DataType.Json           : StringBuilder.Append("NVARCHAR(MAX)");                           break;
 				case DataType.DateTimeOffset :
 				case DataType.DateTime2      :
 				case DataType.Time           :

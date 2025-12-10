@@ -58,6 +58,16 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5240")]
+		public async ValueTask TestJSONTypeFallback([IncludeDataSources(TestProvName.AllSqlServer2022Minus)] string context)
+		{
+			const string json1 = /*lang=json,strict*/ "{ \"prop1\": 123 }";
+			const string json2 = /*lang=json,strict*/ "{ \"prop1\": 321 }";
+
+			await TestType<string, string?>(context, new(typeof(string), DataType.Json), "{ }", default, filterByValue: false);
+			await TestType<string, string?>(context, new(typeof(string), DataType.Json), json1, json2, filterByValue: false, filterByNullableValue: false);
+		}
+
 		[Test]
 		public async ValueTask TestVectorType([IncludeDataSources(TestProvName.AllSqlServer2025Plus)] string context)
 		{

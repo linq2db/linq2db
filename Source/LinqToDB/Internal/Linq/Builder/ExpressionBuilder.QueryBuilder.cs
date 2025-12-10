@@ -572,7 +572,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (placeholder.Type != readerExpression.Type)
 					{
-						var convertExpression = MappingSchema.GetConvertExpression(readerExpression.Type, placeholder.Type, false, true, ConversionType.FromDatabase);
+						var convertExpression = MappingSchema.GetConvertExpression(readerExpression.Type, placeholder.Type, checkNull: canBeNull, true, ConversionType.FromDatabase);
 
 						if (convertExpression is null)
 							throw new InvalidOperationException($"No conversions defined from {readerExpression.Type} to {placeholder.Type}");

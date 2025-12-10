@@ -278,7 +278,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				SqlServerVersion.v2017 => new SqlServer2017SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
 				SqlServerVersion.v2019 => new SqlServer2019SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
 				SqlServerVersion.v2022 => new SqlServer2022SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
-				SqlServerVersion.v2025 => new SqlServer2022SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				SqlServerVersion.v2025 => new SqlServer2025SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
 				_ => throw new InvalidOperationException(),
 			};
 		}
@@ -451,7 +451,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 				case DataType.Json:
 				{
-					if (Adapter.SqlJsonType != null)
+					if (Adapter.SqlJsonType != null && Version >= SqlServerVersion.v2025)
 					{
 						if (parameter is BulkCopyReader.Parameter && value?.GetType() == Adapter.SqlJsonType)
 						{
@@ -593,20 +593,20 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			switch (dataType.DataType)
 			{
-				case DataType.Text: type = SqlDbType.Text; break;
-				case DataType.NText: type = SqlDbType.NText; break;
-				case DataType.Binary: type = SqlDbType.Binary; break;
-				case DataType.Image: type = SqlDbType.Image; break;
-				case DataType.SmallMoney: type = SqlDbType.SmallMoney; break;
-				// ArgumentException: The version of SQL Server in use does not support datatype 'date'
-				case DataType.Date: type = Version == SqlServerVersion.v2005 ? SqlDbType.DateTime : SqlDbType.Date; break;
-				case DataType.Time: type = SqlDbType.Time; break;
-				case DataType.SmallDateTime: type = SqlDbType.SmallDateTime; break;
-				case DataType.Timestamp: type = SqlDbType.Timestamp; break;
-				case DataType.Structured: type = SqlDbType.Structured; break;
-				case DataType.Json: type = Adapter.JsonDbType; break;
-				case DataType.Vector16:
-				case DataType.Vector32: type = Adapter.VectorDbType; break;
+				case DataType.Text         : type = SqlDbType.Text;                                                          break;
+				case DataType.NText        : type = SqlDbType.NText;                                                         break;
+				case DataType.Binary       : type = SqlDbType.Binary;                                                        break;
+				case DataType.Image        : type = SqlDbType.Image;                                                         break;
+				case DataType.SmallMoney   : type = SqlDbType.SmallMoney;                                                    break;
+				// ArgumentException       : The version of SQL Server in use does not support datatype 'date'
+				case DataType.Date         : type = Version == SqlServerVersion.v2005 ? SqlDbType.DateTime : SqlDbType.Date; break;
+				case DataType.Time         : type = SqlDbType.Time;                                                          break;
+				case DataType.SmallDateTime: type = SqlDbType.SmallDateTime;                                                 break;
+				case DataType.Timestamp    : type = SqlDbType.Timestamp;                                                     break;
+				case DataType.Structured   : type = SqlDbType.Structured;                                                    break;
+				case DataType.Json when Version >= SqlServerVersion.v2025: type = Adapter.JsonDbType;                        break;
+				case DataType.Vector16     :
+				case DataType.Vector32     : type = Adapter.VectorDbType;                                                    break;
 			}
 
 			if (type != null)
