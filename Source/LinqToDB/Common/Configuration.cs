@@ -24,7 +24,7 @@ namespace LinqToDB.Common
 	public static class Configuration
 	{
 		/// <summary>
-		/// Fixes only partly working datediff and timespanpart calls in ExpressionBuilderSqlBuilder
+		/// Disables built-in datediff and timespanpart call conversions in ExposeExpressionVisitor to allow external conversion via ExtensionAttribute.
 		/// </summary>
 		[Obsolete("This API planned for removal when pull #3994 is merged"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static bool DisableLegacySqlBuilderDateDiffCalls;
