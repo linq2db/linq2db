@@ -236,6 +236,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 							c.Precision = null;
 							c.Scale     = null;
 							break;
+						case "vector"      :
+							c.Length = (c.Length - 8) / 4;
+							break;
 					}
 
 					return c;
@@ -418,8 +421,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			switch (dataType)
 			{
 				case "json"        : return typeof(string);
-				// TODO: currently string mapping is not usable
-				case "vector"      : return Provider.Adapter.SqlVectorType ?? typeof(string);
+				case "vector"      : return Provider.Adapter.SqlVectorType ?? typeof(float[]);
 				case "tinyint"     : return typeof(byte);
 				case "hierarchyid" :
 				case "geography"   :
@@ -435,9 +437,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			// database name for udt not supported by sql server
 			if (udtName != null)
 				return (udtSchema != null ? SqlServerTools.QuoteIdentifier(udtSchema) + '.' : null) + SqlServerTools.QuoteIdentifier(udtName);
-
-			if (columnType == "vector")
-				length = (length - 8) / 4;
 
 			return base.GetDbType(options, columnType, dataType, length, precision, scale, udtCatalog, udtSchema, udtName);
 		}
@@ -542,6 +541,26 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			{
 				return base.GetProcedureSchema(dataConnection, commandText, commandType, parameters, options);
 			}
+		}
+
+		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
+		{
+			var list = base.GetDataTypes(dataConnection);
+
+			if (list.FirstOrDefault(t => t.DataType == "vector") == null)
+			{
+				list.Add(new DataTypeInfo
+				{
+					TypeName         = "vector",
+					DataType         = "System.Single[]",
+					CreateFormat     = "vector({0})",
+					CreateParameters = "length",
+					ProviderSpecific = true,
+					ProviderDbType   = 36
+				});
+			}
+
+			return list;
 		}
 	}
 }
