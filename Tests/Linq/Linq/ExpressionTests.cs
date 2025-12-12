@@ -475,7 +475,7 @@ namespace Tests.Linq
 		[LinqToDB.Sql.ExpressionAttribute("{0} = ANY({1})", ServerSideOnly = true, IsPredicate = true)]
 		static bool IsAnyOf2<T>(T left, T[] right) => throw new ServerSideOnlyException(nameof(IsAnyOf2));
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "Remote context collections serializaton")]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "Remote context collections serialization")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5244")]
 		public void CollectionParameterTranslation_IReadOnlyList([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
@@ -485,7 +485,7 @@ namespace Tests.Linq
 			db.Person.Where(p => IsAnyOf1(p.ID, ids)).Delete();
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "Remote context collections serializaton")]
+		[ActiveIssue(SkipForNonLinqService = true, Details = "Remote context collections serialization")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5244")]
 		public void CollectionParameterTranslation_Array([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
