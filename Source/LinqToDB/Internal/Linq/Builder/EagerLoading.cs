@@ -11,8 +11,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		public static Type GetEnumerableElementType(Type type, MappingSchema mappingSchema)
 		{
 			if (!mappingSchema.IsCollectionType(type))
-				// TODO: we depend on IsCollectionType implementation here, need schema-specific method instead
-				return type.GetGenericArguments()[0];
+				return type;
 			if (type.IsArray)
 				return type.GetElementType()!;
 			if (typeof(IGrouping<,>).IsSameOrParentOf(type))
