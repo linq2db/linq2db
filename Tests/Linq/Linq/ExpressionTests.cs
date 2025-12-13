@@ -468,5 +468,31 @@ namespace Tests.Linq
 
 			Assert.That(db.LastQuery, Does.Contain("ORDER"));
 		}
+
+		[LinqToDB.Sql.ExpressionAttribute("{0} = ANY({1})", ServerSideOnly = true, IsPredicate = true)]
+		static bool IsAnyOf1<T>(T left, IReadOnlyList<T> right) => throw new ServerSideOnlyException(nameof(IsAnyOf1));
+
+		[LinqToDB.Sql.ExpressionAttribute("{0} = ANY({1})", ServerSideOnly = true, IsPredicate = true)]
+		static bool IsAnyOf2<T>(T left, T[] right) => throw new ServerSideOnlyException(nameof(IsAnyOf2));
+
+		[ActiveIssue(SkipForNonLinqService = true, Details = "Remote context collections serialization")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5244")]
+		public void CollectionParameterTranslation_IReadOnlyList([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataConnection(context);
+			IReadOnlyList<int> ids = [10, 20];
+
+			db.Person.Where(p => IsAnyOf1(p.ID, ids)).Delete();
+		}
+
+		[ActiveIssue(SkipForNonLinqService = true, Details = "Remote context collections serialization")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5244")]
+		public void CollectionParameterTranslation_Array([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataConnection(context);
+			int[] ids = [10, 20];
+
+			db.Person.Where(p => IsAnyOf2(p.ID, ids)).Delete();
+		}
 	}
 }

@@ -490,6 +490,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (dynamicProperties != null)
 				{
+					if (ed.DynamicColumnStorageInitializer != null)
+						generator.AddExpression(ed.DynamicColumnStorageInitializer.GetBody(objVariable));
+
 					//TODO: we can make it in MemberInit
 					foreach (var d in dynamicProperties)
 					{

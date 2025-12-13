@@ -2,8 +2,11 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Reflection
 {
@@ -42,6 +45,28 @@ namespace LinqToDB.Reflection
 
 		public IObjectFactory?         ObjectFactory { get; set; }
 		public abstract Type           Type          { get; }
+
+		#endregion
+
+		#region Init
+		private Expression?            _settersInitExpression;
+		private ParameterExpression[]? _settersInitArguments;
+
+		public Expression? GetSettersInitExpression(Expression instance)
+		{
+			return _settersInitExpression?.Transform(
+				(parameters: _settersInitArguments!, instance),
+				static (context, e) => e == context.parameters[0] ? context.instance : e);
+		}
+
+		internal void SetSettersInitExpression(EntityDescriptor entityDescriptor)
+		{
+			if (entityDescriptor.DynamicColumnStorageInitializer != null)
+			{
+				_settersInitArguments  = [Expression.Parameter(Type, "obj")];
+				_settersInitExpression = entityDescriptor.DynamicColumnStorageInitializer.GetBody(_settersInitArguments[0]);
+			}
+		}
 
 		#endregion
 
