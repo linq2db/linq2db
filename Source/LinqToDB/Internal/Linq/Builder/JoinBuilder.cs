@@ -9,7 +9,11 @@ using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	[BuildsMethodCall("Join")]
+	[BuildsMethodCall(nameof(Enumerable.Join))]
+#if NET10_0_OR_GREATER
+	[BuildsMethodCall(nameof(Enumerable.LeftJoin))]
+	[BuildsMethodCall(nameof(Enumerable.RightJoin))]
+#endif
 	sealed class JoinBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
@@ -17,23 +21,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (call.Method.DeclaringType == typeof(LinqExtensions) || !call.IsQueryable())
 				return false;
 
-			// other overload for Join
-			if (call.Arguments[2].Unwrap() is not LambdaExpression lambda)
+			if (call.Arguments.Count != 5)
 				return false;
-
-			var body = lambda.Body.Unwrap();
-			if (body.NodeType == ExpressionType.MemberInit)
-			{
-				var mi = (MemberInitExpression)body;
-
-				var throwExpr = 
-					mi.NewExpression.Arguments.Count > 0
-					|| mi.Bindings.Count == 0
-					|| mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment);
-
-				if (throwExpr)
-					throw new NotSupportedException($"Explicit construction of entity type '{body.Type}' in join is not allowed.");
-			}
 
 			return true;
 		}
@@ -55,19 +44,68 @@ namespace LinqToDB.Internal.Linq.Builder
 				extensions   = jhc.Extensions;
 			}
 
-			var join = innerContext.SelectQuery.InnerJoin();
+#if NET10_0_OR_GREATER
+			var joinType = methodCall.Method.Name switch
+			{
+				nameof(Enumerable.LeftJoin)  => JoinType.Left,
+				nameof(Enumerable.RightJoin) => JoinType.Right,
+				_                            => JoinType.Inner,
+			};
+
+			if (joinType is JoinType.Right)
+			{
+				outerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(
+					buildInfo.Parent,
+					outerContext,
+					outerContext,
+					defaultValue: null,
+					isNullValidationDisabled: false);
+
+				outerContext = new SubQueryContext(outerContext);
+			}
+
+			if (joinType is JoinType.Left)
+			{
+				innerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(
+					buildInfo.Parent,
+					innerContext,
+					innerContext,
+					defaultValue: null,
+					isNullValidationDisabled: false);
+
+				innerContext = new SubQueryContext(innerContext);
+			}
+#else
+			var joinType = JoinType.Inner;
+#endif
+
+			var outerKeyLambda = methodCall.Arguments[2].UnwrapLambda();
+			var innerKeyLambda = methodCall.Arguments[3].UnwrapLambda();
+
+			var outerBody = outerKeyLambda.Body.Unwrap();
+			if (outerBody.NodeType == ExpressionType.MemberInit)
+			{
+				var mi = (MemberInitExpression)outerBody;
+
+				var throwExpr =
+					mi.NewExpression.Arguments.Count > 0
+					|| mi.Bindings.Count             == 0
+					|| mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment);
+
+				if (throwExpr)
+					return BuildSequenceResult.Error(outerKeyLambda, $"Explicit construction of entity type '{outerBody.Type}' in join is not allowed.");
+			}
+
+			var join = new SqlJoinedTable(joinType, innerContext.SelectQuery, null, false);
 			var sql  = outerContext.SelectQuery;
 
 			if (extensions != null)
-				join.JoinedTable.SqlQueryExtensions = extensions;
+				join.SqlQueryExtensions = extensions;
 
 			var selector = methodCall.Arguments[4].UnwrapLambda();
 
 			outerContext.SetAlias(selector.Parameters[0].Name);
 			innerContext.SetAlias(selector.Parameters[1].Name);
-
-			var outerKeyLambda = methodCall.Arguments[2].UnwrapLambda();
-			var innerKeyLambda = methodCall.Arguments[3].UnwrapLambda();
 
 			var innerKeyContext = innerContext;
 
@@ -80,7 +118,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			outerKeySelector = builder.BuildSqlExpression(outerContext, outerKeySelector, BuildPurpose.Sql, BuildFlags.ForKeys);
 			innerKeySelector = builder.BuildSqlExpression(outerContext, innerKeySelector, BuildPurpose.Sql, BuildFlags.ForKeys);
 
-			sql.From.Tables[0].Joins.Add(join.JoinedTable);
+			sql.From.Tables[0].Joins.Add(join);
 
 			bool allowNullComparison = outerKeySelector is SqlGenericConstructorExpression ||
 			                           innerKeySelector is SqlGenericConstructorExpression;
@@ -88,7 +126,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!allowNullComparison && builder.CompareNulls is CompareNulls.LikeClr or CompareNulls.LikeSqlExceptParameters)
 				compareSearchCondition = QueryHelper.CorrectComparisonForJoin(compareSearchCondition);
 
-			join.JoinedTable.Condition = compareSearchCondition;
+			join.Condition = compareSearchCondition;
 
 			var body = SequenceHelper.PrepareBody(selector, outerContext, new ScopeContext(innerContext, outerContext));
 

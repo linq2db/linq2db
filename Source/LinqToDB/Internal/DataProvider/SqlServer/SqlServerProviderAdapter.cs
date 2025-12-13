@@ -76,11 +76,11 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			MappingSchema? mappingSchema,
 
-			Type? jsonDocumentType,
+			Type?                  jsonDocumentType,
 			Func<object, string?>? jsdocToStringConverter,
-			Type? sqlJsonType,
-			Type? sqlVectorType,
-			Type? sqlHalfVectorType,
+			Type?                  sqlJsonType,
+			Type?                  sqlVectorType,
+			Type?                  sqlHalfVectorType,
 
 #if NET8_0_OR_GREATER
 			Func<object, Half[]>? vectorToHalfConverter,

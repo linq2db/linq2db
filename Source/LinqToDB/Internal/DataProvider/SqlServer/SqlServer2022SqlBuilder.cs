@@ -12,7 +12,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 		}
 
-		SqlServer2022SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		protected SqlServer2022SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
