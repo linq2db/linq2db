@@ -55,8 +55,8 @@ namespace LinqToDB.Reflection
 		public Expression? GetSettersInitExpression(Expression instance)
 		{
 			return _settersInitExpression?.Transform(
-				(parameters: _settersInitArguments, instance),
-				static (context, e) => context.instance);
+				(parameters: _settersInitArguments!, instance),
+				static (context, e) => e == context.parameters[0] ? context.instance : e);
 		}
 
 		internal void SetSettersInitExpression(EntityDescriptor entityDescriptor)
