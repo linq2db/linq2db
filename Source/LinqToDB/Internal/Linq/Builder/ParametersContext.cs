@@ -416,10 +416,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				return HasDbMapping(mappingSchema, notNullable, out convertExpr);
 
 			// TODO: Workaround, wee need good TypeMapping approach
-			if (testedType.IsArray)
+			if (mappingSchema.IsCollectionType(testedType))
 			{
 				convertExpr = null;
-				return HasDbMapping(mappingSchema, testedType.GetElementType()!, out _);
+				return HasDbMapping(mappingSchema, EagerLoading.GetEnumerableElementType(testedType, mappingSchema), out _);
 			}
 
 			if (!testedType.IsEnum)
