@@ -548,7 +548,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			var list = base.GetDataTypes(dataConnection);
 
-			if (list.FirstOrDefault(t => t.DataType == "vector") == null)
+			if (!list.Any(t => t.DataType == "vector"))
 			{
 				list.Add(new DataTypeInfo
 				{
