@@ -596,8 +596,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				return expr;
 			}
 
-#pragma warning disable CS0618 // Type or member is obsolete
-			if (!LinqToDB.Common.Configuration.DisableLegacySqlBuilderDateDiffCalls)
+			if (DataContext.Options.SqlOptions.DisableLegacySqlBuilderDateDiffCalls)
 			{
 				if (node.Member.DeclaringType == typeof(TimeSpan) && node.Expression != null)
 				{
@@ -657,7 +656,6 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 					}
 				}
 			}
-#pragma warning restore CS0618 // Type or member is obsolete
 
 			return null;
 		}
