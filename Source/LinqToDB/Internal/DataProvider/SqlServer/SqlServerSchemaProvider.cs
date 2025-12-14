@@ -553,7 +553,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				list.Add(new DataTypeInfo
 				{
 					TypeName         = "vector",
-					DataType         = "System.Single[]",
+					DataType         = typeof(float[]).FullName,
 					CreateFormat     = "vector({0})",
 					CreateParameters = "length",
 					ProviderSpecific = true,
