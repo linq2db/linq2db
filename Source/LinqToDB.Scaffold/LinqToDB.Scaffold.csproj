@@ -9,6 +9,9 @@
 		<Title>LINQ to DB Scaffold Framework</Title>
 		<Description>LINQ to DB Scaffold framework is used for database model generation for Linq To DB projects.</Description>
 		<Product>$(Title)</Product>
+
+		<!--temporary till Jan.2026 SDK release-->
+		<RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
 	</PropertyGroup>
 
 	<ItemGroup>

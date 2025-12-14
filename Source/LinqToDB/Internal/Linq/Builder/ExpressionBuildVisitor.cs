@@ -2343,7 +2343,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public bool HandleAsParameter(Expression node, [NotNullWhen(true)] out Expression? translated)
 		{
-			if (_buildPurpose is BuildPurpose.Sql or BuildPurpose.Expression && Builder.CanBeEvaluatedOnClient(node))
+			if (_buildPurpose is BuildPurpose.Sql)
 			{
 				var sqlParam = Builder.ParametersContext.BuildParameter(BuildContext, node, CurrentDescriptor, alias: Alias);
 

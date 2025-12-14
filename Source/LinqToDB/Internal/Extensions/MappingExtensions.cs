@@ -124,9 +124,8 @@ namespace LinqToDB.Internal.Extensions
 		{
 			if (mappingSchema.IsScalarType(type))
 				return false;
-			if (!typeof(IEnumerable<>).IsSameOrParentOf(type))
-				return false;
-			return true;
+
+			return typeof(IEnumerable<>).IsSameOrParentOf(type);
 		}
 	}
 }
