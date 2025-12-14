@@ -12,8 +12,8 @@ jobs:
     vmImage: 'windows-2025'
   displayName: 'Build'
   variables:
-    with_analyzers: false # ${{ parameters.with_analyzers }}
-    with_api_analyzers: false # ${{ parameters.with_api_analyzers }}
+    with_analyzers: ${{ parameters.with_analyzers }}
+    with_api_analyzers: ${{ parameters.with_api_analyzers }}
 
   steps:
 

@@ -190,7 +190,6 @@ namespace Tests.Linq
 						.ThenByDescending(x => x.NullableValue)
 						.Select(x => x.NotNullableValue)),
 
-
 					NullableDoubleOrder    = string.Join(", ", g
 						.OrderBy(x => x.NotNullableValue)
 						.ThenByDescending(x => x.NullableValue)

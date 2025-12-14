@@ -1613,6 +1613,7 @@ namespace LinqToDB.Internal.SqlQuery
 					var param = (SqlParameter)e;
 					return param.WithIsQueryParameter(false);
 				}
+
 				return e;
 			});
 
