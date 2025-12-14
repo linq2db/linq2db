@@ -1,4 +1,3 @@
-<#@ assembly name="$(LinqToDBT4SqlServerClientPath)Microsoft.Data.SqlClient.dll"                        #>
 <#@ assembly name="System.Data.dll"                                                                     #>
 <#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude"                             once="true" #>
 <#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude"                       once="true" #>
