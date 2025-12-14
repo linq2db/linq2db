@@ -237,6 +237,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 							c.Scale     = null;
 							break;
 						case "vector"      :
+							// Convert binary vector storage size (8-byte header + 4 bytes per float element) to logical dimension count
 							c.Length = (c.Length - 8) / 4;
 							break;
 					}
