@@ -557,6 +557,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					CreateFormat     = "vector({0})",
 					CreateParameters = "length",
 					ProviderSpecific = true,
+					// 36 is the provider type code for the SQL Server 'vector' type (see https://learn.microsoft.com/en-us/sql/relational-databases/vector-database/vector-type?view=sql-server-ver16#data-type-mapping)
 					ProviderDbType   = 36
 				});
 			}
