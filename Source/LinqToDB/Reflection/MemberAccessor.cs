@@ -279,9 +279,14 @@ namespace LinqToDB.Reflection
 			{
 				var objParam   = Expression.Parameter(typeof(object), "obj");
 				var valueParam = Expression.Parameter(typeof(object), "value");
-				var setterExpr = GetSetterExpression(
-					Expression.Convert(objParam, TypeAccessor.Type),
-					Expression.Convert(valueParam, Type));
+				var objValue   = Expression.Convert(objParam, TypeAccessor.Type);
+
+				var settersInitExpr = TypeAccessor.GetSettersInitExpression(objValue);
+				var setterExpr      = GetSetterExpression(objValue, Expression.Convert(valueParam, Type));
+
+				if (settersInitExpr != null)
+					setterExpr = Expression.Block(settersInitExpr, setterExpr);
+
 				var setter = Expression.Lambda<Action<object, object?>>(setterExpr, objParam, valueParam);
 
 				return setter.CompileExpression();

@@ -418,6 +418,10 @@ namespace LinqToDB.Tools.Mapper
 
 			void GetObjectExpression()
 			{
+				var settersInitExpression = _toAccessor.GetSettersInitExpression(_localObject);
+				if (settersInitExpression != null)
+					_expressions.Add(settersInitExpression);
+
 				foreach (var toMember in _toAccessor.Members.Where(_builder._mapperBuilder.ToMemberFilter))
 				{
 					if (!toMember.HasSetter)

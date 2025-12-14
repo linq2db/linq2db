@@ -36,7 +36,7 @@ internal sealed class DB2Provider : DatabaseProviderBase
 		: base(ProviderName.DB2, "IBM DB2 (LUW, z/OS or iSeries)", _providers)
 	{
 #if WITH_ISERIES
-		DataConnection.AddProviderDetector(DB2iSeriesTools.ProviderDetector);
+		DB2iSeriesTools.RegisterProviderDetector();
 #endif
 	}
 

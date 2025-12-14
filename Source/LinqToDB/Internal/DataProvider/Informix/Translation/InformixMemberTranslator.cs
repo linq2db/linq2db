@@ -282,7 +282,7 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 				}
 
 				// interval literal cannot be dynamic so we should try to disable at least parameters
-				QueryHelper.MarkAsNonQueryParameters(increment);
+				increment = QueryHelper.MarkAsNonQueryParameters(increment);
 
 				var intervalExpr     = factory.NotNullExpression(intervalType, "Interval ({0}) " + fragmentStr, increment);
 				if (multiplier != null)

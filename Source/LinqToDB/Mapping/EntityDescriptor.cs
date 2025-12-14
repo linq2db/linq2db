@@ -442,6 +442,14 @@ namespace LinqToDB.Mapping
 		internal LambdaExpression? DynamicColumnGetter { get; private set; }
 
 		/// <summary>
+		/// Gets or sets optional dynamic column storage initialization setter expression with following signature:
+		/// <code>
+		/// void Setter(TEntity entity);
+		/// </code>
+		/// </summary>
+		internal LambdaExpression? DynamicColumnStorageInitializer { get; private set; }
+
+		/// <summary>
 		/// Gets or sets optional dynamic column value setter expression with following signature:
 		/// <code>
 		/// void Setter(TEntity entity, string propertyName, object value);
@@ -531,22 +539,23 @@ namespace LinqToDB.Mapping
 							defaultValueParam);
 
 					// if null, create new dictionary; then assign value
+					DynamicColumnStorageInitializer = Expression.Lambda(
+						Expression.IfThen(
+							Expression.ReferenceEqual(
+								Expression.MakeMemberAccess(objParam, member.MemberInfo),
+								ExpressionInstances.UntypedNull),
+							Expression.Assign(
+								Expression.MakeMemberAccess(objParam, member.MemberInfo),
+								Expression.New(typeof(Dictionary<string, object>)))),
+						objParam);
 					DynamicColumnSetter =
 						Expression.Lambda(
-							Expression.Block(
-								Expression.IfThen(
-									Expression.ReferenceEqual(
-										Expression.MakeMemberAccess(objParam, member.MemberInfo),
-										ExpressionInstances.UntypedNull),
-									Expression.Assign(
-										Expression.MakeMemberAccess(objParam, member.MemberInfo),
-										Expression.New(typeof(Dictionary<string, object>)))),
-								Expression.Assign(
-									Expression.Property(
-										Expression.MakeMemberAccess(objParam, member.MemberInfo),
-										"Item",
-										propNameParam),
-									Expression.Convert(valueParam, typeof(object)))),
+							Expression.Assign(
+								Expression.Property(
+									Expression.MakeMemberAccess(objParam, member.MemberInfo),
+									"Item",
+									propNameParam),
+								Expression.Convert(valueParam, typeof(object))),
 							objParam,
 							propNameParam,
 							valueParam);
@@ -618,8 +627,13 @@ namespace LinqToDB.Mapping
 						DynamicColumnSetter = TypeAccessor.Type.GetExpressionFromExpressionMember<LambdaExpression>(accessorsAttribute.SetterExpressionMethod);
 					else
 						DynamicColumnSetter = accessorsAttribute.SetterExpression;
+
+					if (accessorsAttribute.StorageInitializerExpressionMethod != null)
+						DynamicColumnStorageInitializer = TypeAccessor.Type.GetExpressionFromExpressionMember<LambdaExpression>(accessorsAttribute.StorageInitializerExpressionMethod);
 				}
 			}
+
+			TypeAccessor.SetSettersInitExpression(this);
 		}
 		#endregion
 	}

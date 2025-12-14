@@ -43,6 +43,20 @@ namespace LinqToDB.Internal.SqlQuery
 			return valueConverter == null ? value : valueConverter(value);
 		}
 
+		public SqlParameter WithIsQueryParameter(bool isQueryParameter)
+		{
+			if (IsQueryParameter == isQueryParameter)
+				return this;
+
+			return new SqlParameter(Type, Name, Value)
+			{
+				IsQueryParameter = isQueryParameter,
+				AccessorId       = AccessorId,
+				NeedsCast        = NeedsCast,
+				_valueConverter  = _valueConverter,
+			};
+		}
+
 		#region Value Converter
 
 		internal List<int>? TakeValues;
