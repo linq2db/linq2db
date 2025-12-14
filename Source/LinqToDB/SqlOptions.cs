@@ -1,7 +1,4 @@
-﻿using System;
-using System.ComponentModel;
-
-using LinqToDB.Data;
+﻿using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Options;
 
