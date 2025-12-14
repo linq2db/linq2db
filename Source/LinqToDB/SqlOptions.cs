@@ -43,7 +43,7 @@ namespace LinqToDB
 	/// </example>
 	/// </param>
 	/// <param name="DisableLegacySqlBuilderDateDiffCalls">
-	/// If <c>true</c>, it disables built-in datediff and timespanpart call conversions in ExposeExpressionVisitor to allow external conversion via ExtensionAttribute.
+	/// If <c>true</c>, it disables built-in Timespan member access conversions in ExposeExpressionVisitor to allow external conversion via ExtensionAttribute.
 	/// Default value: <c>false</c>.
 	/// </param>
 	public sealed record SqlOptions
