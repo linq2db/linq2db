@@ -42,15 +42,15 @@ namespace LinqToDB
 	/// </code>
 	/// </example>
 	/// </param>
-	/// <param name="DisableLegacySqlBuilderDateDiffCalls">
-	/// If <c>true</c>, it disables built-in Timespan member access conversions in ExposeExpressionVisitor to allow external conversion via ExtensionAttribute.
+	/// <param name="DisableBuiltInTimeSpanConversion">
+	/// If <c>true</c>, it disables built-in TimeSpan member access conversions in ExposeExpressionVisitor to allow external conversion via ExtensionAttribute.
 	/// Default value: <c>false</c>.
 	/// </param>
 	public sealed record SqlOptions
 	(
-		bool EnableConstantExpressionInOrderBy    = false,
-		bool GenerateFinalAliases                 = false,
-		bool DisableLegacySqlBuilderDateDiffCalls = false
+		bool EnableConstantExpressionInOrderBy = false,
+		bool GenerateFinalAliases              = false,
+		bool DisableBuiltInTimeSpanConversion  = false
 	)
 		: IOptionSet
 	{
@@ -60,9 +60,9 @@ namespace LinqToDB
 
 		SqlOptions(SqlOptions original)
 		{
-			EnableConstantExpressionInOrderBy    = original.EnableConstantExpressionInOrderBy;
-			GenerateFinalAliases                 = original.GenerateFinalAliases;
-			DisableLegacySqlBuilderDateDiffCalls = original.DisableLegacySqlBuilderDateDiffCalls;
+			EnableConstantExpressionInOrderBy = original.EnableConstantExpressionInOrderBy;
+			GenerateFinalAliases              = original.GenerateFinalAliases;
+			DisableBuiltInTimeSpanConversion  = original.DisableBuiltInTimeSpanConversion;
 		}
 
 		int? _configurationID;
