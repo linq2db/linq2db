@@ -110,21 +110,18 @@ namespace Tests
 
 			var issueConfigurations = GetIssueConfigurations();
 
-			var explicitTest = issueConfigurations.Count == 0;
+			var skipTest = false;
 
-			if (!explicitTest)
+			var (provider, isLinqService) = NUnitUtils.GetContext(test);
+
+			if (provider != null)
 			{
-				var (provider, isLinqService) = NUnitUtils.GetContext(test);
-
-				if (provider != null)
-				{
-					explicitTest = issueConfigurations.Contains(provider)
-						&& ((!SkipForLinqService && isLinqService)
-							|| (!SkipForNonLinqService && !isLinqService));
-				}
+				skipTest = (issueConfigurations.Count == 0 || issueConfigurations.Contains(provider))
+					&& ((!SkipForLinqService && isLinqService)
+						|| (!SkipForNonLinqService && !isLinqService));
 			}
 
-			if (!explicitTest)
+			if (!skipTest)
 				return;
 
 			var reason = string.IsNullOrWhiteSpace(_issue) ? "Active issue" : $"Issue {_issue}";
