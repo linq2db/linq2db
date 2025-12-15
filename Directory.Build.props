@@ -44,9 +44,6 @@
 		<AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
 		<ProduceReferenceAssembly>true</ProduceReferenceAssembly>
 
-		<!-- Temporary; remove with release of .net10, with completion of issue https://github.com/dotnet/sdk/issues/51265 -->
-		<RestoreEnablePackagePruning>false</RestoreEnablePackagePruning>
-
 		<!--feature flags to manage floating tfm in one place-->
 		<!--CompositeFormat type-->
 		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_COMPOSITE_FORMAT;$(DefineConstants)</DefineConstants>

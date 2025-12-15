@@ -11559,7 +11559,6 @@ static LinqToDB.Internal.Common.ValueComparer.GetDefaultValueComparer(System.Typ
 static LinqToDB.Internal.Common.ValueComparer.GetDefaultValueComparer<T>(bool favorStructuralComparisons) -> LinqToDB.Internal.Common.ValueComparer<T>!
 static LinqToDB.Internal.Common.ValueComparer<T>.CreateDefaultEqualsExpression() -> System.Linq.Expressions.Expression<System.Func<T, T, bool>!>!
 static LinqToDB.Internal.Common.ValueComparer<T>.CreateDefaultHashCodeExpression(bool favorStructuralComparisons) -> System.Linq.Expressions.Expression<System.Func<T, int>!>!
-static LinqToDB.Internal.Conversion.ConvertBuilder.GetConverter(LinqToDB.Mapping.MappingSchema? mappingSchema, System.Type! from, System.Type! to) -> System.Tuple<System.Linq.Expressions.LambdaExpression!, System.Linq.Expressions.LambdaExpression?, bool>!
 static LinqToDB.Internal.Conversion.ConvertBuilder.GetDefaultMappingFromEnumType(LinqToDB.Mapping.MappingSchema! mappingSchema, System.Type! enumType) -> System.Type?
 static LinqToDB.Internal.DataProvider.AliasesHelper.PrepareQueryAndAliases(LinqToDB.Internal.DataProvider.IIdentifierService! identifierService, LinqToDB.Internal.SqlQuery.SqlStatement! statement, LinqToDB.Internal.SqlQuery.AliasesContext? prevAliasContext, out LinqToDB.Internal.SqlQuery.AliasesContext! newAliasContext) -> void
 static LinqToDB.Internal.DataProvider.BasicBulkCopy.GetTableName<T>(LinqToDB.Internal.SqlProvider.ISqlBuilder! sqlBuilder, LinqToDB.Data.BulkCopyOptions! options, LinqToDB.ITable<T>! table, bool escaped = true) -> string!
@@ -11915,7 +11914,6 @@ static LinqToDB.Internal.SqlQuery.QueryHelper.HasElement(this LinqToDB.Internal.
 static LinqToDB.Internal.SqlQuery.QueryHelper.HasQueryParameter(this LinqToDB.Internal.SqlQuery.IQueryElement! root) -> bool
 static LinqToDB.Internal.SqlQuery.QueryHelper.HasTableInQuery(LinqToDB.Internal.SqlQuery.SelectQuery! query, LinqToDB.Internal.SqlQuery.SqlTable! table) -> bool
 static LinqToDB.Internal.SqlQuery.QueryHelper.IsAggregationFunction(LinqToDB.Internal.SqlQuery.IQueryElement! expr) -> bool
-static LinqToDB.Internal.SqlQuery.QueryHelper.IsAggregationOrWindowFunction(LinqToDB.Internal.SqlQuery.IQueryElement! expr) -> bool
 static LinqToDB.Internal.SqlQuery.QueryHelper.IsAggregationQuery(LinqToDB.Internal.SqlQuery.SelectQuery! selectQuery) -> bool
 static LinqToDB.Internal.SqlQuery.QueryHelper.IsBoolean(LinqToDB.Internal.SqlQuery.ISqlExpression! expr, bool includeFields = false) -> bool
 static LinqToDB.Internal.SqlQuery.QueryHelper.IsConstant(LinqToDB.Internal.SqlQuery.ISqlExpression! expr) -> bool
@@ -11930,7 +11928,6 @@ static LinqToDB.Internal.SqlQuery.QueryHelper.IsNullValue(this LinqToDB.Internal
 static LinqToDB.Internal.SqlQuery.QueryHelper.IsPredicate(this LinqToDB.Internal.SqlQuery.ISqlExpression! expr) -> bool
 static LinqToDB.Internal.SqlQuery.QueryHelper.IsSingleTableInQuery(LinqToDB.Internal.SqlQuery.SelectQuery! query, LinqToDB.Internal.SqlQuery.SqlTable! table) -> bool
 static LinqToDB.Internal.SqlQuery.QueryHelper.IsWindowFunction(LinqToDB.Internal.SqlQuery.IQueryElement! expr) -> bool
-static LinqToDB.Internal.SqlQuery.QueryHelper.MarkAsNonQueryParameters(LinqToDB.Internal.SqlQuery.IQueryElement! root) -> void
 static LinqToDB.Internal.SqlQuery.QueryHelper.MoveOrderByUp(params LinqToDB.Internal.SqlQuery.SelectQuery![]! queries) -> void
 static LinqToDB.Internal.SqlQuery.QueryHelper.NeedParameterInlining(LinqToDB.Internal.SqlQuery.ISqlExpression! expression) -> bool
 static LinqToDB.Internal.SqlQuery.QueryHelper.SameWithoutNullablity(LinqToDB.Internal.SqlQuery.ISqlExpression! expr1, LinqToDB.Internal.SqlQuery.ISqlExpression! expr2) -> bool
@@ -14947,3 +14944,35 @@ virtual LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.TranslatePerce
 virtual LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.TranslateRank(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MethodCallExpression! methodCall, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> System.Linq.Expressions.Expression?
 virtual LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.TranslateRowNumber(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MethodCallExpression! methodCall, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> System.Linq.Expressions.Expression?
 virtual LinqToDB.Linq.Translation.WindowFunctionsMemberTranslator.TranslateSum(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MethodCallExpression! methodCall, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> System.Linq.Expressions.Expression?
+LinqToDB.Internal.Conversion.ConverterLambda
+LinqToDB.Internal.Conversion.ConverterLambda.CheckNullLambda.get -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Internal.Conversion.ConverterLambda.CheckNullLambda.set -> void
+LinqToDB.Internal.Conversion.ConverterLambda.ConverterLambda() -> void
+LinqToDB.Internal.Conversion.ConverterLambda.ConverterLambda(System.Linq.Expressions.LambdaExpression! CheckNullLambda, System.Linq.Expressions.LambdaExpression? Lambda, bool IsSchemaSpecific) -> void
+LinqToDB.Internal.Conversion.ConverterLambda.Deconstruct(out System.Linq.Expressions.LambdaExpression! CheckNullLambda, out System.Linq.Expressions.LambdaExpression? Lambda, out bool IsSchemaSpecific) -> void
+LinqToDB.Internal.Conversion.ConverterLambda.Equals(LinqToDB.Internal.Conversion.ConverterLambda other) -> bool
+LinqToDB.Internal.Conversion.ConverterLambda.IsSchemaSpecific.get -> bool
+LinqToDB.Internal.Conversion.ConverterLambda.IsSchemaSpecific.set -> void
+LinqToDB.Internal.Conversion.ConverterLambda.Lambda.get -> System.Linq.Expressions.LambdaExpression?
+LinqToDB.Internal.Conversion.ConverterLambda.Lambda.set -> void
+LinqToDB.Internal.DataProvider.SqlServer.SqlServer2022SqlBuilder.SqlServer2022SqlBuilder(LinqToDB.Internal.SqlProvider.BasicSqlBuilder! parentBuilder) -> void
+LinqToDB.Internal.DataProvider.SqlServer.SqlServer2025SqlBuilder
+LinqToDB.Internal.DataProvider.SqlServer.SqlServer2025SqlBuilder.SqlServer2025SqlBuilder(LinqToDB.DataProvider.IDataProvider? provider, LinqToDB.Mapping.MappingSchema! mappingSchema, LinqToDB.DataOptions! dataOptions, LinqToDB.Internal.SqlProvider.ISqlOptimizer! sqlOptimizer, LinqToDB.Internal.SqlProvider.SqlProviderFlags! sqlProviderFlags) -> void
+LinqToDB.Internal.DataProvider.SqlServer.SqlServer2025SqlBuilder.SqlServer2025SqlBuilder(LinqToDB.Internal.SqlProvider.BasicSqlBuilder! parentBuilder) -> void
+LinqToDB.Internal.SqlQuery.SqlParameter.WithIsQueryParameter(bool isQueryParameter) -> LinqToDB.Internal.SqlQuery.SqlParameter!
+LinqToDB.Mapping.DynamicColumnAccessorAttribute.StorageInitializerExpressionMethod.get -> string?
+LinqToDB.Mapping.DynamicColumnAccessorAttribute.StorageInitializerExpressionMethod.set -> void
+LinqToDB.Reflection.TypeAccessor.GetSettersInitExpression(System.Linq.Expressions.Expression! instance) -> System.Linq.Expressions.Expression?
+override LinqToDB.Internal.Conversion.ConverterLambda.GetHashCode() -> int
+override LinqToDB.Internal.DataProvider.SqlServer.SqlServer2008SqlBuilder.BuildDataTypeFromDataType(LinqToDB.DbDataType type, bool forCreateTable, bool canBeNull) -> void
+override LinqToDB.Internal.DataProvider.SqlServer.SqlServer2012SqlBuilder.BuildDataTypeFromDataType(LinqToDB.DbDataType type, bool forCreateTable, bool canBeNull) -> void
+override LinqToDB.Internal.DataProvider.SqlServer.SqlServer2025SqlBuilder.BuildDataTypeFromDataType(LinqToDB.DbDataType type, bool forCreateTable, bool canBeNull) -> void
+override LinqToDB.Internal.DataProvider.SqlServer.SqlServer2025SqlBuilder.CreateSqlBuilder() -> LinqToDB.Internal.SqlProvider.ISqlBuilder!
+override LinqToDB.Internal.DataProvider.SqlServer.SqlServer2025SqlBuilder.Name.get -> string!
+static LinqToDB.Internal.Conversion.ConvertBuilder.GetConverter(LinqToDB.Mapping.MappingSchema? mappingSchema, System.Type! from, System.Type! to) -> LinqToDB.Internal.Conversion.ConverterLambda
+static LinqToDB.Internal.Conversion.ConverterLambda.operator !=(LinqToDB.Internal.Conversion.ConverterLambda left, LinqToDB.Internal.Conversion.ConverterLambda right) -> bool
+static LinqToDB.Internal.Conversion.ConverterLambda.operator ==(LinqToDB.Internal.Conversion.ConverterLambda left, LinqToDB.Internal.Conversion.ConverterLambda right) -> bool
+static LinqToDB.Internal.SqlQuery.QueryHelper.IsAggregationOrWindowExpression(LinqToDB.Internal.SqlQuery.ISqlExpression! expression) -> bool
+static LinqToDB.Internal.SqlQuery.QueryHelper.MarkAsNonQueryParameters<TElement>(TElement! root) -> TElement!
+~override LinqToDB.Internal.Conversion.ConverterLambda.Equals(object obj) -> bool
+~override LinqToDB.Internal.Conversion.ConverterLambda.ToString() -> string

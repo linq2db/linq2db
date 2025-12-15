@@ -1097,11 +1097,6 @@ namespace LinqToDB.Internal.SqlQuery
 			return result;
 		}
 
-		public static bool IsAggregationOrWindowFunction(IQueryElement expr)
-		{
-			return IsAggregationFunction(expr) || IsWindowFunction(expr);
-		}
-
 		public static bool IsAggregationFunction(IQueryElement expr)
 		{
 			return expr switch
@@ -1203,6 +1198,11 @@ namespace LinqToDB.Internal.SqlQuery
 				HasReference = true;
 				return base.VisitSqlColumnReference(element);
 			}
+
+			protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+			{
+				return selectQuery;
+			}
 		}
 
 		public static bool IsAggregationQuery(SelectQuery selectQuery)
@@ -1235,6 +1235,16 @@ namespace LinqToDB.Internal.SqlQuery
 
 			needsOrderBy = visitor.CanBeAffectedByOrderBy;
 			return hasAggregation;
+		}
+
+		public static bool IsAggregationOrWindowExpression(ISqlExpression expression)
+		{
+			using var visitorRef = AggregationCheckVisitors.Allocate();
+
+			var visitor = visitorRef.Value;
+			visitor.Visit(expression);
+
+			return visitor.IsAggregation || visitor.IsWindow;
 		}
 
 		public static bool IsWindowFunction(IQueryElement expr)
@@ -1593,16 +1603,21 @@ namespace LinqToDB.Internal.SqlQuery
 			});
 		}
 
-		public static void MarkAsNonQueryParameters(IQueryElement root)
+		public static TElement MarkAsNonQueryParameters<TElement>(TElement root)
+		where TElement : class, IQueryElement
 		{
-			root.VisitAll(static e =>
+			var newElement = root.Convert(1, static (_, e) =>
 			{
 				if (e.ElementType == QueryElementType.SqlParameter)
 				{
 					var param = (SqlParameter)e;
-					param.IsQueryParameter = false;
+					return param.WithIsQueryParameter(false);
 				}
+
+				return e;
 			});
+
+			return (TElement)newElement;
 		}
 
 		public static bool? GetBoolValue(IQueryElement element, EvaluationContext evaluationContext)

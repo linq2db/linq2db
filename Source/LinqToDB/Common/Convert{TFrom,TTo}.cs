@@ -28,11 +28,11 @@ namespace LinqToDB.Common
 #pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
 		static void Init()
 		{
-			var expr = ConvertBuilder.GetConverter(null, typeof(TFrom), typeof(TTo));
+			var (expr, _, _) = ConvertBuilder.GetConverter(null, typeof(TFrom), typeof(TTo));
 
-			_expression = (Expression<Func<TFrom,TTo>>)expr.Item1;
+			_expression = (Expression<Func<TFrom,TTo>>)expr;
 
-			var rexpr = (Expression<Func<TFrom,TTo>>)ConvertReducer.ReducerVisitor.Transform(expr.Item1);
+			var rexpr = (Expression<Func<TFrom,TTo>>)ConvertReducer.ReducerVisitor.Transform(expr);
 
 			_lambda = rexpr.CompileExpression();
 		}
