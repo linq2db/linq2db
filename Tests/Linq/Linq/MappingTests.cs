@@ -1338,7 +1338,7 @@ namespace Tests.Linq
 			Configuration = ProviderName.SQLiteMS,
 			Details = "Reader expressions configuration weakness: we ask for reader for TenderId but get reader for byte[], without conversion defined between them")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5254")]
-		public void ProjectionWithClientSideConversions([DataSources(false)] string context)
+		public void ClientConversion_UnmappedOperators([DataSources(false)] string context)
 		{
 			var ms = new MappingSchema();
 			Issue5254Types.TenderId.LinqToDbMapping(ms);
@@ -1354,6 +1354,114 @@ namespace Tests.Linq
 
 			// bad mapping
 			_ = tb.Select(i => new Issue5254Types.Output { Id = (Guid)i.Id }).FirstOrDefault();
+		}
+
+		static class Issue5254ServerTypes
+		{
+			public sealed class Output
+			{
+				public ShortId Id { get; set; }
+			}
+
+			public readonly struct ShortId : IEquatable<ShortId>
+			{
+				private ShortId(Guid value)
+				{
+					ShortValue = Encode(value);
+					GuidValue = value;
+				}
+
+				public string ShortValue { get; }
+				public Guid GuidValue { get; }
+
+				//[ExpressionMethod(nameof(GuidToId))]
+				public static implicit operator ShortId(Guid guid) => new(guid);
+				public static Expression<Func<Guid, ShortId>> GuidToId() => guid => new(guid);
+
+				private static string Encode(Guid guid)
+				{
+					string enc = Convert.ToBase64String(guid.ToByteArray());
+					enc = enc.Replace("/", "_");
+					enc = enc.Replace("+", "-");
+					return enc[..22];
+				}
+
+				public override string ToString() => ShortValue;
+
+				public bool Equals(ShortId other)
+				{
+					return ShortValue == other.ShortValue && GuidValue.Equals(other.GuidValue);
+				}
+
+				public override bool Equals(object? obj)
+				{
+					return obj is ShortId other && Equals(other);
+				}
+
+				public override int GetHashCode()
+				{
+					return HashCode.Combine(GuidValue);
+				}
+			}
+
+			public sealed class Tender
+			{
+				[Column]
+				public TenderId Id { get; set; }
+
+				[Column]
+				public required string Name { get; set; }
+
+				public static Tender[] Data =
+				[
+					new() { Id = TenderId.From(TestData.Guid1), Name = "TestName" }
+				];
+			}
+
+			public struct TenderId : IEquatable<TenderId>
+			{
+				public Guid Value { get; set; }
+				public static TenderId From(Guid value) => new TenderId { Value = value };
+
+				[ExpressionMethod(nameof(GuidToId))]
+				public static explicit operator TenderId(Guid value) => new TenderId { Value = value };
+				[ExpressionMethod(nameof(IdToGuid))]
+				public static explicit operator Guid(TenderId value) => value.Value;
+
+				public static Expression<Func<Guid, TenderId>> GuidToId() => value => new TenderId { Value = value };
+				public static Expression<Func<TenderId, Guid>> IdToGuid() => value => value.Value;
+
+				public bool Equals(TenderId other) => Value.Equals(other.Value);
+				public override bool Equals(object? obj) => obj is TenderId other && Equals(other);
+				public override int GetHashCode() => Value.GetHashCode();
+
+				internal static void LinqToDbMapping(LinqToDB.Mapping.MappingSchema ms)
+				{
+					ms.SetConverter<TenderId, LinqToDB.Data.DataParameter>(id => new LinqToDB.Data.DataParameter { DataType = DataType.Guid, Value = (Guid)id });
+					ms.SetConverter<TenderId?, LinqToDB.Data.DataParameter>(id => new LinqToDB.Data.DataParameter { DataType = DataType.Guid, Value = (Guid?)id });
+
+					ms.AddScalarType(typeof(TenderId), DataType.Guid);
+				}
+			}
+		}
+
+		[ActiveIssue(
+			Configuration = ProviderName.SQLiteMS,
+			Details = "Reader expressions configuration weakness: we ask for reader for TenderId but get reader for byte[], without conversion defined between them")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5254")]
+		public void ClientConversion_MappedOperators([DataSources(false)] string context)
+		{
+			var ms = new MappingSchema();
+			Issue5254ServerTypes.TenderId.LinqToDbMapping(ms);
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable(Issue5254ServerTypes.Tender.Data);
+
+			// pass
+			AssertQuery(tb.Select(i => new Issue5254ServerTypes.Output { Id = (Guid)i.Id }));
+
+			// bad mapping
+			_ = tb.Select(i => new Issue5254ServerTypes.Output { Id = (Guid)i.Id }).FirstOrDefault();
 		}
 
 		#endregion
