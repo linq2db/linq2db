@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Globalization;
 using System.Linq.Expressions;
 
 using LinqToDB.Concurrency;
@@ -61,7 +62,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return FormattableString.Invariant($".{Configuration}.{(int)Behavior}.");
+			return string.Create(CultureInfo.InvariantCulture, $".{Configuration}.{(int)Behavior}.");
 		}
 	}
 }

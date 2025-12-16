@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -123,7 +123,6 @@ namespace LinqToDB.Data
 			Parameters = GetDataParameters(dataContext, parameters);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal DataConnection GetDataConnection()
 		{
 			if (_dataContext is DataContext dctx)
@@ -132,7 +131,6 @@ namespace LinqToDB.Data
 			return (DataConnection)_dataContext;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal DataContext? TryGetDataContext()
 		{
 			if (_dataContext is DataContext dctx)
@@ -141,7 +139,6 @@ namespace LinqToDB.Data
 			return null;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private CommandBehavior GetCommandBehavior(DataConnection dataConnection)
 		{
 			return dataConnection.GetCommandBehavior(CommandBehavior);
@@ -452,7 +449,7 @@ namespace LinqToDB.Data
 								Command         = rd.Command,
 								StartTime       = startedOn,
 								ExecutionTime   = stopwatch.Elapsed,
-								RecordsAffected = rowCount
+								RecordsAffected = rowCount,
 							});
 						}
 
@@ -1465,7 +1462,6 @@ namespace LinqToDB.Data
 			return dataReader;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private bool InitCommand(DataConnection dataConnection)
 		{
 			var hasParameters = Parameters?.Length > 0;
@@ -1624,7 +1620,6 @@ namespace LinqToDB.Data
 			return result;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		void SetRebindParameters(DataReaderWrapper rd)
 		{
 			if (rd.Command?.Parameters.Count > 0 && Parameters?.Length > 0)
@@ -1711,7 +1706,7 @@ namespace LinqToDB.Data
 																_dataParameterValue,
 																Expression.Convert(
 																	Expression.MakeMemberAccess(pobj, _dataParameterValue),
-																	typeof(object))))
+																	typeof(object)))),
 													});
 											}
 
@@ -1753,7 +1748,7 @@ namespace LinqToDB.Data
 													Expression.Convert(valueGetter, typeof(object))));
 										}
 									)
-								)
+								),
 							]
 						),
 						p);

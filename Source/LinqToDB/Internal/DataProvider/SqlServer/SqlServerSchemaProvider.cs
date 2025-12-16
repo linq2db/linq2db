@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlTypes;
@@ -451,7 +451,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 								ParameterDirection.InputOutput :
 								ParameterDirection.Input :
 							ParameterDirection.Output,
-					DbType   = p.SchemaType
+					DbType   = p.SchemaType,
 				};
 			}
 
@@ -508,7 +508,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 						max_length         = 0,
 						precision          = 0,
 						scale              = 0,
-						is_identity_column = false
+						is_identity_column = false,
 					},
 					"sp_describe_first_result_set",
 					new DataParameter("tsql", tsql),

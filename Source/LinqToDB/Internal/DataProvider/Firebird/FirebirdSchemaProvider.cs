@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -47,7 +48,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					TableName       = name,
 					IsDefaultSchema = schema == "SYSDBA",
 					IsView          = t.Field<string>("TABLE_TYPE") == "VIEW",
-					Description     = t.Field<string>("DESCRIPTION")
+					Description     = t.Field<string>("DESCRIPTION"),
 				}
 			).ToList();
 		}
@@ -190,7 +191,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 							IsTableFunction     = procedureType == "TF",
 							IsDefaultSchema     = true,
 							ProcedureDefinition = source,
-							Description         = description
+							Description         = description,
 						};
 					},
 					sql
@@ -315,7 +316,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 							IsResult      = direction == 2,
 							IsNullable    = isNullable,
 							Description   = description,
-							DataType      = CreateTypeName(type, subType ?? 0, scale)
+							DataType      = CreateTypeName(type, subType ?? 0, scale),
 						};
 					},
 					sql
@@ -349,7 +350,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				(28 or 39, _, _)                                                    => "TIME WITH TIME ZONE",
 				(24 or 25, _, _)                                                    => "DECFLOAT",
 				(26, not 1, >= 0)                                                   => "INT128",
-				_                                                                   => "unknown"
+				_                                                                   => "unknown",
 			};
 		}
 
@@ -379,7 +380,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					SystemType           = systemType,
 					DataType             = GetDataType(columnType, null, length, precision, scale),
 					ProviderSpecificType = GetProviderSpecificType(columnType),
-					Precision            = providerType == 21 ? 16 : null
+					Precision            = providerType == 21 ? 16 : null,
 				}
 			).ToList();
 		}
@@ -413,7 +414,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				{
 					dataType.CreateFormat =
 						dataType.TypeName + "(" +
-						string.Join(",", dataType.CreateParameters!.Split(',').Select((_,i) => FormattableString.Invariant($"{{{i}}}"))) +
+						string.Join(",", dataType.CreateParameters!.Split(',').Select((_,i) => string.Create(CultureInfo.InvariantCulture, $"{{{i}}}"))) +
 						")";
 				}
 			}

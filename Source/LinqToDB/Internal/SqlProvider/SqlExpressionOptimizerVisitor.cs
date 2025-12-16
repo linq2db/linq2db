@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 
 using LinqToDB.Internal.Extensions;
@@ -1009,7 +1010,7 @@ namespace LinqToDB.Internal.SqlProvider
 				(var e, "-", SqlBinaryExpression { Operation: "*", Expr1: SqlValue { Value: -1 } } binary) => SqlBinaryExpressionHelper.CreateWithTypeInferred(element.SystemType!, e, "+", binary.Expr2, Precedence.Subtraction),
 				(var e, "-", SqlBinaryExpression { Operation: "*", Expr2: SqlValue { Value: -1 } } binary) => SqlBinaryExpressionHelper.CreateWithTypeInferred(e.SystemType!, e, "+", binary.Expr1, Precedence.Subtraction),
 
-				_ => element
+				_ => element,
 			};
 
 			if (!ReferenceEquals(newElement, element))
@@ -1112,7 +1113,7 @@ namespace LinqToDB.Internal.SqlProvider
 					if (v1 && v2)
 					{
 						if (value1 is int i1 && value2 is int i2) return QueryHelper.CreateSqlValue(i1 + i2, element, MappingSchema);
-						if (value1 is string || value2 is string) return QueryHelper.CreateSqlValue(FormattableString.Invariant($"{value1}{value2}"), element, MappingSchema);
+						if (value1 is string || value2 is string) return QueryHelper.CreateSqlValue(string.Create(CultureInfo.InvariantCulture, $"{value1}{value2}"), element, MappingSchema);
 					}
 
 					break;
@@ -1753,7 +1754,7 @@ namespace LinqToDB.Internal.SqlProvider
 				SqlPredicate.Operator.Less => SqlPredicate.Operator.Greater,
 				SqlPredicate.Operator.NotGreater => SqlPredicate.Operator.NotLess,
 				SqlPredicate.Operator.LessOrEqual => SqlPredicate.Operator.GreaterOrEqual,
-				_ => throw new InvalidOperationException()
+				_ => throw new InvalidOperationException(),
 			};
 		}
 
@@ -1882,7 +1883,7 @@ namespace LinqToDB.Internal.SqlProvider
 								SqlPredicate.Operator.NotEqual => false,
 								SqlPredicate.Operator.Greater => false,
 								SqlPredicate.Operator.Less => false,
-								_ => throw new InvalidOperationException($"Unexpected binary operator {op}")
+								_ => throw new InvalidOperationException($"Unexpected binary operator {op}"),
 							};
 						}
 					}
@@ -2093,7 +2094,7 @@ namespace LinqToDB.Internal.SqlProvider
 							// some - e < v ===> some < v + e
 							(var some, "-", var e) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, v, "+", e), null),
 
-							_ => null
+							_ => null,
 						},
 
 					(var v, var op, SqlBinaryExpression binary) when CanBeEvaluateNoParameters(v) =>
@@ -2111,10 +2112,10 @@ namespace LinqToDB.Internal.SqlProvider
 							// v < some - e ===> v + e < some
 							(var e, "-", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, v, "+", e), op, some, null),
 
-							_ => null
+							_ => null,
 						},
 
-					_ => null
+					_ => null,
 				};
 
 				exprExpr = newExpr ?? exprExpr;
@@ -2185,7 +2186,7 @@ namespace LinqToDB.Internal.SqlProvider
 						SqlPredicate.Operator.Greater        => new SqlSearchCondition(true, true, predicate, new SqlSearchCondition(false, false, new SqlPredicate.IsNull(compare.Expression1, true), new SqlPredicate.IsNull(compare.Expression2, false))),
 						SqlPredicate.Operator.LessOrEqual    => new SqlSearchCondition(true, true, predicate, new SqlPredicate.IsNull(compare.Expression1, false)),
 						SqlPredicate.Operator.GreaterOrEqual => new SqlSearchCondition(true, true, predicate, new SqlPredicate.IsNull(compare.Expression2, false)),
-						_ => predicate
+						_ => predicate,
 					};
 				}
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -294,7 +294,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				return new TableContext(TranslationModifier, Builder, MappingSchema, context.CloneElement(SelectQuery), context.CloneElement(SqlTable), IsOptional)
 				{
-					LoadWithRoot = LoadWithRoot
+					LoadWithRoot = LoadWithRoot,
 				};
 			}
 

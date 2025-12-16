@@ -1,4 +1,4 @@
-﻿namespace LinqToDB
+namespace LinqToDB
 {
 	public static partial class Sql
 	{
@@ -13,21 +13,21 @@
 		{
 			None,
 			First,
-			Last
+			Last,
 		}
 
 		public enum Nulls
 		{
 			None,
 			Respect,
-			Ignore
+			Ignore,
 		}
 
 		public enum NullsPosition
 		{
 			None,
 			First,
-			Last
+			Last,
 		}
 	}
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
@@ -4054,7 +4054,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			/// <summary>
 			/// The infinity norm, which is the maximum of the absolute values of the vector components.
 			/// </summary>
-			NormInf
+			NormInf,
 		}
 
 		sealed class NormTypeBuilder : Sql.IExtensionCallBuilder
@@ -4085,7 +4085,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			/// <summary>
 			/// <b>sysname</b> with the name of the data type.
 			/// </summary>
-			BaseType
+			BaseType,
 		}
 
 		sealed class VectorPropertyBuilder : Sql.IExtensionCallBuilder

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -80,7 +80,7 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Gets or sets column mapping rules for current mapping class or interface.
-		/// If <c>true</c>, properties and fields should be marked with one of those attributes to be used for mapping:
+		/// If <see langword="true"/>, properties and fields should be marked with one of those attributes to be used for mapping:
 		/// - <see cref="ColumnAttribute"/>;
 		/// - <see cref="PrimaryKeyAttribute"/>;
 		/// - <see cref="IdentityAttribute"/>;
@@ -119,12 +119,12 @@ namespace LinqToDB.Mapping
 
 		List<MemberAccessor>? _calculatedMembers;
 		/// <summary>
-		/// Gets list of calculated column members (properties with <see cref="ExpressionMethodAttribute.IsColumn"/> set to <c>true</c>).
+		/// Gets list of calculated column members (properties with <see cref="ExpressionMethodAttribute.IsColumn"/> set to <see langword="true"/>).
 		/// </summary>
 		public IReadOnlyList<MemberAccessor>? CalculatedMembers => _calculatedMembers;
 
 		/// <summary>
-		/// Returns <c>true</c>, if entity has calculated columns.
+		/// Returns <see langword="true"/>, if entity has calculated columns.
 		/// Also see <seealso cref="CalculatedMembers"/>.
 		/// </summary>
 		public bool HasCalculatedMembers => CalculatedMembers != null && CalculatedMembers.Count > 0;
@@ -149,7 +149,7 @@ namespace LinqToDB.Mapping
 		public Type ObjectType => TypeAccessor.Type;
 
 		/// <summary>
-		/// Returns <c>true</c>, if entity has complex columns (with <see cref="MemberAccessor.IsComplex"/> flag set).
+		/// Returns <see langword="true"/>, if entity has complex columns (with <see cref="MemberAccessor.IsComplex"/> flag set).
 		/// </summary>
 		internal bool HasComplexColumns { get; private set; }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -60,7 +61,7 @@ namespace Tests
 
 						// necessary for multi-threaded tests like `Issue1398Tests.cs`
 						lock (trace)
-							trace.AppendLine($"{name}: {message}");
+							trace.AppendLine(CultureInfo.InvariantCulture, $"{name}: {message}");
 
 						if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
 						{

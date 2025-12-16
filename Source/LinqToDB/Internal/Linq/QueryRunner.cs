@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -122,7 +122,7 @@ namespace LinqToDB.Internal.Linq
 				{
 					MapperExpression = expr,
 					Mapper           = expression.CompileExpression(),
-					IsFaulted        = true
+					IsFaulted        = true,
 				};
 
 				_mappers[dataReaderType] = mapperInfo;

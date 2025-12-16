@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 
@@ -353,7 +353,7 @@ namespace LinqToDB.Internal.SqlQuery
 						.Append('[').Append(c.Number).Append(']')
 #endif
 						.Append('.')
-						.Append(c.Alias ?? FormattableString.Invariant($"c{i + 1}"));
+						.Append(c.Alias ?? string.Create(CultureInfo.InvariantCulture, $"c{i + 1}"));
 
 					var columnName = csb.ToString();
 					columnNames.Add(columnName);

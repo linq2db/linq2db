@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -62,7 +62,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					IsDefaultSchema    = string.IsNullOrEmpty(schema),
 					IsView             = t.Field<string>("TABLE_TYPE") == "VIEW",
 					IsProviderSpecific = system,
-					Description        = t.Field<string>("REMARKS")
+					Description        = t.Field<string>("REMARKS"),
 				}
 			).ToList();
 		}
@@ -96,7 +96,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					Precision   = dt?.CreateParameters != null && dt.CreateParameters.Contains("precision")           ? size  : null,
 					Scale       = dt?.CreateParameters != null && dt.CreateParameters.Contains("scale")               ? scale : null,
 					IsIdentity  = typeName == "COUNTER",
-					Description = c.Field<string>("REMARKS")
+					Description = c.Field<string>("REMARKS"),
 				}
 			).ToList();
 		}
@@ -117,7 +117,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					CatalogName         = null,
 					SchemaName          = schema,
 					ProcedureName       = name,
-					IsDefaultSchema     = string.IsNullOrEmpty(schema)
+					IsDefaultSchema     = string.IsNullOrEmpty(schema),
 				}
 			).ToList();
 		}
@@ -146,7 +146,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					Ordinal       = p.Field<int>("ORDINAL_POSITION"),
 					IsResult      = false,
 					DataType      = typeName,
-					IsNullable    = p.Field<short>("NULLABLE") == 1 // allways true
+					IsNullable    = p.Field<short>("NULLABLE") == 1, // allways true
 				}
 			).ToList();
 		}
@@ -181,7 +181,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 					if (paramValues.All(v => v != null))
 					{
-						var format = $"{dbType}({string.Join(", ", Enumerable.Range(0, paramValues.Length).Select(i => FormattableString.Invariant($"{{{i}}}")))})";
+						var format = $"{dbType}({string.Join(", ", Enumerable.Range(0, paramValues.Length).Select(i => string.Create(CultureInfo.InvariantCulture, $"{{{i}}}")))})";
 						dbType     = string.Format(CultureInfo.InvariantCulture, format, paramValues);
 					}
 				}

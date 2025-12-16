@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -644,7 +644,7 @@ namespace LinqToDB.DataProvider.MySql
 					else if (i > 0)
 						stringBuilder.Append(", ");
 
-					var id    = (Sql.SqlID)((SqlValue)sqlQueryExtension.Arguments[FormattableString.Invariant($"tableIDs.{i}")]).Value!;
+					var id    = (Sql.SqlID)((SqlValue)sqlQueryExtension.Arguments[string.Create(CultureInfo.InvariantCulture, $"tableIDs.{i}")]).Value!;
 					var alias = sqlBuilder.BuildSqlID(id);
 
 					stringBuilder.Append(alias);

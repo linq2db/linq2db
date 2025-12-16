@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -213,7 +213,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 						SchemaName      = schema,
 						ProcedureName   = name,
 						IsFunction      = rd.GetInt16(3) == 2,
-						IsDefaultSchema = schema == "dbo"
+						IsDefaultSchema = schema == "dbo",
 					};
 				})
 				.ToList();
@@ -263,7 +263,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 						Ordinal       = ordinal,
 						IsResult      = direction == 4,
 						DataType      = type,
-						IsNullable    = isNullable
+						IsNullable    = isNullable,
 					};
 				})
 				.ToList();

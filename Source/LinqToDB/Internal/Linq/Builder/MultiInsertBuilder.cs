@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -92,7 +92,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var when          = condition != null ? new SqlSearchCondition() : null;
 			var insert        = new SqlInsertClause
 			{
-				Into          = intoTable.SqlTable
+				Into          = intoTable.SqlTable,
 			};
 
 			statement.Add(when, insert);

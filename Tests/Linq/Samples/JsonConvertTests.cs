@@ -26,16 +26,9 @@ namespace Tests.Samples
 
 	public static class MappingHelper
 	{
-		private static MethodInfo _deserializeMethod;
-		private static MethodInfo _serializeMethod;
-		private static ConstructorInfo _dataParamContructor;
-
-		static MappingHelper()
-		{
-			_deserializeMethod   = MemberHelper.MethodOf(() => JsonConvert.DeserializeObject(null!, typeof(int)));
-			_serializeMethod     = MemberHelper.MethodOf(() => JsonConvert.SerializeObject(null));
-			_dataParamContructor = typeof(DataParameter).GetConstructor(new[] { typeof(string), typeof(object) })!;
-		}
+		private static MethodInfo _deserializeMethod = MemberHelper.MethodOf(() => JsonConvert.DeserializeObject(null!, typeof(int)));
+		private static MethodInfo _serializeMethod = MemberHelper.MethodOf(() => JsonConvert.SerializeObject(null));
+		private static ConstructorInfo _dataParamContructor = typeof(DataParameter).GetConstructor(new[] { typeof(string), typeof(object) })!;
 
 		public static void GenerateConvertorsForTables(Type dataConnectionType, MappingSchema ms)
 		{
@@ -78,11 +71,10 @@ namespace Tests.Samples
 
 	public class MyDataConnection : DataConnection
 	{
-		private static MappingSchema _convertorSchema;
+		private static MappingSchema _convertorSchema = new();
 
 		static MyDataConnection()
 		{
-			_convertorSchema = new MappingSchema();
 			MappingHelper.GenerateConvertorsForTables(typeof(MyDataConnection), _convertorSchema);
 		}
 

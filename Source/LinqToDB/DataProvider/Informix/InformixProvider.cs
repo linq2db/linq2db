@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.DataProvider.Informix
+namespace LinqToDB.DataProvider.Informix
 {
 	/// <summary>
 	/// Informix ADO.NET provider.
@@ -16,6 +16,6 @@
 		/// <summary>
 		/// IBM.Data.DB2 providers.
 		/// </summary>
-		DB2
+		DB2,
 	}
 }

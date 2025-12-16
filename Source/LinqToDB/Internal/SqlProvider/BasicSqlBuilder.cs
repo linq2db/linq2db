@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -4413,7 +4413,7 @@ namespace LinqToDB.Internal.SqlProvider
 					break;
 				}
 
-				alias = FormattableString.Invariant($"{desiredAlias}{i}");
+				alias = string.Create(CultureInfo.InvariantCulture, $"{desiredAlias}{i}");
 			}
 
 			return alias;
@@ -4460,7 +4460,7 @@ namespace LinqToDB.Internal.SqlProvider
 					Sql.SqlIDType.TableAlias => path!.TableAlias,
 					Sql.SqlIDType.TableName  => path!.TableName,
 					Sql.SqlIDType.TableSpec  => path!.TableSpec,
-					_ => throw new InvalidOperationException($"Unknown SqlID Type '{id.Type}'.")
+					_ => throw new InvalidOperationException($"Unknown SqlID Type '{id.Type}'."),
 				};
 
 			throw new InvalidOperationException($"Table ID '{id.ID}' is not defined.");
@@ -4476,7 +4476,7 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 			else
 			{
-				var testToReplace = FormattableString.Invariant($"$$${++_testReplaceNumber}$$$");
+				var testToReplace = string.Create(CultureInfo.InvariantCulture, $"$$${++_testReplaceNumber}$$$");
 
 				StringBuilder.Append(testToReplace);
 

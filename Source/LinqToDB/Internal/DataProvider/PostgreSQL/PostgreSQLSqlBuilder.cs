@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Data.Common;
 using System.Globalization;
@@ -383,7 +383,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		public override string GetReserveSequenceValuesSql(int count, string sequenceName)
 		{
-			return FormattableString.Invariant($"SELECT nextval('{ConvertInline(sequenceName, ConvertType.SequenceName)}') FROM generate_series(1, {count})");
+			return string.Create(CultureInfo.InvariantCulture, $"SELECT nextval('{ConvertInline(sequenceName, ConvertType.SequenceName)}') FROM generate_series(1, {count})");
 		}
 
 		protected override void BuildSubQueryExtensions(SqlStatement statement)

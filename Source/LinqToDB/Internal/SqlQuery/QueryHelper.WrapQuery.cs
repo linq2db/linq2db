@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 using LinqToDB.Internal.SqlQuery.Visitors;
@@ -43,7 +43,7 @@ namespace LinqToDB.Internal.SqlQuery
 					var newQuery = new SelectQuery
 					{
 						IsParameterDependent = selectQuery.IsParameterDependent,
-						DoNotRemove          = _doNotRemove
+						DoNotRemove          = _doNotRemove,
 					};
 					queries.Add(newQuery);
 				}

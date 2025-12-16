@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Globalization;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -30,8 +31,8 @@ namespace LinqToDB.DataProvider.SqlServer
 		//
 		[SqlExpression("bigint")]              public static SqlType<long?>           BigInt                            => new SqlType<long?>   ("bigint");
 		[SqlExpression("numeric")]             public static SqlType<decimal?>        Numeric()                         => new SqlType<decimal?>("numeric");
-		[SqlExpression("numeric({0})")]        public static SqlType<decimal?>        Numeric(int precision)            => new SqlType<decimal?>(FormattableString.Invariant($"numeric({precision})"));
-		[SqlExpression("numeric({0}, {1})")]   public static SqlType<decimal?>        Numeric(int precision, int scale) => new SqlType<decimal?>(FormattableString.Invariant($"numeric({precision}, {scale})"));
+		[SqlExpression("numeric({0})")]        public static SqlType<decimal?>        Numeric(int precision)            => new SqlType<decimal?>(string.Create(CultureInfo.InvariantCulture, $"numeric({precision})"));
+		[SqlExpression("numeric({0}, {1})")]   public static SqlType<decimal?>        Numeric(int precision, int scale) => new SqlType<decimal?>(string.Create(CultureInfo.InvariantCulture, $"numeric({precision}, {scale})"));
 		[SqlExpression("bit")]                 public static SqlType<bool?>           Bit                               => new SqlType<bool?>   ("bit");
 		[SqlExpression("smallint")]            public static SqlType<short?>          SmallInt                          => new SqlType<short?>  ("smallint");
 		[SqlExpression("decimal")]             public static SqlType<decimal?>        Decimal()                         => new SqlType<decimal?>("decimal");

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -67,7 +67,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					var supported = true;
 
 					foreach (var column in columns)
-						if (column.ColumnName != sb.ConvertInline(column.ColumnName, ConvertType.NameToQueryField))
+						if (!string.Equals(column.ColumnName, sb.ConvertInline(column.ColumnName, ConvertType.NameToQueryField), StringComparison.Ordinal))
 						{
 							// fallback to sql-based copy
 							// TODO: we should add support for by-ordinal column mapping to workaround it
@@ -378,7 +378,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					value[j] = valueConverter.Value;
 				}
 
-				helper.Parameters.Add(new DataParameter(FormattableString.Invariant($":p{i + 1}"), value, columnType.DataType, columnType.DbType)
+				helper.Parameters.Add(new DataParameter(string.Create(CultureInfo.InvariantCulture, $":p{i + 1}"), value, columnType.DataType, columnType.DbType)
 				{
 					Direction = ParameterDirection.Input,
 					IsArray   = true,
@@ -416,7 +416,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					value[j] = valueConverter.Value;
 				}
 
-				helper.Parameters.Add(new DataParameter(FormattableString.Invariant($":p{i + 1}"), value, columnType.DataType, columnType.DbType)
+				helper.Parameters.Add(new DataParameter(string.Create(CultureInfo.InvariantCulture, $":p{i + 1}"), value, columnType.DataType, columnType.DbType)
 				{
 					Direction = ParameterDirection.Input,
 					IsArray   = true,

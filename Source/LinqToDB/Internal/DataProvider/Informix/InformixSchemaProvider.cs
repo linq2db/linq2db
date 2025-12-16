@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -138,7 +138,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 							for (var i = 0; i < arr.Length; i++)
 							{
-								var value = rd[FormattableString.Invariant($"col{i + 1}")];
+								var value = rd[string.Create(CultureInfo.InvariantCulture, $"col{i + 1}")];
 								arr[i] = value.IsNullValue() ? null : (string)value;
 							}
 
@@ -146,7 +146,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 							{
 								TableID        = tableId,
 								PrimaryKeyName = pkName,
-								arr
+								arr,
 							};
 						},
 						"""
@@ -183,7 +183,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 					TableID        = pk.TableID,
 					PrimaryKeyName = pk.PrimaryKeyName,
 					ColumnName     = c.c,
-					Ordinal        = c.i
+					Ordinal        = c.i,
 				}
 			).ToList();
 		}
@@ -252,7 +252,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 			if (len == 0 || j > 11) // is the default 12 on have the precision already coded
 			{
-				c.ColumnType = FormattableString.Invariant($"{c.DataType} {arr[j].datetype} TO {arr[i].datetype}");
+				c.ColumnType = string.Create(CultureInfo.InvariantCulture, $"{c.DataType} {arr[j].datetype} TO {arr[i].datetype}");
 			}
 			else // # isn't the default
 			{
@@ -262,7 +262,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 				// add in the extra
 				k += len;
 
-				c.ColumnType = FormattableString.Invariant($"{c.DataType} {arr[j].datetype} ({k}) TO {arr[i].datetype}");
+				c.ColumnType = string.Create(CultureInfo.InvariantCulture, $"{c.DataType} {arr[j].datetype} ({k}) TO {arr[i].datetype}");
 				c.Precision = 5;
 			}
 		}
@@ -393,13 +393,13 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 							for (var i = 0; i < arr.Length; i++)
 							{
-								var value1 = rd[FormattableString.Invariant($"ThisCol{i + 1}")];
-								var value2 = rd[FormattableString.Invariant($"OtherCol{i + 1}")];
+								var value1 = rd[string.Create(CultureInfo.InvariantCulture, $"ThisCol{i + 1}")];
+								var value2 = rd[string.Create(CultureInfo.InvariantCulture, $"OtherCol{i + 1}")];
 
 								arr[i] = new[]
 								{
 									value1.IsNullValue() ? null : (string)value1,
-									value2.IsNullValue() ? null : (string)value2
+									value2.IsNullValue() ? null : (string)value2,
 								};
 							}
 
@@ -415,7 +415,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 									var n        = 0;
 
 									while (names.Contains(name))
-										name = FormattableString.Invariant($"{origName}_{++n}");
+										name = string.Create(CultureInfo.InvariantCulture, $"{origName}_{++n}");
 
 									names.Add(name);
 								}
@@ -426,7 +426,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 								Name         = name,
 								ThisTableID  = thisTableID,
 								OtherTableID = otherTableID,
-								arr
+								arr,
 							};
 						},
 						"""
@@ -488,7 +488,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 					ThisColumn   = c.c[0],
 					OtherTableID = fk.OtherTableID,
 					OtherColumn  = c.c[1],
-					Ordinal      = c.i
+					Ordinal      = c.i,
 				}
 			).ToList();
 		}

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -599,8 +599,8 @@ namespace LinqToDB.Data
 				{
 					dc.WriteTraceLineConnection(
 						info.RecordsAffected != null
-							? FormattableString.Invariant($"Query Execution Time ({info.TraceInfoStep}){GetTagInfo()}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n")
-							: FormattableString.Invariant($"Query Execution Time ({info.TraceInfoStep}){GetTagInfo()}: {info.ExecutionTime}\r\n"),
+							? string.Create(CultureInfo.InvariantCulture, $"Query Execution Time ({info.TraceInfoStep}){GetTagInfo()}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n")
+							: string.Create(CultureInfo.InvariantCulture, $"Query Execution Time ({info.TraceInfoStep}){GetTagInfo()}: {info.ExecutionTime}\r\n"),
 						dc.TraceSwitchConnection.DisplayName,
 						info.TraceLevel);
 					break;
@@ -1683,7 +1683,7 @@ namespace LinqToDB.Data
 						TraceLevel    = TraceLevel.Info,
 						CommandText   = sql,
 						StartTime     = now,
-						ExecutionTime = sw?.Elapsed
+						ExecutionTime = sw?.Elapsed,
 					});
 				}
 

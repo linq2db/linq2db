@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -263,7 +263,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 							IsIdentity  = rd.GetInt32(9) != 0,
 							Description = rd.IsDBNull(10) ? null : rd.GetString(10),
 							Length      = dataType is "CHAR" or "NCHAR" or "NVARCHAR2" or "VARCHAR2" or "VARCHAR"
-											? charLength : dataLength
+											? charLength : dataLength,
 						};
 					},
 					sql
@@ -404,7 +404,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 							ProcedureName   = procedureName,
 							IsFunction      = procedureType != "PROCEDURE",
 							IsTableFunction = procedureType == "TABLE_FUNCTION",
-							IsDefaultSchema = isDefault
+							IsDefaultSchema = isDefault,
 						};
 					},
 					sql
@@ -492,7 +492,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 							IsIn          = direction.StartsWith("IN"),
 							IsOut         = direction.EndsWith("OUT"),
 							IsResult      = ordinal == 0,
-							IsNullable    = true
+							IsNullable    = true,
 						};
 					},
 					sql
@@ -647,7 +647,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					MemberType           = ToTypeName(systemType, isNullable),
 					SystemType           = systemType,
 					DataType             = GetDataType(columnType, null, length, precision, scale),
-					ProviderSpecificType = GetProviderSpecificType(columnType)
+					ProviderSpecificType = GetProviderSpecificType(columnType),
 				}
 			).ToList();
 		}

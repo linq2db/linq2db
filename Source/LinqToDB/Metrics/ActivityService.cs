@@ -15,7 +15,7 @@ namespace LinqToDB.Metrics
 	[PublicAPI]
 	public static class ActivityService
 	{
-		internal static Func<ActivityID,IActivity?> Start { [MethodImpl(MethodImplOptions.AggressiveInlining)] get; private set; } = static _ => null;
+		internal static Func<ActivityID,IActivity?> Start { get; private set; } = static _ => null;
 
 		static IActivity? StartImpl(ActivityID activityID)
 		{

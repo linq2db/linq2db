@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -126,7 +126,7 @@ namespace LinqToDB.Internal.Linq
 			{
 				DataConnection dataConnection => dataConnection,
 				DataContext    dataContext    => dataContext.GetDataConnection(),
-				_                             => null
+				_                             => null,
 			};
 
 			if (dc == null)
@@ -157,7 +157,7 @@ namespace LinqToDB.Internal.Linq
 			{
 				DataConnection dataConnection => dataConnection,
 				DataContext    dataContext    => dataContext.GetDataConnection(),
-				_                             => null
+				_                             => null,
 			};
 
 			if (dc == null)

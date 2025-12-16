@@ -72,49 +72,49 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			if (_instance == null)
 			{
 				lock (_syncRoot)
-#pragma warning disable CA1508 // Avoid dead conditional code
-					if (_instance == null)
-#pragma warning restore CA1508 // Avoid dead conditional code
-					{
-						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
-						if (assembly == null)
-							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
-
-						var connectionType  = assembly.GetType($"{ClientNamespace}.SqlCeConnection" , true)!;
-						var dataReaderType  = assembly.GetType($"{ClientNamespace}.SqlCeDataReader" , true)!;
-						var parameterType   = assembly.GetType($"{ClientNamespace}.SqlCeParameter"  , true)!;
-						var commandType     = assembly.GetType($"{ClientNamespace}.SqlCeCommand"    , true)!;
-						var transactionType = assembly.GetType($"{ClientNamespace}.SqlCeTransaction", true)!;
-						var sqlCeEngine     = assembly.GetType($"{ClientNamespace}.SqlCeEngine"     , true)!;
-
-						var typeMapper = new TypeMapper();
-						typeMapper.RegisterTypeWrapper<SqlCeConnection>(connectionType);
-						typeMapper.RegisterTypeWrapper<SqlCeDataReader>(dataReaderType);
-						typeMapper.RegisterTypeWrapper<SqlCeEngine>(sqlCeEngine);
-						typeMapper.RegisterTypeWrapper<SqlCeParameter>(parameterType);
-						typeMapper.FinalizeMappings();
-
-						var dbTypeBuilder = typeMapper.Type<SqlCeParameter>().Member(p => p.SqlDbType);
-						var typeSetter    = dbTypeBuilder.BuildSetter<DbParameter>();
-						var typeGetter    = dbTypeBuilder.BuildGetter<DbParameter>();
-
-						var connectionFactory = typeMapper.BuildTypedFactory<string, SqlCeConnection, DbConnection>(connectionString => new SqlCeConnection(connectionString));
-
-						_instance = new SqlCeProviderAdapter(
-							connectionType,
-							dataReaderType,
-							parameterType,
-							commandType,
-							transactionType,
-							connectionFactory,
-							typeSetter,
-							typeGetter,
-							typeMapper.BuildWrappedFactory((string connectionString) => new SqlCeEngine(connectionString))!,
-							typeMapper.MapLambda((SqlCeDataReader rd, int ordinal) => ConvertToDecimal(rd.GetSqlDecimal(ordinal))));
-					}
+					_instance ??= GetSqlCeInstance();
 			}
 
 			return _instance;
+
+			static SqlCeProviderAdapter GetSqlCeInstance()
+			{
+				var assembly = Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
+				if (assembly == null)
+					throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
+
+				var connectionType  = assembly.GetType($"{ClientNamespace}.SqlCeConnection" , true)!;
+				var dataReaderType  = assembly.GetType($"{ClientNamespace}.SqlCeDataReader" , true)!;
+				var parameterType   = assembly.GetType($"{ClientNamespace}.SqlCeParameter"  , true)!;
+				var commandType     = assembly.GetType($"{ClientNamespace}.SqlCeCommand"    , true)!;
+				var transactionType = assembly.GetType($"{ClientNamespace}.SqlCeTransaction", true)!;
+				var sqlCeEngine     = assembly.GetType($"{ClientNamespace}.SqlCeEngine"     , true)!;
+
+				var typeMapper = new TypeMapper();
+				typeMapper.RegisterTypeWrapper<SqlCeConnection>(connectionType);
+				typeMapper.RegisterTypeWrapper<SqlCeDataReader>(dataReaderType);
+				typeMapper.RegisterTypeWrapper<SqlCeEngine>(sqlCeEngine);
+				typeMapper.RegisterTypeWrapper<SqlCeParameter>(parameterType);
+				typeMapper.FinalizeMappings();
+
+				var dbTypeBuilder = typeMapper.Type<SqlCeParameter>().Member(p => p.SqlDbType);
+				var typeSetter    = dbTypeBuilder.BuildSetter<DbParameter>();
+				var typeGetter    = dbTypeBuilder.BuildGetter<DbParameter>();
+
+				var connectionFactory = typeMapper.BuildTypedFactory<string, SqlCeConnection, DbConnection>(connectionString => new SqlCeConnection(connectionString));
+
+				return new SqlCeProviderAdapter(
+					connectionType,
+					dataReaderType,
+					parameterType,
+					commandType,
+					transactionType,
+					connectionFactory,
+					typeSetter,
+					typeGetter,
+					typeMapper.BuildWrappedFactory((string connectionString) => new SqlCeEngine(connectionString))!,
+					typeMapper.MapLambda(static (SqlCeDataReader rd, int ordinal) => ConvertToDecimal(rd.GetSqlDecimal(ordinal))));
+			}
 		}
 
 		static decimal ConvertToDecimal(SqlDecimal sqlDecimal)

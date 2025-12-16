@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Linq.Expressions;
 
@@ -104,7 +104,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				Placeholder          = translatedPlaceholder,
 				Validator            = validatorFunc,
-				OuterJoinParentQuery = isSimple ? null : buildInfo.Parent?.SelectQuery
+				OuterJoinParentQuery = isSimple ? null : buildInfo.Parent?.SelectQuery,
 			};
 
 			return BuildSequenceResult.FromContext(context);

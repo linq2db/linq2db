@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -279,7 +279,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				OrderBy           = orderBy?.ToArray() ?? [],
 				IsDistinct        = isDistinct,
 				IsGroupBy         = isGroupBy,
-				IsEmptyGroupBy    = isEmptyGroupBy
+				IsEmptyGroupBy    = isEmptyGroupBy,
 			};
 
 			if (sqlContext != null)
@@ -631,7 +631,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				OrderBy           = orderBy?.ToArray() ?? [],
 				IsDistinct        = isDistinct,
 				IsGroupBy         = isGroupBy,
-				IsEmptyGroupBy    = isEmptyGroupBy
+				IsEmptyGroupBy    = isEmptyGroupBy,
 			};
 
 			var result = functionFactory(aggregationInfo);

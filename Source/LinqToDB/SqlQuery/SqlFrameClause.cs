@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 using LinqToDB.Internal.SqlQuery;
 
@@ -10,7 +10,7 @@ namespace LinqToDB.SqlQuery
 		{
 			Rows,
 			Range,
-			Groups
+			Groups,
 		}
 
 		public SqlFrameClause(FrameTypeKind frameType, SqlFrameBoundary start, SqlFrameBoundary end)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -232,11 +232,11 @@ namespace LinqToDB.Async
 
 		/// <summary>
 		/// Asynchronously apply provided function to each element in source sequence sequentially.
-		/// Sequence enumeration stops if function returns <c>false</c>.
+		/// Sequence enumeration stops if function returns <see langword="false"/>.
 		/// </summary>
 		/// <typeparam name="TSource">Source sequence element type.</typeparam>
 		/// <param name="source">Source sequence.</param>
-		/// <param name="func">Function to apply to each sequence element. Returning <c>false</c> from function will stop numeration.</param>
+		/// <param name="func">Function to apply to each sequence element. Returning <see langword="false"/> from function will stop numeration.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
 		public static Task ForEachUntilAsync<TSource>(

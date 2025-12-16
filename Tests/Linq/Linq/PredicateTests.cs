@@ -786,7 +786,7 @@ namespace Tests.Linq
 			public int? Value4 { get; set; }
 			public int? Value5 { get; set; }
 
-			static BooleanTable()
+			static IReadOnlyCollection<BooleanTable> GetData()
 			{
 				var testData = new List<BooleanTable>();
 				var smallTestData = new List<BooleanTable>();
@@ -810,10 +810,10 @@ namespace Tests.Linq
 								});
 							}
 
-				Data = testData;
+				return testData;
 			}
 
-			public static readonly IReadOnlyCollection<BooleanTable> Data;
+			public static readonly IReadOnlyCollection<BooleanTable> Data = GetData();
 		}
 
 		[Test]

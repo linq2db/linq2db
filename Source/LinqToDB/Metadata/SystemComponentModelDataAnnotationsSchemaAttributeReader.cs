@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reflection;
 
 using LinqToDB.Extensions;
@@ -57,7 +57,7 @@ namespace LinqToDB.Metadata
 				var attr = new ColumnAttribute()
 				{
 					Name   = c.Name,
-					DbType = c.TypeName
+					DbType = c.TypeName,
 				};
 
 				return new MappingAttribute[] { attr };

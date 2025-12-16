@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
@@ -82,7 +82,7 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						AccessorId     = parameter.AccessorId,
 						ValueConverter = parameter.ValueConverter,
-						NeedsCast      = parameter.NeedsCast
+						NeedsCast      = parameter.NeedsCast,
 					};
 				}
 

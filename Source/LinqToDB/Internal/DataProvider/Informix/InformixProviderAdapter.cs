@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
@@ -182,32 +182,34 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		public static InformixProviderAdapter GetInstance(InformixProvider provider)
 		{
-			if (provider == InformixProvider.Informix)
+			return provider switch
+			{
+				InformixProvider.Informix => GetInformixAdapter(),
+				InformixProvider.DB2      => GetDb2Adapter(),
+				_ => throw new InvalidOperationException($"Unsupported provider type: {provider}"),
+			};
+
+			static InformixProviderAdapter GetInformixAdapter()
 			{
 				if (_ifxAdapter == null)
 				{
 					lock (_ifxSyncRoot)
-#pragma warning disable CA1508 // Avoid dead conditional code
 						_ifxAdapter ??= CreateIfxAdapter();
-#pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
 				return _ifxAdapter;
 			}
-			else if (provider == InformixProvider.DB2)
+
+			static InformixProviderAdapter GetDb2Adapter()
 			{
 				if (_db2Adapter == null)
 				{
 					lock (_db2SyncRoot)
-#pragma warning disable CA1508 // Avoid dead conditional code
 						_db2Adapter ??= new(DB2ProviderAdapter.Instance);
-#pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
 				return _db2Adapter;
 			}
-
-			throw new InvalidOperationException($"Unsupported provider type: {provider}");
 		}
 
 		private static InformixProviderAdapter CreateIfxAdapter()
@@ -312,12 +314,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			}
 		}
 
-		sealed class InformixAdapterMappingSchema : LockedMappingSchema
-		{
-			public InformixAdapterMappingSchema() : base("InformixAdapter")
-			{
-			}
-		}
+		sealed class InformixAdapterMappingSchema() : LockedMappingSchema("InformixAdapter");
 
 		#region Wrappers
 
@@ -433,7 +430,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			private static string[] Events { get; }
 				= new[]
 			{
-				nameof(IfxRowsCopied)
+				nameof(IfxRowsCopied),
 			};
 
 			public IfxBulkCopy(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -534,7 +531,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			Default      = 0,
 			KeepIdentity = 1,
 			TableLock    = 2,
-			Truncate     = 4
+			Truncate     = 4,
 		}
 
 		[Wrapper]

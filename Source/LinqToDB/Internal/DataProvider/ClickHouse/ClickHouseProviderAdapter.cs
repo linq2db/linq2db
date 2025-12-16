@@ -151,47 +151,46 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		public static ClickHouseProviderAdapter GetInstance(ClickHouseProvider provider)
 		{
-			if (provider == ClickHouseProvider.Octonica)
+			return provider switch
+			{
+				ClickHouseProvider.Octonica         => GetOctonicaAdapter(),
+				ClickHouseProvider.MySqlConnector   => GetMySqlConnectorAdapter(),
+				ClickHouseProvider.ClickHouseDriver => GetClickhouseDriverAdapter(),
+				_ => throw new InvalidOperationException($"Unsupported provider type: {provider}"),
+			};
+
+			static ClickHouseProviderAdapter GetOctonicaAdapter()
 			{
 				if (_octonicaAdapter == null)
 				{
 					lock (_octonicaSyncRoot)
-						// https://github.com/dotnet/roslyn-analyzers/issues/1649
-#pragma warning disable CA1508 // Avoid dead conditional code
 						_octonicaAdapter ??= CreateOctonicaAdapter();
-#pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
 				return _octonicaAdapter;
 			}
-			else if (provider == ClickHouseProvider.MySqlConnector)
+
+			static ClickHouseProviderAdapter GetMySqlConnectorAdapter()
 			{
 				if (_mysqlAdapter == null)
 				{
 					lock (_mysqlSyncRoot)
-						// https://github.com/dotnet/roslyn-analyzers/issues/1649
-#pragma warning disable CA1508 // Avoid dead conditional code
 						_mysqlAdapter ??= new ClickHouseProviderAdapter(MySqlProviderAdapter.GetInstance(MySqlProvider.MySqlConnector));
-#pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
 				return _mysqlAdapter;
 			}
-			else if (provider == ClickHouseProvider.ClickHouseDriver)
+
+			static ClickHouseProviderAdapter GetClickhouseDriverAdapter()
 			{
 				if (_driverAdapter == null)
 				{
 					lock (_driverSyncRoot)
-						// https://github.com/dotnet/roslyn-analyzers/issues/1649
-#pragma warning disable CA1508 // Avoid dead conditional code
 						_driverAdapter ??= CreateDriverAdapter();
-#pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
 				return _driverAdapter;
 			}
-
-			throw new InvalidOperationException($"Unsupported provider type: {provider}");
 		}
 
 		private static ClickHouseProviderAdapter CreateDriverAdapter()

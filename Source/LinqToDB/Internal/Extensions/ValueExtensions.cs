@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Globalization;
 
 namespace LinqToDB.Internal.Extensions
 {
@@ -16,7 +17,7 @@ namespace LinqToDB.Internal.Extensions
 			1000,
 			100,
 			10,
-			1
+			1,
 		];
 
 		public static long GetTicks(this TimeSpan ts, int precision)
@@ -25,7 +26,7 @@ namespace LinqToDB.Internal.Extensions
 				return ts.Ticks;
 
 			if (precision < 0)
-				throw new InvalidOperationException(FormattableString.Invariant($"Precision must be >= 0: {precision}"));
+				throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"Precision must be >= 0: {precision}"));
 
 			return ts.Ticks - (ts.Ticks % TICKS_DIVIDERS[precision]);
 		}
@@ -36,7 +37,7 @@ namespace LinqToDB.Internal.Extensions
 				return dto;
 
 			if (precision < 0)
-				throw new InvalidOperationException(FormattableString.Invariant($"Precision must be >= 0: {precision}"));
+				throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"Precision must be >= 0: {precision}"));
 
 			var delta = dto.Ticks % TICKS_DIVIDERS[precision];
 			return delta == 0 ? dto : dto.AddTicks(-delta);

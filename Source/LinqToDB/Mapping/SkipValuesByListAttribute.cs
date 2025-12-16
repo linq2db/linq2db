@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -32,7 +32,7 @@ namespace LinqToDB.Mapping
 		/// <param name="obj">The object to check.</param>
 		/// <param name="entityDescriptor">The entity descriptor.</param>
 		/// <param name="columnDescriptor">The column descriptor.</param>
-		/// <returns><c>true</c> if object should be skipped for the operation.</returns>
+		/// <returns><see langword="true"/> if object should be skipped for the operation.</returns>
 		public override bool ShouldSkip(object obj, EntityDescriptor entityDescriptor, ColumnDescriptor columnDescriptor)
 		{
 			return Values?.Contains(columnDescriptor.MemberAccessor.GetValue(obj)) ?? false;

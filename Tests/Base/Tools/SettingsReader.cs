@@ -106,7 +106,7 @@ namespace Tests.Tools
 				{
 					var cs = connection.Value.ConnectionString;
 
-					if (cs != null && cs.StartsWith("[") && cs.EndsWith("]"))
+					if (cs is ['[', .., ']'])
 					{
 						cs = cs.Substring(1, cs.Length - 2);
 						if (settings.Connections.TryGetValue(cs, out var baseConnection))
@@ -133,11 +133,11 @@ namespace Tests.Tools
 								break;
 							default:
 							{
-								if (provider.StartsWith("-"))
+								if (provider.StartsWith('-'))
 								{
 									var p = provider.Replace("-", "").Trim();
 
-									if (p.StartsWith("*") && p.EndsWith("*"))
+									if (p is ['*', .., '*'])
 									{
 										p = p.Trim('*');
 
@@ -145,7 +145,7 @@ namespace Tests.Tools
 											if (pr.Contains(p))
 												providers.Remove(pr);
 									}
-									else if (p.StartsWith("*"))
+									else if (p is ['*', ..])
 									{
 										p = p.Trim('*');
 
@@ -153,7 +153,7 @@ namespace Tests.Tools
 											if (pr.EndsWith(p))
 												providers.Remove(pr);
 									}
-									else if (p.EndsWith("*"))
+									else if (p is [.., '*'])
 									{
 										p = p.Trim('*');
 

@@ -145,45 +145,44 @@ namespace LinqToDB.Benchmarks.Mappings
 		[Association(ThisKey = nameof(CustomerID), OtherKey = nameof(Mappings.Customer.CustomerID))]
 		public Customer Customer { get; set; } = null!;
 
-		public static DataTable SchemaTable;
+		public static DataTable SchemaTable = new()
+		{
+			Columns = { {"AllowDBNull", typeof(bool) } },
+			Rows =
+			{
+				false,
+				true,
+				true,
+				true,
+				false,
+				false,
+				false,
+				false,
+				false,
+				true,
+				false,
+				false,
+				false,
+				true,
+				false,
+				false,
+				false,
+				false,
+				false,
+				true,
+				true,
+				false,
+				false,
+				false,
+				true,
+				true,
+			},
+		};
+
 		public static string[]  Names      = new[] { "SalesOrderID", "AccountNumber", "Comment", "CreditCardApprovalCode", "DueDate", "Freight", "ModifiedDate", "OnlineOrderFlag", "OrderDate", "PurchaseOrderNumber", "RevisionNumber", "Rowguid", "SalesOrderNumber", "ShipDate", "Status", "SubTotal", "TaxAmt", "TotalDue", "CustomerID", "SalesPersonID", "TerritoryID", "BillToAddressID", "ShipToAddressID", "ShipMethodID", "CreditCardID", "CurrencyRateID" };
 		public static Type[]    FieldTypes = new[] { typeof(int), typeof(string), typeof(string), typeof(string), typeof(DateTime), typeof(decimal), typeof(DateTime), typeof(bool), typeof(DateTime), typeof(string), typeof(byte), typeof(Guid), typeof(string), typeof(DateTime), typeof(byte), typeof(decimal), typeof(decimal), typeof(decimal), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int) };
 		public static string[]  DbTypes    = new[] { "int", "nvarchar", "nvarchar", "varchar", "datetime", "money", "datetime", "bit", "datetime", "nvarchar", "tinyint", "uniqueidentifier", "nvarchar", "datetime", "tinyint", "money", "money", "money", "int", "int", "int", "int", "int", "int", "int", "int" };
 		public static object?[] SampleRow  = new object?[] { 123, "100500", "nothing to see here, please disperse", "666", DateTime.Now, 12.34m, DateTime.Now, true, DateTime.Now, "1123787", (byte)4, Guid.NewGuid(), "sdfsdfsd", DateTime.Now, (byte)12, 1.1m, 4.2m, 423.222m, 1, 2, 3, 4, 5, 6, 7, 8 };
-
-		static SalesOrderHeader()
-		{
-			var schema = new DataTable();
-			schema.Columns.Add("AllowDBNull", typeof(bool));
-			schema.Rows.Add(false);
-			schema.Rows.Add(true);
-			schema.Rows.Add(true);
-			schema.Rows.Add(true);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(true);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(true);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(true);
-			schema.Rows.Add(true);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(true);
-			schema.Rows.Add(true);
-
-			SchemaTable = schema;
-		}
 	}
 
 	[Table(Schema = "Sales", Name = "SalesOrderDetail")]
@@ -222,30 +221,29 @@ namespace LinqToDB.Benchmarks.Mappings
 		[Column]
 		public DateTime ModifiedDate { get; set; }
 
-		public static DataTable SchemaTable;
+		public static DataTable SchemaTable = new()
+		{
+			Columns = { {"AllowDBNull", typeof(bool) } },
+			Rows =
+			{
+				false,
+				false,
+				true,
+				false,
+				false,
+				false,
+				false,
+				false,
+				false,
+				false,
+				false,
+			},
+		};
+
 		public static string[]  Names      = new[] { "SalesOrderID", "SalesOrderDetailID", "CarrierTrackingNumber", "OrderQty", "ProductID", "SpecialOfferID", "UnitPrice", "UnitPriceDiscount", "LineTotal", "rowguid", "ModifiedDate" };
 		public static Type[]    FieldTypes = new[] { typeof(int), typeof(int), typeof(string), typeof(short), typeof(int), typeof(int), typeof(decimal), typeof(decimal), typeof(decimal), typeof(Guid), typeof(DateTime) };
 		public static string[]  DbTypes    = new[] { "int", "int", "nvarchar", "smallint", "int", "int", "money", "money", "numeric", "uniqueidentifier", "datetime" };
 		public static object?[] SampleRow  = new object?[] { 123, 22, "nothing to see here, please disperse", (short)267, 23, 33, 2.2m, 3.3m, 2.2m, Guid.NewGuid(), DateTime.Now };
-
-		static SalesOrderDetail()
-		{
-			var schema = new DataTable();
-			schema.Columns.Add("AllowDBNull", typeof(bool));
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(true);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			
-			SchemaTable = schema;
-		}
 	}
 
 	[Table(Schema = "Sales", Name = "Customer")]
@@ -272,98 +270,98 @@ namespace LinqToDB.Benchmarks.Mappings
 		[Column]
 		public DateTime ModifiedDate { get; set; }
 
-		public static DataTable SchemaTable;
+		public static DataTable SchemaTable = new()
+		{
+			Columns = { {"AllowDBNull", typeof(bool) } },
+			Rows =
+			{
+				false,
+				true,
+				true,
+				true,
+				false,
+				false,
+				false,
+			},
+		};
+
 		public static string[]  Names      = new[] { "CustomerID", "PersonID", "StoreID", "TerritoryID", "AccountNumber", "rowguid", "ModifiedDate" };
 		public static Type[]    FieldTypes = new[] { typeof(int), typeof(int), typeof(int), typeof(int), typeof(string), typeof(Guid), typeof(DateTime) };
 		public static string[]  DbTypes    = new[] { "int", "int", "int", "int", "varchar", "uniqueidentifier", "datetime" };
 		public static object?[] SampleRow  = new object?[] { 1, 2, 3, 4, "1348", Guid.NewGuid(), DateTime.Now };
-
-		static Customer()
-		{
-			var schema = new DataTable();
-			schema.Columns.Add("AllowDBNull", typeof(bool));
-			schema.Rows.Add(false);
-			schema.Rows.Add(true);
-			schema.Rows.Add(true);
-			schema.Rows.Add(true);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-
-			SchemaTable = schema;
-		}
 	}
 
 	public static class EagerLoad
 	{
-		public static DataTable SchemaTable_SalesOrderDetails;
+		public static DataTable SchemaTable_SalesOrderDetails = new()
+		{
+			Columns = { {"AllowDBNull", typeof(bool) } },
+			Rows =
+			{
+				false,
+				false,
+				false,
+				true,
+				false,
+				false,
+				false,
+				false,
+				false,
+				false,
+				false,
+				false,
+			},
+		};
+
 		public static string[]  Names_SalesOrderDetails      = new[] { "SalesOrderID", "SalesOrderID", "SalesOrderDetailID", "CarrierTrackingNumber", "OrderQty", "ProductID", "SpecialOfferID", "UnitPrice", "UnitPriceDiscount", "LineTotal", "rowguid", "ModifiedDate" };
 		public static Type[]    FieldTypes_SalesOrderDetails = new[] { typeof(int), typeof(int), typeof(int), typeof(string), typeof(short), typeof(int), typeof(int), typeof(decimal), typeof(decimal), typeof(decimal), typeof(Guid), typeof(DateTime) };
 		public static string[]  DbTypes_SalesOrderDetails    = new[] { "int", "int", "int", "nvarchar", "smallint", "int", "int", "money", "money", "numeric", "uniqueidentifier", "datetime" };
 		public static object?[] SampleRow_SalesOrderDetails(int id) => new object?[] { id, id, 22, "nothing to see here, please disperse", (short)267, 23, 33, 2.2m, 3.3m, 2.2m, Guid.NewGuid(), DateTime.Now };
 
-		public static DataTable SchemaTable_HeaderCustomer;
+		public static DataTable SchemaTable_HeaderCustomer = new()
+		{
+			Columns = { {"AllowDBNull", typeof(bool) } },
+			Rows =
+			{
+				false,
+				true,
+				true,
+				true,
+				false,
+				false,
+				false,
+				false,
+				false,
+				true,
+				false,
+				false,
+				false,
+				true,
+				false,
+				false,
+				false,
+				false,
+				false,
+				true,
+				true,
+				false,
+				false,
+				false,
+				true,
+				true,
+				false,
+				false,
+				false,
+				false,
+				false,
+				false,
+				false,
+			},
+		};
+
 		public static string[]  Names_HeaderCustomer = new[] { "SalesOrderID", "AccountNumber", "Comment", "CreditCardApprovalCode", "DueDate", "Freight", "ModifiedDate", "OnlineOrderFlag", "OrderDate", "PurchaseOrderNumber", "RevisionNumber", "Rowguid", "SalesOrderNumber", "ShipDate", "Status", "SubTotal", "TaxAmt", "TotalDue", "CustomerID", "SalesPersonID", "TerritoryID", "BillToAddressID", "ShipToAddressID", "ShipMethodID", "CreditCardID", "CurrencyRateID", "CustomerID", "PersonID", "StoreID", "TerritoryID", "AccountNumber", "rowguid", "ModifiedDate" };
 		public static Type[]    FieldTypes_HeaderCustomer = new[] { typeof(int), typeof(string), typeof(string), typeof(string), typeof(DateTime), typeof(decimal), typeof(DateTime), typeof(bool), typeof(DateTime), typeof(string), typeof(byte), typeof(Guid), typeof(string), typeof(DateTime), typeof(byte), typeof(decimal), typeof(decimal), typeof(decimal), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(int), typeof(string), typeof(Guid), typeof(DateTime) };
 		public static string[]  DbTypes_HeaderCustomer = new[] { "int", "nvarchar", "nvarchar", "varchar", "datetime", "money", "datetime", "bit", "datetime", "nvarchar", "tinyint", "uniqueidentifier", "nvarchar", "datetime", "tinyint", "money", "money", "money", "int", "int", "int", "int", "int", "int", "int", "int", "int", "int", "int", "int", "varchar", "uniqueidentifier", "datetime" };
 		public static object?[] SampleRow_HeaderCustomer(int id) => new object?[] { id, "100500", "nothing to see here, please disperse", "666", DateTime.Now, 12.34m, DateTime.Now, true, DateTime.Now, "1123787", (byte)4, Guid.NewGuid(), "sdfsdfsd", DateTime.Now, (byte)12, 1.1m, 4.2m, 423.222m, id, 2, 3, 4, 5, 6, 7, 8, id, 2, 3, 4, "1348", Guid.NewGuid(), DateTime.Now };
-
-		static EagerLoad()
-		{
-			var schema = new DataTable();
-			schema.Columns.Add("AllowDBNull", typeof(bool));
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(true);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-
-			SchemaTable_SalesOrderDetails = schema;
-
-			schema = new DataTable();
-			schema.Columns.Add("AllowDBNull", typeof(bool));
-			schema.Rows.Add(false);
-			schema.Rows.Add(true);
-			schema.Rows.Add(true);
-			schema.Rows.Add(true);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(true);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(true);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(true);
-			schema.Rows.Add(true);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(true);
-			schema.Rows.Add(true);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-			schema.Rows.Add(false);
-
-			SchemaTable_HeaderCustomer = schema;
-		}
 	}
 }

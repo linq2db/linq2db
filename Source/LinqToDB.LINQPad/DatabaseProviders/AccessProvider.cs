@@ -71,8 +71,8 @@ internal sealed class AccessProvider : DatabaseProviderBase
 	{
 		connectionString = PasswordManager.ResolvePasswordManagerFields(connectionString);
 
-		var isOleDb = connectionString.IndexOf("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase) != -1
-			|| connectionString.IndexOf("Microsoft.ACE.OLEDB", StringComparison.OrdinalIgnoreCase) != -1;
+		var isOleDb = connectionString.Contains("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase)
+			|| connectionString.Contains("Microsoft.ACE.OLEDB", StringComparison.OrdinalIgnoreCase);
 
 		// we don't check for ODBC provider marker - it will fail on connection test if wrong
 		return _providers[isOleDb ? 0 : 1];

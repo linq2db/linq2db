@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -442,7 +442,7 @@ namespace LinqToDB.Remote
 										typeof(MappingSchema),
 										typeof(DataOptions),
 										typeof(ISqlOptimizer),
-										typeof(SqlProviderFlags)
+										typeof(SqlProviderFlags),
 									}) ?? throw new InvalidOperationException($"Constructor for type '{key.Item1.Name}' not found."),
 									new Expression[]
 									{
@@ -450,7 +450,7 @@ namespace LinqToDB.Remote
 										Expression.Constant(args.mappingSchema, typeof(MappingSchema)),
 										Expression.Constant(key.Item5),
 										Expression.Constant(args.sqlOptimizer),
-										Expression.Constant(key.Item4)
+										Expression.Constant(key.Item4),
 									}))
 								.CompileExpression();
 						},

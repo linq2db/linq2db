@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -235,7 +235,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					(SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2022MappingSchemaMicrosoft(),
 					(SqlServerVersion.v2025, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2025MappingSchemaMicrosoft(),
 
-					_ => throw new InvalidOperationException($"Unexpected dialect/provider: {version}, {provider}")
+					_ => throw new InvalidOperationException($"Unexpected dialect/provider: {version}, {provider}"),
 				};
 			}
 		}

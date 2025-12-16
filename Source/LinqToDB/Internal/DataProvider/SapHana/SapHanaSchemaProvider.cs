@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -72,7 +72,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				CreateFormat     = x.CreateFormat?.Replace("VAR", ""),
 				CreateParameters = x.CreateParameters,
 				ProviderDbType   = x.ProviderDbType,
-				TypeName         = x.TypeName.Replace("VAR", "")
+				TypeName         = x.TypeName.Replace("VAR", ""),
 			}).ToList();
 
 			dt.AddRange(otherTypes);
@@ -101,7 +101,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 					IsView          = !isTable,
 					SchemaName      = schemaName,
 					TableID         = schemaName + '.' + tableName,
-					TableName       = tableName
+					TableName       = tableName,
 				};
 			}, GetTablesQuery());
 
@@ -272,7 +272,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 					Ordinal     = position,
 					Precision   = length,
 					Scale       = scale,
-					TableID     = tableId
+					TableID     = tableId,
 				};
 			}, sqlText);
 
@@ -327,7 +327,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 							IsTableFunction     = isTableFunction,
 							ProcedureDefinition = definition,
 							ProcedureName       = procedure,
-							SchemaName          = schema
+							SchemaName          = schema,
 						};
 					},
 					$"""
@@ -390,7 +390,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 							ParameterName = parameter,
 							Precision     = length,
 							Scale         = scale,
-							IsNullable    = isNullable
+							IsNullable    = isNullable,
 						};
 					}, 
 					$"""
@@ -576,7 +576,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 						IsProcedureResult = true,
 						TypeName          = ToValidName(procedure.ProcedureName + "Result"),
 						ForeignKeys       = new List<ForeignKeySchema>(),
-						Columns           = GetProcedureResultColumns(st, options)
+						Columns           = GetProcedureResultColumns(st, options),
 					};
 
 					foreach (var column in procedure.ResultTable.Columns)
@@ -617,7 +617,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 							? p.IsOut
 								? ParameterDirection.InputOutput
 								: ParameterDirection.Input
-							: ParameterDirection.Output
+							: ParameterDirection.Output,
 				}).ToArray();
 		}
 
@@ -641,7 +641,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 							IsView          = true,
 							SchemaName      = schemaName,
 							TableID         = schemaName + '.' + tableName,
-							TableName       = tableName
+							TableName       = tableName,
 						};
 					},
 					$"""
@@ -708,7 +708,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 							ParameterName = parameterName,
 							Precision     = length,
 							Scale         = scale,
-							IsNullable    = true
+							IsNullable    = true,
 						};
 					},
 					$"""
@@ -774,9 +774,9 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 							SystemType           = systemType,
 							DataType             = GetDataType(pr.DataType, null, pr.Length, pr.Precision, pr.Scale),
 							ProviderSpecificType = GetProviderSpecificType(pr.DataType),
-							IsNullable           = pr.IsNullable
+							IsNullable           = pr.IsNullable,
 						}
-					).ToList()
+					).ToList(),
 				}
 			).ToList();
 

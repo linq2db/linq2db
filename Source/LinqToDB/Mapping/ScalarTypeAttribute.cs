@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Globalization;
 
 namespace LinqToDB.Mapping
 {
@@ -53,13 +54,13 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Gets or sets scalar type flag.
-		/// Default value: <c>true</c>.
+		/// Default value: <see langword="true"/>.
 		/// </summary>
 		public bool   IsScalar      { get; set; }
 
 		public override string GetObjectID()
 		{
-			return FormattableString.Invariant($".{Configuration}.{(IsScalar ? 1 : 0)}.");
+			return string.Create(CultureInfo.InvariantCulture, $".{Configuration}.{(IsScalar ? 1 : 0)}.");
 		}
 	}
 }

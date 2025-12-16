@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -192,7 +192,7 @@ namespace LinqToDB
 
 				if (Extension != null)
 				{
-					str = FormattableString.Invariant($"{paramPrefix}('{Name ?? ""}', {Extension.ChainPrecedence}): {Extension.Expr}");
+					str = string.Create(CultureInfo.InvariantCulture, $"{paramPrefix}('{Name ?? ""}', {Extension.ChainPrecedence}): {Extension.Expr}");
 				}
 				else if (Expression != null)
 				{
@@ -887,7 +887,7 @@ namespace LinqToDB
 							.OrderByDescending(static e => e.Item1.Extension?.ChainPrecedence ?? int.MinValue)
 							.ThenBy(static e => e.Item2)
 							.Select(static e => e.Item1)
-							.ToArray()
+							.ToArray(),
 					})
 					.ToArray();
 
@@ -932,7 +932,7 @@ namespace LinqToDB
 							{
 								(true, _) => true,
 								(_, null) => n,
-								_         => canBeNull
+								_         => canBeNull,
 							};
 						}
 
@@ -955,7 +955,7 @@ namespace LinqToDB
 								(IsNullableType.Nullable, _)                          => IsNullableType.Nullable,
 								(IsNullableType.NotNullable, IsNullableType.Nullable) => IsNullableType.Nullable,
 								(IsNullableType.Undefined, _)                         => isNullable,
-								_                                                     => IsNullableType.IfAnyParameterNullable
+								_                                                     => IsNullableType.IfAnyParameterNullable,
 							};
 						}
 
@@ -977,7 +977,7 @@ namespace LinqToDB
 
 			public override string GetObjectID()
 			{
-				return FormattableString.Invariant($"{base.GetObjectID()}.{TokenName}.{IdentifierBuilder.GetObjectID(BuilderType)}.{BuilderValue}.{ChainPrecedence}.");
+				return string.Create(CultureInfo.InvariantCulture, $"{base.GetObjectID()}.{TokenName}.{IdentifierBuilder.GetObjectID(BuilderType)}.{BuilderValue}.{ChainPrecedence}.");
 			}
 		}
 	}

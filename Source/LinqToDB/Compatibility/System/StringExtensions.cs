@@ -1,4 +1,4 @@
-﻿#if !NET8_0_OR_GREATER
+#if !NET8_0_OR_GREATER
 
 #pragma warning disable IDE0130
 #pragma warning disable IDE0160
@@ -39,7 +39,22 @@ internal static class StringExtensions
 		///	</returns>
 		public string AsSpan(int startIndex, int length) =>
 			str.Substring(startIndex, length);
-	}
+
+		/// <summary>
+		///		Creates a new string by using the specified provider to control the formatting of the specified interpolated string.
+		/// </summary>
+		/// <param name="provider">
+		///		An object that supplies culture-specific formatting information.
+		/// </param>
+		/// <param name="formattableString">
+		///		The interpolated string.
+		/// </param>
+		/// <returns>
+		///		The string that results for formatting the interpolated string using the specified format provider.
+		/// </returns>
+		public static string Create(IFormatProvider? provider, FormattableString formattableString) =>
+			formattableString.ToString(provider);
+    }
 }
 
 #endif

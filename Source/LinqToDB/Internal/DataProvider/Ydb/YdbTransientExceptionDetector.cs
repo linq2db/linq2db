@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
@@ -26,11 +26,11 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		/// </summary>
 		/// <param name="ex">The exception to search.</param>
 		/// <param name="ydbEx">
-		/// When this method returns <c>true</c>, contains the first discovered YDB exception.
+		/// When this method returns <see langword="true"/>, contains the first discovered YDB exception.
 		/// Otherwise, <c>null</c>.
 		/// </param>
 		/// <returns>
-		/// <c>true</c> if a <c>YdbException</c> was found, otherwise <c>false</c>.
+		/// <see langword="true"/> if a <c>YdbException</c> was found, otherwise <see langword="false"/>.
 		/// </returns>
 		public static bool TryGetYdbException(Exception ex, [NotNullWhen(true)] out Exception? ydbEx)
 		{
@@ -56,7 +56,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		/// <param name="codeName">Outputs the name of the status code as a string.</param>
 		/// <param name="isTransient">Outputs whether the error is transient.</param>
 		/// <returns>
-		/// <c>true</c> if the <c>Code</c> property was successfully read, otherwise <c>false</c>.
+		/// <see langword="true"/> if the <c>Code</c> property was successfully read, otherwise <see langword="false"/>.
 		/// </returns>
 		public static bool TryGetCodeAndTransient(Exception ydbEx, out string? codeName, out bool isTransient)
 		{
@@ -84,11 +84,11 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		/// </summary>
 		/// <param name="ex">The exception to evaluate.</param>
 		/// <param name="enableRetryIdempotence">
-		/// If <c>true</c>, adds additional YDB codes that should be retried based on SDK retry schemes.
-		/// If <c>false</c>, only the <c>IsTransient</c> flag is considered.
+		/// If <see langword="true"/>, adds additional YDB codes that should be retried based on SDK retry schemes.
+		/// If <see langword="false"/>, only the <c>IsTransient</c> flag is considered.
 		/// </param>
 		/// <returns>
-		/// <c>true</c> if the operation should be retried; otherwise, <c>false</c>.
+		/// <see langword="true"/> if the operation should be retried; otherwise, <see langword="false"/>.
 		/// </returns>
 		public static bool ShouldRetryOn(Exception ex, bool enableRetryIdempotence)
 		{

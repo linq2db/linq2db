@@ -46,30 +46,28 @@ namespace Tests.Linq
 		[Test]
 		public void DistinctBy([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(TestData.Seed()))
-			{
-				var query = table
-					.OrderBy(t => t.Name)
-					.ThenByDescending(t => t.Date)
-					.DistinctBy(x => new { x.Id, x.Name });
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData.Seed());
 
-				AssertQuery(query);
-			}
+			var query = table
+				.OrderBy(t => t.Name)
+				.ThenByDescending(t => t.Date)
+				.DistinctBy(x => new { x.Id, x.Name });
+
+			AssertQuery(query);
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
 		[Test]
 		public void DistinctByNoOrder([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(TestData.Seed()))
-			{
-				var query = table
-					.DistinctBy(x => new { x.Id, x.Name });
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData.Seed());
 
-				AssertQuery(query);
-			}
+			var query = table
+				.DistinctBy(x => new { x.Id, x.Name });
+
+			AssertQuery(query);
 		}
 
 	}

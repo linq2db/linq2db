@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -73,7 +73,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 							TableID        = string.Concat(schema, '.', tableName),
 							ColumnName     = columnName,
 							Ordinal        = position,
-							PrimaryKeyName = indexName
+							PrimaryKeyName = indexName,
 						};
 					},
 					"""

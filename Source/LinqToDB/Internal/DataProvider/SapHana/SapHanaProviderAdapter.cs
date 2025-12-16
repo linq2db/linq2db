@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
@@ -128,145 +129,145 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		internal static SapHanaProviderAdapter GetInstance(SapHanaProvider provider)
 		{
-			if (provider == SapHanaProvider.ODBC)
+			return provider switch
+			{
+				SapHanaProvider.ODBC      => GetOdbcInstance(),
+				SapHanaProvider.Unmanaged => GetUnmanagedInstance(),
+				_ => throw new InvalidOperationException($"Unsupported provider type: {provider}"),
+			};
+
+			static SapHanaProviderAdapter GetOdbcInstance()
 			{
 				if (_odbcProvider == null)
 				{
 					lock (_odbcSyncRoot)
-#pragma warning disable CA1508 // Avoid dead conditional code
 						_odbcProvider ??= new SapHanaProviderAdapter(OdbcProviderAdapter.GetInstance());
-#pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
 				return _odbcProvider;
 			}
-			else if (provider == SapHanaProvider.Unmanaged)
+
+			static SapHanaProviderAdapter GetUnmanagedInstance()
 			{
 				if (_unmanagedProvider == null)
 				{
 					lock (_unmanagedSyncRoot)
-#pragma warning disable CA1508 // Avoid dead conditional code
-						if (_unmanagedProvider == null)
-#pragma warning restore CA1508 // Avoid dead conditional code
-						{
-							MappingSchema? ms = null;
-
-							Assembly? assembly = null;
-							foreach (var assemblyName in UnmanagedAssemblyNames)
-							{
-								assembly = Common.Tools.TryLoadAssembly(assemblyName, UnmanagedProviderFactoryName);
-
-								if (assembly != null)
-									break;
-							}
-
-							if (assembly == null)
-								throw new InvalidOperationException($"Cannot load assembly by name(s) {string.Join(", ", UnmanagedAssemblyNames)}");
-
-							var connectionType  = assembly.GetType($"{UnmanagedClientNamespace}.HanaConnection" , true)!;
-							var dataReaderType  = assembly.GetType($"{UnmanagedClientNamespace}.HanaDataReader" , true)!;
-							var parameterType   = assembly.GetType($"{UnmanagedClientNamespace}.HanaParameter"  , true)!;
-							var commandType     = assembly.GetType($"{UnmanagedClientNamespace}.HanaCommand"    , true)!;
-							var transactionType = assembly.GetType($"{UnmanagedClientNamespace}.HanaTransaction", true)!;
-							var dbType          = assembly.GetType($"{UnmanagedClientNamespace}.HanaDbType"     , true)!;
-
-							var bulkCopyType                    = assembly.GetType($"{UnmanagedClientNamespace}.HanaBulkCopy"                       , true)!;
-							var bulkCopyOptionsType             = assembly.GetType($"{UnmanagedClientNamespace}.HanaBulkCopyOptions"                , true)!;
-							var bulkCopyColumnMappingType       = assembly.GetType($"{UnmanagedClientNamespace}.HanaBulkCopyColumnMapping"          , true)!;
-							var rowsCopiedEventHandlerType      = assembly.GetType($"{UnmanagedClientNamespace}.HanaRowsCopiedEventHandler"         , true)!;
-							var rowsCopiedEventArgs             = assembly.GetType($"{UnmanagedClientNamespace}.HanaRowsCopiedEventArgs"            , true)!;
-							var bulkCopyColumnMappingCollection = assembly.GetType($"{UnmanagedClientNamespace}.HanaBulkCopyColumnMappingCollection", true)!;
-
-							var hanaDecimalType = LoadType("HanaDecimal", type => new DbDataType(type, DataType.Decimal, dbType: null, length: null, precision: 38, scale: 10),
-								// this currently doesn't work for client-to-db conversions
-								null/*ReflectionExtensions.GetDefaultValue*/,
-								optional: true, register: true);
-
-							var typeMapper = new TypeMapper();
-
-							typeMapper.RegisterTypeWrapper<HanaConnection>(connectionType);
-							typeMapper.RegisterTypeWrapper<HanaTransaction>(transactionType);
-							typeMapper.RegisterTypeWrapper<HanaParameter>(parameterType);
-							typeMapper.RegisterTypeWrapper<HanaDbType>(dbType);
-
-							// bulk copy types
-							typeMapper.RegisterTypeWrapper<HanaBulkCopy>(bulkCopyType);
-							typeMapper.RegisterTypeWrapper<HanaRowsCopiedEventArgs>(rowsCopiedEventArgs);
-							typeMapper.RegisterTypeWrapper<HanaRowsCopiedEventHandler>(rowsCopiedEventHandlerType);
-							typeMapper.RegisterTypeWrapper<HanaBulkCopyColumnMappingCollection>(bulkCopyColumnMappingCollection);
-							typeMapper.RegisterTypeWrapper<HanaBulkCopyOptions>(bulkCopyOptionsType);
-							typeMapper.RegisterTypeWrapper<HanaBulkCopyColumnMapping>(bulkCopyColumnMappingType);
-
-							if (hanaDecimalType != null)
-								typeMapper.RegisterTypeWrapper<HanaDecimal>(hanaDecimalType);
-
-							typeMapper.FinalizeMappings();
-
-							if (hanaDecimalType != null)
-							{
-								var decimalConverter = typeMapper.BuildFunc<object, string>(typeMapper.MapLambda((object value) => ((HanaDecimal)value).ToString()));
-
-								ms!.SetValueToSqlConverter(hanaDecimalType, (sb, dt, _, v) =>
-								{
-									// because sap developers never heard about cultures, we must ensure that decimal.ToString will not result in invalid literal
-									using var r = new InvariantCultureRegion(null);
-									sb.Append(decimalConverter(v));
-								});
-							}
-
-							var connectionFactory = typeMapper.BuildTypedFactory<string, HanaConnection, DbConnection>(connectionString => new HanaConnection(connectionString));
-
-							var typeProperty = typeMapper.Type<HanaParameter>().Member(p => p.HanaDbType);
-
-							_unmanagedProvider = new SapHanaProviderAdapter(
-								connectionType,
-								dataReaderType,
-								parameterType,
-								commandType,
-								transactionType,
-								connectionFactory,
-								typeProperty.BuildSetter<DbParameter>(),
-								typeProperty.BuildGetter<DbParameter>(),
-								typeMapper.BuildWrappedFactory((DbConnection connection, HanaBulkCopyOptions options, DbTransaction? transaction) => new HanaBulkCopy((HanaConnection)(object)connection, options, (HanaTransaction?)(object?)transaction)),
-								typeMapper.BuildWrappedFactory((int source, string destination) => new HanaBulkCopyColumnMapping(source, destination)),
-
-								dataReaderType.GetMethod("GetDateTimeOffset")?.Name,
-								dataReaderType.GetMethod("GetHanaDecimal")?.Name,
-								dataReaderType.GetMethod("GetRealVector")?.Name,
-								dataReaderType.GetMethod("GetTimeSpan")?.Name,
-								
-								ms,
-								hanaDecimalType);
-
-							Type? LoadType(string typeName, Func<Type, DbDataType> getDataType, Func<Type, object?>? getNullValue = null, bool optional = false, bool register = true)
-							{
-								var type = assembly!.GetType($"{UnmanagedClientNamespace}.{typeName}", !optional);
-
-								if (type == null)
-									return null;
-
-								if (register)
-								{
-									(ms ??= new()).AddScalarType(type, new SqlDataType(getDataType(type)));
-									if (getNullValue != null)
-										ms.SetDefaultValue(type, getNullValue(type));
-						}
-
-								return type;
-				}
-						}
+						_unmanagedProvider ??= GetUnmanagedSapHanaInstance();
 				}
 
 				return _unmanagedProvider;
-			}
 
-			throw new InvalidOperationException($"Unsupported provider type: {provider}");
+				static SapHanaProviderAdapter GetUnmanagedSapHanaInstance()
+				{
+					var assembly = UnmanagedAssemblyNames
+						.Select(an => Common.Tools.TryLoadAssembly(an, UnmanagedProviderFactoryName))
+						.FirstOrDefault(an => an is { });
+
+					if (assembly == null)
+						throw new InvalidOperationException($"Cannot load assembly by name(s) {string.Join(", ", UnmanagedAssemblyNames)}");
+
+					var connectionType  = assembly.GetType($"{UnmanagedClientNamespace}.HanaConnection" , true)!;
+					var dataReaderType  = assembly.GetType($"{UnmanagedClientNamespace}.HanaDataReader" , true)!;
+					var parameterType   = assembly.GetType($"{UnmanagedClientNamespace}.HanaParameter"  , true)!;
+					var commandType     = assembly.GetType($"{UnmanagedClientNamespace}.HanaCommand"    , true)!;
+					var transactionType = assembly.GetType($"{UnmanagedClientNamespace}.HanaTransaction", true)!;
+					var dbType          = assembly.GetType($"{UnmanagedClientNamespace}.HanaDbType"     , true)!;
+
+					var bulkCopyType                    = assembly.GetType($"{UnmanagedClientNamespace}.HanaBulkCopy"                       , true)!;
+					var bulkCopyOptionsType             = assembly.GetType($"{UnmanagedClientNamespace}.HanaBulkCopyOptions"                , true)!;
+					var bulkCopyColumnMappingType       = assembly.GetType($"{UnmanagedClientNamespace}.HanaBulkCopyColumnMapping"          , true)!;
+					var rowsCopiedEventHandlerType      = assembly.GetType($"{UnmanagedClientNamespace}.HanaRowsCopiedEventHandler"         , true)!;
+					var rowsCopiedEventArgs             = assembly.GetType($"{UnmanagedClientNamespace}.HanaRowsCopiedEventArgs"            , true)!;
+					var bulkCopyColumnMappingCollection = assembly.GetType($"{UnmanagedClientNamespace}.HanaBulkCopyColumnMappingCollection", true)!;
+
+					MappingSchema? ms = null;
+					var hanaDecimalType = LoadType(
+						"HanaDecimal",
+						type => new DbDataType(type, DataType.Decimal, dbType: null, length: null, precision: 38, scale: 10),
+						// this currently doesn't work for client-to-db conversions
+						null/*ReflectionExtensions.GetDefaultValue*/,
+						optional: true,
+						register: true
+					);
+
+					var typeMapper = new TypeMapper();
+
+					typeMapper.RegisterTypeWrapper<HanaConnection>(connectionType);
+					typeMapper.RegisterTypeWrapper<HanaTransaction>(transactionType);
+					typeMapper.RegisterTypeWrapper<HanaParameter>(parameterType);
+					typeMapper.RegisterTypeWrapper<HanaDbType>(dbType);
+
+					// bulk copy types
+					typeMapper.RegisterTypeWrapper<HanaBulkCopy>(bulkCopyType);
+					typeMapper.RegisterTypeWrapper<HanaRowsCopiedEventArgs>(rowsCopiedEventArgs);
+					typeMapper.RegisterTypeWrapper<HanaRowsCopiedEventHandler>(rowsCopiedEventHandlerType);
+					typeMapper.RegisterTypeWrapper<HanaBulkCopyColumnMappingCollection>(bulkCopyColumnMappingCollection);
+					typeMapper.RegisterTypeWrapper<HanaBulkCopyOptions>(bulkCopyOptionsType);
+					typeMapper.RegisterTypeWrapper<HanaBulkCopyColumnMapping>(bulkCopyColumnMappingType);
+
+					if (hanaDecimalType != null)
+						typeMapper.RegisterTypeWrapper<HanaDecimal>(hanaDecimalType);
+
+					typeMapper.FinalizeMappings();
+
+					if (hanaDecimalType != null)
+					{
+						var decimalConverter = typeMapper.BuildFunc<object, string>(typeMapper.MapLambda((object value) => ((HanaDecimal)value).ToString()));
+
+						ms!.SetValueToSqlConverter(hanaDecimalType, (sb, dt, _, v) =>
+						{
+							// because sap developers never heard about cultures, we must ensure that decimal.ToString will not result in invalid literal
+							using var r = new InvariantCultureRegion(null);
+							sb.Append(decimalConverter(v));
+						});
+					}
+
+					var connectionFactory = typeMapper.BuildTypedFactory<string, HanaConnection, DbConnection>(connectionString => new HanaConnection(connectionString));
+
+					var typeProperty = typeMapper.Type<HanaParameter>().Member(p => p.HanaDbType);
+
+					return new SapHanaProviderAdapter(
+						connectionType,
+						dataReaderType,
+						parameterType,
+						commandType,
+						transactionType,
+						connectionFactory,
+						typeProperty.BuildSetter<DbParameter>(),
+						typeProperty.BuildGetter<DbParameter>(),
+						typeMapper.BuildWrappedFactory((DbConnection connection, HanaBulkCopyOptions options, DbTransaction? transaction) => new HanaBulkCopy((HanaConnection)(object)connection, options, (HanaTransaction?)(object?)transaction)),
+						typeMapper.BuildWrappedFactory((int source, string destination) => new HanaBulkCopyColumnMapping(source, destination)),
+
+						dataReaderType.GetMethod("GetDateTimeOffset")?.Name,
+						dataReaderType.GetMethod("GetHanaDecimal")?.Name,
+						dataReaderType.GetMethod("GetRealVector")?.Name,
+						dataReaderType.GetMethod("GetTimeSpan")?.Name,
+
+						ms,
+						hanaDecimalType);
+
+					Type? LoadType(string typeName, Func<Type, DbDataType> getDataType, Func<Type, object?>? getNullValue = null, bool optional = false, bool register = true)
+					{
+						var type = assembly.GetType($"{UnmanagedClientNamespace}.{typeName}", !optional);
+
+						if (type == null)
+							return null;
+
+						if (register)
+						{
+							(ms ??= new()).AddScalarType(type, new SqlDataType(getDataType(type)));
+							if (getNullValue != null)
+								ms.SetDefaultValue(type, getNullValue(type));
+						}
+
+						return type;
+					}
+				}
+			}
 		}
 
 		[Wrapper]
-		public class HanaTransaction
-		{
-		}
+		public class HanaTransaction;
 
 		[Wrapper]
 		internal sealed class HanaConnection
@@ -357,7 +358,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			private static string[] Events { get; }
 				= new[]
 			{
-				nameof(HanaRowsCopied)
+				nameof(HanaRowsCopied),
 			};
 
 			public HanaBulkCopy(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -466,7 +467,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			Default                = 0,
 			KeepIdentity           = 1,
 			TableLock              = 2,
-			UseInternalTransaction = 4
+			UseInternalTransaction = 4,
 		}
 
 		[Wrapper]

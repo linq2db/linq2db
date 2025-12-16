@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -795,7 +795,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (_nameDic.TryGetValue(prefix + oldNames[i], out var mangledName))
 					newNames[i] = mangledName;
 				else
-					newNames[i] = _nameDic[prefix + oldNames[i]] = FormattableString.Invariant($"{prefix}{_nameDic.Count}");
+					newNames[i] = _nameDic[prefix + oldNames[i]] = string.Create(CultureInfo.InvariantCulture, $"{prefix}{_nameDic.Count}");
 			}
 
 			return string.Join(".", newNames);
@@ -983,7 +983,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!Directory.Exists(dir))
 				Directory.CreateDirectory(dir);
 
-			return Path.Combine(dir, FormattableString.Invariant($"ExpressionTest.0.cs"));
+			return Path.Combine(dir, string.Create(CultureInfo.InvariantCulture, $"ExpressionTest.0.cs"));
 		}
 
 		public string? GenerateSource(Expression expr)

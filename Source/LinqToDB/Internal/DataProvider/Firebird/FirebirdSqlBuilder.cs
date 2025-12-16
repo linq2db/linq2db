@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Common;
 using System.Globalization;
 using System.Linq;
@@ -691,7 +691,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					string strValue => Encoding.UTF8.GetByteCount(strValue),
 					char charValue => Encoding.UTF8.GetByteCount(new[] { charValue }),
 					null when isClientValue => NullCharSize,
-					_ => -1
+					_ => -1,
 				};
 
 				if (length == 0)

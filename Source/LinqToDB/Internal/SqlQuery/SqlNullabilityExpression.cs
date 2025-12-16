@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 
 namespace LinqToDB.Internal.SqlQuery
@@ -21,7 +21,7 @@ namespace LinqToDB.Internal.SqlQuery
 				SqlNullabilityExpression => sqlExpression,
 				SqlSearchCondition       => sqlExpression,
 				SqlRowExpression row     => new SqlRowExpression(row.Values.Select(v => ApplyNullability(v, nullability)).ToArray()),
-				_ => new SqlNullabilityExpression(sqlExpression, nullability.CanBeNull(sqlExpression))
+				_ => new SqlNullabilityExpression(sqlExpression, nullability.CanBeNull(sqlExpression)),
 			};
 		}
 

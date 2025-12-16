@@ -1,4 +1,4 @@
-﻿// BASEDON: https://github.com/aspnet/EntityFramework/blob/dev/src/EFCore/Storage/ExecutionStrategy.cs
+// BASEDON: https://github.com/aspnet/EntityFramework/blob/dev/src/EFCore/Storage/ExecutionStrategy.cs
 
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
@@ -274,7 +274,7 @@ namespace LinqToDB.Data.RetryPolicy
 		/// </summary>
 		/// <param name="exception"> The exception object to be verified. </param>
 		/// <returns>
-		///     <c>true</c> if the specified exception is considered as transient, otherwise <c>false</c>.
+		///     <see langword="true"/> if the specified exception is considered as transient, otherwise <see langword="false"/>.
 		/// </returns>
 		protected abstract bool ShouldRetryOn(Exception exception);
 	}

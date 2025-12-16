@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Common;
 using System.Globalization;
 using System.Linq;
@@ -271,7 +271,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		public override string GetReserveSequenceValuesSql(int count, string sequenceName)
 		{
-			return FormattableString.Invariant($"SELECT {ConvertInline(sequenceName, ConvertType.SequenceName)}.nextval ID from DUAL connect by level <= {count}");
+			return string.Create(CultureInfo.InvariantCulture, $"SELECT {ConvertInline(sequenceName, ConvertType.SequenceName)}.nextval ID from DUAL connect by level <= {count}");
 		}
 
 		protected override void BuildEmptyInsert(SqlInsertClause insertClause)

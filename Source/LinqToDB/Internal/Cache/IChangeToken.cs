@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
@@ -16,7 +16,7 @@ namespace LinqToDB.Internal.Cache
 		bool HasChanged { get; }
 
 		/// <summary>
-		/// Indicates if this token will pro-actively raise callbacks. If <c>false</c>, the token consumer must
+		/// Indicates if this token will pro-actively raise callbacks. If <see langword="false"/>, the token consumer must
 		/// poll <see cref="HasChanged" /> to detect changes.
 		/// </summary>
 		bool ActiveChangeCallbacks { get; }

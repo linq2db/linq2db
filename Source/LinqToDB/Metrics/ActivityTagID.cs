@@ -1,4 +1,4 @@
-﻿using System.Data.Common;
+using System.Data.Common;
 
 namespace LinqToDB.Metrics
 {
@@ -19,6 +19,6 @@ namespace LinqToDB.Metrics
 		/// <remarks>Tag value taken from <see cref="DbConnection.Database"/> property and could contain incorrect data if provider doesn't fill it properly.</remarks>
 		DatabaseName,
 		/// <summary>The text command to run against the data source.</summary>
-		CommandText
+		CommandText,
 	}
 }

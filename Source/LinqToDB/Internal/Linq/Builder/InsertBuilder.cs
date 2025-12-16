@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -277,7 +277,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				Insert,
 				InsertWithIdentity,
 				InsertOutput,
-				InsertOutputInto
+				InsertOutputInto,
 			}
 
 			public InsertContext(IBuildContext querySequence, InsertTypeEnum insertType, SqlInsertStatement insertStatement, LambdaExpression? outputExpression, bool createColumns)
@@ -483,7 +483,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				insertContext = new InsertContext(sequence, InsertContext.InsertTypeEnum.Insert, insertStatement, null, createColumns)
 				{
 					Into = destinationSequence,
-					LastBuildInfo = buildInfo
+					LastBuildInfo = buildInfo,
 				};
 
 				return BuildSequenceResult.FromContext(insertContext);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq.Expressions;
 
 using LinqToDB.Async;
@@ -23,7 +23,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				/*CopyTable = true,*/
 				CreateSubQuery = true,
 				SourceCardinality = SourceCardinality.Unknown,
-				SelectQuery = new SelectQuery()
+				SelectQuery = new SelectQuery(),
 			};
 
 			var buildResult = builder.TryBuildSequence(sequenceBuildInfo);

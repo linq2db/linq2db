@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -68,7 +68,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 							IsDefaultSchema    = true,
 							IsView             = type is "VIEW" or "SYSTEM VIEW",
 							IsProviderSpecific = type == "SYSTEM VIEW" || catalog.Equals("sys", StringComparison.OrdinalIgnoreCase),
-							Description        = rd.GetString(3)
+							Description        = rd.GetString(3),
 						};
 					},
 					"""
@@ -155,7 +155,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 							// also starting from 5.1 we can utilise provileges column for skip properties
 							// but it sounds like a bad idea
 							SkipOnInsert = extra.Contains("VIRTUAL STORED") || extra.Contains("VIRTUAL GENERATED"),
-							SkipOnUpdate = extra.Contains("VIRTUAL STORED") || extra.Contains("VIRTUAL GENERATED")
+							SkipOnUpdate = extra.Contains("VIRTUAL STORED") || extra.Contains("VIRTUAL GENERATED"),
 						};
 					},
 					"""
@@ -334,7 +334,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 							DataType      = type,
 							Length        = length > int.MaxValue ? null : (int?)length,
 							DataTypeExact = Converter.ChangeTypeTo<string>(rd[9]),
-							IsNullable    = true
+							IsNullable    = true,
 						};
 					},
 					"""
@@ -405,7 +405,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					SystemType           = systemType,
 					DataType             = GetDataType(dataType, null, length, precision, scale),
 					ProviderSpecificType = GetProviderSpecificType(dataType),
-					IsIdentity           = r.IsNull("IsIdentity") ? false : r.Field<bool>("IsIdentity")
+					IsIdentity           = r.IsNull("IsIdentity") ? false : r.Field<bool>("IsIdentity"),
 				}
 			).ToList();
 		}

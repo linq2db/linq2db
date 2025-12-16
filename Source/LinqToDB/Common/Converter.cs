@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Data.Linq;
@@ -223,7 +223,7 @@ namespace LinqToDB.Common
 		/// </code>
 		/// </summary>
 		/// <param name="expr">Expression to inspect.</param>
-		/// <returns><c>true</c>, if expression represents default value.</returns>
+		/// <returns><see langword="true"/>, if expression represents default value.</returns>
 		internal static bool IsDefaultValuePlaceHolder(Expression expr)
 		{
 			if (expr is MemberExpression me)

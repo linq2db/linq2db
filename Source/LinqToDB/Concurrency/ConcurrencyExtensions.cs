@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -60,7 +60,7 @@ namespace LinqToDB.Concurrency
 				.Select(c => new
 				{
 					Column = c,
-					Attr   = ed.MappingSchema.GetAttribute<OptimisticLockPropertyBaseAttribute>(objType, c.MemberInfo)
+					Attr   = ed.MappingSchema.GetAttribute<OptimisticLockPropertyBaseAttribute>(objType, c.MemberInfo),
 				})
 				.Where(_ => _.Attr != null)
 				.Select(_ => _.Column)

@@ -1,4 +1,4 @@
-﻿// BASEDON: https://github.com/dotnet/efcore/blob/main/src/EFCore/Query/ExpressionPrinter.cs
+// BASEDON: https://github.com/dotnet/efcore/blob/main/src/EFCore/Query/ExpressionPrinter.cs
 
 // // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
@@ -7,6 +7,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -32,7 +33,7 @@ namespace LinqToDB.Internal.Expressions
 		{
 			"get_Item",
 			"TryReadValue",
-			"ReferenceEquals"
+			"ReferenceEquals",
 		};
 
 		private readonly SqlTextWriter                            _stringBuilder;
@@ -59,7 +60,7 @@ namespace LinqToDB.Internal.Expressions
 			{ ExpressionType.Modulo, " % " },
 			{ ExpressionType.And, " & " },
 			{ ExpressionType.Or, " | " },
-			{ ExpressionType.ExclusiveOr, " ^ " }
+			{ ExpressionType.ExclusiveOr, " ^ " },
 		};
 
 		/// <summary>
@@ -503,7 +504,7 @@ namespace LinqToDB.Internal.Expressions
 					return;
 				}
 
-				var stringValue = value == null ? "null" : FormattableString.Invariant($"{value}");
+				var stringValue = value == null ? "null" : string.Create(CultureInfo.InvariantCulture, $"{value}");
 				if (value != null && stringValue == value.GetType().ToString())
 					stringValue = value.GetType().ShortDisplayName();
 
@@ -520,7 +521,7 @@ namespace LinqToDB.Internal.Expressions
 		protected override Expression VisitGoto(GotoExpression gotoExpression)
 		{
 			Append("Goto(");
-			Append(FormattableString.Invariant($"{gotoExpression.Kind}").ToLowerInvariant());
+			Append(string.Create(CultureInfo.InvariantCulture, $"{gotoExpression.Kind}").ToLowerInvariant());
 			Append(" ");
 
 			if (gotoExpression.Kind == GotoExpressionKind.Break)

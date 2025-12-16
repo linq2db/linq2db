@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -92,10 +92,10 @@ namespace LinqToDB.Extensions
 
 		/// <summary>
 		/// Returns a list of custom attributes applied to a type or type member.
-		/// If there are multiple attributes found and <paramref name="inherit"/> set to <c>true</c>, attributes ordered from current to base type in inheritance hierarchy.
+		/// If there are multiple attributes found and <paramref name="inherit"/> set to <see langword="true"/>, attributes ordered from current to base type in inheritance hierarchy.
 		/// </summary>
 		/// <param name="source">An attribute owner.</param>
-		/// <param name="inherit">When <c>true</c>, look up the hierarchy chain for the inherited custom attribute.</param>
+		/// <param name="inherit">When <see langword="true"/>, look up the hierarchy chain for the inherited custom attribute.</param>
 		/// <typeparam name="T">The type of attribute to search for.
 		/// Only attributes that are assignable to this type are returned.</typeparam>
 		/// <returns>A list of custom attributes applied to this type,
@@ -113,7 +113,7 @@ namespace LinqToDB.Extensions
 
 		/// <summary>
 		/// Retrieves first custom attribute applied to a type or type member.
-		/// If there are multiple attributes found and <paramref name="inherit"/> set to <c>true</c>, attribute from <paramref name="source"/> preferred.
+		/// If there are multiple attributes found and <paramref name="inherit"/> set to <see langword="true"/>, attribute from <paramref name="source"/> preferred.
 		/// </summary>
 		/// <param name="source">An attribute owner.</param>
 		/// <param name="inherit">When true, look up the hierarchy chain for the inherited custom attribute.</param>
@@ -133,7 +133,7 @@ namespace LinqToDB.Extensions
 		/// <param name="source">An attribute owner.</param>
 		/// <param name="inherit">When true, look up the hierarchy chain for the inherited custom attribute.</param>
 		/// <typeparam name="T">The type of attribute to search for. Only attributes that are assignable to this type are covered.</typeparam>
-		/// <returns>Returns <c>true</c> if at least one attribute found.</returns>
+		/// <returns>Returns <see langword="true"/> if at least one attribute found.</returns>
 		public static bool HasAttribute<T>(this ICustomAttributeProvider source, bool inherit = true)
 			where T : Attribute
 		{

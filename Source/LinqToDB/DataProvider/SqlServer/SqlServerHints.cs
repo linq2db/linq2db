@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -180,7 +180,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 					for (var i = 0; i < count; i++)
 					{
-						sqlBuilder.BuildExpression(sqlBuilder.StringBuilder, sqlQueryExtension.Arguments[FormattableString.Invariant($"columns.{i}")], false);
+						sqlBuilder.BuildExpression(sqlBuilder.StringBuilder, sqlQueryExtension.Arguments[string.Create(CultureInfo.InvariantCulture, $"columns.{i}")], false);
 						stringBuilder.Append(", ");
 					}
 
@@ -238,7 +238,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					if (i > 0)
 						stringBuilder.Append(", ");
-					var value = (SqlValue)sqlQueryExtension.Arguments[FormattableString.Invariant($"values.{i}")];
+					var value = (SqlValue)sqlQueryExtension.Arguments[string.Create(CultureInfo.InvariantCulture, $"values.{i}")];
 					stringBuilder.Append(CultureInfo.InvariantCulture, $"{value.Value}");
 				}
 
@@ -303,7 +303,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				for (var i = 0; i < count; i++)
 				{
 					stringBuilder.Append(", ");
-					var value = (SqlValue)sqlQueryExtension.Arguments[FormattableString.Invariant($"values.{i}")];
+					var value = (SqlValue)sqlQueryExtension.Arguments[string.Create(CultureInfo.InvariantCulture, $"values.{i}")];
 					stringBuilder.Append(CultureInfo.InvariantCulture, $"{value.Value}");
 				}
 

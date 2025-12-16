@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -22,7 +22,7 @@ namespace LinqToDB.Internal.Common
 		/// Checks that collection is not null and have at least one element.
 		/// </summary>
 		/// <param name="array">Collection to check.</param>
-		/// <returns><c>true</c> if collection is null or contains no elements, <c>false</c> otherwise.</returns>
+		/// <returns><see langword="true"/> if collection is null or contains no elements, <see langword="false"/> otherwise.</returns>
 		public static bool IsNullOrEmpty([NotNullWhen(false)] this ICollection? array)
 		{
 			return array == null || array.Count == 0;

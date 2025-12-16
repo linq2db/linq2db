@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
@@ -193,8 +193,8 @@ namespace LinqToDB.Internal.SqlQuery
 			/// </summary>
 			/// <returns>
 			/// <list type="bullet">
-			/// <item><c>true</c>: <paramref name="source"/> records are nullable in <paramref name="inQuery"/>;</item>
-			/// <item><c>false</c>: <paramref name="source"/> records are not nullable in <paramref name="inQuery"/>;</item>
+			/// <item><see langword="true"/>: <paramref name="source"/> records are nullable in <paramref name="inQuery"/>;</item>
+			/// <item><see langword="false"/>: <paramref name="source"/> records are not nullable in <paramref name="inQuery"/>;</item>
 			/// <item><c>null</c>: <paramref name="source"/> is not reachable/available in <paramref name="inQuery"/>.</item>
 			/// </list>
 			/// </returns>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
@@ -191,7 +191,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var newContext = new CteTableContext(TranslationModifier, Builder, Parent, ObjectType, context.CloneElement(SelectQuery))
 			{
-				LoadWithRoot = LoadWithRoot
+				LoadWithRoot = LoadWithRoot,
 			};
 			context.RegisterCloned(this, newContext);
 			newContext.CteContext = context.CloneContext(CteContext);

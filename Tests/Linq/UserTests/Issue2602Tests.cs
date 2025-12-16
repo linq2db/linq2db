@@ -57,10 +57,7 @@ namespace Tests.UserTests
 
 			public int GetId()
 			{
-				if (disposed)
-				{
-					throw new ObjectDisposedException("Use after dispose"); // Crashed here on 2nd call to GetEmail
-				}
+				ObjectDisposedException.ThrowIf(disposed, typeof(EmailReader));
 
 				return id;
 			}

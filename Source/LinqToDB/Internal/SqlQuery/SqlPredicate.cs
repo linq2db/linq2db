@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -592,7 +592,7 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 				StartsWith,
 				EndsWith,
-				Contains
+				Contains,
 			}
 
 			public SearchString(ISqlExpression exp1, bool isNot, ISqlExpression exp2, SearchKind searchKind, ISqlExpression caseSensitive)
@@ -783,8 +783,8 @@ namespace LinqToDB.Internal.SqlQuery
 			/// <summary>
 			/// <list type="bullet">
 			/// <item><c>null</c> : evaluate predicate as is and preserve UNKNOWN (null) values if they produced</item>
-			/// <item><c>false</c> : UNKNOWN values should be converted to FALSE</item>
-			/// <item><c>true</c> : UNKNOWN values should be converted to TRUE</item>
+			/// <item><see langword="false"/> : UNKNOWN values should be converted to FALSE</item>
+			/// <item><see langword="true"/> : UNKNOWN values should be converted to TRUE</item>
 			/// </list>
 			/// </summary>
 			public bool?          WithNull    { get; }
@@ -1046,7 +1046,7 @@ namespace LinqToDB.Internal.SqlQuery
 				if (base.CanBeUnknown(nullability, withoutUnknownErased))
 					return true;
 
-				return Values.Any(e => e.CanBeNullable(nullability));
+				return Values.Exists(e => e.CanBeNullable(nullability));
 			}
 
 			public override ISqlPredicate Invert(NullabilityContext nullability)

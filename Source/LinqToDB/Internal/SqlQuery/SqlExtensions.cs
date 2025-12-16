@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 
@@ -155,7 +155,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 			return new SqlFunction(func.Type, name, func.Flags, func.NullabilityType, func.CanBeNullNullable, func.Parameters)
 			{
-				DoNotOptimize = func.DoNotOptimize
+				DoNotOptimize = func.DoNotOptimize,
 			};
 		}
 	}

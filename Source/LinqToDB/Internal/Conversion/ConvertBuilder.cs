@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Globalization;
@@ -281,7 +281,7 @@ namespace LinqToDB.Internal.Conversion
 								attrs = f.attrs
 									.Where (a => a.Configuration == f.attrs[0].Configuration)
 									.Select(a => a.Value ?? mappingSchema.GetDefaultValue(from))
-									.ToList()
+									.ToList(),
 							})
 						.ToList();
 
@@ -370,7 +370,7 @@ namespace LinqToDB.Internal.Conversion
 							})
 							.ThenBy(a => !a.IsDefault)
 							.ThenBy(a => a.Value == null)
-							.FirstOrDefault(a => a.Value == null || a.Value.GetType() == valueType) })
+							.FirstOrDefault(a => a.Value == null || a.Value.GetType() == valueType), })
 						.ToList();
 
 					if (toTypeFields.All(f => f.Attrs != null))
@@ -436,7 +436,7 @@ namespace LinqToDB.Internal.Conversion
 								select new
 								{
 									f,
-									a = f.Attrs.First(a => a.Value?.Equals(toAttr.Value) ?? toAttr.Value == null)
+									a = f.Attrs.First(a => a.Value?.Equals(toAttr.Value) ?? toAttr.Value == null),
 								} into fa
 								from c in cl
 								where fa.a.Configuration == c.c

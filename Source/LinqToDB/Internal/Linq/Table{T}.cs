@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -239,7 +239,7 @@ namespace LinqToDB.Internal.Linq
 		{
 			return new Table<T>(DataContext, this)
 			{
-				ServerName = serverName
+				ServerName = serverName,
 			};
 		}
 
@@ -247,7 +247,7 @@ namespace LinqToDB.Internal.Linq
 		{
 			return new Table<T>(DataContext, this)
 			{
-				DatabaseName = databaseName
+				DatabaseName = databaseName,
 			};
 		}
 
@@ -255,7 +255,7 @@ namespace LinqToDB.Internal.Linq
 		{
 			return new Table<T>(DataContext, this)
 			{
-				SchemaName = schemaName
+				SchemaName = schemaName,
 			};
 		}
 
@@ -263,7 +263,7 @@ namespace LinqToDB.Internal.Linq
 		{
 			return new Table<T>(DataContext, this)
 			{
-				TableName = tableName
+				TableName = tableName,
 			};
 		}
 
@@ -271,7 +271,7 @@ namespace LinqToDB.Internal.Linq
 		{
 			return new Table<T>(DataContext, this)
 			{
-				TableOptions = options
+				TableOptions = options,
 			};
 		}
 
@@ -279,7 +279,7 @@ namespace LinqToDB.Internal.Linq
 		{
 			return new Table<T>(DataContext, this)
 			{
-				TableDescriptor = tableDescriptor
+				TableDescriptor = tableDescriptor,
 			};
 		}
 

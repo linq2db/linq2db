@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -327,7 +327,7 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="obj">Object with data to insert or update.</param>
-		/// <param name="columnFilter">Filter columns to insert and update. Parameters: entity, column descriptor and operation (<c>true</c> for insert )</param>
+		/// <param name="columnFilter">Filter columns to insert and update. Parameters: entity, column descriptor and operation (<see langword="true"/> for insert )</param>
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
@@ -1202,10 +1202,10 @@ namespace LinqToDB
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="throwExceptionIfNotExists">If <c>false</c>, any exception during drop operation will be silently caught and <c>0</c> returned.
+		/// <param name="throwExceptionIfNotExists">If <see langword="false"/>, any exception during drop operation will be silently caught and <c>0</c> returned.
 		/// This behavior is not correct and will be fixed in future to mask only missing table exceptions.
 		/// Tracked by <a href="https://github.com/linq2db/linq2db/issues/798">issue</a>.
-		/// Default value: <c>true</c>.</param>
+		/// Default value: <see langword="true"/>.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		public static void DropTable<T>(
@@ -1237,10 +1237,10 @@ namespace LinqToDB
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="throwExceptionIfNotExists">If <c>false</c>, any exception during drop operation will be silently caught and <c>0</c> returned.
+		/// <param name="throwExceptionIfNotExists">If <see langword="false"/>, any exception during drop operation will be silently caught and <c>0</c> returned.
 		/// This behavior is not correct and will be fixed in future to mask only missing table exceptions.
 		/// Tracked by <a href="https://github.com/linq2db/linq2db/issues/798">issue</a>.
-		/// Default value: <c>true</c>.</param>
+		/// Default value: <see langword="true"/>.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		public static void DropTable<T>(
@@ -1280,10 +1280,10 @@ namespace LinqToDB
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="throwExceptionIfNotExists">If <c>false</c>, any exception during drop operation will be silently caught and <c>0</c> returned.
+		/// <param name="throwExceptionIfNotExists">If <see langword="false"/>, any exception during drop operation will be silently caught and <c>0</c> returned.
 		/// This behavior is not correct and will be fixed in future to mask only missing table exceptions.
 		/// Tracked by <a href="https://github.com/linq2db/linq2db/issues/798">issue</a>.
-		/// Default value: <c>true</c>.</param>
+		/// Default value: <see langword="true"/>.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
@@ -1320,10 +1320,10 @@ namespace LinqToDB
 		/// <param name="tableName">Optional table name to override default table name, extracted from <typeparamref name="T"/> mapping.</param>
 		/// <param name="databaseName">Optional database name, to override default database name. See <see cref="LinqExtensions.DatabaseName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="schemaName">Optional schema/owner name, to override default name. See <see cref="LinqExtensions.SchemaName{T}(ITable{T}, string)"/> method for support information per provider.</param>
-		/// <param name="throwExceptionIfNotExists">If <c>false</c>, any exception during drop operation will be silently caught and <c>0</c> returned.
+		/// <param name="throwExceptionIfNotExists">If <see langword="false"/>, any exception during drop operation will be silently caught and <c>0</c> returned.
 		/// This behavior is not correct and will be fixed in future to mask only missing table exceptions.
 		/// Tracked by <a href="https://github.com/linq2db/linq2db/issues/798">issue</a>.
-		/// Default value: <c>true</c>.</param>
+		/// Default value: <see langword="true"/>.</param>
 		/// <param name="serverName">Optional linked server name. See <see cref="LinqExtensions.ServerName{T}(ITable{T}, string)"/> method for support information per provider.</param>
 		/// <param name="tableOptions">Table options. See <see cref="TableOptions"/> enum for support information per provider.</param>
 

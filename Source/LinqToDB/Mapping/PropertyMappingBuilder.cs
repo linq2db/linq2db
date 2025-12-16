@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -312,7 +312,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Marks current column as discriminator column for inheritance mapping.
 		/// </summary>
-		/// <param name="isDiscriminator">If <c>true</c> - column is used as inheritance mapping discriminator.</param>
+		/// <param name="isDiscriminator">If <see langword="true"/> - column is used as inheritance mapping discriminator.</param>
 		/// <returns>Returns current column mapping builder.</returns>
 		public PropertyMappingBuilder<TEntity, TProperty> IsDiscriminator(bool isDiscriminator = true)
 		{
@@ -322,7 +322,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Marks current column to be skipped by default during a full entity fetch
 		/// </summary>
-		/// <param name="skipOnEntityFetch">If <c>true</c>, column won't be fetched unless explicity selected in a Linq query.</param>
+		/// <param name="skipOnEntityFetch">If <see langword="true"/>, column won't be fetched unless explicity selected in a Linq query.</param>
 		/// <returns>Returns current column mapping builder.</returns>
 		public PropertyMappingBuilder<TEntity, TProperty> SkipOnEntityFetch(bool skipOnEntityFetch = true)
 		{
@@ -335,7 +335,7 @@ namespace LinqToDB.Mapping
 		/// <see cref="DataExtensions.Insert{T}(IDataContext, T, string?, string?, string?, string?, TableOptions)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
-		/// <param name="skipOnInsert">If <c>true</c> - column will be ignored for implicit insert operations.</param>
+		/// <param name="skipOnInsert">If <see langword="true"/> - column will be ignored for implicit insert operations.</param>
 		/// <returns>Returns current column mapping builder.</returns>
 		public PropertyMappingBuilder<TEntity, TProperty> HasSkipOnInsert(bool skipOnInsert = true)
 		{
@@ -348,7 +348,7 @@ namespace LinqToDB.Mapping
 		/// <see cref="DataExtensions.Update{T}(IDataContext, T, string?, string?, string?, string?, TableOptions)"/>
 		/// method and will be ignored when user explicitly specifies value for this column.
 		/// </summary>
-		/// <param name="skipOnUpdate">If <c>true</c> - column will be ignored for implicit update operations.</param>
+		/// <param name="skipOnUpdate">If <see langword="true"/> - column will be ignored for implicit update operations.</param>
 		/// <returns>Returns current column mapping builder.</returns>
 		public PropertyMappingBuilder<TEntity, TProperty> HasSkipOnUpdate(bool skipOnUpdate = true)
 		{
@@ -358,7 +358,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Sets whether a column can contain <c>NULL</c> values.
 		/// </summary>
-		/// <param name="isNullable">If <c>true</c> - column could contain <c>NULL</c> values.</param>
+		/// <param name="isNullable">If <see langword="true"/> - column could contain <c>NULL</c> values.</param>
 		/// <returns>Returns current column mapping builder.</returns>
 		public PropertyMappingBuilder<TEntity, TProperty> IsNullable(bool isNullable = true)
 		{

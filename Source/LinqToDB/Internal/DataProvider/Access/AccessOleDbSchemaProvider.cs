@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -90,7 +90,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					IsDefaultSchema    = string.IsNullOrEmpty(schema),
 					IsView             = t.Field<string>("TABLE_TYPE") == "VIEW",
 					IsProviderSpecific = system,
-					Description        = t.Field<string>("DESCRIPTION")
+					Description        = t.Field<string>("DESCRIPTION"),
 				}
 			).ToList();
 		}
@@ -137,7 +137,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					// ole db provider returns incorrect flags (reports INT NOT NULL columns as identity)
 					// https://github.com/linq2db/linq2db/issues/3149
 					IsIdentity  = false,
-					Description = c.Field<string>("DESCRIPTION")
+					Description = c.Field<string>("DESCRIPTION"),
 				}
 			).ToList();
 		}
@@ -182,7 +182,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					SchemaName          = schema,
 					ProcedureName       = name,
 					IsDefaultSchema     = string.IsNullOrEmpty(schema),
-					ProcedureDefinition = p.Field<string>("PROCEDURE_DEFINITION")
+					ProcedureDefinition = p.Field<string>("PROCEDURE_DEFINITION"),
 				}
 			).ToList();
 		}
@@ -233,7 +233,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 						Ordinal       = i + 1,
 						IsResult      = false,
 						DataType      = dataType,
-						IsNullable    = true
+						IsNullable    = true,
 					});
 				}
 			}
@@ -263,7 +263,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					TypeName         = "CHAR",
 					DataType         = typeof(string).FullName!,
 					CreateParameters = "max length",
-					ProviderDbType   = 130
+					ProviderDbType   = 130,
 				});
 			}
 
@@ -273,7 +273,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 				TypeName         = "VARBINARY",
 				DataType         = typeof(byte[]).FullName!,
 				CreateParameters = "max length",
-				ProviderDbType   = 204
+				ProviderDbType   = 204,
 			});
 
 			return dts;
@@ -304,7 +304,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 					if (paramValues.All(v => v != null))
 					{
-						var format = $"{dbType}({string.Join(", ", Enumerable.Range(0, paramValues.Length).Select(i => FormattableString.Invariant($"{{{i}}}")))})";
+						var format = $"{dbType}({string.Join(", ", Enumerable.Range(0, paramValues.Length).Select(i => string.Create(CultureInfo.InvariantCulture, $"{{{i}}}")))})";
 						dbType     = string.Format(CultureInfo.InvariantCulture, format, paramValues);
 					}
 				}

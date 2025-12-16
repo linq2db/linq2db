@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -271,7 +271,7 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				SqlField  sqlField  => sqlField .Table? .SourceID,
 				SqlColumn sqlColumn => sqlColumn.Parent?.SourceID,
-				_ => null
+				_ => null,
 			} ?? -1;
 		}
 

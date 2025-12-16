@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -125,7 +126,7 @@ namespace Tests
 				{
 					var equals = comparer.Equals(expectedList[i], resultList[i]);
 					Debug.WriteLine("{0} {1} {3} {2}", equals ? " " : "!", expectedList[i], resultList[i], equals ? "==" : "<>");
-					message.AppendFormat("{0} {1} {3} {2}", equals ? " " : "!", expectedList[i], resultList[i], equals ? "==" : "<>");
+					message.AppendFormat(CultureInfo.InvariantCulture, "{0} {1} {3} {2}", equals ? " " : "!", expectedList[i], resultList[i], equals ? "==" : "<>");
 					message.AppendLine();
 				}
 			}

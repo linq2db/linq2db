@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -93,7 +94,7 @@ namespace LinqToDB.Remote
 				SqlBuilderType           = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema, ctx.Options).GetType().AssemblyQualifiedName!,
 				SqlOptimizerType         = ctx.DataProvider.GetSqlOptimizer(ctx.Options).GetType().AssemblyQualifiedName!,
 				SqlProviderFlags         = ctx.DataProvider.SqlProviderFlags,
-				SupportedTableOptions    = ctx.DataProvider.SupportedTableOptions
+				SupportedTableOptions    = ctx.DataProvider.SupportedTableOptions,
 			});
 		}
 
@@ -187,8 +188,8 @@ namespace LinqToDB.Remote
 					Data       =
 					[
 						[
-							SerializationConverter.Serialize(SerializationMappingSchema, scalar)
-						]
+							SerializationConverter.Serialize(SerializationMappingSchema, scalar),
+						],
 					],
 				};
 
@@ -319,7 +320,7 @@ namespace LinqToDB.Remote
 
 				if (names.Contains(name))
 				{
-					while (names.Contains(name = FormattableString.Invariant($"c{++idx}")))
+					while (names.Contains(name = string.Create(CultureInfo.InvariantCulture, $"c{++idx}")))
 					{
 					}
 				}

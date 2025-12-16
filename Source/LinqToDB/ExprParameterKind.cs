@@ -1,9 +1,9 @@
-﻿namespace LinqToDB
+namespace LinqToDB
 {
 	public enum ExprParameterKind
 	{
 		Default,
 		Sequence,
-		Values
+		Values,
 	}
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
@@ -263,7 +263,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets whether a column contains a discriminator value for a LINQ to DB inheritance hierarchy.
 		/// <see cref="InheritanceMappingAttribute"/> for more details.
-		/// Default value: <c>false</c>.
+		/// Default value: <see langword="false"/>.
 		/// </summary>
 		public bool           IsDiscriminator { get; }
 
@@ -291,8 +291,8 @@ namespace LinqToDB.Mapping
 		public bool           SkipOnInsert    { get; }
 
 		/// <summary>
-		/// Gets whether a column must be explicitly defined in a Select statement to be fetched. If <c>true</c>, a "SELECT *"-ish statement won't retrieve this column.
-		/// Default value: <c>false</c>.
+		/// Gets whether a column must be explicitly defined in a Select statement to be fetched. If <see langword="true"/>, a "SELECT *"-ish statement won't retrieve this column.
+		/// Default value: <see langword="false"/>.
 		/// </summary>
 		public bool           SkipOnEntityFetch { get; }
 
@@ -322,7 +322,7 @@ namespace LinqToDB.Mapping
 		/// <param name="obj">The object containing the values for the operation.</param>
 		/// <param name="descriptor"><see cref="EntityDescriptor"/> of the current instance.</param>
 		/// <param name="flags">The flags that specify which operation should be checked.</param>
-		/// <returns><c>true</c> if object contains values that should be skipped. </returns>
+		/// <returns><see langword="true"/> if object contains values that should be skipped. </returns>
 		public virtual bool ShouldSkip(object obj, EntityDescriptor descriptor, SkipModification flags)
 		{
 			if (SkipBaseAttributes == null)

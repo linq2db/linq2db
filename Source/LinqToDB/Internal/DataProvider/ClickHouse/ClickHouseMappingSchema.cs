@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Linq;
 using System.Globalization;
 using System.Linq;
@@ -484,12 +484,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				case DataType.Int128   : BuildInt128Literal(sb, value);                  return;
 				case DataType.UInt128  :
 					if (value < 0)
-						throw new LinqToDBConvertException(FormattableString.Invariant($"Value {value} cannot be converted to unsigned UInt128 literal"));
+						throw new LinqToDBConvertException(string.Create(CultureInfo.InvariantCulture, $"Value {value} cannot be converted to unsigned UInt128 literal"));
 					BuildUInt128Literal(sb, value);                                      return;
 				case DataType.Int256   : BuildInt256Literal(sb, value);                  return;
 				case DataType.UInt256  :
 					if (value < 0)
-						throw new LinqToDBConvertException(FormattableString.Invariant($"Value {value} cannot be converted to unsigned UInt256 literal"));
+						throw new LinqToDBConvertException(string.Create(CultureInfo.InvariantCulture, $"Value {value} cannot be converted to unsigned UInt256 literal"));
 					BuildUInt256Literal(sb, value);                                      return;
 			}
 
@@ -538,13 +538,13 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				case DataType.Int128   : BuildInt128Literal(sb, value);                  return;
 				case DataType.UInt128  :
 					if (value < 0)
-						throw new LinqToDBConvertException(FormattableString.Invariant($"Value {value} cannot be converted to unsigned UInt128 literal"));
+						throw new LinqToDBConvertException(string.Create(CultureInfo.InvariantCulture, $"Value {value} cannot be converted to unsigned UInt128 literal"));
 					BuildUInt128Literal(sb, value);                                      return;
 				case DataType.Undefined:
 				case DataType.Int256   : BuildInt256Literal(sb, value);                  return;
 				case DataType.UInt256  :
 					if (value < 0)
-						throw new LinqToDBConvertException(FormattableString.Invariant($"Value {value} cannot be converted to unsigned UInt256 literal"));
+						throw new LinqToDBConvertException(string.Create(CultureInfo.InvariantCulture, $"Value {value} cannot be converted to unsigned UInt256 literal"));
 					BuildUInt256Literal(sb, value);                                      return;
 			}
 
@@ -717,7 +717,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		private static void BuildDateTime64Literal(StringBuilder sb, DateTime value, int precision)
 		{
 			if (precision < 0)
-				throw new LinqToDBConvertException(FormattableString.Invariant($"Invalid DateTime64 precision: {precision}"));
+				throw new LinqToDBConvertException(string.Create(CultureInfo.InvariantCulture, $"Invalid DateTime64 precision: {precision}"));
 
 			if (precision > 9)
 				precision = 9;
@@ -799,7 +799,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				DataType.IntervalMonth   => "INTERVAL {0} MONTH",
 				DataType.IntervalQuarter => "INTERVAL {0} QUARTER",
 				DataType.IntervalYear    => "INTERVAL {0} YEAR",
-				_                        => null
+				_                        => null,
 			};
 		}
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -106,7 +106,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					DataType.Int16 => "SMALLSERIAL",
 					DataType.Int32 => "SERIAL",
 					DataType.Int64 => "BIGSERIAL",
-					_ => throw new InvalidOperationException($"Unsupported identity field type {field.Type.DataType}")
+					_ => throw new InvalidOperationException($"Unsupported identity field type {field.Type.DataType}"),
 				});
 
 				return;
@@ -426,7 +426,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				var within = 1;
 				for (var j = i; j < Math.Min(i + max, items.Count); j++, within++)
 				{
-					var p = new SqlParameter(dbDataType, FormattableString.Invariant($"Ids{bucketIndex}_{within}"), items[j]);
+					var p = new SqlParameter(dbDataType, string.Create(CultureInfo.InvariantCulture, $"Ids{bucketIndex}_{within}"), items[j]);
 					BuildParameter(p);
 					StringBuilder.Append(InlineComma);
 				}

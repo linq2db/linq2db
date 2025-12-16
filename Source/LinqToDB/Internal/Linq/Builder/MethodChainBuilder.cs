@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -236,7 +236,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				return new ChainContext(null, context.CloneContext(Sequence), context.CloneExpression(MethodCall))
 				{
-					Placeholder = context.CloneExpression(Placeholder)
+					Placeholder = context.CloneExpression(Placeholder),
 				};
 			}
 

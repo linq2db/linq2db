@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
@@ -119,7 +119,7 @@ namespace LinqToDB.Internal.Cache
 			entry.PostEvictionCallbacks.Add(new PostEvictionCallbackRegistration<TKey>()
 			{
 				EvictionCallback = callback,
-				State = state
+				State = state,
 			});
 			return entry;
 		}

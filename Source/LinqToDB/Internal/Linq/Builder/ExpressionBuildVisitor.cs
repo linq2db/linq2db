@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
@@ -1706,7 +1706,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var buildInfo = new BuildInfo(rootContext.BuildContext, association, new SelectQuery())
 				{
 					SourceCardinality = isOptional == true ? SourceCardinality.ZeroOrOne : SourceCardinality.One,
-					IsAssociation = true
+					IsAssociation = true,
 				};
 
 				using var snapshot = CreateSnapshot();
@@ -3741,9 +3741,6 @@ namespace LinqToDB.Internal.Linq.Builder
 						predicateExpr = GeneratePredicate(leftOriginal, leftParsed, condRight.IfFalse, rightParsed);*/
 				}
 
-				if (predicateExpr != null)
-					return predicateExpr;
-
 				return predicateExpr;
 			}
 
@@ -5013,7 +5010,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var info = new BuildInfo(BuildContext, expr, new SelectQuery())
 			{
 				CreateSubQuery = true,
-				IsSubqueryExpression = true
+				IsSubqueryExpression = true,
 			};
 
 			if (_buildFlags.HasFlag(BuildFlags.ForceOuter))
@@ -5174,7 +5171,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return result;
 			}
 
-			public Expression Translate(Expression expression, TranslationFlags translationFlags)
+			public Expression Translate(Expression expression, TranslationFlags translationFlags = TranslationFlags.Sql)
 			{
 				var buildPurpose = GetBuildPurpose(translationFlags);
 				if (CurrentContext == null)

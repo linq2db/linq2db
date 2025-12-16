@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -51,7 +51,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				.Union(
 				new[]
 				{
-					new DataTypeInfo { TypeName = "CHARACTER", CreateParameters = "LENGTH", DataType = "System.String", ProviderDbType = 12 }
+					new DataTypeInfo { TypeName = "CHARACTER", CreateParameters = "LENGTH", DataType = "System.String", ProviderDbType = 12 },
 				})
 				.ToList();
 		}
@@ -83,7 +83,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 					IsDefaultSchema    = schema                        == DefaultSchema,
 					IsView             = t.Field<string>("TABLE_TYPE") == "VIEW",
 					Description        = t.Field<string>("REMARKS"),
-					IsProviderSpecific = system || _systemSchemas.Contains(schema)
+					IsProviderSpecific = system || _systemSchemas.Contains(schema),
 				}
 			).ToList();
 		}
@@ -122,7 +122,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 					TableID        = pk.id,
 					PrimaryKeyName = pk.name,
 					ColumnName     = col.c,
-					Ordinal        = col.i
+					Ordinal        = col.i,
 				}
 			).ToList();
 		}
@@ -293,7 +293,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 					length = precision = scale = 0;
 				else
 				{
-					if (type.CreateParameters == "LENGTH")
+					if (type.CreateParameters is "LENGTH")
 						precision = scale = 0;
 					else
 						length = 0;
@@ -309,7 +309,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 							var format = string.Join(",",
 								type.CreateParameters
 									.Split(',')
-									.Select((p,i) => FormattableString.Invariant($"{{{i}}}")));
+									.Select((p,i) => string.Create(CultureInfo.InvariantCulture, $"{{{i}}}")));
 
 							type.CreateFormat = type.TypeName + "(" + format + ")";
 						}
@@ -407,7 +407,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 					var ss = s.Split('=');
 					return new { key = ss.Length == 2 ? ss[0] : "", value = ss.Length == 2 ? ss[1] : "" };
 				})
-				.Where (s => s.key.ToLowerInvariant() == "server")
+				.Where (s => string.Equals(s.key, "server", StringComparison.OrdinalIgnoreCase))
 				.Select(s => s.value)
 				.FirstOrDefault();
 
@@ -481,7 +481,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 							IsTableFunction     = type == "T",
 							ProcedureDefinition = source,
 							Description         = desc,
-							IsDefaultSchema     = isDefault
+							IsDefaultSchema     = isDefault,
 						};
 					},
 					sql
@@ -518,7 +518,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 							IsIn          = mode.Contains("IN"),
 							IsOut         = mode.Contains("OUT"),
 							IsResult      = mode == "RET",
-							IsNullable    = isNullable
+							IsNullable    = isNullable,
 						};
 
 						var ci = new ColumnInfo { DataType = ppi.DataType };

@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -105,7 +106,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var newExpression = Expression.New(constructor);
 			var initExpression = Expression.MemberInit(newExpression,
-				arguments.Select((a, i) => Expression.Bind(concreteType.GetProperty(FormattableString.Invariant($"Item{i + 1}"))!, a)));
+				arguments.Select((a, i) => Expression.Bind(concreteType.GetProperty(string.Create(CultureInfo.InvariantCulture, $"Item{i + 1}"))!, a)));
 			return initExpression;
 		}
 

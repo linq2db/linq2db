@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
@@ -110,7 +110,7 @@ namespace LinqToDB.Internal.Common
 
 				do
 				{
-					newName = FormattableString.Invariant($"{name}{startDigit}");
+					newName = string.Create(CultureInfo.InvariantCulture, $"{name}{startDigit}");
 					++startDigit;
 				} while (currentNames.Contains(newName) || !validatorFunc(newName, namesParameter));
 

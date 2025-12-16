@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlTypes;
@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 					SchemaName      = schema,
 					TableName       = name,
 					IsDefaultSchema = string.IsNullOrEmpty(schema),
-					IsView          = t.Field<string>("TABLE_TYPE") == "VIEW"
+					IsView          = t.Field<string>("TABLE_TYPE") == "VIEW",
 				}
 			).ToList();
 		}

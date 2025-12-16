@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Common;
 
 using LinqToDB.Data;
@@ -77,7 +77,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			return DB2ProviderAdapter.Instance.ConnectionWrapper(connection).eServerType switch
 			{
 				DB2ProviderAdapter.DB2ServerTypes.DB2_390 => DB2Version.zOS,
-				_                                         => DB2Version.LUW
+				_                                         => DB2Version.LUW,
 			};
 		}
 

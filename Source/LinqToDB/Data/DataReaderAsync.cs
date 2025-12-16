@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -144,7 +145,7 @@ namespace LinqToDB.Data
 
 			ReadNumber++;
 
-			return CommandInfo!.ExecuteQuery<T>(Reader!, FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}"));
+			return CommandInfo!.ExecuteQuery<T>(Reader!, string.Create(CultureInfo.InvariantCulture, $"{CommandInfo.CommandText}$$${ReadNumber}"));
 		}
 
 		public Task<List<T>> QueryToListAsync<T>()
@@ -184,7 +185,7 @@ namespace LinqToDB.Data
 
 			ReadNumber++;
 
-			await CommandInfo.ExecuteQueryAsync(Reader!, FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}"), action, cancellationToken).ConfigureAwait(false);
+			await CommandInfo.ExecuteQueryAsync(Reader!, string.Create(CultureInfo.InvariantCulture, $"{CommandInfo.CommandText}$$${ReadNumber}"), action, cancellationToken).ConfigureAwait(false);
 		}
 
 		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>()

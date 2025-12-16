@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -391,66 +391,53 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		public static OracleProviderAdapter GetInstance(OracleProvider provider)
 		{
-			if (provider == OracleProvider.Native)
+			return provider switch
+			{
+				OracleProvider.Native  => GetNativeAdapter(),
+				OracleProvider.Devart  => GetDevartAdapter(),
+				OracleProvider.Managed => GetManagedAdapter(),
+				_ => throw new InvalidOperationException($"Unsupported provider type: {provider}"),
+			};
+
+			static OracleProviderAdapter GetNativeAdapter()
 			{
 				if (_nativeAdapter == null)
 				{
 					lock (_nativeSyncRoot)
-#pragma warning disable CA1508 // Avoid dead conditional code
 						_nativeAdapter ??= CreateAdapter(NativeAssemblyName, NativeClientNamespace, NativeTypesNamespace, NativeProviderFactoryName, new OracleNativeClientAdapterMappingSchema());
-#pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
 				return _nativeAdapter;
 			}
-			else if (provider == OracleProvider.Devart)
+
+			static OracleProviderAdapter GetDevartAdapter()
 			{
 				if (_devartAdapter == null)
 				{
 					lock (_devartSyncRoot)
-#pragma warning disable CA1508 // Avoid dead conditional code
 						_devartAdapter ??= CreateDevartAdapter();
-#pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
 				return _devartAdapter;
 			}
-			else if (provider == OracleProvider.Managed)
+
+			static OracleProviderAdapter GetManagedAdapter()
 			{
 				if (_managedAdapter == null)
 				{
 					lock (_managedSyncRoot)
-#pragma warning disable CA1508 // Avoid dead conditional code
 						_managedAdapter ??= CreateAdapter(ManagedAssemblyName, ManagedClientNamespace, ManagedTypesNamespace, null, new OracleManagedClientAdapterMappingSchema());
-#pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
 				return _managedAdapter;
 			}
-
-			throw new InvalidOperationException($"Unsupported provider type: {provider}");
 		}
 
-		sealed class OracleNativeClientAdapterMappingSchema : LockedMappingSchema
-		{
-			public OracleNativeClientAdapterMappingSchema() : base("OracleNativeClientAdapter")
-			{
-			}
-		}
+		sealed class OracleNativeClientAdapterMappingSchema() : LockedMappingSchema("OracleNativeClientAdapter");
 
-		sealed class OracleManagedClientAdapterMappingSchema : LockedMappingSchema
-		{
-			public OracleManagedClientAdapterMappingSchema() : base("OracleManagedClientAdapter")
-			{
-			}
-		}
+		sealed class OracleManagedClientAdapterMappingSchema() : LockedMappingSchema("OracleManagedClientAdapter");
 
-		sealed class OracleDevartClientAdapterMappingSchema : LockedMappingSchema
-		{
-			public OracleDevartClientAdapterMappingSchema() : base("OracleDevartClientAdapter")
-			{
-			}
-		}
+		sealed class OracleDevartClientAdapterMappingSchema() : LockedMappingSchema("OracleDevartClientAdapter");
 
 		static OracleProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string typesNamespace, string? factoryName, MappingSchema mappingSchema)
 		{
@@ -975,7 +962,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			KeepSelfReferencedForeignKeys = 0x020,
 			NoLogging                     = 0x040,
 			UseArrayBinding               = 0x080,
-			UseInternalTransaction        = 0x100
+			UseInternalTransaction        = 0x100,
 		}
 
 		internal static class DevartWrappers
@@ -1065,7 +1052,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					DataType.LongRaw                                                                                                                            => OracleDbType.LongRaw,
 					DataType.BFile                                                                                                                              => OracleDbType.BFile,
 					DataType.Guid                                                                                                                               => OracleDbType.Raw,
-					_                                                                                                                                           => OracleDbType.VarChar
+					_                                                                                                                                           => OracleDbType.VarChar,
 				};
 			}
 
@@ -1104,7 +1091,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				TimeStampLTZ = 26,
 				TimeStampTZ  = 27,
 				VarChar      = 28,
-				Xml          = 29
+				Xml          = 29,
 			}
 
 			[Wrapper]
@@ -1192,7 +1179,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				private static string[] Events { get; }
 					= new[]
 				{
-					nameof(RowsCopied)
+					nameof(RowsCopied),
 				};
 
 				public OracleLoader(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -1289,7 +1276,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				KeepSelfReferencedForeignKeys = 256,
 				NoLogging                     = 8,
 				UseArrayBinding               = 4,
-				UseInternalTransaction        = 2
+				UseInternalTransaction        = 2,
 			}
 
 			[Wrapper]
@@ -1567,7 +1554,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				private static string[] Events { get; }
 					= new[]
 				{
-					nameof(OracleRowsCopied)
+					nameof(OracleRowsCopied),
 				};
 
 				public OracleBulkCopy(object instance, Delegate[] wrappers) : base(instance, wrappers)

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -65,7 +65,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 						TableID        = database + "." + rd.ToString(0) + "." + rd.ToString(1),
 						PrimaryKeyName = rd.ToString(2)!,
 						ColumnName     = rd.ToString(3)!,
-						Ordinal        = Converter.ChangeTypeTo<int>(rd[4])
+						Ordinal        = Converter.ChangeTypeTo<int>(rd[4]),
 					},
 					$"""
 					SELECT
@@ -216,7 +216,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 					ThisColumn   = fk.thisColumn,
 					Ordinal      = fk.ordinal,
 					OtherTableID = fk.otherTable,
-					OtherColumn  = otherColumn.ColumnName
+					OtherColumn  = otherColumn.ColumnName,
 				}
 			).ToList();
 		}
@@ -284,7 +284,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 							IsIn          = mode.Contains("IN"),
 							IsOut         = mode.Contains("OUT"),
 							IsResult      = false,
-							IsNullable    = true
+							IsNullable    = true,
 						};
 
 						var ci = new ColumnInfo { DataType = ppi.DataType };

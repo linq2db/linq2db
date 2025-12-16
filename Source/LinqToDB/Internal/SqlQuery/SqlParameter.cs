@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
@@ -31,7 +31,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public object? Value     { get; }
 		/// <summary>
-		/// Enable parameter wrapping with type-cast. Ignored when <see cref="IsQueryParameter"/> is <c>false</c>.
+		/// Enable parameter wrapping with type-cast. Ignored when <see cref="IsQueryParameter"/> is <see langword="false"/>.
 		/// </summary>
 		public bool    NeedsCast { get; set; }
 

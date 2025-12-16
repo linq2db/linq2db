@@ -207,143 +207,151 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			if (_instance == null)
 			{
 				lock (_syncRoot)
-#pragma warning disable CA1508 // Avoid dead conditional code
-					if (_instance == null)
-#pragma warning restore CA1508 // Avoid dead conditional code
+					_instance ??= GetNpgsqlInstance();
+			}
+
+			return _instance;
+
+			static NpgsqlProviderAdapter GetNpgsqlInstance()
+			{
+				var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null);
+				if (assembly == null)
+					throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
+
+				var connectionType     = assembly.GetType($"{ClientNamespace}.NpgsqlConnection"  , true)!;
+				var parameterType      = assembly.GetType($"{ClientNamespace}.NpgsqlParameter"   , true)!;
+				var dataReaderType     = assembly.GetType($"{ClientNamespace}.NpgsqlDataReader"  , true)!;
+				var commandType        = assembly.GetType($"{ClientNamespace}.NpgsqlCommand"     , true)!;
+				var transactionType    = assembly.GetType($"{ClientNamespace}.NpgsqlTransaction" , true)!;
+				var dbType             = assembly.GetType($"{TypesNamespace}.NpgsqlDbType"       , true)!;
+				var npgsqlDateType     = assembly.GetType($"{TypesNamespace}.NpgsqlDate"         , false);
+				var npgsqlPointType    = assembly.GetType($"{TypesNamespace}.NpgsqlPoint"        , true)!;
+				var npgsqlLSegType     = assembly.GetType($"{TypesNamespace}.NpgsqlLSeg"         , true)!;
+				var npgsqlBoxType      = assembly.GetType($"{TypesNamespace}.NpgsqlBox"          , true)!;
+				var npgsqlCircleType   = assembly.GetType($"{TypesNamespace}.NpgsqlCircle"       , true)!;
+				var npgsqlPathType     = assembly.GetType($"{TypesNamespace}.NpgsqlPath"         , true)!;
+				var npgsqlPolygonType  = assembly.GetType($"{TypesNamespace}.NpgsqlPolygon"      , true)!;
+				var npgsqlLineType     = assembly.GetType($"{TypesNamespace}.NpgsqlLine"         , true)!;
+				var npgsqlInetType     = assembly.GetType($"{TypesNamespace}.NpgsqlInet"         , true)!;
+				var npgsqlCidrType     = assembly.GetType($"{TypesNamespace}.NpgsqlCidr"         , false);
+				var npgsqlTimeSpanType = assembly.GetType($"{TypesNamespace}.NpgsqlTimeSpan"     , false);
+				var npgsqlDateTimeType = assembly.GetType($"{TypesNamespace}.NpgsqlDateTime"     , false);
+				var npgsqlRangeTType   = assembly.GetType($"{TypesNamespace}.NpgsqlRange`1"      , true)!;
+				var npgsqlIntervalType = assembly.GetType($"{TypesNamespace}.NpgsqlInterval"     , false);
+				var npgsqlCubeType     = assembly.GetType($"{TypesNamespace}.NpgsqlCube"         , false);
+
+				var npgsqlBinaryImporterType = assembly.GetType($"{ClientNamespace}.NpgsqlBinaryImporter", true)!;
+
+				var supportsBigInteger = assembly.GetName().Version >= MinBigIntegerVersion;
+
+				var typeMapper = new TypeMapper();
+				typeMapper.RegisterTypeWrapper<NpgsqlConnection>(connectionType);
+				typeMapper.RegisterTypeWrapper<NpgsqlParameter>(parameterType);
+				typeMapper.RegisterTypeWrapper<NpgsqlDbType>(dbType);
+				typeMapper.RegisterTypeWrapper<NpgsqlBinaryImporter>(npgsqlBinaryImporterType);
+				typeMapper.FinalizeMappings();
+
+				var paramMapper   = typeMapper.Type<NpgsqlParameter>();
+				var dbTypeBuilder = paramMapper.Member(p => p.NpgsqlDbType);
+
+				var pConnection = Expression.Parameter(typeof(DbConnection));
+				var pCommand    = Expression.Parameter(typeof(string));
+				var pToken      = Expression.Parameter(typeof(CancellationToken));
+
+				var beginBinaryImport = Expression
+					.Lambda<Func<DbConnection, string, NpgsqlBinaryImporter>>(
+						typeMapper.MapExpression((DbConnection conn, string command) => typeMapper.Wrap<NpgsqlBinaryImporter>(((NpgsqlConnection)(object)conn).BeginBinaryImport(command)), pConnection, pCommand),
+						pConnection, pCommand
+					)
+					.CompileExpression();
+
+				Func<DbConnection, string, CancellationToken, Task<NpgsqlBinaryImporter>>? beginBinaryImportAsync = null;
+				if (connectionType.GetMethod(nameof(BeginBinaryImportAsync)) != null)
+				{
+					beginBinaryImportAsync = Expression
+						.Lambda<Func<DbConnection, string, CancellationToken, Task<NpgsqlBinaryImporter>>>(
+							typeMapper.MapExpression((DbConnection conn, string command, CancellationToken cancellationToken) => typeMapper.WrapTask<NpgsqlBinaryImporter>(((NpgsqlConnection)(object)conn).BeginBinaryImportAsync(command, cancellationToken)), pConnection, pCommand, pToken),
+							pConnection, pCommand, pToken
+						)
+						.CompileExpression();
+				}
+
+				// create mapping schema
+				var mappingSchema = new MappingSchema();
+
+				// date/time types
+				if (npgsqlDateType != null)
+					AddUdtType(npgsqlDateType);
+				if (npgsqlDateTimeType != null)
+					AddUdtType(npgsqlDateTimeType);
+				if (npgsqlTimeSpanType != null)
+				{
+					mappingSchema.AddScalarType(npgsqlTimeSpanType, DataType.Interval);
+				}
+
+				Expression? npgsqlIntervalReader = null;
+				if (npgsqlIntervalType != null)
+				{
+					mappingSchema.AddScalarType(npgsqlIntervalType, DataType.Interval);
+
+					var reader  = Expression.Parameter(typeof(DbDataReader));
+					var ordinal = Expression.Parameter(typeof(int));
+					var body    = Expression.Call(reader, nameof(DbDataReader.GetFieldValue), [npgsqlIntervalType], [ordinal]);
+
+					npgsqlIntervalReader = Expression.Lambda(body, reader, ordinal);
+				}
+
+				// NpgsqlDateTimeType => DateTimeOffset
+				if (npgsqlDateTimeType != null)
+				{
+					var p = Expression.Parameter(npgsqlDateTimeType, "p");
+					var pi = p.Type.GetProperty("DateTime");
+
+					Expression expr = pi != null
+						// < 3.2.0
+						// https://github.com/npgsql/npgsql/commit/3894175f970b611f6428757a932b6393749da958#diff-c792076ac0455dd0f2852822ea38b0aaL166
+						? Expression.Property(p, pi)
+						// 3.2.0+
+						: Expression.Call(p, "ToDateTime", null);
+
+					var npgsqlDateTimeToDateTimeOffsetMapper = Expression
+						.Lambda(
+							Expression.New(
+								MemberHelper.ConstructorOf(() => new DateTimeOffset(new DateTime())),
+								expr
+							),
+							p
+						);
+
+					mappingSchema.SetConvertExpression(npgsqlDateTimeType, typeof(DateTimeOffset), npgsqlDateTimeToDateTimeOffsetMapper);
+				}
+
+				// inet types
+				AddUdtType(npgsqlInetType);
+				AddUdtType(typeof(IPAddress));
+				AddUdtType(typeof(PhysicalAddress));
+				// npgsql4 obsoletes NpgsqlInetType and returns ValueTuple<IPAddress, int>
+				// we should be able to map it properly
+				// Note that obsoletion was removed in v8
+				// (IPAddress, int) => NpgsqlInet
+				{
+					var valueTypeType = Type.GetType("System.ValueTuple`2", false);
+					if (valueTypeType != null)
 					{
-						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, null);
-						if (assembly == null)
-							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
-
-						var connectionType     = assembly.GetType($"{ClientNamespace}.NpgsqlConnection"  , true)!;
-						var parameterType      = assembly.GetType($"{ClientNamespace}.NpgsqlParameter"   , true)!;
-						var dataReaderType     = assembly.GetType($"{ClientNamespace}.NpgsqlDataReader"  , true)!;
-						var commandType        = assembly.GetType($"{ClientNamespace}.NpgsqlCommand"     , true)!;
-						var transactionType    = assembly.GetType($"{ClientNamespace}.NpgsqlTransaction" , true)!;
-						var dbType             = assembly.GetType($"{TypesNamespace}.NpgsqlDbType"       , true)!;
-						var npgsqlDateType     = assembly.GetType($"{TypesNamespace}.NpgsqlDate"         , false);
-						var npgsqlPointType    = assembly.GetType($"{TypesNamespace}.NpgsqlPoint"        , true)!;
-						var npgsqlLSegType     = assembly.GetType($"{TypesNamespace}.NpgsqlLSeg"         , true)!;
-						var npgsqlBoxType      = assembly.GetType($"{TypesNamespace}.NpgsqlBox"          , true)!;
-						var npgsqlCircleType   = assembly.GetType($"{TypesNamespace}.NpgsqlCircle"       , true)!;
-						var npgsqlPathType     = assembly.GetType($"{TypesNamespace}.NpgsqlPath"         , true)!;
-						var npgsqlPolygonType  = assembly.GetType($"{TypesNamespace}.NpgsqlPolygon"      , true)!;
-						var npgsqlLineType     = assembly.GetType($"{TypesNamespace}.NpgsqlLine"         , true)!;
-						var npgsqlInetType     = assembly.GetType($"{TypesNamespace}.NpgsqlInet"         , true)!;
-						var npgsqlCidrType     = assembly.GetType($"{TypesNamespace}.NpgsqlCidr"         , false);
-						var npgsqlTimeSpanType = assembly.GetType($"{TypesNamespace}.NpgsqlTimeSpan"     , false);
-						var npgsqlDateTimeType = assembly.GetType($"{TypesNamespace}.NpgsqlDateTime"     , false);
-						var npgsqlRangeTType   = assembly.GetType($"{TypesNamespace}.NpgsqlRange`1"      , true)!;
-						var npgsqlIntervalType = assembly.GetType($"{TypesNamespace}.NpgsqlInterval"     , false);
-						var npgsqlCubeType     = assembly.GetType($"{TypesNamespace}.NpgsqlCube"         , false);
-
-						var npgsqlBinaryImporterType = assembly.GetType($"{ClientNamespace}.NpgsqlBinaryImporter", true)!;
-
-						var supportsBigInteger = assembly.GetName().Version >= MinBigIntegerVersion;
-
-						var typeMapper = new TypeMapper();
-						typeMapper.RegisterTypeWrapper<NpgsqlConnection>(connectionType);
-						typeMapper.RegisterTypeWrapper<NpgsqlParameter>(parameterType);
-						typeMapper.RegisterTypeWrapper<NpgsqlDbType>(dbType);
-						typeMapper.RegisterTypeWrapper<NpgsqlBinaryImporter>(npgsqlBinaryImporterType);
-						typeMapper.FinalizeMappings();
-
-						var paramMapper   = typeMapper.Type<NpgsqlParameter>();
-						var dbTypeBuilder = paramMapper.Member(p => p.NpgsqlDbType);
-
-						var pConnection = Expression.Parameter(typeof(DbConnection));
-						var pCommand    = Expression.Parameter(typeof(string));
-						var pToken      = Expression.Parameter(typeof(CancellationToken));
-
-						var beginBinaryImport = Expression.Lambda<Func<DbConnection, string, NpgsqlBinaryImporter>>(
-								typeMapper.MapExpression((DbConnection conn, string command) => typeMapper.Wrap<NpgsqlBinaryImporter>(((NpgsqlConnection)(object)conn).BeginBinaryImport(command)), pConnection, pCommand),
-								pConnection, pCommand)
-							.CompileExpression();
-
-						Func<DbConnection, string, CancellationToken, Task<NpgsqlBinaryImporter>>? beginBinaryImportAsync = null;
-						if (connectionType.GetMethod(nameof(BeginBinaryImportAsync)) != null)
+						// v8 switched from int to byte for NpgsqlInet.Netmask
+						var netmaskType = typeof(byte);
+						var ctor = npgsqlInetType.GetConstructor(BindingFlags.ExactBinding | BindingFlags.Public | BindingFlags.Instance, new[] { typeof(IPAddress), netmaskType });
+						if (ctor == null)
 						{
-							beginBinaryImportAsync = Expression.Lambda<Func<DbConnection, string, CancellationToken, Task<NpgsqlBinaryImporter>>>(
-									typeMapper.MapExpression((DbConnection conn, string command, CancellationToken cancellationToken) => typeMapper.WrapTask<NpgsqlBinaryImporter>(((NpgsqlConnection)(object)conn).BeginBinaryImportAsync(command, cancellationToken)), pConnection, pCommand, pToken),
-									pConnection, pCommand, pToken)
-								.CompileExpression();
+							netmaskType = typeof(int);
+							ctor = npgsqlInetType.GetConstructor(new[] { typeof(IPAddress), netmaskType })
+								?? throw new InvalidOperationException("Cannot find NpgsqlInet constructor");
 						}
 
-						// create mapping schema
-						var mappingSchema = new MappingSchema();
+						var inetTupleType = valueTypeType.MakeGenericType(typeof(IPAddress), typeof(int));
+						var p = Expression.Parameter(inetTupleType, "p");
 
-						// date/time types
-						if (npgsqlDateType != null)
-							AddUdtType(npgsqlDateType);
-						if (npgsqlDateTimeType != null)
-							AddUdtType(npgsqlDateTimeType);
-						if (npgsqlTimeSpanType != null)
-						{
-							mappingSchema.AddScalarType(npgsqlTimeSpanType, DataType.Interval);
-						}
-
-						Expression? npgsqlIntervalReader = null;
-						if (npgsqlIntervalType != null)
-						{
-							mappingSchema.AddScalarType(npgsqlIntervalType, DataType.Interval);
-
-							var reader  = Expression.Parameter(typeof(DbDataReader));
-							var ordinal = Expression.Parameter(typeof(int));
-							var body    = Expression.Call(reader, nameof(DbDataReader.GetFieldValue), [npgsqlIntervalType], [ordinal]);
-
-							npgsqlIntervalReader = Expression.Lambda(body, reader, ordinal);
-						}
-
-						// NpgsqlDateTimeType => DateTimeOffset
-						if (npgsqlDateTimeType != null)
-						{
-							var p = Expression.Parameter(npgsqlDateTimeType, "p");
-							var pi = p.Type.GetProperty("DateTime");
-
-							Expression expr;
-
-							if (pi != null)
-								// < 3.2.0
-								// https://github.com/npgsql/npgsql/commit/3894175f970b611f6428757a932b6393749da958#diff-c792076ac0455dd0f2852822ea38b0aaL166
-								expr = Expression.Property(p, pi);
-							else
-								// 3.2.0+
-								expr = Expression.Call(p, "ToDateTime", null);
-
-							var npgsqlDateTimeToDateTimeOffsetMapper = Expression.Lambda(
-								Expression.New(
-									MemberHelper.ConstructorOf(() => new DateTimeOffset(new DateTime())),
-									expr),
-								p);
-							mappingSchema.SetConvertExpression(npgsqlDateTimeType, typeof(DateTimeOffset), npgsqlDateTimeToDateTimeOffsetMapper);
-						}
-
-						// inet types
-						AddUdtType(npgsqlInetType);
-						AddUdtType(typeof(IPAddress));
-						AddUdtType(typeof(PhysicalAddress));
-						// npgsql4 obsoletes NpgsqlInetType and returns ValueTuple<IPAddress, int>
-						// we should be able to map it properly
-						// Note that obsoletion was removed in v8
-						// (IPAddress, int) => NpgsqlInet
-						{
-							var valueTypeType = Type.GetType("System.ValueTuple`2", false);
-							if (valueTypeType != null)
-							{
-								// v8 switched from int to byte for NpgsqlInet.Netmask
-								var netmaskType = typeof(byte);
-								var ctor = npgsqlInetType.GetConstructor(BindingFlags.ExactBinding | BindingFlags.Public | BindingFlags.Instance, new[] { typeof(IPAddress), netmaskType });
-								if (ctor == null)
-								{
-									netmaskType = typeof(int);
-									ctor = npgsqlInetType.GetConstructor(new[] { typeof(IPAddress), netmaskType })
-										?? throw new InvalidOperationException("Cannot find NpgsqlInet constructor");
-								}
-
-								var inetTupleType = valueTypeType.MakeGenericType(typeof(IPAddress), typeof(int));
-								var p = Expression.Parameter(inetTupleType, "p");
-
-								var tupleToInetTypeMapper = Expression.Lambda(
+						var tupleToInetTypeMapper = Expression.Lambda(
 										Expression.New(
 											ctor,
 											ExpressionHelper.Field(p, "Item1"),
@@ -351,142 +359,143 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 												? Expression.Convert(ExpressionHelper.Field(p, "Item2"), netmaskType)
 												: ExpressionHelper.Field(p, "Item2")),
 										p);
-								mappingSchema.SetConvertExpression(inetTupleType!, npgsqlInetType, tupleToInetTypeMapper);
-							}
-						}
-
-						// Cidr was extracted from NpgsqlInet in Npgsql 8
-						if (npgsqlCidrType != null)
-						{
-							AddUdtType(npgsqlCidrType);
-
-							// (IPAddress, int) => NpgsqlCidr
-							var valueTypeType = Type.GetType("System.ValueTuple`2", false);
-							if (valueTypeType != null)
-							{
-								var ctor = npgsqlCidrType.GetConstructor(new[] { typeof(IPAddress), typeof(byte) })
-									?? throw new InvalidOperationException("Cannot find NpgsqlCidr constructor");
-								var cidrTupleType = valueTypeType.MakeGenericType(typeof(IPAddress), typeof(int));
-								var p = Expression.Parameter(cidrTupleType, "p");
-
-								var tupleToCidrTypeMapper = Expression.Lambda(
-										Expression.New(
-											ctor,
-											ExpressionHelper.Field(p, "Item1"),
-											Expression.Convert(ExpressionHelper.Field(p, "Item2"), typeof(byte))),
-										p);
-								mappingSchema.SetConvertExpression(cidrTupleType!, npgsqlCidrType, tupleToCidrTypeMapper);
-							}
-						}
-
-						// ranges
-						AddUdtType(npgsqlRangeTType);
-
-						// Range To Parameter conversons
-						{
-							void SetRangeConversion<T>(string? fromDbType = null, DataType fromDataType = DataType.Undefined, string? toDbType = null, DataType toDataType = DataType.Undefined)
-							{
-								var rangeType  = npgsqlRangeTType.MakeGenericType(typeof(T));
-								var fromType   = new DbDataType(rangeType, fromDataType, fromDbType);
-								var toType     = new DbDataType(typeof(DataParameter), toDataType, toDbType);
-								var rangeParam = Expression.Parameter(rangeType, "p");
-
-								mappingSchema.SetConvertExpression(fromType, toType,
-									Expression.Lambda(
-										Expression.New(
-											MemberHelper.ConstructorOf(
-												() => new DataParameter("", null, DataType.Undefined, toDbType)),
-											Expression.Constant(""),
-											Expression.Convert(rangeParam, typeof(object)),
-											Expression.Constant(toDataType),
-											Expression.Constant(toDbType, typeof(string))
-										)
-										, rangeParam)
-								);
-							}
-
-							SetRangeConversion<byte>();
-							SetRangeConversion<int>();
-							SetRangeConversion<double>();
-							SetRangeConversion<float>();
-							SetRangeConversion<decimal>();
-
-							SetRangeConversion<DateTime>(fromDbType: "daterange", toDbType: "daterange");
-
-							SetRangeConversion<DateTime>(fromDbType: "tsrange", toDbType: "tsrange");
-							SetRangeConversion<DateTime>(toDbType: "tsrange");
-
-							SetRangeConversion<DateTime>(fromDbType: "tstzrange", toDbType: "tstzrange");
-
-							SetRangeConversion<DateTimeOffset>("tstzrange");
-						}
-
-						// spatial types
-						AddUdtType(npgsqlPointType);
-						AddUdtType(npgsqlLSegType);
-						AddUdtType(npgsqlBoxType);
-						AddUdtType(npgsqlPathType);
-						AddUdtType(npgsqlCircleType);
-						AddUdtType(npgsqlPolygonType);
-						AddUdtType(npgsqlLineType);
-
-						if (npgsqlCubeType != null)
-							AddUdtType(npgsqlCubeType);
-
-						var connectionFactory = typeMapper.BuildTypedFactory<string, NpgsqlConnection, DbConnection>(connectionString => new NpgsqlConnection(connectionString));
-
-						_instance = new NpgsqlProviderAdapter(
-							connectionType,
-							dataReaderType,
-							parameterType,
-							commandType,
-							transactionType,
-							connectionFactory,
-
-							dbType,
-
-							mappingSchema,
-
-							npgsqlDateType,
-							npgsqlPointType,
-							npgsqlLSegType,
-							npgsqlBoxType,
-							npgsqlCircleType,
-							npgsqlPathType,
-							npgsqlPolygonType,
-							npgsqlLineType,
-							npgsqlInetType,
-							npgsqlCidrType,
-							npgsqlTimeSpanType,
-							npgsqlDateTimeType,
-							npgsqlRangeTType,
-							npgsqlIntervalType,
-							npgsqlCubeType,
-
-							supportsBigInteger,
-
-							npgsqlIntervalReader,
-
-							dbTypeBuilder.BuildSetter<DbParameter>(),
-							dbTypeBuilder.BuildGetter<DbParameter>(),
-
-							beginBinaryImport,
-							beginBinaryImportAsync,
-							typeMapper.Wrap<NpgsqlConnection>);
-
-						void AddUdtType(Type type)
-						{
-							if (!type.IsValueType)
-								mappingSchema.AddScalarType(type, null, true, DataType.Udt);
-							else
-							{
-								mappingSchema.AddScalarType(type, DataType.Udt);
-							}
-						}
+						mappingSchema.SetConvertExpression(inetTupleType!, npgsqlInetType, tupleToInetTypeMapper);
 					}
-			}
+				}
 
-			return _instance;
+				// Cidr was extracted from NpgsqlInet in Npgsql 8
+				if (npgsqlCidrType != null)
+				{
+					AddUdtType(npgsqlCidrType);
+
+					// (IPAddress, int) => NpgsqlCidr
+					var valueTypeType = Type.GetType("System.ValueTuple`2", false);
+					if (valueTypeType != null)
+					{
+						var ctor = npgsqlCidrType.GetConstructor(new[] { typeof(IPAddress), typeof(byte) })
+							?? throw new InvalidOperationException("Cannot find NpgsqlCidr constructor");
+
+						var cidrTupleType = valueTypeType.MakeGenericType(typeof(IPAddress), typeof(int));
+						var p = Expression.Parameter(cidrTupleType, "p");
+
+						var tupleToCidrTypeMapper = Expression
+							.Lambda(
+								Expression.New(
+									ctor,
+									ExpressionHelper.Field(p, "Item1"),
+									Expression.Convert(ExpressionHelper.Field(p, "Item2"), typeof(byte))
+								),
+								p
+							);
+						mappingSchema.SetConvertExpression(cidrTupleType!, npgsqlCidrType, tupleToCidrTypeMapper);
+					}
+				}
+
+				// ranges
+				AddUdtType(npgsqlRangeTType);
+
+				// Range To Parameter conversons
+				{
+					void SetRangeConversion<T>(string? fromDbType = null, DataType fromDataType = DataType.Undefined, string? toDbType = null, DataType toDataType = DataType.Undefined)
+					{
+						var rangeType  = npgsqlRangeTType.MakeGenericType(typeof(T));
+						var fromType   = new DbDataType(rangeType, fromDataType, fromDbType);
+						var toType     = new DbDataType(typeof(DataParameter), toDataType, toDbType);
+						var rangeParam = Expression.Parameter(rangeType, "p");
+
+						mappingSchema.SetConvertExpression(fromType, toType,
+							Expression.Lambda(
+								Expression.New(
+									MemberHelper.ConstructorOf(
+										() => new DataParameter("", null, DataType.Undefined, toDbType)),
+									Expression.Constant(""),
+									Expression.Convert(rangeParam, typeof(object)),
+									Expression.Constant(toDataType),
+									Expression.Constant(toDbType, typeof(string))
+								)
+								, rangeParam)
+						);
+					}
+
+					SetRangeConversion<byte>();
+					SetRangeConversion<int>();
+					SetRangeConversion<double>();
+					SetRangeConversion<float>();
+					SetRangeConversion<decimal>();
+
+					SetRangeConversion<DateTime>(fromDbType: "daterange", toDbType: "daterange");
+
+					SetRangeConversion<DateTime>(fromDbType: "tsrange", toDbType: "tsrange");
+					SetRangeConversion<DateTime>(toDbType: "tsrange");
+
+					SetRangeConversion<DateTime>(fromDbType: "tstzrange", toDbType: "tstzrange");
+
+					SetRangeConversion<DateTimeOffset>("tstzrange");
+				}
+
+				// spatial types
+				AddUdtType(npgsqlPointType);
+				AddUdtType(npgsqlLSegType);
+				AddUdtType(npgsqlBoxType);
+				AddUdtType(npgsqlPathType);
+				AddUdtType(npgsqlCircleType);
+				AddUdtType(npgsqlPolygonType);
+				AddUdtType(npgsqlLineType);
+
+				if (npgsqlCubeType != null)
+					AddUdtType(npgsqlCubeType);
+
+				var connectionFactory = typeMapper.BuildTypedFactory<string, NpgsqlConnection, DbConnection>(connectionString => new NpgsqlConnection(connectionString));
+
+				return new NpgsqlProviderAdapter(
+					connectionType,
+					dataReaderType,
+					parameterType,
+					commandType,
+					transactionType,
+					connectionFactory,
+
+					dbType,
+
+					mappingSchema,
+
+					npgsqlDateType,
+					npgsqlPointType,
+					npgsqlLSegType,
+					npgsqlBoxType,
+					npgsqlCircleType,
+					npgsqlPathType,
+					npgsqlPolygonType,
+					npgsqlLineType,
+					npgsqlInetType,
+					npgsqlCidrType,
+					npgsqlTimeSpanType,
+					npgsqlDateTimeType,
+					npgsqlRangeTType,
+					npgsqlIntervalType,
+					npgsqlCubeType,
+
+					supportsBigInteger,
+
+					npgsqlIntervalReader,
+
+					dbTypeBuilder.BuildSetter<DbParameter>(),
+					dbTypeBuilder.BuildGetter<DbParameter>(),
+
+					beginBinaryImport,
+					beginBinaryImportAsync,
+					typeMapper.Wrap<NpgsqlConnection>);
+
+				void AddUdtType(Type type)
+				{
+					if (!type.IsValueType)
+						mappingSchema.AddScalarType(type, null, true, DataType.Udt);
+					else
+					{
+						mappingSchema.AddScalarType(type, DataType.Udt);
+					}
+				}
+			}
 		}
 
 		#region Wrappers

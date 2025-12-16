@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -57,7 +57,7 @@ namespace LinqToDB.Internal.Expressions.Types
 			var wrapperAttr = wrapperType.GetAttribute<WrapperAttribute>();
 
 			if ((wrapperAttr?.TypeName ?? wrapperType.Name) != originalType.Name)
-				throw new LinqToDBException($"Original and wraped types should have same type name. {wrapperType.Name} != {originalType.Name}");
+				throw new LinqToDBException($"Original and wrapped types should have same type name. {wrapperType.Name} != {originalType.Name}");
 
 			var typeName = originalType.FullName ?? originalType.Name;
 			if (_types.ContainsKey(typeName))
@@ -530,9 +530,9 @@ namespace LinqToDB.Internal.Expressions.Types
 
 							// other cases?
 						}
-					}
 
-					break;
+						break;
+					}
 
 					case ExpressionType.Convert        :
 					case ExpressionType.ConvertChecked :
@@ -707,19 +707,16 @@ namespace LinqToDB.Internal.Expressions.Types
 									switch (b.BindingType)
 									{
 										case MemberBindingType.Assignment:
-											{
-												var mab = (MemberAssignment)b;
-												return Expression.Bind(ReplaceMember(mab.Member, replacement),
-													ReplaceTypes(mab.Expression, context)!);
-											}
+										{
+											var mab = (MemberAssignment)b;
+											return Expression.Bind(ReplaceMember(mab.Member, replacement),
+												ReplaceTypes(mab.Expression, context)!);
+										}
 										case MemberBindingType.MemberBinding:
-											{
-												throw new NotImplementedException();
-											}
 										case MemberBindingType.ListBinding:
-											{
-												throw new NotImplementedException();
-											}
+										{
+											throw new NotImplementedException();
+										}
 										default:
 											throw new InvalidOperationException($"Unexpected binding type: {b.BindingType}");
 									}
@@ -1027,7 +1024,7 @@ namespace LinqToDB.Internal.Expressions.Types
 
 		#region Setters
 
-		public class MemberBuilder<T, TV>
+		public sealed class MemberBuilder<T, TV>
 		{
 			private readonly TypeMapper _mapper;
 			private readonly Expression<Func<T, TV>> _memberExpression;
@@ -1106,7 +1103,7 @@ namespace LinqToDB.Internal.Expressions.Types
 			}
 		}
 
-		public class TypeBuilder<T>
+		public sealed class TypeBuilder<T>
 		{
 			private readonly TypeMapper _mapper;
 

@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -80,7 +81,7 @@ namespace LinqToDB.Internal.Linq
 							var index = columnIndex.Value * 2;
 							if (context.NewVariables[index] == null)
 							{
-								var variable                       = Expression.Variable(typeof(bool), FormattableString.Invariant($"is_null_{columnIndex}"));
+								var variable                       = Expression.Variable(typeof(bool), string.Create(CultureInfo.InvariantCulture, $"is_null_{columnIndex}"));
 								context.NewVariables[index]        = variable;
 								context.Replacements[index]        = variable;
 								context.InsertedExpressions[index] = Expression.Assign(variable, call);
@@ -101,7 +102,7 @@ namespace LinqToDB.Internal.Linq
 								{
 									// no IsDBNull call: column is not nullable
 									// (also could be a bad expression)
-									variable                           = Expression.Variable(type, FormattableString.Invariant($"get_value_{columnIndex}"));
+									variable                           = Expression.Variable(type, string.Create(CultureInfo.InvariantCulture, $"get_value_{columnIndex}"));
 									context.InsertedExpressions[index] = Expression.Assign(variable, Expression.Convert(call, type));
 								}
 								else

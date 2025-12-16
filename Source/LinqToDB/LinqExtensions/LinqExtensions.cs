@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -267,10 +267,10 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="T">Table record type.</typeparam>
 		/// <param name="target">Dropped table.</param>
-		/// <param name="throwExceptionIfNotExists">If <c>false</c>, any exception during drop operation will be silently catched and <c>0</c> returned.
+		/// <param name="throwExceptionIfNotExists">If <see langword="false"/>, any exception during drop operation will be silently catched and <c>0</c> returned.
 		/// This behavior is not correct and will be fixed in future to mask only missing table exceptions.
 		/// Tracked by <a href="https://github.com/linq2db/linq2db/issues/798">issue</a>.
-		/// Default value: <c>true</c>.</param>
+		/// Default value: <see langword="true"/>.</param>
 		/// <returns>Number of affected records. Usually <c>-1</c> as it is not data modification operation.</returns>
 		public static int Drop<T>(this ITable<T> target, bool throwExceptionIfNotExists = true)
 			where T : notnull
@@ -300,10 +300,10 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="T">Table record type.</typeparam>
 		/// <param name="target">Dropped table.</param>
-		/// <param name="throwExceptionIfNotExists">If <c>false</c>, any exception during drop operation will be silently catched and <c>0</c> returned.
+		/// <param name="throwExceptionIfNotExists">If <see langword="false"/>, any exception during drop operation will be silently catched and <c>0</c> returned.
 		/// This behavior is not correct and will be fixed in future to mask only missing table exceptions.
 		/// Tracked by <a href="https://github.com/linq2db/linq2db/issues/798">issue</a>.
-		/// Default value: <c>true</c>.</param>
+		/// Default value: <see langword="true"/>.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records. Usually <c>-1</c> as it is not data modification operation.</returns>
 		public static async Task<int> DropAsync<T>(

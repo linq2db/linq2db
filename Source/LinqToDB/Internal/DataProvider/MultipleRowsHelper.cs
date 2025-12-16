@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +11,7 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.SqlQuery;
 using LinqToDB.Mapping;
+using System.Globalization;
 
 namespace LinqToDB.Internal.DataProvider
 {
@@ -98,7 +99,7 @@ namespace LinqToDB.Internal.DataProvider
 
 				if (ConvertToParameter(Options, column, value) || !MappingSchema.TryConvertToSql(StringBuilder, type, Options, value))
 				{
-					var name = SqlBuilder.ConvertInline(ParameterName == "?" ? ParameterName : FormattableString.Invariant($"{ParameterName}{++ParameterIndex}"), ConvertType.NameToQueryParameter);
+					var name = SqlBuilder.ConvertInline(ParameterName == "?" ? ParameterName : string.Create(CultureInfo.InvariantCulture, $"{ParameterName}{++ParameterIndex}"), ConvertType.NameToQueryParameter);
 
 					if (castParameters && (CurrentCount == 0 || castAllRows))
 					{
@@ -113,12 +114,12 @@ namespace LinqToDB.Internal.DataProvider
 						value = dataParameter.Value;
 
 					Parameters.Add(new DataParameter(
-						SqlBuilder.ConvertInline(ParameterName == "?" ? ParameterName : FormattableString.Invariant($"p{ParameterIndex}"), ConvertType.NameToQueryParameter),
+						SqlBuilder.ConvertInline(ParameterName == "?" ? ParameterName : string.Create(CultureInfo.InvariantCulture, $"p{ParameterIndex}"), ConvertType.NameToQueryParameter),
 						value, type.DataType, type.DbType)
 					{
 						Size      = type.Length,
 						Precision = type.Precision,
-						Scale     = type.Scale
+						Scale     = type.Scale,
 					});
 				}
 				else if (castFirstRowLiteralOnUnionAll && CurrentCount == 0 && castLiteral?.Invoke(Columns[i]) != false)

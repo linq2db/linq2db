@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 using LinqToDB.Internal.SqlQuery;
@@ -271,7 +271,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <param name="rows">Merge source data.</param>
 		/// <param name="row">Index of data row to check. Could contain -1 to indicate that this is a check for empty source NULL value.</param>
 		/// <param name="column">Index of data column to check in row.</param>
-		/// <returns>Returns <c>true</c>, if generated SQL should include type information for value at specified position, otherwise <c>false</c> returned.</returns>
+		/// <returns>Returns <see langword="true"/>, if generated SQL should include type information for value at specified position, otherwise <see langword="false"/> returned.</returns>
 		protected virtual bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source, IReadOnlyList<List<ISqlExpression>> rows, int row, int column) => false;
 
 		private void BuildValuesAsSelectsUnion(IList<SqlField> sourceFields, SqlValuesTable source, IReadOnlyList<List<ISqlExpression>> rows)

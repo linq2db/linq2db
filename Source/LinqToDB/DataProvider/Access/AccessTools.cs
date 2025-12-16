@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Data.Common;
 using System.IO;
@@ -60,7 +60,7 @@ namespace LinqToDB.DataProvider.Access
 		/// Creates new Access database file. Requires Access OLE DB provider (JET or ACE) and ADOX.
 		/// </summary>
 		/// <param name="databaseName">Name of database to create.</param>
-		/// <param name="deleteIfExists">If <c>true</c>, existing database will be removed before create.</param>
+		/// <param name="deleteIfExists">If <see langword="true"/>, existing database will be removed before create.</param>
 		/// <param name="version">Access engine to use to create database. Default value: <see cref="AccessVersion.Ace"/>.</param>
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false, AccessVersion version = AccessVersion.Ace)
 		{
@@ -93,7 +93,7 @@ namespace LinqToDB.DataProvider.Access
 		/// Creates new Access database file. Requires Access OLE DB provider (JET or ACE) and ADOX.
 		/// </summary>
 		/// <param name="databaseName">Name of database to create.</param>
-		/// <param name="deleteIfExists">If <c>true</c>, existing database will be removed before create.</param>
+		/// <param name="deleteIfExists">If <see langword="true"/>, existing database will be removed before create.</param>
 		/// <param name="provider">Name of OleDb provider to use to create database. Default value: "Microsoft.Jet.OLEDB.4.0".</param>
 		/// <remarks>
 		/// Provider value examples: Microsoft.Jet.OLEDB.4.0 (for JET database), Microsoft.ACE.OLEDB.12.0, Microsoft.ACE.OLEDB.15.0 (for ACE database).

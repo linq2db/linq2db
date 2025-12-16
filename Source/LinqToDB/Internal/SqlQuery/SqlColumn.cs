@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 
 namespace LinqToDB.Internal.SqlQuery
@@ -200,7 +201,7 @@ namespace LinqToDB.Internal.SqlQuery
 				.Append('[').Append(Number).Append(']')
 #endif
 				.Append('.')
-				.Append(Alias ?? FormattableString.Invariant($"c{(parentIndex >= 0 ? parentIndex + 1 : parentIndex)}"));
+				.Append(Alias ?? string.Create(CultureInfo.InvariantCulture, $"c{(parentIndex >= 0 ? parentIndex + 1 : parentIndex)}"));
 
 				if (!Expression.CanBeNullable(writer.Nullability) && CanBeNullable(writer.Nullability))
 					writer.Append('?');

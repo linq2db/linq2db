@@ -709,61 +709,59 @@ namespace Tests.xUpdate
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5194")]
 		public void MergeWithOutputAsTupleFactory([IncludeDataSources(true, SIMPLE_OUTPUT)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
 
-				var table = GetTarget(db);
+			PrepareData(db);
 
-				var outputRows = table
-					.Merge()
-					.Using(GetSource1(db).Where(_ => _.Id == 5))
-					.OnTargetKey()
-					.InsertWhenNotMatched()
-					.MergeWithOutput((a, deleted, inserted, source)
-						=> Tuple.Create(
-							source.Field1,
-							Sql.AsSql(source.Field1.ToString()),
-							Sql.AsSql(inserted.Id.ToString())));
+			var table = GetTarget(db);
 
-				var result = outputRows.ToArray();
+			var outputRows = table
+				.Merge()
+				.Using(GetSource1(db).Where(_ => _.Id == 5))
+				.OnTargetKey()
+				.InsertWhenNotMatched()
+				.MergeWithOutput((a, deleted, inserted, source)
+					=> Tuple.Create(
+						source.Field1,
+						Sql.AsSql(source.Field1.ToString()),
+						Sql.AsSql(inserted.Id.ToString())));
 
-				result.Length.ShouldBe(1);
+			var result = outputRows.ToArray();
 
-				var record = result[0];
+			result.Length.ShouldBe(1);
 
-				record.Item3.ShouldBe("5");
-			}
+			var record = result[0];
+
+			record.Item3.ShouldBe("5");
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5194")]
 		public void MergeWithOutputAsTupleConstructor([IncludeDataSources(true, SIMPLE_OUTPUT)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
 
-				var table = GetTarget(db);
+			PrepareData(db);
 
-				var outputRows = table
-					.Merge()
-					.Using(GetSource1(db).Where(_ => _.Id == 5))
-					.OnTargetKey()
-					.InsertWhenNotMatched()
-					.MergeWithOutput((a, deleted, inserted, source)
-						=> new Tuple<int?, string, string>(
-							source.Field1,
-							Sql.AsSql(source.Field1.ToString()!),
-							Sql.AsSql(inserted.Id.ToString())));
+			var table = GetTarget(db);
 
-				var result = outputRows.ToArray();
+			var outputRows = table
+				.Merge()
+				.Using(GetSource1(db).Where(_ => _.Id == 5))
+				.OnTargetKey()
+				.InsertWhenNotMatched()
+				.MergeWithOutput((a, deleted, inserted, source)
+					=> new Tuple<int?, string, string>(
+						source.Field1,
+						Sql.AsSql(source.Field1.ToString()!),
+						Sql.AsSql(inserted.Id.ToString())));
 
-				result.Length.ShouldBe(1);
+			var result = outputRows.ToArray();
 
-				var record = result[0];
+			result.Length.ShouldBe(1);
 
-				record.Item3.ShouldBe("5");
-			}
+			var record = result[0];
+
+			record.Item3.ShouldBe("5");
 		}
 	}
 }

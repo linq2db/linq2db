@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -82,7 +83,7 @@ namespace LinqToDB
 					arguments.Add(".ExtensionArguments.Count",  new SqlValue(ExtensionArguments.Length));
 
 					for (var i = 0; i < ExtensionArguments.Length; i++)
-						arguments.Add(FormattableString.Invariant($".ExtensionArguments.{i}"), new SqlValue(ExtensionArguments[i]));
+						arguments.Add(string.Create(CultureInfo.InvariantCulture, $".ExtensionArguments.{i}"), new SqlValue(ExtensionArguments[i]));
 				}
 
 				return new SqlQueryExtension()
@@ -90,7 +91,7 @@ namespace LinqToDB
 					Configuration = Configuration,
 					Scope         = Scope,
 					BuilderType   = ExtensionBuilderType,
-					Arguments     = arguments
+					Arguments     = arguments,
 				};
 			}
 
@@ -130,7 +131,7 @@ namespace LinqToDB
 
 			public override string GetObjectID()
 			{
-				return FormattableString.Invariant($".{Configuration}.{(int)Scope}.{IdentifierBuilder.GetObjectID(ExtensionBuilderType)}.{IdentifierBuilder.GetObjectID(ExtensionArguments)}.");
+				return string.Create(CultureInfo.InvariantCulture, $".{Configuration}.{(int)Scope}.{IdentifierBuilder.GetObjectID(ExtensionBuilderType)}.{IdentifierBuilder.GetObjectID(ExtensionArguments)}.");
 			}
 		}
 

@@ -1,4 +1,4 @@
-﻿using System.Threading;
+using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Internal.Expressions;
@@ -43,7 +43,7 @@ namespace LinqToDB.Internal.Linq
 
 				var query = new Query<int>(dataContext)
 				{
-					Queries = { new QueryInfo { Statement = createTable, } }
+					Queries = { new QueryInfo { Statement = createTable, } },
 				};
 
 				SetNonQueryQuery(query);
@@ -89,7 +89,7 @@ namespace LinqToDB.Internal.Linq
 
 					var query = new Query<int>(dataContext)
 					{
-						Queries = { new QueryInfo { Statement = createTable, } }
+						Queries = { new QueryInfo { Statement = createTable, } },
 					};
 
 					SetNonQueryQuery(query);

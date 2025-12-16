@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -255,7 +255,7 @@ namespace LinqToDB.Internal.Expressions
 			/// <summary>
 			/// Object created as a result of method call (<see cref="MethodCallExpression"/>).
 			/// </summary>
-			MethodCall
+			MethodCall,
 		}
 
 		public SqlGenericConstructorExpression AppendAssignment(Assignment assignment)
@@ -281,7 +281,7 @@ namespace LinqToDB.Internal.Expressions
 
 			var result = new SqlGenericConstructorExpression(this)
 			{
-				Assignments = assignment
+				Assignments = assignment,
 			};
 
 			return result;
@@ -327,7 +327,7 @@ namespace LinqToDB.Internal.Expressions
 
 			var result = new SqlGenericConstructorExpression(this)
 			{
-				MappingSchema = mappingSchema
+				MappingSchema = mappingSchema,
 			};
 
 			return result;

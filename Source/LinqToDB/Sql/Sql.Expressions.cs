@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -38,7 +39,7 @@ namespace LinqToDB
 					builder.ResultExpression = columnExpressions[0];
 				else
 					builder.ResultExpression = new SqlFragment(
-						string.Join(", ", Enumerable.Range(0, columns.Length).Select(i => FormattableString.Invariant($"{{{i}}}"))),
+						string.Join(", ", Enumerable.Range(0, columns.Length).Select(i => string.Create(CultureInfo.InvariantCulture, $"{{{i}}}"))),
 						columnExpressions);
 			}
 		}
@@ -136,7 +137,7 @@ namespace LinqToDB
 			ServerName   = 0b00001000,
 			TableOptions = 0b00010000,
 
-			Full         = TableName | DatabaseName | SchemaName | ServerName | TableOptions
+			Full         = TableName | DatabaseName | SchemaName | ServerName | TableOptions,
 		}
 
 		[Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = true)]
@@ -184,7 +185,7 @@ namespace LinqToDB
 				return columnExpressions[0];
 
 			return new SqlFragment(
-				string.Join(", ", Enumerable.Range(0, columns.Length).Select(i => FormattableString.Invariant($"{{{i}}}"))),
+				string.Join(", ", Enumerable.Range(0, columns.Length).Select(i => string.Create(CultureInfo.InvariantCulture, $"{{{i}}}"))),
 				columnExpressions);
 		}
 

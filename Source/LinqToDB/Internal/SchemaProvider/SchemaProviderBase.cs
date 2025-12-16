@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -145,7 +145,7 @@ namespace LinqToDB.Internal.SchemaProvider
 						TypeName           = ToValidName(t.TableName),
 						Columns            = new List<ColumnSchema>(),
 						ForeignKeys        = new List<ForeignKeySchema>(),
-						IsProviderSpecific = t.IsProviderSpecific
+						IsProviderSpecific = t.IsProviderSpecific,
 					}
 				).ToList();
 
@@ -307,15 +307,15 @@ namespace LinqToDB.Internal.SchemaProvider
 									IsOut                = pr.IsOut,
 									IsResult             = pr.IsResult,
 									Size                 = pr.Length,
-									ParameterName        = ToValidName(pr.ParameterName ?? FormattableString.Invariant($"par{++n}")),
+									ParameterName        = ToValidName(pr.ParameterName ?? string.Create(CultureInfo.InvariantCulture, $"par{++n}")),
 									ParameterType        = ToTypeName(systemType, true),
 									SystemType           = systemType,
 									DataType             = GetDataType(pr.DataType, pr.DataTypeExact, pr.Length, pr.Precision, pr.Scale),
 									ProviderSpecificType = GetProviderSpecificType(pr.DataType),
 									IsNullable           = pr.IsNullable,
-									Description          = pr.Description
+									Description          = pr.Description,
 								}
-							).ToList()
+							).ToList(),
 						} into ps
 						select ps
 					).ToList();
@@ -454,7 +454,7 @@ namespace LinqToDB.Internal.SchemaProvider
 							IsProcedureResult = true,
 							TypeName          = ToValidName(procedure.ProcedureName + "Result"),
 							ForeignKeys       = new List<ForeignKeySchema>(),
-							Columns           = columns
+							Columns           = columns,
 						};
 
 						foreach (var column in procedure.ResultTable.Columns)
@@ -497,7 +497,7 @@ namespace LinqToDB.Internal.SchemaProvider
 						p.IsOut ?
 							ParameterDirection.InputOutput :
 							ParameterDirection.Input :
-						ParameterDirection.Output
+						ParameterDirection.Output,
 			};
 		}
 

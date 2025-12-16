@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -296,10 +296,10 @@ namespace LinqToDB.Mapping
 		#region CanBeNull
 
 		/// <summary>
-		/// Returns <c>true</c>, if value of specified type could contain <c>null</c>.
+		/// Returns <see langword="true"/>, if value of specified type could contain <c>null</c>.
 		/// </summary>
 		/// <param name="type">Value type.</param>
-		/// <returns>Returns <c>true</c> if specified type supports <c>null</c> values.</returns>
+		/// <returns>Returns <see langword="true"/> if specified type supports <c>null</c> values.</returns>
 		public bool GetCanBeNull(Type type)
 		{
 			foreach (var info in Schemas)
@@ -340,7 +340,7 @@ namespace LinqToDB.Mapping
 		/// Sets <c>null</c> value support flag for specified type.
 		/// </summary>
 		/// <param name="type">Value type.</param>
-		/// <param name="value">If <c>true</c>, specified type value could contain <c>null</c>.</param>
+		/// <param name="value">If <see langword="true"/>, specified type value could contain <c>null</c>.</param>
 		public void SetCanBeNull(Type type, bool value)
 		{
 			lock (_syncRoot)
@@ -367,7 +367,7 @@ namespace LinqToDB.Mapping
 		/// Initialize generic conversions for specific type parameters.
 		/// </summary>
 		/// <param name="types">Generic type parameters.</param>
-		/// <returns>Returns <c>true</c> if new generic type conversions could have added to mapping schema.</returns>
+		/// <returns>Returns <see langword="true"/> if new generic type conversions could have added to mapping schema.</returns>
 		public bool InitGenericConvertProvider(params Type[] types)
 		{
 			foreach (var schema in Schemas)
@@ -466,12 +466,12 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <typeparam name="TFrom">Source type.</typeparam>
 		/// <typeparam name="TTo">Target type.</typeparam>
-		/// <param name="checkNull">If <c>true</c>, and source type could contain <c>null</c>, conversion expression will check converted value for <c>null</c> and replace it with default value.
+		/// <param name="checkNull">If <see langword="true"/>, and source type could contain <c>null</c>, conversion expression will check converted value for <c>null</c> and replace it with default value.
 		/// <see cref="SetDefaultValue(Type, object)"/> for more details.
 		/// </param>
 		/// <param name="createDefault">Create new conversion expression, if conversion is not defined.</param>
 		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for more details.</param>
-		/// <returns>Conversion expression or <c>null</c>, if there is no such conversion and <paramref name="createDefault"/> is <c>false</c>.</returns>
+		/// <returns>Conversion expression or <c>null</c>, if there is no such conversion and <paramref name="createDefault"/> is <see langword="false"/>.</returns>
 		public Expression<Func<TFrom,TTo>>? GetConvertExpression<TFrom,TTo>(
 			bool           checkNull      = true,
 			bool           createDefault  = true,
@@ -485,12 +485,12 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="from">Source type.</param>
 		/// <param name="to">Target type.</param>
-		/// <param name="checkNull">If <c>true</c>, and source type could contain <c>null</c>, conversion expression will check converted value for <c>null</c> and replace it with default value.
+		/// <param name="checkNull">If <see langword="true"/>, and source type could contain <c>null</c>, conversion expression will check converted value for <c>null</c> and replace it with default value.
 		/// <see cref="SetDefaultValue(Type, object)"/> for more details.
 		/// </param>
 		/// <param name="createDefault">Create new conversion expression, if conversion is not defined.</param>
 		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for more details.</param>
-		/// <returns>Conversion expression or <c>null</c>, if there is no such conversion and <paramref name="createDefault"/> is <c>false</c>.</returns>
+		/// <returns>Conversion expression or <c>null</c>, if there is no such conversion and <paramref name="createDefault"/> is <see langword="false"/>.</returns>
 		public LambdaExpression? GetConvertExpression(
 			Type           from,
 			Type           to,
@@ -506,12 +506,12 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="from">Source type.</param>
 		/// <param name="to">Target type.</param>
-		/// <param name="checkNull">If <c>true</c>, and source type could contain <c>null</c>, conversion expression will check converted value for <c>null</c> and replace it with default value.
+		/// <param name="checkNull">If <see langword="true"/>, and source type could contain <c>null</c>, conversion expression will check converted value for <c>null</c> and replace it with default value.
 		/// <see cref="SetDefaultValue(Type, object)"/> for more details.
 		/// </param>
 		/// <param name="createDefault">Create new conversion expression, if conversion is not defined.</param>
 		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for more details.</param>
-		/// <returns>Conversion expression or <c>null</c>, if there is no such conversion and <paramref name="createDefault"/> is <c>false</c>.</returns>
+		/// <returns>Conversion expression or <c>null</c>, if there is no such conversion and <paramref name="createDefault"/> is <see langword="false"/>.</returns>
 		public LambdaExpression? GetConvertExpression(
 			DbDataType     from,
 			DbDataType     to,
@@ -561,11 +561,11 @@ namespace LinqToDB.Mapping
 		/// <param name="fromType">Source type.</param>
 		/// <param name="toType">Target type.</param>
 		/// <param name="expr">Conversion expression.</param>
-		/// <param name="addNullCheck">If <c>true</c>, conversion expression will be wrapped with default value substitution logic for <c>null</c> values.
+		/// <param name="addNullCheck">If <see langword="true"/>, conversion expression will be wrapped with default value substitution logic for <c>null</c> values.
 		/// Wrapper will be added only if source type can have <c>null</c> values and conversion expression doesn't use
 		/// default value provider.
 		/// See <see cref="DefaultValue{T}"/> and <see cref="DefaultValue"/> types for more details.
-		/// This parameter is ignored for conversions to <see cref="DataParameter"/> and treated as <c>false</c>.
+		/// This parameter is ignored for conversions to <see cref="DataParameter"/> and treated as <see langword="false"/>.
 		/// </param>
 		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for more details.</param>
 		public MappingSchema SetConvertExpression(
@@ -598,11 +598,11 @@ namespace LinqToDB.Mapping
 		/// <param name="fromType">Source type.</param>
 		/// <param name="toType">Target type.</param>
 		/// <param name="expr">Conversion expression.</param>
-		/// <param name="addNullCheck">If <c>true</c>, conversion expression will be wrapped with default value substitution logic for <c>null</c> values.
+		/// <param name="addNullCheck">If <see langword="true"/>, conversion expression will be wrapped with default value substitution logic for <c>null</c> values.
 		/// Wrapper will be added only if source type can have <c>null</c> values and conversion expression doesn't use
 		/// default value provider.
 		/// See <see cref="DefaultValue{T}"/> and <see cref="DefaultValue"/> types for more details.
-		/// This parameter is ignored for conversions to <see cref="DataParameter"/> and treated as <c>false</c>.
+		/// This parameter is ignored for conversions to <see cref="DataParameter"/> and treated as <see langword="false"/>.
 		/// </param>
 		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for more details.</param>
 		public MappingSchema SetConvertExpression(
@@ -633,11 +633,11 @@ namespace LinqToDB.Mapping
 		/// <typeparam name="TFrom">Source type.</typeparam>
 		/// <typeparam name="TTo">Target type.</typeparam>
 		/// <param name="expr">Conversion expression.</param>
-		/// <param name="addNullCheck">If <c>true</c>, conversion expression will be wrapped with default value substitution logic for <c>null</c> values.
+		/// <param name="addNullCheck">If <see langword="true"/>, conversion expression will be wrapped with default value substitution logic for <c>null</c> values.
 		/// Wrapper will be added only if source type can have <c>null</c> values and conversion expression doesn't use
 		/// default value provider.
 		/// See <see cref="DefaultValue{T}"/> and <see cref="DefaultValue"/> types for more details.
-		/// This parameter is ignored for conversions to <see cref="DataParameter"/> and treated as <c>false</c>.
+		/// This parameter is ignored for conversions to <see cref="DataParameter"/> and treated as <see langword="false"/>.
 		/// </param>
 		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for more details.</param>
 		public MappingSchema SetConvertExpression<TFrom,TTo>(
@@ -1234,7 +1234,7 @@ namespace LinqToDB.Mapping
 		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
 		/// <param name="type">Member's owner type.</param>
 		/// <param name="memberInfo">Attributes owner member.</param>
-		/// <param name="forFirstConfiguration">If <c>true</c> - returns only attributes for first configuration with attributes from <see cref="ConfigurationList"/>.</param>
+		/// <param name="forFirstConfiguration">If <see langword="true"/> - returns only attributes for first configuration with attributes from <see cref="ConfigurationList"/>.</param>
 		/// <returns>Attributes of specified type.</returns>
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool forFirstConfiguration = false)
 			where T : MappingAttribute
@@ -1272,12 +1272,12 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Returns <c>true</c> if attribute of specified type, associated with specified type.
+		/// Returns <see langword="true"/> if attribute of specified type, associated with specified type.
 		/// Attributes are filtered by schema's configuration names (see <see cref="ConfigurationList"/>).
 		/// </summary>
 		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
 		/// <param name="type">Attribute owner type.</param>
-		/// <returns>Returns <c>true</c> if attribute of specified type, associated with specified type.</returns>
+		/// <returns>Returns <see langword="true"/> if attribute of specified type, associated with specified type.</returns>
 		public bool HasAttribute<T>(Type type)
 			where T : MappingAttribute
 		{
@@ -1285,13 +1285,13 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Returns <c>true</c> if attribute of specified type, associated with specified type member.
+		/// Returns <see langword="true"/> if attribute of specified type, associated with specified type member.
 		/// Attributes are filtered by schema's configuration names (see <see cref="ConfigurationList"/>).
 		/// </summary>
 		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
 		/// <param name="type">Member's owner type.</param>
 		/// <param name="memberInfo">Attribute owner member.</param>
-		/// <returns>Returns <c>true</c> if attribute of specified type, associated with specified type member.</returns>
+		/// <returns>Returns <see langword="true"/> if attribute of specified type, associated with specified type member.</returns>
 		public bool HasAttribute<T>(Type type, MemberInfo memberInfo)
 			where T : MappingAttribute
 		{
@@ -1366,7 +1366,7 @@ namespace LinqToDB.Mapping
 			get
 			{
 				var list = ConfigurationList.Aggregate("", static (s1, s2) => s1.Length == 0 ? s2 : s1 + "." + s2);
-				return FormattableString.Invariant($"{GetType().Name} : ({_configurationID}) {list}");
+				return string.Create(CultureInfo.InvariantCulture, $"{GetType().Name} : ({_configurationID}) {list}");
 			}
 		}
 
@@ -1465,10 +1465,10 @@ namespace LinqToDB.Mapping
 		#region Scalar Types
 
 		/// <summary>
-		/// Returns <c>true</c>, if provided type mapped to scalar database type in current schema.
+		/// Returns <see langword="true"/>, if provided type mapped to scalar database type in current schema.
 		/// </summary>
 		/// <param name="type">Type to check.</param>
-		/// <returns><c>true</c>, if type mapped to scalar database type.</returns>
+		/// <returns><see langword="true"/>, if type mapped to scalar database type.</returns>
 		public bool IsScalarType(Type type)
 		{
 			type = type.UnwrapNullableType();
@@ -1502,7 +1502,7 @@ namespace LinqToDB.Mapping
 		/// Configure how provided type should be handled during mapping to database - as scalar value or composite type.
 		/// </summary>
 		/// <param name="type">Type to configure.</param>
-		/// <param name="isScalarType"><c>true</c>, if provided type should be mapped to scalar database value.</param>
+		/// <param name="isScalarType"><see langword="true"/>, if provided type should be mapped to scalar database value.</param>
 		public void SetScalarType(Type type, bool isScalarType = true)
 		{
 			lock (_syncRoot)
@@ -1632,7 +1632,7 @@ namespace LinqToDB.Mapping
 		/// Returns scalar database type mapping information for provided type.
 		/// </summary>
 		/// <param name="type">Mapped type.</param>
-		/// <param name="canBeNull">Returns <c>true</c>, if <paramref name="type"/> type is enum with mapping to <c>null</c> value.
+		/// <param name="canBeNull">Returns <see langword="true"/>, if <paramref name="type"/> type is enum with mapping to <c>null</c> value.
 		/// Initial parameter value, passed to this method is not used.</param>
 		/// <returns>Scalar database type information.</returns>
 		public SqlDataType GetUnderlyingDataType(Type type, out bool canBeNull)
@@ -1768,7 +1768,7 @@ namespace LinqToDB.Mapping
 					_ => Schemas
 						.Select(static s => s.ColumnNameComparer)
 						.FirstOrDefault(static s => s != null)
-						?? StringComparer.Ordinal
+						?? StringComparer.Ordinal,
 				};
 			}
 

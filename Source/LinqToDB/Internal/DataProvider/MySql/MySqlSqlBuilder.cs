@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Globalization;
@@ -106,8 +106,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					// https://bugs.mysql.com/bug.php?id=87794
 					// FLOAT type is garbage and we shouldn't use it for type CASTs
 					(DataType.Single,         _,                   _,                  _                   ) => "DOUBLE",
-					(DataType.Decimal,        _,                   not null and not 0, _                   ) => FormattableString.Invariant($"DECIMAL({type.Precision ?? 10}, {type.Scale})"),
-					(DataType.Decimal,        not null and not 10, _,                  _                   ) => FormattableString.Invariant($"DECIMAL({type.Precision})"),
+					(DataType.Decimal,        _,                   not null and not 0, _                   ) => string.Create(CultureInfo.InvariantCulture, $"DECIMAL({type.Precision ?? 10}, {type.Scale})"),
+					(DataType.Decimal,        not null and not 10, _,                  _                   ) => string.Create(CultureInfo.InvariantCulture, $"DECIMAL({type.Precision})"),
 					(DataType.Decimal,        _,                   _,                  _                   ) => "DECIMAL",
 					(DataType.Char      or
 					 DataType.NChar     or
@@ -136,7 +136,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					(DataType.VarBinary or
 					 DataType.Binary    or
 					 DataType.Blob,           _,                   _,                  _                   ) => $"BINARY({type.Length})",
-					_ => null
+					_ => null,
 				})
 				{
 					case null        : base.BuildDataTypeFromDataType(type,                forCreateTable, canBeNull); break;
@@ -160,16 +160,16 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				(DataType.Money,          _,                   _,                  _                   ) => "DECIMAL(19, 4)",
 				(DataType.SmallMoney,     _,                   _,                  _                   ) => "DECIMAL(10, 4)",
 				(DataType.Decimal,        null,                null,               _                   ) => "DECIMAL",
-				(DataType.Decimal,        _,                   _,                  _                   ) => FormattableString.Invariant($"DECIMAL({type.Precision ?? 29}, {type.Scale ?? 10})"),
+				(DataType.Decimal,        _,                   _,                  _                   ) => string.Create(CultureInfo.InvariantCulture, $"DECIMAL({type.Precision ?? 29}, {type.Scale ?? 10})"),
 				(DataType.DateTime  or
 				 DataType.DateTime2 or
-				 DataType.SmallDateTime,  > 0 and <= 6,        _,                  _                   ) => FormattableString.Invariant($"DATETIME({type.Precision})"),
+				 DataType.SmallDateTime,  > 0 and <= 6,        _,                  _                   ) => string.Create(CultureInfo.InvariantCulture, $"DATETIME({type.Precision})"),
 				(DataType.DateTime  or
 				 DataType.DateTime2 or
 				 DataType.SmallDateTime,  _,                   _,                  _                   ) => "DATETIME",
-				(DataType.DateTimeOffset, > 0 and <= 6,        _,                  _                   ) => FormattableString.Invariant($"TIMESTAMP({type.Precision})"),
+				(DataType.DateTimeOffset, > 0 and <= 6,        _,                  _                   ) => string.Create(CultureInfo.InvariantCulture, $"TIMESTAMP({type.Precision})"),
 				(DataType.DateTimeOffset, _,                   _,                  _                   ) => "TIMESTAMP",
-				(DataType.Time,           > 0 and <= 6,        _,                  _                   ) => FormattableString.Invariant($"TIME({type.Precision})"),
+				(DataType.Time,           > 0 and <= 6,        _,                  _                   ) => string.Create(CultureInfo.InvariantCulture, $"TIME({type.Precision})"),
 				(DataType.Time,           _,                   _,                  _                   ) => "TIME",
 				(DataType.Boolean,        _,                   _,                  _                   ) => "BOOLEAN",
 				(DataType.Double,         _,                   _,                  _                   ) => "DOUBLE",
@@ -182,12 +182,12 @@ namespace LinqToDB.Internal.DataProvider.MySql
 						var t when t == typeof(short) || t == typeof(ushort) => 16,
 						var t when t == typeof(int)   || t == typeof(uint)   => 32,
 						var t when t == typeof(long)  || t == typeof(ulong)  => 64,
-						_ => 0
+						_ => 0,
 					}
 					switch
 					{
 						0     => "BIT",
-						var l => FormattableString.Invariant($"BIT({l})")
+						var l => string.Create(CultureInfo.InvariantCulture, $"BIT({l})"),
 					},
 				(DataType.BitArray,       _,                  _,                   not 1 and >= 0      ) => $"BIT({type.Length})",
 				(DataType.BitArray,       _,                  _,                   _                   ) => "BIT",
@@ -224,7 +224,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				 DataType.Text,           _,                  _,                   <= 16777215         ) => "MEDIUMTEXT",
 				(DataType.NText or
 				 DataType.Text,           _,                  _,                   _                   ) => "LONGTEXT",
-				_ => null
+				_ => null,
 			})
 			{
 				case null  : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;

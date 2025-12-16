@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
@@ -93,13 +93,13 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 						DecimalType = new DecimalType()
 						{
 							Precision = value.Precision,
-							Scale     = value.Scale
-						}
+							Scale     = value.Scale,
+						},
 					},
 					new ProtoValue()
 					{
 						Low128  = value.Low,
-						High128 = value.High
+						High128 = value.High,
 					})));
 
 			MakeDecimalFromString = (value, p, s) => makeDecimal(MakeDecimalValue(value, p, s));
@@ -308,7 +308,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			Datetime64   = 25,
 			Timestamp64  = 26,
 			Interval64   = 27,
-			List         = int.MinValue
+			List         = int.MinValue,
 
 			// missing simple types:
 			// DyNumber

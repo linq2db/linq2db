@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
@@ -1805,7 +1805,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (member1.DeclaringType == null || member2.DeclaringType == null)
 				return false;
 
-			if (member1.Name != member2.Name)
+			if (!string.Equals(member1.Name, member2.Name, StringComparison.Ordinal))
 				return false;
 
 			return member1.EqualsTo(member2);
@@ -1842,7 +1842,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				case ExpressionType.Call:
 				{
-					//TODO: Do we still need Alias?
+					// TODO: Do we still need Alias?
 					var mc = (MethodCallExpression)createExpression;
 					if (mc.IsSameGenericMethod(Methods.LinqToDB.SqlExt.Alias))
 						return ParseGenericConstructor(mc.Arguments[0], flags, columnDescriptor);

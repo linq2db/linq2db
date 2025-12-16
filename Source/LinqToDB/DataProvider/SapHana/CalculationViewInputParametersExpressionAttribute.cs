@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -51,7 +51,7 @@ namespace LinqToDB.DataProvider.SapHana
 			arg[0] = new SqlFragment(
 				string.Join(", ",
 					Enumerable.Range(0, sqlValues.Count)
-						.Select(static x => FormattableString.Invariant($"{{{x}}}"))),
+						.Select(static x => string.Create(CultureInfo.InvariantCulture, $"{{{x}}}"))),
 				sqlValues.ToArray());
 
 			table.SqlTableType   = SqlTableType.Expression;

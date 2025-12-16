@@ -158,7 +158,7 @@ namespace Tests
 			{
 				case string when context.IsAnyOf(TestProvName.AllSqlServer):
 				{
-					if (!tableName.StartsWith("#"))
+					if (!tableName.StartsWith('#'))
 						finalTableName = "#" + tableName;
 					break;
 				}

@@ -60,9 +60,9 @@ namespace Tests.Linq
 			[Column] public int? MasterId { get; set; }
 		}
 
-		static MappingSchema _filterMappingSchema;
+		static MappingSchema _filterMappingSchema = GetFilterMappingSchema();
 
-		static QueryFilterTests()
+		static MappingSchema GetFilterMappingSchema()
 		{
 			var builder = new FluentMappingBuilder(new MappingSchema());
 
@@ -70,7 +70,7 @@ namespace Tests.Linq
 
 			builder.Build();
 
-			_filterMappingSchema = builder.MappingSchema;
+			return builder.MappingSchema;
 		}
 
 		static Tuple<MasterClass[], InfoClass[], DetailClass[]> GenerateTestData()

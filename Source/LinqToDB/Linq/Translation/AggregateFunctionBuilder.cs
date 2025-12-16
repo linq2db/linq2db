@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -348,7 +348,7 @@ namespace LinqToDB.Linq.Translation
 					HasValue              = HasValue,
 					FilterLambdaIndex     = FilterLambdaIndex,
 					SequenceIndex         = SequenceIndex,
-					FallbackExpression    = FallbackExpression
+					FallbackExpression    = FallbackExpression,
 				};
 			}
 		}

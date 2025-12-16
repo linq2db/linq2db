@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Globalization;
@@ -35,7 +35,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			CompositeFormat.Parse("CAST('{0:hh\\:mm\\:ss\\.ffff}' AS TIME(4))"),
 			CompositeFormat.Parse("CAST('{0:hh\\:mm\\:ss\\.fffff}' AS TIME(5))"),
 			CompositeFormat.Parse("CAST('{0:hh\\:mm\\:ss\\.ffffff}' AS TIME(6))"),
-			CompositeFormat.Parse("CAST('{0:hh\\:mm\\:ss\\.fffffff}' AS TIME)")
+			CompositeFormat.Parse("CAST('{0:hh\\:mm\\:ss\\.fffffff}' AS TIME)"),
 		};
 
 		// DATE
@@ -60,7 +60,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			CompositeFormat.Parse("CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)"),
 			CompositeFormat.Parse("CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)"),
 			CompositeFormat.Parse("CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)"),
-			CompositeFormat.Parse("CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)")
+			CompositeFormat.Parse("CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)"),
 		};
 		// DATETIME2(p)
 		private static readonly CompositeFormat DaTETIME2_FROMPARTS_FORMAT      = CompositeFormat.Parse("DATETIME2FROMPARTS({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})");
@@ -73,7 +73,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			CompositeFormat.Parse("CAST('{0:yyyy-MM-ddTHH:mm:ss.ffff}' AS DATETIME2(4))"),
 			CompositeFormat.Parse("CAST('{0:yyyy-MM-ddTHH:mm:ss.fffff}' AS DATETIME2(5))"),
 			CompositeFormat.Parse("CAST('{0:yyyy-MM-ddTHH:mm:ss.ffffff}' AS DATETIME2(6))"),
-			CompositeFormat.Parse("CAST('{0:yyyy-MM-ddTHH:mm:ss.fffffff}' AS DATETIME2)")
+			CompositeFormat.Parse("CAST('{0:yyyy-MM-ddTHH:mm:ss.fffffff}' AS DATETIME2)"),
 		};
 		// DATETIMEOFFSET(p)
 		private static readonly CompositeFormat DaTETIMEOFFSET_FROMPARTS_FORMAT = CompositeFormat.Parse("DATETIMEOFFSETFROMPARTS({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})");
@@ -86,7 +86,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			CompositeFormat.Parse("'{0:yyyy-MM-ddTHH:mm:ss.ffffzzz}'"),
 			CompositeFormat.Parse("'{0:yyyy-MM-ddTHH:mm:ss.fffffzzz}'"),
 			CompositeFormat.Parse("'{0:yyyy-MM-ddTHH:mm:ss.ffffffzzz}'"),
-			CompositeFormat.Parse("'{0:yyyy-MM-ddTHH:mm:ss.fffffffzzz}'")
+			CompositeFormat.Parse("'{0:yyyy-MM-ddTHH:mm:ss.fffffffzzz}'"),
 		};
 
 		private static readonly CompositeFormat[] DATETIMEOFFSET_TYPED_FORMATS = new[]
@@ -98,7 +98,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			CompositeFormat.Parse("CAST('{0:yyyy-MM-ddTHH:mm:ss.ffffzzz}' AS DATETIMEOFFSET(4))"),
 			CompositeFormat.Parse("CAST('{0:yyyy-MM-ddTHH:mm:ss.fffffzzz}' AS DATETIMEOFFSET(5))"),
 			CompositeFormat.Parse("CAST('{0:yyyy-MM-ddTHH:mm:ss.ffffffzzz}' AS DATETIMEOFFSET(6))"),
-			CompositeFormat.Parse("CAST('{0:yyyy-MM-ddTHH:mm:ss.fffffffzzz}' AS DATETIMEOFFSET)")
+			CompositeFormat.Parse("CAST('{0:yyyy-MM-ddTHH:mm:ss.fffffffzzz}' AS DATETIMEOFFSET)"),
 		};
 		private static readonly CompositeFormat[] DATETIMEOFFSET_AS_DATETIME_TYPED_FORMATS = new[]
 		{
@@ -211,7 +211,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			"hh\\:mm\\:ss\\.ffff",
 			"hh\\:mm\\:ss\\.fffff",
 			"hh\\:mm\\:ss\\.ffffff",
-			"hh\\:mm\\:ss\\.fffffff"
+			"hh\\:mm\\:ss\\.fffffff",
 		};
 		private static readonly string[] DATETIMEOFFSET_RAW_FORMATS   = new[]
 		{
@@ -366,7 +366,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				{
 					var precision = dt.Type.Precision ?? 7;
 					if (precision is < 0 or > 7)
-						throw new InvalidOperationException(FormattableString.Invariant($"DATETIME2 type precision is out-of-bounds: {precision}"));
+						throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"DATETIME2 type precision is out-of-bounds: {precision}"));
 
 					// DATETIME2FROMPARTS ( year, month, day, hour, minute, seconds, fractions, precision )
 					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DaTETIME2_FROMPARTS_FORMAT, value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second, GetFractionalSecondFromTicks(value.Ticks, precision), precision);
@@ -376,7 +376,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				{
 					var precision = dt.Type.Precision ?? 7;
 					if (precision is < 0 or > 7)
-						throw new InvalidOperationException(FormattableString.Invariant($"DATETIME2 type precision is out-of-bounds: {precision}"));
+						throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"DATETIME2 type precision is out-of-bounds: {precision}"));
 
 					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME2_TYPED_FORMATS[precision], value);
 					break;
@@ -385,7 +385,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				{
 					var precision = dt.Type.Precision ?? 7;
 					if (precision is < 0 or > 7)
-						throw new InvalidOperationException(FormattableString.Invariant($"DATETIME2 type precision is out-of-bounds: {precision}"));
+						throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"DATETIME2 type precision is out-of-bounds: {precision}"));
 
 					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME_WITH_PRECISION_FORMATS[precision], value);
 					break;
@@ -405,7 +405,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		internal static string ConvertTimeSpanToString(TimeSpan value, int precision)
 		{
 			if (precision is < 0 or > 7)
-				throw new InvalidOperationException(FormattableString.Invariant($"TIME type precision is out-of-bounds: {precision}"));
+				throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"TIME type precision is out-of-bounds: {precision}"));
 
 			return value.ToString(TIME_RAW_FORMATS[precision], DateTimeFormatInfo.InvariantInfo);
 		}
@@ -413,7 +413,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		internal static string ConvertDateTimeOffsetToString(DateTimeOffset value, int precision)
 		{
 			if (precision is < 0 or > 7)
-				throw new InvalidOperationException(FormattableString.Invariant($"DATETIMEOFFSET type precision is out-of-bounds: {precision}"));
+				throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"DATETIMEOFFSET type precision is out-of-bounds: {precision}"));
 
 			return value.ToString(DATETIMEOFFSET_RAW_FORMATS[precision], DateTimeFormatInfo.InvariantInfo);
 		}
@@ -426,7 +426,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				{
 					var precision = sqlDataType.Type.Precision ?? 7;
 					if (precision is < 0 or > 7)
-						throw new InvalidOperationException(FormattableString.Invariant($"TIME type precision is out-of-bounds: {precision}"));
+						throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"TIME type precision is out-of-bounds: {precision}"));
 
 					var ticks = value.Ticks - (value.Ticks % ValueExtensions.TICKS_DIVIDERS[precision]);
 
@@ -437,7 +437,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				{
 					var precision = sqlDataType.Type.Precision ?? 7;
 					if (precision is < 0 or > 7)
-						throw new InvalidOperationException(FormattableString.Invariant($"TIME type precision is out-of-bounds: {precision}"));
+						throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"TIME type precision is out-of-bounds: {precision}"));
 
 					var ticks = value.Ticks - (value.Ticks % ValueExtensions.TICKS_DIVIDERS[precision]);
 
@@ -448,7 +448,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				{
 					var precision = sqlDataType.Type.Precision ?? 7;
 					if (precision is < 0 or > 7)
-						throw new InvalidOperationException(FormattableString.Invariant($"TIME type precision is out-of-bounds: {precision}"));
+						throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"TIME type precision is out-of-bounds: {precision}"));
 
 					var ticks = value.Ticks - (value.Ticks % ValueExtensions.TICKS_DIVIDERS[precision]);
 
@@ -463,7 +463,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					var precision = sqlDataType.Type.Precision ?? 7;
 
 					if (precision is < 0 or > 7)
-						throw new InvalidOperationException(FormattableString.Invariant($"TIME type precision is out-of-bounds: {precision}"));
+						throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"TIME type precision is out-of-bounds: {precision}"));
 
 					if (supportsFromParts)
 						// TIMEFROMPARTS ( hour, minute, seconds, fractions, precision )
@@ -516,7 +516,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				{
 					var precision = sqlDataType.Type.Precision ?? 7;
 					if (precision is < 0 or > 7)
-						throw new InvalidOperationException(FormattableString.Invariant($"DATETIMEOFFSET type precision is out-of-bounds: {precision}"));
+						throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"DATETIMEOFFSET type precision is out-of-bounds: {precision}"));
 
 					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIMEOFFSET_FORMATS[precision], value);
 					break;
@@ -525,7 +525,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				{
 					var precision = sqlDataType.Type.Precision ?? 7;
 					if (precision is < 0 or > 7)
-						throw new InvalidOperationException(FormattableString.Invariant($"DATETIMEOFFSET type precision is out-of-bounds: {precision}"));
+						throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"DATETIMEOFFSET type precision is out-of-bounds: {precision}"));
 
 					stringBuilder.Append('N');
 					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIMEOFFSET_FORMATS[precision], value);
@@ -540,7 +540,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				{
 					var precision = sqlDataType.Type.Precision ?? 7;
 					if (precision is < 0 or > 7)
-						throw new InvalidOperationException(FormattableString.Invariant($"DATETIMEOFFSET type precision is out-of-bounds: {precision}"));
+						throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"DATETIMEOFFSET type precision is out-of-bounds: {precision}"));
 
 					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIMEOFFSET_AS_DATETIME_TYPED_FORMATS[precision], value.LocalDateTime);
 					break;
@@ -550,7 +550,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				{
 					var precision = sqlDataType.Type.Precision ?? 7;
 					if (precision is < 0 or > 7)
-						throw new InvalidOperationException(FormattableString.Invariant($"DATETIMEOFFSET type precision is out-of-bounds: {precision}"));
+						throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"DATETIMEOFFSET type precision is out-of-bounds: {precision}"));
 
 					if (supportsFromParts)
 						// DATETIMEOFFSETFROMPARTS ( year, month, day, hour, minute, seconds, fractions, hour_offset, minute_offset, precision )
@@ -814,7 +814,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 				BuildAnyVectorRaw(sb, data);
 
-				sb.Append(FormattableString.Invariant($"' AS VECTOR({size}, {typeName}))"));
+				sb.Append(string.Create(CultureInfo.InvariantCulture, $"' AS VECTOR({size}, {typeName}))"));
 			}
 
 			static void BuildAnyVectorRaw<T>(StringBuilder sb, ReadOnlySpan<T> data)

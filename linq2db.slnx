@@ -345,7 +345,6 @@
     <File Path="Redist/Readme.md" />
   </Folder>
   <Folder Name="/Source/">
-    <File Path="Source/.editorconfig" />
     <File Path="Source/BannedSymbols.txt" />
     <File Path="Source/Directory.Build.props" />
     <Project Path="Source/CodeGenerators/CodeGenerators.csproj" />
@@ -405,7 +404,6 @@
   </Folder>
   <Folder Name="/Tests/">
     <File Path="DataProviders.json" />
-    <File Path="Tests/.editorconfig" />
     <File Path="Tests/BannedSymbols.txt" />
     <File Path="Tests/Directory.Build.props" />
     <File Path="Tests/linq2db.BasicTestProjects.props" />

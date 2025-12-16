@@ -1,4 +1,4 @@
-﻿// https://github.com/dotnet/efcore/blob/main/src/Shared/SharedTypeExtensions.cs
+// https://github.com/dotnet/efcore/blob/main/src/Shared/SharedTypeExtensions.cs
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
@@ -34,7 +34,7 @@ namespace LinqToDB.Internal.Extensions
 			{ typeof(uint), "uint" },
 			{ typeof(ulong), "ulong" },
 			{ typeof(ushort), "ushort" },
-			{ typeof(void), "void" }
+			{ typeof(void), "void" },
 		};
 
 		public static bool IsAnonymousType(this Type type)

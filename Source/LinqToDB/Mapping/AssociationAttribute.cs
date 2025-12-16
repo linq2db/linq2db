@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Globalization;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
@@ -148,7 +149,7 @@ namespace LinqToDB.Mapping
 		/// - outer join for <c>CanBeNull = true</c>.
 		/// When using Configuration.UseNullableTypesMetadata, the default value
 		/// for associations (cardinality 1) is derived from nullability.
-		/// Otherwise the default value is <c>true</c> (for collections and when option is disabled).
+		/// Otherwise the default value is <see langword="true"/> (for collections and when option is disabled).
 		/// </summary>
 		public bool         CanBeNull
 		{
@@ -175,7 +176,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return FormattableString.Invariant($".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{IdentifierBuilder.GetObjectID(Predicate)}.{QueryExpressionMethod}.{IdentifierBuilder.GetObjectID(QueryExpression)}.{Storage}.{AssociationSetterExpressionMethod}.{IdentifierBuilder.GetObjectID(AssociationSetterExpression)}.{(ConfiguredCanBeNull switch { null => -1, true => 1, _ => 0 })}.{AliasName}.");
+			return string.Create(CultureInfo.InvariantCulture, $".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{IdentifierBuilder.GetObjectID(Predicate)}.{QueryExpressionMethod}.{IdentifierBuilder.GetObjectID(QueryExpression)}.{Storage}.{AssociationSetterExpressionMethod}.{IdentifierBuilder.GetObjectID(AssociationSetterExpression)}.{(ConfiguredCanBeNull switch { null => -1, true => 1, _ => 0 })}.{AliasName}.");
 		}
 	}
 }

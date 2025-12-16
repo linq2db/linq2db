@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -113,7 +113,7 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						OutputTable = result.OutputTable,
 						OutputItems = result.OutputItems,
-						OutputColumns = newElements
+						OutputColumns = newElements,
 					};
 				}
 			}
@@ -335,7 +335,7 @@ namespace LinqToDB.Internal.SqlProvider
 				new SqlCaseExpression.CaseItem[]
 				{
 					new(new SqlSearchCondition().AddGreater(element.Expression1, element.Expression2, DataOptions.LinqOptions.CompareNulls), new SqlValue(1)),
-					new(new SqlSearchCondition().AddEqual(element.Expression1, element.Expression2, DataOptions.LinqOptions.CompareNulls), new SqlValue(0))
+					new(new SqlSearchCondition().AddEqual(element.Expression1, element.Expression2, DataOptions.LinqOptions.CompareNulls), new SqlValue(0)),
 				},
 				new SqlValue(-1));
 
@@ -716,8 +716,8 @@ namespace LinqToDB.Internal.SqlProvider
 		public virtual bool LikePatternParameterSupport => true;
 		public virtual bool LikeValueParameterSupport => true;
 		/// <summary>
-		/// Should be <c>true</c> for provider with <c>LIKE ... ESCAPE</c> modifier support.
-		/// Default: <c>true</c>.
+		/// Should be <see langword="true"/> for provider with <c>LIKE ... ESCAPE</c> modifier support.
+		/// Default: <see langword="true"/>.
 		/// </summary>
 		public virtual bool LikeIsEscapeSupported => true;
 
@@ -753,7 +753,7 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		/// <summary>
-		/// Implements LIKE pattern escaping logic for provider without ESCAPE clause support (<see cref="LikeIsEscapeSupported"/> is <c>false</c>).
+		/// Implements LIKE pattern escaping logic for provider without ESCAPE clause support (<see cref="LikeIsEscapeSupported"/> is <see langword="false"/>).
 		/// Default logic prefix characters from <see cref="LikeCharactersToEscape"/> with <see cref="LikeEscapeCharacter"/>.
 		/// </summary>
 		/// <param name="str">Raw pattern value.</param>
@@ -800,7 +800,7 @@ namespace LinqToDB.Internal.SqlProvider
 					SqlPredicate.SearchString.SearchKind.StartsWith => patternValue + LikeWildcardCharacter,
 					SqlPredicate.SearchString.SearchKind.EndsWith => LikeWildcardCharacter + patternValue,
 					SqlPredicate.SearchString.SearchKind.Contains => LikeWildcardCharacter + patternValue + LikeWildcardCharacter,
-					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}")
+					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}"),
 				};
 
 				var patternExpr = LikePatternParameterSupport
@@ -833,7 +833,7 @@ namespace LinqToDB.Internal.SqlProvider
 					SqlPredicate.SearchString.SearchKind.StartsWith => new SqlBinaryExpression(typeof(string), patternExpr, "+", anyCharacterExpr, Precedence.Additive),
 					SqlPredicate.SearchString.SearchKind.EndsWith => new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive),
 					SqlPredicate.SearchString.SearchKind.Contains => new SqlBinaryExpression(typeof(string), new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive), "+", anyCharacterExpr, Precedence.Additive),
-					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}")
+					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}"),
 				};
 
 				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, patternExpr, LikeIsEscapeSupported ? escape : null);
@@ -1502,7 +1502,7 @@ namespace LinqToDB.Internal.SqlProvider
 							new SqlCaseExpression.CaseItem[]
 							{
 								new(predicate, trueValue),
-								new(new SqlPredicate.Not(predicate), falseValue)
+								new(new SqlPredicate.Not(predicate), falseValue),
 							}, new SqlValue(toType, null));
 					}
 					else if (!withNull || !SqlProviderFlags.SupportsBooleanType || forceConvert)

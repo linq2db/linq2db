@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 
 using BenchmarkDotNet.Attributes;
@@ -85,7 +86,7 @@ namespace LinqToDB.Benchmarks.QueryGeneration
 
 			for (int i = 0; i < 2; i++)
 			{
-				var param = i.ToString();
+				var param = i.ToString(CultureInfo.InvariantCulture);
 				var str   = db.VwSalesByCategory(2010 + i).Where(e => e.CategoryName.Contains(param)).ToString();
 			}
 		}

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -188,7 +188,7 @@ namespace LinqToDB.Internal.Common
 				IEnumerable col    => GetIEnumerableID(col),
 				Expression ex      => GetObjectID(ex).ToString(NumberFormatInfo.InvariantInfo),
 				TimeSpan ts        => ts.Ticks.ToString(NumberFormatInfo.InvariantInfo),
-				_                  => GetOrAddObject(obj)
+				_                  => GetOrAddObject(obj),
 			};
 
 			static string GetIEnumerableID(IEnumerable col)

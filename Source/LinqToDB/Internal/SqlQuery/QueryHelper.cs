@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
@@ -556,7 +556,7 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		/// <summary>
-		/// Returns <c>true</c> if tested expression is constant during query execution (e.g. value or parameter).
+		/// Returns <see langword="true"/> if tested expression is constant during query execution (e.g. value or parameter).
 		/// </summary>
 		/// <param name="expr">Tested expression.</param>
 		/// <returns></returns>
@@ -1028,7 +1028,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 				var newIndex = transformFunc(context, idx);
 
-				return FormattableString.Invariant($"{{{newIndex}}}");
+				return string.Create(CultureInfo.InvariantCulture, $"{{{newIndex}}}");
 			});
 
 			return str;
@@ -1477,7 +1477,7 @@ namespace LinqToDB.Internal.SqlQuery
 				ParametersNullabilityType.SameAsLastParameter          => SameAs(parameters.Length - 1),
 				ParametersNullabilityType.IfAnyParameterNullable       => parameters.Any(static p => p),
 				ParametersNullabilityType.IfAllParametersNullable      => parameters.All(static p => p),
-				_ => null
+				_ => null,
 			};
 
 			bool SameAs(int parameterNumber)
@@ -1518,7 +1518,7 @@ namespace LinqToDB.Internal.SqlQuery
 				var newParam = new SqlParameter(dbDataType, foundParam.Name, value)
 				{
 					IsQueryParameter = foundParam.IsQueryParameter,
-					NeedsCast = foundParam.NeedsCast
+					NeedsCast = foundParam.NeedsCast,
 				};
 
 				return newParam;
@@ -1687,7 +1687,7 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		/// <summary>
-		/// Returns <c>true</c> if expression typed by predicate (returns SQL BOOLEAN-typed value).
+		/// Returns <see langword="true"/> if expression typed by predicate (returns SQL BOOLEAN-typed value).
 		/// </summary>
 		public static bool IsBoolean(ISqlExpression expr, bool includeFields = false)
 		{
@@ -1756,7 +1756,7 @@ namespace LinqToDB.Internal.SqlQuery
 				DataType.Int64 => DataType.UInt64,
 				DataType.Int128 => DataType.UInt128,
 				DataType.Int256 => DataType.UInt256,
-				_ => throw new InvalidOperationException($"Unsigned DB type expected: {type}")
+				_ => throw new InvalidOperationException($"Unsigned DB type expected: {type}"),
 			};
 
 			return type.WithDataType(newType);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -218,7 +218,7 @@ namespace LinqToDB.Internal.DataProvider
 		{
 			var table = new DataTable("SchemaTable")
 			{
-				Locale = CultureInfo.InvariantCulture
+				Locale = CultureInfo.InvariantCulture,
 			};
 
 			table.Columns.Add(new DataColumn(SchemaTableColumn.ColumnName,                       typeof(string)));

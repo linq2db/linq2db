@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -1005,7 +1005,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					context.CloneContext(_sequence1), context.CloneContext(_sequence2),
 					context.CloneExpression(_methodCall))
 				{
-					LoadWithRoot = LoadWithRoot
+					LoadWithRoot = LoadWithRoot,
 				};
 
 				// for correct updating self-references below

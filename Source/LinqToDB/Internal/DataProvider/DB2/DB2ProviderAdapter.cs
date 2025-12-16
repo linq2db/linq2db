@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
@@ -259,7 +259,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			DB2_UW      = 1,
 			DB2_VM      = 24,
 			DB2_VM_VSE  = 8,
-			DB2_VSE     = 40
+			DB2_VSE     = 40,
 		}
 
 		[Wrapper]
@@ -392,7 +392,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			private static string[] Events { get; }
 				= new[]
 			{
-				nameof(DB2RowsCopied)
+				nameof(DB2RowsCopied),
 			};
 
 			public DB2BulkCopy(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -492,7 +492,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			Default      = 0,
 			KeepIdentity = 1,
 			TableLock    = 2,
-			Truncate     = 4
+			Truncate     = 4,
 		}
 
 		[Wrapper]

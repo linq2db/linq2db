@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -318,7 +318,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 					Sql.DateParts.Second      => "DateTime::GetSecond",
 					Sql.DateParts.Millisecond => "DateTime::GetMillisecondOfSecond",
 					Sql.DateParts.WeekDay     => "DateTime::GetDayOfWeek",
-					_                         => null
+					_                         => null,
 				};
 
 				if (fn == null)
@@ -357,7 +357,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 						Sql.DateParts.Year    => "DateTime::ShiftYears",
 						Sql.DateParts.Month   => "DateTime::ShiftMonths",
 						Sql.DateParts.Quarter => "DateTime::ShiftMonths",
-						_                     => throw new InvalidOperationException()
+						_                     => throw new InvalidOperationException(),
 					};
 
 					var shiftArg = increment;
@@ -379,7 +379,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 					Sql.DateParts.Minute      => "DateTime::IntervalFromMinutes",
 					Sql.DateParts.Second      => "DateTime::IntervalFromSeconds",
 					Sql.DateParts.Millisecond => "DateTime::IntervalFromMilliseconds",
-					_                         => null
+					_                         => null,
 				};
 
 				if (intervalFn == null)

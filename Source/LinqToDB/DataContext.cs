@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -192,7 +192,7 @@ namespace LinqToDB
 		private bool _keepConnectionAlive;
 		/// <summary>
 		/// Gets flag indicating wether context should dispose underlying connection after use or not.
-		/// Default value: <c>false</c>.
+		/// Default value: <see langword="false"/>.
 		/// </summary>
 		public  bool  KeepConnectionAlive
 		{
@@ -427,7 +427,7 @@ namespace LinqToDB
 		/// <summary>
 		/// For active underlying connection, updates information about last executed query <see cref="LastQuery"/> and
 		/// releases connection, if it is not locked (<see cref="_lockDbManagerCounter"/>)
-		/// and <see cref="KeepConnectionAlive"/> is <c>false</c>.
+		/// and <see cref="KeepConnectionAlive"/> is <see langword="false"/>.
 		/// </summary>
 		internal void ReleaseQuery()
 		{
@@ -454,7 +454,7 @@ namespace LinqToDB
 		/// <summary>
 		/// For active underlying connection, updates information about last executed query <see cref="LastQuery"/> and
 		/// releases connection, if it is not locked (<see cref="_lockDbManagerCounter"/>)
-		/// and <see cref="KeepConnectionAlive"/> is <c>false</c>.
+		/// and <see cref="KeepConnectionAlive"/> is <see langword="false"/>.
 		/// </summary>
 		internal async ValueTask ReleaseQueryAsync()
 		{

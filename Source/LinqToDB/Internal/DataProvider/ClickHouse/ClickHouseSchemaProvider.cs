@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -51,7 +51,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 							Precision    = checked((int?)precision),
 							Scale        = checked((int?)scale),
 							Description  = string.IsNullOrWhiteSpace(description) ? null : description,
-							SkipOnUpdate = readOnly
+							SkipOnUpdate = readOnly,
 						};
 					},
 					"""
@@ -88,7 +88,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					{
 						TableID    = name,
 						ColumnName = f.Trim(),
-						Ordinal    = i
+						Ordinal    = i,
 					});
 				},
 				"select name, primary_key from system.tables where is_temporary = 0 and database = database() and primary_key <> ''")
@@ -111,7 +111,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 						TableName       = name,
 						Description     = string.IsNullOrWhiteSpace(description) ? null : description,
 						IsDefaultSchema = true,
-						IsView          = isView
+						IsView          = isView,
 					};
 				},
 				"select name, comment, engine LIKE '%View' from system.tables where is_temporary = 0 and database = database()")
@@ -194,7 +194,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					< 10 => (DataType.Decimal32,  typeof(decimal)),
 					< 19 => (DataType.Decimal64,  typeof(decimal)),
 					< 38 => (DataType.Decimal128, typeof(decimal)),
-					_    => (DataType.Decimal256, typeof(decimal))
+					_    => (DataType.Decimal256, typeof(decimal)),
 				};
 			}
 

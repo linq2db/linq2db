@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -34,7 +34,7 @@ namespace LinqToDB.Mapping
 		/// <param name="storage">Optional association value storage field or property name.</param>
 		/// <param name="associationSetterExpressionMethod">Optional name of setter method.</param>
 		/// <param name="associationSetterExpression">Optional setter expression.</param>
-		/// <param name="canBeNull">If <c>true</c>, association will generate outer join, otherwise - inner join.</param>
+		/// <param name="canBeNull">If <see langword="true"/>, association will generate outer join, otherwise - inner join.</param>
 		/// <param name="aliasName">Optional alias for representation in SQL.</param>
 		public AssociationDescriptor(
 			MappingSchema mappingSchema,
@@ -127,7 +127,7 @@ namespace LinqToDB.Mapping
 		public Expression? AssociationSetterExpression { get; }
 		/// <summary>
 		/// Gets join type, generated for current association.
-		/// If <c>true</c>, association will generate outer join, otherwise - inner join.
+		/// If <see langword="true"/>, association will generate outer join, otherwise - inner join.
 		/// </summary>
 		public bool        CanBeNull           { get; }
 		/// <summary>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -251,7 +251,7 @@ namespace LinqToDB.Internal.Extensions
 		/// </summary>
 		/// <param name="memberInfo">The member information.</param>
 		/// <returns>
-		///   <c>true</c> if member info is Sql.Property method; otherwise, <c>false</c>.
+		///   <see langword="true"/> if member info is Sql.Property method; otherwise, <see langword="false"/>.
 		/// </returns>
 		public static bool IsSqlPropertyMethodEx(this MemberInfo memberInfo)
 		{
@@ -264,7 +264,7 @@ namespace LinqToDB.Internal.Extensions
 		/// </summary>
 		/// <param name="memberInfo">The member information.</param>
 		/// <returns>
-		///   <c>true</c> if member info is dynamic column property; otherwise, <c>false</c>.
+		///   <see langword="true"/> if member info is dynamic column property; otherwise, <see langword="false"/>.
 		/// </returns>
 		public static bool IsDynamicColumnPropertyEx(this MemberInfo memberInfo)
 		{
@@ -319,7 +319,7 @@ namespace LinqToDB.Internal.Extensions
 					TargetType       = type,
 					InterfaceType    = interfaceType,
 					TargetMethods    = [],
-					InterfaceMethods = []
+					InterfaceMethods = [],
 				};
 			}
 		}
@@ -826,7 +826,7 @@ namespace LinqToDB.Internal.Extensions
 			{ typeof(uint),    new HashSet<Type> { typeof(byte),  typeof(ushort), typeof(char)                                                                                                       } },
 			{ typeof(int),     new HashSet<Type> { typeof(sbyte), typeof(byte),   typeof(short), typeof(ushort), typeof(char)                                                                        } },
 			{ typeof(ushort),  new HashSet<Type> { typeof(byte),  typeof(char)                                                                                                                       } },
-			{ typeof(short),   new HashSet<Type> { typeof(byte)                                                                                                                                      } }
+			{ typeof(short),   new HashSet<Type> { typeof(byte)                                                                                                                                      } },
 		};
 
 		public static bool CanConvertTo(this Type fromType, Type toType)

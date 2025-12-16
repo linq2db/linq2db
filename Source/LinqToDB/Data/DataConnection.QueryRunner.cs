@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -64,7 +64,7 @@ namespace LinqToDB.Data
 							TraceLevel       = TraceLevel.Info,
 							MapperExpression = MapperExpression,
 							StartTime        = _startedOn,
-							ExecutionTime    = _stopwatch.Elapsed
+							ExecutionTime    = _stopwatch.Elapsed,
 						});
 					}
 				}
@@ -129,7 +129,7 @@ namespace LinqToDB.Data
 						MapperExpression = MapperExpression,
 						StartTime        = _startedOn,
 						ExecutionTime    = _stopwatch.Elapsed,
-						RecordsAffected  = RowsCount
+						RecordsAffected  = RowsCount,
 					});
 				}
 
@@ -150,7 +150,7 @@ namespace LinqToDB.Data
 						MapperExpression = MapperExpression,
 						StartTime        = _startedOn,
 						ExecutionTime    = _stopwatch.Elapsed,
-						RecordsAffected  = RowsCount
+						RecordsAffected  = RowsCount,
 					});
 				}
 

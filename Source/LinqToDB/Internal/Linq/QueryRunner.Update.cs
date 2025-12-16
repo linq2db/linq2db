@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Linq;
 using System.Linq.Expressions;
@@ -66,7 +66,7 @@ namespace LinqToDB.Internal.Linq
 
 				var ei = new Query<int>(dataContext)
 				{
-					Queries = { new QueryInfo { Statement = updateStatement, } }
+					Queries = { new QueryInfo { Statement = updateStatement, } },
 				};
 
 				var keys = (sqlTable.GetKeys(true) ?? Enumerable.Empty<ISqlExpression>()).Cast<SqlField>().ToList();

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Globalization;
@@ -187,8 +187,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					14 => SqlServerVersion.v2017,
 					15 => SqlServerVersion.v2019,
 					16 => SqlServerVersion.v2022,
-					_  => SqlServerVersion.v2025
-				}
+					_  => SqlServerVersion.v2025,
+				},
 			};
 		}
 

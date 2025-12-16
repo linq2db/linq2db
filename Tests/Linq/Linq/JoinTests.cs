@@ -34,10 +34,10 @@ namespace Tests.Linq
 			where TOuter : class
 			where TInner : class
 		{
-			if (outer          == null) throw new ArgumentNullException(nameof(outer));
-			if (inner          == null) throw new ArgumentNullException(nameof(inner));
-			if (predicate      == null) throw new ArgumentNullException(nameof(predicate));
-			if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+			ArgumentNullException.ThrowIfNull(outer);
+			ArgumentNullException.ThrowIfNull(inner);
+			ArgumentNullException.ThrowIfNull(predicate);
+			ArgumentNullException.ThrowIfNull(resultSelector);
 
 			switch (joinType)
 			{
@@ -73,11 +73,11 @@ namespace Tests.Linq
 			where TOuter: class
 			where TInner: class
 		{
-			if (outer            == null) throw new ArgumentNullException(nameof(outer));
-			if (inner            == null) throw new ArgumentNullException(nameof(inner));
-			if (outerKeySelector == null) throw new ArgumentNullException(nameof(outerKeySelector));
-			if (innerKeySelector == null) throw new ArgumentNullException(nameof(innerKeySelector));
-			if (resultSelector   == null) throw new ArgumentNullException(nameof(resultSelector));
+			ArgumentNullException.ThrowIfNull(outer);
+			ArgumentNullException.ThrowIfNull(inner);
+			ArgumentNullException.ThrowIfNull(outerKeySelector);
+			ArgumentNullException.ThrowIfNull(innerKeySelector);
+			ArgumentNullException.ThrowIfNull(resultSelector);
 
 			switch (joinType)
 			{

@@ -783,9 +783,9 @@ namespace Tests.DataProvider
 			[Column(Precision = 12)]
 			public DB2TimeStamp TimeStamp12 { get; set; }
 
-			static TestTimeTypes()
+			static TestTimeTypes[] GetData()
 			{
-				Data = new[]
+				var data = new[]
 				{
 					new TestTimeTypes() { Id = 1, Date1 = new DateTime(1234, 5, 6), Date2 = new DateTime(1234, 5, 7), Time = new TimeSpan(21, 2, 3) },
 					new TestTimeTypes() { Id = 2, Date1 = new DateTime(6543, 2, 1), Date2 = new DateTime(1234, 5, 8), Time = new TimeSpan(23, 2, 1) }
@@ -808,9 +808,11 @@ namespace Tests.DataProvider
 					Data[idx].TimeStamp11 = new DB2TimeStamp(1000, 1, 10, 2, 20, 30, 10 * i, 11);
 					Data[idx].TimeStamp12 = new DB2TimeStamp(1000, 1, 10, 2, 20, 30, i, 12);
 				}
+
+				return data;
 			}
 
-			public static TestTimeTypes[] Data;
+			public static TestTimeTypes[] Data = GetData();
 
 			public static Func<TestTimeTypes, TestTimeTypes, bool> Comparer = ComparerBuilder.GetEqualsFunc<TestTimeTypes>();
 		}

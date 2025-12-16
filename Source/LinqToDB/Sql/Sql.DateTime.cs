@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 
 using LinqToDB.Internal.SqlQuery;
@@ -137,7 +137,7 @@ namespace LinqToDB
 					DateParts.Minute => "minute",
 					DateParts.Second => "second",
 					DateParts.Millisecond => "millisecond",
-					_ => throw new InvalidOperationException($"Unexpected datepart: {part}")
+					_ => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
 			}
 

@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Globalization;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Common;
@@ -82,7 +83,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return FormattableString.Invariant($".{Configuration}.{SetterMethod}.{GetterMethod}.{SetterExpressionMethod}.{StorageInitializerExpressionMethod}.{GetterExpressionMethod}.{IdentifierBuilder.GetObjectID(SetterExpression)}.{IdentifierBuilder.GetObjectID(GetterExpression)}.");
+			return string.Create(CultureInfo.InvariantCulture, $".{Configuration}.{SetterMethod}.{GetterMethod}.{SetterExpressionMethod}.{StorageInitializerExpressionMethod}.{GetterExpressionMethod}.{IdentifierBuilder.GetObjectID(SetterExpression)}.{IdentifierBuilder.GetObjectID(GetterExpression)}.");
 		}
 	}
 }

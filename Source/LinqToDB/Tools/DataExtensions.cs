@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -19,8 +19,8 @@ namespace LinqToDB.Tools
 		/// <summary>
 		/// Initializes source columns, marked with <see cref="ColumnAttribute.IsIdentity"/> or <see cref="IdentityAttribute" /> with identity values:
 		/// <list type="bullet">
-		/// <item>if column had sequence name set using <see cref="SequenceNameAttribute"/> and <paramref name="useSequenceName"/> set to <c>true</c>, values from sequence used. Implemented for: Oracle, PostgreSQL</item>
-		/// <item>if table has identity configured and <paramref name="useIdentity"/> set to <c>true</c>, values from sequence used. Implemented for: SQL Server 2005+</item>
+		/// <item>if column had sequence name set using <see cref="SequenceNameAttribute"/> and <paramref name="useSequenceName"/> set to <see langword="true"/>, values from sequence used. Implemented for: Oracle, PostgreSQL</item>
+		/// <item>if table has identity configured and <paramref name="useIdentity"/> set to <see langword="true"/>, values from sequence used. Implemented for: SQL Server 2005+</item>
 		/// <item>Otherwise column initialized with values, incremented by 1 starting with max value from database for this column plus 1.</item>
 		/// </list>
 		/// </summary>
@@ -88,8 +88,8 @@ namespace LinqToDB.Tools
 		/// <summary>
 		/// Initializes source columns, marked with <see cref="ColumnAttribute.IsIdentity"/> or <see cref="IdentityAttribute" /> with identity values:
 		/// <list type="bullet">
-		/// <item>if column had sequence name set using <see cref="SequenceNameAttribute"/> and <paramref name="useSequenceName"/> set to <c>true</c>, values from sequence used. Implemented for: Oracle, PostgreSQL</item>
-		/// <item>if table has identity configured and <paramref name="useIdentity"/> set to <c>true</c>, values from sequence used. Implemented for: SQL Server 2005+</item>
+		/// <item>if column had sequence name set using <see cref="SequenceNameAttribute"/> and <paramref name="useSequenceName"/> set to <see langword="true"/>, values from sequence used. Implemented for: Oracle, PostgreSQL</item>
+		/// <item>if table has identity configured and <paramref name="useIdentity"/> set to <see langword="true"/>, values from sequence used. Implemented for: SQL Server 2005+</item>
 		/// <item>Otherwise column initialized with values, incremented by 1 starting with max value from database for this column plus 1.</item>
 		/// </list>
 		/// </summary>

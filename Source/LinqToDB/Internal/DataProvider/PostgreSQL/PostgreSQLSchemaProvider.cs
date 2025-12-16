@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -246,7 +246,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 			var excludeSchemas =
 				new HashSet<string?>(
-					ExcludedSchemas.Where(s => !string.IsNullOrEmpty(s)).Union(_schemaSchemas),
+					ExcludedSchemas.Where(s => !string.IsNullOrEmpty(s)).Union(_schemaSchemas, StringComparer.Ordinal),
 					StringComparer.OrdinalIgnoreCase);
 
 			var includeSchemas = new HashSet<string?>(IncludedSchemas.Where(s => !string.IsNullOrEmpty(s)), StringComparer.OrdinalIgnoreCase);
@@ -267,14 +267,14 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			if (excludeSchemas.Count > 0)
 			{
 				var schemasToExcludeStr =
-					string.Join(", ", excludeSchemas.OrderBy(s => s).Select(s => ToDatabaseLiteral(dataConnection, s)));
+					string.Join(", ", excludeSchemas.OrderBy(s => s, StringComparer.Ordinal).Select(s => ToDatabaseLiteral(dataConnection, s)));
 				schemaFilter = $@"{schemaColumnName} NOT IN ({schemasToExcludeStr})";
 			}
 
 			if (includeSchemas.Count > 0)
 			{
 				var schemasToIncludeStr =
-					string.Join(", ", includeSchemas.OrderBy(s => s).Select(s => ToDatabaseLiteral(dataConnection, s)));
+					string.Join(", ", includeSchemas.OrderBy(s => s, StringComparer.Ordinal).Select(s => ToDatabaseLiteral(dataConnection, s)));
 				if (!string.IsNullOrEmpty(schemaFilter))
 					schemaFilter += " AND ";
 				schemaFilter += $@"{schemaColumnName} IN ({schemasToIncludeStr})";
@@ -440,7 +440,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 							SkipOnInsert = skipOnInsert,
 							SkipOnUpdate = skipOnUpdate,
 							Description  = description,
-							Type         = isCustomEnum ? DataType.Enum : null
+							Type         = isCustomEnum ? DataType.Enum : null,
 						};
 					},
 					sql
@@ -533,7 +533,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 					OtherTableID = otherTableID,
 					ThisColumn   = Convert.ToString(col.thisColumn, CultureInfo.InvariantCulture)!,
 					OtherColumn  = Convert.ToString(col.otherColumn, CultureInfo.InvariantCulture)!,
-					Ordinal      = col.ordinal
+					Ordinal      = col.ordinal,
 				}
 			).ToList();
 		}
@@ -700,7 +700,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				return new DataTypeInfo()
 				{
 					DataType = "System.String",
-					TypeName = typeName
+					TypeName = typeName,
 
 				};
 
@@ -766,7 +766,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 								ProcedureDefinition = definition,
 								// result of function has dynamic form and vary per call if function return type is 'record'
 								// only exception is function with out/inout parameters, where we know that record contains those parameters
-								IsResultDynamic     = Converter.ChangeTypeTo<string>(rd[8]) == "record" && Converter.ChangeTypeTo<int>(rd[9]) == 0
+								IsResultDynamic     = Converter.ChangeTypeTo<string>(rd[8]) == "record" && Converter.ChangeTypeTo<int>(rd[9]) == 0,
 							};
 						},
 						$"""
@@ -820,7 +820,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 								IsWindowFunction    = kind == 'w',
 								IsDefaultSchema     = schema == (options.DefaultSchema ?? "public"),
 								ProcedureDefinition = definition,
-								IsResultDynamic     = Converter.ChangeTypeTo<string>(rd[7]) == "record" && Converter.ChangeTypeTo<int>(rd[8]) == 0
+								IsResultDynamic     = Converter.ChangeTypeTo<string>(rd[7]) == "record" && Converter.ChangeTypeTo<int>(rd[8]) == 0,
 							};
 						},
 						$"""
@@ -869,7 +869,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 							Precision     = null,
 							Scale         = null,
 							Length        = null,
-							IsNullable    = true
+							IsNullable    = true,
 						};
 					},
 					"""
@@ -897,7 +897,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 								Precision     = null,
 								Scale         = null,
 								Length        = null,
-								IsNullable    = true
+								IsNullable    = true,
 							},
 							"""
 							SELECT r.SPECIFIC_CATALOG, r.SPECIFIC_SCHEMA, r.SPECIFIC_NAME, r.DATA_TYPE

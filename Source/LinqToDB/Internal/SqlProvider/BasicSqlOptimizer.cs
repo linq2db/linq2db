@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 using LinqToDB;
@@ -1794,7 +1795,7 @@ namespace LinqToDB.Internal.SqlProvider
 						var takeValue = takeExpr.EvaluateExpression(optimizationContext.EvaluationContext)!;
 						var takeParameter = new SqlParameter(new DbDataType(takeValue.GetType()), "take", takeValue)
 						{
-							IsQueryParameter = dataOptions.LinqOptions.ParameterizeTakeSkip && !QueryHelper.NeedParameterInlining(takeExpr)
+							IsQueryParameter = dataOptions.LinqOptions.ParameterizeTakeSkip && !QueryHelper.NeedParameterInlining(takeExpr),
 						};
 						takeExpr = takeParameter;
 					}
@@ -1815,7 +1816,7 @@ namespace LinqToDB.Internal.SqlProvider
 						var skipValue = skipExpr.EvaluateExpression(optimizationContext.EvaluationContext)!;
 						var skipParameter = new SqlParameter(new DbDataType(skipValue.GetType()), "skip", skipValue)
 						{
-							IsQueryParameter = dataOptions.LinqOptions.ParameterizeTakeSkip && !QueryHelper.NeedParameterInlining(skipExpr)
+							IsQueryParameter = dataOptions.LinqOptions.ParameterizeTakeSkip && !QueryHelper.NeedParameterInlining(skipExpr),
 						};
 						skipExpr = skipParameter;
 					}
@@ -1930,7 +1931,7 @@ namespace LinqToDB.Internal.SqlProvider
 						orderByItems = context.supportsEmptyOrderBy ? [] : [new SqlOrderByItem(new SqlFragment("(SELECT NULL)"), false, false)];
 
 					var orderBy = string.Join(", ",
-						orderByItems.Select(static (oi, i) => oi.IsDescending ? FormattableString.Invariant($"{{{i}}} DESC") : FormattableString.Invariant($"{{{i}}}")));
+						orderByItems.Select(static (oi, i) => oi.IsDescending ? string.Create(CultureInfo.InvariantCulture, $"{{{i}}} DESC") : string.Create(CultureInfo.InvariantCulture, $"{{{i}}}")));
 
 					var parameters = orderByItems.Select(static oi => oi.Expression).ToArray();
 
