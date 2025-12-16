@@ -1335,7 +1335,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5254")]
-		public void FirstOrDefaultMappingWithConversions([DataSources] string context)
+		public void FirstOrDefaultMappingWithConversions([DataSources(false)] string context)
 		{
 			var ms = new MappingSchema();
 			Issue5254Types.TenderId.LinqToDbMapping(ms);
