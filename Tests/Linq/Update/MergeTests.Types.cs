@@ -609,7 +609,8 @@ namespace Tests.xUpdate
 						if (expected == TimeSpan.FromDays(1))
 							expected = expected.Value.Add(TimeSpan.FromMilliseconds(-4));
 						break;
-					};
+					}
+
 					case string when provider.IsAnyOf(TestProvName.AllFirebird):
 						expected = TimeSpan.FromTicks((expected.Value.Ticks / 1000) * 1000);
 						break;

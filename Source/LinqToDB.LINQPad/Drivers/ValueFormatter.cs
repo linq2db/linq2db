@@ -50,7 +50,7 @@ internal static class ValueFormatter
 	{
 		var typeConverters       = new Dictionary<Type, Func<object, object>>();
 		var baseTypeConverters   = new Dictionary<Type, Func<object, object>>();
-		var byTypeNameConverters = new Dictionary<string, Func<object, object>>(StringComparer.Ordinal);
+		var byTypeNameConverters = new Dictionary<string, Func<object, object>>();
 
 		// generic types
 		typeConverters.Add(typeof(BigInteger)     , ConvertToString);
@@ -199,7 +199,7 @@ internal static class ValueFormatter
 		// INullable implemented by System.Data.SqlTypes.Sql* types
 		return (value is System.Data.SqlTypes.INullable nullable && nullable.IsNull)
 			|| (value is Oracle.ManagedDataAccess.Types.INullable onull && onull.IsNull)
-			|| (value.GetType().FullName!.StartsWith("IBM.Data.DB2Types.", StringComparison.Ordinal) && IsDB2Null(value));
+			|| (value.GetType().FullName!.StartsWith("IBM.Data.DB2Types.") && IsDB2Null(value));
 
 		// moved to function to avoid assembly load errors when loaded with wrong process bitness
 		static bool IsDB2Null(object value) => value is IBM.Data.DB2Types.INullable db2null && db2null.IsNull;

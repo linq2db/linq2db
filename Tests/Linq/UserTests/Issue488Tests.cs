@@ -45,7 +45,7 @@ namespace Tests.UserTests
 
 			var dc = (DataConnection)db;
 			commandInterceptor.Parameters.Length.ShouldBe(1);
-			commandInterceptor.Parameters.Where(p => p.DbType == DbType.Date).Count().ShouldBe(1); ;
+			commandInterceptor.Parameters.Where(p => p.DbType == DbType.Date).Count().ShouldBe(1);
 		}
 
 		[Test]
@@ -64,7 +64,7 @@ namespace Tests.UserTests
 
 			var dc = (DataConnection)db;
 			commandInterceptor.Parameters.Length.ShouldBe(1);
-			commandInterceptor.Parameters.Where(p => p.DbType == DbType.Date).Count().ShouldBe(1); ;
+			commandInterceptor.Parameters.Where(p => p.DbType == DbType.Date).Count().ShouldBe(1);
 		}
 	}
 }

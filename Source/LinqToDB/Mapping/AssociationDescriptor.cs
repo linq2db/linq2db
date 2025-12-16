@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -195,7 +195,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="parentType">Type of object that declares association</param>
 		/// <param name="objectType">Type of object associated with expression predicate</param>
-		/// <returns><c>null</c> of association has no custom predicate expression or predicate expression, specified
+		/// <returns><see langword="null"/> of association has no custom predicate expression or predicate expression, specified
 		/// by <see cref="ExpressionPredicate"/> member.</returns>
 		public LambdaExpression? GetPredicate(Type parentType, Type objectType)
 		{
@@ -296,7 +296,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="parentType">Type of object that declares association</param>
 		/// <param name="objectType">Type of object associated with query method expression</param>
-		/// <returns><c>null</c> of association has no custom query method expression or query method expression, specified
+		/// <returns><see langword="null"/> of association has no custom query method expression or query method expression, specified
 		/// by <see cref="ExpressionQueryMethod"/> member.</returns>
 		public LambdaExpression? GetQueryMethod(Type parentType, Type objectType)
 		{
@@ -363,7 +363,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="memberType">Type of the storage member that declares association</param>
 		/// <param name="objectType">Type of object associated with setter method expression</param>
-		/// <returns><c>null</c> if association has no custom setter method expression specified
+		/// <returns><see langword="null"/> if association has no custom setter method expression specified
 		/// by <see cref="AssociationSetterExpressionMethod"/> member.</returns>
 		LambdaExpression? GetAssociationSetterMethod(Type memberType, Type objectType)
 		{

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
@@ -17,7 +17,7 @@ namespace LinqToDB.Internal.SqlQuery
 		public static NullabilityContext NonQuery { get; } = new([], null, null, null);
 
 		/// <summary>
-		/// Creates nullability context for provided query or empty context if query is <c>null</c>.
+		/// Creates nullability context for provided query or empty context if query is <see langword="null"/>.
 		/// </summary>
 		public static NullabilityContext GetContext(SelectQuery? selectQuery) =>
 			selectQuery == null ? NonQuery : new NullabilityContext([selectQuery], null, null, null);
@@ -195,7 +195,7 @@ namespace LinqToDB.Internal.SqlQuery
 			/// <list type="bullet">
 			/// <item><see langword="true"/>: <paramref name="source"/> records are nullable in <paramref name="inQuery"/>;</item>
 			/// <item><see langword="false"/>: <paramref name="source"/> records are not nullable in <paramref name="inQuery"/>;</item>
-			/// <item><c>null</c>: <paramref name="source"/> is not reachable/available in <paramref name="inQuery"/>.</item>
+			/// <item><see langword="null"/>: <paramref name="source"/> is not reachable/available in <paramref name="inQuery"/>.</item>
 			/// </list>
 			/// </returns>
 			public bool? IsNullableSource(SelectQuery inQuery, ISqlTableSource source, ISqlTableSource? joinedTable, SqlQueryVisitor.IVisitorTransformationInfo? transformationInfo)

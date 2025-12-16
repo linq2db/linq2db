@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -43,7 +43,7 @@ namespace LinqToDB
 		/// Creates data context using specific database configuration.
 		/// </summary>
 		/// <param name="configurationString">Connection configuration name.
-		/// In case of <c>null</c> value, context will use default configuration.
+		/// In case of <see langword="null"/> value, context will use default configuration.
 		/// <see cref="DataConnection.DefaultConfiguration"/> for more details.
 		/// </param>
 		public DataContext(string? configurationString)

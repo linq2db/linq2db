@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Common;
@@ -963,8 +963,8 @@ namespace LinqToDB
 		#region DataContextOptions
 
 		/// <summary>
-		/// Command timeout in seconds or <c>null</c> for default timeout.
-		/// Default value: <c>null</c>.
+		/// Command timeout in seconds or <see langword="null"/> for default timeout.
+		/// Default value: <see langword="null"/>.
 		/// </summary>
 		[Pure]
 		public static DataContextOptions WithCommandTimeout(this DataContextOptions options, int? commandTimeout)
@@ -973,8 +973,8 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Command timeout in seconds or <c>null</c> for default timeout.
-		/// Default value: <c>null</c>.
+		/// Command timeout in seconds or <see langword="null"/> for default timeout.
+		/// Default value: <see langword="null"/>.
 		/// </summary>
 		[Pure]
 		public static DataOptions UseCommandTimeout(this DataOptions options, int? commandTimeout)

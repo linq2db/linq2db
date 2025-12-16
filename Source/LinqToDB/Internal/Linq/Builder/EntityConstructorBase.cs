@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -93,18 +93,18 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (level > 0 || hasNested)
 			{
-				var processed = new HashSet<string>(StringComparer.Ordinal);
+				var processed = new HashSet<string>();
 				foreach (var column in columns)
 				{
 					if (column.SkipOnEntityFetch)
 						continue;
 
-					if (!column.MemberName.Contains('.', StringComparison.Ordinal))
+					if (!column.MemberName.Contains('.'))
 						continue;
 
 					// explicit interface implementation
 					//
-					if (column.MemberInfo.Name.Contains('.', StringComparison.Ordinal))
+					if (column.MemberInfo.Name.Contains('.'))
 						continue;
 
 					var names = column.MemberName.Split('.');
@@ -142,7 +142,7 @@ namespace LinqToDB.Internal.Linq.Builder
 								throw new InvalidOperationException($"No suitable member '[{currentMemberName}]' found for type '{currentPath.Type}'");
 						}
 
-						var newColumns = columns.Where(c => c.MemberName.StartsWith(propPath, StringComparison.Ordinal)).ToList();
+						var newColumns = columns.Where(c => c.MemberName.StartsWith(propPath)).ToList();
 						var newPath    = MakeAssignExpression(currentPath, memberInfo, column);
 
 						assignExpression = BuildGenericFromMembers(newColumns, flags, newPath, level + 1, purpose);
@@ -329,7 +329,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				members,
 				x =>
 					x.MemberInfo.GetMemberType() == parameter.ParameterType &&
-					string.Equals(x.MemberInfo.Name, parameter.Name, StringComparison.Ordinal)
+					string.Equals(x.MemberInfo.Name, parameter.Name)
 			);
 
 			if (found < 0)

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.Linq.Expressions;
 
@@ -35,7 +35,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="column">Column mapping descriptor.</param>
 		/// <param name="record">Updated record.</param>
-		/// <returns><c>null</c> to skip explicit column update or update expression.</returns>
+		/// <returns><see langword="null"/> to skip explicit column update or update expression.</returns>
 		public override LambdaExpression? GetNextValue(ColumnDescriptor column, ParameterExpression record)
 		{
 			switch (Behavior)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlQuery;
@@ -36,7 +36,7 @@ namespace LinqToDB
 
 			public override int GetHashCode()
 			{
-				return (int)Type | (ID.GetHashCode() >> 3);
+				return HashCode.Combine(Type, ID);
 			}
 
 			public ISqlExpression ToSql(object value)
@@ -54,9 +54,11 @@ namespace LinqToDB
 				var type = value.Substring(0, idx);
 				var id   = value.Substring(idx + 1);
 
-#pragma warning disable CA2263 // Prefer generic overload when type is known
+#if NET8_0_OR_GREATER
+				return new (Enum.Parse<SqlIDType>(type), id);
+#else
 				return new ((SqlIDType)Enum.Parse(typeof(SqlIDType), type), id);
-#pragma warning restore CA2263 // Prefer generic overload when type is known
+#endif
 			}
 		}
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
@@ -178,7 +178,7 @@ namespace LinqToDB.Internal.SqlQuery
 		/// Returns <see cref="IValueConverter"/> for <paramref name="expr"/>.
 		/// </summary>
 		/// <param name="expr">Tested SQL Expression.</param>
-		/// <returns>Associated converter or <c>null</c>.</returns>
+		/// <returns>Associated converter or <see langword="null"/>.</returns>
 		public static IValueConverter? GetValueConverter(ISqlExpression? expr)
 		{
 			return GetColumnDescriptor(expr)?.ValueConverter;
@@ -188,7 +188,7 @@ namespace LinqToDB.Internal.SqlQuery
 		/// Returns <see cref="ColumnDescriptor"/> for <paramref name="expr"/>.
 		/// </summary>
 		/// <param name="expr">Tested SQL Expression.</param>
-		/// <returns>Associated column descriptor or <c>null</c>.</returns>
+		/// <returns>Associated column descriptor or <see langword="null"/>.</returns>
 		public static ColumnDescriptor? GetColumnDescriptor(ISqlExpression? expr)
 		{
 			if (expr == null)
@@ -317,13 +317,12 @@ namespace LinqToDB.Internal.SqlQuery
 				}
 				case QueryElementType.SqlField:
 				{
-					return ((SqlField)expr).ColumnDescriptor?.GetDbDataType(true);
+					return ((SqlField)expr).ColumnDescriptor?.GetDbDataType(completeDataType: true);
 				}
 				case QueryElementType.SqlExpression:
 				{
-					var sqlExpr = (SqlExpression)expr;
-					if (sqlExpr.Parameters.Length == 1 && sqlExpr.Expr == "{0}")
-						return SuggestDbDataType(sqlExpr.Parameters[0]);
+					if (expr is SqlExpression { Expr: "{0}", Parameters: [var parameter] })
+						return SuggestDbDataType(parameter);
 					break;
 				}
 				case QueryElementType.SqlQuery:
@@ -399,7 +398,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 				case { SystemType: null } : return DbDataType.Undefined;
 				case { SystemType: var t }: return new(t);
-			};
+			}
 
 			static DbDataType GetCaseExpressionType(SqlCaseExpression caseExpression)
 			{
@@ -493,7 +492,7 @@ namespace LinqToDB.Internal.SqlQuery
 		static bool IsTransitiveExpression(SqlExpression sqlExpression, bool checkNullability)
 		{
 			if (sqlExpression is { Parameters: [var p] }
-				&& sqlExpression.Expr.Trim() == "{0}" 
+				&& sqlExpression.Expr.AsSpan().Trim() is "{0}"
 				&& (!checkNullability || sqlExpression.CanBeNullable(NullabilityContext.NonQuery) == p.CanBeNullable(NullabilityContext.NonQuery)))
 			{
 				if (p is SqlExpression argExpression)
@@ -506,7 +505,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		static bool IsTransitivePredicate(SqlExpression sqlExpression)
 		{
-			if (sqlExpression is { Parameters: [var p] } && sqlExpression.Expr.Trim() == "{0}")
+			if (sqlExpression is { Parameters: [var p] } && sqlExpression.Expr.AsSpan().Trim() is "{0}")
 			{
 				if (p is SqlExpression argExpression)
 					return IsTransitivePredicate(argExpression);
@@ -703,7 +702,7 @@ namespace LinqToDB.Internal.SqlQuery
 			var result =
 				table1.ObjectType   == table2.ObjectType &&
 				table1.TableName    == table2.TableName  &&
-				table1.Expression   == table2.Expression;
+				string.Equals(table1.Expression, table2.Expression);
 
 			if (result && withExtensions)
 			{
@@ -901,7 +900,7 @@ namespace LinqToDB.Internal.SqlQuery
 					current = cast.Expression;
 				else if (current is SqlExpression expr)
 				{
-					if (IsTransitiveExpression(expr, true))
+					if (IsTransitiveExpression(expr, checkNullability: true))
 						current = expr.Parameters[0];
 					else
 						break;
@@ -999,11 +998,12 @@ namespace LinqToDB.Internal.SqlQuery
 			}
 		}
 
+		private const string ParamsRegexPattern = /* lang=regex */ @"(?<open>{+)(?<key>\w+)(?<format>:[^}]+)?(?<close>}+)";
 #if SUPPORTS_REGEX_GENERATORS
-		[GeneratedRegex(@"(?<open>{+)(?<key>\w+)(?<format>:[^}]+)?(?<close>}+)")]
+		[GeneratedRegex(ParamsRegexPattern, RegexOptions.Compiled, matchTimeoutMilliseconds: 1)]
 		private static partial Regex ParamsRegex();
 #else
-		static Regex _paramsRegex = new (@"(?<open>{+)(?<key>\w+)(?<format>:[^}]+)?(?<close>}+)", RegexOptions.Compiled);
+		static Regex _paramsRegex = new(ParamsRegexPattern, RegexOptions.Compiled, TimeSpan.FromMilliseconds(1));
 		static Regex ParamsRegex() => _paramsRegex;
 #endif
 
@@ -1085,8 +1085,13 @@ namespace LinqToDB.Internal.SqlQuery
 			if (result != null && lastMatchPosition < format.Length)
 			{
 				var value = StripDoubleQuotes(format.Substring(lastMatchPosition));
-				result = new SqlBinaryExpression(typeof(string),
-					result, "+", new SqlValue(typeof(string), value), Precedence.Additive);
+				result = new SqlBinaryExpression(
+					typeof(string),
+					result,
+					"+",
+					new SqlValue(typeof(string), value),
+					Precedence.Additive
+				);
 			}
 
 			result ??= new SqlValue(typeof(string), format);

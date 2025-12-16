@@ -231,7 +231,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Registers database provider factory method.
-		/// Factory accepts connection string settings and connection string. Could return <c>null</c>, if cannot create provider
+		/// Factory accepts connection string settings and connection string. Could return <see langword="null"/>, if cannot create provider
 		/// instance using provided options.
 		/// </summary>
 		/// <param name="providerDetector">Factory method delegate.</param>
@@ -242,7 +242,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Registers database provider factory method.
-		/// Factory accepts connection string settings and connection string. Could return <c>null</c>, if cannot create provider
+		/// Factory accepts connection string settings and connection string. Could return <see langword="null"/>, if cannot create provider
 		/// instance using provided options.
 		/// </summary>
 		/// <param name="providerDetector">Factory method delegate.</param>

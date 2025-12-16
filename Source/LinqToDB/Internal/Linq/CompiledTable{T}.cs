@@ -35,7 +35,7 @@ namespace LinqToDB.Internal.Linq
 			}
 
 			var methodName = methodCall.Method.Name;
-			if (!methodName.EndsWith("Async", StringComparison.Ordinal))
+			if (!methodName.EndsWith("Async"))
 			{
 				return true;
 			}

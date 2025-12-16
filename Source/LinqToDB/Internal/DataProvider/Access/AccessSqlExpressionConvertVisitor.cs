@@ -148,7 +148,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 				var parms = new ISqlExpression[array.Length - 1];
 				Array.Copy(array, 1, parms, 0, parms.Length);
 				return parms;
-			};
+			}
 
 			return element;
 		}

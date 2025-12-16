@@ -2108,7 +2108,7 @@ AS
 						from tet in PersonTableExpressionTable(db, null, person.ID, person.FirstName).InnerJoin(tet => tet.ID == p.ID)
 						select p;
 
-				query.First().ShouldBe(person); ;
+				query.First().ShouldBe(person);
 
 				// last query should have only 2 parameters
 				GetCurrentBaselines().ShouldContain("DECLARE", Exactly.Times(10));

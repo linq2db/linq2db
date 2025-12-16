@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -230,7 +230,7 @@ namespace LinqToDB.Mapping
 						return a;
 					},
 					setColumn,
-					attrs => attrs.FirstOrDefault(_ => memberName == null || memberName.Equals(_.MemberName, StringComparison.Ordinal)));
+					attrs => attrs.FirstOrDefault(_ => memberName == null || memberName.Equals(_.MemberName)));
 
 				return this;
 			}
@@ -246,7 +246,7 @@ namespace LinqToDB.Mapping
 					 },
 					(_,a) => setColumn(a),
 					a     => new ColumnAttribute(a),
-					attrs => attrs.FirstOrDefault(_ => memberName == null || memberName.Equals(_.MemberName, StringComparison.Ordinal)));
+					attrs => attrs.FirstOrDefault(_ => memberName == null || memberName.Equals(_.MemberName)));
 
 			return this;
 		}

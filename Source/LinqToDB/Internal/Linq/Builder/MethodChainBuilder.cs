@@ -70,7 +70,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			root = builder.ConvertExpressionTree(root);
 			var rootContextref = builder.BuildRootExpression(root) as ContextRefExpression;
 
-			var finalFunction = functions.First();
+			var finalFunction = functions[0];
 
 			if (rootContextref != null)
 			{

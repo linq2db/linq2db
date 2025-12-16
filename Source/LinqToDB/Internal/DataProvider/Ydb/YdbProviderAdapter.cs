@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 
 using LinqToDB.Common;
 using LinqToDB.Internal.Expressions.Types;
+using System.Runtime.InteropServices;
+
 
 #if !NET8_0_OR_GREATER
 using System.Numerics;
@@ -115,6 +117,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				.CompileExpression();
 		}
 
+		[StructLayout(LayoutKind.Auto)]
 		record struct DecimalValue(ulong Low, ulong High, uint Precision, uint Scale);
 
 		private static DecimalValue MakeDecimalValue(string value, int precision, int scale)

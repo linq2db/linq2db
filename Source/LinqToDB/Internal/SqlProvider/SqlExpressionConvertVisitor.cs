@@ -723,7 +723,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		public virtual ISqlExpression CreateLikeEscapeCharacter() => new SqlValue(LikeEscapeCharacter);
 
-		protected static string[] StandardLikeCharactersToEscape = {"%", "_", "?", "*", "#", "[", "]"};
+		protected static readonly string[] StandardLikeCharactersToEscape = {"%", "_", "?", "*", "#", "[", "]"};
 
 		/// <summary>
 		/// Characters with special meaning in LIKE predicate (defined by <see cref="LikeCharactersToEscape"/>) that should be escaped to be used as matched character.

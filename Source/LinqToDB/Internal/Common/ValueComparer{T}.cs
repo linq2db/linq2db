@@ -86,7 +86,7 @@ namespace LinqToDB.Internal.Common
 			var typedEquals = type.GetRuntimeMethods().FirstOrDefault(
 				m => m.ReturnType == typeof(bool)
 					&& !m.IsStatic
-					&& nameof(object.Equals).Equals(m.Name, StringComparison.Ordinal)
+					&& nameof(object.Equals).Equals(m.Name)
 					&& m.GetParameters().Length == 1
 					&& m.GetParameters()[0].ParameterType == typeof(T));
 
@@ -97,7 +97,7 @@ namespace LinqToDB.Internal.Common
 				typedEquals = declaredMethods.FirstOrDefault(
 					m => m.IsStatic
 						&& m.ReturnType == typeof(bool)
-						&& "op_Equality".Equals(m.Name, StringComparison.Ordinal)
+						&& "op_Equality".Equals(m.Name)
 						&& m.GetParameters().Length == 2
 						&& m.GetParameters()[0].ParameterType == typeof(T)
 						&& m.GetParameters()[1].ParameterType == typeof(T));

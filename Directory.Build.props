@@ -113,6 +113,11 @@
 		<Polyfill>$(Polyfill)|M:System.String.Contains(System.Char)</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.String.Contains(System.Char,System.StringComparison)</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.String.Contains(System.String,System.StringComparison)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.String.Replace(System.String,System.String,System.StringComparison)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Text.StringBuilder.AppendJoin(System.Char,System.Object[])</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Text.StringBuilder.AppendJoin(System.Char,System.String[])</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Text.StringBuilder.AppendJoin(System.String,System.Object[])</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Text.StringBuilder.AppendJoin(System.String,System.String[])</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.Type.GetConstructor(System.Reflection.BindingFlags,System.Type[])</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.ToListAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.ToArrayAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
@@ -122,7 +127,6 @@
 		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.SingleOrDefaultAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.SingleOrDefaultAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},``0,System.Threading.CancellationToken)</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.SingleAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
-		<Polyfill>$(Polyfill)|M:M:System.Enum.GetNames``1</Polyfill>
 		<MeziantouPolyfill_IncludedPolyfills>$(Polyfill)</MeziantouPolyfill_IncludedPolyfills>
 	</PropertyGroup>
 

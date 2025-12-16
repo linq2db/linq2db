@@ -220,7 +220,7 @@ namespace LinqToDB.Internal.SqlQuery
 				if (column.CanBeNullable(nullability))
 					return true;
 
-			var allAggregation = Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression));
+			var allAggregation = Select.Columns.TrueForAll(c => QueryHelper.IsAggregationFunction(c.Expression));
 			if (allAggregation)
 				return false;
 

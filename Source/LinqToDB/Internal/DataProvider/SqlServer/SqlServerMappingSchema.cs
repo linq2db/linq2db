@@ -124,7 +124,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			"CAST('{0:hh\\:mm\\:ss\\.ffff}' AS TIME(4))",
 			"CAST('{0:hh\\:mm\\:ss\\.fffff}' AS TIME(5))",
 			"CAST('{0:hh\\:mm\\:ss\\.ffffff}' AS TIME(6))",
-			"CAST('{0:hh\\:mm\\:ss\\.fffffff}' AS TIME)"
+			"CAST('{0:hh\\:mm\\:ss\\.fffffff}' AS TIME)",
 		};
 
 		// DATE
@@ -149,7 +149,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)",
 			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)",
 			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)",
-			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)"
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)",
 		};
 		// DATETIME2(p)
 		private const string DaTETIME2_FROMPARTS_FORMAT                = "DATETIME2FROMPARTS({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})";
@@ -162,7 +162,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			"CAST('{0:yyyy-MM-ddTHH:mm:ss.ffff}' AS DATETIME2(4))",
 			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fffff}' AS DATETIME2(5))",
 			"CAST('{0:yyyy-MM-ddTHH:mm:ss.ffffff}' AS DATETIME2(6))",
-			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fffffff}' AS DATETIME2)"
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fffffff}' AS DATETIME2)",
 		};
 		// DATETIMEOFFSET(p)
 		private const string DaTETIMEOFFSET_FROMPARTS_FORMAT          = "DATETIMEOFFSETFROMPARTS({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})";
@@ -187,7 +187,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			"CAST('{0:yyyy-MM-ddTHH:mm:ss.ffffzzz}' AS DATETIMEOFFSET(4))",
 			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fffffzzz}' AS DATETIMEOFFSET(5))",
 			"CAST('{0:yyyy-MM-ddTHH:mm:ss.ffffffzzz}' AS DATETIMEOFFSET(6))",
-			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fffffffzzz}' AS DATETIMEOFFSET)"
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fffffffzzz}' AS DATETIMEOFFSET)",
 		};
 		private static readonly string[] DATETIMEOFFSET_AS_DATETIME_TYPED_FORMATS = new[]
 		{

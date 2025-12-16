@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Globalization;
@@ -141,7 +141,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				{
 					case null        : base.BuildDataTypeFromDataType(type,                forCreateTable, canBeNull); break;
 					case var t       : StringBuilder.Append(t);                                                        break;
-				};
+				}
 
 				return;
 			}
@@ -229,7 +229,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			{
 				case null  : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
 				case var t : StringBuilder.Append(t);                                         break;
-			};
+			}
 		}
 
 		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
@@ -399,7 +399,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			else
 			{
 				var sql = StringBuilder.ToString();
-				var insertIndex = sql.IndexOf("INSERT", position, StringComparison.Ordinal);
+				var insertIndex = sql.IndexOf("INSERT", position);
 
 				StringBuilder.Clear()
 					.Append(sql.AsSpan(0, insertIndex))

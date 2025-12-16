@@ -1,4 +1,4 @@
-// BASEDON: https://github.com/aspnet/EntityFramework/blob/dev/src/EFCore/Storage/ExecutionStrategy.cs
+﻿// BASEDON: https://github.com/aspnet/EntityFramework/blob/dev/src/EFCore/Storage/ExecutionStrategy.cs
 
 // Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
@@ -247,7 +247,7 @@ namespace LinqToDB.Data.RetryPolicy
 		/// <param name="lastException"> The exception thrown during the last execution attempt. </param>
 		/// <returns>
 		///     Returns the delay indicating how long to wait for before the next execution attempt if the operation should be retried;
-		///     <c>null</c> otherwise
+		///     <see langword="null"/> otherwise
 		/// </returns>
 		protected virtual TimeSpan? GetNextDelay(Exception lastException)
 		{

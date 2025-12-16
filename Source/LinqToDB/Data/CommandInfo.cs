@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -108,7 +108,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection instance.</param>
 		/// <param name="commandText">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>

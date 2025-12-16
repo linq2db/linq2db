@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -953,9 +953,9 @@ namespace LinqToDB.Internal.Extensions
 				!type.IsPublic &&
 				 type.IsGenericType &&
 				// C# anonymous type name prefix
-				(type.Name.StartsWith("<>f__AnonymousType", StringComparison.Ordinal) ||
+				(type.Name.StartsWith("<>f__AnonymousType") ||
 				 // VB.NET anonymous type name prefix
-				 type.Name.StartsWith("VB$AnonymousType", StringComparison.Ordinal)) &&
+				 type.Name.StartsWith("VB$AnonymousType")) &&
 				type.HasAttribute<CompilerGeneratedAttribute>(false);
 		}
 

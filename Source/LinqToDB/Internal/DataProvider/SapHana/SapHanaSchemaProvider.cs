@@ -545,10 +545,10 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			if (procedure.IsTableFunction)
 			{
 				commandText = "SELECT * FROM " + commandText + "(";
-				commandText += string.Join(",", procedure.Parameters.Select(p => (
+				commandText += string.Join(",", procedure.Parameters.Select(p => 
 					p.SystemType == typeof (DateTime)
-						? string.Format(CultureInfo.InvariantCulture, "'{0}'", DateTime.Now)
-						: string.Format(CultureInfo.InvariantCulture, "{0}", DefaultValue.GetValue(p.SystemType ?? typeof(object)) ?? "''"))));
+						? string.Create(CultureInfo.InvariantCulture, $"'{DateTime.Now}'")
+						: string.Create(CultureInfo.InvariantCulture, $"{(DefaultValue.GetValue(p.SystemType ?? typeof(object)) ?? "''")}")));
 
 				commandText += ")";
 				commandType = CommandType.Text;

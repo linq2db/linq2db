@@ -1010,8 +1010,6 @@ namespace Tests.DataProvider
 						.Property(e => e.GuidValue)
 							.IsNotColumn()
 					.Build();
-				;
-
 				if (context.IsAnyOf(TestProvName.AllOracleNative))
 				{
 					new FluentMappingBuilder(ms)

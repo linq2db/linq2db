@@ -63,7 +63,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="commandText">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -160,7 +160,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -183,7 +183,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -254,7 +254,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -277,7 +277,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -348,7 +348,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -415,7 +415,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -466,7 +466,7 @@ namespace LinqToDB.Data
 		/// <param name="objectReader">Record mapping function from data reader.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -584,7 +584,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -606,7 +606,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -677,7 +677,7 @@ namespace LinqToDB.Data
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -700,7 +700,7 @@ namespace LinqToDB.Data
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -907,7 +907,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -929,7 +929,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1000,7 +1000,7 @@ namespace LinqToDB.Data
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1023,7 +1023,7 @@ namespace LinqToDB.Data
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1188,7 +1188,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1240,7 +1240,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1354,7 +1354,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1431,7 +1431,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1492,7 +1492,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1550,7 +1550,7 @@ namespace LinqToDB.Data
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1606,7 +1606,7 @@ namespace LinqToDB.Data
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1646,7 +1646,7 @@ namespace LinqToDB.Data
 		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1732,7 +1732,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1753,7 +1753,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1818,7 +1818,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1839,7 +1839,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1958,7 +1958,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -1980,7 +1980,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -2049,7 +2049,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -2071,7 +2071,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text. This is caller's responsibility to properly escape procedure name.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -2182,7 +2182,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -2203,7 +2203,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -2336,7 +2336,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -2357,7 +2357,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection.</param>
 		/// <param name="sql">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>

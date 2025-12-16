@@ -343,7 +343,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Performs value conversion to specified type. If conversion failed, returns <c>null</c>.
+		/// Performs value conversion to specified type. If conversion failed, returns <see langword="null"/>.
 		/// Supported databases:
 		/// <list type="bullet">
 		/// <item>SQL Server 2012 or newer</item>
@@ -354,14 +354,14 @@ namespace LinqToDB
 		/// <typeparam name="TTo">Target value type.</typeparam>
 		/// <param name="value">Value to convert.</param>
 		/// <param name="_">Unused. Added to support method overloads.</param>
-		/// <returns>Value, converted to target type or <c>null</c> if conversion failed.</returns>
+		/// <returns>Value, converted to target type or <see langword="null"/> if conversion failed.</returns>
 		[CLSCompliant(false)]
 		[Function(PseudoFunctions.TRY_CONVERT, 3, 2, 0, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.Nullable)]
 		public static TTo? TryConvert<TFrom, TTo>(TFrom value, TTo? _) where TTo : struct
 			=> throw new ServerSideOnlyException(nameof(TryConvert));
 
 		/// <summary>
-		/// Performs value conversion to specified type. If conversion failed, returns <c>null</c>.
+		/// Performs value conversion to specified type. If conversion failed, returns <see langword="null"/>.
 		/// Supported databases:
 		/// <list type="bullet">
 		/// <item>SQL Server 2012 or newer</item>
@@ -372,7 +372,7 @@ namespace LinqToDB
 		/// <typeparam name="TTo">Target value type.</typeparam>
 		/// <param name="value">Value to convert.</param>
 		/// <param name="_">Unused. Added to support method overloads.</param>
-		/// <returns>Value, converted to target type or <c>null</c> if conversion failed.</returns>
+		/// <returns>Value, converted to target type or <see langword="null"/> if conversion failed.</returns>
 		[CLSCompliant(false)]
 		[Function(PseudoFunctions.TRY_CONVERT, 3, 2, 0, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.Nullable)]
 		public static TTo? TryConvert<TFrom, TTo>(TFrom value, TTo? _) where TTo : class
@@ -652,7 +652,7 @@ namespace LinqToDB
 		[Expression(PN.Ydb, "Unicode::Substring({0}, 0, {1} - 1) || {3} || Unicode::Substring({0}, {1} + {2} - 1)", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Concatenate)]
 		public static string Stuff(IEnumerable<string> characterExpression, int? start, int? length, string replaceWithExpression)
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException();
 		}
 
 		[Function(                                                        IsNullable = IsNullableType.IfAnyParameterNullable)]

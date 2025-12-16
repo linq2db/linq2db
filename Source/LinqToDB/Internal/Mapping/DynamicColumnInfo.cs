@@ -52,7 +52,7 @@ namespace LinqToDB.Internal.Mapping
 			if (other == null)
 				return false;
 
-			return ReferenceEquals(this, other) || Name.Equals(other.Name, StringComparison.Ordinal) && other.DeclaringType == DeclaringType;
+			return ReferenceEquals(this, other) || Name.Equals(other.Name) && other.DeclaringType == DeclaringType;
 		}
 
 		public override bool Equals(object? obj)

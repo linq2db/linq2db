@@ -97,7 +97,7 @@ internal sealed class SapHanaProvider : DatabaseProviderBase
 			{
 				foreach (var assemblyName in SapHanaProviderAdapter.UnmanagedAssemblyNames)
 				{
-					var version = assemblyName.Substring(assemblyName.IndexOf(".v", StringComparison.Ordinal) + 1);
+					var version = assemblyName.Substring(assemblyName.IndexOf(".v") + 1);
 
 					var path = Path.Combine(programFiles, $"sap\\hdbclient\\dotnetcore\\{version}\\{assemblyName}.dll");
 

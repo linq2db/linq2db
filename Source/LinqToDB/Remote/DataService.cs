@@ -100,14 +100,14 @@ namespace LinqToDB.Remote
 					let tt  = t.GetGenericArguments()[0]
 					let m   = _mappingSchema.GetEntityDescriptor(tt, _options.ConnectionOptions.OnEntityDescriptorCreated)
 					let tbl = new SqlTable(m)
-					where tbl.Fields.Any(f => f.IsPrimaryKey)
+					where tbl.Fields.Exists(f => f.IsPrimaryKey)
 					select new
 					{
 						p.Name,
 						ID     = n++,
 						Type   = tt,
 						Table  = tbl,
-						Mapper = m
+						Mapper = m,
 					}
 				).ToList();
 

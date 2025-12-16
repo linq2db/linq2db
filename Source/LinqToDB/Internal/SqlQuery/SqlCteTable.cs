@@ -53,7 +53,7 @@ namespace LinqToDB.Internal.SqlQuery
 				{
 					var field = Cte.Fields[idx];
 
-					var foundField = Fields.FirstOrDefault(f => f.Name == field.Name);
+					var foundField = Fields.Find(f => f.Name == field.Name);
 					if (foundField == null)
 						hasInvalid = true;
 					return (foundField as ISqlExpression)!;

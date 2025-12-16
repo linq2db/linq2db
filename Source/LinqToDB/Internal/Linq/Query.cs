@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -34,7 +34,7 @@ namespace LinqToDB.Internal.Linq
 
 		internal abstract void Init(IBuildContext parseContext);
 
-		internal Query(IDataContext dataContext)
+		protected internal Query(IDataContext dataContext)
 		{
 			ConfigurationID         = dataContext.ConfigurationID;
 			ContextType             = dataContext.GetType();

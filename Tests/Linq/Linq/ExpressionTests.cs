@@ -386,8 +386,6 @@ namespace Tests.Linq
 			var qry = from a in t1
 					   from b in Issue4674JoinTable<Issue4674StockRoomItem>(db, b => b.TenantId == a.TenantId && b.StockroomCode == a.Code)
 					   select new { a.TenantId, a.Code, a.Description, b.StockroomCode, b.Quantity };
-
-			;
 			Assert.That(() => qry.ToArray(), Throws.InstanceOf<LinqToDBException>()
 				.With.Message.Contain("The LINQ expression could not be converted to SQL."));
 		}

@@ -93,7 +93,6 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 				_ => base.ConvertSqlFunction(func),
 			};
-			;
 		}
 
 		// TODO: remove and use DataType check when we implement DbType parsing to DbDataType

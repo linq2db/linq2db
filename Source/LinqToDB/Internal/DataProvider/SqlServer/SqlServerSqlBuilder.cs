@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -45,7 +45,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			{
 				var identityField = insertClause.Into!.GetIdentityField();
 
-				if (identityField != null && (identityField.Type.DataType == DataType.Guid || ProviderOptions.GenerateScopeIdentity == false))
+				if (identityField != null && (identityField.Type.DataType == DataType.Guid || !ProviderOptions.GenerateScopeIdentity))
 				{
 					AppendIndent()
 						.Append("DECLARE ");
@@ -70,7 +70,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			{
 				var identityField = insertClause.Into!.GetIdentityField();
 
-				if (identityField != null && (identityField.Type.DataType == DataType.Guid || ProviderOptions.GenerateScopeIdentity == false))
+				if (identityField != null && (identityField.Type.DataType == DataType.Guid || !ProviderOptions.GenerateScopeIdentity))
 				{
 					StringBuilder
 						.Append("OUTPUT [INSERTED].");
@@ -96,7 +96,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			var identityField = insertClause.Into!.GetIdentityField();
 
-			if (identityField != null && (identityField.Type.DataType == DataType.Guid || ProviderOptions.GenerateScopeIdentity == false))
+			if (identityField != null && (identityField.Type.DataType == DataType.Guid || !ProviderOptions.GenerateScopeIdentity))
 			{
 				StringBuilder
 					.AppendLine();
@@ -200,7 +200,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			};
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
 		{
 			var databaseName = name.Database;
 
@@ -295,7 +295,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			}
 
 			StringBuilder.Append("PRIMARY KEY CLUSTERED (");
-			StringBuilder.Append(string.Join(InlineComma, fieldNames));
+			StringBuilder.AppendJoin(InlineComma, fieldNames);
 			StringBuilder.Append(')');
 		}
 

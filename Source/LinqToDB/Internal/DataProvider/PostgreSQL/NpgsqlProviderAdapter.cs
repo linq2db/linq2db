@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Common;
@@ -113,9 +113,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			// because NpgsqlDbType enumeration changes often (compared to other providers)
 			// we should create lookup list of mapped fields, defined in used npgsql version
 			var dbTypeKnownNames    = Enum.GetNames(dbTypeType);
-#pragma warning disable CA2263 // Prefer generic overload when type is known
 			var dbMappedDbTypeNames = Enum.GetNames(typeof(NpgsqlDbType));
-#pragma warning restore CA2263 // Prefer generic overload when type is known
 			foreach (var knownTypeName in from nType in dbTypeKnownNames
 										  join mType in dbMappedDbTypeNames on nType equals mType
 										  select nType)

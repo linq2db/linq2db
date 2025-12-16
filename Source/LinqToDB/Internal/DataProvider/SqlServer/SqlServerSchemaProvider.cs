@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlTypes;
@@ -28,7 +28,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			var version = dataConnection.Execute<string>("select @@version");
 
-			IsAzure            = version.Contains("Azure", StringComparison.Ordinal);
+			IsAzure            = version.Contains("Azure");
 			CompatibilityLevel = dataConnection.Execute<int>("SELECT compatibility_level FROM sys.databases WHERE name = db_name()");
 		}
 
@@ -513,7 +513,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					"sp_describe_first_result_set",
 					new DataParameter("tsql", tsql),
 					new DataParameter("params", parms)
-					))
+					)
+				)
 				{
 					var row = dt.NewRow();
 

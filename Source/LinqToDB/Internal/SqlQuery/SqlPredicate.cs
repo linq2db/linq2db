@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -782,7 +782,7 @@ namespace LinqToDB.Internal.SqlQuery
 			public ISqlExpression FalseValue  { get; set; }
 			/// <summary>
 			/// <list type="bullet">
-			/// <item><c>null</c> : evaluate predicate as is and preserve UNKNOWN (null) values if they produced</item>
+			/// <item><see langword="null"/> : evaluate predicate as is and preserve UNKNOWN (null) values if they produced</item>
 			/// <item><see langword="false"/> : UNKNOWN values should be converted to FALSE</item>
 			/// <item><see langword="true"/> : UNKNOWN values should be converted to TRUE</item>
 			/// </list>

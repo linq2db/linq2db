@@ -113,7 +113,7 @@ namespace LinqToDB
 				&& Length     == other.Length
 				&& Precision  == other.Precision
 				&& Scale      == other.Scale
-				&& string.Equals(DbType, other.DbType, StringComparison.Ordinal);
+				&& string.Equals(DbType, other.DbType);
 		}
 
 		public readonly bool EqualsDbOnly(DbDataType other)
@@ -122,7 +122,7 @@ namespace LinqToDB
 				&& Length     == other.Length
 				&& Precision  == other.Precision
 				&& Scale      == other.Scale
-				&& string.Equals(DbType, other.DbType, StringComparison.Ordinal);
+				&& string.Equals(DbType, other.DbType);
 		}
 
 		public override bool Equals(object? obj)

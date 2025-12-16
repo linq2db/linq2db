@@ -54,7 +54,7 @@ internal sealed class ModelProviderInterceptor(ConnectionSettings settings, ISql
 	#region Type Mapping
 	public override TypeMapping? GetTypeMapping(DatabaseType databaseType, ITypeParser typeParser, TypeMapping? defaultMapping)
 	{
-		if (_replaceClickHouseFixedString && databaseType.Name?.StartsWith("FixedString(", StringComparison.Ordinal) == true)
+		if (_replaceClickHouseFixedString && databaseType.Name?.StartsWith("FixedString(") == true)
 			return new TypeMapping(WellKnownTypes.System.String, DataType.NChar);
 
 		return base.GetTypeMapping(databaseType, typeParser, defaultMapping);

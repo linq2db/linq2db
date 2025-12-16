@@ -31,7 +31,7 @@ namespace LinqToDB.Internal.DataProvider
 
 		/// <summary>
 		/// Gets type, that implements <see cref="DbTransaction"/> for current ADO.NET provider.
-		/// For providers/databases without transaction support contains <c>null</c>.
+		/// For providers/databases without transaction support contains <see langword="null"/>.
 		/// </summary>
 		Type? TransactionType { get; }
 

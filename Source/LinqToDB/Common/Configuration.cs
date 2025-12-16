@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Data;
 using System.Linq.Expressions;
@@ -607,7 +607,7 @@ namespace LinqToDB.Common
 			/// </code>
 			/// </example>
 			/// <remarks>
-			/// Set this value to <c>null</c> to disable special alias generation queries.
+			/// Set this value to <see langword="null"/> to disable special alias generation queries.
 			/// </remarks>
 			/// </summary>
 			public static string? AssociationAlias

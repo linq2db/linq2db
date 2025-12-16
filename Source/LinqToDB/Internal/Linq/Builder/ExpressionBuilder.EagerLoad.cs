@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -110,6 +111,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return initExpression;
 		}
 
+		[StructLayout(LayoutKind.Auto)]
 		readonly struct KeyDetailEnvelope<TKey, TDetail>
 			where TKey: notnull
 		{

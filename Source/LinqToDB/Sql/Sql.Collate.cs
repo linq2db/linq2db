@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
@@ -24,11 +24,18 @@ namespace LinqToDB
 		public static string? Collate(this string? expr, [SqlQueryDependent] string collation)
 			=> throw new ServerSideOnlyException(nameof(Collate));
 
-		internal sealed class NamedCollationBuilder : IExtensionCallBuilder
+		internal sealed partial class NamedCollationBuilder : IExtensionCallBuilder
 		{
-			private static readonly Regex _collationValidator = new(@"^[a-zA-Z0-9_\.\-@]+$", RegexOptions.Compiled);
+			private const string CollationValidationPattern = /* lang=regex */ @"^[a-zA-Z0-9_\.\-@]+$";
+#if SUPPORTS_REGEX_GENERATORS
+            [GeneratedRegex(CollationValidationPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 1)]
+            private static partial Regex CollationValidationRegex();
+#else
+			private static readonly Regex _collationValidator = new(CollationValidationPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(1));
+			private Regex CollationValidationRegex() => _collationValidator;
+#endif
 
-			public void Build(ISqlExtensionBuilder builder)
+            public void Build(ISqlExtensionBuilder builder)
 			{
 				var expr = builder.GetExpression("expr")!;
 				var collation = builder.GetValue<string>("collation");
@@ -38,7 +45,6 @@ namespace LinqToDB
 
 				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), $"{{0}} COLLATE {collation}",
 					Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, expr);
-;
 			}
 
 			/// <summary>
@@ -48,7 +54,7 @@ namespace LinqToDB
 			/// <returns>False if invalid characters found, else true.</returns>
 			private static bool ValidateCollation(string collation)
 			{
-				return !string.IsNullOrWhiteSpace(collation) && _collationValidator.IsMatch(collation);
+				return !string.IsNullOrWhiteSpace(collation) && CollationValidationRegex().IsMatch(collation);
 			}
 		}
 

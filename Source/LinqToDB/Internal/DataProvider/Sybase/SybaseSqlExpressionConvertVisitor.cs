@@ -86,7 +86,6 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 				_ => base.ConvertSqlFunction(func),
 			};
-			;
 		}
 
 		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)

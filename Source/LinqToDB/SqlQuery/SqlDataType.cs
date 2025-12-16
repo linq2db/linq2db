@@ -5,6 +5,7 @@ using System.Data.SqlTypes;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.InteropServices;
 
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -102,6 +103,7 @@ namespace LinqToDB.SqlQuery
 
 		#region Static Members
 
+		[StructLayout(LayoutKind.Auto)]
 		readonly struct TypeInfo
 		{
 			public TypeInfo(DataType dbType, int? maxLength, int? maxPrecision, int? maxScale, int? maxDisplaySize)

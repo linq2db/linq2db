@@ -164,17 +164,17 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		[Wrapper]
 		private sealed class SqliteConnection
 		{
-			public SqliteConnection(string connectionString) => throw new NotImplementedException();
+			public SqliteConnection(string connectionString) => throw new NotSupportedException();
 
-			public static void ClearAllPools() => throw new NotImplementedException();
+			public static void ClearAllPools() => throw new NotSupportedException();
 		}
 
 		[Wrapper]
 		private sealed class SQLiteConnection
 		{
-			public SQLiteConnection(string connectionString) => throw new NotImplementedException();
+			public SQLiteConnection(string connectionString) => throw new NotSupportedException();
 
-			public static void ClearAllPools() => throw new NotImplementedException();
+			public static void ClearAllPools() => throw new NotSupportedException();
 		}
 
 		#endregion

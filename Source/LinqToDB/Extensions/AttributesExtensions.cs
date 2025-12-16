@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -118,7 +118,7 @@ namespace LinqToDB.Extensions
 		/// <param name="source">An attribute owner.</param>
 		/// <param name="inherit">When true, look up the hierarchy chain for the inherited custom attribute.</param>
 		/// <typeparam name="T">The type of attribute to search for. Only attributes that are assignable to this type are returned.</typeparam>
-		/// <returns>A reference to the first custom attribute of type <typeparamref name="T"/> that is applied to element, or <c>null</c> if there is no such attribute.</returns>
+		/// <returns>A reference to the first custom attribute of type <typeparamref name="T"/> that is applied to element, or <see langword="null"/> if there is no such attribute.</returns>
 		public static T? GetAttribute<T>(this ICustomAttributeProvider source, bool inherit = true)
 			where T : Attribute
 		{

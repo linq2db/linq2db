@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
@@ -58,7 +58,7 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool        IsSkipSupportedIfTake          { get; set; }
 		/// <summary>
 		/// Indicates supported TAKE/LIMIT hints.
-		/// Default (set by <see cref="DataProviderBase"/>): <c>null</c> (none).
+		/// Default (set by <see cref="DataProviderBase"/>): <see langword="null"/> (none).
 		/// </summary>
 		[DataMember(Order =  7)]
 		public TakeHints?  TakeHintsSupported              { get; set; }
@@ -215,7 +215,7 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsCommonTableExpressionsSupported     { get; set; }
 
 		/// <summary>
-		/// Provider treats empty string as <c>null</c> in queries.
+		/// Provider treats empty string as <see langword="null"/> in queries.
 		/// It is specific behaviour only for Oracle.
 		/// Default <see langword="false"/>
 		/// </summary>
@@ -488,7 +488,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		/// <summary>
 		/// Provider supports correlated subqueris, but limited how deep in subquery outer reference
-		/// Default <c>null</c>. If this value is <c>0</c>c>, provider do not support correlated subqueries
+		/// Default <see langword="null"/>. If this value is <c>0</c>c>, provider do not support correlated subqueries
 		/// </summary>
 		[DataMember(Order = 56)]
 		public int? SupportedCorrelatedSubqueriesLevel { get; set; }

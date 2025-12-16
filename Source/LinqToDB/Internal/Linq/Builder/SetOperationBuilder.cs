@@ -357,14 +357,14 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							if (QueryHelper.IsNullValue(column2.Expression))
 							{
-								return MakeNullCondition(new SqlPathExpression(map.Key, placeholder1.Type), isLeft == true);
+								return MakeNullCondition(new SqlPathExpression(map.Key, placeholder1.Type), isNotNull: isLeft);
 							}
 
 						}
 						else if (!column2.Expression.CanBeNullable(nullability2))
 						{
 							if (QueryHelper.IsNullValue(column1.Expression))
-								return MakeNullCondition(new SqlPathExpression(map.Key, placeholder2.Type), isLeft == false);
+								return MakeNullCondition(new SqlPathExpression(map.Key, placeholder2.Type), isNotNull: !isLeft);
 						}
 					}
 				}
@@ -484,7 +484,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var placeholder1 = placeholder;
 
-					var (placeholder2, _) = placeholders2.FirstOrDefault(p2 => PathComparer.Instance.Equals(p2.path, path));
+					var (placeholder2, _) = placeholders2.Find(p2 => PathComparer.Instance.Equals(p2.path, path));
 					if (placeholder2 == null)
 					{
 						placeholder2 = ExpressionBuilder.CreatePlaceholder(_sequence2,
@@ -548,7 +548,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (eagerMapping?.ContainsKey(e1) == true)
 						continue;
 
-					var found = eager2.FirstOrDefault(e2 => ExpressionEqualityComparer.Instance.Equals(e2, e1));
+					var found = eager2.Find(e2 => ExpressionEqualityComparer.Instance.Equals(e2, e1));
 
 					eagerMapping ??= new(ExpressionEqualityComparer.Instance);
 

@@ -48,7 +48,6 @@ namespace Tests.Linq
 		public void Take1([DataSources] string context, [Values] bool withParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
-
 			for (var i = 2; i <= 3; i++)
 			{
 				Assert.That((from ch in db.Child select ch).Take(i).ToList(), Has.Count.EqualTo(i));
@@ -648,7 +647,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ElementAtDefault5([DataSources] string context, [Values(2, 3)] int idx, [Values] bool withParameters)
+		public void ElementAtDefault5([DataSources] string context, [Values(2,3)] int idx, [Values] bool withParameters)
 		{
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
 			var missCount = db.Person.GetCacheMissCount();
@@ -787,29 +786,29 @@ namespace Tests.Linq
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
 			using (db.CreateLocalTable(new[]
 			{
-					new Batch { Id = 1, Value = "V1" },
-					new Batch { Id = 2, Value = "V2" },
-					new Batch { Id = 3, Value = "V3" }
-				}))
+				new Batch { Id = 1, Value = "V1" },
+				new Batch { Id = 2, Value = "V2" },
+				new Batch { Id = 3, Value = "V3" },
+			}))
 			using (db.CreateLocalTable(new[]
 			{
-					new Confirmation { BatchId = 1, Date = DateTime.Parse("09 Apr 2019 14:30:00 GMT", DateTimeFormatInfo.InvariantInfo) },
-					new Confirmation { BatchId = 2, Date = DateTime.Parse("09 Apr 2019 14:30:20 GMT", DateTimeFormatInfo.InvariantInfo) },
-					new Confirmation { BatchId = 2, Date = DateTime.Parse("09 Apr 2019 14:30:25 GMT", DateTimeFormatInfo.InvariantInfo) },
-					new Confirmation { BatchId = 3, Date = DateTime.Parse("09 Apr 2019 14:30:35 GMT", DateTimeFormatInfo.InvariantInfo) },
-				}))
+				new Confirmation { BatchId = 1, Date = DateTime.Parse("09 Apr 2019 14:30:00 GMT", DateTimeFormatInfo.InvariantInfo) },
+				new Confirmation { BatchId = 2, Date = DateTime.Parse("09 Apr 2019 14:30:20 GMT", DateTimeFormatInfo.InvariantInfo) },
+				new Confirmation { BatchId = 2, Date = DateTime.Parse("09 Apr 2019 14:30:25 GMT", DateTimeFormatInfo.InvariantInfo) },
+				new Confirmation { BatchId = 3, Date = DateTime.Parse("09 Apr 2019 14:30:35 GMT", DateTimeFormatInfo.InvariantInfo) },
+			}))
 			{
 
 				var query = db.GetTable<Batch>()
-							.OrderByDescending(x => x.Id)
-							.Select(x => new
-							{
-								BatchId = x.Id,
-								CreationDate = x.Confirmations.FirstOrDefault()!.Date,
-								x.Value
-							})
-							.Take(2)
-							.OrderBy(x => x.BatchId);
+					.OrderByDescending(x => x.Id)
+					.Select(x => new
+					{
+						BatchId = x.Id,
+						CreationDate = x.Confirmations.FirstOrDefault()!.Date,
+						x.Value,
+					})
+					.Take(2)
+					.OrderBy(x => x.BatchId);
 
 				var res = query.ToList();
 
@@ -830,12 +829,14 @@ namespace Tests.Linq
 
 		sealed class TakeSkipClass
 		{
+			[PrimaryKey] public int Id { get; set; }
+
 			[Column(DataType = DataType.VarChar, Length = 10)]
 			public string? Value { get; set; }
 
 			private bool Equals(TakeSkipClass other)
 			{
-				return Value == other.Value;
+				return string.Equals(Value, other.Value, StringComparison.Ordinal);
 			}
 
 			public override bool Equals(object? obj)
@@ -850,6 +851,26 @@ namespace Tests.Linq
 			{
 				return (Value != null ? Value.GetHashCode() : 0);
 			}
+
+			public static TakeSkipClass[] TestData1 =
+			[
+				new TakeSkipClass { Id = 1, Value = "PIPPO" },
+				new TakeSkipClass { Id = 2, Value = "PLUTO" },
+				new TakeSkipClass { Id = 3, Value = "PLUTO" },
+				new TakeSkipClass { Id = 4, Value = "BOLTO" },
+			];
+
+			public static TakeSkipClass[] TestData2 =
+			[
+				new TakeSkipClass { Id = 1, Value = "Value1" },
+				new TakeSkipClass { Id = 2, Value = "Value2" },
+				new TakeSkipClass { Id = 3, Value = "Value3" },
+				new TakeSkipClass { Id = 4, Value = "Value4" },
+				new TakeSkipClass { Id = 5, Value = "Value5" },
+				new TakeSkipClass { Id = 6, Value = "Value6" },
+				new TakeSkipClass { Id = 7, Value = "Value7" },
+				new TakeSkipClass { Id = 8, Value = "Value8" },
+			];
 		}
 
 		// Sybase, Informix: doesn't support TOP/FIRST in subqueries
@@ -857,16 +878,8 @@ namespace Tests.Linq
 		[YdbCteAsSource]
 		public void GroupTakeAnyTest([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values] bool withParameters)
 		{
-			var testData = new[]
-			{
-				new TakeSkipClass { Value = "PIPPO" },
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "BOLTO" }
-			};
-
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
-			using var tempTable = db.CreateLocalTable(testData);
+			using var tempTable = db.CreateLocalTable(TakeSkipClass.TestData1);
 
 			var actual = tempTable
 					.GroupBy(item => item.Value)
@@ -875,7 +888,7 @@ namespace Tests.Linq
 					.Take(1)
 					.Any();
 
-			var expected = testData
+			var expected = TakeSkipClass.TestData1
 					.GroupBy(item => item.Value)
 					.Where(group => group.Count() > 1)
 					.Select(item => item.Key)
@@ -889,23 +902,15 @@ namespace Tests.Linq
 		[Test]
 		public void DistinctTakeTest([DataSources] string context, [Values] bool withParameters)
 		{
-			var testData = new[]
-			{
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "PIPPO" },
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "BOLTO" }
-			};
-
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
-			using var tempTable = db.CreateLocalTable(testData);
+			using var tempTable = db.CreateLocalTable(TakeSkipClass.TestData1);
 
-			var actual = tempTable
+			var actual = tempTable.Select(r => r.Value)
 					.Distinct()
 					.Take(3)
 					.ToArray();
 
-			var expected = testData
+			var expected = TakeSkipClass.TestData1.Select(r => r.Value)
 					.Distinct()
 					.Take(3)
 					.ToArray();
@@ -917,23 +922,15 @@ namespace Tests.Linq
 		[Test]
 		public void OrderByTakeTest([DataSources] string context, [Values] bool withParameters)
 		{
-			var testData = new[]
-			{
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "PIPPO" },
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "BOLTO" }
-			};
-
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
-			using var tempTable = db.CreateLocalTable(testData);
+			using var tempTable = db.CreateLocalTable(TakeSkipClass.TestData1);
 
 			var actual = tempTable
 					.OrderBy(t => t.Value)
 					.Take(2)
 					.ToArray();
 
-			var expected = testData
+			var expected = TakeSkipClass.TestData1
 					.OrderBy(t => t.Value)
 					.Take(2)
 					.ToArray();
@@ -945,16 +942,8 @@ namespace Tests.Linq
 		[Test]
 		public void MultipleTake1([DataSources] string context, [Values] bool withParameters)
 		{
-			var testData = new[]
-			{
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "PIPPO" },
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "BOLTO" }
-			};
-
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
-			using var tempTable = db.CreateLocalTable(testData);
+			using var tempTable = db.CreateLocalTable(TakeSkipClass.TestData1);
 
 			var actual = tempTable
 					.OrderBy(t => t.Value)
@@ -962,7 +951,7 @@ namespace Tests.Linq
 					.Take(2)
 					.ToArray();
 
-			var expected = testData
+			var expected = TakeSkipClass.TestData1
 					.OrderBy(t => t.Value)
 					.Take(3)
 					.Take(2)
@@ -982,16 +971,8 @@ namespace Tests.Linq
 		[Test]
 		public void MultipleTake2([DataSources] string context, [Values] bool withParameters)
 		{
-			var testData = new[]
-			{
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "PIPPO" },
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "BOLTO" }
-			};
-
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
-			using var tempTable = db.CreateLocalTable(testData);
+			using var tempTable = db.CreateLocalTable(TakeSkipClass.TestData1);
 
 			var actual = tempTable
 					.OrderBy(t => t.Value)
@@ -999,7 +980,7 @@ namespace Tests.Linq
 					.Take(3)
 					.ToArray();
 
-			var expected = testData
+			var expected = TakeSkipClass.TestData1
 					.OrderBy(t => t.Value)
 					.Take(2)
 					.Take(3)
@@ -1019,20 +1000,8 @@ namespace Tests.Linq
 		[Test]
 		public void MultipleTake3([DataSources] string context, [Values] bool withParameters)
 		{
-			var testData = new[]
-			{
-				new TakeSkipClass { Value = "Value1" },
-				new TakeSkipClass { Value = "Value2" },
-				new TakeSkipClass { Value = "Value3" },
-				new TakeSkipClass { Value = "Value4" },
-				new TakeSkipClass { Value = "Value5" },
-				new TakeSkipClass { Value = "Value6" },
-				new TakeSkipClass { Value = "Value7" },
-				new TakeSkipClass { Value = "Value8" },
-			};
-
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
-			using var tempTable = db.CreateLocalTable(testData);
+			using var tempTable = db.CreateLocalTable(TakeSkipClass.TestData2);
 
 			var actual = tempTable
 					.OrderBy(t => t.Value)
@@ -1041,7 +1010,7 @@ namespace Tests.Linq
 					.Take(2)
 					.ToArray();
 
-			var expected = testData
+			var expected = TakeSkipClass.TestData2
 					.OrderBy(t => t.Value)
 					.Take(1)
 					.Take(3)
@@ -1062,20 +1031,8 @@ namespace Tests.Linq
 		[Test]
 		public void MultipleTake4([DataSources] string context, [Values] bool withParameters)
 		{
-			var testData = new[]
-			{
-				new TakeSkipClass { Value = "Value1" },
-				new TakeSkipClass { Value = "Value2" },
-				new TakeSkipClass { Value = "Value3" },
-				new TakeSkipClass { Value = "Value4" },
-				new TakeSkipClass { Value = "Value5" },
-				new TakeSkipClass { Value = "Value6" },
-				new TakeSkipClass { Value = "Value7" },
-				new TakeSkipClass { Value = "Value8" },
-			};
-
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
-			using var tempTable = db.CreateLocalTable(testData);
+			using var tempTable = db.CreateLocalTable(TakeSkipClass.TestData2);
 
 			var actual = tempTable
 					.OrderBy(t => t.Value)
@@ -1084,7 +1041,7 @@ namespace Tests.Linq
 					.Take(1)
 					.ToArray();
 
-			var expected = testData
+			var expected = TakeSkipClass.TestData2
 					.OrderBy(t => t.Value)
 					.Take(2)
 					.Take(3)
@@ -1105,16 +1062,8 @@ namespace Tests.Linq
 		[Test]
 		public void MultipleSkip1([DataSources] string context)
 		{
-			var testData = new[]
-			{
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "PIPPO" },
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "BOLTO" }
-			};
-
 			using var db = GetDataContext(context);
-			using var tempTable = db.CreateLocalTable(testData);
+			using var tempTable = db.CreateLocalTable(TakeSkipClass.TestData1);
 
 			var actual = tempTable
 					.OrderBy(t => t.Value)
@@ -1122,7 +1071,7 @@ namespace Tests.Linq
 					.Skip(2)
 					.ToArray();
 
-			var expected = testData
+			var expected = TakeSkipClass.TestData1
 					.OrderBy(t => t.Value)
 					.Skip(1)
 					.Skip(2)
@@ -1140,16 +1089,8 @@ namespace Tests.Linq
 		[Test]
 		public async Task MultipleSkip1Async([DataSources] string context)
 		{
-			var testData = new[]
-			{
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "PIPPO" },
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "BOLTO" }
-			};
-
 			using var db = GetDataContext(context);
-			using var tempTable = db.CreateLocalTable(testData);
+			using var tempTable = db.CreateLocalTable(TakeSkipClass.TestData1);
 
 			var actual = await tempTable
 					.OrderBy(t => t.Value)
@@ -1157,7 +1098,7 @@ namespace Tests.Linq
 					.Skip(2)
 					.ToArrayAsync();
 
-			var expected = testData
+			var expected = TakeSkipClass.TestData1
 					.OrderBy(t => t.Value)
 					.Skip(1)
 					.Skip(2)
@@ -1175,16 +1116,8 @@ namespace Tests.Linq
 		[Test]
 		public void MultipleSkip2([DataSources] string context, [Values] bool withParameters)
 		{
-			var testData = new[]
-			{
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "PIPPO" },
-				new TakeSkipClass { Value = "PLUTO" },
-				new TakeSkipClass { Value = "BOLTO" }
-			};
-
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
-			using var tempTable = db.CreateLocalTable(testData);
+			using var tempTable = db.CreateLocalTable(TakeSkipClass.TestData1);
 			for (int i = 1; i <= 2; i++)
 			{
 				var missCount = tempTable.GetCacheMissCount();
@@ -1195,7 +1128,7 @@ namespace Tests.Linq
 						.Skip(i)
 						.ToArray();
 
-				var expected = testData
+				var expected = TakeSkipClass.TestData1
 						.OrderBy(t => t.Value)
 						.Skip(2)
 						.Skip(i)
@@ -1218,20 +1151,8 @@ namespace Tests.Linq
 		[Test]
 		public void MultipleSkip3([DataSources] string context, [Values] bool withParameters)
 		{
-			var testData = new[]
-			{
-				new TakeSkipClass { Value = "Value1" },
-				new TakeSkipClass { Value = "Value2" },
-				new TakeSkipClass { Value = "Value3" },
-				new TakeSkipClass { Value = "Value4" },
-				new TakeSkipClass { Value = "Value5" },
-				new TakeSkipClass { Value = "Value6" },
-				new TakeSkipClass { Value = "Value7" },
-				new TakeSkipClass { Value = "Value8" },
-			};
-
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
-			using var tempTable = db.CreateLocalTable(testData);
+			using var tempTable = db.CreateLocalTable(TakeSkipClass.TestData2);
 
 			var actual = tempTable
 					.OrderBy(t => t.Value)
@@ -1240,7 +1161,7 @@ namespace Tests.Linq
 					.Skip(1)
 					.ToArray();
 
-			var expected = testData
+			var expected = TakeSkipClass.TestData2
 					.OrderBy(t => t.Value)
 					.Skip(2)
 					.Skip(3)
@@ -1259,20 +1180,8 @@ namespace Tests.Linq
 		[Test]
 		public void MultipleSkip4([DataSources] string context, [Values] bool withParameters)
 		{
-			var testData = new[]
-			{
-				new TakeSkipClass { Value = "Value1" },
-				new TakeSkipClass { Value = "Value2" },
-				new TakeSkipClass { Value = "Value3" },
-				new TakeSkipClass { Value = "Value4" },
-				new TakeSkipClass { Value = "Value5" },
-				new TakeSkipClass { Value = "Value6" },
-				new TakeSkipClass { Value = "Value7" },
-				new TakeSkipClass { Value = "Value8" },
-			};
-
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
-			using var tempTable = db.CreateLocalTable(testData);
+			using var tempTable = db.CreateLocalTable(TakeSkipClass.TestData2);
 
 			var actual = tempTable
 					.OrderBy(t => t.Value)
@@ -1281,7 +1190,7 @@ namespace Tests.Linq
 					.Skip(2)
 					.ToArray();
 
-			var expected = testData
+			var expected = TakeSkipClass.TestData2
 					.OrderBy(t => t.Value)
 					.Skip(1)
 					.Skip(3)
@@ -1300,20 +1209,8 @@ namespace Tests.Linq
 		[Test]
 		public void MultipleTakeSkip1([DataSources] string context, [Values] bool withParameters)
 		{
-			var testData = new[]
-			{
-				new TakeSkipClass { Value = "Value1" },
-				new TakeSkipClass { Value = "Value2" },
-				new TakeSkipClass { Value = "Value3" },
-				new TakeSkipClass { Value = "Value4" },
-				new TakeSkipClass { Value = "Value5" },
-				new TakeSkipClass { Value = "Value6" },
-				new TakeSkipClass { Value = "Value7" },
-				new TakeSkipClass { Value = "Value8" },
-			};
-
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
-			using var tempTable = db.CreateLocalTable(testData);
+			using var tempTable = db.CreateLocalTable(TakeSkipClass.TestData2);
 
 			var actual = tempTable
 					.OrderBy(t => t.Value)
@@ -1323,7 +1220,7 @@ namespace Tests.Linq
 					.Skip(1)
 					.ToArray();
 
-			var expected = testData
+			var expected = TakeSkipClass.TestData2
 					.OrderBy(t => t.Value)
 					.Take(6)
 					.Skip(2)
@@ -1345,20 +1242,8 @@ namespace Tests.Linq
 		[Test]
 		public void MultipleTakeSkip2([DataSources] string context, [Values] bool withParameters)
 		{
-			var testData = new[]
-			{
-				new TakeSkipClass { Value = "Value1" },
-				new TakeSkipClass { Value = "Value2" },
-				new TakeSkipClass { Value = "Value3" },
-				new TakeSkipClass { Value = "Value4" },
-				new TakeSkipClass { Value = "Value5" },
-				new TakeSkipClass { Value = "Value6" },
-				new TakeSkipClass { Value = "Value7" },
-				new TakeSkipClass { Value = "Value8" },
-			};
-
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
-			using var tempTable = db.CreateLocalTable(testData);
+			using var tempTable = db.CreateLocalTable(TakeSkipClass.TestData2);
 
 			var actual = tempTable
 					.OrderBy(t => t.Value)
@@ -1368,7 +1253,7 @@ namespace Tests.Linq
 					.Take(2)
 					.ToArray();
 
-			var expected = testData
+			var expected = TakeSkipClass.TestData2
 					.OrderBy(t => t.Value)
 					.Skip(2)
 					.Take(5)
@@ -1390,21 +1275,8 @@ namespace Tests.Linq
 		[Test]
 		public void MultipleTakeSkip3([DataSources] string context, [Values] bool withParameters)
 		{
-			var testData = new[]
-			{
-				new TakeSkipClass { Value = "Value1" },
-				new TakeSkipClass { Value = "Value2" },
-				new TakeSkipClass { Value = "Value3" },
-				new TakeSkipClass { Value = "Value4" },
-				new TakeSkipClass { Value = "Value5" },
-				new TakeSkipClass { Value = "Value6" },
-				new TakeSkipClass { Value = "Value7" },
-				new TakeSkipClass { Value = "Value8" },
-				new TakeSkipClass { Value = "Value9" },
-			};
-
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
-			using var tempTable = db.CreateLocalTable(testData);
+			using var tempTable = db.CreateLocalTable(TakeSkipClass.TestData2);
 
 			var actual = tempTable
 					.OrderBy(t => t.Value)
@@ -1416,7 +1288,7 @@ namespace Tests.Linq
 					.Skip(1)
 					.ToArray();
 
-			var expected = testData
+			var expected = TakeSkipClass.TestData2
 					.OrderBy(t => t.Value)
 					.Take(8)
 					.Skip(1)
@@ -1440,21 +1312,8 @@ namespace Tests.Linq
 		[Test]
 		public void MultipleTakeSkip4([DataSources] string context, [Values] bool withParameters)
 		{
-			var testData = new[]
-			{
-				new TakeSkipClass { Value = "Value1" },
-				new TakeSkipClass { Value = "Value2" },
-				new TakeSkipClass { Value = "Value3" },
-				new TakeSkipClass { Value = "Value4" },
-				new TakeSkipClass { Value = "Value5" },
-				new TakeSkipClass { Value = "Value6" },
-				new TakeSkipClass { Value = "Value7" },
-				new TakeSkipClass { Value = "Value8" },
-				new TakeSkipClass { Value = "Value9" },
-			};
-
 			using var db = GetDataContext(context, o => o.UseParameterizeTakeSkip(withParameters));
-			using var tempTable = db.CreateLocalTable(testData);
+			using var tempTable = db.CreateLocalTable(TakeSkipClass.TestData2);
 
 			var actual = tempTable
 					.OrderBy(t => t.Value)
@@ -1466,7 +1325,7 @@ namespace Tests.Linq
 					.Take(2)
 					.ToArray();
 
-			var expected = testData
+			var expected = TakeSkipClass.TestData2
 					.OrderBy(t => t.Value)
 					.Skip(1)
 					.Take(8)

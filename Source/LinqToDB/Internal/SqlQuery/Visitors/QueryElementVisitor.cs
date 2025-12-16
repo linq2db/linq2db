@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -3130,7 +3130,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						{
 							(modified ??= new ()).Add(pair.Key, newValue);
 						}
-					};
+					}
 
 					if (modified != null)
 					{
@@ -3154,7 +3154,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						{
 							(modified ??= new()).Add(pair.Key, newValue);
 						}
-					};
+					}
 
 					if (modified != null)
 					{
@@ -3415,7 +3415,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// <returns>
 		/// Return value depends on <paramref name="mode"/> value:
 		/// <list type="bullet">
-		/// <item><c>null</c> when <paramref name="arr1"/> is <c>null</c>;</item>
+		/// <item><see langword="null"/> when <paramref name="arr1"/> is <see langword="null"/>;</item>
 		/// <item><see cref="VisitMode.ReadOnly"/>: returns input array <paramref name="arr1"/> instance;</item>
 		/// <item><see cref="VisitMode.Modify"/>: returns input array <paramref name="arr1"/> instance, could contain inplace array element replacements;</item>
 		/// <item><see cref="VisitMode.Transform"/>: returns new array instance when there were changes to array items; otherwise returns original array.</item>
@@ -3488,7 +3488,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// <returns>
 		/// Return value depends on <paramref name="mode"/> value:
 		/// <list type="bullet">
-		/// <item><c>null</c> when <paramref name="list1"/> is <c>null</c>;</item>
+		/// <item><see langword="null"/> when <paramref name="list1"/> is <see langword="null"/>;</item>
 		/// <item><see cref="VisitMode.ReadOnly"/>: returns input list <paramref name="list1"/> instance;</item>
 		/// <item><see cref="VisitMode.Modify"/>: returns input list <paramref name="list1"/> instance, could contain inplace list item replacements;</item>
 		/// <item><see cref="VisitMode.Transform"/>: returns new list instance when there were changes to list items; otherwise returns original list.</item>
@@ -3564,7 +3564,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// <returns>
 		/// Return value depends on <paramref name="mode"/> value:
 		/// <list type="bullet">
-		/// <item><c>null</c> when <paramref name="list1"/> is <c>null</c>;</item>
+		/// <item><see langword="null"/> when <paramref name="list1"/> is <see langword="null"/>;</item>
 		/// <item><see cref="VisitMode.ReadOnly"/>: returns input list <paramref name="list1"/> instance;</item>
 		/// <item><see cref="VisitMode.Modify"/>: returns input list <paramref name="list1"/> instance, could contain inplace list item replacements;</item>
 		/// <item><see cref="VisitMode.Transform"/>: returns new list instance when there were changes to list items; otherwise returns original list.</item>
@@ -3638,7 +3638,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// <returns>
 		/// Return value depends on <paramref name="mode"/> value:
 		/// <list type="bullet">
-		/// <item><c>null</c> when <paramref name="list1"/> is <c>null</c>;</item>
+		/// <item><see langword="null"/> when <paramref name="list1"/> is <see langword="null"/>;</item>
 		/// <item><see cref="VisitMode.ReadOnly"/>: returns input list <paramref name="list1"/> instance;</item>
 		/// <item><see cref="VisitMode.Modify"/>: returns input list <paramref name="list1"/> instance, could contain inplace list item replacements;</item>
 		/// <item><see cref="VisitMode.Transform"/>: returns new list instance when there were changes to list items; otherwise returns original list.</item>
@@ -3714,7 +3714,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// <returns>
 		/// Return value depends on <paramref name="mode"/> value:
 		/// <list type="bullet">
-		/// <item><c>null</c> when <paramref name="list1"/> is <c>null</c>;</item>
+		/// <item><see langword="null"/> when <paramref name="list1"/> is <see langword="null"/>;</item>
 		/// <item><see cref="VisitMode.ReadOnly"/>: returns input list <paramref name="list1"/> instance;</item>
 		/// <item><see cref="VisitMode.Modify"/>: returns input list <paramref name="list1"/> instance, could contain inplace list item replacements;</item>
 		/// <item><see cref="VisitMode.Transform"/>: returns new list instance when there were changes to list items; otherwise returns original list.</item>

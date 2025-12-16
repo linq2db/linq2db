@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -207,7 +207,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		/// <summary>
 		/// Inspect join condition and return list of field pairs used in equals conditions between <paramref name="leftSource"/> (when specified) and <paramref name="rightJoin"/> tables.
-		/// If condition contains top-level OR operator, method returns <c>null</c>.
+		/// If condition contains top-level OR operator, method returns <see langword="null"/>.
 		/// </summary>
 		IReadOnlyList<EqualityFields>? SearchForJoinEqualityFields(SqlTableSource? leftSource, SqlJoinedTable rightJoin)
 		{

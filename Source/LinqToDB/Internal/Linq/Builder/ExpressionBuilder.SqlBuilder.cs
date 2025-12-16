@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
@@ -694,7 +694,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				idx++;
 			}
 
-			if (values.Count(v => v.Value != null) > 1)
+			if (values.Where(v => v.Value != null).Skip(1).Any())
 			{
 				// for multiple values generate IN predicate
 				cond.Predicates.Add(
@@ -935,7 +935,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					MemberAccessor? foundMember = null;
 					foreach (var tm in typeMembers)
 					{
-						if (tm.Name == param.Name)
+						if (string.Equals(tm.Name, param.Name))
 						{
 							foundMember = tm;
 							break;
@@ -1053,7 +1053,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						var dic  = typeMembers
 							.Select(static (m,i) => new { m, i })
-							.ToDictionary(static _ => _.m.MemberInfo.Name, static _ => _.i);
+							.ToDictionary(static _ => _.m.MemberInfo.Name, static _ => _.i, StringComparer.Ordinal);
 
 						var assignments = new List<(MemberAssignment ma, int order)>();
 						foreach (var ma in expr.Bindings.Cast<MemberAssignment>())
@@ -1392,7 +1392,7 @@ namespace LinqToDB.Internal.Linq.Builder
 								for (int i = 0; i < genericConstructor.Assignments.Count; i++)
 								{
 									var assignment = genericConstructor.Assignments[i];
-									if (assignment.MemberInfo.ReflectedType != member.ReflectedType && assignment.MemberInfo.Name == member.Name)
+									if (assignment.MemberInfo.ReflectedType != member.ReflectedType && string.Equals(assignment.MemberInfo.Name, member.Name))
 									{
 										var mi = assignment.MemberInfo.ReflectedType!.GetMemberEx(member);
 										if (mi != null && IsEqualMembers(assignment.MemberInfo, mi))
@@ -1726,7 +1726,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (mc.Method.IsStatic)
 					{
-						if (mc.Method.Name == nameof(Sql.Alias) && mc.Method.DeclaringType == typeof(Sql))
+						if (mc.Method.Name is nameof(Sql.Alias) && mc.Method.DeclaringType == typeof(Sql))
 						{
 							return Project(context, path, nextPath, nextIndex, flags, mc.Arguments[0], strict);
 						}
@@ -1805,7 +1805,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (member1.DeclaringType == null || member2.DeclaringType == null)
 				return false;
 
-			if (!string.Equals(member1.Name, member2.Name, StringComparison.Ordinal))
+			if (!string.Equals(member1.Name, member2.Name))
 				return false;
 
 			return member1.EqualsTo(member2);

@@ -91,7 +91,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 				//JET: Provider=Microsoft.Jet.OLEDB.4.0
 				//ACE: Provider=Microsoft.ACE.OLEDB.12.0 (or e.g. 15, etc)
-				return provider.StartsWith("Microsoft.Jet.OLEDB.", StringComparison.Ordinal)
+				return provider.StartsWith("Microsoft.Jet.OLEDB.")
 					? AccessVersion.Jet
 					: AccessVersion.Ace;
 			}

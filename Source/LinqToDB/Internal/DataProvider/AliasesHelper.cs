@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -219,16 +219,9 @@ namespace LinqToDB.Internal.DataProvider
 					for (int i = 0; i < element.Fields.Count; i++)
 					{
 						var field    = element.Fields[i];
-						var cteField = element.Cte.Fields.FirstOrDefault(f => f.Name == field.PhysicalName);
-						if (cteField != null)
-						{
-							if (field.PhysicalName != cteField.PhysicalName)
-								field.PhysicalName = cteField.PhysicalName;
-						}
-						else
-						{
-
-						}
+						var cteField = element.Cte.Fields.Find(f => f.Name == field.PhysicalName);
+						if (cteField != null && field.PhysicalName != cteField.PhysicalName)
+							field.PhysicalName = cteField.PhysicalName;
 					}
 				}
 

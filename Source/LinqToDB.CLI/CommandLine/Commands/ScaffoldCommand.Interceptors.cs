@@ -405,7 +405,7 @@ namespace LinqToDB.CommandLine
 			referencesList.Add(MetadataReference.CreateFromFile(Path.Combine(fwPath, "netstandard.dll")));
 			foreach (var asmName in Directory.GetFiles(fwPath, "System*.dll"))
 			{
-				if (!asmName.Contains(".Native.", StringComparison.Ordinal))
+				if (!asmName.Contains(".Native."))
 					referencesList.Add(MetadataReference.CreateFromFile(Path.Combine(fwPath, asmName)));
 			}
 

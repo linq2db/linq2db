@@ -107,7 +107,7 @@ public sealed partial class LinqToDBDriver : DynamicDataContextDriver
 			if (token == fallback)
 				return MetadataReference.CreateFromFile(reference);
 
-			var newReference = reference.Replace($"\\{token}\\", $"\\{fallback}\\", StringComparison.Ordinal);
+			var newReference = reference.Replace($"\\{token}\\", $"\\{fallback}\\");
 
 			if (File.Exists(newReference))
 				return MetadataReference.CreateFromFile(newReference);

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -53,7 +53,7 @@ namespace LinqToDB.Data
 		/// Creates database connection object that uses provided connection configuration.
 		/// </summary>
 		/// <param name="configurationString">Name of database connection configuration to use with this connection.
-		/// In case of <c>null</c>, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
+		/// In case of <see langword="null"/>, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
 		public DataConnection(string? configurationString)
 			: this(configurationString == null
 				? DefaultDataOptions
@@ -65,7 +65,7 @@ namespace LinqToDB.Data
 		/// Creates database connection object that uses provided connection configuration.
 		/// </summary>
 		/// <param name="configurationString">Name of database connection configuration to use with this connection.
-		/// In case of <c>null</c>, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
+		/// In case of <see langword="null"/>, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
 		// TODO: Remove in v7
 		[Obsolete("This API scheduled for removal in v7. Instead use: new DataConnection(new DataOptions().UseConfiguration(configurationString)...)"), EditorBrowsable(EditorBrowsableState.Never)]
 		public DataConnection(string? configurationString, Func<DataOptions,DataOptions> optionsSetter)
@@ -775,7 +775,7 @@ namespace LinqToDB.Data
 		public DbConnection Connection => OpenDbConnection();
 
 		/// <summary>
-		/// Returns underlying <see cref="DbConnection"/> instance or <c>null</c> if connection is not open.
+		/// Returns underlying <see cref="DbConnection"/> instance or <see langword="null"/> if connection is not open.
 		/// </summary>
 		public DbConnection? TryGetDbConnection() => _connection?.Connection;
 
@@ -925,7 +925,7 @@ namespace LinqToDB.Data
 #pragma warning restore CA2213 // Disposable fields should be disposed
 
 		/// <summary>
-		/// Gets current command instance if it exists or <c>null</c> otherwise.
+		/// Gets current command instance if it exists or <see langword="null"/> otherwise.
 		/// </summary>
 		internal DbCommand? CurrentCommand => _command;
 

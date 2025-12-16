@@ -1,4 +1,4 @@
-// https://github.com/dotnet/efcore/blob/main/src/Shared/SharedTypeExtensions.cs
+﻿// https://github.com/dotnet/efcore/blob/main/src/Shared/SharedTypeExtensions.cs
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
@@ -38,7 +38,7 @@ namespace LinqToDB.Internal.Extensions
 		};
 
 		public static bool IsAnonymousType(this Type type)
-			=> type.Name.StartsWith("<>", StringComparison.Ordinal)
+			=> type.Name.StartsWith("<>")
 			   && type.GetCustomAttributes(typeof(CompilerGeneratedAttribute), inherit: false).Length > 0
 			   && type.Name.Contains("AnonymousType");
 

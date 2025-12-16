@@ -199,7 +199,6 @@ namespace Tests.Mapping
 				.UpdateWhenMatched()
 				.InsertWhenNotMatched()
 				.Merge();
-				;
 
 #pragma warning disable CS0618 // Type or member is obsolete
 			t.Merge(

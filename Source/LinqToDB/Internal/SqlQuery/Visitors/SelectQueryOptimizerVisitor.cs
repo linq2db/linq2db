@@ -2913,7 +2913,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 										{
 											isValid = false;
 											break;
-										};
+										}
 
 										if (_providerFlags.IsApplyJoinSupported)
 										{

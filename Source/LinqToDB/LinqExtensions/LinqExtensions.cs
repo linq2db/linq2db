@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -108,7 +108,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Inserts new record into target table or updates existing record if record with the same primary key value already exists in target table.
-		/// When <c>null</c> value or expression without field setters passed to <paramref name="onDuplicateKeyUpdateSetter"/>, this method
+		/// When <see langword="null"/> value or expression without field setters passed to <paramref name="onDuplicateKeyUpdateSetter"/>, this method
 		/// implements <c>INSERT IF NOT EXISTS</c> logic.
 		/// </summary>
 		/// <typeparam name="T">Table record type.</typeparam>
@@ -141,7 +141,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Asynchronously inserts new record into target table or updates existing record if record with the same primary key value already exists in target table.
-		/// When <c>null</c> value or expression without field setters passed to <paramref name="onDuplicateKeyUpdateSetter"/>, this method
+		/// When <see langword="null"/> value or expression without field setters passed to <paramref name="onDuplicateKeyUpdateSetter"/>, this method
 		/// implements <c>INSERT IF NOT EXISTS</c> logic.
 		/// </summary>
 		/// <typeparam name="T">Table record type.</typeparam>
@@ -178,7 +178,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Inserts new record into target table or updates existing record if record with the same key value already exists in target table.
-		/// When <c>null</c> value or expression without field setters passed to <paramref name="onDuplicateKeyUpdateSetter"/>, this method
+		/// When <see langword="null"/> value or expression without field setters passed to <paramref name="onDuplicateKeyUpdateSetter"/>, this method
 		/// implements <c>INSERT IF NOT EXISTS</c> logic.
 		/// </summary>
 		/// <typeparam name="T">Table record type.</typeparam>
@@ -217,7 +217,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Asynchronously inserts new record into target table or updates existing record if record with the same key value already exists in target table.
-		/// When <c>null</c> value or expression without field setters passed to <paramref name="onDuplicateKeyUpdateSetter"/>, this method
+		/// When <see langword="null"/> value or expression without field setters passed to <paramref name="onDuplicateKeyUpdateSetter"/>, this method
 		/// implements <c>INSERT IF NOT EXISTS</c> logic.
 		/// </summary>
 		/// <typeparam name="T">Table record type.</typeparam>

@@ -10,7 +10,7 @@ namespace LinqToDB.Internal.Common
 	public static class ActivatorExt
 	{
 		/// <summary>
-		/// Creates instance of <paramref name="type"/> type. Ensures that instance is not <c>null</c>.
+		/// Creates instance of <paramref name="type"/> type. Ensures that instance is not <see langword="null"/>.
 		/// </summary>
 		public static object CreateInstance(Type type) => CreateInstance(type, false);
 

@@ -289,7 +289,7 @@ namespace LinqToDB.Internal.Conversion
 						from c in cases
 						from a in c.attrs
 						group c by a into g
-						where g.Count() > 1
+						where g.Skip(1).Any()
 						select g;
 
 					var ambiguityMapping = ambiguityMappings.FirstOrDefault();

@@ -182,7 +182,7 @@ namespace LinqToDB.CommandLine
 			{
 				consoleWidth = Console.BufferWidth;
 			}
-			catch { };
+			catch { }
 
 			Console.Out.WriteLine();
 			Console.Out.Write("   ");

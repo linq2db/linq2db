@@ -542,7 +542,14 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		// Default implementation. Doesn't generate linked server and package name components.
-		public virtual StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
+		public virtual StringBuilder BuildObjectName(
+			StringBuilder sb,
+			SqlObjectName name,
+			ConvertType objectType = ConvertType.NameToQueryTable,
+			bool escape = true,
+			TableOptions tableOptions = TableOptions.NotSet,
+			bool withoutSuffix = false
+		)
 		{
 			if (name.Database != null)
 			{
@@ -1920,7 +1927,7 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				alias = GetTableAlias(ts);
 				var isBuildAlias = BuildPhysicalTable(ts.Source, alias);
-				if (isBuildAlias == false)
+				if (isBuildAlias is false)
 					buildAlias = false;
 			}
 
@@ -1929,13 +1936,18 @@ namespace LinqToDB.Internal.SqlProvider
 				if (ts.SqlTableType != SqlTableType.Expression)
 				{
 
-					if (buildName && ts.Source is SqlTable { SqlQueryExtensions : not null } t)
+					if (buildName)
 					{
-						BuildTableNameExtensions(t);
-					}
+						if (ts.Source is SqlTable { SqlQueryExtensions: not null } t)
+						{
+							BuildTableNameExtensions(t);
+						}
 
-					if (buildName == false)
+					}
+					else
+					{
 						alias = GetTableAlias(ts);
+					}
 
 					if (!string.IsNullOrEmpty(alias))
 					{
@@ -2281,7 +2293,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var orderBy = ConvertElement(selectQuery.OrderBy);
 
-			IReadOnlyList<SqlOrderByItem> nonConstant = orderBy.Items.All(i => !QueryHelper.IsConstantFast(i.Expression))
+			IReadOnlyList<SqlOrderByItem> nonConstant = orderBy.Items.TrueForAll(i => !QueryHelper.IsConstantFast(i.Expression))
 				? orderBy.Items
 				: orderBy.Items.Where(i => !QueryHelper.IsConstantFast(i.Expression))
 					.ToList();
@@ -2855,7 +2867,7 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 
 				if (multipleParts)
-					StringBuilder.Insert(len, "(").Append(')');
+					StringBuilder.Insert(len, '(').Append(')');
 			}
 		}
 

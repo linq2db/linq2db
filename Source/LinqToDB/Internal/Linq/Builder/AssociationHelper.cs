@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -241,7 +241,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (loadWith != null)
 			{
-				var associationLoadWith = loadWith.MembersToLoad?.Where(x => x.MemberInfo.EqualsTo(association.MemberInfo)).FirstOrDefault();
+				var associationLoadWith = loadWith.MembersToLoad?.Find(x => x.MemberInfo.EqualsTo(association.MemberInfo));
 
 				if (associationLoadWith == null)
 				{

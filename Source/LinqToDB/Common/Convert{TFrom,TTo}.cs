@@ -41,7 +41,7 @@ namespace LinqToDB.Common
 		/// <summary>
 		/// Gets or sets an expression that converts a value of <i>TFrom</i> type to <i>TTo</i> type.
 		/// Setter updates both expression and delegate forms of converter.
-		/// Assigning <c>null</c> value will reset converter to default conversion logic.
+		/// Assigning <see langword="null"/> value will reset converter to default conversion logic.
 		/// Assigning non-null value will also set converter as default converter.
 		/// </summary>
 		[AllowNull]
@@ -75,7 +75,7 @@ namespace LinqToDB.Common
 		/// <summary>
 		/// Gets or sets a function that converts a value of <i>TFrom</i> type to <i>TTo</i> type.
 		/// Setter updates both expression and delegate forms of converter.
-		/// Assigning <c>null</c> value will reset converter to default conversion logic.
+		/// Assigning <see langword="null"/> value will reset converter to default conversion logic.
 		/// Assigning non-null value will also set converter as default converter.
 		/// </summary>
 		[AllowNull]

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -333,7 +333,7 @@ namespace LinqToDB.Mapping
 		/// Gets column descriptor by member name.
 		/// </summary>
 		/// <param name="memberName">Member name.</param>
-		/// <returns>Returns column descriptor or <c>null</c>, if descriptor not found.</returns>
+		/// <returns>Returns column descriptor or <see langword="null"/>, if descriptor not found.</returns>
 		public ColumnDescriptor? this[string memberName]
 		{
 			get

@@ -10,7 +10,7 @@ using LinqToDB.Data;
 namespace LinqToDB.Metrics
 {
 	/// <summary>
-	/// Provides API to register factory methods that return an Activity object or <c>null</c> for provided <see cref="ActivityID"/> event.
+	/// Provides API to register factory methods that return an Activity object or <see langword="null"/> for provided <see cref="ActivityID"/> event.
 	/// </summary>
 	[PublicAPI]
 	public static class ActivityService
@@ -64,7 +64,7 @@ namespace LinqToDB.Metrics
 		static Func<ActivityID,IActivity?>? _factory;
 
 		/// <summary>
-		/// Adds a factory method that returns an Activity object or <c>null</c> for provided <see cref="ActivityID"/> event.
+		/// Adds a factory method that returns an Activity object or <see langword="null"/> for provided <see cref="ActivityID"/> event.
 		/// </summary>
 		/// <param name="factory">A factory method.</param>
 		public static void AddFactory(Func<ActivityID,IActivity?> factory)

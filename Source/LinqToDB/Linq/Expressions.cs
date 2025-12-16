@@ -1034,7 +1034,7 @@ namespace LinqToDB.Linq
 #pragma warning disable CS0618 // Type or member is obsolete
 		static Dictionary<string,Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo>> LoadMembers()
 		{
-			var members = new Dictionary<string,Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo>>
+			var members = new Dictionary<string, Dictionary<MemberHelper.MemberInfoWithType, IExpressionInfo>>
 			{
 				{ "", _commonMembers },
 
@@ -1276,18 +1276,18 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Round      (0.0)  ), N(() => L<double?, double?>   (d => d - Sql.Floor(d) == 0.5  && Sql.Floor(d) % 2 == 0? Sql.Ceiling(d) : AccessRound(d, 0))) },
 					{ M(() => Sql.Round      (0m, 0)), N(() => L<decimal?,int?,decimal?>((v,p)=> (decimal?)(
 						p == 1 ? Sql.Round(v * 10) / 10 :
-						p == 2 ? Sql.Round(v * 10) / 10 :
-						p == 3 ? Sql.Round(v * 10) / 10 :
-						p == 4 ? Sql.Round(v * 10) / 10 :
-						p == 5 ? Sql.Round(v * 10) / 10 :
-								 Sql.Round(v * 10) / 10))) },
+						p == 2 ? Sql.Round(v * 100) / 100 :
+						p == 3 ? Sql.Round(v * 1_000) / 1_000 :
+						p == 4 ? Sql.Round(v * 10_000) / 10_000 :
+						p == 5 ? Sql.Round(v * 100_000) / 100_000 :
+								 Sql.Round(v * 1_000_000) / 1_000_000))) },
 					{ M(() => Sql.Round      (0.0,0)), N(() => L<double?,int?,double?>((v,p) => (double?)(
 						p == 1 ? Sql.Round(v * 10) / 10 :
-						p == 2 ? Sql.Round(v * 10) / 10 :
-						p == 3 ? Sql.Round(v * 10) / 10 :
-						p == 4 ? Sql.Round(v * 10) / 10 :
-						p == 5 ? Sql.Round(v * 10) / 10 :
-								 Sql.Round(v * 10) / 10))) },
+						p == 2 ? Sql.Round(v * 100) / 100 :
+						p == 3 ? Sql.Round(v * 1_000) / 1_000 :
+						p == 4 ? Sql.Round(v * 10_000) / 10_000 :
+						p == 5 ? Sql.Round(v * 100_000) / 100_000 :
+								 Sql.Round(v * 1_000_000) / 1_000_000))) },
 					{ M(() => Sql.RoundToEven(0m)   ), N(() => L<decimal?,decimal?>     ( v   => AccessRound(v, 0))) },
 					{ M(() => Sql.RoundToEven(0.0)  ), N(() => L<double?, double?>      ( v   => AccessRound(v, 0))) },
 					{ M(() => Sql.RoundToEven(0m, 0)), N(() => L<decimal?,int?,decimal?>((v,p)=> AccessRound(v, p))) },

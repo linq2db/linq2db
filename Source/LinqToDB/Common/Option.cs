@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace LinqToDB.Common
 {
@@ -8,6 +9,7 @@ namespace LinqToDB.Common
 	/// <a href="https://en.wikipedia.org/wiki/Option_type">Option type</a>.
 	/// </summary>
 	/// <typeparam name="T">Value type.</typeparam>
+	[StructLayout(LayoutKind.Auto)]
 	public readonly struct Option<T>
 	{
 		private Option(T value)

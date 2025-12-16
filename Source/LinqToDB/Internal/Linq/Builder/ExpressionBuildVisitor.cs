@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
@@ -1766,7 +1766,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				notNull = placeholders
-					.FirstOrDefault(pl => !pl.Sql.CanBeNullable(NullabilityContext.NonQuery));
+					.Find(pl => !pl.Sql.CanBeNullable(NullabilityContext.NonQuery));
 			}
 
 			if (notNull == null)

@@ -209,6 +209,7 @@ dotnet_diagnostic.IDE0009.severity = error # IDE0009: Qualify member access
 dotnet_diagnostic.IDE0051.severity = error # IDE0051: Remove unused private members
 dotnet_diagnostic.IDE0052.severity = error # IDE0052: Remove unread private member
 dotnet_diagnostic.IDE0060.severity = error # IDE0060: Remove unused parameter
+dotnet_diagnostic.IDE0070.severity = error # IDE0070: Use 'System.HashCode.Combine'
 dotnet_diagnostic.IDE0330.severity = error # IDE0330: Use `System.Threading.Lock`
 
 ###### Meziantou.Analyzers
@@ -258,8 +259,13 @@ dotnet_diagnostic.IDE0005.severity = none # IDE0005: Remove unnecessary import
 dotnet_diagnostic.IDE0370.severity = none # IDE0370: Remove unnecessary suppression
 
 # Require net8+
-dotnet_diagnostic.SYSLIB1045.severity = none # Use GeneratedRegexAttribute
 dotnet_diagnostic.SYSLIB1054.severity = none # Use LibraryImportAttribute
+
+###### Meziantou.Analyzers (StringComparison; TODO: should enable eventually)
+dotnet_diagnostic.MA0001.severity = none # MA0001: StringComparison is missing
+dotnet_diagnostic.MA0002.severity = none # MA0002: IEqualityComparer<string> or IComparer<string> is missing
+dotnet_diagnostic.MA0006.severity = none # MA0006: Use String.Equals instead of equality operator
+dotnet_diagnostic.MA0074.severity = none # MA0074: Avoid implicit culture-sensitive methods
 
 ###### Meziantou.Analyzers
 dotnet_diagnostic.MA0018.severity = none # MA0018: Do not declare static members on generic types (deprecated; use CA1000 instead)
@@ -272,6 +278,8 @@ dotnet_diagnostic.MA0042.severity = none # MA0042: Do not use blocking calls in 
 dotnet_diagnostic.MA0045.severity = none # MA0045: Do not use blocking calls in a sync method (need to make calling method async)
 dotnet_diagnostic.MA0051.severity = none # MA0051: Method is too long
 dotnet_diagnostic.MA0071.severity = none # MA0071: Avoid using redundant else
+dotnet_diagnostic.MA0099.severity = none # MA0099: Use Explicit enum value instead of 0
+dotnet_diagnostic.MA0101.severity = none # MA0101: String contains an implicit end of line character
 dotnet_diagnostic.MA0136.severity = none # MA0136: Raw String contains an implicit end of line character
 # Lots of false positives
 dotnet_diagnostic.MA0165.severity = none # MA0165: Make interpolated string
@@ -414,7 +422,6 @@ dotnet_diagnostic.IDE0059.severity = none # IDE0059: Remove unnecessary value as
 dotnet_diagnostic.IDE0060.severity = none # IDE0060: Remove unused parameter
 dotnet_diagnostic.IDE0061.severity = none # IDE0061: Use expression body for local functions
 dotnet_diagnostic.IDE0062.severity = none # IDE0062: Make local function static
-dotnet_diagnostic.IDE0070.severity = none # IDE0070: Use 'System.HashCode.Combine'
 dotnet_diagnostic.IDE0072.severity = none # IDE0072: Add missing cases
 dotnet_diagnostic.IDE0075.severity = none # IDE0075: Simplify conditional expression
 dotnet_diagnostic.IDE0079.severity = none # IDE0079: Remove unnecessary suppression
@@ -478,6 +485,10 @@ dotnet_diagnostic.CA1862.severity = none # CA1862: prefer the string comparison 
 dotnet_diagnostic.CA2007.severity = none # CA2007: Do not directly await a Task
 dotnet_diagnostic.CA2237.severity = none # CA2237: Mark ISerializable types with SerializableAttribute
 
+dotnet_diagnostic.MA0002.severity = none # MA0002: IEqualityComparer<string> or IComparer<string> is missing
+dotnet_diagnostic.MA0004.severity = none # MA0004: Use Task.ConfigureAwait
+dotnet_diagnostic.MA0021.severity = none # MA0021: Use StringComparer.GetHashCode instead of string.GetHashCode
+dotnet_diagnostic.MA0031.severity = none # MA0031: Optimize Enumerable.Count() usage
 dotnet_diagnostic.MA0169.severity = none # MA0169: Use Equals method instead of operator
 
 [Tests/**.vb]

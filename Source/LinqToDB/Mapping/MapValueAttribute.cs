@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 
 namespace LinqToDB.Mapping
@@ -26,7 +26,7 @@ namespace LinqToDB.Mapping
 	{
 		/// <summary>
 		/// Adds <see cref="MapValueAttribute"/> mapping to enum field. If you don't specify <see cref="Value"/> property,
-		/// <c>null</c> value will be used.
+		/// <see langword="null"/> value will be used.
 		/// </summary>
 		public MapValueAttribute()
 		{

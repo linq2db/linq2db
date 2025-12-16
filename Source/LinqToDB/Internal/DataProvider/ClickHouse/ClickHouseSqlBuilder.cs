@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -31,12 +31,19 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		protected override void BuildMergeStatement(SqlMergeStatement merge)     => throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		protected override void BuildParameter(SqlParameter parameter) => throw new LinqToDBException($"Parameters not supported for {Name} provider");
 
-		#region Identifiers
+        #region Identifiers
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
-		{
-			// FQN: [db].name (actually FQN schema is more complex, but we don't support such scenarios)
-			if (name.Database != null && !tableOptions.IsTemporaryOptionSet())
+        public override StringBuilder BuildObjectName(
+            StringBuilder sb,
+            SqlObjectName name,
+            ConvertType objectType = ConvertType.NameToQueryTable,
+            bool escape = true,
+            TableOptions tableOptions = TableOptions.NotSet,
+            bool withoutSuffix = false
+        )
+        {
+            // FQN: [db].name (actually FQN schema is more complex, but we don't support such scenarios)
+            if (name.Database != null && !tableOptions.IsTemporaryOptionSet())
 			{
 				(escape ? Convert(sb, name.Database, ConvertType.NameToDatabase) : sb.Append(name.Database))
 					.Append('.');

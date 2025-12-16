@@ -551,7 +551,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (type.IsEnum)
 			{
 				// var ed = mappingSchema.GetEntityDescriptor(type); -> todo entity descriptor should contain enum mappings, otherwise fluent mappings will not be included
-				_typeBuilder.AppendLine("\tenum " + MangleName(isUserName, type.Name, "T") + " {");
+				_typeBuilder.Append("\tenum ").Append(MangleName(isUserName, type.Name, "T")).AppendLine(" {");
 				foreach (var nm in Enum.GetNames(type))
 				{
 					var attr = "";
@@ -593,7 +593,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				);
 			}).ToList();
 
-			if (ctors.Count == 1 && ctors[0].Contains("()", StringComparison.Ordinal))
+			if (ctors.Count == 1 && ctors[0].Contains("()"))
 				ctors.Clear();
 
 			var members = type.GetFields().Intersect(_usedMembers.OfType<FieldInfo>()).Select(f =>
@@ -810,7 +810,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static bool IsUserNamespace(string? @namespace)
 		{
-			return @namespace == null || SystemNamespaces.All(ns => @namespace != ns && !@namespace.StartsWith(ns + '.'));
+			return @namespace == null || SystemNamespaces.TrueForAll(ns => @namespace != ns && !@namespace.StartsWith(ns + '.'));
 		}
 
 		string? GetTypeName(Type type)
@@ -1035,7 +1035,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							type.IsGenericType && type.GetGenericTypeDefinition() != type);
 				}))
 					continue;
-				_typeBuilder.AppendLine("namespace " + MangleName(IsUserNamespace(typeNamespaceList.Key), typeNamespaceList.Key, "T"));
+				_typeBuilder.Append("namespace ").AppendLine(MangleName(IsUserNamespace(typeNamespaceList.Key), typeNamespaceList.Key, "T"));
 				_typeBuilder.AppendLine("{");
 				foreach (var type in typeNamespaceList.OrderBy(t => t.Name))
 				{

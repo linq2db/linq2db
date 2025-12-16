@@ -258,8 +258,8 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 					for (var i = 0; thisColumns.Length > 0; i++)
 					{
-						var thisColumn  = thisTable. FirstOrDefault(c => thisColumns. StartsWith(c.Name));
-						var otherColumn = otherTable.FirstOrDefault(c => otherColumns.StartsWith(c.Name));
+						var thisColumn  = thisTable. Find(c => thisColumns. StartsWith(c.Name));
+						var otherColumn = otherTable.Find(c => otherColumns.StartsWith(c.Name));
 
 						if (thisColumn == null || otherColumn == null)
 							break;
@@ -300,7 +300,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 					if (type.CreateFormat == null)
 					{
-						if (type.TypeName.Contains("()", StringComparison.Ordinal))
+						if (type.TypeName.Contains("()"))
 						{
 							type.CreateFormat = type.TypeName.Replace("()", "({0})");
 						}

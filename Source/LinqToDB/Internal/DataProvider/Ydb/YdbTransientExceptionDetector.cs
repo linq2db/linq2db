@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
@@ -27,7 +27,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		/// <param name="ex">The exception to search.</param>
 		/// <param name="ydbEx">
 		/// When this method returns <see langword="true"/>, contains the first discovered YDB exception.
-		/// Otherwise, <c>null</c>.
+		/// Otherwise, <see langword="null"/>.
 		/// </param>
 		/// <returns>
 		/// <see langword="true"/> if a <c>YdbException</c> was found, otherwise <see langword="false"/>.

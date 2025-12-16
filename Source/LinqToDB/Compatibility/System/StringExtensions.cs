@@ -1,4 +1,4 @@
-#if !NET8_0_OR_GREATER
+﻿#if !NET8_0_OR_GREATER
 
 #pragma warning disable IDE0130
 #pragma warning disable IDE0160
@@ -8,6 +8,15 @@ internal static class StringExtensions
 {
 	extension(string str)
 	{
+		/// <summary>
+		///	    False proxy for `string.AsSpan()` available in net6+. Returns the instance itself in net462 and
+		///     netstandard2.0. This matches existing behavior and so does not reduce performance further.
+		/// </summary>
+		/// <returns>
+		///	    The string passed in.
+		///	</returns>
+		public string AsSpan() => str;
+
 		/// <summary>
 		///	    False proxy for `string.AsSpan()` available in net6+. Returns <see cref="string.Substring(int)"/> in
 		///     net462 and netstandard2.0. This matches existing behavior and so does not reduce performance further.

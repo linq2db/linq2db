@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -246,7 +246,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 			var excludeSchemas =
 				new HashSet<string?>(
-					ExcludedSchemas.Where(s => !string.IsNullOrEmpty(s)).Union(_schemaSchemas, StringComparer.Ordinal),
+					ExcludedSchemas.Where(s => !string.IsNullOrEmpty(s)).Union(_schemaSchemas),
 					StringComparer.OrdinalIgnoreCase);
 
 			var includeSchemas = new HashSet<string?>(IncludedSchemas.Where(s => !string.IsNullOrEmpty(s)), StringComparer.OrdinalIgnoreCase);
@@ -267,14 +267,14 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			if (excludeSchemas.Count > 0)
 			{
 				var schemasToExcludeStr =
-					string.Join(", ", excludeSchemas.OrderBy(s => s, StringComparer.Ordinal).Select(s => ToDatabaseLiteral(dataConnection, s)));
+					string.Join(", ", excludeSchemas.OrderBy(s => s).Select(s => ToDatabaseLiteral(dataConnection, s)));
 				schemaFilter = $@"{schemaColumnName} NOT IN ({schemasToExcludeStr})";
 			}
 
 			if (includeSchemas.Count > 0)
 			{
 				var schemasToIncludeStr =
-					string.Join(", ", includeSchemas.OrderBy(s => s, StringComparer.Ordinal).Select(s => ToDatabaseLiteral(dataConnection, s)));
+					string.Join(", ", includeSchemas.OrderBy(s => s).Select(s => ToDatabaseLiteral(dataConnection, s)));
 				if (!string.IsNullOrEmpty(schemaFilter))
 					schemaFilter += " AND ";
 				schemaFilter += $@"{schemaColumnName} IN ({schemasToIncludeStr})";
