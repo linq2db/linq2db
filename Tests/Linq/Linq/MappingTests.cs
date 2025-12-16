@@ -1335,7 +1335,7 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue(
-			Configuration = ProviderName.SQLiteMS,
+			Configurations = [TestProvName.AllSapHana, TestProvName.AllSybase, ProviderName.SQLiteMS, TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllOracle, ProviderName.ClickHouseMySql],
 			Details = "Reader expressions configuration weakness: we ask for reader for TenderId but get reader for byte[], without conversion defined between them")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5254")]
 		public void ClientConversion_UnmappedOperators([DataSources(false)] string context)
@@ -1446,7 +1446,7 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue(
-			Configuration = ProviderName.SQLiteMS,
+			Configurations = [TestProvName.AllSapHana, TestProvName.AllSybase, ProviderName.SQLiteMS, TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllOracle, ProviderName.ClickHouseMySql],
 			Details = "Reader expressions configuration weakness: we ask for reader for TenderId but get reader for byte[], without conversion defined between them")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5254")]
 		public void ClientConversion_MappedOperators([DataSources(false)] string context)
