@@ -106,6 +106,9 @@
 		<None Update="Databases\SqlCe.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlCe.generated.cs" />
 		<Compile Update="Databases\SqlCe.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="SqlCe.tt" />
 
+		<None Update="Databases\SqlServerNE.tt" LastGenOutput="SqlServerNE.generated.cs" Generator="TextTemplatingFileGenerator" />
+		<Compile Update="Databases\SqlServerNE.generated.cs" DependentUpon="SqlServerNE.tt" DesignTime="True" AutoGen="True" />
+
 		<None Update="Databases\SQLite.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SQLite.generated.cs" />
 		<Compile Update="Databases\SQLite.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="SQLite.tt" />
 
@@ -211,7 +214,8 @@
 
 		<None Update="Models\MultipleFiles.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="MultipleFiles.generated.cs" />
 		<Compile Update="Models\MultipleFiles.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="MultipleFiles.tt" />
-		<Compile Update="Models\aaa.cs" DesignTime="True" AutoGen="True" DependentUpon="MultipleFiles.tt" />
+
 		<None Update="Models\bbb.txt" DesignTime="True" AutoGen="True" DependentUpon="MultipleFiles.tt" />
+		<Compile Update="Models\aaa.cs" DesignTime="True" AutoGen="True" DependentUpon="MultipleFiles.tt" />
 	</ItemGroup>
 </Project>

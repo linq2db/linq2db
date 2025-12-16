@@ -19,7 +19,7 @@
 		var buildColumnComparison = BuildColumnComparison;
 		BuildColumnComparison = (c, padding1, padding2, last) =>
 		{
-			if (c.BuildType() == "SqlHierarchyId")
+			if (c.BuildType()?.Trim() == "SqlHierarchyId")
 				return string.Format("\t(bool)(t.{0}{1} == {0}{3}){2}", c.MemberName, padding1, last ? ");" : " &&", last ? "" : padding2);
 			else
 				return buildColumnComparison(c, padding1, padding2, last);
