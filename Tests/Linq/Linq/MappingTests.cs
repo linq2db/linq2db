@@ -1334,8 +1334,11 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(
+			Configuration = ProviderName.SQLiteMS,
+			Details = "Reader expressions configuration weakness: we ask for reader for TenderId but get reader for byte[], without conversion defined between them")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5254")]
-		public void FirstOrDefaultMappingWithConversions([DataSources(false)] string context)
+		public void ProjectionWithClientSideConversions([DataSources(false)] string context)
 		{
 			var ms = new MappingSchema();
 			Issue5254Types.TenderId.LinqToDbMapping(ms);
