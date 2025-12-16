@@ -1233,7 +1233,7 @@ namespace Tests.Linq
 
 					try
 					{
-						output = new ShortId(input);
+						output = new ShortId(input!);
 						return true;
 					}
 					catch (ArgumentException)
