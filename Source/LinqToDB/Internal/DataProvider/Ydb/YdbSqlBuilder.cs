@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -443,13 +443,20 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 			if (bucketIndex > 1 || hasNull)
 			{
-				StringBuilder.Insert(startLen, "(").Append(')');
+				StringBuilder.Insert(startLen, '(').Append(')');
 			}
 		}
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge) => throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
+		public override StringBuilder BuildObjectName(
+			StringBuilder sb,
+			SqlObjectName name,
+			ConvertType objectType = ConvertType.NameToQueryTable,
+			bool escape = true,
+			TableOptions tableOptions = TableOptions.NotSet,
+			bool withoutSuffix = false
+		)
 		{
 			string fqn;
 

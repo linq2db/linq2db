@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -18,7 +19,7 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.PostgreSQL
 {
-	public class PostgreSQLSchemaProvider : SchemaProviderBase
+	public partial class PostgreSQLSchemaProvider : SchemaProviderBase
 	{
 		const int v93 = 90300;
 		const int v10 = 100000;
@@ -634,8 +635,22 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			};
 		}
 
-		static readonly Regex _matchArray = new(@"^(.*)(\[\]){1}$", RegexOptions.Compiled);
-		static readonly Regex _matchType  = new(@"^(.*)(\(\d+(,\s*\d+)?\))(.*){1}$", RegexOptions.Compiled);
+		private const string MatchArrayPattern = /* lang=regex */ @"^(?<type>.*)(\[\])$";
+		private const string MatchTypePattern = /* lang=regex */ @"^(?<type>.*)(\(\d+(,\s*\d+)?\))(?<suffix>.*)$";
+
+#if SUPPORTS_REGEX_GENERATORS
+		[GeneratedRegex(MatchArrayPattern, RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 1)]
+		private static partial Regex MatchArrayRegex();
+
+		[GeneratedRegex(MatchTypePattern, RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 1)]
+		private static partial Regex MatchTypeRegex();
+#else
+		private static readonly Regex _matchArray = new(MatchArrayPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(1));
+		private static readonly Regex _matchType  = new(MatchTypePattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(1));
+
+		private static Regex MatchArrayRegex() => _matchArray;
+		private static Regex MatchTypeRegex() => _matchType;
+#endif
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo,
 			int? length, int? precision, int? scale, GetSchemaOptions options)
@@ -647,10 +662,20 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			if (dataType != null)
 			{
 				dataType = dataType.Trim();
-				var match = _matchArray.Match(dataType);
+				var match = MatchArrayRegex().Match(dataType);
+
 				if (match.Success)
 				{
-					var elementType = GetSystemType(match.Groups[1].Value, null, GetDataType(match.Groups[1].Value, null, options), null, null, null, options);
+					var elementType = GetSystemType(
+						match.Groups["type"].Value,
+						null,
+						GetDataType(match.Groups["type"].Value, dataType: null, options),
+						null,
+						null,
+						null,
+						options
+					);
+
 					if (elementType != null)
 					{
 						foundType = elementType.MakeArrayType();
@@ -717,12 +742,12 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		static string SimplifyDataType(string dataType)
 		{
-			var typeMatch = _matchType.Match(dataType);
+			var typeMatch = MatchTypeRegex().Match(dataType);
 			if (typeMatch.Success)
 			{
 				// ignore generated length, precision, scale
-				dataType = typeMatch.Groups[1].Value.Trim();
-				var suffix = typeMatch.Groups[4].Value?.Trim();
+				dataType = typeMatch.Groups["type"].Value.Trim();
+				var suffix = typeMatch.Groups["suffix"].Value?.Trim();
 				if (!string.IsNullOrEmpty(suffix))
 					dataType = dataType + " " + suffix;
 			}

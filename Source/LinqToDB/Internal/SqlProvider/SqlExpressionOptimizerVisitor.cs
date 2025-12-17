@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -1726,20 +1726,30 @@ namespace LinqToDB.Internal.SqlProvider
 			if (current == additional)
 				return;
 
-			if (current == SqlPredicate.Operator.Equal && additional == SqlPredicate.Operator.Greater)
-				current = SqlPredicate.Operator.GreaterOrEqual;
-			else if (current == SqlPredicate.Operator.Equal && additional == SqlPredicate.Operator.Less)
-				current = SqlPredicate.Operator.LessOrEqual;
-			else if (current == SqlPredicate.Operator.Greater && additional == SqlPredicate.Operator.Equal)
-				current = SqlPredicate.Operator.GreaterOrEqual;
-			else if (current == SqlPredicate.Operator.Less && additional == SqlPredicate.Operator.Equal)
-				current = SqlPredicate.Operator.LessOrEqual;
-			else if (current == SqlPredicate.Operator.Greater && additional == SqlPredicate.Operator.Less)
-				current = SqlPredicate.Operator.NotEqual;
-			else if (current == SqlPredicate.Operator.Less && additional == SqlPredicate.Operator.Greater)
-				current = SqlPredicate.Operator.NotEqual;
-			else
-				throw new NotImplementedException();
+			current = (current, additional) switch
+			{
+				(SqlPredicate.Operator.Equal, SqlPredicate.Operator.Greater) => 
+					SqlPredicate.Operator.GreaterOrEqual,
+
+				(SqlPredicate.Operator.Equal, SqlPredicate.Operator.Less) => 
+					SqlPredicate.Operator.LessOrEqual,
+
+				(SqlPredicate.Operator.Greater, SqlPredicate.Operator.Equal) => 
+					SqlPredicate.Operator.GreaterOrEqual,
+
+				(SqlPredicate.Operator.Less, SqlPredicate.Operator.Equal) => 
+					SqlPredicate.Operator.LessOrEqual,
+
+				(SqlPredicate.Operator.Greater, SqlPredicate.Operator.Less) => 
+					SqlPredicate.Operator.NotEqual,
+
+				(SqlPredicate.Operator.Less, SqlPredicate.Operator.Greater) => 
+					SqlPredicate.Operator.NotEqual,
+
+				_ => throw new InvalidOperationException(
+					$"Operators `{current}` and `{additional}` cannot be combined."
+				),
+			};
 		}
 
 		static SqlPredicate.Operator SwapOperator(SqlPredicate.Operator op)

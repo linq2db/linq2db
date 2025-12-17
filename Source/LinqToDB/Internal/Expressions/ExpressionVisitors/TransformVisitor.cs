@@ -201,7 +201,7 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 						Transform(((LoopExpression)expr).Body)
 					),
 
-				_ => throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}"),
+				_ => throw new InvalidOperationException($"Unhandled expression type: {expr.NodeType}"),
 			};
 		}
 

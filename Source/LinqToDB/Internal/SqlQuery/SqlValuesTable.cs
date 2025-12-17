@@ -148,13 +148,13 @@ namespace LinqToDB.Internal.SqlQuery
 
 		#region ISqlExpression
 
-		public override bool CanBeNullable(NullabilityContext nullability) => throw new NotImplementedException();
+		public override bool CanBeNullable(NullabilityContext nullability) => throw new NotSupportedException();
 
-		public override int Precedence => throw new NotImplementedException();
+		public override int Precedence => throw new NotSupportedException();
 
 		public override Type SystemType => typeof(object);
 
-		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer) => throw new NotImplementedException();
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer) => throw new NotSupportedException();
 
 		#endregion
 
@@ -243,7 +243,7 @@ namespace LinqToDB.Internal.SqlQuery
 		#endregion
 
 		#region IEquatable
-		public override bool Equals(ISqlExpression? other) => throw new NotImplementedException();
+		public override bool Equals(ISqlExpression? other) => throw new NotSupportedException();
 		#endregion
 
 		public void Modify(ISqlExpression? source)

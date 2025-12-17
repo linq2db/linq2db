@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
@@ -222,7 +222,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		[Wrapper]
 		internal sealed class AseConnection
 		{
-			public AseConnection(string connectionString) => throw new NotImplementedException();
+			public AseConnection(string connectionString) => throw new NotSupportedException();
 		}
 
 		[Wrapper]
@@ -271,7 +271,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			{
 			}
 
-			public AseBulkCopy(AseConnection connection, AseBulkCopyOptions options, AseTransaction? transaction) => throw new NotImplementedException();
+			public AseBulkCopy(AseConnection connection, AseBulkCopyOptions options, AseTransaction? transaction) => throw new NotSupportedException();
 
 			void IDisposable.Dispose() => ((Action<AseBulkCopy>)CompiledWrappers[0])(this);
 
@@ -391,7 +391,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			{
 			}
 
-			public AseBulkCopyColumnMapping(string source, string destination) => throw new NotImplementedException();
+			public AseBulkCopyColumnMapping(string source, string destination) => throw new NotSupportedException();
 		}
 
 		#endregion

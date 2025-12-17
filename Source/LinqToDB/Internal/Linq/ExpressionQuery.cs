@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -211,13 +211,11 @@ namespace LinqToDB.Internal.Linq
 
 			var enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
 
-#pragma warning disable CA2007
-			await using var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
-#pragma warning restore CA2007
-
-			while (await enumerator.MoveNextAsync().ConfigureAwait(false))
+			var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
+			await using (enumerator.ConfigureAwait(false))
 			{
-				action(enumerator.Current);
+				while (await enumerator.MoveNextAsync().ConfigureAwait(false))
+					action(enumerator.Current);
 			}
 		}
 

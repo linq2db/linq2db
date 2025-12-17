@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 
 using LinqToDB.DataProvider;
@@ -39,7 +39,14 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			return name;
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
+		public override StringBuilder BuildObjectName(
+			StringBuilder sb,
+			SqlObjectName name,
+			ConvertType objectType = ConvertType.NameToQueryTable,
+			bool escape = true,
+			TableOptions tableOptions = TableOptions.NotSet,
+			bool withoutSuffix = false
+		)
 		{
 			if (objectType == ConvertType.NameToProcedure && name.Database != null)
 				throw new LinqToDBException("DB2 LUW cannot address functions/procedures with database name specified.");

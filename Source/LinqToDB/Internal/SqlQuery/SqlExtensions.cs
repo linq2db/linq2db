@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 
@@ -117,7 +117,7 @@ namespace LinqToDB.Internal.SqlQuery
 			=> expression.Type.IsSqlRow();
 
 		private static bool IsSqlRow(this Type type)
-			=> type.IsGenericType == true && type.GetGenericTypeDefinition() == typeof(Sql.SqlRow<,>);
+			=> type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Sql.SqlRow<,>);
 
 		internal static ReadOnlyCollection<Expression> GetSqlRowValues(this Expression expr)
 		{

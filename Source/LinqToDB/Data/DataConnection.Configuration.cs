@@ -403,7 +403,7 @@ namespace LinqToDB.Data
 			var info = new ConfigurationInfo(
 				new ConnectionStringSettings(configuration, connectionString, dataProvider));
 
-			Configuration.Info.AddOrUpdate(configuration, info, (_,_) => info);
+			Configuration.Info.AddOrUpdate(configuration, info, (_, _) => info);
 		}
 
 		/// <summary>

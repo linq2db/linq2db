@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -272,13 +272,13 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		[Wrapper]
 		internal sealed class HanaConnection
 		{
-			public HanaConnection(string connectionString) => throw new NotImplementedException();
+			public HanaConnection(string connectionString) => throw new NotSupportedException();
 		}
 
 		[Wrapper]
 		private sealed class HanaDecimal
 		{
-			public override string ToString() => throw new NotImplementedException();
+			public override string ToString() => throw new NotSupportedException();
 		}
 
 		[Wrapper]
@@ -365,7 +365,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			{
 			}
 
-			public HanaBulkCopy(HanaConnection connection, HanaBulkCopyOptions options, HanaTransaction? transaction) => throw new NotImplementedException();
+			public HanaBulkCopy(HanaConnection connection, HanaBulkCopyOptions options, HanaTransaction? transaction) => throw new NotSupportedException();
 
 			public void Dispose      ()                       => ((Action<HanaBulkCopy>)CompiledWrappers[0])(this);
 #pragma warning disable RS0030 // API mapping must preserve type
@@ -477,7 +477,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			{
 			}
 
-			public HanaBulkCopyColumnMapping(int source, string destination) => throw new NotImplementedException();
+			public HanaBulkCopyColumnMapping(int source, string destination) => throw new NotSupportedException();
 		}
 
 		#endregion

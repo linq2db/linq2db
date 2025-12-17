@@ -332,7 +332,7 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 					return TransformXE(expr);
 
 				default:
-					throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}");
+					throw new NotSupportedException($"Unhandled expression type: {expr.NodeType}");
 			}
 		}
 

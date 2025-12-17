@@ -49,7 +49,12 @@ namespace LinqToDB
 		public DataContext(string? configurationString)
 			: this(configurationString == null
 				? DataConnection.DefaultDataOptions
-				: DataConnection.ConnectionOptionsByConfigurationString.GetOrAdd(configurationString, _ => new(new(ConfigurationString : configurationString))))
+				: DataConnection.ConnectionOptionsByConfigurationString
+					.GetOrAdd(
+						configurationString,
+						cs => new(new(ConfigurationString: cs))
+					)
+			)
 		{
 		}
 
@@ -211,7 +216,7 @@ namespace LinqToDB
 
 			_keepConnectionAlive = keepAlive;
 
-			if (keepAlive == false)
+			if (!keepAlive)
 				ReleaseQuery();
 		}
 
@@ -224,7 +229,7 @@ namespace LinqToDB
 
 			_keepConnectionAlive = keepAlive;
 
-			if (keepAlive == false)
+			if (!keepAlive)
 				return ReleaseQueryAsync();
 
 			return default;
@@ -439,7 +444,7 @@ namespace LinqToDB
 				LastQuery = _dataConnection.LastQuery;
 #pragma warning restore CS0618 // Type or member is obsolete
 
-				if (_lockDbManagerCounter == 0 && KeepConnectionAlive == false)
+				if (_lockDbManagerCounter == 0 && !KeepConnectionAlive)
 				{
 					if (_dataConnection.QueryHints.    Count > 0) QueryHints    .AddRange(_dataConnection.QueryHints);
 					if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_dataConnection.NextQueryHints);
@@ -466,7 +471,7 @@ namespace LinqToDB
 				LastQuery = _dataConnection.LastQuery;
 #pragma warning restore CS0618 // Type or member is obsolete
 
-				if (_lockDbManagerCounter == 0 && KeepConnectionAlive == false)
+				if (_lockDbManagerCounter == 0 && !KeepConnectionAlive)
 				{
 					if (_dataConnection.QueryHints.    Count > 0) QueryHints    .AddRange(_dataConnection.QueryHints);
 					if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_dataConnection.NextQueryHints);

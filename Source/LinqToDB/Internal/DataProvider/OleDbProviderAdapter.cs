@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
@@ -146,9 +146,9 @@ namespace LinqToDB.Internal.DataProvider
 			{
 			}
 
-			public OleDbConnection(string connectionString) => throw new NotImplementedException();
+			public OleDbConnection(string connectionString) => throw new NotSupportedException();
 
-			public DataTable GetOleDbSchemaTable(Guid schema, object[]? restrictions) => throw new NotImplementedException();
+			public DataTable GetOleDbSchemaTable(Guid schema, object[]? restrictions) => throw new NotSupportedException();
 
 			// implementation returns string.Empty instead of null
 			public string Provider => ((Func<OleDbConnection, string>)CompiledWrappers[0])(this);

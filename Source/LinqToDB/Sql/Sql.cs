@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Diagnostics.CodeAnalysis;
@@ -194,7 +194,7 @@ namespace LinqToDB
 #pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
 		static TR ConvertRemover<T, TR>(T input)
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(ConvertRemover));
 		}
 
 		sealed class NoConvertBuilder : IExtensionCallBuilder
@@ -652,7 +652,7 @@ namespace LinqToDB
 		[Expression(PN.Ydb, "Unicode::Substring({0}, 0, {1} - 1) || {3} || Unicode::Substring({0}, {1} + {2} - 1)", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Concatenate)]
 		public static string Stuff(IEnumerable<string> characterExpression, int? start, int? length, string replaceWithExpression)
 		{
-			throw new ServerSideOnlyException();
+			throw new ServerSideOnlyException(nameof(Stuff));
 		}
 
 		[Function(                                                        IsNullable = IsNullableType.IfAnyParameterNullable)]

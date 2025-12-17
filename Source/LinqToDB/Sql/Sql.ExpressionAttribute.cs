@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -29,7 +29,7 @@ namespace LinqToDB
 		[PublicAPI]
 		[Serializable]
 		[AttributeUsage(AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
-		public class ExpressionAttribute : MappingAttribute
+		public partial class ExpressionAttribute : MappingAttribute
 		{
 			/// <summary>
 			/// Creates an Expression that will be used in SQL,
@@ -174,7 +174,14 @@ namespace LinqToDB
 				set => СonfiguredCanBeNull = value;
 			}
 
-			static readonly Regex _matchParamRegEx = new(@"{([0-9a-z_A-Z?]*)(,\s'(.*)')?}", RegexOptions.Compiled);
+			private const string MatchParamPattern = /* lang=regex */ @"{(?<name>[0-9a-z_A-Z?]*)(,\s'(?<delimiter>.*)')?}";
+#if SUPPORTS_REGEX_GENERATORS
+			[GeneratedRegex(MatchParamPattern, RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 1)]
+			private static partial Regex MatchParamRegex();
+#else
+			private static readonly Regex _matchParamRegEx = new(MatchParamPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(1));
+			private static Regex MatchParamRegex() => _matchParamRegEx;
+#endif
 
 			public static string ResolveExpressionValues<TContext>(TContext context, string expression, Func<TContext, string, string?, string?> valueProvider, out Expression? error)
 			{
@@ -187,9 +194,9 @@ namespace LinqToDB
 
 				Expression? errorExpr = null;
 
-				var str = _matchParamRegEx.Replace(expression, match =>
+				var str = MatchParamRegex().Replace(expression, match =>
 				{
-					var paramName     = match.Groups[1].Value;
+					var paramName     = match.Groups["name"].Value;
 					var canBeOptional = paramName.EndsWith('?');
 					if (canBeOptional)
 						paramName = paramName.TrimEnd('?');
@@ -201,7 +208,7 @@ namespace LinqToDB
 						return string.Empty;
 					}
 
-					var delimiter  = match.Groups[3].Success ? match.Groups[3].Value : null;
+					var delimiter  = match.Groups["delimiter"].Success ? match.Groups["delimiter"].Value : null;
 					var calculated = valueProvider(context, paramName, delimiter);
 
 					if (string.IsNullOrEmpty(calculated) && !canBeOptional)

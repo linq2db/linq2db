@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -127,12 +127,19 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			{
 				AppendIndent()
 					.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY (")
-					.AppendJoin(InlineComma, fieldNames)
+					.AppendJoinStrings(InlineComma, fieldNames)
 					.Append(')');
 			}
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
+		public override StringBuilder BuildObjectName(
+			StringBuilder sb,
+			SqlObjectName name,
+			ConvertType objectType = ConvertType.NameToQueryTable,
+			bool escape = true,
+			TableOptions tableOptions = TableOptions.NotSet,
+			bool withoutSuffix = false
+		)
 		{
 			// either "temp", "main" or attached db name supported
 			if (tableOptions.IsTemporaryOptionSet())

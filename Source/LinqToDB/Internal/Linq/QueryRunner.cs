@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -543,10 +543,11 @@ namespace LinqToDB.Internal.Linq
 			{
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteQueryAsync))
 				{
-#pragma warning disable CA2007
-					await using var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _parameters, _preambles);
-					await using var dr     = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-#pragma warning restore CA2007
+					var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _parameters, _preambles);
+					await using var _2 = runner.ConfigureAwait(false);
+
+					var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+					await using var _3 = dr.ConfigureAwait(false);
 
 					var dataReader = dr.DataReader!;
 

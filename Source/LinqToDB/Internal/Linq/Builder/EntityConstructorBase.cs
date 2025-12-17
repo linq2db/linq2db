@@ -852,7 +852,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					TryConstructObject(constructorExpression, constructorExpression.ObjectType, out error),
 
 				_ =>
-					throw new NotImplementedException(),
+					throw new NotSupportedException(),
 			};
 		}
 

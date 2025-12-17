@@ -27,7 +27,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				throw new NotImplementedException();
+				throw new NotSupportedException();
 			}
 
 			public override SqlStatement GetResultStatement()
@@ -37,7 +37,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
-				throw new NotImplementedException();
+				throw new NotSupportedException();
 			}
 		}
 
@@ -177,7 +177,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					// in case when we have alias placeholder we should not generate any fields
 					if (table.Parameters.All(p => p.ElementType != QueryElementType.SqlAliasPlaceholder))
 					{
-						var sql = SqlTable.Fields.FirstOrDefault(f => f.Name == "value");
+						var sql = SqlTable.Fields.Find(f => f.Name == "value");
 						if (sql != null)
 						{
 							return ExpressionBuilder.CreatePlaceholder(this, sql, path);

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Globalization;
@@ -70,7 +70,7 @@ namespace LinqToDB.Remote
 
 		protected virtual void ValidateQuery(LinqServiceQuery query)
 		{
-			if (AllowUpdates == false && query.Statement.QueryType != QueryType.Select)
+			if (!AllowUpdates && query.Statement.QueryType != QueryType.Select)
 				throw new LinqToDBException("Insert/Update/Delete requests are not allowed by the service policy.");
 		}
 
@@ -80,7 +80,7 @@ namespace LinqToDB.Remote
 
 		#region ILinqService Members
 
-		public virtual Task<LinqServiceInfo> GetInfoAsync(string? configuration, CancellationToken cancellationToken)
+		public virtual Task<LinqServiceInfo> GetInfoAsync(string? configuration, CancellationToken cancellationToken = default)
 		{
 			using var ctx = CreateDataContext(configuration);
 
@@ -101,21 +101,18 @@ namespace LinqToDB.Remote
 		public async Task<int> ExecuteNonQueryAsync(
 			string?           configuration,
 			string            queryData,
-			CancellationToken cancellationToken)
+			CancellationToken cancellationToken = default)
 		{
 			try
 			{
-#pragma warning disable CA2007
-				await using var db = CreateDataContext(configuration);
-#pragma warning restore CA2007
+				var db = CreateDataContext(configuration);
+				await using var _1 = db.ConfigureAwait(false);
 
 				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-#pragma warning disable CA2007
-				await using var _ = db.DataProvider.ExecuteScope(db);
-#pragma warning restore CA2007
+				await using var _2 = db.DataProvider.ExecuteScope(db);
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
@@ -124,7 +121,7 @@ namespace LinqToDB.Remote
 					new QueryContext(query.Statement, query.DataOptions),
 					new SqlParameterValues(),
 					cancellationToken
-					).ConfigureAwait(false);
+				).ConfigureAwait(false);
 			}
 			catch (Exception exception)
 			{
@@ -134,32 +131,29 @@ namespace LinqToDB.Remote
 		}
 
 		public async Task<string?> ExecuteScalarAsync(
-			string?           configuration,
-			string            queryData,
-			CancellationToken cancellationToken)
+			string? configuration,
+			string queryData,
+			CancellationToken cancellationToken = default)
 		{
 			try
 			{
-#pragma warning disable CA2007
-				await using var db = CreateDataContext(configuration);
-#pragma warning restore CA2007
+				var db = CreateDataContext(configuration);
+				await using var _1 = db.ConfigureAwait(false);
 
 				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-#pragma warning disable CA2007
-				await using var _ = db.DataProvider.ExecuteScope(db);
-#pragma warning restore CA2007
+				await using var _2 = db.DataProvider.ExecuteScope(db)?.ConfigureAwait(false);
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
 				var scalar = await DataConnection.QueryRunner.ExecuteScalarAsync(
 					db,
 					new QueryContext(query.Statement, query.DataOptions),
-					null,
+					parameterValues: null,
 					cancellationToken
-					).ConfigureAwait(false);
+				).ConfigureAwait(false);
 
 				var result = ProcessScalar(scalar);
 
@@ -202,32 +196,34 @@ namespace LinqToDB.Remote
 		public async Task<string> ExecuteReaderAsync(
 			string?           configuration,
 			string            queryData,
-			CancellationToken cancellationToken)
+			CancellationToken cancellationToken = default)
 		{
 			try
 			{
-#pragma warning disable CA2007
-				await using var db = CreateDataContext(configuration);
+				var db = CreateDataContext(configuration);
+				await using var _1 = db.ConfigureAwait(false);
 
 				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-				await using var _ = db.DataProvider.ExecuteScope(db);
+				await using var _2 = db.DataProvider.ExecuteScope(db);
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
-				await using var rd = await DataConnection.QueryRunner.ExecuteReaderAsync(
+				var rd = await DataConnection.QueryRunner.ExecuteReaderAsync(
 					db,
 					new QueryContext(query.Statement, query.DataOptions),
 					SqlParameterValues.Empty,
 					cancellationToken
-					).ConfigureAwait(false);
+				).ConfigureAwait(false);
 
-				var ret = ProcessDataReaderWrapper(query, db, rd);
+				await using (rd.ConfigureAwait(false))
+				{
+					var ret = ProcessDataReaderWrapper(query, db, rd);
 
-				return LinqServiceSerializer.Serialize(SerializationMappingSchema, ret);
-#pragma warning restore CA2007
+					return LinqServiceSerializer.Serialize(SerializationMappingSchema, ret);
+				}
 			}
 			catch (Exception exception)
 			{
@@ -236,13 +232,12 @@ namespace LinqToDB.Remote
 			}
 		}
 
-		public async Task<int> ExecuteBatchAsync(string? configuration, string queryData, CancellationToken cancellationToken)
+		public async Task<int> ExecuteBatchAsync(string? configuration, string queryData, CancellationToken cancellationToken = default)
 		{
 			try
 			{
-#pragma warning disable CA2007
-				await using var db = CreateDataContext(configuration);
-#pragma warning restore CA2007
+				var db = CreateDataContext(configuration);
+				await using var _1 = db.ConfigureAwait(false);
 
 				var data    = LinqServiceSerializer.DeserializeStringArray(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 				var queries = data.Select(r => LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, r)).ToArray();
@@ -250,9 +245,7 @@ namespace LinqToDB.Remote
 				foreach (var query in queries)
 					ValidateQuery(query);
 
-#pragma warning disable CA2007
-				await using var _ = db.DataProvider.ExecuteScope(db);
-#pragma warning restore CA2007
+				await using var _2 = db.DataProvider.ExecuteScope(db);
 
 				await db.BeginTransactionAsync(cancellationToken)
 					.ConfigureAwait(false);
@@ -310,7 +303,7 @@ namespace LinqToDB.Remote
 				QueryType.Delete => ((SqlDeleteStatement)query.Statement).Output!.OutputColumns!,
 				QueryType.Update => ((SqlUpdateStatement)query.Statement).Output!.OutputColumns!,
 				QueryType.Merge  => ((SqlMergeStatement )query.Statement).Output!.OutputColumns!,
-				_ => throw new NotImplementedException($"Query type not supported: {query.Statement.QueryType}"),
+				_ => throw new NotSupportedException($"Query type not supported: {query.Statement.QueryType}"),
 			};
 
 			for (var i = 0; i < ret.FieldCount; i++)

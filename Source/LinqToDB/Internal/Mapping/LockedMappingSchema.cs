@@ -16,7 +16,7 @@ namespace LinqToDB.Internal.Mapping
 		{
 		}
 
-		internal LockedMappingSchema(MappingSchemaInfo mappingSchemaInfo) : base(mappingSchemaInfo)
+		private protected LockedMappingSchema(MappingSchemaInfo mappingSchemaInfo) : base(mappingSchemaInfo)
 		{
 		}
 

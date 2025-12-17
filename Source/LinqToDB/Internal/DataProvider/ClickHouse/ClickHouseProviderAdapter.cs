@@ -327,7 +327,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			[Wrapper]
 			internal sealed class ClickHouseConnection
 			{
-				public ClickHouseConnection(string connectionString) => throw new NotImplementedException();
+				public ClickHouseConnection(string connectionString) => throw new NotSupportedException();
 			}
 
 			[Wrapper]
@@ -349,7 +349,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				{
 				}
 
-				public ClickHouseConnectionStringBuilder(string connectionString) => throw new NotImplementedException();
+				public ClickHouseConnectionStringBuilder(string connectionString) => throw new NotSupportedException();
 
 				public bool UseSession
 				{
@@ -363,7 +363,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			[Wrapper]
 			internal sealed class ClickHouseDecimal
 			{
-				public string ToString(IFormatProvider provider) => throw new NotImplementedException();
+				public string ToString(IFormatProvider provider) => throw new NotSupportedException();
 			}
 
 			[Wrapper]
@@ -401,7 +401,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				{
 				}
 
-				public ClickHouseBulkCopy(ClickHouseConnection connection) => throw new NotImplementedException();
+				public ClickHouseBulkCopy(ClickHouseConnection connection) => throw new NotSupportedException();
 
 				void IDisposable.Dispose() => ((Action<ClickHouseBulkCopy>)CompiledWrappers[0])(this);
 
@@ -450,10 +450,10 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			[Wrapper]
 			internal sealed class ClickHouseConnection
 			{
-				public ClickHouseConnection(string connectionString) => throw new NotImplementedException();
+				public ClickHouseConnection(string connectionString) => throw new NotSupportedException();
 
-				public ClickHouseColumnWriter       CreateColumnWriter     (string insertFormatCommand                                     ) => throw new NotImplementedException();
-				public Task<ClickHouseColumnWriter> CreateColumnWriterAsync(string insertFormatCommand, CancellationToken cancellationToken) => throw new NotImplementedException();
+				public ClickHouseColumnWriter       CreateColumnWriter     (string insertFormatCommand                                     ) => throw new NotSupportedException();
+				public Task<ClickHouseColumnWriter> CreateColumnWriterAsync(string insertFormatCommand, CancellationToken cancellationToken) => throw new NotSupportedException();
 			}
 
 			[Wrapper]
@@ -463,7 +463,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				{
 				}
 
-				public ClickHouseColumnSettings(Type columnType) => throw new NotImplementedException();
+				public ClickHouseColumnSettings(Type columnType) => throw new NotSupportedException();
 			}
 
 			[Wrapper]

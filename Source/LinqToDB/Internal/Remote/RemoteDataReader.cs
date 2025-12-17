@@ -84,15 +84,15 @@ namespace LinqToDB.Internal.Remote
 			return false;
 		}
 
-		public override long        GetBytes      (int ordinal, long dataOffset, byte[]? buffer, int bufferOffset, int length) => throw new NotImplementedException();
-		public override long        GetChars      (int ordinal, long dataOffset, char[]? buffer, int bufferOffset, int length) => throw new NotImplementedException();
-		public override int         GetValues     (object[] values) => throw new NotImplementedException();
-		public override IEnumerator GetEnumerator () => throw new NotImplementedException();
-		public override DataTable   GetSchemaTable() => throw new NotImplementedException();
-		public override bool        NextResult    () => throw new NotImplementedException();
+		public override long        GetBytes      (int ordinal, long dataOffset, byte[]? buffer, int bufferOffset, int length) => throw new NotSupportedException();
+		public override long        GetChars      (int ordinal, long dataOffset, char[]? buffer, int bufferOffset, int length) => throw new NotSupportedException();
+		public override int         GetValues     (object[] values) => throw new NotSupportedException();
+		public override IEnumerator GetEnumerator () => throw new NotSupportedException();
+		public override DataTable   GetSchemaTable() => throw new NotSupportedException();
+		public override bool        NextResult    () => throw new NotSupportedException();
 
-		public override bool IsClosed       => throw new NotImplementedException();
-		public override int RecordsAffected => throw new NotImplementedException();
+		public override bool IsClosed       => throw new NotSupportedException();
+		public override int RecordsAffected => throw new NotSupportedException();
 		#endregion
 	}
 }

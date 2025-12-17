@@ -96,15 +96,12 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 			return File.Exists(Path.Combine(dirName ?? ".", InformixProviderAdapter.IfxAssemblyName + ".dll"))
 				? InformixProvider.Informix
-				: File.Exists(Path.Combine(dirName ?? ".", DB2ProviderAdapter.AssemblyName + ".dll"))
 #if !NETFRAMEWORK
-					|| File.Exists(Path.Combine(dirName ?? ".", DB2ProviderAdapter.AssemblyNameOld + ".dll"))
-#endif
-					? InformixProvider.DB2
-#if NETFRAMEWORK
-					: InformixProvider.Informix;
+				: InformixProvider.DB2;
 #else
-					: InformixProvider.DB2;
+				: File.Exists(Path.Combine(dirName ?? ".", DB2ProviderAdapter.AssemblyName + ".dll"))
+					? InformixProvider.DB2
+					: InformixProvider.Informix;
 #endif
 		}
 	}

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -134,7 +134,7 @@ namespace LinqToDB.Internal.Expressions
 		public SqlGenericConstructorExpression(MemberInitExpression memberInitExpression)
 		{
 			if (memberInitExpression.NewExpression.Members != null)
-				throw new NotImplementedException();
+				throw new InvalidOperationException("Expected initialization with no members.");
 
 			Parameters = GetMethodParameters(memberInitExpression.NewExpression.Constructor!, memberInitExpression.NewExpression.Arguments);
 
@@ -191,7 +191,7 @@ namespace LinqToDB.Internal.Expressions
 					}
 
 					default:
-						throw new NotImplementedException();
+						throw new InvalidOperationException($"Unsupported MemberBindingType `{binding.BindingType}`");
 				}
 			}
 

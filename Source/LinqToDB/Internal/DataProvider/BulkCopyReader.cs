@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -120,7 +120,7 @@ namespace LinqToDB.Internal.DataProvider
 			public override void ResetDbType() { }
 		}
 
-#region Implementation of IDataRecord
+		#region Implementation of IDataRecord
 
 		public override string GetName(int ordinal)
 		{
@@ -178,36 +178,36 @@ namespace LinqToDB.Internal.DataProvider
 
 		public override long GetBytes(int ordinal, long dataOffset, byte[]? buffer, int bufferOffset, int length)
 		{
-			throw new NotImplementedException();
+			throw new NotSupportedException();
 		}
 
 		public override long GetChars(int ordinal, long dataOffset, char[]? buffer, int bufferOffset, int length)
 		{
-			throw new NotImplementedException();
+			throw new NotSupportedException();
 		}
 
-		public override string      GetDataTypeName(int ordinal) => throw new NotImplementedException();
+		public override string      GetDataTypeName(int ordinal) => throw new NotSupportedException();
 		public override int         GetOrdinal     (string name) => _ordinals[name];
-		public override bool        GetBoolean     (int ordinal) => throw new NotImplementedException();
-		public override byte        GetByte        (int ordinal) => throw new NotImplementedException();
-		public override char        GetChar        (int ordinal) => throw new NotImplementedException();
-		public override Guid        GetGuid        (int ordinal) => throw new NotImplementedException();
-		public override short       GetInt16       (int ordinal) => throw new NotImplementedException();
-		public override int         GetInt32       (int ordinal) => throw new NotImplementedException();
-		public override long        GetInt64       (int ordinal) => throw new NotImplementedException();
-		public override float       GetFloat       (int ordinal) => throw new NotImplementedException();
-		public override double      GetDouble      (int ordinal) => throw new NotImplementedException();
-		public override string      GetString      (int ordinal) => throw new NotImplementedException();
-		public override decimal     GetDecimal     (int ordinal) => throw new NotImplementedException();
-		public override DateTime    GetDateTime    (int ordinal) => throw new NotImplementedException();
+		public override bool        GetBoolean     (int ordinal) => throw new NotSupportedException();
+		public override byte        GetByte        (int ordinal) => throw new NotSupportedException();
+		public override char        GetChar        (int ordinal) => throw new NotSupportedException();
+		public override Guid        GetGuid        (int ordinal) => throw new NotSupportedException();
+		public override short       GetInt16       (int ordinal) => throw new NotSupportedException();
+		public override int         GetInt32       (int ordinal) => throw new NotSupportedException();
+		public override long        GetInt64       (int ordinal) => throw new NotSupportedException();
+		public override float       GetFloat       (int ordinal) => throw new NotSupportedException();
+		public override double      GetDouble      (int ordinal) => throw new NotSupportedException();
+		public override string      GetString      (int ordinal) => throw new NotSupportedException();
+		public override decimal     GetDecimal     (int ordinal) => throw new NotSupportedException();
+		public override DateTime    GetDateTime    (int ordinal) => throw new NotSupportedException();
 		public override bool        IsDBNull       (int ordinal) => GetValueInternal(ordinal) == null;
 
-		public override object this[int i]       => throw new NotImplementedException();
-		public override object this[string name] => throw new NotImplementedException();
+		public override object this[int i]       => throw new NotSupportedException();
+		public override object this[string name] => throw new NotSupportedException();
 
-#endregion
+		#endregion
 
-#region Implementation of IDataReader
+		#region Implementation of IDataReader
 
 		public override void Close()
 		{
@@ -296,16 +296,16 @@ namespace LinqToDB.Internal.DataProvider
 			return b;
 		}
 
-		public override int Depth           => throw new NotImplementedException();
+		public override int Depth           => throw new NotSupportedException();
 
 		public override bool IsClosed       => false;
 
-		public override int RecordsAffected => throw new NotImplementedException();
+		public override int RecordsAffected => throw new NotSupportedException();
 
-#endregion
+		#endregion
 
-		public override IEnumerator GetEnumerator() => throw new NotImplementedException();
+		public override IEnumerator GetEnumerator() => throw new NotSupportedException();
 
-		public override bool HasRows => throw new NotImplementedException();
+		public override bool HasRows => throw new NotSupportedException();
 	}
 }

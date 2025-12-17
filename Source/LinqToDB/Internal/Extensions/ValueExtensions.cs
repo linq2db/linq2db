@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 
 namespace LinqToDB.Internal.Extensions
@@ -49,7 +49,7 @@ namespace LinqToDB.Internal.Extensions
 				return dt;
 
 			if (precision < 0)
-				throw new InvalidOperationException(FormattableString.Invariant($"Precision must be >= 0: {precision}"));
+				throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"Precision must be >= 0: {precision}"));
 
 			var delta = dt.Ticks % TICKS_DIVIDERS[precision];
 			return delta == 0 ? dt : dt.AddTicks(-delta);

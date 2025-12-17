@@ -30,7 +30,7 @@ namespace LinqToDB.Expressions
 				return Equals(Type, other.Type) && MemberInfo.Equals(other.MemberInfo);
 			}
 
-			public override bool Equals(object? obj)
+			public override readonly bool Equals(object? obj)
 			{
 				return obj is MemberInfoWithType other && Equals(other);
 			}
@@ -118,7 +118,7 @@ namespace LinqToDB.Expressions
 				// check if member exists on type
 				var existingMember = TypeAccessor.GetAccessor(objectExpr.Type).Members.SingleOrDefault(m =>
 					m.Name == memberName &&
-					(m.MemberInfo.MemberType == MemberTypes.Property || m.MemberInfo.MemberType == MemberTypes.Field));
+					(m.MemberInfo.MemberType is MemberTypes.Property or MemberTypes.Field));
 
 				if (existingMember != null)
 					return new MemberInfoWithType(objectExpr.Type, existingMember.MemberInfo);

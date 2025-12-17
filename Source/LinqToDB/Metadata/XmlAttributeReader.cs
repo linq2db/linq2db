@@ -303,9 +303,10 @@ namespace LinqToDB.Metadata
 					var ctors = Type.GetConstructors();
 					var ctor  = ctors.FirstOrDefault(c => c.GetParameters().Length == 0);
 
-					if (ctor != null)
-					{
-						var expr = Expression.Lambda<Func<MappingAttribute>>(
+					if (ctor == null)
+						throw new InvalidOperationException($"Missing a parameterless constructor for `{Type.FullName}`.");
+
+					var expr = Expression.Lambda<Func<MappingAttribute>>(
 						Expression.Convert(
 							Expression.MemberInit(
 								Expression.New(ctor),
@@ -320,12 +321,7 @@ namespace LinqToDB.Metadata
 								})),
 							typeof(MappingAttribute)));
 
-						_func = expr.CompileExpression();
-					}
-					else
-					{
-						throw new NotImplementedException();
-					}
+					_func = expr.CompileExpression();
 				}
 
 				return _func();

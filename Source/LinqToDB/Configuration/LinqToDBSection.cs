@@ -110,8 +110,7 @@ namespace LinqToDB.Configuration
 				isPresent = true;
 			}
 
-			return
-				 isPresent == false &&
+			return !isPresent &&
 				(source    == null  ||
 				source.EndsWith("machine.config", StringComparison.OrdinalIgnoreCase));
 		}

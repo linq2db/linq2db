@@ -166,7 +166,14 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			StringBuilder.Append("IDENTITY");
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
+		public override StringBuilder BuildObjectName(
+			StringBuilder sb,
+			SqlObjectName name,
+			ConvertType objectType = ConvertType.NameToQueryTable,
+			bool escape = true,
+			TableOptions tableOptions = TableOptions.NotSet,
+			bool withoutSuffix = false
+		)
 		{
 			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);
 		}

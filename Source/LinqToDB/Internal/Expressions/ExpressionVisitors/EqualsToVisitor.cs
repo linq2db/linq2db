@@ -139,7 +139,7 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 
 				ExpressionType.Extension => EqualsExtensions(expr1, expr2),
 
-				_ => throw new NotImplementedException($"Unhandled expression type: {expr1.NodeType}"),
+				_ => throw new InvalidOperationException($"Unhandled expression type: {expr1.NodeType}"),
 			};
 		}
 

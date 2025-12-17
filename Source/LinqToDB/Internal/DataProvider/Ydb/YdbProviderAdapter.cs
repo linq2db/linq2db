@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 using LinqToDB.Common;
 using LinqToDB.Internal.Expressions.Types;
 using System.Runtime.InteropServices;
-
 
 #if !NET8_0_OR_GREATER
 using System.Numerics;
@@ -189,13 +188,13 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		[Wrapper]
 		internal sealed class YdbConnection
 		{
-			public YdbConnection(string connectionString) => throw new NotImplementedException();
+			public YdbConnection(string connectionString) => throw new NotSupportedException();
 
-			public IBulkUpsertImporter BeginBulkUpsertImport(string name, IReadOnlyList<string> columns, CancellationToken cancellationToken) => throw new NotImplementedException();
+			public IBulkUpsertImporter BeginBulkUpsertImport(string name, IReadOnlyList<string> columns, CancellationToken cancellationToken) => throw new NotSupportedException();
 
-			public static Task ClearAllPools() => throw new NotImplementedException();
+			public static Task ClearAllPools() => throw new NotSupportedException();
 
-			public static Task ClearPool(YdbConnection connection) => throw new NotImplementedException();
+			public static Task ClearPool(YdbConnection connection) => throw new NotSupportedException();
 		}
 
 		[Wrapper]
@@ -224,54 +223,54 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		{
 			// access internal .ctor
 			[WrappedBindingFlags(BindingFlags.Instance | BindingFlags.NonPublic)]
-			public YdbValue(ProtoType type, ProtoValue value) => throw new NotImplementedException();
+			public YdbValue(ProtoType type, ProtoValue value) => throw new NotSupportedException();
 		}
 
 		[Wrapper("Value")]
 		internal sealed class ProtoValue
 		{
-			public ProtoValue() => throw new NotImplementedException();
+			public ProtoValue() => throw new NotSupportedException();
 
 			public ulong High128
 			{
-				get => throw new NotImplementedException();
-				set => throw new NotImplementedException();
+				get => throw new NotSupportedException();
+				set => throw new NotSupportedException();
 			}
 
 			public ulong Low128
 			{
-				get => throw new NotImplementedException();
-				set => throw new NotImplementedException();
+				get => throw new NotSupportedException();
+				set => throw new NotSupportedException();
 			}
 		}
 
 		[Wrapper("Type")]
 		internal sealed class ProtoType
 		{
-			public ProtoType() => throw new NotImplementedException();
+			public ProtoType() => throw new NotSupportedException();
 
 			public DecimalType DecimalType
 			{
-				get => throw new NotImplementedException();
-				set => throw new NotImplementedException();
+				get => throw new NotSupportedException();
+				set => throw new NotSupportedException();
 			}
 		}
 
 		[Wrapper]
 		internal sealed class DecimalType
 		{
-			public DecimalType() => throw new NotImplementedException();
+			public DecimalType() => throw new NotSupportedException();
 
 			public uint Scale
 			{
-				get => throw new NotImplementedException();
-				set => throw new NotImplementedException();
+				get => throw new NotSupportedException();
+				set => throw new NotSupportedException();
 			}
 
 			public uint Precision
 			{
-				get => throw new NotImplementedException();
-				set => throw new NotImplementedException();
+				get => throw new NotSupportedException();
+				set => throw new NotSupportedException();
 			}
 		}
 

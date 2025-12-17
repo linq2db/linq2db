@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -200,7 +200,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			};
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
+		public override StringBuilder BuildObjectName(
+			StringBuilder sb,
+			SqlObjectName name,
+			ConvertType objectType = ConvertType.NameToQueryTable,
+			bool escape = true,
+			TableOptions tableOptions = TableOptions.NotSet,
+			bool withoutSuffix = false
+		)
 		{
 			var databaseName = name.Database;
 
@@ -295,7 +302,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			}
 
 			StringBuilder.Append("PRIMARY KEY CLUSTERED (");
-			StringBuilder.AppendJoin(InlineComma, fieldNames);
+			StringBuilder.AppendJoinStrings(InlineComma, fieldNames);
 			StringBuilder.Append(')');
 		}
 

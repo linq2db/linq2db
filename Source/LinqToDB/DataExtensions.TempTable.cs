@@ -1017,7 +1017,12 @@ namespace LinqToDB
 			where T : class
 		{
 			if (items is not IExpressionQuery eq)
-				throw new ArgumentException($"The '{nameof(items)}' argument must be of type 'LinqToDB.Linq.IExpressionQuery'.");
+			{
+				throw new ArgumentException(
+					$"The '{nameof(items)}' argument must be of type 'LinqToDB.Linq.IExpressionQuery'.",
+					nameof(items)
+				);
+			}
 
 			TempTableDescriptor? tempTableDescriptor = null;
 			if (setTable != null)
@@ -1125,7 +1130,12 @@ namespace LinqToDB
 			where T : class
 		{
 			if (items is not IExpressionQuery eq)
-				throw new ArgumentException($"The '{nameof(items)}' argument must be of type 'LinqToDB.Linq.IExpressionQuery'.");
+			{
+				throw new ArgumentException(
+					$"The '{nameof(items)}' argument must be of type 'LinqToDB.Linq.IExpressionQuery'.",
+					nameof(items)
+				);
+			}
 
 			TempTableDescriptor? tempTableDescriptor = null;
 			if (setTable != null)

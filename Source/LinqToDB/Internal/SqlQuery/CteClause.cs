@@ -9,7 +9,7 @@ namespace LinqToDB.Internal.SqlQuery
 	[DebuggerDisplay("CTE({CteID}, {Name})")]
 	public sealed class CteClause : QueryElement
 	{
-		public static int CteIDCounter;
+		internal static int CteIDCounter;
 
 		public List<SqlField> Fields { get; internal set; }
 

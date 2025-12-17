@@ -1259,36 +1259,40 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				next = nextPath[nextIndex];
 
-				if (next is MemberExpression me)
+				switch (next)
 				{
-					member = me.Member;
-				}
-				else if (next is SqlGenericParamAccessExpression paramAccess)
-				{
-					if (body.NodeType == ExpressionType.New)
+					case MemberExpression me:
+						member = me.Member;
+						break;
+
+					case SqlGenericParamAccessExpression paramAccess:
 					{
-						var newExpr = (NewExpression)body;
-						if (newExpr.Constructor == paramAccess.ParameterInfo.Member && paramAccess.ParamIndex < newExpr.Arguments.Count)
+						if (body.NodeType == ExpressionType.New)
 						{
-							return Project(context, null, nextPath, nextIndex - 1, flags,
-								newExpr.Arguments[paramAccess.ParamIndex], strict);
+							var newExpr = (NewExpression)body;
+							if (newExpr.Constructor == paramAccess.ParameterInfo.Member && paramAccess.ParamIndex < newExpr.Arguments.Count)
+							{
+								return Project(context, null, nextPath, nextIndex - 1, flags,
+									newExpr.Arguments[paramAccess.ParamIndex], strict);
+							}
 						}
-					}
-					else if (body.NodeType == ExpressionType.Call)
-					{
-						var methodCall = (MethodCallExpression)body;
-						if (methodCall.Method == paramAccess.ParameterInfo.Member && paramAccess.ParamIndex < methodCall.Arguments.Count)
+						else if (body.NodeType == ExpressionType.Call)
 						{
-							return Project(context, null, nextPath, nextIndex - 1, flags,
-								methodCall.Arguments[paramAccess.ParamIndex], strict);
+							var methodCall = (MethodCallExpression)body;
+							if (methodCall.Method == paramAccess.ParameterInfo.Member && paramAccess.ParamIndex < methodCall.Arguments.Count)
+							{
+								return Project(context, null, nextPath, nextIndex - 1, flags,
+									methodCall.Arguments[paramAccess.ParamIndex], strict);
+							}
 						}
+
+						break;
+
+						// nothing to do right now
 					}
 
-					// nothing to do right now
-				}
-				else
-				{
-					throw new NotImplementedException();
+					default:
+						throw new NotSupportedException($"Invalid Projection `{next.GetType().FullName}`");
 				}
 			}
 
@@ -1587,6 +1591,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 									break;
 								}
+
 								case MemberBindingType.MemberBinding:
 								{
 									var memberMemberBinding = (MemberMemberBinding)binding;
@@ -1600,10 +1605,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 									break;
 								}
+
 								case MemberBindingType.ListBinding:
-									throw new NotImplementedException();
+									throw new NotSupportedException($"Unsupported MemberBindingType `{memberBinding.BindingType}`");
+
 								default:
-									throw new NotImplementedException();
+									throw new InvalidOperationException($"Unsupported MemberBindingType `{binding.BindingType}`");
 							}
 						}
 

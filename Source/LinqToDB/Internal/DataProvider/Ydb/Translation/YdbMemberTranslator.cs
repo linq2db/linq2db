@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Linq.Expressions;
@@ -232,14 +232,14 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 			protected override Expression? ConvertBit(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 			{
 				//return base.ConvertBit(translationContext, memberExpression, translationFlags);
-				throw new NotImplementedException("55");
+				throw new NotSupportedException("55");
 			}
 #if SUPPORTS_DATEONLY
 
 			protected override Expression? ConvertDateOnly(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 			{
 				//return base.ConvertDateOnly(translationContext, memberExpression, translationFlags);
-				throw new NotImplementedException("52");
+				throw new NotSupportedException("52");
 			}
 #endif
 
@@ -262,19 +262,19 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				//return base.TranslateDateTimeOffsetDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
-				throw new NotImplementedException("11");
+				throw new NotSupportedException("11");
 			}
 
 			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
 				//return base.TranslateDateTimeOffsetTruncationToDate(translationContext, dateExpression, translationFlags);
-				throw new NotImplementedException("10");
+				throw new NotSupportedException("10");
 			}
 
 			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
 				//return base.TranslateDateTimeOffsetTruncationToTime(translationContext, dateExpression, translationFlags);
-				throw new NotImplementedException("09");
+				throw new NotSupportedException("09");
 			}
 
 			protected override ISqlExpression? TranslateDateTimeTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)

@@ -1,4 +1,4 @@
-// BASEDON: https://github.com/dotnet/efcore/blob/main/src/EFCore/Query/ExpressionPrinter.cs
+﻿// BASEDON: https://github.com/dotnet/efcore/blob/main/src/EFCore/Query/ExpressionPrinter.cs
 
 // // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
@@ -566,7 +566,7 @@ namespace LinqToDB.Internal.Expressions
 
 				Visit(parameter);
 
-				if (parameter != lambdaExpression.Parameters.Last())
+				if (parameter != lambdaExpression.Parameters[^1])
 				{
 					_stringBuilder.Append(", ");
 				}
@@ -873,7 +873,7 @@ namespace LinqToDB.Internal.Expressions
 					}
 
 					Append("namelessParameter{");
-					Append(FormattableString.Invariant($"{_namelessParameters.IndexOf(parameterExpression)}"));
+					Append(string.Create(CultureInfo.InvariantCulture, $"{_namelessParameters.IndexOf(parameterExpression)}"));
 					Append("}");
 				}
 				else if (parameterName.Contains('.'))
@@ -913,7 +913,7 @@ namespace LinqToDB.Internal.Expressions
 					_encounteredParameters.Add(parameterExpression);
 				}
 
-				_stringBuilder.Append(FormattableString.Invariant($"{{{parameterIndex}}}"));
+				_stringBuilder.Append(string.Create(CultureInfo.InvariantCulture, $"{{{parameterIndex}}}"));
 			}
 
 			return parameterExpression;

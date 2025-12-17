@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -99,7 +99,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		public abstract bool    IsPackageProceduresSupported { get; }
 
-		public class BulkCopyAdapter
+		public sealed class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
 				Func<DbConnection, DbTransaction?, MySqlConnector.MySqlBulkCopy> bulkCopyCreator,
@@ -230,15 +230,15 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			[Wrapper]
 			private sealed class MySqlDateTime
 			{
-				public DateTime GetDateTime() => throw new NotImplementedException();
+				public DateTime GetDateTime() => throw new NotSupportedException();
 			}
 
 			[Wrapper]
 			private sealed class MySqlDecimal
 			{
-				public          decimal Value      => throw new NotImplementedException();
-				public          double  ToDouble() => throw new NotImplementedException();
-				public override string  ToString() => throw new NotImplementedException();
+				public          decimal Value      => throw new NotSupportedException();
+				public          double  ToDouble() => throw new NotSupportedException();
+				public override string  ToString() => throw new NotSupportedException();
 			}
 
 			[Wrapper]
@@ -430,15 +430,15 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			[Wrapper]
 			private sealed class MySqlDecimal
 			{
-				public          decimal Value      => throw new NotImplementedException();
-				public          double  ToDouble() => throw new NotImplementedException();
-				public override string  ToString() => throw new NotImplementedException();
+				public          decimal Value      => throw new NotSupportedException();
+				public          double  ToDouble() => throw new NotSupportedException();
+				public override string  ToString() => throw new NotSupportedException();
 			}
 
 			[Wrapper]
 			private sealed class MySqlDateTime
 			{
-				public DateTime GetDateTime() => throw new NotImplementedException();
+				public DateTime GetDateTime() => throw new NotSupportedException();
 			}
 
 			[Wrapper]
@@ -552,7 +552,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				{
 				}
 
-				public MySqlBulkCopy(MySqlConnection connection, MySqlTransaction? transaction) => throw new NotImplementedException();
+				public MySqlBulkCopy(MySqlConnection connection, MySqlTransaction? transaction) => throw new NotSupportedException();
 
 #pragma warning disable RS0030 // API mapping must preserve type (IDataReader)
 				private bool CanWriteToServer1 => CompiledWrappers[7] != null;
@@ -625,7 +625,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					remove => _MySqlRowsCopied = (MySqlRowsCopiedEventHandler?)Delegate.Remove (_MySqlRowsCopied, value);
 				}
 
-				private List<MySqlBulkCopyColumnMapping> ColumnMappings => throw new NotImplementedException("Use AddColumnMapping method instead");
+				private List<MySqlBulkCopyColumnMapping> ColumnMappings => throw new NotSupportedException("Use AddColumnMapping method instead");
 
 				// because underlying object use List<T> for column mappings, easiest approch will be to add
 				// non-existing Add method
@@ -677,7 +677,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			{
 			}
 
-			public MySqlBulkCopyColumnMapping(int sourceOrdinal, string destinationColumn, string? expression = null) => throw new NotImplementedException();
+			public MySqlBulkCopyColumnMapping(int sourceOrdinal, string destinationColumn, string? expression = null) => throw new NotSupportedException();
 		}
 
 		[Wrapper]
@@ -691,7 +691,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		[Wrapper]
 		internal sealed class MySqlConnection
 		{
-			public MySqlConnection(string connectionString) => throw new NotImplementedException();
+			public MySqlConnection(string connectionString) => throw new NotSupportedException();
 		}
 	}
 }

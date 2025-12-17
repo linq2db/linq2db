@@ -9,7 +9,7 @@ namespace LinqToDB.Internal.Expressions
 {
 	public sealed class ExpressionGenerator
 	{
-		public static TypeMapper NoOpTypeMapper = new TypeMapper();
+		private static readonly TypeMapper NoOpTypeMapper = new TypeMapper();
 
 		List<ParameterExpression>? _variables;
 		List<Expression>?          _expressions;

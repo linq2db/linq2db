@@ -162,7 +162,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			{
 			}
 
-			public SqlCeEngine(string connectionString) => throw new NotImplementedException();
+			public SqlCeEngine(string connectionString) => throw new NotSupportedException();
 
 			public void CreateDatabase() => ((Action<SqlCeEngine>)CompiledWrappers[0])(this);
 			public void Dispose()        => ((Action<SqlCeEngine>)CompiledWrappers[1])(this);
@@ -177,13 +177,13 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 		[Wrapper]
 		private sealed class SqlCeConnection
 		{
-			public SqlCeConnection(string connectionString) => throw new NotImplementedException();
+			public SqlCeConnection(string connectionString) => throw new NotSupportedException();
 		}
 
 		[Wrapper]
 		private sealed class SqlCeDataReader
 		{
-			public SqlDecimal GetSqlDecimal(int ordinal) => throw new NotImplementedException();
+			public SqlDecimal GetSqlDecimal(int ordinal) => throw new NotSupportedException();
 		}
 
 		#endregion

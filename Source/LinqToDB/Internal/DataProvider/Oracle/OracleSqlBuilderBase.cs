@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data.Common;
 using System.Globalization;
 using System.Linq;
@@ -309,7 +309,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 			var identityField = dropTable.Table!.IdentityFields.Count > 0 ? dropTable.Table!.IdentityFields[0] : null;
 
-			if (identityField == null && dropTable.Table.TableOptions.HasDropIfExists() == false && dropTable.Table.TableOptions.HasIsTemporary() == false)
+			if (identityField == null && !dropTable.Table.TableOptions.HasDropIfExists() && !dropTable.Table.TableOptions.HasIsTemporary())
 			{
 				base.BuildDropTableStatement(dropTable);
 			}
@@ -506,7 +506,14 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			StringBuilder.Append("TRUNCATE TABLE ");
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
+		public override StringBuilder BuildObjectName(
+			StringBuilder sb,
+			SqlObjectName name,
+			ConvertType objectType = ConvertType.NameToQueryTable,
+			bool escape = true,
+			TableOptions tableOptions = TableOptions.NotSet,
+			bool withoutSuffix = false
+		)
 		{
 			if (name.Schema != null)
 			{

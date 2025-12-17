@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -755,7 +755,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			{
 			}
 
-			public SqlConnectionStringBuilder(string connectionString) => throw new NotImplementedException();
+			public SqlConnectionStringBuilder(string connectionString) => throw new NotSupportedException();
 
 			public bool MultipleActiveResultSets
 			{
@@ -767,7 +767,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		[Wrapper]
 		internal sealed class SqlConnection
 		{
-			public SqlConnection(string connectionString) => throw new NotImplementedException();
+			public SqlConnection(string connectionString) => throw new NotSupportedException();
 		}
 
 		[Wrapper]
@@ -819,7 +819,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			{
 			}
 
-			public SqlBulkCopy(SqlConnection connection, SqlBulkCopyOptions options, SqlTransaction? transaction) => throw new NotImplementedException();
+			public SqlBulkCopy(SqlConnection connection, SqlBulkCopyOptions options, SqlTransaction? transaction) => throw new NotSupportedException();
 
 			void IDisposable.Dispose()                        => ((Action<SqlBulkCopy>)CompiledWrappers[0])(this);
 #pragma warning disable RS0030 // API mapping must preserve type
@@ -931,7 +931,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			{
 			}
 
-			public SqlBulkCopyColumnMapping(int source, string destination) => throw new NotImplementedException();
+			public SqlBulkCopyColumnMapping(int source, string destination) => throw new NotSupportedException();
 		}
 
 		#endregion

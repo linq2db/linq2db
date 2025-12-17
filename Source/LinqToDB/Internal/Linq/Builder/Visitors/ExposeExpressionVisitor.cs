@@ -763,7 +763,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 					if (node.Left is BinaryExpression equalityLeft && node.Right is ConstantExpression constantRight)
 						if (equalityLeft.Type.IsNullableType)
 							if (equalityLeft.NodeType == ExpressionType.Equal && equalityLeft.Left.Type == equalityLeft.Right.Type)
-								if (constantRight.Value is bool val && val == false)
+								if (constantRight.Value is bool val && !val)
 								{
 									var result = Visit(equalityLeft);
 									if (result.Type != node.Type)

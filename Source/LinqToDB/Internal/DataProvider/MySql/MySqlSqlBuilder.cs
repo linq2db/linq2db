@@ -309,7 +309,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 				case ConvertType.NameToSprocParameter:
 					if(string.IsNullOrEmpty(value))
-							throw new ArgumentException("Argument 'value' must represent parameter name.");
+						throw new ArgumentException($"Argument '{nameof(value)}' must represent parameter name.", nameof(value));
 
 					if (value[0] == '@')
 						value = value.Substring(1);
@@ -399,7 +399,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			else
 			{
 				var sql = StringBuilder.ToString();
-				var insertIndex = sql.IndexOf("INSERT", position);
+				var insertIndex = sql.IndexOf("INSERT", position, StringComparison.Ordinal);
 
 				StringBuilder.Clear()
 					.Append(sql.AsSpan(0, insertIndex))
@@ -422,11 +422,18 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		{
 			AppendIndent();
 			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
-			StringBuilder.Append(string.Join(InlineComma, fieldNames));
+			StringBuilder.AppendJoinStrings(InlineComma, fieldNames);
 			StringBuilder.Append(')');
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
+		public override StringBuilder BuildObjectName(
+			StringBuilder sb,
+			SqlObjectName name,
+			ConvertType objectType = ConvertType.NameToQueryTable,
+			bool escape = true,
+			TableOptions tableOptions = TableOptions.NotSet,
+			bool withoutSuffix = false
+		)
 		{
 			if (name.Database != null)
 			{

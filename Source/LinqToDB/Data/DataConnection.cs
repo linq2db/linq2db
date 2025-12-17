@@ -57,7 +57,12 @@ namespace LinqToDB.Data
 		public DataConnection(string? configurationString)
 			: this(configurationString == null
 				? DefaultDataOptions
-				: ConnectionOptionsByConfigurationString.GetOrAdd(configurationString, _ => new(new(configurationString))))
+				: ConnectionOptionsByConfigurationString
+					.GetOrAdd(
+						configurationString, 
+						static cs => new(new(cs))
+					)
+			)
 		{
 		}
 
@@ -71,7 +76,12 @@ namespace LinqToDB.Data
 		public DataConnection(string? configurationString, Func<DataOptions,DataOptions> optionsSetter)
 			: this(optionsSetter(configurationString == null
 				? DefaultDataOptions
-				: ConnectionOptionsByConfigurationString.GetOrAdd(configurationString, _ => new(new(configurationString)))))
+				: ConnectionOptionsByConfigurationString
+					.GetOrAdd(
+						configurationString,
+						static cs => new(new(cs))
+					)
+			))
 		{
 		}
 

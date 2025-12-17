@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Linq;
@@ -622,7 +623,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsOrderByAggregateFunctionSupported                  .GetHashCode()
 				^ IsComplexJoinConditionSupported                      .GetHashCode()
 				^ IsCrossJoinSyntaxRequired                            .GetHashCode()
-				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
+				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
 		public override bool Equals(object? obj)

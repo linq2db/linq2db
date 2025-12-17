@@ -29,9 +29,9 @@ namespace LinqToDB.Internal.Common
 #if NETFRAMEWORK
 			return new ComWrapper(ActivatorExt.CreateInstance(Type.GetTypeFromProgID(progID, true)!));
 #else
-			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			if (OperatingSystem.IsWindows())
 			{
-				return new ComWrapper(ActivatorExt.CreateInstance(Type.GetTypeFromProgID(progID, true)!));
+				return new ComWrapper(ActivatorExt.CreateInstance(Type.GetTypeFromProgID(progID, throwOnError: true)!));
 			}
 #endif
 
@@ -83,7 +83,7 @@ namespace LinqToDB.Internal.Common
 #if NETFRAMEWORK
 				Marshal.ReleaseComObject(instance);
 #else
-				if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+				if (OperatingSystem.IsWindows())
 				{
 					Marshal.ReleaseComObject(instance);
 				}

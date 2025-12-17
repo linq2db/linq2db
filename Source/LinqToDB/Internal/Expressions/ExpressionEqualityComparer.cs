@@ -292,8 +292,9 @@ namespace LinqToDB.Internal.Expressions
 
 					break;
 				}
+
 				default:
-					throw new NotImplementedException();
+					throw new InvalidOperationException($"Unsupported ExpressionType `{obj.NodeType}`");
 			}
 		}
 
@@ -331,7 +332,7 @@ namespace LinqToDB.Internal.Expressions
 					}
 
 					default:
-						throw new NotImplementedException();
+						throw new InvalidOperationException($"Unsupported MemberBindingType `{memberBinding.BindingType}`");
 				}
 			}
 		}
@@ -435,7 +436,7 @@ namespace LinqToDB.Internal.Expressions
 					ExpressionType.Index => CompareIndex((IndexExpression)a, (IndexExpression)b),
 					ExpressionType.Switch => CompareSwitch((SwitchExpression)a, (SwitchExpression)b),
 
-					_ => throw new NotImplementedException(),
+					_ => throw new InvalidOperationException($"Unsupported ExpressionType `{a.NodeType}`."),
 				};
 			}
 
@@ -741,7 +742,7 @@ namespace LinqToDB.Internal.Expressions
 					MemberBindingType.Assignment	=> CompareMemberAssignment((MemberAssignment)a, (MemberAssignment)b),
 					MemberBindingType.ListBinding	=> CompareMemberListBinding((MemberListBinding)a, (MemberListBinding)b),
 					MemberBindingType.MemberBinding => CompareMemberMemberBinding((MemberMemberBinding)a, (MemberMemberBinding)b),
-					_                               => throw new NotImplementedException(),
+					_                               => throw new InvalidOperationException($"Unsupported MemberBindingType `{a.BindingType}`"),
 				};
 			}
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -1103,8 +1103,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			[Wrapper]
 			public sealed class OracleDataReader
 			{
-				public OracleTimeStamp GetOracleTimeStamp(int i) => throw new NotImplementedException();
-				public OracleNumber    GetOracleNumber   (int i) => throw new NotImplementedException();
+				public OracleTimeStamp GetOracleTimeStamp(int i) => throw new NotSupportedException();
+				public OracleNumber    GetOracleNumber   (int i) => throw new NotSupportedException();
 			}
 
 			[Wrapper]
@@ -1112,23 +1112,23 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			{
 				public bool PassParametersByName
 				{
-					get => throw new NotImplementedException();
-					set => throw new NotImplementedException();
+					get => throw new NotSupportedException();
+					set => throw new NotSupportedException();
 				}
 
-				public int ExecuteArray(int iters) => throw new NotImplementedException();
+				public int ExecuteArray(int iters) => throw new NotSupportedException();
 			}
 
 			[Wrapper]
 			internal sealed class OracleConnection
 			{
-				public OracleConnection(string connectionString) => throw new NotImplementedException();
+				public OracleConnection(string connectionString) => throw new NotSupportedException();
 			}
 
 			[Wrapper]
 			public sealed class OracleNumber
 			{
-				public static explicit operator decimal(OracleNumber val) => throw new NotImplementedException();
+				public static explicit operator decimal(OracleNumber val) => throw new NotSupportedException();
 			}
 
 			[Wrapper]
@@ -1138,17 +1138,17 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				{
 				}
 
-				public OracleTimeStamp(int year, int month, int day, int hour, int minute, int second, int nanosecond, string timeZone) => throw new NotImplementedException();
+				public OracleTimeStamp(int year, int month, int day, int hour, int minute, int second, int nanosecond, string timeZone) => throw new NotSupportedException();
 
-				public int Year                => throw new NotImplementedException();
-				public int Month               => throw new NotImplementedException();
-				public int Day                 => throw new NotImplementedException();
-				public int Hour                => throw new NotImplementedException();
-				public int Minute              => throw new NotImplementedException();
-				public int Second              => throw new NotImplementedException();
-				public int Nanosecond          => throw new NotImplementedException();
-				public string TimeZone         => throw new NotImplementedException();
-				public TimeSpan TimeZoneOffset => throw new NotImplementedException();
+				public int Year                => throw new NotSupportedException();
+				public int Month               => throw new NotSupportedException();
+				public int Day                 => throw new NotSupportedException();
+				public int Hour                => throw new NotSupportedException();
+				public int Minute              => throw new NotSupportedException();
+				public int Second              => throw new NotSupportedException();
+				public int Nanosecond          => throw new NotSupportedException();
+				public string TimeZone         => throw new NotSupportedException();
+				public TimeSpan TimeZoneOffset => throw new NotSupportedException();
 			}
 
 			#region BulkCopy
@@ -1186,7 +1186,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				{
 				}
 
-				public OracleLoader(string tableName, OracleConnection connection, OracleLoaderOptions options) => throw new NotImplementedException();
+				public OracleLoader(string tableName, OracleConnection connection, OracleLoaderOptions options) => throw new NotSupportedException();
 
 				public void Dispose() => ((Action<OracleLoader>)CompiledWrappers[0])(this);
 #pragma warning disable RS0030 // API mapping must preserve type
@@ -1286,7 +1286,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				{
 				}
 
-				public OracleLoaderColumn(string name, OracleDbType dbType, int size, int precision, int scale, string dateFormat) => throw new NotImplementedException();
+				public OracleLoaderColumn(string name, OracleDbType dbType, int size, int precision, int scale, string dateFormat) => throw new NotSupportedException();
 			}
 
 			#endregion
@@ -1362,9 +1362,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			[Wrapper]
 			public sealed class OracleDataReader
 			{
-				public OracleTimeStampTZ  GetOracleTimeStampTZ (int i) => throw new NotImplementedException();
-				public OracleTimeStampLTZ GetOracleTimeStampLTZ(int i) => throw new NotImplementedException();
-				public OracleDecimal      GetOracleDecimal     (int i) => throw new NotImplementedException();
+				public OracleTimeStampTZ  GetOracleTimeStampTZ (int i) => throw new NotSupportedException();
+				public OracleTimeStampLTZ GetOracleTimeStampLTZ(int i) => throw new NotSupportedException();
+				public OracleDecimal      GetOracleDecimal     (int i) => throw new NotSupportedException();
 			}
 
 			[Wrapper]
@@ -1422,20 +1422,20 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			{
 				public int ArrayBindCount
 				{
-					get => throw new NotImplementedException();
-					set => throw new NotImplementedException();
+					get => throw new NotSupportedException();
+					set => throw new NotSupportedException();
 				}
 
 				public bool BindByName
 				{
-					get => throw new NotImplementedException();
-					set => throw new NotImplementedException();
+					get => throw new NotSupportedException();
+					set => throw new NotSupportedException();
 				}
 
 				public int InitialLONGFetchSize
 				{
-					get => throw new NotImplementedException();
-					set => throw new NotImplementedException();
+					get => throw new NotSupportedException();
+					set => throw new NotSupportedException();
 				}
 			}
 
@@ -1458,12 +1458,12 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				{
 				}
 
-				public OracleConnection(string connectionString) => throw new NotImplementedException();
+				public OracleConnection(string connectionString) => throw new NotSupportedException();
 
 				// not called using wrapper
-				public string HostName     => throw new NotImplementedException();
-				public string DatabaseName => throw new NotImplementedException();
-				public string ServiceName  => throw new NotImplementedException();
+				public string HostName     => throw new NotSupportedException();
+				public string DatabaseName => throw new NotSupportedException();
+				public string ServiceName  => throw new NotSupportedException();
 
 				public void      Open         () => ((Action<OracleConnection>         )CompiledWrappers[0])(this);
 				public DbCommand CreateCommand() => ((Func<OracleConnection, DbCommand>)CompiledWrappers[1])(this);
@@ -1473,24 +1473,24 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			[Wrapper]
 			public sealed class OracleTimeStampLTZ
 			{
-				public int Year       => throw new NotImplementedException();
-				public int Month      => throw new NotImplementedException();
-				public int Day        => throw new NotImplementedException();
-				public int Hour       => throw new NotImplementedException();
-				public int Minute     => throw new NotImplementedException();
-				public int Second     => throw new NotImplementedException();
-				public int Nanosecond => throw new NotImplementedException();
+				public int Year       => throw new NotSupportedException();
+				public int Month      => throw new NotSupportedException();
+				public int Day        => throw new NotSupportedException();
+				public int Hour       => throw new NotSupportedException();
+				public int Minute     => throw new NotSupportedException();
+				public int Second     => throw new NotSupportedException();
+				public int Nanosecond => throw new NotSupportedException();
 
-				public OracleTimeStampTZ ToOracleTimeStampTZ()    => throw new NotImplementedException();
-				public static TimeSpan   GetLocalTimeZoneOffset() => throw new NotImplementedException();
+				public OracleTimeStampTZ ToOracleTimeStampTZ()    => throw new NotSupportedException();
+				public static TimeSpan   GetLocalTimeZoneOffset() => throw new NotSupportedException();
 			}
 
 			[Wrapper]
 			public sealed class OracleDecimal
 			{
-				public static OracleDecimal SetPrecision(OracleDecimal value1, int precision) => throw new NotImplementedException();
+				public static OracleDecimal SetPrecision(OracleDecimal value1, int precision) => throw new NotSupportedException();
 
-				public static explicit operator decimal(OracleDecimal value1) => throw new NotImplementedException();
+				public static explicit operator decimal(OracleDecimal value1) => throw new NotSupportedException();
 			}
 
 			[Wrapper]
@@ -1500,18 +1500,18 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				{
 				}
 
-				public OracleTimeStampTZ(int year, int month, int day, int hour, int minute, int second, int nanosecond, string timeZone) => throw new NotImplementedException();
+				public OracleTimeStampTZ(int year, int month, int day, int hour, int minute, int second, int nanosecond, string timeZone) => throw new NotSupportedException();
 
-				public int Year        => throw new NotImplementedException();
-				public int Month       => throw new NotImplementedException();
-				public int Day         => throw new NotImplementedException();
-				public int Hour        => throw new NotImplementedException();
-				public int Minute      => throw new NotImplementedException();
-				public int Second      => throw new NotImplementedException();
-				public int Nanosecond  => throw new NotImplementedException();
-				public string TimeZone => throw new NotImplementedException();
+				public int Year        => throw new NotSupportedException();
+				public int Month       => throw new NotSupportedException();
+				public int Day         => throw new NotSupportedException();
+				public int Hour        => throw new NotSupportedException();
+				public int Minute      => throw new NotSupportedException();
+				public int Second      => throw new NotSupportedException();
+				public int Nanosecond  => throw new NotSupportedException();
+				public string TimeZone => throw new NotSupportedException();
 
-				public TimeSpan GetTimeZoneOffset() => throw new NotImplementedException();
+				public TimeSpan GetTimeZoneOffset() => throw new NotSupportedException();
 			}
 
 			#region BulkCopy
@@ -1561,7 +1561,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				{
 				}
 
-				public OracleBulkCopy(OracleConnection connection, OracleBulkCopyOptions options) => throw new NotImplementedException();
+				public OracleBulkCopy(OracleConnection connection, OracleBulkCopyOptions options) => throw new NotSupportedException();
 
 				public void Dispose      ()                       => ((Action<OracleBulkCopy>)CompiledWrappers[0])(this);
 	#pragma warning disable RS0030 // API mapping must preserve type
@@ -1674,7 +1674,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				{
 				}
 
-				public OracleBulkCopyColumnMapping(int source, string destination) => throw new NotImplementedException();
+				public OracleBulkCopyColumnMapping(int source, string destination) => throw new NotSupportedException();
 			}
 		}
 

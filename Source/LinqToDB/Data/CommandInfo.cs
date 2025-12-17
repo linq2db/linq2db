@@ -894,7 +894,7 @@ namespace LinqToDB.Data
 				_rd          = rd;
 			}
 
-			public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken)
+			public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
 			{
 				return new ReaderAsyncEnumerator<T>(_commandInfo, _rd, cancellationToken);
 			}
@@ -2052,9 +2052,9 @@ namespace LinqToDB.Data
 
 		struct ReleaseQuery(DataContext? dataContext) : IDisposable, IAsyncDisposable
 		{
-			void IDisposable.Dispose() => dataContext?.ReleaseQuery();
+			readonly void IDisposable.Dispose() => dataContext?.ReleaseQuery();
 
-			ValueTask IAsyncDisposable.DisposeAsync()
+			readonly ValueTask IAsyncDisposable.DisposeAsync()
 			{
 				return dataContext?.ReleaseQueryAsync() ?? default;
 			}

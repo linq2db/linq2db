@@ -180,7 +180,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		#region ISqlTableSource Members
 
-		public static int SourceIDCounter;
+		internal static int SourceIDCounter;
 
 		public int           SourceID { get; }
 		public SqlTableType  SqlTableType => SqlTableType.Table;

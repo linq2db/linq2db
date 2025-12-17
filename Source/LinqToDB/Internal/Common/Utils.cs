@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
@@ -162,7 +162,7 @@ namespace LinqToDB.Internal.Common
 
 		public class ObjectReferenceEqualityComparer<T> : IEqualityComparer<T>
 		{
-			public static IEqualityComparer<T> Default = new ObjectReferenceEqualityComparer<T>();
+			public static readonly IEqualityComparer<T> Default = new ObjectReferenceEqualityComparer<T>();
 
 			#region IEqualityComparer<T> Members
 

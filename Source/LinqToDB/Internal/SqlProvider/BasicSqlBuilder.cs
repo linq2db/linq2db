@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -1667,7 +1667,7 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			AppendIndent();
 			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY (");
-			StringBuilder.Append(string.Join(InlineComma, fieldNames));
+			StringBuilder.AppendJoinStrings(InlineComma, fieldNames);
 			StringBuilder.Append(')');
 		}
 
@@ -1730,7 +1730,14 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 		}
 
-		private static readonly Regex _selectDetector = new (@"^[\W\r\n]*select\W+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+		private const string SelectPattern = /* lang=regex */ @"^[\W\r\n]*select\b";
+#if SUPPORTS_REGEX_GENERATORS
+		[GeneratedRegex(SelectPattern, RegexOptions.ExplicitCapture | RegexOptions.IgnoreCase, matchTimeoutMilliseconds: 1)]
+		private static partial Regex SelectRegex();
+#else
+		private static readonly Regex _selectDetector = new (SelectPattern, RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(1));
+		private static Regex SelectRegex() => _selectDetector;
+#endif
 
 		protected virtual bool? BuildPhysicalTable(ISqlTableSource table, string? alias, string? defaultDatabaseName = null)
 		{
@@ -1782,7 +1789,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 					var rawSqlTable = (SqlRawSqlTable)table;
 
-					var appendParentheses = _selectDetector.IsMatch(rawSqlTable.SQL);
+					var appendParentheses = SelectRegex().IsMatch(rawSqlTable.SQL);
 					var multiLine         = appendParentheses || rawSqlTable.SQL.Contains('\n');
 
 					if (appendParentheses)
@@ -2161,7 +2168,7 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 		}
 
-		#endregion
+#endregion
 
 		#region Where Clause
 
@@ -3064,7 +3071,7 @@ namespace LinqToDB.Internal.SqlProvider
 						var tableAlias = (noAlias ? null : GetTableAlias(table)) ?? GetPhysicalTableName(column.Parent!, null, ignoreTableExpression : true);
 
 						if (string.IsNullOrEmpty(tableAlias))
-							throw new LinqToDBException($"Table {column.Parent} should have an alias.");
+							throw new LinqToDBException($"Table `{column.Parent?.ToString()}` should have an alias.");
 
 						addAlias = alias != column.Alias;
 
@@ -4364,13 +4371,13 @@ namespace LinqToDB.Internal.SqlProvider
 			using var sb = Pools.StringBuilder.Allocate();
 
 			foreach (var hint in queryHints)
-				if (hint?.Length >= 2 && hint.StartsWith("**"))
-					sb.Value.AppendLine(hint.Substring(2));
+				if (hint.StartsWith("**"))
+					sb.Value.Append(hint, 2, hint.Length - 2).AppendLine();
 
 			sb.Value.Append(sqlText);
 
 			foreach (var hint in queryHints)
-				if (!(hint?.Length >= 2 && hint.StartsWith("**")))
+				if (!hint.StartsWith("**"))
 					sb.Value.AppendLine(hint);
 
 			return sb.Value.ToString();
@@ -4378,7 +4385,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		public virtual string GetReserveSequenceValuesSql(int count, string sequenceName)
 		{
-			throw new NotImplementedException();
+			throw new NotSupportedException();
 		}
 
 		public virtual string GetMaxValueSql(EntityDescriptor entity, ColumnDescriptor column)

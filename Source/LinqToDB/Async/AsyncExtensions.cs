@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -579,17 +580,22 @@ namespace LinqToDB.Async
 			}
 
 			IEnumerable<TElement> ILookup<TKey,TElement>.this[TKey key] =>
-				TryGetValue(key, out var grouping) ? grouping : Enumerable.Empty<TElement>();
+				TryGetValue(key, out var grouping) ? grouping : [];
 
 			public void AddItem(TKey key, TElement element)
 			{
-				if (TryGetValue(key, out var grouping) == false)
-					Add(key, grouping = new Grouping<TKey,TElement>(key));
+#if NET8_0_OR_GREATER
+				ref var grouping = ref CollectionsMarshal.GetValueRefOrAddDefault(this, key, out var _);
+				grouping ??= new(key);
+#else
+				if (!TryGetValue(key, out var grouping))
+					Add(key, grouping = new(key));
+#endif
 
 				grouping.Add(element);
 			}
 		}
 
-		#endregion
+#endregion
 	}
 }

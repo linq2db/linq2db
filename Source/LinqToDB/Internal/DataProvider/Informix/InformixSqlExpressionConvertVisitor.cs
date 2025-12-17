@@ -49,7 +49,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			};
 		}
 
-		protected override SqlCoalesceExpression? WrapBooleanCoalesceItems(SqlCoalesceExpression element, IQueryElement newElement, bool forceConvert)
+		protected override SqlCoalesceExpression? WrapBooleanCoalesceItems(SqlCoalesceExpression element, IQueryElement newElement, bool forceConvert = false)
 		{
 			return base.WrapBooleanCoalesceItems(element, newElement, forceConvert: true);
 		}

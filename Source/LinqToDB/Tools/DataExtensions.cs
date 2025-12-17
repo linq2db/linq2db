@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -184,7 +184,7 @@ namespace LinqToDB.Tools
 					TypeCode.UInt64  => (ulong  )maxValue + 1,
 					TypeCode.Single  => (float  )maxValue + 1,
 					TypeCode.Decimal => (decimal)maxValue + 1,
-					_                => throw new NotImplementedException(),
+					_                => throw new InvalidOperationException($"Invalid identity type `{type}`"),
 				};
 				var value = Converter.ChangeType(maxValue, column.MemberType);
 				column.MemberAccessor.SetValue(item!, value);
@@ -215,7 +215,7 @@ namespace LinqToDB.Tools
 					TypeCode.UInt64  => (ulong  )maxValue + 1,
 					TypeCode.Single  => (float  )maxValue + 1,
 					TypeCode.Decimal => (decimal)maxValue + 1,
-					_                => throw new NotImplementedException(),
+					_                => throw new InvalidOperationException($"Invalid identity type `{type}`"),
 				};
 				var value = Converter.ChangeType(maxValue, column.MemberType);
 				column.MemberAccessor.SetValue(item!, value);
@@ -241,7 +241,7 @@ namespace LinqToDB.Tools
 					TypeCode.UInt64  => (ulong  )last + (ulong)(i + 1) * (ulong)step,
 					TypeCode.Single  => (float  )last + (i + 1) * (float  )step,
 					TypeCode.Decimal => (decimal)last + (i + 1) * (decimal)step,
-					_                => throw new NotImplementedException(),
+					_                => throw new InvalidOperationException($"Invalid identity type `{type}`"),
 				};
 
 				var value = Converter.ChangeType(nextValue, column.MemberType);

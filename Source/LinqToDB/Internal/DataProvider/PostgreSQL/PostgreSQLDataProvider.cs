@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -94,7 +94,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			if (dateTime == DateTime.MaxValue)
 				return DateTimeOffset.MaxValue;
 
-			return dateTime;
+			return (DateTimeOffset)dateTime;
 		}
 
 		protected override IMemberTranslator CreateMemberTranslator()

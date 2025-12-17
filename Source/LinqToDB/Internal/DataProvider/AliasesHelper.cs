@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -243,7 +243,7 @@ namespace LinqToDB.Internal.DataProvider
 			{
 				base.VisitSqlQuery(selectQuery);
 
-				if (selectQuery.DoNotSetAliases == false && selectQuery.Select.Columns.Count > 0)
+				if (selectQuery is { DoNotSetAliases: false, Select.Columns.Count: > 0 })
 				{
 					Utils.MakeUniqueNames(
 						selectQuery.Select.Columns.Where(c => c.Alias != "*"),

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -219,7 +219,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				throw new NotImplementedException();
+				throw new NotSupportedException();
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)

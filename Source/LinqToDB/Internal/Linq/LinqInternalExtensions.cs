@@ -63,7 +63,7 @@ namespace LinqToDB.Internal.Linq
 
 		internal static IQueryable<T> AsCte<T>(IQueryable<T> cteTable, IQueryable<T> cteBody, string? tableName)
 		{
-			throw new NotImplementedException();
+			throw new NotSupportedException();
 		}
 
 		#endregion

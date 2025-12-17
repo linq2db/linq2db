@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -66,7 +66,7 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 				var column      = (SqlColumn)current;
 				var columnQuery = column.Parent;
-				if (columnQuery == null || columnQuery.HasSetOperators || QueryHelper.EnumerateLevelSources(columnQuery).Take(2).Count() > 1)
+				if (columnQuery == null || columnQuery.HasSetOperators || QueryHelper.EnumerateLevelSources(columnQuery).Skip(1).Any())
 					break;
 				current = QueryHelper.UnwrapExpression(column.Expression, true);
 			}

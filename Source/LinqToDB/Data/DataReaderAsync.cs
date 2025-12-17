@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
@@ -33,7 +33,7 @@ namespace LinqToDB.Data
 			{
 				var dataConnection = CommandInfo.GetDataConnection();
 
-				if (dataConnection.TraceSwitchConnection.TraceInfo == true)
+				if (dataConnection.TraceSwitchConnection.TraceInfo)
 				{
 					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, false)
 					{
@@ -58,7 +58,7 @@ namespace LinqToDB.Data
 			{
 				var dataConnection = CommandInfo.GetDataConnection();
 
-				if (dataConnection.TraceSwitchConnection.TraceInfo == true)
+				if (dataConnection.TraceSwitchConnection.TraceInfo)
 				{
 					dataConnection.OnTraceConnection(new TraceInfo(dataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, true)
 					{
@@ -202,7 +202,7 @@ namespace LinqToDB.Data
 
 				ReadNumber++;
 
-				await foreach (var element in CommandInfo.ExecuteQueryAsync<T>(Reader!, FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}"))
+				await foreach (var element in CommandInfo.ExecuteQueryAsync<T>(Reader!, string.Create(CultureInfo.InvariantCulture, $"{CommandInfo.CommandText}$$${ReadNumber}"))
 						.WithCancellation(cancellationToken)
 						.ConfigureAwait(false))
 				{
@@ -275,7 +275,7 @@ namespace LinqToDB.Data
 
 			ReadNumber++;
 
-			var sql = FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}");
+			var sql = string.Create(CultureInfo.InvariantCulture, $"{CommandInfo.CommandText}$$${ReadNumber}");
 
 			return CommandInfo.ExecuteScalar<T>(Reader!, sql);
 		}
@@ -293,7 +293,7 @@ namespace LinqToDB.Data
 
 			ReadNumber++;
 
-			var sql = FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}");
+			var sql = string.Create(CultureInfo.InvariantCulture, $"{CommandInfo.CommandText}$$${ReadNumber}");
 
 			return await CommandInfo.ExecuteScalarAsync<T>(Reader!, sql, cancellationToken).ConfigureAwait(false);
 		}

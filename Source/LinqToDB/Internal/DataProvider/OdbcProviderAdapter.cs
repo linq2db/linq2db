@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
@@ -126,7 +126,7 @@ namespace LinqToDB.Internal.DataProvider
 			{
 			}
 
-			public OdbcConnection(string connectionString) => throw new NotImplementedException();
+			public OdbcConnection(string connectionString) => throw new NotSupportedException();
 
 			// implementation returns string.Empty instead of null
 			public string Driver => ((Func<OdbcConnection, string>)CompiledWrappers[0])(this);

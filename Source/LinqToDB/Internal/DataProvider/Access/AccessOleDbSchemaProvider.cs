@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -13,7 +13,7 @@ using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.Access
 {
-	public class AccessOleDbSchemaProvider : AccessSchemaProviderBase
+	public partial class AccessOleDbSchemaProvider : AccessSchemaProviderBase
 	{
 		private readonly AccessDataProvider _provider;
 
@@ -187,7 +187,15 @@ namespace LinqToDB.Internal.DataProvider.Access
 			).ToList();
 		}
 
-		static readonly Regex _paramsExp = new (@"PARAMETERS ((\[(?<name>[^\]]+)\]|(?<name>[^\s]+))\s(?<type>[^,;\s]+(\s\([^\)]+\))?)[,;]\s)*", RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+		private const string ParametersPattern = /* lang=regex */ @"PARAMETERS ((\[(?<name>[^\]]+)\]|(?<name>[^\s]+))\s(?<type>[^,;\s]+(\s\([^\)]+\))?)[,;]\s)*";
+#if SUPPORTS_REGEX_GENERATORS
+		[GeneratedRegex(ParametersPattern, RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 1)]
+		private static partial Regex ParametersRegex();
+#else
+		static readonly Regex _paramsExp = new (ParametersPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(1));
+		private static Regex ParametersRegex() => _paramsExp;
+#endif
+
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			var list = new List<ProcedureParameterInfo>();
@@ -197,7 +205,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 				if (procedure.ProcedureDefinition == null)
 					continue;
 
-				var match      = _paramsExp.Match(procedure.ProcedureDefinition);
+				var match      = ParametersRegex().Match(procedure.ProcedureDefinition);
 				var names      = match.Groups["name"].Captures;
 				var types      = match.Groups["type"].Captures;
 				var separators = new[] {' ', '(', ',', ')'};

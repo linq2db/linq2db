@@ -259,46 +259,35 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 
 				case ExpressionType.Extension:
 				{
-					if (expr is SqlGenericConstructorExpression generic)
+					return expr switch
 					{
-						return Find(generic.Parameters, ParameterFind) ??
-						       Find(generic.Assignments, AssignmentFind);
-					}
+						SqlGenericConstructorExpression generic => 
+							Find(generic.Parameters, ParameterFind)
+							?? Find(generic.Assignments, AssignmentFind),
 
-					if (expr is SqlErrorExpression error)
-					{
-						return Find(error.Expression);
-					}
+						SqlErrorExpression error =>
+							Find(error.Expression),
 
-					if (expr is SqlAdjustTypeExpression adjustType)
-					{
-						return Find(adjustType.Expression);
-					}
+						SqlAdjustTypeExpression adjustType =>
+							Find(adjustType.Expression),
 
-					if (expr is SqlGenericParamAccessExpression paramAccess)
-					{
-						return Find(paramAccess.Constructor);
-					}
+						SqlGenericParamAccessExpression paramAccess =>
+							Find(paramAccess.Constructor),
 
-					if (expr is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
-					{
-						return Find(defaultIfEmptyExpression.InnerExpression);
-					}
+						SqlDefaultIfEmptyExpression defaultIfEmptyExpression =>
+							Find(defaultIfEmptyExpression.InnerExpression),
 
-					if (expr is SqlValidateExpression validateExpression)
-					{
-						return Find(validateExpression.InnerExpression);
-					}
+						SqlValidateExpression validateExpression =>
+							Find(validateExpression.InnerExpression),
 
-					if (expr is SqlPathExpression pathExpression)
-					{
-						return Find(pathExpression.Path);
-					}
+						SqlPathExpression pathExpression =>
+							Find(pathExpression.Path),
 
-					if (expr.CanReduce)
-						return Find(expr.Reduce());
+						{ CanReduce: true } =>
+							Find(expr.Reduce()),
 
-					break;
+						_ => null,
+					};
 				}
 					// final expressions
 				case ExpressionType.Parameter:
@@ -306,7 +295,7 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 				case ExpressionType.Constant : break;
 
 				default:
-					throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}");
+					throw new NotSupportedException($"Unhandled expression type: {expr.NodeType}");
 			}
 
 			return null;

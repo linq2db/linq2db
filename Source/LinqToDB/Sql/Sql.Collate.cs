@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
@@ -32,7 +32,7 @@ namespace LinqToDB
             private static partial Regex CollationValidationRegex();
 #else
 			private static readonly Regex _collationValidator = new(CollationValidationPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(1));
-			private Regex CollationValidationRegex() => _collationValidator;
+			private static Regex CollationValidationRegex() => _collationValidator;
 #endif
 
             public void Build(ISqlExtensionBuilder builder)

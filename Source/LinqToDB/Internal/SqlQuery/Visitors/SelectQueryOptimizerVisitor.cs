@@ -2072,10 +2072,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		protected override IQueryElement VisitSqlFromClause(SqlFromClause element)
 		{
 			element = (SqlFromClause)base.VisitSqlFromClause(element);
-
-			if (_correcting != null)
-				return element;
-
 			return element;
 		}
 

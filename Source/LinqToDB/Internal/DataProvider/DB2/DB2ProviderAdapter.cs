@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
@@ -277,7 +277,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			{
 			}
 
-			public DB2Connection(string connectionString) => throw new NotImplementedException();
+			public DB2Connection(string connectionString) => throw new NotSupportedException();
 
 			// internal actually
 			public DB2ServerTypes eServerType => ((Func<DB2Connection, DB2ServerTypes>)CompiledWrappers[0])(this);
@@ -399,7 +399,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			{
 			}
 
-			public DB2BulkCopy(DB2Connection connection, DB2BulkCopyOptions options) => throw new NotImplementedException();
+			public DB2BulkCopy(DB2Connection connection, DB2BulkCopyOptions options) => throw new NotSupportedException();
 
 			public void Dispose      ()                       => ((Action<DB2BulkCopy>)CompiledWrappers[0])(this);
 #pragma warning disable RS0030 // API mapping must preserve type
@@ -502,7 +502,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			{
 			}
 
-			public DB2BulkCopyColumnMapping(int source, string destination) => throw new NotImplementedException();
+			public DB2BulkCopyColumnMapping(int source, string destination) => throw new NotSupportedException();
 		}
 
 		#endregion

@@ -114,7 +114,7 @@ namespace LinqToDB.Internal.Linq
 										context.IsNullableStruct[columnIndex.Value] = true;
 									}
 
-									variable                   = Expression.Variable(type, FormattableString.Invariant($"get_value_{columnIndex}"));
+									variable                   = Expression.Variable(type, string.Create(CultureInfo.InvariantCulture, $"get_value_{columnIndex}"));
 									context.InsertedExpressions[index] = Expression.Assign(
 										variable,
 										Expression.Condition(
@@ -146,7 +146,7 @@ namespace LinqToDB.Internal.Linq
 
 						if (context.NewVariables[index] == null)
 						{
-							context.NewVariables[index] = Expression.Variable(typeof(object), FormattableString.Invariant($"get_value_{columnIndex}"));
+							context.NewVariables[index] = Expression.Variable(typeof(object), string.Create(CultureInfo.InvariantCulture, $"get_value_{columnIndex}"));
 							if (context.SlowColumnTypes == null)
 							{
 								context.SlowColumnTypes = new Dictionary<int, Tuple<ConvertFromDataReaderExpression.ColumnReader, ISet<Type>>>();
@@ -319,7 +319,7 @@ namespace LinqToDB.Internal.Linq
 						// this is currently how we detect method that we must process
 						if (idx != context.ColumnIndex)
 						{
-							context.FailMessage = FormattableString.Invariant($"Expected column index: {context.ColumnIndex}, but found {idx}");
+							context.FailMessage = string.Create(CultureInfo.InvariantCulture, $"Expected column index: {context.ColumnIndex}, but found {idx}");
 							return e;
 						}
 
@@ -380,7 +380,7 @@ namespace LinqToDB.Internal.Linq
 					{
 						if (idx != context.ColumnIndex)
 						{
-							context.FailMessage = FormattableString.Invariant($"Expected column index: {context.ColumnIndex}, but found {idx}");
+							context.FailMessage = string.Create(CultureInfo.InvariantCulture, $"Expected column index: {context.ColumnIndex}, but found {idx}");
 							return;
 						}
 

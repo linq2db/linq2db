@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.Linq;
@@ -161,7 +161,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			return true;
 		}
 
-		public override IQueryParametersNormalizer GetQueryParameterNormalizer() => throw new NotImplementedException($"Parameters not supported by ClickHouse provider. Create issue if you hit this exception from LINQ query.");
+		public override IQueryParametersNormalizer GetQueryParameterNormalizer() => throw new NotSupportedException("Parameters not supported by ClickHouse provider. Create issue if you hit this exception from LINQ query.");
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{

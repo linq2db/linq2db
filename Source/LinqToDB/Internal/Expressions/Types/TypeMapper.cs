@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -715,7 +715,7 @@ namespace LinqToDB.Internal.Expressions.Types
 										case MemberBindingType.MemberBinding:
 										case MemberBindingType.ListBinding:
 										{
-											throw new NotImplementedException();
+											throw new NotSupportedException();
 										}
 										default:
 											throw new InvalidOperationException($"Unexpected binding type: {b.BindingType}");

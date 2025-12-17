@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Common;
@@ -113,15 +113,13 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			// because NpgsqlDbType enumeration changes often (compared to other providers)
 			// we should create lookup list of mapped fields, defined in used npgsql version
 			var dbTypeKnownNames    = Enum.GetNames(dbTypeType);
-			var dbMappedDbTypeNames = Enum.GetNames(typeof(NpgsqlDbType));
+			var dbMappedDbTypeNames = Enum.GetNames<NpgsqlDbType>();
 			foreach (var knownTypeName in from nType in dbTypeKnownNames
 										  join mType in dbMappedDbTypeNames on nType equals mType
 										  select nType)
 			{
 				// use setter([]) instead of Add() because enum contains duplicate fields with same values
-#pragma warning disable CA2263 // Prefer generic overload when type is known
-				_knownDbTypes[(NpgsqlDbType)Enum.Parse(typeof(NpgsqlDbType), knownTypeName)] = (int)Enum.Parse(dbTypeType, knownTypeName);
-#pragma warning restore CA2263 // Prefer generic overload when type is known
+				_knownDbTypes[Enum.Parse<NpgsqlDbType>(knownTypeName)] = (int)Enum.Parse(dbTypeType, knownTypeName);
 			}
 		}
 
@@ -652,13 +650,13 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			{
 			}
 
-			public NpgsqlConnection(string connectionString) => throw new NotImplementedException();
+			public NpgsqlConnection(string connectionString) => throw new NotSupportedException();
 
 			public Version PostgreSqlVersion => ((Func<NpgsqlConnection, Version>)CompiledWrappers[0])(this);
 
 			// not implemented, as it is not called from wrapper
-			internal NpgsqlBinaryImporter BeginBinaryImport(string copyFromCommand) => throw new NotImplementedException();
-			internal Task<NpgsqlBinaryImporter> BeginBinaryImportAsync(string copyFromCommand, CancellationToken cancellationToken) => throw new NotImplementedException();
+			internal NpgsqlBinaryImporter BeginBinaryImport(string copyFromCommand) => throw new NotSupportedException();
+			internal Task<NpgsqlBinaryImporter> BeginBinaryImportAsync(string copyFromCommand, CancellationToken cancellationToken) => throw new NotSupportedException();
 		}
 
 		#region BulkCopy

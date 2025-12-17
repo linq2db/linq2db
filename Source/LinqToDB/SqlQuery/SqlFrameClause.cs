@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 using LinqToDB.Internal.SqlQuery;
 
@@ -74,13 +74,7 @@ namespace LinqToDB.SqlQuery
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				var hashCode = FrameType.GetHashCode();
-				hashCode = (hashCode * 397) ^ Start.GetHashCode();
-				hashCode = (hashCode * 397) ^ End.GetHashCode();
-				return hashCode;
-			}
+			return HashCode.Combine(FrameType, Start, End);
 		}
 
 		public void Modify(SqlFrameBoundary start, SqlFrameBoundary end)

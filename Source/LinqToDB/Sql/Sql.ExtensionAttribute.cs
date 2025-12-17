@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -328,12 +328,12 @@ namespace LinqToDB
 					throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Argument '{0}' not found", argName));
 				}
 
-				public ISqlExpression? GetExpression(int index, bool unwrap, bool? inlineParameters = null)
+				public ISqlExpression? GetExpression(int index, bool unwrap = false, bool? inlineParameters = null)
 				{
 					return ConvertExpression(Arguments[index], unwrap, null, inlineParameters);
 				}
 
-				public ISqlExpression? GetExpression(string argName, bool unwrap, bool? inlineParameters = null)
+				public ISqlExpression? GetExpression(string argName, bool unwrap = false, bool? inlineParameters = null)
 				{
 					if (Method != null)
 					{
@@ -370,7 +370,7 @@ namespace LinqToDB
 					return null;
 				}
 
-				public ISqlExpression? ConvertExpressionToSql(Expression expression, bool unwrap, bool? inlineParameters = null)
+				public ISqlExpression? ConvertExpressionToSql(Expression expression, bool unwrap = false, bool? inlineParameters = null)
 				{
 					return ConvertExpression(expression, unwrap, null, inlineParameters);
 				}

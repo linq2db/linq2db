@@ -195,7 +195,7 @@ namespace LinqToDB.Internal.DataProvider
 			}
 		}
 
-		public static Expression<Func<DbDataReader, int, string>> GetCharExpression = (dr, i) => GetCharFromString(dr.GetString(i));
+		internal static readonly Expression<Func<DbDataReader, int, string>> GetCharExpression = (dr, i) => GetCharFromString(dr.GetString(i));
 
 		private static string GetCharFromString(string str)
 		{

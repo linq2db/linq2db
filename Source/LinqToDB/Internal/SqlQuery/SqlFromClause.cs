@@ -8,7 +8,7 @@ namespace LinqToDB.Internal.SqlQuery
 	{
 		#region Join
 
-		public class Join
+		public sealed class Join
 		{
 			internal Join(JoinType joinType, ISqlTableSource table, string? alias, bool isWeak, IReadOnlyCollection<Join>? joins)
 			{
@@ -29,7 +29,7 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		internal SqlFromClause(IEnumerable<SqlTableSource> tables)
-			: base(null)
+			: base(selectQuery: null)
 		{
 			Tables.AddRange(tables);
 		}
