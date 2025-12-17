@@ -505,7 +505,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (method.IsQueryable(nameof(Queryable.Select)) || method.IsQueryable(nameof(Queryable.Where)))
 					{
 						current = method;
-						chain.RemoveAt(i);
 					}
 				}
 
