@@ -450,11 +450,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (methodCall.IsQueryable(_allowedNames))
 					{
-						/*
-						if (methodCall.Arguments.Skip(1).Any(HasAggregationRootContext))
-							break;
-							*/
-
 						current = methodCall.Arguments[0];
 
 						if (methodCall.IsQueryable(_orderByNames))
@@ -503,7 +498,18 @@ namespace LinqToDB.Internal.Linq.Builder
 					return null;
 				}
 
-				var aggregation = BuildAggregateExecuteExpression((MethodCallExpression)functionExpression, sequenceExpressionIndex, current, chain!);
+				// unwind Selects and Wheres over non-context sequences
+				for (int i = chain?.Count - 1 ?? -1; i >= 0; i--)
+				{
+					var method = chain![i];
+					if (method.IsQueryable(nameof(Queryable.Select)) || method.IsQueryable(nameof(Queryable.Where)))
+					{
+						current = method;
+						chain.RemoveAt(i);
+					}
+				}
+
+				var aggregation = BuildAggregateExecuteExpression((MethodCallExpression)functionExpression, sequenceExpressionIndex, current, null);
 				return aggregation;
 			}
 
