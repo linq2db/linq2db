@@ -349,7 +349,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return unwrapped;
 		}
 
-		public static Expression BuildAggregateExecuteExpression(MethodCallExpression methodCall, int sequenceExpressionIndex, Expression dataSequence, IReadOnlyList<MethodCallExpression>? chain)
+		public static Expression BuildAggregateExecuteExpression(MethodCallExpression methodCall, int sequenceExpressionIndex, Expression dataSequence, MethodCallExpression? allowedBody)
 		{
 			if (methodCall == null) throw new ArgumentNullException(nameof(methodCall));
 
@@ -362,7 +362,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var sourceParamTyped = BuildExpressionUtils.EnsureEnumerableType(sourceParam, dataSequence.Type);
 
-			var body = chain == null ? sourceParamTyped : chain[0].Replace(dataSequence, sourceParamTyped);
+			var body = allowedBody == null ? sourceParamTyped : allowedBody.Replace(dataSequence, sourceParamTyped);
 
 			Expression[] arguments = [..methodCall.Arguments.Take(sequenceExpressionIndex).Select(a => a.Unwrap()), body, ..methodCall.Arguments.Skip(sequenceExpressionIndex + 1).Select(a => a.Unwrap())];
 
@@ -498,17 +498,23 @@ namespace LinqToDB.Internal.Linq.Builder
 					return null;
 				}
 
-				// unwind Selects and Wheres over non-context sequences
-				for (int i = chain?.Count - 1 ?? -1; i >= 0; i--)
+				// unwind Selects over non-context sequences
+				for (int i = 0; i <= (chain?.Count - 1 ?? -1); i++)
 				{
 					var method = chain![i];
-					if (method.IsQueryable(nameof(Queryable.Select)) || method.IsQueryable(nameof(Queryable.Where)))
+					if (method.IsQueryable(nameof(Queryable.Select)))
 					{
-						current = method;
+						var lambda = method.Arguments[1].UnwrapLambda();
+						if (null != lambda.Body.Find(1, (_, e) => e is MethodCallExpression))
+						{
+							chain.RemoveAt(i);
+							current = method;
+							break;
+						}
 					}
 				}
 
-				var aggregation = BuildAggregateExecuteExpression((MethodCallExpression)functionExpression, sequenceExpressionIndex, current, null);
+				var aggregation = BuildAggregateExecuteExpression((MethodCallExpression)functionExpression, sequenceExpressionIndex, current, chain?.Count > 0 ? chain[0] : null);
 				return aggregation;
 			}
 
@@ -608,7 +614,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (buildRoot != current || isFallback || (contextRef.BuildContext is not GroupByBuilder.GroupByContext && contextRef.BuildContext is not AggregateRootContext))
 			{
-				var aggregation = BuildAggregateExecuteExpression((MethodCallExpression)functionExpression, sequenceExpressionIndex, buildRoot, chain);
+				var aggregation = BuildAggregateExecuteExpression((MethodCallExpression)functionExpression, sequenceExpressionIndex, buildRoot, chain?.Count > 0 ? chain[0] : null);
 
 				return aggregation;
 			}
