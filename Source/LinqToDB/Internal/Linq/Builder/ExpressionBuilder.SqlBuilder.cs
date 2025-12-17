@@ -1607,7 +1607,7 @@ namespace LinqToDB.Internal.Linq.Builder
 								}
 
 								case MemberBindingType.ListBinding:
-									throw new NotSupportedException($"Unsupported MemberBindingType `{memberBinding.BindingType}`");
+									throw new NotSupportedException($"Unsupported MemberBindingType `{binding.BindingType}`");
 
 								default:
 									throw new InvalidOperationException($"Unsupported MemberBindingType `{binding.BindingType}`");

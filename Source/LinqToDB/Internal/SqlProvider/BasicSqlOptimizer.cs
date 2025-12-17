@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -164,7 +164,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (path.Count > 2)
 				return false;
 
-			var result = path.All(e =>
+			var result = path.TrueForAll(e =>
 			{
 				return e switch
 				{
@@ -667,7 +667,7 @@ namespace LinqToDB.Internal.SqlProvider
 									resultExpression = field;
 									if (field.Table != originalTable)
 									{
-										var newField = (originalTable as SqlTable)?.Fields.FirstOrDefault(f => f.PhysicalName == field.PhysicalName);
+										var newField = (originalTable as SqlTable)?.Fields.Find(f => f.PhysicalName == field.PhysicalName);
 										if (newField != null)
 										{
 											resultExpression = newField;
@@ -971,7 +971,7 @@ namespace LinqToDB.Internal.SqlProvider
 				var ts = query.From.Tables[i];
 				if (ts.Source == table)
 				{
-					if (!ts.Joins.All(j => j.JoinType is JoinType.Inner or JoinType.Cross))
+					if (!ts.Joins.TrueForAll(j => j.JoinType is JoinType.Inner or JoinType.Cross))
 						return false;
 						
 					source = ts;
@@ -2014,7 +2014,7 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						// if multitable query has joins, we need to move tables to subquery and left joins on the current level
 						//
-						if (sqlQuery.From.Tables.Any(t => t.Joins.Count > 0))
+						if (sqlQuery.From.Tables.Exists(t => t.Joins.Count > 0))
 						{
 							var sub = new SelectQuery { DoNotRemove = true };
 
@@ -2036,7 +2036,7 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						var allJoins = sqlQuery.From.Tables.SelectMany(t => t.Joins).ToList();
 
-						if (allJoins.Any(j => j.JoinType == JoinType.Cross) && allJoins.Any(j => j.JoinType != JoinType.Cross))
+						if (allJoins.Exists(j => j.JoinType == JoinType.Cross) && allJoins.Exists(j => j.JoinType != JoinType.Cross))
 						{
 							var sub = new SelectQuery { DoNotRemove = true };
 

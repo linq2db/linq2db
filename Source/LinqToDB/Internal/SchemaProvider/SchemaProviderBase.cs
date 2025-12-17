@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -223,7 +223,7 @@ namespace LinqToDB.Internal.SchemaProvider
 					if (thisColumn == null || otherColumn == null)
 						continue;
 
-					var key = thisTable.ForeignKeys.FirstOrDefault(f => f.KeyName == fk.Name);
+					var key = thisTable.ForeignKeys.Find(f => f.KeyName == fk.Name);
 
 					if (key == null)
 					{
@@ -728,17 +728,19 @@ namespace LinqToDB.Internal.SchemaProvider
 				{
 					if (key.BackReference != null && key.AssociationType == AssociationType.Auto)
 					{
-						if (key.ThisColumns.All(_ => _.IsPrimaryKey))
+						if (key.ThisColumns.TrueForAll(_ => _.IsPrimaryKey))
 						{
+#pragma warning disable MA0031 // Optimize Enumerable.Count() usage
 							if (t.Columns.Count(_ => _.IsPrimaryKey) == key.ThisColumns.Count)
 								key.AssociationType = AssociationType.OneToOne;
 							else
 								key.AssociationType = AssociationType.ManyToOne;
+#pragma warning restore MA0031 // Optimize Enumerable.Count() usage
 						}
 						else
 							key.AssociationType = AssociationType.ManyToOne;
 
-						key.CanBeNull = key.ThisColumns.All(_ => _.IsNullable);
+						key.CanBeNull = key.ThisColumns.TrueForAll(_ => _.IsNullable);
 					}
 				}
 

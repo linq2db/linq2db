@@ -253,7 +253,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 		{
 			var dts = ExecuteOnNewConnection(dataConnection, base.GetDataTypes);
 
-			if (dts.All(dt => dt.ProviderDbType != 128))
+			if (dts.TrueForAll(dt => dt.ProviderDbType != 128))
 			{
 				dts.Add(new DataTypeInfo()
 				{
@@ -264,7 +264,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 				});
 			}
 
-			if (dts.All(dt => dt.ProviderDbType != 130))
+			if (dts.TrueForAll(dt => dt.ProviderDbType != 130))
 			{
 				dts.Add(new DataTypeInfo()
 				{

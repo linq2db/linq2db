@@ -751,7 +751,9 @@ namespace LinqToDB.Internal.Linq
 				return ret;
 			}
 
+#pragma warning disable MA0098 // Use indexer instead of LINQ methods
 			return Array.Empty<T>().First();
+#pragma warning restore MA0098 // Use indexer instead of LINQ methods
 		}
 
 		static async Task<T> ExecuteElementAsync<T>(
@@ -766,36 +768,36 @@ namespace LinqToDB.Internal.Linq
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteElementAsync))
 			{
 				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, ps, preambles);
-				await using (runner.ConfigureAwait(false))
+				await using var _1 = runner.ConfigureAwait(false);
+
+				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+				await using var _2 = dr.ConfigureAwait(false);
+
+				if (await dr.ReadAsync(cancellationToken).ConfigureAwait(false))
 				{
-					var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-					await using (dr.ConfigureAwait(false))
+					DbDataReader dataReader;
+
+					if (dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
 					{
-						if (await dr.ReadAsync(cancellationToken).ConfigureAwait(false))
-						{
-							DbDataReader dataReader;
-
-							if (dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
-							{
-								using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
-									dataReader = interceptor.UnwrapDataReader(dataContext, dr.DataReader);
-							}
-							else
-							{
-								dataReader = dr.DataReader;
-							}
-
-							var mapperInfo = mapper.GetMapperInfo(dataContext, runner, dataReader);
-							var item       = mapper.Map(dataContext, runner, dataReader, ref mapperInfo);
-
-							var ret = dataContext.MappingSchema.ChangeTypeTo<T>(item);
-							runner.RowsCount++;
-							return ret;
-						}
-
-						return Array.Empty<T>().First();
+						using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+							dataReader = interceptor.UnwrapDataReader(dataContext, dr.DataReader);
 					}
+					else
+					{
+						dataReader = dr.DataReader;
+					}
+
+					var mapperInfo = mapper.GetMapperInfo(dataContext, runner, dataReader);
+					var item       = mapper.Map(dataContext, runner, dataReader, ref mapperInfo);
+
+					var ret = dataContext.MappingSchema.ChangeTypeTo<T>(item);
+					runner.RowsCount++;
+					return ret;
 				}
+
+#pragma warning disable MA0098 // Use indexer instead of LINQ methods
+				return Array.Empty<T>().First();
+#pragma warning restore MA0098 // Use indexer instead of LINQ methods
 			}
 		}
 

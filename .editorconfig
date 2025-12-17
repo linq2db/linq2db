@@ -215,17 +215,22 @@ dotnet_diagnostic.IDE0330.severity = error # IDE0330: Use `System.Threading.Lock
 ###### Meziantou.Analyzers
 dotnet_diagnostic.MA0003.severity = suggestion # MA0003: Add parameter name to improve readability
 dotnet_diagnostic.MA0011.severity = error # MA0011: IFormatProvider is missing
+dotnet_diagnostic.MA0015.severity = suggestion # MA0015: Specify the parameter name in ArgumentException
 dotnet_diagnostic.MA0025.severity = suggestion # MA0025: Implement the functionality instead of throwing NotImplementedException
 dotnet_diagnostic.MA0026.severity = suggestion # MA0026: Fix TODO comment
 dotnet_diagnostic.MA0044.severity = error # MA0044: Remove useless ToString call
 dotnet_diagnostic.MA0047.severity = error # MA0047: Declare types in namespaces
 dotnet_diagnostic.MA0048.severity = error # MA0048: File name must match type name
+dotnet_diagnostic.MA0056.severity = suggestion # MA0056: Do not call overridable members in constructor
+dotnet_diagnostic.MA0069.severity = suggestion # MA0069: Non-constant static fields should not be visible
 dotnet_diagnostic.MA0075.severity = error # MA0075: Do not use implicit culture-sensitive ToString
 dotnet_diagnostic.MA0076.severity = error # MA0076: Do not use implicit culture-sensitive ToString in interpolated strings
 dotnet_diagnostic.MA0079.severity = error # MA0079: Forward the CancellationToken using .WithCancellation()
 dotnet_diagnostic.MA0080.severity = error # MA0080: Use a cancellation token using .WithCancellation()
+dotnet_diagnostic.MA0106.severity = suggestion # MA0106: Avoid closure by using an overload with the 'factoryArgument' parameter
 dotnet_diagnostic.MA0107.severity = error # MA0107: Do not use culture-sensitive object.ToString
 dotnet_diagnostic.MA0129.severity = error # MA0129: Await task in using statement
+dotnet_diagnostic.MA0151.severity = suggestion # MA0151: DebuggerDisplay must contain valid members
 
 MA0011.consider_nullable_types = true
 MA0075.consider_nullable_types = true
@@ -271,13 +276,14 @@ dotnet_diagnostic.MA0074.severity = none # MA0074: Avoid implicit culture-sensit
 ###### Meziantou.Analyzers
 dotnet_diagnostic.MA0016.severity = none # MA0016: Prefer using collection abstraction instead of implementation
 dotnet_diagnostic.MA0018.severity = none # MA0018: Do not declare static members on generic types (deprecated; use CA1000 instead)
-dotnet_diagnostic.MA0032.severity = none # MA0032: Use an overload with a CancellationToken argument
 dotnet_diagnostic.MA0036.severity = none # MA0036: Make class static (enable when CA1822 enabled)
 dotnet_diagnostic.MA0038.severity = none # MA0038: Make method static (deprecated, use CA1822 instead)
 dotnet_diagnostic.MA0040.severity = none # MA0040: Forward the CancellationToken parameter to methods that take one
 dotnet_diagnostic.MA0041.severity = none # MA0041: Make property static (deprecated, use CA1822 instead)
 dotnet_diagnostic.MA0042.severity = none # MA0042: Do not use blocking calls in an async method
 dotnet_diagnostic.MA0045.severity = none # MA0045: Do not use blocking calls in a sync method (need to make calling method async)
+# too many backwards compatibility concerns
+dotnet_diagnostic.MA0046.severity = none # MA0046: Use EventHandler<T> to declare events
 dotnet_diagnostic.MA0051.severity = none # MA0051: Method is too long
 dotnet_diagnostic.MA0071.severity = none # MA0071: Avoid using redundant else
 dotnet_diagnostic.MA0099.severity = none # MA0099: Use Explicit enum value instead of 0

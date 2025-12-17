@@ -234,7 +234,7 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var argument in Arguments)
 			{
-				if (!otherFunction.Arguments.Any(a => argument.Modifier == a.Modifier && argument.Expression.Equals(a.Expression, comparer) && argument.Suffix.AreEqual(a.Suffix, comparer)))
+				if (!otherFunction.Arguments.Exists(a => argument.Modifier == a.Modifier && argument.Expression.Equals(a.Expression, comparer) && argument.Suffix.AreEqual(a.Suffix, comparer)))
 					return false;
 			}
 
@@ -276,9 +276,9 @@ namespace LinqToDB.SqlQuery
 			if (CanBeNull.HasValue)
 				return CanBeNull.Value;
 
-			return Arguments.Any(a => a.Expression.CanBeNullable(nullability)) ||
-				   (PartitionBy?.Any(p => p.CanBeNullable(nullability)) ?? false) ||
-				   (OrderBy?.Any(o => o.Expression.CanBeNullable(nullability)) ?? false) ||
+			return Arguments.Exists(a => a.Expression.CanBeNullable(nullability)) ||
+				   (PartitionBy?.Exists(p => p.CanBeNullable(nullability)) ?? false) ||
+				   (OrderBy?.Exists(o => o.Expression.CanBeNullable(nullability)) ?? false) ||
 				   (Filter?.CanBeNullable(nullability) ?? false);
 		}
 

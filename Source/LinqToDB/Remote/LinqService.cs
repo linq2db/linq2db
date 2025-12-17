@@ -112,7 +112,7 @@ namespace LinqToDB.Remote
 
 				ValidateQuery(query);
 
-				await using var _2 = db.DataProvider.ExecuteScope(db);
+				await using var _2 = (db.DataProvider.ExecuteScope(db) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
@@ -144,7 +144,7 @@ namespace LinqToDB.Remote
 
 				ValidateQuery(query);
 
-				await using var _2 = db.DataProvider.ExecuteScope(db)?.ConfigureAwait(false);
+				await using var _2 = (db.DataProvider.ExecuteScope(db) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
@@ -207,7 +207,7 @@ namespace LinqToDB.Remote
 
 				ValidateQuery(query);
 
-				await using var _2 = db.DataProvider.ExecuteScope(db);
+				await using var _2 = (db.DataProvider.ExecuteScope(db) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
@@ -218,12 +218,11 @@ namespace LinqToDB.Remote
 					cancellationToken
 				).ConfigureAwait(false);
 
-				await using (rd.ConfigureAwait(false))
-				{
-					var ret = ProcessDataReaderWrapper(query, db, rd);
+				await using var _3 = rd.ConfigureAwait(false);
 
-					return LinqServiceSerializer.Serialize(SerializationMappingSchema, ret);
-				}
+				var ret = ProcessDataReaderWrapper(query, db, rd);
+
+				return LinqServiceSerializer.Serialize(SerializationMappingSchema, ret);
 			}
 			catch (Exception exception)
 			{
@@ -245,7 +244,7 @@ namespace LinqToDB.Remote
 				foreach (var query in queries)
 					ValidateQuery(query);
 
-				await using var _2 = db.DataProvider.ExecuteScope(db);
+				await using var _2 = (db.DataProvider.ExecuteScope(db) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
 				await db.BeginTransactionAsync(cancellationToken)
 					.ConfigureAwait(false);

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 
 namespace LinqToDB.Internal.SqlQuery
@@ -245,6 +244,20 @@ namespace LinqToDB.Internal.SqlQuery
 					return From.Tables[0].SystemType;
 
 				return null;
+			}
+		}
+
+		public override string ToString()
+		{
+			try
+			{
+				var writer = new QueryElementTextWriter(NullabilityContext.GetContext(this));
+				ToString(writer);
+				return writer.ToString();
+			}
+			catch
+			{
+				return $"FAIL ToString('{typeof(SelectQuery).FullName}').";
 			}
 		}
 

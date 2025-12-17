@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -798,7 +798,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					newNames[i] = _nameDic[prefix + oldNames[i]] = string.Create(CultureInfo.InvariantCulture, $"{prefix}{_nameDic.Count}");
 			}
 
-			return string.Join(".", newNames);
+			return string.JoinStrings('.', newNames);
 		}
 
 		public static List<string> SystemNamespaces = ["System", "LinqToDB", "Microsoft"];

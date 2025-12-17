@@ -265,7 +265,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		{
 			if (Provider == SapHanaProvider.ODBC && commandType == CommandType.StoredProcedure)
 			{
-				commandText = $"{{ CALL {commandText} ({string.Join(",", (parameters ?? []).Select(x => "?"))}) }}";
+				commandText = $"{{ CALL {commandText} ({string.JoinStrings(',', (parameters ?? []).Select(x => "?"))}) }}";
 				commandType = CommandType.Text;
 			}
 

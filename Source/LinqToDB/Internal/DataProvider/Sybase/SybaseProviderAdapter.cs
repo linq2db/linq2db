@@ -68,7 +68,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		public BulkCopyAdapter? BulkCopy { get; }
 
-		public class BulkCopyAdapter
+		public sealed class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
 				Func<DbConnection, AseBulkCopyOptions, DbTransaction?, AseBulkCopy> bulkCopyCreator,

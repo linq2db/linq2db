@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -414,7 +414,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				{
 					dataType.CreateFormat =
 						dataType.TypeName + "(" +
-						string.Join(",", dataType.CreateParameters!.Split(',').Select((_,i) => string.Create(CultureInfo.InvariantCulture, $"{{{i}}}"))) +
+						string.JoinStrings(',', dataType.CreateParameters!.Split(',').Select((_,i) => string.Create(CultureInfo.InvariantCulture, $"{{{i}}}"))) +
 						")";
 				}
 			}

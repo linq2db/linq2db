@@ -209,7 +209,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (selectQuery.Select.IsDistinct
 				// we cannot remove unused columns for non-UNION ALL operators as it could affect result
-				|| (selectQuery.HasSetOperators && (selectQuery.Select.Columns.Count == 1 || selectQuery.SetOperators.Any(o => o.Operation != SetOperation.UnionAll)))
+				|| (selectQuery.HasSetOperators && (selectQuery.Select.Columns.Count == 1 || selectQuery.SetOperators.Exists(o => o.Operation != SetOperation.UnionAll)))
 				|| (!isCteQuery && _parentSelectQuery == null))
 			{
 				foreach (var c in selectQuery.Select.Columns)

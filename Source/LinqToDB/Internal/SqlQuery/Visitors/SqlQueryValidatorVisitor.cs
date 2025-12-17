@@ -203,7 +203,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 			else
 			{
-				var isDerived = _parentQuery != null && _parentQuery.From.Tables.Any(t => t.Source == selectQuery);
+				var isDerived = _parentQuery != null && _parentQuery.From.Tables.Exists(t => t.Source == selectQuery);
 
 				if (isDerived)
 				{
@@ -233,10 +233,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (selectQuery.Select.HasModifier)
 				return false;
 
-			if (selectQuery.Select.Columns.Any(c => QueryHelper.IsAggregationFunction(c.Expression)))
+			if (selectQuery.Select.Columns.Exists(c => QueryHelper.IsAggregationFunction(c.Expression)))
 				return false;
 
-			if (selectQuery.Where.SearchCondition.Predicates.Any(p => p is SqlSearchCondition))
+			if (selectQuery.Where.SearchCondition.Predicates.Exists(p => p is SqlSearchCondition))
 				return false;
 
 			if (QueryHelper.IsDependsOnOuterSources(selectQuery, elementsToIgnore : new[] { selectQuery.Where }))

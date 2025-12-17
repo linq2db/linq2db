@@ -323,7 +323,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var member = defined[index];
 				current.MembersToLoad ??= new List<LoadWithMember>();
 
-				var found = current.MembersToLoad.FirstOrDefault(m => m.MemberInfo.EqualsTo(member.MemberInfo));
+				var found = current.MembersToLoad.Find(m => m.MemberInfo.EqualsTo(member.MemberInfo));
 				if (found == null)
 				{
 					current.MembersToLoad.Add(member);

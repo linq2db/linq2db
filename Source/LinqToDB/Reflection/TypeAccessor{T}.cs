@@ -7,7 +7,7 @@ using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Reflection
 {
-	public class TypeAccessor<T> : TypeAccessor
+	public sealed class TypeAccessor<T> : TypeAccessor
 	{
 		static readonly IReadOnlyList<MemberInfo> _members = GetTypeMembers();
 		static readonly IObjectFactory?  _objectFactory = typeof(T).GetAttribute<ObjectFactoryAttribute>()?.ObjectFactory;
@@ -133,7 +133,7 @@ namespace LinqToDB.Reflection
 		{
 			if (_objectFactory != null)
 				return (T)_objectFactory.CreateInstance(this);
-			return ObjectFactory<T>.CreateInstance()!;
+			return ObjectFactory<T>.CreateInstance();
 		}
 
 		public override Type Type => typeof(T);

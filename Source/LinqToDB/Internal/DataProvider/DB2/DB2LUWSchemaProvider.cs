@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -306,7 +306,8 @@ namespace LinqToDB.Internal.DataProvider.DB2
 						}
 						else
 						{
-							var format = string.Join(",",
+							var format = string.JoinStrings(
+								',',
 								type.CreateParameters
 									.Split(',')
 									.Select((p,i) => string.Create(CultureInfo.InvariantCulture, $"{{{i}}}")));

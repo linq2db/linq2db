@@ -552,24 +552,29 @@ namespace LinqToDB.Internal.Extensions
 		{
 			ArgumentNullException.ThrowIfNull(genericType);
 
-			while (type != typeof(object))
+			return Core(genericType, type);
+
+			static IEnumerable<Type> Core(Type genericType, Type type)
 			{
-				if (type.IsGenericType && type.GetGenericTypeDefinition() == genericType)
-					yield return type;
-
-				if (genericType.IsInterface)
+				while (type != typeof(object))
 				{
-					foreach (var interfaceType in type.GetInterfaces())
+					if (type.IsGenericType && type.GetGenericTypeDefinition() == genericType)
+						yield return type;
+
+					if (genericType.IsInterface)
 					{
-						foreach (var gType in GetGenericTypes(genericType, interfaceType))
-							yield return gType;
+						foreach (var interfaceType in type.GetInterfaces())
+						{
+							foreach (var gType in GetGenericTypes(genericType, interfaceType))
+								yield return gType;
+						}
 					}
+
+					if (type.BaseType == null)
+						break;
+
+					type = type.BaseType;
 				}
-
-				if (type.BaseType == null)
-					break;
-
-				type = type.BaseType;
 			}
 		}
 

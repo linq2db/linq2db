@@ -118,7 +118,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (names.Length - 1 > level)
 					{
-						var propPath = string.Join(".", names.Take(level + 1));
+						var propPath = string.JoinStrings('.', names.Take(level + 1));
 						if (!processed.Add(propPath))
 							continue;
 

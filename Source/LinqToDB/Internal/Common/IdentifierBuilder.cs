@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -243,7 +243,7 @@ namespace LinqToDB.Internal.Common
 					if (o is IComparable c)
 						lock (_buggyObjects)
 						{
-							var id = _buggyObjects.FirstOrDefault(bo => c.CompareTo(bo.obj) == 0);
+							var id = _buggyObjects.Find(bo => c.CompareTo(bo.obj) == 0);
 
 							if (id.obj == null)
 							{

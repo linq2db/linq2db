@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -40,7 +40,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return $"{base.GetObjectID()}.{string.Join(".", Values.Select(v => string.Format(CultureInfo.InvariantCulture, "{0}", v)))}.";
+			return $"{base.GetObjectID()}.{string.JoinStrings('.', Values.Select(v => string.Create(CultureInfo.InvariantCulture, $"{v}")))}.";
 		}
 	}
 }

@@ -2,7 +2,6 @@
 #pragma warning disable MA0048 // File name must match type name
 
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Text;
 
 #if NETFRAMEWORK || NETSTANDARD2_0
@@ -25,8 +24,19 @@ internal static class StringBuilderExtensions
 
 	public static StringBuilder AppendBuilder(this StringBuilder sb, StringBuilder? stringBuilder)
 	{
+#pragma warning disable MA0028 // Optimize StringBuilder usage
 		if (stringBuilder?.Length > 0)
 			sb.Append(stringBuilder.ToString());
+#pragma warning restore MA0028 // Optimize StringBuilder usage
+		return sb;
+	}
+
+	public static StringBuilder InsertBuilder(this StringBuilder sb, int index, StringBuilder? stringBuilder)
+	{
+#pragma warning disable MA0028 // Optimize StringBuilder usage
+		if (stringBuilder?.Length > 0)
+			sb.Insert(index, stringBuilder.ToString());
+#pragma warning restore MA0028 // Optimize StringBuilder usage
 		return sb;
 	}
 
@@ -103,6 +113,15 @@ internal static class StringBuilderExtensions
 #pragma warning disable RS0030 // Do not use banned APIs
 		return sb.AppendJoin(separator, values);
 #pragma warning restore RS0030 // Do not use banned APIs
+	}
+
+	public static StringBuilder InsertBuilder(this StringBuilder sb, int index, StringBuilder? stringBuilder)
+	{
+#pragma warning disable MA0028 // Optimize StringBuilder usage
+		if (stringBuilder?.Length > 0)
+			sb.Insert(index, stringBuilder.ToString());
+#pragma warning restore MA0028 // Optimize StringBuilder usage
+		return sb;
 	}
 }
 

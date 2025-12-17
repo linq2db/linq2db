@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -545,7 +545,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			if (procedure.IsTableFunction)
 			{
 				commandText = "SELECT * FROM " + commandText + "(";
-				commandText += string.Join(",", procedure.Parameters.Select(p => 
+				commandText += string.JoinStrings(',', procedure.Parameters.Select(p => 
 					p.SystemType == typeof (DateTime)
 						? string.Create(CultureInfo.InvariantCulture, $"'{DateTime.Now}'")
 						: string.Create(CultureInfo.InvariantCulture, $"{(DefaultValue.GetValue(p.SystemType ?? typeof(object)) ?? "''")}")));

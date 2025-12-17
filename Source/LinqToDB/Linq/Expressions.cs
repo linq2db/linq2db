@@ -1018,6 +1018,7 @@ namespace LinqToDB.Linq
 			#endregion
 
 			#region SqlTypes
+#pragma warning disable MA0073 // Avoid comparison with bool constant
 
 			{ M(() => new SqlBoolean().Value),   N(() => L<SqlBoolean,bool>(obj => (bool)obj))          },
 			{ M(() => new SqlBoolean().IsFalse), N(() => L<SqlBoolean,bool>(obj => (bool)obj == false)) },
@@ -1025,6 +1026,7 @@ namespace LinqToDB.Linq
 			{ M(() => SqlBoolean.True),          N(() => L                 (()               => true))  },
 			{ M(() => SqlBoolean.False),         N(() => L                 (()               => false)) },
 
+#pragma warning restore MA0073 // Avoid comparison with bool constant
 			#endregion
 		};
 #pragma warning restore CS0618 // Type or member is obsolete

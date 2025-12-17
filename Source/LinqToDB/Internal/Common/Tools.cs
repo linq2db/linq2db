@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 using LinqToDB.Data;
 using LinqToDB.Internal.Linq;
@@ -16,7 +17,7 @@ namespace LinqToDB.Internal.Common
 	/// <summary>
 	/// Various general-purpose helpers.
 	/// </summary>
-	public static class Tools
+	public static partial class Tools
 	{
 		/// <summary>
 		/// Checks that collection is not null and have at least one element.
@@ -49,31 +50,18 @@ namespace LinqToDB.Internal.Common
 			return assembly.Location;
 		}
 
+		private const string WhitespacePattern = /* lang=regex */ @"[\r\n\s]+";
+#if SUPPORTS_REGEX_GENERATORS
+		[GeneratedRegex(WhitespacePattern, RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 1)]
+		private static partial Regex WhitespaceRegex();
+#else
+		private static readonly Regex _whitespaceRegex = new(WhitespacePattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(1));
+		private static Regex WhitespaceRegex() => _whitespaceRegex;
+#endif
+
 		public static string ToDebugDisplay(string str)
 		{
-			static string RemoveDuplicates(string pattern, string input)
-			{
-				var toSearch = pattern + pattern;
-				do
-				{
-					var s = input.Replace(toSearch, pattern);
-					if (s == input)
-						break;
-					input = s;
-				} while (true);
-
-				return input;
-			}
-
-			str = RemoveDuplicates("\t",   str);
-			str = RemoveDuplicates("\r\n", str);
-			str = RemoveDuplicates("\n",   str);
-
-			str = str.Replace("\t",   " ");
-			str = str.Replace("\r\n", " ");
-			str = str.Replace("\n",   " ");
-
-			return str.Trim();
+			return WhitespaceRegex().Replace(str, m => " ").Trim();
 		}
 
 		internal static HashSet<T> AddRange<T>(this HashSet<T> hashSet, IEnumerable<T> items)

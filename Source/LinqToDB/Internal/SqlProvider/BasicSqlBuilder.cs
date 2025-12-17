@@ -364,7 +364,7 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				var isUnion =
 					Statement.SelectQuery is {HasSetOperators: true} ||
-					Statement.ParentStatement?.SelectQuery is {HasSetOperators: true} sq && sq.SetOperators.Any(s => s.SelectQuery == Statement.SelectQuery);
+					Statement.ParentStatement?.SelectQuery is {HasSetOperators: true} sq && sq.SetOperators.Exists(s => s.SelectQuery == Statement.SelectQuery);
 
 				if (isUnion)
 				{
@@ -606,7 +606,7 @@ namespace LinqToDB.Internal.SqlProvider
 					AppendIndent();
 					StringBuilder.Append("WITH ");
 
-					if (IsRecursiveCteKeywordRequired && with.Clauses.Any(c => c.IsRecursive))
+					if (IsRecursiveCteKeywordRequired && with.Clauses.Exists(c => c.IsRecursive))
 						StringBuilder.Append("RECURSIVE ");
 
 					first = false;
@@ -1482,7 +1482,7 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 			}
 
-			var hasIdentity = fields.Any(f => f.Field.IsIdentity);
+			var hasIdentity = fields.Exists(f => f.Field.IsIdentity);
 
 			// Build identity attribute.
 			//
@@ -1819,7 +1819,7 @@ namespace LinqToDB.Internal.SqlProvider
 						StringBuilder.Append(' ');
 						BuildObjectName(StringBuilder, new(alias), ConvertType.NameToQueryFieldAlias, true, TableOptions.NotSet);
 						StringBuilder.Append('(');
-						BuildExpression(rawSqlTable.Fields.First(), buildTableName: false, checkParentheses: false);
+						BuildExpression(rawSqlTable.Fields[0], buildTableName: false, checkParentheses: false);
 						StringBuilder.Append(')');
 						buildAlias = false;
 					}
@@ -2055,7 +2055,7 @@ namespace LinqToDB.Internal.SqlProvider
 			string?                 suffix,
 			Sql.QueryExtensionScope scope)
 		{
-			if (sqlQueryExtensions.Any(ext => ext.Scope == scope))
+			if (sqlQueryExtensions.Exists(ext => ext.Scope == scope))
 			{
 				if (prefix != null)
 					sb.Append(prefix);
@@ -3034,72 +3034,72 @@ namespace LinqToDB.Internal.SqlProvider
 					break;
 
 				case QueryElementType.Column:
+				{
+					var column = (SqlColumn)expr;
+
+#if DEBUG
+					var sql = Statement.SqlText;
+#endif
+					if (_disableAlias)
 					{
-						var column = (SqlColumn)expr;
-
-#if DEBUG
-						var sql = Statement.SqlText;
-#endif
-						if (_disableAlias)
-						{
-							Convert(StringBuilder, column.Alias!, ConvertType.NameToQueryField);
-							break;
-						}
-
-						ISqlTableSource? table;
-						var currentStatement = Statement;
-						var noAlias = false;
-
-						do
-						{
-							table = currentStatement.GetTableSource(column.Parent!, out noAlias);
-							if (table != null)
-								break;
-							currentStatement = currentStatement.ParentStatement;
-						}
-						while (currentStatement != null);
-
-						if (table == null)
-						{
-#if DEBUG
-							table = Statement.GetTableSource(column.Parent!, out noAlias);
-#endif
-
-							throw new LinqToDBException($"Table not found for '{column}'.");
-						}
-
-						var tableAlias = (noAlias ? null : GetTableAlias(table)) ?? GetPhysicalTableName(column.Parent!, null, ignoreTableExpression : true);
-
-						if (string.IsNullOrEmpty(tableAlias))
-							throw new LinqToDBException($"Table `{column.Parent?.ToString()}` should have an alias.");
-
-						addAlias = alias != column.Alias;
-
-						Convert(StringBuilder, tableAlias, ConvertType.NameToQueryTableAlias);
-						StringBuilder.Append('.');
 						Convert(StringBuilder, column.Alias!, ConvertType.NameToQueryField);
+						break;
 					}
 
+					ISqlTableSource? table;
+					var currentStatement = Statement;
+					var noAlias = false;
+
+					do
+					{
+						table = currentStatement.GetTableSource(column.Parent!, out noAlias);
+						if (table != null)
+							break;
+						currentStatement = currentStatement.ParentStatement;
+					}
+					while (currentStatement != null);
+
+					if (table == null)
+					{
+#if DEBUG
+						table = Statement.GetTableSource(column.Parent!, out noAlias);
+#endif
+
+						throw new LinqToDBException($"Table not found for '{column}'.");
+					}
+
+					var tableAlias = (noAlias ? null : GetTableAlias(table)) ?? GetPhysicalTableName(column.Parent!, null, ignoreTableExpression : true);
+
+					if (string.IsNullOrEmpty(tableAlias))
+						throw new LinqToDBException($"Table `{column.Parent}` should have an alias.");
+
+					addAlias = alias != column.Alias;
+
+					Convert(StringBuilder, tableAlias, ConvertType.NameToQueryTableAlias);
+					StringBuilder.Append('.');
+					Convert(StringBuilder, column.Alias!, ConvertType.NameToQueryField);
+
 					break;
+				}
 
 				case QueryElementType.SqlQuery:
-					{
-						var hasParentheses = checkParentheses && StringBuilder.Length > 0 && StringBuilder[^1] == '(';
+				{
+					var hasParentheses = checkParentheses && StringBuilder.Length > 0 && StringBuilder[^1] == '(';
 
-						if (!hasParentheses)
-							StringBuilder.AppendLine(OpenParens);
-						else
-							StringBuilder.AppendLine();
+					if (!hasParentheses)
+						StringBuilder.AppendLine(OpenParens);
+					else
+						StringBuilder.AppendLine();
 
-						BuildSqlBuilder((SelectQuery)expr, Indent + 1, BuildStep != Step.FromClause);
+					BuildSqlBuilder((SelectQuery)expr, Indent + 1, BuildStep != Step.FromClause);
 
-						AppendIndent();
+					AppendIndent();
 
-						if (!hasParentheses)
-							StringBuilder.Append(')');
-					}
+					if (!hasParentheses)
+						StringBuilder.Append(')');
 
 					break;
+				}
 
 				case QueryElementType.SqlValue:
 					var sqlval = (SqlValue)expr;

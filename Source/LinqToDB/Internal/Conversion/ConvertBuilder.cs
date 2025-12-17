@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Globalization;
@@ -272,7 +272,7 @@ namespace LinqToDB.Internal.Conversion
 					.Select(f => new { f.OrigValue, attrs = f.MapValues.Where(a => a.Value == null || a.Value.GetType() == fromType).ToList() })
 					.ToList();
 
-				if (fromTypeFields.All(f => f.attrs.Count != 0))
+				if (fromTypeFields.TrueForAll(f => f.attrs.Count != 0))
 				{
 					var cases = fromTypeFields
 						.Select(f => new
@@ -323,7 +323,7 @@ namespace LinqToDB.Internal.Conversion
 					return expr;
 				}
 
-				if (fromTypeFields.Any(f => f.attrs.Any(a => a.Value != null)))
+				if (fromTypeFields.Exists(f => f.attrs.Exists(a => a.Value != null)))
 				{
 					var field = fromTypeFields.First(f => f.attrs.Count == 0);
 
@@ -373,7 +373,7 @@ namespace LinqToDB.Internal.Conversion
 							.FirstOrDefault(a => a.Value == null || a.Value.GetType() == valueType), })
 						.ToList();
 
-					if (toTypeFields.All(f => f.Attrs != null))
+					if (toTypeFields.TrueForAll(f => f.Attrs != null))
 					{
 						var cases = toTypeFields.Select(f => Expression.SwitchCase(
 							Expression.Constant(f.Attrs!.Value ?? mappingSchema.GetDefaultValue(to), to),
@@ -391,7 +391,7 @@ namespace LinqToDB.Internal.Conversion
 						return expr;
 					}
 
-					if (toTypeFields.Any(f => f.Attrs != null))
+					if (toTypeFields.Exists(f => f.Attrs != null))
 					{
 						var field = toTypeFields.First(f => f.Attrs == null);
 
@@ -419,7 +419,7 @@ namespace LinqToDB.Internal.Conversion
 						if (toField.Attrs == null || toField.Attrs.Length == 0)
 							return null;
 
-						var toAttr = toField.Attrs.First();
+						var toAttr = toField.Attrs[0];
 
 						toAttr = toField.Attrs.FirstOrDefault(a => a.Configuration == toAttr.Configuration && a.IsDefault) ?? toAttr;
 

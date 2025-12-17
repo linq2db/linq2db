@@ -49,14 +49,6 @@ namespace LinqToDB.Internal.Cache
 		}
 
 		/// <summary>
-		/// Cleans up the background collection events.
-		/// </summary>
-		~MemoryCache()
-		{
-			Dispose(false);
-		}
-
-		/// <summary>
 		/// Gets the count of the current entries for diagnostic purposes.
 		/// </summary>
 		public int Count => _entries.Count;
@@ -458,20 +450,7 @@ namespace LinqToDB.Internal.Cache
 
 		public void Dispose()
 		{
-			Dispose(true);
-		}
-
-		void Dispose(bool disposing)
-		{
-			if (!_disposed)
-			{
-				if (disposing)
-				{
-					GC.SuppressFinalize(this);
-				}
-
-				_disposed = true;
-			}
+			_disposed = true;
 		}
 
 		private void CheckDisposed()

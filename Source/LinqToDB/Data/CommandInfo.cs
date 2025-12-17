@@ -1920,7 +1920,7 @@ namespace LinqToDB.Data
 
 				var ctors = typeof(T).GetConstructors().Select(c => new { c, ps = c.GetParameters() }).ToList();
 
-				if (ctors.Count > 0 && ctors.All(c => c.ps.Length > 0))
+				if (ctors.Count > 0 && ctors.TrueForAll(c => c.ps.Length > 0))
 				{
 					var q =
 						from c in ctors

@@ -607,7 +607,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				HintBuilder.Insert(0, " /*+ ");
 				HintBuilder.Append(" */");
 
-				StringBuilder.Insert(_hintPosition, HintBuilder.ToString());
+				StringBuilder.InsertBuilder(_hintPosition, HintBuilder);
 			}
 		}
 

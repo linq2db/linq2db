@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -195,7 +195,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 			var dts = base.GetDataTypes(dataConnection);
 
 			// https://docs.microsoft.com/en-us/sql/odbc/microsoft/microsoft-access-data-types?view=sql-server-ver15
-			if (dts.All(dt => dt.TypeName != "BIGBINARY"))
+			if (dts.TrueForAll(dt => dt.TypeName != "BIGBINARY"))
 			{
 				dts.Add(new DataTypeInfo()
 				{
@@ -205,7 +205,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 				});
 			}
 
-			if (dts.All(dt => dt.TypeName != "DECIMAL"))
+			if (dts.TrueForAll(dt => dt.TypeName != "DECIMAL"))
 			{
 				dts.Add(new DataTypeInfo()
 				{

@@ -227,7 +227,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 		public BulkCopyAdapter BulkCopy { get; }
 
-		public class BulkCopyAdapter
+		public sealed class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
 				Func<DbConnection, DB2BulkCopyOptions, DB2BulkCopy> bulkCopyCreator,

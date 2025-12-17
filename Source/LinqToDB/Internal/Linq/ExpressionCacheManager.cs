@@ -430,7 +430,7 @@ namespace LinqToDB.Internal.Linq
 			var nonComparable = NonComparableExpressions;
 			if (_parameterEntries != null && knownParameters != null)
 			{
-				var usedEntries = _parameterEntries.Where(e => knownParameters.Any(p => p.AccessorId == e.Key)).Select(e => e.Value).ToList();
+				var usedEntries = _parameterEntries.Where(e => knownParameters.Exists(p => p.AccessorId == e.Key)).Select(e => e.Value).ToList();
 				if (usedEntries.Count > 0)
 				{
 					nonComparable = [.. NonComparableExpressions];

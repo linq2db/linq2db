@@ -371,7 +371,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (sqlExpression is SelectQuery { GroupBy.IsEmpty: true } selectQuery)
 			{
 				var nullabilityContext = NullabilityContext.GetContext(selectQuery);
-				if (selectQuery.Select.Columns.All(c => QueryHelper.ContainsAggregationFunction(c.Expression) && !c.Expression.CanBeNullable(nullabilityContext)))
+				if (selectQuery.Select.Columns.TrueForAll(c => QueryHelper.ContainsAggregationFunction(c.Expression) && !c.Expression.CanBeNullable(nullabilityContext)))
 				{
 					return sqlExpression;
 				}
@@ -419,7 +419,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					var operation = selectQuery.HasSetOperators ? selectQuery.SetOperators[0].Operation : mainSubquery.SetOperators[0].Operation;
 
-					if (mainSubquery.SetOperators.All(so => so.Operation == operation))
+					if (mainSubquery.SetOperators.TrueForAll(so => so.Operation == operation))
 					{
 						if (CheckSetColumns(newIndexes, mainSubquery, operation))
 						{
@@ -451,7 +451,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (setOperator.SelectQuery.From.Tables.Count == 1 &&
 				    setOperator.SelectQuery.From.Tables[0].Source is SelectQuery { HasSetOperators: true } subQuery)
 				{
-					if (subQuery.SetOperators.All(so => so.Operation == setOperator.Operation))
+					if (subQuery.SetOperators.TrueForAll(so => so.Operation == setOperator.Operation))
 					{
 						var allColumns = setOperator.Operation != SetOperation.UnionAll;
 
@@ -756,7 +756,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (query.Select.TakeValue is SqlValue { Value: 1 })
 				return true;
 
-			if (query.GroupBy.IsEmpty && query.Select.Columns.Count > 0 && query.Select.Columns.All(c => QueryHelper.ContainsAggregationFunction(c.Expression)))
+			if (query.GroupBy.IsEmpty && query.Select.Columns.Count > 0 && query.Select.Columns.TrueForAll(c => QueryHelper.ContainsAggregationFunction(c.Expression)))
 				return true;
 
 			if (query.From.Tables.Count == 1 && query.From.Tables[0].Source is SelectQuery subQuery)
@@ -872,7 +872,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						var bExpr = keyB[j];
 
 						// Search equality pair either direction
-						if (equalityPairs.Any(ep => (SameExpr(ep.Left, aExpr) && SameExpr(ep.Right, bExpr)) ||
+						if (equalityPairs.Exists(ep => (SameExpr(ep.Left, aExpr) && SameExpr(ep.Right, bExpr)) ||
 													(SameExpr(ep.Left, bExpr) && SameExpr(ep.Right, aExpr))))
 						{
 							found = true;
@@ -919,7 +919,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (!selectQuery.GroupBy.IsEmpty)
 			{
-				if (selectQuery.GroupBy.Items.All(gi => selectQuery.Select.Columns.Any(c => c.Expression.Equals(gi))))
+				if (selectQuery.GroupBy.Items.TrueForAll(gi => selectQuery.Select.Columns.Exists(c => c.Expression.Equals(gi))))
 				{
 					selectQuery.GroupBy.Items.Clear();
 					return true;
@@ -1048,7 +1048,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (joinSource.Source.ElementType == QueryElementType.SqlQuery)
 			{
 				var sql   = (SelectQuery)joinSource.Source;
-				var isAgg = sql.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowExpression(c.Expression));
+				var isAgg = sql.Select.Columns.Exists(static c => QueryHelper.IsAggregationOrWindowExpression(c.Expression));
 
 				isApplySupported = isApplySupported && (joinTable.JoinType == JoinType.CrossApply ||
 				                                        joinTable.JoinType == JoinType.OuterApply);
@@ -1187,7 +1187,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 								}
 
 								// check that used key in grouping
-								if (!sql.GroupBy.Items.Any(gi => QueryHelper.SameWithoutNullablity(gi, expExpr.Expr1) || QueryHelper.SameWithoutNullablity(gi, expExpr.Expr2)))
+								if (!sql.GroupBy.Items.Exists(gi => QueryHelper.SameWithoutNullablity(gi, expExpr.Expr1) || QueryHelper.SameWithoutNullablity(gi, expExpr.Expr2)))
 								{
 									return optimized;
 								}
@@ -1464,7 +1464,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (subQuery.IsSimple && parentQuery.IsSimple)
 			{
-				if (parentQuery.Select.Columns.All(c => c.Expression is SqlColumn))
+				if (parentQuery.Select.Columns.TrueForAll(c => c.Expression is SqlColumn))
 				{
 					// shortcut
 					return true;
@@ -1744,7 +1744,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			    && (parentQuery.QueryName != null
 			        // parent has other tables/sub-queries
 			        || parentQuery.From.Tables.Count > 1
-			        || parentQuery.From.Tables.Any(static t => t.Joins.Count > 0)))
+			        || parentQuery.From.Tables.Exists(static t => t.Joins.Count > 0)))
 			{
 				return false;
 			}
@@ -1794,8 +1794,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					// Columns in parent query should match
 					//
 
-					if (!(parentQuery.Select.Columns.Count == 0 || subQuery.Select.Columns.All(sc =>
-						    parentQuery.Select.Columns.Any(pc => ReferenceEquals(QueryHelper.UnwrapNullablity(pc.Expression), sc)))))
+					if (!(parentQuery.Select.Columns.Count == 0 || subQuery.Select.Columns.TrueForAll(sc =>
+						    parentQuery.Select.Columns.Exists(pc => ReferenceEquals(QueryHelper.UnwrapNullablity(pc.Expression), sc)))))
 					{
 						return false;
 					}
@@ -1834,7 +1834,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						return false;
 				}
 
-				if (parentQuery.Select.Columns.Any(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
+				if (parentQuery.Select.Columns.Exists(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
 				{
 					return false;
 				}
@@ -1842,7 +1842,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (subQuery.Select.HasModifier || !subQuery.Where.IsEmpty)
 			{
-				if (tableSource.Joins.Any(j => j.JoinType is JoinType.Right or JoinType.RightApply or JoinType.Full or JoinType.FullApply))
+				if (tableSource.Joins.Exists(j => j.JoinType is JoinType.Right or JoinType.RightApply or JoinType.Full or JoinType.FullApply))
 				{
 					return false;
 				}
@@ -1852,7 +1852,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				if (QueryHelper.EnumerateJoins(subQuery).Any(j => j.JoinType != JoinType.Inner))
 				{
-					if (subQuery.Select.Columns.Any(c => IsInsideAggregate(parentQuery, c)))
+					if (subQuery.Select.Columns.Exists(c => IsInsideAggregate(parentQuery, c)))
 					{
 						if (QueryHelper.IsDependsOnOuterSources(subQuery))
 							return false;
@@ -1885,7 +1885,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				if (parentQuery.Select.Columns.Count != subQuery.Select.Columns.Count)
 				{
-					if (subQuery.SetOperators.Any(so => so.Operation != SetOperation.UnionAll))
+					if (subQuery.SetOperators.Exists(so => so.Operation != SetOperation.UnionAll))
 						return false;
 				}
 
@@ -1897,7 +1897,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (_currentSetOperator != null && _currentSetOperator.Operation != operation)
 					return false;
 
-				if (!subQuery.SetOperators.All(so => so.Operation == operation))
+				if (!subQuery.SetOperators.TrueForAll(so => so.Operation == operation))
 					return false;
 			}
 
@@ -2020,7 +2020,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
-			if (subQuery.Select.Columns.Any(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
+			if (subQuery.Select.Columns.Exists(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
 				return false;
 
 			// Actual modification starts from this point
@@ -2721,7 +2721,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 
 					// all keys should be matched
-					if (keys.Any(kl => kl.All(k => foundEquality.Contains(k))))
+					if (keys.Exists(kl => kl.All(k => foundEquality.Contains(k))))
 						return true;
 				}
 			}
@@ -3326,13 +3326,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					{
 						var enumerableSourceField = enumerableSource.Fields[i];
 
-						if (element.SourceFields.All(f => f.BasedOn != enumerableSourceField))
+						if (element.SourceFields.TrueForAll(f => f.BasedOn != enumerableSourceField))
 						{
 							enumerableSource.RemoveField(i);
 						}
 					}
 
-					if (element.SourceFields.All(x => x.BasedOn != null))
+					if (element.SourceFields.TrueForAll(x => x.BasedOn != null))
 					{
 						var newIndexes = element.SourceFields
 							.Select((field, currentIndex) => (field, currentIndex))

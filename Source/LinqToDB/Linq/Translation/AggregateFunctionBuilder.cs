@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
@@ -213,7 +213,7 @@ namespace LinqToDB.Linq.Translation
 
 			if (filterSql != null && valueSql != null && config.AllowNotNullCheckMode.HasValue && filterSql is { IsAnd: true })
 			{
-				var isNotNull = filterSql.Predicates.FirstOrDefault(p => p is SqlPredicate.IsNull { IsNot: true } isNull && isNull.Expr1.Equals(valueSql));
+				var isNotNull = filterSql.Predicates.Find(p => p is SqlPredicate.IsNull { IsNot: true } isNull && isNull.Expr1.Equals(valueSql));
 				if (isNotNull != null)
 				{
 					isNullFiltered = true;
