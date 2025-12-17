@@ -388,140 +388,6 @@ namespace LinqToDB.Internal.Expressions
 			return default;
 		}
 
-		#endregion
-
-		public static bool IsEvaluable(this Expression? expression, MappingSchema mappingSchema)
-		{
-			return expression?.NodeType switch
-			{
-				null                        => true,
-				ExpressionType.Convert or ExpressionType.ConvertChecked => IsEvaluable(((UnaryExpression)expression).Operand, mappingSchema),
-				ExpressionType.Default      => true,
-				// don't return true for closure classes
-				ExpressionType.Constant     => expression is ConstantExpression c && (c.Value == null || c.Value is string || c.Value.GetType().IsValueType),
-				ExpressionType.MemberAccess => ((MemberExpression)expression).Member.GetExpressionAttribute(mappingSchema)?.ServerSideOnly != true && IsEvaluable(((MemberExpression)expression).Expression, mappingSchema),
-				_                           => false,
-			};
-		}
-
-		/// <summary>
-		/// Optimizes expression context by evaluating constants and simplifying boolean operations.
-		/// </summary>
-		/// <param name="expression">Expression to optimize.</param>
-		/// <returns>Optimized expression.</returns>
-		[return: NotNullIfNotNull(nameof(expression))]
-		public static Expression? OptimizeExpression(this Expression? expression, MappingSchema mappingSchema)
-		{
-			return TransformInfoVisitor<MappingSchema>.Create(mappingSchema, OptimizeExpressionTransformer).Transform(expression);
-		}
-
-		private static TransformInfo OptimizeExpressionTransformer(MappingSchema mappingSchema, Expression e)
-		{
-			var newExpr = e;
-			if (e is BinaryExpression binary)
-			{
-				var left  = OptimizeExpression(binary.Left, mappingSchema)!;
-				var right = OptimizeExpression(binary.Right, mappingSchema)!;
-
-				if (left.Type != binary.Left.Type)
-					left = Expression.Convert(left, binary.Left.Type);
-
-				if (right.Type != binary.Right.Type)
-					right = Expression.Convert(right, binary.Right.Type);
-
-				newExpr = binary.Update(left, OptimizeExpression(binary.Conversion, mappingSchema) as LambdaExpression, right);
-			}
-			else if (e is UnaryExpression unaryExpression)
-			{
-				newExpr = unaryExpression.Update(OptimizeExpression(unaryExpression.Operand, mappingSchema));
-				if (newExpr.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked && ((UnaryExpression)newExpr).Operand.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
-				{
-					// remove double convert
-					newExpr = Expression.Convert(
-						((UnaryExpression)((UnaryExpression)newExpr).Operand).Operand, newExpr.Type);
-				}
-			}
-
-			if (IsEvaluable(newExpr, mappingSchema))
-			{
-				newExpr = newExpr.NodeType == ExpressionType.Constant
-					? newExpr
-					: Expression.Constant(newExpr.EvaluateExpression());
-			}
-			else
-			{
-				switch (newExpr)
-				{
-					case NewArrayExpression:
-					{
-						return new TransformInfo(newExpr, true);
-					}
-					case UnaryExpression unary when IsEvaluable(unary.Operand, mappingSchema):
-					{
-						newExpr = Expression.Constant(unary.EvaluateExpression());
-						break;
-					}
-					case MemberExpression { Expression.NodeType: ExpressionType.Constant } me when IsEvaluable(me.Expression, mappingSchema):
-					{
-						newExpr = Expression.Constant(me.EvaluateExpression());
-						break;
-					}
-					case BinaryExpression be when IsEvaluable(be.Left, mappingSchema) && IsEvaluable(be.Right, mappingSchema):
-					{
-						newExpr = Expression.Constant(be.EvaluateExpression());
-						break;
-					}
-					case BinaryExpression { NodeType: ExpressionType.AndAlso } be:
-					{
-						if (IsEvaluable(be.Left, mappingSchema))
-						{
-							var leftBool = be.Left.EvaluateExpression() as bool?;
-							if (leftBool == true)
-								e = be.Right;
-							else if (leftBool == false)
-								newExpr = ExpressionInstances.False;
-						}
-						else if (IsEvaluable(be.Right, mappingSchema))
-						{
-							var rightBool = be.Right.EvaluateExpression() as bool?;
-							if (rightBool == true)
-								newExpr = be.Left;
-							else if (rightBool == false)
-								newExpr = ExpressionInstances.False;
-						}
-
-						break;
-					}
-					case BinaryExpression { NodeType: ExpressionType.OrElse } be:
-					{
-						if (IsEvaluable(be.Left, mappingSchema))
-						{
-							var leftBool = be.Left.EvaluateExpression() as bool?;
-							if (leftBool == false)
-								newExpr = be.Right;
-							else if (leftBool == true)
-								newExpr = ExpressionInstances.True;
-						}
-						else if (IsEvaluable(be.Right, mappingSchema))
-						{
-							var rightBool = be.Right.EvaluateExpression() as bool?;
-							if (rightBool == false)
-								newExpr = be.Left;
-							else if (rightBool == true)
-								newExpr = ExpressionInstances.True;
-						}
-
-						break;
-					}
-				}
-			}
-
-			if (newExpr.Type != e.Type)
-				newExpr = Expression.Convert(newExpr, e.Type);
-
-			return new TransformInfo(newExpr);
-		}
-
 		public static Expression ApplyLambdaToExpression(LambdaExpression convertLambda, Expression expression)
 		{
 			// Replace multiple parameters with single variable or single parameter with the reader expression.
@@ -539,6 +405,228 @@ namespace LinqToDB.Internal.Expressions
 			}
 
 			return expression;
+		}
+
+		#endregion
+
+		/// <summary>
+		/// Optimizes expression context by evaluating constants and simplifying boolean operations.
+		/// Uses visitor pattern to prevent stack overflow in deeply nested expressions.
+		/// </summary>
+		/// <param name="expression">Expression to optimize.</param>
+		/// <param name="canBeEvaluatedOnClient">Function to determine if an expression can be evaluated on the client side.</param>
+		/// <returns>Optimized expression.</returns>
+		[return: NotNullIfNotNull(nameof(expression))]
+		public static Expression? OptimizeExpression(this Expression? expression, Func<Expression, bool> canBeEvaluatedOnClient)
+		{
+			if (expression == null)
+				return null;
+
+			using var visitor = ExpressionOptimizerVisitor.Pool.Allocate();
+			visitor.Value.Initialize(canBeEvaluatedOnClient);
+			
+			return visitor.Value.Visit(expression);
+		}
+
+		sealed class ExpressionOptimizerVisitor : ExpressionVisitorBase
+		{
+			public static readonly ObjectPool<ExpressionOptimizerVisitor> Pool = new(() => new ExpressionOptimizerVisitor(), v => v.Cleanup(), 100);
+
+			const int              MaxDepth               = 100;
+
+			Func<Expression, bool> _canBeEvaluatedOnClient = default!;
+			int                    _depth;
+
+			// Track expressions being optimized to detect circular references
+			private HashSet<Expression>? _visitedExpressions;
+
+			public void Initialize(Func<Expression, bool> canBeEvaluatedOnClient)
+			{
+				Cleanup();
+				_canBeEvaluatedOnClient = canBeEvaluatedOnClient;
+				_depth = 0;
+				_visitedExpressions = null;
+			}
+
+			public override void Cleanup()
+			{
+				base.Cleanup();
+				_canBeEvaluatedOnClient = default!;
+				_depth                  = 0;
+				_visitedExpressions     = null;
+			}
+
+			bool IsEvaluable(Expression expr)
+			{
+				return _canBeEvaluatedOnClient(expr);
+			}
+
+			[return: NotNullIfNotNull(nameof(node))]
+			public override Expression? Visit(Expression? node)
+			{
+				if (node == null)
+					return null;
+
+				// Depth check to prevent stack overflow
+				if (_depth >= MaxDepth)
+					return node;
+
+				// Circular reference detection
+				if (_visitedExpressions != null && !_visitedExpressions.Add(node))
+					return node;
+
+				_visitedExpressions ??= new HashSet<Expression>(Utils.ObjectReferenceEqualityComparer<Expression>.Default);
+
+				_depth++;
+				try
+				{
+					return base.Visit(node);
+				}
+				finally
+				{
+					_depth--;
+					_visitedExpressions.Remove(node);
+					
+					if (_depth == 0)
+						_visitedExpressions?.Clear();
+				}
+			}
+
+			protected override Expression VisitBinary(BinaryExpression node)
+			{
+				var left  = Visit(node.Left);
+				var right = Visit(node.Right);
+
+				// Ensure type compatibility
+				if (left.Type != node.Left.Type)
+					left = Expression.Convert(left, node.Left.Type);
+
+				if (right.Type != node.Right.Type)
+					right = Expression.Convert(right, node.Right.Type);
+
+				var conversion = Visit(node.Conversion) as LambdaExpression;
+				var newExpr = node.Update(left, conversion, right);
+
+				// Try to evaluate if both sides are evaluable
+				if (IsEvaluable(newExpr))
+				{
+					return Expression.Constant(newExpr.EvaluateExpression());
+				}
+
+				// Optimize boolean operations
+				switch (newExpr.NodeType)
+				{
+					case ExpressionType.AndAlso:
+						return OptimizeAndAlso((BinaryExpression)newExpr);
+					
+					case ExpressionType.OrElse:
+						return OptimizeOrElse((BinaryExpression)newExpr);
+				}
+
+				return newExpr;
+			}
+
+			protected override Expression VisitUnary(UnaryExpression node)
+			{
+				var operand = Visit(node.Operand);
+				var newExpr = node.Update(operand);
+
+				// Remove double convert: Convert(Convert(x, T1), T2) => Convert(x, T2)
+				if (newExpr.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked 
+					&& operand.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
+				{
+					var innerOperand = ((UnaryExpression)operand).Operand;
+					return Expression.Convert(innerOperand, newExpr.Type);
+				}
+
+				// Try to evaluate if operand is evaluable
+				if (IsEvaluable(newExpr))
+				{
+					return Expression.Constant(newExpr.EvaluateExpression());
+				}
+
+				return newExpr;
+			}
+
+			protected override Expression VisitMember(MemberExpression node)
+			{
+				var expression = Visit(node.Expression);
+				var newNode = node.Update(expression);
+
+				// Evaluate constant member access
+				if (expression?.NodeType == ExpressionType.Constant && IsEvaluable(newNode))
+				{
+					return Expression.Constant(newNode.EvaluateExpression());
+				}
+
+				return newNode;
+			}
+
+			protected override Expression VisitNewArray(NewArrayExpression node)
+			{
+				var newNode = base.VisitNewArray(node);
+				
+				// Don't optimize array expressions further
+				return newNode;
+			}
+
+			protected override Expression VisitConstant(ConstantExpression node)
+			{
+				// Constants are already optimized
+				return node;
+			}
+
+			protected override Expression VisitDefault(DefaultExpression node)
+			{
+				// Default expressions are already optimized
+				return node;
+			}
+
+			private Expression OptimizeAndAlso(BinaryExpression node)
+			{
+				if (IsEvaluable(node.Left))
+				{
+					var leftBool = node.Left.EvaluateExpression() as bool?;
+					if (leftBool == true)
+						return node.Right;
+					if (leftBool == false)
+						return ExpressionInstances.False;
+				}
+
+				if (IsEvaluable(node.Right))
+				{
+					var rightBool = node.Right.EvaluateExpression() as bool?;
+					if (rightBool == true)
+						return node.Left;
+					if (rightBool == false)
+						return ExpressionInstances.False;
+				}
+
+				return node;
+			}
+
+			private Expression OptimizeOrElse(BinaryExpression node)
+			{
+				if (IsEvaluable(node.Left))
+				{
+					var leftBool = node.Left.EvaluateExpression() as bool?;
+					if (leftBool == false)
+						return node.Right;
+					if (leftBool == true)
+						return ExpressionInstances.True;
+				}
+
+				if (IsEvaluable(node.Right))
+				{
+					var rightBool = node.Right.EvaluateExpression() as bool?;
+					if (rightBool == false)
+						return node.Left;
+					if (rightBool == true)
+						return ExpressionInstances.True;
+				}
+
+				return node;
+			}
 		}
 	}
 }
