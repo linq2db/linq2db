@@ -28,7 +28,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public async Task NestedSubqueryWithGroupedAggregationsSumOfSums([DataSources] string context)
+		public void NestedSubqueryWithGroupedAggregationsSumOfSums([DataSources] string context)
 		{
 			var productsData = new[]
 			{
@@ -64,24 +64,12 @@ namespace Tests.UserTests
 					).Sum() ?? 0
 				};
 
-			var result = await query.ToListAsync();
-
-			// Verify the query executes without SQL errors
-			Assert.That(result, Is.Not.Null);
-			Assert.That(result, Has.Count.EqualTo(3));
-
-			// Verify the aggregation results
-			// Each product should have the sum of all quantities across all line items
-			var totalQuantity = purchaseOrderLineItemsData.Sum(x => x.Quantity);
-			foreach (var item in result)
-			{
-				Assert.That(item.OnOrder, Is.EqualTo(totalQuantity));
-			}
+			AssertQuery(query);
 		}
 
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
-		public async Task NestedSubqueryWithGroupedAggregationsFilteredSumOfSums([DataSources] string context)
+		public void NestedSubqueryWithGroupedAggregationsFilteredSumOfSums([DataSources] string context)
 		{
 			var productsData = new[]
 			{
@@ -117,21 +105,7 @@ namespace Tests.UserTests
 					).Sum() ?? 0
 				};
 
-			var result = await query.ToListAsync();
-
 			AssertQuery(query);
-
-			// Verify the query executes without SQL errors
-			Assert.That(result, Is.Not.Null);
-			Assert.That(result, Has.Count.EqualTo(3));
-
-			// Verify the aggregation results per product
-			using (Assert.EnterMultipleScope())
-			{
-				Assert.That(result.First(x => x.ProductId == 1).OnOrder, Is.EqualTo(30)); // 10 + 20
-				Assert.That(result.First(x => x.ProductId == 2).OnOrder, Is.EqualTo(40)); // 15 + 25
-				Assert.That(result.First(x => x.ProductId == 3).OnOrder, Is.EqualTo(5));  // 5
-			}
 		}
 	}
 }
