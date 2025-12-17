@@ -425,7 +425,8 @@ namespace LinqToDB.Internal.Expressions
 			using var visitor = ExpressionOptimizerVisitor.Pool.Allocate();
 			visitor.Value.Initialize(canBeEvaluatedOnClient);
 			
-			return visitor.Value.Visit(expression);
+			var optimized = visitor.Value.Visit(expression);
+			return optimized;
 		}
 
 		sealed class ExpressionOptimizerVisitor : ExpressionVisitorBase
@@ -438,14 +439,14 @@ namespace LinqToDB.Internal.Expressions
 			int                    _depth;
 
 			// Track expressions being optimized to detect circular references
-			private HashSet<Expression>? _visitedExpressions;
+			private HashSet<Expression> _visitedExpressions = default!;
 
 			public void Initialize(Func<Expression, bool> canBeEvaluatedOnClient)
 			{
 				Cleanup();
 				_canBeEvaluatedOnClient = canBeEvaluatedOnClient;
 				_depth = 0;
-				_visitedExpressions = null;
+				_visitedExpressions = new HashSet<Expression>(Utils.ObjectReferenceEqualityComparer<Expression>.Default);
 			}
 
 			public override void Cleanup()
@@ -453,7 +454,7 @@ namespace LinqToDB.Internal.Expressions
 				base.Cleanup();
 				_canBeEvaluatedOnClient = default!;
 				_depth                  = 0;
-				_visitedExpressions     = null;
+				_visitedExpressions     = default!;
 			}
 
 			bool IsEvaluable(Expression expr)
@@ -472,24 +473,17 @@ namespace LinqToDB.Internal.Expressions
 					return node;
 
 				// Circular reference detection
-				if (_visitedExpressions != null && !_visitedExpressions.Add(node))
+				if (!_visitedExpressions.Add(node))
 					return node;
 
-				_visitedExpressions ??= new HashSet<Expression>(Utils.ObjectReferenceEqualityComparer<Expression>.Default);
-
 				_depth++;
-				try
-				{
-					return base.Visit(node);
-				}
-				finally
-				{
-					_depth--;
-					_visitedExpressions.Remove(node);
-					
-					if (_depth == 0)
-						_visitedExpressions?.Clear();
-				}
+
+				var newNode = base.Visit(node);
+
+				_depth--;
+				_visitedExpressions.Remove(node);
+
+				return newNode;
 			}
 
 			protected override Expression VisitBinary(BinaryExpression node)
@@ -548,38 +542,22 @@ namespace LinqToDB.Internal.Expressions
 				return newExpr;
 			}
 
-			protected override Expression VisitMember(MemberExpression node)
+			protected override Expression VisitConditional(ConditionalExpression node)
 			{
-				var expression = Visit(node.Expression);
-				var newNode = node.Update(expression);
+				var test    = Visit(node.Test);
+				var ifTrue  = Visit(node.IfTrue);
+				var ifFalse = Visit(node.IfFalse);
 
-				// Evaluate constant member access
-				if (expression?.NodeType == ExpressionType.Constant && IsEvaluable(newNode))
+				if (IsEvaluable(test))
 				{
-					return Expression.Constant(newNode.EvaluateExpression());
+					var testValue = test.EvaluateExpression() as bool?;
+					if (testValue == true)
+						return ifTrue;
+					if (testValue == false)
+						return ifFalse;
 				}
 
-				return newNode;
-			}
-
-			protected override Expression VisitNewArray(NewArrayExpression node)
-			{
-				var newNode = base.VisitNewArray(node);
-				
-				// Don't optimize array expressions further
-				return newNode;
-			}
-
-			protected override Expression VisitConstant(ConstantExpression node)
-			{
-				// Constants are already optimized
-				return node;
-			}
-
-			protected override Expression VisitDefault(DefaultExpression node)
-			{
-				// Default expressions are already optimized
-				return node;
+				return node.Update(test, ifTrue, ifFalse);
 			}
 
 			private Expression OptimizeAndAlso(BinaryExpression node)
