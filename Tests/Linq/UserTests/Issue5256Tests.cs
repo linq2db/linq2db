@@ -27,7 +27,6 @@ namespace Tests.UserTests
 			[Column] public int Quantity { get; set; }
 		}
 
-		[ThrowsCannotBeConverted(TestProvName.AllAccess)]
 		[Test]
 		public void NestedSubqueryWithGroupedAggregationsSumOfSums([DataSources] string context)
 		{
@@ -69,9 +68,9 @@ namespace Tests.UserTests
 		}
 
 		[ThrowsRequiresCorrelatedSubquery]
-		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllDB2)]
+		[ThrowsRequiredOuterJoins(TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllAccess, TestProvName.AllDB2)]
 		[Test]
-		public void NestedSubqueryWithGroupedAggregationsFilteredSumOfSums([DataSources] string context)
+		public void NestedSubqueryWithGroupedAggregationsFilteredSumOfSums([DataSources(TestProvName.AllOracle11, TestProvName.AllSybase)] string context)
 		{
 			var productsData = new[]
 			{
