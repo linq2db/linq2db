@@ -437,6 +437,7 @@ namespace LinqToDB.Internal.Expressions
 
 			Func<Expression, bool> _canBeEvaluatedOnClient = default!;
 			int                    _depth;
+			bool                   _allowEvaluation;
 
 			// Track expressions being optimized to detect circular references
 			private HashSet<Expression> _visitedExpressions = default!;
@@ -455,10 +456,14 @@ namespace LinqToDB.Internal.Expressions
 				_canBeEvaluatedOnClient = default!;
 				_depth                  = 0;
 				_visitedExpressions     = default!;
+				_allowEvaluation        = false;
 			}
 
 			bool IsEvaluable(Expression expr)
 			{
+				if (!_allowEvaluation)
+					return false;
+
 				return _canBeEvaluatedOnClient(expr);
 			}
 
@@ -483,6 +488,27 @@ namespace LinqToDB.Internal.Expressions
 				_depth--;
 				_visitedExpressions.Remove(node);
 
+				return newNode;
+			}
+
+			protected override Expression VisitLambda<T>(Expression<T> node)
+			{
+				var saveAllowEvaluation = _allowEvaluation;
+
+				_allowEvaluation = true;
+				var newNode = base.VisitLambda(node);
+				_allowEvaluation = saveAllowEvaluation;
+				return newNode;
+			}
+
+			protected override Expression VisitMethodCall(MethodCallExpression node)
+			{
+				var saveAllowEvaluation = _allowEvaluation;
+
+				_allowEvaluation = false;
+				var newNode = base.VisitMethodCall(node);
+				_allowEvaluation = saveAllowEvaluation;
+				
 				return newNode;
 			}
 
@@ -530,7 +556,7 @@ namespace LinqToDB.Internal.Expressions
 					&& operand.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
 				{
 					var innerOperand = ((UnaryExpression)operand).Operand;
-					return Expression.Convert(innerOperand, newExpr.Type);
+					return Visit(Expression.Convert(innerOperand, newExpr.Type));
 				}
 
 				// Try to evaluate if operand is evaluable
