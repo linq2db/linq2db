@@ -90,21 +90,21 @@ JSON file example:
 					null,
 					null,
 					false,
-					new (false, false, DatabaseType.Access         .ToString(), "MS Access (requires OLE DB or/and ODBC provider installed)"),
-					new (false, false, DatabaseType.DB2            .ToString(), "IBM DB2 LUW or z/OS"                                       ),
-					new (false, false, DatabaseType.Firebird       .ToString(), "Firebird"                                                  ),
-					new (false, false, DatabaseType.Informix       .ToString(), "IBM Informix"                                              ),
-					new (false, false, DatabaseType.SQLServer      .ToString(), "MS SQL Server (including Azure SQL Server)"                ),
-					new (false, false, DatabaseType.MySQL          .ToString(), "MySQL/MariaDB"                                             ),
-					new (false, false, DatabaseType.Oracle         .ToString(), "Oracle Database"                                           ),
-					new (false, false, DatabaseType.PostgreSQL     .ToString(), "PostgreSQL"                                                ),
-					new (false, false, DatabaseType.SqlCe          .ToString(), "MS SQL Server Compact"                                     ),
-					new (false, false, DatabaseType.SQLite         .ToString(), "SQLite"                                                    ),
-					new (false, false, DatabaseType.Sybase         .ToString(), "SAP/Sybase ASE"                                            ),
-					new (false, false, DatabaseType.SapHana        .ToString(), "SAP HANA"                                                  ),
-					new (false, false, DatabaseType.ClickHouseMySql.ToString(), "ClickHouse (MySql interface)"                              ),
-					new (false, false, DatabaseType.ClickHouseHttp .ToString(), "ClickHouse (HTTP(S) interface)"                            ),
-					new (false, false, DatabaseType.ClickHouseTcp  .ToString(), "ClickHouse (TCP/binary interface)"                         ));
+					new (false, false, nameof(DatabaseType.Access),          "MS Access (requires OLE DB or/and ODBC provider installed)"),
+					new (false, false, nameof(DatabaseType.DB2),             "IBM DB2 LUW or z/OS"                                       ),
+					new (false, false, nameof(DatabaseType.Firebird),        "Firebird"                                                  ),
+					new (false, false, nameof(DatabaseType.Informix),        "IBM Informix"                                              ),
+					new (false, false, nameof(DatabaseType.SQLServer),       "MS SQL Server (including Azure SQL Server)"                ),
+					new (false, false, nameof(DatabaseType.MySQL),           "MySQL/MariaDB"                                             ),
+					new (false, false, nameof(DatabaseType.Oracle),          "Oracle Database"                                           ),
+					new (false, false, nameof(DatabaseType.PostgreSQL),      "PostgreSQL"                                                ),
+					new (false, false, nameof(DatabaseType.SqlCe),           "MS SQL Server Compact"                                     ),
+					new (false, false, nameof(DatabaseType.SQLite),          "SQLite"                                                    ),
+					new (false, false, nameof(DatabaseType.Sybase),          "SAP/Sybase ASE"                                            ),
+					new (false, false, nameof(DatabaseType.SapHana),         "SAP HANA"                                                  ),
+					new (false, false, nameof(DatabaseType.ClickHouseMySql), "ClickHouse (MySql interface)"                              ),
+					new (false, false, nameof(DatabaseType.ClickHouseHttp),  "ClickHouse (HTTP(S) interface)"                            ),
+					new (false, false, nameof(DatabaseType.ClickHouseTcp),   "ClickHouse (TCP/binary interface)"                         ));
 
 			/// <summary>
 			/// Database provider location option.
@@ -763,7 +763,7 @@ static class CustomFluentExtensions
 					new[]
 					{
 						/*lang=json,strict*/
-						"{ \"dataModel\": { \"base-context\": \"LinqToDB.DataContext\" } }"
+						"{ \"dataModel\": { \"base-context\": \"LinqToDB.DataContext\" } }",
 					},
 					new[] { "LinqToDB.Data.DataConnection" },
 					new[] { "LinqToDB.Data.DataConnection" });
@@ -785,7 +785,7 @@ static class CustomFluentExtensions
 					new[]
 					{
 						/*lang=json,strict*/
-						"{ \"dataModel\": { \"context-modifier\": \"internal\" } }"
+						"{ \"dataModel\": { \"context-modifier\": \"internal\" } }",
 					},
 					false,
 					new (false, false, "private", "applies 'public' to data context class"),
@@ -1443,7 +1443,7 @@ string // also you can put table name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"include-tables\": [ \"Users\", { \"name\": \"Roles\", \"schema\": \"dbo\" } ] } } // Users and dbo.Roles tables",
 						/*lang=json*/
-						"{ \"schema\": { \"include-tables\": [ { \"regex\": \"^audit_.+$\", \"schema\": \"dbo\" } ] } } // all tables starting from audit_ prefix"
+						"{ \"schema\": { \"include-tables\": [ { \"regex\": \"^audit_.+$\", \"schema\": \"dbo\" } ] } } // all tables starting from audit_ prefix",
 					});
 
 			/// <summary>
@@ -1480,7 +1480,7 @@ string // also you can put table name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"exclude-tables\": [ \"Users\", { \"name\": \"Roles\", \"schema\": \"dbo\" } ] } } // Users and dbo.Roles tables ignored",
 						/*lang=json*/
-						"{ \"schema\": { \"exclude-tables\": [ { \"regex\": \"^audit_.+$\", \"schema\": \"dbo\" } ] } } // all tables starting from audit_ prefix ignored"
+						"{ \"schema\": { \"exclude-tables\": [ { \"regex\": \"^audit_.+$\", \"schema\": \"dbo\" } ] } } // all tables starting from audit_ prefix ignored",
 					});
 
 			/// <summary>
@@ -1517,7 +1517,7 @@ string // also you can put view name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"include-views\": [ \"Users\", { \"name\": \"Roles\", \"schema\": \"dbo\" } ] } } // Users and dbo.Roles views",
 						/*lang=json*/
-						"{ \"schema\": { \"include-views\": [ { \"regex\": \"^audit_.+$\", \"schema\": \"dbo\" } ] } } // all views starting from audit_ prefix"
+						"{ \"schema\": { \"include-views\": [ { \"regex\": \"^audit_.+$\", \"schema\": \"dbo\" } ] } } // all views starting from audit_ prefix",
 					});
 
 			/// <summary>
@@ -1554,7 +1554,7 @@ string // also you can put view name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"exclude-views\": [ \"Users\", { \"name\": \"Roles\", \"schema\": \"dbo\" } ] } } // Users and dbo.Roles views ignored",
 						/*lang=json*/
-						"{ \"schema\": { \"exclude-views\": [ { \"regex\": \"^audit_.+$\", \"schema\": \"dbo\" } ] } } // all views starting from audit_ prefix ignored"
+						"{ \"schema\": { \"exclude-views\": [ { \"regex\": \"^audit_.+$\", \"schema\": \"dbo\" } ] } } // all views starting from audit_ prefix ignored",
 					});
 
 			/// <summary>
@@ -1591,7 +1591,7 @@ string // also you can put procedure name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"procedures-with-schema\": [ \"GetUsers\", { \"name\": \"LoadPermissions\", \"schema\": \"dbo\" } ] } } // GetUsers and dbo.LoadPermissions procedures",
 						/*lang=json*/
-						"{ \"schema\": { \"procedures-with-schema\": [ { \"regex\": \"^Load.+$\", \"schema\": \"dbo\" } ] } } // all procedures starting from Load prefix"
+						"{ \"schema\": { \"procedures-with-schema\": [ { \"regex\": \"^Load.+$\", \"schema\": \"dbo\" } ] } } // all procedures starting from Load prefix",
 					});
 
 			/// <summary>
@@ -1628,7 +1628,7 @@ string // also you can put procedure name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"procedures-without-schema\": [ \"DropAllTables\", { \"name\": \"FormatAllDrives\", \"schema\": \"dbo\" } ] } } // DropAllTables and dbo.FormatAllDrives procedures schema not loaded",
 						/*lang=json*/
-						"{ \"schema\": { \"procedures-without-schema\": [ { \"regex\": \"^Delete.+$\", \"schema\": \"dbo\" } ] } } // all procedures starting from Delete prefix"
+						"{ \"schema\": { \"procedures-without-schema\": [ { \"regex\": \"^Delete.+$\", \"schema\": \"dbo\" } ] } } // all procedures starting from Delete prefix",
 					});
 
 			/// <summary>
@@ -1665,7 +1665,7 @@ string // also you can put stored procedure name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"include-stored-procedures\": [ \"ActiveUsers\", { \"name\": \"InactiveUsers\", \"schema\": \"dbo\" } ] } } // ActiveUsers and dbo.InactiveUsers procedures",
 						/*lang=json*/
-						"{ \"schema\": { \"include-stored-procedures\": [ { \"regex\": \"^Query.+$\", \"schema\": \"dbo\" } ] } } // all stored procedures starting from Query prefix"
+						"{ \"schema\": { \"include-stored-procedures\": [ { \"regex\": \"^Query.+$\", \"schema\": \"dbo\" } ] } } // all stored procedures starting from Query prefix",
 					});
 
 			/// <summary>
@@ -1702,7 +1702,7 @@ string // also you can put stored procedure name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"exclude-stored-procedure\": [ \"TestProcedure\", { \"name\": \"CheckDb\", \"schema\": \"dbo\" } ] } } // TestProcedure and dbo.CheckDb procedures ignored",
 						/*lang=json*/
-						"{ \"schema\": { \"exclude-stored-procedure\": [ { \"regex\": \"^Audit.+$\", \"schema\": \"dbo\" } ] } } // all stored procedures starting from Audit prefix ignored"
+						"{ \"schema\": { \"exclude-stored-procedure\": [ { \"regex\": \"^Audit.+$\", \"schema\": \"dbo\" } ] } } // all stored procedures starting from Audit prefix ignored",
 					});
 
 			/// <summary>
@@ -1739,7 +1739,7 @@ string // also you can put table function name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"include-table-functions\": [ \"ActiveUsers\", { \"name\": \"InactiveUsers\", \"schema\": \"dbo\" } ] } } // ActiveUsers and dbo.InactiveUsers functions",
 						/*lang=json*/
-						"{ \"schema\": { \"include-table-functions\": [ { \"regex\": \"^Query.+$\", \"schema\": \"dbo\" } ] } } // all table functions starting from Query prefix"
+						"{ \"schema\": { \"include-table-functions\": [ { \"regex\": \"^Query.+$\", \"schema\": \"dbo\" } ] } } // all table functions starting from Query prefix",
 					});
 
 			/// <summary>
@@ -1776,7 +1776,7 @@ string // also you can put table function name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"exclude-table-functions\": [ \"TestFunction\", { \"name\": \"CheckDb\", \"schema\": \"dbo\" } ] } } // TestFunction and dbo.CheckDb functions ignored",
 						/*lang=json*/
-						"{ \"schema\": { \"exclude-table-functions\": [ { \"regex\": \"^Audit.+$\", \"schema\": \"dbo\" } ] } } // all table functions starting from Audit prefix ignored"
+						"{ \"schema\": { \"exclude-table-functions\": [ { \"regex\": \"^Audit.+$\", \"schema\": \"dbo\" } ] } } // all table functions starting from Audit prefix ignored",
 					});
 
 			/// <summary>
@@ -1813,7 +1813,7 @@ string // also you can put scalar function name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"include-scalar-functions\": [ \"ActiveUsers\", { \"name\": \"InactiveUsers\", \"schema\": \"dbo\" } ] } } // ActiveUsers and dbo.InactiveUsers functions",
 						/*lang=json*/
-						"{ \"schema\": { \"include-scalar-functions\": [ { \"regex\": \"^Query.+$\", \"schema\": \"dbo\" } ] } } // all scalar functions starting from Query prefix"
+						"{ \"schema\": { \"include-scalar-functions\": [ { \"regex\": \"^Query.+$\", \"schema\": \"dbo\" } ] } } // all scalar functions starting from Query prefix",
 					});
 
 			/// <summary>
@@ -1850,7 +1850,7 @@ string // also you can put scalar function name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"exclude-scalar-functions\": [ \"TestFunction\", { \"name\": \"CheckDb\", \"schema\": \"dbo\" } ] } } // TestFunction and dbo.CheckDb functions ignored",
 						/*lang=json*/
-						"{ \"schema\": { \"exclude-scalar-functions\": [ { \"regex\": \"^Audit.+$\", \"schema\": \"dbo\" } ] } } // all scalar functions starting from Audit prefix ignored"
+						"{ \"schema\": { \"exclude-scalar-functions\": [ { \"regex\": \"^Audit.+$\", \"schema\": \"dbo\" } ] } } // all scalar functions starting from Audit prefix ignored",
 					});
 
 			/// <summary>
@@ -1887,7 +1887,7 @@ string // also you can put aggregateaggregate function name as string directly t
 						/*lang=json*/
 						"{ \"schema\": { \"include-aggregate-functions\": [ \"ActiveUsers\", { \"name\": \"InactiveUsers\", \"schema\": \"dbo\" } ] } } // ActiveUsers and dbo.InactiveUsers functions",
 						/*lang=json*/
-						"{ \"schema\": { \"include-aggregate-functions\": [ { \"regex\": \"^Query.+$\", \"schema\": \"dbo\" } ] } } // all aggregate functions starting from Query prefix"
+						"{ \"schema\": { \"include-aggregate-functions\": [ { \"regex\": \"^Query.+$\", \"schema\": \"dbo\" } ] } } // all aggregate functions starting from Query prefix",
 					});
 
 			/// <summary>
@@ -1924,7 +1924,7 @@ string // also you can put aggregate function name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"exclude-aggregate-functions\": [ \"TestFunction\", { \"name\": \"CheckDb\", \"schema\": \"dbo\" } ] } } // TestFunction and dbo.CheckDb functions ignored",
 						/*lang=json*/
-						"{ \"schema\": { \"exclude-aggregate-functions\": [ { \"regex\": \"^Audit.+$\", \"schema\": \"dbo\" } ] } } // all aggregate functions starting from Audit prefix ignored"
+						"{ \"schema\": { \"exclude-aggregate-functions\": [ { \"regex\": \"^Audit.+$\", \"schema\": \"dbo\" } ] } } // all aggregate functions starting from Audit prefix ignored",
 					});
 		}
 

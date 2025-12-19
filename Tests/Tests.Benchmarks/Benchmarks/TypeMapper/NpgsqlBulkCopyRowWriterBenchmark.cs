@@ -48,7 +48,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 
 			public enum NpgsqlDbType
 			{
-				Test
+				Test,
 			}
 		}
 
@@ -74,7 +74,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			[Wrapper]
 			public enum NpgsqlDbType
 			{
-				Test
+				Test,
 			}
 		}
 

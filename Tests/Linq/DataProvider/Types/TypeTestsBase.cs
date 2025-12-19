@@ -28,7 +28,7 @@ namespace Tests.DataProvider
 
 		/// <summary>
 		/// Returns default switch for disable parameters testing for database provider.
-		/// Used by TestType method when testParameters parameter is not set (or <c>null</c>).
+		/// Used by TestType method when testParameters parameter is not set (or <see langword="null"/>).
 		/// </summary>
 		protected virtual bool TestParameters => true;
 

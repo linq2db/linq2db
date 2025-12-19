@@ -71,7 +71,7 @@ internal static class StaticSchemaGenerator
 		// ITable<TableRecord> Prop or // IQueryable<TableRecord> Prop
 		var tables = customContextType.GetProperties()
 			.Where(static p => !p.HasAttribute<ObsoleteAttribute>() && typeof(IQueryable<>).IsSameOrParentOf(p.PropertyType))
-			.OrderBy(static p => p.Name)
+			.OrderBy(static p => p.Name, StringComparer.Ordinal)
 			.Select(static p => new TableInfo(p));
 
 		var lookup = new Dictionary<Type, ExplorerItem>();
@@ -111,7 +111,7 @@ internal static class StaticSchemaGenerator
 							DragText        = CSharpUtils.EscapeIdentifier(ma.Name),
 							ToolTipText     = GetTypeName(ma.Type),
 							IsEnumerable    = isToMany,
-							HyperlinkTarget = otherItem
+							HyperlinkTarget = otherItem,
 						});
 				}
 			}
@@ -120,13 +120,13 @@ internal static class StaticSchemaGenerator
 		if (tableItems != null)
 			items.Add(new ExplorerItem("Tables", ExplorerItemKind.Category, ExplorerIcon.Table)
 			{
-				Children = tableItems
+				Children = tableItems,
 			});
 
 		if (viewItems != null)
 			items.Add(new ExplorerItem("Views", ExplorerItemKind.Category, ExplorerIcon.View)
 			{
-				Children = viewItems
+				Children = viewItems,
 			});
 
 		return items;
@@ -134,6 +134,7 @@ internal static class StaticSchemaGenerator
 
 	static ExplorerItem GetTable(ExplorerIcon icon, TableInfo table)
 	{
+#pragma warning disable MA0002 // IEqualityComparer<string> or IComparer<string> is missing
 		var columns =
 		(
 			from ma in table.TypeAccessor.Members
@@ -141,15 +142,15 @@ internal static class StaticSchemaGenerator
 			let ca = ma.MemberInfo.GetAttribute<ColumnAttribute>()
 			let id = ma.MemberInfo.GetAttribute<IdentityAttribute>()
 			let pk = ma.MemberInfo.GetAttribute<PrimaryKeyAttribute>()
-			orderby
-				ca == null ? 1 : ca.Order >= 0 ? 0 : 2,
-				ca?.Order,
-				ma.Name
 			where
 				ca != null && ca.IsColumn ||
 				pk != null ||
 				id != null ||
 				ca == null && !table.IsColumnAttributeRequired && MappingSchema.Default.IsScalarType(ma.Type)
+			orderby
+				ca == null ? 1 : ca.Order >= 0 ? 0 : 2,
+				ca?.Order,
+				ma.Name
 			select new ExplorerItem(
 				ma.Name,
 				ExplorerItemKind.Property,
@@ -159,12 +160,13 @@ internal static class StaticSchemaGenerator
 				DragText = CSharpUtils.EscapeIdentifier(ma.Name),
 			}
 		).ToList();
+#pragma warning restore MA0002 // IEqualityComparer<string> or IComparer<string> is missing
 
 		var ret = new ExplorerItem(table.Name, ExplorerItemKind.QueryableObject, icon)
 		{
 			DragText     = CSharpUtils.EscapeIdentifier(table.Name),
 			IsEnumerable = true,
-			Children     = columns
+			Children     = columns,
 		};
 
 		return ret;

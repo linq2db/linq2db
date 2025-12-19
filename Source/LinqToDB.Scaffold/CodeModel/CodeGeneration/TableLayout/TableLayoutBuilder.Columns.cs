@@ -317,7 +317,7 @@ namespace LinqToDB.CodeModel
 			/// Gets column value for specific row.
 			/// </summary>
 			/// <param name="rowIndex">Index of row, for which return column value.</param>
-			/// <returns>Column value for specific row or <c>null</c> if column is empty at that row.</returns>
+			/// <returns>Column value for specific row or <see langword="null"/> if column is empty at that row.</returns>
 			internal string? GetValue(int rowIndex)
 			{
 				return rowIndex < (_rowValues?.Count ?? 0)

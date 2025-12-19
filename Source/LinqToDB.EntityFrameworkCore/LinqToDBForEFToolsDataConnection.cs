@@ -166,7 +166,7 @@ namespace LinqToDB.EntityFrameworkCore
 				return entity;
 
 			// Do not allow to store in ChangeTracker tables that has different name
-			if (eventData.TableName != _lastEntityType.GetTableName())
+			if (!string.Equals(eventData.TableName, _lastEntityType.GetTableName(), StringComparison.Ordinal))
 				return entity;
 
 			_stateManager ??= Context.GetService<IStateManager>();
@@ -229,7 +229,7 @@ namespace LinqToDB.EntityFrameworkCore
 					Expression.Constant(key),
 					newArrayExpression), Expression.Constant(true));
 
-			if (properties.Any(p => !p.ClrType.IsValueType))
+			if (properties.Exists(p => !p.ClrType.IsValueType))
 			{
 				var checkExpression = properties
 					.Where(p => !p.ClrType.IsValueType)

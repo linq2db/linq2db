@@ -694,7 +694,7 @@ namespace LinqToDB.Extensions.DependencyInjection
 			{
 				service.AddScoped<ILinqService<TContext>>(provider => new LinqService<TContext>(provider.GetRequiredService<IDataContextFactory<TContext>>())
 				{
-					AllowUpdates = allowUpdates
+					AllowUpdates = allowUpdates,
 				});
 			}
 

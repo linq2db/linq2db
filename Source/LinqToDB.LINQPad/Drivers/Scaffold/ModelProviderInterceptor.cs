@@ -20,13 +20,13 @@ namespace LinqToDB.LINQPad;
 /// </summary>
 internal sealed class ModelProviderInterceptor(ConnectionSettings settings, ISqlBuilder sqlBuilder) : ScaffoldInterceptors
 {
-	private readonly bool        _replaceClickHouseFixedString = settings.Connection.Database == ProviderName.ClickHouse && settings.Scaffold.ClickHouseFixedStringAsString;
+	private readonly bool        _replaceClickHouseFixedString = string.Equals(settings.Connection.Database, ProviderName.ClickHouse, StringComparison.Ordinal) && settings.Scaffold.ClickHouseFixedStringAsString;
 
 	// stores populated model information:
 	// - FK associations
 	// - schema-scoped objects (views, tables, routines)
 	private readonly List<AssociationData>          _associations = new ();
-	private readonly Dictionary<string, SchemaData> _schemaItems  = new ();
+	private readonly Dictionary<string, SchemaData> _schemaItems  = new (StringComparer.Ordinal);
 
 	#region model DTOs
 
@@ -46,7 +46,7 @@ internal sealed class ModelProviderInterceptor(ConnectionSettings settings, ISql
 	{
 		None,
 		Ref,
-		Out
+		Out,
 	}
 
 	#endregion
@@ -54,7 +54,7 @@ internal sealed class ModelProviderInterceptor(ConnectionSettings settings, ISql
 	#region Type Mapping
 	public override TypeMapping? GetTypeMapping(DatabaseType databaseType, ITypeParser typeParser, TypeMapping? defaultMapping)
 	{
-		if (_replaceClickHouseFixedString && databaseType.Name?.StartsWith("FixedString(") == true)
+		if (_replaceClickHouseFixedString && databaseType.Name?.StartsWith("FixedString(", StringComparison.Ordinal) == true)
 			return new TypeMapping(WellKnownTypes.System.String, DataType.NChar);
 
 		return base.GetTypeMapping(databaseType, typeParser, defaultMapping);
@@ -79,7 +79,7 @@ internal sealed class ModelProviderInterceptor(ConnectionSettings settings, ISql
 	private PackageData GetSchemaOrPackage(string? schemaName, string? packageName)
 	{
 		if (!_schemaItems.TryGetValue(schemaName ?? string.Empty, out var schema))
-			_schemaItems.Add(schemaName ?? string.Empty, schema = new SchemaData(new(), new(), new(), new(), new(), new(), new()));
+			_schemaItems.Add(schemaName ?? string.Empty, schema = new SchemaData(new(), new(), new(), new(), new(), new(), new(StringComparer.Ordinal)));
 
 		if (packageName != null)
 		{
@@ -237,7 +237,7 @@ internal sealed class ModelProviderInterceptor(ConnectionSettings settings, ISql
 				System.Data.ParameterDirection.InputOutput        => ParameterDirection.Ref,
 				System.Data.ParameterDirection.Output
 					or System.Data.ParameterDirection.ReturnValue => ParameterDirection.Out,
-				_                                                 => ParameterDirection.None
+				_                                                 => ParameterDirection.None,
 			};
 
 			parametersData.Add(new ParameterData(
@@ -267,7 +267,7 @@ internal sealed class ModelProviderInterceptor(ConnectionSettings settings, ISql
 
 		var model = new List<ExplorerItem>();
 
-		foreach (var schema in _schemaItems.Keys.OrderBy(static _ => _))
+		foreach (var schema in _schemaItems.Keys.OrderBy(static _ => _, StringComparer.Ordinal))
 		{
 			// for cases when default (empty) schema exists in model with named schemas
 			if (schema.Length == 0)
@@ -275,14 +275,14 @@ internal sealed class ModelProviderInterceptor(ConnectionSettings settings, ISql
 				{
 					ToolTipText = $"default schema",
 					SqlName     = string.Empty,
-					Children    = PopulateSchemaMembers(schema, tablesLookup)
+					Children    = PopulateSchemaMembers(schema, tablesLookup),
 				});
 			else
 				model.Add(new ExplorerItem(schema, ExplorerItemKind.Schema, ExplorerIcon.Schema)
 				{
 					ToolTipText = $"schema: {schema}",
 					SqlName     = GetDbName(schema),
-					Children    = PopulateSchemaMembers(schema, tablesLookup)
+					Children    = PopulateSchemaMembers(schema, tablesLookup),
 				});
 		}
 
@@ -300,7 +300,7 @@ internal sealed class ModelProviderInterceptor(ConnectionSettings settings, ISql
 
 		if (data.Packages.Count > 0)
 		{
-			foreach (var package in data.Packages.Keys.OrderBy(_ => _))
+			foreach (var package in data.Packages.Keys.OrderBy(_ => _, StringComparer.Ordinal))
 			{
 				var children = new List<ExplorerItem>();
 				PopulateSchemaOrPackageMembers(tablesLookup, children, data.Packages[package]);
@@ -308,7 +308,7 @@ internal sealed class ModelProviderInterceptor(ConnectionSettings settings, ISql
 				{
 					ToolTipText = $"package: {package}",
 					SqlName     = GetDbName(package),
-					Children    = children
+					Children    = children,
 				});
 			}
 		}
@@ -343,7 +343,7 @@ internal sealed class ModelProviderInterceptor(ConnectionSettings settings, ISql
 	{
 		var items = new List<ExplorerItem>(procedures.Count);
 
-		foreach (var func in procedures.OrderBy(static f => f.MethodName))
+		foreach (var func in procedures.OrderBy(static f => f.MethodName, StringComparer.Ordinal))
 		{
 			List<ExplorerItem>? children = null;
 			var size = func.Parameters.Count + (func.Result != null ? 1 : 0);
@@ -362,13 +362,13 @@ internal sealed class ModelProviderInterceptor(ConnectionSettings settings, ISql
 				DragText     = $"this.{CSharpUtils.EscapeIdentifier(func.MethodName)}({string.Join(", ", func.Parameters.Select(GetParameterNameEscaped))})",
 				Children     = children,
 				IsEnumerable = func.Result != null,
-				SqlName      = func.DbName
+				SqlName      = func.DbName,
 			});
 		}
 
 		return new ExplorerItem("Stored Procedures", ExplorerItemKind.Category, ExplorerIcon.StoredProc)
 		{
-			Children = items
+			Children = items,
 		};
 	}
 
@@ -392,7 +392,7 @@ internal sealed class ModelProviderInterceptor(ConnectionSettings settings, ISql
 
 		children.Add(new ExplorerItem("Result Table", ExplorerItemKind.Category, ExplorerIcon.Table)
 		{
-			Children = columns
+			Children = columns,
 		});
 	}
 
@@ -416,7 +416,7 @@ internal sealed class ModelProviderInterceptor(ConnectionSettings settings, ISql
 	{
 		var items = new List<ExplorerItem>(functions.Count);
 
-		foreach (var func in functions.OrderBy(static f => f.MethodName))
+		foreach (var func in functions.OrderBy(static f => f.MethodName, StringComparer.Ordinal))
 		{
 			var children = new List<ExplorerItem>(func.Parameters.Count + 1);
 
@@ -429,13 +429,13 @@ internal sealed class ModelProviderInterceptor(ConnectionSettings settings, ISql
 				DragText     = $"{CSharpUtils.EscapeIdentifier(func.MethodName)}({string.Join(", ", func.Parameters.Select(GetParameterNameEscaped))})",
 				Children     = children,
 				IsEnumerable = true,
-				SqlName      = func.DbName
+				SqlName      = func.DbName,
 			});
 		}
 
 		return new ExplorerItem("Table Functions", ExplorerItemKind.Category, ExplorerIcon.TableFunction)
 		{
-			Children = items
+			Children = items,
 		};
 	}
 
@@ -443,7 +443,7 @@ internal sealed class ModelProviderInterceptor(ConnectionSettings settings, ISql
 	{
 		var items = new List<ExplorerItem>(functions.Count);
 
-		foreach (var func in functions.OrderBy(static f => f.MethodName))
+		foreach (var func in functions.OrderBy(static f => f.MethodName, StringComparer.Ordinal))
 		{
 			List<ExplorerItem>? children = null;
 			if (func.Parameters.Count > 0)
@@ -457,13 +457,13 @@ internal sealed class ModelProviderInterceptor(ConnectionSettings settings, ISql
 				DragText     = $"ExtensionMethods.{CSharpUtils.EscapeIdentifier(func.MethodName)}({string.Join(", ", func.Parameters.Select(GetParameterNameEscaped))})",
 				Children     = children,
 				IsEnumerable = false,
-				SqlName      = func.DbName
+				SqlName      = func.DbName,
 			});
 		}
 
 		return new ExplorerItem(categoryName, ExplorerItemKind.Category, ExplorerIcon.TableFunction)
 		{
-			Children = items
+			Children = items,
 		};
 	}
 
@@ -471,7 +471,7 @@ internal sealed class ModelProviderInterceptor(ConnectionSettings settings, ISql
 	{
 		var children = new List<ExplorerItem>(tables.Count);
 
-		foreach (var table in tables.OrderBy(static t => t.ContextName))
+		foreach (var table in tables.OrderBy(static t => t.ContextName, StringComparer.Ordinal))
 		{
 			var tableChildren = new List<ExplorerItem>(table.Columns.Count);
 
@@ -500,7 +500,7 @@ internal sealed class ModelProviderInterceptor(ConnectionSettings settings, ISql
 				SqlName      = table.DbName,
 				IsEnumerable = true,
 				// we don't sort columns/associations and render associations after columns intentionally
-				Children     = tableChildren
+				Children     = tableChildren,
 			};
 
 			tablesLookup.Add(table, tableNode);
@@ -510,7 +510,7 @@ internal sealed class ModelProviderInterceptor(ConnectionSettings settings, ISql
 
 		return new ExplorerItem(category, ExplorerItemKind.Category, icon)
 		{
-			Children = children
+			Children = children,
 		};
 	}
 
@@ -583,7 +583,7 @@ internal sealed class ModelProviderInterceptor(ConnectionSettings settings, ISql
 				TypeKind.Dynamic             => "dynamic",
 				TypeKind.Generic             => $"{type.Name!.Name}<{string.Join(", ", type.TypeArguments!.Select(SimpleBuildTypeName))}>",
 				TypeKind.OpenGeneric         => $"{type.Name!.Name}<{string.Join(", ", type.TypeArguments!.Select(static _ => string.Empty))}>",
-				_                            => throw new InvalidOperationException($"Unsupported type kind: {type.Kind}")
+				_                            => throw new InvalidOperationException($"Unsupported type kind: {type.Kind}"),
 			};
 
 			if (type.IsNullable)

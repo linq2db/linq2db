@@ -31,7 +31,7 @@ namespace LinqToDB.Benchmarks.Queries
 			StartTime     = DateTimeOffset.Now,
 			UpdateTime    = DateTimeOffset.Now,
 			ProcessedTime = DateTimeOffset.Now,
-			CompleteTime  = DateTimeOffset.Now
+			CompleteTime  = DateTimeOffset.Now,
 		};
 
 		[GlobalSetup]
@@ -66,7 +66,7 @@ namespace LinqToDB.Benchmarks.Queries
 						RowVersion    = x.RowVersion + 1,
 						StartTime     = record.StartTime,
 						ProcessedTime = record.ProcessedTime,
-						CompleteTime  = record.CompleteTime
+						CompleteTime  = record.CompleteTime,
 					}));
 		}
 
@@ -113,7 +113,7 @@ namespace LinqToDB.Benchmarks.Queries
 						RowVersion    = x.RowVersion + 1,
 						StartTime     = _record.StartTime,
 						ProcessedTime = _record.ProcessedTime,
-						CompleteTime  = _record.CompleteTime
+						CompleteTime  = _record.CompleteTime,
 					});
 			}
 
@@ -139,7 +139,7 @@ namespace LinqToDB.Benchmarks.Queries
 						RowVersion    = _record.RowVersion + 1,
 						StartTime     = _record.StartTime,
 						ProcessedTime = _record.ProcessedTime,
-						CompleteTime  = _record.CompleteTime
+						CompleteTime  = _record.CompleteTime,
 					});
 			}
 

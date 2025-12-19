@@ -29,13 +29,13 @@ namespace LinqToDB.Benchmarks.Queries
 				CardType     = $"card type {_}",
 				ExpMonth     = (byte)(_ % 12),
 				ExpYear      = (short)(_ % 1000),
-				ModifiedDate = DateTime.Now
+				ModifiedDate = DateTime.Now,
 
 			}).ToArray();
 
 			_result = new QueryResult()
 			{
-				Return = _batchSize
+				Return = _batchSize,
 			};
 		}
 

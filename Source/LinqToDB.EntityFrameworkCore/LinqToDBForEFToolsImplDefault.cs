@@ -63,7 +63,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			private bool Equals(ProviderKey other)
 			{
-				return string.Equals(ProviderName, other.ProviderName) && string.Equals(ConnectionString, other.ConnectionString);
+				return string.Equals(ProviderName, other.ProviderName, StringComparison.Ordinal) && string.Equals(ConnectionString, other.ConnectionString, StringComparison.Ordinal);
 			}
 
 			public override bool Equals(object? obj)
@@ -87,7 +87,7 @@ namespace LinqToDB.EntityFrameworkCore
 		private readonly MemoryCache _schemaCache = new(
 			new MemoryCacheOptions()
 			{
-				ExpirationScanFrequency = TimeSpan.FromHours(1.0)
+				ExpirationScanFrequency = TimeSpan.FromHours(1.0),
 			});
 
 		/// <summary>
@@ -399,7 +399,7 @@ namespace LinqToDB.EntityFrameworkCore
 			void MapEnumType(Type type)
 			{
 				var mapping = mappingSource?.FindMapping(type);
-				if (mapping?.GetType().Name == "NpgsqlEnumTypeMapping")
+				if (mapping is { } && string.Equals(mapping.GetType().Name, "NpgsqlEnumTypeMapping", StringComparison.Ordinal))
 				{
 					if (mapping.GetType().GetProperty("Labels")?.GetValue(mapping) is IReadOnlyDictionary<object, string> labels)
 					{
@@ -666,7 +666,7 @@ namespace LinqToDB.EntityFrameworkCore
 			return new EFConnectionInfo
 			{
 				ConnectionString = relational?.ConnectionString,
-				Connection = relational?.Connection
+				Connection = relational?.Connection,
 			};
 		}
 

@@ -164,7 +164,7 @@
 		/// </summary>
 		Lambda,
 		/// <summary>
-		/// Constant value/literal (including <c>null</c>).
+		/// Constant value/literal (including <see langword="null"/>).
 		/// </summary>
 		Constant,
 		/// <summary>

@@ -140,14 +140,15 @@ namespace Tests.UserTests
 
 				var ex = Assert.Catch(() => sp.GetSchema(db, new GetSchemaOptions()
 				{
-					GetTables = false
+					GetTables = false,
 				}))!;
 
 				Assert.That(ex, Is.InstanceOf<InvalidOperationException>());
 				Assert.That(
 					ex.Message.Contains("requires the command to have a transaction")
-					|| ex.Message.Contains("команда имела транзакцию") //for those who accidentally installed a russian localization of Sql Server :)
-, Is.True);
+					|| ex.Message.Contains("команда имела транзакцию"), //for those who accidentally installed a russian localization of Sql Server :)
+					Is.True
+				);
 			}
 		}
 
@@ -163,7 +164,7 @@ namespace Tests.UserTests
 
 				var ex = Assert.Catch(() => sp.GetSchema(db, new GetSchemaOptions()
 				{
-					GetTables = false
+					GetTables = false,
 				}))!;
 
 				Assert.That(ex, Is.InstanceOf<LinqToDBException>());

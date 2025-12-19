@@ -48,7 +48,7 @@ namespace LinqToDB.CommandLine
 				return null;
 			}
 
-			var properties = new HashSet<string>();
+			var properties = new HashSet<string>(System.StringComparer.Ordinal);
 
 			var options = new NormalizationOptions();
 

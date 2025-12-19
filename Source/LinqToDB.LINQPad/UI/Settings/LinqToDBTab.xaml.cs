@@ -16,7 +16,7 @@ internal sealed partial class LinqToDBTab
 	{
 		Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri)
 		{
-			UseShellExecute = true
+			UseShellExecute = true,
 		});
 
 		e.Handled = true;

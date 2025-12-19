@@ -32,7 +32,7 @@ namespace LinqToDB.Benchmarks.Queries
 				DbTypes    = SalesOrderHeader.DbTypes,
 				Data       = new object?[][]
 				{
-					SalesOrderHeader.SampleRow
+					SalesOrderHeader.SampleRow,
 				},
 			};
 

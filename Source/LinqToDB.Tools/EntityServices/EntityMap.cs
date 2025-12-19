@@ -34,7 +34,7 @@ namespace LinqToDB.Tools.EntityServices
 			var entity = (T)args.Entity;
 			var entry  = _entities.GetOrAdd(entity, key => new EntityMapEntry<T> { Entity = key });
 
-			if (ReferenceEquals(args.Entity, entry.Entity) == false)
+			if (!ReferenceEquals(args.Entity, entry.Entity))
 				args.Entity = entry.Entity;
 
 			entry.IncrementDBCount();
@@ -89,7 +89,7 @@ namespace LinqToDB.Tools.EntityServices
 				}
 				else
 				{
-					var fromNames = new HashSet<string>(TypeAccessor.GetAccessor<TK>().Members.Select(m => m.Name));
+					var fromNames = new HashSet<string>(TypeAccessor.GetAccessor<TK>().Members.Select(m => m.Name), StringComparer.Ordinal);
 
 					foreach (var column in _keyColumns)
 						if (!fromNames.Contains(column.Name))

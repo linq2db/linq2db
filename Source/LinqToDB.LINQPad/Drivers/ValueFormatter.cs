@@ -50,7 +50,7 @@ internal static class ValueFormatter
 	{
 		var typeConverters       = new Dictionary<Type, Func<object, object>>();
 		var baseTypeConverters   = new Dictionary<Type, Func<object, object>>();
-		var byTypeNameConverters = new Dictionary<string, Func<object, object>>();
+		var byTypeNameConverters = new Dictionary<string, Func<object, object>>(StringComparer.Ordinal);
 
 		// generic types
 		typeConverters.Add(typeof(BigInteger)     , ConvertToString);
@@ -199,7 +199,7 @@ internal static class ValueFormatter
 		// INullable implemented by System.Data.SqlTypes.Sql* types
 		return (value is System.Data.SqlTypes.INullable nullable && nullable.IsNull)
 			|| (value is Oracle.ManagedDataAccess.Types.INullable onull && onull.IsNull)
-			|| (value.GetType().FullName!.StartsWith("IBM.Data.DB2Types.") && IsDB2Null(value));
+			|| (value.GetType().FullName!.StartsWith("IBM.Data.DB2Types.", StringComparison.Ordinal) && IsDB2Null(value));
 
 		// moved to function to avoid assembly load errors when loaded with wrong process bitness
 		static bool IsDB2Null(object value) => value is IBM.Data.DB2Types.INullable db2null && db2null.IsNull;
@@ -291,7 +291,18 @@ internal static class ValueFormatter
 	private static object Format(char chr)
 	{
 		if (!XmlConvert.IsXmlChar(chr) && !char.IsHighSurrogate(chr) && !char.IsLowSurrogate(chr))
-			return new XElement("span", new XElement("i", new XAttribute("style", "font-style: italic"), chr <= 255 ? FormattableString.Invariant($"\\x{((short)chr):X2}") : FormattableString.Invariant($"\\u{((short)chr):X4}")));
+		{
+			return new XElement(
+				"span", 
+				new XElement(
+					"i",
+					new XAttribute("style", "font-style: italic"),
+					chr <= 255 
+						? string.Create(CultureInfo.InvariantCulture, $"\\x{((short)chr):X2}")
+						: string.Create(CultureInfo.InvariantCulture, $"\\u{((short)chr):X4}")
+				)
+			);
+		}
 
 		return chr.ToString();
 	}
@@ -302,7 +313,7 @@ internal static class ValueFormatter
 	#region Primitives (final types)
 
 	// for types that already implement rendering of all data using ToString
-	private static object ConvertToString(object value) => FormattableString.Invariant($"{value}");
+	private static object ConvertToString(object value) => string.Create(CultureInfo.InvariantCulture, $"{value}");
 
 	#region Runtime
 	private static object ConvertBitArray(object value)
@@ -328,7 +339,7 @@ internal static class ValueFormatter
 		var val = (NpgsqlInterval)value;
 		// let's use ISO8601 duration format
 		// Time is microseconds
-		return FormattableString.Invariant($"P{val.Months}M{val.Days}DT{((decimal)val.Time) / 1_000_000}S");
+		return string.Create(CultureInfo.InvariantCulture, $"P{val.Months}M{val.Days}DT{((decimal)val.Time) / 1_000_000}S");
 	}
 	#endregion
 

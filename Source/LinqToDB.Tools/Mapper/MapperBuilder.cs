@@ -110,7 +110,7 @@ namespace LinqToDB.Tools.Mapper
 			FromMappingDictionary ??= new Dictionary<Type,Dictionary<string,string>>();
 
 			if (!FromMappingDictionary.TryGetValue(type, out var dic))
-				FromMappingDictionary[type] = dic = new Dictionary<string,string>();
+				FromMappingDictionary[type] = dic = new Dictionary<string,string>(StringComparer.Ordinal);
 
 			dic[memberName] = mapName;
 
@@ -189,7 +189,7 @@ namespace LinqToDB.Tools.Mapper
 			ToMappingDictionary ??= new Dictionary<Type,Dictionary<string,string>>();
 
 			if (!ToMappingDictionary.TryGetValue(type, out var dic))
-				ToMappingDictionary[type] = dic = new Dictionary<string,string>();
+				ToMappingDictionary[type] = dic = new Dictionary<string,string>(StringComparer.Ordinal);
 
 			dic[memberName] = mapName;
 

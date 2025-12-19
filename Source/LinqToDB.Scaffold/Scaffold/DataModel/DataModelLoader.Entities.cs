@@ -165,7 +165,7 @@ namespace LinqToDB.Scaffold
 		/// <param name="fk">Foreign key schema object.</param>
 		/// <param name="defaultSchemas">List of default database schema names.</param>
 		/// <returns>Assocation model.
-		/// Could return <c>null</c> if any of foreign key relation tables were not loaded into model.</returns>
+		/// Could return <see langword="null"/> if any of foreign key relation tables were not loaded into model.</returns>
 		private AssociationModel? BuildAssociations(ForeignKey fk, ISet<string> defaultSchemas)
 		{
 			if (!_entities.TryGetValue(fk.Source, out var source)

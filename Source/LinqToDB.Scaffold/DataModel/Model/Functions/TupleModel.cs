@@ -17,7 +17,7 @@ namespace LinqToDB.DataModel
 		/// </summary>
 		public ClassModel            Class     { get; set; }
 		/// <summary>
-		/// Gets or sets flag, indicating that function could return <c>null</c> instead as tuple value.
+		/// Gets or sets flag, indicating that function could return <see langword="null"/> instead as tuple value.
 		/// </summary>
 		public bool                  CanBeNull { get; set; }
 		/// <summary>

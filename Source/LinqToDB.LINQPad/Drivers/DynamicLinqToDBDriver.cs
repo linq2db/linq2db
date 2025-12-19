@@ -61,7 +61,7 @@ public sealed partial class LinqToDBDriver : DynamicDataContextDriver
 	public override bool ShowConnectionDialog(IConnectionInfo cxInfo, ConnectionDialogOptions dialogOptions) => DriverHelper.ShowConnectionDialog(cxInfo, true);
 
 #if !NETFRAMEWORK
-	[GeneratedRegex(@"^.+\\(?<token>[^\\]+)\\[^\\]+$", RegexOptions.ExplicitCapture | RegexOptions.Compiled)]
+	[GeneratedRegex(@"^.+\\(?<token>[^\\]+)\\[^\\]+$", RegexOptions.ExplicitCapture | RegexOptions.Compiled, matchTimeoutMilliseconds: 1_000)]
 	private static partial Regex RuntimeTokenExtractor();
 
 	private static IEnumerable<string> GetFallbackTokens(string forToken)
@@ -104,10 +104,10 @@ public sealed partial class LinqToDBDriver : DynamicDataContextDriver
 
 		foreach (var fallback in GetFallbackTokens(runtimeToken))
 		{
-			if (token == fallback)
+			if (string.Equals(token, fallback, StringComparison.Ordinal))
 				return MetadataReference.CreateFromFile(reference);
 
-			var newReference = reference.Replace($"\\{token}\\", $"\\{fallback}\\");
+			var newReference = reference.Replace($"\\{token}\\", $"\\{fallback}\\", StringComparison.Ordinal);
 
 			if (File.Exists(newReference))
 				return MetadataReference.CreateFromFile(newReference);
@@ -216,7 +216,7 @@ public sealed partial class LinqToDBDriver : DynamicDataContextDriver
 			[
 				settings.Connection.Provider,
 				settings.Connection.ProviderPath,
-				settings.Connection.GetFullConnectionString()
+				settings.Connection.GetFullConnectionString(),
 			];
 		}
 		catch (Exception ex)

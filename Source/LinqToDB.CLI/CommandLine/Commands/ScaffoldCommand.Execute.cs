@@ -75,7 +75,7 @@ namespace LinqToDB.CommandLine
 				DatabaseType.ClickHouseMySql => ProviderName.ClickHouseMySql,
 				DatabaseType.ClickHouseHttp  => ProviderName.ClickHouseDriver,
 				DatabaseType.ClickHouseTcp   => ProviderName.ClickHouseOctonica,
-				_                            => throw new InvalidOperationException($"Unsupported provider: {providerName}")
+				_                            => throw new InvalidOperationException($"Unsupported provider: {providerName}"),
 			};
 
 			options.Remove(General.ConnectionString, out value);
@@ -177,7 +177,7 @@ namespace LinqToDB.CommandLine
 			@"v8.0\Sap.Data.Hana.Net.v8.0.dll",
 #endif
 			@"v6.0\Sap.Data.Hana.Net.v6.0.dll",
-			@"v2.1\Sap.Data.Hana.Core.v2.1.dll"
+			@"v2.1\Sap.Data.Hana.Core.v2.1.dll",
 		];
 
 		private DataConnection? GetConnection(string provider, string? providerLocation, string connectionString, string? additionalConnectionString, out DataConnection? secondaryConnection)
@@ -296,7 +296,7 @@ Possible reasons:
 				case ProviderName.Informix:
 				case ProviderName.DB2:
 				{
-					if (provider == ProviderName.Informix)
+					if (string.Equals(provider, ProviderName.Informix, StringComparison.Ordinal))
 						provider = ProviderName.InformixDB2;
 					else
 						DB2Tools.AutoDetectProvider = true;
@@ -392,7 +392,7 @@ Provider could be downloaded from:
 		/// </summary>
 		/// <param name="requestedArch">New process architecture.</param>
 		/// <param name="args">Command line arguments for current invocation.</param>
-		/// <returns>Not-null return code from child process if scaffold restarted in child process with specific arch or <c>null</c> otherwise.</returns>
+		/// <returns>Not-null return code from child process if scaffold restarted in child process with specific arch or <see langword="null"/> otherwise.</returns>
 		private async Task<int?> RestartIfNeeded(string requestedArch, string[] args)
 		{
 			// currently we support multiarch only for Windows
@@ -403,11 +403,11 @@ Provider could be downloaded from:
 			}
 
 			string? exeName = null;
-			if (requestedArch == "x86" && RuntimeInformation.ProcessArchitecture == Architecture.X64)
+			if (string.Equals(requestedArch, "x86", StringComparison.Ordinal) && RuntimeInformation.ProcessArchitecture == Architecture.X64)
 			{
 				exeName = "dotnet-linq2db.win-x86.exe";
 			}
-			else if (requestedArch == "x64" && RuntimeInformation.ProcessArchitecture == Architecture.X86)
+			else if (string.Equals(requestedArch, "x64", StringComparison.Ordinal) && RuntimeInformation.ProcessArchitecture == Architecture.X86)
 			{
 				exeName = "dotnet-linq2db.win-x64.exe";
 			}

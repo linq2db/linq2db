@@ -14,7 +14,7 @@ internal sealed class SQLiteProvider : DatabaseProviderBase
 	private static readonly IReadOnlyList<ProviderInfo> _providers =
 	[
 		new(ProviderName.SQLiteClassic, "Official Client (System.Data.SQLite)"   ),
-		new(ProviderName.SQLiteMS,      "Microsof Client (Microsoft.Data.Sqlite)")
+		new(ProviderName.SQLiteMS,      "Microsof Client (Microsoft.Data.Sqlite)"),
 	];
 
 #if NETFRAMEWORK
@@ -43,7 +43,7 @@ internal sealed class SQLiteProvider : DatabaseProviderBase
 
 	public override void ClearAllPools(string providerName)
 	{
-		if (providerName == ProviderName.SQLiteClassic)
+		if (string.Equals(providerName, ProviderName.SQLiteClassic, StringComparison.Ordinal))
 			SQLiteConnection.ClearAllPools();
 		else
 			SqliteConnection.ClearAllPools();
@@ -57,7 +57,7 @@ internal sealed class SQLiteProvider : DatabaseProviderBase
 
 	public override DbProviderFactory GetProviderFactory(string providerName)
 	{
-		if (providerName == ProviderName.SQLiteClassic)
+		if (string.Equals(providerName, ProviderName.SQLiteClassic, StringComparison.Ordinal))
 			return SQLiteFactory.Instance;
 		else
 #if NETFRAMEWORK

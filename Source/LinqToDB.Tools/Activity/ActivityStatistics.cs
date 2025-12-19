@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 
 using LinqToDB.Metrics;
@@ -234,7 +235,7 @@ namespace LinqToDB.Tools.Activity
 
 				// Placeholder for Total, must be last, do not remove or change position!
 				//
-				null!
+				null!,
 			];
 
 			All[^1] = Total = new ("Total", All.Where(a => a is StatActivity).ToArray());
@@ -353,7 +354,7 @@ namespace LinqToDB.Tools.Activity
 				ActivityID.OnTraceInternal                              => OnTraceInternal,
 				ActivityID.Materialization                              => Materialization,
 
-				_ => throw new InvalidOperationException($"Unknown metric type {metric}")
+				_ => throw new InvalidOperationException($"Unknown metric type {metric}"),
 			};
 		}
 
@@ -378,7 +379,7 @@ namespace LinqToDB.Tools.Activity
 		/// <summary>
 		/// Returns a report with collected statistics.
 		/// </summary>
-		/// <param name="includeAll">If <c>true</c>, includes metrics with zero call count. Default is <c>false</c>.</param>
+		/// <param name="includeAll">If <c><see langword="true"/></c>, includes metrics with zero call count. Default is <see langword="false"/>.</param>
 		/// <returns>
 		/// A report with collected statistics.
 		/// </returns>
@@ -397,9 +398,9 @@ namespace LinqToDB.Tools.Activity
 					{
 						0 => TimeSpan.Zero,
 						1 => m.Elapsed,
-						_ => new TimeSpan(m.Elapsed.Ticks / m.CallCount)
+						_ => new TimeSpan(m.Elapsed.Ticks / m.CallCount),
 					},
-					Percent = m.CallCount == 0 ? "" : FormattableString.Invariant($"{m.Elapsed.Ticks / totalTime * 100,7:0.00}%")
+					Percent = m.CallCount == 0 ? "" : string.Create(CultureInfo.InvariantCulture, $"{m.Elapsed.Ticks / totalTime * 100,7:0.00}%"),
 				})
 				.ToDiagnosticString();
 		}

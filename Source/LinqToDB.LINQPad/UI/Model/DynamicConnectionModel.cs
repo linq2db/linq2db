@@ -10,7 +10,7 @@ internal sealed class DynamicConnectionModel : ConnectionModelBase, INotifyPrope
 	public DynamicConnectionModel(ConnectionSettings settings, bool enabled)
 		: base(settings, enabled)
 	{
-		foreach (var db in DatabaseProviders.Providers.Values.OrderBy(static db => db.Description))
+		foreach (var db in DatabaseProviders.Providers.Values.OrderBy(static db => db.Description, System.StringComparer.Ordinal))
 			Databases.Add(db);
 
 		UpdateProviders();
@@ -59,7 +59,7 @@ internal sealed class DynamicConnectionModel : ConnectionModelBase, INotifyPrope
 		var assemblyNames      = db.GetProviderAssemblyNames(provider.Name);
 		ProviderPathVisibility = Visibility.Visible;
 		ProviderPath           = Settings.Connection.ProviderPath ?? db.TryGetDefaultPath(provider.Name);
-		ProviderPathLabel      = $"Specify path to {string.Join("/", assemblyNames)}";
+		ProviderPathLabel      = $"Specify path to {string.JoinStrings('/', assemblyNames)}";
 
 		OnPropertyChanged(_providerPathVisibilityChangedEventArgs);
 		OnPropertyChanged(_providerPathLabelChangedEventArgs);
@@ -140,7 +140,7 @@ internal sealed class DynamicConnectionModel : ConnectionModelBase, INotifyPrope
 		if (!string.IsNullOrWhiteSpace(Settings.Connection.Provider))
 		{
 			foreach (var provider in Database.Providers)
-				if (provider.Name == Settings.Connection.Provider)
+				if (string.Equals(provider.Name, Settings.Connection.Provider, System.StringComparison.Ordinal))
 					return provider;
 		}
 
@@ -237,7 +237,7 @@ internal sealed class DynamicConnectionModel : ConnectionModelBase, INotifyPrope
 				return null;
 
 			foreach (var provider in Database.Providers)
-				if (provider.Name == Settings.Connection.SecondaryProvider)
+				if (string.Equals(provider.Name, Settings.Connection.SecondaryProvider, System.StringComparison.Ordinal))
 					return provider;
 
 			return null;

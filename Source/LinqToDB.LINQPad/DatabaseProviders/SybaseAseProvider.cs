@@ -13,7 +13,7 @@ internal sealed class SybaseAseProvider : DatabaseProviderBase
 {
 	private static readonly IReadOnlyList<ProviderInfo> _providers =
 	[
-		new(ProviderName.SybaseManaged, "SAP/Sybase ASE")
+		new(ProviderName.SybaseManaged, "SAP/Sybase ASE"),
 	];
 
 	public SybaseAseProvider()

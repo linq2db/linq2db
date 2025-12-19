@@ -16,7 +16,7 @@ internal abstract partial class ModelBase : INotifyPropertyChanged
 		get => _name;
 		set
 		{
-			if (_name != value)
+			if (!string.Equals(_name, value, System.StringComparison.Ordinal))
 			{
 				_name = value;
 				OnPropertyChanged(_nameChangedEventArgs);

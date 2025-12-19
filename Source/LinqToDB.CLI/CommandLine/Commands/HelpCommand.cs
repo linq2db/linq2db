@@ -31,7 +31,7 @@ namespace LinqToDB.CommandLine
 			Dictionary<CliOption, object?> options,
 			IReadOnlyCollection<string>    unknownArgs)
 		{
-			if (options.Count == 0 && (rawArgs.Length == 0 || (rawArgs.Length == 1 && rawArgs[0] == "help")))
+			if (options.Count == 0 && (rawArgs.Length == 0 || (rawArgs.Length == 1 && string.Equals(rawArgs[0], "help", StringComparison.Ordinal))))
 			{
 				// handle proper calls with general help display:
 				// "dotnet linq2db"
@@ -42,13 +42,13 @@ namespace LinqToDB.CommandLine
 
 			// handle command-specific help requests (except help command itself):
 			// "dotnet linq2db help <known_command>"
-			if (options.Count == 0 && rawArgs.Length == 2 && rawArgs[0] == "help")
+			if (options.Count == 0 && rawArgs.Length == 2 && string.Equals(rawArgs[0], "help", StringComparison.Ordinal))
 			{
 				foreach (var command in controller.Commands)
 				{
 					if (command != this)
 					{
-						if (command.Name == rawArgs[1])
+						if (string.Equals(command.Name, rawArgs[1], StringComparison.Ordinal))
 						{
 							// request for command help for known non-help command - print specific command help
 							PrintCommandHelp(command, unknownArgs);
@@ -248,7 +248,7 @@ namespace LinqToDB.CommandLine
 						if (!stringOption.AllowMultiple)
 							Console.Out.WriteLine("{0}   default: {1}", indent, stringOption.Default[0]);
 						else
-							Console.Out.WriteLine("{0}   default: {1}", indent, string.Join(",", stringOption.Default));
+							Console.Out.WriteLine("{0}   default: {1}", indent, string.JoinStrings(',', stringOption.Default));
 					}
 
 					if (stringOption.T4Default != null)
@@ -256,7 +256,7 @@ namespace LinqToDB.CommandLine
 						if (!stringOption.AllowMultiple)
 							Console.Out.WriteLine("{0}   default (T4 mode): {1}", indent, stringOption.T4Default[0]);
 						else
-							Console.Out.WriteLine("{0}   default (T4 mode): {1}", indent, string.Join(",", stringOption.T4Default));
+							Console.Out.WriteLine("{0}   default (T4 mode): {1}", indent, string.JoinStrings(',', stringOption.T4Default));
 					}
 				}
 				else if (option is StringEnumCliOption enumOption)

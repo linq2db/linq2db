@@ -13,7 +13,7 @@ namespace LinqToDB.CommandLine
 		private readonly Dictionary<OptionCategory, List<CliOption>>           _optionsByCategory      = new ();
 		private readonly List<CliOption>                                       _optionsWithoutCategory = new ();
 		// TODO: replace with HashSet if not used as it also ensures command name/shortname is unique
-		private readonly Dictionary<string, CliOption>                         _optionsByName          = new ();
+		private readonly Dictionary<string, CliOption>                         _optionsByName          = new (StringComparer.Ordinal);
 		private readonly Dictionary<char, CliOption>                           _optionsByShortName     = new ();
 		private readonly Dictionary<CliOption, IReadOnlyCollection<CliOption>> _incompatibleOptions    = new ();
 
@@ -82,20 +82,20 @@ namespace LinqToDB.CommandLine
 		public IReadOnlyCollection<CliOption> GetOptionsWithoutCategory() => _optionsWithoutCategory;
 
 		/// <summary>
-		/// Returns option descriptor by name of option or <c>null</c> if option not found.
+		/// Returns option descriptor by name of option or <see langword="null"/> if option not found.
 		/// </summary>
 		/// <param name="name">Option name.</param>
-		/// <returns>Option or <c>null</c>.</returns>
+		/// <returns>Option or <see langword="null"/>.</returns>
 		public CliOption? GetOptionByName(string name)
 		{
 			return _optionsByName.TryGetValue(name, out var option) ? option : null;
 		}
 
 		/// <summary>
-		/// Returns option descriptor by short name of option or <c>null</c> if option not found.
+		/// Returns option descriptor by short name of option or <see langword="null"/> if option not found.
 		/// </summary>
 		/// <param name="name">Option short name.</param>
-		/// <returns>Option or <c>null</c>.</returns>
+		/// <returns>Option or <see langword="null"/>.</returns>
 		public CliOption? GetOptionByShortName(char name)
 		{
 			return _optionsByShortName.TryGetValue(name, out var option) ? option : null;
@@ -105,7 +105,7 @@ namespace LinqToDB.CommandLine
 		/// Returns list of options, not compatible with <paramref name="forOption"/> option.
 		/// </summary>
 		/// <param name="forOption">For which option return incompatible options.</param>
-		/// <returns>List of incompatible options or <c>null</c>, if <paramref name="forOption"/> option has no conflicts with other options.</returns>
+		/// <returns>List of incompatible options or <see langword="null"/>, if <paramref name="forOption"/> option has no conflicts with other options.</returns>
 		public IEnumerable<CliOption>? GetIncompatibleOptions(CliOption forOption)
 		{
 			if (_incompatibleOptions.TryGetValue(forOption, out var options))
