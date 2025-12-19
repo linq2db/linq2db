@@ -176,19 +176,14 @@ internal static class ValueFormatter
 		}
 
 		// apply simple values formatting
-		if (value is string strVal)
-			return Format(strVal);
-
-		if (value is bool boolVal)
-			return Format(boolVal);
-		
-		if (value is char[] chars)
-			return Format(chars);
-
-		if (value is byte[] binary)
-			return Format(binary);
-
-		return value;
+		return value switch
+		{
+			string strVal => Format(strVal),
+			bool boolVal  => Format(boolVal),
+			char[] chars  => Format(chars),
+			byte[] binary => Format(binary),
+			_             => value,
+		};
 	}
 
 	private static bool IsNull(object value)

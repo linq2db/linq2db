@@ -185,6 +185,22 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void CurrentTimestamp2Update([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				(
+					from p in db.Types where p.ID == 100000 select p
+				)
+				.Update(t => new LinqDataTypes
+				{
+					BoolValue     = true,
+					DateTimeValue = Sql.CurrentTimestamp2
+				});
+			}
+		}
+
+		[Test]
 		public void Now([DataSources] string context)
 		{
 			using (new DisableBaseline("Server-side date generation test"))
