@@ -116,8 +116,7 @@ namespace LinqToDB.Expressions
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
 
 				// check if member exists on type
-				var existingMember = TypeAccessor.GetAccessor(objectExpr.Type).Members.SingleOrDefault(m =>
-					m.Name == memberName &&
+				var existingMember = TypeAccessor.GetAccessor(objectExpr.Type).Members.SingleOrDefault(m => string.Equals(m.Name, memberName, StringComparison.Ordinal) &&
 					(m.MemberInfo.MemberType is MemberTypes.Property or MemberTypes.Field));
 
 				if (existingMember != null)

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -169,7 +169,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							if (orderDefined)
 								continue;
-							if (methodCall.Method.Name.StartsWith(nameof(Queryable.OrderBy)))
+							if (methodCall.Method.Name.StartsWith(nameof(Queryable.OrderBy), StringComparison.Ordinal))
 								orderDefined = true;
 						}
 
@@ -461,7 +461,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							if (orderDefined)
 								continue;
-							if (methodCall.Method.Name.StartsWith(nameof(Queryable.OrderBy)))
+							if (methodCall.Method.Name.StartsWith(nameof(Queryable.OrderBy), StringComparison.Ordinal))
 								orderDefined = true;
 						}
 

@@ -33,7 +33,7 @@ namespace LinqToDB.Mapping
 				return false;
 
 			if (obj1 is RawSqlString str1 && obj2 is RawSqlString str2)
-				return str1.Format == str2.Format;
+				return string.Equals(str1.Format, str2.Format, StringComparison.Ordinal);
 
 			if (obj1 is not string and IEnumerable list1 && obj2 is IEnumerable list2)
 			{

@@ -336,7 +336,7 @@ namespace LinqToDB.Linq
 
 			if (!Members[""].TryGetValue(memberKey, out expr))
 			{
-				if (mi is MethodInfo && mi.Name == "CompareString" && mi.DeclaringType!.FullName!.StartsWith("Microsoft.VisualBasic.CompilerServices."))
+				if (mi is MethodInfo && string.Equals(mi.Name, "CompareString", StringComparison.Ordinal) && mi.DeclaringType!.FullName!.StartsWith("Microsoft.VisualBasic.CompilerServices.", StringComparison.Ordinal))
 				{
 					lock (_memberSync)
 					{
@@ -344,9 +344,9 @@ namespace LinqToDB.Linq
 						{
 							expr = new LazyExpressionInfo();
 
-#pragma warning disable CA1304, MA0011 // use CultureInfo
+#pragma warning disable CA1304, CA1311, MA0011 // use CultureInfo
 							((LazyExpressionInfo)expr).SetExpression(L<string,string,bool,int>((s1,s2,b) => b ? string.CompareOrdinal(s1.ToUpper(), s2.ToUpper()) : string.CompareOrdinal(s1, s2)));
-#pragma warning restore CA1304, MA0011 // use CultureInfo
+#pragma warning restore CA1304, CA1311, MA0011 // use CultureInfo
 
 							Members[""].Add(memberKey, expr);
 						}
@@ -433,7 +433,7 @@ namespace LinqToDB.Linq
 			if (typeNamespace == null)
 				return true;
 
-			var dotIndex = typeNamespace.IndexOf('.');
+			var dotIndex = typeNamespace.IndexOf('.', StringComparison.Ordinal);
 			var root     = dotIndex != -1 ? typeNamespace.Substring(0, dotIndex) : typeNamespace;
 
 			// Startup optimization.
@@ -498,7 +498,7 @@ namespace LinqToDB.Linq
 		private static readonly Lock _memberSync = new();
 
 		static readonly Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>> _binaries =
-			new Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>>(() => new Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>());
+			new Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>>(() => new(StringComparer.Ordinal));
 
 		#region Common
 
@@ -542,10 +542,10 @@ namespace LinqToDB.Linq
 #endif
 			{ M(() => "".TrimEnd    ((char[])null!)), N(() => L<string,char[],string?>     ((obj,ch) => TrimRight(obj, ch))) },
 			{ M(() => "".TrimStart  ((char[])null!)), N(() => L<string,char[],string?>     ((obj,ch) => TrimLeft (obj, ch))) },
-#pragma warning disable CA1304, MA0011 // use CultureInfo
+#pragma warning disable CA1304, CA1311, MA0011 // use CultureInfo
 			{ M(() => "".ToLower    ()        ), N(() => L<string?,string?>                (obj => Sql.Lower(obj))) },
 			{ M(() => "".ToUpper    ()        ), N(() => L<string?,string?>                (obj => Sql.Upper(obj))) },
-#pragma warning restore CA1304, MA0011 // use CultureInfo
+#pragma warning restore CA1304, CA1311, MA0011 // use CultureInfo
 			{ M(() => "".CompareTo  ("")      ), N(() => L<string,string,int>              ((obj,p0) => ConvertToCaseCompareTo(obj, p0)!.Value)) },
 #pragma warning disable MA0107 // object.ToString is bad, m'kay?
 			{ M(() => "".CompareTo  (1)       ), N(() => L<string,object,int>              ((obj,p0) => ConvertToCaseCompareTo(obj, p0.ToString())!.Value)) },
@@ -564,14 +564,14 @@ namespace LinqToDB.Linq
 			{ M(() => string.IsNullOrWhiteSpace("")),                                         N(() => L<string,bool>                                   (p0                 => Sql.IsNullOrWhiteSpace(p0))) },
 			{ M(() => string.CompareOrdinal("","")),                                          N(() => L<string,string,int>                             ((s1,s2)            => s1.CompareTo(s2))) },
 			{ M(() => string.CompareOrdinal("",0,"",0,0)),                                    N(() => L<string,int,string,int,int,int>                 ((s1,i1,s2,i2,l)    => s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
+#pragma warning disable CA1304, CA1309, CA1310, CA1311, CA1862, MA0011 // use CultureInfo
 			{ M(() => string.Compare       ("","")),                                          N(() => L<string,string,int>                             ((s1,s2)            => s1.CompareTo(s2))) },
 			{ M(() => string.Compare       ("",0,"",0,0)),                                    N(() => L<string,int,string,int,int,int>                 ((s1,i1,s2,i2,l)    => s1.Substring(i1,l).CompareTo(s2.Substring(i2,l)))) },
-#pragma warning disable CA1304, MA0011 // use CultureInfo
 			{ M(() => string.Compare       ("","",true)),                                     N(() => L<string,string,bool,int>                        ((s1,s2,b)          => b ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2))) },
 			{ M(() => string.Compare       ("",0,"",0,0,true)),                               N(() => L<string,int,string,int,int,bool,int>            ((s1,i1,s2,i2,l,b)  => b ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
 			{ M(() => string.Compare       ("",0,"",0,0,StringComparison.OrdinalIgnoreCase)), N(() => L<string,int,string,int,int,StringComparison,int>((s1,i1,s2,i2,l,sc) => sc == StringComparison.CurrentCultureIgnoreCase || sc==StringComparison.OrdinalIgnoreCase ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
 			{ M(() => string.Compare       ("","",StringComparison.OrdinalIgnoreCase)),       N(() => L<string,string,StringComparison,int>            ((s1,s2,sc)         => sc == StringComparison.CurrentCultureIgnoreCase || sc==StringComparison.OrdinalIgnoreCase ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2))) },
-#pragma warning restore CA1304, MA0011 // use CultureInfo
+#pragma warning restore CA1304, CA1309, CA1310, CA1311, CA1862, MA0011 // use CultureInfo
 
 			{ M(() => AltStuff("",0,0,"")), N(() => L<string,int?,int?,string,string>((p0,p1,p2,p3) => Sql.Left(p0, p1 - 1) + p3 + Sql.Right(p0, p0.Length - (p1 + p2 - 1)))) },
 
@@ -1036,7 +1036,7 @@ namespace LinqToDB.Linq
 #pragma warning disable CS0618 // Type or member is obsolete
 		static Dictionary<string,Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo>> LoadMembers()
 		{
-			var members = new Dictionary<string, Dictionary<MemberHelper.MemberInfoWithType, IExpressionInfo>>
+			var members = new Dictionary<string, Dictionary<MemberHelper.MemberInfoWithType, IExpressionInfo>>(StringComparer.Ordinal)
 			{
 				{ "", _commonMembers },
 
@@ -1577,7 +1577,7 @@ namespace LinqToDB.Linq
 		[Sql.Extension(builderType: typeof(ConvertToCaseCompareToBuilder))]
 		public static int? ConvertToCaseCompareTo(string? str, string? value)
 		{
-			return str == null || value == null ? (int?)null : str.CompareTo(value);
+			return str == null || value == null ? (int?)null : StringComparer.Ordinal.Compare(str, value);
 		}
 
 		// Access, DB2, Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite

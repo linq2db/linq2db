@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -178,7 +178,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return result;
 		}
 
-		static string[] _passThroughMethodsForUnwrappingDefaultIfEmpty = { nameof(Enumerable.Where), nameof(Enumerable.Select) };
+		static readonly string[] _passThroughMethodsForUnwrappingDefaultIfEmpty = { nameof(Enumerable.Where), nameof(Enumerable.Select) };
 
 		static Expression UnwrapDefaultIfEmpty(Expression expression)
 		{

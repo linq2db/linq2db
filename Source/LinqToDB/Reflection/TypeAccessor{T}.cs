@@ -83,7 +83,7 @@ namespace LinqToDB.Reflection
 				implementor = implementor.BaseType;
 			}
 
-			var uniqueNames = new HashSet<string>();
+			var uniqueNames = new HashSet<string>(StringComparer.Ordinal);
 			var members = new List<MemberInfo>();
 			foreach (var mi in type.GetPublicInstanceValueMembers())
 			{

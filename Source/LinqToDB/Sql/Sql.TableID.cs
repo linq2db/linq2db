@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.SqlQuery;
@@ -31,7 +31,7 @@ namespace LinqToDB
 
 			public bool Equals(SqlID other)
 			{
-				return Type == other.Type && ID == other.ID;
+				return Type == other.Type && string.Equals(ID, other.ID, StringComparison.Ordinal);
 			}
 
 			public override int GetHashCode()
@@ -46,7 +46,7 @@ namespace LinqToDB
 
 			public static SqlID Parse(string value)
 			{
-				var idx = value.IndexOf(':');
+				var idx = value.IndexOf(':', StringComparison.Ordinal);
 
 				if (idx == -1)
 					throw new InvalidOperationException($"Cannot parse '{value}' to SqlID.");

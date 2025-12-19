@@ -127,7 +127,7 @@ namespace LinqToDB.Internal.Common
 		}
 
 		static          int                              _identifierCounter;
-		static readonly ConcurrentDictionary<string,int> _identifiers = new ();
+		static readonly ConcurrentDictionary<string,int> _identifiers = new (StringComparer.Ordinal);
 
 		public int CreateID()
 		{
@@ -152,7 +152,7 @@ namespace LinqToDB.Internal.Common
 		}
 
 		static          int                              _expressionCounter;
-		static readonly ConcurrentDictionary<string,int> _expressions = new ();
+		static readonly ConcurrentDictionary<string,int> _expressions = new (StringComparer.Ordinal);
 
 		public static int GetObjectID(Expression? ex)
 		{

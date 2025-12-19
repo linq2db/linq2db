@@ -177,7 +177,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					// in case when we have alias placeholder we should not generate any fields
 					if (table.Parameters.All(p => p.ElementType != QueryElementType.SqlAliasPlaceholder))
 					{
-						var sql = SqlTable.Fields.Find(f => f.Name == "value");
+						var sql = SqlTable.Fields.Find(f => string.Equals(f.Name, "value", StringComparison.Ordinal));
 						if (sql != null)
 						{
 							return ExpressionBuilder.CreatePlaceholder(this, sql, path);

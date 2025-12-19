@@ -39,10 +39,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			Expression = expression;
 		}
 
-		static ConstructorInfo _parameterConstructor =
+		static readonly ConstructorInfo _parameterConstructor =
 			MemberHelper.ConstructorOf(() => new SqlParameter(new DbDataType(typeof(object)), "", null));
 
-		static ConstructorInfo _sqlValueConstructor =
+		static readonly ConstructorInfo _sqlValueConstructor =
 			MemberHelper.ConstructorOf(() => new SqlValue(new DbDataType(typeof(object)), null));
 
 		List<(Expression path, ColumnDescriptor? descriptor, SqlPlaceholderExpression placeholder)> _fieldsMap = new ();

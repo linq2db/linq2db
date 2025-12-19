@@ -15,7 +15,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		#region LIKE
 
-		private static string[] SybaseCharactersToEscape = {"_", "%", "[", "]", "^"};
+		private static readonly string[] SybaseCharactersToEscape = {"_", "%", "[", "]", "^"};
 
 		public override string[] LikeCharactersToEscape => SybaseCharactersToEscape;
 

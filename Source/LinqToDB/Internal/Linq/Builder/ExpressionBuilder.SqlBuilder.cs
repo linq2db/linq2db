@@ -935,7 +935,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					MemberAccessor? foundMember = null;
 					foreach (var tm in typeMembers)
 					{
-						if (string.Equals(tm.Name, param.Name))
+						if (string.Equals(tm.Name, param.Name, StringComparison.Ordinal))
 						{
 							foundMember = tm;
 							break;
@@ -1396,7 +1396,7 @@ namespace LinqToDB.Internal.Linq.Builder
 								for (int i = 0; i < genericConstructor.Assignments.Count; i++)
 								{
 									var assignment = genericConstructor.Assignments[i];
-									if (assignment.MemberInfo.ReflectedType != member.ReflectedType && string.Equals(assignment.MemberInfo.Name, member.Name))
+									if (assignment.MemberInfo.ReflectedType != member.ReflectedType && string.Equals(assignment.MemberInfo.Name, member.Name, StringComparison.Ordinal))
 									{
 										var mi = assignment.MemberInfo.ReflectedType!.GetMemberEx(member);
 										if (mi != null && IsEqualMembers(assignment.MemberInfo, mi))
@@ -1812,7 +1812,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (member1.DeclaringType == null || member2.DeclaringType == null)
 				return false;
 
-			if (!string.Equals(member1.Name, member2.Name))
+			if (!string.Equals(member1.Name, member2.Name, StringComparison.Ordinal))
 				return false;
 
 			return member1.EqualsTo(member2);

@@ -116,10 +116,10 @@ namespace LinqToDB.Data
 					if (DataConnection.ConfigurationString != null)
 						sb.Append(' ').Append(DataConnection.ConfigurationString);
 
-					if (DataConnection.ConfigurationString != DataConnection.DataProvider.Name)
+					if (!string.Equals(DataConnection.ConfigurationString, DataConnection.DataProvider.Name, StringComparison.Ordinal))
 						sb.Append(' ').Append(DataConnection.DataProvider.Name);
 
-					if (DataConnection.DataProvider.Name != sqlProvider.Name)
+					if (!string.Equals(DataConnection.DataProvider.Name, sqlProvider.Name, StringComparison.Ordinal))
 						sb.Append(' ').Append(sqlProvider.Name);
 
 					if (IsAsync || DataConnection.Tag is not null)

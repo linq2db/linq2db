@@ -22,7 +22,7 @@ namespace LinqToDB.Internal.Remote
 
 		readonly MappingSchema          _mappingSchema;
 		readonly LinqServiceResult      _result;
-		readonly Dictionary<string,int> _ordinal = new ();
+		readonly Dictionary<string,int> _ordinal = new (StringComparer.Ordinal);
 
 		string?[]? _data;
 		int        _current = -1;

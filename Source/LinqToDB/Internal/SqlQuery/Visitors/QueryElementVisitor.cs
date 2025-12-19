@@ -3128,7 +3128,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						var newValue = (ISqlExpression)Visit(pair.Value);
 						if (!ReferenceEquals(newValue, pair.Value))
 						{
-							(modified ??= new ()).Add(pair.Key, newValue);
+							(modified ??= new (StringComparer.Ordinal)).Add(pair.Key, newValue);
 						}
 					}
 
@@ -3152,7 +3152,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						var newValue = (ISqlExpression)Visit(pair.Value);
 						if (!ReferenceEquals(newValue, pair.Value))
 						{
-							(modified ??= new()).Add(pair.Key, newValue);
+							(modified ??= new(StringComparer.Ordinal)).Add(pair.Key, newValue);
 						}
 					}
 
@@ -3170,7 +3170,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					{
 						var newExtension = new SqlQueryExtension()
 						{
-							Arguments     = current != extension.Arguments ? current : new(extension.Arguments),
+							Arguments     = current != extension.Arguments ? current : new(extension.Arguments, StringComparer.Ordinal),
 							BuilderType   = extension.BuilderType,
 							Configuration = extension.Configuration,
 							Scope         = extension.Scope,

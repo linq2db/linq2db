@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
@@ -76,7 +76,7 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				var newName = (_parametersNormalizer ??= _parametersNormalizerFactory()).Normalize(parameter.Name);
 
-				if (IsParameterOrderDependent || newName != parameter.Name)
+				if (IsParameterOrderDependent || !string.Equals(newName, parameter.Name, StringComparison.Ordinal))
 				{
 					returnValue = new SqlParameter(parameter.Type, newName, parameter.Value)
 					{

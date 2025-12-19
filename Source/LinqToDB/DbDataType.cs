@@ -113,7 +113,7 @@ namespace LinqToDB
 				&& Length     == other.Length
 				&& Precision  == other.Precision
 				&& Scale      == other.Scale
-				&& string.Equals(DbType, other.DbType);
+				&& string.Equals(DbType, other.DbType, StringComparison.Ordinal);
 		}
 
 		public readonly bool EqualsDbOnly(DbDataType other)
@@ -122,7 +122,7 @@ namespace LinqToDB
 				&& Length     == other.Length
 				&& Precision  == other.Precision
 				&& Scale      == other.Scale
-				&& string.Equals(DbType, other.DbType);
+				&& string.Equals(DbType, other.DbType, StringComparison.Ordinal);
 		}
 
 		public override readonly bool Equals(object? obj)
@@ -131,7 +131,6 @@ namespace LinqToDB
 			return obj is DbDataType type && Equals(type);
 		}
 
-		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
 		public override readonly int GetHashCode()
 		{
 			return HashCode.Combine(

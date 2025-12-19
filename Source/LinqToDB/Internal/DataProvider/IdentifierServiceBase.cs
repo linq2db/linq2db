@@ -25,7 +25,7 @@ namespace LinqToDB.Internal.DataProvider
 			}
 
 			if (replace)
-				alias = new string(cs).Replace(" ", "");
+				alias = new string(cs).Replace(" ", "", System.StringComparison.Ordinal);
 
 			return alias;
 		}

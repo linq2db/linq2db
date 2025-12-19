@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlTypes;
@@ -50,7 +50,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			return
 			(
 				from t in tables.AsEnumerable()
-				where _tableTypes.Contains(t.Field<string>("TABLE_TYPE"))
+				where _tableTypes.Contains(t.Field<string>("TABLE_TYPE"), StringComparer.Ordinal)
 				let catalog = t.Field<string>("TABLE_CATALOG")
 				let schema  = t.Field<string>("TABLE_SCHEMA")
 				let name    = t.Field<string>("TABLE_NAME")
@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 					SchemaName      = schema,
 					TableName       = name,
 					IsDefaultSchema = string.IsNullOrEmpty(schema),
-					IsView          = t.Field<string>("TABLE_TYPE") == "VIEW",
+					IsView          = string.Equals(t.Field<string>("TABLE_TYPE"), "VIEW", StringComparison.Ordinal),
 				}
 			).ToList();
 		}
@@ -96,7 +96,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 				{
 					TableID    = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
 					Name       = c.Field<string>("COLUMN_NAME")!,
-					IsNullable = c.Field<string>("IS_NULLABLE") == "YES",
+					IsNullable = string.Equals(c.Field<string>("IS_NULLABLE"), "YES", StringComparison.Ordinal),
 					Ordinal    = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
 					DataType   = c.Field<string>("DATA_TYPE"),
 					Length     = length > int.MaxValue ? null : (int?)length,
@@ -138,7 +138,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
-			return (dataType?.ToLowerInvariant()) switch
+			return dataType?.ToLowerInvariant() switch
 			{
 				"tinyint" => typeof(byte),
 				_         => base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options),

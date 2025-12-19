@@ -131,8 +131,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		public override ISqlExpression ConvertSqlExpression(SqlExpression element)
 		{
-			if (element.Expr.StartsWith("To_Number(To_Char(") && element.Expr.EndsWith(", 'FF'))"))
-				return Div(new SqlExpression(element.Type, element.Expr.Replace("To_Number(To_Char(", "to_Number(To_Char("), element.Parameters), 1000);
+			if (element.Expr.StartsWith("To_Number(To_Char(", StringComparison.Ordinal) && element.Expr.EndsWith(", 'FF'))", StringComparison.Ordinal))
+				return Div(new SqlExpression(element.Type, element.Expr.Replace("To_Number(To_Char(", "to_Number(To_Char(", StringComparison.Ordinal), element.Parameters), 1000);
 
 			return base.ConvertSqlExpression(element);
 		}

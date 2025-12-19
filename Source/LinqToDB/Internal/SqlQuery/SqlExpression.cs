@@ -80,7 +80,7 @@ namespace LinqToDB.Internal.SqlQuery
 			if (Parameters.Length == 0)
 				return writer.Append(Expr);
 
-			if (Expr.Contains('{'))
+			if (Expr.Contains('{', System.StringComparison.Ordinal))
 				return writer.AppendFormat(Expr, arguments.ToArray());
 
 			return writer

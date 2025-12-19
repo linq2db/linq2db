@@ -63,7 +63,7 @@ namespace LinqToDB
 			public void Build(ISqlExtensionBuilder builder)
 			{
 				var expr      = builder.GetExpression("expr")!;
-				var collation = builder.GetValue<string>("collation").Replace("\"", "\"\"");
+				var collation = builder.GetValue<string>("collation").Replace("\"", "\"\"", StringComparison.Ordinal);
 
 				builder.ResultExpression = new SqlExpression(builder.Mapping.GetDbDataType(typeof(string)), $"{{0}} COLLATE \"{collation}\"",
 					Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable,

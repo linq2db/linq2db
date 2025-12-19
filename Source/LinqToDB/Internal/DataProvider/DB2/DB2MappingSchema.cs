@@ -112,7 +112,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			if (precision == null && type.Type.DbType != null)
 			{
 				var dbtype = type.Type.DbType.ToLowerInvariant();
-				if (dbtype.StartsWith("timestamp("))
+				if (dbtype.StartsWith("timestamp(", StringComparison.Ordinal))
 				{
 					if (int.TryParse(dbtype.AsSpan(10, dbtype.Length - 11), NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var fromDbType))
 						precision = fromDbType;

@@ -43,7 +43,7 @@ namespace LinqToDB.Internal.Extensions
 			//	- preserve the order of GetMembers() inside the same type declared type
 
 			var results = new List<MemberInfo>(members.Length);
-			var seen    = new HashSet<string>();
+			var seen    = new HashSet<string>(StringComparer.Ordinal);
 			for (var t = type; t != typeof(object) && t != typeof(ValueType); t = t.BaseType!)
 			{
 				// iterating in reverse order because we will reverse it
@@ -75,7 +75,7 @@ namespace LinqToDB.Internal.Extensions
 			else
 			{
 				var results = members.ToList();
-				var seen    = new HashSet<string>(results.Select(m => m.Name));
+				var seen    = new HashSet<string>(results.Select(m => m.Name), StringComparer.Ordinal);
 
 				foreach (var iface in interfaces)
 				{
@@ -121,7 +121,7 @@ namespace LinqToDB.Internal.Extensions
 					PropertyInfo? foundByName = null;
 					foreach (var prop in props)
 					{
-						if (prop.Name == memberInfo.Name)
+						if (string.Equals(prop.Name, memberInfo.Name, StringComparison.Ordinal))
 						{
 							foundByName ??= prop;
 							if (prop.GetMemberType() == memberInfo.GetMemberType())
@@ -157,7 +157,7 @@ namespace LinqToDB.Internal.Extensions
 		{
 			foreach (var method in type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
 			{
-				if (method.Name == name && method.ReturnType == returnType)
+				if (string.Equals(method.Name, name, StringComparison.Ordinal) && method.ReturnType == returnType)
 				{
 					var parameters = method.GetParameters();
 					if (parameters.Length != types.Length)
@@ -189,8 +189,7 @@ namespace LinqToDB.Internal.Extensions
 			foreach (var method in type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
 			{
 				if (method.IsGenericMethod
-					&& method.Name == name
-					&& method.GetGenericMethodDefinition().GetGenericArguments().Length == genericParametersCount)
+					&& string.Equals(method.Name, name, StringComparison.Ordinal) && method.GetGenericMethodDefinition().GetGenericArguments().Length == genericParametersCount)
 				{
 					var parameters = method.GetParameters();
 					if (parameters.Length == types.Length)
@@ -413,7 +412,7 @@ namespace LinqToDB.Internal.Extensions
 				{
 					var method = pm.TargetMethods[i];
 
-					if (!method.IsStatic && (method == member || (method.DeclaringType == member.DeclaringType && method.Name == member.Name)))
+					if (!method.IsStatic && (method == member || (method.DeclaringType == member.DeclaringType && string.Equals(method.Name, member.Name, StringComparison.Ordinal))))
 						yield return inf;
 				}
 			}
@@ -608,7 +607,7 @@ namespace LinqToDB.Internal.Extensions
 				{
 					if (pi.GetIndexParameters().Length > 0 && pi.PropertyType != typeof(object))
 					{
-						if (pi.Name == "Item")
+						if (string.Equals(pi.Name, "Item", StringComparison.Ordinal))
 							return pi.PropertyType;
 
 						last = pi;
@@ -695,7 +694,7 @@ namespace LinqToDB.Internal.Extensions
 						if (t.GetGenericTypeDefinition() == baseType)
 							return t.GetGenericArguments();
 					}
-					else if (baseTypeName == null || t.Name.Split('`')[0] == baseTypeName)
+					else if (baseTypeName == null || string.Equals(t.Name.Split('`')[0], baseTypeName, StringComparison.Ordinal))
 					{
 						return t.GetGenericArguments();
 					}
@@ -711,7 +710,7 @@ namespace LinqToDB.Internal.Extensions
 						if (t.GetGenericTypeDefinition() == baseType)
 							return t.GetGenericArguments();
 					}
-					else if (baseTypeName == null || t.Name.Split('`')[0] == baseTypeName)
+					else if (baseTypeName == null || string.Equals(t.Name.Split('`')[0], baseTypeName, StringComparison.Ordinal))
 					{
 						return t.GetGenericArguments();
 					}
@@ -802,22 +801,19 @@ namespace LinqToDB.Internal.Extensions
 
 		public static bool IsNullableValueMember(this MemberInfo member)
 		{
-			return
-				member.Name == "Value" &&
+			return string.Equals(member.Name, "Value", StringComparison.Ordinal) &&
 				member.DeclaringType!.IsNullableType;
 		}
 
 		public static bool IsNullableHasValueMember(this MemberInfo member)
 		{
-			return
-				member.Name == "HasValue" &&
+			return string.Equals(member.Name, "HasValue", StringComparison.Ordinal) &&
 				member.DeclaringType!.IsNullableType;
 		}
 
 		public static bool IsNullableGetValueOrDefault(this MemberInfo member)
 		{
-			return
-				member.Name == "GetValueOrDefault" &&
+			return string.Equals(member.Name, "GetValueOrDefault", StringComparison.Ordinal) &&
 				member.DeclaringType!.IsNullableType;
 		}
 
@@ -847,7 +843,7 @@ namespace LinqToDB.Internal.Extensions
 
 			foreach (var m in fromType.GetMethods())
 			{
-				if (m.IsStatic && m.IsPublic && m.ReturnType == toType && (m.Name == "op_Implicit" || m.Name == "op_Explicit"))
+				if (m.IsStatic && m.IsPublic && m.ReturnType == toType && (string.Equals(m.Name, "op_Implicit", StringComparison.Ordinal) || string.Equals(m.Name, "op_Explicit", StringComparison.Ordinal)))
 					return true;
 			}
 
@@ -862,7 +858,7 @@ namespace LinqToDB.Internal.Extensions
 			if (member1 == null || member2 == null)
 				return false;
 
-			if (member1.Name == member2.Name && member1.DeclaringType == member2.DeclaringType)
+			if (string.Equals(member1.Name, member2.Name, StringComparison.Ordinal) && member1.DeclaringType == member2.DeclaringType)
 				return true;
 
 			if (member1 is not PropertyInfo || member2 is not PropertyInfo)
@@ -870,7 +866,7 @@ namespace LinqToDB.Internal.Extensions
 
 			if (!member1.DeclaringType!.IsInterface && !member2.DeclaringType!.IsInterface)
 			{
-				if (member1.Name != member2.Name)
+				if (!string.Equals(member1.Name, member2.Name, StringComparison.Ordinal))
 					return false;
 
 				// Looks like it will not handle "new" properties case properly
@@ -900,7 +896,7 @@ namespace LinqToDB.Internal.Extensions
 
 			// we use ".<PROPERTY_NAME>" suffix to match implicit implementations by name
 			// it potentially could lead to name conflicts but it's best we can do as full name generation logic is not easy
-			if (member1.Name == member2.Name || member1.Name.EndsWith($".{member2.Name}"))
+			if (string.Equals(member1.Name, member2.Name, StringComparison.Ordinal) || member1.Name.EndsWith($".{member2.Name}", StringComparison.Ordinal))
 			{
 				var getter1 = ((PropertyInfo)member1).GetMethod!;
 				var getter2 = ((PropertyInfo)member2).GetMethod!;
@@ -911,7 +907,7 @@ namespace LinqToDB.Internal.Extensions
 					if (!map.InterfaceMethods[i].IsStatic &&
 						map.InterfaceMethods[i] == getter2 &&
 						(map.TargetMethods[i] == getter1 ||
-						(map.TargetMethods[i].Name == getter1.Name && map.TargetMethods[i].DeclaringType == getter1.DeclaringType)))
+						(string.Equals(map.TargetMethods[i].Name, getter1.Name, StringComparison.Ordinal) && map.TargetMethods[i].DeclaringType == getter1.DeclaringType)))
 						return true;
 
 				// (see Issue4031_Case01 test)
@@ -924,7 +920,7 @@ namespace LinqToDB.Internal.Extensions
 				var accessorNameEnd = $".{getter1.Name}";
 				for (var i = 0; i < map.InterfaceMethods.Length; i++)
 				{
-					if (declaringType == map.TargetMethods[i].DeclaringType && map.TargetMethods[i].Name.EndsWith(accessorNameEnd))
+					if (declaringType == map.TargetMethods[i].DeclaringType && map.TargetMethods[i].Name.EndsWith(accessorNameEnd, StringComparison.Ordinal))
 					{
 						// now we need to check that target method has no property to avoid false matches
 						var targetMethod = map.TargetMethods[i];
@@ -958,9 +954,9 @@ namespace LinqToDB.Internal.Extensions
 				!type.IsPublic &&
 				 type.IsGenericType &&
 				// C# anonymous type name prefix
-				(type.Name.StartsWith("<>f__AnonymousType") ||
+				(type.Name.StartsWith("<>f__AnonymousType", StringComparison.Ordinal) ||
 				 // VB.NET anonymous type name prefix
-				 type.Name.StartsWith("VB$AnonymousType")) &&
+				 type.Name.StartsWith("VB$AnonymousType", StringComparison.Ordinal)) &&
 				type.HasAttribute<CompilerGeneratedAttribute>(false);
 		}
 
@@ -1001,7 +997,7 @@ namespace LinqToDB.Internal.Extensions
 			return mi;
 		}
 
-		static ConcurrentDictionary<MethodInfo, MethodInfo> _methodDefinitionCache = new ();
+		static readonly ConcurrentDictionary<MethodInfo, MethodInfo> _methodDefinitionCache = new ();
 
 		internal static MethodInfo GetGenericMethodDefinitionCached(this MethodInfo method)
 		{

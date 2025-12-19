@@ -23,7 +23,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				// Merge(ITable<TTarget> target, string hint)
 
-				var disableFilters = methodCall.Arguments[0] is not MethodCallExpression mc || mc.Method.Name != nameof(LinqExtensions.AsCte);
+				var disableFilters = methodCall.Arguments[0] is not MethodCallExpression mc || !string.Equals(mc.Method.Name, nameof(LinqExtensions.AsCte), StringComparison.Ordinal);
 				if (disableFilters)
 					builder.PushDisabledQueryFilters([]);
 

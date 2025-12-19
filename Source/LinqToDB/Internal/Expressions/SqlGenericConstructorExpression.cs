@@ -113,13 +113,13 @@ namespace LinqToDB.Internal.Expressions
 			{
 				if (member.Type == parameter.ParameterType)
 				{
-					if (member.Name == parameter.Name)
+					if (string.Equals(member.Name, parameter.Name, StringComparison.Ordinal))
 					{
 						exactMatch = member.MemberInfo;
 						break;
 					}
 
-					if (member.Name.Equals(parameter.Name, StringComparison.InvariantCultureIgnoreCase))
+					if (member.Name.Equals(parameter.Name, StringComparison.OrdinalIgnoreCase))
 					{
 						nonCaseMatch = member.MemberInfo;
 						break;
@@ -366,8 +366,8 @@ namespace LinqToDB.Internal.Expressions
 
 			if (result)
 			{
-				result = EqualsLists(Assignments.OrderBy(a => a.MemberInfo.Name).ToList(),
-					other.Assignments.OrderBy(a => a.MemberInfo.Name).ToList(), Assignment.AssignmentComparer);
+				result = EqualsLists(Assignments.OrderBy(a => a.MemberInfo.Name, StringComparer.Ordinal).ToList(),
+					other.Assignments.OrderBy(a => a.MemberInfo.Name, StringComparer.Ordinal).ToList(), Assignment.AssignmentComparer);
 			}
 
 			return result;

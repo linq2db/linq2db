@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data.Linq;
 using System.Globalization;
 using System.Linq;
@@ -951,18 +951,18 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 			static float StringToFloat(string raw)
 			{
-				if (raw == "-inf") return float.NegativeInfinity;
-				if (raw == "inf" ) return float.PositiveInfinity;
-				if (raw == "nan" ) return float.NaN;
+				if (string.Equals(raw, "-inf", StringComparison.Ordinal)) return float.NegativeInfinity;
+				if (string.Equals(raw, "inf", StringComparison.Ordinal)) return float.PositiveInfinity;
+				if (string.Equals(raw, "nan", StringComparison.Ordinal)) return float.NaN;
 
 				return float.Parse(raw, CultureInfo.InvariantCulture);
 			}
 
 			static double StringToDouble(string raw)
 			{
-				if (raw == "-inf") return double.NegativeInfinity;
-				if (raw == "inf" ) return double.PositiveInfinity;
-				if (raw == "nan" ) return double.NaN;
+				if (string.Equals(raw, "-inf", StringComparison.Ordinal)) return double.NegativeInfinity;
+				if (string.Equals(raw, "inf", StringComparison.Ordinal)) return double.PositiveInfinity;
+				if (string.Equals(raw, "nan", StringComparison.Ordinal)) return double.NaN;
 
 				return double.Parse(raw, CultureInfo.InvariantCulture);
 			}

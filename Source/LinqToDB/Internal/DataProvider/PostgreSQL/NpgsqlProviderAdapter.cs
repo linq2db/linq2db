@@ -114,9 +114,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			// we should create lookup list of mapped fields, defined in used npgsql version
 			var dbTypeKnownNames    = Enum.GetNames(dbTypeType);
 			var dbMappedDbTypeNames = Enum.GetNames<NpgsqlDbType>();
-			foreach (var knownTypeName in from nType in dbTypeKnownNames
-										  join mType in dbMappedDbTypeNames on nType equals mType
-										  select nType)
+			foreach (var knownTypeName in dbTypeKnownNames.Where(n => dbMappedDbTypeNames.Contains(n, StringComparer.Ordinal)))
 			{
 				// use setter([]) instead of Add() because enum contains duplicate fields with same values
 				_knownDbTypes[Enum.Parse<NpgsqlDbType>(knownTypeName)] = (int)Enum.Parse(dbTypeType, knownTypeName);

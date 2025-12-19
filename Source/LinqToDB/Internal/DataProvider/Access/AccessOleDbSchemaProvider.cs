@@ -88,7 +88,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					SchemaName         = schema,
 					TableName          = name,
 					IsDefaultSchema    = string.IsNullOrEmpty(schema),
-					IsView             = t.Field<string>("TABLE_TYPE") == "VIEW",
+					IsView             = string.Equals(t.Field<string>("TABLE_TYPE"), "VIEW", StringComparison.Ordinal),
 					IsProviderSpecific = system,
 					Description        = t.Field<string>("DESCRIPTION"),
 				}
@@ -131,9 +131,9 @@ namespace LinqToDB.Internal.DataProvider.Access
 					IsNullable  = c.Field<bool>  ("IS_NULLABLE"),
 					Ordinal     = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
 					DataType    = dt?.TypeName,
-					Length      = dt?.CreateParameters != null && dt.CreateParameters.Contains("max length") ? Converter.ChangeTypeTo<int?>(c["CHARACTER_MAXIMUM_LENGTH"]) : null,
-					Precision   = dt?.CreateParameters != null && dt.CreateParameters.Contains("precision")  ? Converter.ChangeTypeTo<int?>(c["NUMERIC_PRECISION"])        : null,
-					Scale       = dt?.CreateParameters != null && dt.CreateParameters.Contains("scale")      ? Converter.ChangeTypeTo<int?>(c["NUMERIC_SCALE"])            : null,
+					Length      = dt?.CreateParameters != null && dt.CreateParameters.Contains("max length", StringComparison.Ordinal) ? Converter.ChangeTypeTo<int?>(c["CHARACTER_MAXIMUM_LENGTH"]) : null,
+					Precision   = dt?.CreateParameters != null && dt.CreateParameters.Contains("precision", StringComparison.Ordinal)  ? Converter.ChangeTypeTo<int?>(c["NUMERIC_PRECISION"])        : null,
+					Scale       = dt?.CreateParameters != null && dt.CreateParameters.Contains("scale", StringComparison.Ordinal)      ? Converter.ChangeTypeTo<int?>(c["NUMERIC_SCALE"])            : null,
 					// ole db provider returns incorrect flags (reports INT NOT NULL columns as identity)
 					// https://github.com/linq2db/linq2db/issues/3149
 					IsIdentity  = false,

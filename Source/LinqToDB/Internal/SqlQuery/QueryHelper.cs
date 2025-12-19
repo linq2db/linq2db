@@ -226,7 +226,7 @@ namespace LinqToDB.Internal.SqlQuery
 				case QueryElementType.SqlExpression:
 				{
 					var sqlExpr = (SqlExpression)expr;
-					if (sqlExpr.Parameters.Length == 1 && sqlExpr.Expr == "{0}")
+					if (sqlExpr.Parameters.Length == 1 && string.Equals(sqlExpr.Expr, "{0}", StringComparison.Ordinal))
 						return GetColumnDescriptor(sqlExpr.Parameters[0]);
 					break;
 				}
@@ -702,7 +702,7 @@ namespace LinqToDB.Internal.SqlQuery
 			var result =
 				table1.ObjectType   == table2.ObjectType &&
 				table1.TableName    == table2.TableName  &&
-				string.Equals(table1.Expression, table2.Expression);
+				string.Equals(table1.Expression, table2.Expression, StringComparison.Ordinal);
 
 			if (result && withExtensions)
 			{
@@ -1003,7 +1003,7 @@ namespace LinqToDB.Internal.SqlQuery
 		[GeneratedRegex(ParamsRegexPattern, RegexOptions.Compiled, matchTimeoutMilliseconds: 1)]
 		private static partial Regex ParamsRegex();
 #else
-		static Regex _paramsRegex = new(ParamsRegexPattern, RegexOptions.Compiled, TimeSpan.FromMilliseconds(1));
+		static readonly Regex _paramsRegex = new(ParamsRegexPattern, RegexOptions.Compiled, TimeSpan.FromMilliseconds(1));
 		static Regex ParamsRegex() => _paramsRegex;
 #endif
 
@@ -1041,8 +1041,8 @@ namespace LinqToDB.Internal.SqlQuery
 
 			string StripDoubleQuotes(string str)
 			{
-				str = str.Replace("{{", "{");
-				str = str.Replace("}}", "}");
+				str = str.Replace("{{", "{", StringComparison.Ordinal);
+				str = str.Replace("}}", "}", StringComparison.Ordinal);
 				return str;
 			}
 

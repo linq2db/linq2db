@@ -16,10 +16,10 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			if (options.ProviderName?.Contains("SqlCe") == true
-				|| options.ProviderName?.Contains("SqlServerCe") == true
-				|| options.ConfigurationString?.Contains("SqlCe") == true
-				|| options.ConfigurationString?.Contains("SqlServerCe") == true)
+			if (options.ProviderName?.Contains("SqlCe", StringComparison.Ordinal) == true
+				|| options.ProviderName?.Contains("SqlServerCe", StringComparison.Ordinal) == true
+				|| options.ConfigurationString?.Contains("SqlCe", StringComparison.Ordinal) == true
+				|| options.ConfigurationString?.Contains("SqlServerCe", StringComparison.Ordinal) == true)
 				return _sqlCeDataProvider.Value;
 
 			return null;

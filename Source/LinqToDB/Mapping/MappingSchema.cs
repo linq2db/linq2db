@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -1088,7 +1088,7 @@ namespace LinqToDB.Mapping
 
 				void AddMetadataReaderInternal(IMetadataReader reader)
 				{
-					if (!(hash ??= new()).Add(reader.GetObjectID()))
+					if (!(hash ??= new(StringComparer.Ordinal)).Add(reader.GetObjectID()))
 						return;
 
 					if (reader is MetadataReader metadataReader)
@@ -1172,7 +1172,7 @@ namespace LinqToDB.Mapping
 					foreach (var c in ConfigurationList)
 					{
 						foreach (var a in attrs)
-							if (a.Configuration == c)
+							if (string.Equals(a.Configuration, c, StringComparison.Ordinal))
 								(list ??= new()).Add(a);
 					}
 
@@ -1198,7 +1198,7 @@ namespace LinqToDB.Mapping
 					foreach (var c in ConfigurationList)
 					{
 						foreach (var a in attrs)
-							if (a.Configuration == c)
+							if (string.Equals(a.Configuration, c, StringComparison.Ordinal))
 								(list ??= new()).Add(a);
 						if (list != null)
 							return list.ToArray();
@@ -1358,7 +1358,7 @@ namespace LinqToDB.Mapping
 			get => field ??= Schemas
 				.Select(s => s.Configuration)
 				.Where(s => !string.IsNullOrEmpty(s))
-				.Distinct()
+				.Distinct(StringComparer.Ordinal)
 				.ToArray();
 		}
 

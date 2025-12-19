@@ -201,7 +201,7 @@ namespace LinqToDB
 					if (canBeOptional)
 						paramName = paramName.TrimEnd('?');
 
-					if (paramName == "_")
+					if (string.Equals(paramName, "_", StringComparison.Ordinal))
 					{
 						spaceNeeded = true;
 						prevMatch   = match.Index + match.Length;

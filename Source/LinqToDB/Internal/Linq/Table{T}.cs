@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -156,7 +156,7 @@ namespace LinqToDB.Internal.Linq
 			get => _name.Server;
 			set
 			{
-				if (_name.Server != value)
+				if (!string.Equals(_name.Server, value, System.StringComparison.Ordinal))
 				{
 					Expression = ApplyServerName(Expression, value);
 
@@ -170,7 +170,7 @@ namespace LinqToDB.Internal.Linq
 			get => _name.Database;
 			set
 			{
-				if (_name.Database != value)
+				if (!string.Equals(_name.Database, value, System.StringComparison.Ordinal))
 				{
 					Expression = ApplyDatabaseName(Expression, value);
 
@@ -184,7 +184,7 @@ namespace LinqToDB.Internal.Linq
 			get => _name.Schema;
 			set
 			{
-				if (_name.Schema != value)
+				if (!string.Equals(_name.Schema, value, System.StringComparison.Ordinal))
 				{
 					Expression = ApplySchemaName(Expression, value);
 
@@ -212,7 +212,7 @@ namespace LinqToDB.Internal.Linq
 			get => _name.Name;
 			set
 			{
-				if (_name.Name != value)
+				if (!string.Equals(_name.Name, value, System.StringComparison.Ordinal))
 				{
 					Expression = ApplyTableName(Expression, value);
 
@@ -226,7 +226,7 @@ namespace LinqToDB.Internal.Linq
 			get;
 			set
 			{
-				if (field != value)
+				if (!string.Equals(field, value, System.StringComparison.Ordinal))
 				{
 					Expression = ApplyTableId(Expression, value);
 

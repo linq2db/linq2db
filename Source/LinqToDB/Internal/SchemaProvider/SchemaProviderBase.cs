@@ -45,7 +45,7 @@ namespace LinqToDB.Internal.SchemaProvider
 
 		protected string? BuildSchemaFilter(GetSchemaOptions? options, string defaultSchema, Action<StringBuilder, string> stringLiteralBuilder)
 		{
-			var schemas = new HashSet<string>();
+			var schemas = new HashSet<string>(StringComparer.Ordinal);
 
 			schemas.Add(defaultSchema);
 
@@ -143,57 +143,51 @@ namespace LinqToDB.Internal.SchemaProvider
 						IsDefaultSchema    = t.IsDefaultSchema,
 						IsView             = t.IsView,
 						TypeName           = ToValidName(t.TableName),
-						Columns            = new List<ColumnSchema>(),
-						ForeignKeys        = new List<ForeignKeySchema>(),
+						Columns            = [],
+						ForeignKeys        = [],
 						IsProviderSpecific = t.IsProviderSpecific,
 					}
 				).ToList();
 
-				var pks = GetPrimaryKeys(dataConnection, tables, options);
-
 				#region Columns
 
-				var columns =
-					from c  in GetColumns(dataConnection, options)
+				var pks     = GetPrimaryKeys(dataConnection, tables, options).ToLookup(pk => pk.TableID, StringComparer.Ordinal);
+				var columns = GetColumns(dataConnection, options).ToLookup(c => c.TableID, StringComparer.Ordinal);
 
-					join pk in pks
-						on c.TableID + "." + c.Name equals pk.TableID + "." + pk.ColumnName into g2
-					from pk in g2.DefaultIfEmpty()
-
-					join t  in tables on c.TableID equals t.ID
-
-					orderby c.Ordinal
-					select new { t, c, dt = GetDataType(c.DataType, c.Type, options), pk };
-
-				foreach (var column in columns)
+				foreach (var t in tables)
 				{
-					var dataType   = column.c.DataType;
-					var systemType = GetSystemType(dataType, column.c.ColumnType, column.dt, column.c.Length, column.c.Precision, column.c.Scale, options);
-					var isNullable = column.c.IsNullable;
-					var columnType = column.c.ColumnType ?? GetDbType(options, dataType, column.dt, column.c.Length, column.c.Precision, column.c.Scale, null, null, null);
-
-					column.t.Columns.Add(new ColumnSchema
-					{
-						Table                = column.t,
-						ColumnName           = column.c.Name,
-						ColumnType           = columnType,
-						IsNullable           = isNullable,
-						MemberName           = ToValidName(column.c.Name),
-						MemberType           = ToTypeName(systemType, isNullable),
-						SystemType           = systemType,
-						DataType             = column.c.Type ?? GetDataType(dataType, column.c.ColumnType, column.c.Length, column.c.Precision, column.c.Scale),
-						ProviderSpecificType = GetProviderSpecificType(dataType),
-						SkipOnInsert         = column.c.SkipOnInsert || column.c.IsIdentity,
-						SkipOnUpdate         = column.c.SkipOnUpdate || column.c.IsIdentity,
-						IsPrimaryKey         = column.pk != null,
-						PrimaryKeyOrder      = column.pk?.Ordinal ?? -1,
-						IsIdentity           = column.c.IsIdentity,
-						Description          = column.c.Description,
-						Length               = column.c.Length,
-						Precision            = column.c.Precision,
-						Scale                = column.c.Scale,
-						Ordinal              = column.c.Ordinal,
-					});
+					t.Columns = (
+						from c in columns[t.ID!]
+						orderby c.Ordinal
+						let pk         = pks[t.ID!].FirstOrDefault(pk => string.Equals(pk.ColumnName, c.Name, StringComparison.Ordinal))
+						let dt         = GetDataType(c.DataType, c.Type, options)
+						let dataType   = c.DataType
+						let systemType = GetSystemType(dataType, c.ColumnType, dt, c.Length, c.Precision, c.Scale, options)
+						let isNullable = c.IsNullable
+						let columnType = c.ColumnType ?? GetDbType(options, dataType, dt, c.Length, c.Precision, c.Scale, null, null, null)
+						select new ColumnSchema
+						{
+							Table = t,
+							ColumnName = c.Name,
+							ColumnType = columnType,
+							IsNullable = isNullable,
+							MemberName = ToValidName(c.Name),
+							MemberType = ToTypeName(systemType, isNullable),
+							SystemType = systemType,
+							DataType = c.Type ?? GetDataType(dataType, c.ColumnType, c.Length, c.Precision, c.Scale),
+							ProviderSpecificType = GetProviderSpecificType(dataType),
+							SkipOnInsert = c.SkipOnInsert || c.IsIdentity,
+							SkipOnUpdate = c.SkipOnUpdate || c.IsIdentity,
+							IsPrimaryKey = pk != null,
+							PrimaryKeyOrder = pk?.Ordinal ?? -1,
+							IsIdentity = c.IsIdentity,
+							Description = c.Description,
+							Length = c.Length,
+							Precision = c.Precision,
+							Scale = c.Scale,
+							Ordinal = c.Ordinal,
+						}
+					).ToList();
 				}
 
 				#endregion
@@ -204,15 +198,15 @@ namespace LinqToDB.Internal.SchemaProvider
 
 				foreach (var fk in fks.OrderBy(f => f.Ordinal))
 				{
-					var thisTable  = (from t in tables where t.ID == fk.ThisTableID  select t).FirstOrDefault();
-					var otherTable = (from t in tables where t.ID == fk.OtherTableID select t).FirstOrDefault();
+					var thisTable  = (from t in tables where string.Equals(t.ID, fk.ThisTableID, StringComparison.Ordinal) select t).FirstOrDefault();
+					var otherTable = (from t in tables where string.Equals(t.ID, fk.OtherTableID, StringComparison.Ordinal) select t).FirstOrDefault();
 
 					if (thisTable == null || otherTable == null)
 						continue;
 
 					var stringComparison = ForeignKeyColumnComparison(fk.OtherColumn);
 
-					var thisColumn  = (from c in thisTable. Columns where c.ColumnName == fk.ThisColumn   select c).SingleOrDefault();
+					var thisColumn  = (from c in thisTable. Columns where string.Equals(c.ColumnName, fk.ThisColumn, StringComparison.Ordinal) select c).SingleOrDefault();
 					var otherColumn =
 					(
 						from c in otherTable.Columns
@@ -223,7 +217,7 @@ namespace LinqToDB.Internal.SchemaProvider
 					if (thisColumn == null || otherColumn == null)
 						continue;
 
-					var key = thisTable.ForeignKeys.Find(f => f.KeyName == fk.Name);
+					var key = thisTable.ForeignKeys.Find(f => string.Equals(f.KeyName, fk.Name, StringComparison.Ordinal));
 
 					if (key == null)
 					{
@@ -265,7 +259,7 @@ namespace LinqToDB.Internal.SchemaProvider
 
 				if (procs != null)
 				{
-					var procParams = (IEnumerable<ProcedureParameterInfo>?)GetProcedureParameters(dataConnection, procs, options) ?? [];
+					var procParams = (GetProcedureParameters(dataConnection, procs, options) ?? []).ToLookup(p => p.ProcedureID, StringComparer.Ordinal);
 
 					procedures =
 					(
@@ -275,8 +269,6 @@ namespace LinqToDB.Internal.SchemaProvider
 							(ExcludedSchemas .Count == 0 || !ExcludedSchemas .Contains(sp.SchemaName))  &&
 							(IncludedCatalogs.Count == 0 ||  IncludedCatalogs.Contains(sp.CatalogName)) &&
 							(ExcludedCatalogs.Count == 0 || !ExcludedCatalogs.Contains(sp.CatalogName))
-						join p  in procParams on sp.ProcedureID equals p.ProcedureID
-						into gr
 						select new ProcedureSchema
 						{
 							CatalogName         = sp.CatalogName,
@@ -292,12 +284,9 @@ namespace LinqToDB.Internal.SchemaProvider
 							Description         = sp.Description,
 							Parameters          =
 							(
-								from pr in gr
-
+								from pr in procParams[sp.ProcedureID]
 								let dt         = GetDataType(pr.DataType, null, options)
-
 								let systemType = GetSystemType(pr.DataType, pr.DataTypeExact, dt, pr.Length, pr.Precision, pr.Scale, options)
-
 								orderby pr.Ordinal
 								select new ParameterSchema
 								{
@@ -316,8 +305,7 @@ namespace LinqToDB.Internal.SchemaProvider
 									Description          = pr.Description,
 								}
 							).ToList(),
-						} into ps
-						select ps
+						}
 					).ToList();
 
 					var current = 1;
@@ -465,7 +453,7 @@ namespace LinqToDB.Internal.SchemaProvider
 							from t in tables
 							where t.Columns.Count == procedure.ResultTable.Columns.Count
 							let zip = t.Columns.Zip(procedure.ResultTable.Columns, (c1, c2) => new { c1, c2 })
-							where zip.All(z => z.c1.ColumnName == z.c2.ColumnName && z.c1.SystemType == z.c2.SystemType)
+							where zip.All(z => string.Equals(z.c1.ColumnName, z.c2.ColumnName, StringComparison.Ordinal) && z.c1.SystemType == z.c2.SystemType)
 							select t
 						).ToList();
 					}
@@ -636,7 +624,7 @@ namespace LinqToDB.Internal.SchemaProvider
 		// TODO: use proper C# identifier validation procedure
 		public static string ToValidName(string name)
 		{
-			if (name.Contains(' ') || name.Contains('\t'))
+			if (name.Contains(' ', StringComparison.Ordinal) || name.Contains('\t', StringComparison.Ordinal))
 			{
 				var ss = name.Split(_nameSeparators, StringSplitOptions.RemoveEmptyEntries)
 					.Select(s => char.ToUpperInvariant(s[0]) + s.Substring(1));
@@ -705,7 +693,7 @@ namespace LinqToDB.Internal.SchemaProvider
 			{
 				foreach (var key in t.ForeignKeys.ToList())
 				{
-					if (!key.KeyName.EndsWith("_BackReference"))
+					if (!key.KeyName.EndsWith("_BackReference", StringComparison.Ordinal))
 					{
 						key.OtherTable.ForeignKeys.Add(
 							key.BackReference = new ForeignKeySchema
@@ -769,32 +757,32 @@ namespace LinqToDB.Internal.SchemaProvider
 			{
 				name = key.MemberName;
 
-				if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.ToLowerInvariant().EndsWith("id"))
+				if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.EndsWith("id", StringComparison.OrdinalIgnoreCase))
 				{
 					name = key.ThisColumns[0].MemberName;
 					name = name.Substring(0, name.Length - "id".Length).TrimEnd('_');
 
 					if (table.ForeignKeys.Select(_ => _.MemberName). Concat(
 						table.Columns.    Select(_ => _.MemberName)).Concat(
-						new[] { table.TypeName }).Any(_ => _ == name))
+						new[] { table.TypeName }).Any(_ => string.Equals(_, name, StringComparison.Ordinal)))
 					{
 						name = key.MemberName;
 					}
 				}
 
-				if (name == key.MemberName)
+				if (string.Equals(name, key.MemberName, StringComparison.Ordinal))
 				{
-					if (name.StartsWith("FK_"))
+					if (name.StartsWith("FK_", StringComparison.Ordinal))
 						name = name.Substring(3);
 
-					if (name.EndsWith("_BackReference"))
+					if (name.EndsWith("_BackReference", StringComparison.Ordinal))
 						name = name.Substring(0, name.Length - "_BackReference".Length);
 
 					name = string.Concat(name
 						.Split('_')
 						.Where(_ =>
-							_.Length > 0 && _ != table.TableName &&
-							(table.SchemaName == null || table.IsDefaultSchema || _ != table.SchemaName)));
+							_.Length > 0 && !string.Equals(_, table.TableName, StringComparison.Ordinal) &&
+							(table.SchemaName == null || table.IsDefaultSchema || !string.Equals(_, table.SchemaName, StringComparison.Ordinal))));
 
 					var digitEnd = 0;
 					for (var i = name.Length - 1; i >= 0; i--)
@@ -814,7 +802,7 @@ namespace LinqToDB.Internal.SchemaProvider
 
 				if (table.ForeignKeys.Select(_ => _.MemberName). Concat(
 					table.Columns.    Select(_ => _.MemberName)).Concat(
-					new[] { table.TypeName }).All(_ => _ != name))
+					new[] { table.TypeName }).All(_ => !string.Equals(_, name, StringComparison.Ordinal)))
 				{
 					key.MemberName = ToValidName(name);
 				}

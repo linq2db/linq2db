@@ -53,7 +53,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			if (Adapter.GetBigIntReaderMethod != null)
 				SetField(typeof(long), "BIGINT", Adapter.GetBigIntReaderMethod, false, dataReaderType: Adapter.DataReaderType);
 
-			if (Name == ProviderName.Informix && Adapter.DecimalType != null)
+			if (string.Equals(Name, ProviderName.Informix, StringComparison.Ordinal) && Adapter.DecimalType != null)
 											  SetProviderField(Adapter.DecimalType , typeof(decimal) , Adapter.GetDecimalReaderMethod!, dataReaderType: Adapter.DataReaderType);
 			if (Adapter.DateTimeType != null) SetProviderField(Adapter.DateTimeType, typeof(DateTime), Adapter.GetDateTimeReaderMethod, dataReaderType: Adapter.DataReaderType);
 			if (Adapter.TimeSpanType != null) SetProviderField(Adapter.TimeSpanType, typeof(TimeSpan), Adapter.GetTimeSpanReaderMethod, dataReaderType: Adapter.DataReaderType);

@@ -24,16 +24,16 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			// and other method returns default provider type
 
 			// ensure ClickHouse configuration over mysql protocol is not detected as mysql
-			if (options.ProviderName?.Contains("ClickHouse") == true || options.ConfigurationString?.Contains("ClickHouse") == true)
+			if (options.ProviderName?.Contains("ClickHouse", StringComparison.Ordinal) == true || options.ConfigurationString?.Contains("ClickHouse", StringComparison.Ordinal) == true)
 				return null;
 
 			switch (options.ProviderName)
 			{
 				case ""                                           :
 				case null                                         :
-					if (options.ConfigurationString?.Contains("MySql") == true)
+					if (options.ConfigurationString?.Contains("MySql", StringComparison.Ordinal) == true)
 						goto case ProviderName.MySql;
-					if (options.ConfigurationString?.Contains("MariaDB") == true)
+					if (options.ConfigurationString?.Contains("MariaDB", StringComparison.Ordinal) == true)
 						goto case "MariaDB";
 					break;
 				case ProviderName.MySql57MySqlData                :
@@ -56,19 +56,19 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				case ProviderName.MySql                           :
 					var provider = DetectProvider(options, MySqlProvider.AutoDetect);
 
-					if (options.ConfigurationString?.Contains("5.") == true
-						|| options.ProviderName?    .Contains("55") == true
-						|| options.ProviderName?    .Contains("56") == true
-						|| options.ProviderName?    .Contains("57") == true) return GetDataProvider(options, provider, MySqlVersion.MySql57);
-					if (options.ConfigurationString?.Contains("8.") == true
-						|| options.ProviderName?    .Contains("80") == true
-						|| options.ProviderName?    .Contains("81") == true
-						|| options.ProviderName?    .Contains("82") == true
-						|| options.ProviderName?    .Contains("83") == true) return GetDataProvider(options, provider, MySqlVersion.MySql80);
+					if (options.ConfigurationString?.Contains("5.", StringComparison.Ordinal) == true
+						|| options.ProviderName?    .Contains("55", StringComparison.Ordinal) == true
+						|| options.ProviderName?    .Contains("56", StringComparison.Ordinal) == true
+						|| options.ProviderName?    .Contains("57", StringComparison.Ordinal) == true) return GetDataProvider(options, provider, MySqlVersion.MySql57);
+					if (options.ConfigurationString?.Contains("8.", StringComparison.Ordinal) == true
+						|| options.ProviderName?    .Contains("80", StringComparison.Ordinal) == true
+						|| options.ProviderName?    .Contains("81", StringComparison.Ordinal) == true
+						|| options.ProviderName?    .Contains("82", StringComparison.Ordinal) == true
+						|| options.ProviderName?    .Contains("83", StringComparison.Ordinal) == true) return GetDataProvider(options, provider, MySqlVersion.MySql80);
 
-					if (options.ProviderName?   .Contains("MariaDB") == true
-						|| options.ProviderName?.Contains("10")      == true
-						|| options.ProviderName?.Contains("11")      == true) return GetDataProvider(options, provider, MySqlVersion.MariaDB10);
+					if (options.ProviderName?   .Contains("MariaDB", StringComparison.Ordinal) == true
+						|| options.ProviderName?.Contains("10", StringComparison.Ordinal)      == true
+						|| options.ProviderName?.Contains("11", StringComparison.Ordinal)      == true) return GetDataProvider(options, provider, MySqlVersion.MariaDB10);
 
 					if (AutoDetectProvider)
 					{
@@ -122,9 +122,9 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			// MySQL: X.Y.Z[-optionalsuffix]
 			// MariaDB: X.Y.Z-MariaDB[-optionalsuffix]
 
-			var isMariaDB = versionString.Contains("-MariaDB");
+			var isMariaDB = versionString.Contains("-MariaDB", StringComparison.Ordinal);
 
-			var idx = versionString.IndexOf('-');
+			var idx = versionString.IndexOf('-', StringComparison.Ordinal);
 			if (idx != -1)
 				versionString = versionString.Substring(0, idx);
 

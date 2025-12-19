@@ -184,7 +184,7 @@ namespace LinqToDB.Internal.Expressions
 		static MethodInfo? FindMethodInfoInType(Type type, string methodName, int paramCount)
 		{
 			var method = type.GetRuntimeMethods()
-				.FirstOrDefault(m => m.Name == methodName && m.GetParameters().Length == paramCount);
+				.FirstOrDefault(m => string.Equals(m.Name, methodName, StringComparison.Ordinal) && m.GetParameters().Length == paramCount);
 			return method;
 		}
 

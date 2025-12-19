@@ -237,7 +237,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		private static SqlServerProviderAdapter CreateAdapter(SqlServerProvider provider, string assemblyName, string clientNamespace, string factoryName)
 		{
-			var isSystem = assemblyName == SystemAssemblyName;
+			var isSystem = string.Equals(assemblyName, SystemAssemblyName, StringComparison.Ordinal);
 
 			Assembly?  assembly;
 			Exception? exception = null;

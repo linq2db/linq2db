@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -123,8 +123,8 @@ namespace LinqToDB.Internal.DataProvider.DB2
 					{
 						TableID     = tableId,
 						Name        = name,
-						IsNullable  = rd.ToString(5) == "Y",
-						IsIdentity  = rd.ToString(6) == "Y",
+						IsNullable  = string.Equals(rd.ToString(5), "Y", System.StringComparison.Ordinal),
+						IsIdentity  = string.Equals(rd.ToString(6), "Y", System.StringComparison.Ordinal),
 						Ordinal     = Converter.ChangeTypeTo<int> (rd[7]),
 						DataType    = rd.ToString(8),
 						Description = rd.ToString(9),
@@ -207,7 +207,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 						B.COLSEQ
 					"""
 				)
-				let   otherColumn = _primaryKeys!.Where(pk => pk.TableID == fk.otherTable).ElementAtOrDefault(fk.ordinal - 1)
+				let   otherColumn = _primaryKeys!.Where(pk => string.Equals(pk.TableID, fk.otherTable, System.StringComparison.Ordinal)).ElementAtOrDefault(fk.ordinal - 1)
 				where otherColumn != null
 				select new ForeignKeyInfo
 				{
@@ -232,7 +232,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 						// IMPORTANT: reader calls must be ordered to support SequentialAccess
 						var schema     = rd.ToString(0);
 						var name       = rd.ToString(1)!;
-						var isFunction = rd.ToString(2) == "F";
+						var isFunction = string.Equals(rd.ToString(2), "F", System.StringComparison.Ordinal);
 
 						return new ProcedureInfo
 						{
@@ -254,7 +254,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 						{GetSchemaFilter("SCHEMA")}
 					"""
 				)
-				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || p.SchemaName == DefaultSchema)
+				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || string.Equals(p.SchemaName, DefaultSchema, System.StringComparison.Ordinal))
 				.ToList();
 		}
 
@@ -281,8 +281,8 @@ namespace LinqToDB.Internal.DataProvider.DB2
 							ParameterName = pName,
 							DataType      = dataType,
 							Ordinal       = ConvertTo<int>.From(ordinal),
-							IsIn          = mode.Contains("IN"),
-							IsOut         = mode.Contains("OUT"),
+							IsIn          = mode.Contains("IN", System.StringComparison.Ordinal),
+							IsOut         = mode.Contains("OUT", System.StringComparison.Ordinal),
 							IsResult      = false,
 							IsNullable    = true,
 						};

@@ -85,9 +85,9 @@ namespace LinqToDB.Remote
 			readonly MappingSchema _mappingSchema;
 
 			public readonly Dictionary<Type,TypeInfo>                   TypeDic     = new();
-			public readonly Dictionary<string,ResourceType>             Types       = new();
-			public readonly Dictionary<string,ResourceSet>              Sets        = new();
-			public readonly Dictionary<string,Func<object?,IQueryable>> RootGetters = new();
+			public readonly Dictionary<string,ResourceType>             Types       = new(StringComparer.Ordinal);
+			public readonly Dictionary<string,ResourceSet>              Sets        = new(StringComparer.Ordinal);
+			public readonly Dictionary<string,Func<object?,IQueryable>> RootGetters = new(StringComparer.Ordinal);
 
 			void LoadMetadata()
 			{

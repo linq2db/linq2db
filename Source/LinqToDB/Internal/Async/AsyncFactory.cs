@@ -246,7 +246,7 @@ namespace LinqToDB.Internal.Async
 
 			if (mi == null
 				|| (!returnsValueTask && mi.ReturnType          != typeof(Task))
-				|| (returnsValueTask  && mi.ReturnType.FullName != "System.Threading.Tasks.ValueTask"))
+				|| (returnsValueTask  && !string.Equals(mi.ReturnType.FullName, "System.Threading.Tasks.ValueTask", StringComparison.Ordinal)))
 				return default;
 
 			var pInstance      = Expression.Parameter(typeof(TInstance));
@@ -338,7 +338,7 @@ namespace LinqToDB.Internal.Async
 				|| !mi.ReturnType.IsGenericType
 				|| !typeof(TTask).IsAssignableFrom(mi.ReturnType.GetGenericArguments()[0])
 				|| (!returnsValueTask && mi.ReturnType.GetGenericTypeDefinition()          != typeof(Task<>))
-				|| ( returnsValueTask && mi.ReturnType.GetGenericTypeDefinition().FullName != "System.Threading.Tasks.ValueTask`1"))
+				|| ( returnsValueTask && !string.Equals(mi.ReturnType.GetGenericTypeDefinition().FullName, "System.Threading.Tasks.ValueTask`1", StringComparison.Ordinal)))
 				return default;
 
 			var pInstance  = Expression.Parameter(typeof(TInstance));

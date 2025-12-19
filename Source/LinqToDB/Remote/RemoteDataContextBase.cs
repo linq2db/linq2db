@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -105,7 +105,7 @@ namespace LinqToDB.Remote
 			public IMemberConverter  MemberConverter  = null!;
 		}
 
-		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new();
+		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new(StringComparer.Ordinal);
 
 		sealed class RemoteMappingSchema : MappingSchema
 		{
@@ -128,9 +128,9 @@ namespace LinqToDB.Remote
 
 			static MappingSchema GetMappingSchema(Type type)
 			{
-				if (type.Namespace == _sqlServerMappingSchemaNamespaceName) return Internal.DataProvider.SqlServer.SqlServerMappingSchema.GetRemoteMappingSchema(type);
-				if (type.Namespace == _firebirdMappingSchemaNamespaceName)  return Internal.DataProvider.Firebird. FirebirdMappingSchema. GetRemoteMappingSchema(type);
-				if (type.Namespace == _oracleMappingSchemaNamespaceName)    return Internal.DataProvider.Oracle.   OracleMappingSchema.   GetRemoteMappingSchema(type);
+				if (string.Equals(type.Namespace, _sqlServerMappingSchemaNamespaceName, StringComparison.Ordinal)) return Internal.DataProvider.SqlServer.SqlServerMappingSchema.GetRemoteMappingSchema(type);
+				if (string.Equals(type.Namespace, _firebirdMappingSchemaNamespaceName, StringComparison.Ordinal))  return Internal.DataProvider.Firebird. FirebirdMappingSchema. GetRemoteMappingSchema(type);
+				if (string.Equals(type.Namespace, _oracleMappingSchemaNamespaceName, StringComparison.Ordinal))    return Internal.DataProvider.Oracle.   OracleMappingSchema.   GetRemoteMappingSchema(type);
 
 				return ActivatorExt.CreateInstance<MappingSchema>(type);
 			}
@@ -634,9 +634,9 @@ namespace LinqToDB.Remote
 				// For ConnectionOptions we reapply only mapping schema and connection interceptor.
 				// Connection string, configuration, data provider, etc. are not reapplyable.
 				//
-				if (options.ConfigurationString       != previousOptions?.ConfigurationString)       throw new LinqToDBException($"Option '{nameof(options.ConfigurationString)} cannot be changed for context dynamically.");
-				if (options.ConnectionString          != previousOptions?.ConnectionString)          throw new LinqToDBException($"Option '{nameof(options.ConnectionString)} cannot be changed for context dynamically.");
-				if (options.ProviderName              != previousOptions?.ProviderName)              throw new LinqToDBException($"Option '{nameof(options.ProviderName)} cannot be changed for context dynamically.");
+				if (!string.Equals(options.ConfigurationString, previousOptions?.ConfigurationString, StringComparison.Ordinal))       throw new LinqToDBException($"Option '{nameof(options.ConfigurationString)} cannot be changed for context dynamically.");
+				if (!string.Equals(options.ConnectionString, previousOptions?.ConnectionString, StringComparison.Ordinal))          throw new LinqToDBException($"Option '{nameof(options.ConnectionString)} cannot be changed for context dynamically.");
+				if (!string.Equals(options.ProviderName, previousOptions?.ProviderName, StringComparison.Ordinal))              throw new LinqToDBException($"Option '{nameof(options.ProviderName)} cannot be changed for context dynamically.");
 				if (options.DbConnection              != previousOptions?.DbConnection)              throw new LinqToDBException($"Option '{nameof(options.DbConnection)} cannot be changed for context dynamically.");
 				if (options.DbTransaction             != previousOptions?.DbTransaction)             throw new LinqToDBException($"Option '{nameof(options.DbTransaction)} cannot be changed for context dynamically.");
 				if (options.DisposeConnection         != previousOptions?.DisposeConnection)         throw new LinqToDBException($"Option '{nameof(options.DisposeConnection)} cannot be changed for context dynamically.");

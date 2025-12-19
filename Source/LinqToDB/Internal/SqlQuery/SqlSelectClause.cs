@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 
@@ -373,7 +373,7 @@ namespace LinqToDB.Internal.SqlQuery
 						using (writer.IndentScope())
 							writer.AppendElement(c.Expression);
 
-						if (writer.ToString(writer.Length - 1, 1) != "?" && c.Expression.CanBeNullable(writer.Nullability))
+						if (!string.Equals(writer.ToString(writer.Length - 1, 1), "?", StringComparison.Ordinal) && c.Expression.CanBeNullable(writer.Nullability))
 							writer.Append('?');
 
 						if (index < Columns.Count - 1)

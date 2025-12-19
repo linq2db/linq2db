@@ -73,7 +73,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					for (var i = 0; i < cte.Cte!.Fields.Count; i++)
 					{
-						if (cte.Cte!.Fields[i].Name == f.PhysicalName)
+						if (string.Equals(cte.Cte!.Fields[i].Name, f.PhysicalName, System.StringComparison.Ordinal))
 						{
 							var cteColumn = cte.Cte.Body!.Select.Columns[i];
 							v.RegisterColumn(cteColumn);
@@ -92,7 +92,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				for (var i = 0; i < cte.Cte!.Fields.Count; i++)
 				{
-					if (cte.Cte!.Fields[i].Name == element.PhysicalName)
+					if (string.Equals(cte.Cte!.Fields[i].Name, element.PhysicalName, System.StringComparison.Ordinal))
 					{
 						var column = cte.Cte.Body!.Select.Columns[i];
 						RegisterColumn(column);

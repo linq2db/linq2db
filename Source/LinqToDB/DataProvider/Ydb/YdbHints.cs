@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -96,7 +96,7 @@ namespace LinqToDB.DataProvider.Ydb
 					if (needQuote)
 					{
 						stringBuilder.Append('\'')
-						  .Append(raw.Replace("'", "''"))
+						  .Append(raw.Replace("'", "''", StringComparison.Ordinal))
 						  .Append('\'');
 					}
 					else

@@ -76,7 +76,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			var version = assembly.GetName().Version;
 
 			var typeMapper = new TypeMapper();
-			if (clientNamespace == MicrosoftDataSQLiteClientNamespace)
+			if (string.Equals(clientNamespace, MicrosoftDataSQLiteClientNamespace, StringComparison.Ordinal))
 			{
 				typeMapper.RegisterTypeWrapper<SqliteConnection>(connectionType);
 			}
@@ -89,7 +89,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 			Action? clearAllPools = null;
 
-			if (clientNamespace == MicrosoftDataSQLiteClientNamespace)
+			if (string.Equals(clientNamespace, MicrosoftDataSQLiteClientNamespace, StringComparison.Ordinal))
 			{
 				if (version >= ClearPoolsMinVersionMDS)
 				{
@@ -101,10 +101,10 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 				clearAllPools = typeMapper.BuildAction(typeMapper.MapActionLambda(() => SQLiteConnection.ClearAllPools()));
 			}
 
-			var supportsDateOnly   = clientNamespace == MicrosoftDataSQLiteClientNamespace && assembly.GetName().Version >= MinDateOnlyAssemblyVersionMDS;
+			var supportsDateOnly   = string.Equals(clientNamespace, MicrosoftDataSQLiteClientNamespace, StringComparison.Ordinal) && assembly.GetName().Version >= MinDateOnlyAssemblyVersionMDS;
 
 			Func<string, DbConnection> connectionFactory;
-			if (clientNamespace == MicrosoftDataSQLiteClientNamespace)
+			if (string.Equals(clientNamespace, MicrosoftDataSQLiteClientNamespace, StringComparison.Ordinal))
 			{
 				connectionFactory = typeMapper.BuildTypedFactory<string, SqliteConnection, DbConnection>(connectionString => new SqliteConnection(connectionString));
 			}

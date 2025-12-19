@@ -254,7 +254,7 @@ namespace LinqToDB.Internal.Common
 
 		public SqlTextWriter AppendIdentCheck(string str)
 		{
-			if (str.Contains(Environment.NewLine))
+			if (str.Contains(Environment.NewLine, StringComparison.Ordinal))
 			{
 				var split = str.Split('\n');
 				for (var index = 0; index < split.Length; index++)

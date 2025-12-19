@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return sb
 				.Append('[')
-				.Append(identifier.Replace("]", "]]"))
+				.Append(identifier.Replace("]", "]]", System.StringComparison.Ordinal))
 				.Append(']');
 		}
 

@@ -12,7 +12,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 		protected override bool SupportsNullInColumn => false;
 
-		static string[] DB2LikeCharactersToEscape = {"%", "_"};
+		static readonly string[] DB2LikeCharactersToEscape = {"%", "_"};
 
 		public override string[] LikeCharactersToEscape => DB2LikeCharactersToEscape;
 

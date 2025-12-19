@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq.Expressions;
 
 using LinqToDB.Async;
@@ -44,7 +44,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var condition = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 
-				if (methodCall.Method.Name.StartsWith("All"))
+				if (methodCall.Method.Name.StartsWith("All", StringComparison.Ordinal))
 					condition = Expression.Lambda(Expression.Not(condition.Body), condition.Name, condition.Parameters);
 
 				sequence = builder.BuildWhere(sequence, condition: condition, enforceHaving: false, out var error);
@@ -84,7 +84,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (_innerSql != null)
 					return _innerSql;
 
-				var predicate = new SqlPredicate.Exists(_methodCall.Method.Name.StartsWith("All"), Sequence.SelectQuery);
+				var predicate = new SqlPredicate.Exists(_methodCall.Method.Name.StartsWith("All", StringComparison.Ordinal), Sequence.SelectQuery);
 				
 				var innerSql = ExpressionBuilder.CreatePlaceholder(Parent?.SelectQuery ?? SelectQuery, new SqlSearchCondition(false, canBeUnknown: null, predicate), path, convertType: typeof(bool));
 

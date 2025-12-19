@@ -294,7 +294,7 @@ namespace LinqToDB.Remote
 				Data       = new List<string?[]>(),
 			};
 
-			var names             = new HashSet<string>();
+			var names             = new HashSet<string>(StringComparer.Ordinal);
 			var selectExpressions = query.Statement.QueryType switch
 			{
 				QueryType.Select => query.Statement.SelectQuery!.Select.Columns.Select(c => c.Expression).ToList(),

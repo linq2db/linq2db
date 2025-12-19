@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -99,7 +99,7 @@ namespace LinqToDB.Internal.DataProvider
 
 				if (ConvertToParameter(Options, column, value) || !MappingSchema.TryConvertToSql(StringBuilder, type, Options, value))
 				{
-					var name = SqlBuilder.ConvertInline(ParameterName == "?" ? ParameterName : string.Create(CultureInfo.InvariantCulture, $"{ParameterName}{++ParameterIndex}"), ConvertType.NameToQueryParameter);
+					var name = SqlBuilder.ConvertInline(string.Equals(ParameterName, "?", StringComparison.Ordinal) ? ParameterName : string.Create(CultureInfo.InvariantCulture, $"{ParameterName}{++ParameterIndex}"), ConvertType.NameToQueryParameter);
 
 					if (castParameters && (CurrentCount == 0 || castAllRows))
 					{
@@ -114,7 +114,7 @@ namespace LinqToDB.Internal.DataProvider
 						value = dataParameter.Value;
 
 					Parameters.Add(new DataParameter(
-						SqlBuilder.ConvertInline(ParameterName == "?" ? ParameterName : string.Create(CultureInfo.InvariantCulture, $"p{ParameterIndex}"), ConvertType.NameToQueryParameter),
+						SqlBuilder.ConvertInline(string.Equals(ParameterName, "?", StringComparison.Ordinal) ? ParameterName : string.Create(CultureInfo.InvariantCulture, $"p{ParameterIndex}"), ConvertType.NameToQueryParameter),
 						value, type.DataType, type.DbType)
 					{
 						Size      = type.Length,

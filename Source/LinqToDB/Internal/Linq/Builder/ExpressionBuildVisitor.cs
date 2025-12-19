@@ -2336,7 +2336,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (node.Method.DeclaringType == typeof(string))
 			{
-				if (node.Method.Name == "Format")
+				if (string.Equals(node.Method.Name, "Format", StringComparison.Ordinal))
 				{
 					var format = node.Arguments[0].EvaluateExpression<string>();
 					if (format == null)
@@ -5054,7 +5054,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return buildResult.BuildContext;
 		}
 
-		static string [] _singleElementMethods =
+		static readonly string[] _singleElementMethods =
 		{
 			nameof(Enumerable.FirstOrDefault),
 			nameof(Enumerable.First),

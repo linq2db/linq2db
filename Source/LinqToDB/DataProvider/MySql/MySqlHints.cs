@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -632,7 +632,7 @@ namespace LinqToDB.DataProvider.MySql
 				var hint    = (string)((SqlValue)sqlQueryExtension.Arguments["hint"]).Value!;
 				var idCount = (int)   ((SqlValue)sqlQueryExtension.Arguments["tableIDs.Count"]).Value!;
 
-				if ((hint is SubQuery.ForShare || idCount > 0) && sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.MariaDB10))
+				if ((hint is SubQuery.ForShare || idCount > 0) && sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.MariaDB10, StringComparer.Ordinal))
 					stringBuilder.Append("-- ");
 
 				stringBuilder.Append(hint);

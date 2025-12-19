@@ -50,7 +50,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						var param = builder.ParametersContext.BuildParameter(sequence, methodCall.Arguments[1], null)!;
 
-						param.Name             = methodCall.Method.Name == "Take" ? "take" : "skip";
+						param.Name             = string.Equals(methodCall.Method.Name, "Take", System.StringComparison.Ordinal) ? "take" : "skip";
 						param.IsQueryParameter = param.IsQueryParameter && parameterize;
 						expr                   = param;
 					}
@@ -62,7 +62,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					builder.ParametersContext.RegisterNonQueryParameter(paramExpr);
 				}
 
-				if (methodCall.Method.Name == "Take")
+				if (string.Equals(methodCall.Method.Name, "Take", System.StringComparison.Ordinal))
 				{
 					TakeHints? hints = null;
 					if (methodCall.Arguments.Count == 3 && methodCall.Arguments[2].Type == typeof(TakeHints))

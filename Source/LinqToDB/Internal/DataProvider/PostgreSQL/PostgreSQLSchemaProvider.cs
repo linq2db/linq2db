@@ -247,7 +247,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		{
 			var excludeSchemas =
 				new HashSet<string?>(
-					ExcludedSchemas.Where(s => !string.IsNullOrEmpty(s)).Union(_schemaSchemas),
+					ExcludedSchemas.Where(s => !string.IsNullOrEmpty(s)).Union(_schemaSchemas, StringComparer.Ordinal),
 					StringComparer.OrdinalIgnoreCase);
 
 			var includeSchemas = new HashSet<string?>(IncludedSchemas.Where(s => !string.IsNullOrEmpty(s)), StringComparer.OrdinalIgnoreCase);
@@ -268,14 +268,14 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			if (excludeSchemas.Count > 0)
 			{
 				var schemasToExcludeStr =
-					string.Join(", ", excludeSchemas.OrderBy(s => s).Select(s => ToDatabaseLiteral(dataConnection, s)));
+					string.Join(", ", excludeSchemas.OrderBy(s => s, StringComparer.Ordinal).Select(s => ToDatabaseLiteral(dataConnection, s)));
 				schemaFilter = $@"{schemaColumnName} NOT IN ({schemasToExcludeStr})";
 			}
 
 			if (includeSchemas.Count > 0)
 			{
 				var schemasToIncludeStr =
-					string.Join(", ", includeSchemas.OrderBy(s => s).Select(s => ToDatabaseLiteral(dataConnection, s)));
+					string.Join(", ", includeSchemas.OrderBy(s => s, StringComparer.Ordinal).Select(s => ToDatabaseLiteral(dataConnection, s)));
 				if (!string.IsNullOrEmpty(schemaFilter))
 					schemaFilter += " AND ";
 				schemaFilter += $@"{schemaColumnName} IN ({schemasToIncludeStr})";
@@ -684,7 +684,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				else
 				{
 					var simplified = SimplifyDataType(dataType);
-					if (simplified != dataType)
+					if (!string.Equals(simplified, dataType, StringComparison.Ordinal))
 					{
 						foundType = GetSystemType(simplified, null, GetDataType(simplified, null, options), null, null, null, options);
 						if (foundType != null)
@@ -733,7 +733,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			if (typInfo == null)
 			{
 				var simplified = SimplifyDataType(typeName);
-				if (simplified != typeName)
+				if (!string.Equals(simplified, typeName, StringComparison.Ordinal))
 					typInfo = base.GetDataType(simplified, dataType, options);
 			}
 
@@ -770,7 +770,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 							var catalog       = rd.GetString(0);
 							var schema        = rd.GetString(1);
 							var procName      = rd.GetString(2);
-							var isFunction    = rd.GetString(3) == "FUNCTION";
+							var isFunction    = string.Equals(rd.GetString(3), "FUNCTION", StringComparison.Ordinal);
 							var definition    = Converter.ChangeTypeTo<string>(rd[4]);
 							var procId        = catalog + "." + schema + "." + rd.GetString(5);
 							var isAggregate   = Converter.ChangeTypeTo<bool>(rd[6]);
@@ -787,11 +787,11 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 								IsFunction          = isFunction,
 								IsTableFunction     = isTableResult,
 								IsAggregateFunction = isAggregate,
-								IsDefaultSchema     = schema == (options.DefaultSchema ?? "public"),
+								IsDefaultSchema     = string.Equals(schema, options.DefaultSchema ?? "public", StringComparison.Ordinal),
 								ProcedureDefinition = definition,
 								// result of function has dynamic form and vary per call if function return type is 'record'
 								// only exception is function with out/inout parameters, where we know that record contains those parameters
-								IsResultDynamic     = Converter.ChangeTypeTo<string>(rd[8]) == "record" && Converter.ChangeTypeTo<int>(rd[9]) == 0,
+								IsResultDynamic     = string.Equals(Converter.ChangeTypeTo<string>(rd[8]), "record", StringComparison.Ordinal) && Converter.ChangeTypeTo<int>(rd[9]) == 0,
 							};
 						},
 						$"""
@@ -843,9 +843,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 								// this is only diffrence starting from v11
 								IsAggregateFunction = kind == 'a',
 								IsWindowFunction    = kind == 'w',
-								IsDefaultSchema     = schema == (options.DefaultSchema ?? "public"),
+								IsDefaultSchema     = string.Equals(schema, options.DefaultSchema ?? "public", StringComparison.Ordinal),
 								ProcedureDefinition = definition,
-								IsResultDynamic     = Converter.ChangeTypeTo<string>(rd[7]) == "record" && Converter.ChangeTypeTo<int>(rd[8]) == 0,
+								IsResultDynamic     = string.Equals(Converter.ChangeTypeTo<string>(rd[7]), "record", StringComparison.Ordinal) && Converter.ChangeTypeTo<int>(rd[8]) == 0,
 							};
 						},
 						$"""
@@ -953,13 +953,13 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				commandText += "NULL";
 
 				// we don't have proper support for any* yet
-				if (parameter.SchemaType == "USER-DEFINED")
+				if (string.Equals(parameter.SchemaType, "USER-DEFINED", StringComparison.Ordinal))
 				{ }
-				else if (parameter.SchemaType == "anyarray")
+				else if (string.Equals(parameter.SchemaType, "anyarray", StringComparison.Ordinal))
 					commandText += "::int[]";
-				else if (parameter.SchemaType == "anyelement")
+				else if (string.Equals(parameter.SchemaType, "anyelement", StringComparison.Ordinal))
 					commandText += "::int";
-				else if (parameter.SchemaType != "ARRAY")
+				else if (!string.Equals(parameter.SchemaType, "ARRAY", StringComparison.Ordinal))
 					// otherwise it will fail on overrides with same parameter count
 					commandText += "::" + parameter.SchemaType;
 			}
@@ -982,7 +982,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 					// https://github.com/npgsql/npgsql/issues/1693
 					let isNullable   = r.IsNull("AllowDBNull")      ? true       : r.Field<bool>("AllowDBNull")
 					// see https://github.com/npgsql/npgsql/issues/2243
-					let length       = r.IsNull("ColumnSize")       ? (int?)null : (r.Field<int>("ColumnSize") == -1 && columnType == "character" ? 1 : r.Field<int>("ColumnSize"))
+					let length       = r.IsNull("ColumnSize")       ? (int?)null : (r.Field<int>("ColumnSize") == -1 && string.Equals(columnType, "character", StringComparison.Ordinal) ? 1 : r.Field<int>("ColumnSize"))
 					let precision    = r.IsNull("NumericPrecision") ? (int?)null : r.Field<int>("NumericPrecision")
 					let scale        = r.IsNull("NumericScale")     ? (int?)null : r.Field<int>("NumericScale")
 					let providerType = r.IsNull("DataType")         ? null       : r.Field<Type>("DataType")

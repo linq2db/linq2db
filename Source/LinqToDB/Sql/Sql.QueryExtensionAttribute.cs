@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -73,7 +73,7 @@ namespace LinqToDB
 
 			public virtual SqlQueryExtension GetExtension(List<SqlQueryExtensionData> parameters)
 			{
-				var arguments = new Dictionary<string,ISqlExpression>();
+				var arguments = new Dictionary<string,ISqlExpression>(StringComparer.Ordinal);
 
 				foreach (var item in parameters)
 					arguments.Add(item.Name, item.SqlExpression!);

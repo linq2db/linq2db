@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
@@ -117,7 +117,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (parameterName == null && columnDescriptor != null)
 			{
-				if (columnDescriptor.MemberName.Contains('.'))
+				if (columnDescriptor.MemberName.Contains('.', StringComparison.Ordinal))
 					parameterName = columnDescriptor.ColumnName;
 				else
 					parameterName = columnDescriptor.MemberName;

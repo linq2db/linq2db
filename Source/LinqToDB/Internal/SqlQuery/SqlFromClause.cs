@@ -54,7 +54,7 @@ namespace LinqToDB.Internal.SqlQuery
 		{
 			foreach (var ts in Tables)
 				if (ts.Source == table)
-					if (alias == null || ts.Alias == alias)
+					if (alias == null || string.Equals(ts.Alias, alias, StringComparison.Ordinal))
 						return ts;
 					else
 						throw new ArgumentException($"Invalid alias: '{ts.Alias}' != '{alias}'");

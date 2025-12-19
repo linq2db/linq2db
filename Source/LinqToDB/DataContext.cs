@@ -801,9 +801,9 @@ namespace LinqToDB
 				// For ConnectionOptions we reapply only mapping schema and connection interceptor.
 				// Connection string, configuration, data provider, etc. are not reapplyable.
 				//
-				if (options.ConfigurationString       != previousOptions?.ConfigurationString)       throw new LinqToDBException($"Option '{nameof(ConnectionOptions.ConfigurationString)} cannot be changed for context dynamically.");
-				if (options.ConnectionString          != previousOptions?.ConnectionString)          throw new LinqToDBException($"Option '{nameof(ConnectionOptions.ConnectionString)} cannot be changed for context dynamically.");
-				if (options.ProviderName              != previousOptions?.ProviderName)              throw new LinqToDBException($"Option '{nameof(ConnectionOptions.ProviderName)} cannot be changed for context dynamically.");
+				if (!string.Equals(options.ConfigurationString, previousOptions?.ConfigurationString, StringComparison.Ordinal))       throw new LinqToDBException($"Option '{nameof(ConnectionOptions.ConfigurationString)} cannot be changed for context dynamically.");
+				if (!string.Equals(options.ConnectionString, previousOptions?.ConnectionString, StringComparison.Ordinal))          throw new LinqToDBException($"Option '{nameof(ConnectionOptions.ConnectionString)} cannot be changed for context dynamically.");
+				if (!string.Equals(options.ProviderName, previousOptions?.ProviderName, StringComparison.Ordinal))              throw new LinqToDBException($"Option '{nameof(ConnectionOptions.ProviderName)} cannot be changed for context dynamically.");
 				if (options.DbConnection              != previousOptions?.DbConnection)              throw new LinqToDBException($"Option '{nameof(ConnectionOptions.DbConnection)} cannot be changed for context dynamically.");
 				if (options.DbTransaction             != previousOptions?.DbTransaction)             throw new LinqToDBException($"Option '{nameof(ConnectionOptions.DbTransaction)} cannot be changed for context dynamically.");
 				if (options.DisposeConnection         != previousOptions?.DisposeConnection)         throw new LinqToDBException($"Option '{nameof(ConnectionOptions.DisposeConnection)} cannot be changed for context dynamically.");

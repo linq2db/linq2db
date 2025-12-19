@@ -38,7 +38,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			// but we traverse the inner exceptions just in case.
 			for (var e = ex; e != null; e = e.InnerException!)
 			{
-				if (e.GetType().FullName == YdbExceptionFullName)
+				if (string.Equals(e.GetType().FullName, YdbExceptionFullName, StringComparison.Ordinal))
 				{
 					ydbEx = e;
 					return true;

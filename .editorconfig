@@ -267,12 +267,6 @@ dotnet_diagnostic.IDE0370.severity = none # IDE0370: Remove unnecessary suppress
 # Require net8+
 dotnet_diagnostic.SYSLIB1054.severity = none # Use LibraryImportAttribute
 
-###### Meziantou.Analyzers (StringComparison; TODO: should enable eventually)
-dotnet_diagnostic.MA0001.severity = none # MA0001: StringComparison is missing
-dotnet_diagnostic.MA0002.severity = none # MA0002: IEqualityComparer<string> or IComparer<string> is missing
-dotnet_diagnostic.MA0006.severity = none # MA0006: Use String.Equals instead of equality operator
-dotnet_diagnostic.MA0074.severity = none # MA0074: Avoid implicit culture-sensitive methods
-
 ###### Meziantou.Analyzers
 dotnet_diagnostic.MA0016.severity = none # MA0016: Prefer using collection abstraction instead of implementation
 dotnet_diagnostic.MA0018.severity = none # MA0018: Do not declare static members on generic types (deprecated; use CA1000 instead)
@@ -305,7 +299,6 @@ dotnet_diagnostic.CA1008.severity = none # CA1008: Enums should have zero value
 dotnet_diagnostic.CA1010.severity = none # CA1010: Collections should implement generic interface
 dotnet_diagnostic.CA1019.severity = none # CA1019: Define accessors for attribute arguments
 dotnet_diagnostic.CA1024.severity = none # CA1024: Use properties where appropriate
-dotnet_diagnostic.CA1027.severity = none # CA1027: Mark enums with FlagsAttribute
 dotnet_diagnostic.CA1028.severity = none # CA1028: Enum storage should be Int32
 dotnet_diagnostic.CA1031.severity = none # CA1031: Do not catch general exception types
 dotnet_diagnostic.CA1033.severity = none # CA1033: Interface methods should be callable by child types
@@ -325,11 +318,7 @@ dotnet_diagnostic.CA1067.severity = none # CA1067: Override Equals when implemen
 dotnet_diagnostic.CA1068.severity = none # CA1068: CancellationToken parameters must come last
 dotnet_diagnostic.CA1069.severity = none # CA1069: Enums should not have duplicate values
 dotnet_diagnostic.CA1303.severity = none # CA1303: Do not pass literals as localized parameters
-dotnet_diagnostic.CA1307.severity = none # CA1307: Specify StringComparison for clarity
 dotnet_diagnostic.CA1308.severity = none # CA1308: Normalize strings to uppercase
-dotnet_diagnostic.CA1309.severity = none # CA1309: Use ordinal StringComparison
-dotnet_diagnostic.CA1310.severity = none # CA1310: Specify StringComparison for correctness
-dotnet_diagnostic.CA1311.severity = none # CA1311: Specify a culture or use an invariant version
 dotnet_diagnostic.CA1416.severity = none # CA1416: Validate platform compatibility
 dotnet_diagnostic.CA1422.severity = none # CA1422: Validate platform compatibility - obsoleted APIs
 dotnet_diagnostic.CA1863.severity = none # CA1863: use CompositeFormat
@@ -349,7 +338,6 @@ dotnet_diagnostic.CA1815.severity = none # CA1815: Override equals and operator 
 dotnet_diagnostic.CA1819.severity = none # CA1819: Properties should not return arrays
 dotnet_diagnostic.CA1822.severity = none # CA1822: Mark members as static TODO: V6 - fix remaining errors
 dotnet_diagnostic.CA1859.severity = none # CA1859: Use concrete types when possible for improved performance
-dotnet_diagnostic.CA1862.severity = none # CA1862: Prefer the 'StringComparison' method overloads to perform case-insensitive string comparisons
 dotnet_diagnostic.CA2100.severity = none # CA2100: Review SQL queries for security vulnerabilities
 dotnet_diagnostic.CA2119.severity = none # CA2119: Seal methods that satisfy private interfaces
 dotnet_diagnostic.CA2211.severity = none # CA2211: Non-constant fields should not be visible
@@ -474,11 +462,15 @@ dotnet_diagnostic.IDE0083.severity = none # IDE0083: Use pattern matching (not o
 # ReSharper properties
 resharper_space_before_new_parentheses = true
 
+dotnet_diagnostic.CA1027.severity = none # CA1027: Mark enums with FlagsAttribute
 dotnet_diagnostic.CA1044.severity = none # CA1044: Properties should not be write only
 dotnet_diagnostic.CA1050.severity = none # CA1050: Declare types in namespaces
 dotnet_diagnostic.CA1055.severity = none # CA1045: Url in name - url in type...
 dotnet_diagnostic.CA1058.severity = none # CA1058: Types should not extend certain base types
 dotnet_diagnostic.CA1307.severity = none # CA1307: Specify StringComparison for clarity
+dotnet_diagnostic.CA1309.severity = none # CA1309: Use ordinal StringComparison
+dotnet_diagnostic.CA1310.severity = none # CA1310: Specify StringComparison for correctness
+dotnet_diagnostic.CA1311.severity = none # CA1311: Specify a culture or use an invariant version
 dotnet_diagnostic.CA1515.severity = none # CA1515: Mark type internal
 dotnet_diagnostic.CA1802.severity = none # CA1802: Use Literals Where Appropriate
 dotnet_diagnostic.CA1812.severity = none # CA1812: Avoid uninstantiated internal classes
@@ -487,18 +479,21 @@ dotnet_diagnostic.CA1827.severity = none # CA1827: Do not use Count/LongCount wh
 dotnet_diagnostic.CA1829.severity = none # CA1829: Use Length/Count property instead of Enumerable.Count method
 dotnet_diagnostic.CA1849.severity = none # CA1849: Call async methods when in an async method
 dotnet_diagnostic.CA1851.severity = none # CA1851: Possible multiple enumerations of IEnumerable collection
-dotnet_diagnostic.CA1858.severity = none # CA1858: Use StartsWith instead of IndexOf
 dotnet_diagnostic.CA1852.severity = none # CA1852: Type can be sealed
+dotnet_diagnostic.CA1858.severity = none # CA1858: Use StartsWith instead of IndexOf
 dotnet_diagnostic.CA1860.severity = none # CA1860: Avoid using 'Enumerable.Any()' extension method
 dotnet_diagnostic.CA1861.severity = none # CA1861: Avoid constant arrays as arguments
 dotnet_diagnostic.CA1862.severity = none # CA1862: prefer the string comparison method with StringComparison argument
 dotnet_diagnostic.CA2007.severity = none # CA2007: Do not directly await a Task
 dotnet_diagnostic.CA2237.severity = none # CA2237: Mark ISerializable types with SerializableAttribute
 
+dotnet_diagnostic.MA0001.severity = none # MA0001: StringComparison is missing
 dotnet_diagnostic.MA0002.severity = none # MA0002: IEqualityComparer<string> or IComparer<string> is missing
 dotnet_diagnostic.MA0004.severity = none # MA0004: Use Task.ConfigureAwait
+dotnet_diagnostic.MA0006.severity = none # MA0006: Use String.Equals instead of equality operator
 dotnet_diagnostic.MA0021.severity = none # MA0021: Use StringComparer.GetHashCode instead of string.GetHashCode
 dotnet_diagnostic.MA0031.severity = none # MA0031: Optimize Enumerable.Count() usage
+dotnet_diagnostic.MA0074.severity = none # MA0074: Avoid implicit culture-sensitive methods
 dotnet_diagnostic.MA0169.severity = none # MA0169: Use Equals method instead of operator
 
 [Tests/**.vb]

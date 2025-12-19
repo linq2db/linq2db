@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		{
 			stringBuilder
 				.Append('\'')
-				.Append(value.Replace("\\", "\\\\").Replace("'",  "''"))
+				.Append(value.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("'",  "''", StringComparison.Ordinal))
 				.Append('\'');
 		}
 

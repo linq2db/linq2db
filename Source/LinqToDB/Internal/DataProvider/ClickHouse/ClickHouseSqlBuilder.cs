@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -518,24 +518,24 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			{
 				var h = (string)v.Value!;
 
-				if (h.StartsWith(ClickHouseHints.Join.Global))
+				if (h.StartsWith(ClickHouseHints.Join.Global, StringComparison.Ordinal))
 				{
 					StringBuilder
 						.Append(ClickHouseHints.Join.Global)
 						.Append(' ');
 
-					if (h ==  ClickHouseHints.Join.Global)
+					if (string.Equals(h, ClickHouseHints.Join.Global, StringComparison.Ordinal))
 						return base.BuildJoinType(join, condition);
 
 					h = h[(ClickHouseHints.Join.Global.Length + 1)..];
 				}
-				else if (h.StartsWith(ClickHouseHints.Join.All))
+				else if (h.StartsWith(ClickHouseHints.Join.All, StringComparison.Ordinal))
 				{
 					StringBuilder
 						.Append(ClickHouseHints.Join.All)
 						.Append(' ');
 
-					if (h ==  ClickHouseHints.Join.All)
+					if (string.Equals(h, ClickHouseHints.Join.All, StringComparison.Ordinal))
 						return base.BuildJoinType(join, condition);
 
 					h = h[(ClickHouseHints.Join.All.Length + 1)..];

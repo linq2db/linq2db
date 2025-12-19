@@ -166,7 +166,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				else
 					stringBuilder
 						.Append('\'')
-						.Append(value.Replace("'", "''"))
+						.Append(value.Replace("'", "''", StringComparison.Ordinal))
 						.Append('\'');
 			}
 		}

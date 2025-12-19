@@ -16,7 +16,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 {
 	public partial class SQLiteSchemaProvider : SchemaProviderBase
 	{
-		static IReadOnlyDictionary<string, (Type dotnetType, DataType dataType)> _typeMappings = new Dictionary<string, (Type dotnetType, DataType dataType)>(StringComparer.OrdinalIgnoreCase)
+		static readonly IReadOnlyDictionary<string, (Type dotnetType, DataType dataType)> _typeMappings = new Dictionary<string, (Type dotnetType, DataType dataType)>(StringComparer.OrdinalIgnoreCase)
 		{
 			// affinities
 			{ "blob",    ( typeof(byte[]),  DataType.VarBinary) },

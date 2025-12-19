@@ -204,7 +204,7 @@ namespace LinqToDB.Internal.Conversion
 				var values = Enum.GetValues(to);
 				var names  = Enum.GetNames (to);
 
-				var dic = new Dictionary<string,object>();
+				var dic = new Dictionary<string,object>(StringComparer.Ordinal);
 
 				for (var i = 0; i < values.Length; i++)
 				{
@@ -279,7 +279,7 @@ namespace LinqToDB.Internal.Conversion
 							{
 								value = f.OrigValue,
 								attrs = f.attrs
-									.Where (a => a.Configuration == f.attrs[0].Configuration)
+									.Where (a => string.Equals(a.Configuration, f.attrs[0].Configuration, StringComparison.Ordinal))
 									.Select(a => a.Value ?? mappingSchema.GetDefaultValue(from))
 									.ToList(),
 							})
@@ -421,7 +421,7 @@ namespace LinqToDB.Internal.Conversion
 
 						var toAttr = toField.Attrs[0];
 
-						toAttr = toField.Attrs.FirstOrDefault(a => a.Configuration == toAttr.Configuration && a.IsDefault) ?? toAttr;
+						toAttr = toField.Attrs.FirstOrDefault(a => string.Equals(a.Configuration, toAttr.Configuration, StringComparison.Ordinal) && a.IsDefault) ?? toAttr;
 
 						var fromAttrs = fromFields.Where(f => f.Attrs.Any(a =>
 							a.Value?.Equals(toAttr.Value) ?? toAttr.Value == null)).ToList();
@@ -439,7 +439,7 @@ namespace LinqToDB.Internal.Conversion
 									a = f.Attrs.First(a => a.Value?.Equals(toAttr.Value) ?? toAttr.Value == null),
 								} into fa
 								from c in cl
-								where fa.a.Configuration == c.c
+								where string.Equals(fa.a.Configuration, c.c, StringComparison.Ordinal)
 								orderby c.i
 								select fa.f;
 

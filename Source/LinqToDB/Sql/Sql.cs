@@ -131,7 +131,7 @@ namespace LinqToDB
 			{
 				var left  = builder.GetExpression(0)!;
 				var right = builder.GetExpression(1)!;
-				var isNot = builder.Expression == "NOT";
+				var isNot = string.Equals(builder.Expression, "NOT", StringComparison.Ordinal);
 
 				var nullability = NullabilityContext.GetContext(builder.Query);
 
@@ -229,7 +229,7 @@ namespace LinqToDB
 				var sqlExpr = builder.ConvertExpressionToSql(newExpr)!;
 				sqlExpr = sqlExpr.Convert(static (v, e) =>
 				{
-					if (e is SqlFunction func && func.Name == PseudoFunctions.REMOVE_CONVERT)
+					if (e is SqlFunction { Name: PseudoFunctions.REMOVE_CONVERT } func)
 						return func.Parameters[0];
 					return e;
 				});
@@ -527,7 +527,7 @@ namespace LinqToDB
 		{
 			if (value == null || str == null) return null;
 
-			return str.IndexOf(value.Value) + 1;
+			return str.IndexOf(value.Value, StringComparison.Ordinal) + 1;
 		}
 
 		[Function(                                                          IsNullable = IsNullableType.IfAnyParameterNullable)]
@@ -695,7 +695,7 @@ namespace LinqToDB
 			if (str.Length == 0)                                     return str;
 			if (oldValue.Length == 0)                                return str; // Replace raises exception here.
 
-			return str.Replace(oldValue, newValue);
+			return str.Replace(oldValue, newValue, StringComparison.Ordinal);
 		}
 
 		[Function(                              IsNullable = IsNullableType.IfAnyParameterNullable)]

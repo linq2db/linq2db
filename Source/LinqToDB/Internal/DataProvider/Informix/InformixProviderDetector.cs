@@ -31,11 +31,11 @@ namespace LinqToDB.Internal.DataProvider.Informix
 				case DB2ProviderAdapter.CoreClientNamespace    :
 
 					// this check used by both Informix and DB2 providers to avoid conflicts
-					if (options.ConfigurationString?.Contains("Informix") == true)
+					if (options.ConfigurationString?.Contains("Informix", StringComparison.Ordinal) == true)
 						goto case ProviderName.Informix;
 					break;
 				case ProviderName.Informix:
-					if (options.ConfigurationString?.Contains("DB2") == true)
+					if (options.ConfigurationString?.Contains("DB2", StringComparison.Ordinal) == true)
 						return _informixDB2DataProvider.Value;
 
 #if NETFRAMEWORK
@@ -85,7 +85,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 					return InformixProvider.Informix;
 
 				default:
-					if (options.ConfigurationString?.Contains("DB2") == true)
+					if (options.ConfigurationString?.Contains("DB2", StringComparison.Ordinal) == true)
 						return InformixProvider.DB2;
 
 					break;

@@ -150,7 +150,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static SqlFunction WithName(this SqlFunction func, string name)
 		{
-			if (name == func.Name)
+			if (string.Equals(name, func.Name, StringComparison.Ordinal))
 				return func;
 
 			return new SqlFunction(func.Type, name, func.Flags, func.NullabilityType, func.CanBeNullNullable, func.Parameters)

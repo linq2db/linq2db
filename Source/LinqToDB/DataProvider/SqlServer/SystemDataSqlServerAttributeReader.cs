@@ -138,7 +138,7 @@ namespace LinqToDB.DataProvider.SqlServer
 								if (mi.IsStatic)
 								{
 									var name = key.memberInfo.DeclaringType!.Name.ToLowerInvariant();
-									name = name.StartsWith("sql") ? name.Substring(3) : name;
+									name = name.StartsWith("sql", StringComparison.Ordinal) ? name.Substring(3) : name;
 
 									ex = string.Format(
 										CultureInfo.InvariantCulture,

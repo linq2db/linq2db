@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -199,7 +199,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					Extensions.Select(e => new SqlQueryExtension()
 					{
 						Configuration = e.Configuration,
-						Arguments     = e.Arguments.ToDictionary(a => a.Key, a => context.CloneElement(a.Value)),
+						Arguments     = e.Arguments.ToDictionary(a => a.Key, a => context.CloneElement(a.Value), StringComparer.Ordinal),
 						BuilderType   = e.BuilderType,
 						Scope         = e.Scope,
 					}).ToList());

@@ -22,7 +22,7 @@ namespace LinqToDB.Data
 				EnsureInit();
 			}
 
-			public static readonly ConcurrentDictionary<string,ConfigurationInfo> Info = new();
+			public static readonly ConcurrentDictionary<string,ConfigurationInfo> Info = new(StringComparer.Ordinal);
 
 			public static void EnsureInit()
 			{
@@ -83,7 +83,7 @@ namespace LinqToDB.Data
 			DefaultDataOptions = null;
 		}
 
-		internal static ConcurrentDictionary<string,DataOptions> ConnectionOptionsByConfigurationString = new();
+		internal static ConcurrentDictionary<string,DataOptions> ConnectionOptionsByConfigurationString = new(StringComparer.Ordinal);
 
 		internal sealed class ConfigurationInfo
 		{
@@ -154,7 +154,7 @@ namespace LinqToDB.Data
 					else if (!_dataProviders.TryGetValue(providerName!, out dataProvider) &&
 					         !_dataProviders.TryGetValue(configuration!, out dataProvider))
 					{
-						var providers = _dataProviders.Where(dp => dp.Value.ConnectionNamespace == providerName).ToList();
+						var providers = _dataProviders.Where(dp => string.Equals(dp.Value.ConnectionNamespace, providerName, StringComparison.Ordinal)).ToList();
 
 						dataProvider = providers.Count switch
 						{
@@ -181,11 +181,11 @@ namespace LinqToDB.Data
 			IDataProvider?                                  defp)
 		{
 			foreach (var p in providers.OrderByDescending(kv => kv.Key.Length))
-				if (configuration == p.Key || configuration.StartsWith(p.Key + '.'))
+				if (string.Equals(configuration, p.Key, StringComparison.Ordinal) || configuration.StartsWith(p.Key + '.', StringComparison.Ordinal))
 					return p.Value;
 
 			foreach (var p in providers.OrderByDescending(kv => kv.Value.Name.Length))
-				if (configuration == p.Value.Name || configuration.StartsWith(p.Value.Name + '.'))
+				if (string.Equals(configuration, p.Value.Name, StringComparison.Ordinal) || configuration.StartsWith(p.Value.Name + '.', StringComparison.Ordinal))
 					return p.Value;
 
 			return defp;
@@ -251,7 +251,7 @@ namespace LinqToDB.Data
 			_providerDetectors.Insert(0, providerDetector);
 		}
 
-		static readonly ConcurrentDictionary<string,IDataProvider> _dataProviders = new();
+		static readonly ConcurrentDictionary<string,IDataProvider> _dataProviders = new(StringComparer.Ordinal);
 
 		internal static IDataProvider GetDataProviderEx(string providerName, string connectionString)
 		{
@@ -342,7 +342,7 @@ namespace LinqToDB.Data
 		/// Returns registered providers collection.
 		/// </returns>
 		public static IReadOnlyDictionary<string, IDataProvider> GetRegisteredProviders() =>
-			_dataProviders.ToDictionary(p => p.Key, p => p.Value);
+			_dataProviders.ToDictionary(p => p.Key, p => p.Value, StringComparer.Ordinal);
 
 		internal static ConfigurationInfo GetConfigurationInfo(string? configurationString)
 		{
@@ -694,9 +694,9 @@ namespace LinqToDB.Data
 				// For ConnectionOptions we reapply only mapping schema and connection interceptor.
 				// Connection string, configuration, data provider, etc. are not reapplyable.
 				//
-				if (options.ConfigurationString       != previousOptions?.ConfigurationString)       throw new LinqToDBException($"Option '{nameof(options.ConfigurationString)}' string cannot be changed for context dynamically.");
-				if (options.ConnectionString          != previousOptions?.ConnectionString)          throw new LinqToDBException($"Option '{nameof(options.ConnectionString)}' cannot be changed for context dynamically.");
-				if (options.ProviderName              != previousOptions?.ProviderName)              throw new LinqToDBException($"Option '{nameof(options.ProviderName)}' cannot be changed for context dynamically.");
+				if (!string.Equals(options.ConfigurationString, previousOptions?.ConfigurationString, StringComparison.Ordinal))       throw new LinqToDBException($"Option '{nameof(options.ConfigurationString)}' string cannot be changed for context dynamically.");
+				if (!string.Equals(options.ConnectionString, previousOptions?.ConnectionString, StringComparison.Ordinal))          throw new LinqToDBException($"Option '{nameof(options.ConnectionString)}' cannot be changed for context dynamically.");
+				if (!string.Equals(options.ProviderName, previousOptions?.ProviderName, StringComparison.Ordinal))              throw new LinqToDBException($"Option '{nameof(options.ProviderName)}' cannot be changed for context dynamically.");
 				if (options.DbConnection              != previousOptions?.DbConnection)              throw new LinqToDBException($"Option '{nameof(options.DbConnection)}' cannot be changed for context dynamically.");
 				if (options.DbTransaction             != previousOptions?.DbTransaction)             throw new LinqToDBException($"Option '{nameof(options.DbTransaction)}' cannot be changed for context dynamically.");
 				if (options.DisposeConnection         != previousOptions?.DisposeConnection)         throw new LinqToDBException($"Option '{nameof(options.DisposeConnection)}' cannot be changed for context dynamically.");

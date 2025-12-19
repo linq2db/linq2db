@@ -211,7 +211,7 @@ namespace LinqToDB.SqlQuery
 			if (other is not SqlExtendedFunction otherFunction)
 				return false;
 
-			if (FunctionName != otherFunction.FunctionName)
+			if (!string.Equals(FunctionName, otherFunction.FunctionName, StringComparison.Ordinal))
 				return false;
 
 			if (Arguments.Count != otherFunction.Arguments.Count)

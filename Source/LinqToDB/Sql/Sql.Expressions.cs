@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -50,7 +50,7 @@ namespace LinqToDB
 			{
 				var fieldExpr    = (LambdaExpression) builder.Arguments[1].Unwrap();
 				var qualified    = builder.Arguments.Length <= 2 || builder.GetValue<bool>(2);
-				var isExpression = builder.Member.Name == "FieldExpr";
+				var isExpression = string.Equals(builder.Member.Name, "FieldExpr", StringComparison.Ordinal);
 
 				var column = GetColumnFromExpression(((MethodInfo)builder.Member).GetGenericArguments()[0], fieldExpr, builder.Mapping, builder.DataContext.Options);
 
@@ -78,7 +78,7 @@ namespace LinqToDB
 			{
 				var fieldExpr    = builder.GetExpression(0)!;
 				var qualified    = builder.Arguments.Length <= 1 || builder.GetValue<bool>(1);
-				var isExpression = builder.Member.Name == "FieldExpr";
+				var isExpression = string.Equals(builder.Member.Name, "FieldExpr", StringComparison.Ordinal);
 
 				var field = QueryHelper.ExtractField(fieldExpr);
 				if (field == null)
@@ -282,7 +282,7 @@ namespace LinqToDB
 				var helperType   = typeof(TableHelper<>).MakeGenericType(tableType);
 				var tableHelper  = ActivatorExt.CreateInstance<TableHelper>(helperType, tableExpr);
 				var qualified    = builder.Arguments.Length <= 1 ? TableQualification.Full : builder.GetValue<TableQualification>(1);
-				var isExpression = builder.Member.Name == "TableExpr";
+				var isExpression = string.Equals(builder.Member.Name, "TableExpr", StringComparison.Ordinal);
 
 				if (isExpression)
 				{
@@ -341,7 +341,7 @@ namespace LinqToDB
 					throw new LinqToDBException("Cannot find Table associated with expression");
 
 				var qualified    = builder.Arguments.Length <= 1 ? TableQualification.Full : builder.GetValue<TableQualification>(1);
-				var isExpression = builder.Member.Name == "TableExpr";
+				var isExpression = string.Equals(builder.Member.Name, "TableExpr", StringComparison.Ordinal);
 
 				var name = sqlTable.TableName.Name;
 

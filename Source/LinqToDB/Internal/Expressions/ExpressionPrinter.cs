@@ -505,7 +505,7 @@ namespace LinqToDB.Internal.Expressions
 				}
 
 				var stringValue = value == null ? "null" : string.Create(CultureInfo.InvariantCulture, $"{value}");
-				if (value != null && stringValue == value.GetType().ToString())
+				if (value != null && string.Equals(stringValue, value.GetType().ToString(), StringComparison.Ordinal))
 					stringValue = value.GetType().ShortDisplayName();
 
 				if (value is string)
@@ -701,7 +701,7 @@ namespace LinqToDB.Internal.Expressions
 
 			_stringBuilder.Append("(");
 
-			var isSimpleMethodOrProperty = SimpleMethods.Contains(method.Name)
+			var isSimpleMethodOrProperty = SimpleMethods.Contains(method.Name, StringComparer.Ordinal)
 				|| methodArguments.Count < 2;
 
 			var appendAction = isSimpleMethodOrProperty ? (Func<string, ExpressionVisitor>)Append : AppendLine;
@@ -876,7 +876,7 @@ namespace LinqToDB.Internal.Expressions
 					Append(string.Create(CultureInfo.InvariantCulture, $"{_namelessParameters.IndexOf(parameterExpression)}"));
 					Append("}");
 				}
-				else if (parameterName.Contains('.'))
+				else if (parameterName.Contains('.', StringComparison.Ordinal))
 				{
 					Append("[");
 					Append(parameterName);
@@ -1143,7 +1143,7 @@ namespace LinqToDB.Internal.Expressions
 		private static string PostProcess(string printedExpression)
 		{
 			var processedPrintedExpression = printedExpression
-				.Replace(Environment.NewLine + Environment.NewLine, Environment.NewLine);
+				.Replace(Environment.NewLine + Environment.NewLine, Environment.NewLine, StringComparison.Ordinal);
 
 			return processedPrintedExpression;
 		}

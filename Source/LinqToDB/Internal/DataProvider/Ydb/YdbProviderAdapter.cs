@@ -122,7 +122,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 		private static DecimalValue MakeDecimalValue(string value, int precision, int scale)
 		{
 			var valuePrecision = value.Count(char.IsDigit);
-			var dot = value.IndexOf('.');
+			var dot = value.IndexOf('.', StringComparison.Ordinal);
 			var valueScale = dot == -1 ? 0 : value.Length - dot - 1;
 
 			if (valueScale < scale)
@@ -135,12 +135,12 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			}
 
 #if SUPPORTS_INT128
-			var raw128 = Int128.Parse(value.Replace(".", ""), CultureInfo.InvariantCulture);
+			var raw128 = Int128.Parse(value.Replace(".", "", StringComparison.Ordinal), CultureInfo.InvariantCulture);
 
 			var low64 = (ulong)(raw128 & 0xFFFFFFFFFFFFFFFF);
 			var high64 = (ulong)(raw128 >> 64);
 #else
-			var raw128 = BigInteger.Parse(value.Replace(".", ""), CultureInfo.InvariantCulture);
+			var raw128 = BigInteger.Parse(value.Replace(".", "", StringComparison.Ordinal), CultureInfo.InvariantCulture);
 			var bytes = raw128.ToByteArray();
 			var raw = new byte[16];
 

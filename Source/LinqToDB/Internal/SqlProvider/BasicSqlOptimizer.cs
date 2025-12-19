@@ -667,7 +667,7 @@ namespace LinqToDB.Internal.SqlProvider
 									resultExpression = field;
 									if (field.Table != originalTable)
 									{
-										var newField = (originalTable as SqlTable)?.Fields.Find(f => f.PhysicalName == field.PhysicalName);
+										var newField = (originalTable as SqlTable)?.Fields.Find(f => string.Equals(f.PhysicalName, field.PhysicalName, StringComparison.Ordinal));
 										if (newField != null)
 										{
 											resultExpression = newField;
@@ -882,7 +882,7 @@ namespace LinqToDB.Internal.SqlProvider
 								return idx;
 							});
 
-						var changed = ctx.WriteableValue || newExpr != expr.Expr;
+						var changed = ctx.WriteableValue || !string.Equals(newExpr, expr.Expr, StringComparison.Ordinal);
 
 						if (changed)
 							newExpression = new SqlExpression(expr.Type, newExpr, expr.Precedence, expr.Flags, expr.NullabilityType, null, newExpressions.ToArray());

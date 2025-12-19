@@ -236,8 +236,7 @@ namespace LinqToDB.Internal.Linq
 
 			static bool CanBeDuplicate(ParameterCacheEntry paramEntry, Expression paramExpression, string paramName, Expression testedExprExpression, ParameterCacheEntry testedEntry, string? testedName)
 			{
-				return paramName == testedName
-					   && paramExpression.Type.UnwrapNullableType() == testedExprExpression.Type.UnwrapNullableType()
+				return string.Equals(paramName, testedName, StringComparison.Ordinal) && paramExpression.Type.UnwrapNullableType() == testedExprExpression.Type.UnwrapNullableType()
 					   && !ExpressionEqualityComparer.Instance.Equals(paramExpression, testedExprExpression)
 				       && testedEntry.DbDataType.EqualsDbOnly(paramEntry.DbDataType)
 				       && ExpressionEqualityComparer.Instance.Equals(testedEntry.ClientToProviderConverter, paramEntry.ClientToProviderConverter)

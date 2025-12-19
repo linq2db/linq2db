@@ -441,7 +441,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		static OracleProviderAdapter CreateAdapter(string assemblyName, string clientNamespace, string typesNamespace, string? factoryName, MappingSchema mappingSchema)
 		{
-			var isNative = assemblyName == NativeAssemblyName;
+			var isNative = string.Equals(assemblyName, NativeAssemblyName, StringComparison.Ordinal);
 
 			var assembly = Common.Tools.TryLoadAssembly(assemblyName, factoryName);
 			if (assembly == null)
@@ -595,7 +595,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				connectionFactory,
 
 				mappingSchema,
-				assemblyName != ManagedAssemblyName,
+!string.Equals(assemblyName, ManagedAssemblyName, StringComparison.Ordinal),
 
 				customReaders,
 

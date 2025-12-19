@@ -22,7 +22,7 @@ namespace LinqToDB.Internal.DataProvider
 			if (str == null)
 				return str;
 
-			var nextIndex = str.IndexOf('[');
+			var nextIndex = str.IndexOf('[', StringComparison.Ordinal);
 			if (nextIndex < 0)
 				return str;
 
@@ -215,7 +215,7 @@ namespace LinqToDB.Internal.DataProvider
 		{
 			databaseName = databaseName.Trim();
 
-			if (!databaseName.ToLowerInvariant().EndsWith(extension))
+			if (!databaseName.EndsWith(extension, StringComparison.OrdinalIgnoreCase))
 				databaseName += extension;
 
 			if (File.Exists(databaseName))
@@ -238,7 +238,7 @@ namespace LinqToDB.Internal.DataProvider
 			}
 			else
 			{
-				if (!databaseName.ToLowerInvariant().EndsWith(extension))
+				if (!databaseName.ToLowerInvariant().EndsWith(extension, StringComparison.Ordinal))
 				{
 					databaseName += extension;
 

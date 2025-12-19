@@ -72,7 +72,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 			return
 				other is SqlBinaryExpression expr  &&
-				Operation  == expr.Operation       &&
+string.Equals(Operation, expr.Operation, StringComparison.Ordinal) &&
 				SystemType == expr.SystemType      &&
 				Expr1.Equals(expr.Expr1, comparer) &&
 				Expr2.Equals(expr.Expr2, comparer) &&

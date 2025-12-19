@@ -13,7 +13,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 		{
 		}
 
-		static string[] AccessLikeCharactersToEscape = {"_", "?", "*", "%", "#", "-", "!"};
+		static readonly string[] AccessLikeCharactersToEscape = {"_", "?", "*", "%", "#", "-", "!"};
 
 		public override bool LikeIsEscapeSupported => false;
 
@@ -34,11 +34,11 @@ namespace LinqToDB.Internal.DataProvider.Access
 		protected override string EscapeLikePattern(string str)
 		{
 			var newStr = DataTools.EscapeUnterminatedBracket(str);
-			if (newStr == str)
-				newStr = newStr.Replace("[", "[[]");
+			if (string.Equals(newStr, str, StringComparison.Ordinal))
+				newStr = newStr.Replace("[", "[[]", StringComparison.Ordinal);
 
 			foreach (var s in LikeCharactersToEscape)
-				newStr = newStr.Replace(s, "[" + s + "]");
+				newStr = newStr.Replace(s, "[" + s + "]", StringComparison.Ordinal);
 
 			return newStr;
 		}

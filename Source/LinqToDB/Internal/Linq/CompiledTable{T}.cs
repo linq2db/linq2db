@@ -35,7 +35,7 @@ namespace LinqToDB.Internal.Linq
 			}
 
 			var methodName = methodCall.Method.Name;
-			if (!methodName.EndsWith("Async"))
+			if (!methodName.EndsWith("Async", StringComparison.Ordinal))
 			{
 				return true;
 			}
@@ -115,7 +115,7 @@ namespace LinqToDB.Internal.Linq
 					return [];
 
 				var methodInfos = methodsContainer.GetMethods()
-					.Where(m => m.Name == newMethodName)
+					.Where(m => string.Equals(m.Name, newMethodName, StringComparison.Ordinal))
 					.ToList();
 				return methodInfos;
 			}

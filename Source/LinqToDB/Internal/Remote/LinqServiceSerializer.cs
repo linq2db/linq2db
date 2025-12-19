@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -609,7 +609,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 
 				if (type == null)
 				{
-					if (str == "System.Data.Linq.Binary")
+					if (string.Equals(str, "System.Data.Linq.Binary", StringComparison.Ordinal))
 						return typeof(System.Data.Linq.Binary);
 
 					try
@@ -2807,7 +2807,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							var configuration = ReadString();
 							var scope         = (Sql.QueryExtensionScope)ReadInt();
 							var builderType   = ReadType();
-							var arguments     = new Dictionary<string,ISqlExpression>();
+							var arguments     = new Dictionary<string,ISqlExpression>(StringComparer.Ordinal);
 
 							var cnt = ReadInt();
 

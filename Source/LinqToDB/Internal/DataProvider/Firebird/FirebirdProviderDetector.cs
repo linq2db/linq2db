@@ -26,23 +26,23 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				case ProviderName.Firebird5  : return _firebirdDataProvider5.Value;
 				case ""                      :
 				case null                    :
-					if (options.ConfigurationString?.Contains(ProviderName.Firebird) == true)
+					if (options.ConfigurationString?.Contains(ProviderName.Firebird, StringComparison.Ordinal) == true)
 						goto case FirebirdProviderAdapter.ClientNamespace;
 					break;
 				case FirebirdProviderAdapter.ClientNamespace :
-				case var providerName when providerName.Contains(ProviderName.Firebird) || providerName.Contains(FirebirdProviderAdapter.AssemblyName):
+				case var providerName when providerName.Contains(ProviderName.Firebird, StringComparison.Ordinal) || providerName.Contains(FirebirdProviderAdapter.AssemblyName, StringComparison.Ordinal):
 					if (options.ConfigurationString != null)
 					{
-						if (options.ConfigurationString.Contains("2.5") || options.ConfigurationString.Contains("25"))
+						if (options.ConfigurationString.Contains("2.5", StringComparison.Ordinal) || options.ConfigurationString.Contains("25", StringComparison.Ordinal))
 							return _firebirdDataProvider25.Value;
 
-						if (options.ConfigurationString.Contains('5'))
+						if (options.ConfigurationString.Contains('5', StringComparison.Ordinal))
 							return _firebirdDataProvider5.Value;
 
-						if (options.ConfigurationString.Contains('4'))
+						if (options.ConfigurationString.Contains('4', StringComparison.Ordinal))
 							return _firebirdDataProvider4.Value;
 
-						if (options.ConfigurationString.Contains('3'))
+						if (options.ConfigurationString.Contains('3', StringComparison.Ordinal))
 							return _firebirdDataProvider3.Value;
 					}
 

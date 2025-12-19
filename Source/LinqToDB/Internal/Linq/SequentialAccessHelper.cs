@@ -76,7 +76,7 @@ namespace LinqToDB.Internal.Linq
 					if (columnIndex != null)
 					{
 						// test IsDBNull method by-name to support overrides
-						if (call.Object != null && typeof(DbDataReader).IsAssignableFrom(call.Object.Type) && call.Method.Name == nameof(DbDataReader.IsDBNull))
+						if (call.Object != null && typeof(DbDataReader).IsAssignableFrom(call.Object.Type) && string.Equals(call.Method.Name, nameof(DbDataReader.IsDBNull), StringComparison.Ordinal))
 						{
 							var index = columnIndex.Value * 2;
 							if (context.NewVariables[index] == null)
@@ -245,7 +245,7 @@ namespace LinqToDB.Internal.Linq
 						if (block.Expressions[skip] is BinaryExpression binary
 							&& binary.NodeType == ExpressionType.Assign
 							&& binary.Left is ParameterExpression pe
-							&& pe.Name == "ldr")
+							&& string.Equals(pe.Name, "ldr", StringComparison.Ordinal))
 						{
 							found = true;
 							break;
@@ -324,7 +324,7 @@ namespace LinqToDB.Internal.Linq
 						}
 
 						// test IsDBNull method by-name to support overrides
-						if (call.Method.Name == nameof(IDataReader.IsDBNull))
+						if (string.Equals(call.Method.Name, nameof(IDataReader.IsDBNull), StringComparison.Ordinal))
 							return context.IsNullParameter;
 						else // otherwise we treat it as Get*Value method (as we already extracted index without errors for it)
 							return call.Type != context.RawValueParameter.Type ? Expression.Convert(context.RawValueParameter, call.Type) : context.RawValueParameter;
@@ -384,7 +384,7 @@ namespace LinqToDB.Internal.Linq
 							return;
 						}
 
-						if (call.Method.Name != nameof(DbDataReader.IsDBNull))
+						if (!string.Equals(call.Method.Name, nameof(DbDataReader.IsDBNull), StringComparison.Ordinal))
 						{
 							if (context.RawCall == null)
 								context.RawCall = call;

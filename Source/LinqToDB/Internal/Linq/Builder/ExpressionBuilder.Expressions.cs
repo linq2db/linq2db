@@ -10,7 +10,7 @@ namespace LinqToDB.Internal.Linq.Builder
 {
 	partial class ExpressionBuilder
 	{
-		static ObjectPool<FinalizeExpressionVisitor> _finalizeVisitorPool = new(() => new FinalizeExpressionVisitor(), v => v.Cleanup(), 100);
+		static readonly ObjectPool<FinalizeExpressionVisitor> _finalizeVisitorPool = new(() => new FinalizeExpressionVisitor(), v => v.Cleanup(), 100);
 
 		public ColumnDescriptor? CurrentDescriptor => _buildVisitor.CurrentDescriptor;
 
@@ -133,8 +133,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (testedColumn != null)
 			{
-				var otherColumns = ed.Aliases.Where(a =>
-					a.Value == testedColumn.MemberName);
+				var otherColumns = ed.Aliases.Where(a => string.Equals(a.Value, testedColumn.MemberName, System.StringComparison.Ordinal));
 
 				foreach (var other in otherColumns)
 				{

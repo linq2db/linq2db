@@ -20,7 +20,7 @@ namespace LinqToDB.Internal.Mapping
 		{
 		}
 
-		static Dictionary<Type,int> _configurationIDs = new ();
+		static readonly Dictionary<Type,int> _configurationIDs = new ();
 
 		protected internal override int GenerateID()
 		{

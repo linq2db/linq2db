@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -149,11 +149,11 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		private static (string type, bool isNullable, bool lowCardinality) PreParseTypeName(string type)
 		{
 			// we don't need this information currently, so it is not returned
-			var lowCardinality = type.StartsWith("LowCardinality(") && type.EndsWith(')');
+			var lowCardinality = type.StartsWith("LowCardinality(", StringComparison.Ordinal) && type.EndsWith(')');
 			if (lowCardinality)
 				type = type.Substring(15, type.Length - 16);
 
-			var isNullable = type.StartsWith("Nullable(") && type.EndsWith(')');
+			var isNullable = type.StartsWith("Nullable(", StringComparison.Ordinal) && type.EndsWith(')');
 			if (isNullable)
 				type = type.Substring(9, type.Length - 10);
 
@@ -172,22 +172,22 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				return mapping;
 
 			// types with parameters
-			if (dataType.StartsWith("Enum8("))       return (DataType.Enum8     , typeof(sbyte));
-			if (dataType.StartsWith("Enum16("))      return (DataType.Enum16    , typeof(short));
+			if (dataType.StartsWith("Enum8(", StringComparison.Ordinal))       return (DataType.Enum8     , typeof(sbyte));
+			if (dataType.StartsWith("Enum16(", StringComparison.Ordinal))      return (DataType.Enum16    , typeof(short));
 
-			if (dataType.StartsWith("FixedString("))
+			if (dataType.StartsWith("FixedString(", StringComparison.Ordinal))
 				return (DataType.NChar, length is 1 ? typeof(char) : typeof(string));
 
-			if (dataType.StartsWith("DateTime64("))  return (DataType.DateTime64, typeof(DateTimeOffset));
+			if (dataType.StartsWith("DateTime64(", StringComparison.Ordinal))  return (DataType.DateTime64, typeof(DateTimeOffset));
 
 			// ClickHouse actually return Decimal( instead of DecimalX( in schema, but better to implement it
-			if (dataType.StartsWith("Decimal32("))   return (DataType.Decimal32 , typeof(decimal));
+			if (dataType.StartsWith("Decimal32(", StringComparison.Ordinal))   return (DataType.Decimal32 , typeof(decimal));
 			// types could store values that doesn't fit decimal
-			if (dataType.StartsWith("Decimal64("))   return (DataType.Decimal64 , typeof(decimal));
-			if (dataType.StartsWith("Decimal128("))  return (DataType.Decimal128, typeof(decimal));
-			if (dataType.StartsWith("Decimal256("))  return (DataType.Decimal256, typeof(decimal));
+			if (dataType.StartsWith("Decimal64(", StringComparison.Ordinal))   return (DataType.Decimal64 , typeof(decimal));
+			if (dataType.StartsWith("Decimal128(", StringComparison.Ordinal))  return (DataType.Decimal128, typeof(decimal));
+			if (dataType.StartsWith("Decimal256(", StringComparison.Ordinal))  return (DataType.Decimal256, typeof(decimal));
 
-			if (dataType.StartsWith("Decimal("))
+			if (dataType.StartsWith("Decimal(", StringComparison.Ordinal))
 			{
 				return precision switch
 				{
@@ -202,7 +202,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		}
 
 		// contains only types with fixed name
-		private static readonly IReadOnlyDictionary<string, (DataType dataType, Type type)> _typeMap = new Dictionary<string, (DataType dataType, Type type)>()
+		private static readonly IReadOnlyDictionary<string, (DataType dataType, Type type)> _typeMap = new Dictionary<string, (DataType dataType, Type type)>(StringComparer.Ordinal)
 		{
 			// also could store binary data
 			{ "String"    , (DataType.NVarChar  , typeof(string        )) },

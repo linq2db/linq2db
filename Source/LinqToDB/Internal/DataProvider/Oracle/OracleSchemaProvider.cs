@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -402,8 +402,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 							SchemaName      = schema,
 							PackageName     = packageName,
 							ProcedureName   = procedureName,
-							IsFunction      = procedureType != "PROCEDURE",
-							IsTableFunction = procedureType == "TABLE_FUNCTION",
+							IsFunction      = !string.Equals(procedureType, "PROCEDURE", StringComparison.Ordinal),
+							IsTableFunction = string.Equals(procedureType, "TABLE_FUNCTION", StringComparison.Ordinal),
 							IsDefaultSchema = isDefault,
 						};
 					},
@@ -489,8 +489,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 							Length        = length,
 							Precision     = precision,
 							Scale         = scale,
-							IsIn          = direction.StartsWith("IN"),
-							IsOut         = direction.EndsWith("OUT"),
+							IsIn          = direction.StartsWith("IN", StringComparison.Ordinal),
+							IsOut         = direction.EndsWith("OUT", StringComparison.Ordinal),
 							IsResult      = ordinal == 0,
 							IsNullable    = true,
 						};
@@ -511,7 +511,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
-			if (dataType == "NUMBER" && precision > 0 && (scale ?? 0) == 0)
+			if (string.Equals(dataType, "NUMBER", StringComparison.Ordinal) && precision > 0 && (scale ?? 0) == 0)
 			{
 				if (precision <  3) return typeof(sbyte);
 				if (precision <  5) return typeof(short);
@@ -519,14 +519,14 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				if (precision < 20) return typeof(long);
 			}
 
-			if (dataType == "BINARY_INTEGER")
+			if (string.Equals(dataType, "BINARY_INTEGER", StringComparison.Ordinal))
 				return typeof(int);
-			if (dataType?.StartsWith("INTERVAL DAY") == true)
+			if (dataType?.StartsWith("INTERVAL DAY", StringComparison.Ordinal) == true)
 				return typeof(TimeSpan);
-			if (dataType?.StartsWith("INTERVAL YEAR") == true)
+			if (dataType?.StartsWith("INTERVAL YEAR", StringComparison.Ordinal) == true)
 				return typeof(long);
-			if (dataType?.StartsWith("TIMESTAMP") == true)
-				return dataType.EndsWith("TIME ZONE") ? typeof(DateTimeOffset) : typeof(DateTime);
+			if (dataType?.StartsWith("TIMESTAMP", StringComparison.Ordinal) == true)
+				return dataType.EndsWith("TIME ZONE", StringComparison.Ordinal) ? typeof(DateTimeOffset) : typeof(DateTime);
 
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 		}
@@ -557,16 +557,16 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				"ROWID"          => DataType.VarChar,
 				"REF CURSOR"     => DataType.Cursor,
 
-			    { } txt when txt.StartsWith("TIMESTAMP") && dataType.EndsWith("TIME ZONE")
+			    { } txt when txt.StartsWith("TIMESTAMP", StringComparison.Ordinal) && dataType.EndsWith("TIME ZONE", StringComparison.Ordinal)
 				                 => DataType.DateTimeOffset,
 
-				{ } txt when txt.StartsWith("TIMESTAMP")
+				{ } txt when txt.StartsWith("TIMESTAMP", StringComparison.Ordinal)
 				                 => DataType.DateTime2,
 
-				{ } txt when txt.StartsWith("INTERVAL DAY")
+				{ } txt when txt.StartsWith("INTERVAL DAY", StringComparison.Ordinal)
 				                 => DataType.Time,
 
-				{ } txt when txt.StartsWith("INTERVAL YEAR")
+				{ } txt when txt.StartsWith("INTERVAL YEAR", StringComparison.Ordinal)
 				                 => DataType.Int64,
 
 				_                => DataType.Undefined,

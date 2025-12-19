@@ -68,7 +68,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						continue;
 
 					Expression me;
-					if (column.MemberName.Contains('.') && !column.MemberInfo.Name.Contains('.'))
+					if (column.MemberName.Contains('.', StringComparison.Ordinal) && !column.MemberInfo.Name.Contains('.', StringComparison.Ordinal))
 					{
 						hasNested = true;
 					}
@@ -93,18 +93,18 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (level > 0 || hasNested)
 			{
-				var processed = new HashSet<string>();
+				var processed = new HashSet<string>(StringComparer.Ordinal);
 				foreach (var column in columns)
 				{
 					if (column.SkipOnEntityFetch)
 						continue;
 
-					if (!column.MemberName.Contains('.'))
+					if (!column.MemberName.Contains('.', StringComparison.Ordinal))
 						continue;
 
 					// explicit interface implementation
 					//
-					if (column.MemberInfo.Name.Contains('.'))
+					if (column.MemberInfo.Name.Contains('.', StringComparison.Ordinal))
 						continue;
 
 					var names = column.MemberName.Split('.');
@@ -142,7 +142,7 @@ namespace LinqToDB.Internal.Linq.Builder
 								throw new InvalidOperationException($"No suitable member '[{currentMemberName}]' found for type '{currentPath.Type}'");
 						}
 
-						var newColumns = columns.Where(c => c.MemberName.StartsWith(propPath)).ToList();
+						var newColumns = columns.Where(c => c.MemberName.StartsWith(propPath, StringComparison.Ordinal)).ToList();
 						var newPath    = MakeAssignExpression(currentPath, memberInfo, column);
 
 						assignExpression = BuildGenericFromMembers(newColumns, flags, newPath, level + 1, purpose);
@@ -329,15 +329,14 @@ namespace LinqToDB.Internal.Linq.Builder
 				members,
 				x =>
 					x.MemberInfo.GetMemberType() == parameter.ParameterType &&
-					string.Equals(x.MemberInfo.Name, parameter.Name)
+					string.Equals(x.MemberInfo.Name, parameter.Name, StringComparison.Ordinal)
 			);
 
 			if (found < 0)
 			{
 				found = FindIndex(members, x =>
 					x.MemberInfo.GetMemberType() == parameter.ParameterType &&
-					x.MemberInfo.Name.Equals(parameter.Name,
-						StringComparison.InvariantCultureIgnoreCase));
+					x.MemberInfo.Name.Equals(parameter.Name, StringComparison.OrdinalIgnoreCase));
 			}
 
 			return found;

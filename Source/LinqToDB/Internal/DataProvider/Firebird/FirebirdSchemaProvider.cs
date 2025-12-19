@@ -46,8 +46,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					CatalogName     = catalog,
 					SchemaName      = schema,
 					TableName       = name,
-					IsDefaultSchema = schema == "SYSDBA",
-					IsView          = t.Field<string>("TABLE_TYPE") == "VIEW",
+					IsDefaultSchema = string.Equals(schema, "SYSDBA", StringComparison.Ordinal),
+					IsView          = string.Equals(t.Field<string>("TABLE_TYPE"), "VIEW", StringComparison.Ordinal),
 					Description     = t.Field<string>("DESCRIPTION"),
 				}
 			).ToList();
@@ -187,8 +187,8 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 							ProcedureID         = $"{packageName}.{procedureName}",
 							PackageName         = packageName,
 							ProcedureName       = procedureName,
-							IsFunction          = procedureType != "P",
-							IsTableFunction     = procedureType == "TF",
+							IsFunction          = !string.Equals(procedureType, "P", StringComparison.Ordinal),
+							IsTableFunction     = string.Equals(procedureType, "TF", StringComparison.Ordinal),
 							IsDefaultSchema     = true,
 							ProcedureDefinition = source,
 							Description         = description,
@@ -394,9 +394,9 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			catch (Exception ex)
 			{
 				// procedure XXX does not return any values
-				if (ex.Message.Contains("SQL error code = -84")
+				if (ex.Message.Contains("SQL error code = -84", StringComparison.Ordinal)
 					// SchemaOnly doesn't work for non-selectable procedures in FB
-					|| ex.Message.Contains("is not selectable"))
+					|| ex.Message.Contains("is not selectable", StringComparison.Ordinal))
 					return null;
 				throw;
 			}
@@ -516,7 +516,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			if (procedure.ResultTable != null)
 				foreach (var col in procedure.ResultTable.Columns)
 					for (var i = 0; i < procedure.Parameters.Count; i++)
-						if (procedure.Parameters[i].IsOut && col.ColumnName == procedure.Parameters[i].ParameterName)
+						if (procedure.Parameters[i].IsOut && string.Equals(col.ColumnName, procedure.Parameters[i].ParameterName, StringComparison.Ordinal))
 						{
 							procedure.Parameters.RemoveAt(i);
 							break;

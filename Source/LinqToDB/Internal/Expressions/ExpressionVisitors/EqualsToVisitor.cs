@@ -125,7 +125,7 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 					EqualsToX((NewArrayExpression)expr1, (NewArrayExpression)expr2, info),
 
 				ExpressionType.Default   => true,
-				ExpressionType.Parameter => ((ParameterExpression)expr1).Name == ((ParameterExpression)expr2).Name,
+				ExpressionType.Parameter => string.Equals(((ParameterExpression)expr1).Name, ((ParameterExpression)expr2).Name, StringComparison.Ordinal),
 
 				ExpressionType.TypeIs =>
 					((TypeBinaryExpression)expr1).TypeOperand == ((TypeBinaryExpression)expr2).TypeOperand &&

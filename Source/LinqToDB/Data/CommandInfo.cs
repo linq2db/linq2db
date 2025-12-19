@@ -911,7 +911,7 @@ namespace LinqToDB.Data
 			Func<IDataContext,DbDataReader, T> _objectReader;
 			bool                               _isFaulted;
 			bool                               _isFinished;
-			CancellationToken                  _cancellationToken;
+			readonly CancellationToken         _cancellationToken;
 
 			public ReaderAsyncEnumerator(CommandInfo commandInfo, DbDataReader rd, CancellationToken cancellationToken)
 			{

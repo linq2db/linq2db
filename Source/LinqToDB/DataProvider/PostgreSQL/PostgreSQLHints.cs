@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			{
 				var hint = (string)((SqlValue)sqlQueryExtension.Arguments["hint"]).Value!;
 
-				if (hint is ForNoKeyUpdate or ForKeyShare && sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL92))
+				if (hint is ForNoKeyUpdate or ForKeyShare && sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL92, StringComparer.Ordinal))
 					stringBuilder.Append("-- ");
 
 				stringBuilder.Append(hint);
@@ -55,11 +55,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 				if (sqlQueryExtension.Arguments.TryGetValue("hint2", out var h) && h is SqlValue { Value: string value })
 				{
-					if (value != SkipLocked
-						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL95)
-						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL13)
-						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL15)
-						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL18))
+					if (!string.Equals(value, SkipLocked, StringComparison.Ordinal)
+						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL95, StringComparer.Ordinal)
+						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL13, StringComparer.Ordinal)
+						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL15, StringComparer.Ordinal)
+						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL18, StringComparer.Ordinal))
 					{
 						stringBuilder.Append(' ');
 						stringBuilder.Append(value);

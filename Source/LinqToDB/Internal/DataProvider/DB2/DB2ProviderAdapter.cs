@@ -42,7 +42,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				if (assembly != null)
 					clientNamespace = ClientNamespaceOld;
 			}
-			else if (assembly.GetName().Name == AssemblyNameOld)
+			else if (string.Equals(assembly.GetName().Name, AssemblyNameOld, StringComparison.Ordinal))
 			{
 				// cover case when provider factory loaded old assembly
 				clientNamespace = ClientNamespaceOld;

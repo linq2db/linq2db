@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
@@ -213,7 +213,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 						SchemaName      = schema,
 						ProcedureName   = name,
 						IsFunction      = rd.GetInt16(3) == 2,
-						IsDefaultSchema = schema == "dbo",
+						IsDefaultSchema = string.Equals(schema, "dbo", StringComparison.Ordinal),
 					};
 				})
 				.ToList();
@@ -275,7 +275,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 			dataConnection.Execute("SET FMTONLY ON");
 
-			if (dataConnection.DataProvider.Name == ProviderName.SybaseManaged)
+			if (string.Equals(dataConnection.DataProvider.Name, ProviderName.SybaseManaged, StringComparison.Ordinal))
 			{
 				// https://github.com/DataAction/AdoNetCore.AseClient/issues/189
 				using var rd = dataConnection.ExecuteReader(commandText, commandType, CommandBehavior.Default, parameters);

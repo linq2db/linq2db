@@ -347,7 +347,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 						toType      = sqlDataType.Type;
 					}
 
-					return MakeConversion(func.Parameters[2], toType, true, func.Name == PseudoFunctions.TRY_CONVERT_OR_DEFAULT ? func.Parameters[3] : null);
+					return MakeConversion(func.Parameters[2], toType, true, string.Equals(func.Name, PseudoFunctions.TRY_CONVERT_OR_DEFAULT, System.StringComparison.Ordinal) ? func.Parameters[3] : null);
 				}
 			}
 

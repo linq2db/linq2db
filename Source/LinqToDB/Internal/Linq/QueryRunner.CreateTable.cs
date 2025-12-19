@@ -1,4 +1,4 @@
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Internal.Expressions;
@@ -11,7 +11,7 @@ namespace LinqToDB.Internal.Linq
 {
 	static partial class QueryRunner
 	{
-		static IQueryExpressions EmptyQueryExpressions  = new RuntimeExpressionsContainer(ExpressionInstances.UntypedNull);
+		static readonly IQueryExpressions EmptyQueryExpressions  = new RuntimeExpressionsContainer(ExpressionInstances.UntypedNull);
 
 		public static class CreateTable<T>
 			where T : notnull

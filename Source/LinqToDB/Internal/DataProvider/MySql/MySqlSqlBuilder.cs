@@ -331,7 +331,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				case ConvertType.NameToCteName        :
 				case ConvertType.NameToProcedure      :
 					// https://dev.mysql.com/doc/refman/8.0/en/identifiers.html
-					value = value.Replace("`", "``");
+					value = value.Replace("`", "``", StringComparison.Ordinal);
 
 					return sb.Append('`').Append(value).Append('`');
 			}

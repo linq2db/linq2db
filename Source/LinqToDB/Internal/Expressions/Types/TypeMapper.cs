@@ -27,7 +27,7 @@ namespace LinqToDB.Internal.Expressions.Types
 		private static readonly Type[] _wrapperConstructorParameters2 = [typeof(object), typeof(Delegate[])];
 
 		// [type name] = originalType
-		private readonly IDictionary<string, Type>              _types                    = new Dictionary<string, Type>();
+		private readonly IDictionary<string, Type>              _types                    = new Dictionary<string, Type>(StringComparer.Ordinal);
 
 		// [wrapperType] = originalType?
 		readonly Dictionary<Type, Type?>                        _typeMappingCache         = new ();
@@ -56,7 +56,7 @@ namespace LinqToDB.Internal.Expressions.Types
 
 			var wrapperAttr = wrapperType.GetAttribute<WrapperAttribute>();
 
-			if ((wrapperAttr?.TypeName ?? wrapperType.Name) != originalType.Name)
+			if (!string.Equals(wrapperAttr?.TypeName ?? wrapperType.Name, originalType.Name, StringComparison.Ordinal))
 				throw new LinqToDBException($"Original and wrapped types should have same type name. {wrapperType.Name} != {originalType.Name}");
 
 			var typeName = originalType.FullName ?? originalType.Name;
@@ -96,8 +96,8 @@ namespace LinqToDB.Internal.Expressions.Types
 			if (baseType != Enum.GetUnderlyingType(originalType))
 				throw new LinqToDBException($"Enums {wrapperType} and {originalType} have different base types: {baseType} vs {Enum.GetUnderlyingType(originalType)}");
 
-			var wrapperValues  = Enum.GetValues(wrapperType) .OfType<object>().Distinct().ToDictionary(v => string.Format(CultureInfo.InvariantCulture, "{0}", v), _ => _);
-			var originalValues = Enum.GetValues(originalType).OfType<object>().Distinct().ToDictionary(v => string.Format(CultureInfo.InvariantCulture, "{0}", v), _ => _);
+			var wrapperValues  = Enum.GetValues(wrapperType) .OfType<object>().Distinct().ToDictionary(v => string.Format(CultureInfo.InvariantCulture, "{0}", v), _ => _, StringComparer.Ordinal);
+			var originalValues = Enum.GetValues(originalType).OfType<object>().Distinct().ToDictionary(v => string.Format(CultureInfo.InvariantCulture, "{0}", v), _ => _, StringComparer.Ordinal);
 
 			var hasCommonMembers   = false;
 			var hasDifferentValues = false;

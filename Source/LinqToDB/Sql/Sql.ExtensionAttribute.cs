@@ -100,7 +100,7 @@ namespace LinqToDB
 				ChainPrecedence  = chainPrecedence;
 				IsNullable       = isNullable;
 				CanBeNull        = canBeNull;
-				NamedParameters  = parameters.ToLookup(static p => p.Name ?? string.Empty).ToDictionary(static p => p.Key, static p => p.ToList());
+				NamedParameters  = parameters.ToLookup(static p => p.Name ?? string.Empty, StringComparer.Ordinal).ToDictionary(static p => p.Key, static p => p.ToList(), StringComparer.Ordinal);
 
 				if (isAggregate)      Flags |= SqlFlags.IsAggregate;
 				if (isWindowFunction) Flags |= SqlFlags.IsWindowFunction;
@@ -301,7 +301,7 @@ namespace LinqToDB
 						var parameters = Method.GetParameters();
 
 						for (var i = 0; i < parameters.Length; i++)
-							if (parameters[i].Name == argName)
+							if (string.Equals(parameters[i].Name, argName, StringComparison.Ordinal))
 								return GetValue<T>(i);
 					}
 
@@ -321,7 +321,7 @@ namespace LinqToDB
 						var parameters = Method.GetParameters();
 
 						for (var i = 0; i < parameters.Length; i++)
-							if (parameters[i].Name == argName)
+							if (string.Equals(parameters[i].Name, argName, StringComparison.Ordinal))
 								return GetObjectValue(i);
 					}
 
@@ -340,7 +340,7 @@ namespace LinqToDB
 						var parameters = Method.GetParameters();
 						for (int i = 0; i < parameters.Length; i++)
 						{
-							if (parameters[i].Name == argName)
+							if (string.Equals(parameters[i].Name, argName, StringComparison.Ordinal))
 							{
 								return GetExpression(i, unwrap);
 							}
@@ -560,7 +560,7 @@ namespace LinqToDB
 						var tokenNames = attributes.Where(a => !string.IsNullOrEmpty(a.TokenName))
 							.Select(a => a.TokenName!).ToList();
 						var namedAttributes = GetExtensionAttributes(current, dataContext.MappingSchema, false)
-							.Where(e => !string.IsNullOrEmpty(e.TokenName) && !tokenNames.Contains(e.TokenName!));
+							.Where(e => !string.IsNullOrEmpty(e.TokenName) && !tokenNames.Contains(e.TokenName!, StringComparer.Ordinal));
 
 						var continueChain   = false;
 
@@ -615,7 +615,7 @@ namespace LinqToDB
 
 						var inlineParameters = InlineParameters;
 
-						var names = new HashSet<string>();
+						var names = new HashSet<string>(StringComparer.Ordinal);
 						var paramAttr = param.GetAttribute<ExprParameterAttribute>();
 						if (paramAttr != null)
 						{
@@ -879,7 +879,7 @@ namespace LinqToDB
 				var replacementMap = ordered
 					.Where(c => c.Extension != mainExtension)
 					.Select(static (c, i) => Tuple.Create(c, i))
-					.GroupBy(static e => e.Item1.Name ?? "")
+					.GroupBy(static e => e.Item1.Name ?? "", StringComparer.Ordinal)
 					.Select(static g => new
 					{
 						Name = g.Key,

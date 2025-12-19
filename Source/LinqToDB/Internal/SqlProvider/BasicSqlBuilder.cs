@@ -46,7 +46,7 @@ namespace LinqToDB.Internal.SqlProvider
 			SqlProviderFlags   = parentBuilder.SqlProviderFlags;
 			TablePath          = parentBuilder.TablePath;
 			QueryName          = parentBuilder.QueryName;
-			TableIDs           = parentBuilder.TableIDs ??= new();
+			TableIDs           = parentBuilder.TableIDs ??= new(StringComparer.Ordinal);
 			NullabilityContext = parentBuilder.NullabilityContext;
 		}
 
@@ -1682,7 +1682,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (selectQuery.From.Tables.Count == 0 || selectQuery.From.Tables[0].Alias == "$F")
+			if (selectQuery.From.Tables.Count == 0 || string.Equals(selectQuery.From.Tables[0].Alias, "$F", StringComparison.Ordinal))
 				return;
 
 			AppendIndent();
@@ -1768,7 +1768,7 @@ namespace LinqToDB.Internal.SqlProvider
 						if (QueryName is not null)
 							path += $"@{QueryName}";
 
-						(TableIDs ??= new())[id] = new(alias, name, path!);
+						(TableIDs ??= new(StringComparer.Ordinal))[id] = new(alias, name, path!);
 					}
 
 					break;
@@ -1790,7 +1790,7 @@ namespace LinqToDB.Internal.SqlProvider
 					var rawSqlTable = (SqlRawSqlTable)table;
 
 					var appendParentheses = SelectRegex().IsMatch(rawSqlTable.SQL);
-					var multiLine         = appendParentheses || rawSqlTable.SQL.Contains('\n');
+					var multiLine         = appendParentheses || rawSqlTable.SQL.Contains('\n', StringComparison.Ordinal);
 
 					if (appendParentheses)
 						StringBuilder.AppendLine(OpenParens);
@@ -3015,7 +3015,7 @@ namespace LinqToDB.Internal.SqlProvider
 								if (len == StringBuilder.Length)
 									throw new LinqToDBException($"Table {field.Table} should have an alias.");
 
-								addAlias = alias != field.PhysicalName;
+								addAlias = !string.Equals(alias, field.PhysicalName, StringComparison.Ordinal);
 
 								StringBuilder
 									.Append('.');
@@ -3073,7 +3073,7 @@ namespace LinqToDB.Internal.SqlProvider
 					if (string.IsNullOrEmpty(tableAlias))
 						throw new LinqToDBException($"Table `{column.Parent}` should have an alias.");
 
-					addAlias = alias != column.Alias;
+					addAlias = !string.Equals(alias, column.Alias, StringComparison.Ordinal);
 
 					Convert(StringBuilder, tableAlias, ConvertType.NameToQueryTableAlias);
 					StringBuilder.Append('.');
@@ -3111,7 +3111,7 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						var e = (SqlExpression)expr;
 
-						if (e.Expr == "{0}")
+						if (string.Equals(e.Expr, "{0}", StringComparison.Ordinal))
 							BuildExpression(e.Parameters[0], buildTableName, checkParentheses, alias, ref addAlias, throwExceptionIfTableNotFound);
 						else
 							BuildFormatValues(e.Expr, e.Parameters, GetPrecedence(e));
@@ -3123,7 +3123,7 @@ namespace LinqToDB.Internal.SqlProvider
 				{
 					var e = (SqlFragment)expr;
 
-					if (e.Expr == "{0}")
+					if (string.Equals(e.Expr, "{0}", StringComparison.Ordinal))
 						BuildExpression(e.Parameters[0], buildTableName, checkParentheses, alias, ref addAlias, throwExceptionIfTableNotFound);
 					else
 						BuildFormatValues(e.Expr, e.Parameters, GetPrecedence(e));
@@ -3624,7 +3624,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (string.IsNullOrEmpty(text))
 				return text;
 
-			text = text.Replace("\r", "");
+			text = text.Replace("\r", "", StringComparison.Ordinal);
 
 			var strArray = text.Split('\n');
 			using var sb = Pools.StringBuilder.Allocate();
@@ -3742,7 +3742,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		void BuildBinaryExpression(string op, SqlBinaryExpression expr)
 		{
-			if (expr.Operation == "*" && expr.Expr1 is SqlValue value)
+			if (string.Equals(expr.Operation, "*", StringComparison.Ordinal) && expr.Expr1 is SqlValue value)
 			{
 				if (value.Value is int i && i == -1)
 				{
@@ -3888,7 +3888,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			for (var i = 0; i < comment.Lines.Count; i++)
 			{
-				sb.Append(comment.Lines[i].Replace("/*", "").Replace("*/", ""));
+				sb.Append(comment.Lines[i].Replace("/*", "", StringComparison.Ordinal).Replace("*/", "", StringComparison.Ordinal));
 				if (i < comment.Lines.Count - 1)
 					sb.AppendLine();
 			}
@@ -3935,7 +3935,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return expr.ElementType switch
 			{
 				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.Date,
-				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == dateName,
+				QueryElementType.SqlExpression => string.Equals(((SqlExpression)expr).Expr, dateName, StringComparison.Ordinal),
 				_                              => false,
 			};
 		}
@@ -3945,7 +3945,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return expr.ElementType switch
 			{
 				QueryElementType.SqlDataType   => ((SqlDataType)expr).Type.DataType == DataType.Time,
-				QueryElementType.SqlExpression => ((SqlExpression)expr).Expr == "Time",
+				QueryElementType.SqlExpression => string.Equals(((SqlExpression)expr).Expr, "Time", StringComparison.Ordinal),
 				_                              => false,
 			};
 		}
@@ -4193,12 +4193,12 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				if (parameter.Size > 0)
 				{
-					if (t1.IndexOf('(') < 0)
+					if (t1.IndexOf('(', StringComparison.Ordinal) < 0)
 						sb.Append(CultureInfo.InvariantCulture, $"({parameter.Size})");
 				}
 				else if (parameter.Precision > 0)
 				{
-					if (t1.IndexOf('(') < 0)
+					if (t1.IndexOf('(', StringComparison.Ordinal) < 0)
 						sb.Append(CultureInfo.InvariantCulture, $"({parameter.Precision}{InlineComma}{parameter.Scale})");
 				}
 				else
@@ -4240,7 +4240,7 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 			}
 
-			if (t1 != t2)
+			if (!string.Equals(t1, t2, StringComparison.Ordinal))
 				sb.Append(" -- ").Append(t2);
 		}
 
@@ -4371,13 +4371,13 @@ namespace LinqToDB.Internal.SqlProvider
 			using var sb = Pools.StringBuilder.Allocate();
 
 			foreach (var hint in queryHints)
-				if (hint.StartsWith("**"))
+				if (hint.StartsWith("**", StringComparison.Ordinal))
 					sb.Value.Append(hint, 2, hint.Length - 2).AppendLine();
 
 			sb.Value.Append(sqlText);
 
 			foreach (var hint in queryHints)
-				if (!hint.StartsWith("**"))
+				if (!hint.StartsWith("**", StringComparison.Ordinal))
 					sb.Value.AppendLine(hint);
 
 			return sb.Value.ToString();
@@ -4399,7 +4399,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return BuildObjectName(sb.Value, entity.Name, ConvertType.NameToQueryTable, true, entity.TableOptions).ToString();
 		}
 
-		public virtual string Name => field ??= GetType().Name.Replace("SqlBuilder", "");
+		public virtual string Name => field ??= GetType().Name.Replace("SqlBuilder", "", StringComparison.Ordinal);
 
 		#endregion
 

@@ -39,7 +39,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 			var procs        = dbConnection.GetSchema("Procedures");
 
 			var procIds = new HashSet<string>(
-				procs.AsEnumerable().Select(p => $"{p.Field<string>("PROCEDURE_CAT")}.{p.Field<string>("PROCEDURE_SCHEM")}.{p.Field<string>("PROCEDURE_NAME")}"));
+				procs.AsEnumerable().Select(p => $"{p.Field<string>("PROCEDURE_CAT")}.{p.Field<string>("PROCEDURE_SCHEM")}.{p.Field<string>("PROCEDURE_NAME")}"), StringComparer.Ordinal);
 
 			return
 			(
@@ -50,7 +50,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 				// Compared to OleDb:
 				// no separate ACCESS TABLE type, SYSTEM TABLE type used
 				// VIEW is in separate schema table
-				let system  = t.Field<string>("TABLE_TYPE") == "SYSTEM TABLE"
+				let system  = string.Equals(t.Field<string>("TABLE_TYPE"), "SYSTEM TABLE", StringComparison.Ordinal)
 				let id      = catalog + '.' + schema + '.' + name
 				where !procIds.Contains(id)
 				select new TableInfo
@@ -60,7 +60,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					SchemaName         = schema,
 					TableName          = name,
 					IsDefaultSchema    = string.IsNullOrEmpty(schema),
-					IsView             = t.Field<string>("TABLE_TYPE") == "VIEW",
+					IsView             = string.Equals(t.Field<string>("TABLE_TYPE"), "VIEW", StringComparison.Ordinal),
 					IsProviderSpecific = system,
 					Description        = t.Field<string>("REMARKS"),
 				}
@@ -92,10 +92,10 @@ namespace LinqToDB.Internal.DataProvider.Access
 					IsNullable  = c.Field<short> ("NULLABLE") == 1,
 					Ordinal     = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
 					DataType    = dt?.TypeName ?? typeName,
-					Length      = dt?.CreateParameters != null && dt.CreateParameters.Contains("length") && size != 0 ? size  : null,
-					Precision   = dt?.CreateParameters != null && dt.CreateParameters.Contains("precision")           ? size  : null,
-					Scale       = dt?.CreateParameters != null && dt.CreateParameters.Contains("scale")               ? scale : null,
-					IsIdentity  = typeName == "COUNTER",
+					Length      = dt?.CreateParameters != null && dt.CreateParameters.Contains("length", StringComparison.Ordinal) && size != 0 ? size  : null,
+					Precision   = dt?.CreateParameters != null && dt.CreateParameters.Contains("precision", StringComparison.Ordinal)           ? size  : null,
+					Scale       = dt?.CreateParameters != null && dt.CreateParameters.Contains("scale", StringComparison.Ordinal)               ? scale : null,
+					IsIdentity  = string.Equals(typeName, "COUNTER", StringComparison.Ordinal),
 					Description = c.Field<string>("REMARKS"),
 				}
 			).ToList();
@@ -140,9 +140,9 @@ namespace LinqToDB.Internal.DataProvider.Access
 					ParameterName = p.Field<string>("COLUMN_NAME")!.TrimStart('[').TrimEnd(']'),
 					IsIn          = true,
 					IsOut         = false,
-					Length        = dt.CreateParameters != null && dt.CreateParameters.Contains("length")    ? size : null,
-					Precision     = dt.CreateParameters != null && dt.CreateParameters.Contains("precision") ? size : null,
-					Scale         = dt.CreateParameters != null && dt.CreateParameters.Contains("scale")     ? p.Field<short?>("DECIMAL_DIGITS") : null,
+					Length        = dt.CreateParameters != null && dt.CreateParameters.Contains("length", StringComparison.Ordinal)    ? size : null,
+					Precision     = dt.CreateParameters != null && dt.CreateParameters.Contains("precision", StringComparison.Ordinal) ? size : null,
+					Scale         = dt.CreateParameters != null && dt.CreateParameters.Contains("scale", StringComparison.Ordinal)     ? p.Field<short?>("DECIMAL_DIGITS") : null,
 					Ordinal       = p.Field<int>("ORDINAL_POSITION"),
 					IsResult      = false,
 					DataType      = typeName,
@@ -195,7 +195,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 			var dts = base.GetDataTypes(dataConnection);
 
 			// https://docs.microsoft.com/en-us/sql/odbc/microsoft/microsoft-access-data-types?view=sql-server-ver15
-			if (dts.TrueForAll(dt => dt.TypeName != "BIGBINARY"))
+			if (dts.TrueForAll(dt => !string.Equals(dt.TypeName, "BIGBINARY", StringComparison.Ordinal)))
 			{
 				dts.Add(new DataTypeInfo()
 				{
@@ -205,7 +205,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 				});
 			}
 
-			if (dts.TrueForAll(dt => dt.TypeName != "DECIMAL"))
+			if (dts.TrueForAll(dt => !string.Equals(dt.TypeName, "DECIMAL", StringComparison.Ordinal)))
 			{
 				dts.Add(new DataTypeInfo()
 				{
@@ -244,7 +244,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					SystemType           = systemType,
 					DataType             = GetDataType(columnType, null, length, precision, scale),
 					ProviderSpecificType = GetProviderSpecificType(columnType),
-					IsIdentity           = columnType == "COUNTER",
+					IsIdentity           = string.Equals(columnType, "COUNTER", StringComparison.Ordinal),
 				}
 			).ToList();
 		}

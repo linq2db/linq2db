@@ -102,8 +102,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		static ObjectPool<IsServerSideOnlyCheckVisitor> _serverSideOnlyVisitorPool  = new(() => new IsServerSideOnlyCheckVisitor(), v => v.Cleanup(), 100);
-		static ObjectPool<CanBeEvaluatedOnClientCheckVisitor> _canBeEvaluatedOnClientCheckVisitorPool = new(() => new CanBeEvaluatedOnClientCheckVisitor(), v => v.Cleanup(), 100);
+		static readonly ObjectPool<IsServerSideOnlyCheckVisitor> _serverSideOnlyVisitorPool  = new(() => new IsServerSideOnlyCheckVisitor(), v => v.Cleanup(), 100);
+		static readonly ObjectPool<CanBeEvaluatedOnClientCheckVisitor> _canBeEvaluatedOnClientCheckVisitorPool = new(() => new CanBeEvaluatedOnClientCheckVisitor(), v => v.Cleanup(), 100);
 
 		Dictionary<Expression, bool>? _isServerSideOnlyCache;
 
@@ -375,7 +375,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				    method.DeclaringType.IsDefined(typeof(IsReadOnlyAttribute), false))
 				{
 					// Instance methods in readonly structs are implicitly read-only
-					if (!method.IsStatic && method.Name != ".ctor")
+					if (!method.IsStatic && !string.Equals(method.Name, ".ctor", StringComparison.Ordinal))
 					{
 						return true;
 					}
@@ -411,7 +411,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							return true;
 						}
 
-						if (method.DeclaringType == typeof(object) && method.Name == nameof(ToString))
+						if (method.DeclaringType == typeof(object) && string.Equals(method.Name, nameof(ToString), StringComparison.Ordinal))
 						{
 							return true;
 						}

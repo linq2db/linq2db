@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
@@ -74,7 +74,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return context;
 		}
 
-		readonly Dictionary<string, SqlPlaceholderExpression> _fieldsMap = new ();
+		readonly Dictionary<string, SqlPlaceholderExpression> _fieldsMap = new (StringComparer.Ordinal);
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{

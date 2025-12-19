@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -124,68 +124,65 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			return
-			(
-				from pk in dataConnection
-					.Query(
-						rd =>
+			return dataConnection
+				.Query(
+					rd =>
+					{
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						var tableId = string.Format(CultureInfo.InvariantCulture, "{0}", rd[0]);
+						var pkName  = (string)rd[1];
+
+						var arr = new string?[16];
+
+						for (var i = 0; i < arr.Length; i++)
 						{
-							// IMPORTANT: reader calls must be ordered to support SequentialAccess
-							var tableId = string.Format(CultureInfo.InvariantCulture, "{0}", rd[0]);
-							var pkName  = (string)rd[1];
+							var value = rd[string.Create(CultureInfo.InvariantCulture, $"col{i + 1}")];
+							arr[i] = value.IsNullValue() ? null : (string)value;
+						}
 
-							var arr = new string?[16];
-
-							for (var i = 0; i < arr.Length; i++)
-							{
-								var value = rd[string.Create(CultureInfo.InvariantCulture, $"col{i + 1}")];
-								arr[i] = value.IsNullValue() ? null : (string)value;
-							}
-
-							return new
-							{
-								TableID        = tableId,
-								PrimaryKeyName = pkName,
-								arr,
-							};
-						},
-						"""
-						SELECT
-							t.tabid,
-							x.idxname,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part1)  as col1,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part2)  as col2,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part3)  as col3,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part4)  as col4,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part5)  as col5,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part6)  as col6,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part7)  as col7,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part8)  as col8,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part9)  as col9,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part10) as col10,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part11) as col11,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part12) as col12,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part13) as col13,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part14) as col14,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part15) as col15,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part16) as col16
-						FROM systables t
-							JOIN sysindexes x ON t.tabid = x.tabid
-						WHERE t.tabid >= 100 AND x.idxtype = 'U'
-						"""
-					)
-				group pk by pk.TableID into gr
-				select gr.First() into pk
-				from c in pk.arr.Select((c,i) => new { c, i })
-				where c.c != null
-				select new PrimaryKeyInfo
+						return new
+						{
+							TableID        = tableId,
+							PrimaryKeyName = pkName,
+							arr,
+						};
+					},
+					"""
+					SELECT
+						t.tabid,
+						x.idxname,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part1)  as col1,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part2)  as col2,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part3)  as col3,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part4)  as col4,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part5)  as col5,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part6)  as col6,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part7)  as col7,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part8)  as col8,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part9)  as col9,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part10) as col10,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part11) as col11,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part12) as col12,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part13) as col13,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part14) as col14,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part15) as col15,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part16) as col16
+					FROM systables t
+						JOIN sysindexes x ON t.tabid = x.tabid
+					WHERE t.tabid >= 100 AND x.idxtype = 'U'
+					"""
+				)
+				.GroupBy(pk => pk.TableID, (_, g) => g.First(), StringComparer.Ordinal)
+				.SelectMany(pk => pk.arr.Select((c,i) => new { pk, c, i }))
+				.Where(pk => pk.c != null)
+				.Select(c => new PrimaryKeyInfo
 				{
-					TableID        = pk.TableID,
-					PrimaryKeyName = pk.PrimaryKeyName,
-					ColumnName     = c.c,
+					TableID        = c.pk.TableID,
+					PrimaryKeyName = c.pk.PrimaryKeyName,
+					ColumnName     = c.c!,
 					Ordinal        = c.i,
-				}
-			).ToList();
+				})
+				.ToList();
 		}
 
 		static void SetDate(ColumnInfo c, int num)
@@ -375,7 +372,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var names = new HashSet<string>();
+			var names = new HashSet<string>(StringComparer.Ordinal);
 
 			return
 			(
@@ -407,7 +404,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 							{
 								var ns = name.Substring(1).Split('_');
 
-								if (ns.Length == 2 && ns[0] == thisTableID && ns[1] == id)
+								if (ns.Length == 2 && string.Equals(ns[0], thisTableID, StringComparison.Ordinal) && string.Equals(ns[1], id, StringComparison.Ordinal))
 								{
 									name = "FK_" + rd["ThisTableName"] + "_" + rd["OtherTableName"];
 

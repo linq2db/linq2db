@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Globalization;
@@ -272,14 +272,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				AddMetadataReader(SystemDataSqlServerAttributeReader.MicrosoftSqlServerServerProvider);
 		}
 
-		static SqlServerMappingSchema Instance = new ();
+		static readonly SqlServerMappingSchema Instance = new ();
 
 		// TODO: move to SqlServerTypes.Configure?
 		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
 		{
-			if (@from           != to          &&
-				@from.FullName  == to.FullName &&
-				@from.Namespace == SqlServerTypes.TypesNamespace)
+			if (@from != to &&
+				string.Equals(@from.FullName, to.FullName, StringComparison.Ordinal) &&
+				string.Equals(@from.Namespace, SqlServerTypes.TypesNamespace, StringComparison.Ordinal))
 			{
 				var p = Expression.Parameter(@from);
 

@@ -551,8 +551,7 @@ namespace LinqToDB.Internal.Expressions
 					}
 				}
 
-				return a.Name == b.Name
-					   && a.Type == b.Type;
+				return string.Equals(a.Name, b.Name, StringComparison.Ordinal) && a.Type == b.Type;
 			}
 
 			bool CompareMemberAccess(MemberExpression a, MemberExpression b)

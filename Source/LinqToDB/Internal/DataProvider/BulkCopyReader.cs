@@ -100,7 +100,7 @@ namespace LinqToDB.Internal.DataProvider
 			_dataConnection = dataConnection;
 			_columns        = columns;
 			_columnTypes    = _columns.Select(c => c.GetConvertedDbDataType()).ToArray();
-			_ordinals       = _columns.Select((c, i) => new { c, i }).ToDictionary(_ => _.c.ColumnName, _ => _.i);
+			_ordinals       = _columns.Select((c, i) => new { c, i }).ToDictionary(_ => _.c.ColumnName, _ => _.i, StringComparer.Ordinal);
 		}
 
 		public sealed class Parameter : DbParameter

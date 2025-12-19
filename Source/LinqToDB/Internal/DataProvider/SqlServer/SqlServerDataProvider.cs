@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -292,7 +292,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			return new SqlServerSchemaProvider(this);
 		}
 
-		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ();
+		static readonly ConcurrentDictionary<string,bool> _marsFlags = new (StringComparer.Ordinal);
 
 		// TODO: Remove in v7
 		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -652,7 +652,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		#region UDT support
 
 		private readonly ConcurrentDictionary<Type, string> _udtTypeNames = new ();
-		private readonly ConcurrentDictionary<string, Type> _udtTypes     = new ();
+		private readonly ConcurrentDictionary<string, Type> _udtTypes     = new (StringComparer.Ordinal);
 
 		public void AddUdtType(Type type, string udtName)
 		{

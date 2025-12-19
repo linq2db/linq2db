@@ -17,7 +17,6 @@ namespace LinqToDB.Internal.SqlProvider
 {
 	public class SqlExpressionOptimizerVisitor : SqlQueryVisitor
 	{
-		ISimilarityMerger           _similarityMerger   = SimilarityMerger.Instance;
 		NullabilityContext          _nullabilityContext = default!;
 		ICollection<ISqlPredicate>? _allowOptimizeList;
 		ISqlPredicate?              _allowOptimize;
@@ -698,7 +697,7 @@ namespace LinqToDB.Internal.SqlProvider
 				return element;
 
 			var predicatesToCompare = element.Predicates
-				.SelectMany(p => _similarityMerger.GetSimilarityCodes(p).Select(code => (predicate : p, code)))
+				.SelectMany(p => SimilarityMerger.Instance.GetSimilarityCodes(p).Select(code => (predicate : p, code)))
 				.GroupBy(x => x.code)
 				.Select(g => g.Select(x => x.predicate).Distinct().ToList())
 				.Where(p => p.Count > 1)
@@ -726,8 +725,8 @@ namespace LinqToDB.Internal.SqlProvider
 							if (visitedPredicates.Contains(predicate2))
 								continue;
 
-							if (_similarityMerger.TryMerge(_nullabilityContext, _isInsidePredicate, predicate1, predicate2, element.IsOr, out var mergedPredicate) || 
-							    _similarityMerger.TryMerge(_nullabilityContext, _isInsidePredicate, predicate2, predicate1, element.IsOr, out mergedPredicate))
+							if (SimilarityMerger.Instance.TryMerge(_nullabilityContext, _isInsidePredicate, predicate1, predicate2, element.IsOr, out var mergedPredicate) ||
+								SimilarityMerger.Instance.TryMerge(_nullabilityContext, _isInsidePredicate, predicate2, predicate1, element.IsOr, out mergedPredicate))
 							{
 								var predicatesList = element.Predicates;
 
@@ -848,13 +847,13 @@ namespace LinqToDB.Internal.SqlProvider
 			if (searchCondition.Predicates.Count > 100)
 				return false;
 
-			var predicateCodes = _similarityMerger.GetSimilarityCodes(predicate).ToArray();
+			var predicateCodes = SimilarityMerger.Instance.GetSimilarityCodes(predicate).ToArray();
 
 			if (predicateCodes.Length == 0)
 				return false;
 
 			var predicatesToCompare = searchCondition.Predicates
-				.Where(p => _similarityMerger.GetSimilarityCodes(p).Any(code => predicateCodes.Contains(code)))
+				.Where(p => SimilarityMerger.Instance.GetSimilarityCodes(p).Any(code => predicateCodes.Contains(code)))
 				.ToList();
 
 			if (predicatesToCompare.Count == 0)
@@ -872,7 +871,7 @@ namespace LinqToDB.Internal.SqlProvider
 				if (visitedPredicates.Contains(conditionPredicate))
 					continue;
 
-				if (_similarityMerger.TryMerge(_nullabilityContext, _isInsidePredicate, predicate, conditionPredicate, !searchCondition.IsOr, out var mergedSingle, out var mergedConditional))
+				if (SimilarityMerger.Instance.TryMerge(_nullabilityContext, _isInsidePredicate, predicate, conditionPredicate, !searchCondition.IsOr, out var mergedSingle, out var mergedConditional))
 				{
 					isOptimized = true;
 
@@ -1193,7 +1192,7 @@ namespace LinqToDB.Internal.SqlProvider
 							case int i when i == 1 : return element.Expr2;
 							case int i when
 								element.Expr2    is SqlBinaryExpression be2 &&
-								be2.Operation == "*"                   &&
+string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 								TryEvaluateNoParameters(be2.Expr1, out var be2v1)  &&
 								be2v1 is int bi :
 							{

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -735,12 +735,12 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			var newStr = str;
 
-			newStr = newStr.Replace(escape, escape + escape);
+			newStr = newStr.Replace(escape, escape + escape, StringComparison.Ordinal);
 
 			var toEscape = LikeCharactersToEscape;
 			foreach (var s in toEscape)
 			{
-				newStr = newStr.Replace(s, escape + s);
+				newStr = newStr.Replace(s, escape + s, StringComparison.Ordinal);
 			}
 
 			return newStr;
@@ -761,7 +761,7 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual string EscapeLikePattern(string str)
 		{
 			foreach (var s in LikeCharactersToEscape)
-				str = str.Replace(s, LikeEscapeCharacter + s);
+				str = str.Replace(s, LikeEscapeCharacter + s, StringComparison.Ordinal);
 
 			return str;
 		}
@@ -818,7 +818,7 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 
 				return new SqlPredicate.Like(valueExpr, predicate.IsNot, patternExpr,
-					LikeIsEscapeSupported && (patternValue != patternRawValue) ? CreateLikeEscapeCharacter() : null);
+					LikeIsEscapeSupported && (!string.Equals(patternValue, patternRawValue, StringComparison.Ordinal)) ? CreateLikeEscapeCharacter() : null);
 			}
 			else
 			{
@@ -1932,22 +1932,22 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected static bool IsDateDataType(DbDataType dataType, string typeName)
 		{
-			return dataType.DataType == DataType.Date || dataType.DbType == typeName;
+			return dataType.DataType == DataType.Date || string.Equals(dataType.DbType, typeName, StringComparison.Ordinal);
 		}
 
 		protected static bool IsSmallDateTimeType(DbDataType dataType, string typeName)
 		{
-			return dataType.DataType == DataType.SmallDateTime || dataType.DbType == typeName;
+			return dataType.DataType == DataType.SmallDateTime || string.Equals(dataType.DbType, typeName, StringComparison.Ordinal);
 		}
 
 		protected static bool IsDateTime2Type(DbDataType dataType, string typeName)
 		{
-			return dataType.DataType == DataType.DateTime2 || dataType.DbType == typeName;
+			return dataType.DataType == DataType.DateTime2 || string.Equals(dataType.DbType, typeName, StringComparison.Ordinal);
 		}
 
 		protected static bool IsDateTimeType(DbDataType dataType, string typeName)
 		{
-			return dataType.DataType == DataType.DateTime2 || dataType.DbType == typeName;
+			return dataType.DataType == DataType.DateTime2 || string.Equals(dataType.DbType, typeName, StringComparison.Ordinal);
 		}
 
 		protected static bool IsDateDataOffsetType(DbDataType dataType)
@@ -1957,7 +1957,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected static bool IsTimeDataType(DbDataType dataType)
 		{
-			return dataType.DataType == DataType.Time || dataType.DbType == "Time";
+			return dataType.DataType == DataType.Time || string.Equals(dataType.DbType, "Time", StringComparison.Ordinal);
 		}
 
 		protected SqlCastExpression FloorBeforeConvert(SqlCastExpression cast)

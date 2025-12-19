@@ -320,7 +320,7 @@ namespace LinqToDB.Internal.SqlProvider
 				case QueryElementType.SqlExpression:
 				{
 					var sqlExpr = (SqlExpression)expr;
-					if (sqlExpr.Expr == "{0}" && sqlExpr.Parameters.Length == 1)
+					if (string.Equals(sqlExpr.Expr, "{0}", StringComparison.Ordinal) && sqlExpr.Parameters.Length == 1)
 						return GetUnderlyingFieldOrColumn(sqlExpr.Parameters[0]);
 					return null;
 				}

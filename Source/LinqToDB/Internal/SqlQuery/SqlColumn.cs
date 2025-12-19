@@ -94,7 +94,7 @@ namespace LinqToDB.Internal.SqlQuery
 				case SqlColumn   column : return column.Alias;
 				case SelectQuery query  :
 					{
-						if (query.Select.Columns.Count == 1 && query.Select.Columns[0].Alias != "*")
+						if (query.Select.Columns.Count == 1 && !string.Equals(query.Select.Columns[0].Alias, "*", StringComparison.Ordinal))
 							return query.Select.Columns[0].Alias;
 						break;
 					}

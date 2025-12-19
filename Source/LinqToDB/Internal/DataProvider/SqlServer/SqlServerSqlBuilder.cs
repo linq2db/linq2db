@@ -213,7 +213,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			// remove database name, which could be inherited from non-temporary table mapping
 			// except explicit use of tempdb, needed in some cases at least for sql server 2014
-			if ((name.Name.StartsWith('#') || tableOptions.IsTemporaryOptionSet()) && databaseName != "tempdb")
+			if ((name.Name.StartsWith('#') || tableOptions.IsTemporaryOptionSet()) && !string.Equals(databaseName, "tempdb", StringComparison.Ordinal))
 				databaseName = "tempdb";
 
 			if (name.Server != null && (databaseName == null || name.Schema == null))
@@ -251,7 +251,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					return sb.Append('@').Append(value);
 
 				case ConvertType.NameToQueryField:
-					if (value == PseudoFunctions.MERGE_ACTION)
+					if (string.Equals(value, PseudoFunctions.MERGE_ACTION, StringComparison.Ordinal))
 						return sb.Append("$action");
 					goto case ConvertType.NameToQueryFieldAlias;
 				case ConvertType.NameToQueryFieldAlias:
@@ -295,7 +295,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			AppendIndent();
 
-			if (!pkName.StartsWith("[PK_#") && !createTable.Table.TableOptions.IsTemporaryOptionSet())
+			if (!pkName.StartsWith("[PK_#", StringComparison.Ordinal) && !createTable.Table.TableOptions.IsTemporaryOptionSet())
 			{
 				StringBuilder.Append("CONSTRAINT ");
 				Convert(StringBuilder, pkName, ConvertType.NameToQueryTable).Append(' ');

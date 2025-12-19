@@ -277,7 +277,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						_exprBuilder.Append(CultureInfo.InvariantCulture, $"db.GetTable<{GetTypeName(expr.Type.GetGenericArguments()[0])}>()");
 					else if (c.Value == _dataContext || c.Value == null && typeof(IDataContext).IsSameOrParentOf(c.Type))
 						_exprBuilder.Append("db");
-					else if (expr.ToString() == $"value({expr.Type})")
+					else if (string.Equals(expr.ToString(), $"value({expr.Type})", StringComparison.Ordinal))
 						_exprBuilder.Append("value(").Append(GetTypeName(expr.Type)).Append(')');
 					else
 						_exprBuilder.Append(CultureInfo.InvariantCulture, $"{expr}");
@@ -593,7 +593,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				);
 			}).ToList();
 
-			if (ctors.Count == 1 && ctors[0].Contains("()"))
+			if (ctors.Count == 1 && ctors[0].Contains("()", StringComparison.Ordinal))
 				ctors.Clear();
 
 			var members = type.GetFields().Intersect(_usedMembers.OfType<FieldInfo>()).Select(f =>
@@ -766,10 +766,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static bool IsAnonymous(Type type)
 		{
-			return type.Name.StartsWith("<>");
+			return type.Name.StartsWith("<>", StringComparison.Ordinal);
 		}
 
-		readonly Dictionary<string,string> _nameDic = new ();
+		readonly Dictionary<string,string> _nameDic = new (StringComparer.Ordinal);
 
 		string MangleName(Type type, string? name, string prefix)
 		{
@@ -810,7 +810,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static bool IsUserNamespace(string? @namespace)
 		{
-			return @namespace == null || SystemNamespaces.TrueForAll(ns => @namespace != ns && !@namespace.StartsWith(ns + '.'));
+			return @namespace == null || SystemNamespaces.TrueForAll(ns => !string.Equals(@namespace, ns, StringComparison.Ordinal) && !@namespace.StartsWith(ns + '.', StringComparison.Ordinal));
 		}
 
 		string? GetTypeName(Type type)
@@ -836,7 +836,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				name = "";
 
-				if (type.Namespace != "System")
+				if (!string.Equals(type.Namespace, "System", StringComparison.Ordinal))
 					name = type.Namespace + ".";
 
 				name += type.Name;
@@ -864,7 +864,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return name;
 			}
 
-			if (type.Namespace == "System")
+			if (string.Equals(type.Namespace, "System", StringComparison.Ordinal))
 				return type.Name;
 
 			return MangleName(type, type.ToString(), "T");
@@ -1025,7 +1025,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			(_membersVisitor ??= VisitActionVisitor<ExpressionTestGenerator>.Create(this, static (ctx, e) => ctx.VisitMembers(e))).Visit(expr);
 			(_typesVisitor   ??= VisitActionVisitor<ExpressionTestGenerator>.Create(this, static (ctx, e) => ctx.VisitTypes(e))).Visit(expr);
 
-			foreach (var typeNamespaceList in _usedTypes.OrderBy(t => t.Namespace).GroupBy(x => x.Namespace))
+			foreach (var typeNamespaceList in _usedTypes.OrderBy(t => t.Namespace, StringComparer.Ordinal).GroupBy(x => x.Namespace, StringComparer.Ordinal))
 			{
 				if (typeNamespaceList.All(type =>
 				{
@@ -1037,7 +1037,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					continue;
 				_typeBuilder.Append("namespace ").AppendLine(MangleName(IsUserNamespace(typeNamespaceList.Key), typeNamespaceList.Key, "T"));
 				_typeBuilder.AppendLine("{");
-				foreach (var type in typeNamespaceList.OrderBy(t => t.Name))
+				foreach (var type in typeNamespaceList.OrderBy(t => t.Name, StringComparer.Ordinal))
 				{
 					BuildType(type, _dataContext.MappingSchema, _dataContext.Options);
 				}
@@ -1082,7 +1082,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				""",
 				_typeBuilder,
-				_nameDic.Aggregate(expr.ToString(), (current,item) => current.Replace(item.Key.Length == 1 ? item.Key : item.Key.Substring(1), item.Value)),
+				_nameDic.Aggregate(expr.ToString(), (current,item) => current.Replace(item.Key.Length == 1 ? item.Key : item.Key.Substring(1), item.Value, StringComparison.Ordinal)),
 				_exprBuilder
 			);
 

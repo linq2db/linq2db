@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -322,7 +322,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (SqlTable.Alias != null)
 					return;
 
-				if (!alias.Contains('<'))
+				if (!alias.Contains('<', StringComparison.Ordinal))
 					SqlTable.Alias = alias;
 			}
 
@@ -403,7 +403,7 @@ namespace LinqToDB.Internal.Linq.Builder
 									foreach (var field in SqlTable.Fields)
 									{
 										var name = levelMember.Member.Name;
-										if (field.Name.Contains('.'))
+										if (field.Name.Contains('.', StringComparison.Ordinal))
 										{
 											if (pathName == null)
 											{
@@ -420,10 +420,10 @@ namespace LinqToDB.Internal.Linq.Builder
 												pathName = !string.IsNullOrEmpty(suffix) ? name + "." + suffix : name;
 											}
 
-											if (field.Name == pathName)
+											if (string.Equals(field.Name, pathName, StringComparison.Ordinal))
 												return field;
 										}
-										else if (field.Name == name)
+										else if (string.Equals(field.Name, name, StringComparison.Ordinal))
 											return field;
 									}
 								}
@@ -463,7 +463,7 @@ namespace LinqToDB.Internal.Linq.Builder
 									}
 								}
 
-								if (InheritanceMapping.Count > 0 && field.Name == memberExpression.Member.Name)
+								if (InheritanceMapping.Count > 0 && string.Equals(field.Name, memberExpression.Member.Name, StringComparison.Ordinal))
 								{
 									foreach (var mapping in InheritanceMapping)
 									{

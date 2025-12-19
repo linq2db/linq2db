@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -67,7 +67,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 							TableName          = name,
 							IsDefaultSchema    = true,
 							IsView             = type is "VIEW" or "SYSTEM VIEW",
-							IsProviderSpecific = type == "SYSTEM VIEW" || catalog.Equals("sys", StringComparison.OrdinalIgnoreCase),
+							IsProviderSpecific = string.Equals(type, "SYSTEM VIEW", StringComparison.Ordinal) || catalog.Equals("sys", StringComparison.OrdinalIgnoreCase),
 							Description        = rd.GetString(3),
 						};
 					},
@@ -128,14 +128,14 @@ namespace LinqToDB.Internal.DataProvider.MySql
 						var columnType = rd.GetString(1);
 						var tableId    = rd.GetString(2).ToLowerInvariant() + ".." + rd.GetString(3);
 						var name       = rd.GetString(4);
-						var isNullable = rd.GetString(5) == "YES";
+						var isNullable = string.Equals(rd.GetString(5), "YES", StringComparison.Ordinal);
 						var ordinal    = Converter.ChangeTypeTo<int>(rd[6]);
 						var length     = Converter.ChangeTypeTo<long?>(rd[7]);
 						var precision  = Converter.ChangeTypeTo<long?>(rd[8]);
 						var scale      = Converter.ChangeTypeTo<long?>(rd[9]);
 						var extra      = rd.GetString(10);
 
-						if (dataType == "vector")
+						if (string.Equals(dataType, "vector", StringComparison.Ordinal))
 							length /= 4;
 
 						return new ColumnInfo()
@@ -150,12 +150,12 @@ namespace LinqToDB.Internal.DataProvider.MySql
 							Precision    = (int?)precision,
 							Scale        = (int?)scale,
 							ColumnType   = columnType,
-							IsIdentity   = extra.Contains("auto_increment"),
+							IsIdentity   = extra.Contains("auto_increment", StringComparison.Ordinal),
 							Description  = rd.GetString(11),
 							// also starting from 5.1 we can utilise provileges column for skip properties
 							// but it sounds like a bad idea
-							SkipOnInsert = extra.Contains("VIRTUAL STORED") || extra.Contains("VIRTUAL GENERATED"),
-							SkipOnUpdate = extra.Contains("VIRTUAL STORED") || extra.Contains("VIRTUAL GENERATED"),
+							SkipOnInsert = extra.Contains("VIRTUAL STORED", StringComparison.Ordinal) || extra.Contains("VIRTUAL GENERATED", StringComparison.Ordinal),
+							SkipOnUpdate = extra.Contains("VIRTUAL STORED", StringComparison.Ordinal) || extra.Contains("VIRTUAL GENERATED", StringComparison.Ordinal),
 						};
 					},
 					"""
@@ -256,12 +256,12 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				"double"            => DataType.Double,
 				"float"             => DataType.Single,
 				"vector"            => DataType.Vector32,
-				"tinyint"           => columnType != null && columnType.Contains("unsigned") ? DataType.Byte   : DataType.SByte,
-				"smallint"          => columnType != null && columnType.Contains("unsigned") ? DataType.UInt16 : DataType.Int16,
-				"int"               => columnType != null && columnType.Contains("unsigned") ? DataType.UInt32 : DataType.Int32,
+				"tinyint"           => columnType != null && columnType.Contains("unsigned", StringComparison.Ordinal) ? DataType.Byte   : DataType.SByte,
+				"smallint"          => columnType != null && columnType.Contains("unsigned", StringComparison.Ordinal) ? DataType.UInt16 : DataType.Int16,
+				"int"               => columnType != null && columnType.Contains("unsigned", StringComparison.Ordinal) ? DataType.UInt32 : DataType.Int32,
 				"year"              => DataType.Int32,
-				"mediumint"         => columnType != null && columnType.Contains("unsigned") ? DataType.UInt32 : DataType.Int32,
-				"bigint"            => columnType != null && columnType.Contains("unsigned") ? DataType.UInt64 : DataType.Int64,
+				"mediumint"         => columnType != null && columnType.Contains("unsigned", StringComparison.Ordinal) ? DataType.UInt32 : DataType.Int32,
+				"bigint"            => columnType != null && columnType.Contains("unsigned", StringComparison.Ordinal) ? DataType.UInt64 : DataType.Int64,
 				"decimal"           => DataType.Decimal,
 				"json"              => DataType.Json,
 				_                   => DataType.Undefined,
@@ -285,7 +285,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 							ProcedureID         = catalog + "." + name,
 							CatalogName         = catalog,
 							ProcedureName       = name,
-							IsFunction          = Converter.ChangeTypeTo<string>(rd[2]) == "FUNCTION",
+							IsFunction          = string.Equals(Converter.ChangeTypeTo<string>(rd[2]), "FUNCTION", StringComparison.Ordinal),
 							IsDefaultSchema     = true,
 							ProcedureDefinition = Converter.ChangeTypeTo<string>(rd[3]),
 							Description         = Converter.ChangeTypeTo<string>(rd[4]),
@@ -318,7 +318,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 						var type      = rd.GetString(7).ToUpperInvariant();
 						var length    = Converter.ChangeTypeTo<long?>(rd[8]);
 
-						if (type == "VECTOR")
+						if (string.Equals(type, "VECTOR", StringComparison.Ordinal))
 							length /= 4;
 
 						return new ProcedureParameterInfo()
@@ -369,8 +369,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			// now we have similar issue with MySqlConnector
 			// https://github.com/mysql-net/MySqlConnector/issues/722
 			if (rv != null && rv.AsEnumerable()
-					.Any(r => r.Field<string>("ColumnName")!.StartsWith("@_cnet_param_")
-						||    r.Field<string>("ColumnName") == "\ue001\b\v"))
+					.Any(r => r.Field<string>("ColumnName")!.StartsWith("@_cnet_param_", StringComparison.Ordinal)
+						|| string.Equals(r.Field<string>("ColumnName"), "\ue001\b\v", StringComparison.Ordinal)))
 				rv = null;
 
 			return rv;
@@ -391,7 +391,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				let precision    = Converter.ChangeTypeTo<int>(r["NumericPrecision"])
 				let scale        = Converter.ChangeTypeTo<int>(r["NumericScale"])
 
-				let length = dataType == "vector" ? len / 4 : len
+				let length = string.Equals(dataType, "vector", StringComparison.Ordinal) ? len / 4 : len
 
 				let systemType = GetSystemType(dataType, null, dt, length, precision, scale, options)
 
@@ -451,15 +451,15 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				case "tinyint"           :
 				{
 					var size = precision > 0 ? precision : length;
-					if (columnType == "tinyint(1)" || size == 1)
+					if (string.Equals(columnType, "tinyint(1)", StringComparison.Ordinal) || size == 1)
 						return typeof(bool);
-					return columnType?.Contains("unsigned") == true ? typeof(byte) : typeof(sbyte);
+					return columnType?.Contains("unsigned", StringComparison.Ordinal) == true ? typeof(byte) : typeof(sbyte);
 				}
 				//case "tinyint"           : return columnType?.Contains("unsigned") == true ? typeof(byte)   : typeof(sbyte);
-				case "smallint"          : return columnType?.Contains("unsigned") == true ? typeof(ushort) : typeof(short);
+				case "smallint"          : return columnType?.Contains("unsigned", StringComparison.Ordinal) == true ? typeof(ushort) : typeof(short);
 				case "mediumint"         :
-				case "int"               : return columnType?.Contains("unsigned") == true ? typeof(uint)   : typeof(int);
-				case "bigint"            : return columnType?.Contains("unsigned") == true ? typeof(ulong)  : typeof(long);
+				case "int"               : return columnType?.Contains("unsigned", StringComparison.Ordinal) == true ? typeof(uint)   : typeof(int);
+				case "bigint"            : return columnType?.Contains("unsigned", StringComparison.Ordinal) == true ? typeof(ulong)  : typeof(long);
 				case "json"              :
 				case "longtext"          : return typeof(string);
 				case "timestamp"         : return typeof(DateTime);

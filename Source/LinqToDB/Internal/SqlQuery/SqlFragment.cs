@@ -47,7 +47,7 @@ namespace LinqToDB.Internal.SqlQuery
 			if (Parameters.Length == 0)
 				return writer.Append(Expr);
 
-			if (Expr.Contains('{'))
+			if (Expr.Contains('{', StringComparison.Ordinal))
 				return writer.AppendFormat(Expr, arguments.ToArray());
 
 			return writer
@@ -83,8 +83,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 			if (other is not SqlFragment expr
 				|| Precedence != expr.Precedence
-				|| Expr != expr.Expr
-				|| Parameters.Length != expr.Parameters.Length)
+				|| !string.Equals(Expr, expr.Expr, StringComparison.Ordinal) || Parameters.Length != expr.Parameters.Length)
 			{
 				return false;
 			}

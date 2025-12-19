@@ -546,8 +546,7 @@ namespace LinqToDB.Internal.SqlQuery
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
 				return other is Like expr
-					&& FunctionName == expr.FunctionName
-					&& Expr2.Equals(expr.Expr2, comparer)
+					&& string.Equals(FunctionName, expr.FunctionName, StringComparison.Ordinal) && Expr2.Equals(expr.Expr2, comparer)
 					&& (   (Escape != null && expr.Escape != null && Escape.Equals(expr.Escape, comparer))
 						|| (Escape == null && expr.Escape == null))
 					&& base.Equals(other, comparer);

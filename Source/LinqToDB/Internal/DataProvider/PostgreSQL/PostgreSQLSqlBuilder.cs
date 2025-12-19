@@ -153,7 +153,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryField     :
-					if (value == PseudoFunctions.MERGE_ACTION)
+					if (string.Equals(value, PseudoFunctions.MERGE_ACTION, StringComparison.Ordinal))
 						return sb.Append("merge_action()");
 					goto case ConvertType.NameToQueryFieldAlias;
 				case ConvertType.NameToQueryFieldAlias:
@@ -184,7 +184,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 						if (quote)
 							// don't forget to duplicate quotes
-							return sb.Append('"').Append(value.Replace("\"", "\"\"")).Append('"');
+							return sb.Append('"').Append(value.Replace("\"", "\"\"", StringComparison.Ordinal)).Append('"');
 					}
 
 					break;

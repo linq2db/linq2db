@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Data.Linq;
@@ -228,7 +228,7 @@ namespace LinqToDB.Common
 		{
 			if (expr is MemberExpression me)
 			{
-				if (me.Member.Name == "Value" && me.Member.DeclaringType!.IsGenericType)
+				if (string.Equals(me.Member.Name, "Value", StringComparison.Ordinal) && me.Member.DeclaringType!.IsGenericType)
 					return me.Member.DeclaringType.GetGenericTypeDefinition() == typeof(DefaultValue<>);
 			}
 

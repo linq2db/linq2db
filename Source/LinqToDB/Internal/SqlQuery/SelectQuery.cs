@@ -147,7 +147,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		internal static SqlTableSource? CheckTableSource(SqlTableSource ts, ISqlTableSource table, string? alias)
 		{
-			if (ts.Source == table && (alias == null || ts.Alias == alias))
+			if (ts.Source == table && (alias == null || string.Equals(ts.Alias, alias, StringComparison.Ordinal)))
 				return ts;
 
 			var jt = ts[table, alias];

@@ -68,20 +68,20 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			return
 			(
 				from t in tables.AsEnumerable()
-				where _tableTypes.Contains(t.Field<string>("TABLE_TYPE"))
+				where _tableTypes.Contains(t.Field<string>("TABLE_TYPE"), StringComparer.Ordinal)
 				let catalog = database
 				let schema  = t.Field<string>("TABLE_SCHEMA")
 				let name    = t.Field<string>("TABLE_NAME")
-				let system  = t.Field<string>("TABLE_TYPE") == "SYSTEM TABLE"
-				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == DefaultSchema
+				let system  = string.Equals(t.Field<string>("TABLE_TYPE"), "SYSTEM TABLE", StringComparison.Ordinal)
+				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || string.Equals(schema, DefaultSchema, StringComparison.Ordinal)
 				select new TableInfo
 				{
 					TableID            = catalog + '.' + schema + '.' + name,
 					CatalogName        = catalog,
 					SchemaName         = schema,
 					TableName          = name,
-					IsDefaultSchema    = schema                        == DefaultSchema,
-					IsView             = t.Field<string>("TABLE_TYPE") == "VIEW",
+					IsDefaultSchema    = string.Equals(schema, DefaultSchema, StringComparison.Ordinal),
+					IsView             = string.Equals(t.Field<string>("TABLE_TYPE"), "VIEW", StringComparison.Ordinal),
 					Description        = t.Field<string>("REMARKS"),
 					IsProviderSpecific = system || _systemSchemas.Contains(schema),
 				}
@@ -159,15 +159,15 @@ namespace LinqToDB.Internal.DataProvider.DB2
 					var name        = rd.ToString(2)!;
 					var size        = Converter.ChangeTypeTo<int?>(rd[3]);
 					var scale       = Converter.ChangeTypeTo<int?>(rd[4]);
-					var isNullable  = rd.ToString(5) == "Y";
-					var isIdentity  = rd.ToString(6) == "Y";
+					var isNullable  = string.Equals(rd.ToString(5), "Y", StringComparison.Ordinal);
+					var isIdentity  = string.Equals(rd.ToString(6), "Y", StringComparison.Ordinal);
 					var ordinal     = Converter.ChangeTypeTo<int>(rd[7]);
 					var typeName    = rd.ToString(8);
 					var description = rd.ToString(9);
 					var cp          = Converter.ChangeTypeTo<int>(rd[10]);
 
-					     if (typeName == "CHARACTER" && cp == 0) typeName = "CHAR () FOR BIT DATA";
-					else if (typeName == "VARCHAR"   && cp == 0) typeName = "VARCHAR () FOR BIT DATA";
+					     if (string.Equals(typeName, "CHARACTER", StringComparison.Ordinal) && cp == 0) typeName = "CHAR () FOR BIT DATA";
+					else if (string.Equals(typeName, "VARCHAR", StringComparison.Ordinal) && cp == 0) typeName = "VARCHAR () FOR BIT DATA";
 
 					var ci = new ColumnInfo
 					{
@@ -249,8 +249,8 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				)
 				.SelectMany(fk =>
 				{
-					var thisTable    = _columns!.Where(c => c.TableID == fk.thisTable). OrderByDescending(c => c.Name.Length).ToList();
-					var otherTable   = _columns!.Where(c => c.TableID == fk.otherTable).OrderByDescending(c => c.Name.Length).ToList();
+					var thisTable    = _columns!.Where(c => string.Equals(c.TableID, fk.thisTable, StringComparison.Ordinal)). OrderByDescending(c => c.Name.Length).ToList();
+					var otherTable   = _columns!.Where(c => string.Equals(c.TableID, fk.otherTable, StringComparison.Ordinal)).OrderByDescending(c => c.Name.Length).ToList();
 					var thisColumns  = fk.thisColumns. Trim();
 					var otherColumns = fk.otherColumns.Trim();
 
@@ -258,8 +258,8 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 					for (var i = 0; thisColumns.Length > 0; i++)
 					{
-						var thisColumn  = thisTable. Find(c => thisColumns. StartsWith(c.Name));
-						var otherColumn = otherTable.Find(c => otherColumns.StartsWith(c.Name));
+						var thisColumn  = thisTable. Find(c => thisColumns. StartsWith(c.Name, StringComparison.Ordinal));
+						var otherColumn = otherTable.Find(c => otherColumns.StartsWith(c.Name, StringComparison.Ordinal));
 
 						if (thisColumn == null || otherColumn == null)
 							break;
@@ -300,9 +300,9 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 					if (type.CreateFormat == null)
 					{
-						if (type.TypeName.Contains("()"))
+						if (type.TypeName.Contains("()", StringComparison.Ordinal))
 						{
-							type.CreateFormat = type.TypeName.Replace("()", "({0})");
+							type.CreateFormat = type.TypeName.Replace("()", "({0})", StringComparison.Ordinal);
 						}
 						else
 						{
@@ -478,8 +478,8 @@ namespace LinqToDB.Internal.DataProvider.DB2
 							SchemaName          = schema,
 							PackageName         = module,
 							ProcedureName       = name,
-							IsFunction          = type != "P",
-							IsTableFunction     = type == "T",
+							IsFunction          = !string.Equals(type, "P", StringComparison.Ordinal),
+							IsTableFunction     = string.Equals(type, "T", StringComparison.Ordinal),
 							ProcedureDefinition = source,
 							Description         = desc,
 							IsDefaultSchema     = isDefault,
@@ -487,7 +487,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 					},
 					sql
 				)
-				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || p.SchemaName == DefaultSchema)
+				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || string.Equals(p.SchemaName, DefaultSchema, StringComparison.Ordinal))
 				.ToList();
 		}
 
@@ -508,7 +508,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 						var ordinal    = ConvertTo<int>.From(rd[6]);
 						var length     = ConvertTo<int>.From(rd[7]);
 						var scale      = ConvertTo<int>.From(rd[8]);
-						var isNullable = rd.ToString(9) == "Y";
+						var isNullable = string.Equals(rd.ToString(9), "Y", StringComparison.Ordinal);
 
 						var ppi = new ProcedureParameterInfo()
 						{
@@ -516,9 +516,9 @@ namespace LinqToDB.Internal.DataProvider.DB2
 							ParameterName = pName,
 							DataType      = dataType,
 							Ordinal       = ordinal,
-							IsIn          = mode.Contains("IN"),
-							IsOut         = mode.Contains("OUT"),
-							IsResult      = mode == "RET",
+							IsIn          = mode.Contains("IN", StringComparison.Ordinal),
+							IsOut         = mode.Contains("OUT", StringComparison.Ordinal),
+							IsResult      = string.Equals(mode, "RET", StringComparison.Ordinal),
 							IsNullable    = isNullable,
 						};
 

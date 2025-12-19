@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -58,7 +58,7 @@ namespace LinqToDB.Mapping
 
 			return string.IsNullOrEmpty(Configuration) ?
 				attrs.Where(a => string.IsNullOrEmpty(a.Configuration)):
-				attrs.Where(a => Configuration ==     a.Configuration) ;
+				attrs.Where(a => string.Equals(Configuration, a.Configuration, StringComparison.Ordinal)) ;
 		}
 
 		#endregion

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
+using System.Data.SqlTypes;
 using System.Globalization;
 using System.Linq;
 
@@ -66,13 +68,13 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 					ProviderDbType   = Converter.ChangeTypeTo<int>(t["ProviderDbType"]),
 				}).ToList();
 
-			var otherTypes = dt.Where(x => x.TypeName.Contains("VAR")).Select(x => new DataTypeInfo
+			var otherTypes = dt.Where(x => x.TypeName.Contains("VAR", StringComparison.Ordinal)).Select(x => new DataTypeInfo
 			{
 				DataType         = x.DataType,
-				CreateFormat     = x.CreateFormat?.Replace("VAR", ""),
+				CreateFormat     = x.CreateFormat?.Replace("VAR", "", StringComparison.Ordinal),
 				CreateParameters = x.CreateParameters,
 				ProviderDbType   = x.ProviderDbType,
-				TypeName         = x.TypeName.Replace("VAR", ""),
+				TypeName         = x.TypeName.Replace("VAR", "", StringComparison.Ordinal),
 			}).ToList();
 
 			dt.AddRange(otherTypes);
@@ -97,7 +99,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				{
 					CatalogName     = null,
 					Description     = comments,
-					IsDefaultSchema = schemaName == DefaultSchema,
+					IsDefaultSchema = string.Equals(schemaName, DefaultSchema, StringComparison.Ordinal),
 					IsView          = !isTable,
 					SchemaName      = schemaName,
 					TableID         = schemaName + '.' + tableName,
@@ -180,7 +182,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			return
 			(
 				from pk in pks.AsEnumerable()
-				where pk.Field<string>("CONSTRAINT") == "PRIMARY KEY"
+				where string.Equals(pk.Field<string>("CONSTRAINT"), "PRIMARY KEY", StringComparison.Ordinal)
 				select new PrimaryKeyInfo
 				{
 					TableID        = pk.Field<string>("TABLE_SCHEMA") + "." + pk.Field<string>("TABLE_NAME"),
@@ -258,7 +260,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				var tableId      = schemaName + '.' + tableName;
 
 				// decfloat detect
-				if (dataTypeName == "DECIMAL" && scale == null)
+				if (string.Equals(dataTypeName, "DECIMAL", StringComparison.Ordinal) && scale == null)
 					length = null;
 
 				return new ColumnInfo
@@ -322,7 +324,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 							ProcedureID         = string.Concat(schema, '.', procedure),
 							CatalogName         = null,
 							IsAggregateFunction = false,
-							IsDefaultSchema     = schema == DefaultSchema,
+							IsDefaultSchema     = string.Equals(schema, DefaultSchema, StringComparison.Ordinal),
 							IsFunction          = isFunction,
 							IsTableFunction     = isTableFunction,
 							ProcedureDefinition = definition,
@@ -372,18 +374,18 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 						var isResult   = rd.GetBoolean(6);
 						var length     = (int?)rd.GetInt32(7);
 						var scale      = (int?)rd.GetInt32(8);
-						var isNullable = rd.GetString(9) == "TRUE";
+						var isNullable = string.Equals(rd.GetString(9), "TRUE", StringComparison.Ordinal);
 
 						// detect decfloat
-						if (dataType == "DECIMAL" && length == 65535)
+						if (string.Equals(dataType, "DECIMAL", StringComparison.Ordinal) && length == 65535)
 							scale = length = null;
 
 						return new ProcedureParameterInfo
 						{
 							ProcedureID   = string.Concat(schema, '.', procedure),
 							DataType      = dataType,
-							IsIn          = paramType.Contains("IN"),
-							IsOut         = paramType.Contains("OUT"),
+							IsIn          = paramType.Contains("IN", StringComparison.Ordinal),
+							IsOut         = paramType.Contains("OUT", StringComparison.Ordinal),
 							IsResult      = isResult,
 							Length        = length,
 							Ordinal       = position,
@@ -587,7 +589,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 							from t in tables
 							where t.Columns.Count == procedure.ResultTable.Columns.Count
 							let zip = t.Columns.Zip(procedure.ResultTable.Columns, (c1, c2) => new { c1, c2 })
-							where zip.All(z => z.c1.ColumnName == z.c2.ColumnName && z.c1.SystemType == z.c2.SystemType)
+							where zip.All(z => string.Equals(z.c1.ColumnName, z.c2.ColumnName, StringComparison.Ordinal) && z.c1.SystemType == z.c2.SystemType)
 							select t
 							).ToList();
 				}
@@ -637,7 +639,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 						{
 							CatalogName     = null,
 							Description     = rd.IsDBNull(2) ? null : rd.GetString(2),
-							IsDefaultSchema = schemaName == DefaultSchema,
+							IsDefaultSchema = string.Equals(schemaName, DefaultSchema, StringComparison.Ordinal),
 							IsView          = true,
 							SchemaName      = schemaName,
 							TableID         = schemaName + '.' + tableName,
@@ -734,17 +736,16 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			if (!HasAccessForCalculationViews)
 				return new List<TableSchema>();
 
-			var result =
-			(
-				from v in GetViewsWithParameters(dataConnection)
-				join p in GetParametersForViews(dataConnection) on v.TableID equals p.ProcedureID
-				into pgroup
-				where
+			var parameters = GetParametersForViews(dataConnection).ToLookup(p => p.ProcedureID, StringComparer.Ordinal);
+
+			var result = GetViewsWithParameters(dataConnection)
+				.Where(v => 
 					(IncludedSchemas .Count == 0 ||  IncludedSchemas .Contains(v.SchemaName)) &&
 					(ExcludedSchemas .Count == 0 || !ExcludedSchemas .Contains(v.SchemaName)) &&
 					(IncludedCatalogs.Count == 0 ||  IncludedCatalogs.Contains(v.CatalogName!)) &&
 					(ExcludedCatalogs.Count == 0 || !ExcludedCatalogs.Contains(v.CatalogName!))
-				select new ViewWithParametersTableSchema
+				)
+				.Select(v => new ViewWithParametersTableSchema
 				{
 					ID              = v.TableID,
 					CatalogName     = v.CatalogName,
@@ -754,13 +755,13 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 					IsDefaultSchema = v.IsDefaultSchema,
 					IsView          = v.IsView,
 					TypeName        = ToValidName(v.TableName),
-					Columns         = new List<ColumnSchema>(),
-					ForeignKeys     = new List<ForeignKeySchema>(),
+					Columns         = [],
+					ForeignKeys     = [],
 					Parameters      = (
-						from pr in pgroup
+						from pr in parameters[v.TableID]
+						orderby pr.Ordinal
 						let dt         = GetDataType(pr.DataType, null, options)
 						let systemType = GetSystemType(pr.DataType, null, dt, pr.Length ?? 0, pr.Precision, pr.Scale, options)
-						orderby pr.Ordinal
 						select new ParameterSchema
 						{
 							SchemaName           = pr.ParameterName,
@@ -777,43 +778,42 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 							IsNullable           = pr.IsNullable,
 						}
 					).ToList(),
-				}
-			).ToList();
+				})
+				.Cast<TableSchema>()
+				.ToList();
 
-			var columns =
-				from c in GetColumns(dataConnection, options)
-				join v in result on c.TableID equals v.ID
-				orderby c.Ordinal
-				select new {v, c, dt = GetDataType(c.DataType, null, options) };
+			var columns = GetColumns(dataConnection, options).ToLookup(c => c.TableID, StringComparer.Ordinal);
 
-			foreach (var column in columns)
+			foreach (var v in result)
 			{
-				var dataType   = column.c.DataType;
-				var systemType = GetSystemType(dataType, column.c.ColumnType, column.dt, column.c.Length, column.c.Precision, column.c.Scale, options);
-				var isNullable = column.c.IsNullable;
-
-				column.v.Columns.Add(new ColumnSchema
-				{
-					Table                = column.v,
-					ColumnName           = column.c.Name,
-					ColumnType           = column.c.ColumnType ?? GetDbType(options, dataType, column.dt, column.c.Length, column.c.Precision, column.c.Scale, null, null, null),
-					IsNullable           = isNullable,
-					MemberName           = ToValidName(column.c.Name),
-					MemberType           = ToTypeName(systemType, isNullable),
-					SystemType           = systemType,
-					DataType             = GetDataType(dataType, column.c.ColumnType, column.c.Length, column.c.Precision, column.c.Scale),
-					ProviderSpecificType = GetProviderSpecificType(dataType),
-					SkipOnInsert         = column.c.SkipOnInsert || column.c.IsIdentity,
-					SkipOnUpdate         = column.c.SkipOnUpdate || column.c.IsIdentity,
-					IsPrimaryKey         = false,
-					PrimaryKeyOrder      = -1,
-					IsIdentity           = column.c.IsIdentity,
-					Description          = column.c.Description,
-					Ordinal              = column.c.Ordinal,
-				});
+				v.Columns = (
+					from c in columns[v.ID!]
+					orderby c.Ordinal
+					let dt         = GetDataType(c.DataType, null, options)
+					let systemType = GetSystemType(c.DataType, c.ColumnType, dt, c.Length, c.Precision, c.Scale, options)
+					select new ColumnSchema
+					{
+						Table                = v,
+						ColumnName           = c.Name,
+						ColumnType           = c.ColumnType ?? GetDbType(options, c.DataType, dt, c.Length, c.Precision, c.Scale, null, null, null),
+						IsNullable           = c.IsNullable,
+						MemberName           = ToValidName(c.Name),
+						MemberType           = ToTypeName(systemType, c.IsNullable),
+						SystemType           = systemType,
+						DataType             = GetDataType(c.DataType, c.ColumnType, c.Length, c.Precision, c.Scale),
+						ProviderSpecificType = GetProviderSpecificType(c.DataType),
+						SkipOnInsert         = c.SkipOnInsert || c.IsIdentity,
+						SkipOnUpdate         = c.SkipOnUpdate || c.IsIdentity,
+						IsPrimaryKey         = false,
+						PrimaryKeyOrder      = -1,
+						IsIdentity           = c.IsIdentity,
+						Description          = c.Description,
+						Ordinal              = c.Ordinal,
+					}
+				).ToList();
 			}
 
-			return result.Cast<TableSchema>().ToList();
+			return result;
 		}
 	}
 }

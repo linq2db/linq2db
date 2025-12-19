@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -379,7 +379,7 @@ namespace LinqToDB.Data
 				{
 					InitCommand(dataConnection, executionQuery, i);
 
-					if (i < executionQuery.PreparedQuery.Commands.Length - 1 && executionQuery.PreparedQuery.Commands[i].Command.StartsWith("DROP"))
+					if (i < executionQuery.PreparedQuery.Commands.Length - 1 && executionQuery.PreparedQuery.Commands[i].Command.StartsWith("DROP", StringComparison.Ordinal))
 					{
 						try
 						{
@@ -420,7 +420,7 @@ namespace LinqToDB.Data
 				{
 					InitCommand(dataConnection, executionQuery, i);
 
-					if (i < executionQuery.PreparedQuery.Commands.Length - 1 && executionQuery.PreparedQuery.Commands[i].Command.StartsWith("DROP"))
+					if (i < executionQuery.PreparedQuery.Commands.Length - 1 && executionQuery.PreparedQuery.Commands[i].Command.StartsWith("DROP", StringComparison.Ordinal))
 					{
 						try
 						{
@@ -710,7 +710,7 @@ namespace LinqToDB.Data
 				{
 					InitCommand(_dataConnection, _executionQuery, i);
 
-					if (i < _executionQuery.PreparedQuery.Commands.Length - 1 && _executionQuery.PreparedQuery.Commands[i].Command.StartsWith("DROP"))
+					if (i < _executionQuery.PreparedQuery.Commands.Length - 1 && _executionQuery.PreparedQuery.Commands[i].Command.StartsWith("DROP", StringComparison.Ordinal))
 					{
 						try
 						{

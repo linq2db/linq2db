@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -126,7 +126,7 @@ namespace LinqToDB
 								return helper.CallTable(context.query, expr, context.ps, context.preambles, qtype != null ? MethodType.Queryable : MethodType.Element);
 							}
 
-							if (expr.Method.Name == "GetTable" && expr.Method.DeclaringType == typeof(DataExtensions))
+							if (string.Equals(expr.Method.Name, "GetTable", StringComparison.Ordinal) && expr.Method.DeclaringType == typeof(DataExtensions))
 								goto case ExpressionType.MemberAccess;
 						}
 

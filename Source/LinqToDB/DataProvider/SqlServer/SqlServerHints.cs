@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -866,7 +866,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				var lastLength = stringBuilder.Length;
 
-				if (expression == TemporalTable.ContainedIn)
+				if (string.Equals(expression, TemporalTable.ContainedIn, StringComparison.Ordinal))
 					stringBuilder.Length--;
 
 				var b2016 = sqlBuilder as SqlServer2016SqlBuilder;
@@ -888,7 +888,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 					sqlBuilder.BuildExpression(stringBuilder, dt, true, this);
 
-					if (expression == TemporalTable.ContainedIn)
+					if (string.Equals(expression, TemporalTable.ContainedIn, StringComparison.Ordinal))
 						stringBuilder.Append(')');
 				}
 

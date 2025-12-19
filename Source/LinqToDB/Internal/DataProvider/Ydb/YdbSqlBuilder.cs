@@ -221,7 +221,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					sb.Append('$');
 
 					if (quote)
-						return sb.Append('`').Append(value.Replace("`", "\\`")).Append('`');
+						return sb.Append('`').Append(value.Replace("`", "\\`", StringComparison.Ordinal)).Append('`');
 
 					return sb.Append(value);
 				}
@@ -237,7 +237,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 						|| IsReserved(value);
 
 					if (quote)
-						return sb.Append('`').Append(value.Replace("`", "\\`")).Append('`');
+						return sb.Append('`').Append(value.Replace("`", "\\`", StringComparison.Ordinal)).Append('`');
 
 					return sb.Append(value);
 				}

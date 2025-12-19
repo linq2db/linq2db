@@ -41,7 +41,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			LoadWithEntity lastLoadWith;
 
-			if (methodCall.Method.Name == "LoadWithInternal")
+			if (string.Equals(methodCall.Method.Name, "LoadWithInternal", StringComparison.Ordinal))
 			{
 				table = SequenceHelper.GetTableOrCteContext(sequence);
 
@@ -95,7 +95,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var tableLoadWith = table.LoadWithRoot ??= new();
 
-				if (methodCall.Method.Name == "ThenLoad")
+				if (string.Equals(methodCall.Method.Name, "ThenLoad", StringComparison.Ordinal))
 				{
 					var prevSequence = (LoadWithContext)sequence;
 

@@ -17,7 +17,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		public record MemberReplacement(LambdaExpression Pattern, LambdaExpression Replacement);
 
-		Dictionary<MemberHelper.MemberInfoWithType, TranslateFunc> _translations = new();
+		readonly Dictionary<MemberHelper.MemberInfoWithType, TranslateFunc> _translations = new();
 
 		Dictionary<MemberHelper.MemberInfoWithType, MemberReplacement>? _replacements;
 

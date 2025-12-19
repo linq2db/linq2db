@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -62,7 +62,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 						var indexName  = rd.GetString(2);
 						var constraint = rd.IsDBNull(3) ? null : rd.GetString(3);
 
-						if (constraint != "PRIMARY KEY")
+						if (!string.Equals(constraint, "PRIMARY KEY", StringComparison.Ordinal))
 							return null;
 
 						var columnName = rd.GetString(4);

@@ -90,7 +90,7 @@ namespace LinqToDB.Internal.Linq
 				}
 				// SqlNullValueException: MySqlData
 				// OracleNullValueException: managed and native oracle providers
-				catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
+				catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException", StringComparison.Ordinal))
 				{
 					// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
 					if (mapperInfo.IsFaulted)
@@ -514,7 +514,7 @@ namespace LinqToDB.Internal.Linq
 							res = mapperInfo.Mapper(runner, origDataReader);
 							runner.RowsCount++;
 						}
-						catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
+						catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException", StringComparison.Ordinal))
 						{
 							// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
 							if (mapperInfo.IsFaulted)
@@ -580,7 +580,7 @@ namespace LinqToDB.Internal.Linq
 								res = mapperInfo.Mapper(runner, origDataReader);
 								runner.RowsCount++;
 							}
-							catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
+							catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException", StringComparison.Ordinal))
 							{
 								// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
 								if (mapperInfo.IsFaulted)

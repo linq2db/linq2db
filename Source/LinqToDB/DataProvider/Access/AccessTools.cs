@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Data.Common;
 using System.IO;
@@ -71,7 +71,7 @@ namespace LinqToDB.DataProvider.Access
 			var defaultExtension = version == AccessVersion.Ace ? ".accdb" : ".mdb";
 
 			// add extension if not specified
-			if (!databaseName.ToLowerInvariant().EndsWith(".mdb") && !databaseName.ToLowerInvariant().EndsWith(defaultExtension))
+			if (!databaseName.EndsWith(".mdb", StringComparison.OrdinalIgnoreCase) && !databaseName.EndsWith(defaultExtension, StringComparison.OrdinalIgnoreCase))
 				databaseName += defaultExtension;
 
 			if (File.Exists(databaseName))
@@ -106,7 +106,7 @@ namespace LinqToDB.DataProvider.Access
 
 			databaseName = databaseName.Trim();
 
-			if (!databaseName.ToLowerInvariant().EndsWith(".mdb"))
+			if (!databaseName.EndsWith(".mdb", StringComparison.OrdinalIgnoreCase))
 				databaseName += ".mdb";
 
 			if (File.Exists(databaseName))

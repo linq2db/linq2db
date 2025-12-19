@@ -22,7 +22,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// Flags for use by external providers.
 		/// </summary>
 		[DataMember(Order = 1)]
-		public HashSet<string> CustomFlags { get; set; } = new HashSet<string>();
+		public HashSet<string> CustomFlags { get; set; } = new HashSet<string>(StringComparer.Ordinal);
 
 		/// <summary>
 		/// Indicates that provider (not database!) uses positional parameters instead of named parameters (parameter values assigned in order they appear in query, not by parameter name).

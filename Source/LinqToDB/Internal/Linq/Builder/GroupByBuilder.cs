@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -526,7 +526,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var found             = false;
 					while (true)
 					{
-						if (currentMemberExpr.Expression is ContextRefExpression && currentMemberExpr.Member.Name == "Key")
+						if (currentMemberExpr.Expression is ContextRefExpression && string.Equals(currentMemberExpr.Member.Name, "Key", StringComparison.Ordinal))
 						{
 							found = true;
 							break;
