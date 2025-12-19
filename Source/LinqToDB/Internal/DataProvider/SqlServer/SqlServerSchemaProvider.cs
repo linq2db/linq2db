@@ -421,8 +421,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			switch (dataType)
 			{
-				case "json"        : return typeof(string);
-				case "vector"      : return Provider.Adapter.SqlVectorType ?? typeof(float[]);
+				case "json"        : return (options.PreferProviderSpecificTypes ? Provider.Adapter.SqlJsonType   : null) ?? typeof(string);
+				case "vector"      : return (options.PreferProviderSpecificTypes ? Provider.Adapter.SqlVectorType : null) ?? typeof(float[]);
 				case "tinyint"     : return typeof(byte);
 				case "hierarchyid" :
 				case "geography"   :
@@ -548,12 +548,28 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			var list = base.GetDataTypes(dataConnection);
 
-			if (!list.Any(t => t.DataType == "vector"))
+			if (list.All(t => t.DataType != "json"))
 			{
+				var type = Provider.Adapter.SqlJsonType ?? typeof(string);
+
+				list.Add(new DataTypeInfo
+				{
+					TypeName         = "json",
+					DataType         = type.FullName!,
+					ProviderSpecific = Provider.Adapter.SqlJsonType is not null,
+					// 36 is the provider type code for the SQL Server 'vector' type (see https://learn.microsoft.com/en-us/sql/relational-databases/vector-database/vector-type?view=sql-server-ver17#data-type-mapping)
+					ProviderDbType   = 36
+				});
+			}
+
+			if (list.All(t => t.DataType != "vector"))
+			{
+				var type = Provider.Adapter.SqlVectorType ?? typeof(float[]);
+
 				list.Add(new DataTypeInfo
 				{
 					TypeName         = "vector",
-					DataType         = typeof(float[]).FullName!,
+					DataType         = type.FullName!,
 					CreateFormat     = "vector({0})",
 					CreateParameters = "length",
 					ProviderSpecific = true,
