@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 
-using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Internal.DataProvider.SqlServer;
 using LinqToDB.SchemaProvider;
@@ -32,8 +31,11 @@ namespace Tests.SchemaProvider
 			var jsonColumn = table.Columns.First(c => c.ColumnName == "jsonDataType");
 			var type       = preferProviderSpecificTypes && db.DataProvider is SqlServerDataProvider { Adapter.SqlJsonType: not null } ? typeof(SqlJson) : typeof(string);
 
-			Assert.That(jsonColumn.Length,     Is.Null);
-			Assert.That(jsonColumn.SystemType, Is.EqualTo(type));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(jsonColumn.Length,     Is.Null);
+				Assert.That(jsonColumn.SystemType, Is.EqualTo(type));
+			}
 		}
 
 		[Test]
@@ -53,8 +55,11 @@ namespace Tests.SchemaProvider
 			var jsonColumn = table.Columns.First(c => c.ColumnName == "vectorDataType");
 			var type       = preferProviderSpecificTypes && db.DataProvider is SqlServerDataProvider { Adapter.SqlVectorType: not null } ? typeof(SqlVector<float>) : typeof(float[]);
 
-			Assert.That(jsonColumn.Length,     Is.EqualTo(5));
-			Assert.That(jsonColumn.SystemType, Is.EqualTo(type));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(jsonColumn.Length,     Is.EqualTo(5));
+				Assert.That(jsonColumn.SystemType, Is.EqualTo(type));
+			}
 		}
 	}
 }
