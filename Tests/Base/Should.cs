@@ -25,8 +25,8 @@ namespace Tests
 
 		class SubstringsConstraint : StringConstraint
 		{
-			string[]          _substrings;
-			int               _matched;
+			string[] _substrings;
+			int      _matched = -1;
 
 			/// <summary>
 			/// Initializes a new instance of the <see cref="SubstringConstraint"/> class.
@@ -87,6 +87,7 @@ namespace Tests
 					if (idx < 0)
 						return false;
 
+					idx++;
 					_matched++;
 				}
 
