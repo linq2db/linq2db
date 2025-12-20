@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 
 using LinqToDB;
@@ -598,12 +599,12 @@ namespace Tests.Linq
 				return key1.City != key2.City || key1.Street != key2.Street || key1.Building != key2.Building;
 			}
 
-			public override int GetHashCode()
+			public override readonly int GetHashCode()
 			{
-				return City?.GetHashCode() ?? 0 ^ Street?.GetHashCode() ?? 0 ^ Building.GetHashCode();
+				return HashCode.Combine(City, Street, Building);
 			}
 
-			public override bool Equals(object? obj)
+			public override readonly bool Equals(object? obj)
 			{
 				if (obj is not AddressStruct other)
 					return false;
@@ -611,7 +612,7 @@ namespace Tests.Linq
 				return Equals(other);
 			}
 
-			public bool Equals(AddressStruct other)
+			public readonly bool Equals(AddressStruct other)
 			{
 				return City == other.City
 					&& Street == other.Street
@@ -783,6 +784,7 @@ namespace Tests.Linq
 				public Class Class { get; set; } = null!;
 			}
 
+			[StructLayout(LayoutKind.Auto)]
 			public struct Struct
 			{
 				public int Value1 { get; set; }

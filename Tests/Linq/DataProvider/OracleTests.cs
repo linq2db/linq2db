@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -326,13 +326,14 @@ namespace Tests.DataProvider
 					Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(new DateTime(2012, 12, 12, 12, 12, 12)))));
 
 				// no idea how/why it works that way. In any case it is not a good idea to map TS to DT
-				var expected = context.IsAnyOf(TestProvName.AllOracleManaged)
+				var expected = 
 #if !NETFRAMEWORK
+					context.IsAnyOf(TestProvName.AllOracleManaged)
 						? new DateTime(2012, 12, 12, 17, 12, 12, 12)
-#else
-						? new DateTime(2012, 12, 12, 12, 12, 12, 12)
-#endif
 						: new DateTime(2012, 12, 12, 12, 12, 12, 12);
+#else
+					new DateTime(2012, 12, 12, 12, 12, 12, 12);
+#endif
 
 				Assert.That(conn.Execute<DateTime>(
 					"SELECT timestamp '2012-12-12 12:12:12.012 -04:00' FROM sys.dual"),

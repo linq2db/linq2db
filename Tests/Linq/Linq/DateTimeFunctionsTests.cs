@@ -174,30 +174,30 @@ namespace Tests.Linq
 		public void CurrentTimestampUpdate([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
+
 			(
 				from p in db.Types where p.ID == 100000 select p
 			)
 			.Update(t => new LinqDataTypes
 			{
 				BoolValue = true,
-				DateTimeValue = Sql.CurrentTimestamp
+				DateTimeValue = Sql.CurrentTimestamp,
 			});
 		}
 
 		[Test]
 		public void CurrentTimestamp2Update([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+
+			(
+				from p in db.Types where p.ID == 100000 select p
+			)
+			.Update(t => new LinqDataTypes
 			{
-				(
-					from p in db.Types where p.ID == 100000 select p
-				)
-				.Update(t => new LinqDataTypes
-				{
-					BoolValue     = true,
-					DateTimeValue = Sql.CurrentTimestamp2
-				});
-			}
+				BoolValue = true,
+				DateTimeValue = Sql.CurrentTimestamp2,
+			});
 		}
 
 		[Test]

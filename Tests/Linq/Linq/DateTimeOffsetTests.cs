@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 
@@ -14,7 +14,7 @@ namespace Tests.Linq
 	{
 		private static string GetNepalTzId()
 		{
-			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			if (OperatingSystem.IsWindows())
 			{
 				// windows TZ ID
 				return "Nepal Standard Time";

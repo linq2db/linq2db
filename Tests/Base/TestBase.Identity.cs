@@ -65,7 +65,7 @@ namespace Tests
 					case string prov when prov.IsAnyOf(TestProvName.AllOracle):
 						sql = new[] {
 						$"DROP SEQUENCE \"PersonSeq\"",
-						$"CREATE SEQUENCE \"PersonSeq\" MINVALUE 1 START WITH {lastValue + 1}"
+						$"CREATE SEQUENCE \"PersonSeq\" MINVALUE 1 START WITH {lastValue + 1}",
 					};
 						break;
 					case string prov when prov.IsAnyOf(TestProvName.AllPostgreSQL):
@@ -90,7 +90,7 @@ CREATE COLUMN TABLE ""Person"" (
 						"INSERT INTO \"Person\" SELECT \"PersonID\", \"FirstName\", \"LastName\", \"MiddleName\", \"Gender\" FROM \"Person_OLD\"",
 						"DROP TABLE \"Person_OLD\"",
 						"ALTER TABLE \"Doctor\" ADD CONSTRAINT \"FK_Doctor_Person\" FOREIGN KEY (\"PersonID\") REFERENCES \"Person\" (\"PersonID\") ON UPDATE CASCADE ON DELETE CASCADE",
-						"ALTER TABLE \"Patient\" ADD CONSTRAINT \"FK_Patient_Person\" FOREIGN KEY (\"PersonID\") REFERENCES \"Person\" (\"PersonID\") ON UPDATE CASCADE ON DELETE CASCADE"
+						"ALTER TABLE \"Patient\" ADD CONSTRAINT \"FK_Patient_Person\" FOREIGN KEY (\"PersonID\") REFERENCES \"Person\" (\"PersonID\") ON UPDATE CASCADE ON DELETE CASCADE",
 					};
 						break;
 					case string prov when prov.IsAnyOf(TestProvName.AllSqlServer):
@@ -176,7 +176,7 @@ CREATE COLUMN TABLE ""Person"" (
 					case string prov when prov.IsAnyOf(TestProvName.AllOracle):
 						sql = new[] {
 						$"DROP SEQUENCE \"AllTypesSeq\"",
-						$"CREATE SEQUENCE \"AllTypesSeq\" MINVALUE 1 START WITH {lastValue + 1}"
+						$"CREATE SEQUENCE \"AllTypesSeq\" MINVALUE 1 START WITH {lastValue + 1}",
 					};
 						break;
 					case string prov when prov.IsAnyOf(TestProvName.AllPostgreSQL):
@@ -237,7 +237,7 @@ CREATE COLUMN TABLE ""AllTypes""
 						sql = new[]
 						{
 							$"sp_chgattribute AllTypes, 'identity_burn_max', 0, '{lastValue}'",
-							$"sp_chgattribute KeepIdentityTest, 'identity_burn_max', 0, '{keepIdentityLastValue}'"
+							$"sp_chgattribute KeepIdentityTest, 'identity_burn_max', 0, '{keepIdentityLastValue}'",
 						};
 						break;
 					case string prov when prov.IsAnyOf(TestProvName.AllSQLite):

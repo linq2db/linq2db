@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -462,7 +462,7 @@ namespace Tests.Linq
 		{
 			public static readonly DbDataType Type = new DbDataType(typeof(DataTable), "IntTableType");
 
-			public DataParameter CreateParameter()
+			public readonly DataParameter CreateParameter()
 			{
 				using var dataTable = new DataTable("IntTableType");
 				dataTable.Columns.Add("Id", typeof(int));

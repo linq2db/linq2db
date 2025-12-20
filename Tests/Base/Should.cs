@@ -13,7 +13,7 @@ namespace Tests
 			return new SubstringsConstraint(expected);
 		}
 
-		class SubstringsConstraint : StringConstraint
+		sealed class SubstringsConstraint : StringConstraint
 		{
 			string[]          _substrings;
 			int               _matched;

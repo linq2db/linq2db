@@ -545,7 +545,7 @@ namespace Tests.Model
 	public enum Parent4Type
 	{
 		Value1 = 1,
-		Value2 = 2
+		Value2 = 2,
 	}
 
 	[Table(Name="Parent")]

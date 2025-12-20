@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -200,6 +201,7 @@ namespace Tests.Data
 		}
 
 		[ScalarType(false)]
+		[StructLayout(LayoutKind.Auto)]
 		struct QueryStruct
 		{
 			public int      Column1;

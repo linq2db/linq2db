@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
 namespace LinqToDB.EntityFrameworkCore.Tests
@@ -95,6 +96,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			await assert(result.Object);
 		}
 
+		[StructLayout(LayoutKind.Auto)]
 		internal readonly record struct ArrangeResult<T, TMock>(T Object, TMock? Mock)
 			where TMock : notnull;
 

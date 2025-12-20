@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.InteropServices;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -1094,6 +1095,7 @@ namespace Tests.Linq
 			[Column("IntValue")]    public int?       TargetID;
 		}
 
+		[StructLayout(LayoutKind.Auto)]
 		struct ObjectReference
 		{
 			public TestEnum1 TargetType;
@@ -1146,6 +1148,7 @@ namespace Tests.Linq
 			[Column("IntValue")]    public int?       TargetID;
 		}
 
+		[StructLayout(LayoutKind.Auto)]
 		struct ObjectReference2
 		{
 			public TestEnum2 TargetType;

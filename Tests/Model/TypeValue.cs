@@ -10,6 +10,6 @@ namespace Tests.Model
 		[MapValue(3)]    Value3 = 3,
 		[MapValue(4)]    Value4 = 4,
 		[MapValue(5)]    Value5 = 5,
-		[MapValue(6)]    Value6 = 6
+		[MapValue(6)]    Value6 = 6,
 	}
 }

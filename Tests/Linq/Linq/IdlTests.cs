@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -121,7 +121,7 @@ namespace Tests.Linq
 
 			public int Value
 			{
-				get { return m_value; }
+				readonly get { return m_value; }
 				set { m_value = value; }
 			}
 
@@ -152,7 +152,7 @@ namespace Tests.Linq
 
 			public int? Value
 			{
-				get { return m_value; }
+				readonly get { return m_value; }
 				set { m_value = value; }
 			}
 

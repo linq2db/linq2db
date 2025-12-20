@@ -457,6 +457,8 @@ dotnet_diagnostic.ide0001.severity = none # IDE0001: Simplify name
 # casts used a lot in test linq expressions
 dotnet_diagnostic.ide0004.severity = none # IDE0004: Remove unnecessary cast
 
+dotnet_diagnostic.IDE0051.severity = none # IDE0051: Remove unused private members
+
 # pattern matching cannot be used in expression trees, so allow local linq and db linq to look the same
 dotnet_diagnostic.IDE0078.severity = none # IDE0078: Use pattern matching
 dotnet_diagnostic.IDE0083.severity = none # IDE0083: Use pattern matching (not operator)
@@ -469,6 +471,8 @@ dotnet_diagnostic.CA1044.severity = none # CA1044: Properties should not be writ
 dotnet_diagnostic.CA1050.severity = none # CA1050: Declare types in namespaces
 dotnet_diagnostic.CA1055.severity = none # CA1045: Url in name - url in type...
 dotnet_diagnostic.CA1058.severity = none # CA1058: Types should not extend certain base types
+dotnet_diagnostic.CA1304.severity = none # CA1304: Specify CultureInfo
+dotnet_diagnostic.CA1305.severity = none # CA1305: Specify IFormatProvider
 dotnet_diagnostic.CA1307.severity = none # CA1307: Specify StringComparison for clarity
 dotnet_diagnostic.CA1309.severity = none # CA1309: Use ordinal StringComparison
 dotnet_diagnostic.CA1310.severity = none # CA1310: Specify StringComparison for correctness
@@ -480,24 +484,58 @@ dotnet_diagnostic.CA1814.severity = none # CA1814: Prefer jagged arrays over mul
 dotnet_diagnostic.CA1827.severity = none # CA1827: Do not use Count/LongCount when Any can be used
 dotnet_diagnostic.CA1829.severity = none # CA1829: Use Length/Count property instead of Enumerable.Count method
 dotnet_diagnostic.CA1849.severity = none # CA1849: Call async methods when in an async method
+dotnet_diagnostic.CA1847.severity = none # CA1847: Use char literal for a single character lookup
 dotnet_diagnostic.CA1851.severity = none # CA1851: Possible multiple enumerations of IEnumerable collection
 dotnet_diagnostic.CA1852.severity = none # CA1852: Type can be sealed
 dotnet_diagnostic.CA1858.severity = none # CA1858: Use StartsWith instead of IndexOf
 dotnet_diagnostic.CA1860.severity = none # CA1860: Avoid using 'Enumerable.Any()' extension method
 dotnet_diagnostic.CA1861.severity = none # CA1861: Avoid constant arrays as arguments
 dotnet_diagnostic.CA1862.severity = none # CA1862: prefer the string comparison method with StringComparison argument
+dotnet_diagnostic.CA1866.severity = none # CA1866: Use char overload
 dotnet_diagnostic.CA2007.severity = none # CA2007: Do not directly await a Task
 dotnet_diagnostic.CA2237.severity = none # CA2237: Mark ISerializable types with SerializableAttribute
 
 dotnet_diagnostic.MA0001.severity = none # MA0001: StringComparison is missing
 dotnet_diagnostic.MA0002.severity = none # MA0002: IEqualityComparer<string> or IComparer<string> is missing
 dotnet_diagnostic.MA0004.severity = none # MA0004: Use Task.ConfigureAwait
+dotnet_diagnostic.MA0005.severity = none # MA0005: Use Array.Empty<T>()
 dotnet_diagnostic.MA0006.severity = none # MA0006: Use String.Equals instead of equality operator
+dotnet_diagnostic.MA0007.severity = suggestion # MA0007: Add a comma after the last value
+dotnet_diagnostic.MA0009.severity = none # MA0009: Add regex evaluation timeout
+dotnet_diagnostic.MA0011.severity = none # MA0011: IFormatProvider is missing
+dotnet_diagnostic.MA0020.severity = none # MA0020: Use direct methods instead of LINQ methods
 dotnet_diagnostic.MA0021.severity = none # MA0021: Use StringComparer.GetHashCode instead of string.GetHashCode
+dotnet_diagnostic.MA0023.severity = none # MA0023: Add RegexOptions.ExplicitCapture
+dotnet_diagnostic.MA0028.severity = none # MA0028: Optimize StringBuilder usage
+dotnet_diagnostic.MA0029.severity = none # MA0029: Combine LINQ methods
+dotnet_diagnostic.MA0030.severity = none # MA0030: Remove useless OrderBy call
 dotnet_diagnostic.MA0031.severity = none # MA0031: Optimize Enumerable.Count() usage
+dotnet_diagnostic.MA0044.severity = suggestion # MA0044: Remove useless ToString call
+dotnet_diagnostic.MA0047.severity = none # MA0047: Declare types in namespaces
 dotnet_diagnostic.MA0048.severity = none # MA0048: File name must match type name
+dotnet_diagnostic.MA0053.severity = none # MA0053: Make class or record sealed
+dotnet_diagnostic.MA0062.severity = none # MA0062: Non-flags enums should not be marked with "FlagsAttribute"
+dotnet_diagnostic.MA0063.severity = none # MA0063: Use Where before OrderBy
+dotnet_diagnostic.MA0073.severity = none # MA0073: Avoid comparison with bool constant
 dotnet_diagnostic.MA0074.severity = none # MA0074: Avoid implicit culture-sensitive methods
+dotnet_diagnostic.MA0075.severity = none # MA0075: Do not use implicit culture-sensitive ToString
+dotnet_diagnostic.MA0076.severity = none # MA0076: Do not use implicit culture-sensitive ToString in interpolated strings
+dotnet_diagnostic.MA0077.severity = none # MA0077: A class that provides Equals(T) should implement IEquatable<T>
+dotnet_diagnostic.MA0078.severity = none # MA0078: Use 'Cast' instead of 'Select' to cast
+dotnet_diagnostic.MA0079.severity = none # MA0079: Forward the CancellationToken using .WithCancellation()
+dotnet_diagnostic.MA0080.severity = none # MA0080: Use a cancellation token using .WithCancellation()
+dotnet_diagnostic.MA0089.severity = none # MA0089: Optimize string method usage
+dotnet_diagnostic.MA0095.severity = none # MA0095: A class that implements IEquatable<T> should override Equals(object)
+dotnet_diagnostic.MA0097.severity = none # MA0097: A class that implements IComparable<T> or IComparable should override comparison operators
+dotnet_diagnostic.MA0098.severity = none # MA0098: Use indexer instead of LINQ methods
+dotnet_diagnostic.MA0107.severity = none # MA0107: Do not use object.ToString
+dotnet_diagnostic.MA0111.severity = none # MA0111: Use string.Create instead of FormattableString
+dotnet_diagnostic.MA0132.severity = none # MA0132: Do not convert implicitly to DateTimeOffset
+dotnet_diagnostic.MA0150.severity = none # MA0150: Do not call the default object.ToString explicitly
 dotnet_diagnostic.MA0169.severity = none # MA0169: Use Equals method instead of operator
+dotnet_diagnostic.MA0176.severity = none # MA0176: Optimize guid creation
+
+dotnet_diagnostic.SYSLIB1045.severity = none # SYSLIB1045: Convert to 'GeneratedRegexAttribute'.
 
 [Tests/**.vb]
 dotnet_diagnostic.CA2224.severity = none # CA2224: Override Equals on overloading operator equals // https://github.com/dotnet/roslyn-analyzers/issues/6778

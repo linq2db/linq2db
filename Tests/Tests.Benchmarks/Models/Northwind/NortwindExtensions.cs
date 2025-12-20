@@ -179,8 +179,7 @@ namespace LinqToDB.Benchmarks.Models
 		public static IQueryable<Northwind.AlphabeticalListOfProduct> VwAlphabeticalListOfProduct(this NorthwindDB db)
 		{
 			var result = from Products in db.Product
-				where
-				Products.Discontinued == false
+				where !Products.Discontinued
 				select new Northwind.AlphabeticalListOfProduct
 				{
 					ProductID = Products.ProductID,
@@ -218,8 +217,7 @@ namespace LinqToDB.Benchmarks.Models
 		public static IQueryable<Northwind.CurrentProductList> VwCurrentProductList(this NorthwindDB db)
 		{
 			var result = from p in db.Product
-				where
-				p.Discontinued == false
+				where !p.Discontinued
 				select new Northwind.CurrentProductList
 				{
 					ProductID = p.ProductID,

@@ -230,7 +230,7 @@ namespace Tests
 				selectQuery.GroupBy,
 				selectQuery.Having,
 				selectQuery.Where,
-				selectQuery.OrderBy
+				selectQuery.OrderBy,
 			};
 
 				items.AddRange(selectQuery.Select.Columns);

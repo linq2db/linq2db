@@ -44,7 +44,7 @@ namespace Tests
 					}
 
 					var ctx = CustomTestContext.Get();
-					if (ctx.Get<bool>(CustomTestContext.TRACE_DISABLED) != true)
+					if (!ctx.Get<bool>(CustomTestContext.TRACE_DISABLED))
 					{
 						static StringBuilder GetTraceBuilder(CustomTestContext ctx)
 						{

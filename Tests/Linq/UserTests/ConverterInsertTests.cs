@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -150,7 +150,7 @@ namespace Tests.UserTests
 			var p = db.GetTable<PurePerson>().First(t => t.PersonID == id);
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(p.Gender, Is.EqualTo(Gender.M.ToString()));
+				Assert.That(p.Gender, Is.EqualTo(nameof(Gender.M)));
 				Assert.That(p.FirstName, Is.EqualTo("123"));
 			}
 		}

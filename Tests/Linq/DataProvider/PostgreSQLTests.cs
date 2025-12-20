@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Linq;
@@ -112,6 +112,7 @@ namespace Tests.DataProvider
 			public object Result                                               { get; set; }
 		}
 
+		[AttributeUsage(AttributeTargets.Method)]
 		sealed class TestDataTypeAttribute : NUnitAttribute, ITestBuilder, IImplyFixture
 		{
 			public TestDataTypeAttribute(string providerName)

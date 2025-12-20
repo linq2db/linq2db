@@ -211,7 +211,7 @@ namespace Tests
 			static string normalize(string sql)
 			{
 				var lines = sql.Split(_newlineSeparators, StringSplitOptions.RemoveEmptyEntries);
-				return string.Join("\n", lines.Where(l => !l.StartsWith("-- ")).Select(l => l.TrimStart('\t', ' ')));
+				return string.JoinStrings('\n', lines.Where(l => !l.StartsWith("-- ")).Select(l => l.TrimStart('\t', ' ')));
 			}
 		}
 

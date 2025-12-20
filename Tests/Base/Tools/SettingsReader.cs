@@ -203,7 +203,7 @@ namespace Tests.Tools
 										Provider         = "SqlServer1",
 									}
 								},
-							}
+							},
 						}
 					},
 					{
@@ -224,7 +224,7 @@ namespace Tests.Tools
 										Provider         = "SqlServer1",
 									}
 								},
-							}
+							},
 						}
 					},
 				});

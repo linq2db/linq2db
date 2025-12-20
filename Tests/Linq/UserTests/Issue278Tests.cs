@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Linq;
 using System.Linq.Expressions;
@@ -29,10 +29,10 @@ namespace Tests.UserTests
 			NoCacheScope
 		}
 
-		sealed class Issue278TestData : TestCaseSourceAttribute
+		sealed class Issue278TestDataAttribute : TestCaseSourceAttribute
 		{
-			public Issue278TestData(CacheMode mode)
-				: base(typeof(Issue278TestData), nameof(TestData), new object[] { mode })
+			public Issue278TestDataAttribute(CacheMode mode)
+				: base(typeof(Issue278TestDataAttribute), nameof(TestData), new object[] { mode })
 			{
 			}
 
