@@ -1475,6 +1475,24 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
+		sealed class TimespanAsTicksRegressionTable
+		{
+			[PrimaryKey] public Guid Id { get; set; }
+			[Column    ] public DateTimeOffset Value { get; set; }
+		}
+
+		[Test]
+		public void TimespanAsTicksRegression([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetDataType(typeof(TimeSpan), DataType.Int64);
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<TimespanAsTicksRegressionTable>();
+
+			_ = tb.Where(r => r.Value > DateTimeOffset.Now - TimeSpan.FromDays(1)).ToArray();
+		}
+
 		#region Issue 4955
 
 		record MappingTypingByConstant<T>(int Id, T Value);
