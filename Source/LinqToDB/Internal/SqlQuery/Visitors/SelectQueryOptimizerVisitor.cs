@@ -1900,10 +1900,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 
 			// Do not optimize t.Field IN (SELECT x FROM o)
-			if (parentQuery == _inSubquery && (subQuery.Select.HasModifier || subQuery.HasSetOperators))
-			{
-				return false;
-			}
+//			if (parentQuery == _inSubquery && (subQuery.Select.HasModifier || subQuery.HasSetOperators))
+//			{
+//				return false;
+//			}
 
 			return true;
 		}

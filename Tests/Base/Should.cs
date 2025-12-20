@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 
+using NUnit.Framework;
 using NUnit.Framework.Constraints;
 
 namespace Tests
@@ -10,6 +11,16 @@ namespace Tests
 		public static StringConstraint Contain(params string[] expected)
 		{
 			return new SubstringsConstraint(expected);
+		}
+
+		public static ShouldNegation Not { get; } = new ();
+
+		public sealed class ShouldNegation
+		{
+			public Constraint Contain(params string[] expected)
+			{
+				return new NotConstraint(new SubstringsConstraint(expected));
+			}
 		}
 
 		class SubstringsConstraint : StringConstraint
