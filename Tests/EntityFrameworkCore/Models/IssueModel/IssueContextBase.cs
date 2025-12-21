@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text.Json;
 
 using Microsoft.EntityFrameworkCore;
@@ -65,6 +66,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public DbSet<Issue4783Record> Issue4783Records { get; set; } = null!;
 
 		public DbSet<Issue5177Table> Issue5177 { get; set; } = null!;
+
+		public DbSet<Issue5267Department> Issue5267Departments { get; set; } = null!;
+		public DbSet<Issue5267Role> Issue5267Roles { get; set; } = null!;
 
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
@@ -347,6 +351,30 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 				e.Property(e => e.Value).HasConversion(converter);
 			});
+
+			modelBuilder.Entity<Issue5267Role>(e =>
+			{
+				e.Property(e => e.Id).ValueGeneratedNever();
+				var filterExpression = CreateFilterExpression<Issue5267Role>();
+				e.HasQueryFilter(filterExpression);
+				e.Property(e => e.DepartmentId);
+				e.Property(e => e.IsDeleted);
+				e.Property(e => e.TenantId);
+			});
+
+			modelBuilder.Entity<Issue5267Department>(e =>
+			{
+				e.Property(e => e.Id).ValueGeneratedNever();
+				e.Property(e => e.ParentGuid);
+			});
+
+			Expression<Func<TEntity, bool>> CreateFilterExpression<TEntity>()
+					where TEntity : class
+			{
+				return e => !EF.Property<bool>(e, "IsDeleted") && EF.Property<Guid>(e, "TenantId") == Issue5267CurrentTenantId;
+			}
 		}
+
+		public Guid? Issue5267CurrentTenantId { get; set; }
 	}
 }
