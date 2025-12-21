@@ -1902,7 +1902,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			// Do not optimize t.Field IN (SELECT x FROM o)
 			if (parentQuery == _inSubquery && (subQuery.Select.HasModifier || subQuery.HasSetOperators))
 			{
-				if (_dataOptions.LinqOptions.PreferExistsForScalar)
+				if (_dataOptions.LinqOptions.PreferExistsForScalar || _providerFlags.IsExistsPreferableForContains)
 					return false;
 			}
 
