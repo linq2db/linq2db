@@ -1487,6 +1487,7 @@ namespace Tests.Linq
 			var ms = new MappingSchema();
 			ms.SetDataType(typeof(TimeSpan), DataType.Int64);
 
+			using var bl = new DisableBaseline("Use of DateTimeOffset.Now");
 			using var db = GetDataContext(context, ms);
 			using var tb = db.CreateLocalTable<TimespanAsTicksRegressionTable>();
 

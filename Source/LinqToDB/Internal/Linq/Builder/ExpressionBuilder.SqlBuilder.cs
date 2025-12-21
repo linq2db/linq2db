@@ -368,8 +368,6 @@ namespace LinqToDB.Internal.Linq.Builder
 		public bool CanBeEvaluatedOnClient(Expression expr)
 		{
 			var result = _optimizationContext.CanBeEvaluatedOnClient(expr);
-			if (result && HasTranslation(expr))
-				result = false;
 			return result;
 		}
 
