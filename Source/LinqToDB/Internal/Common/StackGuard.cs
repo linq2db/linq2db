@@ -1,10 +1,10 @@
-﻿namespace LinqToDB.Internal.Common
-{
-	using System;
-	using System.Runtime.CompilerServices;
-	using System.Threading;
-	using System.Threading.Tasks;
+﻿using System;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 
+namespace LinqToDB.Internal.Common
+{
 	internal sealed class StackGuard
 	{
 		private const int MaxHops = 256;
@@ -16,8 +16,9 @@
 		public bool TryEnterOnCurrentStack()
 		{
 			if (Volatile.Read(ref _hopCount) >= MaxHops)
-				throw new InsufficientExecutionStackException(
-					$"Too many stack hops (>{MaxHops}). Recursion cannot safely continue.");
+			{
+				throw new InsufficientExecutionStackException($"Too many stack hops (>{MaxHops}). Recursion cannot safely continue.");
+			}
 
 			return StackProbe.TryEnsureSufficientExecutionStack();
 		}

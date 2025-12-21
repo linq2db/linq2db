@@ -2,14 +2,24 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
+using LinqToDB.Internal.Common;
+
 namespace LinqToDB.Internal.Expressions
 {
 	public abstract class ExpressionVisitorBase : ExpressionVisitor
 	{
+		readonly StackGuard _guard = new();
+
 		[DebuggerStepThrough]
 		[return: NotNullIfNotNull(nameof(node))]
 		public override Expression? Visit(Expression? node)
 		{
+			if (node == null)
+				return null;
+
+			if (!_guard.TryEnterOnCurrentStack())
+				return _guard.RunOnEmptyStack(() => Visit(node));
+
 			return base.Visit(node);
 		}
 

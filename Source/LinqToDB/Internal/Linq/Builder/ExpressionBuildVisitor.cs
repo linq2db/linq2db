@@ -32,7 +32,6 @@ namespace LinqToDB.Internal.Linq.Builder
 	{
 		public ExpressionBuilder Builder { get; }
 
-		readonly StackGuard        _guard = new();
 		BuildPurpose               _buildPurpose;
 		BuildFlags                 _buildFlags;
 		readonly Stack<Expression> _disableSubqueries = new();
@@ -631,18 +630,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return false;
-		}
-
-		[return: NotNullIfNotNull(nameof(node))]
-		public override Expression? Visit(Expression? node)
-		{
-			if (node == null)
-				return null;
-
-			if (!_guard.TryEnterOnCurrentStack())
-				return _guard.RunOnEmptyStack(() => Visit(node));
-
-			return base.Visit(node);
 		}
 
 		[Conditional("DEBUG")]
