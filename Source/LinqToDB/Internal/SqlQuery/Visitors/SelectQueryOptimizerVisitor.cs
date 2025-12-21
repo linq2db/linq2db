@@ -209,7 +209,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					{
 						isModified = true;
 					}
-					
+
 					if (MoveOuterJoinsToSubQuery(selectQuery, ref doNotRemoveQueries, processMultiColumn: false))
 					{
 						isModified = true;
@@ -319,7 +319,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			var saveCurrent        = _currentSetOperator;
 
 			_currentSetOperator = null;
-			
+
 			var newElement = base.VisitSqlTableSource(element);
 
 			_currentSetOperator = saveCurrent;
@@ -1536,7 +1536,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				// not allowed to move to parent if it has aggregates
 				return false;
 			}
-		
+
 			// Check columns
 			//
 
@@ -1626,7 +1626,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					if (!(!parentQuery.Select.HasModifier && parentQuery.Where.IsEmpty && parentQuery.GroupBy.IsEmpty && parentQuery.Having.IsEmpty && parentQuery.From.Tables is [{ Joins.Count: 0 }]))
 					{
-						// not allowed to break query window 
+						// not allowed to break query window
 						return false;
 					}
 				}
@@ -1673,7 +1673,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				// All constants in grouping will be optimized to query which produce different query. Optimization will be done in 'OptimizeGroupBy'.
 				// See 'GroupByConstantsEmpty' test. It will fail if this check is not performed.
-				// 
+				//
 				if (!parentQuery.GroupBy.EnumItems().Except(groupingConstants, Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default).Any())
 				{
 					return false;
@@ -1900,10 +1900,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 
 			// Do not optimize t.Field IN (SELECT x FROM o)
-//			if (parentQuery == _inSubquery && (subQuery.Select.HasModifier || subQuery.HasSetOperators))
-//			{
-//				return false;
-//			}
+			if (parentQuery == _inSubquery && (subQuery.Select.HasModifier || subQuery.HasSetOperators))
+			{
+				if (_dataOptions.LinqOptions.PreferExistsForScalar)
+					return false;
+			}
 
 			return true;
 		}
@@ -2637,7 +2638,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 							isModified = true;
 						}
-						else 
+						else
 						{
 							selectQuery.From.Tables.Insert(queryTableIndex + 1, join.Table);
 							table.Joins.RemoveAt(joinIndex);
@@ -2928,7 +2929,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 											isValid    = false;
 											isModified = true;
 											break;
-										}	
+										}
 									}
 
 									if (usageCount == 1 && !IsInSelectPart(sq, testedColumn))
@@ -3051,7 +3052,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			var saveParent = _parentSelect;
 			_parentSelect = null;
 			_currentCteClause = element;
-			
+
 			var newElement = base.VisitCteClause(element);
 
 			_parentSelect = saveParent;
@@ -3323,7 +3324,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					// Synchronizing Enumerable table
 
 					var enumerableSource = element.SourceEnumerable;
-					
+
 					for(var i = enumerableSource.Fields.Count - 1; i >= 0; i--)
 					{
 						var enumerableSourceField = enumerableSource.Fields[i];
