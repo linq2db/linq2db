@@ -32,6 +32,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	{
 		public ExpressionBuilder Builder { get; }
 
+		readonly StackGuard        _guard = new();
 		BuildPurpose               _buildPurpose;
 		BuildFlags                 _buildFlags;
 		readonly Stack<Expression> _disableSubqueries = new();
@@ -632,23 +633,17 @@ namespace LinqToDB.Internal.Linq.Builder
 			return false;
 		}
 
-#if DEBUG
-		[DebuggerStepThrough]
 		[return: NotNullIfNotNull(nameof(node))]
 		public override Expression? Visit(Expression? node)
 		{
-			var newNode = base.Visit(node);
+			if (node == null)
+				return null;
 
-			/*
-			if (newNode != null && node != null && !IsSame(newNode, node!))
-			{
-				Debug.WriteLine($"--> Node  {_buildPurpose}, {_buildFlags}, {node.NodeType}, \t {node} \t\t -> {newNode}");
-			}
-			*/
+			if (!_guard.TryEnterOnCurrentStack())
+				return _guard.RunOnEmptyStack(() => Visit(node));
 
-			return newNode;
+			return base.Visit(node);
 		}
-#endif
 
 		[Conditional("DEBUG")]
 		public void LogVisit(Expression node, [CallerMemberName] string callerName = "")
