@@ -1776,14 +1776,14 @@ namespace Tests.Linq
 
 		[Column("child1_name", $"{nameof(Customer)}.{nameof(Child1.Name)}")]
 		[Column("child2_name", $"{nameof(CustomerOther)}.{nameof(Child2.Name)}")]
-		sealed class Issue5226Table
+		sealed class Issue5266Table
 		{
 			[PrimaryKey] public int Id { get; set; }
 			public Child1? Customer { get; set; }
 			public Child2? CustomerOther { get; set; }
 		}
 
-		sealed class Issue5226TableFluent
+		sealed class Issue5266TableFluent
 		{
 			public int Id { get; set; }
 			public Child1? Customer { get; set; }
@@ -1794,9 +1794,9 @@ namespace Tests.Linq
 		public void TestCompositeNamesConflicts_Attributes([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<Issue5226Table>();
+			using var tb = db.CreateLocalTable<Issue5266Table>();
 
-			db.Insert(new Issue5226Table()
+			db.Insert(new Issue5266Table()
 			{
 				Id = 1,
 				Customer = new () { Name = "name1" },
@@ -1823,16 +1823,16 @@ namespace Tests.Linq
 		public void TestCompositeNamesConflicts_Fluent([DataSources] string context)
 		{
 			var builder = new FluentMappingBuilder()
-				.Entity<Issue5226TableFluent>()
+				.Entity<Issue5266TableFluent>()
 					.HasPrimaryKey(e => e.Id)
 					.Property(e => e.Customer!.Name).HasColumnName("child1_name")
 					.Property(e => e.CustomerOther!.Name).HasColumnName("child2_name")
 					.Build();
 
 			using var db = GetDataContext(context, builder.MappingSchema);
-			using var tb = db.CreateLocalTable<Issue5226TableFluent>();
+			using var tb = db.CreateLocalTable<Issue5266TableFluent>();
 
-			db.Insert(new Issue5226TableFluent()
+			db.Insert(new Issue5266TableFluent()
 			{
 				Id = 1,
 				Customer = new() { Name = "name1" },
