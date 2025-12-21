@@ -66,8 +66,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			protected override Expression VisitMember(MemberExpression node)
 			{
-				var attr = node.Member.GetExpressionAttribute(_mappingSchema);
-				if (attr != null && attr.ServerSideOnly)
+				if (node.Member.IsServerSideOnly(_mappingSchema))
 				{
 					_isServerSideOnly = true;
 					return node;
@@ -78,8 +77,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			protected override Expression VisitMethodCall(MethodCallExpression node)
 			{
-				var attr = node.Method.GetExpressionAttribute(_mappingSchema);
-				if (attr?.ServerSideOnly == true)
+				if (node.Method.IsServerSideOnly(_mappingSchema))
 				{
 					_isServerSideOnly = true;
 					return node;
@@ -397,8 +395,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						if (method.DeclaringType != null)
 						{
-							var attributes = _mappingSchema.GetAttributes<Sql.ExpressionAttribute>(method.DeclaringType, method);
-							if (attributes.Length > 0 && !attributes.Any(a => a.PreferServerSide || a.ServerSideOnly || !a.IsPure))
+							var attribute = method.GetExpressionAttribute(_mappingSchema);
+							if (attribute != null && !attribute.PreferServerSide && attribute.IsPure && !method.IsServerSideOnly(_mappingSchema))
 							{
 								return true;
 							}
