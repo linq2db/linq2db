@@ -1,7 +1,5 @@
 ﻿using System;
 
-using JetBrains.Annotations;
-
 namespace LinqToDB.Mapping
 {
 	/// <summary>
