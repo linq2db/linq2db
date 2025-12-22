@@ -60,6 +60,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (element == null)
 				return element;
 
+			using var _ = _guard.EnterScope();
+
 			if (!_guard.TryEnterOnCurrentStack())
 				return _guard.RunOnEmptyStack(() => Visit(element));
 

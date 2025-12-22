@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,25 +8,69 @@ namespace LinqToDB.Internal.Common
 {
 	internal sealed class StackGuard
 	{
-		private const int MaxHops = 256;
+		private const int MaxHops = 5;
 
 		// Use interlocked to be safe when execution switches threads.
-		private int _hopCount;
+		int _hopCount;
+
+		int _internalDepth;
+
+		public readonly struct StackScope : IDisposable
+		{
+			readonly StackGuard _guard;
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public StackScope(StackGuard guard)
+			{
+				_guard = guard;
+				_guard._internalDepth++;
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public void Dispose()
+			{
+				_guard._internalDepth--;
+			}
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public StackScope EnterScope()
+		{
+			return new StackScope(this);
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TryEnterOnCurrentStack()
 		{
-			if (Volatile.Read(ref _hopCount) >= MaxHops)
-			{
-				throw new InsufficientExecutionStackException($"Too many stack hops (>{MaxHops}). Recursion cannot safely continue.");
-			}
+			return _internalDepth % 64 != 0 || StackProbe.TryEnsureSufficientExecutionStack();
+		}
 
-			return StackProbe.TryEnsureSufficientExecutionStack();
+		public int Depth
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _internalDepth;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Enter()
+		{
+			_internalDepth++;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Exit()
+		{
+			_internalDepth--;
 		}
 
 		public T RunOnEmptyStack<T>(Func<T> action)
 		{
 			Interlocked.Increment(ref _hopCount);
+			if (_hopCount > MaxHops)
+			{
+				throw new InsufficientExecutionStackException($"Too many stack hops (>{MaxHops.ToString(CultureInfo.InvariantCulture)}). Recursion cannot safely continue.");
+			}
+
 			try
 			{
 				var task = Task.Factory.StartNew(

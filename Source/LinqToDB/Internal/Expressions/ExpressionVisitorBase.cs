@@ -17,6 +17,8 @@ namespace LinqToDB.Internal.Expressions
 			if (node == null)
 				return null;
 
+			using var _ = _guard.EnterScope();
+
 			if (!_guard.TryEnterOnCurrentStack())
 				return _guard.RunOnEmptyStack(() => Visit(node));
 
