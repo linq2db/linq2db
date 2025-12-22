@@ -128,6 +128,32 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void InWithSkipTest([DataSources(TestProvName.AllSybase)] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
+		{
+			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
+
+			var query =
+				from c in db.Child
+				where UseInQuery(c.ParentID, compareNullsAsValues) && c.ParentID.In(db.Parent.Select(p => p.ParentID).Where(v => UseInQuery(v, compareNullsAsValues)).Skip(100))
+				select c;
+
+			AssertTest(query, preferExists);
+		}
+
+		[Test]
+		public void InWithSkipTakeTest([DataSources(TestProvName.AllSybase)] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
+		{
+			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
+
+			var query =
+				from c in db.Child
+				where UseInQuery(c.ParentID, compareNullsAsValues) && c.ParentID.In(db.Parent.Select(p => p.ParentID).Where(v => UseInQuery(v, compareNullsAsValues)).Skip(100).Take(100))
+				select c;
+
+			AssertTest(query, preferExists);
+		}
+
+		[Test]
 		public void ObjectInTest([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);

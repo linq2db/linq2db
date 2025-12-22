@@ -1905,7 +1905,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (_dataOptions.LinqOptions.PreferExistsForScalar || _providerFlags.IsExistsPreferableForContains)
 					return false;
 
-				if (!_providerFlags.IsTakeWithInAllAnySomeSubquerySupported && subQuery.Select.TakeValue != null)
+				if (!_providerFlags.IsTakeWithInAllAnySomeSubquerySupported && (subQuery.Select.TakeValue != null || subQuery.Select.SkipValue != null))
 					return false;
 
 				if (!_providerFlags.IsSubQuerySkipSupported && subQuery.Select.SkipValue != null)
