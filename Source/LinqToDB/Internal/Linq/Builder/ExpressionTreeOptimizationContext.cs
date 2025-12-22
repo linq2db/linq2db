@@ -395,8 +395,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						if (method.DeclaringType != null)
 						{
-							var attribute = method.GetExpressionAttribute(_mappingSchema);
-							if (attribute != null && !attribute.PreferServerSide && attribute.IsPure && !method.IsServerSideOnly(_mappingSchema))
+							if (method.GetExpressionAttribute(_mappingSchema) is { PreferServerSide: false, IsPure: true }
+								&& !method.IsServerSideOnly(_mappingSchema))
 							{
 								return true;
 							}
