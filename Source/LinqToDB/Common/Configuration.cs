@@ -110,6 +110,12 @@ namespace LinqToDB.Common
 		/// </summary>
 		public static bool TraceMaterializationActivity { get; set; }
 
+		/// <summary>
+		/// Maximum number of hops to other threads during translation.
+		/// Default value: 5.
+		/// </summary>
+		public static int TranslationThreadMaxHopCount { get; set; } = 5;
+
 		public static class Data
 		{
 			/// <summary>

@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Internal.Common
 {
-	internal sealed class StackGuard
+	public sealed class StackGuard
 	{
-		private const int MaxHops = 5;
-
 		// Use interlocked to be safe when execution switches threads.
 		int _hopCount;
 
@@ -66,9 +64,9 @@ namespace LinqToDB.Internal.Common
 		public T RunOnEmptyStack<T>(Func<T> action)
 		{
 			Interlocked.Increment(ref _hopCount);
-			if (_hopCount > MaxHops)
+			if (_hopCount > LinqToDB.Common.Configuration.TranslationThreadMaxHopCount)
 			{
-				throw new InsufficientExecutionStackException($"Too many stack hops (>{MaxHops.ToString(CultureInfo.InvariantCulture)}). Recursion cannot safely continue.");
+				throw new InsufficientExecutionStackException($"Too many stack hops (>{LinqToDB.Common.Configuration.TranslationThreadMaxHopCount.ToString(CultureInfo.InvariantCulture)}). Recursion cannot safely continue.");
 			}
 
 			try
