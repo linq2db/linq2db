@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -94,7 +95,7 @@ namespace LinqToDB.Internal.Common
 					if (ex is AggregateException aex)
 					{
 						var flat = aex.Flatten();
-						var list = new System.Collections.Generic.List<Exception>(flat.InnerExceptions.Count + 1);
+						var list = new List<Exception>(flat.InnerExceptions.Count + 1);
 						list.AddRange(flat.InnerExceptions);
 						list.Add(hop);
 						throw new AggregateException("Stack hop failed. See inner exceptions for full thread stacks.", list);
