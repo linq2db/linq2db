@@ -1904,6 +1904,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				if (_dataOptions.LinqOptions.PreferExistsForScalar || _providerFlags.IsExistsPreferableForContains)
 					return false;
+
+				if (!_providerFlags.IsTakeWithInAllAnySomeSubquerySupported && subQuery.Select.TakeValue != null)
+					return false;
+
+				if (!_providerFlags.IsSubQuerySkipSupported && subQuery.Select.SkipValue != null)
+					return false;
+
+				if (!_providerFlags.IsSubQueryTakeSupported && subQuery.Select.TakeValue != null)
+					return false;
 			}
 
 			return true;
