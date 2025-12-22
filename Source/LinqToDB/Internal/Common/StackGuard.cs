@@ -80,8 +80,28 @@ namespace LinqToDB.Internal.Common
 				// Avoid Task.Wait/Result (AggregateException and potential inlining quirks).
 				((IAsyncResult)task).AsyncWaitHandle.WaitOne();
 
-				// Rethrows original exception type (no AggregateException).
-				return task.GetAwaiter().GetResult();
+				try
+				{
+					// Rethrows result or original exception type
+					return task.GetAwaiter().GetResult();
+				}
+				catch (Exception ex)
+				{
+					// Capture caller stack only on failure to avoid overhead on success path
+					var callerTrace = new System.Diagnostics.StackTrace(skipFrames: 1, fNeedFileInfo: true);
+					var hop = new StackHopTraceException(callerTrace);
+
+					if (ex is AggregateException aex)
+					{
+						var flat = aex.Flatten();
+						var list = new System.Collections.Generic.List<Exception>(flat.InnerExceptions.Count + 1);
+						list.AddRange(flat.InnerExceptions);
+						list.Add(hop);
+						throw new AggregateException("Stack hop failed. See inner exceptions for full thread stacks.", list);
+					}
+
+					throw new AggregateException("Stack hop failed. See inner exceptions for full thread stacks.", ex, hop);
+				}
 			}
 			finally
 			{
@@ -95,8 +115,8 @@ namespace LinqToDB.Internal.Common
 			public static bool TryEnsureSufficientExecutionStack()
 			{
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_0_OR_GREATER
-		        // Available on netstandard/.NET (not on .NET Framework)
-		        return RuntimeHelpers.TryEnsureSufficientExecutionStack();
+	        // Available on netstandard/.NET (not on .NET Framework)
+	        return RuntimeHelpers.TryEnsureSufficientExecutionStack();
 #else
 				// .NET Framework: only EnsureSufficientExecutionStack() exists
 				try
