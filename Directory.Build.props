@@ -8,12 +8,6 @@
 
 		<Configurations>Testing;Debug;Release;Azure</Configurations>
 
-		<Authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko, and others</Authors>
-		<Company>linq2db.net</Company>
-		<Copyright>2002-2026 linq2db.net</Copyright>
-		<RepositoryUrl>https://github.com/linq2db/linq2db</RepositoryUrl>
-		<RepositoryType>git</RepositoryType>
-
 		<AppDesignerFolder>Properties</AppDesignerFolder>
 		<LangVersion>14</LangVersion>
 		<Nullable>enable</Nullable>
@@ -67,6 +61,34 @@
 		<ArtifactsPath>$(MSBuildThisFileDirectory).build</ArtifactsPath>
 		<ArtifactsPivots>$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)</ArtifactsPivots>
 	</PropertyGroup>
+
+	<PropertyGroup Label="Nuget">
+		<GenericPackageTags>linq;linq2db;LinqToDB;ORM;database;DB;SQL</GenericPackageTags>
+		<DatabasePackageTags>Access;ClickHouse;DB2;LUW;Firebird;Informix;MySql;MariaDB;Oracle;PostgreSQL;SapHana;Hana;SQLCE;SQLite;SQLServer;Sybase;SAP;ASE;SqlServerCe;ODP;IBM</DatabasePackageTags>
+		<PackageTags>$(GenericPackageTags);$(DatabasePackageTags)</PackageTags>
+
+		<Authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko, and others</Authors>
+		<Company>linq2db.net</Company>
+		<Copyright>Copyright © 2026 $(Authors)</Copyright>
+
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<RepositoryUrl>https://github.com/linq2db/linq2db</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+
+		<PackageProjectUrl>https://linq2db.com</PackageProjectUrl>
+		<PackageReleaseNotes>https://github.com/linq2db/linq2db/wiki/releases-and-roadmap#release-$(Version.Replace(".",""))</PackageReleaseNotes>
+		<PackageVersion>$(Version)</PackageVersion>
+		<PackageIcon>images\icon.png</PackageIcon>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageReadmeFile>readme.md</PackageReadmeFile>
+
+		<EnablePackageValidation>true</EnablePackageValidation>
+		<PackageValidationBaselineVersion>6.0.0</PackageValidationBaselineVersion>
+	</PropertyGroup>
+
+	<ItemGroup Label="Nuget">
+		<None Include="$(MSBuildThisFileDirectory)/Nuget/icon.png" Pack="true" PackagePath="images\icon.png" Visible="False" />
+	</ItemGroup>
 
 	<PropertyGroup Label="Code Analysis Setup">
 		<RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
