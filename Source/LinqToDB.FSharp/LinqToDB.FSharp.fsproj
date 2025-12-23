@@ -4,15 +4,23 @@
 		<LangVersion>9</LangVersion>
 		<AssemblyName>linq2db.FSharp</AssemblyName>
 		<RootNamespace>LinqToDB.FSharp</RootNamespace>
-		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 
 		<WarningLevel>5</WarningLevel>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 
-		<Title>Linq to DB F#</Title>
-		<Description>Linq to DB Bindings to support F#</Description>
-		<Product>$(Title)</Product>
 	</PropertyGroup>
+
+	<PropertyGroup Label="Nuget">
+		<Title>LINQ to DB F# Services</Title>
+		<Description>LINQ to DB F# Services adds support for F#-specific features to Linq To DB.</Description>
+		<Product>$(Title)</Product>
+
+		<PackageTags>$(PackageTags);fsharp;aspnetcore</PackageTags>
+	</PropertyGroup>
+
+	<ItemGroup Label="Nuget">
+		<None Include="../../Nuget/README.FSharp.md" Pack="true" PackagePath="readme.md" Visible="False" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<Compile Include="FSharpEntityBindingInterceptor.fs" />
