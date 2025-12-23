@@ -234,7 +234,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					var optimizationContext = new ExpressionTreeOptimizationContext(dc);
 					var optimizedExpr       = ExpressionBuilder.ExposeExpression(closureExpr, dc, optimizationContext, null, optimizeConditions : true, compactBinary : true);
-					optimizedExpr = optimizedExpr.OptimizeExpression(dc.MappingSchema);
+					optimizedExpr = optimizedExpr.OptimizeExpression(optimizationContext.CanBeEvaluatedOnClient);
 					return optimizedExpr;
 				});
 			}
@@ -352,7 +352,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			definedQueryMethod = (LambdaExpression)builder.ConvertExpressionTree(definedQueryMethod);
-			definedQueryMethod = (LambdaExpression)definedQueryMethod.OptimizeExpression(builder.MappingSchema)!;
+			definedQueryMethod = (LambdaExpression)definedQueryMethod.OptimizeExpression(builder.CanBeEvaluatedOnClient)!;
 
 			return definedQueryMethod;
 		}
