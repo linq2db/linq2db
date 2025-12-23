@@ -287,11 +287,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				}
 				else if (paramValue.ProviderValue is decimal d)
 				{
-					var precision = DecimalHelper.GetPrecision(d);
-					var scale = DecimalHelper.GetScale(d);
-					if (precision == 0 && scale == 0)
-						precision = 1;
-					dbDataType = dbDataType.WithPrecision(precision).WithScale(scale);
+					dbDataType = CorrectDecimalPrecision(dbDataType, d);
 				}
 
 				// TODO: temporary guard against cast to unknown type (Variant)
@@ -739,11 +735,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 					if (paramValue.ProviderValue is decimal decValue)
 					{
-						var precision = DecimalHelper.GetPrecision(decValue);
-						var scale = DecimalHelper.GetScale(decValue);
-						if (precision == 0 && scale == 0)
-							precision = 1;
-						dataType = dataType.WithPrecision(precision).WithScale(scale);
+						dataType = CorrectDecimalPrecision(dataType, decValue);
 					}
 				}
 

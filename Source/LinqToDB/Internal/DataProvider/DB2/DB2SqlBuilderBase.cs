@@ -435,11 +435,7 @@ END");
 				}
 				else if (paramValue.ProviderValue is decimal d)
 				{
-					var precision = DecimalHelper.GetPrecision(d);
-					var scale = DecimalHelper.GetScale(d);
-					if (precision == 0 && scale == 0)
-						precision = 1;
-					dbDataType = dbDataType.WithPrecision(precision).WithScale(scale);
+					dbDataType = CorrectDecimalPrecision(dbDataType, d);
 				}
 
 				if (dbDataType.Length > 32672)

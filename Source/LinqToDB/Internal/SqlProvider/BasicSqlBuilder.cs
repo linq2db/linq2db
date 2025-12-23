@@ -3842,6 +3842,22 @@ namespace LinqToDB.Internal.SqlProvider
 				StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Precision}{InlineComma}{type.Scale})");
 		}
 
+		protected static DbDataType CorrectDecimalPrecision(DbDataType dataType, decimal decValue)
+		{
+			var precision = DecimalHelper.GetPrecision(decValue);
+			var scale     = DecimalHelper.GetScale(decValue);
+
+			if (precision == 0)
+				precision = 1;
+
+			if (scale > precision)
+			{
+				precision = scale;
+			}
+
+			return dataType.WithPrecision(precision).WithScale(scale);
+		}
+
 		#endregion
 
 		#region GetPrecedence

@@ -2128,7 +2128,34 @@ namespace Tests.xUpdate
 				Assert.That(entities, Has.Count.EqualTo(2));
 			}
 		}
-  
+
+		sealed class TableWithMoney
+		{
+			[PrimaryKey()]
+			public int       ID;
+			[Column(DataType = DataType.Decimal, Scale = 4)]
+			public decimal   MoneyValue;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5272")]
+		public void InsertOrReplaceDecimal([InsertOrUpdateDataSources] string context)
+		{
+			var       values = new decimal[] { 0, 0.5m, 0.05m, 0.0005m, 1.5m, 1.05m, 1.0005m };
+			using var db     = GetDataContext(context);
+			using var table  = db.CreateLocalTable<TableWithMoney>();
+
+			for (var i = 0; i < values.Length; i++)
+			{
+				var data = new TableWithMoney()
+				{
+					ID         = i + 1,
+					MoneyValue = values[i]
+				};
+				db.Insert(data);
+				db.InsertOrReplace(data);
+			}
+		}
+
 		#region InsertIfNotExists (https://github.com/linq2db/linq2db/issues/3005)
 		private int GetEmptyRowCount(string context)
 		{
