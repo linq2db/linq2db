@@ -1451,7 +1451,7 @@ namespace Tests.Linq
 		#endregion
 
 		[Test]
-		public void DistinctSubqueryTest([DataSources] string context)
+		public void DistinctSubqueryTest([DataSources(TestProvName.AllFirebird, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 
