@@ -399,7 +399,7 @@ namespace LinqToDB.Internal.Expressions
 				ExpressionType.Default      => true,
 				// don't return true for closure classes
 				ExpressionType.Constant     => expression is ConstantExpression c && (c.Value == null || c.Value is string || c.Value.GetType().IsValueType),
-				ExpressionType.MemberAccess => ((MemberExpression)expression).Member.GetExpressionAttribute(mappingSchema)?.ServerSideOnly != true && IsEvaluable(((MemberExpression)expression).Expression, mappingSchema),
+				ExpressionType.MemberAccess => !((MemberExpression)expression).Member.IsServerSideOnly(mappingSchema) && IsEvaluable(((MemberExpression)expression).Expression, mappingSchema),
 				_                           => false,
 			};
 		}
