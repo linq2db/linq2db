@@ -1473,10 +1473,6 @@ namespace Tests.Linq
 					"SELECT",
 					"SELECT",
 					"DISTINCT"));
-
-//			var sql = query.GetWhere();
-//			Assert.That(sql.Predicates, Has.Count.EqualTo(1));
-//			Assert.That(sql.Predicates[0] is SqlPredicate.InSubQuery q &&, Has.Count.EqualTo(1));
 		}
 	}
 }
