@@ -2257,7 +2257,13 @@ namespace LinqToDB.Internal.Linq.Builder
 								return Visit(placeholder.WithType(node.Type));
 							}
 
-							return Visit(CreatePlaceholder(PseudoFunctions.MakeCast(placeholder.Sql, MappingSchema.GetDbDataType(node.Type), s), node));
+							var nt = MappingSchema.GetDbDataType(node.Type);
+							if (nt.SystemType == typeof(object))
+							{
+								return base.VisitUnary(node);
+							}
+
+							return Visit(CreatePlaceholder(PseudoFunctions.MakeCast(placeholder.Sql, nt, s), node));
 						}
 					}
 
