@@ -3,15 +3,19 @@
 		<AssemblyName>linq2db.Compat</AssemblyName>
 		<RootNamespace>LinqToDB</RootNamespace>
 
-		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
-
 		<!-- Define COMPAT constant -->
 		<DefineConstants>$(DefineConstants);COMPAT</DefineConstants>
+	</PropertyGroup>
 
+	<PropertyGroup Label="Nuget">
 		<Title>LINQ to DB Compat</Title>
 		<Description>LINQ to DB Compat provides .NET Framework compatibility functionality to leverage migration to .NET.</Description>
 		<Product>$(Title)</Product>
 	</PropertyGroup>
+
+	<ItemGroup Label="Nuget">
+		<None Include="README.md" Pack="true" PackagePath="readme.md" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
