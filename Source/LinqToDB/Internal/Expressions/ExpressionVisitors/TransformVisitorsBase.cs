@@ -28,5 +28,10 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 		{
 			return node;
 		}
+
+		public override Expression VisitMarkerExpression(MarkerExpression node)
+		{
+			return node.Update(Visit(node.InnerExpression));
+		}
 	}
 }

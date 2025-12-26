@@ -8,7 +8,7 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 	{
 		public override Expression VisitSqlValidateExpression(SqlValidateExpression node)
 		{
-			return Visit(node.Reduce());
+			return node.Update(Visit(node.InnerExpression));
 		}
 
 		internal override Expression VisitSqlEagerLoadExpression(SqlEagerLoadExpression node)
@@ -39,6 +39,16 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 		public override Expression VisitConstantPlaceholder(ConstantPlaceholderExpression node)
 		{
 			return Visit(node.Reduce());
+		}
+
+		public override Expression VisitMarkerExpression(MarkerExpression node)
+		{
+			return Visit(node.Reduce());
+		}
+
+		internal override Expression VisitSqlAdjustTypeExpression(SqlAdjustTypeExpression node)
+		{
+			return node.Update(Visit(node.Expression));
 		}
 	}
 }

@@ -16,7 +16,6 @@ namespace LinqToDB.Internal.Expressions
 
 		public Expression[] Path { get; set; }
 
-		public override bool           CanReduce => false;
 		public override ExpressionType NodeType  => ExpressionType.Extension;
 		public override Type           Type      { get; }
 
