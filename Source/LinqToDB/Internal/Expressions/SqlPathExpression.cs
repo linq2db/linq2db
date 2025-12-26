@@ -28,9 +28,7 @@ namespace LinqToDB.Internal.Expressions
 		protected override Expression Accept(ExpressionVisitor visitor)
 		{
 			if (visitor is ExpressionVisitorBase baseVisitor)
-			{
 				return baseVisitor.VisitSqlPathExpression(this);
-			}
 
 			return base.Accept(visitor);
 		}

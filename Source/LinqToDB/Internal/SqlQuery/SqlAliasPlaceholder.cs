@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -33,5 +36,8 @@ namespace LinqToDB.Internal.SqlQuery
 		public override bool CanBeNullable(NullabilityContext nullability) => false;
 		public override int Precedence  => LinqToDB.SqlQuery.Precedence.Primary;
 		public override Type SystemType => typeof(object);
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlAliasPlaceholder(this);
 	}
 }

@@ -434,16 +434,13 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#region PreferServerSide
 
-		FindVisitor<ExpressionBuilder>? _enforceServerSideVisitorTrue;
-		FindVisitor<ExpressionBuilder>? _enforceServerSideVisitorFalse;
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		FindVisitor<ExpressionBuilder> GetVisitor(bool enforceServerSide)
+		bool PreferServerSide(bool enforceServerSide, Expression expr)
 		{
 			if (enforceServerSide)
-				return _enforceServerSideVisitorTrue ??= FindVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.PreferServerSide(e, true));
+				return expr.Find(this, static (ctx, e) => ctx.PreferServerSide(e, true)) != null;
 			else
-				return _enforceServerSideVisitorFalse ??= FindVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.PreferServerSide(e, false));
+				return expr.Find(this, static (ctx, e) => ctx.PreferServerSide(e, false)) != null;
 		}
 
 		internal bool PreferServerSide(Expression expr, bool enforceServerSide)
@@ -465,7 +462,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (l.Parameters.Count == 1 && pi.Expression != null)
 							info = info.Replace(l.Parameters[0], pi.Expression);
 
-						return GetVisitor(enforceServerSide).Find(info) != null;
+						return PreferServerSide(enforceServerSide, info);
 					}
 
 					var attr = pi.Member.GetExpressionAttribute(MappingSchema);
@@ -478,7 +475,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var l  = LinqToDB.Linq.Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
 
 					if (l != null)
-						return GetVisitor(enforceServerSide).Find(l.Body.Unwrap()) != null;
+						return PreferServerSide(enforceServerSide, l.Body.Unwrap());
 
 					var attr = pi.Method.GetExpressionAttribute(MappingSchema);
 					return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeEvaluatedOnClient(expr);

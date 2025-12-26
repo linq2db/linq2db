@@ -6,12 +6,14 @@ namespace LinqToDB.Internal.Expressions
 {
 	public abstract class ExpressionVisitorBase : ExpressionVisitor
 	{
+#if DEBUG
 		[DebuggerStepThrough]
 		[return: NotNullIfNotNull(nameof(node))]
 		public override Expression? Visit(Expression? node)
 		{
 			return base.Visit(node);
 		}
+#endif
 
 		public virtual Expression VisitSqlPlaceholderExpression(SqlPlaceholderExpression node)
 		{
