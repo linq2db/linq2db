@@ -4,6 +4,8 @@
 	<PropertyGroup>
 		<SignAssembly>False</SignAssembly>
 
+		<EnablePackageValidation>false</EnablePackageValidation>
+
 		<!--to avoid conflicts with main solution-->
 		<ArtifactsProjectName>Examples_$(MSBuildProjectName)</ArtifactsProjectName>
 	</PropertyGroup>
