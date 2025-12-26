@@ -1,10 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
 
 	<PropertyGroup>
 		<RootNamespace>LinqToDB.LINQPad</RootNamespace>
 		<AssemblyName>linq2db.LINQPad</AssemblyName>
 
-		<TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+		<TargetFrameworks>net472;net8.0-windows7.0</TargetFrameworks>
 		<UseWPF>true</UseWPF>
 
 		<!--don't forget to (un)comment reference in nuspec file!-->
@@ -14,6 +14,26 @@
 		<MSBuildWarningsAsMessages>MSB3270</MSBuildWarningsAsMessages>
 		<SignAssembly>False</SignAssembly>
 	</PropertyGroup>
+
+	<PropertyGroup Label="Nuget">
+		<Title>LINQ to DB driver for LINQPad</Title>
+		<Description>Supported databases: IBM DB2 LUW/zOS, Firebird, IBM Informix, Microsoft Access, Microsoft Sql Server (+Azure), Microsoft Sql Server Compact, MySql, MariaDB, Oracle, PostgreSQL, SQLite, SAP HANA, SAP/Sybase ASE, ClickHouse.</Description>
+		<Product>$(Title)</Product>
+
+		<PackageTags>$(PackageTags);linqpaddriver;linqpad;iseries</PackageTags>
+
+		<EnablePackageValidation>false</EnablePackageValidation>
+
+		<IncludeBuildOutput Condition="'$(TargetFramework)' == 'net472'">False</IncludeBuildOutput>
+		<SuppressDependenciesWhenPacking Condition="'$(TargetFramework)' == 'net472'">True</SuppressDependenciesWhenPacking>
+	</PropertyGroup>
+
+	<ItemGroup Label="Nuget">
+		<None Include="../../Nuget/README.LINQPad.md" Pack="true" PackagePath="readme.md" Visible="False" />
+
+		<None Include="../../Nuget/LINQPad/Connection.png" Pack="true" PackagePath="lib/net8.0-windows7.0" />
+		<None Include="../../Nuget/LINQPad/FailedConnection.png" Pack="true" PackagePath="lib/net8.0-windows7.0" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
@@ -107,7 +127,7 @@
 	</Target>
 
 	<Target Name="PostBuild2" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' == 'net472'">
-	<!--we are trying to deceive DB2 provider here, see UnsafeNativeMethods.DB2Interop.Init() method logic-->
+		<!--we are trying to deceive DB2 provider here, see UnsafeNativeMethods.DB2Interop.Init() method logic-->
 		<Delete Files="$(TargetDir)\IBM.Data.DB2.dll" />
 		<MakeDir Directories="$(TargetDir)\IBM.Data.DB2.DLL_provider" />
 		<Copy SourceFiles="$(PkgIBM_Data_DB_Provider)\build\net451\x64\IBM.Data.DB2.dll" DestinationFiles="$(TargetDir)\IBM.Data.DB2.DLL_provider\x64\IBM.Data.DB2.dll" />
