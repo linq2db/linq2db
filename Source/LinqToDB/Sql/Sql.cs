@@ -1205,6 +1205,7 @@ namespace LinqToDB
 			return DateTime.Now;
 		}
 
+		[ServerSideOnly]
 		public static DateTime CurrentTimestamp => throw new ServerSideOnlyException(nameof(CurrentTimestamp));
 
 		public static DateTime CurrentTimestampUtc => DateTime.UtcNow;

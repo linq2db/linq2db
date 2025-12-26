@@ -1143,7 +1143,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					memberInfo = ((MemberExpression)expr).Member;
 				}
 
-				var attribute = memberInfo.GetExpressionAttribute(MappingSchema);
+				var isServerSideOnly = memberInfo.IsServerSideOnly(MappingSchema);
+				var attribute        = memberInfo.GetExpressionAttribute(MappingSchema);
 
 				if (attribute != null)
 				{
@@ -1155,18 +1156,18 @@ namespace LinqToDB.Internal.Linq.Builder
 						return false;
 					}
 
-					if (!attribute.ServerSideOnly && !attribute.PreferServerSide && Builder.CanBeEvaluatedOnClient(expr))
+					if (!isServerSideOnly && !attribute.PreferServerSide && Builder.CanBeEvaluatedOnClient(expr))
 					{
-						attribute = null;
+						attribute  = null;
 						translated = null;
 						return false;
 					}
 
-					translated = ConvertExtension(attribute, context, expr);
+					translated = ConvertExtension(attribute, context, expr, isServerSideOnly);
 
 					if (translated is not SqlPlaceholderExpression placeholder)
 					{
-						if (attribute.ServerSideOnly)
+						if (isServerSideOnly)
 						{
 							translated = SqlErrorExpression.EnsureError(translated);
 							return true;
@@ -1184,7 +1185,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return false;
 		}
 
-		public Expression ConvertExtension(Sql.ExpressionAttribute attr, IBuildContext context, Expression expr)
+		public Expression ConvertExtension(Sql.ExpressionAttribute attr, IBuildContext context, Expression expr, bool isServerSideOnly)
 		{
 			var rootContext     = context;
 			var rootSelectQuery = context.SelectQuery;
@@ -1280,7 +1281,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return placeholder;
 			}
 
-			if (attr.ServerSideOnly)
+			if (isServerSideOnly)
 			{
 				if (transformed is SqlErrorExpression errorExpr)
 					return SqlErrorExpression.EnsureError(errorExpr, expr.Type);

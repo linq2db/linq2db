@@ -142,7 +142,8 @@ namespace LinqToDB.Internal.Linq.Builder
 								throw new InvalidOperationException($"No suitable member '[{currentMemberName}]' found for type '{currentPath.Type}'");
 						}
 
-						var newColumns = columns.Where(c => c.MemberName.StartsWith(propPath, StringComparison.Ordinal)).ToList();
+						var prefix     = $"{propPath}.";
+						var newColumns = columns.Where(c => c.MemberName.StartsWith(prefix, StringComparison.Ordinal)).ToList();
 						var newPath    = MakeAssignExpression(currentPath, memberInfo, column);
 
 						assignExpression = BuildGenericFromMembers(newColumns, flags, newPath, level + 1, purpose);
