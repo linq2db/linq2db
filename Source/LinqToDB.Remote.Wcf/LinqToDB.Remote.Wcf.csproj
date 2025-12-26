@@ -4,13 +4,20 @@
 		<AssemblyName>linq2db.Remote.Wcf</AssemblyName>
 		<RootNamespace>LinqToDB.Remote.Wcf</RootNamespace>
 
-		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 		<TargetFrameworks>net462</TargetFrameworks>
-
-		<Title>Linq to DB WCF Remote</Title>
-		<Description>Linq to DB support for querying remote data contexts over WCF</Description>
-		<Product>$(Title)</Product>
 	</PropertyGroup>
+	
+	<PropertyGroup Label="Nuget">
+		<Title>LINQ to DB remote data context over WCF</Title>
+		<Description>LINQ to DB Remote WCF package provides client and server classes to query database remotely using WCF.</Description>
+		<Product>$(Title)</Product>
+
+		<PackageTags>$(PackageTags);WCF;RemoteLinq</PackageTags>
+	</PropertyGroup>
+
+	<ItemGroup Label="Nuget">
+		<None Include="../../Nuget/README.Remote.Wcf.md" Pack="true" PackagePath="readme.md" Visible="False" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<AdditionalFiles Include="PublicAPI.*.txt" />
