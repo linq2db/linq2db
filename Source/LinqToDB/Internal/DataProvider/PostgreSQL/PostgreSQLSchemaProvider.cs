@@ -902,6 +902,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 					FROM INFORMATION_SCHEMA.parameters
 					"""
 				)
+				.ToList() // necessary to split previous query from next
 				// populate return parameters for functions
 				// there is no separate result parameter for functions (maybe it will be for procedures in v11), so
 				// we need to read data_type of function itself if it is not table/void function to define return parameter

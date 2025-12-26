@@ -202,7 +202,7 @@ namespace Tests.Linq
 		public void Stuff2Fail()
 		{
 			var expression = Enumerable.Empty<string>();
-			Assert.Throws<NotImplementedException>(() => Sql.Stuff(expression, 1, 1, "")); // ServerSideOnly
+			Assert.Throws<ServerSideOnlyException>(() => Sql.Stuff(expression, 1, 1, "")); // ServerSideOnly
 		}
 
 		[Test]

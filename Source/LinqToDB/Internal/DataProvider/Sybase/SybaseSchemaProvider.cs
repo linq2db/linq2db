@@ -173,6 +173,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 							LEFT JOIN sysindexes i ON r2.indexid = i.indid AND r2.reftabid = i.id
 				WHERE
 					c.status = 64
+
 				""";
 
 			string? sql = null;

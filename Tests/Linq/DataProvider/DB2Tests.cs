@@ -783,38 +783,31 @@ namespace Tests.DataProvider
 			[Column(Precision = 12)]
 			public DB2TimeStamp TimeStamp12 { get; set; }
 
-			static TestTimeTypes[] GetData()
-			{
-				var data = new[]
-				{
-					new TestTimeTypes() { Id = 1, Date1 = new DateTime(1234, 5, 6), Date2 = new DateTime(1234, 5, 7), Time = new TimeSpan(21, 2, 3) },
-					new TestTimeTypes() { Id = 2, Date1 = new DateTime(6543, 2, 1), Date2 = new DateTime(1234, 5, 8), Time = new TimeSpan(23, 2, 1) }
-				};
+			public static readonly TestTimeTypes[] Data = 
+				Enumerable.Range(1, 2)
+					.Select(i => new TestTimeTypes()
+					{
+						Id = i,
+						Date1 = i switch { 1 => new DateTime(1234, 5, 6), _ => new DateTime(6543, 2, 1) },
+						Date2 = i switch { 1 => new DateTime(1234, 5, 7), _ => new DateTime(1234, 5, 8) },
+						Time =  i switch { 1 => new TimeSpan(21, 2, 3),   _ => new TimeSpan(23, 2, 1)   },
+						TimeStamp0  = new     DateTime(1000, 1, 10, 2, 20, 30 + i, 0),
+						TimeStamp1  = new     DateTime(1000, 1, 10, 2, 20, 30, i * 100),
+						TimeStamp2  = new     DateTime(1000, 1, 10, 2, 20, 30, i * 10),
+						TimeStamp3  = new     DateTime(1000, 1, 10, 2, 20, 30, i),
+						TimeStamp4  = new     DateTime(1000, 1, 10, 2, 20, 30, 1).AddTicks(1000 * i),
+						TimeStamp5  = new     DateTime(1000, 1, 10, 2, 20, 30, 1).AddTicks(100 * i),
+						TimeStamp6  = new     DateTime(1000, 1, 10, 2, 20, 30, 1).AddTicks(10 * i),
+						TimeStamp7  = new     DateTime(1000, 1, 10, 2, 20, 30, 1).AddTicks(1 * i),
+						TimeStamp8  = new DB2TimeStamp(1000, 1, 10, 2, 20, 30, 10000 * i, 8),
+						TimeStamp9  = new DB2TimeStamp(1000, 1, 10, 2, 20, 30, 1000 * i, 9),
+						TimeStamp10 = new DB2TimeStamp(1000, 1, 10, 2, 20, 30, 100 * i, 10),
+						TimeStamp11 = new DB2TimeStamp(1000, 1, 10, 2, 20, 30, 10 * i, 11),
+						TimeStamp12 = new DB2TimeStamp(1000, 1, 10, 2, 20, 30, i, 12),
+					})
+					.ToArray();
 
-				for (var i = 1; i <= Data.Length; i++)
-				{
-					var idx = i - 1;
-					Data[idx].TimeStamp0  = new     DateTime(1000, 1, 10, 2, 20, 30 + i, 0);
-					Data[idx].TimeStamp1  = new     DateTime(1000, 1, 10, 2, 20, 30, i * 100);
-					Data[idx].TimeStamp2  = new     DateTime(1000, 1, 10, 2, 20, 30, i * 10);
-					Data[idx].TimeStamp3  = new     DateTime(1000, 1, 10, 2, 20, 30, i);
-					Data[idx].TimeStamp4  = new     DateTime(1000, 1, 10, 2, 20, 30, 1).AddTicks(1000 * i);
-					Data[idx].TimeStamp5  = new     DateTime(1000, 1, 10, 2, 20, 30, 1).AddTicks(100 * i);
-					Data[idx].TimeStamp6  = new     DateTime(1000, 1, 10, 2, 20, 30, 1).AddTicks(10 * i);
-					Data[idx].TimeStamp7  = new     DateTime(1000, 1, 10, 2, 20, 30, 1).AddTicks(1 * i);
-					Data[idx].TimeStamp8  = new DB2TimeStamp(1000, 1, 10, 2, 20, 30, 10000 * i, 8);
-					Data[idx].TimeStamp9  = new DB2TimeStamp(1000, 1, 10, 2, 20, 30, 1000 * i, 9);
-					Data[idx].TimeStamp10 = new DB2TimeStamp(1000, 1, 10, 2, 20, 30, 100 * i, 10);
-					Data[idx].TimeStamp11 = new DB2TimeStamp(1000, 1, 10, 2, 20, 30, 10 * i, 11);
-					Data[idx].TimeStamp12 = new DB2TimeStamp(1000, 1, 10, 2, 20, 30, i, 12);
-				}
-
-				return data;
-			}
-
-			public static TestTimeTypes[] Data = GetData();
-
-			public static Func<TestTimeTypes, TestTimeTypes, bool> Comparer = ComparerBuilder.GetEqualsFunc<TestTimeTypes>();
+			public static readonly Func<TestTimeTypes, TestTimeTypes, bool> Comparer = ComparerBuilder.GetEqualsFunc<TestTimeTypes>();
 		}
 
 		[ActiveIssue(SkipForNonLinqService = true, Details = "RemoteContext miss provider-specific types mappings. Could be workarounded by explicit column mappings")]

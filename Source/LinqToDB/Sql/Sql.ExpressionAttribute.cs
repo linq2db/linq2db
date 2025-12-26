@@ -176,10 +176,10 @@ namespace LinqToDB
 
 			private const string MatchParamPattern = /* lang=regex */ @"{(?<name>[0-9a-z_A-Z?]*)(,\s'(?<delimiter>.*)')?}";
 #if SUPPORTS_REGEX_GENERATORS
-			[GeneratedRegex(MatchParamPattern, RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 1)]
+			[GeneratedRegex(MatchParamPattern, RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 100)]
 			private static partial Regex MatchParamRegex();
 #else
-			private static readonly Regex _matchParamRegEx = new(MatchParamPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(1));
+			private static readonly Regex _matchParamRegEx = new(MatchParamPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(100));
 			private static Regex MatchParamRegex() => _matchParamRegEx;
 #endif
 
