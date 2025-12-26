@@ -1473,7 +1473,7 @@ namespace LinqToDB.Internal.SqlProvider
 					if (field.Field.CreateFormat != null)
 					{
 						var sb = field.StringBuilder;
-						sb.Length = field.Name.Length;
+						sb.Remove(0, field.Name.Length);
 						sb.Append(' ');
 
 						field.Type = sb.ToString();
