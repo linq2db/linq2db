@@ -26,7 +26,8 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 
 		internal override Expression VisitSqlPathExpression(SqlPathExpression node)
 		{
-			Visit(node.Path.AsReadOnly());
+			foreach (var p in node.Path)
+				Visit(p);
 
 			return node;
 		}
