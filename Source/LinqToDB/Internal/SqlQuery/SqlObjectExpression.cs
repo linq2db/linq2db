@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.SqlQuery
@@ -104,5 +106,8 @@ namespace LinqToDB.Internal.SqlQuery
 		public MappingSchema MappingSchema { get; }
 
 		internal SqlGetValue[] InfoParameters => _infoParameters;
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlObjectExpression(this);
 	}
 }

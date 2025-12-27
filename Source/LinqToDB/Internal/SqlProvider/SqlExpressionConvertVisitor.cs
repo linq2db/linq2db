@@ -100,7 +100,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return expression;
 		}
 
-		protected override IQueryElement VisitSqlOutputClause(SqlOutputClause element)
+		protected internal override IQueryElement VisitSqlOutputClause(SqlOutputClause element)
 		{
 			var result = (SqlOutputClause)base.VisitSqlOutputClause(element);
 
@@ -121,7 +121,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return result;
 		}
 
-		protected override IQueryElement VisitSqlConditionExpression(SqlConditionExpression element)
+		protected internal override IQueryElement VisitSqlConditionExpression(SqlConditionExpression element)
 		{
 			var newElement = base.VisitSqlConditionExpression(element);
 
@@ -160,7 +160,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return newElement;
 		}
 
-		protected override IQueryElement VisitSqlCaseExpression(SqlCaseExpression element)
+		protected internal override IQueryElement VisitSqlCaseExpression(SqlCaseExpression element)
 		{
 			var newElement = base.VisitSqlCaseExpression(element);
 
@@ -177,7 +177,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+		protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
 			if (!VisitQueries)
 				return selectQuery;
@@ -192,7 +192,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return newQuery;
 		}
 
-		protected override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
+		protected internal override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
 		{
 			var result = base.VisitExprPredicate(predicate);
 
@@ -238,7 +238,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return ConvertToBooleanSearchCondition(castExpression.Expression);
 		}
 
-		protected override IQueryElement VisitSqlFieldReference(SqlField element)
+		protected internal override IQueryElement VisitSqlFieldReference(SqlField element)
 		{
 			var newElement = base.VisitSqlFieldReference(element);
 
@@ -248,7 +248,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlColumnReference(SqlColumn element)
+		protected internal override IQueryElement VisitSqlColumnReference(SqlColumn element)
 		{
 			var newElement = base.VisitSqlColumnReference(element);
 
@@ -258,7 +258,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
-		protected override IQueryElement VisitNotPredicate(SqlPredicate.Not predicate)
+		protected internal override IQueryElement VisitNotPredicate(SqlPredicate.Not predicate)
 		{
 			var saveInner    = predicate.Predicate;
 
@@ -276,7 +276,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return newPredicate;
 		}
 
-		protected override IQueryElement VisitSqlValue(SqlValue element)
+		protected internal override IQueryElement VisitSqlValue(SqlValue element)
 		{
 			var newElement = base.VisitSqlValue(element);
 
@@ -301,7 +301,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return OptimizationContext.OptimizerVisitor.Optimize(EvaluationContext, NullabilityContext, OptimizationContext.TransformationInfo, DataOptions, OptimizationContext.MappingSchema, element, VisitQueries, reducePredicates: false);
 		}
 
-		protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
+		protected internal override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 		{
 			var saveInsidePredicate = IsInsidePredicate;
 			IsInsidePredicate = true;
@@ -324,7 +324,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return newPredicate;
 		}
 
-		protected override IQueryElement VisitSqlCompareToExpression(SqlCompareToExpression element)
+		protected internal override IQueryElement VisitSqlCompareToExpression(SqlCompareToExpression element)
 		{
 			var newElement = base.VisitSqlCompareToExpression(element);
 
@@ -342,7 +342,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return Visit(Optimize(caseExpression));
 		}
 
-		protected override IQueryElement VisitIsDistinctPredicate(SqlPredicate.IsDistinct predicate)
+		protected internal override IQueryElement VisitIsDistinctPredicate(SqlPredicate.IsDistinct predicate)
 		{
 			var newPredicate = base.VisitIsDistinctPredicate(predicate);
 
@@ -542,7 +542,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return result;
 		}
 
-		protected override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
+		protected internal override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
 		{
 			var newElement = base.VisitInListPredicate(predicate);
 
@@ -673,7 +673,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return predicate;
 		}
 
-		protected override IQueryElement VisitSearchStringPredicate(SqlPredicate.SearchString predicate)
+		protected internal override IQueryElement VisitSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
 			var newElement = base.VisitSearchStringPredicate(predicate);
 
@@ -844,7 +844,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		#region Visitor overrides
 
-		protected override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
+		protected internal override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
 		{
 			var newElement = base.VisitIsNullPredicate(predicate);
 
@@ -865,7 +865,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return predicate;
 		}
 
-		protected override IQueryElement VisitSqlFunction(SqlFunction element)
+		protected internal override IQueryElement VisitSqlFunction(SqlFunction element)
 		{
 			var newElement = base.VisitSqlFunction(element);
 
@@ -879,7 +879,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlExtendedFunction(SqlExtendedFunction element)
+		protected internal override IQueryElement VisitSqlExtendedFunction(SqlExtendedFunction element)
 		{
 			var newElement = base.VisitSqlExtendedFunction(element);
 
@@ -893,7 +893,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
+		protected internal override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
 		{
 			var saveNullabilityContext = NullabilityContext;
 			NullabilityContext = NullabilityContext.WithJoinSource(element.Table.Source);
@@ -905,7 +905,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return newElement;
 		}
 
-		protected override IQueryElement VisitSqlExpression(SqlExpression element)
+		protected internal override IQueryElement VisitSqlExpression(SqlExpression element)
 		{
 			var newElement = base.VisitSqlExpression(element);
 
@@ -921,7 +921,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return newElement;
 		}
 
-		protected override IQueryElement VisitLikePredicate(SqlPredicate.Like predicate)
+		protected internal override IQueryElement VisitLikePredicate(SqlPredicate.Like predicate)
 		{
 			var newElement = base.VisitLikePredicate(predicate);
 
@@ -937,7 +937,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return newElement;
 		}
 
-		protected override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
+		protected internal override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			var newElement = base.VisitSqlBinaryExpression(element);
 
@@ -953,7 +953,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return newElement;
 		}
 
-		protected override IQueryElement VisitSqlInlinedSqlExpression(SqlInlinedSqlExpression element)
+		protected internal override IQueryElement VisitSqlInlinedSqlExpression(SqlInlinedSqlExpression element)
 		{
 			var newElement = base.VisitSqlInlinedSqlExpression(element);
 
@@ -969,7 +969,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return newElement;
 		}
 
-		protected override IQueryElement VisitSqlInlinedToSqlExpression(SqlInlinedToSqlExpression element)
+		protected internal override IQueryElement VisitSqlInlinedToSqlExpression(SqlInlinedToSqlExpression element)
 		{
 			var newElement = base.VisitSqlInlinedToSqlExpression(element);
 
@@ -985,7 +985,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return newElement;
 		}
 
-		protected override IQueryElement VisitBetweenPredicate(SqlPredicate.Between predicate)
+		protected internal override IQueryElement VisitBetweenPredicate(SqlPredicate.Between predicate)
 		{
 			var newElement = base.VisitBetweenPredicate(predicate);
 
@@ -1000,7 +1000,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return newElement;
 		}
 
-		protected override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		protected internal override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
 		{
 			if (predicate.DoNotConvert)
 				return base.VisitInSubQueryPredicate(predicate);
@@ -1049,7 +1049,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return predicate;
 		}
 
-		protected override IQueryElement VisitSqlOrderByItem(SqlOrderByItem element)
+		protected internal override IQueryElement VisitSqlOrderByItem(SqlOrderByItem element)
 		{
 			var newElement = (SqlOrderByItem)base.VisitSqlOrderByItem(element);
 
@@ -1070,7 +1070,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return newElement;
 		}
 
-		protected override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
+		protected internal override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
 		{
 			var newElement = (SqlSetExpression)base.VisitSqlSetExpression(element);
 
@@ -1116,7 +1116,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return WrapBooleanExpression(newItem, includeFields: false);
 		}
 
-		protected override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
+		protected internal override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
 		{
 			var newElement = base.VisitSqlCastExpression(element);
 
@@ -1132,7 +1132,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
+		protected internal override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
 		{
 			var newElement = base.VisitSqlCoalesceExpression(element);
 			if (!ReferenceEquals(newElement, element))
