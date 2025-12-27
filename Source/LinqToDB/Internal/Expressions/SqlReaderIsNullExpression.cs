@@ -11,7 +11,7 @@ namespace LinqToDB.Internal.Expressions
 		public SqlReaderIsNullExpression(SqlPlaceholderExpression placeholder, bool isNot)
 		{
 			Placeholder = placeholder;
-			IsNot  = isNot;
+			IsNot       = isNot;
 		}
 
 		public override ExpressionType NodeType => ExpressionType.Extension;
@@ -64,7 +64,7 @@ namespace LinqToDB.Internal.Expressions
 				return true;
 			}
 
-			if (obj.GetType() != this.GetType())
+			if (obj.GetType() != GetType())
 			{
 				return false;
 			}

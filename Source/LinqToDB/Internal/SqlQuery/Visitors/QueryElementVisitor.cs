@@ -12,6 +12,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 	// TODO: REFACTORING: it probably makes sense to move Visit calls from element visit switch to upper level to:
 	// - reduce function/code size
 	// - reduce chances to de-sync VisitMode branches on changes
+
+	/*
+	 * Implementation notes:
+	 * - some element visitors (e.g. VisitSqlQuery, VisitSqlTableSource) use sub-functions for each visitor mode to reduce
+	 *   total stack frame size for method. In general this optimization should be applied only to elements that
+	 *   could be used a lot in deep AST as it complicates code and doesn't save much space if not called a lot
+	 */
 	/// <summary>
 	/// Base visitor for all SQL AST visitors.
 	/// Supports three visit modes, defined by <see cref="VisitMode"/> enum.
@@ -65,90 +72,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (!_guard.TryEnterOnCurrentStack())
 				return _guard.RunOnEmptyStack(() => Visit(element));
 
-			return element.ElementType switch
-			{
-				QueryElementType.SqlField                  => VisitSqlFieldReference         ((SqlField                  )element),
-				QueryElementType.SqlFunction               => VisitSqlFunction               ((SqlFunction               )element),
-				QueryElementType.SqlParameter              => VisitSqlParameter              ((SqlParameter              )element),
-				QueryElementType.SqlExpression             => VisitSqlExpression             ((SqlExpression             )element),
-				QueryElementType.SqlNullabilityExpression  => VisitSqlNullabilityExpression  ((SqlNullabilityExpression  )element),
-				QueryElementType.SqlAnchor                 => VisitSqlAnchor                 ((SqlAnchor                 )element),
-				QueryElementType.SqlObjectExpression       => VisitSqlObjectExpression       ((SqlObjectExpression       )element),
-				QueryElementType.SqlBinaryExpression       => VisitSqlBinaryExpression       ((SqlBinaryExpression       )element),
-				QueryElementType.SqlValue                  => VisitSqlValue                  ((SqlValue                  )element),
-				QueryElementType.SqlDataType               => VisitSqlDataType               ((SqlDataType               )element),
-				QueryElementType.SqlTable                  => VisitSqlTable                  ((SqlTable                  )element),
-				QueryElementType.SqlAliasPlaceholder       => VisitSqlAliasPlaceholder       ((SqlAliasPlaceholder       )element),
-				QueryElementType.SqlRow                    => VisitSqlRow                    ((SqlRowExpression          )element),
-				QueryElementType.NotPredicate              => VisitNotPredicate              ((SqlPredicate.Not          )element),
-				QueryElementType.TruePredicate             => VisitTruePredicate             ((SqlPredicate.TruePredicate         )element),
-				QueryElementType.FalsePredicate            => VisitFalsePredicate            ((SqlPredicate.FalsePredicate        )element),
-				QueryElementType.ExprPredicate             => VisitExprPredicate             ((SqlPredicate.Expr         )element),
-				QueryElementType.ExprExprPredicate         => VisitExprExprPredicate         ((SqlPredicate.ExprExpr     )element),
-				QueryElementType.LikePredicate             => VisitLikePredicate             ((SqlPredicate.Like         )element),
-				QueryElementType.SearchStringPredicate     => VisitSearchStringPredicate     ((SqlPredicate.SearchString )element),
-				QueryElementType.BetweenPredicate          => VisitBetweenPredicate          ((SqlPredicate.Between      )element),
-				QueryElementType.IsNullPredicate           => VisitIsNullPredicate           ((SqlPredicate.IsNull       )element),
-				QueryElementType.IsDistinctPredicate       => VisitIsDistinctPredicate       ((SqlPredicate.IsDistinct   )element),
-				QueryElementType.IsTruePredicate           => VisitIsTruePredicate           ((SqlPredicate.IsTrue       )element),
-				QueryElementType.InSubQueryPredicate       => VisitInSubQueryPredicate       ((SqlPredicate.InSubQuery   )element),
-				QueryElementType.InListPredicate           => VisitInListPredicate           ((SqlPredicate.InList       )element),
-				QueryElementType.ExistsPredicate           => VisitExistsPredicate           ((SqlPredicate.Exists       )element),
-				QueryElementType.SqlQuery                  => VisitSqlQuery                  ((SelectQuery               )element),
-				QueryElementType.Column                    => VisitSqlColumnReference        ((SqlColumn                 )element),
-				QueryElementType.SearchCondition           => VisitSqlSearchCondition        ((SqlSearchCondition        )element),
-				QueryElementType.TableSource               => VisitSqlTableSource            ((SqlTableSource            )element),
-				QueryElementType.JoinedTable               => VisitSqlJoinedTable            ((SqlJoinedTable            )element),
-				QueryElementType.SelectClause              => VisitSqlSelectClause           ((SqlSelectClause           )element),
-				QueryElementType.InsertClause              => VisitSqlInsertClause           ((SqlInsertClause           )element),
-				QueryElementType.UpdateClause              => VisitSqlUpdateClause           ((SqlUpdateClause           )element),
-				QueryElementType.SetExpression             => VisitSqlSetExpression          ((SqlSetExpression          )element),
-				QueryElementType.FromClause                => VisitSqlFromClause             ((SqlFromClause             )element),
-				QueryElementType.WhereClause               => VisitSqlWhereClause            ((SqlWhereClause            )element),
-				QueryElementType.HavingClause              => VisitSqlHavingClause           ((SqlHavingClause           )element),
-				QueryElementType.GroupByClause             => VisitSqlGroupByClause          ((SqlGroupByClause          )element),
-				QueryElementType.OrderByClause             => VisitSqlOrderByClause          ((SqlOrderByClause          )element),
-				QueryElementType.OrderByItem               => VisitSqlOrderByItem            ((SqlOrderByItem            )element),
-				QueryElementType.SetOperator               => VisitSqlSetOperator            ((SqlSetOperator            )element),
-				QueryElementType.WithClause                => VisitSqlWithClause             ((SqlWithClause             )element),
-				QueryElementType.CteClause                 => VisitCteClause                 ((CteClause                 )element),
-				QueryElementType.SqlCteTable               => VisitSqlCteTable               ((SqlCteTable               )element),
-				QueryElementType.SqlRawSqlTable            => VisitSqlRawSqlTable            ((SqlRawSqlTable            )element),
-				QueryElementType.SqlValuesTable            => VisitSqlValuesTable            ((SqlValuesTable            )element),
-				QueryElementType.OutputClause              => VisitSqlOutputClause           ((SqlOutputClause           )element),
-				QueryElementType.SelectStatement           => VisitSqlSelectStatement        ((SqlSelectStatement        )element),
-				QueryElementType.InsertStatement           => VisitSqlInsertStatement        ((SqlInsertStatement        )element),
-				QueryElementType.InsertOrUpdateStatement   => VisitSqlInsertOrUpdateStatement((SqlInsertOrUpdateStatement)element),
-				QueryElementType.UpdateStatement           => VisitSqlUpdateStatement        ((SqlUpdateStatement        )element),
-				QueryElementType.DeleteStatement           => VisitSqlDeleteStatement        ((SqlDeleteStatement        )element),
-				QueryElementType.MergeStatement            => VisitSqlMergeStatement         ((SqlMergeStatement         )element),
-				QueryElementType.MultiInsertStatement      => VisitSqlMultiInsertStatement   ((SqlMultiInsertStatement   )element),
-				QueryElementType.ConditionalInsertClause   => VisitSqlConditionalInsertClause((SqlConditionalInsertClause)element),
-				QueryElementType.CreateTableStatement      => VisitSqlCreateTableStatement   ((SqlCreateTableStatement   )element),
-				QueryElementType.DropTableStatement        => VisitSqlDropTableStatement     ((SqlDropTableStatement     )element),
-				QueryElementType.TruncateTableStatement    => VisitSqlTruncateTableStatement ((SqlTruncateTableStatement )element),
-				QueryElementType.SqlTableLikeSource        => VisitSqlTableLikeSource        ((SqlTableLikeSource        )element),
-				QueryElementType.MergeOperationClause      => VisitSqlMergeOperationClause   ((SqlMergeOperationClause   )element),
-				QueryElementType.GroupingSet               => VisitSqlGroupingSet            ((SqlGroupingSet            )element),
-				QueryElementType.Comment                   => VisitSqlComment                ((SqlComment                )element),
-				QueryElementType.SqlExtension              => VisitSqlExtension              ((IQueryExtension           )element),
-				QueryElementType.SqlInlinedExpression      => VisitSqlInlinedSqlExpression   ((SqlInlinedSqlExpression   )element),
-				QueryElementType.SqlInlinedToSqlExpression => VisitSqlInlinedToSqlExpression ((SqlInlinedToSqlExpression )element),
-				QueryElementType.SqlQueryExtension         => VisitSqlQueryExtension         ((SqlQueryExtension         )element),
-				QueryElementType.SqlCondition              => VisitSqlConditionExpression    ((SqlConditionExpression    )element),
-				QueryElementType.SqlCast                   => VisitSqlCastExpression         ((SqlCastExpression         )element),
-				QueryElementType.SqlCoalesce               => VisitSqlCoalesceExpression     ((SqlCoalesceExpression     )element),
-				QueryElementType.SqlCase                   => VisitSqlCaseExpression         ((SqlCaseExpression         )element),
-				QueryElementType.CompareTo                 => VisitSqlCompareToExpression    ((SqlCompareToExpression    )element),
-                QueryElementType.SqlFragment               => VisitSqlFragment               ((SqlFragment)element),
-				QueryElementType.SqlExtendedFunction       => VisitSqlExtendedFunction       ((SqlExtendedFunction       )element),
-				QueryElementType.SqlFunctionArgument       => VisitSqlFunctionArgument       ((SqlFunctionArgument       )element),
-				QueryElementType.SqlWindowOrderItem        => VisitSqlWindowOrderItem        ((SqlWindowOrderItem        )element),
-				QueryElementType.SqlFrameClause            => VisitSqlFrameClause            ((SqlFrameClause            )element),
-				QueryElementType.SqlFrameBoundary          => VisitSqlFrameBoundary          ((SqlFrameBoundary        )element),
-
-				_ => throw new InvalidOperationException()
-			};
+			return element.Accept(this);
 		}
 
 		#region Query element VisitSqlXXX methods
@@ -163,7 +87,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// Visitor of <see cref="CteClause"/> definition from <see cref="SqlWithClause"/> visitor (owner).
 		/// For visitor of <see cref="CteClause"/> in queries see <see cref="VisitCteClauseReference"/> visitor.
 		/// </summary>
-		protected virtual IQueryElement VisitCteClause(CteClause element)
+		protected internal virtual IQueryElement VisitCteClause(CteClause element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -202,7 +126,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
@@ -211,7 +135,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// <summary>
 		/// Visitor for <see cref="SqlExtendedFunction"/>.
 		/// </summary>
-		protected virtual IQueryElement VisitSqlExtendedFunction(SqlExtendedFunction element)
+		protected internal virtual IQueryElement VisitSqlExtendedFunction(SqlExtendedFunction element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -270,13 +194,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlFunctionArgument(SqlFunctionArgument element)
+		protected internal virtual IQueryElement VisitSqlFunctionArgument(SqlFunctionArgument element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -303,13 +227,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlWindowOrderItem(SqlWindowOrderItem element)
+		protected internal virtual IQueryElement VisitSqlWindowOrderItem(SqlWindowOrderItem element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -335,7 +259,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
@@ -344,7 +268,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// <summary>
 		/// Visitor for <see cref="SqlFrameClause"/>.
 		/// </summary>
-		protected virtual IQueryElement VisitSqlFrameClause(SqlFrameClause element)
+		protected internal virtual IQueryElement VisitSqlFrameClause(SqlFrameClause element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -374,13 +298,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlFrameBoundary(SqlFrameBoundary element)
+		protected internal virtual IQueryElement VisitSqlFrameBoundary(SqlFrameBoundary element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -403,7 +327,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
@@ -412,13 +336,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// <summary>
 		/// Visitor for <see cref="SqlField"/> reference from query expressions.
 		/// </summary>
-		protected virtual IQueryElement VisitSqlFieldReference(SqlField element) => element;
+		protected internal virtual IQueryElement VisitSqlFieldReference(SqlField element) => element;
 
 		/// <summary>
 		/// Used to visit columns as references in other expressions.
 		/// Actual visit of table column happens in <see cref="VisitSqlColumnExpression(SqlColumn, ISqlExpression)"/>.
 		/// </summary>
-		protected virtual IQueryElement VisitSqlColumnReference(SqlColumn element) => element;
+		protected internal virtual IQueryElement VisitSqlColumnReference(SqlColumn element) => element;
 
 		/// <summary>
 		/// Visit of column expression from owner table. For column references visitor see <see cref="VisitSqlColumnReference"/>
@@ -428,7 +352,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return (ISqlExpression)Visit(expression);
 		}
 
-		protected virtual IQueryElement VisitSqlInlinedSqlExpression(SqlInlinedSqlExpression element)
+		protected internal virtual IQueryElement VisitSqlInlinedSqlExpression(SqlInlinedSqlExpression element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -460,13 +384,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlInlinedToSqlExpression(SqlInlinedToSqlExpression element)
+		protected internal virtual IQueryElement VisitSqlInlinedToSqlExpression(SqlInlinedToSqlExpression element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -498,20 +422,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		private IQueryElement VisitSqlExtension(IQueryExtension element)
-		{
-			return element.Accept(this);
-		}
+		protected internal virtual IQueryElement VisitSqlComment(SqlComment element) => element;
 
-		protected virtual IQueryElement VisitSqlComment(SqlComment element) => element;
-
-		protected virtual IQueryElement VisitSqlGroupingSet(SqlGroupingSet element)
+		protected internal virtual IQueryElement VisitSqlGroupingSet(SqlGroupingSet element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -539,13 +458,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlMergeOperationClause(SqlMergeOperationClause element)
+		protected internal virtual IQueryElement VisitSqlMergeOperationClause(SqlMergeOperationClause element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -589,13 +508,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
+		protected internal virtual IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -634,13 +553,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlTruncateTableStatement(SqlTruncateTableStatement element)
+		protected internal virtual IQueryElement VisitSqlTruncateTableStatement(SqlTruncateTableStatement element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -686,13 +605,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlDropTableStatement(SqlDropTableStatement element)
+		protected internal virtual IQueryElement VisitSqlDropTableStatement(SqlDropTableStatement element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -738,13 +657,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlCreateTableStatement(SqlCreateTableStatement element)
+		protected internal virtual IQueryElement VisitSqlCreateTableStatement(SqlCreateTableStatement element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -790,13 +709,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlConditionalInsertClause(SqlConditionalInsertClause element)
+		protected internal virtual IQueryElement VisitSqlConditionalInsertClause(SqlConditionalInsertClause element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -831,13 +750,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlMultiInsertStatement(SqlMultiInsertStatement element)
+		protected internal virtual IQueryElement VisitSqlMultiInsertStatement(SqlMultiInsertStatement element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -883,13 +802,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlMergeStatement(SqlMergeStatement element)
+		protected internal virtual IQueryElement VisitSqlMergeStatement(SqlMergeStatement element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -963,13 +882,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlDeleteStatement(SqlDeleteStatement element)
+		protected internal virtual IQueryElement VisitSqlDeleteStatement(SqlDeleteStatement element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -1034,13 +953,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
+		protected internal virtual IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -1100,13 +1019,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlInsertOrUpdateStatement(SqlInsertOrUpdateStatement element)
+		protected internal virtual IQueryElement VisitSqlInsertOrUpdateStatement(SqlInsertOrUpdateStatement element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -1164,13 +1083,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlInsertStatement(SqlInsertStatement element)
+		protected internal virtual IQueryElement VisitSqlInsertStatement(SqlInsertStatement element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -1228,13 +1147,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlSelectStatement(SqlSelectStatement element)
+		protected internal virtual IQueryElement VisitSqlSelectStatement(SqlSelectStatement element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -1282,13 +1201,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlOutputClause(SqlOutputClause element)
+		protected internal virtual IQueryElement VisitSqlOutputClause(SqlOutputClause element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -1347,13 +1266,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlValuesTable(SqlValuesTable element)
+		protected internal virtual IQueryElement VisitSqlValuesTable(SqlValuesTable element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -1390,14 +1309,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 			
 		}
 
-		protected virtual IQueryElement VisitSqlRawSqlTable(SqlRawSqlTable element)
+		protected internal virtual IQueryElement VisitSqlRawSqlTable(SqlRawSqlTable element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -1440,13 +1359,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlCteTable(SqlCteTable element)
+		protected internal virtual IQueryElement VisitSqlCteTable(SqlCteTable element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -1490,13 +1409,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlWithClause(SqlWithClause element)
+		protected internal virtual IQueryElement VisitSqlWithClause(SqlWithClause element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -1525,13 +1444,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlSetOperator(SqlSetOperator element)
+		protected internal virtual IQueryElement VisitSqlSetOperator(SqlSetOperator element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -1560,13 +1479,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlOrderByItem(SqlOrderByItem element)
+		protected internal virtual IQueryElement VisitSqlOrderByItem(SqlOrderByItem element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -1592,13 +1511,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlFragment(SqlFragment element)
+		protected internal virtual IQueryElement VisitSqlFragment(SqlFragment element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -1626,13 +1545,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlOrderByClause(SqlOrderByClause element)
+		protected internal virtual IQueryElement VisitSqlOrderByClause(SqlOrderByClause element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -1660,7 +1579,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
@@ -1671,7 +1590,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return (ISqlExpression) Visit(element);
 		}
 
-		protected virtual IQueryElement VisitSqlGroupByClause(SqlGroupByClause element)
+		protected internal virtual IQueryElement VisitSqlGroupByClause(SqlGroupByClause element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -1699,13 +1618,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlWhereClause(SqlWhereClause element)
+		protected internal virtual IQueryElement VisitSqlWhereClause(SqlWhereClause element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -1733,13 +1652,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlHavingClause(SqlHavingClause element)
+		protected internal virtual IQueryElement VisitSqlHavingClause(SqlHavingClause element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -1767,13 +1686,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlFromClause(SqlFromClause element)
+		protected internal virtual IQueryElement VisitSqlFromClause(SqlFromClause element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -1801,13 +1720,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlSetExpression(SqlSetExpression element)
+		protected internal virtual IQueryElement VisitSqlSetExpression(SqlSetExpression element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -1838,13 +1757,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlUpdateClause(SqlUpdateClause element)
+		protected internal virtual IQueryElement VisitSqlUpdateClause(SqlUpdateClause element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -1897,13 +1816,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlInsertClause(SqlInsertClause element)
+		protected internal virtual IQueryElement VisitSqlInsertClause(SqlInsertClause element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -1945,13 +1864,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
+		protected internal virtual IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -1992,60 +1911,68 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlTableSource(SqlTableSource element)
+		protected internal virtual IQueryElement VisitSqlTableSource(SqlTableSource element)
 		{
 			switch (GetVisitMode(element))
 			{
 				case VisitMode.ReadOnly:
-				{
-					Visit(element.Source);
-					VisitElements(element.Joins, VisitMode.ReadOnly);
-
+					VisitSqlTableSourceReadOnly(element);
 					break;
-				}
 				case VisitMode.Modify:
-				{
-					var source = (ISqlTableSource)Visit(element.Source);
-					VisitElements(element.Joins, VisitMode.Modify);
-
-					if (element.HasUniqueKeys)
-						VisitListOfArrays(element.UniqueKeys, VisitMode.Modify);
-
-					element.Modify(source);
-
+					VisitSqlTableSourceModify(element);
 					break;
-				}
 				case VisitMode.Transform:
-				{
-					var source = (ISqlTableSource)Visit(element.Source);
-					var joins  = VisitElements(element.Joins, VisitMode.Transform);
-
-					var uk = element.HasUniqueKeys ? VisitListOfArrays(element.UniqueKeys, VisitMode.Transform) : null;
-
-					if (ShouldReplace(element)                              ||
-					    !ReferenceEquals(source, element.Source)            ||
-						(element.HasUniqueKeys && element.UniqueKeys != uk) ||
-					    element.Joins != joins)
-					{
-						return NotifyReplaced(new SqlTableSource(source, element.RawAlias, element.Joins != joins ? joins : joins.ToList(), uk), element);
-					}
-
-					break;
-				}
+					return VisitSqlTableSourceTransform(element)
+						?? element;
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
+
+			IQueryElement? VisitSqlTableSourceTransform(SqlTableSource element)
+			{
+				var source = (ISqlTableSource)Visit(element.Source);
+				var joins  = VisitElements(element.Joins, VisitMode.Transform);
+
+				var uk = element.HasUniqueKeys ? VisitListOfArrays(element.UniqueKeys, VisitMode.Transform) : null;
+
+				if (ShouldReplace(element)                              ||
+					!ReferenceEquals(source, element.Source)            ||
+					(element.HasUniqueKeys && element.UniqueKeys != uk) ||
+					element.Joins != joins)
+				{
+					return NotifyReplaced(new SqlTableSource(source, element.RawAlias, element.Joins != joins ? joins : joins.ToList(), uk), element);
+				}
+
+				return null;
+			}
+
+			void VisitSqlTableSourceReadOnly(SqlTableSource element)
+			{
+				Visit(element.Source);
+				VisitElements(element.Joins, VisitMode.ReadOnly);
+			}
+
+			void VisitSqlTableSourceModify(SqlTableSource element)
+			{
+				var source = (ISqlTableSource)Visit(element.Source);
+				VisitElements(element.Joins, VisitMode.Modify);
+
+				if (element.HasUniqueKeys)
+					VisitListOfArrays(element.UniqueKeys, VisitMode.Modify);
+
+				element.Modify(source);
+			}
 		}
 
-		protected virtual IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
+		protected internal virtual IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -2072,13 +1999,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlSelectClause(SqlSelectClause element)
+		protected internal virtual IQueryElement VisitSqlSelectClause(SqlSelectClause element)
 		{
 			// note that for column definitions we don't want to call by-ref visitor (VisitSqlColumnReference)
 			// column visit implementation similar to table fields visit (CopyFields)
@@ -2145,185 +2072,175 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+		protected internal virtual IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
 			switch (GetVisitMode(selectQuery))
 			{
 				case VisitMode.ReadOnly:
-				{
-					Visit(selectQuery.From   );
-					Visit(selectQuery.Select );
-					Visit(selectQuery.Where  );
-					Visit(selectQuery.GroupBy);
-					Visit(selectQuery.Having );
-					Visit(selectQuery.OrderBy);
-
-					if (selectQuery.HasSetOperators)
-						VisitElements(selectQuery.SetOperators, VisitMode.ReadOnly);
-
-					if (selectQuery.HasUniqueKeys)
-						VisitListOfArrays(selectQuery.UniqueKeys, VisitMode.ReadOnly);
-
-					VisitElements(selectQuery.SqlQueryExtensions, VisitMode.ReadOnly);
-
+					VisitSelectQuery(selectQuery, VisitMode.ReadOnly);
 					break;
-				}
 				case VisitMode.Modify:
-				{
-					Visit(selectQuery.From   );
-					Visit(selectQuery.Select );
-					Visit(selectQuery.Where  );
-					Visit(selectQuery.GroupBy);
-					Visit(selectQuery.Having );
-					Visit(selectQuery.OrderBy);
-
-					if (selectQuery.HasSetOperators)
-						VisitElements(selectQuery.SetOperators, VisitMode.Modify);
-
-					if (selectQuery.HasUniqueKeys)
-						VisitListOfArrays(selectQuery.UniqueKeys, VisitMode.Modify);
-
-					VisitElements(selectQuery.SqlQueryExtensions, VisitMode.Modify);
-
+					VisitSelectQuery(selectQuery, VisitMode.Modify);
 					break;
-				}
 				case VisitMode.Transform:
-				{
-					var fc = (SqlFromClause)   Visit(selectQuery.From   );
-					var sc = (SqlSelectClause) Visit(selectQuery.Select );
-					var wc = (SqlWhereClause)  Visit(selectQuery.Where  );
-					var gc = (SqlGroupByClause)Visit(selectQuery.GroupBy);
-					var hc = (SqlHavingClause) Visit(selectQuery.Having );
-					var oc = (SqlOrderByClause)Visit(selectQuery.OrderBy);
-
-					var so = selectQuery.HasSetOperators ? VisitElements    (selectQuery.SetOperators, VisitMode.Transform) : null;
-					var uk = selectQuery.HasUniqueKeys   ? VisitListOfArrays(selectQuery.UniqueKeys  , VisitMode.Transform) : null;
-
-					var ex = VisitElements(selectQuery.SqlQueryExtensions, VisitMode.Transform);
-
-					if (ShouldReplace(selectQuery)
-						|| !ReferenceEquals(fc, selectQuery.From)
-						|| !ReferenceEquals(sc, selectQuery.Select)
-						|| !ReferenceEquals(wc, selectQuery.Where)
-						|| !ReferenceEquals(gc, selectQuery.GroupBy)
-						|| !ReferenceEquals(hc, selectQuery.Having)
-						|| !ReferenceEquals(oc, selectQuery.OrderBy)
-						|| (selectQuery.HasSetOperators && so != selectQuery.SetOperators)
-						|| (selectQuery.HasUniqueKeys   && uk != selectQuery.UniqueKeys)
-						|| selectQuery.SqlQueryExtensions != ex)
-					{
-						// we force clone strong components (clauses) of select query, that were not cloned above
-						// as they cannot belong to more than one query due to Parent reference to SelectQuery instance
-						// removal of such reference is not an easy task currently
-						//
-						var nq = new SelectQuery();
-
-						if (ReferenceEquals(fc, selectQuery.From))
-						{
-							fc = new SqlFromClause(nq);
-							fc.Tables.AddRange(selectQuery.From.Tables);
-
-							NotifyReplaced(fc, selectQuery.From);
-						}
-
-						if (ReferenceEquals(sc, selectQuery.Select))
-						{
-							sc = new SqlSelectClause(selectQuery.Select.IsDistinct, selectQuery.Select.TakeValue,
-								selectQuery.Select.TakeHints, selectQuery.Select.SkipValue,
-								selectQuery.Select.Columns.Select(c => new SqlColumn(nq, c.Expression, c.RawAlias)));
-
-							for (int i = 0; i < selectQuery.Select.Columns.Count; i++)
-							{
-								var oldColumn = selectQuery.Select.Columns[i];
-								var newColumn = sc.Columns[i];
-								NotifyReplaced(newColumn, oldColumn);
-							}
-
-							NotifyReplaced(sc, selectQuery.Select);
-						}
-						else
-						{
-							// all columns already copied by VisitSqlSelectClause, just reassign query
-							foreach (var c in sc.Columns)
-								c.Parent = nq;
-						}
-
-						if (ReferenceEquals(wc, selectQuery.Where))
-						{
-							wc                 = new SqlWhereClause(nq);
-							wc.SearchCondition = selectQuery.Where.SearchCondition;
-
-							NotifyReplaced(wc, selectQuery.Where);
-						}
-
-						if (ReferenceEquals(gc, selectQuery.GroupBy))
-						{
-							gc = new SqlGroupByClause(nq)
-							{
-								GroupingType = selectQuery.GroupBy.GroupingType
-							};
-							gc.Items.AddRange(selectQuery.GroupBy.Items);
-
-							NotifyReplaced(gc, selectQuery.GroupBy);
-						}
-
-						if (ReferenceEquals(hc, selectQuery.Having))
-						{
-							hc                 = new SqlHavingClause(nq);
-							hc.SearchCondition = selectQuery.Having.SearchCondition;
-
-							NotifyReplaced(hc, selectQuery.Having);
-						}
-
-						if (ReferenceEquals(oc, selectQuery.OrderBy))
-						{
-							oc = new SqlOrderByClause(nq);
-							oc.Items.AddRange(selectQuery.OrderBy.Items);
-
-							NotifyReplaced(oc, selectQuery.OrderBy);
-						}
-
-						if (selectQuery.HasSetOperators)
-						{
-							if (so == selectQuery.SetOperators)
-								so = so.ToList();
-						}
-
-						if (selectQuery.HasUniqueKeys)
-						{
-							if (uk == selectQuery.UniqueKeys)
-								uk = uk.ToList();
-						}
-
-						if (selectQuery.SqlQueryExtensions == ex)
-							ex = ex?.ToList();
-
-						nq.Init(sc, fc, wc, gc, hc, oc, so, uk,
-							selectQuery.IsParameterDependent,
-							selectQuery.QueryName,
-							selectQuery.DoNotSetAliases);
-
-						nq.SqlQueryExtensions = ex;
-
-						return NotifyReplaced(nq, selectQuery);
-					}
-
-					break;
-				}
+					return TransformSelectQuery(selectQuery)
+						?? selectQuery;
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return selectQuery;
+
+			IQueryElement? TransformSelectQuery(SelectQuery selectQuery)
+			{
+				var fc = (SqlFromClause)   Visit(selectQuery.From   );
+				var sc = (SqlSelectClause) Visit(selectQuery.Select );
+				var wc = (SqlWhereClause)  Visit(selectQuery.Where  );
+				var gc = (SqlGroupByClause)Visit(selectQuery.GroupBy);
+				var hc = (SqlHavingClause) Visit(selectQuery.Having );
+				var oc = (SqlOrderByClause)Visit(selectQuery.OrderBy);
+
+				var so = selectQuery.HasSetOperators ? VisitElements    (selectQuery.SetOperators, VisitMode.Transform) : null;
+				var uk = selectQuery.HasUniqueKeys   ? VisitListOfArrays(selectQuery.UniqueKeys  , VisitMode.Transform) : null;
+
+				var ex = VisitElements(selectQuery.SqlQueryExtensions, VisitMode.Transform);
+
+				if (ShouldReplace(selectQuery)
+					|| !ReferenceEquals(fc, selectQuery.From)
+					|| !ReferenceEquals(sc, selectQuery.Select)
+					|| !ReferenceEquals(wc, selectQuery.Where)
+					|| !ReferenceEquals(gc, selectQuery.GroupBy)
+					|| !ReferenceEquals(hc, selectQuery.Having)
+					|| !ReferenceEquals(oc, selectQuery.OrderBy)
+					|| (selectQuery.HasSetOperators && so != selectQuery.SetOperators)
+					|| (selectQuery.HasUniqueKeys && uk != selectQuery.UniqueKeys)
+					|| selectQuery.SqlQueryExtensions != ex)
+				{
+					// we force clone strong components (clauses) of select query, that were not cloned above
+					// as they cannot belong to more than one query due to Parent reference to SelectQuery instance
+					// removal of such reference is not an easy task currently
+					//
+					var nq = new SelectQuery();
+
+					if (ReferenceEquals(fc, selectQuery.From))
+					{
+						fc = new SqlFromClause(nq);
+						fc.Tables.AddRange(selectQuery.From.Tables);
+
+						NotifyReplaced(fc, selectQuery.From);
+					}
+
+					if (ReferenceEquals(sc, selectQuery.Select))
+					{
+						sc = new SqlSelectClause(selectQuery.Select.IsDistinct, selectQuery.Select.TakeValue,
+							selectQuery.Select.TakeHints, selectQuery.Select.SkipValue,
+							selectQuery.Select.Columns.Select(c => new SqlColumn(nq, c.Expression, c.RawAlias)));
+
+						for (int i = 0; i < selectQuery.Select.Columns.Count; i++)
+						{
+							var oldColumn = selectQuery.Select.Columns[i];
+							var newColumn = sc.Columns[i];
+							NotifyReplaced(newColumn, oldColumn);
+						}
+
+						NotifyReplaced(sc, selectQuery.Select);
+					}
+					else
+					{
+						// all columns already copied by VisitSqlSelectClause, just reassign query
+						foreach (var c in sc.Columns)
+							c.Parent = nq;
+					}
+
+					if (ReferenceEquals(wc, selectQuery.Where))
+					{
+						wc = new SqlWhereClause(nq);
+						wc.SearchCondition = selectQuery.Where.SearchCondition;
+
+						NotifyReplaced(wc, selectQuery.Where);
+					}
+
+					if (ReferenceEquals(gc, selectQuery.GroupBy))
+					{
+						gc = new SqlGroupByClause(nq)
+						{
+							GroupingType = selectQuery.GroupBy.GroupingType
+						};
+						gc.Items.AddRange(selectQuery.GroupBy.Items);
+
+						NotifyReplaced(gc, selectQuery.GroupBy);
+					}
+
+					if (ReferenceEquals(hc, selectQuery.Having))
+					{
+						hc = new SqlHavingClause(nq);
+						hc.SearchCondition = selectQuery.Having.SearchCondition;
+
+						NotifyReplaced(hc, selectQuery.Having);
+					}
+
+					if (ReferenceEquals(oc, selectQuery.OrderBy))
+					{
+						oc = new SqlOrderByClause(nq);
+						oc.Items.AddRange(selectQuery.OrderBy.Items);
+
+						NotifyReplaced(oc, selectQuery.OrderBy);
+					}
+
+					if (selectQuery.HasSetOperators)
+					{
+						if (so == selectQuery.SetOperators)
+							so = so.ToList();
+					}
+
+					if (selectQuery.HasUniqueKeys)
+					{
+						if (uk == selectQuery.UniqueKeys)
+							uk = uk.ToList();
+					}
+
+					if (selectQuery.SqlQueryExtensions == ex)
+						ex = ex?.ToList();
+
+					nq.Init(sc, fc, wc, gc, hc, oc, so, uk,
+						selectQuery.IsParameterDependent,
+						selectQuery.QueryName,
+						selectQuery.DoNotSetAliases);
+
+					nq.SqlQueryExtensions = ex;
+
+					return NotifyReplaced(nq, selectQuery);
+				}
+
+				return null;
+			}
+
+			void VisitSelectQuery(SelectQuery selectQuery, VisitMode mode)
+			{
+				Visit(selectQuery.From);
+				Visit(selectQuery.Select);
+				Visit(selectQuery.Where);
+				Visit(selectQuery.GroupBy);
+				Visit(selectQuery.Having);
+				Visit(selectQuery.OrderBy);
+
+				if (selectQuery.HasSetOperators)
+					VisitElements(selectQuery.SetOperators, mode);
+
+				if (selectQuery.HasUniqueKeys)
+					VisitListOfArrays(selectQuery.UniqueKeys, mode);
+
+				VisitElements(selectQuery.SqlQueryExtensions, mode);
+			}
 		}
 
-		protected virtual IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
+		protected internal virtual IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
 		{
 			switch (GetVisitMode(predicate))
 			{
@@ -2353,13 +2270,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return predicate;
 		}
 
-		protected virtual IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
+		protected internal virtual IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
 		{
 			switch (GetVisitMode(predicate))
 			{
@@ -2395,13 +2312,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return predicate;
 		}
 
-		protected virtual IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		protected internal virtual IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
 		{
 			switch (GetVisitMode(predicate))
 			{
@@ -2435,13 +2352,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return predicate;
 		}
 
-		protected virtual IQueryElement VisitIsTruePredicate(SqlPredicate.IsTrue predicate)
+		protected internal virtual IQueryElement VisitIsTruePredicate(SqlPredicate.IsTrue predicate)
 		{
 			switch (GetVisitMode(predicate))
 			{
@@ -2477,13 +2394,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return predicate;
 		}
 
-		protected virtual IQueryElement VisitIsDistinctPredicate(SqlPredicate.IsDistinct predicate)
+		protected internal virtual IQueryElement VisitIsDistinctPredicate(SqlPredicate.IsDistinct predicate)
 		{
 			switch (GetVisitMode(predicate))
 			{
@@ -2512,13 +2429,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return predicate;
 		}
 
-		protected virtual IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
+		protected internal virtual IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
 		{
 			switch (GetVisitMode(predicate))
 			{
@@ -2544,13 +2461,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return predicate;
 		}
 
-		protected virtual IQueryElement VisitBetweenPredicate(SqlPredicate.Between predicate)
+		protected internal virtual IQueryElement VisitBetweenPredicate(SqlPredicate.Between predicate)
 		{
 			switch (GetVisitMode(predicate))
 			{
@@ -2587,13 +2504,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return predicate;
 		}
 
-		protected virtual IQueryElement VisitSearchStringPredicate(SqlPredicate.SearchString predicate)
+		protected internal virtual IQueryElement VisitSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
 			switch (GetVisitMode(predicate))
 			{
@@ -2633,13 +2550,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return predicate;
 		}
 
-		protected virtual IQueryElement VisitLikePredicate(SqlPredicate.Like predicate)
+		protected internal virtual IQueryElement VisitLikePredicate(SqlPredicate.Like predicate)
 		{
 			switch (GetVisitMode(predicate))
 			{
@@ -2676,13 +2593,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return predicate;
 		}
 
-		protected virtual IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
+		protected internal virtual IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 		{
 			switch (GetVisitMode(predicate))
 			{
@@ -2711,13 +2628,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return predicate;
 		}
 
-		protected virtual IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
+		protected internal virtual IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
 		{
 			switch (GetVisitMode(predicate))
 			{
@@ -2744,13 +2661,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return predicate;
 		}
 
-		protected virtual IQueryElement VisitSqlRow(SqlRowExpression element)
+		protected internal virtual IQueryElement VisitSqlRow(SqlRowExpression element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -2777,13 +2694,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitNotPredicate(SqlPredicate.Not predicate)
+		protected internal virtual IQueryElement VisitNotPredicate(SqlPredicate.Not predicate)
 		{
 			switch (GetVisitMode(predicate))
 			{
@@ -2805,19 +2722,19 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return predicate;
 		}
 
-		protected virtual IQueryElement VisitTruePredicate(SqlPredicate.TruePredicate predicate) => predicate;
+		protected internal virtual IQueryElement VisitTruePredicate(SqlPredicate.TruePredicate predicate) => predicate;
 
-		protected virtual IQueryElement VisitFalsePredicate(SqlPredicate.FalsePredicate predicate) => predicate;
+		protected internal virtual IQueryElement VisitFalsePredicate(SqlPredicate.FalsePredicate predicate) => predicate;
 
-		protected virtual IQueryElement VisitSqlAliasPlaceholder(SqlAliasPlaceholder element) => element;
+		protected internal virtual IQueryElement VisitSqlAliasPlaceholder(SqlAliasPlaceholder element) => element;
 
-		protected virtual IQueryElement VisitSqlTable(SqlTable element)
+		protected internal virtual IQueryElement VisitSqlTable(SqlTable element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -2863,17 +2780,17 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlDataType(SqlDataType element) => element;
+		protected internal virtual IQueryElement VisitSqlDataType(SqlDataType element) => element;
 
-		protected virtual IQueryElement VisitSqlValue(SqlValue element) => element;
+		protected internal virtual IQueryElement VisitSqlValue(SqlValue element) => element;
 
-		protected virtual IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
+		protected internal virtual IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -2910,13 +2827,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlObjectExpression(SqlObjectExpression element)
+		protected internal virtual IQueryElement VisitSqlObjectExpression(SqlObjectExpression element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -2972,13 +2889,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlAnchor(SqlAnchor element)
+		protected internal virtual IQueryElement VisitSqlAnchor(SqlAnchor element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -3002,13 +2919,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlNullabilityExpression(SqlNullabilityExpression element)
+		protected internal virtual IQueryElement VisitSqlNullabilityExpression(SqlNullabilityExpression element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -3035,13 +2952,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlExpression(SqlExpression element)
+		protected internal virtual IQueryElement VisitSqlExpression(SqlExpression element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -3070,15 +2987,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlParameter(SqlParameter sqlParameter) => sqlParameter;
+		protected internal virtual IQueryElement VisitSqlParameter(SqlParameter sqlParameter) => sqlParameter;
 
-		protected virtual IQueryElement VisitSqlFunction(SqlFunction element)
+		protected internal virtual IQueryElement VisitSqlFunction(SqlFunction element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -3110,13 +3027,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlQueryExtension(SqlQueryExtension extension)
+		protected internal virtual IQueryElement VisitSqlQueryExtension(SqlQueryExtension extension)
 		{
 			switch (GetVisitMode(extension))
 			{
@@ -3190,13 +3107,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return extension;
 		}
 
-		protected virtual IQueryElement VisitSqlConditionExpression(SqlConditionExpression element)
+		protected internal virtual IQueryElement VisitSqlConditionExpression(SqlConditionExpression element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -3235,13 +3152,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlCastExpression(SqlCastExpression element)
+		protected internal virtual IQueryElement VisitSqlCastExpression(SqlCastExpression element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -3269,13 +3186,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
+		protected internal virtual IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -3295,7 +3212,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					var expressions = VisitElements(element.Expressions, VisitMode.Transform);
 
-					if (ShouldReplace(element)                             || 
+					if (ShouldReplace(element)                             ||
 					    !ReferenceEquals(element.Expressions, expressions))
 					{
 						return NotifyReplaced(new SqlCoalesceExpression(element.Expressions != expressions ? expressions : expressions.ToArray()), element);
@@ -3304,7 +3221,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
@@ -3315,7 +3232,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element.Update((ISqlPredicate)Visit(element.Condition), (ISqlExpression)Visit(element.ResultExpression));
 		}
 
-		protected virtual IQueryElement VisitSqlCaseExpression(SqlCaseExpression element)
+		protected internal virtual IQueryElement VisitSqlCaseExpression(SqlCaseExpression element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -3350,13 +3267,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlCompareToExpression(SqlCompareToExpression element)
+		protected internal virtual IQueryElement VisitSqlCompareToExpression(SqlCompareToExpression element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -3388,7 +3305,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					break;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					return ThrowInvalidVisitModeException();
 			}
 
 			return element;
@@ -3414,8 +3331,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newFields;
 		}
 
-		protected Exception CreateInvalidVisitModeException([CallerMemberName] string? methodName = null)
-			=> new InvalidOperationException($"Invalid VisitMode in '{methodName}'");
+		protected IQueryElement ThrowInvalidVisitModeException([CallerMemberName] string? methodName = null)
+			=> throw new InvalidOperationException($"Invalid VisitMode in '{methodName}'");
 
 		/// <summary>
 		/// Visits array of query elements.
@@ -3486,7 +3403,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					return arr2 ?? arr1;
 				}
 				default:
-					throw CreateInvalidVisitModeException();
+					_ = ThrowInvalidVisitModeException();
+					return default!;
 			}
 		}
 
@@ -3512,55 +3430,64 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			switch (mode)
 			{
 				case VisitMode.ReadOnly:
-				{
-					foreach (var t in list1)
-					{
-						_ = Visit(t);
-					}
-
+					VisitElementsReadOnly(list1);
 					return list1;
-				}
 
 				case VisitMode.Modify:
-				{
-					for (var i = 0; i < list1.Count; i++)
-					{
-						list1[i] = (T)Visit(list1[i]);
-					}
-
+					VisitElementsModify(list1);
 					return list1;
-				}
 
 				case VisitMode.Transform:
-				{
-					List<T>? list2 = null;
-
-					for (var i = 0; i < list1.Count; i++)
-					{
-						var elem1 = list1[i];
-						var elem2 = (T)Visit(elem1);
-
-						if (!ReferenceEquals(elem1, elem2))
-						{
-							if (list2 == null)
-							{
-								list2 = new List<T>(list1.Count);
-
-								for (var j = 0; j < i; j++)
-									list2.Add(list1[j]);
-							}
-
-							list2.Add(elem2);
-						}
-						else if (list2 != null)
-							list2.Add(elem1);
-					}
-
-					return list2 ?? list1;
-				}
+					return VisitElementsTransform(list1) ?? list1;
 
 				default:
-					throw CreateInvalidVisitModeException();
+					_ = ThrowInvalidVisitModeException();
+					// unreachable
+					return default!;
+			}
+
+			void VisitElementsReadOnly(List<T> list1)
+			{
+				foreach (var t in list1)
+				{
+					_ = Visit(t);
+				}
+			}
+
+			void VisitElementsModify(List<T> list1)
+			{
+				for (var i = 0; i < list1.Count; i++)
+				{
+					list1[i] = (T)Visit(list1[i]);
+				}
+			}
+
+			List<T>? VisitElementsTransform(List<T> list1)
+			{
+				List<T>? list2 = null;
+
+				for (var i = 0; i < list1.Count; i++)
+				{
+					var elem1 = list1[i];
+					var elem2 = (T)Visit(elem1);
+
+					if (!ReferenceEquals(elem1, elem2))
+					{
+						if (list2 == null)
+						{
+							list2 = new List<T>(list1.Count);
+
+							for (var j = 0; j < i; j++)
+								list2.Add(list1[j]);
+						}
+
+						list2.Add(elem2);
+					}
+					else if (list2 != null)
+						list2.Add(elem1);
+				}
+
+				return list2;
 			}
 		}
 
@@ -3636,7 +3563,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 
 				default:
-					throw CreateInvalidVisitModeException();
+					_ = ThrowInvalidVisitModeException();
+					// unreachable
+					return default!;
 			}
 		}
 
@@ -3712,7 +3641,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 
 				default:
-					throw CreateInvalidVisitModeException();
+					_ = ThrowInvalidVisitModeException();
+					// unreachable
+					return default!;
 			}
 		}
 
@@ -3788,7 +3719,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 
 				default:
-					throw CreateInvalidVisitModeException();
+					_ = ThrowInvalidVisitModeException();
+					// unreachable
+					return default!;
 			}
 		}
 

@@ -264,7 +264,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			public bool ContainsNotNullExpr {get; private set; }
 
-			protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
+			protected internal override IQueryElement VisitSqlTableSource(SqlTableSource element)
 			{
 				_currentSources.Push(element.Source);
 
@@ -283,7 +283,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return base.Visit(element);
 			}
 
-			protected override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
+			protected internal override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
 			{
 				if (predicate.IsNot)
 				{
@@ -297,7 +297,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 		}
 
-		protected override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
+		protected internal override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
 		{
 			var saveColumnSubqueryLevel = _columnSubqueryLevel;
 			_columnSubqueryLevel = null;
@@ -316,7 +316,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return base.Visit(element);
 		}
 
-		protected override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
+		protected internal override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
 		{
 			if (!_providerFlags.IsApplyJoinSupported)
 			{
@@ -362,14 +362,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return result;
 		}
 
-		protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
+		protected internal override IQueryElement VisitSqlTableSource(SqlTableSource element)
 		{
 			base.VisitSqlTableSource(element);
 
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+		protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
 			if (IsSubquery(selectQuery))
 			{
@@ -391,7 +391,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return selectQuery;
 		}
 
-		protected override IQueryElement VisitSqlFromClause(SqlFromClause element)
+		protected internal override IQueryElement VisitSqlFromClause(SqlFromClause element)
 		{
 			var appendLevel = _providerFlags.CalculateSupportedCorrelatedLevelWithAggregateQueries || !QueryHelper.IsAggregationQuery(element.SelectQuery);
 		

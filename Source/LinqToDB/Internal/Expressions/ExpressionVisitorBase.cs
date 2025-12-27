@@ -10,6 +10,7 @@ namespace LinqToDB.Internal.Expressions
 	{
 		readonly StackGuard _guard = new();
 
+#if DEBUG
 		[DebuggerStepThrough]
 		[return: NotNullIfNotNull(nameof(node))]
 		public override Expression? Visit(Expression? node)
@@ -24,6 +25,7 @@ namespace LinqToDB.Internal.Expressions
 
 			return base.Visit(node);
 		}
+#endif
 
 		public virtual Expression VisitSqlPlaceholderExpression(SqlPlaceholderExpression node)
 		{
