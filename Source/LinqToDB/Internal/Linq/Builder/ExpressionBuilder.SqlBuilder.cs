@@ -72,7 +72,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (!_buildVisitor.BuildSearchCondition(buildSequence, expr, sc, out var errorExpr))
 			{
-				error = null != errorExpr.Find(1, (_, e) => e is SqlPlaceholderExpression) ? SqlErrorExpression.EnsureError(expr) : errorExpr;
+				error = null != errorExpr.Find(e => e is SqlPlaceholderExpression) ? SqlErrorExpression.EnsureError(expr) : errorExpr;
 
 				return null;
 			}
@@ -832,16 +832,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			return expr.UnwrapConvert().IsNullValue();
 		}
 
-		TransformVisitor<ExpressionBuilder>? _removeNullPropagationTransformer;
-		TransformVisitor<ExpressionBuilder>? _removeNullPropagationTransformerForSearch;
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		TransformVisitor<ExpressionBuilder> GetRemoveNullPropagationTransformer(bool forSearch)
+		Expression RemoveNullPropagationTransformation(Expression expression, bool forSearch)
 		{
-			if (forSearch)
-				return _removeNullPropagationTransformerForSearch ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.RemoveNullPropagation(e, forSearch: true));
-			else
-				return _removeNullPropagationTransformer ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.RemoveNullPropagation(e, forSearch: false));
+			return expression.Transform((builder: this, forSearch), static (ctx, e) => ctx.builder.RemoveNullPropagation(e, forSearch: ctx.forSearch));
 		}
 
 		public Expression RemoveNullPropagation(Expression expr)
@@ -883,13 +877,13 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							if (nullRight && nullLeft)
 							{
-								return GetRemoveNullPropagationTransformer(forSearch).Transform(conditional.IfFalse);
+								return RemoveNullPropagationTransformation(conditional.IfFalse, forSearch);
 							}
 							else if (IsNullConstant(conditional.IfFalse)
 								&& ((nullRight && IsAcceptableType(binary.Left.Type) ||
 									(nullLeft  && IsAcceptableType(binary.Right.Type)))))
 							{
-								return GetRemoveNullPropagationTransformer(forSearch).Transform(conditional.IfTrue);
+								return RemoveNullPropagationTransformation(conditional.IfTrue, forSearch);
 							}
 						}
 					}
@@ -902,13 +896,13 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							if (nullRight && nullLeft)
 							{
-								return GetRemoveNullPropagationTransformer(forSearch).Transform(conditional.IfTrue);
+								return RemoveNullPropagationTransformation(conditional.IfTrue, forSearch);
 							}
 							else if (IsNullConstant(conditional.IfTrue)
 									 && ((nullRight && IsAcceptableType(binary.Left.Type) ||
 										  (nullLeft && IsAcceptableType(binary.Right.Type)))))
 							{
-								return GetRemoveNullPropagationTransformer(forSearch).Transform(conditional.IfFalse);
+								return RemoveNullPropagationTransformation(conditional.IfFalse, forSearch);
 							}
 						}
 					}
@@ -964,7 +958,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			expression = GetRemoveNullPropagationTransformer(false).Transform(expression);
+			expression = RemoveNullPropagationTransformation(expression, false);
 
 			switch (expression.NodeType)
 			{

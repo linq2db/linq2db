@@ -412,7 +412,7 @@ namespace LinqToDB.Internal.Expressions
 		[return: NotNullIfNotNull(nameof(expression))]
 		public static Expression? OptimizeExpression(this Expression? expression, MappingSchema mappingSchema)
 		{
-			return TransformInfoVisitor<MappingSchema>.Create(mappingSchema, OptimizeExpressionTransformer).Transform(expression);
+			return expression.Transform(mappingSchema, OptimizeExpressionTransformer);
 		}
 
 		private static TransformInfo OptimizeExpressionTransformer(MappingSchema mappingSchema, Expression e)

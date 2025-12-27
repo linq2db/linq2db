@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -49,6 +52,9 @@ namespace LinqToDB.Internal.SqlQuery
 				Output?.GetElementHashCode()
 			);
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlInsertStatement(this);
 
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)
 		{
