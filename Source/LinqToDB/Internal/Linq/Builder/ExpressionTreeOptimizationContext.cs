@@ -10,7 +10,6 @@ using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq.Builder.Visitors;
 using LinqToDB.Internal.Reflection;
@@ -507,10 +506,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private bool PreferServerSide(bool enforceServerSide, Expression expr)
 		{
-			if (enforceServerSide)
-				return expr.Find(this, static (ctx, e) => ctx.PreferServerSide(e, true)) != null;
-			else
-				return expr.Find(this, static (ctx, e) => ctx.PreferServerSide(e, false)) != null;
+			return expr.Find((context: this, enforceServerSide), static (ctx, e) => ctx.context.PreferServerSide(e, ctx.enforceServerSide)) != null;
 		}
 
 		public bool PreferServerSide(Expression expr, bool enforceServerSide)
