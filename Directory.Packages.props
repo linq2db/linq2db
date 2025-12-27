@@ -2,10 +2,6 @@
 	<PropertyGroup>
 		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
 		<CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
-
-		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-		<RestoreLockedMode>true</RestoreLockedMode>
-		<NuGetLockFilePath>$(MSBuildThisFileDirectory)/Build/nuget/packages.$(MSBuildProjectName).lock.json</NuGetLockFilePath>
 	</PropertyGroup>
 
 	<!--
