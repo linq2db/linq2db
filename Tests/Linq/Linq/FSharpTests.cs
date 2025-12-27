@@ -11,8 +11,8 @@ namespace Tests.Linq
 		[Test]
 		public void LoadSingle([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.WhereTest.LoadSingle(db);
+			using var db = GetDataContext(context);
+			FSharp.WhereTest.LoadSingle(db);
 		}
 
 		[Test]
@@ -91,8 +91,8 @@ namespace Tests.Linq
 		[Test]
 		public void LoadSinglesWithPatient([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.WhereTest.LoadSinglesWithPatient( db);
+			using var db = GetDataContext(context);
+			FSharp.WhereTest.LoadSinglesWithPatient(db);
 		}
 
 		[Test]
@@ -100,8 +100,8 @@ namespace Tests.Linq
 		{
 			var ms = FSharp.MappingSchema.Initialize();
 
-			using (var db = GetDataContext(context, ms))
-				FSharp.WhereTest.LoadSingleWithOptions(db);
+			using var db = GetDataContext(context, ms);
+			FSharp.WhereTest.LoadSingleWithOptions(db);
 		}
 
 		[ActiveIssue]
@@ -116,78 +116,78 @@ namespace Tests.Linq
 		[Test]
 		public void LoadSingleCLIMutable([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.WhereTest.LoadSingleCLIMutable(db);
+			using var db = GetDataContext(context);
+			FSharp.WhereTest.LoadSingleCLIMutable(db);
 		}
 
 		[Test]
 		public void LoadSingleComplexPerson([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.WhereTest.LoadSingleComplexPerson(db);
+			using var db = GetDataContext(context);
+			FSharp.WhereTest.LoadSingleComplexPerson(db);
 		}
 
 		[Test]
 		public void LoadSingleDeeplyComplexPerson([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.WhereTest.LoadSingleDeeplyComplexPerson(db);
+			using var db = GetDataContext(context);
+			FSharp.WhereTest.LoadSingleDeeplyComplexPerson(db);
 		}
 
 		[Test]
 		public void LoadColumnOfDeeplyComplexPerson([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.WhereTest.LoadColumnOfDeeplyComplexPerson(db);
+			using var db = GetDataContext(context);
+			FSharp.WhereTest.LoadColumnOfDeeplyComplexPerson(db);
 		}
 
 		[Test]
 		public void SelectField([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.SelectTest.SelectField(db);
+			using var db = GetDataContext(context);
+			FSharp.SelectTest.SelectField(db);
 		}
 
 		[Test]
 		public void SelectFieldDeeplyComplexPerson([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.SelectTest.SelectFieldDeeplyComplexPerson(db);
+			using var db = GetDataContext(context);
+			FSharp.SelectTest.SelectFieldDeeplyComplexPerson(db);
 		}
 
 		[Test]
 		public void Insert1([DataSources(ProviderName.Ydb, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.InsertTest.Insert1(db);
+			using var db = GetDataContext(context);
+			FSharp.InsertTest.Insert1(db);
 		}
 
 		[Test]
 		public void Insert2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.InsertTest.Insert2(db, context.IsAnyOf(TestProvName.AllClickHouse) ? 100 : 0);
+			using var db = GetDataContext(context);
+			FSharp.InsertTest.Insert2(db, context.IsAnyOf(TestProvName.AllClickHouse) ? 100 : 0);
 		}
 
 		[Test]
 		public void SelectLeftJoin([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.SelectTest.SelectLeftJoin(db);
+			using var db = GetDataContext(context);
+			FSharp.SelectTest.SelectLeftJoin(db);
 		}
 
 		[Test]
 		public void TestIssue2678_SelectObject([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.Issue2678.InsertAndSelectObject(db);
+			using var db = GetDataContext(context);
+			FSharp.Issue2678.InsertAndSelectObject(db);
 		}
 
 		[Test]
 		public void TestIssue2678_SelectRecord([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-				FSharp.Issue2678.InsertAndSelectRecord(db);
+			using var db = GetDataContext(context);
+			FSharp.Issue2678.InsertAndSelectRecord(db);
 		}
 
 		[Test(Description = "record type support")]

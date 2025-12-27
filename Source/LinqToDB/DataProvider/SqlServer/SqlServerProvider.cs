@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.DataProvider.SqlServer
+namespace LinqToDB.DataProvider.SqlServer
 {
 	/// <summary>
 	/// SQL Server database provider.
@@ -18,6 +18,6 @@
 		/// <summary>
 		/// <c>Microsoft.Data.SqlClient</c> provider.
 		/// </summary>
-		MicrosoftDataSqlClient
+		MicrosoftDataSqlClient,
 	}
 }

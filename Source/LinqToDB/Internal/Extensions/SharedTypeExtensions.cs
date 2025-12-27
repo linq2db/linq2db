@@ -34,13 +34,13 @@ namespace LinqToDB.Internal.Extensions
 			{ typeof(uint), "uint" },
 			{ typeof(ulong), "ulong" },
 			{ typeof(ushort), "ushort" },
-			{ typeof(void), "void" }
+			{ typeof(void), "void" },
 		};
 
 		public static bool IsAnonymousType(this Type type)
 			=> type.Name.StartsWith("<>", StringComparison.Ordinal)
 			   && type.GetCustomAttributes(typeof(CompilerGeneratedAttribute), inherit: false).Length > 0
-			   && type.Name.Contains("AnonymousType");
+			   && type.Name.Contains("AnonymousType", StringComparison.Ordinal);
 
 		public static Type? TryGetSequenceType(/*[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] */this Type type)
 			=> type.TryGetElementType(typeof(IEnumerable<>))
@@ -239,7 +239,7 @@ namespace LinqToDB.Internal.Extensions
 				}
 			}
 
-			var genericPartIndex = type.Name.IndexOf('`');
+			var genericPartIndex = type.Name.IndexOf('`', StringComparison.Ordinal);
 			if (genericPartIndex <= 0)
 			{
 				builder.Append(type.Name);

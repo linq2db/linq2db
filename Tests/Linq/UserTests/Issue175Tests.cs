@@ -23,14 +23,12 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q = from c in db.GetTable<Child>()
-						join p in db.GetTable<Parent>() on c.ParentID equals p.ParentID
-						select c;
+			using var db = GetDataContext(context);
+			var q = from c in db.GetTable<Child>()
+					join p in db.GetTable<Parent>() on c.ParentID equals p.ParentID
+					select c;
 
-				Assert.That(q, Is.Not.Empty);
-			}
+			Assert.That(q, Is.Not.Empty);
 		}
 	}
 }

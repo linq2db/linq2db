@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.Internal.SqlQuery
+namespace LinqToDB.Internal.SqlQuery
 {
 	public enum SqlTableType
 	{
@@ -13,6 +13,6 @@
 		Cte,
 		RawSql,
 		MergeSource,
-		Values
+		Values,
 	}
 }

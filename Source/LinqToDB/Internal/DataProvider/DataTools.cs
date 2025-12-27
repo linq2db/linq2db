@@ -22,7 +22,7 @@ namespace LinqToDB.Internal.DataProvider
 			if (str == null)
 				return str;
 
-			var nextIndex = str.IndexOf('[');
+			var nextIndex = str.IndexOf('[', StringComparison.Ordinal);
 			if (nextIndex < 0)
 				return str;
 
@@ -32,7 +32,7 @@ namespace LinqToDB.Internal.DataProvider
 			while (nextIndex >= 0)
 			{
 				if (nextIndex != 0)
-					newStr.Value.Append(str.Substring(lastIndex, nextIndex - lastIndex));
+					newStr.Value.Append(str.AsSpan(lastIndex, nextIndex - lastIndex));
 
 				lastIndex = nextIndex;
 
@@ -51,7 +51,7 @@ namespace LinqToDB.Internal.DataProvider
 
 			}
 
-			newStr.Value.Append(str.Substring(lastIndex + 1));
+			newStr.Value.Append(str.AsSpan(lastIndex + 1));
 			return newStr.Value.ToString();
 		}
 
@@ -195,7 +195,7 @@ namespace LinqToDB.Internal.DataProvider
 			}
 		}
 
-		public static Expression<Func<DbDataReader, int, string>> GetCharExpression = (dr, i) => GetCharFromString(dr.GetString(i));
+		internal static readonly Expression<Func<DbDataReader, int, string>> GetCharExpression = (dr, i) => GetCharFromString(dr.GetString(i));
 
 		private static string GetCharFromString(string str)
 		{
@@ -215,7 +215,7 @@ namespace LinqToDB.Internal.DataProvider
 		{
 			databaseName = databaseName.Trim();
 
-			if (!databaseName.ToLowerInvariant().EndsWith(extension))
+			if (!databaseName.EndsWith(extension, StringComparison.OrdinalIgnoreCase))
 				databaseName += extension;
 
 			if (File.Exists(databaseName))
@@ -238,7 +238,7 @@ namespace LinqToDB.Internal.DataProvider
 			}
 			else
 			{
-				if (!databaseName.ToLowerInvariant().EndsWith(extension))
+				if (!databaseName.ToLowerInvariant().EndsWith(extension, StringComparison.Ordinal))
 				{
 					databaseName += extension;
 

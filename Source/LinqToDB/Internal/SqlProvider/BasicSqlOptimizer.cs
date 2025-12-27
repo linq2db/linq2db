@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 using LinqToDB;
@@ -161,7 +162,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (path.Count > 2)
 				return false;
 
-			var result = path.All(e =>
+			var result = path.TrueForAll(e =>
 			{
 				return e switch
 				{
@@ -664,7 +665,7 @@ namespace LinqToDB.Internal.SqlProvider
 									resultExpression = field;
 									if (field.Table != originalTable)
 									{
-										var newField = (originalTable as SqlTable)?.Fields.FirstOrDefault(f => f.PhysicalName == field.PhysicalName);
+										var newField = (originalTable as SqlTable)?.Fields.Find(f => string.Equals(f.PhysicalName, field.PhysicalName, StringComparison.Ordinal));
 										if (newField != null)
 										{
 											resultExpression = newField;
@@ -877,7 +878,7 @@ namespace LinqToDB.Internal.SqlProvider
 								return idx;
 							});
 
-						var changed = ctx.WriteableValue || newExpr != expr.Expr;
+						var changed = ctx.WriteableValue || !string.Equals(newExpr, expr.Expr, StringComparison.Ordinal);
 
 						if (changed)
 							newExpression = new SqlExpression(expr.Type, newExpr, expr.Precedence, expr.Flags, expr.NullabilityType, null, newExpressions.ToArray());
@@ -966,7 +967,7 @@ namespace LinqToDB.Internal.SqlProvider
 				var ts = query.From.Tables[i];
 				if (ts.Source == table)
 				{
-					if (!ts.Joins.All(j => j.JoinType is JoinType.Inner or JoinType.Cross))
+					if (!ts.Joins.TrueForAll(j => j.JoinType is JoinType.Inner or JoinType.Cross))
 						return false;
 						
 					source = ts;
@@ -1212,20 +1213,12 @@ namespace LinqToDB.Internal.SqlProvider
 
 				var newUpdateStatement = new SqlUpdateStatement(sql);
 
-				if (clonedQuery == null)
-					clonedQuery = CloneQuery(updateStatement.SelectQuery, null, out replaceTree);
+				clonedQuery ??= CloneQuery(updateStatement.SelectQuery, null, out replaceTree);
 
-				SqlTable? tableToCompare = null;
 				if (replaceTree!.TryGetValue(updateStatement.Update.Table!, out var newTable))
 				{
-					tableToCompare = (SqlTable)newTable;
-				}
-
-				if (tableToCompare != null)
-				{
 					replaceTree = CorrectReplaceTree(replaceTree, updateStatement.Update.Table);
-
-					ApplyUpdateTableComparison(clonedQuery, updateStatement.Update, tableToCompare, dataOptions);
+					ApplyUpdateTableComparison(clonedQuery, updateStatement.Update, (SqlTable)newTable, dataOptions);
 				}
 
 				CorrectUpdateSetters(updateStatement);
@@ -1793,12 +1786,12 @@ namespace LinqToDB.Internal.SqlProvider
 
 				if (supportsParameter)
 				{
-					if (takeExpr.ElementType != QueryElementType.SqlParameter && takeExpr.ElementType != QueryElementType.SqlValue)
+					if (takeExpr.ElementType is not QueryElementType.SqlParameter and not QueryElementType.SqlValue)
 					{
 						var takeValue = takeExpr.EvaluateExpression(optimizationContext.EvaluationContext)!;
 						var takeParameter = new SqlParameter(new DbDataType(takeValue.GetType()), "take", takeValue)
 						{
-							IsQueryParameter = dataOptions.LinqOptions.ParameterizeTakeSkip && !QueryHelper.NeedParameterInlining(takeExpr)
+							IsQueryParameter = dataOptions.LinqOptions.ParameterizeTakeSkip && !QueryHelper.NeedParameterInlining(takeExpr),
 						};
 						takeExpr = takeParameter;
 					}
@@ -1814,12 +1807,12 @@ namespace LinqToDB.Internal.SqlProvider
 
 				if (supportsParameter)
 				{
-					if (skipExpr.ElementType != QueryElementType.SqlParameter && skipExpr.ElementType != QueryElementType.SqlValue)
+					if (skipExpr.ElementType is not QueryElementType.SqlParameter and not QueryElementType.SqlValue)
 					{
 						var skipValue = skipExpr.EvaluateExpression(optimizationContext.EvaluationContext)!;
 						var skipParameter = new SqlParameter(new DbDataType(skipValue.GetType()), "skip", skipValue)
 						{
-							IsQueryParameter = dataOptions.LinqOptions.ParameterizeTakeSkip && !QueryHelper.NeedParameterInlining(skipExpr)
+							IsQueryParameter = dataOptions.LinqOptions.ParameterizeTakeSkip && !QueryHelper.NeedParameterInlining(skipExpr),
 						};
 						skipExpr = skipParameter;
 					}
@@ -1934,7 +1927,7 @@ namespace LinqToDB.Internal.SqlProvider
 						orderByItems = context.supportsEmptyOrderBy ? [] : [new SqlOrderByItem(new SqlFragment("(SELECT NULL)"), false, false)];
 
 					var orderBy = string.Join(", ",
-						orderByItems.Select(static (oi, i) => oi.IsDescending ? FormattableString.Invariant($"{{{i}}} DESC") : FormattableString.Invariant($"{{{i}}}")));
+						orderByItems.Select(static (oi, i) => oi.IsDescending ? string.Create(CultureInfo.InvariantCulture, $"{{{i}}} DESC") : string.Create(CultureInfo.InvariantCulture, $"{{{i}}}")));
 
 					var parameters = orderByItems.Select(static oi => oi.Expression).ToArray();
 
@@ -2017,7 +2010,7 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						// if multitable query has joins, we need to move tables to subquery and left joins on the current level
 						//
-						if (sqlQuery.From.Tables.Any(t => t.Joins.Count > 0))
+						if (sqlQuery.From.Tables.Exists(t => t.Joins.Count > 0))
 						{
 							var sub = new SelectQuery { DoNotRemove = true };
 
@@ -2039,7 +2032,7 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						var allJoins = sqlQuery.From.Tables.SelectMany(t => t.Joins).ToList();
 
-						if (allJoins.Any(j => j.JoinType == JoinType.Cross) && allJoins.Any(j => j.JoinType != JoinType.Cross))
+						if (allJoins.Exists(j => j.JoinType == JoinType.Cross) && allJoins.Exists(j => j.JoinType != JoinType.Cross))
 						{
 							var sub = new SelectQuery { DoNotRemove = true };
 

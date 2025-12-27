@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Expressions;
@@ -48,7 +48,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						SqlJoinType.Left  => JoinType.Left,
 						SqlJoinType.Right => JoinType.Right,
 						SqlJoinType.Full  => JoinType.Full,
-						_                 => throw new InvalidOperationException($"Unexpected join type: {(SqlJoinType)builder.EvaluateExpression(methodCall.Arguments[1])!}")
+						_                 => throw new InvalidOperationException($"Unexpected join type: {(SqlJoinType)builder.EvaluateExpression(methodCall.Arguments[1])!}"),
 					};
 					break;
 			}

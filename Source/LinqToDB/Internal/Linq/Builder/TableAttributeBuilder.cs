@@ -25,8 +25,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var table    = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
-			var value = methodCall.Arguments.Count == 1 && methodCall.Method.Name == nameof(TableExtensions.IsTemporary)
-				? true
+			var value = methodCall.Arguments.Count == 1 && string.Equals(methodCall.Method.Name, nameof(TableExtensions.IsTemporary), System.StringComparison.Ordinal) ? true
 				: builder.EvaluateExpression(methodCall.Arguments[1]);
 
 			switch (methodCall.Method.Name)

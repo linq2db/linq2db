@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -74,12 +75,12 @@ namespace LinqToDB.Internal.Linq
 					if (columnIndex != null)
 					{
 						// test IsDBNull method by-name to support overrides
-						if (call.Object != null && typeof(DbDataReader).IsAssignableFrom(call.Object.Type) && call.Method.Name == nameof(DbDataReader.IsDBNull))
+						if (call.Object != null && typeof(DbDataReader).IsAssignableFrom(call.Object.Type) && string.Equals(call.Method.Name, nameof(DbDataReader.IsDBNull), StringComparison.Ordinal))
 						{
 							var index = columnIndex.Value * 2;
 							if (context.NewVariables[index] == null)
 							{
-								var variable                       = Expression.Variable(typeof(bool), FormattableString.Invariant($"is_null_{columnIndex}"));
+								var variable                       = Expression.Variable(typeof(bool), string.Create(CultureInfo.InvariantCulture, $"is_null_{columnIndex}"));
 								context.NewVariables[index]        = variable;
 								context.Replacements[index]        = variable;
 								context.InsertedExpressions[index] = Expression.Assign(variable, call);
@@ -100,7 +101,7 @@ namespace LinqToDB.Internal.Linq
 								{
 									// no IsDBNull call: column is not nullable
 									// (also could be a bad expression)
-									variable                           = Expression.Variable(type, FormattableString.Invariant($"get_value_{columnIndex}"));
+									variable                           = Expression.Variable(type, string.Create(CultureInfo.InvariantCulture, $"get_value_{columnIndex}"));
 									context.InsertedExpressions[index] = Expression.Assign(variable, Expression.Convert(call, type));
 								}
 								else
@@ -112,7 +113,7 @@ namespace LinqToDB.Internal.Linq
 										context.IsNullableStruct[columnIndex.Value] = true;
 									}
 
-									variable                   = Expression.Variable(type, FormattableString.Invariant($"get_value_{columnIndex}"));
+									variable                   = Expression.Variable(type, string.Create(CultureInfo.InvariantCulture, $"get_value_{columnIndex}"));
 									context.InsertedExpressions[index] = Expression.Assign(
 										variable,
 										Expression.Condition(
@@ -144,7 +145,7 @@ namespace LinqToDB.Internal.Linq
 
 						if (context.NewVariables[index] == null)
 						{
-							context.NewVariables[index] = Expression.Variable(typeof(object), FormattableString.Invariant($"get_value_{columnIndex}"));
+							context.NewVariables[index] = Expression.Variable(typeof(object), string.Create(CultureInfo.InvariantCulture, $"get_value_{columnIndex}"));
 							if (context.SlowColumnTypes == null)
 							{
 								context.SlowColumnTypes = new Dictionary<int, Tuple<ConvertFromDataReaderExpression.ColumnReader, ISet<Type>>>();
@@ -196,7 +197,7 @@ namespace LinqToDB.Internal.Linq
 				}
 
 				return e;
-			};
+			}
 
 			var ctx = new OptimizeMappingExpressionForSequentialAccessContext(fieldCount);
 
@@ -243,7 +244,7 @@ namespace LinqToDB.Internal.Linq
 						if (block.Expressions[skip] is BinaryExpression binary
 							&& binary.NodeType == ExpressionType.Assign
 							&& binary.Left is ParameterExpression pe
-							&& pe.Name == "ldr")
+							&& string.Equals(pe.Name, "ldr", StringComparison.Ordinal))
 						{
 							found = true;
 							break;
@@ -317,12 +318,12 @@ namespace LinqToDB.Internal.Linq
 						// this is currently how we detect method that we must process
 						if (idx != context.ColumnIndex)
 						{
-							context.FailMessage = FormattableString.Invariant($"Expected column index: {context.ColumnIndex}, but found {idx}");
+							context.FailMessage = string.Create(CultureInfo.InvariantCulture, $"Expected column index: {context.ColumnIndex}, but found {idx}");
 							return e;
 						}
 
 						// test IsDBNull method by-name to support overrides
-						if (call.Method.Name == nameof(IDataReader.IsDBNull))
+						if (string.Equals(call.Method.Name, nameof(IDataReader.IsDBNull), StringComparison.Ordinal))
 							return context.IsNullParameter;
 						else // otherwise we treat it as Get*Value method (as we already extracted index without errors for it)
 							return call.Type != context.RawValueParameter.Type ? Expression.Convert(context.RawValueParameter, call.Type) : context.RawValueParameter;
@@ -378,11 +379,11 @@ namespace LinqToDB.Internal.Linq
 					{
 						if (idx != context.ColumnIndex)
 						{
-							context.FailMessage = FormattableString.Invariant($"Expected column index: {context.ColumnIndex}, but found {idx}");
+							context.FailMessage = string.Create(CultureInfo.InvariantCulture, $"Expected column index: {context.ColumnIndex}, but found {idx}");
 							return;
 						}
 
-						if (call.Method.Name != nameof(DbDataReader.IsDBNull))
+						if (!string.Equals(call.Method.Name, nameof(DbDataReader.IsDBNull), StringComparison.Ordinal))
 						{
 							if (context.RawCall == null)
 								context.RawCall = call;

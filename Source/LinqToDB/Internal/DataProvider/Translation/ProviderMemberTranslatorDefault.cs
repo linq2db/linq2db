@@ -139,7 +139,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			translated = null;
 
-			if (methodCall.Object != null && methodCall.Method.Name == nameof(ToString))
+			if (methodCall.Object != null && string.Equals(methodCall.Method.Name, nameof(ToString), StringComparison.Ordinal))
 			{
 				var parameters = methodCall.Method.GetParameters();
 				if (parameters.Length > 1)
@@ -184,7 +184,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (methodCall.Method.DeclaringType != typeof(Sql))
 				return false;
 
-			if (methodCall.Method.Name != nameof(Sql.Convert))
+			if (!string.Equals(methodCall.Method.Name, nameof(Sql.Convert), StringComparison.Ordinal))
 				return false;
 
 			if (methodCall.Arguments.Count == 1)
@@ -220,7 +220,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (methodCall.Method.DeclaringType != typeof(Convert))
 				return false;
 
-			if (methodCall.Method.Name != nameof(Convert.ToBoolean))
+			if (!string.Equals(methodCall.Method.Name, nameof(Convert.ToBoolean), StringComparison.Ordinal))
 				return false;
 
 			if (methodCall.Arguments.Count != 1)
@@ -249,7 +249,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (nullableType == null || !typeof(Nullable<>).IsSameOrParentOf(nullableType))
 				return false;
 
-			if (methodCall.Method.Name != nameof(Nullable<>.GetValueOrDefault))
+			if (!string.Equals(methodCall.Method.Name, nameof(Nullable<>.GetValueOrDefault), StringComparison.Ordinal))
 				return false;
 
 			var argumentPlaceholder = TranslateNoRequiredObjectExpression(translationContext, methodCall.Object);

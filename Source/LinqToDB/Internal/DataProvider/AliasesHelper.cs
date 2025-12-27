@@ -57,7 +57,7 @@ namespace LinqToDB.Internal.DataProvider
 						ts =>
 						{
 							var a = GetCurrentAlias(ts);
-							return string.IsNullOrEmpty(a) ? "t1" : a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
+							return string.IsNullOrEmpty(a) ? "t1" : a + (a!.EndsWith('_') ? string.Empty : "_") + "1";
 						},
 						StringComparer.OrdinalIgnoreCase);
 				}
@@ -116,7 +116,7 @@ namespace LinqToDB.Internal.DataProvider
 			bool IsValidAlias(string identifier)
 			{
 				var corrected = _identifierService.CorrectAlias(identifier);
-				if (corrected != identifier)
+				if (!string.Equals(corrected, identifier, StringComparison.Ordinal))
 					return true;
 
 				if (ReservedWords.IsReserved(identifier))
@@ -143,7 +143,7 @@ namespace LinqToDB.Internal.DataProvider
 						var a = TruncateAlias(f.PhysicalName);
 						return string.IsNullOrEmpty(a)
 							? "c1"
-							: a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
+							: a + (a!.EndsWith('_') ? string.Empty : "_") + "1";
 					},
 					StringComparer.OrdinalIgnoreCase);
 
@@ -178,7 +178,7 @@ namespace LinqToDB.Internal.DataProvider
 						var a = TruncateAlias(f.PhysicalName);
 						return string.IsNullOrEmpty(a)
 							? "f1"
-							: a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
+							: a + (a!.EndsWith('_') ? string.Empty : "_") + "1";
 					},
 					StringComparer.OrdinalIgnoreCase);
 
@@ -219,16 +219,9 @@ namespace LinqToDB.Internal.DataProvider
 					for (int i = 0; i < element.Fields.Count; i++)
 					{
 						var field    = element.Fields[i];
-						var cteField = element.Cte.Fields.FirstOrDefault(f => f.Name == field.PhysicalName);
-						if (cteField != null)
-						{
-							if (field.PhysicalName != cteField.PhysicalName)
-								field.PhysicalName = cteField.PhysicalName;
-						}
-						else
-						{
-
-						}
+						var cteField = element.Cte.Fields.Find(f => string.Equals(f.Name, field.PhysicalName, StringComparison.Ordinal));
+						if (cteField != null && !string.Equals(field.PhysicalName, cteField.PhysicalName, StringComparison.Ordinal))
+							field.PhysicalName = cteField.PhysicalName;
 					}
 				}
 
@@ -250,10 +243,10 @@ namespace LinqToDB.Internal.DataProvider
 			{
 				base.VisitSqlQuery(selectQuery);
 
-				if (selectQuery.DoNotSetAliases == false && selectQuery.Select.Columns.Count > 0)
+				if (selectQuery is { DoNotSetAliases: false, Select.Columns.Count: > 0 })
 				{
 					Utils.MakeUniqueNames(
-						selectQuery.Select.Columns.Where(c => c.Alias != "*"),
+						selectQuery.Select.Columns.Where(c => !string.Equals(c.Alias, "*", StringComparison.Ordinal)),
 						null,
 						(n, a) => IsValidAlias(n),
 						c => TruncateAlias(c.Alias ?? string.Empty),
@@ -267,7 +260,7 @@ namespace LinqToDB.Internal.DataProvider
 							var a = TruncateAlias(c.Alias ?? string.Empty);
 							return string.IsNullOrEmpty(a)
 								? "c1"
-								: a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
+								: a + (a!.EndsWith('_') ? string.Empty : "_") + "1";
 						},
 						StringComparer.OrdinalIgnoreCase);
 

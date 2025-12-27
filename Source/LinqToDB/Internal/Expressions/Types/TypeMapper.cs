@@ -27,7 +27,7 @@ namespace LinqToDB.Internal.Expressions.Types
 		private static readonly Type[] _wrapperConstructorParameters2 = [typeof(object), typeof(Delegate[])];
 
 		// [type name] = originalType
-		private readonly IDictionary<string, Type>              _types                    = new Dictionary<string, Type>();
+		private readonly IDictionary<string, Type>              _types                    = new Dictionary<string, Type>(StringComparer.Ordinal);
 
 		// [wrapperType] = originalType?
 		readonly Dictionary<Type, Type?>                        _typeMappingCache         = new ();
@@ -56,8 +56,8 @@ namespace LinqToDB.Internal.Expressions.Types
 
 			var wrapperAttr = wrapperType.GetAttribute<WrapperAttribute>();
 
-			if ((wrapperAttr?.TypeName ?? wrapperType.Name) != originalType.Name)
-				throw new LinqToDBException($"Original and wraped types should have same type name. {wrapperType.Name} != {originalType.Name}");
+			if (!string.Equals(wrapperAttr?.TypeName ?? wrapperType.Name, originalType.Name, StringComparison.Ordinal))
+				throw new LinqToDBException($"Original and wrapped types should have same type name. {wrapperType.Name} != {originalType.Name}");
 
 			var typeName = originalType.FullName ?? originalType.Name;
 			if (_types.ContainsKey(typeName))
@@ -96,8 +96,8 @@ namespace LinqToDB.Internal.Expressions.Types
 			if (baseType != Enum.GetUnderlyingType(originalType))
 				throw new LinqToDBException($"Enums {wrapperType} and {originalType} have different base types: {baseType} vs {Enum.GetUnderlyingType(originalType)}");
 
-			var wrapperValues  = Enum.GetValues(wrapperType) .OfType<object>().Distinct().ToDictionary(v => string.Format(CultureInfo.InvariantCulture, "{0}", v), _ => _);
-			var originalValues = Enum.GetValues(originalType).OfType<object>().Distinct().ToDictionary(v => string.Format(CultureInfo.InvariantCulture, "{0}", v), _ => _);
+			var wrapperValues  = Enum.GetValues(wrapperType) .OfType<object>().Distinct().ToDictionary(v => string.Format(CultureInfo.InvariantCulture, "{0}", v), _ => _, StringComparer.Ordinal);
+			var originalValues = Enum.GetValues(originalType).OfType<object>().Distinct().ToDictionary(v => string.Format(CultureInfo.InvariantCulture, "{0}", v), _ => _, StringComparer.Ordinal);
 
 			var hasCommonMembers   = false;
 			var hasDifferentValues = false;
@@ -530,9 +530,9 @@ namespace LinqToDB.Internal.Expressions.Types
 
 							// other cases?
 						}
-					}
 
-					break;
+						break;
+					}
 
 					case ExpressionType.Convert        :
 					case ExpressionType.ConvertChecked :
@@ -707,19 +707,16 @@ namespace LinqToDB.Internal.Expressions.Types
 									switch (b.BindingType)
 									{
 										case MemberBindingType.Assignment:
-											{
-												var mab = (MemberAssignment)b;
-												return Expression.Bind(ReplaceMember(mab.Member, replacement),
-													ReplaceTypes(mab.Expression, context)!);
-											}
+										{
+											var mab = (MemberAssignment)b;
+											return Expression.Bind(ReplaceMember(mab.Member, replacement),
+												ReplaceTypes(mab.Expression, context)!);
+										}
 										case MemberBindingType.MemberBinding:
-											{
-												throw new NotImplementedException();
-											}
 										case MemberBindingType.ListBinding:
-											{
-												throw new NotImplementedException();
-											}
+										{
+											throw new NotSupportedException();
+										}
 										default:
 											throw new InvalidOperationException($"Unexpected binding type: {b.BindingType}");
 									}
@@ -1027,7 +1024,7 @@ namespace LinqToDB.Internal.Expressions.Types
 
 		#region Setters
 
-		public class MemberBuilder<T, TV>
+		public sealed class MemberBuilder<T, TV>
 		{
 			private readonly TypeMapper _mapper;
 			private readonly Expression<Func<T, TV>> _memberExpression;
@@ -1106,7 +1103,7 @@ namespace LinqToDB.Internal.Expressions.Types
 			}
 		}
 
-		public class TypeBuilder<T>
+		public sealed class TypeBuilder<T>
 		{
 			private readonly TypeMapper _mapper;
 

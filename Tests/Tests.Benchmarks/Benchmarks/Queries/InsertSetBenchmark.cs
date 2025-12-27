@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 using BenchmarkDotNet.Attributes;
@@ -25,27 +26,25 @@ namespace LinqToDB.Benchmarks.Queries
 			_data = Enumerable.Range(0, 1000).Select(_ => new CreditCard()
 			{
 				CreditCardID = _,
-				CardNumber   = $"card #{_}",
-				CardType     = $"card type {_}",
+				CardNumber   = string.Create(CultureInfo.InvariantCulture, $"card #{_}"),
+				CardType     = string.Create(CultureInfo.InvariantCulture, $"card type {_}"),
 				ExpMonth     = (byte)(_ % 12),
 				ExpYear      = (short)(_ % 1000),
-				ModifiedDate = DateTime.Now
+				ModifiedDate = DateTime.Now,
 
 			}).ToArray();
 
 			_result = new QueryResult()
 			{
-				Return = _batchSize
+				Return = _batchSize,
 			};
 		}
 
 		[Benchmark(Baseline = true)]
 		public BulkCopyRowsCopied Test()
 		{
-			using (var db = new Db(_provider, _result))
-			{
-				return db.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows, MaxBatchSize = _batchSize }, _data);
-			}
+			using var db = new Db(_provider, _result);
+			return db.BulkCopy(new BulkCopyOptions { BulkCopyType = BulkCopyType.MultipleRows, MaxBatchSize = _batchSize }, _data);
 		}
 	}
 }

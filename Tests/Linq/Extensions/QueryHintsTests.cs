@@ -16,44 +16,42 @@ namespace Tests.Extensions
 		[Test]
 		public void Comment([DataSources(TestProvName.AllAccess, TestProvName.AllMySql)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			db.QueryHints.Add("---");
+			db.NextQueryHints.Add("----");
+
+			var q = db.Parent.Select(p => p);
+
+			var str = q.ToSqlQuery().Sql;
+
+			BaselinesManager.LogQuery(str);
+
+			Assert.That(str, Contains.Substring("---"));
+			Assert.That(str, Contains.Substring("----"));
+
+			var list = q.ToList();
+
+			var ctx = db as DataConnection;
+
+			if (ctx != null)
 			{
-				db.QueryHints.Add("---");
-				db.NextQueryHints.Add("----");
+				Assert.That(ctx.LastQuery, Contains.Substring("---"));
+				Assert.That(ctx.LastQuery, Contains.Substring("----"));
+			}
 
-				var q = db.Parent.Select(p => p);
+			str = q.ToSqlQuery().Sql;
 
-				var str = q.ToSqlQuery().Sql;
+			BaselinesManager.LogQuery(str);
 
-				BaselinesManager.LogQuery(str);
+			Assert.That(str, Contains.Substring("---"));
+			Assert.That(str, Is.Not.Contains("----"));
 
-				Assert.That(str, Contains.Substring("---"));
-				Assert.That(str, Contains.Substring("----"));
+			list = q.ToList();
 
-				var list = q.ToList();
-
-				var ctx = db as DataConnection;
-
-				if (ctx != null)
-				{
-					Assert.That(ctx.LastQuery, Contains.Substring("---"));
-					Assert.That(ctx.LastQuery, Contains.Substring("----"));
-				}
-
-				str = q.ToSqlQuery().Sql;
-
-				BaselinesManager.LogQuery(str);
-
-				Assert.That(str, Contains.Substring("---"));
-				Assert.That(str, Is.Not.Contains("----"));
-
-				list = q.ToList();
-
-				if (ctx != null)
-				{
-					Assert.That(ctx.LastQuery, Contains.Substring("---"));
-					Assert.That(ctx.LastQuery, Is.Not.Contains("----"));
-				}
+			if (ctx != null)
+			{
+				Assert.That(ctx.LastQuery, Contains.Substring("---"));
+				Assert.That(ctx.LastQuery, Is.Not.Contains("----"));
 			}
 		}
 

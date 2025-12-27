@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -27,7 +27,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				"ElementAtOrDefaultAsync" => MethodKind.ElementAtOrDefault,
 				"ElementAt"               => MethodKind.ElementAt,
 				"ElementAtAsync"          => MethodKind.ElementAt,
-				_ => throw new ArgumentOutOfRangeException(nameof(methodName), methodName, "Not supported method.")
+				_ => throw new ArgumentOutOfRangeException(nameof(methodName), methodName, "Not supported method."),
 			};
 		}
 

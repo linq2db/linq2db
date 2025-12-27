@@ -136,7 +136,7 @@ namespace LinqToDB.Internal.SqlQuery
 			if (Predicates.Count > 1 && IsAnd)
 				return false;
 
-			return Predicates.All(p =>
+			return Predicates.TrueForAll(p =>
 			{
 				if (p is not SqlSearchCondition)
 					return false;
@@ -204,7 +204,7 @@ namespace LinqToDB.Internal.SqlQuery
 				nullability = new NullabilityContext(nullability, visitor.Value.NotNullOverrides);
 		}
 
-			return Predicates.Any(predicate => predicate.CanBeUnknown(nullability, withoutUnknownErased));
+			return Predicates.Exists(predicate => predicate.CanBeUnknown(nullability, withoutUnknownErased));
 		}
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)

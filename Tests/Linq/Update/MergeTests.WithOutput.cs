@@ -22,195 +22,182 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeWithOutputFull([IncludeDataSources(true, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var outputRows = table
+			var outputRows = table
 					.Merge()
 					.Using(GetSource1(db).Where(_ => _.Id == 5))
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.MergeWithOutput((a, deleted, inserted) => new {a, deleted, inserted});
 
-				var result = outputRows.ToArray();
+			var result = outputRows.ToArray();
 
-				result.Length.ShouldBe(1);
+			result.Length.ShouldBe(1);
 
-				var record = result[0];
+			var record = result[0];
 
-				record.a.ShouldBe("INSERT");
-				record.deleted.Id.ShouldBe(0);
+			record.a.ShouldBe("INSERT");
+			record.deleted.Id.ShouldBe(0);
 
-				record.inserted.Id.ShouldBe(5);
-				record.inserted.Field1.ShouldBe(10);
-			}
+			record.inserted.Id.ShouldBe(5);
+			record.inserted.Field1.ShouldBe(10);
 		}
 
 		[Test]
 		public void MergeWithOutputWithoutAction([IncludeDataSources(true, OUTPUT_WITH_HISTORY)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var outputRows = table
+			var outputRows = table
 					.Merge()
 					.Using(GetSource1(db).Where(_ => _.Id == 5))
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.MergeWithOutput((a, deleted, inserted) => new { deleted, inserted});
 
-				var result = outputRows.ToArray();
+			var result = outputRows.ToArray();
 
-				result.Length.ShouldBe(1);
+			result.Length.ShouldBe(1);
 
-				var record = result[0];
+			var record = result[0];
 
-				record.deleted.Id.ShouldBe(0);
+			record.deleted.Id.ShouldBe(0);
 
-				record.inserted.Id.ShouldBe(5);
-				record.inserted.Field1.ShouldBe(10);
-			}
+			record.inserted.Id.ShouldBe(5);
+			record.inserted.Field1.ShouldBe(10);
 		}
 
 		[Test]
 		public async Task MergeWithOutputFullAsync([IncludeDataSources(true, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var outputRows = table
+			var outputRows = table
 					.Merge()
 					.Using(GetSource1(db).Where(_ => _.Id == 5))
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.MergeWithOutputAsync((a, deleted, inserted) => new {a, deleted, inserted});
 
-				var cnt = 0;
-				await foreach (var record in outputRows)
-				{
-					cnt++;
+			var cnt = 0;
+			await foreach (var record in outputRows)
+			{
+				cnt++;
 
-					record.a.ShouldBe("INSERT");
-					record.deleted.Id.ShouldBe(0);
+				record.a.ShouldBe("INSERT");
+				record.deleted.Id.ShouldBe(0);
 
-					record.inserted.Id.ShouldBe(5);
-					record.inserted.Field1.ShouldBe(10);
-				}
-
-				Assert.That(cnt, Is.EqualTo(1));
+				record.inserted.Id.ShouldBe(5);
+				record.inserted.Field1.ShouldBe(10);
 			}
+
+			Assert.That(cnt, Is.EqualTo(1));
 		}
 
 		[Test]
 		public async Task MergeWithOutputWithoutActionAsync([IncludeDataSources(true, OUTPUT_WITH_HISTORY)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var outputRows = table
+			var outputRows = table
 					.Merge()
 					.Using(GetSource1(db).Where(_ => _.Id == 5))
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.MergeWithOutputAsync((a, deleted, inserted) => new {deleted, inserted});
 
-				var hasRecord = false;
-				await foreach (var record in outputRows)
-				{
-					Assert.That(hasRecord, Is.False);
-					hasRecord = true;
+			var hasRecord = false;
+			await foreach (var record in outputRows)
+			{
+				Assert.That(hasRecord, Is.False);
+				hasRecord = true;
 
-					record.deleted.Id.ShouldBe(0);
+				record.deleted.Id.ShouldBe(0);
 
-					record.inserted.Id.ShouldBe(5);
-					record.inserted.Field1.ShouldBe(10);
-				}
-
-				Assert.That(hasRecord, Is.True);
+				record.inserted.Id.ShouldBe(5);
+				record.inserted.Field1.ShouldBe(10);
 			}
+
+			Assert.That(hasRecord, Is.True);
 		}
 		
 		[Test]
 		public async Task MergeWithOutputWithoutOldAsync([IncludeDataSources(true, OUTPUT_WITH_ACTION)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var outputRows = table
+			var outputRows = table
 					.Merge()
 					.Using(GetSource1(db).Where(_ => _.Id == 5))
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.MergeWithOutputAsync((a, deleted, inserted) => new {a, inserted});
 
-				var cnt = 0;
-				await foreach (var record in outputRows)
-				{
-					cnt++;
+			var cnt = 0;
+			await foreach (var record in outputRows)
+			{
+				cnt++;
 
-					record.a.ShouldBe("INSERT");
+				record.a.ShouldBe("INSERT");
 
-					record.inserted.Id.ShouldBe(5);
-					record.inserted.Field1.ShouldBe(10);
-				}
-
-				Assert.That(cnt, Is.EqualTo(1));
+				record.inserted.Id.ShouldBe(5);
+				record.inserted.Field1.ShouldBe(10);
 			}
+
+			Assert.That(cnt, Is.EqualTo(1));
 		}
 
 		[Test]
 		public void MergeWithOutputProjected([IncludeDataSources(true, OUTPUT_WITH_ACTION)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var outputRows = table
+			var outputRows = table
 					.Merge()
 					.Using(GetSource1(db).Where(_ => _.Id == 5))
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.MergeWithOutput((a, deleted, inserted) => new {a, inserted.Id});
 
-				var result = outputRows.ToArray();
+			var result = outputRows.ToArray();
 
-				result.Length.ShouldBe(1);
+			result.Length.ShouldBe(1);
 
-				var record = result[0];
+			var record = result[0];
 
-				record.a.ShouldBe("INSERT");
+			record.a.ShouldBe("INSERT");
 
-				record.Id.ShouldBe(5);
-			}
+			record.Id.ShouldBe(5);
 		}
 
 		[Test]
 		public void MergeWithOutputSource([IncludeDataSources(true, OUTPUT_WITH_ACTION)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var outputRows = table
+			var outputRows = table
 					.Merge()
 					.Using(GetSource1(db).Where(_ => _.Id == 5))
 					.OnTargetKey()
@@ -223,28 +210,26 @@ namespace Tests.xUpdate
 						Id = Sql.AsSql(inserted.Id.ToString())
 					});
 
-				var result = outputRows.ToArray();
+			var result = outputRows.ToArray();
 
-				result.Length.ShouldBe(1);
+			result.Length.ShouldBe(1);
 
-				var record = result[0];
+			var record = result[0];
 
-				record.a.ShouldBe("INSERT");
+			record.a.ShouldBe("INSERT");
 
-				record.Id.ShouldBe("5");
-			}
+			record.Id.ShouldBe("5");
 		}
 
 		[Test]
 		public void MergeWithOutputSourceNoAction([IncludeDataSources(true, SIMPLE_OUTPUT)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var outputRows = table
+			var outputRows = table
 					.Merge()
 					.Using(GetSource1(db).Where(_ => _.Id == 5))
 					.OnTargetKey()
@@ -256,26 +241,24 @@ namespace Tests.xUpdate
 						Id = Sql.AsSql(inserted.Id.ToString())
 					});
 
-				var result = outputRows.ToArray();
+			var result = outputRows.ToArray();
 
-				result.Length.ShouldBe(1);
+			result.Length.ShouldBe(1);
 
-				var record = result[0];
+			var record = result[0];
 
-				record.Id.ShouldBe("5");
-			}
+			record.Id.ShouldBe("5");
 		}
 
 		[Test]
 		public void MergeWithOutputFromQuery([IncludeDataSources(true, SIMPLE_OUTPUT)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var outputRows = table
+			var outputRows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -291,39 +274,36 @@ namespace Tests.xUpdate
 						source.Field2
 					});
 
-				var result = outputRows.ToArray();
+			var result = outputRows.ToArray();
 
-				result.Length.ShouldBe(1);
-				var record = result[0];
+			result.Length.ShouldBe(1);
+			var record = result[0];
 
-				record.Field2.ShouldBe(3);
-			}
+			record.Field2.ShouldBe(3);
 		}
 
 		[Test]
 		public void MergeWithOutputProjectedWithoutAction([IncludeDataSources(true, SIMPLE_OUTPUT)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var outputRows = table
+			var outputRows = table
 					.Merge()
 					.Using(GetSource1(db).Where(_ => _.Id == 5))
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.MergeWithOutput((a, deleted, inserted) => new {inserted.Id});
 
-				var result = outputRows.ToArray();
+			var result = outputRows.ToArray();
 
-				result.Length.ShouldBe(1);
+			result.Length.ShouldBe(1);
 
-				var record = result[0];
+			var record = result[0];
 
-				record.Id.ShouldBe(5);
-			}
+			record.Id.ShouldBe(5);
 		}
 
 		sealed class InsertTempTable
@@ -337,15 +317,14 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeWithOutputInto([IncludeDataSources(false, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				using var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
+			using var db = GetDataContext(context);
+			using var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
 
-				PrepareData(db);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var affected = table
+			var affected = table
 					.Merge()
 					.Using(GetSource1(db).Where(_ => _.Id == 5))
 					.OnTargetKey()
@@ -360,33 +339,31 @@ namespace Tests.xUpdate
 						}
 					);
 
-				affected.ShouldBe(1);
+			affected.ShouldBe(1);
 
-				var result = temp.ToArray();
+			var result = temp.ToArray();
 
-				result.Length.ShouldBe(1);
+			result.Length.ShouldBe(1);
 
-				var record = result[0];
+			var record = result[0];
 
-				record.Action.   ShouldBe("INSERT");
-				record.NewId.    ShouldBe(5);
-				record.DeletedId.ShouldBeNull();
-				record.SourceId. ShouldBe(6);
-			}
+			record.Action.ShouldBe("INSERT");
+			record.NewId.ShouldBe(5);
+			record.DeletedId.ShouldBeNull();
+			record.SourceId.ShouldBe(6);
 		}
 		
 		[Test]
 		public async Task MergeWithOutputIntoWithSourceAsync([IncludeDataSources(false, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				using var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
+			using var db = GetDataContext(context);
+			using var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
 
-				PrepareData(db);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var affected = await table
+			var affected = await table
 					.Merge()
 					.Using(GetSource1(db).Where(_ => _.Id == 5))
 					.OnTargetKey()
@@ -401,33 +378,31 @@ namespace Tests.xUpdate
 						}
 					);
 
-				affected.ShouldBe(1);
+			affected.ShouldBe(1);
 
-				var result = temp.ToArray();
+			var result = temp.ToArray();
 
-				result.Length.ShouldBe(1);
+			result.Length.ShouldBe(1);
 
-				var record = result[0];
+			var record = result[0];
 
-				record.Action.   ShouldBe("INSERT");
-				record.NewId.    ShouldBe(5);
-				record.DeletedId.ShouldBeNull();
-				record.SourceId. ShouldBe(6);
-			}
+			record.Action.ShouldBe("INSERT");
+			record.NewId.ShouldBe(5);
+			record.DeletedId.ShouldBeNull();
+			record.SourceId.ShouldBe(6);
 		}
 
 		[Test]
 		public void MergeWithOutputConditionalInto([IncludeDataSources(false, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				using var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
+			using var db = GetDataContext(context);
+			using var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
 
-				PrepareData(db);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var affected = table
+			var affected = table
 					.Merge()
 					.Using(GetSource1(db).Where(_ => _.Id == 5))
 					.OnTargetKey()
@@ -442,33 +417,31 @@ namespace Tests.xUpdate
 						}
 					);
 
-				affected.ShouldBe(1);
+			affected.ShouldBe(1);
 
-				var result = temp.ToArray();
+			var result = temp.ToArray();
 
-				result.Length.ShouldBe(1);
+			result.Length.ShouldBe(1);
 
-				var record = result[0];
+			var record = result[0];
 
-				record.Action.   ShouldBe("Row Inserted");
-				record.NewId.    ShouldBe(5);
-				record.DeletedId.ShouldBeNull();
-				record.SourceId. ShouldBe(6);
-			}
+			record.Action.ShouldBe("Row Inserted");
+			record.NewId.ShouldBe(5);
+			record.DeletedId.ShouldBeNull();
+			record.SourceId.ShouldBe(6);
 		}
 
 		[Test]
 		public void MergeWithOutputIntoTempTable([IncludeDataSources(false, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				using var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable", tableOptions: TableOptions.IsTemporary);
+			using var db = GetDataContext(context);
+			using var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable", tableOptions: TableOptions.IsTemporary);
 
-				PrepareData(db);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var affected = table
+			var affected = table
 					.Merge()
 					.Using(GetSource1(db).Where(_ => _.Id == 5))
 					.OnTargetKey()
@@ -477,37 +450,35 @@ namespace Tests.xUpdate
 						(a, deleted, inserted) => new InsertTempTable { Action = a, NewId = inserted.Id, DeletedId = deleted.Id }
 					);
 
-				affected.ShouldBe(1);
+			affected.ShouldBe(1);
 
-				var result = temp.ToArray();
+			var result = temp.ToArray();
 
-				result.Length.ShouldBe(1);
-				result.Length.ShouldBe(1);
+			result.Length.ShouldBe(1);
+			result.Length.ShouldBe(1);
 
-				var record = result[0];
+			var record = result[0];
 
-				record.Action.ShouldBe("INSERT");
+			record.Action.ShouldBe("INSERT");
 
-				record.NewId.ShouldBe(5);
-				record.DeletedId.ShouldBeNull();
-			}
+			record.NewId.ShouldBe(5);
+			record.DeletedId.ShouldBeNull();
 		}
 		
 		[Test]
 		public void MergeWithOutputIntoTempTableByTableName([IncludeDataSources(false, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				using var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable_42", tableOptions: TableOptions.IsTemporary);
-				var tempRef = db.GetTable<InsertTempTable>()
+			using var db = GetDataContext(context);
+			using var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable_42", tableOptions: TableOptions.IsTemporary);
+			var tempRef = db.GetTable<InsertTempTable>()
 					.TableOptions(TableOptions.IsTemporary)
 					.TableName(temp.TableName);
 
-				PrepareData(db);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var affected = table
+			var affected = table
 					.Merge()
 					.Using(GetSource1(db).Where(_ => _.Id == 5))
 					.OnTargetKey()
@@ -516,33 +487,31 @@ namespace Tests.xUpdate
 						(a, deleted, inserted) => new InsertTempTable { Action = a, NewId = inserted.Id, DeletedId = deleted.Id }
 					);
 
-				affected.ShouldBe(1);
+			affected.ShouldBe(1);
 
-				var result = temp.ToArray();
+			var result = temp.ToArray();
 
-				result.Length.ShouldBe(1);
-				result.Length.ShouldBe(1);
+			result.Length.ShouldBe(1);
+			result.Length.ShouldBe(1);
 
-				var record = result[0];
+			var record = result[0];
 
-				record.Action.ShouldBe("INSERT");
+			record.Action.ShouldBe("INSERT");
 
-				record.NewId.ShouldBe(5);
-				record.DeletedId.ShouldBeNull();
-			}
+			record.NewId.ShouldBe(5);
+			record.DeletedId.ShouldBeNull();
 		}
 
 		[Test]
 		public void MergeWithOutputIntoNonTemp([IncludeDataSources(true, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var temp = db.CreateLocalTable<InsertTempTable>())
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			using var temp = db.CreateLocalTable<InsertTempTable>();
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var affected = table
+			var affected = table
 					.Merge()
 					.Using(GetSource1(db).Where(_ => _.Id == 5))
 					.OnTargetKey()
@@ -551,34 +520,32 @@ namespace Tests.xUpdate
 						(a, deleted, inserted) => new InsertTempTable { Action = a, NewId = inserted.Id, DeletedId = deleted.Id }
 					);
 
-				affected.ShouldBe(1);
+			affected.ShouldBe(1);
 
-				var result = temp.ToArray();
+			var result = temp.ToArray();
 
-				result.Length.ShouldBe(1);
-				result.Length.ShouldBe(1);
+			result.Length.ShouldBe(1);
+			result.Length.ShouldBe(1);
 
-				var record = result[0];
+			var record = result[0];
 
-				record.Action.ShouldBe("INSERT");
+			record.Action.ShouldBe("INSERT");
 
-				record.NewId.ShouldBe(5);
-				record.DeletedId.ShouldBeNull();
-			}
+			record.NewId.ShouldBe(5);
+			record.DeletedId.ShouldBeNull();
 		}
 
 		[Test]
 		public async Task MergeWithOutputIntoAsync([IncludeDataSources(OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				using var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
+			using var db = GetDataContext(context);
+			using var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
 
-				PrepareData(db);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var affected = await table
+			var affected = await table
 					.Merge()
 					.Using(GetSource1(db).Where(_ => _.Id == 5))
 					.OnTargetKey()
@@ -587,37 +554,35 @@ namespace Tests.xUpdate
 						(a, deleted, inserted) => new InsertTempTable { Action = a, NewId = inserted.Id, DeletedId = deleted.Id }
 					);
 
-				affected.ShouldBe(1);
+			affected.ShouldBe(1);
 
-				var result = await temp.ToArrayAsync();
+			var result = await temp.ToArrayAsync();
 
-				result.Length.ShouldBe(1);
-				result.Length.ShouldBe(1);
+			result.Length.ShouldBe(1);
+			result.Length.ShouldBe(1);
 
-				var record = result[0];
+			var record = result[0];
 
-				record.Action.ShouldBe("INSERT");
+			record.Action.ShouldBe("INSERT");
 
-				record.NewId.ShouldBe(5);
-				record.DeletedId.ShouldBeNull();
-			}
+			record.NewId.ShouldBe(5);
+			record.DeletedId.ShouldBeNull();
 		}
 
 		[Test]
 		public async Task MergeWithOutputIntoTempTableByTableNameAsync([IncludeDataSources(OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				using var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable_42");
-				var tempRef = db.GetTable<InsertTempTable>()
+			using var db = GetDataContext(context);
+			using var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable_42");
+			var tempRef = db.GetTable<InsertTempTable>()
 					.TableOptions(TableOptions.IsTemporary)
 					.TableName(temp.TableName);
 
-				PrepareData(db);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var affected = await table
+			var affected = await table
 					.Merge()
 					.Using(GetSource1(db).Where(_ => _.Id == 5))
 					.OnTargetKey()
@@ -626,37 +591,35 @@ namespace Tests.xUpdate
 						(a, deleted, inserted) => new InsertTempTable { Action = a, NewId = inserted.Id, DeletedId = deleted.Id }
 					);
 
-				affected.ShouldBe(1);
+			affected.ShouldBe(1);
 
-				var result = await temp.ToArrayAsync();
+			var result = await temp.ToArrayAsync();
 
-				result.Length.ShouldBe(1);
-				result.Length.ShouldBe(1);
+			result.Length.ShouldBe(1);
+			result.Length.ShouldBe(1);
 
-				var record = result[0];
+			var record = result[0];
 
-				record.Action.ShouldBe("INSERT");
+			record.Action.ShouldBe("INSERT");
 
-				record.NewId.ShouldBe(5);
-				record.DeletedId.ShouldBeNull();
-			}
+			record.NewId.ShouldBe(5);
+			record.DeletedId.ShouldBeNull();
 		}
 
 		[Test]
 		public void MergeWithOutputIntoTempTableByTableNameWithSource([IncludeDataSources(false, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				using var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable_42");
-				var tempRef = db.GetTable<InsertTempTable>()
+			using var db = GetDataContext(context);
+			using var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable_42");
+			var tempRef = db.GetTable<InsertTempTable>()
 					.TableOptions(TableOptions.IsTemporary)
 					.TableName(temp.TableName);
 
-				PrepareData(db);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var affected = table
+			var affected = table
 					.Merge()
 					.Using(GetSource1(db).Where(_ => _.Id == 5))
 					.OnTargetKey()
@@ -671,36 +634,34 @@ namespace Tests.xUpdate
 						}
 					);
 
-				affected.ShouldBe(1);
+			affected.ShouldBe(1);
 
-				var result = temp.ToArray();
+			var result = temp.ToArray();
 
-				result.Length.ShouldBe(1);
+			result.Length.ShouldBe(1);
 
-				var record = result[0];
+			var record = result[0];
 
-				record.Action.ShouldBe("INSERT");
-				record.NewId.ShouldBe(5);
-				record.DeletedId.ShouldBeNull();
-				record.SourceId.ShouldBe(6);
-			}
+			record.Action.ShouldBe("INSERT");
+			record.NewId.ShouldBe(5);
+			record.DeletedId.ShouldBeNull();
+			record.SourceId.ShouldBe(6);
 		}
 
 		[Test]
 		public async Task MergeWithOutputIntoTempTableByTableNameWithSourceAsync([IncludeDataSources(false, OUTPUT_INTO_WITH_ACTION_AND_HISTORY)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				using var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable_42");
-				var tempRef = db.GetTable<InsertTempTable>()
+			using var db = GetDataContext(context);
+			using var temp = db.CreateTempTable<InsertTempTable>("InsertTempTable_42");
+			var tempRef = db.GetTable<InsertTempTable>()
 					.TableOptions(TableOptions.IsTemporary)
 					.TableName(temp.TableName);
 
-				PrepareData(db);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var affected = await table
+			var affected = await table
 					.Merge()
 					.Using(GetSource1(db).Where(_ => _.Id == 5))
 					.OnTargetKey()
@@ -715,97 +676,92 @@ namespace Tests.xUpdate
 						}
 					);
 
-				affected.ShouldBe(1);
+			affected.ShouldBe(1);
 
-				var result = temp.ToArray();
+			var result = temp.ToArray();
 
-				result.Length.ShouldBe(1);
+			result.Length.ShouldBe(1);
 
-				var record = result[0];
+			var record = result[0];
 
-				record.Action.ShouldBe("INSERT");
-				record.NewId.ShouldBe(5);
-				record.DeletedId.ShouldBeNull();
-				record.SourceId.ShouldBe(6);
-			}
+			record.Action.ShouldBe("INSERT");
+			record.NewId.ShouldBe(5);
+			record.DeletedId.ShouldBeNull();
+			record.SourceId.ShouldBe(6);
 		}
 
 		[Test]
 		public void Issue4213Test([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.Person.Where(x => x.FirstName == "unknown").AsCte()
-					.Merge()
-					.Using(db.Child)
-					.On((dest, src) => dest.ID == src.ChildID)
-					.UpdateWhenMatched((dest, temp) => new Model.Person()
-					{
-						MiddleName = "unpdated"
-					})
-					.MergeWithOutput((a, d, i) => i.Gender)
-					.ToArray();
-			}
+			using var db = GetDataContext(context);
+			db.Person.Where(x => x.FirstName == "unknown").AsCte()
+				.Merge()
+				.Using(db.Child)
+				.On((dest, src) => dest.ID == src.ChildID)
+				.UpdateWhenMatched((dest, temp) => new Model.Person()
+				{
+					MiddleName = "unpdated"
+				})
+				.MergeWithOutput((a, d, i) => i.Gender)
+				.ToArray();
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5194")]
 		public void MergeWithOutputAsTupleFactory([IncludeDataSources(true, SIMPLE_OUTPUT)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
 
-				var table = GetTarget(db);
+			PrepareData(db);
 
-				var outputRows = table
-					.Merge()
-					.Using(GetSource1(db).Where(_ => _.Id == 5))
-					.OnTargetKey()
-					.InsertWhenNotMatched()
-					.MergeWithOutput((a, deleted, inserted, source)
-						=> Tuple.Create(
-							source.Field1,
-							Sql.AsSql(source.Field1.ToString()),
-							Sql.AsSql(inserted.Id.ToString())));
+			var table = GetTarget(db);
 
-				var result = outputRows.ToArray();
+			var outputRows = table
+				.Merge()
+				.Using(GetSource1(db).Where(_ => _.Id == 5))
+				.OnTargetKey()
+				.InsertWhenNotMatched()
+				.MergeWithOutput((a, deleted, inserted, source)
+					=> Tuple.Create(
+						source.Field1,
+						Sql.AsSql(source.Field1.ToString()),
+						Sql.AsSql(inserted.Id.ToString())));
 
-				result.Length.ShouldBe(1);
+			var result = outputRows.ToArray();
 
-				var record = result[0];
+			result.Length.ShouldBe(1);
 
-				record.Item3.ShouldBe("5");
-			}
+			var record = result[0];
+
+			record.Item3.ShouldBe("5");
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5194")]
 		public void MergeWithOutputAsTupleConstructor([IncludeDataSources(true, SIMPLE_OUTPUT)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
 
-				var table = GetTarget(db);
+			PrepareData(db);
 
-				var outputRows = table
-					.Merge()
-					.Using(GetSource1(db).Where(_ => _.Id == 5))
-					.OnTargetKey()
-					.InsertWhenNotMatched()
-					.MergeWithOutput((a, deleted, inserted, source)
-						=> new Tuple<int?, string, string>(
-							source.Field1,
-							Sql.AsSql(source.Field1.ToString()!),
-							Sql.AsSql(inserted.Id.ToString())));
+			var table = GetTarget(db);
 
-				var result = outputRows.ToArray();
+			var outputRows = table
+				.Merge()
+				.Using(GetSource1(db).Where(_ => _.Id == 5))
+				.OnTargetKey()
+				.InsertWhenNotMatched()
+				.MergeWithOutput((a, deleted, inserted, source)
+					=> new Tuple<int?, string, string>(
+						source.Field1,
+						Sql.AsSql(source.Field1.ToString()!),
+						Sql.AsSql(inserted.Id.ToString())));
 
-				result.Length.ShouldBe(1);
+			var result = outputRows.ToArray();
 
-				var record = result[0];
+			result.Length.ShouldBe(1);
 
-				record.Item3.ShouldBe("5");
-			}
+			var record = result[0];
+
+			record.Item3.ShouldBe("5");
 		}
 	}
 }

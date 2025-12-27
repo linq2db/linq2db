@@ -20,7 +20,7 @@ namespace LinqToDB.Internal.DataProvider
 			_reservedWords[ProviderName.Ydb]           = _reservedWordsYdb;
 
 			var assembly = typeof(SelectQuery).Assembly;
-			var name = assembly.GetManifestResourceNames().Single(_ => _.EndsWith("ReservedWords.txt"));
+			var name = assembly.GetManifestResourceNames().Single(_ => _.EndsWith("ReservedWords.txt", StringComparison.Ordinal));
 
 			using (var stream = assembly.GetManifestResourceStream(name)!)
 			using (var reader = new StreamReader(stream))
@@ -28,7 +28,7 @@ namespace LinqToDB.Internal.DataProvider
 				string? s;
 				while ((s = reader.ReadLine()) != null)
 				{
-					if (!s.StartsWith("#"))
+					if (!s.StartsWith('#'))
 					{
 						_reservedWordsAll     .Add(s);
 						_reservedWordsInformix.Add(s);
@@ -37,7 +37,7 @@ namespace LinqToDB.Internal.DataProvider
 				}
 			}
 
-			name = assembly.GetManifestResourceNames().Single(_ => _.EndsWith("ReservedWordsPostgres.txt"));
+			name = assembly.GetManifestResourceNames().Single(_ => _.EndsWith("ReservedWordsPostgres.txt", StringComparison.Ordinal));
 
 			using (var stream = assembly.GetManifestResourceStream(name)!)
 			using (var reader = new StreamReader(stream))
@@ -45,7 +45,7 @@ namespace LinqToDB.Internal.DataProvider
 				string? s;
 				while ((s = reader.ReadLine()) != null)
 				{
-					if (!s.StartsWith("#"))
+					if (!s.StartsWith('#'))
 					{
 						_reservedWordsPostgres.Add(s);
 						_reservedWordsAll     .Add(s);
@@ -53,7 +53,7 @@ namespace LinqToDB.Internal.DataProvider
 				}
 			}
 
-			name = assembly.GetManifestResourceNames().Single(_ => _.EndsWith("ReservedWordsOracle.txt"));
+			name = assembly.GetManifestResourceNames().Single(_ => _.EndsWith("ReservedWordsOracle.txt", StringComparison.Ordinal));
 
 			using (var stream = assembly.GetManifestResourceStream(name)!)
 			using (var reader = new StreamReader(stream))
@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.DataProvider
 				string? s;
 				while ((s = reader.ReadLine()) != null)
 				{
-					if(!s.StartsWith("#"))
+					if(!s.StartsWith('#'))
 					{
 						_reservedWordsOracle.Add(s);
 						_reservedWordsAll   .Add(s);
@@ -69,7 +69,7 @@ namespace LinqToDB.Internal.DataProvider
 				}
 			}
 
-			name = assembly.GetManifestResourceNames().Single(_ => _.EndsWith("ReservedWordsFirebird.txt"));
+			name = assembly.GetManifestResourceNames().Single(_ => _.EndsWith("ReservedWordsFirebird.txt", StringComparison.Ordinal));
 
 			using (var stream = assembly.GetManifestResourceStream(name)!)
 			using (var reader = new StreamReader(stream))
@@ -77,7 +77,7 @@ namespace LinqToDB.Internal.DataProvider
 				string? s;
 				while ((s = reader.ReadLine()) != null)
 				{
-					if (!s.StartsWith("#"))
+					if (!s.StartsWith('#'))
 					{
 						_reservedWordsFirebird.Add(s);
 						_reservedWordsAll     .Add(s);

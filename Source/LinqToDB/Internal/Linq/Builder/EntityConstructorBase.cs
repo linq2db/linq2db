@@ -68,7 +68,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						continue;
 
 					Expression me;
-					if (column.MemberName.Contains('.') && !column.MemberInfo.Name.Contains("."))
+					if (column.MemberName.Contains('.', StringComparison.Ordinal) && !column.MemberInfo.Name.Contains('.', StringComparison.Ordinal))
 					{
 						hasNested = true;
 					}
@@ -93,18 +93,18 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (level > 0 || hasNested)
 			{
-				var processed = new HashSet<string>();
+				var processed = new HashSet<string>(StringComparer.Ordinal);
 				foreach (var column in columns)
 				{
 					if (column.SkipOnEntityFetch)
 						continue;
 
-					if (!column.MemberName.Contains('.'))
+					if (!column.MemberName.Contains('.', StringComparison.Ordinal))
 						continue;
 
 					// explicit interface implementation
 					//
-					if (column.MemberInfo.Name.Contains("."))
+					if (column.MemberInfo.Name.Contains('.', StringComparison.Ordinal))
 						continue;
 
 					var names = column.MemberName.Split('.');
@@ -118,7 +118,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (names.Length - 1 > level)
 					{
-						var propPath = string.Join(".", names.Take(level + 1));
+						var propPath = string.JoinStrings('.', names.Take(level + 1));
 						if (!processed.Add(propPath))
 							continue;
 
@@ -143,7 +143,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						}
 
 						var prefix     = $"{propPath}.";
-						var newColumns = columns.Where(c => c.MemberName.StartsWith(prefix)).ToList();
+						var newColumns = columns.Where(c => c.MemberName.StartsWith(prefix, StringComparison.Ordinal)).ToList();
 						var newPath    = MakeAssignExpression(currentPath, memberInfo, column);
 
 						assignExpression = BuildGenericFromMembers(newColumns, flags, newPath, level + 1, purpose);
@@ -326,16 +326,18 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var found = -1;
 
-			found = FindIndex(members, x =>
-				x.MemberInfo.GetMemberType() == parameter.ParameterType &&
-				x.MemberInfo.Name            == parameter.Name);
+			found = FindIndex(
+				members,
+				x =>
+					x.MemberInfo.GetMemberType() == parameter.ParameterType &&
+					string.Equals(x.MemberInfo.Name, parameter.Name, StringComparison.Ordinal)
+			);
 
 			if (found < 0)
 			{
 				found = FindIndex(members, x =>
 					x.MemberInfo.GetMemberType() == parameter.ParameterType &&
-					x.MemberInfo.Name.Equals(parameter.Name,
-						StringComparison.InvariantCultureIgnoreCase));
+					x.MemberInfo.Name.Equals(parameter.Name, StringComparison.OrdinalIgnoreCase));
 			}
 
 			return found;
@@ -837,23 +839,21 @@ namespace LinqToDB.Internal.Linq.Builder
 			DataContext   = dataContext;
 			MappingSchema = mappingSchema;
 
-			switch (constructorExpression.ConstructType)
+			return constructorExpression.ConstructType switch
 			{
-				case SqlGenericConstructorExpression.CreateType.Full:
-				{
-					return TryConstructFullEntity(constructorExpression, constructorExpression.ObjectType, flags, true, out error);
-				}
-				case SqlGenericConstructorExpression.CreateType.MemberInit:
-				case SqlGenericConstructorExpression.CreateType.Auto:
-				case SqlGenericConstructorExpression.CreateType.Keys:
-				case SqlGenericConstructorExpression.CreateType.New:
-				case SqlGenericConstructorExpression.CreateType.MethodCall:
-				{
-					return TryConstructObject(constructorExpression, constructorExpression.ObjectType, out error);
-				}
-				default:
-					throw new NotImplementedException();
-			}
+				SqlGenericConstructorExpression.CreateType.Full =>
+					TryConstructFullEntity(constructorExpression, constructorExpression.ObjectType, flags, true, out error),
+
+				SqlGenericConstructorExpression.CreateType.MemberInit or
+				SqlGenericConstructorExpression.CreateType.Auto or
+				SqlGenericConstructorExpression.CreateType.Keys or
+				SqlGenericConstructorExpression.CreateType.New or
+				SqlGenericConstructorExpression.CreateType.MethodCall =>
+					TryConstructObject(constructorExpression, constructorExpression.ObjectType, out error),
+
+				_ =>
+					throw new NotSupportedException(),
+			};
 		}
 
 		#endregion

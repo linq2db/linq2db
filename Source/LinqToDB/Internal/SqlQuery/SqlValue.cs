@@ -62,7 +62,7 @@ namespace LinqToDB.Internal.SqlQuery
 				{
 					writer
 						.Append('\'')
-						.Append(strVal.Replace("\'", "''"))
+						.Append(strVal.Replace("\'", "''", StringComparison.Ordinal))
 						.Append('\'');
 				}
 				else

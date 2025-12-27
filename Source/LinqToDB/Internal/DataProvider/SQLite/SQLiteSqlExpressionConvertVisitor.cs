@@ -16,16 +16,20 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
-			switch (element.Operation)
+			return element.Operation switch
 			{
-				case "+": return element.SystemType == typeof(string)? new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence) : element;
-				case "^": // (a + b) - (a & b) * 2
-					return Sub(
-						Add(element.Expr1, element.Expr2, element.SystemType),
-						Mul(new SqlBinaryExpression(element.SystemType, element.Expr1, "&", element.Expr2), 2), element.SystemType);
-			}
+				"+" when element.SystemType == typeof(string) => new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
+				"+" => element,
 
-			return base.ConvertSqlBinaryExpression(element);
+				// (a + b) - (a & b) * 2
+				"^" => Sub(
+						Add(element.Expr1, element.Expr2, element.SystemType),
+						Mul(new SqlBinaryExpression(element.SystemType, element.Expr1, "&", element.Expr2), 2),
+						element.SystemType
+					),
+
+				_ => base.ConvertSqlBinaryExpression(element),
+			};
 		}
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
@@ -102,13 +106,14 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		private static bool IsDateTime(DbDataType dbDataType)
 		{
-			if (dbDataType.DataType == DataType.Date           ||
-			    dbDataType.DataType == DataType.Time           ||
-			    dbDataType.DataType == DataType.DateTime       ||
-			    dbDataType.DataType == DataType.DateTime2      ||
-			    dbDataType.DataType == DataType.DateTimeOffset ||
-			    dbDataType.DataType == DataType.SmallDateTime  ||
-			    dbDataType.DataType == DataType.Timestamp)
+			if (dbDataType.DataType
+					is DataType.Date
+					or DataType.Time
+					or DataType.DateTime
+					or DataType.DateTime2
+					or DataType.DateTimeOffset
+					or DataType.SmallDateTime
+					or DataType.Timestamp)
 				return true;
 
 			if (dbDataType.DataType != DataType.Undefined)
@@ -134,14 +139,14 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			{
 				var dateType = IsDateTime(leftType) ? leftType : rightType;
 				var expr1 = GetActualExpr(predicate.Expr1);
-				if (!(expr1 is SqlCastExpression || expr1 is SqlFunction { DoNotOptimize: true }))
+				if (expr1 is not (SqlCastExpression or SqlFunction { DoNotOptimize: true }))
 				{
 					var left = PseudoFunctions.MakeMandatoryCast(predicate.Expr1, dateType, null);
 					predicate = new SqlPredicate.ExprExpr(left, predicate.Operator, predicate.Expr2, predicate.UnknownAsValue);
 				}
 
 				var expr2 = GetActualExpr(predicate.Expr2);
-				if (!(expr2 is SqlCastExpression || expr2 is SqlFunction { DoNotOptimize: true }))
+				if (expr2 is not (SqlCastExpression or SqlFunction { DoNotOptimize: true }))
 				{
 					var right = PseudoFunctions.MakeMandatoryCast(predicate.Expr2, dateType, null);
 					predicate = new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, right, predicate.UnknownAsValue);
@@ -189,7 +194,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		{
 			if (IsDateTime(dbDataType))
 			{
-				if (!(expression is SqlCastExpression || expression is SqlFunction { DoNotOptimize: true }))
+				if (expression is not (SqlCastExpression or SqlFunction { DoNotOptimize: true }))
 				{
 					if (IsDateDataType(dbDataType, "Date"))
 						return new SqlFunction(dbDataType, "Date", expression) { DoNotOptimize = true };

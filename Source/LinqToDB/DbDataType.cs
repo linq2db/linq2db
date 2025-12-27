@@ -125,18 +125,15 @@ namespace LinqToDB
 				&& string.Equals(DbType, other.DbType, StringComparison.Ordinal);
 		}
 
-		public override bool Equals(object? obj)
+		public override readonly bool Equals(object? obj)
 		{
 			if (obj is null) return false;
 			return obj is DbDataType type && Equals(type);
 		}
 
-		int? _hashCode;
-
-		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
-		public override int GetHashCode()
+		public override readonly int GetHashCode()
 		{
-			return _hashCode ??= HashCode.Combine(
+			return HashCode.Combine(
 				SystemType,
 				DataType,
 				DbType,

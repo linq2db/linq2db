@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using LinqToDB.Data.RetryPolicy;
 
 namespace LinqToDB.Internal.DataProvider.Ydb
@@ -109,7 +109,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				"Overloaded" or "ClientTransportResourceExhausted"
 					=> EqualJitter(_slowBackoffBaseMs, _slowCapBackoffMs, _slowCeiling, attempt),
 
-				_ => null
+				_ => null,
 			};
 		}
 

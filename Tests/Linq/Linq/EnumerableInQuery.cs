@@ -28,15 +28,14 @@ namespace Tests.Linq
 				new SampleClass { Id = 1, Value = 11 }, new SampleClass { Id = 2, Value = 22 },
 				new SampleClass { Id = 3, Value = 33 }, new SampleClass { Id = 4, Value = 44 }
 			};
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+
+			IQueryable<SampleClass>? itemsQuery = null;
+
+			for (int i = 0; i < items.Length; i++)
 			{
-
-				IQueryable<SampleClass>? itemsQuery = null;
-
-				for (int i = 0; i < items.Length; i++)
-				{
-					var item = items[i];
-					var current = i % 2 == 0
+				var item = items[i];
+				var current = i % 2 == 0
 						? db.SelectQuery(() => new SampleClass
 						{
 							Id = item.Id,
@@ -48,43 +47,38 @@ namespace Tests.Linq
 							Id = item.Id,
 						});
 
-					itemsQuery = itemsQuery == null ? current : itemsQuery.Concat(current);
-				}
-
-				var result = itemsQuery!.AsCte().ToArray();
-
-				AreEqual(items, result, ComparerBuilder.GetEqualityComparer<SampleClass>());
+				itemsQuery = itemsQuery == null ? current : itemsQuery.Concat(current);
 			}
+
+			var result = itemsQuery!.AsCte().ToArray();
+
+			AreEqual(items, result, ComparerBuilder.GetEqualityComparer<SampleClass>());
 		}
 
 		[Test]
 		public void FieldProjection([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var collection = db.Person.ToList();
-				var query = db.Person
+			using var db = GetDataContext(context);
+			var collection = db.Person.ToList();
+			var query = db.Person
 					.Select(x => collection.First(r => r.ID == x.ID).ID);
 
-				AssertQuery(query);
-			}
+			AssertQuery(query);
 		}
 
 		[Test]
 		public void AnonymousProjection([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var collection = db.Parent.Select(_ => new { _.ParentID }).ToList();
+			using var db = GetDataContext(context);
+			var collection = db.Parent.Select(_ => new { _.ParentID }).ToList();
 
-				var query = db.Parent
+			var query = db.Parent
 					.Select(_ => new
 					{
 						Children = collection.Where(c1 => c1.ParentID == _.ParentID).ToArray()
 					});
 
-				AssertQuery(query);
-			}
+			AssertQuery(query);
 		}
 
 		[Test]

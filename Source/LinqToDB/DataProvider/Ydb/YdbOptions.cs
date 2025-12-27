@@ -1,4 +1,4 @@
-﻿using LinqToDB.Data;
+using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Options;
@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.Ydb
 	/// </param>
 	/// <param name="UseParametrizedDecimal">
 	/// Use Decimal(p, s) type name instead of Decimal.
-	/// Default value: <c>true</c>.
+	/// Default value: <see langword="true"/>.
 	/// </param>
 	public sealed record YdbOptions(
 		BulkCopyType BulkCopyType     = BulkCopyType.ProviderSpecific,

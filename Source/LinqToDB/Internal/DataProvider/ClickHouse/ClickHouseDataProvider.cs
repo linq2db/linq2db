@@ -161,7 +161,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			return true;
 		}
 
-		public override IQueryParametersNormalizer GetQueryParameterNormalizer() => throw new NotImplementedException($"Parameters not supported by ClickHouse provider. Create issue if you hit this exception from LINQ query.");
+		public override IQueryParametersNormalizer GetQueryParameterNormalizer() => throw new NotSupportedException("Parameters not supported by ClickHouse provider. Create issue if you hit this exception from LINQ query.");
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
@@ -203,7 +203,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					(ClickHouseProvider.ClickHouseDriver, DataType.IPv6, string val)                            => IPAddress.Parse(val).MapToIPv6(),
 					(ClickHouseProvider.ClickHouseDriver, DataType.IPv6, byte[] val)                            => new IPAddress(val).MapToIPv6(),
 
-					_ => value
+					_ => value,
 				};
 			}
 
@@ -259,7 +259,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			{
 				ClickHouseProvider.ClickHouseDriver => new ClickHouseMappingSchema.ClientMappingSchema  (),
 				ClickHouseProvider.MySqlConnector   => new ClickHouseMappingSchema.MySqlMappingSchema   (),
-				_                                   => new ClickHouseMappingSchema.OctonicaMappingSchema()
+				_                                   => new ClickHouseMappingSchema.OctonicaMappingSchema(),
 			};
 		}
 	}

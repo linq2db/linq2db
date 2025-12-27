@@ -201,7 +201,7 @@ namespace Tests.Linq
 				where db.Child.Select(c => c.ParentID).Contains(p.ParentID + n)
 				select p;
 
-			AssertTest(query, preferExists);;
+			AssertTest(query, preferExists);
 		}
 
 		[YdbCteAsSource]

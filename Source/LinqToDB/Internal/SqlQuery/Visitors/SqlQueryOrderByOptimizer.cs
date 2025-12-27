@@ -152,10 +152,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (selectQuery.HasSetOperators)
 			{
 				var setOperator = selectQuery.SetOperators[0];
-				if (setOperator.Operation == SetOperation.Union     || 
-				    setOperator.Operation == SetOperation.Except    || 
-				    setOperator.Operation == SetOperation.Intersect || 
-				    setOperator.Operation == SetOperation.IntersectAll)
+				if (setOperator.Operation
+						is SetOperation.Union
+						or SetOperation.Except
+						or SetOperation.Intersect
+						or SetOperation.IntersectAll)
 				{
 					_disableOrderBy = true;
 				}

@@ -54,8 +54,8 @@ namespace LinqToDB.Scaffold
 		/// If type is nested, it should use + for type separator, e.g. <c>"My.NameSpace.SomeClass+BaseEntity"</c>
 		/// Current limitaion - type cannot be generic.
 		/// <list type="bullet">
-		/// <item>Default: <c>null</c></item>
-		/// <item>In T4 compability mode: <c>null</c></item>
+		/// <item>Default: <see langword="null"/></item>
+		/// <item>In T4 compability mode: <see langword="null"/></item>
 		/// </list>
 		/// </summary>
 		public string? BaseEntityClass { get; set; }

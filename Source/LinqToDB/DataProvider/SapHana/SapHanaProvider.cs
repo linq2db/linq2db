@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.DataProvider.SapHana
+namespace LinqToDB.DataProvider.SapHana
 {
 	/// <summary>
 	/// SAP HANA 2 ADO.NET provider.
@@ -16,6 +16,6 @@
 		/// <summary>
 		/// ODBC HDBODBC/HDBODBC32 provider.
 		/// </summary>
-		ODBC
+		ODBC,
 	}
 }

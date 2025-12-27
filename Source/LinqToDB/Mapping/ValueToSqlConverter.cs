@@ -128,7 +128,7 @@ namespace LinqToDB.Mapping
 		{
 			stringBuilder
 				.Append('\'')
-				.Append(value.Replace("'", "''"))
+				.Append(value.Replace("'", "''", StringComparison.Ordinal))
 				.Append('\'');
 		}
 

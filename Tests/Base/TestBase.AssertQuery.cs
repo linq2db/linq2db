@@ -19,17 +19,17 @@ namespace Tests
 {
 	partial class TestBase
 	{
-		class ApplyNullPropagationVisitor : ExpressionVisitorBase
+		sealed class ApplyNullPropagationVisitor : ExpressionVisitorBase
 		{
 
-			protected bool CanBeNull(Type type)
+			private bool CanBeNull(Type type)
 			{
 				if (type.IsValueType)
 					return false;
 				return true;
 			}
 
-			protected bool CanBeNull(Expression expression)
+			private bool CanBeNull(Expression expression)
 			{
 				if (expression.Type.IsValueType)
 					return false;
@@ -55,7 +55,7 @@ namespace Tests
 				return true;
 			}
 
-			protected bool IsLINQMethod(MethodInfo method)
+			private bool IsLINQMethod(MethodInfo method)
 			{
 				return method.IsStatic && method.DeclaringType == typeof(Enumerable) || method.DeclaringType == typeof(Queryable);
 			}
@@ -103,8 +103,8 @@ namespace Tests
 				{
 					if (CanBeNull(node.Expression) || node.Member.IsNullableValueMember())
 					{
-						var checkedExoression = Visit(node.Expression);
-						return Expression.Condition(Expression.Equal(checkedExoression, Expression.Constant(null, checkedExoression.Type)),
+						var checkedExpression = Visit(node.Expression);
+						return Expression.Condition(Expression.Equal(checkedExpression, Expression.Constant(null, checkedExpression.Type)),
 							Expression.Constant(DefaultValue.GetValue(node.Type), node.Type), node);
 					}
 				}

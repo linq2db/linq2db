@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -36,7 +36,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			AsCteMethod,
 			GetCteMethod,
 			FromSqlMethod,
-			FromSqlScalarMethod
+			FromSqlScalarMethod,
 		}
 
 		static BuildContextType FindBuildContext(ExpressionBuilder builder, BuildInfo buildInfo, out IBuildContext? parentContext)

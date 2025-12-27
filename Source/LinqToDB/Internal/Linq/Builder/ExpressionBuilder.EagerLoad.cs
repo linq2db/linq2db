@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -105,10 +107,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var newExpression = Expression.New(constructor);
 			var initExpression = Expression.MemberInit(newExpression,
-				arguments.Select((a, i) => Expression.Bind(concreteType.GetProperty(FormattableString.Invariant($"Item{i + 1}"))!, a)));
+				arguments.Select((a, i) => Expression.Bind(concreteType.GetProperty(string.Create(CultureInfo.InvariantCulture, $"Item{i + 1}"))!, a)));
 			return initExpression;
 		}
 
+		[StructLayout(LayoutKind.Auto)]
 		readonly struct KeyDetailEnvelope<TKey, TDetail>
 			where TKey: notnull
 		{
@@ -175,7 +178,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return result;
 		}
 
-		static string[] _passThroughMethodsForUnwrappingDefaultIfEmpty = { nameof(Enumerable.Where), nameof(Enumerable.Select) };
+		static readonly string[] _passThroughMethodsForUnwrappingDefaultIfEmpty = { nameof(Enumerable.Where), nameof(Enumerable.Select) };
 
 		static Expression UnwrapDefaultIfEmpty(Expression expression)
 		{

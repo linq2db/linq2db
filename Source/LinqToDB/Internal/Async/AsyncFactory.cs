@@ -63,8 +63,7 @@ namespace LinqToDB.Internal.Async
 		/// <returns><see cref="IAsyncDbConnection"/> implementation for provided connection instance.</returns>
 		public static IAsyncDbConnection Create(DbConnection connection)
 		{
-			if (connection == null)
-				throw new ArgumentNullException(nameof(connection));
+			ArgumentNullException.ThrowIfNull(connection);
 
 			// no wrap required
 			if (connection is IAsyncDbConnection asyncConnection)
@@ -90,8 +89,7 @@ namespace LinqToDB.Internal.Async
 		/// <returns><see cref="IAsyncDbTransaction"/> implementation for provided transaction instance.</returns>
 		public static IAsyncDbTransaction Create(DbTransaction transaction)
 		{
-			if (transaction == null)
-				throw new ArgumentNullException(nameof(transaction));
+			ArgumentNullException.ThrowIfNull(transaction);
 
 			// no wrap required
 			if (transaction is IAsyncDbTransaction asyncTransaction)
@@ -248,7 +246,7 @@ namespace LinqToDB.Internal.Async
 
 			if (mi == null
 				|| (!returnsValueTask && mi.ReturnType          != typeof(Task))
-				|| (returnsValueTask  && mi.ReturnType.FullName != "System.Threading.Tasks.ValueTask"))
+				|| (returnsValueTask  && !string.Equals(mi.ReturnType.FullName, "System.Threading.Tasks.ValueTask", StringComparison.Ordinal)))
 				return default;
 
 			var pInstance      = Expression.Parameter(typeof(TInstance));
@@ -340,7 +338,7 @@ namespace LinqToDB.Internal.Async
 				|| !mi.ReturnType.IsGenericType
 				|| !typeof(TTask).IsAssignableFrom(mi.ReturnType.GetGenericArguments()[0])
 				|| (!returnsValueTask && mi.ReturnType.GetGenericTypeDefinition()          != typeof(Task<>))
-				|| ( returnsValueTask && mi.ReturnType.GetGenericTypeDefinition().FullName != "System.Threading.Tasks.ValueTask`1"))
+				|| ( returnsValueTask && !string.Equals(mi.ReturnType.GetGenericTypeDefinition().FullName, "System.Threading.Tasks.ValueTask`1", StringComparison.Ordinal)))
 				return default;
 
 			var pInstance  = Expression.Parameter(typeof(TInstance));

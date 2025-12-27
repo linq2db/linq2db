@@ -219,31 +219,25 @@ namespace LinqToDB.Internal.Expressions
 					case ExpressionType.Call           :
 					case ExpressionType.MemberAccess   :
 					case ExpressionType.New            :
-						if (!accessors.ContainsKey(e))
-							accessors.Add(e, p);
+						accessors.TryAdd(e, p);
 						break;
 
 					case ExpressionType.Constant       :
-						if (!accessors.ContainsKey(e))
-							accessors.Add(e, Expression.Property(p, ReflectionHelper.Constant.Value));
+						accessors.TryAdd(e, Expression.Property(p, ReflectionHelper.Constant.Value));
 						break;
 
 					case ExpressionType.ConvertChecked :
 					case ExpressionType.Convert        :
-						if (!accessors.ContainsKey(e))
+						var ue = (UnaryExpression)e;
+
+						switch (ue.Operand.NodeType)
 						{
-							var ue = (UnaryExpression)e;
-
-							switch (ue.Operand.NodeType)
-							{
-								case ExpressionType.Call        :
-								case ExpressionType.MemberAccess:
-								case ExpressionType.New         :
-								case ExpressionType.Constant    :
-
-									accessors.Add(e, p);
-									break;
-							}
+							case ExpressionType.Call        :
+							case ExpressionType.MemberAccess:
+							case ExpressionType.New         :
+							case ExpressionType.Constant    :
+								accessors.TryAdd(e, p);
+								break;
 						}
 
 						break;
@@ -283,14 +277,14 @@ namespace LinqToDB.Internal.Expressions
 
 		public static bool IsQueryable(this MethodCallExpression method, string name)
 		{
-			return method.Method.Name == name && method.IsQueryable();
+			return string.Equals(method.Method.Name, name, StringComparison.Ordinal) && method.IsQueryable();
 		}
 
 		public static bool IsQueryable(this MethodCallExpression method, string[] names)
 		{
 			if (method.IsQueryable())
 				foreach (var name in names)
-					if (method.Method.Name == name)
+					if (string.Equals(method.Method.Name, name, StringComparison.Ordinal))
 						return true;
 
 			return false;
@@ -300,7 +294,7 @@ namespace LinqToDB.Internal.Expressions
 		{
 			if (method.IsAsyncExtension())
 				foreach (var name in names)
-					if (method.Method.Name == name)
+					if (string.Equals(method.Method.Name, name, StringComparison.Ordinal))
 						return true;
 
 			return false;
@@ -308,7 +302,7 @@ namespace LinqToDB.Internal.Expressions
 
 		public static bool IsSameGenericMethod(this MethodCallExpression method, MethodInfo genericMethodInfo)
 		{
-			if (method.Method.Name != genericMethodInfo.Name)
+			if (!string.Equals(method.Method.Name, genericMethodInfo.Name, StringComparison.Ordinal))
 				return false;
 
 			if (!method.Method.IsGenericMethod)
@@ -332,7 +326,7 @@ namespace LinqToDB.Internal.Expressions
 
 			foreach (var current in genericMethodInfo)
 			{
-				if (current.Name == mi.Name)
+				if (string.Equals(current.Name, mi.Name, StringComparison.Ordinal))
 				{
 					if (gd == null)
 					{
@@ -382,7 +376,7 @@ namespace LinqToDB.Internal.Expressions
 			var parameters = methodCall.Method.GetParameters();
 
 			for (var i = 0; i < parameters.Length; i++)
-				if (parameters[i].Name == parameterName)
+				if (string.Equals(parameters[i].Name, parameterName, StringComparison.Ordinal))
 					return arguments[i];
 
 			return default;

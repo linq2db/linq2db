@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 
@@ -24,12 +24,12 @@ namespace LinqToDB.Internal.Conversion
 		{
 			{ typeof(byte)  , new Dictionary<Type, Tuple<IComparable, IComparable>>()
 				{
-					{ typeof(sbyte), Tuple.Create((IComparable)(byte)0, (IComparable)(byte)sbyte.MaxValue) }
+					{ typeof(sbyte), Tuple.Create((IComparable)(byte)0, (IComparable)(byte)sbyte.MaxValue) },
 				}
 			},
 			{ typeof(sbyte) , new Dictionary<Type, Tuple<IComparable, IComparable>>()
 				{
-					{ typeof(byte), Tuple.Create((IComparable)(sbyte)0, (IComparable)sbyte.MaxValue) }
+					{ typeof(byte), Tuple.Create((IComparable)(sbyte)0, (IComparable)sbyte.MaxValue) },
 				}
 			},
 			{ typeof(short) , new Dictionary<Type, Tuple<IComparable, IComparable>>()

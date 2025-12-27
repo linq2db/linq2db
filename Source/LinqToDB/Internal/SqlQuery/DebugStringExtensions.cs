@@ -47,7 +47,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 				for (var i = 0; i < comment.Lines.Count; i++)
 				{
-					writer.Append(comment.Lines[i].Replace("/*", "").Replace("*/", ""));
+					writer.Append(comment.Lines[i].Replace("/*", "", System.StringComparison.Ordinal).Replace("*/", "", System.StringComparison.Ordinal));
 					if (i < comment.Lines.Count - 1)
 						writer.AppendLine();
 				}

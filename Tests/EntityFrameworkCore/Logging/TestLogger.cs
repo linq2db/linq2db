@@ -1,6 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Text;
 
 using Microsoft.Extensions.Logging;
@@ -189,7 +191,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Logging
 
 			return new LogMessageEntry(
 				Message: logBuilder.ToString(),
-				TimeStamp: timestampFormat != null ? FormattableString.Invariant($"{DateTime.Now:timestampFormat}") : null,
+				TimeStamp: timestampFormat != null ? string.Create(CultureInfo.InvariantCulture, $"{DateTime.Now:timestampFormat}") : null,
 				LevelString: logLevelString,
 				LevelBackground: logLevelColors.Background,
 				LevelForeground: logLevelColors.Foreground,
@@ -216,7 +218,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Logging
 #pragma warning restore CS0618 // Type or member is obsolete
 			if (timestampFormat != null)
 			{
-				logBuilder.Append(FormattableString.Invariant($"{DateTime.Now:timestampFormat}"));
+				logBuilder.Append(string.Create(CultureInfo.InvariantCulture, $"{DateTime.Now:timestampFormat}"));
 			}
 
 			// category and event id
@@ -353,6 +355,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Logging
 			}
 		}
 
+		[StructLayout(LayoutKind.Auto)]
 		private readonly record struct ConsoleColors(ConsoleColor? Foreground, ConsoleColor? Background);
 	}
 }

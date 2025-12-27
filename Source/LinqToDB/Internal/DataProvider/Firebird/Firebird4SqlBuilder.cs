@@ -40,7 +40,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			switch (type.DataType)
 			{
 				case DataType.Guid  : StringBuilder.Append("BINARY(16)"); break;
-				case DataType.Binary when type.Length == null || type.Length < 1:
+				case DataType.Binary when type.Length is null or < 1:
 					StringBuilder.Append("BINARY");
 					break;
 					
@@ -48,7 +48,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					StringBuilder.Append(CultureInfo.InvariantCulture, $"BINARY({type.Length})");
 					break;
 					
-				case DataType.VarBinary when type.Length == null || type.Length > 32_765:
+				case DataType.VarBinary when type.Length is null or > 32_765:
 					StringBuilder.Append("BLOB");
 					break;
 					

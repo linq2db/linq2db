@@ -27,9 +27,9 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 		/// <summary>
 		/// Provider instance, which use mapping attributes from System.Data.SqlClient assembly.
-		/// Could be null of assembly not found.
+		/// Could be null if assembly not found.
 		/// </summary>
-		public static IMetadataReader? SystemDataSqlClientProvider =
+		public static readonly IMetadataReader? SystemDataSqlClientProvider =
 #if NETFRAMEWORK
 			new SystemDataSqlServerAttributeReader(typeof(SqlMethodAttribute), typeof(SqlUserDefinedTypeAttribute))
 #else
@@ -41,9 +41,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		/// <summary>
 		/// Provider instance, which use mapping attributes from Microsoft.Data.SqlClient assembly (v1-4).
-		/// Could be null of assembly not found.
+		/// Could be null if assembly not found.
 		/// </summary>
-		public static IMetadataReader? MicrosoftDataSqlClientProvider = TryCreate(
+		public static readonly IMetadataReader? MicrosoftDataSqlClientProvider = TryCreate(
 			"Microsoft.Data.SqlClient.Server.SqlMethodAttribute, Microsoft.Data.SqlClient",
 			"Microsoft.Data.SqlClient.Server.SqlUserDefinedTypeAttribute, Microsoft.Data.SqlClient");
 
@@ -138,7 +138,7 @@ namespace LinqToDB.DataProvider.SqlServer
 								if (mi.IsStatic)
 								{
 									var name = key.memberInfo.DeclaringType!.Name.ToLowerInvariant();
-									name = name.StartsWith("sql") ? name.Substring(3) : name;
+									name = name.StartsWith("sql", StringComparison.Ordinal) ? name.Substring(3) : name;
 
 									ex = string.Format(
 										CultureInfo.InvariantCulture,

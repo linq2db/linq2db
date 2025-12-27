@@ -336,7 +336,7 @@ namespace LinqToDB.CodeModel
 		public CodeAsOperator As(IType type, ICodeExpression expression) => new(type, expression);
 
 		/// <summary>
-		/// Creates <c>null</c> constant.
+		/// Creates <see langword="null"/> constant.
 		/// </summary>
 		/// <param name="type">Type of constant.</param>
 		/// <param name="targetTyped">Indicates that constant type could be inferred from context.</param>

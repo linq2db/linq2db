@@ -173,7 +173,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 				case ConvertType.SprocParameterToName:
 					return value.Length > 0 && value[0] == '@'
-						? sb.Append(value.Substring(1))
+						? sb.Append(value.AsSpan(1))
 						: sb.Append(value);
 			}
 
@@ -189,11 +189,18 @@ namespace LinqToDB.Internal.DataProvider.Access
 		{
 			AppendIndent();
 			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
-			StringBuilder.Append(string.Join(InlineComma, fieldNames));
+			StringBuilder.AppendJoinStrings(InlineComma, fieldNames);
 			StringBuilder.Append(')');
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
+		public override StringBuilder BuildObjectName(
+			StringBuilder sb,
+			SqlObjectName name,
+			ConvertType objectType = ConvertType.NameToQueryTable,
+			bool escape = true,
+			TableOptions tableOptions = TableOptions.NotSet,
+			bool withoutSuffix = false
+		)
 		{
 			if (name.Database != null)
 			{

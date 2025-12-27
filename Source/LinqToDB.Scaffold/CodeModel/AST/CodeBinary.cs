@@ -12,22 +12,22 @@ namespace LinqToDB.CodeModel
 			Operation = operation;
 			Right     = right;
 
-			switch (operation)
+			_type = operation switch
 			{
-				case BinaryOperation.Equal   :
-				case BinaryOperation.NotEqual:
-				case BinaryOperation.And     :
-				case BinaryOperation.Or      :
-					_type = WellKnownTypes.System.Boolean;
-					break;
-				case BinaryOperation.Add  :
+				BinaryOperation.Equal    or
+				BinaryOperation.NotEqual or
+				BinaryOperation.And      or
+				BinaryOperation.Or       =>
+					WellKnownTypes.System.Boolean,
+
+				BinaryOperation.Add =>
 					// this is not correct in general
 					// but for now we will stick to it while it doesn't give issues
-					_type = left.Type;
-					break;
-				default:
-					throw new NotImplementedException($"Type infer is not implemented for binary operation: {operation}");
-			}
+					left.Type,
+
+				_ =>
+					throw new NotImplementedException($"Type infer is not implemented for binary operation: {operation}"),
+			};
 		}
 
 		/// <summary>

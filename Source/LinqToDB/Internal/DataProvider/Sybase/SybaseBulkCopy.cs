@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -105,7 +105,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 					{
 						DataConnection      = dataConnection,
 						ProviderConnection  = connection,
-						ProviderTransaction = transaction
+						ProviderTransaction = transaction,
 					};
 				}
 			}
@@ -134,7 +134,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 					{
 						DataConnection = dataConnection,
 						ProviderConnection = connection,
-						ProviderTransaction = transaction
+						ProviderTransaction = transaction,
 					};
 				}
 			}

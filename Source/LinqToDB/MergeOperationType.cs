@@ -1,4 +1,4 @@
-﻿namespace LinqToDB
+namespace LinqToDB
 {
 	public enum MergeOperationType
 	{
@@ -8,6 +8,6 @@
 		Delete,
 		UpdateWithDelete,
 		UpdateBySource,
-		DeleteBySource
+		DeleteBySource,
 	}
 }

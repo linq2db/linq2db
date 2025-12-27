@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 
 using LinqToDB.Internal.SqlQuery.Visitors;
@@ -67,7 +68,7 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 				var column      = (SqlColumn)current;
 				var columnQuery = column.Parent;
-				if (columnQuery == null || columnQuery.HasSetOperators || QueryHelper.EnumerateLevelSources(columnQuery).Take(2).Count() > 1)
+				if (columnQuery == null || columnQuery.HasSetOperators || QueryHelper.EnumerateLevelSources(columnQuery).Skip(1).Any())
 					break;
 				current = QueryHelper.UnwrapExpression(column.Expression, true);
 			}
@@ -95,7 +96,7 @@ namespace LinqToDB.Internal.SqlQuery
 				case SqlColumn   column : return column.Alias;
 				case SelectQuery query  :
 					{
-						if (query.Select.Columns.Count == 1 && query.Select.Columns[0].Alias != "*")
+						if (query.Select.Columns.Count == 1 && !string.Equals(query.Select.Columns[0].Alias, "*", StringComparison.Ordinal))
 							return query.Select.Columns[0].Alias;
 						break;
 					}
@@ -166,7 +167,7 @@ namespace LinqToDB.Internal.SqlQuery
 			if (ReferenceEquals(this, other))
 				return true;
 
-			if (!(other is SqlColumn otherColumn))
+			if (other is not SqlColumn otherColumn)
 				return false;
 
 			if (Parent != otherColumn.Parent)
@@ -202,7 +203,7 @@ namespace LinqToDB.Internal.SqlQuery
 				.Append('[').Append(Number).Append(']')
 #endif
 				.Append('.')
-				.Append(Alias ?? FormattableString.Invariant($"c{(parentIndex >= 0 ? parentIndex + 1 : parentIndex)}"));
+				.Append(Alias ?? string.Create(CultureInfo.InvariantCulture, $"c{(parentIndex >= 0 ? parentIndex + 1 : parentIndex)}"));
 
 				if (!Expression.CanBeNullable(writer.Nullability) && CanBeNullable(writer.Nullability))
 					writer.Append('?');

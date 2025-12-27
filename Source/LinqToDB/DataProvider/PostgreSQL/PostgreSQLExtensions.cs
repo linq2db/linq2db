@@ -58,8 +58,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		[Sql.Extension("ARRAY_AGG({expr}{_}{order_by_clause?})", IsAggregate = true, ChainPrecedence = 10)]
 		public static Sql.IAggregateFunctionNotOrdered<TEntity, TV[]> ArrayAggregate<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
-			if (source  == null) throw new ArgumentNullException(nameof(source));
-			if (expr    == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var currentSource = source.ProcessIQueryable();
 
@@ -75,8 +75,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		[Sql.Extension("ARRAY_AGG({modifier?}{_}{expr}{_}{order_by_clause?})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 10)]
 		public static Sql.IAggregateFunctionNotOrdered<TEntity, TV[]> ArrayAggregate<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
 		{
-			if (source  == null) throw new ArgumentNullException(nameof(source));
-			if (expr    == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var currentSource = source.ProcessIQueryable();
 

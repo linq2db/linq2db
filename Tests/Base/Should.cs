@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Text;
 
 using NUnit.Framework.Constraints;
@@ -12,7 +13,7 @@ namespace Tests
 			return new SubstringsConstraint(expected);
 		}
 
-		class SubstringsConstraint : StringConstraint
+		sealed class SubstringsConstraint : StringConstraint
 		{
 			string[]          _substrings;
 			int               _matched;
@@ -45,7 +46,7 @@ namespace Tests
 
 					for (var i = 0; i < _substrings.Length; i++)
 					{
-						sb.AppendLine().Append($"\"{_substrings[i]}\"");
+						sb.AppendLine().Append(CultureInfo.InvariantCulture, $"\"{_substrings[i]}\"");
 
 						if (i == _matched)
 							sb.Append("    <-- not found");
