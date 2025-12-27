@@ -236,6 +236,10 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 							c.Precision = null;
 							c.Scale     = null;
 							break;
+						case "vector"      :
+							// Convert binary vector storage size (8-byte header + 4 bytes per float element) to logical dimension count
+							c.Length = (c.Length - 8) / 4;
+							break;
 					}
 
 					return c;
@@ -415,24 +419,22 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			return dataType switch
 			{
-				"json"       => typeof(string),
-				// TODO: currently string mapping is not usable
-				"vector"     => Provider.Adapter.SqlVectorType ?? typeof(string),
-				"tinyint"    => typeof(byte),
-				"hierarchyid" or "geography" or "geometry" => Provider.GetUdtTypeByName(dataType),
-				"table type" => typeof(DataTable),
-				_            => base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options),
+				"json"        => (options.PreferProviderSpecificTypes ? Provider.Adapter.SqlJsonType   : null) ?? typeof(string),
+				"vector"      => (options.PreferProviderSpecificTypes ? Provider.Adapter.SqlVectorType : null) ?? typeof(float[]),
+				"tinyint"     => typeof(byte),
+				"hierarchyid" or
+				"geography"   or
+				"geometry"    => Provider.GetUdtTypeByName(dataType),
+				"table type"  => typeof(DataTable),
+				_             => base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options),
 			};
-			}
+		}
 
 		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, int? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
 		{
 			// database name for udt not supported by sql server
 			if (udtName != null)
 				return (udtSchema != null ? SqlServerTools.QuoteIdentifier(udtSchema) + '.' : null) + SqlServerTools.QuoteIdentifier(udtName);
-
-			if (string.Equals(columnType, "vector", StringComparison.Ordinal))
-				length = (length - 8) / 4;
 
 			return base.GetDbType(options, columnType, dataType, length, precision, scale, udtCatalog, udtSchema, udtName);
 		}
@@ -540,6 +542,41 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			{
 				return base.GetProcedureSchema(dataConnection, commandText, commandType, parameters, options);
 			}
+		}
+
+		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
+		{
+			var list = base.GetDataTypes(dataConnection);
+
+			if (list.TrueForAll(t => !string.Equals(t.DataType, "json", StringComparison.Ordinal)))
+			{
+				var type = Provider.Adapter.SqlJsonType ?? typeof(string);
+
+				list.Add(new DataTypeInfo
+				{
+					TypeName         = "json",
+					DataType         = type.FullName!,
+					ProviderSpecific = Provider.Adapter.SqlJsonType is not null,
+					ProviderDbType   = 35,
+				});
+			}
+
+			if (list.TrueForAll(t => !string.Equals(t.DataType, "vector", StringComparison.Ordinal)))
+			{
+				var type = Provider.Adapter.SqlVectorType ?? typeof(float[]);
+
+				list.Add(new DataTypeInfo
+				{
+					TypeName         = "vector",
+					DataType         = type.FullName!,
+					CreateFormat     = "vector({0})",
+					CreateParameters = "length",
+					ProviderSpecific = true,
+					ProviderDbType   = 36,
+				});
+			}
+
+			return list;
 		}
 	}
 }
