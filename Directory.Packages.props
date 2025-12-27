@@ -144,7 +144,7 @@
 		<PackageVersion Include="Microsoft.NET.Test.Sdk"                                Version="18.0.1"                       />
 		<PackageVersion Include="NUnit"                                                 Version="4.4.0"                        />
 		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.11.2"                       />
-		<PackageVersion Include="NUnit3TestAdapter"                                     Version="6.0.1"                        />
+		<PackageVersion Include="NUnit3TestAdapter"                                     Version="5.2.0"                        />
 
 		<PackageVersion Include="Microsoft.AspNet.OData"                                Version="7.7.9"                        />
 		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="8.3.1"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
