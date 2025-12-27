@@ -1,6 +1,11 @@
 ﻿<Project>
 	<PropertyGroup>
 		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+		<CentralPackageTransitivePinningEnabled>false</CentralPackageTransitivePinningEnabled>
+
+		<!--unusable currently with EF projects share location-->
+		<RestorePackagesWithLockFile>false</RestorePackagesWithLockFile>
+		<RestoreLockedMode>false</RestoreLockedMode>
 	</PropertyGroup>
 
 	<!--
