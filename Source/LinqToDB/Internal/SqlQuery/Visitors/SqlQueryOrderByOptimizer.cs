@@ -74,7 +74,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		
 		}
 
-		protected override IQueryElement VisitSqlSetOperator(SqlSetOperator element)
+		protected internal override IQueryElement VisitSqlSetOperator(SqlSetOperator element)
 		{
 			var saveDisableOrderBy    = _disableOrderBy;
 			var saveInsideSetOperator = _insideSetOperator;
@@ -95,7 +95,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newElement;
 		}
 
-		protected override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
+		protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
 		{
 			var saveDisableOrderBy = _disableOrderBy;
 
@@ -108,7 +108,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newElement;
 		}
 
-		protected override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
+		protected internal override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
 		{
 			var saveDisableOrderBy = _disableOrderBy;
 
@@ -145,7 +145,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return false;
 		}
 
-		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+		protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
 			var saveDisableOrderBy = _disableOrderBy;
 			
@@ -211,7 +211,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return selectQuery;
 		}
 
-		protected override IQueryElement VisitSqlFromClause(SqlFromClause element)
+		protected internal override IQueryElement VisitSqlFromClause(SqlFromClause element)
 		{
 			var saveDisableOrderBy = _disableOrderBy;
 
@@ -230,7 +230,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newElement;
 		}
 
-		protected override IQueryElement VisitSqlWhereClause(SqlWhereClause element)
+		protected internal override IQueryElement VisitSqlWhereClause(SqlWhereClause element)
 		{
 			var saveDisableOrderBy = _disableOrderBy;
 
@@ -243,7 +243,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newElement;
 		}
 
-		protected override IQueryElement VisitSqlGroupByClause(SqlGroupByClause element)
+		protected internal override IQueryElement VisitSqlGroupByClause(SqlGroupByClause element)
 		{
 			var saveDisableOrderBy = _disableOrderBy;
 
@@ -269,7 +269,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return expression;
 		}
 
-		protected override IQueryElement VisitCteClause(CteClause element)
+		protected internal override IQueryElement VisitCteClause(CteClause element)
 		{
 			var saveDisableOrderBy = _disableOrderBy;
 
@@ -282,7 +282,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newElement;
 		}
 
-		protected override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		protected internal override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
 		{
 			var saveDisableOrderBy = _disableOrderBy;
 

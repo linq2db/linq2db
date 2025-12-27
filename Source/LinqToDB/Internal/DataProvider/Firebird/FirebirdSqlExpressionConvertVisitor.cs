@@ -177,7 +177,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			return base.ConvertConversion(cast);
 		}
 
-		protected override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
+		protected internal override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
 		{
 			return predicate switch
 			{

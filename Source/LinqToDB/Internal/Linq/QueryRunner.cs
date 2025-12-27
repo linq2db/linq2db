@@ -25,6 +25,7 @@ using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.Logging;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 using LinqToDB.Metrics;
 
 namespace LinqToDB.Internal.Linq
@@ -150,6 +151,101 @@ namespace LinqToDB.Internal.Linq
 				return mapperInfo;
 			}
 
+			static readonly ObjectPool<MapperExpressionTransformer> _mapperExpressionTransformerPool = new(() => new MapperExpressionTransformer(), v => v.Cleanup(), 100);
+
+			sealed class MapperExpressionTransformer : ExpressionVisitorBase
+			{
+				private bool                 _slowMode;
+				private LambdaExpression     _originalMapper = default!;
+				private IDataContext         _context        = default!;
+				private DbDataReader         _dataReader     = default!;
+				private Type                 _dataReaderType = default!;
+				private ParameterExpression? _oldVariable;
+				private ParameterExpression? _newVariable;
+
+				public override void Cleanup()
+				{
+					_slowMode       = false;
+					_originalMapper = default!;
+					_context        = default!;
+					_dataReader     = default!;
+					_dataReaderType = default!;
+					_oldVariable    = null;
+					_newVariable    = null;
+
+					base.Cleanup();
+				}
+
+				public Expression Transform(
+					IDataContext     context,
+					DbDataReader     dataReader,
+					Type             dataReaderType,
+					bool             slowMode,
+					LambdaExpression mapper)
+				{
+					_slowMode       = slowMode;
+					_originalMapper = mapper;
+					_context        = context;
+					_dataReader     = dataReader;
+					_dataReaderType = dataReaderType;
+
+					return Visit(mapper);
+				}
+
+				public override Expression VisitSqlQueryRootExpression(SqlQueryRootExpression node)
+				{
+					if (((IConfigurationID)node.MappingSchema).ConfigurationID == ((IConfigurationID)_context.MappingSchema).ConfigurationID)
+					{
+						var contextExpr = (Expression)Expression.PropertyOrField(_originalMapper.Parameters[0], nameof(IQueryRunner.DataContext));
+
+						if (contextExpr.Type != node.Type)
+							contextExpr = Expression.Convert(contextExpr, node.Type);
+
+						return contextExpr;
+					}
+
+					return node;
+				}
+
+				internal override Expression VisitConvertFromDataReaderExpression(ConvertFromDataReaderExpression node)
+				{
+					if (_slowMode)
+						return Visit(new ConvertFromDataReaderExpression(node.Type, node.Index, node.Converter, node.DataContextParam, _newVariable!, _context).Reduce());
+					else
+						return Visit(node.Reduce(_context, _dataReader, _newVariable!));
+				}
+
+				protected override Expression VisitParameter(ParameterExpression node)
+				{
+					if (_oldVariable == null && string.Equals(node.Name, "ldr", StringComparison.Ordinal))
+					{
+						_oldVariable = node;
+						_newVariable = Expression.Variable(_dataReader.GetType(), "ldr");
+					}
+
+					if (node == _oldVariable)
+						return _newVariable!;
+
+					return node;
+				}
+
+				protected override Expression VisitBinary(BinaryExpression node)
+				{
+					var left = Visit(node.Left);
+					Expression? right = null;
+
+					if (node.NodeType == ExpressionType.Assign && node.Left == _oldVariable)
+					{
+						right = Expression.Convert(_originalMapper.Parameters[1], _dataReaderType);
+					}
+
+					return node.Update(
+						left,
+						VisitAndConvert(node.Conversion, nameof(VisitBinary)),
+						right ?? Visit(node.Right));
+				}
+			}
+
 			// transform extracted to separate method to avoid closures allocation on mapper cache hit
 			private Expression<Func<IQueryRunner, DbDataReader, T>> TransformMapperExpression(
 				IDataContext context,
@@ -157,97 +253,13 @@ namespace LinqToDB.Internal.Linq
 				Type         dataReaderType,
 				bool         slowMode)
 			{
-				var ctx = new TransformMapperExpressionContext(_expression, context, dataReader, dataReaderType);
-
-				Expression expression;
-
-				expression = _expression.Transform(
-					ctx,
-					static (context, e) =>
-					{
-						if (e is SqlQueryRootExpression root)
-						{
-							if (((IConfigurationID)root.MappingSchema).ConfigurationID ==
-								((IConfigurationID)context.Context.MappingSchema).ConfigurationID)
-							{
-								var lambda      = (LambdaExpression)context.Expression;
-								var contextExpr = (Expression)Expression.PropertyOrField(lambda.Parameters[0], nameof(IQueryRunner.DataContext));
-
-								if (contextExpr.Type != e.Type)
-									contextExpr = Expression.Convert(contextExpr, e.Type);
-								return contextExpr;
-							}
-						}
-
-						return e;
-					});
-
-				if (slowMode)
-				{
-					expression = expression.Transform(
-						ctx,
-						static (context, e) =>
-						{
-							if (e is ConvertFromDataReaderExpression ex)
-								return new ConvertFromDataReaderExpression(ex.Type, ex.Index, ex.Converter, ex.DataContextParam, context.NewVariable!, context.Context).Reduce();
-
-							return ReplaceVariable(context, e);
-						});
-				}
-				else
-				{
-					expression = expression.Transform(
-						ctx,
-						static (context, e) =>
-						{
-							if (e is ConvertFromDataReaderExpression ex)
-								return ex.Reduce(context.Context, context.DataReader, context.NewVariable!).Transform(context, ReplaceVariable);
-
-							return ReplaceVariable(context, e);
-						});
-				}
+				using var transformer = _mapperExpressionTransformerPool.Allocate();
+				var expression = transformer.Value.Transform(context, dataReader, dataReaderType, slowMode, _expression);
 
 				if (LinqToDB.Common.Configuration.OptimizeForSequentialAccess)
 					expression = SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(expression, dataReader.FieldCount, reduce: false);
 
 				return (Expression<Func<IQueryRunner, DbDataReader, T>>)expression;
-			}
-
-			static Expression ReplaceVariable(TransformMapperExpressionContext context, Expression e)
-			{
-				if (e is ParameterExpression { Name: "ldr" } vex)
-				{
-					context.OldVariable = vex;
-					return context.NewVariable ??= Expression.Variable(context.DataReader.GetType(), "ldr");
-				}
-
-				if (e is BinaryExpression { NodeType: ExpressionType.Assign } bex && bex.Left == context.OldVariable)
-				{
-					var dataReaderExpression = Expression.Convert(context.Expression.Parameters[1], context.DataReaderType);
-
-					return Expression.Assign(context.NewVariable!, dataReaderExpression);
-				}
-
-				return e;
-			}
-
-			sealed class TransformMapperExpressionContext
-			{
-				public TransformMapperExpressionContext(Expression<Func<IQueryRunner, DbDataReader, T>> expression, IDataContext context, DbDataReader dataReader, Type dataReaderType)
-				{
-					Expression     = expression;
-					Context        = context;
-					DataReader     = dataReader;
-					DataReaderType = dataReaderType;
-				}
-
-				public Expression<Func<IQueryRunner,DbDataReader,T>> Expression;
-				public readonly IDataContext                         Context;
-				public readonly DbDataReader                         DataReader;
-				public readonly Type                                 DataReaderType;
-
-				public ParameterExpression? OldVariable;
-				public ParameterExpression? NewVariable;
 			}
 		}
 

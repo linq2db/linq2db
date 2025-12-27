@@ -1138,7 +1138,7 @@ namespace LinqToDB.Internal.SqlQuery
 				return base.Visit(element);
 			}
 
-			protected override IQueryElement VisitSqlFunction(SqlFunction element)
+			protected internal override IQueryElement VisitSqlFunction(SqlFunction element)
 			{
 				var isAggregation = IsAggregationFunction(element);
 				var isWindow      = IsWindowFunction(element);
@@ -1154,7 +1154,7 @@ namespace LinqToDB.Internal.SqlQuery
 				return base.VisitSqlFunction(element);
 			}
 
-			protected override IQueryElement VisitSqlExtendedFunction(SqlExtendedFunction element)
+			protected internal override IQueryElement VisitSqlExtendedFunction(SqlExtendedFunction element)
 			{
 				var isAggregation = IsAggregationFunction(element);
 				var isWindow      = IsWindowFunction(element);
@@ -1173,7 +1173,7 @@ namespace LinqToDB.Internal.SqlQuery
 				return base.VisitSqlExtendedFunction(element);
 			}
 
-			protected override IQueryElement VisitSqlExpression(SqlExpression element)
+			protected internal override IQueryElement VisitSqlExpression(SqlExpression element)
 			{
 				var isAggregation = IsAggregationFunction(element);
 				var isWindow      = IsWindowFunction(element);
@@ -1189,19 +1189,19 @@ namespace LinqToDB.Internal.SqlQuery
 				return base.VisitSqlExpression(element);
 			}
 
-			protected override IQueryElement VisitSqlFieldReference(SqlField element)
+			protected internal override IQueryElement VisitSqlFieldReference(SqlField element)
 			{
 				HasReference = true;
 				return base.VisitSqlFieldReference(element);
 			}
 
-			protected override IQueryElement VisitSqlColumnReference(SqlColumn element)
+			protected internal override IQueryElement VisitSqlColumnReference(SqlColumn element)
 			{
 				HasReference = true;
 				return base.VisitSqlColumnReference(element);
 			}
 
-			protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+			protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 			{
 				return selectQuery;
 			}

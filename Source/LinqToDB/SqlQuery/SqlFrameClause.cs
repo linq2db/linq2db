@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlQuery
 {
@@ -76,6 +78,9 @@ namespace LinqToDB.SqlQuery
 		{
 			return HashCode.Combine(FrameType, Start, End);
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlFrameClause(this);
 
 		public void Modify(SqlFrameBoundary start, SqlFrameBoundary end)
 		{

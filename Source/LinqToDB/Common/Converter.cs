@@ -235,7 +235,10 @@ namespace LinqToDB.Common
 			return expr is DefaultValueExpression;
 		}
 
-		internal static readonly FindVisitor<object?> IsDefaultValuePlaceHolderVisitor = FindVisitor<object?>.Create(IsDefaultValuePlaceHolder);
+		internal static bool HasDefaultValuePlaceHolder(Expression expr)
+		{
+			return null != expr.Find(IsDefaultValuePlaceHolder);
+		}
 
 		/// <summary>
 		/// Returns type, to which provided enumeration values should be mapped.

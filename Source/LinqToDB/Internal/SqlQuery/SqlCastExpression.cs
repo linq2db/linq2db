@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.SqlQuery
@@ -58,6 +60,9 @@ namespace LinqToDB.Internal.SqlQuery
 
 			return ToType.Equals(otherCast.ToType) && Expression.Equals(otherCast.Expression, comparer);
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlCastExpression(this);
 
 		public override bool CanBeNullable(NullabilityContext nullability)
 		{

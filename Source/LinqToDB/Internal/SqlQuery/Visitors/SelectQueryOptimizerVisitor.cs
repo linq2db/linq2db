@@ -157,7 +157,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return base.NotifyReplaced(newElement, oldElement);
 		}
 
-		protected override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
+		protected internal override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
 		{
 			var saveQuery = _applySelect;
 
@@ -174,7 +174,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newElement;
 		}
 
-		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+		protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
 			var saveSetOperatorCount  = selectQuery.HasSetOperators ? selectQuery.SetOperators.Count : 0;
 			var saveParent            = _parentSelect;
@@ -304,7 +304,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newQuery;
 		}
 
-		protected override IQueryElement VisitSqlSetOperator(SqlSetOperator element)
+		protected internal override IQueryElement VisitSqlSetOperator(SqlSetOperator element)
 		{
 			var saveCurrent = _currentSetOperator;
 
@@ -317,7 +317,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newElement;
 		}
 
-		protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
+		protected internal override IQueryElement VisitSqlTableSource(SqlTableSource element)
 		{
 			var saveCurrent        = _currentSetOperator;
 
@@ -330,7 +330,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newElement;
 		}
 
-		protected override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		protected internal override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
 		{
 			var saveInsubquery = _inSubquery;
 
@@ -341,7 +341,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newNode;
 		}
 
-		protected override IQueryElement VisitSqlOrderByClause(SqlOrderByClause element)
+		protected internal override IQueryElement VisitSqlOrderByClause(SqlOrderByClause element)
 		{
 			var newElement = (SqlOrderByClause)base.VisitSqlOrderByClause(element);
 
@@ -355,7 +355,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newElement;
 		}
 
-		protected override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
+		protected internal override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
 		{
 			_updateQuery = element.SelectQuery;
 			_updateTable = element.Update.Table as ISqlTableSource ?? element.Update.TableSource;
@@ -365,7 +365,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return result;
 		}
 
-		protected override IQueryElement VisitSqlNullabilityExpression(SqlNullabilityExpression element)
+		protected internal override IQueryElement VisitSqlNullabilityExpression(SqlNullabilityExpression element)
 		{
 			var sqlExpression = Visit(element.SqlExpression);
 			if (sqlExpression is SelectQuery { GroupBy.IsEmpty: true } selectQuery)
@@ -2069,7 +2069,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return true;
 		}
 
-		protected override IQueryElement VisitSqlFromClause(SqlFromClause element)
+		protected internal override IQueryElement VisitSqlFromClause(SqlFromClause element)
 		{
 			element = (SqlFromClause)base.VisitSqlFromClause(element);
 			return element;
@@ -3039,7 +3039,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return isModified;
 		}
 
-		protected override IQueryElement VisitCteClause(CteClause element)
+		protected internal override IQueryElement VisitCteClause(CteClause element)
 		{
 			var saveIsInRecursiveCte = _isInRecursiveCte;
 			var saveCurrentCteClause = _currentCteClause;
@@ -3060,7 +3060,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newElement;
 		}
 
-		protected override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
+		protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
 		{
 			var result = base.VisitExistsPredicate(predicate);
 
@@ -3157,7 +3157,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return base.Visit(element);
 			}
 
-			protected override IQueryElement VisitSqlOrderByItem(SqlOrderByItem element)
+			protected internal override IQueryElement VisitSqlOrderByItem(SqlOrderByItem element)
 			{
 				if (element.IsPositioned)
 				{
@@ -3169,7 +3169,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return base.VisitSqlOrderByItem(element);
 			}
 
-			protected override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
+			protected internal override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
 			{
 				using var scope = DoNotAllowScope(predicate.Expr1.ElementType == QueryElementType.SqlObjectExpression);
 				return base.VisitInListPredicate(predicate);
@@ -3259,7 +3259,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return base.Visit(element);
 			}
 
-			protected override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
+			protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
 			{
 				// OuterApplyOptimization test
 				return predicate;
@@ -3291,7 +3291,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				_visitedFromCte.Clear();
 			}
 
-			protected override IQueryElement VisitCteClause(CteClause element)
+			protected internal override IQueryElement VisitCteClause(CteClause element)
 			{
 				_visitedFromCte.Add(element.Body!.Select.Select);
 				ProcessSelectClause(element.Body!.Select.Select, element);
@@ -3299,7 +3299,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return base.VisitCteClause(element);
 			}
 
-			protected override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
+			protected internal override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
 			{
 				if (!_visitedFromCte.Contains(element))
 					ProcessSelectClause(element, null);
@@ -3307,7 +3307,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return base.VisitSqlSelectClause(element);
 			}
 
-			protected override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
+			protected internal override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
 			{
 				var newElement = base.VisitSqlTableLikeSource(element);
 

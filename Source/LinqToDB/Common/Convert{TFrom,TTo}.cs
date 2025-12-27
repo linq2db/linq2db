@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Conversion;
 using LinqToDB.Mapping;
 
@@ -32,7 +33,7 @@ namespace LinqToDB.Common
 
 			_expression = (Expression<Func<TFrom,TTo>>)expr;
 
-			var rexpr = (Expression<Func<TFrom,TTo>>)ConvertReducer.ReducerVisitor.Transform(expr);
+			var rexpr = (Expression<Func<TFrom,TTo>>)expr.Transform(ConvertReducer.Reducer);
 
 			_lambda = rexpr.CompileExpression();
 		}

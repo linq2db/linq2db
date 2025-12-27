@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -208,7 +210,10 @@ string.Equals(Alias, otherTable.Alias, StringComparison.Ordinal);
 
 		public override int Precedence => LinqToDB.SqlQuery.Precedence.Primary;
 		public override Type SystemType => ObjectType;
-		
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlTable(this);
+
 		#endregion
 
 		#region Public Members

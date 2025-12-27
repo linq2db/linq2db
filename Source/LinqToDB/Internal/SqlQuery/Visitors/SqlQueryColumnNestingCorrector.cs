@@ -7,7 +7,7 @@ using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.SqlQuery.Visitors
 {
-	public sealed class SqlQueryColumnNestingCorrector : SqlQueryVisitor
+	public sealed class SqlQueryColumnNestingCorrector : QueryElementVisitor
 	{
 		[DebuggerDisplay("QN(S:{TableSource.SourceID})")]
 		sealed class QueryNesting
@@ -146,14 +146,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		public bool HasSelectQuery { get; private set; }
 
-		public SqlQueryColumnNestingCorrector() : base(VisitMode.Modify, null)
+		public SqlQueryColumnNestingCorrector() : base(VisitMode.Modify)
 		{
 		}
 
-		public override void Cleanup()
+		public void Cleanup()
 		{
-			base.Cleanup();
-
 			_parentQueryNesting = null;
 		}
 
@@ -200,7 +198,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlFieldReference(SqlField element)
+		protected internal override IQueryElement VisitSqlFieldReference(SqlField element)
 		{
 			var newElement = base.VisitSqlFieldReference(element);
 
@@ -233,7 +231,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newElement;
 		}
 
-		protected override IQueryElement VisitSqlColumnReference(SqlColumn element)
+		protected internal override IQueryElement VisitSqlColumnReference(SqlColumn element)
 		{
 			var newElement = base.VisitSqlColumnReference(element);
 
@@ -248,7 +246,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newElement;
 		}
 
-		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+		protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
 			HasSelectQuery = true;
 
@@ -263,7 +261,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newQuery;
 		}
 
-		protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
+		protected internal override IQueryElement VisitSqlTableSource(SqlTableSource element)
 		{
 			_ = new QueryNesting(_parentQueryNesting, element.Source);
 
@@ -272,7 +270,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newElement;
 		}
 
-		protected override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
+		protected internal override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
 		{
 			var saveQueryNesting = _parentQueryNesting;
 			_parentQueryNesting = new QueryNesting(saveQueryNesting, element);
@@ -283,6 +281,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				_parentQueryNesting = saveQueryNesting;
 
 			return newElement;
+		}
 	}
-}
 }

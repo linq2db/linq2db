@@ -189,22 +189,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (!IsNullValidationDisabled && DefaultValue != null)
 				{
-					var notNullConditions = GetNotNullConditions();
-
-					var sequenceRef = new ContextRefExpression(ElementType, Sequence);
-
-					var testCondition = notNullConditions.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
-
-					var defaultValue = DefaultValue;
-					if (defaultValue.Type != sequenceRef.Type)
-					{
-						defaultValue = Expression.Convert(defaultValue, sequenceRef.Type);
-					}
-
-					var body = Expression.Condition(testCondition, sequenceRef, defaultValue);
-
-					var projectedDefault = Builder.Project(Sequence, newPath, null, -1, flags, body, true);
-					return projectedDefault;
+					return ProjectWithDefaultValue(flags, newPath);
 				}
 
 				var expr = Builder.BuildExpression(this, newPath);
@@ -243,14 +228,34 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				return expr;
+
+				Expression ProjectWithDefaultValue(ProjectFlags flags, Expression newPath)
+				{
+					var notNullConditions = GetNotNullConditions();
+
+					var sequenceRef = new ContextRefExpression(ElementType, Sequence);
+
+					var testCondition = notNullConditions.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
+
+					var defaultValue = DefaultValue;
+					if (defaultValue.Type != sequenceRef.Type)
+					{
+						defaultValue = Expression.Convert(defaultValue, sequenceRef.Type);
+					}
+
+					var body = Expression.Condition(testCondition, sequenceRef, defaultValue);
+
+					var projectedDefault = Builder.Project(Sequence, newPath, null, -1, flags, body, true);
+					return projectedDefault;
+				}
 			}
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new DefaultIfEmptyContext(null, 
-					context.CloneContext(Sequence), 
-					context.CloneContext(_nullabilitySequence), 
-					context.CloneExpression(DefaultValue), 
+				return new DefaultIfEmptyContext(null,
+					context.CloneContext(Sequence),
+					context.CloneContext(_nullabilitySequence),
+					context.CloneExpression(DefaultValue),
 					IsNullValidationDisabled);
 			}
 

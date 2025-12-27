@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.SqlProvider
 				statement = new JoinsOptimizer().Optimize(statement, evaluationContext);
 
 				// Do it again after JOIN Optimization
-				FinalizeCte(statement);
+			FinalizeCte(statement);
 			}
 
 			statement = FinalizeInsert(statement);
@@ -71,8 +71,6 @@ namespace LinqToDB.Internal.SqlProvider
 
 			// provider specific query correction
 			statement = FinalizeStatement(statement, evaluationContext, dataOptions, mappingSchema);
-
-//statement.EnsureFindTables();
 
 			return statement;
 		}
@@ -439,7 +437,7 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 			}
 
-			protected override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
+			protected internal override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
 			{
 				var newElement = base.VisitSqlSelectClause(element);
 
@@ -466,7 +464,7 @@ namespace LinqToDB.Internal.SqlProvider
 				return element;
 			}
 
-			protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
+			protected internal override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 			{
 				base.VisitExprExprPredicate(predicate);
 
@@ -480,7 +478,7 @@ namespace LinqToDB.Internal.SqlProvider
 				return predicate;
 			}
 
-			protected override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
+			protected internal override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
 			{
 				var saveUpdateSelect = _updateSelect;
 				_updateSelect = element.SelectQuery;
@@ -706,7 +704,7 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 		}
 
-		sealed class CteCollectorVisitor : SqlQueryVisitor
+		sealed class CteCollectorVisitor : QueryElementVisitor
 		{
 			public sealed class CteDependencyHolder
 			{
@@ -714,17 +712,17 @@ namespace LinqToDB.Internal.SqlProvider
 				public HashSet<CteClause>? DependsOn { get; private set; }
 
 				public CteDependencyHolder(CteClause cteClause)
-		{
+				{
 					CteClause = cteClause;
 				}
 
 				public bool AddDependency(CteClause cteClause)
-			{
-					if (ReferenceEquals(CteClause, cteClause))
 				{
+					if (ReferenceEquals(CteClause, cteClause))
+					{
 						CteClause.IsRecursive = true;
 						return false;
-				}
+					}
 
 					DependsOn ??= new HashSet<CteClause>();
 					DependsOn.Add(cteClause);
@@ -736,7 +734,7 @@ namespace LinqToDB.Internal.SqlProvider
 			Dictionary<CteClause, CteDependencyHolder>? _foundCtes;
 			Stack<CteDependencyHolder>?                  _currentCteStack;
 
-			public CteCollectorVisitor() : base(VisitMode.ReadOnly, null)
+			public CteCollectorVisitor() : base(VisitMode.ReadOnly)
 			{
 			}
 
@@ -746,47 +744,45 @@ namespace LinqToDB.Internal.SqlProvider
 				_currentCteStack = null;
 				Visit(statement);
 				return _foundCtes;
-		}
+			}
 
-			public override void Cleanup()
-		{
-				base.Cleanup();
-
+			public void Cleanup()
+			{
 				_foundCtes       = null;
 				_currentCteStack = null;
 			}
 
-			protected override IQueryElement VisitSqlWithClause(SqlWithClause element)
+			protected internal override IQueryElement VisitSqlWithClause(SqlWithClause element)
 			{
 				return element;
 			}
 
-			protected override IQueryElement VisitSqlCteTable(SqlCteTable element)
-				{
+			protected internal override IQueryElement VisitSqlCteTable(SqlCteTable element)
+			{
 				var cteClause = element.Cte;
 
 				CteDependencyHolder? holder    = null;
 
 				if (cteClause != null)
-						{
+				{
 					_foundCtes ??= new();
 					if (!_foundCtes.TryGetValue(cteClause, out holder))
-							{
+					{
 						cteClause.IsRecursive = false;
 						holder                = new CteDependencyHolder(cteClause);
 						_foundCtes.Add(cteClause, holder);
-							}
-						}
+					}
+				}
 
 				_currentCteStack ??= new Stack<CteDependencyHolder>();
 				if (holder != null)
-						{
+				{
 					foreach (var h in _currentCteStack)
-							{
+					{
 						// recursion found
 						if (!h.AddDependency(holder.CteClause))
 							return element;
-							}
+					}
 
 					_currentCteStack.Push(holder);
 				}
@@ -797,41 +793,41 @@ namespace LinqToDB.Internal.SqlProvider
 					_currentCteStack.Pop();
 
 				return element;
-						}
-				}
+			}
+		}
 
 		protected void FinalizeCte(SqlStatement statement)
-				{
+		{
 			if (statement is not SqlStatementWithQueryBase select)
 				return;
 
 			IDictionary<CteClause, CteCollectorVisitor.CteDependencyHolder>? foundCtes;
 
 			using (var cteCollector = _cteCollectorVisitorPool.Allocate())
-						{
+			{
 				foundCtes = cteCollector.Value.FindCtes(statement);
-				}
+			}
 
 			if (foundCtes == null)
 			{
-					select.With = null;
+				select.With = null;
 			}
-				else
-				{
-					// TODO: Ideally if there is no recursive CTEs we can convert them to SubQueries
-					if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
-						throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");
+			else
+			{
+				// TODO: Ideally if there is no recursive CTEs we can convert them to SubQueries
+				if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
+					throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");
 
 				var ordered = TopoSorting.TopoSort(foundCtes.Keys, foundCtes, static (ctes, cteClause) => (ctes.TryGetValue(cteClause, out var h) ? h.DependsOn ?? [] : []))
 					.ToList();
 
-					Utils.MakeUniqueNames(ordered, null, static (n, a) => !ReservedWords.IsReserved(n), static c => c.Name, static (c, n, a) => c.Name = n,
-						static c => string.IsNullOrEmpty(c.Name) ? "CTE_1" : c.Name, StringComparer.OrdinalIgnoreCase);
+				Utils.MakeUniqueNames(ordered, null, static (n, a) => !ReservedWords.IsReserved(n), static c => c.Name, static (c, n, a) => c.Name = n,
+					static c => string.IsNullOrEmpty(c.Name) ? "CTE_1" : c.Name, StringComparer.OrdinalIgnoreCase);
 
-					select.With = new SqlWithClause();
-					select.With.Clauses.AddRange(ordered);
-				}
+				select.With = new SqlWithClause();
+				select.With.Clauses.AddRange(ordered);
 			}
+		}
 
 		protected static bool HasParameters(ISqlExpression expr)
 		{
@@ -2088,7 +2084,7 @@ namespace LinqToDB.Internal.SqlProvider
 				return result;
 			}
 
-			protected override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
+			protected internal override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
 			{
 				if (_disableParameters)
 					sqlParameter.IsQueryParameter = false;

@@ -106,7 +106,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				|| type.DbType?.Equals("json", StringComparison.OrdinalIgnoreCase) == true;
 		}
 
-		protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
+		protected internal override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 		{
 			if (predicate.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
 			{

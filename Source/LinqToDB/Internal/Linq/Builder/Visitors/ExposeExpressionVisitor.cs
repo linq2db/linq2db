@@ -22,7 +22,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 {
 	sealed class ExposeExpressionVisitor : ExpressionVisitorBase, IExpressionEvaluator
 	{
-		static readonly ObjectPool<IsCompilableVisitor> _isCompilableVisitorPool = new(() => new IsCompilableVisitor(), v => v.Cleanup(), 100);
+		static ObjectPool<IsCompilableVisitor> _isCompilableVisitorPool = new(() => new IsCompilableVisitor(), v => v.Cleanup(), 100);
 
 		IDataContext                      _dataContext         = default!;
 		IMemberConverter                  _memberConverter     = default!;
@@ -74,6 +74,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			base.Cleanup();
 		}
 
+#if DEBUG
 		[return: NotNullIfNotNull(nameof(node))]
 		public override Expression? Visit(Expression? node)
 		{
@@ -82,6 +83,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 			return base.Visit(node);
 		}
+#endif
 
 		protected override Expression VisitMethodCall(MethodCallExpression node)
 		{
@@ -101,6 +103,107 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			}
 
 			if (node.Method.IsSqlPropertyMethodEx())
+			{
+				return HandleSqlProperty(node);
+			}
+
+			if (string.Equals(node.Method.Name, "Compile", StringComparison.Ordinal) &&
+				typeof(LambdaExpression).IsSameOrParentOf(node.Method.DeclaringType!))
+			{
+				if (node.Object.EvaluateExpression() is LambdaExpression lambda)
+				{
+					return Visit(lambda);
+				}
+			}
+
+			if (string.Equals(node.Method.Name, "Invoke", StringComparison.Ordinal) && node.Object is LambdaExpression invokeLambda)
+			{
+				return HandleInvoke(node, invokeLambda);
+			}
+
+			if (string.Equals(node.Method.Name, nameof(DataExtensions.QueryFromExpression), StringComparison.Ordinal) &&
+				node.Method.DeclaringType == typeof(DataExtensions))
+			{
+				if (node.Arguments[1].EvaluateExpression() is LambdaExpression lambda)
+				{
+					return Visit(lambda.Body);
+				}
+			}
+
+			if (TryConvertIQueryable(node, out var convertedQuery))
+			{
+				var save = _compactBinary;
+				_compactBinary = true;
+				convertedQuery = Visit(convertedQuery);
+				_compactBinary = save;
+
+				return convertedQuery;
+			}
+
+			if (_includeConvert)
+			{
+				var newNode = ConvertMethod(node);
+				if (newNode != null)
+				{
+					return Visit(newNode);
+				}
+			}
+
+			var dependentParameters = SqlQueryDependentAttributeHelper.GetQueryDependentAttributes(node.Method);
+
+			if (dependentParameters != null)
+			{
+				node = HandleSqlDependentParameters(node, dependentParameters);
+			}
+
+			if (_isSingleConvert)
+				return node;
+
+			var newEvaluatedArguments = TryEvaluateArguments(node);
+
+			if (newEvaluatedArguments != null)
+			{
+				return Visit(node.Update(node.Object, newEvaluatedArguments));
+			}
+
+			var result = base.VisitMethodCall(node);
+			return result;
+
+			MethodCallExpression HandleSqlDependentParameters(MethodCallExpression node, IList<SqlQueryDependentAttribute?> dependentParameters)
+			{
+				var           arguments    = node.Arguments;
+				Expression[]? newArguments = null;
+
+				for (var i = 0; i < arguments.Count; i++)
+				{
+					var attr = dependentParameters[i];
+					if (attr != null)
+					{
+						var argument = arguments[i];
+						if (argument.NodeType != ExpressionType.Constant)
+						{
+							var newArgument = attr.PrepareForCache(argument, this);
+							if (newArgument.Type != argument.Type)
+								newArgument = Expression.Convert(newArgument, argument.Type);
+
+							if (!ReferenceEquals(newArgument, argument))
+							{
+								newArguments ??= arguments.ToArray();
+								newArguments[i] = newArgument;
+							}
+						}
+					}
+				}
+
+				if (newArguments != null)
+				{
+					node = node.Update(node.Object, newArguments);
+				}
+
+				return node;
+			}
+
+			Expression HandleSqlProperty(MethodCallExpression node)
 			{
 				// transform Sql.Property into member access
 				if (node.Arguments[1].Type != typeof(string))
@@ -135,16 +238,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				return Expression.MakeMemberAccess(entity, memberInfo);
 			}
 
-			if (string.Equals(node.Method.Name, "Compile", StringComparison.Ordinal) &&
-			    typeof(LambdaExpression).IsSameOrParentOf(node.Method.DeclaringType!))
-			{
-				if (node.Object.EvaluateExpression() is LambdaExpression lambda)
-				{
-					return Visit(lambda);
-				}
-			}
-
-			if (string.Equals(node.Method.Name, "Invoke", StringComparison.Ordinal) && node.Object is LambdaExpression invokeLambda)
+			Expression HandleInvoke(MethodCallExpression node, LambdaExpression invokeLambda)
 			{
 				var body = invokeLambda.Body;
 
@@ -159,101 +253,33 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				return Visit(body);
 			}
 
-			if (string.Equals(node.Method.Name, nameof(DataExtensions.QueryFromExpression), StringComparison.Ordinal) &&
-			    node.Method.DeclaringType == typeof(DataExtensions))
+			Expression[]? TryEvaluateArguments(MethodCallExpression node)
 			{
-				if (node.Arguments[1].EvaluateExpression() is LambdaExpression lambda)
+				Expression[]? newEvaluatedArguments = null;
+
+				for (var i = 0; i < node.Arguments.Count; i++)
 				{
-					return Visit(lambda.Body);
-				}
-			}
+					var argument = node.Arguments[i];
 
-			if (TryConvertIQueryable(node, out var convertedQuery))
-			{
-				var save = _compactBinary;
-				_compactBinary = true;
-				convertedQuery = Visit(convertedQuery);
-				_compactBinary = save;
-
-				return convertedQuery;
-			}
-
-			if (_includeConvert)
-			{
-				var newNode = ConvertMethod(node);
-				if (newNode != null)
-				{
-					return Visit(newNode);
-				}
-			}
-
-			var dependentParameters = SqlQueryDependentAttributeHelper.GetQueryDependentAttributes(node.Method);
-
-			if (dependentParameters != null)
-			{
-				var           arguments    = node.Arguments;
-				Expression[]? newArguments = null;
-
-				for (var i = 0; i < arguments.Count; i++)
-				{
-					var attr = dependentParameters[i];
-					if (attr != null)
+					if (argument.NodeType != ExpressionType.Quote && typeof(Expression<>).IsSameOrParentOf(argument.Type))
 					{
-						var argument = arguments[i];
-						if (argument.NodeType != ExpressionType.Constant)
+						if (IsCompilable(argument))
 						{
-							var newArgument = attr.PrepareForCache(argument, this);
-							if (newArgument.Type != argument.Type)
-								newArgument = Expression.Convert(newArgument, argument.Type);
-
-							if (!ReferenceEquals(newArgument, argument))
+							var evaluated = EvaluateExpression(argument);
+							if (evaluated is Expression evaluatedExpr)
 							{
-								newArguments ??= arguments.ToArray();
-								newArguments[i] = newArgument;
+								if (newEvaluatedArguments == null)
+								{
+									newEvaluatedArguments ??= node.Arguments.ToArray();
+									newEvaluatedArguments[i] = evaluatedExpr;
+								}
 							}
 						}
 					}
 				}
 
-				if (newArguments != null)
-				{
-					node = node.Update(node.Object, newArguments);
-				}
+				return newEvaluatedArguments;
 			}
-
-			if (_isSingleConvert)
-				return node;
-
-			Expression[]? newEvaluatedArguments = null;
-
-			for (var i = 0; i < node.Arguments.Count; i++)
-			{
-				var argument = node.Arguments[i];
-
-				if (argument.NodeType != ExpressionType.Quote && typeof(Expression<>).IsSameOrParentOf(argument.Type))
-				{
-					if (IsCompilable(argument))
-					{
-						var evaluated = EvaluateExpression(argument);
-						if (evaluated is Expression evaluatedExpr)
-						{
-							if (newEvaluatedArguments == null)
-							{
-								newEvaluatedArguments    ??= node.Arguments.ToArray();
-								newEvaluatedArguments[i] =   evaluatedExpr;
-							}
-						}
-					}
-				}
-			}
-
-			if (newEvaluatedArguments != null)
-			{
-				return Visit(node.Update(node.Object, newEvaluatedArguments));
-			}
-
-			var result = base.VisitMethodCall(node);
-			return result;
 		}
 
 		Expression? ConvertMethod(MethodCallExpression pi)
@@ -763,7 +789,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 					if (node.Left is BinaryExpression equalityLeft && node.Right is ConstantExpression constantRight)
 						if (equalityLeft.Type.IsNullableType)
 							if (equalityLeft.NodeType == ExpressionType.Equal && equalityLeft.Left.Type == equalityLeft.Right.Type)
-								if (constantRight.Value is bool val && !val)
+								if (constantRight.Value is false)
 								{
 									var result = Visit(equalityLeft);
 									if (result.Type != node.Type)
@@ -1012,7 +1038,8 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 						expr = Expression.Call(
 							mi.DeclaringType!,
 							name,
-!string.Equals(name, attr.MethodName, StringComparison.Ordinal) ? [] : args);
+							!string.Equals(name, attr.MethodName, StringComparison.Ordinal) ? [] : args
+						);
 					}
 					else
 					{

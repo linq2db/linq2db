@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
@@ -103,6 +104,9 @@ namespace LinqToDB.Internal.SqlQuery
 
 			return hash.ToHashCode();
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlSearchCondition(this);
 
 		#endregion
 
@@ -262,7 +266,7 @@ namespace LinqToDB.Internal.SqlQuery
 				return base.Visit(element);
 			}
 
-			protected override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
+			protected internal override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
 			{
 				if (predicate.IsNot != _isOr)
 					(NotNullOverrides ??= new(ISqlExpressionEqualityComparer.Instance)).TryAdd(predicate.Expr1, false);
@@ -270,7 +274,7 @@ namespace LinqToDB.Internal.SqlQuery
 				return predicate;
 			}
 
-			protected override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
+			protected internal override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
 			{
 				if (element.IsOr != _isOr)
 					return element;

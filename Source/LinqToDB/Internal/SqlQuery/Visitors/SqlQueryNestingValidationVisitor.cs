@@ -21,7 +21,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_forStatement = forStatement;
 		}
 
-		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+		protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
 			var saveQuery   = _currentQuery;
 			var saveOuter   = _outerSources;
@@ -69,7 +69,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return new InvalidOperationException(messageString);
 		}
 
-		protected override IQueryElement VisitSqlFieldReference(SqlField element)
+		protected internal override IQueryElement VisitSqlFieldReference(SqlField element)
 		{
 			if (element.Table != null)
 			{
@@ -87,7 +87,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return base.VisitSqlFieldReference(element);
 		}
 
-		protected override IQueryElement VisitSqlOrderByItem(SqlOrderByItem element)
+		protected internal override IQueryElement VisitSqlOrderByItem(SqlOrderByItem element)
 		{
 			var saveOuter = _outerSources;
 
@@ -102,7 +102,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlColumnReference(SqlColumn element)
+		protected internal override IQueryElement VisitSqlColumnReference(SqlColumn element)
 		{
 			if (element.Parent != null)
 			{
@@ -135,7 +135,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return expression;
 		}
 
-		protected override IQueryElement VisitSqlWhereClause(SqlWhereClause element)
+		protected internal override IQueryElement VisitSqlWhereClause(SqlWhereClause element)
 		{
 			var saveOuter = _outerSources;
 
@@ -150,7 +150,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlMergeStatement(SqlMergeStatement element)
+		protected internal override IQueryElement VisitSqlMergeStatement(SqlMergeStatement element)
 		{
 			var saveSources = _querySources;
 
@@ -166,7 +166,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlMultiInsertStatement(SqlMultiInsertStatement element)
+		protected internal override IQueryElement VisitSqlMultiInsertStatement(SqlMultiInsertStatement element)
 		{
 			var saveOuter = _outerSources;
 
@@ -180,7 +180,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlConditionalInsertClause(SqlConditionalInsertClause element)
+		protected internal override IQueryElement VisitSqlConditionalInsertClause(SqlConditionalInsertClause element)
 		{
 			var saveOuter = _outerSources;
 
@@ -196,7 +196,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlInsertOrUpdateStatement(SqlInsertOrUpdateStatement element)
+		protected internal override IQueryElement VisitSqlInsertOrUpdateStatement(SqlInsertOrUpdateStatement element)
 		{
 			var saveOuter = _outerSources;
 
@@ -215,7 +215,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
+		protected internal override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
 		{
 			var saveOuter = _outerSources;
 
@@ -248,7 +248,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlOutputClause(SqlOutputClause element)
+		protected internal override IQueryElement VisitSqlOutputClause(SqlOutputClause element)
 		{
 			var saveOuter = _outerSources;
 
@@ -264,7 +264,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlDeleteStatement(SqlDeleteStatement element)
+		protected internal override IQueryElement VisitSqlDeleteStatement(SqlDeleteStatement element)
 		{
 			var saveOuter = _outerSources;
 
@@ -282,7 +282,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlInsertStatement(SqlInsertStatement element)
+		protected internal override IQueryElement VisitSqlInsertStatement(SqlInsertStatement element)
 		{
 			var saveOuter = _outerSources;
 
@@ -300,7 +300,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
+		protected internal override IQueryElement VisitSqlTableSource(SqlTableSource element)
 		{
 			if (_querySources != null)
 				_querySources.Add(element.Source);
@@ -310,7 +310,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
+		protected internal override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
 		{
 			if (element.JoinType
 					is JoinType.CrossApply

@@ -1,5 +1,8 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -40,10 +43,10 @@ namespace LinqToDB.Internal.SqlQuery
 
 				SqlNullabilityExpression nullabilityExpression =>
 					new SqlNullabilityExpression(nullabilityExpression.SqlExpression, canBeNull),
-
+					
 				_ => new SqlNullabilityExpression(sqlExpression, canBeNull),
 			};
-		}
+			}
 
 		public void Modify(ISqlExpression sqlExpression)
 		{
@@ -97,5 +100,8 @@ namespace LinqToDB.Internal.SqlQuery
 				SqlExpression.GetElementHashCode()
 			);
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlNullabilityExpression(this);
 	}
 }

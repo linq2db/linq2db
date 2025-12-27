@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 
+using LinqToDB.Internal.SqlQuery.Visitors;
+
 namespace LinqToDB.Internal.SqlQuery
 {
 	public sealed class SqlColumn : SqlExpressionBase
@@ -208,5 +210,8 @@ namespace LinqToDB.Internal.SqlQuery
 
 			return writer;
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlColumnReference(this);
 	}
 }

@@ -10,7 +10,6 @@ using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq.Builder.Visitors;
 using LinqToDB.Internal.Reflection;
@@ -504,16 +503,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#region PreferServerSide
 
-		private FindVisitor<ExpressionTreeOptimizationContext>? _enforceServerSideVisitorTrue;
-		private FindVisitor<ExpressionTreeOptimizationContext>? _enforceServerSideVisitorFalse;
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private FindVisitor<ExpressionTreeOptimizationContext> GetVisitor(bool enforceServerSide)
+		private bool PreferServerSide(bool enforceServerSide, Expression expr)
 		{
-			if (enforceServerSide)
-				return _enforceServerSideVisitorTrue ??= FindVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.PreferServerSide(e, true));
-			else
-				return _enforceServerSideVisitorFalse ??= FindVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.PreferServerSide(e, false));
+			return expr.Find((context: this, enforceServerSide), static (ctx, e) => ctx.context.PreferServerSide(e, ctx.enforceServerSide)) != null;
 		}
 
 		public bool PreferServerSide(Expression expr, bool enforceServerSide)
@@ -532,7 +525,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (l.Parameters.Count == 1 && pi.Expression != null)
 							info = info.Replace(l.Parameters[0], pi.Expression);
 
-						return GetVisitor(enforceServerSide).Find(info) != null;
+						return PreferServerSide(enforceServerSide, info);
 					}
 
 					var attr = pi.Member.GetExpressionAttribute(MappingSchema);
@@ -545,7 +538,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var l  = LinqToDB.Linq.Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
 
 					if (l != null)
-						return GetVisitor(enforceServerSide).Find(l.Body.Unwrap()) != null;
+						return PreferServerSide(enforceServerSide, l.Body.Unwrap());
 
 					var attr = pi.Method.GetExpressionAttribute(MappingSchema);
 					return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeEvaluatedOnClient(expr);

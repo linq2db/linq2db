@@ -692,34 +692,34 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 					return expression;
 				}
 
-				protected override IQueryElement VisitSqlTable(SqlTable element)
+				protected internal override IQueryElement VisitSqlTable(SqlTable element)
 				{
 					RegisterInSerializer(element.All);
 					VisitElements(element.Fields, VisitMode.ReadOnly);
 					return base.VisitSqlTable(element);
 				}
 
-				protected override IQueryElement VisitSqlCteTable(SqlCteTable element)
+				protected internal override IQueryElement VisitSqlCteTable(SqlCteTable element)
 				{
 					RegisterInSerializer(element.All);
 					VisitElements(element.Fields, VisitMode.ReadOnly);
 					return base.VisitSqlCteTable(element);
 				}
 
-				protected override IQueryElement VisitSqlRawSqlTable(SqlRawSqlTable element)
+				protected internal override IQueryElement VisitSqlRawSqlTable(SqlRawSqlTable element)
 				{
 					RegisterInSerializer(element.All);
 					VisitElements(element.Fields, VisitMode.ReadOnly);
 					return base.VisitSqlRawSqlTable(element);
 				}
 
-				protected override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
+				protected internal override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
 				{
 					VisitElements(element.SourceFields, VisitMode.ReadOnly);
 					return base.VisitSqlTableLikeSource(element);
 				}
 
-				protected override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
+				protected internal override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
 				{
 					VisitElements(element.Fields, VisitMode.ReadOnly);
 					VisitListOfLists(element.Rows, VisitMode.ReadOnly);

@@ -116,10 +116,6 @@ namespace LinqToDB.Mapping
 		/// </remarks>
 		public MappingSchema(string? configuration, params MappingSchema[]? schemas)
 		{
-			// initialize on schema creation to avoid race conditions later
-			// see https://github.com/linq2db/linq2db/issues/3312
-			_reduceDefaultValueTransformer = TransformVisitor<MappingSchema>.Create(this, static (ctx, e) => ctx.ReduceDefaultValueTransformer(e));
-
 			configuration ??= string.Empty;
 
 #pragma warning disable CA2214 // Do not call overridable methods in constructors
@@ -185,7 +181,6 @@ namespace LinqToDB.Mapping
 
 		readonly Lock _syncRoot = new();
 		internal readonly MappingSchemaInfo[] Schemas;
-		readonly TransformVisitor<MappingSchema> _reduceDefaultValueTransformer;
 
 		#endregion
 
@@ -579,9 +574,9 @@ namespace LinqToDB.Mapping
 			ArgumentNullException.ThrowIfNull(toType);
 			ArgumentNullException.ThrowIfNull(expr);
 
-			var ex = addNullCheck && toType != typeof(DataParameter) && Converter.IsDefaultValuePlaceHolderVisitor.Find(expr) == null?
-				AddNullCheck(expr) :
-				expr;
+			var ex = addNullCheck && toType != typeof(DataParameter) && !Converter.HasDefaultValuePlaceHolder(expr)
+				? AddNullCheck(expr)
+				: expr;
 
 			lock (_syncRoot)
 			{
@@ -614,9 +609,9 @@ namespace LinqToDB.Mapping
 		{
 			ArgumentNullException.ThrowIfNull(expr);
 
-			var ex = addNullCheck && toType.SystemType != typeof(DataParameter) && Converter.IsDefaultValuePlaceHolderVisitor.Find(expr) == null?
-				AddNullCheck(expr) :
-				expr;
+			var ex = addNullCheck && toType.SystemType != typeof(DataParameter) && !Converter.HasDefaultValuePlaceHolder(expr)
+				? AddNullCheck(expr)
+				: expr;
 
 			lock (_syncRoot)
 			{
@@ -647,9 +642,9 @@ namespace LinqToDB.Mapping
 		{
 			ArgumentNullException.ThrowIfNull(expr);
 
-			var ex = addNullCheck && typeof(TTo) != typeof(DataParameter) && Converter.IsDefaultValuePlaceHolderVisitor.Find(expr) == null?
-				AddNullCheck(expr) :
-				expr;
+			var ex = addNullCheck && typeof(TTo) != typeof(DataParameter) && !Converter.HasDefaultValuePlaceHolder(expr)
+				? AddNullCheck(expr)
+				: expr;
 
 			lock (_syncRoot)
 			{
@@ -975,7 +970,7 @@ namespace LinqToDB.Mapping
 
 		Expression ReduceDefaultValue(Expression expr)
 		{
-			return _reduceDefaultValueTransformer.Transform(expr);
+			return expr.Transform(ReduceDefaultValueTransformer);
 		}
 
 		private Expression ReduceDefaultValueTransformer(Expression e)
@@ -1377,8 +1372,6 @@ namespace LinqToDB.Mapping
 
 		internal MappingSchema(MappingSchemaInfo mappingSchemaInfo)
 		{
-			_reduceDefaultValueTransformer = TransformVisitor<MappingSchema>.Create(this, static (ctx, e) => ctx.ReduceDefaultValueTransformer(e));
-
 			Schemas = new[] { mappingSchemaInfo };
 
 			ValueToSqlConverter = new ();
