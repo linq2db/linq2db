@@ -59,7 +59,6 @@ namespace Sql2025
 		public ITable<SameTableName>            SameTableNames           { get { return this.GetTable<SameTableName>(); } }
 		public ITable<TestSchema_SameTableName> SameTableNames0          { get { return this.GetTable<TestSchema_SameTableName>(); } }
 		public ITable<SqlType>                  SqlTypes                 { get { return this.GetTable<SqlType>(); } }
-		public ITable<TestClass>                TestClasses              { get { return this.GetTable<TestClass>(); } }
 		public ITable<TestIdentity>             TestIdentities           { get { return this.GetTable<TestIdentity>(); } }
 		public ITable<TestMerge1>               TestMerge1               { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>               TestMerge2               { get { return this.GetTable<TestMerge2>(); } }
@@ -502,12 +501,6 @@ namespace Sql2025
 	{
 		[Column(DbType="int"),         PrimaryKey,  NotNull] public int             ID  { get; set; } // int
 		[Column(DbType="hierarchyid"),    Nullable         ] public SqlHierarchyId? HID { get; set; } // hierarchyid
-	}
-
-	[Table(Schema="dbo", Name="TestClass")]
-	public partial class TestClass
-	{
-		[Column(DbType="char(1)", Length=1), Nullable] public char? EnumValue { get; set; } // char(1)
 	}
 
 	[Table(Schema="dbo", Name="TestIdentity")]
