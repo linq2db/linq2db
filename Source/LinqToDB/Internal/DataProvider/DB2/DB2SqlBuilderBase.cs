@@ -434,9 +434,7 @@ END");
 					dbDataType = dbDataType.WithLength(str.Length);
 				}
 				else if (paramValue.ProviderValue is decimal d)
-				{
-					dbDataType = CorrectDecimalPrecision(dbDataType, d);
-				}
+					dbDataType = CorrectDecimalFacets(dbDataType, d);
 
 				if (dbDataType.Length > 32672)
 				{

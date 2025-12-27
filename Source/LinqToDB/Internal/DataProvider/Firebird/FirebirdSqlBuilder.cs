@@ -286,9 +286,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					dbDataType = dbDataType.WithLength(str.Length);
 				}
 				else if (paramValue.ProviderValue is decimal d)
-				{
-					dbDataType = CorrectDecimalPrecision(dbDataType, d);
-				}
+					dbDataType = CorrectDecimalFacets(dbDataType, d);
 
 				// TODO: temporary guard against cast to unknown type (Variant)
 				if (dbDataType.DataType == DataType.Undefined)
@@ -722,21 +720,13 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			else
 			{
 				if (value is SqlValue { Value: decimal val })
-				{
-					var precision = DecimalHelper.GetPrecision(val);
-					var scale = DecimalHelper.GetScale(val);
-					if (precision == 0 && scale == 0)
-						precision = 1;
-					dataType = dataType.WithPrecision(precision).WithScale(scale);
-				}
+					dataType = CorrectDecimalFacets(dataType, val);
 				else if (value is SqlParameter param)
 				{
 					var paramValue = param.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
 
 					if (paramValue.ProviderValue is decimal decValue)
-					{
-						dataType = CorrectDecimalPrecision(dataType, decValue);
-					}
+						dataType = CorrectDecimalFacets(dataType, decValue);
 				}
 
 				base.BuildTypedExpression(dataType, value);
