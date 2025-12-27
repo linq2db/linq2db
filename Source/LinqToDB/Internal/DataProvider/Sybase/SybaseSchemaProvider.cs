@@ -226,7 +226,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				throw new LinqToDBException("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false");
 
 			using var reader = dataConnection.ExecuteReader(
-				"sp_oledb_stored_procedures",
+				"sp_oledb_getprocedurecolumns",
 				CommandType.StoredProcedure,
 				CommandBehavior.Default
 			);
