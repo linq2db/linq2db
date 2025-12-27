@@ -2131,7 +2131,7 @@ namespace Tests.xUpdate
 
 		sealed class TableWithMoney
 		{
-			[PrimaryKey()]
+			[PrimaryKey]
 			public int       ID;
 			[Column(DataType = DataType.Decimal, Scale = 4)]
 			public decimal   MoneyValue;
