@@ -35,8 +35,8 @@
 	
 	<ItemGroup Label="Build: Analyzers and Tools">
 		<PackageVersion Include="DotNet.ReproducibleBuilds"                             Version="1.2.39"                       />
-		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.260"                      />
-		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.68"                       />
+		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.264"                      />
+		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.77"                       />
 		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                      Version="5.0.0-1.25277.114"            />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="5.0.0-1.25277.114"            />
 		<PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers"             Version="5.0.0-1.25277.114"            />
@@ -86,7 +86,7 @@
 	<ItemGroup Label="Database Providers">
 		<PackageVersion Include="AdoNetCore.AseClient"                                  Version="0.19.2"                       />
 		<PackageVersion Include="ClickHouse.Driver"                                     Version="0.8.1"                        />
-		<PackageVersion Include="Devart.Data.Oracle"                                    Version="10.4.290"                     />
+		<PackageVersion Include="Devart.Data.Oracle"                                    Version="11.0.0"                       />
 		<PackageVersion Include="dotMorten.Microsoft.SqlServer.TNET.Testypes"                   Version="1.5.0"                />
 		<!--<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="2.5.0"                 />-->
 		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"                       Version="10.3.4"                       />
@@ -100,11 +100,11 @@
 		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="9.0.0.400"                    />
 		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="9.0.0.400"                    />
 		<PackageVersion Include="Npgsql"                                                Version="8.0.8"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
-		<PackageVersion Include="Npgsql"                                                Version="10.0.0"                       Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
+		<PackageVersion Include="Npgsql"                                                Version="10.0.1"                       Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
 		<PackageVersion Include="Npgsql.NodaTime"                                       Version="8.0.8"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
-		<PackageVersion Include="Npgsql.NodaTime"                                       Version="10.0.0"                       Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
+		<PackageVersion Include="Npgsql.NodaTime"                                       Version="10.0.1"                       Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
 		<!--as of 3.1.1 multiple introduced issues blocks update-->
-		<PackageVersion Include="Octonica.ClickHouseClient"                             Version="3.1.3"                        />
+		<PackageVersion Include="Octonica.ClickHouseClient"                             Version="3.1.5"                        />
 		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.20.0"                      />
 		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="23.26.0"                      />
 		<PackageVersion Include="System.Data.Odbc"                                      Version="$(Net10Latest)"               />
@@ -112,12 +112,12 @@
 		<PackageVersion Include="System.Data.SqlClient"                                 Version="4.9.0"                        />
 		<PackageVersion Include="System.Data.SQLite"                                    Version="2.0.2"                        />
 		<PackageVersion Include="SourceGear.sqlite3"                                    Version="3.50.4.5"                     />
-		<PackageVersion Include="Ydb.Sdk"                                               Version="0.26.0"                       />
-		<PackageVersion Include="linq2db4iSeries"                                       Version="6.0.0"                        />
+		<PackageVersion Include="Ydb.Sdk"                                               Version="0.27.0"                       />
+		<PackageVersion Include="linq2db4iSeries"                                       Version="6.1.0"                        />
 	</ItemGroup>
 
 	<ItemGroup Label="Remote">
-		<PackageVersion Include="Grpc.Net.Client"                                       Version="2.71.0"                       />
+		<PackageVersion Include="Grpc.Net.Client"                                       Version="2.76.0"                       />
 
 		<PackageVersion Include="Microsoft.AspNetCore.SignalR.Core"                     Version="1.2.0"                        />
 
@@ -139,7 +139,7 @@
 		<PackageVersion Include="Microsoft.NET.Test.Sdk"                                Version="18.0.1"                       />
 		<PackageVersion Include="NUnit"                                                 Version="4.4.0"                        />
 		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.11.2"                       />
-		<PackageVersion Include="NUnit3TestAdapter"                                     Version="5.2.0"                        />
+		<PackageVersion Include="NUnit3TestAdapter"                                     Version="6.0.1"                        />
 
 		<PackageVersion Include="Microsoft.AspNet.OData"                                Version="7.7.9"                        />
 		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="8.3.1"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
