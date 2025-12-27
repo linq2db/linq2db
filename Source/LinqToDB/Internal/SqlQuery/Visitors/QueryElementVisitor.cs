@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
+using LinqToDB.Internal.Common;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.SqlQuery.Visitors
@@ -24,6 +25,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 	/// </summary>
 	public abstract class QueryElementVisitor
 	{
+		readonly StackGuard _guard = new();
+
 		protected QueryElementVisitor(VisitMode visitMode)
 		{
 			VisitMode = visitMode;
@@ -59,7 +62,18 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// Visitor dispatch method.
 		/// </summary>
 		[return: NotNullIfNotNull(nameof(element))]
-		public virtual IQueryElement? Visit(IQueryElement? element) => element?.Accept(this);
+		public virtual IQueryElement? Visit(IQueryElement? element)
+		{
+			if (element == null)
+				return element;
+
+			using var _ = _guard.EnterScope();
+
+			if (!_guard.TryEnterOnCurrentStack())
+				return _guard.RunOnEmptyStack(() => Visit(element));
+
+			return element.Accept(this);
+		}
 
 		#region Query element VisitSqlXXX methods
 
