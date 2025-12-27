@@ -1000,10 +1000,10 @@ namespace LinqToDB.Internal.SqlQuery
 
 		private const string ParamsRegexPattern = /* lang=regex */ @"(?<open>{+)(?<key>\w+)(?<format>:[^}]+)?(?<close>}+)";
 #if SUPPORTS_REGEX_GENERATORS
-		[GeneratedRegex(ParamsRegexPattern, RegexOptions.Compiled, matchTimeoutMilliseconds: 1)]
+		[GeneratedRegex(ParamsRegexPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 50)]
 		private static partial Regex ParamsRegex();
 #else
-		static readonly Regex _paramsRegex = new(ParamsRegexPattern, RegexOptions.Compiled, TimeSpan.FromMilliseconds(1));
+		static readonly Regex _paramsRegex = new(ParamsRegexPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(50));
 		static Regex ParamsRegex() => _paramsRegex;
 #endif
 

@@ -639,14 +639,14 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		private const string MatchTypePattern = /* lang=regex */ @"^(?<type>.*)(\(\d+(,\s*\d+)?\))(?<suffix>.*)$";
 
 #if SUPPORTS_REGEX_GENERATORS
-		[GeneratedRegex(MatchArrayPattern, RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 1)]
+		[GeneratedRegex(MatchArrayPattern, RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 10)]
 		private static partial Regex MatchArrayRegex();
 
-		[GeneratedRegex(MatchTypePattern, RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 1)]
+		[GeneratedRegex(MatchTypePattern, RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 10)]
 		private static partial Regex MatchTypeRegex();
 #else
-		private static readonly Regex _matchArray = new(MatchArrayPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(1));
-		private static readonly Regex _matchType  = new(MatchTypePattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(1));
+		private static readonly Regex _matchArray = new(MatchArrayPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(10));
+		private static readonly Regex _matchType  = new(MatchTypePattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(10));
 
 		private static Regex MatchArrayRegex() => _matchArray;
 		private static Regex MatchTypeRegex() => _matchType;

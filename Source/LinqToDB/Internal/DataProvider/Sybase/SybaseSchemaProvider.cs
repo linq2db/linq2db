@@ -173,7 +173,6 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 							LEFT JOIN sysindexes i ON r2.indexid = i.indid AND r2.reftabid = i.id
 				WHERE
 					c.status = 64
-
 				""";
 
 			string? sql = null;
@@ -181,7 +180,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			for (var i = 1; i <= 16; i++)
 			{
 				if (sql != null)
-					sql += "\nUNION ALL";
+					sql += "\nUNION ALL\n";
 
 				sql += string.Format(CultureInfo.InvariantCulture, baseSql, i);
 			}
