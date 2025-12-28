@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata>
-		<id>linq2db.Remote.HttpClient.Sever</id>
+		<id>linq2db.Remote.HttpClient.Server</id>
 		<title>LINQ to DB remote data context over HttpClient</title>
 		<description>LINQ to DB Remote HttpClient package provides server classes to query database remotely using HttpClient.</description>
 		<tags>HttpClient RemoteLinq</tags>
