@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 
+using LinqToDB.Internal.SqlQuery.Visitors;
+
 namespace LinqToDB.Internal.SqlQuery
 {
 	[DebuggerDisplay("CTE({CteID}, {Name})")]
@@ -94,5 +96,8 @@ namespace LinqToDB.Internal.SqlQuery
 
 			return hash.ToHashCode();
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitCteClause(this);
 	}
 }

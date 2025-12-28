@@ -91,6 +91,5 @@ namespace LinqToDB.Internal.Expressions
 				return baseVisitor.VisitSqlGenericParamAccessExpression(this);
 			return base.Accept(visitor);
 		}
-
 	}
 }

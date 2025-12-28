@@ -200,7 +200,6 @@ namespace LinqToDB.Internal.Expressions
 
 		public override ExpressionType NodeType  => ExpressionType.Extension;
 		public override Type           Type      => ObjectType;
-		public override bool           CanReduce => false;
 
 		public override string ToString()
 		{

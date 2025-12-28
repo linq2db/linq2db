@@ -419,7 +419,7 @@ namespace LinqToDB.Internal.Linq
 
 				if (linqOptions.GenerateExpressionTest)
 				{
-					var testFile = new ExpressionTestGenerator(dataContext).GenerateSource(expressions.MainExpression);
+					var testFile = ExpressionTestGenerator.GenerateSourceFile(dataContext, expressions.MainExpression);
 
 					if (dataContext.GetTraceSwitch().TraceInfo)
 					{
