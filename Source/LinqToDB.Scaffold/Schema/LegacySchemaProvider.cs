@@ -39,7 +39,7 @@ namespace LinqToDB.Schema
 
 		private readonly ILanguageProvider _languageProvider;
 		private readonly SchemaOptions     _options;
-		private readonly ISet<string>      _defaultSchemas = new HashSet<string>();
+		private readonly ISet<string>      _defaultSchemas = new HashSet<string>(StringComparer.Ordinal);
 
 		// database provider name, used to workaround provider-specific issues with legacy API...
 		private readonly string            _providerName;
@@ -57,12 +57,12 @@ namespace LinqToDB.Schema
 			var schemaProvider = connection.DataProvider.GetSchemaProvider();
 			_providerName      = connection.DataProvider.Name;
 
-			_isPostgreSql       = _providerName.Contains(ProviderName.PostgreSQL);
+			_isPostgreSql       = _providerName.Contains(ProviderName.PostgreSQL, StringComparison.Ordinal);
 			_isMySqlOrMariaDB   = _providerName is ProviderName.MariaDB10MySqlConnector or ProviderName.MySql80MySqlConnector or ProviderName.MySql57MySqlConnector;
-			_isSystemDataSqlite = _providerName == "SQLite.Classic";
+			_isSystemDataSqlite = string.Equals(_providerName, "SQLite.Classic", StringComparison.Ordinal);
 			_isAccessOleDb      = _providerName is ProviderName.AccessJetOleDb or ProviderName.AccessAceOleDb;
 			_isAccessOdbc       = _providerName is ProviderName.AccessJetOdbc or ProviderName.AccessAceOdbc;
-			_isSqlServer        = _providerName.Contains(ProviderName.SqlServer);
+			_isSqlServer        = _providerName.Contains(ProviderName.SqlServer, StringComparison.Ordinal);
 
 			// load schema from legacy API and convrt it into new model
 			ParseSchema(
@@ -399,7 +399,7 @@ namespace LinqToDB.Schema
 			{
 				var pkColumns = table.Columns.Where(c => c.IsPrimaryKey).ToList();
 
-				if (pkColumns.Count != pkColumns.Select(c => c.PrimaryKeyOrder).Distinct().Count())
+				if (pkColumns.Count != pkColumns.Select(c => c.PrimaryKeyOrder).Distinct().Take(pkColumns.Count + 1).Count())
 					throw new InvalidOperationException($"Primary key columns have duplicate ordinals on table {tableName}");
 
 				primaryKey = new PrimaryKey(null, table.Columns.Where(c => c.IsPrimaryKey).OrderBy(c => c.PrimaryKeyOrder).Select(c => c.ColumnName).ToList());
@@ -535,6 +535,24 @@ namespace LinqToDB.Schema
 					"Microsoft.SqlServer.Types.SqlHierarchyId" => WellKnownTypes.Microsoft.SqlServer.Types.SqlHierarchyId,
 					"Microsoft.SqlServer.Types.SqlGeography"   => _languageProvider.TypeParser.Parse("Microsoft.SqlServer.Types.SqlGeography", false),
 					"Microsoft.SqlServer.Types.SqlGeometry"    => _languageProvider.TypeParser.Parse("Microsoft.SqlServer.Types.SqlGeometry", false),
+
+					// SQL 2025 types
+					"Microsoft.Data.SqlTypes.SqlJson"          => _languageProvider.TypeParser.Parse("Microsoft.Data.SqlTypes.SqlJson", false),
+					"Microsoft.Data.SqlTypes.SqlVector<float>" =>
+						_languageProvider.ASTBuilder.GenericType(
+							_languageProvider.TypeParser.Parse("Microsoft.Data.SqlTypes.SqlVector<>", true),
+							false,
+							true,
+							_languageProvider.ASTBuilder.Type(typeof(float), false)
+						),
+
+					"Microsoft.Data.SqlTypes.SqlVector<System.Half>" =>
+						_languageProvider.ASTBuilder.GenericType(
+							_languageProvider.TypeParser.Parse("Microsoft.Data.SqlTypes.SqlVector<>", true),
+							false,
+							true,
+							_languageProvider.TypeParser.Parse("System.Half", true)
+						),
 
 					// SQL Server/SQL CE Sql* types
 					"SqlString"   => WellKnownTypes.System.Data.SqlTypes.SqlString,

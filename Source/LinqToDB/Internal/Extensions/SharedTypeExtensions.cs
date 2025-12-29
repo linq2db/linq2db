@@ -10,6 +10,8 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 
+using LinqToDB.Extensions;
+
 #pragma warning disable RS0030
 
 namespace LinqToDB.Internal.Extensions
@@ -39,7 +41,7 @@ namespace LinqToDB.Internal.Extensions
 
 		public static bool IsAnonymousType(this Type type)
 			=> type.Name.StartsWith("<>", StringComparison.Ordinal)
-			   && type.GetCustomAttributes(typeof(CompilerGeneratedAttribute), inherit: false).Length > 0
+			   && type.HasAttribute<CompilerGeneratedAttribute>(inherit: false)
 			   && type.Name.Contains("AnonymousType", StringComparison.Ordinal);
 
 		public static Type? TryGetSequenceType(/*[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] */this Type type)

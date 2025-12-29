@@ -539,6 +539,12 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 61), DefaultValue(false)]
 		public bool IsCrossJoinSyntaxRequired { get; set; }
 
+		/// <summary>
+		/// When disabled, SQL dialect doesn't support Take/LIMIT &amp; IN/ALL/ANY/SOME subquery.
+		/// </summary>
+		[DataMember(Order = 62), DefaultValue(true)]
+		public bool IsTakeWithInAllAnySomeSubquerySupported { get; set; } = true;
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null;
@@ -623,6 +629,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsOrderByAggregateFunctionSupported                  .GetHashCode()
 				^ IsComplexJoinConditionSupported                      .GetHashCode()
 				^ IsCrossJoinSyntaxRequired                            .GetHashCode()
+				^ IsTakeWithInAllAnySomeSubquerySupported              .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => StringComparer.Ordinal.GetHashCode(flag) ^ hash);
 	}
 
@@ -689,6 +696,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsOrderByAggregateFunctionSupported                   == other.IsOrderByAggregateFunctionSupported
 				&& IsComplexJoinConditionSupported                       == other.IsComplexJoinConditionSupported
 				&& IsCrossJoinSyntaxRequired                             == other.IsCrossJoinSyntaxRequired
+				&& IsTakeWithInAllAnySomeSubquerySupported               == other.IsTakeWithInAllAnySomeSubquerySupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
 		#endregion

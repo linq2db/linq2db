@@ -23,6 +23,7 @@
 	RunCliTool("SQLite"         , null                 , "Cli.Default.SQLite"             , Path.Combine(targetDir, "SQLite")             , mode, connectionString: sqliteCN);
 	RunCliTool("SQLServer"      , "SqlServer.Northwind", "Cli.Default.SqlServerNorthwind" , Path.Combine(targetDir, "SqlServerNorthwind") , mode);
 	RunCliTool("SQLServer"      , "SqlServer.2017"     , "Cli.Default.SqlServer"          , Path.Combine(targetDir, "SqlServer")          , mode);
+	RunCliTool("SQLServer"      , "SqlServer.2025"     , "Cli.Default.SqlServer2025"      , Path.Combine(targetDir, "SqlServer2025")      , mode);
 	RunCliTool("Sybase"         , "Sybase.Managed"     , "Cli.Default.Sybase"             , Path.Combine(targetDir, "Sybase")             , mode);
 	RunCliTool("ClickHouseMySql", "ClickHouse.MySql"   , "Cli.Default.ClickHouse.MySql"   , Path.Combine(targetDir, "ClickHouse.MySql")   , mode);
 	RunCliTool("ClickHouseHttp" , "ClickHouse.Driver"  , "Cli.Default.ClickHouse.Driver"  , Path.Combine(targetDir, "ClickHouse.Driver")  , mode);
