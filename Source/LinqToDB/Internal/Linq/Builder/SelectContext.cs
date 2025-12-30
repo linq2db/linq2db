@@ -149,21 +149,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					result = Builder.Project(this, path, null, 0, flags, Body, true);
 					if (result is not SqlErrorExpression)
 					{
-						if (flags.IsSql())
-						{
-							result = Builder.BuildExpression(this, result);
-						}
-
 						return result;
 					}
 				}
 
 				result = Body;
-
-				if (flags.IsSql())
-				{
-					result = Builder.BuildExpression(this, result);
-				}
 			}
 			else
 			{
@@ -206,11 +196,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 							return path;
 						}
-					}
-
-					if (flags.IsSql())
-					{
-						result = Builder.BuildExpression(this, result);
 					}
 				}
 			}
