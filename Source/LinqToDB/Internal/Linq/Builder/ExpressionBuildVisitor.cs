@@ -5078,10 +5078,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public IBuildContext? GetSubQuery(Expression expr, IBuildContext onContext, out bool isSequence, out string? errorMessage)
 		{
-			if (onContext is GroupByBuilder.GroupByContext groupBy)
-			{
-			}
-
 			var info = new BuildInfo(onContext, expr, new SelectQuery())
 			{
 				CreateSubQuery = true,
