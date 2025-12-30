@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -12,9 +13,12 @@ namespace LinqToDB.Internal.Common
 		// Use interlocked to be safe when execution switches threads.
 		int _hopCount;
 
+		// limit snapshot to avoid issues with option changes
+		readonly int _maxHops = LinqToDB.Common.Configuration.TranslationThreadMaxHopCount;
+
 		int _internalDepth;
 
-		public readonly struct StackScope : IDisposable
+		readonly struct StackScope : IDisposable
 		{
 			readonly StackGuard _guard;
 
@@ -33,7 +37,7 @@ namespace LinqToDB.Internal.Common
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public StackScope EnterScope()
+		public IDisposable EnterScope()
 		{
 			return new StackScope(this);
 		}
@@ -41,7 +45,7 @@ namespace LinqToDB.Internal.Common
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TryEnterOnCurrentStack()
 		{
-			return _internalDepth % 64 != 0 || StackProbe.TryEnsureSufficientExecutionStack();
+			return _maxHops < 0 || _internalDepth % 64 != 0 || StackProbe.TryEnsureSufficientExecutionStack();
 		}
 
 		public int Depth
@@ -65,9 +69,9 @@ namespace LinqToDB.Internal.Common
 		public T RunOnEmptyStack<T>(Func<T> action)
 		{
 			Interlocked.Increment(ref _hopCount);
-			if (_hopCount > LinqToDB.Common.Configuration.TranslationThreadMaxHopCount)
+			if (_hopCount > _maxHops)
 			{
-				throw new InsufficientExecutionStackException($"Too many stack hops (>{LinqToDB.Common.Configuration.TranslationThreadMaxHopCount.ToString(CultureInfo.InvariantCulture)}). Recursion cannot safely continue.");
+				throw new InsufficientExecutionStackException($"Too many stack hops (> {_maxHops.ToString(CultureInfo.InvariantCulture)}). Recursion cannot safely continue.");
 			}
 
 			try
@@ -86,22 +90,9 @@ namespace LinqToDB.Internal.Common
 					// Rethrows result or original exception type
 					return task.GetAwaiter().GetResult();
 				}
-				catch (Exception ex)
+				catch (InsufficientExecutionStackException ex)
 				{
-					// Capture caller stack only on failure to avoid overhead on success path
-					var callerTrace = new System.Diagnostics.StackTrace(skipFrames: 1, fNeedFileInfo: true);
-					var hop = new StackHopTraceException(callerTrace);
-
-					if (ex is AggregateException aex)
-					{
-						var flat = aex.Flatten();
-						var list = new List<Exception>(flat.InnerExceptions.Count + 1);
-						list.AddRange(flat.InnerExceptions);
-						list.Add(hop);
-						throw new AggregateException("Stack hop failed. See inner exceptions for full thread stacks.", list);
-					}
-
-					throw new AggregateException("Stack hop failed. See inner exceptions for full thread stacks.", ex, hop);
+					throw new InsufficientExecutionStackException($"Too many stack hops (> {_maxHops.ToString(CultureInfo.InvariantCulture)}). Recursion cannot safely continue.", ex);
 				}
 			}
 			finally
@@ -115,9 +106,9 @@ namespace LinqToDB.Internal.Common
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public static bool TryEnsureSufficientExecutionStack()
 			{
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_0_OR_GREATER
-	        // Available on netstandard/.NET (not on .NET Framework)
-	        return RuntimeHelpers.TryEnsureSufficientExecutionStack();
+#if !NETFRAMEWORK
+				// Available on netstandard/.NET (not on .NET Framework)
+				return RuntimeHelpers.TryEnsureSufficientExecutionStack();
 #else
 				// .NET Framework: only EnsureSufficientExecutionStack() exists
 				try

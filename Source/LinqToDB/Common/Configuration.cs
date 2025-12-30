@@ -112,6 +112,8 @@ namespace LinqToDB.Common
 
 		/// <summary>
 		/// Maximum number of hops to other threads during translation.
+		/// When all threads used up, application will throw <see cref="InsufficientExecutionStackException"/>.
+		/// To disable this feature and produce <see cref="StackOverflowException"/> when stack is used up, set -1 as value.
 		/// Default value: 5.
 		/// </summary>
 		public static int TranslationThreadMaxHopCount { get; set; } = 5;

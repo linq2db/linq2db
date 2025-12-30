@@ -1,7 +1,16 @@
-﻿using System.Linq;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Metrics;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -97,6 +106,7 @@ namespace Tests.Exceptions
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5265")]
 		public void EagerLoadProjection([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
+			using var sc  = new ThreadHopsScope(-1);
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue5265Table>();
 			using var t1 = db.CreateLocalTable<Issue5265SubTable01>();
@@ -107,7 +117,7 @@ namespace Tests.Exceptions
 
 #if DEBUG
 			// initial: 710K
-			const int LKG_SIZE = 200 * 1024;
+			const int LKG_SIZE = 250 * 1024;
 #else
 			// initial: 390K
 			const int LKG_SIZE = 190 * 1024;
@@ -125,5 +135,137 @@ namespace Tests.Exceptions
 					.ToArray();
 			}
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5265")]
+		public void TestStackHopOption([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var sc  = new ThreadHopsScope(1);
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue5265Table>();
+			using var t1 = db.CreateLocalTable<Issue5265SubTable01>();
+			using var t2 = db.CreateLocalTable<Issue5265SubTable02>();
+			using var t3 = db.CreateLocalTable<Issue5265SubTable03>();
+			using var t4 = db.CreateLocalTable<Issue5265SubTable04>();
+			using var t5 = db.CreateLocalTable<Issue5265SubTable05>();
+
+			// start from small-stack thread to hop fast as otherwise we need to add more associations
+			// which make this query really slow
+			var thread = new Thread(ThreadBody, 150 * 1024);
+			thread.Start();
+			thread.Join();
+
+			void ThreadBody(object? context)
+			{
+				_ = tb
+					.LoadWith(e => e.SubTable3!.SubTable5!.SubTable2!.SubTable4!.SubTable1!.SubTable2!
+						.SubTable5!.SubTable3!.SubTable3!.SubTable5!.SubTable2!.SubTable4!.SubTable1!.SubTable4)
+					.ToArray();
+			}
+		}
+
+		[Test]
+		public void TestPreserveExceptionOnHop()
+		{
+			using var sc  = new ThreadHopsScope(5);
+
+			var mi = MethodHelper.GetMethodInfo(Call);
+			var expr = Expression.Call(mi, Expression.Constant(null, typeof(object)));
+			for (var i = 0; i < 30_000; i++)
+				expr = Expression.Call(mi, expr);
+
+			Assert.That(() => new TestExpressionVisitor(true).Visit(expr), Throws.InvalidOperationException);
+		}
+
+		[Test]
+		public void TestExpressionVisitorHops([Values(0, 1, 5, 10)] int hops)
+		{
+			using var sc  = new ThreadHopsScope(hops);
+
+			var mi = MethodHelper.GetMethodInfo(Call);
+			var expr = Expression.Call(mi, Expression.Constant(null, typeof(object)));
+			for (var i = 0; i < 30_000; i++)
+				expr = Expression.Call(mi, expr);
+
+			if (hops is 0)
+			{
+				Assert.That(() => new TestExpressionVisitor().Visit(expr), Throws.InstanceOf<InsufficientExecutionStackException>().And.InnerException.Null);
+			}
+			else if (hops is 1)
+			{
+				Assert.That(() => new TestExpressionVisitor().Visit(expr), Throws.InstanceOf<InsufficientExecutionStackException>()
+					.And.InnerException.InstanceOf<InsufficientExecutionStackException>()
+					.And.InnerException.InnerException.Null);
+			}
+			else if (hops is 5)
+			{
+				Assert.That(() => new TestExpressionVisitor().Visit(expr), Throws.InstanceOf<InsufficientExecutionStackException>()
+					.And.InnerException.InstanceOf<InsufficientExecutionStackException>()
+					.And.InnerException.InnerException.InstanceOf<InsufficientExecutionStackException>()
+					.And.InnerException.InnerException.InnerException.InstanceOf<InsufficientExecutionStackException>()
+					.And.InnerException.InnerException.InnerException.InnerException.InstanceOf<InsufficientExecutionStackException>()
+					.And.InnerException.InnerException.InnerException.InnerException.InnerException.InstanceOf<InsufficientExecutionStackException>()
+					.And.InnerException.InnerException.InnerException.InnerException.InnerException.InnerException.Null);
+			}
+			else
+			{
+				new TestExpressionVisitor().Visit(expr);
+			}
+		}
+
+		static object? Call(object? param) => param;
+
+		sealed class TestExpressionVisitor(bool throwCustom = false) : ExpressionVisitorBase
+		{
+			private int _counter;
+
+			[return: NotNullIfNotNull(nameof(node))]
+			public override Expression? Visit(Expression? node)
+			{
+				_counter++;
+				if (throwCustom && _counter > 25000)
+					throw new InvalidOperationException("Something wrong exception");
+
+				return base.Visit(node);
+			}
+		}
+
+		[Test]
+		public void TestSqlVisitorHops([Values(0, 1, 5, 10)] int hops)
+		{
+			using var sc  = new ThreadHopsScope(hops);
+
+			const string name = "fake";
+			var type = new DbDataType(typeof(int));
+			var expr = new SqlFunction(type, name, new SqlValue(1));
+			for (var i = 0; i < 10_000; i++)
+				expr = new SqlFunction(type, name, expr);
+
+			if (hops is 0)
+			{
+				Assert.That(() => new TestSqlVisitor().Visit(expr), Throws.InstanceOf<InsufficientExecutionStackException>().And.InnerException.Null);
+			}
+			else if (hops is 1)
+			{
+				Assert.That(() => new TestSqlVisitor().Visit(expr), Throws.InstanceOf<InsufficientExecutionStackException>()
+					.And.InnerException.InstanceOf<InsufficientExecutionStackException>()
+					.And.InnerException.InnerException.Null);
+			}
+			else if (hops is 5)
+			{
+				Assert.That(() => new TestSqlVisitor().Visit(expr), Throws.InstanceOf<InsufficientExecutionStackException>()
+					.And.InnerException.InstanceOf<InsufficientExecutionStackException>()
+					.And.InnerException.InnerException.InstanceOf<InsufficientExecutionStackException>()
+					.And.InnerException.InnerException.InnerException.InstanceOf<InsufficientExecutionStackException>()
+					.And.InnerException.InnerException.InnerException.InnerException.InstanceOf<InsufficientExecutionStackException>()
+					.And.InnerException.InnerException.InnerException.InnerException.InnerException.InstanceOf<InsufficientExecutionStackException>()
+					.And.InnerException.InnerException.InnerException.InnerException.InnerException.InnerException.Null);
+			}
+			else
+			{
+				new TestSqlVisitor().Visit(expr);
+			}
+		}
+
+		sealed class TestSqlVisitor() : QueryElementVisitor(VisitMode.ReadOnly);
 	}
 }
