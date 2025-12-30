@@ -12,27 +12,26 @@ namespace LinqToDB.Internal.Common
 		int _hopCount;
 		int _internalDepth;
 
-		// limit snapshot to avoid issues with option changes
-		int _maxHops = LinqToDB.Common.Configuration.TranslationThreadMaxHopCount;
+		int? _maxHops;
 
 		public void Reset()
 		{
-			_maxHops = LinqToDB.Common.Configuration.TranslationThreadMaxHopCount;
-			_hopCount = default;
+			_maxHops       = default;
+			_hopCount      = default;
 			_internalDepth = default;
 		}
 
-		public T? Enter<T>(Func<T, T> action, T arg)
-			where T : class
+		public TResult Enter<T, TResult>(Func<T, TResult> action, T arg)
 		{
 			_internalDepth++;
+			_maxHops ??= LinqToDB.Common.Configuration.TranslationThreadMaxHopCount;
 
 			// test _internalDepth for 1 so we can trigger hop before doing 64 calls and fail
 			// when starting stack is already too small
 			if (_maxHops >= 0 && _internalDepth % 64 == 1 && !TryEnsureSufficientExecutionStack())
 				return RunOnEmptyStack(() => action(arg));
 
-			return null;
+			return default!;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -46,7 +45,7 @@ namespace LinqToDB.Internal.Common
 			Interlocked.Increment(ref _hopCount);
 			if (_hopCount > _maxHops)
 			{
-				throw new InsufficientExecutionStackException($"Too many stack hops (> {_maxHops.ToString(CultureInfo.InvariantCulture)}). Recursion cannot safely continue.");
+				throw new InsufficientExecutionStackException($"Too many stack hops (> {_maxHops.Value.ToString(CultureInfo.InvariantCulture)}). Recursion cannot safely continue.");
 			}
 
 			try
@@ -67,7 +66,7 @@ namespace LinqToDB.Internal.Common
 				}
 				catch (InsufficientExecutionStackException ex)
 				{
-					throw new InsufficientExecutionStackException($"Too many stack hops (> {_maxHops.ToString(CultureInfo.InvariantCulture)}). Recursion cannot safely continue.", ex);
+					throw new InsufficientExecutionStackException($"Too many stack hops (> {_maxHops!.Value.ToString(CultureInfo.InvariantCulture)}). Recursion cannot safely continue.", ex);
 				}
 			}
 			finally

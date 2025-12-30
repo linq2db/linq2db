@@ -75,7 +75,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (element == null)
 				return element;
 
-			element = _guard.Enter(Visit, element) ?? element.Accept(this);
+			element = _guard.Enter(element.Accept, this) ?? element.Accept(this);
 
 			_guard.Exit();
 
