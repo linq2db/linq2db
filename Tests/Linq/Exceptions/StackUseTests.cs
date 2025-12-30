@@ -117,7 +117,7 @@ namespace Tests.Exceptions
 
 #if DEBUG
 			// initial: 710K
-			const int LKG_SIZE = 250 * 1024;
+			const int LKG_SIZE = 200 * 1024;
 #else
 			// initial: 390K
 			const int LKG_SIZE = 190 * 1024;

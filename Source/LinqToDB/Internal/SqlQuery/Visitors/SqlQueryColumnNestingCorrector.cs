@@ -150,9 +150,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 		}
 
-		public void Cleanup()
+		public override void Cleanup()
 		{
 			_parentQueryNesting = null;
+
+			base.Cleanup();
 		}
 
 		public IQueryElement CorrectColumnNesting(IQueryElement element)

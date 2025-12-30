@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -12,52 +10,29 @@ namespace LinqToDB.Internal.Common
 	{
 		// Use interlocked to be safe when execution switches threads.
 		int _hopCount;
-
-		// limit snapshot to avoid issues with option changes
-		readonly int _maxHops = LinqToDB.Common.Configuration.TranslationThreadMaxHopCount;
-
 		int _internalDepth;
 
-		readonly struct StackScope : IDisposable
+		// limit snapshot to avoid issues with option changes
+		int _maxHops = LinqToDB.Common.Configuration.TranslationThreadMaxHopCount;
+
+		public void Reset()
 		{
-			readonly StackGuard _guard;
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public StackScope(StackGuard guard)
-			{
-				_guard = guard;
-				_guard._internalDepth++;
-			}
-
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public void Dispose()
-			{
-				_guard._internalDepth--;
-			}
+			_maxHops = LinqToDB.Common.Configuration.TranslationThreadMaxHopCount;
+			_hopCount = default;
+			_internalDepth = default;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IDisposable EnterScope()
-		{
-			return new StackScope(this);
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool TryEnterOnCurrentStack()
-		{
-			return _maxHops < 0 || _internalDepth % 64 != 0 || StackProbe.TryEnsureSufficientExecutionStack();
-		}
-
-		public int Depth
-		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => _internalDepth;
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Enter()
+		public T? Enter<T>(Func<T, T> action, T arg)
+			where T : class
 		{
 			_internalDepth++;
+
+			// test _internalDepth for 1 so we can trigger hop before doing 64 calls and fail
+			// when starting stack is already too small
+			if (_maxHops >= 0 && _internalDepth % 64 == 1 && !TryEnsureSufficientExecutionStack())
+				return RunOnEmptyStack(() => action(arg));
+
+			return null;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -66,7 +41,7 @@ namespace LinqToDB.Internal.Common
 			_internalDepth--;
 		}
 
-		public T RunOnEmptyStack<T>(Func<T> action)
+		T RunOnEmptyStack<T>(Func<T> action)
 		{
 			Interlocked.Increment(ref _hopCount);
 			if (_hopCount > _maxHops)
@@ -101,27 +76,24 @@ namespace LinqToDB.Internal.Common
 			}
 		}
 
-		internal static class StackProbe
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool TryEnsureSufficientExecutionStack()
 		{
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public static bool TryEnsureSufficientExecutionStack()
-			{
 #if !NETFRAMEWORK
-				// Available on netstandard/.NET (not on .NET Framework)
-				return RuntimeHelpers.TryEnsureSufficientExecutionStack();
+			// Available on netstandard/.NET (not on .NET Framework)
+			return RuntimeHelpers.TryEnsureSufficientExecutionStack();
 #else
-				// .NET Framework: only EnsureSufficientExecutionStack() exists
-				try
-				{
-					RuntimeHelpers.EnsureSufficientExecutionStack();
-					return true;
-				}
-				catch (InsufficientExecutionStackException)
-				{
-					return false;
-				}
-#endif
+			// .NET Framework: only EnsureSufficientExecutionStack() exists
+			try
+			{
+				RuntimeHelpers.EnsureSufficientExecutionStack();
+				return true;
 			}
+			catch (InsufficientExecutionStackException)
+			{
+				return false;
+			}
+#endif
 		}
 	}
 }

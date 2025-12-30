@@ -10,7 +10,6 @@ namespace LinqToDB.Internal.Expressions
 	{
 		readonly StackGuard _guard = new();
 
-#if DEBUG
 		[DebuggerStepThrough]
 		[return: NotNullIfNotNull(nameof(node))]
 		public override Expression? Visit(Expression? node)
@@ -18,14 +17,17 @@ namespace LinqToDB.Internal.Expressions
 			if (node == null)
 				return null;
 
-			using var _ = _guard.EnterScope();
+			node = _guard.Enter(base.Visit, node) ?? base.Visit(node);
 
-			if (!_guard.TryEnterOnCurrentStack())
-				return _guard.RunOnEmptyStack(() => Visit(node));
+			_guard.Exit();
 
-			return base.Visit(node);
+			return node;
 		}
-#endif
+
+		public virtual void Cleanup()
+		{
+			_guard.Reset();
+		}
 
 		public virtual Expression VisitSqlPlaceholderExpression(SqlPlaceholderExpression node)
 		{
@@ -105,10 +107,6 @@ namespace LinqToDB.Internal.Expressions
 		internal virtual Expression VisitSqlPathExpression(SqlPathExpression node)
 		{
 			return node;
-		}
-
-		public virtual void Cleanup()
-		{
 		}
 
 		public virtual Expression VisitMarkerExpression(MarkerExpression node)
