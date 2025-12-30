@@ -40,7 +40,7 @@ namespace LinqToDB.Internal.Common
 			_internalDepth--;
 		}
 
-		T RunOnEmptyStack<T>(Func<T> action)
+		TResult RunOnEmptyStack<T, TResult>(Func<T, TResult> action, T arg)
 		{
 			Interlocked.Increment(ref _hopCount);
 			if (_hopCount > _maxHops)
@@ -51,7 +51,12 @@ namespace LinqToDB.Internal.Common
 			try
 			{
 				var task = Task.Factory.StartNew(
-					action,
+					static x =>
+					{
+						var (action, arg) = (ValueTuple<Func<T, TResult>, T>)x!;
+						return action(arg);
+					},
+					(action, arg),
 					CancellationToken.None,
 					TaskCreationOptions.DenyChildAttach,
 					TaskScheduler.Default); // ThreadPool
@@ -78,7 +83,7 @@ namespace LinqToDB.Internal.Common
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool TryEnsureSufficientExecutionStack()
 		{
-#if !NETFRAMEWORK
+#if NET
 			// Available on netstandard/.NET (not on .NET Framework)
 			return RuntimeHelpers.TryEnsureSufficientExecutionStack();
 #else
