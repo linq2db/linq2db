@@ -29,7 +29,7 @@ namespace LinqToDB.Internal.Common
 			// test _internalDepth for 1 so we can trigger hop before doing 64 calls and fail
 			// when starting stack is already too small
 			if (_maxHops >= 0 && _internalDepth % 64 == 1 && !TryEnsureSufficientExecutionStack())
-				return RunOnEmptyStack(() => action(arg));
+				return RunOnEmptyStack(action, arg);
 
 			return default!;
 		}
