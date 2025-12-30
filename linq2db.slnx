@@ -344,6 +344,12 @@
   <Folder Name="/Build/Redist/">
     <File Path="Redist/Readme.md" />
   </Folder>
+  <Folder Name="/Packaging/">
+    <Project Path="NuGet/NuGet.csproj">
+      <Build Solution="Testing|*" Project="false" />
+    </Project>
+    <Project Path="NuGet/PostgreSQL/linq2db.PostgreSQL.csproj" />
+  </Folder>
   <Folder Name="/Source/">
     <File Path="Source/.editorconfig" />
     <File Path="Source/BannedSymbols.txt" />
@@ -445,7 +451,4 @@
     </Project>
     <Project Path="Tests/VisualBasic/Tests.VisualBasic.vbproj" />
   </Folder>
-  <Project Path="NuGet/NuGet.csproj">
-    <Build Solution="Testing|*" Project="false" />
-  </Project>
 </Solution>
