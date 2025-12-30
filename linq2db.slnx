@@ -345,10 +345,22 @@
     <File Path="Redist/Readme.md" />
   </Folder>
   <Folder Name="/Packaging/">
+    <Project Path="NuGet/Access/linq2db.Access.csproj" />
+    <Project Path="NuGet/ClickHouse/linq2db.ClickHouse.csproj" />
+    <Project Path="NuGet/DB2/linq2db.DB2.csproj" />
+    <Project Path="NuGet/Firebird/linq2db.Firebird.csproj" />
+    <Project Path="NuGet/Informix/linq2db.Informix.csproj" />
+    <Project Path="NuGet/MySql/linq2db.MySql.csproj" />
     <Project Path="NuGet/NuGet.csproj">
       <Build Solution="Testing|*" Project="false" />
     </Project>
+    <Project Path="NuGet/Oracle/linq2db.Oracle.csproj" />
     <Project Path="NuGet/PostgreSQL/linq2db.PostgreSQL.csproj" />
+    <Project Path="NuGet/SapHana/linq2db.SapHana.csproj" />
+    <Project Path="NuGet/SqlCe/linq2db.SqlCe.csproj" />
+    <Project Path="NuGet/SQLite/linq2db.SQLite.csproj" />
+    <Project Path="NuGet/SqlServer/linq2db.SqlServer.csproj" />
+    <Project Path="NuGet/Sybase/linq2db.Sybase.csproj" />
   </Folder>
   <Folder Name="/Source/">
     <File Path="Source/.editorconfig" />

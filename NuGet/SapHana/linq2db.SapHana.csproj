@@ -8,9 +8,9 @@
 	</PropertyGroup>
 
 	<PropertyGroup Label="Nuget">
-		<Title>LINQ to DB T4 Scaffold Templates for PostgreSQL</Title>
-		<Description>T4 scaffolding templates for PostgreSQL database to generate LINQ to DB data models. It provides only scaffolding functionality and to use Linq To DB in your project you should add reference to linq2db nuget and corresponding database provider explicitly.</Description>
-		<PackageTags>$(GenericPackageTags);T4;datamodel;PostgreSQL;Npgsql</PackageTags>
+		<Title>LINQ to DB T4 Scaffold Templates for SAP HANA</Title>
+		<Description>T4 scaffolding templates for SAP HANA database to generate LINQ to DB data models. It provides only scaffolding functionality and to use Linq To DB in your project you should add reference to linq2db nuget and corresponding database provider explicitly.</Description>
+		<PackageTags>$(GenericPackageTags);T4;datamodel;SapHana;SAP;Hana</PackageTags>
 
 		<IsPackable>true</IsPackable>
 		<EnablePackageValidation>false</EnablePackageValidation>
@@ -34,14 +34,8 @@
 		<None Include="$(ToolsPath)/linq2db.Scaffold.dll"						   Pack="true" PackagePath="tools" Visible="false" />
 		<None Include="$(ToolsPath)/Humanizer.dll"								   Pack="true" PackagePath="tools" Visible="false" />
 		<None Include="$(ToolsPath)/Microsoft.Bcl.AsyncInterfaces.dll"			   Pack="true" PackagePath="tools" Visible="false" />
-		<None Include="$(ToolsPath)/Npgsql.dll"                                    Pack="true" PackagePath="tools" Visible="false" />
-		<None Include="$(ToolsPath)/Microsoft.Bcl.HashCode.dll"                    Pack="true" PackagePath="tools" Visible="false" />
-		<None Include="$(ToolsPath)/Microsoft.Extensions.Logging.Abstractions.dll" Pack="true" PackagePath="tools" Visible="false" />
-		<None Include="$(ToolsPath)/System.Collections.Immutable.dll"              Pack="true" PackagePath="tools" Visible="false" />
-		<None Include="$(ToolsPath)/System.Diagnostics.DiagnosticSource.dll"       Pack="true" PackagePath="tools" Visible="false" />
-		<None Include="$(ToolsPath)/System.Runtime.CompilerServices.Unsafe.dll"    Pack="true" PackagePath="tools" Visible="false" />
-		<None Include="$(ToolsPath)/System.Text.Json.dll"                          Pack="true" PackagePath="tools" Visible="false" />
-		<None Include="$(ToolsPath)/System.Threading.Channels.dll"                 Pack="true" PackagePath="tools" Visible="false" />
+		<None Include="$(ToolsPath)/System.Data.Odbc.dll"   					   Pack="true" PackagePath="tools" Visible="false" />
+		<None Include="$(ToolsPath)/Sap.Data.Hana.v4.5.dll" 					   Pack="true" PackagePath="tools" Visible="false" />
 	</ItemGroup>
 
 	<ItemGroup>
