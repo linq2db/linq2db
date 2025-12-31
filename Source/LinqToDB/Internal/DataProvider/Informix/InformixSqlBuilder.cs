@@ -375,12 +375,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 					dbDataType = dbDataType.WithLength(str.Length);
 				}
 				else if (paramValue.ProviderValue is decimal d)
-				{
-					if (dbDataType.Precision == null)
-						dbDataType = dbDataType.WithPrecision(DecimalHelper.GetPrecision(d));
-					if (dbDataType.Scale == null)
-						dbDataType = dbDataType.WithScale(DecimalHelper.GetScale(d));
-				}
+					dbDataType = CorrectDecimalFacets(dbDataType, d, updateNullsOnly: true);
 
 				if (dbDataType.DataType == DataType.Undefined)
 				{

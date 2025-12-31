@@ -1,0 +1,18 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"   #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                 #>
+<#@ output extension=".generated.cs"                                                           #>
+<#@ assembly name="$(LinqToDBT4SqlServerClientPath)Microsoft.Data.SqlClient.dll"               #>
+<#@ include file="$(LinqToDBT4SqlServerTemplatesPath)LinqToDB.SqlServer.ttinclude" once="true" #>
+<#@ include file="..\Shared.ttinclude"                                             once="true" #>
+<#
+	NamespaceName = "Sql2025";
+
+	GetSchemaOptions.PreferProviderSpecificTypes = false;
+	GenerateLengthProperty = true;
+	GenerateDbTypes        = true;
+
+	DefaultSqlServerProvider = SqlServerProvider.MicrosoftDataSqlClient;
+
+	LoadSqlServerMetadata(GetConnectionString("SqlServer.2025"));
+	GenerateModel();
+#>

@@ -286,13 +286,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					dbDataType = dbDataType.WithLength(str.Length);
 				}
 				else if (paramValue.ProviderValue is decimal d)
-				{
-					var precision = DecimalHelper.GetPrecision(d);
-					var scale = DecimalHelper.GetScale(d);
-					if (precision == 0 && scale == 0)
-						precision = 1;
-					dbDataType = dbDataType.WithPrecision(precision).WithScale(scale);
-				}
+					dbDataType = CorrectDecimalFacets(dbDataType, d);
 
 				// TODO: temporary guard against cast to unknown type (Variant)
 				if (dbDataType.DataType == DataType.Undefined)
@@ -726,25 +720,13 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			else
 			{
 				if (value is SqlValue { Value: decimal val })
-				{
-					var precision = DecimalHelper.GetPrecision(val);
-					var scale = DecimalHelper.GetScale(val);
-					if (precision == 0 && scale == 0)
-						precision = 1;
-					dataType = dataType.WithPrecision(precision).WithScale(scale);
-				}
+					dataType = CorrectDecimalFacets(dataType, val);
 				else if (value is SqlParameter param)
 				{
 					var paramValue = param.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
 
 					if (paramValue.ProviderValue is decimal decValue)
-					{
-						var precision = DecimalHelper.GetPrecision(decValue);
-						var scale = DecimalHelper.GetScale(decValue);
-						if (precision == 0 && scale == 0)
-							precision = 1;
-						dataType = dataType.WithPrecision(precision).WithScale(scale);
-					}
+						dataType = CorrectDecimalFacets(dataType, decValue);
 				}
 
 				base.BuildTypedExpression(dataType, value);

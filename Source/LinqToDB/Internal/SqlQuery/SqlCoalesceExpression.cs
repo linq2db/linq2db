@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -58,6 +61,9 @@ namespace LinqToDB.Internal.SqlQuery
 
 			return true;
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlCoalesceExpression(this);
 
 		public override bool CanBeNullable(NullabilityContext nullability)
 		{

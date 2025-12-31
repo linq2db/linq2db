@@ -102,7 +102,6 @@
 		SqlCoalesce,
 		SqlCondition,
 		SqlCase,
-		SqlSimpleCase,
 		CompareTo,
 
 		SqlFragment,
