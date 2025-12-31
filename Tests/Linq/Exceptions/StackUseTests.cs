@@ -181,7 +181,7 @@ namespace Tests.Exceptions
 			using var sc  = new ThreadHopsScope(hops);
 
 			var iterations = RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
-				? 150_000
+				? 300_000
 				: 30_000;
 
 			var mi = MethodHelper.GetMethodInfo(Call);
@@ -235,7 +235,7 @@ namespace Tests.Exceptions
 			using var sc  = new ThreadHopsScope(hops);
 
 			var iterations = RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
-				? 50_000
+				? 100_000
 				: 10_000;
 
 			const string name = "fake";
