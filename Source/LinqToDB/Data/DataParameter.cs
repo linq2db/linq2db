@@ -171,6 +171,20 @@ namespace LinqToDB.Data
 
 		internal DbDataType GetOrSetDbDataType(DbDataType? columnType) => _dbDataType ?? columnType ?? DbDataType;
 
+		internal DataParameter ClearValue(bool clearValue)
+		{
+			if (clearValue)
+				Value = null;
+
+			return this;
+		}
+
+		internal DataParameter WithType(DbDataType type)
+		{
+			DbDataType = type;
+			return this;
+		}
+
 		public static DataParameter Char          (string? name, char           value) { return new DataParameter { DataType = DataType.Char,           Name = name, Value = value, }; }
 		public static DataParameter Char          (string? name, string?        value) { return new DataParameter { DataType = DataType.Char,           Name = name, Value = value, }; }
 		public static DataParameter VarChar       (string? name, char           value) { return new DataParameter { DataType = DataType.VarChar,        Name = name, Value = value, }; }

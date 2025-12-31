@@ -199,6 +199,12 @@ namespace LinqToDB.Expressions
 			return mi is PropertyInfo info ? info.GetGetMethod()! : (MethodInfo)mi;
 		}
 
+		public static MethodInfo MethodOf<T>(Expression<Action<T>> func)
+		{
+			var mi = GetMemberInfo(func);
+			return mi is PropertyInfo info ? info.GetGetMethod()! : (MethodInfo)mi;
+		}
+
 		public static MethodInfo MethodOfGeneric<T>(Expression<Func<T,object?>> func)
 		{
 			var mi = MethodOf(func);
