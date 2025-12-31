@@ -26,8 +26,6 @@ namespace LinqToDB.Internal.Expressions
 			return $"Ref({BuildContextDebuggingHelper.GetContextInfo(BuildContext)}::{Type.Name})";
 		}
 
-		public override bool CanReduce => false;
-
 		public ContextRefExpression WithType(Type type)
 		{
 			if (type == Type)

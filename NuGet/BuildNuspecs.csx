@@ -108,7 +108,7 @@ foreach (var xmlPath in GetFiles(path))
 	SetDependency("linq2db.Scaffold",         linq2DbVersion);
 	SetDependency("linq2db.t4models",         linq2DbVersion);
 	SetMetadata  ("releaseNotes",             "https://github.com/linq2db/linq2db/wiki/releases-and-roadmap#release-" + version.Replace(".", ""), true);
-	SetMetadata  ("copyright",                "Copyright © 2025 " + authors, true);
+	SetMetadata  ("copyright",                "Copyright © 2026 " + authors, true);
 	SetMetadata  ("authors",                  authors,                       true);
 	SetMetadata  ("readme",                   "README.md",                   true);
 	SetMetadata  ("projectUrl",               "http://linq2db.com",          true);

@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 
 using LinqToDB.Internal.Linq.Builder;
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.SqlQuery
@@ -55,5 +57,7 @@ namespace LinqToDB.Internal.SqlQuery
 			return Parameter.Equals(otherInlined.Parameter, comparer);
 		}
 
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlInlinedToSqlExpression(this);
 	}
 }

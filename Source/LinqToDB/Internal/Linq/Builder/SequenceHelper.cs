@@ -89,7 +89,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public static bool HasContextRef(Expression expression)
 		{
-			return null != expression.Find(1, static (_, e) => e is ContextRefExpression);
+			return null != expression.Find(e => e is ContextRefExpression);
 		}
 
 		public static Expression CorrectTrackingPath(Expression expression, IBuildContext from, IBuildContext to)
@@ -834,7 +834,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public static bool IsSqlReady(Expression expression)
 		{
-			if (expression.Find(1, (_, e) => e is SqlErrorExpression or SqlEagerLoadExpression or ContextRefExpression) != null)
+			if (expression.Find(e => e is SqlErrorExpression or SqlEagerLoadExpression or ContextRefExpression) != null)
 				return false;
 			return true;
 		}
@@ -855,7 +855,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public static SqlErrorExpression? FindError(Expression expression)
 		{
-			var found = expression.Find(1, (_, e) => e is SqlErrorExpression) as SqlErrorExpression;
+			var found = expression.Find(e => e is SqlErrorExpression) as SqlErrorExpression;
 			return found;
 		}
 

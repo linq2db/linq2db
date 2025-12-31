@@ -29,7 +29,7 @@ namespace LinqToDB.Internal.SqlQuery
 				_doNotRemove = doNotRemove;
 			}
 
-			protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+			protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 			{
 				selectQuery = (SelectQuery)base.VisitSqlQuery(selectQuery);
 

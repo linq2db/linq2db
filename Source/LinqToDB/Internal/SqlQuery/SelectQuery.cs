@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 
+using LinqToDB.Internal.SqlQuery.Visitors;
+
 namespace LinqToDB.Internal.SqlQuery
 {
 	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
@@ -312,6 +314,9 @@ namespace LinqToDB.Internal.SqlQuery
 
 			return hash.ToHashCode();
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlQuery(this);
 
 		#endregion
 

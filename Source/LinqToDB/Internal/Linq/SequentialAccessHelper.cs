@@ -19,7 +19,6 @@ namespace LinqToDB.Internal.Linq
 {
 	internal static class SequentialAccessHelper
 	{
-		private static readonly TransformVisitor<object?> _reducer = TransformVisitor<object?>.Create(Reducer);
 		private static Expression Reducer(Expression e)
 		{
 			return e is ConvertFromDataReaderExpression
@@ -57,7 +56,7 @@ namespace LinqToDB.Internal.Linq
 		public static Expression OptimizeMappingExpressionForSequentialAccess(Expression expression, int fieldCount, bool reduce)
 		{
 			if (reduce)
-				expression = _reducer.Transform(expression);
+				expression = expression.Transform(Reducer);
 
 			static Expression TranformFunc(OptimizeMappingExpressionForSequentialAccessContext context, Expression e)
 			{

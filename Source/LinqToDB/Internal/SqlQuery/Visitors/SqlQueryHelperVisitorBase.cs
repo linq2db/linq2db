@@ -12,7 +12,7 @@
 			return base.VisitSqlColumnExpression(column, expression);
 		}
 
-		protected override IQueryElement VisitSqlTable(SqlTable element)
+		protected internal override IQueryElement VisitSqlTable(SqlTable element)
 		{
 			return base.VisitSqlTable(element);
 		}

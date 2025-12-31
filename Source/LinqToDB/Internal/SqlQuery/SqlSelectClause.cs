@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 
 using LinqToDB.Common;
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 #if BUGCHECK
 using System.Linq;
@@ -288,6 +290,9 @@ namespace LinqToDB.Internal.SqlQuery
 
 			return hash.ToHashCode();
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlSelectClause(this);
 
 		#endregion
 

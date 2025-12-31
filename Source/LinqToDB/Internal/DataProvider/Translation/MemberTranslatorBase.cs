@@ -63,7 +63,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			translated = Registration.ProvideReplacement(memberExpression);
 			if (translated != null)
-				return translated;
+			{
+				return Translate(translationContext, translated, translationFlags); 
+			}
 
 			translated = TranslateOverrideHandler(translationContext, memberExpression, translationFlags);
 			if (translated != null)

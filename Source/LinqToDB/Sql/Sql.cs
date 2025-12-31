@@ -201,8 +201,6 @@ namespace LinqToDB
 		{
 			private static readonly MethodInfo _method = MethodHelper.GetMethodInfo(ConvertRemover<int, int>, 0).GetGenericMethodDefinition();
 
-			private static readonly TransformVisitor<object?> _transformer = TransformVisitor<object?>.Create(Transform);
-
 			private static Expression Transform(Expression e)
 			{
 				if (e.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
@@ -218,7 +216,7 @@ namespace LinqToDB
 			public void Build(ISqlExtensionBuilder builder)
 			{
 				var expr    = builder.Arguments[0];
-				var newExpr = _transformer.Transform(expr);
+				var newExpr = expr.Transform(Transform);
 
 				if (newExpr == expr)
 				{
@@ -1205,6 +1203,7 @@ namespace LinqToDB
 			return DateTime.Now;
 		}
 
+		[ServerSideOnly]
 		public static DateTime CurrentTimestamp => throw new ServerSideOnlyException(nameof(CurrentTimestamp));
 
 		public static DateTime CurrentTimestampUtc => DateTime.UtcNow;

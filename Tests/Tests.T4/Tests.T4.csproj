@@ -31,11 +31,6 @@
 
 		<None Update="Cli\NewCliFeatures.tt" LastGenOutput="NewCliFeatures.generated.cs" Generator="TextTemplatingFileGenerator" />
 		<Compile Update="Cli\NewCliFeatures.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="NewCliFeatures.tt" />
-		<Compile Update="Default\ClickHouse.Driver.generated.cs">
-		  <DesignTime>True</DesignTime>
-		  <AutoGen>True</AutoGen>
-		  <DependentUpon>ClickHouse.Driver.tt</DependentUpon>
-		</Compile>
 
 		<None Update="Cli\Fluent.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Fluent.generated.cs" />
 		<Compile Update="Cli\Fluent.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="Fluent.tt" />
@@ -115,6 +110,9 @@
 		<None Update="Databases\ModelInterface.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="ModelInterface.generated.cs" />
 		<Compile Update="Databases\ModelInterface.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="ModelInterface.tt" />
 
+		<None Update="Databases\SqlServer.2025.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlServer.2025.generated.cs" />
+		<Compile Update="Databases\SqlServer.2025.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="SqlServer.2025.tt" />
+
 		<None Update="Databases\SqlServer.2017.ProceduresFromSchema.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlServer.2017.ProceduresFromSchema.generated.cs" />
 		<Compile Update="Databases\SqlServer.2017.ProceduresFromSchema.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="SqlServer.2017.ProceduresFromSchema.tt" />
 
@@ -144,10 +142,9 @@
 
 		<None Update="Default\AccessOleDB.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="AccessOleDB.generated.cs" />
 		<Compile Update="Default\AccessOleDB.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="AccessOleDB.tt" />
-		<None Update="Default\ClickHouse.Driver.tt">
-		  <Generator>TextTemplatingFileGenerator</Generator>
-		  <LastGenOutput>ClickHouse.Client.generated.cs</LastGenOutput>
-		</None>
+
+		<None Update="Default\ClickHouse.Driver.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="ClickHouse.Client.generated.cs" />
+		<Compile Update="Default\ClickHouse.Driver.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="ClickHouse.Driver.tt" />
 
 		<None Update="Default\ClickHouse.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="ClickHouse.generated.cs" />
 		<Compile Update="Default\ClickHouse.generated.cs" DependentUpon="ClickHouse.tt" DesignTime="True" AutoGen="True" />

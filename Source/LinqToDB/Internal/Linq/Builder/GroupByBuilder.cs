@@ -247,7 +247,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (!SequenceHelper.IsSqlReady(groupingExpr))
 				{
-					var sqLError = groupingExpr.Find(1, (_, e) => e is SqlErrorExpression);
+					var sqLError = groupingExpr.Find(e => e is SqlErrorExpression);
 					errorExpression = sqLError ?? SqlErrorExpression.EnsureError(groupingExpr, groupingExpr.Type);
 					return false;
 				}

@@ -396,7 +396,35 @@ namespace LinqToDB.Mapping
 
 			// order from most specific to least specific type to simplify work with hierarchies
 			// where we need to handle more specific types first
-			Array.Sort(_inheritanceMappings, (x, y) => x == y ? 0 : x.Type.IsAssignableFrom(y.Type) ? 1 : -1);
+
+			var rootTypes = _inheritanceMappings
+				.Where(m => !_inheritanceMappings.Any(other =>
+					m.Type != other.Type && m.Type.IsSubclassOf(other.Type)))
+				.Select(m => m.Type)
+				.ToList();
+
+			Array.Sort(_inheritanceMappings, (x, y) =>
+			{
+				if (x == y)
+					return 0;
+
+				if (x.Type == y.Type)
+					return 0;
+
+				if (x.Type.IsAssignableFrom(y.Type))
+					return 1;
+
+				var xIsRoot = rootTypes.IndexOf(x.Type) >= 0;
+				var yIsRoot = rootTypes.IndexOf(y.Type) >= 0;
+
+				if (yIsRoot && !xIsRoot)
+					return -1;
+
+				if (xIsRoot && !yIsRoot)
+					return 1;
+
+				return -string.Compare(x.Type.FullName, y.Type.FullName, StringComparison.Ordinal);
+			});
 		}
 
 		void AddColumn(ColumnDescriptor columnDescriptor)

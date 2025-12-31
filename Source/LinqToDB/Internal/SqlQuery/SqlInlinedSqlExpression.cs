@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -51,5 +54,8 @@ namespace LinqToDB.Internal.SqlQuery
 
 			return Parameter.Equals(otherInlined.Parameter, comparer);
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlInlinedSqlExpression(this);
 	}
 }

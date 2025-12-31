@@ -82,7 +82,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 		}
 
-		protected override IQueryElement VisitSqlConditionExpression(SqlConditionExpression element)
+		protected internal override IQueryElement VisitSqlConditionExpression(SqlConditionExpression element)
 		{
 			var trueIsNull  = element.TrueValue.IsNullValue();
 			var falseIsNull = element.FalseValue.IsNullValue();
@@ -109,7 +109,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlFunction(SqlFunction element)
+		protected internal override IQueryElement VisitSqlFunction(SqlFunction element)
 		{
 			if (element is { IsAggregate: false, IsPure: true })
 			{
@@ -119,7 +119,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlExpression(SqlExpression element)
+		protected internal override IQueryElement VisitSqlExpression(SqlExpression element)
 		{
 			if (element is { IsAggregate: false, IsPure: true })
 			{
@@ -171,7 +171,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 		}
 
-		protected override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
+		protected internal override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			if (element.Operation is "+" or "-" or "*" or "/" or "%" or "&" or "||")
 			{
@@ -182,14 +182,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
+		protected internal override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
 		{
 			ReduceOrAdd(element.Expression);
 
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlNullabilityExpression(SqlNullabilityExpression element)
+		protected internal override IQueryElement VisitSqlNullabilityExpression(SqlNullabilityExpression element)
 		{
 			// abort
 			if (element.CanBeNullable(_nullabilityContext) != element.SqlExpression.CanBeNullable(_nullabilityContext))

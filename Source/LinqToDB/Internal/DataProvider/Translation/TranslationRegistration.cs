@@ -122,6 +122,9 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (replacementInfo == null)
 				return null;
 
+			if (replacementInfo.Pattern.Parameters.Count == 0)
+				return replacementInfo.Replacement.Body;
+
 			var replacement = replacementInfo.Pattern.GetBody(replacementInfo.Replacement);
 			return replacement;
 		}

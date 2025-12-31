@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -65,6 +68,9 @@ namespace LinqToDB.Internal.SqlQuery
 				return Predicate.Equals(notPredicate.Predicate, comparer);
 			}
 
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitNotPredicate(this);
+
 			public void Modify(ISqlPredicate predicate)
 			{
 				Predicate = predicate;
@@ -90,6 +96,9 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 				return HashCode.Combine(ElementType);
 			}
+
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitTruePredicate(this);
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
@@ -121,6 +130,9 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 				return HashCode.Combine(ElementType);
 			}
+
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitFalsePredicate(this);
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
@@ -176,6 +188,9 @@ namespace LinqToDB.Internal.SqlQuery
 					Expr1.GetElementHashCode()
 				);
 			}
+
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitExprPredicate(this);
 
 			protected override void WritePredicate(QueryElementTextWriter writer)
 			{
@@ -277,6 +292,9 @@ namespace LinqToDB.Internal.SqlQuery
 			}
 
 			public override QueryElementType ElementType => QueryElementType.ExprExprPredicate;
+
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitExprExprPredicate(this);
 
 			protected override void WritePredicate(QueryElementTextWriter writer)
 			{
@@ -553,6 +571,9 @@ namespace LinqToDB.Internal.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitLikePredicate(this);
+
 			public override ISqlPredicate Invert(NullabilityContext nullability)
 			{
 				return new Like(Expr1, !IsNot, Expr2, Escape);
@@ -628,6 +649,9 @@ namespace LinqToDB.Internal.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSearchStringPredicate(this);
+
 			public override ISqlPredicate Invert(NullabilityContext nullability)
 			{
 				return new SearchString(Expr1, !IsNot, Expr2, Kind, CaseSensitive);
@@ -700,6 +724,9 @@ namespace LinqToDB.Internal.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitIsDistinctPredicate(this);
+
 			public override ISqlPredicate Invert(NullabilityContext nullability) => new IsDistinct(Expr1, !IsNot, Expr2);
 
 			public override bool CanBeUnknown(NullabilityContext nullability, bool withoutUnknownErased) => false;
@@ -750,6 +777,9 @@ namespace LinqToDB.Internal.SqlQuery
 					&& Expr3.Equals(expr.Expr3, comparer)
 					&& base.Equals(other, comparer);
 			}
+
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitBetweenPredicate(this);
 
 			public override ISqlPredicate Invert(NullabilityContext nullability)
 			{
@@ -818,6 +848,9 @@ namespace LinqToDB.Internal.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitIsTruePredicate(this);
+
 			protected override void WritePredicate(QueryElementTextWriter writer)
 			{
 				writer.AppendElement(Reduce(writer.Nullability, true));
@@ -882,6 +915,9 @@ namespace LinqToDB.Internal.SqlQuery
 				);
 			}
 
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitIsNullPredicate(this);
+
 			public override bool CanBeUnknown(NullabilityContext nullability, bool withoutUnknownErased) => false;
 
 			protected override void WritePredicate(QueryElementTextWriter writer)
@@ -934,6 +970,9 @@ namespace LinqToDB.Internal.SqlQuery
 					&& SubQuery.Equals(expr.SubQuery, comparer)
 					&& base.Equals(other, comparer);
 			}
+
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitInSubQueryPredicate(this);
 
 			public override bool CanInvert(NullabilityContext nullability)
 			{
@@ -1041,6 +1080,9 @@ namespace LinqToDB.Internal.SqlQuery
 				return true;
 			}
 
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitInListPredicate(this);
+
 			public override bool CanBeUnknown(NullabilityContext nullability, bool withoutUnknownErased)
 			{
 				if (base.CanBeUnknown(nullability, withoutUnknownErased))
@@ -1120,6 +1162,9 @@ namespace LinqToDB.Internal.SqlQuery
 					SubQuery.GetElementHashCode()
 				);
 			}
+
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitExistsPredicate(this);
 
 			protected override void WritePredicate(QueryElementTextWriter writer)
 			{

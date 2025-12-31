@@ -21,7 +21,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		#endregion
 
-		protected override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
+		protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
 		{
 			var result = base.VisitExistsPredicate(predicate);
 
