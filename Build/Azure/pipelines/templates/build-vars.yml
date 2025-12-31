@@ -36,20 +36,20 @@ variables:
   artifact_test_net90_binaries: 'test_net90_binaries'
   artifact_test_net100_binaries: 'test_net100_binaries'
 # nuget/assembly versions
-  assemblyVersion: 6.1.0.0
-  ef3AssemblyVersion: 3.29.0.0
-  ef8AssemblyVersion: 8.3.0.0
-  ef9AssemblyVersion: 9.2.0.0
-  ef10AssemblyVersion: 10.1.0.0
+  assemblyVersion: 6.2.0.0
+  ef3AssemblyVersion: 3.30.0.0
+  ef8AssemblyVersion: 8.4.0.0
+  ef9AssemblyVersion: 9.3.0.0
+  ef10AssemblyVersion: 10.2.0.0
   ${{ if eq(variables['Build.SourceBranchName'], 'release') }}:
-    packageVersion: 6.1.0
-    ef3PackageVersion: 3.29.0
-    ef8PackageVersion: 8.3.0
-    ef9PackageVersion: 9.2.0
-    ef10PackageVersion: 10.1.0
+    packageVersion: 6.2.0
+    ef3PackageVersion: 3.30.0
+    ef8PackageVersion: 8.4.0
+    ef9PackageVersion: 9.3.0
+    ef10PackageVersion: 10.2.0
   ${{ if ne(variables['Build.SourceBranchName'], 'release') }}:
-    packageVersion: 6.1.0
-    ef3PackageVersion: 3.29.0
-    ef8PackageVersion: 8.3.0
-    ef9PackageVersion: 9.2.0
-    ef10PackageVersion: 10.1.0
+    packageVersion: 6.2.0
+    ef3PackageVersion: 3.30.0
+    ef8PackageVersion: 8.4.0
+    ef9PackageVersion: 9.3.0
+    ef10PackageVersion: 10.2.0

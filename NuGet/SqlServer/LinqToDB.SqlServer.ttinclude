@@ -62,9 +62,11 @@ void DoGenerateSqlServerFreeText()
 	);
 }
 
+static SqlServerProvider DefaultSqlServerProvider = SqlServerProvider.SystemDataSqlClient;
+
 LinqToDB.Data.DataConnection GetSqlServerConnection(string connectionString, SqlServerVersion version)
 {
-	return LinqToDB.DataProvider.SqlServer.SqlServerTools.CreateDataConnection(connectionString, version, SqlServerProvider.SystemDataSqlClient);
+	return LinqToDB.DataProvider.SqlServer.SqlServerTools.CreateDataConnection(connectionString, version, DefaultSqlServerProvider);
 }
 
 LinqToDB.Data.DataConnection GetSqlServerConnection(string server, string database, SqlServerVersion version)

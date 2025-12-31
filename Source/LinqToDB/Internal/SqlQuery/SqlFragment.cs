@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -100,6 +103,9 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		public override bool CanBeNullable(NullabilityContext nullability) => false;
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlFragment(this);
 
 		public override int Precedence { get; }
 		public override Type? SystemType => null;

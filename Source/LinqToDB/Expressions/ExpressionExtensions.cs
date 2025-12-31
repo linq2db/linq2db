@@ -95,11 +95,25 @@ namespace LinqToDB.Expressions
 		/// Calls the given <paramref name="func"/> for each child node of the <paramref name="expr"/>.
 		/// </summary>
 		public static void Visit<TContext>(this Expression expr, TContext context, Action<TContext, Expression> func)
+			where TContext : notnull
 		{
 			if (expr == null)
 				return;
 
-			new VisitActionVisitor<TContext>(context, func).Visit(expr);
+			using var visitor = VisitActionVisitor<TContext>.Pool.Allocate();
+			visitor.Value.VisitAction(expr, context, func);
+		}
+
+		/// <summary>
+		/// Calls the given <paramref name="func"/> for each child node of the <paramref name="expr"/>.
+		/// </summary>
+		public static void Visit(this Expression expr, Action<Expression> func)
+		{
+			if (expr == null)
+				return;
+
+			using var visitor = VisitActionVisitor.Pool.Allocate();
+			visitor.Value.VisitAction(expr, func);
 		}
 
 		/// <summary>
@@ -107,11 +121,26 @@ namespace LinqToDB.Expressions
 		/// If the <paramref name="func"/> returns false, no childs of the tested expression will be enumerated.
 		/// </summary>
 		public static void Visit<TContext>(this Expression expr, TContext context, Func<TContext, Expression, bool> func)
+			where TContext : notnull
 		{
 			if (expr == null || !func(context, expr))
 				return;
 
-			new VisitFuncVisitor<TContext>(context, func).Visit(expr);
+			using var visitor = VisitFuncVisitor<TContext>.Pool.Allocate();
+			visitor.Value.VisitFunc(expr, context, func);
+		}
+
+		/// <summary>
+		/// Calls the given <paramref name="func"/> for each node of the <paramref name="expr"/>.
+		/// If the <paramref name="func"/> returns false, no childs of the tested expression will be enumerated.
+		/// </summary>
+		public static void Visit(this Expression expr, Func<Expression, bool> func)
+		{
+			if (expr == null || !func(expr))
+				return;
+
+			using var visitor = VisitFuncVisitor.Pool.Allocate();
+			visitor.Value.VisitFunc(expr, func);
 		}
 
 		#endregion
@@ -141,11 +170,26 @@ namespace LinqToDB.Expressions
 		/// which matches the given <paramref name="func"/>. If no expression was found, null is returned.
 		/// </summary>
 		public static Expression? Find<TContext>(this Expression? expr, TContext context, Func<TContext,Expression, bool> func)
+			where TContext : notnull
 		{
 			if (expr == null)
 				return expr;
 
-			return new FindVisitor<TContext>(context, func).Find(expr);
+			using var visitor = FindVisitor<TContext>.Pool.Allocate();
+			return visitor.Value.Find(expr, context, func);
+		}
+
+		/// <summary>
+		/// Enumerates the given <paramref name="expr"/> and returns the first sub-expression
+		/// which matches the given <paramref name="func"/>. If no expression was found, null is returned.
+		/// </summary>
+		public static Expression? Find(this Expression? expr, Func<Expression, bool> func)
+		{
+			if (expr == null)
+				return expr;
+
+			using var visitor = FindVisitor.Pool.Allocate();
+			return visitor.Value.Find(expr, func);
 		}
 
 		#endregion
@@ -257,11 +301,13 @@ namespace LinqToDB.Expressions
 		/// <returns>The modified expression.</returns>
 		[return: NotNullIfNotNull(nameof(expr))]
 		public static Expression? Transform<TContext>(this Expression? expr, TContext context, [InstantHandle] Func<TContext, Expression, Expression> func)
+			where TContext : notnull
 		{
 			if (expr == null)
 				return null;
 
-			return new TransformVisitor<TContext>(context, func).Transform(expr);
+			using var visitor = TransformVisitor<TContext>.Pool.Allocate();
+			return visitor.Value.Transform(expr, context, func);
 		}
 
 		/// <summary>
@@ -275,7 +321,8 @@ namespace LinqToDB.Expressions
 			if (expr == null)
 				return null;
 
-			return new TransformVisitor<Func<Expression, Expression>>(func, static (f, e) => f(e)).Transform(expr);
+			using var visitor = TransformVisitor.Pool.Allocate();
+			return visitor.Value.Transform(expr, func);
 		}
 
 		#endregion
@@ -284,11 +331,13 @@ namespace LinqToDB.Expressions
 
 		[return: NotNullIfNotNull(nameof(expr))]
 		public static Expression? Transform<TContext>(this Expression? expr, TContext context, Func<TContext, Expression, TransformInfo> func)
+			where TContext : notnull
 		{
 			if (expr == null)
 				return null;
 
-			return new TransformInfoVisitor<TContext>(context, func).Transform(expr);
+			using var visitor = TransformInfoVisitor<TContext>.Pool.Allocate();
+			return visitor.Value.Transform(expr, context, func);
 		}
 
 		[return: NotNullIfNotNull(nameof(expr))]
@@ -297,7 +346,8 @@ namespace LinqToDB.Expressions
 			if (expr == null)
 				return null;
 
-			return new TransformInfoVisitor<Func<Expression, TransformInfo>>(func, static (f, e) => f(e)).Transform(expr);
+			using var visitor = TransformInfoVisitor.Pool.Allocate();
+			return visitor.Value.Transform(expr, func);
 		}
 
 		#endregion
