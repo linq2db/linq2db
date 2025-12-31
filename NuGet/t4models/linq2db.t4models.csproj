@@ -1,0 +1,100 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net462</TargetFrameworks>
+		<IsPackable>true</IsPackable>
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<ToolsPath>$(ArtifactsPath)/bin/NuGet/$(Configuration)/net462</ToolsPath>
+	</PropertyGroup>
+
+	<PropertyGroup Label="Nuget">
+		<Title>LINQ to DB T4 Scaffold Templates for All Databases</Title>
+		<Description>T4 scaffolding templates to generate LINQ to DB data models for different databases. It provides scaffolding functionality and reference to linq2db main package only. To use Linq To DB in your project you should add reference to corresponding database provider(s) explicitly.</Description>
+		<PackageTags>$(PackageTags);T4;datamodel</PackageTags>
+
+		<IsPackable>true</IsPackable>
+		<EnablePackageValidation>false</EnablePackageValidation>
+		<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="../readme.t4.txt"                   Pack="true" PackagePath="readme.txt"                               Visible="false" />
+		<None Include="../readme.t4.md"                    Pack="true" PackagePath="readme.md"                                Visible="false" />
+		<None Include="../../Source/LinqToDB.Templates/**" Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" Visible="false" />
+		<None Include="../../Source/LinqToDB.Templates/**" Pack="true" PackagePath="content\LinqToDB.Templates\"              Visible="false" />
+
+		<None Include="*.props"                            Pack="true" PackagePath="build\" />
+
+		<None Include="../Access/*.ttinclude"              Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../Access/*.ttinclude"              Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../Access/*.txt"                    Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../Access/*.txt"                    Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../ClickHouse/*.ttinclude"          Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../ClickHouse/*.ttinclude"          Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../ClickHouse/*.txt"                Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../ClickHouse/*.txt"                Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../DB2/*.ttinclude"                 Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../DB2/*.ttinclude"                 Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../DB2/*.txt"                       Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../DB2/*.txt"                       Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../Firebird/*.ttinclude"            Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../Firebird/*.ttinclude"            Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../Firebird/*.txt"                  Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../Firebird/*.txt"                  Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../Informix/*.ttinclude"            Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../Informix/*.ttinclude"            Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../Informix/*.txt"                  Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../Informix/*.txt"                  Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../MySql/*.ttinclude"               Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../MySql/*.ttinclude"               Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../MySql/*.txt"                     Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../MySql/*.txt"                     Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../Oracle/*.ttinclude"              Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../Oracle/*.ttinclude"              Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../Oracle/*.txt"                    Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../Oracle/*.txt"                    Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../PostgreSQL/*.ttinclude"          Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../PostgreSQL/*.ttinclude"          Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../PostgreSQL/*.txt"                Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../PostgreSQL/*.txt"                Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../SapHana/*.ttinclude"             Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../SapHana/*.ttinclude"             Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../SapHana/*.txt"                   Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../SapHana/*.txt"                   Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../SqlCe/*.ttinclude"               Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../SqlCe/*.ttinclude"               Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../SqlCe/*.txt"                     Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../SqlCe/*.txt"                     Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../SQLite/*.ttinclude"              Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../SQLite/*.ttinclude"              Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../SQLite/*.txt"                    Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../SQLite/*.txt"                    Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../SqlServer/*.ttinclude"           Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../SqlServer/*.ttinclude"           Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../SqlServer/*.txt"                 Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../SqlServer/*.txt"                 Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../Sybase/*.ttinclude"              Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../Sybase/*.ttinclude"              Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../Sybase/*.txt"                    Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../Sybase/*.txt"                    Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="$(ToolsPath)/**"                    Pack="true" PackagePath="tools" Visible="false" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="../NuGet.csproj" />
+	</ItemGroup>
+
+</Project>

@@ -361,6 +361,7 @@
     <Project Path="NuGet/SQLite/linq2db.SQLite.csproj" />
     <Project Path="NuGet/SqlServer/linq2db.SqlServer.csproj" />
     <Project Path="NuGet/Sybase/linq2db.Sybase.csproj" />
+    <Project Path="NuGet/t4models/linq2db.t4models.csproj" />
   </Folder>
   <Folder Name="/Source/">
     <File Path="Source/.editorconfig" />
