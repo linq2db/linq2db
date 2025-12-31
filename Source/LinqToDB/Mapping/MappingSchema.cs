@@ -586,6 +586,8 @@ namespace LinqToDB.Mapping
 				ResetID();
 			}
 
+			SetNullableConversion(new DbDataType(fromType), new DbDataType(toType), expr, conversionType);
+
 			return this;
 		}
 
@@ -621,6 +623,8 @@ namespace LinqToDB.Mapping
 				ResetID();
 			}
 
+			SetNullableConversion(fromType, toType, expr, conversionType);
+
 			return this;
 		}
 
@@ -654,6 +658,8 @@ namespace LinqToDB.Mapping
 				ResetID();
 			}
 
+			SetNullableConversion(new(typeof(TFrom)), new(typeof(TTo)), expr, conversionType);
+
 			return this;
 		}
 
@@ -677,6 +683,8 @@ namespace LinqToDB.Mapping
 				Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), conversionType, new (checkNullExpr, expr, null, false));
 				ResetID();
 			}
+
+			SetNullableConversion(new(typeof(TFrom)), new(typeof(TTo)), expr, conversionType);
 
 			return this;
 		}
@@ -702,6 +710,8 @@ namespace LinqToDB.Mapping
 				Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), conversionType, new (ex, null, func, false));
 				ResetID();
 			}
+
+			SetNullableConversion(new(typeof(TFrom)), new(typeof(TTo)), ex, conversionType);
 
 			return this;
 		}
@@ -737,6 +747,8 @@ namespace LinqToDB.Mapping
 				Schemas[0].SetConvertInfo(from, to, conversionType, new (ex, null, func, false), true);
 				ResetID();
 			}
+
+			SetNullableConversion(from, to, ex, conversionType);
 
 			return this;
 		}
@@ -847,25 +859,43 @@ namespace LinqToDB.Mapping
 			return false;
 		}
 
+		void SetNullableConversion(DbDataType from, DbDataType to, LambdaExpression conversion, ConversionType conversionType)
+		{
+			if (to.SystemType != typeof(DataParameter)
+				|| !from.SystemType.IsValueType || from.SystemType.IsNullableType
+				|| GetConverter(from, to, false, conversionType) != null)
+				return;
+
+			// generate T? -> DataParameter conversion from T -> DataParameter conversion
+			var nullableType = from.SystemType.MakeNullable();
+
+			var p = Expression.Parameter(nullableType, conversion.Parameters[0].Name);
+
+			var nullableConversion = Expression.Lambda(
+				Expression.Call(
+					Expression.Call(
+						conversion.Body.Transform(
+							(oldParam: conversion.Parameters[0], newParam: p, defaultValue: Expression.Default(conversion.Parameters[0].Type)),
+							static (context, e) => e == context.oldParam ? Expression.Coalesce(context.newParam, context.defaultValue) : e),
+						Methods.LinqToDB.DataParameter.ClearValue,
+						Expression.Equal(p, Expression.Constant(null, p.Type))),
+					Methods.LinqToDB.DataParameter.WithType,
+					Expression.Constant(from)),
+				p);
+
+			lock (_syncRoot)
+			{
+				Schemas[0].SetConvertInfo(from.WithSystemType(nullableType), to, conversionType, new(nullableConversion, null, null, false), true);
+				ResetID();
+			}
+		}
+
 		internal ConvertInfo.LambdaInfo? GetConverter(DbDataType from, DbDataType to, bool create, ConversionType conversionType)
 		{
 			var conversion = TryFindExistingConversion(from, to, conversionType);
 
-			if (conversion == null && from.SystemType.IsNullableType && to.SystemType == typeof(DataParameter))
-			{
-				conversion = TryFindExistingConversion(from.WithSystemType(from.SystemType.UnwrapNullableType()), to, conversionType);
-
-				if (conversion != null)
-				{
-					conversion = MakeNullableDataParameterConversion(from, conversion);
-					SetConvertExpression(from, to, conversion.Lambda, addNullCheck: false, conversionType: conversionType);
-				}
-			}
-
 			if (conversion != null)
-			{
 				return conversion;
-			}
 
 			var isFromGeneric = from.SystemType is { IsGenericType: true, IsGenericTypeDefinition: false };
 			var isToGeneric   = to.  SystemType is { IsGenericType: true, IsGenericTypeDefinition: false };
@@ -989,30 +1019,6 @@ namespace LinqToDB.Mapping
 
 				} while (Simplify(ref currentFrom));
 				return null;
-			}
-
-			static ConvertInfo.LambdaInfo MakeNullableDataParameterConversion(DbDataType from, ConvertInfo.LambdaInfo conversion)
-			{
-				var p = Expression.Parameter(from.SystemType, conversion.Lambda.Parameters[0].Name);
-
-				var nullableConversion = Expression.Lambda(
-					Expression.Call(
-						Expression.Call(
-							conversion.Lambda.Body.Transform(
-								(oldParam: conversion.Lambda.Parameters[0], newParam: p, defaultValue: Expression.Default(conversion.Lambda.Parameters[0].Type)),
-								static (context, e) => e == context.oldParam ? Expression.Coalesce(context.newParam, context.defaultValue) : e),
-							Methods.LinqToDB.DataParameter.ClearValue,
-							Expression.Equal(p, Expression.Constant(null, p.Type))),
-						Methods.LinqToDB.DataParameter.WithType,
-						Expression.Constant(from)),
-					p);
-
-				if (conversion.Lambda != conversion.CheckNullLambda)
-				{
-					throw new InvalidOperationException();
-				}
-
-				return new ConvertInfo.LambdaInfo(nullableConversion, nullableConversion, null, conversion.IsSchemaSpecific);
 			}
 		}
 
