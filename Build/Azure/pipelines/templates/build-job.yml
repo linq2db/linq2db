@@ -17,6 +17,9 @@ jobs:
 
   steps:
 
+  - checkout: self
+    fetchDepth: 5
+
 # use latest SDK explicitly to avoid issues with slow azure updates
   - task: UseDotNet@2
     displayName: 'Use latest .NET SDK'
