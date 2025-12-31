@@ -12,7 +12,6 @@
 		<Description>T4 scaffolding templates for SAP/Sybase ASE database to generate LINQ to DB data models. It provides only scaffolding functionality and to use Linq To DB in your project you should add reference to linq2db nuget and corresponding database provider explicitly.</Description>
 		<PackageTags>$(GenericPackageTags);T4;datamodel;SAP;Sybase;ASE</PackageTags>
 
-		<IsPackable>true</IsPackable>
 		<EnablePackageValidation>false</EnablePackageValidation>
 		<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
 	</PropertyGroup>

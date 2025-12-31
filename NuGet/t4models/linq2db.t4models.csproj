@@ -12,7 +12,6 @@
 		<Description>T4 scaffolding templates to generate LINQ to DB data models for different databases. It provides scaffolding functionality and reference to linq2db main package only. To use Linq To DB in your project you should add reference to corresponding database provider(s) explicitly.</Description>
 		<PackageTags>$(PackageTags);T4;datamodel</PackageTags>
 
-		<IsPackable>true</IsPackable>
 		<EnablePackageValidation>false</EnablePackageValidation>
 		<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
 	</PropertyGroup>
