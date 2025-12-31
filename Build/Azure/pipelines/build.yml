@@ -2,7 +2,7 @@
 variables:
   - template: templates/build-vars.yml
 
-# allways trigger on PRs
+# always trigger on PRs
 trigger: none
 pr:
   branches:
@@ -22,12 +22,5 @@ stages:
       with_nugets: true
       with_examples: true
       with_tests: false
-      with_analyzers: false # true disabled till https://github.com/dotnet/roslyn/pull/80621 shipped
+      with_analyzers: true
       with_release: false
-##############
-#  NUGET JOB #
-##############
-  - template: templates/nuget-job.yml
-    parameters:
-      publish: false
-      release: false

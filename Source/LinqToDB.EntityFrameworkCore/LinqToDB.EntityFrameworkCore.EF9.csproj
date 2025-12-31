@@ -4,7 +4,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net8.0</TargetFrameworks>
-		<AssemblyVersion>$(EF9Version)</AssemblyVersion>
+		<Version>$(EF9Version)</Version>
 		<DefineConstants>EF9;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 

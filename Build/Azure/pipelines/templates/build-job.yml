@@ -30,6 +30,28 @@ jobs:
       packageType: sdk
       version: 10.x
 
+# tag version numbers appropriately
+  - powershell: echo "##vso[task.setvariable variable=assemblyVersion]$(assemblyVersion)-dev.$(Build.BuildId)"
+    condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
+    displayName: Update assembly version
+
+  - powershell: echo "##vso[task.setvariable variable=ef3assemblyVersion]$(ef3assemblyVersion)-dev.$(Build.BuildId)"
+    condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
+    displayName: Update assembly version
+
+  - powershell: echo "##vso[task.setvariable variable=ef8assemblyVersion]$(ef8assemblyVersion)-dev.$(Build.BuildId)"
+    condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
+    displayName: Update assembly version
+
+  - powershell: echo "##vso[task.setvariable variable=ef9assemblyVersion]$(ef9assemblyVersion)-dev.$(Build.BuildId)"
+    condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
+    displayName: Update assembly version
+
+  - powershell: echo "##vso[task.setvariable variable=ef10assemblyVersion]$(ef10assemblyVersion)-dev.$(Build.BuildId)"
+    condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
+    displayName: Update assembly version
+
+# set version numbers in directory.build.props
   - task: PowerShell@2
     inputs:
       filePath: '$(Build.SourcesDirectory)/Build/SetVersion.ps1'
@@ -212,151 +234,22 @@ jobs:
       command: build
       projects: $(solution)
       arguments: -property:RunAnalyzersDuringBuild=${{ variables['with_analyzers'] }} -property:RunApiAnalyzersDuringBuild=${{ variables['with_api_analyzers'] }} --configuration $(release_configuration)
-    displayName: Build Solution for Release and Nuget
+    displayName: Build Solution for Nuget
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: pack
+      projects: $(solution)
+      arguments: -property:RunAnalyzersDuringBuild=${{ variables['with_analyzers'] }} -property:RunApiAnalyzersDuringBuild=${{ variables['with_api_analyzers'] }} --configuration $(release_configuration)
+    displayName: Pack Solution for Nuget
     condition: and(succeeded(), ${{ parameters.with_nugets }})
 
   - task: PublishPipelineArtifact@1
     inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB/Release'
-      artifact: '$(artifact_linq2db_binaries)'
-    displayName: Publish linq2db build results
-    condition: and(succeeded(), ${{ parameters.with_nugets }})
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Tools/Release'
-      artifact: '$(artifact_linq2db_tools_binaries)'
-    displayName: Publish linq2db.Tools build results
-    condition: and(succeeded(), ${{ parameters.with_nugets }})
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Extensions/Release'
-      artifact: '$(artifact_linq2db_extensions_binaries)'
-    displayName: Publish linq2db.Extensions build results
-    condition: and(succeeded(), ${{ parameters.with_nugets }})
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Compat/Release'
-      artifact: '$(artifact_linq2db_compat_binaries)'
-    displayName: Publish linq2db.Compat build results
-    condition: and(succeeded(), ${{ parameters.with_nugets }})
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.Wcf/Release'
-      artifact: '$(artifact_linq2db_remote_wcf_binaries)'
-    displayName: Publish linq2db.remote.Wcf build results
-    condition: and(succeeded(), ${{ parameters.with_nugets }})
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.Grpc/Release'
-      artifact: '$(artifact_linq2db_remote_grpc_binaries)'
-    displayName: Publish linq2db.remote.Grpc build results
-    condition: and(succeeded(), ${{ parameters.with_nugets }})
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.SignalR.Client/Release'
-      artifact: '$(artifact_linq2db_remote_signalr_client_binaries)'
-    displayName: Publish linq2db.remote.SignalR Client build results
-    condition: and(succeeded(), ${{ parameters.with_nugets }})
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.SignalR.Server/Release'
-      artifact: '$(artifact_linq2db_remote_signalr_server_binaries)'
-    displayName: Publish linq2db.remote.SignalR Server build results
-    condition: and(succeeded(), ${{ parameters.with_nugets }})
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.HttpClient.Client/Release'
-      artifact: '$(artifact_linq2db_remote_httpclient_client_binaries)'
-    displayName: Publish linq2db.remote.HttpClient.Client build results
-    condition: and(succeeded(), ${{ parameters.with_nugets }})
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.HttpClient.Server/Release'
-      artifact: '$(artifact_linq2db_remote_httpclient_server_binaries)'
-    displayName: Publish linq2db.remote.HttpClient.Server build results
-    condition: and(succeeded(), ${{ parameters.with_nugets }})
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.CLI/Release'
-      artifact: '$(artifact_linq2db_cli_binaries)'
-    displayName: Publish linq2db.CLI build results
-    condition: and(succeeded(), ${{ parameters.with_nugets }})
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Scaffold/Release'
-      artifact: '$(artifact_linq2db_scaffold_binaries)'
-    displayName: Publish linq2db.Scaffold build results
-    condition: and(succeeded(), ${{ parameters.with_nugets }})
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.FSharp/Release'
-      artifact: '$(artifact_linq2db_fsharp_binaries)'
-    displayName: Publish linq2db.FSharp build results
-    condition: and(succeeded(), ${{ parameters.with_nugets }})
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.EF3/Release'
-      artifact: '$(artifact_linq2db_efcore_3_binaries)'
-    displayName: Publish linq2db.EntityFrameworkCore build results
-    condition: and(succeeded(), ${{ parameters.with_nugets }})
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.EF8/Release'
-      artifact: '$(artifact_linq2db_efcore_8_binaries)'
-    displayName: Publish linq2db.EntityFrameworkCore build results
-    condition: and(succeeded(), ${{ parameters.with_nugets }})
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.EF9/Release'
-      artifact: '$(artifact_linq2db_efcore_9_binaries)'
-    displayName: Publish linq2db.EntityFrameworkCore build results
-    condition: and(succeeded(), ${{ parameters.with_nugets }})
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.EF10/Release'
-      artifact: '$(artifact_linq2db_efcore_10_binaries)'
-    displayName: Publish linq2db.EntityFrameworkCore build results
-    condition: and(succeeded(), ${{ parameters.with_nugets }})
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/NuGet/$(release_configuration)'
-      artifact: '$(artifact_t4_binaries)'
-    displayName: Publish T4 nuget artifacts
-    condition: and(succeeded(), ${{ parameters.with_nugets }})
-
-  - task: CmdLine@2
-    inputs:
-      script: |
-        ECHO ON
-        RD $(Build.SourcesDirectory)\.build\bin\LinqToDB.LINQPad\Release\net472 /S /Q
-        RD $(Build.SourcesDirectory)\.build\bin\LinqToDB.LINQPad\Release\net8.0-windows\clidriver /S /Q
-        CD $(Build.SourcesDirectory)\.build\bin\LinqToDB.LINQPad\Release\net8.0-windows
-        FOR %%f IN (*) DO IF NOT "%%f"=="linq2db.LINQPad.dll" DEL "%%f" /Q
-    condition: and(succeeded(), ${{ parameters.with_nugets }})
-    displayName: Cleanup LINQPad artifacts
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.LINQPad/Release'
-      artifact: '$(artifact_linq2db_linqpad_binaries)'
-    displayName: Publish linq2db.LINQPad build results
+      path: '$(Build.SourcesDirectory)/.build/package/release'
+      artifact: '$(artifact_nugets)'
+    displayName: Publish linq2db nugets
     condition: and(succeeded(), ${{ parameters.with_nugets }})
 
   - task: PublishBuildArtifacts@1

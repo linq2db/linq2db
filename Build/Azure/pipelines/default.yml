@@ -27,14 +27,13 @@ stages:
       ${{ if eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']) }}:
         with_api_analyzers: true
       with_release: eq(variables['Build.SourceBranchName'], variables['release_branch'])
-      with_analyzers: false # true
+      with_analyzers: true
 
 #############
 # NUGET JOB #
 ##############
   - template: templates/nuget-job.yml
     parameters:
-      publish: true
       release: eq(variables['Build.SourceBranchName'], variables['release_branch'])
 
 #############

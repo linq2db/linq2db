@@ -4,7 +4,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net10.0</TargetFrameworks>
-		<AssemblyVersion>$(EF10Version)</AssemblyVersion>
+		<Version>$(EF10Version)</Version>
 		<DefineConstants>EF10;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 

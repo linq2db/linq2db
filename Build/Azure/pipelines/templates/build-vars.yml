@@ -9,26 +9,7 @@ variables:
   test_configuration: 'Azure'
 # names for build artifacts
   artifact_nugets: 'nugets'
-  artifact_linq2db_binaries: 'linq2db_binaries'
-  artifact_linq2db_tools_binaries: 'linq2db_tools_binaries'
-  artifact_linq2db_compat_binaries: 'linq2db_compat_binaries'
-  artifact_linq2db_extensions_binaries: 'linq2db_extensions_binaries'
-  artifact_linq2db_remote_wcf_binaries: 'linq2db_remote_wcf_binaries'
-  artifact_linq2db_remote_grpc_binaries: 'linq2db_remote_grpc_binaries'
-  artifact_linq2db_remote_signalr_client_binaries: 'linq2db_remote_signalr_client_binaries'
-  artifact_linq2db_remote_signalr_server_binaries: 'linq2db_remote_signalr_server_binaries'
-  artifact_linq2db_remote_httpclient_client_binaries: 'linq2db_remote_httpclient_client_binaries'
-  artifact_linq2db_remote_httpclient_server_binaries: 'linq2db_remote_httpclient_server_binaries'
-  artifact_linq2db_cli_binaries: 'linq2db_cli_binaries'
-  artifact_linq2db_scaffold_binaries: 'linq2db_scaffold_binaries'
-  artifact_linq2db_fsharp_binaries: 'linq2db_fsharp_binaries'
-  artifact_linq2db_efcore_3_binaries: 'linq2db_efcore_3_binaries'
-  artifact_linq2db_efcore_8_binaries: 'linq2db_efcore_8_binaries'
-  artifact_linq2db_efcore_9_binaries: 'linq2db_efcore_9_binaries'
-  artifact_linq2db_efcore_10_binaries: 'linq2db_efcore_10_binaries'
-  artifact_linq2db_linqpad_binaries: 'linq2db_linqpad_binaries'
   artifact_linq2db_linqpad_lpx: 'linq2db_linqpad_lpx'
-  artifact_t4_binaries: 't4_binaries'
   artifact_test_configs: 'test_configs'
   artifact_test_scripts: 'test_scripts'
   artifact_test_netfx_binaries: 'test_netfx_binaries'
@@ -41,15 +22,3 @@ variables:
   ef8AssemblyVersion: 8.4.0.0
   ef9AssemblyVersion: 9.3.0.0
   ef10AssemblyVersion: 10.2.0.0
-  ${{ if eq(variables['Build.SourceBranchName'], 'release') }}:
-    packageVersion: 6.2.0
-    ef3PackageVersion: 3.30.0
-    ef8PackageVersion: 8.4.0
-    ef9PackageVersion: 9.3.0
-    ef10PackageVersion: 10.2.0
-  ${{ if ne(variables['Build.SourceBranchName'], 'release') }}:
-    packageVersion: 6.2.0
-    ef3PackageVersion: 3.30.0
-    ef8PackageVersion: 8.4.0
-    ef9PackageVersion: 9.3.0
-    ef10PackageVersion: 10.2.0

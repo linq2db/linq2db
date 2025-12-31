@@ -1,10 +1,11 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
-		<Version>6.0.0.0</Version>
-		<EF3Version>3.0.0.0</EF3Version>
-		<EF8Version>8.0.0.0</EF8Version>
-		<EF9Version>9.0.0.0</EF9Version>
-		<EF10Version>10.0.0.0</EF10Version>
+		<!-- Should match with `build-vars.yml`; update after release -->
+		<Version>6.2.0-local.1</Version>
+		<EF3Version>3.30.0-local.1</EF3Version>
+		<EF8Version>8.4.0-local.1</EF8Version>
+		<EF9Version>9.3.0-local.1</EF9Version>
+		<EF10Version>10.2.0-local.1</EF10Version>
 
 		<Configurations>Testing;Debug;Release;Azure</Configurations>
 
