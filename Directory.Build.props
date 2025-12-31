@@ -78,7 +78,6 @@
 
 		<PackageProjectUrl>https://linq2db.com</PackageProjectUrl>
 		<PackageReleaseNotes>https://github.com/linq2db/linq2db/wiki/releases-and-roadmap#release-$(Version.Replace(".",""))</PackageReleaseNotes>
-		<PackageVersion>$(Version)</PackageVersion>
 		<PackageIcon>images\icon.png</PackageIcon>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageReadmeFile>readme.md</PackageReadmeFile>
