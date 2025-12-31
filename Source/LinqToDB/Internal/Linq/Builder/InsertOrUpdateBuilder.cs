@@ -73,7 +73,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var q =
 				(
 					from k in keys
-					join i in insertOrUpdateStatement.Insert.Items on k equals i.Column
+					join i in insertOrUpdateStatement.Insert.Items on k equals QueryHelper.GetUnderlyingField(i.Column)
 					select new { k, i }
 				).ToList();
 
