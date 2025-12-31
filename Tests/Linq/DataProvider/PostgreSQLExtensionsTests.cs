@@ -412,5 +412,53 @@ namespace Tests.DataProvider
 			}
 		}
 
+		public class Issue5285Table
+		{
+			[PrimaryKey, Identity]
+			public int Id { get; set; }
+
+			public int Value { get; set; }
+		}
+
+		static IQueryable<TValue> UnnestOld<TValue>(IDataContext db, TValue[] member)
+			=> db.FromSql<TValue>($"unnest({member})");
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5285")]
+		public void TestUnnestWithLateral1([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue5285Table>();
+
+			var query = from i in db.Unnest([1,2,3])
+						from a in tb
+						.Where(x => x.Value > i)
+						.OrderBy(x => x.Value)
+						.Take(1)
+						select new
+						{
+							a.Id
+						};
+
+			_ = query.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5285")]
+		public void TestUnnestWithLateral2([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue5285Table>();
+
+			var query = from i in UnnestOld(db, [1,2,3])
+						from a in tb
+						.Where(x => x.Value > i)
+						.OrderBy(x => x.Value)
+						.Take(1)
+						select new
+						{
+							a.Id
+						};
+
+			_ = query.ToArray();
+		}
 	}
 }
