@@ -175,7 +175,7 @@ namespace Tests.Exceptions
 		}
 
 		[Test]
-		public void TestExpressionVisitorHops([Values(0, 1, 5, 10)] int hops)
+		public void TestExpressionVisitorHops([Values(0, 1, 2, 10)] int hops)
 		{
 			using var sc  = new ThreadHopsScope(hops);
 
@@ -194,15 +194,12 @@ namespace Tests.Exceptions
 					.And.InnerException.InstanceOf<InsufficientExecutionStackException>()
 					.And.InnerException.InnerException.Null);
 			}
-			else if (hops is 5)
+			else if (hops is 2)
 			{
 				Assert.That(() => new TestExpressionVisitor().Visit(expr), Throws.InstanceOf<InsufficientExecutionStackException>()
 					.And.InnerException.InstanceOf<InsufficientExecutionStackException>()
 					.And.InnerException.InnerException.InstanceOf<InsufficientExecutionStackException>()
-					.And.InnerException.InnerException.InnerException.InstanceOf<InsufficientExecutionStackException>()
-					.And.InnerException.InnerException.InnerException.InnerException.InstanceOf<InsufficientExecutionStackException>()
-					.And.InnerException.InnerException.InnerException.InnerException.InnerException.InstanceOf<InsufficientExecutionStackException>()
-					.And.InnerException.InnerException.InnerException.InnerException.InnerException.InnerException.Null);
+					.And.InnerException.InnerException.InnerException.Null);
 			}
 			else
 			{
@@ -228,7 +225,7 @@ namespace Tests.Exceptions
 		}
 
 		[Test]
-		public void TestSqlVisitorHops([Values(0, 1, 5, 10)] int hops)
+		public void TestSqlVisitorHops([Values(0, 1, 2, 10)] int hops)
 		{
 			using var sc  = new ThreadHopsScope(hops);
 
@@ -248,15 +245,12 @@ namespace Tests.Exceptions
 					.And.InnerException.InstanceOf<InsufficientExecutionStackException>()
 					.And.InnerException.InnerException.Null);
 			}
-			else if (hops is 5)
+			else if (hops is 2)
 			{
 				Assert.That(() => new TestSqlVisitor().Visit(expr), Throws.InstanceOf<InsufficientExecutionStackException>()
 					.And.InnerException.InstanceOf<InsufficientExecutionStackException>()
 					.And.InnerException.InnerException.InstanceOf<InsufficientExecutionStackException>()
-					.And.InnerException.InnerException.InnerException.InstanceOf<InsufficientExecutionStackException>()
-					.And.InnerException.InnerException.InnerException.InnerException.InstanceOf<InsufficientExecutionStackException>()
-					.And.InnerException.InnerException.InnerException.InnerException.InnerException.InstanceOf<InsufficientExecutionStackException>()
-					.And.InnerException.InnerException.InnerException.InnerException.InnerException.InnerException.Null);
+					.And.InnerException.InnerException.InnerException.Null);
 			}
 			else
 			{
