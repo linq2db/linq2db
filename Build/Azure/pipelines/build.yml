@@ -22,5 +22,5 @@ stages:
       with_nugets: true
       with_examples: true
       with_tests: false
-      with_analyzers: true
+      with_analyzers: false # true disabled till https://github.com/dotnet/roslyn/pull/80621 shipped
       with_release: false
