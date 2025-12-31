@@ -1,12 +1,16 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
-		<!-- Should match with `build-vars.yml`; update to next after release -->
-		<Version>6.2.0-local.1</Version>
-		<EF3Version>3.30.0-local.1</EF3Version>
-		<EF8Version>8.4.0-local.1</EF8Version>
-		<EF9Version>9.3.0-local.1</EF9Version>
-		<EF10Version>10.2.0-local.1</EF10Version>
+		<!-- Update to next after release -->
+		<Version>6.2.0</Version>
+		<EF3Version>3.30.0</EF3Version>
+		<EF8Version>8.4.0</EF8Version>
+		<EF9Version>9.3.0</EF9Version>
+		<EF10Version>10.2.0</EF10Version>
 
+		<AssemblyVersion>$(Version)</AssemblyVersion>
+		<VersionSuffix Condition=" '$(VersionSuffix)' == '' ">-local.1</VersionSuffix>
+		<ApplyVersionSuffix Condition=" '$(ApplyVersionSuffix)' == '' ">true</ApplyVersionSuffix>
+		
 		<Configurations>Testing;Debug;Release;Azure</Configurations>
 
 		<AppDesignerFolder>Properties</AppDesignerFolder>
@@ -81,6 +85,7 @@
 		<PackageIcon>images\icon.png</PackageIcon>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageReadmeFile>readme.md</PackageReadmeFile>
+		<PackageVersion Condition=" '$(ApplyVersionSuffix)' == 'true' ">$(Version)$(VersionSuffix)</PackageVersion>
 
 		<EnablePackageValidation>true</EnablePackageValidation>
 		<PackageValidationBaselineVersion>6.0.0</PackageValidationBaselineVersion>

@@ -46,7 +46,6 @@
   <Folder Name="/Build/">
     <File Path="Build/linq2db.snk" />
     <File Path="Build/README.md" />
-    <File Path="Build/SetVersion.ps1" />
     <File Path="Directory.Build.props" />
     <File Path="Directory.Packages.props" />
   </Folder>

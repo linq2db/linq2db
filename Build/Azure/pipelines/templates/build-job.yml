@@ -34,61 +34,13 @@ jobs:
       version: 10.x
 
 # tag version numbers appropriately
-  - powershell: echo "##vso[task.setvariable variable=assemblyVersion]$(assemblyVersion)-dev.$(Build.BuildId)"
+  - powershell: echo "##vso[task.setvariable variable=versionSuffix]-dev.$(Build.BuildId)"
     condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
-    displayName: Update assembly version
+    displayName: Set version suffix (non-release)
 
-  - powershell: echo "##vso[task.setvariable variable=ef3assemblyVersion]$(ef3assemblyVersion)-dev.$(Build.BuildId)"
-    condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
-    displayName: Update assembly version
-
-  - powershell: echo "##vso[task.setvariable variable=ef8assemblyVersion]$(ef8assemblyVersion)-dev.$(Build.BuildId)"
-    condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
-    displayName: Update assembly version
-
-  - powershell: echo "##vso[task.setvariable variable=ef9assemblyVersion]$(ef9assemblyVersion)-dev.$(Build.BuildId)"
-    condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
-    displayName: Update assembly version
-
-  - powershell: echo "##vso[task.setvariable variable=ef10assemblyVersion]$(ef10assemblyVersion)-dev.$(Build.BuildId)"
-    condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
-    displayName: Update assembly version
-
-# set version numbers in directory.build.props
-  - task: PowerShell@2
-    inputs:
-      filePath: '$(Build.SourcesDirectory)/Build/SetVersion.ps1'
-      workingDirectory: '$(Build.SourcesDirectory)'
-      arguments: -path $(Build.SourcesDirectory)/Directory.Build.props -version $(assemblyVersion) -prop Version
-    displayName: Update Linq To DB main assembly version
-
-  - task: PowerShell@2
-    inputs:
-      filePath: '$(Build.SourcesDirectory)/Build/SetVersion.ps1'
-      workingDirectory: '$(Build.SourcesDirectory)'
-      arguments: -path $(Build.SourcesDirectory)/Directory.Build.props -version $(ef3AssemblyVersion) -prop EF3Version
-    displayName: Update EF.Core 3.1 integration assembly version
-
-  - task: PowerShell@2
-    inputs:
-      filePath: '$(Build.SourcesDirectory)/Build/SetVersion.ps1'
-      workingDirectory: '$(Build.SourcesDirectory)'
-      arguments: -path $(Build.SourcesDirectory)/Directory.Build.props -version $(ef8AssemblyVersion) -prop EF8Version
-    displayName: Update EF.Core 8 integration assembly version
-
-  - task: PowerShell@2
-    inputs:
-      filePath: '$(Build.SourcesDirectory)/Build/SetVersion.ps1'
-      workingDirectory: '$(Build.SourcesDirectory)'
-      arguments: -path $(Build.SourcesDirectory)/Directory.Build.props -version $(ef9AssemblyVersion) -prop EF9Version
-    displayName: Update EF.Core 9 integration assembly version
-
-  - task: PowerShell@2
-    inputs:
-      filePath: '$(Build.SourcesDirectory)/Build/SetVersion.ps1'
-      workingDirectory: '$(Build.SourcesDirectory)'
-      arguments: -path $(Build.SourcesDirectory)/Directory.Build.props -version $(ef10AssemblyVersion) -prop EF10Version
-    displayName: Update EF.Core 10 integration assembly version
+  - powershell: echo "##vso[task.setvariable variable=applyVersionSuffix]false"
+    condition: eq(variables['Build.SourceBranchName'], variables['release_branch'])
+    displayName: Remove version suffix (release)
 
   - task: DotNetCoreCLI@2
     inputs:

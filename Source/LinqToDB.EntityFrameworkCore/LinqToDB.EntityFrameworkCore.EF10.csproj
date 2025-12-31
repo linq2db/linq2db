@@ -4,7 +4,8 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net10.0</TargetFrameworks>
-		<Version>$(EF10Version)</Version>
+		<Version>$(EF3Version)</Version>
+		<AssemblyVersion>$(EF10Version)</AssemblyVersion>
 		<DefineConstants>EF10;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
@@ -14,7 +15,7 @@
 		<Description>Allows to execute Linq to DB queries in Entity Framework Core DbContext.</Description>
 		<Product>$(Title)</Product>
 
-		<PackageVersion>$(EF10Version)</PackageVersion>
+		<PackageVersion Condition=" '$(ApplyVersionSuffix)' == 'true' ">$(Version)$(VersionSuffix)</PackageVersion>
 		<PackageValidationBaselineVersion>10.0.0</PackageValidationBaselineVersion>
 
 		<PackageTags>$(PackageTags);entity-framework-core;EntityFrameworkCore;EFCore</PackageTags>

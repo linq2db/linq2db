@@ -5,6 +5,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>net8.0</TargetFrameworks>
 		<Version>$(EF8Version)</Version>
+		<AssemblyVersion>$(EF8Version)</AssemblyVersion>
 		<DefineConstants>EF8;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
@@ -14,7 +15,7 @@
 		<Description>Allows to execute Linq to DB queries in Entity Framework Core DbContext.</Description>
 		<Product>$(Title)</Product>
 
-		<PackageVersion>$(EF8Version)</PackageVersion>
+		<PackageVersion Condition=" '$(ApplyVersionSuffix)' == 'true' ">$(Version)$(VersionSuffix)</PackageVersion>
 		<PackageValidationBaselineVersion>8.2.0</PackageValidationBaselineVersion>
 
 		<PackageTags>$(PackageTags);entity-framework-core;EntityFrameworkCore;EFCore</PackageTags>

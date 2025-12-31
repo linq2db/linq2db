@@ -5,6 +5,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>net8.0</TargetFrameworks>
 		<Version>$(EF9Version)</Version>
+		<AssemblyVersion>$(EF9Version)</AssemblyVersion>
 		<DefineConstants>EF9;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
@@ -18,7 +19,7 @@
 		<Description>Allows to execute Linq to DB queries in Entity Framework Core DbContext.</Description>
 		<Product>$(Title)</Product>
 
-		<PackageVersion>$(EF9Version)</PackageVersion>
+		<PackageVersion Condition=" '$(ApplyVersionSuffix)' == 'true' ">$(Version)$(VersionSuffix)</PackageVersion>
 		<PackageValidationBaselineVersion>9.1.0</PackageValidationBaselineVersion>
 
 		<PackageTags>$(PackageTags);entity-framework-core;EntityFrameworkCore;EFCore</PackageTags>

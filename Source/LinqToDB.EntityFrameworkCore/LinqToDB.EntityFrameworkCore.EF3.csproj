@@ -5,6 +5,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.0;net462</TargetFrameworks>
 		<Version>$(EF3Version)</Version>
+		<AssemblyVersion>$(EF3Version)</AssemblyVersion>
 		<DefineConstants>EF31;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 	
@@ -14,7 +15,7 @@
 		<Description>Allows to execute Linq to DB queries in Entity Framework Core DbContext.</Description>
 		<Product>$(Title)</Product>
 
-		<PackageVersion>$(EF3Version)</PackageVersion>
+		<PackageVersion Condition=" '$(ApplyVersionSuffix)' == 'true' ">$(Version)$(VersionSuffix)</PackageVersion>
 		<PackageValidationBaselineVersion>3.28.0</PackageValidationBaselineVersion>
 
 		<PackageTags>$(PackageTags);entity-framework-core;EntityFrameworkCore;EFCore</PackageTags>
