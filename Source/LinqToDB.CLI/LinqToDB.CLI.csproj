@@ -8,7 +8,6 @@
 		<SignAssembly>False</SignAssembly>
 		<RollForward>Major</RollForward>
 		<SelfContained>false</SelfContained>
-		<OptimizationPreference>speed</OptimizationPreference>
 		<RuntimeIdentifiers>win-x64;win-arm64;osx-x64;osx-arm64;linux-x64;linux-arm64</RuntimeIdentifiers>
 	</PropertyGroup>
 
