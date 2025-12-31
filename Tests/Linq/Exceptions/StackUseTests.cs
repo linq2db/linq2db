@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 using LinqToDB;
@@ -179,9 +180,13 @@ namespace Tests.Exceptions
 		{
 			using var sc  = new ThreadHopsScope(hops);
 
+			var iterations = RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+				? 150_000
+				: 30_000;
+
 			var mi = MethodHelper.GetMethodInfo(Call);
 			var expr = Expression.Call(mi, Expression.Constant(null, typeof(object)));
-			for (var i = 0; i < 30_000; i++)
+			for (var i = 0; i < iterations; i++)
 				expr = Expression.Call(mi, expr);
 
 			if (hops is 0)
@@ -229,10 +234,14 @@ namespace Tests.Exceptions
 		{
 			using var sc  = new ThreadHopsScope(hops);
 
+			var iterations = RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+				? 50_000
+				: 10_000;
+
 			const string name = "fake";
 			var type = new DbDataType(typeof(int));
 			var expr = new SqlFunction(type, name, new SqlValue(1));
-			for (var i = 0; i < 10_000; i++)
+			for (var i = 0; i < iterations; i++)
 				expr = new SqlFunction(type, name, expr);
 
 			if (hops is 0)
