@@ -1732,7 +1732,7 @@ namespace Tests.Data
 					}
 				}
 
-				Assert.Fail($"Command wasn't cancelled");
+				Assert.Fail("Command wasn't cancelled");
 			}
 			catch (OperationCanceledException)
 			{
@@ -1759,7 +1759,7 @@ namespace Tests.Data
 					}
 				}
 
-				Assert.Fail($"Command wasn't cancelled");
+				Assert.Fail("Command wasn't cancelled");
 			}
 			catch (OperationCanceledException)
 			{
@@ -1789,7 +1789,7 @@ namespace Tests.Data
 					}
 				}
 
-				Assert.Fail($"Command wasn't cancelled");
+				Assert.Fail("Command wasn't cancelled");
 			}
 			catch (OperationCanceledException)
 			{
