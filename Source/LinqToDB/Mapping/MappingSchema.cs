@@ -884,7 +884,7 @@ namespace LinqToDB.Mapping
 						Methods.LinqToDB.DataParameter.ClearValue,
 						Expression.Equal(p, Expression.Constant(null, p.Type))),
 					Methods.LinqToDB.DataParameter.WithType,
-					Expression.Constant(from)),
+					Expression.Constant(fromNullable)),
 				p);
 
 			lock (_syncRoot)
