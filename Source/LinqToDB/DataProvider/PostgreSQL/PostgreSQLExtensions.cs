@@ -97,8 +97,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		[ExpressionMethod(nameof(UnnestImpl))]
 		public static IQueryable<T> Unnest<T>(this IDataContext dc, T[] array)
-			//TODO: can be executable when we finish queryable arrays
-			=> throw new ServerSideOnlyException(nameof(Unnest));
+			=> dc.FromSqlScalar<T>($"UNNEST({array})");
 
 		static Expression<Func<IDataContext, T[], IQueryable<T>>> UnnestImpl<T>()
 		{
