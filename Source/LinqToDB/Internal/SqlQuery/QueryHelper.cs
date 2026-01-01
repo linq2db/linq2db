@@ -1118,12 +1118,14 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 			}
 
-			public void Cleanup()
+			public override void Cleanup()
 			{
 				IsAggregation          = false;
 				IsWindow               = false;
 				HasReference           = false;
 				CanBeAffectedByOrderBy = false;
+
+				base.Cleanup();
 			}
 
 			[return : NotNullIfNotNull(nameof(element))]

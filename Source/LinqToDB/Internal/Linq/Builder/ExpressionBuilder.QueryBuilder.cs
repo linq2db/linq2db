@@ -156,8 +156,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override void Cleanup()
 			{
-				base.Cleanup();
-
 				_visited   = default!;
 				_generator = default!;
 				_context   = default!;
@@ -165,6 +163,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				_duplicates             = default;
 				_constructed            = default;
 				_constructedAssignments = default;
+
+				base.Cleanup();
 			}
 		}
 
