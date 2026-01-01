@@ -862,12 +862,16 @@ namespace LinqToDB.Mapping
 		void SetNullableConversion(DbDataType from, DbDataType to, LambdaExpression conversion, ConversionType conversionType)
 		{
 			if (to.SystemType != typeof(DataParameter)
-				|| !from.SystemType.IsValueType || from.SystemType.IsNullableType
-				|| GetConverter(from, to, false, conversionType) != null)
+				|| !from.SystemType.IsValueType || from.SystemType.IsNullableType)
 				return;
 
 			// generate T? -> DataParameter conversion from T -> DataParameter conversion
 			var nullableType = from.SystemType.MakeNullable();
+			var fromNullable = from.WithSystemType(nullableType);
+
+			// we probably shouldn't rewrite exsting conversions implicitly
+			if (GetConverter(fromNullable, to, false, conversionType) != null)
+				return;
 
 			var p = Expression.Parameter(nullableType, conversion.Parameters[0].Name);
 
@@ -885,7 +889,7 @@ namespace LinqToDB.Mapping
 
 			lock (_syncRoot)
 			{
-				Schemas[0].SetConvertInfo(from.WithSystemType(nullableType), to, conversionType, new(nullableConversion, null, null, false), true);
+				Schemas[0].SetConvertInfo(fromNullable, to, conversionType, new(nullableConversion, null, null, false), true);
 				ResetID();
 			}
 		}
