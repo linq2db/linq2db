@@ -191,7 +191,8 @@ jobs:
 
   - task: DotNetCoreCLI@2
     inputs:
-      command: pack
+      command: custom
+      custom: pack
       projects: $(solution)
       arguments: -property:RunAnalyzersDuringBuild=${{ variables['with_analyzers'] }} -property:RunApiAnalyzersDuringBuild=${{ variables['with_api_analyzers'] }} --configuration $(release_configuration)
     displayName: Pack Solution for Nuget
