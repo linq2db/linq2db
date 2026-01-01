@@ -96,8 +96,8 @@ namespace LinqToDB.Internal.Expressions.Types
 			if (baseType != Enum.GetUnderlyingType(originalType))
 				throw new LinqToDBException($"Enums {wrapperType} and {originalType} have different base types: {baseType} vs {Enum.GetUnderlyingType(originalType)}");
 
-			var wrapperValues  = Enum.GetValues(wrapperType) .OfType<object>().Distinct().ToDictionary(v => string.Format(CultureInfo.InvariantCulture, "{0}", v), _ => _, StringComparer.Ordinal);
-			var originalValues = Enum.GetValues(originalType).OfType<object>().Distinct().ToDictionary(v => string.Format(CultureInfo.InvariantCulture, "{0}", v), _ => _, StringComparer.Ordinal);
+			var wrapperValues  = Enum.GetValues(wrapperType) .OfType<object>().Distinct().ToDictionary(v => string.Create(CultureInfo.InvariantCulture, $"{v}"), StringComparer.Ordinal);
+			var originalValues = Enum.GetValues(originalType).OfType<object>().Distinct().ToDictionary(v => string.Create(CultureInfo.InvariantCulture, $"{v}"), StringComparer.Ordinal);
 
 			var hasCommonMembers   = false;
 			var hasDifferentValues = false;
