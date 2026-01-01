@@ -413,9 +413,9 @@ namespace Tests.Linq
 		[Table]
 		public partial class Issue5289Table
 		{
-			[PrimaryKey              ] public long  Id        { get; set; }
-			[Column                  ] public long? PictureId { get; set; }
-			[Column(CanBeNull = true)] public bool  Deleted   { get; }
+			[PrimaryKey] public int  Id        { get; set; }
+			[Column    ] public int? PictureId { get; set; }
+			[Column    ] public bool  Deleted  { get; init; }
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5289")]
@@ -433,6 +433,7 @@ namespace Tests.Linq
 				{
 					Id = 1,
 					PictureId = 2,
+					Deleted = false
 				},
 				r => new Issue5289Table()
 				{
@@ -448,7 +449,8 @@ namespace Tests.Linq
 				() => new Issue5289Table()
 				{
 					Id = 1,
-					PictureId = 2
+					PictureId = 2,
+					Deleted = false
 				},
 				r => new Issue5289Table()
 				{
