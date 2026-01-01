@@ -62,7 +62,7 @@ namespace LinqToDB.Internal.DataProvider
 			return new NeedCastScope(this, needCast);
 		}
 
-		protected override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
+		protected internal override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
 		{
 			var save = _inModifier;
 
@@ -90,19 +90,19 @@ namespace LinqToDB.Internal.DataProvider
 			return base.VisitSqlColumnExpression(column, expression);
 		}
 
-		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+		protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
 			using var scope = NeedCast(false);
 			return base.VisitSqlQuery(selectQuery);
 		}
 
-		protected override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
+		protected internal override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
 		{
 			using var scope = NeedCast(false);
 			return base.VisitSqlCastExpression(element);
 		}
 
-		protected override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
+		protected internal override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
 		{
 			var saveNeedCast = _needCast;
 
@@ -131,25 +131,25 @@ namespace LinqToDB.Internal.DataProvider
 			return result;
 		}
 
-		protected override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
+		protected internal override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			using var scope = NeedCast(!_inModifier && _wrapFlags.HasFlag(WrapFlags.InBinary));
 			return base.VisitSqlBinaryExpression(element);
 		}
 
-		protected override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
+		protected internal override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
 		{
 			using var scope = NeedCast(!_inModifier && _wrapFlags.HasFlag(WrapFlags.InFunctionParameters));
 			return base.VisitSqlCoalesceExpression(element);
 		}
 
-		protected override IQueryElement VisitSqlFunction(SqlFunction element)
+		protected internal override IQueryElement VisitSqlFunction(SqlFunction element)
 		{
 			using var scope = NeedCast(!_inModifier && _wrapFlags.HasFlag(WrapFlags.InFunctionParameters));
 			return base.VisitSqlFunction(element);
 		}
 
-		protected override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
+		protected internal override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
 		{
 			if (_needCast)
 			{
@@ -162,7 +162,7 @@ namespace LinqToDB.Internal.DataProvider
 			return base.VisitSqlParameter(sqlParameter);
 		}
 
-		protected override IQueryElement VisitSqlInsertClause(SqlInsertClause element)
+		protected internal override IQueryElement VisitSqlInsertClause(SqlInsertClause element)
 		{
 			var save = _inInsert;
 			_inInsert = true;
@@ -172,19 +172,19 @@ namespace LinqToDB.Internal.DataProvider
 			return result;
 		}
 
-		protected override IQueryElement VisitSqlOutputClause(SqlOutputClause element)
+		protected internal override IQueryElement VisitSqlOutputClause(SqlOutputClause element)
 		{
 			using var scope = NeedCast(_wrapFlags.HasFlag(WrapFlags.InOutput));
 			return base.VisitSqlOutputClause(element);
 		}
 
-		protected override IQueryElement VisitSqlMergeOperationClause(SqlMergeOperationClause element)
+		protected internal override IQueryElement VisitSqlMergeOperationClause(SqlMergeOperationClause element)
 		{
 			using var scope = NeedCast(_wrapFlags.HasFlag(WrapFlags.InMerge));
 			return base.VisitSqlMergeOperationClause(element);
 		}
 
-		protected override IQueryElement VisitSqlInsertOrUpdateStatement(SqlInsertOrUpdateStatement element)
+		protected internal override IQueryElement VisitSqlInsertOrUpdateStatement(SqlInsertOrUpdateStatement element)
 		{
 			var saveInInsertOrUpdate = _inInsertOrUpdate;
 			_inInsertOrUpdate = true;
