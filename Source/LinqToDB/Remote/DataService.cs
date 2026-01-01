@@ -20,29 +20,29 @@ namespace LinqToDB.Remote
 
 		public DataService()
 		{
-			_defaultMetadata ??= Tuple.Create(default(T)!, new MetadataInfo(new DataOptions(), MappingSchema.Default));
+			_defaultMetadata ??= new(new DataOptions(), MappingSchema.Default);
 
-			_metadata = new MetadataProvider(_defaultMetadata.Item2);
-			_query    = new QueryProvider   (_defaultMetadata.Item2);
-			_update   = new UpdateProvider  (_defaultMetadata.Item2, _metadata);
+			_metadata = new MetadataProvider(_defaultMetadata);
+			_query    = new QueryProvider   (_defaultMetadata);
+			_update   = new UpdateProvider  (_defaultMetadata, _metadata);
 		}
 
-		static Tuple<T,MetadataInfo>? _defaultMetadata;
+		static MetadataInfo? _defaultMetadata;
 
 		public DataService(DataOptions options, MappingSchema mappingSchema)
 		{
 			lock (_cache)
 			{
 				if (!_cache.TryGetValue(mappingSchema, out var data))
-					data = Tuple.Create(default(T)!, new MetadataInfo(options, mappingSchema));
+					data = new (options, mappingSchema);
 
-				_metadata = new MetadataProvider(data.Item2);
-				_query    = new QueryProvider   (data.Item2);
-				_update   = new UpdateProvider  (data.Item2, _metadata);
+				_metadata = new MetadataProvider(data);
+				_query    = new QueryProvider   (data);
+				_update   = new UpdateProvider  (data, _metadata);
 			}
 		}
 
-		static readonly Dictionary<MappingSchema,Tuple<T,MetadataInfo>> _cache = new();
+		static readonly Dictionary<MappingSchema, MetadataInfo> _cache = [];
 
 		readonly MetadataProvider _metadata;
 		readonly QueryProvider    _query;

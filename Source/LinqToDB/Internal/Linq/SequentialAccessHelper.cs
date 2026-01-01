@@ -40,7 +40,7 @@ namespace LinqToDB.Internal.Linq
 			}
 
 			// slow mode column types
-			public Dictionary<int, Tuple<ConvertFromDataReaderExpression.ColumnReader, ISet<Type>>>? SlowColumnTypes;
+			public Dictionary<int, (ConvertFromDataReaderExpression.ColumnReader Reader, ISet<Type> Types)>? SlowColumnTypes;
 
 			public Expression? DataContextExpr;
 			public Expression? DataReaderExpr;
@@ -148,15 +148,15 @@ namespace LinqToDB.Internal.Linq
 							context.NewVariables[index] = Expression.Variable(typeof(object), string.Create(CultureInfo.InvariantCulture, $"get_value_{columnIndex}"));
 							if (context.SlowColumnTypes == null)
 							{
-								context.SlowColumnTypes = new Dictionary<int, Tuple<ConvertFromDataReaderExpression.ColumnReader, ISet<Type>>>();
+								context.SlowColumnTypes = new();
 								context.DataContextExpr = call.Arguments[0];
 								context.DataReaderExpr  = call.Arguments[1];
 							}
 
-							context.SlowColumnTypes.Add(columnIndex.Value, new Tuple<ConvertFromDataReaderExpression.ColumnReader, ISet<Type>>(columnReader, new HashSet<Type>()));
+							context.SlowColumnTypes.Add(columnIndex.Value, (columnReader, new HashSet<Type>()));
 						}
 
-						context.SlowColumnTypes![columnIndex.Value].Item2.Add(columnReader.ColumnType);
+						context.SlowColumnTypes![columnIndex.Value].Types.Add(columnReader.ColumnType);
 
 						// replacement expression build later when we know all types
 						return call.Update(
@@ -221,11 +221,11 @@ namespace LinqToDB.Internal.Linq
 							isNullVariable,
 							Expression.Constant(null, valueVariable.Type),
 							Expression.Call(
-								Expression.Constant(kvp.Value.Item1),
+								Expression.Constant(kvp.Value.Reader),
 								Methods.LinqToDB.ColumnReader.GetRawValueSequential,
 								ctx.DataContextExpr!,
 								ctx.DataReaderExpr!,
-								Expression.Constant(kvp.Value.Item2.ToArray())),
+								Expression.Constant(kvp.Value.Types.ToArray())),
 							valueVariable.Type));
 				}
 			}

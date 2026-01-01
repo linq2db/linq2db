@@ -1135,7 +1135,7 @@ namespace LinqToDB.Internal.SqlProvider
 			yield return (target, source, null);
 		}
 
-		static IEnumerable<(ISqlExpression, ISqlExpression)> GenerateRows(
+		static IEnumerable<ISqlExpression> GenerateRows(
 			ISqlExpression                            target,
 			ISqlExpression                            source,
 			Dictionary<IQueryElement, IQueryElement>? mainTree,
@@ -1149,10 +1149,10 @@ namespace LinqToDB.Internal.SqlProvider
 
 				for (var i = 0; i < targetRow.Values.Length; i++)
 				{
-					var tagetRowValue  = targetRow.Values[i];
+					var targetRowValue = targetRow.Values[i];
 					var sourceRowValue = sourceRow.Values[i];
 
-					foreach (var r in GenerateRows(tagetRowValue, sourceRowValue, mainTree, innerTree, selectQuery))
+					foreach (var r in GenerateRows(targetRowValue, sourceRowValue, mainTree, innerTree, selectQuery))
 						yield return r;
 				}
 			}
@@ -1161,7 +1161,7 @@ namespace LinqToDB.Internal.SqlProvider
 				var ex         = RemapCloned(source, mainTree, innerTree);
 				var columnExpr = selectQuery.Select.AddNewColumn(ex);
 
-				yield return (target, columnExpr);
+				yield return target;
 			}
 		}
 
@@ -1258,7 +1258,7 @@ namespace LinqToDB.Internal.SqlProvider
 						var innerQuery = CloneQuery(clonedQuery, updateStatement.Update.Table, out var innerTree);
 						innerQuery.Select.Columns.Clear();
 
-						var rows = new List<(ISqlExpression, ISqlExpression)>(updateStatement.Update.Items.Count);
+						var rows = new List<ISqlExpression>(updateStatement.Update.Items.Count);
 						foreach (var item in updateStatement.Update.Items)
 						{
 							if (item.Expression == null)
@@ -1267,7 +1267,7 @@ namespace LinqToDB.Internal.SqlProvider
 							rows.AddRange(GenerateRows(item.Column, item.Expression, replaceTree, innerTree, innerQuery));
 						}
 
-						var sqlRow        = new SqlRowExpression(rows.Select(r => r.Item1).ToArray());
+						var sqlRow        = new SqlRowExpression(rows.ToArray());
 						var newUpdateItem = new SqlSetExpression(sqlRow, innerQuery);
 
 						newUpdateStatement.Update.Items.Clear();

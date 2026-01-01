@@ -418,7 +418,10 @@ namespace LinqToDB.Remote
 			return null;
 		}
 
-		static readonly ConcurrentDictionary<Tuple<Type,MappingSchema,Type,SqlProviderFlags,DataOptions>,Func<ISqlBuilder>> _sqlBuilders = new ();
+		static readonly ConcurrentDictionary<
+			(Type SqlProviderType, MappingSchema MappingSchema, Type SqlOptimizerType, SqlProviderFlags SqlProviderFlags, DataOptions Options),
+			Func<ISqlBuilder>
+		> _sqlBuilders = new ();
 
 		Func<ISqlBuilder> IDataContext.CreateSqlBuilder
 		{
@@ -426,43 +429,36 @@ namespace LinqToDB.Remote
 			{
 				ThrowOnDisposed();
 
-				if (field == null)
-				{
-					var key = Tuple.Create(SqlProviderType, MappingSchema, SqlOptimizerType, ((IDataContext)this).SqlProviderFlags, Options);
-
-					field = _sqlBuilders.GetOrAdd(
-						key,
-						static (key, args) =>
-						{
-							return Expression.Lambda<Func<ISqlBuilder>>(
-								Expression.New(
-									key.Item1.GetConstructor(new[]
-									{
-										typeof(IDataProvider),
-										typeof(MappingSchema),
-										typeof(DataOptions),
-										typeof(ISqlOptimizer),
-										typeof(SqlProviderFlags),
-									}) ?? throw new InvalidOperationException($"Constructor for type '{key.Item1.Name}' not found."),
-									new Expression[]
-									{
-										Expression.Constant(null, typeof(IDataProvider)),
-										Expression.Constant(args.mappingSchema, typeof(MappingSchema)),
-										Expression.Constant(key.Item5),
-										Expression.Constant(args.sqlOptimizer),
-										Expression.Constant(key.Item4),
-									}))
-								.CompileExpression();
-						},
-						(mappingSchema: MappingSchema, sqlOptimizer: ((IDataContext)this).GetSqlOptimizer(Options))
-					);
-				}
-
-				return field;
+				return field ??= _sqlBuilders.GetOrAdd(
+					(SqlProviderType, MappingSchema, SqlOptimizerType, ((IDataContext)this).SqlProviderFlags, Options),
+					static (key, args) =>
+					{
+						return Expression.Lambda<Func<ISqlBuilder>>(
+							Expression.New(
+								key.SqlProviderType.GetConstructor(new[]
+								{
+									typeof(IDataProvider),
+									typeof(MappingSchema),
+									typeof(DataOptions),
+									typeof(ISqlOptimizer),
+									typeof(SqlProviderFlags),
+								}) ?? throw new InvalidOperationException($"Constructor for type '{key.SqlProviderType.Name}' not found."),
+								new Expression[]
+								{
+									Expression.Constant(null, typeof(IDataProvider)),
+									Expression.Constant(args.mappingSchema, typeof(MappingSchema)),
+									Expression.Constant(key.Options),
+									Expression.Constant(args.sqlOptimizer),
+									Expression.Constant(key.SqlProviderFlags),
+								}))
+							.CompileExpression();
+					},
+					(mappingSchema: MappingSchema, sqlOptimizer: ((IDataContext)this).GetSqlOptimizer(Options))
+				);
 			}
 		}
 
-		static readonly ConcurrentDictionary<Tuple<Type,SqlProviderFlags>,Func<DataOptions,ISqlOptimizer>> _sqlOptimizers = new ();
+		static readonly ConcurrentDictionary<(Type SqlOptimizerType, SqlProviderFlags SqlProviderFlags), Func<DataOptions,ISqlOptimizer>> _sqlOptimizers = new ();
 
 		Func<DataOptions,ISqlOptimizer> IDataContext.GetSqlOptimizer
 		{
@@ -470,32 +466,34 @@ namespace LinqToDB.Remote
 			{
 				ThrowOnDisposed();
 
-				if (field == null)
-				{
-					var key = Tuple.Create(SqlOptimizerType, ((IDataContext)this).SqlProviderFlags);
-
-					field = _sqlOptimizers.GetOrAdd(key, static key =>
+				return field ??= _sqlOptimizers.GetOrAdd(
+					(SqlOptimizerType, ((IDataContext)this).SqlProviderFlags),
+					static key =>
 					{
 						var p = Expression.Parameter(typeof(DataOptions));
-						var c = key.Item1.GetConstructor(new[] {typeof(SqlProviderFlags)});
+						var c = key.SqlOptimizerType.GetConstructor(new[] {typeof(SqlProviderFlags)});
 
 						if (c != null)
-							return Expression.Lambda<Func<DataOptions,ISqlOptimizer>>(
-								Expression.New(c, Expression.Constant(key.Item2)),
-								p)
+							return Expression
+								.Lambda<Func<DataOptions, ISqlOptimizer>>(
+									Expression.New(c, Expression.Constant(key.SqlProviderFlags)),
+									p
+								)
 								.CompileExpression();
 
-						return Expression.Lambda<Func<DataOptions,ISqlOptimizer>>(
-							Expression.New(
-								key.Item1.GetConstructor(new[] {typeof(SqlProviderFlags), typeof(DataOptions)}) ?? throw new InvalidOperationException($"Constructor for type '{key.Item1.Name}' not found."),
-								Expression.Constant(key.Item2),
-								p),
-							p)
+						return Expression
+							.Lambda<Func<DataOptions, ISqlOptimizer>>(
+								Expression.New(
+									key.SqlOptimizerType.GetConstructor(new[] {typeof(SqlProviderFlags), typeof(DataOptions)}) 
+										?? throw new InvalidOperationException($"Constructor for type '{key.SqlOptimizerType.Name}' not found."),
+									Expression.Constant(key.SqlProviderFlags),
+									p
+								),
+								p
+							)
 							.CompileExpression();
-					});
-				}
-
-				return field;
+					}
+				);
 			}
 		}
 

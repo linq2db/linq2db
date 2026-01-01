@@ -162,13 +162,13 @@ namespace LinqToDB.Linq
 			ArgumentNullException.ThrowIfNull(expression);
 
 			if (!_binaries.Value.TryGetValue(providerName, out var dic))
-				_binaries.Value.Add(providerName, dic = new Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>());
+				_binaries.Value.Add(providerName, dic = []);
 
 			var expr = new LazyExpressionInfo();
 
 			expr.SetExpression(expression);
 
-			dic[Tuple.Create(nodeType, leftType, rightType)] = expr;
+			dic[(nodeType, leftType, rightType)] = expr;
 
 			_checkUserNamespace = false;
 		}
@@ -399,10 +399,10 @@ namespace LinqToDB.Linq
 				return null;
 
 			IExpressionInfo? expr;
-			Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>? dic;
+			Dictionary<(ExpressionType,Type,Type),IExpressionInfo>? dic;
 
 			var binaries = _binaries.Value;
-			var key      = Tuple.Create(binaryExpression.NodeType, binaryExpression.Left.Type, binaryExpression.Right.Type);
+			var key      = (binaryExpression.NodeType, binaryExpression.Left.Type, binaryExpression.Right.Type);
 
 			foreach (var configuration in mappingSchema.ConfigurationList)
 			{
@@ -497,8 +497,7 @@ namespace LinqToDB.Linq
 
 		private static readonly Lock _memberSync = new();
 
-		static readonly Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>> _binaries =
-			new Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>>(() => new(StringComparer.Ordinal));
+		static readonly Lazy<Dictionary<string,Dictionary<(ExpressionType,Type,Type),IExpressionInfo>>> _binaries = new(() => new(StringComparer.Ordinal));
 
 		#region Common
 

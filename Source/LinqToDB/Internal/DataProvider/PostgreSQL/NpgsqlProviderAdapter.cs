@@ -329,7 +329,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				// Note that obsoletion was removed in v8
 				// (IPAddress, int) => NpgsqlInet
 				{
-					var valueTypeType = Type.GetType("System.ValueTuple`2", false);
+					var valueTypeType = Type.GetType("System.ValueTuple`2", throwOnError: false);
 					if (valueTypeType != null)
 					{
 						// v8 switched from int to byte for NpgsqlInet.Netmask
@@ -346,13 +346,15 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 						var p = Expression.Parameter(inetTupleType, "p");
 
 						var tupleToInetTypeMapper = Expression.Lambda(
-										Expression.New(
-											ctor,
-											ExpressionHelper.Field(p, "Item1"),
-											netmaskType == typeof(byte)
-												? Expression.Convert(ExpressionHelper.Field(p, "Item2"), netmaskType)
-												: ExpressionHelper.Field(p, "Item2")),
-										p);
+							Expression.New(
+								ctor,
+								ExpressionHelper.Field(p, nameof(ValueTuple<,>.Item1)),
+								netmaskType == typeof(byte)
+									? Expression.Convert(ExpressionHelper.Field(p, nameof(ValueTuple<,>.Item2)), netmaskType)
+									: ExpressionHelper.Field(p, nameof(ValueTuple<,>.Item2))
+							),
+							p);
+
 						mappingSchema.SetConvertExpression(inetTupleType!, npgsqlInetType, tupleToInetTypeMapper);
 					}
 				}
@@ -376,11 +378,12 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 							.Lambda(
 								Expression.New(
 									ctor,
-									ExpressionHelper.Field(p, "Item1"),
-									Expression.Convert(ExpressionHelper.Field(p, "Item2"), typeof(byte))
+									ExpressionHelper.Field(p, nameof(ValueTuple<,>.Item1)),
+									Expression.Convert(ExpressionHelper.Field(p, nameof(ValueTuple<,>.Item2)), typeof(byte))
 								),
 								p
 							);
+
 						mappingSchema.SetConvertExpression(cidrTupleType!, npgsqlCidrType, tupleToCidrTypeMapper);
 					}
 				}

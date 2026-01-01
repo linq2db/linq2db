@@ -659,10 +659,9 @@ namespace LinqToDB
 									descriptor = sqlExpressions.OfType<SqlPlaceholderExpression>().Select(p => QueryHelper.GetColumnDescriptor(p.Sql)).FirstOrDefault(static d => d != null);
 									if (descriptor != null)
 									{
-										foreach (var pair
-										         in TypeHelper.EnumTypeRemapping(elementType, argElementType, templateGenericArguments))
+										foreach (var (template, _) in TypeHelper.EnumTypeRemapping(elementType, argElementType, templateGenericArguments))
 										{
-											descriptorMapping.TryAdd(pair.Item1, descriptor);
+											descriptorMapping.TryAdd(template, descriptor);
 										}
 									}
 								}
@@ -845,10 +844,10 @@ namespace LinqToDB
 					throw new InvalidOperationException($"No sequence found for expression '{expression}'");
 
 				var ordered = chain
-					.Select(static (c, i) => Tuple.Create(c, i))
-					.OrderByDescending(static t => t.Item1.Extension?.ChainPrecedence ?? int.MinValue)
-					.ThenByDescending(static t => t.Item2)
-					.Select(static t => t.Item1)
+					.Select(static (c, i) => (Parameter: c, Index: i))
+					.OrderByDescending(static t => t.Parameter.Extension?.ChainPrecedence ?? int.MinValue)
+					.ThenByDescending(static t => t.Index)
+					.Select(static t => t.Parameter)
 					.ToArray();
 
 				var main    = ordered.FirstOrDefault(static c => c.Extension != null);
@@ -878,15 +877,15 @@ namespace LinqToDB
 				// calculating replacements
 				var replacementMap = ordered
 					.Where(c => c.Extension != mainExtension)
-					.Select(static (c, i) => Tuple.Create(c, i))
-					.GroupBy(static e => e.Item1.Name ?? "", StringComparer.Ordinal)
+					.Select(static (c, i) => (Parameter: c, Index: i))
+					.GroupBy(static e => e.Parameter.Name ?? "", StringComparer.Ordinal)
 					.Select(static g => new
 					{
 						Name = g.Key,
 						UnderName = g
-							.OrderByDescending(static e => e.Item1.Extension?.ChainPrecedence ?? int.MinValue)
-							.ThenBy(static e => e.Item2)
-							.Select(static e => e.Item1)
+							.OrderByDescending(static e => e.Parameter.Extension?.ChainPrecedence ?? int.MinValue)
+							.ThenBy(static e => e.Index)
+							.Select(static e => e.Parameter)
 							.ToArray(),
 					})
 					.ToArray();

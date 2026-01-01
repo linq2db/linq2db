@@ -386,14 +386,17 @@ namespace LinqToDB.Internal.Expressions.Types
 		{
 			var wrappers = wrapperType.GetProperty("Wrappers", BindingFlags.Static | BindingFlags.NonPublic);
 
-			if (wrappers != null)
-				return ((IEnumerable<object>)wrappers.GetValue(null)!)
-					.Select(e => e is Tuple<LambdaExpression, bool> tuple
-						? new { expr = tuple.Item1, optional = tuple.Item2 }
-						: new { expr = (LambdaExpression)e, optional = false })
-					.Select(e => BuildWrapper(e.expr, e.optional)!).ToArray();
+			if (wrappers == null)
+				return null;
 
-			return null;
+			return ((IEnumerable<object>)wrappers.GetValue(null)!)
+				.Select(
+					e => e is Tuple<LambdaExpression, bool> tuple
+						? (Expression: tuple.Item1, Optional: tuple.Item2)
+						: (Expression: (LambdaExpression)e, Optional: false)
+				)
+				.Select(e => BuildWrapper(e.Expression, e.Optional)!)
+				.ToArray();
 		}
 
 		private bool TryMapType(Type type, [NotNullWhen(true)] out Type? replacement)
@@ -401,7 +404,8 @@ namespace LinqToDB.Internal.Expressions.Types
 			if (_typeMappingCache.TryGetValue(type, out replacement))
 				return replacement != null;
 
-			if (type.IsGenericType) {
+			if (type.IsGenericType)
+			{
 				var typeArguments = type.GetGenericArguments().Select(t => TryMapType(t, out var r) ? r : null).ToArray();
 				if (typeArguments.All(t => t != null))
 				{
