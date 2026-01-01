@@ -55,30 +55,28 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([DataSources] string configuration)
 		{
-			using (var db = GetDataContext(configuration))
+			using var db = GetDataContext(configuration);
+			using (db.CreateLocalTable<Task>())
+			using (db.CreateLocalTable<TaskStage>())
 			{
-				using (db.CreateLocalTable<Task>())
-				using (db.CreateLocalTable<TaskStage>())
-				{
-					db.Insert(new Task {Id = 1, TargetName = "bda.Requests"});
-					db.Insert(new Task {Id = 2, TargetName = "None"});
-					db.Insert(new TaskStage {Id = 2, TaskId = 1, Actual = true});
+				db.Insert(new Task { Id = 1, TargetName = "bda.Requests" });
+				db.Insert(new Task { Id = 2, TargetName = "None" });
+				db.Insert(new TaskStage { Id = 2, TaskId = 1, Actual = true });
 
-					var query = db.GetTable<Task>()
+				var query = db.GetTable<Task>()
 						.OfType<BdaTask>()
 						.Select(p => new
 						{
 							Instance = p,
 							ActualStageId = p.ActualStage!.Id
 						});
-					var res = query.ToArray();
+				var res = query.ToArray();
 
-					Assert.That(res, Has.Length.EqualTo(1));
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(res[0].Instance, Is.Not.Null);
-						Assert.That(res[0].ActualStageId, Is.EqualTo(2));
-					}
+				Assert.That(res, Has.Length.EqualTo(1));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0].Instance, Is.Not.Null);
+					Assert.That(res[0].ActualStageId, Is.EqualTo(2));
 				}
 			}
 		}
@@ -86,46 +84,44 @@ namespace Tests.UserTests
 		[Test]
 		public void Test2([DataSources] string configuration)
 		{
-			using (var db = GetDataContext(configuration))
+			using var db = GetDataContext(configuration);
+			using (db.CreateLocalTable<Task>())
+			using (db.CreateLocalTable<TaskStage>())
 			{
-				using (db.CreateLocalTable<Task>())
-				using (db.CreateLocalTable<TaskStage>())
-				{
-					db.Insert(new Task {Id = 1, TargetName = "bda.Requests"});
-					db.Insert(new Task {Id = 2, TargetName = "None"});
-					db.Insert(new TaskStage {Id = 2, TaskId = 1, Actual = true});
+				db.Insert(new Task { Id = 1, TargetName = "bda.Requests" });
+				db.Insert(new Task { Id = 2, TargetName = "None" });
+				db.Insert(new TaskStage { Id = 2, TaskId = 1, Actual = true });
 
-					var query = db.GetTable<Task>()
+				var query = db.GetTable<Task>()
 						.OfType<BdaTask>()
 						.Select(p => new
 						{
 							Instance = p,
 							ActualStageId = (p as Task).ActualStage!.Id
 						});
-					var res = query.ToArray();
+				var res = query.ToArray();
 
-					Assert.That(res, Has.Length.EqualTo(1));
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(res[0].Instance, Is.Not.Null);
-						Assert.That(res[0].ActualStageId, Is.EqualTo(2));
-					}
+				Assert.That(res, Has.Length.EqualTo(1));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res[0].Instance, Is.Not.Null);
+					Assert.That(res[0].ActualStageId, Is.EqualTo(2));
+				}
 
-					var query2 = db.GetTable<Task>()
+				var query2 = db.GetTable<Task>()
 						.Select(p => new
 						{
 							Instance = p,
 							ActualStageId = (p as Task).ActualStage!.Id
 						});
 
-					var res2 = query2.OrderBy(_ => _.Instance.Id).ToArray();
+				var res2 = query2.OrderBy(_ => _.Instance.Id).ToArray();
 
-					Assert.That(res2, Has.Length.EqualTo(2));
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(res2[0].Instance, Is.Not.Null);
-						Assert.That(res2[0].ActualStageId, Is.EqualTo(2));
-					}
+				Assert.That(res2, Has.Length.EqualTo(2));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(res2[0].Instance, Is.Not.Null);
+					Assert.That(res2[0].ActualStageId, Is.EqualTo(2));
 				}
 			}
 		}

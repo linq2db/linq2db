@@ -699,12 +699,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 				}
 
-				if (newNode == null)
-				{
-					newNode = base.VisitSqlGenericAssignment(assignment);
-				}
-
-				return newNode;
+				return newNode ??= base.VisitSqlGenericAssignment(assignment);
 			}
 		}
 
@@ -1749,7 +1744,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var buildInfo = new BuildInfo(rootContext.BuildContext, association, new SelectQuery())
 				{
 					SourceCardinality = isOptional == true ? SourceCardinality.ZeroOrOne : SourceCardinality.One,
-					IsAssociation = true
+					IsAssociation = true,
 				};
 
 				using var snapshot = CreateSnapshot();
@@ -1808,8 +1803,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 				}
 
-				notNull = placeholders
-					.FirstOrDefault(pl => !pl.Sql.CanBeNullable(NullabilityContext.NonQuery));
+				notNull = placeholders.Find(pl => !pl.Sql.CanBeNullable(NullabilityContext.NonQuery));
 			}
 
 			if (notNull == null)
@@ -2006,7 +2000,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return QueryHelper.IsNullValue(placeholder.Sql);
 			}
 
-			if (expr.NodeType == ExpressionType.Equal || expr.NodeType == ExpressionType.NotEqual)
+			if (expr.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
 			{
 				var binary = (BinaryExpression)expr;
 
@@ -2032,7 +2026,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var ifTrue  = RemoveNullPropagation(cond.IfTrue, toSql: true);
 				var ifFalse = RemoveNullPropagation(cond.IfFalse, toSql: true);
 
-				if (test.NodeType == ExpressionType.Equal || test.NodeType == ExpressionType.NotEqual)
+				if (test.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
 				{
 					var testLeft  = ((BinaryExpression)test).Left;
 					var testRight = ((BinaryExpression)test).Right;
@@ -2160,8 +2154,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						if (predicateExpr is SqlPlaceholderExpression placeholder)
 						{
-							var predicate = placeholder.Sql as ISqlPredicate;
-							if (predicate is null)
+							if (placeholder.Sql is not ISqlPredicate predicate)
 							{
 								var withNull = !node.Operand.Type.IsNullableType;
 
@@ -2379,7 +2372,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (node.Method.DeclaringType == typeof(string))
 			{
-				if (node.Method.Name == "Format")
+				if (string.Equals(node.Method.Name, "Format", StringComparison.Ordinal))
 				{
 					var format = node.Arguments[0].EvaluateExpression<string>();
 					if (format == null)
@@ -2764,7 +2757,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var shouldSkipSqlConversion = false;
 			if (_buildPurpose is BuildPurpose.Expression)
 			{
-				if (node.NodeType == ExpressionType.Equal || node.NodeType == ExpressionType.NotEqual)
+				if (node.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
 				{
 					// Small tuning of final Expression generation
 					//
@@ -3364,7 +3357,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var arg = mc.Arguments[1];
 
-				if (arg.NodeType == ExpressionType.Constant || arg.NodeType == ExpressionType.Default)
+				if (arg.NodeType is ExpressionType.Constant or ExpressionType.Default)
 				{
 					var comparison = (StringComparison)(Builder.EvaluateExpression(arg) ?? throw new InvalidOperationException());
 					return new SqlValue(comparison is StringComparison.CurrentCulture
@@ -3619,7 +3612,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 				else
 				{
-					if (nodeType == ExpressionType.Equal || nodeType == ExpressionType.NotEqual)
+					if (nodeType is ExpressionType.Equal or ExpressionType.NotEqual)
 					{
 						// Fore generating Path for SqlPlaceholderExpression
 						if (!rightExpr.Type.IsPrimitive)
@@ -3784,9 +3777,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (predicateExpr == null)
 						predicateExpr = GeneratePredicate(leftOriginal, leftParsed, condRight.IfFalse, rightParsed);*/
 				}
-
-				if (predicateExpr != null)
-					return predicateExpr;
 
 				return predicateExpr;
 			}
@@ -4106,7 +4096,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			ISqlPredicate? predicate = null;
 
-			var isEquality = op == SqlPredicate.Operator.Equal || op == SqlPredicate.Operator.NotEqual
+			var isEquality = op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual
 				? op == SqlPredicate.Operator.Equal
 				: (bool?)null;
 
@@ -4188,13 +4178,14 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 				}
 
-				if (predicate == null)
-				{
-					predicate = new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
-						compareNullsAsValues && (lOriginal.CanBeNullable(nullability) || rOriginal.CanBeNullable(nullability))
-							? op == SqlPredicate.Operator.Equal
-							: null);
-				}
+				predicate ??= new SqlPredicate.ExprExpr(
+					lOriginal,
+					op,
+					rOriginal,
+					compareNullsAsValues && (lOriginal.CanBeNullable(nullability) || rOriginal.CanBeNullable(nullability))
+						? op == SqlPredicate.Operator.Equal
+						: null
+				);
 			}
 
 			return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, predicate), GetOriginalExpression());
@@ -5054,7 +5045,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var info = new BuildInfo(BuildContext, expr, new SelectQuery())
 			{
 				CreateSubQuery = true,
-				IsSubqueryExpression = true
+				IsSubqueryExpression = true,
 			};
 
 			if (_buildFlags.HasFlag(BuildFlags.ForceOuter))
@@ -5215,7 +5206,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return result;
 			}
 
-			public Expression Translate(Expression expression, TranslationFlags translationFlags)
+			public Expression Translate(Expression expression, TranslationFlags translationFlags = TranslationFlags.Sql)
 			{
 				var buildPurpose = GetBuildPurpose(translationFlags);
 				if (CurrentContext == null)
@@ -5412,7 +5403,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			translated = null;
 
-			if (memberExpression is MethodCallExpression || memberExpression is MemberExpression || memberExpression is NewExpression)
+			if (memberExpression is MethodCallExpression or MemberExpression or NewExpression)
 			{
 				// Skip translation if there is a placeholder in the expression. It means that we already tried to translate, but it is failed.
 				if (null != memberExpression.Find(e => e is SqlPlaceholderExpression))

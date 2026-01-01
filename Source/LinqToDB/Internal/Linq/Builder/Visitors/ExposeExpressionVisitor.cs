@@ -107,7 +107,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				return HandleSqlProperty(node);
 			}
 
-			if (node.Method.Name == "Compile" &&
+			if (string.Equals(node.Method.Name, "Compile", StringComparison.Ordinal) &&
 				typeof(LambdaExpression).IsSameOrParentOf(node.Method.DeclaringType!))
 			{
 				if (node.Object.EvaluateExpression() is LambdaExpression lambda)
@@ -116,12 +116,12 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				}
 			}
 
-			if (node.Method.Name == "Invoke" && node.Object is LambdaExpression invokeLambda)
+			if (string.Equals(node.Method.Name, "Invoke", StringComparison.Ordinal) && node.Object is LambdaExpression invokeLambda)
 			{
 				return HandleInvoke(node, invokeLambda);
 			}
 
-			if (node.Method.Name == nameof(DataExtensions.QueryFromExpression) &&
+			if (string.Equals(node.Method.Name, nameof(DataExtensions.QueryFromExpression), StringComparison.Ordinal) &&
 				node.Method.DeclaringType == typeof(DataExtensions))
 			{
 				if (node.Arguments[1].EvaluateExpression() is LambdaExpression lambda)
@@ -223,7 +223,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				{
 					foreach (var a in entityDescriptor.Associations)
 					{
-						if (a.MemberInfo.Name == memberName)
+						if (string.Equals(a.MemberInfo.Name, memberName, StringComparison.Ordinal))
 						{
 							if (memberInfo != null)
 								throw new InvalidOperationException("Sequence contains more than one element");
@@ -521,7 +521,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 			// Replace Count with Count()
 			//
-			if (node.Member.Name == "Count")
+			if (string.Equals(node.Member.Name, "Count", StringComparison.Ordinal))
 			{
 				var isList = typeof(System.Collections.ICollection).IsAssignableFrom(node.Member.DeclaringType);
 
@@ -688,7 +688,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			if (node.Expression.NodeType == ExpressionType.Call)
 			{
 				var mc = (MethodCallExpression)node.Expression;
-				if (mc.Method.Name == "Compile" &&
+				if (string.Equals(mc.Method.Name, "Compile", StringComparison.Ordinal) &&
 				    typeof(LambdaExpression).IsSameOrParentOf(mc.Method.DeclaringType!))
 				{
 					if (mc.Object.EvaluateExpression() is LambdaExpression lambda)
@@ -789,7 +789,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 					if (node.Left is BinaryExpression equalityLeft && node.Right is ConstantExpression constantRight)
 						if (equalityLeft.Type.IsNullableType)
 							if (equalityLeft.NodeType == ExpressionType.Equal && equalityLeft.Left.Type == equalityLeft.Right.Type)
-								if (constantRight.Value is bool val && val == false)
+								if (constantRight.Value is false)
 								{
 									var result = Visit(equalityLeft);
 									if (result.Type != node.Type)
@@ -851,7 +851,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			if (lambda != null)
 			{
 				var ef    = lambda.Body.Unwrap();
-				var parms = new Dictionary<string,int>(lambda.Parameters.Count);
+				var parms = new Dictionary<string,int>(lambda.Parameters.Count, StringComparer.Ordinal);
 				var pn    = 0;
 
 				foreach (var p in lambda.Parameters)
@@ -1038,7 +1038,8 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 						expr = Expression.Call(
 							mi.DeclaringType!,
 							name,
-							name != attr.MethodName ? [] : args);
+							!string.Equals(name, attr.MethodName, StringComparison.Ordinal) ? [] : args
+						);
 					}
 					else
 					{

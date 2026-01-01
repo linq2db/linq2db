@@ -34,7 +34,7 @@ namespace LinqToDB.Mapping
 		/// <param name="storage">Optional association value storage field or property name.</param>
 		/// <param name="associationSetterExpressionMethod">Optional name of setter method.</param>
 		/// <param name="associationSetterExpression">Optional setter expression.</param>
-		/// <param name="canBeNull">If <c>true</c>, association will generate outer join, otherwise - inner join.</param>
+		/// <param name="canBeNull">If <see langword="true"/>, association will generate outer join, otherwise - inner join.</param>
 		/// <param name="aliasName">Optional alias for representation in SQL.</param>
 		public AssociationDescriptor(
 			MappingSchema mappingSchema,
@@ -52,9 +52,9 @@ namespace LinqToDB.Mapping
 			bool?         canBeNull,
 			string?       aliasName)
 		{
-			if (memberInfo == null) throw new ArgumentNullException(nameof(memberInfo));
-			if (thisKey    == null) throw new ArgumentNullException(nameof(thisKey));
-			if (otherKey   == null) throw new ArgumentNullException(nameof(otherKey));
+			ArgumentNullException.ThrowIfNull(memberInfo);
+			ArgumentNullException.ThrowIfNull(thisKey);
+			ArgumentNullException.ThrowIfNull(otherKey);
 
 			if (thisKey.Length == 0 && string.IsNullOrEmpty(expressionPredicate) && predicate == null && string.IsNullOrEmpty(expressionQueryMethod) && expressionQuery == null)
 				throw new ArgumentOutOfRangeException(
@@ -127,7 +127,7 @@ namespace LinqToDB.Mapping
 		public Expression? AssociationSetterExpression { get; }
 		/// <summary>
 		/// Gets join type, generated for current association.
-		/// If <c>true</c>, association will generate outer join, otherwise - inner join.
+		/// If <see langword="true"/>, association will generate outer join, otherwise - inner join.
 		/// </summary>
 		public bool        CanBeNull           { get; }
 		/// <summary>
@@ -142,7 +142,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns array with names of association key column members.</returns>
 		public static string[] ParseKeys(string? keys)
 		{
-			return keys?.Replace(" ", "").Split(',') ?? [];
+			return keys?.Replace(" ", "", StringComparison.Ordinal).Split(',') ?? [];
 		}
 
 		/// <summary>
@@ -195,7 +195,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="parentType">Type of object that declares association</param>
 		/// <param name="objectType">Type of object associated with expression predicate</param>
-		/// <returns><c>null</c> of association has no custom predicate expression or predicate expression, specified
+		/// <returns><see langword="null"/> of association has no custom predicate expression or predicate expression, specified
 		/// by <see cref="ExpressionPredicate"/> member.</returns>
 		public LambdaExpression? GetPredicate(Type parentType, Type objectType)
 		{
@@ -249,20 +249,27 @@ namespace LinqToDB.Mapping
 				}
 
 				if (predicate == null)
+				{
 					throw new LinqToDBException(
 						$"Member '{ExpressionPredicate}' for type '{type.ShortDisplayName()}' should be static property or method");
+			}
 			}
 			else
 				predicate = Predicate;
 
-			var lambda = predicate as LambdaExpression;
-			if (lambda == null || lambda.Parameters.Count != 2)
+			if (predicate is not LambdaExpression { Parameters.Count: 2 } lambda)
+			{
 				if (!string.IsNullOrEmpty(ExpressionPredicate))
+				{
 					throw new LinqToDBException(
-						$"Invalid predicate expression in {type.ShortDisplayName()}.{ExpressionPredicate}. Expected: Expression<Func<{parentType.ShortDisplayName()}, {objectType.ShortDisplayName()}, bool>>");
+						$"Invalid predicate expression in {type.Name}.{ExpressionPredicate}. Expected: Expression<Func<{parentType.ShortDisplayName()}, {objectType.ShortDisplayName()}, bool>>");
+				}
 				else
+				{
 					throw new LinqToDBException(
-						$"Invalid predicate expression in {type.ShortDisplayName()}. Expected: Expression<Func<{parentType.ShortDisplayName()}, {objectType.ShortDisplayName()}, bool>>");
+						$"Invalid predicate expression in {type.Name}. Expected: Expression<Func<{parentType.ShortDisplayName()}, {objectType.ShortDisplayName()}, bool>>");
+				}
+			}
 
 			var firstParameter = lambda.Parameters[0];
 			if (!firstParameter.Type.IsSameOrParentOf(parentType) && !parentType.IsSameOrParentOf(firstParameter.Type))
@@ -289,7 +296,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="parentType">Type of object that declares association</param>
 		/// <param name="objectType">Type of object associated with query method expression</param>
-		/// <returns><c>null</c> of association has no custom query method expression or query method expression, specified
+		/// <returns><see langword="null"/> of association has no custom query method expression or query method expression, specified
 		/// by <see cref="ExpressionQueryMethod"/> member.</returns>
 		public LambdaExpression? GetQueryMethod(Type parentType, Type objectType)
 		{
@@ -309,13 +316,18 @@ namespace LinqToDB.Mapping
 				queryExpression = ExpressionQuery!;
 
 			var lambda = queryExpression as LambdaExpression;
-			if (lambda == null || lambda.Parameters.Count < 1)
+			if (lambda is null or { Parameters.Count: < 1 })
 			{
 				if (!string.IsNullOrEmpty(ExpressionQueryMethod))
+				{
 					throw new LinqToDBException(
 						$"Invalid predicate expression in {type.ShortDisplayName()}.{ExpressionQueryMethod}. Expected: Expression<Func<{parentType.ShortDisplayName()}, IDataContext, IQueryable<{objectType.ShortDisplayName()}>>>");
-				throw new LinqToDBException(
-					$"Invalid predicate expression in {type.ShortDisplayName()}. Expected: Expression<Func<{parentType.ShortDisplayName()}, IDataContext, IQueryable<{objectType.ShortDisplayName()}>>>");
+				}
+				else
+				{
+					throw new LinqToDBException(
+						$"Invalid predicate expression in {type.ShortDisplayName()}. Expected: Expression<Func<{parentType.ShortDisplayName()}, IDataContext, IQueryable<{objectType.Name}>>>");
+				}
 			}
 
 			if (!lambda.Parameters[0].Type.IsSameOrParentOf(parentType))
@@ -351,7 +363,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="memberType">Type of the storage member that declares association</param>
 		/// <param name="objectType">Type of object associated with setter method expression</param>
-		/// <returns><c>null</c> if association has no custom setter method expression specified
+		/// <returns><see langword="null"/> if association has no custom setter method expression specified
 		/// by <see cref="AssociationSetterExpressionMethod"/> member.</returns>
 		LambdaExpression? GetAssociationSetterMethod(Type memberType, Type objectType)
 		{
@@ -371,13 +383,19 @@ namespace LinqToDB.Mapping
 				setExpression = AssociationSetterExpression!;
 
 			var lambda = setExpression as LambdaExpression;
-			if (lambda == null || lambda.Parameters.Count != 2)
+			if (lambda is null or { Parameters.Count: not 2 })
+			{
 				if (!string.IsNullOrEmpty(AssociationSetterExpressionMethod))
+				{
 					throw new LinqToDBException(
 						$"Invalid setter expression in {type.ShortDisplayName()}.{AssociationSetterExpressionMethod}. Expected: Expression<Action<{memberType.ShortDisplayName()}, {objectType.ShortDisplayName()}>>");
+				}
 				else
+				{
 					throw new LinqToDBException(
 						$"Invalid setter expression in {type.ShortDisplayName()}. Expected: Expression<Action<{memberType.ShortDisplayName()}, {objectType.ShortDisplayName()}>>");
+				}
+			}
 
 			if (!lambda.Parameters[0].Type.IsSameOrParentOf(memberType))
 				throw new LinqToDBException($"First parameter of setter expression should be '{memberType.ShortDisplayName()}'");

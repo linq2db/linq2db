@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 
 using LinqToDB.Internal.Extensions;
@@ -16,7 +17,6 @@ namespace LinqToDB.Internal.SqlProvider
 {
 	public class SqlExpressionOptimizerVisitor : SqlQueryVisitor
 	{
-		ISimilarityMerger           _similarityMerger   = SimilarityMerger.Instance;
 		NullabilityContext          _nullabilityContext = default!;
 		ICollection<ISqlPredicate>? _allowOptimizeList;
 		ISqlPredicate?              _allowOptimize;
@@ -697,7 +697,7 @@ namespace LinqToDB.Internal.SqlProvider
 				return element;
 
 			var predicatesToCompare = element.Predicates
-				.SelectMany(p => _similarityMerger.GetSimilarityCodes(p).Select(code => (predicate : p, code)))
+				.SelectMany(p => SimilarityMerger.Instance.GetSimilarityCodes(p).Select(code => (predicate : p, code)))
 				.GroupBy(x => x.code)
 				.Select(g => g.Select(x => x.predicate).Distinct().ToList())
 				.Where(p => p.Count > 1)
@@ -725,8 +725,8 @@ namespace LinqToDB.Internal.SqlProvider
 							if (visitedPredicates.Contains(predicate2))
 								continue;
 
-							if (_similarityMerger.TryMerge(_nullabilityContext, _isInsidePredicate, predicate1, predicate2, element.IsOr, out var mergedPredicate) || 
-							    _similarityMerger.TryMerge(_nullabilityContext, _isInsidePredicate, predicate2, predicate1, element.IsOr, out mergedPredicate))
+							if (SimilarityMerger.Instance.TryMerge(_nullabilityContext, _isInsidePredicate, predicate1, predicate2, element.IsOr, out var mergedPredicate) ||
+								SimilarityMerger.Instance.TryMerge(_nullabilityContext, _isInsidePredicate, predicate2, predicate1, element.IsOr, out mergedPredicate))
 							{
 								var predicatesList = element.Predicates;
 
@@ -847,13 +847,13 @@ namespace LinqToDB.Internal.SqlProvider
 			if (searchCondition.Predicates.Count > 100)
 				return false;
 
-			var predicateCodes = _similarityMerger.GetSimilarityCodes(predicate).ToArray();
+			var predicateCodes = SimilarityMerger.Instance.GetSimilarityCodes(predicate).ToArray();
 
 			if (predicateCodes.Length == 0)
 				return false;
 
 			var predicatesToCompare = searchCondition.Predicates
-				.Where(p => _similarityMerger.GetSimilarityCodes(p).Any(code => predicateCodes.Contains(code)))
+				.Where(p => SimilarityMerger.Instance.GetSimilarityCodes(p).Any(code => predicateCodes.Contains(code)))
 				.ToList();
 
 			if (predicatesToCompare.Count == 0)
@@ -871,7 +871,7 @@ namespace LinqToDB.Internal.SqlProvider
 				if (visitedPredicates.Contains(conditionPredicate))
 					continue;
 
-				if (_similarityMerger.TryMerge(_nullabilityContext, _isInsidePredicate, predicate, conditionPredicate, !searchCondition.IsOr, out var mergedSingle, out var mergedConditional))
+				if (SimilarityMerger.Instance.TryMerge(_nullabilityContext, _isInsidePredicate, predicate, conditionPredicate, !searchCondition.IsOr, out var mergedSingle, out var mergedConditional))
 				{
 					isOptimized = true;
 
@@ -1009,7 +1009,7 @@ namespace LinqToDB.Internal.SqlProvider
 				(var e, "-", SqlBinaryExpression { Operation: "*", Expr1: SqlValue { Value: -1 } } binary) => SqlBinaryExpressionHelper.CreateWithTypeInferred(element.SystemType!, e, "+", binary.Expr2, Precedence.Subtraction),
 				(var e, "-", SqlBinaryExpression { Operation: "*", Expr2: SqlValue { Value: -1 } } binary) => SqlBinaryExpressionHelper.CreateWithTypeInferred(e.SystemType!, e, "+", binary.Expr1, Precedence.Subtraction),
 
-				_ => element
+				_ => element,
 			};
 
 			if (!ReferenceEquals(newElement, element))
@@ -1112,7 +1112,7 @@ namespace LinqToDB.Internal.SqlProvider
 					if (v1 && v2)
 					{
 						if (value1 is int i1 && value2 is int i2) return QueryHelper.CreateSqlValue(i1 + i2, element, MappingSchema);
-						if (value1 is string || value2 is string) return QueryHelper.CreateSqlValue(FormattableString.Invariant($"{value1}{value2}"), element, MappingSchema);
+						if (value1 is string || value2 is string) return QueryHelper.CreateSqlValue(string.Create(CultureInfo.InvariantCulture, $"{value1}{value2}"), element, MappingSchema);
 					}
 
 					break;
@@ -1192,7 +1192,7 @@ namespace LinqToDB.Internal.SqlProvider
 							case int i when i == 1 : return element.Expr2;
 							case int i when
 								element.Expr2    is SqlBinaryExpression be2 &&
-								be2.Operation == "*"                   &&
+string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 								TryEvaluateNoParameters(be2.Expr1, out var be2v1)  &&
 								be2v1 is int bi :
 							{
@@ -1658,19 +1658,18 @@ namespace LinqToDB.Internal.SqlProvider
 
 		static bool Compare(int v1, int v2, SqlPredicate.Operator op)
 		{
-			switch (op)
+			return op switch
 			{
-				case SqlPredicate.Operator.Equal:          return v1 == v2;
-				case SqlPredicate.Operator.NotEqual:       return v1 != v2;
-				case SqlPredicate.Operator.Greater:        return v1 >  v2;
-				case SqlPredicate.Operator.NotLess:
-				case SqlPredicate.Operator.GreaterOrEqual: return v1 >= v2;
-				case SqlPredicate.Operator.Less:           return v1 <  v2;
-				case SqlPredicate.Operator.NotGreater:
-				case SqlPredicate.Operator.LessOrEqual:    return v1 <= v2;
-			}
-
-			throw new InvalidOperationException();
+				SqlPredicate.Operator.Equal          => v1 == v2,
+				SqlPredicate.Operator.NotEqual       => v1 != v2,
+				SqlPredicate.Operator.Greater        => v1 > v2,
+				SqlPredicate.Operator.NotLess or
+				SqlPredicate.Operator.GreaterOrEqual => v1 >= v2,
+				SqlPredicate.Operator.Less           => v1 < v2,
+				SqlPredicate.Operator.NotGreater or
+				SqlPredicate.Operator.LessOrEqual    => v1 <= v2,
+				_ => throw new InvalidOperationException(),
+			};
 		}
 
 		static bool Compare(object? value1, object? value2, SqlPredicate.Operator op, out bool result)
@@ -1726,20 +1725,30 @@ namespace LinqToDB.Internal.SqlProvider
 			if (current == additional)
 				return;
 
-			if (current == SqlPredicate.Operator.Equal && additional == SqlPredicate.Operator.Greater)
-				current = SqlPredicate.Operator.GreaterOrEqual;
-			else if (current == SqlPredicate.Operator.Equal && additional == SqlPredicate.Operator.Less)
-				current = SqlPredicate.Operator.LessOrEqual;
-			else if (current == SqlPredicate.Operator.Greater && additional == SqlPredicate.Operator.Equal)
-				current = SqlPredicate.Operator.GreaterOrEqual;
-			else if (current == SqlPredicate.Operator.Less && additional == SqlPredicate.Operator.Equal)
-				current = SqlPredicate.Operator.LessOrEqual;
-			else if (current == SqlPredicate.Operator.Greater && additional == SqlPredicate.Operator.Less)
-				current = SqlPredicate.Operator.NotEqual;
-			else if (current == SqlPredicate.Operator.Less && additional == SqlPredicate.Operator.Greater)
-				current = SqlPredicate.Operator.NotEqual;
-			else
-				throw new NotImplementedException();
+			current = (current, additional) switch
+			{
+				(SqlPredicate.Operator.Equal, SqlPredicate.Operator.Greater) => 
+					SqlPredicate.Operator.GreaterOrEqual,
+
+				(SqlPredicate.Operator.Equal, SqlPredicate.Operator.Less) => 
+					SqlPredicate.Operator.LessOrEqual,
+
+				(SqlPredicate.Operator.Greater, SqlPredicate.Operator.Equal) => 
+					SqlPredicate.Operator.GreaterOrEqual,
+
+				(SqlPredicate.Operator.Less, SqlPredicate.Operator.Equal) => 
+					SqlPredicate.Operator.LessOrEqual,
+
+				(SqlPredicate.Operator.Greater, SqlPredicate.Operator.Less) => 
+					SqlPredicate.Operator.NotEqual,
+
+				(SqlPredicate.Operator.Less, SqlPredicate.Operator.Greater) => 
+					SqlPredicate.Operator.NotEqual,
+
+				_ => throw new InvalidOperationException(
+					$"Operators `{current}` and `{additional}` cannot be combined."
+				),
+			};
 		}
 
 		static SqlPredicate.Operator SwapOperator(SqlPredicate.Operator op)
@@ -1754,7 +1763,7 @@ namespace LinqToDB.Internal.SqlProvider
 				SqlPredicate.Operator.Less => SqlPredicate.Operator.Greater,
 				SqlPredicate.Operator.NotGreater => SqlPredicate.Operator.NotLess,
 				SqlPredicate.Operator.LessOrEqual => SqlPredicate.Operator.GreaterOrEqual,
-				_ => throw new InvalidOperationException()
+				_ => throw new InvalidOperationException(),
 			};
 		}
 
@@ -1883,7 +1892,7 @@ namespace LinqToDB.Internal.SqlProvider
 								SqlPredicate.Operator.NotEqual => false,
 								SqlPredicate.Operator.Greater => false,
 								SqlPredicate.Operator.Less => false,
-								_ => throw new InvalidOperationException($"Unexpected binary operator {op}")
+								_ => throw new InvalidOperationException($"Unexpected binary operator {op}"),
 							};
 						}
 					}
@@ -2094,7 +2103,7 @@ namespace LinqToDB.Internal.SqlProvider
 							// some - e < v ===> some < v + e
 							(var some, "-", var e) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, v, "+", e), null),
 
-							_ => null
+							_ => null,
 						},
 
 					(var v, var op, SqlBinaryExpression binary) when CanBeEvaluateNoParameters(v) =>
@@ -2112,10 +2121,10 @@ namespace LinqToDB.Internal.SqlProvider
 							// v < some - e ===> v + e < some
 							(var e, "-", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, v, "+", e), op, some, null),
 
-							_ => null
+							_ => null,
 						},
 
-					_ => null
+					_ => null,
 				};
 
 				exprExpr = newExpr ?? exprExpr;
@@ -2186,7 +2195,7 @@ namespace LinqToDB.Internal.SqlProvider
 						SqlPredicate.Operator.Greater        => new SqlSearchCondition(true, true, predicate, new SqlSearchCondition(false, false, new SqlPredicate.IsNull(compare.Expression1, true), new SqlPredicate.IsNull(compare.Expression2, false))),
 						SqlPredicate.Operator.LessOrEqual    => new SqlSearchCondition(true, true, predicate, new SqlPredicate.IsNull(compare.Expression1, false)),
 						SqlPredicate.Operator.GreaterOrEqual => new SqlSearchCondition(true, true, predicate, new SqlPredicate.IsNull(compare.Expression2, false)),
-						_ => predicate
+						_ => predicate,
 					};
 				}
 

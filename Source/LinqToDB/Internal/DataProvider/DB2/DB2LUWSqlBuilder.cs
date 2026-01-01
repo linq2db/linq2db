@@ -39,7 +39,14 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			return name;
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
+		public override StringBuilder BuildObjectName(
+			StringBuilder sb,
+			SqlObjectName name,
+			ConvertType objectType = ConvertType.NameToQueryTable,
+			bool escape = true,
+			TableOptions tableOptions = TableOptions.NotSet,
+			bool withoutSuffix = false
+		)
 		{
 			if (objectType == ConvertType.NameToProcedure && name.Database != null)
 				throw new LinqToDBException("DB2 LUW cannot address functions/procedures with database name specified.");
@@ -81,7 +88,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			{
 				case DataType.VarBinary:
 					// https://www.ibm.com/docs/en/db2/11.5?topic=list-binary-strings
-					var length = type.Length == null || type.Length > 32672 || type.Length < 1 ? 32672 : type.Length;
+					var length = type.Length is null or > 32672 or < 1 ? 32672 : type.Length;
 					StringBuilder.Append(CultureInfo.InvariantCulture, $"VARBINARY({length})");
 					return;
 			}

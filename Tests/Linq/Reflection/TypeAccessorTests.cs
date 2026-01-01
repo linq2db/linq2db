@@ -1,4 +1,4 @@
-﻿using LinqToDB.Reflection;
+using LinqToDB.Reflection;
 
 using NUnit.Framework;
 
@@ -18,11 +18,13 @@ namespace Tests.Reflection
 
 			public TestClass2? Class2;
 
+#pragma warning disable IDE0052 // Remove unread private members
 			int _prop3;
 			public int Prop3
 			{
 				set { _prop3 = value; }
 			}
+#pragma warning restore IDE0052 // Remove unread private members
 		}
 
 		sealed class TestClass2

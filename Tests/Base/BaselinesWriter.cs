@@ -14,7 +14,7 @@ namespace Tests
 		{
 			Direct = 1,
 			Remote = 2,
-			Both = Direct | Remote
+			Both = Direct | Remote,
 		}
 
 		// used to detect baseline overwrites by another test(case)

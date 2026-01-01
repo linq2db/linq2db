@@ -38,7 +38,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			ExpressionBuilder.QueryExpressionContainerParam,
 			ExpressionConstants.DataContextParam,
-			ExpressionBuilder.ParametersParam
+			ExpressionBuilder.ParametersParam,
 		};
 
 		public readonly List<ParameterAccessor>           CurrentSqlParameters = new();
@@ -69,7 +69,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			Default,
 			Bool,
-			InPredicate
+			InPredicate,
 		}
 
 		public Expression SimplifyConversion(Expression expression)
@@ -117,7 +117,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (parameterName == null && columnDescriptor != null)
 			{
-				if (columnDescriptor.MemberName.Contains("."))
+				if (columnDescriptor.MemberName.Contains('.', StringComparison.Ordinal))
 					parameterName = columnDescriptor.ColumnName;
 				else
 					parameterName = columnDescriptor.MemberName;
@@ -157,7 +157,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			sqlParameter = new SqlParameter(entry.DbDataType, entry.ParameterName, null)
 			{
 				AccessorId       = finalParameterId,
-				IsQueryParameter = !(context != null ? context.Builder.GetTranslationModifier().InlineParameters : DataContext.InlineParameters)
+				IsQueryParameter = !(context != null ? context.Builder.GetTranslationModifier().InlineParameters : DataContext.InlineParameters),
 			};
 
 			_parametersById[finalParameterId] = sqlParameter;
@@ -484,7 +484,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					new SqlParameter(dbDataType, name, null)
 					{
 						AccessorId = accessorId,
-						IsQueryParameter = !dataContext.InlineParameters
+						IsQueryParameter = !dataContext.InlineParameters,
 					}
 				)
 #if DEBUG

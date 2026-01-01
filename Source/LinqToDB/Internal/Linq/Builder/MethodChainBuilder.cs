@@ -70,7 +70,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			root = builder.ConvertExpressionTree(root);
 			var rootContextref = builder.BuildRootExpression(root) as ContextRefExpression;
 
-			var finalFunction = functions.First();
+			var finalFunction = functions[0];
 
 			if (rootContextref != null)
 			{
@@ -170,7 +170,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (_returnType.IsGenericType && _returnType.GetGenericTypeDefinition() == typeof(Task<>))
 				{
 					_returnType = _returnType.GetGenericArguments()[0];
-					_methodName = _methodName.Replace("Async", "");
+					_methodName = _methodName.Replace("Async", "", StringComparison.Ordinal);
 				}
 			}
 
@@ -236,7 +236,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				return new ChainContext(null, context.CloneContext(Sequence), context.CloneExpression(MethodCall))
 				{
-					Placeholder = context.CloneExpression(Placeholder)
+					Placeholder = context.CloneExpression(Placeholder),
 				};
 			}
 

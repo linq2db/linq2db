@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.InteropServices;
 
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
@@ -13,7 +14,7 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
 {
-	public sealed class SqlDataType : SqlExpressionBase
+	public sealed class SqlDataType : SqlExpressionBase, IEquatable<SqlDataType>
 	{
 		#region Init
 
@@ -34,7 +35,7 @@ namespace LinqToDB.SqlQuery
 
 		public SqlDataType(DataType dataType, Type type)
 		{
-			if (type == null) throw new ArgumentNullException(nameof(type));
+			ArgumentNullException.ThrowIfNull(type);
 
 			Type = GetDataType(dataType).Type
 				.WithDataType(dataType)
@@ -43,7 +44,7 @@ namespace LinqToDB.SqlQuery
 
 		public SqlDataType(DataType dataType, Type type, string dbType)
 		{
-			if (type == null) throw new ArgumentNullException(nameof(type));
+			ArgumentNullException.ThrowIfNull(type);
 
 			Type = GetDataType(dataType).Type
 				.WithDataType(dataType)
@@ -53,8 +54,8 @@ namespace LinqToDB.SqlQuery
 
 		public SqlDataType(DataType dataType, Type type, int length)
 		{
-			if (type == null) throw new ArgumentNullException(nameof(type));
-			if (length <= 0)  throw new ArgumentOutOfRangeException(nameof(length));
+			ArgumentNullException.ThrowIfNull(type);
+			ArgumentOutOfRangeException.ThrowIfNegativeOrZero(length);
 
 			Type = GetDataType(dataType).Type
 				.WithDataType(dataType)
@@ -64,9 +65,9 @@ namespace LinqToDB.SqlQuery
 
 		public SqlDataType(DataType dataType, Type type, int precision, int scale)
 		{
-			if (type      == null) throw new ArgumentNullException(nameof(type));
-			if (precision <= 0   ) throw new ArgumentOutOfRangeException(nameof(precision));
-			if (scale     <  0   ) throw new ArgumentOutOfRangeException(nameof(scale));
+			ArgumentNullException.ThrowIfNull(type);
+			ArgumentOutOfRangeException.ThrowIfNegativeOrZero(precision);
+			ArgumentOutOfRangeException.ThrowIfNegative(scale);
 
 			Type = GetDataType(dataType).Type
 				.WithDataType(dataType)
@@ -104,6 +105,7 @@ namespace LinqToDB.SqlQuery
 
 		#region Static Members
 
+		[StructLayout(LayoutKind.Auto)]
 		readonly struct TypeInfo
 		{
 			public TypeInfo(DataType dbType, int? maxLength, int? maxPrecision, int? maxScale, int? maxDisplaySize)
@@ -416,9 +418,9 @@ namespace LinqToDB.SqlQuery
 			if (!string.IsNullOrEmpty(Type.DbType))
 				writer.Append(":\"").Append(Type.DbType).Append('"');
 
-			if (Type.Length != null && Type.Length != 0)
+			if (Type.Length is not null and not 0)
 				writer.Append('(').Append(Type.Length).Append(')');
-			else if (Type.Precision != null && Type.Precision != 0)
+			else if (Type.Precision is not null and not 0)
 				writer.Append('(').Append(Type.Precision).Append(',').Append(Type.Scale).Append(')');
 
 			return writer;

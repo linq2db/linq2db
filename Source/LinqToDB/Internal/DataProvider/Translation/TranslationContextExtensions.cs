@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -104,7 +104,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			OrderBy = 1 << 1,
 			Distinct = 1 << 2,
 
-			All = Filter | OrderBy | Distinct
+			All = Filter | OrderBy | Distinct,
 		}
 
 		public record OrderByInformation(Expression Expr, bool IsDescending, Sql.NullsPosition Nulls);
@@ -309,7 +309,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				ValueExpression  = valueExpression,
 				OrderBy          = orderBy?.ToArray() ?? [],
 				IsDistinct       = isDistinct,
-				IsGroupBy        = isGroupBy
+				IsGroupBy        = isGroupBy,
 			};
 
 			return true;

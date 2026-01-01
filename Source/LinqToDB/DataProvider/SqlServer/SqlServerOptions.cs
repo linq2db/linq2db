@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	/// </param>
 	/// <param name="GenerateScopeIdentity">
 	/// Enables identity selection using SCOPE_IDENTITY function for insert with identity APIs.
-	/// Default value: <c>true</c>.
+	/// Default value: <see langword="true"/>.
 	/// </param>
 	public sealed record SqlServerOptions
 	(

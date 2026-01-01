@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 using LinqToDB.Internal.Extensions;
@@ -18,7 +19,7 @@ namespace LinqToDB.Internal.Linq
 
 		public int GetHashCode(MemberInfo obj)
 		{
-			return obj == null ? 0 : obj.Name.GetHashCode();
+			return StringComparer.Ordinal.GetHashCode(obj.Name);
 		}
 	}
 }

@@ -167,38 +167,36 @@ namespace Tests.Linq
 		[Test]
 		public void TestSqlQueryDepended([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var tb = db.CreateLocalTable<ManyFields>())
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<ManyFields>();
+			tb.ClearCache();
+
+			var currentMiss = tb.GetCacheMissCount();
+
+			int i;
+			for (i = 1; i <= 5; i++)
 			{
-				tb.ClearCache();
-
-				var currentMiss = tb.GetCacheMissCount();
-
-				int i;
-				for (i = 1; i <= 5; i++)
-				{
-					var test = db
+				var test = db
 						.GetTable<ManyFields>()
 						.Where(x => Helper.GetField(x, i) == i);
 
-					_ = test.ToSqlQuery();
-				}
-
-				Assert.That(tb.GetCacheMissCount() - currentMiss, Is.EqualTo(5));
-
-				currentMiss = tb.GetCacheMissCount();
-
-				for (i = 1; i <= 5; i++)
-				{
-					var test = db
-						.GetTable<ManyFields>()
-						.Where(x => Helper.GetField(x, i) == i);
-
-					_ = test.ToSqlQuery();
-				}
-
-				Assert.That(tb.GetCacheMissCount(), Is.EqualTo(currentMiss));
+				_ = test.ToSqlQuery();
 			}
+
+			Assert.That(tb.GetCacheMissCount() - currentMiss, Is.EqualTo(5));
+
+			currentMiss = tb.GetCacheMissCount();
+
+			for (i = 1; i <= 5; i++)
+			{
+				var test = db
+						.GetTable<ManyFields>()
+						.Where(x => Helper.GetField(x, i) == i);
+
+				_ = test.ToSqlQuery();
+			}
+
+			Assert.That(tb.GetCacheMissCount(), Is.EqualTo(currentMiss));
 		}
 
 		[Test]

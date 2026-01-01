@@ -138,7 +138,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			foreach (var pair in replacements)
 			{
 				if (ReferenceEquals(pair.Key, pair.Value))
-					throw new ArgumentException($"{nameof(replacements)} contains entry with key == value");
+					throw new ArgumentException($"{nameof(replacements)} contains entry with key == value", nameof(replacements));
 
 				info.RegisterReplaced(pair.Value, pair.Key);
 			}
@@ -284,7 +284,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					foreach (var pair in _replacements)
 					{
 						if (ReferenceEquals(pair.Key, pair.Value))
-							throw new ArgumentException($"{nameof(objectTree)} contains entry with key == value");
+						{
+							throw new ArgumentException(
+								$"{nameof(objectTree)} contains entry with key == value",
+								nameof(objectTree)
+							);
+						}
 
 						objectTree[pair.Key] = pair.Value;
 					}

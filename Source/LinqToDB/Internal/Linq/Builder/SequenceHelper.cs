@@ -704,7 +704,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return visitor.Value.ReplaceContext(expression, current, onContext);
 		}
 
-		static ObjectPool<ReplaceContextVisitor> _replaceContextVisitorPool = new(() => new ReplaceContextVisitor(), v => v.Cleanup(), 100);
+		static readonly ObjectPool<ReplaceContextVisitor> _replaceContextVisitorPool = new(() => new ReplaceContextVisitor(), v => v.Cleanup(), 100);
 
 		sealed class ReplaceContextVisitor : ExpressionVisitorBase
 		{
@@ -906,7 +906,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public static LambdaExpression? GetArgumentLambda(MethodCallExpression methodCall, string argumentName)
 		{
-			var idx = Array.FindIndex(methodCall.Method.GetParameters(), a => a.Name == argumentName);
+			var idx = Array.FindIndex(methodCall.Method.GetParameters(), a => string.Equals(a.Name, argumentName, StringComparison.Ordinal));
 			if (idx < 0)
 				return null;
 			return methodCall.Arguments[idx].UnwrapLambda();
@@ -1019,7 +1019,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (memberExpression.Member is not SpecialPropertyInfo)
 				return false;
 
-			if (memberExpression.Member.Name != propName)
+			if (!string.Equals(memberExpression.Member.Name, propName, StringComparison.Ordinal))
 				return false;
 
 			return true;

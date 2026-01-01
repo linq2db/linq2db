@@ -21,10 +21,10 @@ namespace LinqToDB.Internal.SqlQuery
 		/// </summary>
 		public static bool IsInsert(this SqlStatement statement)
 		{
-			return
-				statement.QueryType == QueryType.Insert ||
-				statement.QueryType == QueryType.InsertOrUpdate ||
-				statement.QueryType == QueryType.MultiInsert;
+			return statement.QueryType 
+				is QueryType.Insert
+				or QueryType.InsertOrUpdate
+				or QueryType.MultiInsert;
 		}
 
 		/// <summary>
@@ -33,7 +33,7 @@ namespace LinqToDB.Internal.SqlQuery
 		/// </summary>
 		public static bool NeedsIdentity(this SqlStatement statement)
 		{
-			return statement.QueryType == QueryType.Insert && ((SqlInsertStatement)statement).Insert.WithIdentity;
+			return statement is SqlInsertStatement { QueryType: QueryType.Insert, Insert.WithIdentity: true };
 		}
 
 		/// <summary>
@@ -42,7 +42,7 @@ namespace LinqToDB.Internal.SqlQuery
 		/// </summary>
 		public static bool IsUpdate(this SqlStatement statement)
 		{
-			return statement != null && statement.QueryType == QueryType.Update;
+			return statement is { QueryType: QueryType.Update };
 		}
 
 		/// <summary>
@@ -51,7 +51,7 @@ namespace LinqToDB.Internal.SqlQuery
 		/// </summary>
 		public static bool IsDelete(this SqlStatement statement)
 		{
-			return statement != null && statement.QueryType == QueryType.Delete;
+			return statement is { QueryType: QueryType.Delete };
 		}
 
 		/// <summary>
@@ -117,7 +117,7 @@ namespace LinqToDB.Internal.SqlQuery
 			=> expression.Type.IsSqlRow();
 
 		private static bool IsSqlRow(this Type type)
-			=> type.IsGenericType == true && type.GetGenericTypeDefinition() == typeof(Sql.SqlRow<,>);
+			=> type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Sql.SqlRow<,>);
 
 		internal static ReadOnlyCollection<Expression> GetSqlRowValues(this Expression expr)
 		{
@@ -150,12 +150,12 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static SqlFunction WithName(this SqlFunction func, string name)
 		{
-			if (name == func.Name)
+			if (string.Equals(name, func.Name, StringComparison.Ordinal))
 				return func;
 
 			return new SqlFunction(func.Type, name, func.Flags, func.NullabilityType, func.CanBeNullNullable, func.Parameters)
 			{
-				DoNotOptimize = func.DoNotOptimize
+				DoNotOptimize = func.DoNotOptimize,
 			};
 		}
 	}

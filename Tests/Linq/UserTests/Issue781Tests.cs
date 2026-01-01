@@ -15,152 +15,138 @@ namespace Tests.UserTests
 		[Test]
 		public void TestCount([DataSources(false)] string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				var actual   = db.GetTable<Person>()
+			using var db = GetDataConnection(context);
+			var actual   = db.GetTable<Person>()
 					.GroupBy(_ => Sql.Concat("test", _.Patient!.Diagnosis))
 					.Count();
 
-				var expected = Person
+			var expected = Person
 					.GroupBy(_ => _.Patient == null ? null : Sql.Concat("test", _.Patient.Diagnosis))
 					.Count();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(actual, Is.EqualTo(expected));
-					Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
-				}
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(actual, Is.EqualTo(expected));
+				Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
 			}
 		}
 
 		[Test]
 		public void TestLongCount([DataSources(false)] string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				var actual    = db.GetTable<Person>()
+			using var db = GetDataConnection(context);
+			var actual    = db.GetTable<Person>()
 					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
 					.LongCount();
 
-				var expected = Person
+			var expected = Person
 					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient!.Diagnosis)
 					.LongCount();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(actual, Is.EqualTo(expected));
-					Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
-				}
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(actual, Is.EqualTo(expected));
+				Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
 			}
 		}
 
 		[Test]
 		public void TestHavingCount([DataSources(false, TestProvName.AllAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql, ProviderName.SqlCe)] string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				var actual = db.GetTable<Person>()
+			using var db = GetDataConnection(context);
+			var actual = db.GetTable<Person>()
 					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
 					.Having(_ => _.Key != null)
 					.Count();
 
-				var expected = Person
+			var expected = Person
 					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
 					.Where(_ => _.Key != null)
 					.Count();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(actual, Is.EqualTo(expected));
-					Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
-				}
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(actual, Is.EqualTo(expected));
+				Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
 			}
 		}
 
 		[Test]
 		public void TestHavingLongCount([DataSources(false, TestProvName.AllAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql, ProviderName.SqlCe)] string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				var actual = db.GetTable<Person>()
+			using var db = GetDataConnection(context);
+			var actual = db.GetTable<Person>()
 					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
 					.Having(_ => _.Key != null)
 					.LongCount();
 
-				var expected = Person
+			var expected = Person
 					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
 					.Where(_ => _.Key != null)
 					.LongCount();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(actual, Is.EqualTo(expected));
-					Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
-				}
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(actual, Is.EqualTo(expected));
+				Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
 			}
 		}
 
 		[Test]
 		public void TestCountWithSelect([DataSources(false)] string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				var actual = db.GetTable<Person>()
+			using var db = GetDataConnection(context);
+			var actual = db.GetTable<Person>()
 					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
 					.Select(_ => _.Key)
 					.Count();
 
-				var expected = Person
+			var expected = Person
 					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
 					.Select(_ => _.Key)
 					.Count();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(actual, Is.EqualTo(expected));
-					Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
-				}
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(actual, Is.EqualTo(expected));
+				Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
 			}
 		}
 
 		[Test]
 		public void TestLongCountWithSelect([DataSources(false)] string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				var actual = db.GetTable<Person>()
+			using var db = GetDataConnection(context);
+			var actual = db.GetTable<Person>()
 					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
 					.Select(_ => _.Key)
 					.LongCount();
 
-				var expected = Person
+			var expected = Person
 					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
 					.Select(_ => _.Key)
 					.LongCount();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(actual, Is.EqualTo(expected));
-					Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
-				}
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(actual, Is.EqualTo(expected));
+				Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
 			}
 		}
 
 		[Test]
 		public void TestHavingCountWithSelect([DataSources(false, TestProvName.AllAccess, TestProvName.AllOracle, TestProvName.AllSybase, TestProvName.AllMySql, ProviderName.SqlCe)] string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				var actual = db.GetTable<Person>()
+			using var db = GetDataConnection(context);
+			var actual = db.GetTable<Person>()
 					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
 					.Having(_ => _.Key != null)
 					.Select(_ => _.Key)
 					.Count();
 
-				var expected = Person
+			var expected = Person
 					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
 					.Where(_ => _.Key != null)
 					.Select(_ => _.Key)
 					.Count();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(actual, Is.EqualTo(expected));
-					Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
-				}
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(actual, Is.EqualTo(expected));
+				Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
 			}
 		}
 
@@ -170,24 +156,22 @@ namespace Tests.UserTests
 				TestProvName.AllMySql, ProviderName.SqlCe)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				var actual = db.GetTable<Person>()
+			using var db = GetDataConnection(context);
+			var actual = db.GetTable<Person>()
 					.GroupBy(_ => "test" + _.Patient!.Diagnosis)
 					.Having(_ => _.Key != null)
 					.Select(_ => _.Key)
 					.LongCount();
 
-				var expected = Person
+			var expected = Person
 					.GroupBy(_ => _.Patient == null ? null : "test" + _.Patient.Diagnosis)
 					.Where(_ => _.Key != null)
 					.Select(_ => _.Key)
 					.LongCount();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(actual, Is.EqualTo(expected));
-					Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
-				}
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(actual, Is.EqualTo(expected));
+				Assert.That(db.LastQuery!.IndexOf("COUNT", StringComparison.OrdinalIgnoreCase), Is.Not.EqualTo(-1));
 			}
 		}
 	}

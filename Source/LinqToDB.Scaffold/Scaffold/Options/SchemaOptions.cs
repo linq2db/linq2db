@@ -82,10 +82,10 @@ namespace LinqToDB.Scaffold
 		/// </summary>
 		public ISet<string> Schemas { get; } = new HashSet<string>();
 		/// <summary>
-		/// List of default schemas. When <c>null</c>, use default schema information from database schema provider.
+		/// List of default schemas. When <see langword="null"/>, use default schema information from database schema provider.
 		/// <list type="bullet">
-		/// <item>Default: <c>null</c></item>
-		/// <item>In T4 compability mode: <c>null</c></item>
+		/// <item>Default: <see langword="null"/></item>
+		/// <item>In T4 compability mode: <see langword="null"/></item>
 		/// </list>
 		/// </summary>
 		public ISet<string>? DefaultSchemas { get; set; }

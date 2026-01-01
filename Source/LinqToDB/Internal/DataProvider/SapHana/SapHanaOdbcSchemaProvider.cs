@@ -52,36 +52,41 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			return dataConnection.Query(rd =>
-			{
-				// IMPORTANT: reader calls must be ordered to support SequentialAccess
-				var schema     = rd.GetString(0);
-				var tableName  = rd.GetString(1);
-				var indexName  = rd.GetString(2);
-				var constraint = rd.IsDBNull(3) ? null : rd.GetString(3);
+			return dataConnection
+				.Query(
+					rd =>
+					{
+						// IMPORTANT: reader calls must be ordered to support SequentialAccess
+						var schema     = rd.GetString(0);
+						var tableName  = rd.GetString(1);
+						var indexName  = rd.GetString(2);
+						var constraint = rd.IsDBNull(3) ? null : rd.GetString(3);
 
-				if (constraint != "PRIMARY KEY")
-					return null;
+						if (!string.Equals(constraint, "PRIMARY KEY", StringComparison.Ordinal))
+							return null;
 
-				var columnName = rd.GetString(4);
-				var position   = rd.GetInt32(5);
+						var columnName = rd.GetString(4);
+						var position   = rd.GetInt32(5);
 
-				return new PrimaryKeyInfo
-				{
-					TableID        = string.Concat(schema, '.', tableName),
-					ColumnName     = columnName,
-					Ordinal        = position,
-					PrimaryKeyName = indexName
-				};
-			}, @"
-				SELECT
-					SCHEMA_NAME,
-					TABLE_NAME,
-					INDEX_NAME,
-					CONSTRAINT,
-					COLUMN_NAME,
-					POSITION
-				FROM INDEX_COLUMNS")
+						return new PrimaryKeyInfo
+						{
+							TableID        = string.Concat(schema, '.', tableName),
+							ColumnName     = columnName,
+							Ordinal        = position,
+							PrimaryKeyName = indexName,
+						};
+					},
+					"""
+					SELECT
+						SCHEMA_NAME,
+						TABLE_NAME,
+						INDEX_NAME,
+						CONSTRAINT,
+						COLUMN_NAME,
+						POSITION
+					FROM INDEX_COLUMNS
+					"""
+				)
 				.Where(x => x != null).ToList()!;
 		}
 	}

@@ -156,9 +156,9 @@ namespace LinqToDB.Common
 
 			/// <summary>
 			/// Controls how group data for LINQ queries ended with GroupBy will be loaded:
-			/// - if <c>true</c> - group data will be loaded together with main query, resulting in 1 + N queries, where N - number of groups;
-			/// - if <c>false</c> - group data will be loaded when you call enumerator for specific group <see cref="System.Linq.IGrouping{TKey, TElement}"/>.
-			/// Default value: <c>false</c>.
+			/// - if <see langword="true"/> - group data will be loaded together with main query, resulting in 1 + N queries, where N - number of groups;
+			/// - if <see langword="false"/> - group data will be loaded when you call enumerator for specific group <see cref="System.Linq.IGrouping{TKey, TElement}"/>.
+			/// Default value: <see langword="false"/>.
 			/// </summary>
 			// TODO: Remove in v7
 			[Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -166,9 +166,9 @@ namespace LinqToDB.Common
 
 			/// <summary>
 			/// Controls behavior of linq2db when there is no updateable fields in Update query:
-			/// - if <c>true</c> - query not executed and Update operation returns 0 as number of affected records;
-			/// - if <c>false</c> - <see cref="LinqToDBException"/> will be thrown.
-			/// Default value: <c>false</c>.
+			/// - if <see langword="true"/> - query not executed and Update operation returns 0 as number of affected records;
+			/// - if <see langword="false"/> - <see cref="LinqToDBException"/> will be thrown.
+			/// Default value: <see langword="false"/>.
 			/// </summary>
 			public static bool IgnoreEmptyUpdate
 			{
@@ -186,7 +186,7 @@ namespace LinqToDB.Common
 			/// Test file will be placed to <c>linq2db</c> subfolder of temp folder and exact file path will be logged
 			/// to data connection tracing infrastructure.
 			/// See <see cref="DataConnection.TraceSwitch"/> for more details.
-			/// Default value: <c>false</c>.
+			/// Default value: <see langword="false"/>.
 			/// </summary>
 			public static bool GenerateExpressionTest
 			{
@@ -201,7 +201,7 @@ namespace LinqToDB.Common
 			/// <summary>
 			/// Enables logging of generated mapping expression to data connection tracing infrastructure.
 			/// See <see cref="DataConnection.TraceSwitch"/> for more details.
-			/// Default value: <c>false</c>.
+			/// Default value: <see langword="false"/>.
 			/// </summary>
 			public static bool TraceMapperExpression
 			{
@@ -216,10 +216,10 @@ namespace LinqToDB.Common
 			/// <summary>
 			/// Controls behavior, when LINQ query chain contains multiple <see cref="System.Linq.Queryable.OrderBy{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> or <see cref="System.Linq.Queryable.OrderByDescending{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> calls:
 			/// <list type="bullet">
-			/// <item>if <c>true</c> - non-first OrderBy* call will be treated as ThenBy* call;</item>
-			/// <item>if <c>false</c> - OrderBy* call will place sort specifications, added by previous OrderBy* and ThenBy* calls, after current call.</item>
+			/// <item>if <see langword="true"/> - non-first OrderBy* call will be treated as ThenBy* call;</item>
+			/// <item>if <see langword="false"/> - OrderBy* call will place sort specifications, added by previous OrderBy* and ThenBy* calls, after current call.</item>
 			/// </list>
-			/// Default value: <c>false</c>.
+			/// Default value: <see langword="false"/>.
 			/// <para>
 			/// Example:
 			/// <code>
@@ -251,9 +251,9 @@ namespace LinqToDB.Common
 
 			/// <summary>
 			/// Controls behavior, when LINQ query chain contains multiple <see cref="System.Linq.Queryable.OrderBy{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> or <see cref="System.Linq.Queryable.OrderByDescending{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> calls:
-			/// - if <c>true</c> - non-first OrderBy* call will be treated as ThenBy* call;
-			/// - if <c>false</c> - OrderBy* call will discard sort specifications, added by previous OrderBy* and ThenBy* calls.
-			/// Default value: <c>false</c>.
+			/// - if <see langword="true"/> - non-first OrderBy* call will be treated as ThenBy* call;
+			/// - if <see langword="false"/> - OrderBy* call will discard sort specifications, added by previous OrderBy* and ThenBy* calls.
+			/// Default value: <see langword="false"/>.
 			/// </summary>
 			// TODO: Remove in v7
 			[property: Obsolete("This API was renamed to ConcatenateOrderBy. Compatibility alias will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -273,7 +273,7 @@ namespace LinqToDB.Common
 			/// - removes duplicate joins by unique target table key;
 			/// - removes self-joins by unique key;
 			/// - removes left joins if joined table is not used in query.
-			/// Default value: <c>true</c>.
+			/// Default value: <see langword="true"/>.
 			/// </summary>
 			public static bool OptimizeJoins
 			{
@@ -343,9 +343,9 @@ namespace LinqToDB.Common
 
 			/// <summary>
 			/// Controls behavior of LINQ query, which ends with GroupBy call.
-			/// - if <c>true</c> - <seealso cref="LinqToDBException"/> will be thrown for such queries;
-			/// - if <c>false</c> - eager loading used.
-			/// Default value: <c>true</c>.
+			/// - if <see langword="true"/> - <seealso cref="LinqToDBException"/> will be thrown for such queries;
+			/// - if <see langword="false"/> - eager loading used.
+			/// Default value: <see langword="true"/>.
 			/// </summary>
 			/// <remarks>
 			/// <a href="https://github.com/linq2db/linq2db/issues/365">More details</a>.
@@ -368,7 +368,7 @@ namespace LinqToDB.Common
 			/// <para />
 			/// - cache access synchronization could lead to bigger latencies than it saves.
 			/// <para />
-			/// Default value: <c>false</c>.
+			/// Default value: <see langword="false"/>.
 			/// <para />
 			/// It is not recommended to enable this option as it could lead to severe slowdown. Better approach will be
 			/// to use <see cref="NoLinqCache"/> scope around queries, that produce severe memory leaks you need to fix.
@@ -401,7 +401,7 @@ namespace LinqToDB.Common
 
 			/// <summary>
 			/// Used to generate CROSS APPLY or OUTER APPLY if possible.
-			/// Default value: <c>true</c>.
+			/// Default value: <see langword="true"/>.
 			/// </summary>
 			// TODO: Remove in v7
 			[Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -411,7 +411,7 @@ namespace LinqToDB.Common
 			/// Allows SQL generation to automatically transform
 			/// <code>SELECT DISTINCT value FROM Table ORDER BY date</code>
 			/// Into GROUP BY equivalent if syntax is not supported
-			/// Default value: <c>true</c>.
+			/// Default value: <see langword="true"/>.
 			/// </summary>
 			// TODO: Remove in v7
 			[Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -419,7 +419,7 @@ namespace LinqToDB.Common
 
 			/// <summary>
 			/// Enables Take/Skip parameterization.
-			/// Default value: <c>true</c>.
+			/// Default value: <see langword="true"/>.
 			/// </summary>
 			public static bool ParameterizeTakeSkip
 			{
@@ -432,11 +432,11 @@ namespace LinqToDB.Common
 			}
 
 			/// <summary>
-			/// If <c>true</c>, user could add new mappings to context mapping schems (<see cref="IDataContext.MappingSchema"/>).
+			/// If <see langword="true"/>, user could add new mappings to context mapping schems (<see cref="IDataContext.MappingSchema"/>).
 			/// Otherwise <see cref="LinqToDBException"/> will be generated on locked mapping schema edit attempt.
 			/// It is not recommended to enable this option as it has performance implications.
 			/// Proper approach is to create single <see cref="Mapping.MappingSchema"/> instance once, configure mappings for it and use this <see cref="Mapping.MappingSchema"/> instance for all context instances.
-			/// Default value: <c>false</c>.
+			/// Default value: <see langword="false"/>.
 			/// </summary>
 			public static bool EnableContextSchemaEdit
 			{
@@ -514,8 +514,8 @@ namespace LinqToDB.Common
 
 			/// <summary>
 			/// Status of use of default retry policy.
-			/// Getter returns <c>true</c> if default retry policy used, and false if custom retry policy used or retry policy is not set.
-			/// Setter sets <see cref="Factory"/> to default retry policy factory if <paramref name="value"/> is <c>true</c>, otherwise removes retry policy.
+			/// Getter returns <see langword="true"/> if default retry policy used, and false if custom retry policy used or retry policy is not set.
+			/// Setter sets <see cref="Factory"/> to default retry policy factory if <paramref name="value"/> is <see langword="true"/>, otherwise removes retry policy.
 			/// </summary>
 			public static bool UseDefaultPolicy
 			{
@@ -615,7 +615,7 @@ namespace LinqToDB.Common
 			/// </code>
 			/// </example>
 			/// <remarks>
-			/// Set this value to <c>null</c> to disable special alias generation queries.
+			/// Set this value to <see langword="null"/> to disable special alias generation queries.
 			/// </remarks>
 			/// </summary>
 			public static string? AssociationAlias
@@ -645,7 +645,7 @@ namespace LinqToDB.Common
 			/// Indicates whether SQL Builder should generate aliases for final projection.
 			/// It is not required for correct query processing but simplifies SQL analysis.
 			/// <para>
-			/// Default value: <c>false</c>.
+			/// Default value: <see langword="false"/>.
 			/// </para>
 			/// <example>
 			/// For the query
@@ -656,7 +656,7 @@ namespace LinqToDB.Common
 			///       TrackId = child.ChildID,
 			///	   };
 			/// </code>
-			/// When property is <c>true</c>
+			/// When property is <see langword="true"/>
 			/// <code>
 			/// SELECT
 			///	   [child].[ChildID] as [TrackId]
@@ -679,8 +679,8 @@ namespace LinqToDB.Common
 			}
 
 			/// <summary>
-			/// If <c>true</c>, linq2db will allow any constant expressions in ORDER BY clause.
-			/// Default value: <c>false</c>.
+			/// If <see langword="true"/>, linq2db will allow any constant expressions in ORDER BY clause.
+			/// Default value: <see langword="false"/>.
 			/// </summary>
 			public static bool EnableConstantExpressionInOrderBy
 			{

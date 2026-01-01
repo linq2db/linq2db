@@ -319,35 +319,35 @@ namespace LinqToDB.Internal.SqlQuery
 
 			static Operator InvertOperator(Operator op)
 			{
-				switch (op)
+				return op switch
 				{
-					case Operator.Equal          : return Operator.NotEqual;
-					case Operator.NotEqual       : return Operator.Equal;
-					case Operator.Greater        : return Operator.LessOrEqual;
-					case Operator.NotLess        :
-					case Operator.GreaterOrEqual : return Operator.Less;
-					case Operator.Less           : return Operator.GreaterOrEqual;
-					case Operator.NotGreater     :
-					case Operator.LessOrEqual    : return Operator.Greater;
-					default: throw new InvalidOperationException();
-				}
+					Operator.Equal          => Operator.NotEqual,
+					Operator.NotEqual       => Operator.Equal,
+					Operator.Greater        => Operator.LessOrEqual,
+					Operator.NotLess        or
+					Operator.GreaterOrEqual => Operator.Less,
+					Operator.Less           => Operator.GreaterOrEqual,
+					Operator.NotGreater     or
+					Operator.LessOrEqual => Operator.Greater,
+					_                       => throw new InvalidOperationException(),
+				};
 			}
 
 			public static Operator SwapOperator(Operator op)
 			{
-				switch (op)
+				return op switch
 				{
-					case Operator.Equal:          return Operator.Equal;
-					case Operator.NotEqual:       return Operator.NotEqual;
-					case Operator.Greater:        return Operator.Less;
-					case Operator.NotLess:        return Operator.NotGreater;
-					case Operator.GreaterOrEqual: return Operator.LessOrEqual;
-					case Operator.Less:           return Operator.Greater;
-					case Operator.NotGreater:     return Operator.NotLess;
-					case Operator.LessOrEqual:    return Operator.GreaterOrEqual;
-					case Operator.Overlaps:       return Operator.Overlaps;
-					default:                      throw new InvalidOperationException();
-				}
+					Operator.Equal          => Operator.Equal,
+					Operator.NotEqual       => Operator.NotEqual,
+					Operator.Greater        => Operator.Less,
+					Operator.NotLess        => Operator.NotGreater,
+					Operator.GreaterOrEqual => Operator.LessOrEqual,
+					Operator.Less           => Operator.Greater,
+					Operator.NotGreater     => Operator.NotLess,
+					Operator.LessOrEqual    => Operator.GreaterOrEqual,
+					Operator.Overlaps       => Operator.Overlaps,
+					_                       => throw new InvalidOperationException(),
+				};
 			}
 
 			public override bool CanInvert(NullabilityContext nullability) => !NotNullableExpr1 && !NotNullableExpr2;
@@ -381,7 +381,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 				// CompareNulls.LikeSqlExceptParameters and CompareNulls.LikeClr
 				// always sniffs parameters to == and != (for backward compatibility).
-				if (Operator == Operator.Equal || Operator == Operator.NotEqual)
+				if (Operator is Operator.Equal or Operator.NotEqual)
 				{
 					if (this.TryEvaluateExpression(context, out var value))
 					{
@@ -564,8 +564,7 @@ namespace LinqToDB.Internal.SqlQuery
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
 				return other is Like expr
-					&& FunctionName == expr.FunctionName
-					&& Expr2.Equals(expr.Expr2, comparer)
+					&& string.Equals(FunctionName, expr.FunctionName, StringComparison.Ordinal) && Expr2.Equals(expr.Expr2, comparer)
 					&& (   (Escape != null && expr.Escape != null && Escape.Equals(expr.Escape, comparer))
 						|| (Escape == null && expr.Escape == null))
 					&& base.Equals(other, comparer);
@@ -613,7 +612,7 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 				StartsWith,
 				EndsWith,
-				Contains
+				Contains,
 			}
 
 			public SearchString(ISqlExpression exp1, bool isNot, ISqlExpression exp2, SearchKind searchKind, ISqlExpression caseSensitive)
@@ -812,9 +811,9 @@ namespace LinqToDB.Internal.SqlQuery
 			public ISqlExpression FalseValue  { get; set; }
 			/// <summary>
 			/// <list type="bullet">
-			/// <item><c>null</c> : evaluate predicate as is and preserve UNKNOWN (null) values if they produced</item>
-			/// <item><c>false</c> : UNKNOWN values should be converted to FALSE</item>
-			/// <item><c>true</c> : UNKNOWN values should be converted to TRUE</item>
+			/// <item><see langword="null"/> : evaluate predicate as is and preserve UNKNOWN (null) values if they produced</item>
+			/// <item><see langword="false"/> : UNKNOWN values should be converted to FALSE</item>
+			/// <item><see langword="true"/> : UNKNOWN values should be converted to TRUE</item>
 			/// </list>
 			/// </summary>
 			public bool?          WithNull    { get; }
@@ -1088,7 +1087,7 @@ namespace LinqToDB.Internal.SqlQuery
 				if (base.CanBeUnknown(nullability, withoutUnknownErased))
 					return true;
 
-				return Values.Any(e => e.CanBeNullable(nullability));
+				return Values.Exists(e => e.CanBeNullable(nullability));
 			}
 
 			public override ISqlPredicate Invert(NullabilityContext nullability)

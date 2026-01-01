@@ -13,7 +13,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 		{
 		}
 
-		static string[] AccessLikeCharactersToEscape = {"_", "?", "*", "%", "#", "-", "!"};
+		static readonly string[] AccessLikeCharactersToEscape = {"_", "?", "*", "%", "#", "-", "!"};
 
 		public override bool LikeIsEscapeSupported => false;
 
@@ -34,11 +34,11 @@ namespace LinqToDB.Internal.DataProvider.Access
 		protected override string EscapeLikePattern(string str)
 		{
 			var newStr = DataTools.EscapeUnterminatedBracket(str);
-			if (newStr == str)
-				newStr = newStr.Replace("[", "[[]");
+			if (string.Equals(newStr, str, StringComparison.Ordinal))
+				newStr = newStr.Replace("[", "[[]", StringComparison.Ordinal);
 
 			foreach (var s in LikeCharactersToEscape)
-				newStr = newStr.Replace(s, "[" + s + "]");
+				newStr = newStr.Replace(s, "[" + s + "]", StringComparison.Ordinal);
 
 			return newStr;
 		}
@@ -148,39 +148,33 @@ namespace LinqToDB.Internal.DataProvider.Access
 				var parms = new ISqlExpression[array.Length - 1];
 				Array.Copy(array, 1, parms, 0, parms.Length);
 				return parms;
-			};
+			}
 
 			return element;
 		}
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func)
-			{ 
-				case { Name: PseudoFunctions.TO_LOWER }:
-					return func.WithName("LCase");
-				case { Name: PseudoFunctions.TO_UPPER }:
-					return func.WithName("UCase");
-				case { Name: PseudoFunctions.LENGTH }:
-					return func.WithName("Len");
+			return func switch
+			{
+				{ Name: PseudoFunctions.TO_LOWER } => func.WithName("LCase"),
+				{ Name: PseudoFunctions.TO_UPPER } => func.WithName("UCase"),
+				{ Name: PseudoFunctions.LENGTH } => func.WithName("Len"),
 
-				case {
+				{
 					Name: "CharIndex",
 					Parameters: [var p0, var p1],
 					Type: var type,
-				}:
-					return new SqlFunction(type, "InStr", new SqlValue(1), p1, p0, new SqlValue(1));
+				} => new SqlFunction(type, "InStr", new SqlValue(1), p1, p0, new SqlValue(1)),
 
-				case {
+				{
 					Name: "CharIndex",
 					Parameters: [var p0, var p1, var p2],
 					Type: var type,
-				}:
-					return new SqlFunction(type, "InStr", p2, p1, p0, new SqlValue(1));
+				} => new SqlFunction(type, "InStr", p2, p1, p0, new SqlValue(1)),
 
-				default:
-					return base.ConvertSqlFunction(func);
-			}
+				_ => base.ConvertSqlFunction(func),
+			};
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)

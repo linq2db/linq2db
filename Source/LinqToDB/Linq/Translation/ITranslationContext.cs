@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Expressions;
@@ -17,7 +17,7 @@ namespace LinqToDB.Linq.Translation
 			OrderBy  = 1 << 1,
 			Distinct = 1 << 2,
 
-			All = Filter | OrderBy | Distinct
+			All = Filter | OrderBy | Distinct,
 		}
 
 		public record OrderByInformation(Expression Expr, bool IsDescending, Sql.NullsPosition Nulls);

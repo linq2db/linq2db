@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.DataProvider.Sybase
+namespace LinqToDB.DataProvider.Sybase
 {
 	/// <summary>
 	/// Sybase ADO.NET provider.
@@ -16,6 +16,6 @@
 		/// <summary>
 		/// DataAction <see href="https://github.com/DataAction/AdoNetCore.AseClient">managed provider</see>.
 		/// </summary>
-		DataAction
+		DataAction,
 	}
 }

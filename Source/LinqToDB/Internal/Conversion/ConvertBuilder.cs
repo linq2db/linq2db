@@ -204,7 +204,7 @@ namespace LinqToDB.Internal.Conversion
 				var values = Enum.GetValues(to);
 				var names  = Enum.GetNames (to);
 
-				var dic = new Dictionary<string,object>();
+				var dic = new Dictionary<string,object>(StringComparer.Ordinal);
 
 				for (var i = 0; i < values.Length; i++)
 				{
@@ -272,16 +272,16 @@ namespace LinqToDB.Internal.Conversion
 					.Select(f => new { f.OrigValue, attrs = f.MapValues.Where(a => a.Value == null || a.Value.GetType() == fromType).ToList() })
 					.ToList();
 
-				if (fromTypeFields.All(f => f.attrs.Count != 0))
+				if (fromTypeFields.TrueForAll(f => f.attrs.Count != 0))
 				{
 					var cases = fromTypeFields
 						.Select(f => new
 							{
 								value = f.OrigValue,
 								attrs = f.attrs
-									.Where (a => a.Configuration == f.attrs[0].Configuration)
+									.Where (a => string.Equals(a.Configuration, f.attrs[0].Configuration, StringComparison.Ordinal))
 									.Select(a => a.Value ?? mappingSchema.GetDefaultValue(from))
-									.ToList()
+									.ToList(),
 							})
 						.ToList();
 
@@ -289,7 +289,7 @@ namespace LinqToDB.Internal.Conversion
 						from c in cases
 						from a in c.attrs
 						group c by a into g
-						where g.Count() > 1
+						where g.Skip(1).Any()
 						select g;
 
 					var ambiguityMapping = ambiguityMappings.FirstOrDefault();
@@ -323,7 +323,7 @@ namespace LinqToDB.Internal.Conversion
 					return expr;
 				}
 
-				if (fromTypeFields.Any(f => f.attrs.Any(a => a.Value != null)))
+				if (fromTypeFields.Exists(f => f.attrs.Exists(a => a.Value != null)))
 				{
 					var field = fromTypeFields.First(f => f.attrs.Count == 0);
 
@@ -370,10 +370,10 @@ namespace LinqToDB.Internal.Conversion
 							})
 							.ThenBy(a => !a.IsDefault)
 							.ThenBy(a => a.Value == null)
-							.FirstOrDefault(a => a.Value == null || a.Value.GetType() == valueType) })
+							.FirstOrDefault(a => a.Value == null || a.Value.GetType() == valueType), })
 						.ToList();
 
-					if (toTypeFields.All(f => f.Attrs != null))
+					if (toTypeFields.TrueForAll(f => f.Attrs != null))
 					{
 						var cases = toTypeFields.Select(f => Expression.SwitchCase(
 							Expression.Constant(f.Attrs!.Value ?? mappingSchema.GetDefaultValue(to), to),
@@ -391,7 +391,7 @@ namespace LinqToDB.Internal.Conversion
 						return expr;
 					}
 
-					if (toTypeFields.Any(f => f.Attrs != null))
+					if (toTypeFields.Exists(f => f.Attrs != null))
 					{
 						var field = toTypeFields.First(f => f.Attrs == null);
 
@@ -419,9 +419,9 @@ namespace LinqToDB.Internal.Conversion
 						if (toField.Attrs == null || toField.Attrs.Length == 0)
 							return null;
 
-						var toAttr = toField.Attrs.First();
+						var toAttr = toField.Attrs[0];
 
-						toAttr = toField.Attrs.FirstOrDefault(a => a.Configuration == toAttr.Configuration && a.IsDefault) ?? toAttr;
+						toAttr = toField.Attrs.FirstOrDefault(a => string.Equals(a.Configuration, toAttr.Configuration, StringComparison.Ordinal) && a.IsDefault) ?? toAttr;
 
 						var fromAttrs = fromFields.Where(f => f.Attrs.Any(a =>
 							a.Value?.Equals(toAttr.Value) ?? toAttr.Value == null)).ToList();
@@ -436,10 +436,10 @@ namespace LinqToDB.Internal.Conversion
 								select new
 								{
 									f,
-									a = f.Attrs.First(a => a.Value?.Equals(toAttr.Value) ?? toAttr.Value == null)
+									a = f.Attrs.First(a => a.Value?.Equals(toAttr.Value) ?? toAttr.Value == null),
 								} into fa
 								from c in cl
-								where fa.a.Configuration == c.c
+								where string.Equals(fa.a.Configuration, c.c, StringComparison.Ordinal)
 								orderby c.i
 								select fa.f;
 

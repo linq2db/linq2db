@@ -201,10 +201,7 @@ namespace LinqToDB.Linq.Translation
 					return BuildAggregationFunctionResult.Error(error);
 				}
 
-				if (filterSql == null)
-				{
-					filterSql = new SqlSearchCondition();
-				}
+				filterSql ??= new SqlSearchCondition();
 
 				if (filterExprSql is not ISqlPredicate predicate)
 				{
@@ -216,7 +213,7 @@ namespace LinqToDB.Linq.Translation
 
 			if (filterSql != null && valueSql != null && config.AllowNotNullCheckMode.HasValue && filterSql is { IsAnd: true })
 			{
-				var isNotNull = filterSql.Predicates.FirstOrDefault(p => p is SqlPredicate.IsNull { IsNot: true } isNull && isNull.Expr1.Equals(valueSql));
+				var isNotNull = filterSql.Predicates.Find(p => p is SqlPredicate.IsNull { IsNot: true } isNull && isNull.Expr1.Equals(valueSql));
 				if (isNotNull != null)
 				{
 					isNullFiltered = true;
@@ -351,7 +348,7 @@ namespace LinqToDB.Linq.Translation
 					HasValue              = HasValue,
 					FilterLambdaIndex     = FilterLambdaIndex,
 					SequenceIndex         = SequenceIndex,
-					FallbackExpression    = FallbackExpression
+					FallbackExpression    = FallbackExpression,
 				};
 			}
 		}

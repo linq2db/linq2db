@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -77,6 +79,18 @@ namespace LinqToDB.Internal.Linq.Builder
 			});
 		}
 
+		private static readonly Type[] ValueTupleTypes =
+		[
+			typeof(ValueTuple<>),
+			typeof(ValueTuple<,>),
+			typeof(ValueTuple<,,>),
+			typeof(ValueTuple<,,,>),
+			typeof(ValueTuple<,,,,>),
+			typeof(ValueTuple<,,,,,>),
+			typeof(ValueTuple<,,,,,,>),
+			typeof(ValueTuple<,,,,,,,>),
+		];
+
 		static Expression GenerateKeyExpression(Expression[] members, int startIndex)
 		{
 			var count = members.Length - startIndex;
@@ -85,9 +99,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			Expression[] arguments;
 
-			if (count > MutableTuple.MaxMemberCount)
+			if (count > ValueTupleTypes.Length)
 			{
-				count     = MutableTuple.MaxMemberCount;
+				count     = ValueTupleTypes.Length;
 				arguments = new Expression[count];
 				Array.Copy(members, startIndex, arguments, 0, count - 1);
 				arguments[count - 1] = GenerateKeyExpression(members, startIndex + count);
@@ -98,17 +112,18 @@ namespace LinqToDB.Internal.Linq.Builder
 				Array.Copy(members, startIndex, arguments, 0, count);
 			}
 
-			var type         = MutableTuple.MTypes[count - 1];
+			var type         = ValueTupleTypes[count - 1];
 			var concreteType = type.MakeGenericType(arguments.Select(a => a.Type).ToArray());
-			var constructor = concreteType.GetConstructor(Type.EmptyTypes) ??
-			                  throw new LinqToDBException($"Cannot retrieve default constructor for '{type.Name}'");
+			var constructor  = concreteType.GetConstructor(arguments.Select(a => a.Type).ToArray()) ??
+				throw new LinqToDBException($"Cannot retrieve default constructor for '{type.Name}'");
 
-			var newExpression = Expression.New(constructor);
-			var initExpression = Expression.MemberInit(newExpression,
-				arguments.Select((a, i) => Expression.Bind(concreteType.GetProperty(FormattableString.Invariant($"Item{i + 1}"))!, a)));
-			return initExpression;
+			return Expression.New(
+				constructor,
+				arguments
+			);
 		}
 
+		[StructLayout(LayoutKind.Auto)]
 		readonly struct KeyDetailEnvelope<TKey, TDetail>
 			where TKey: notnull
 		{
@@ -175,7 +190,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return result;
 		}
 
-		static string[] _passThroughMethodsForUnwrappingDefaultIfEmpty = { nameof(Enumerable.Where), nameof(Enumerable.Select) };
+		static readonly string[] _passThroughMethodsForUnwrappingDefaultIfEmpty = { nameof(Enumerable.Where), nameof(Enumerable.Select) };
 
 		static Expression UnwrapDefaultIfEmpty(Expression expression)
 		{
@@ -342,16 +357,20 @@ namespace LinqToDB.Internal.Linq.Builder
 			return resultExpression;
 		}
 
-		static Expression ApplyEnumerableOrderBy(Expression queryExpr, List<(LambdaExpression, bool)> orderBy)
+		static Expression ApplyEnumerableOrderBy(Expression queryExpr, List<(LambdaExpression Expression, bool Descending)> orderBy)
 		{
 			var isFirst = true;
 			foreach (var order in orderBy)
 			{
-				var methodName =
-					isFirst ? order.Item2 ? nameof(Queryable.OrderByDescending) : nameof(Queryable.OrderBy)
-					: order.Item2 ? nameof(Queryable.ThenByDescending) : nameof(Queryable.ThenBy);
+				var methodName = (isFirst, order.Descending) switch
+				{
+					(true, true)   => nameof(Queryable.OrderByDescending),
+					(true, false)  => nameof(Queryable.OrderBy),
+					(false, true)  => nameof(Queryable.ThenByDescending),
+					(false, false) => nameof(Queryable.ThenBy),
+				};
 
-				var lambda = order.Item1;
+				var lambda = order.Expression;
 				queryExpr = Expression.Call(typeof(Enumerable), methodName, new[] { lambda.Parameters[0].Type, lambda.Body.Type }, queryExpr, lambda);
 				isFirst = false;
 			}
@@ -563,7 +582,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (_items == null)
 					{
-						_items = new Dictionary<TKey, List<T>>();
+						_items = new Dictionary<TKey, List<T>>(ValueComparer.GetDefaultValueComparer<TKey>(favorStructuralComparisons: true));
 						list   = new List<T>();
 						_items.Add(key, list);
 					}

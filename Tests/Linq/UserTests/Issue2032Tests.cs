@@ -30,12 +30,11 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([IncludeDataSources(TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(Issue2032Table.Data))
-			{
-				var data = table
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(Issue2032Table.Data);
+			var data = table
 					.OrderBy(r => r.Id)
-					.Select(r => new 
+					.Select(r => new
 					{
 						r.Id,
 						r.Decimal1,
@@ -46,22 +45,21 @@ namespace Tests.UserTests
 					})
 					.ToArray();
 
-				Assert.That(data, Has.Length.EqualTo(2));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(data[0].Id, Is.EqualTo(1));
-					Assert.That(data[0].Decimal1, Is.EqualTo(123.456m));
-					Assert.That(data[0].Decimal2, Is.Zero);
-					Assert.That(data[0].Decimal3, Is.EqualTo(0.1m));
-					Assert.That(data[0].Int1, Is.Zero);
-					Assert.That(data[0].Int2, Is.EqualTo(22));
-					Assert.That(data[1].Id, Is.EqualTo(2));
-					Assert.That(data[1].Decimal1, Is.EqualTo(-123.456m));
-					Assert.That(data[1].Decimal2, Is.EqualTo(678.903m));
-					Assert.That(data[1].Decimal3, Is.EqualTo(3523.2352m));
-					Assert.That(data[1].Int1, Is.EqualTo(-123));
-					Assert.That(data[1].Int2, Is.EqualTo(345));
-				}
+			Assert.That(data, Has.Length.EqualTo(2));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(data[0].Id, Is.EqualTo(1));
+				Assert.That(data[0].Decimal1, Is.EqualTo(123.456m));
+				Assert.That(data[0].Decimal2, Is.Zero);
+				Assert.That(data[0].Decimal3, Is.EqualTo(0.1m));
+				Assert.That(data[0].Int1, Is.Zero);
+				Assert.That(data[0].Int2, Is.EqualTo(22));
+				Assert.That(data[1].Id, Is.EqualTo(2));
+				Assert.That(data[1].Decimal1, Is.EqualTo(-123.456m));
+				Assert.That(data[1].Decimal2, Is.EqualTo(678.903m));
+				Assert.That(data[1].Decimal3, Is.EqualTo(3523.2352m));
+				Assert.That(data[1].Int1, Is.EqualTo(-123));
+				Assert.That(data[1].Int2, Is.EqualTo(345));
 			}
 		}
 	}

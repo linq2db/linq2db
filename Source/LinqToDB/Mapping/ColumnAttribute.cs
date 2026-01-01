@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Globalization;
 
 using LinqToDB.SqlQuery;
 
@@ -133,7 +134,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets or sets flag that tells that current member should be included into mapping.
 		/// Use NonColumnAttribute instead as a shorthand.
-		/// Default value: <c>true</c>.
+		/// Default value: <see langword="true"/>.
 		/// </summary>
 		public bool IsColumn { get; set; }
 
@@ -146,13 +147,13 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets or sets whether a column contains a discriminator value for a LINQ to DB inheritance hierarchy.
 		/// <see cref="InheritanceMappingAttribute"/> for more details.
-		/// Default value: <c>false</c>.
+		/// Default value: <see langword="false"/>.
 		/// </summary>
 		public bool IsDiscriminator { get; set; }
 
 		/// <summary>
-		/// Gets or sets whether a column must be explicitly defined in a Select statement to be fetched. If <c>true</c>, a "SELECT *"-ish statement won't retrieve this column.
-		/// Default value: <c>false</c>.
+		/// Gets or sets whether a column must be explicitly defined in a Select statement to be fetched. If <see langword="true"/>, a "SELECT *"-ish statement won't retrieve this column.
+		/// Default value: <see langword="false"/>.
 		/// </summary>
 		public bool SkipOnEntityFetch { get; set; }
 
@@ -170,9 +171,9 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Returns <c>true</c>, if <see cref="SkipOnInsert"/> was configured for current attribute.
+		/// Returns <see langword="true"/>, if <see cref="SkipOnInsert"/> was configured for current attribute.
 		/// </summary>
-		/// <returns><c>true</c> if <see cref="SkipOnInsert"/> property was set in attribute.</returns>
+		/// <returns><see langword="true"/> if <see cref="SkipOnInsert"/> property was set in attribute.</returns>
 		internal bool HasSkipOnInsert() => _skipOnInsert.HasValue;
 
 		private bool? _skipOnUpdate;
@@ -189,9 +190,9 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Returns <c>true</c>, if <see cref="SkipOnUpdate"/> was configured for current attribute.
+		/// Returns <see langword="true"/>, if <see cref="SkipOnUpdate"/> was configured for current attribute.
 		/// </summary>
-		/// <returns><c>true</c> if <see cref="SkipOnUpdate"/> property was set in attribute.</returns>
+		/// <returns><see langword="true"/> if <see cref="SkipOnUpdate"/> property was set in attribute.</returns>
 		internal bool HasSkipOnUpdate() => _skipOnUpdate.HasValue;
 
 		private bool? _isIdentity;
@@ -206,9 +207,9 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Returns <c>true</c>, if <see cref="IsIdentity"/> was configured for current attribute.
+		/// Returns <see langword="true"/>, if <see cref="IsIdentity"/> was configured for current attribute.
 		/// </summary>
-		/// <returns><c>true</c> if <see cref="IsIdentity"/> property was set in attribute.</returns>
+		/// <returns><see langword="true"/> if <see cref="IsIdentity"/> property was set in attribute.</returns>
 		internal bool HasIsIdentity() => _isIdentity.HasValue;
 
 		private bool? _isPrimaryKey;
@@ -223,9 +224,9 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Returns <c>true</c>, if <see cref="IsPrimaryKey"/> was configured for current attribute.
+		/// Returns <see langword="true"/>, if <see cref="IsPrimaryKey"/> was configured for current attribute.
 		/// </summary>
-		/// <returns><c>true</c> if <see cref="IsPrimaryKey"/> property was set in attribute.</returns>
+		/// <returns><see langword="true"/> if <see cref="IsPrimaryKey"/> property was set in attribute.</returns>
 		internal bool HasIsPrimaryKey() => _isPrimaryKey.HasValue;
 
 		/// <summary>
@@ -245,9 +246,9 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Returns <c>true</c>, if <see cref="CanBeNull"/> was configured for current attribute.
+		/// Returns <see langword="true"/>, if <see cref="CanBeNull"/> was configured for current attribute.
 		/// </summary>
-		/// <returns><c>true</c> if <see cref="CanBeNull"/> property was set in attribute.</returns>
+		/// <returns><see langword="true"/> if <see cref="CanBeNull"/> property was set in attribute.</returns>
 		internal bool HasCanBeNull() => _canBeNull.HasValue;
 
 		private int? _length;
@@ -262,9 +263,9 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Returns <c>true</c>, if <see cref="Length"/> was configured for current attribute.
+		/// Returns <see langword="true"/>, if <see cref="Length"/> was configured for current attribute.
 		/// </summary>
-		/// <returns><c>true</c> if <see cref="Length"/> property was set in attribute.</returns>
+		/// <returns><see langword="true"/> if <see cref="Length"/> property was set in attribute.</returns>
 		internal bool HasLength() => _length.HasValue;
 
 		private int? _precision;
@@ -279,9 +280,9 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Returns <c>true</c>, if <see cref="Precision"/> was configured for current attribute.
+		/// Returns <see langword="true"/>, if <see cref="Precision"/> was configured for current attribute.
 		/// </summary>
-		/// <returns><c>true</c> if <see cref="Precision"/> property was set in attribute.</returns>
+		/// <returns><see langword="true"/> if <see cref="Precision"/> property was set in attribute.</returns>
 		internal bool HasPrecision() => _precision.HasValue;
 
 		private int? _scale;
@@ -296,9 +297,9 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Returns <c>true</c>, if <see cref="Scale"/> was configured for current attribute.
+		/// Returns <see langword="true"/>, if <see cref="Scale"/> was configured for current attribute.
 		/// </summary>
-		/// <returns><c>true</c> if <see cref="Scale"/> property was set in attribute.</returns>
+		/// <returns><see langword="true"/> if <see cref="Scale"/> property was set in attribute.</returns>
 		internal bool HasScale() => _scale.HasValue;
 
 		/// <summary>
@@ -326,14 +327,14 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Returns <c>true</c>, if <see cref="Order"/> was configured for current attribute.
+		/// Returns <see langword="true"/>, if <see cref="Order"/> was configured for current attribute.
 		/// </summary>
-		/// <returns><c>true</c> if <see cref="Order"/> property was set in attribute.</returns>
+		/// <returns><see langword="true"/> if <see cref="Order"/> property was set in attribute.</returns>
 		internal bool HasOrder() => _order.HasValue;
 
 		public override string GetObjectID()
 		{
-			return FormattableString.Invariant($".{Configuration}.{Name}.{MemberName}.{(int)DataType}.{DbType}.{(IsColumn?'1':'0')}.{Storage}.{(IsDiscriminator?'1':'0')}.{(SkipOnEntityFetch?'1':'0')}.{_skipOnInsert}.{_skipOnUpdate}.{_isIdentity}.{_isPrimaryKey}.{PrimaryKeyOrder}.{_canBeNull}.{_length}.{_precision}.{_scale}.{CreateFormat}.{_order}.");
+			return string.Create(CultureInfo.InvariantCulture, $".{Configuration}.{Name}.{MemberName}.{(int)DataType}.{DbType}.{(IsColumn?'1':'0')}.{Storage}.{(IsDiscriminator?'1':'0')}.{(SkipOnEntityFetch?'1':'0')}.{_skipOnInsert}.{_skipOnUpdate}.{_isIdentity}.{_isPrimaryKey}.{PrimaryKeyOrder}.{_canBeNull}.{_length}.{_precision}.{_scale}.{CreateFormat}.{_order}.");
 		}
 	}
 }

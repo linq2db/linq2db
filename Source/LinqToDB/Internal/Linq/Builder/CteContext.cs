@@ -38,9 +38,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			CteExpression = default!;
 		}
 
-		Dictionary<Expression, SqlPlaceholderExpression>                               _knownMap     = new (ExpressionEqualityComparer.Instance);
-		Dictionary<Expression, (SqlField field, SqlPlaceholderExpression placeholder)> _fieldsMap    = new(ExpressionEqualityComparer.Instance);
-		Dictionary<Expression, SqlPlaceholderExpression>                               _recursiveMap = new (ExpressionEqualityComparer.Instance);
+		readonly Dictionary<Expression, SqlPlaceholderExpression>                               _knownMap     = new(ExpressionEqualityComparer.Instance);
+		readonly Dictionary<Expression, (SqlField field, SqlPlaceholderExpression placeholder)> _fieldsMap    = new(ExpressionEqualityComparer.Instance);
+		readonly Dictionary<Expression, SqlPlaceholderExpression>                               _recursiveMap = new(ExpressionEqualityComparer.Instance);
 
 		bool _isRecursiveCall;
 

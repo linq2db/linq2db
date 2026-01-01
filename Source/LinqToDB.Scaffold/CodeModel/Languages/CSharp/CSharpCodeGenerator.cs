@@ -1055,7 +1055,7 @@ namespace LinqToDB.CodeModel
 		}
 
 		/// <summary>
-		/// Generates value literal including <c>null</c> literals, type hints when it is needed for proper
+		/// Generates value literal including <see langword="null"/> literals, type hints when it is needed for proper
 		/// value typing and enum literals.
 		/// Supports only types, currently used by codegeneration.
 		/// </summary>

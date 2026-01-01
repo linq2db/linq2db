@@ -476,7 +476,7 @@ namespace LinqToDB.Internal.Remote
 						TypeIndex      => ResolveType(ReadString())!,
 						TypeArrayIndex => GetArrayType(Read<Type>()!),
 						_              => throw new SerializationException(
-							FormattableString.Invariant($"TypeIndex or TypeArrayIndex ({TypeIndex} or {TypeArrayIndex}) expected, but was {typecode}")),
+string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({TypeIndex} or {TypeArrayIndex}) expected, but was {typecode}")),
 					};
 					ObjectIndices.Add(idx, type);
 
@@ -484,7 +484,7 @@ namespace LinqToDB.Internal.Remote
 
 					var idx2 = ReadInt();
 					if (idx2 != idx)
-						throw new SerializationException(FormattableString.Invariant($"Wrong type reading, expected index is {idx} but was {idx2}"));
+						throw new SerializationException(string.Create(CultureInfo.InvariantCulture, $"Wrong type reading, expected index is {idx} but was {idx2}"));
 				}
 
 				return (Type?) type;
@@ -609,7 +609,7 @@ namespace LinqToDB.Internal.Remote
 
 				if (type == null)
 				{
-					if (str == "System.Data.Linq.Binary")
+					if (string.Equals(str, "System.Data.Linq.Binary", StringComparison.Ordinal))
 						return typeof(System.Data.Linq.Binary);
 
 					try
@@ -828,7 +828,7 @@ namespace LinqToDB.Internal.Remote
 							var v      = pValue.ProviderValue;
 							var t      = v == null ? pValue.DbDataType.SystemType : v.GetType();
 
-							if (v == null || t.IsArray || t == typeof(string) || !(v is IEnumerable))
+							if (v == null || t.IsArray || t == typeof(string) || v is not IEnumerable)
 							{
 								GetType(t);
 							}
@@ -919,7 +919,7 @@ namespace LinqToDB.Internal.Remote
 							var value = paramValue.ProviderValue;
 							var type  = value == null ? paramValue.DbDataType.SystemType : value.GetType();
 
-							if (value == null || type.IsEnum || type.IsArray || type == typeof(string) || !(value is IEnumerable))
+							if (value == null || type.IsEnum || type.IsArray || type == typeof(string) || value is not IEnumerable)
 							{
 								Append(type, value);
 							}
@@ -1931,7 +1931,7 @@ namespace LinqToDB.Internal.Remote
 								IsInsertable    = isInsertable,
 								IsDynamic       = isDynamic,
 								CreateFormat    = createFormat,
-								CreateOrder     = createOrder
+								CreateOrder     = createOrder,
 							};
 
 							ReadDelayedObject(table =>
@@ -1959,7 +1959,7 @@ namespace LinqToDB.Internal.Remote
 
 						obj = new SqlFunction(dbDataType, name, flags, nullability, canBeNull, parameters)
 							{
-								DoNotOptimize = doNotOptimize
+								DoNotOptimize = doNotOptimize,
 							};
 
 							break;
@@ -2087,7 +2087,7 @@ namespace LinqToDB.Internal.Remote
 								sourceID, expression, alias, tableName, objectType, sequenceAttributes, flds,
 								sqlTableType, tableArgs, tableOptions, tableID)
 							{
-								SqlQueryExtensions = extensions
+								SqlQueryExtensions = extensions,
 							};
 
 							break;
@@ -2153,7 +2153,7 @@ namespace LinqToDB.Internal.Remote
 
 							obj = new SqlRawSqlTable(sourceID, alias, objectType, flds, sql, isScalar, parameters)
 							{
-								SqlQueryExtensions = extensions
+								SqlQueryExtensions = extensions,
 							};
 
 							break;
@@ -2389,7 +2389,7 @@ namespace LinqToDB.Internal.Remote
 
 							obj = new SqlJoinedTable(joinType, table, isWeak, condition)
 							{
-								SqlQueryExtensions = extensions
+								SqlQueryExtensions = extensions,
 							};
 
 							break;
@@ -2481,7 +2481,7 @@ namespace LinqToDB.Internal.Remote
 							{
 								With = with,
 								Tag  = tag,
-								SqlQueryExtensions = extensions
+								SqlQueryExtensions = extensions,
 							};
 
 							break;
@@ -2502,7 +2502,7 @@ namespace LinqToDB.Internal.Remote
 								Output             = output,
 								With               = with,
 								Tag                = tag,
-								SqlQueryExtensions = extensions
+								SqlQueryExtensions = extensions,
 							};
 
 							break;
@@ -2523,7 +2523,7 @@ namespace LinqToDB.Internal.Remote
 								Output             = output,
 								With               = with,
 								Tag                = tag,
-								SqlQueryExtensions = extensions
+								SqlQueryExtensions = extensions,
 							};
 
 							break;
@@ -2544,7 +2544,7 @@ namespace LinqToDB.Internal.Remote
 								Update             = update,
 								With               = with,
 								Tag                = tag,
-								SqlQueryExtensions = extensions
+								SqlQueryExtensions = extensions,
 							};
 
 							break;
@@ -2568,7 +2568,7 @@ namespace LinqToDB.Internal.Remote
 								SelectQuery = selectQuery,
 								With        = with,
 								Tag         = tag,
-								SqlQueryExtensions = extensions
+								SqlQueryExtensions = extensions,
 							};
 
 							break;
@@ -2589,7 +2589,7 @@ namespace LinqToDB.Internal.Remote
 								StatementFooter    = statementFooter,
 								DefaultNullable    = defaultNullable,
 								Tag                = tag,
-								SqlQueryExtensions = extensions
+								SqlQueryExtensions = extensions,
 							};
 
 							break;
@@ -2604,7 +2604,7 @@ namespace LinqToDB.Internal.Remote
 						obj = _statement = new SqlDropTableStatement(table)
 						{
 							Tag                = tag,
-							SqlQueryExtensions = extensions
+							SqlQueryExtensions = extensions,
 						};
 
 						break;
@@ -2622,7 +2622,7 @@ namespace LinqToDB.Internal.Remote
 							Table              = table,
 							ResetIdentity      = reset,
 							Tag                = tag,
-							SqlQueryExtensions = extensions
+							SqlQueryExtensions = extensions,
 						};
 
 						break;
@@ -2716,7 +2716,7 @@ namespace LinqToDB.Internal.Remote
 							{
 								Tag    = tag,
 								Output = output,
-								SqlQueryExtensions = extensions
+								SqlQueryExtensions = extensions,
 							};
 
 							break;
@@ -2732,7 +2732,7 @@ namespace LinqToDB.Internal.Remote
 							obj = _statement =
 								new SqlMultiInsertStatement(insertType, source, inserts)
 								{
-									SqlQueryExtensions = extensions
+									SqlQueryExtensions = extensions,
 								};
 
 							break;
@@ -2785,7 +2785,7 @@ namespace LinqToDB.Internal.Remote
 							var c = new SqlOutputClause()
 							{
 								OutputTable   = output,
-								OutputColumns = columns
+								OutputColumns = columns,
 							};
 
 							if (items is { Length : > 0 })
@@ -2807,7 +2807,7 @@ namespace LinqToDB.Internal.Remote
 							var configuration = ReadString();
 							var scope         = (Sql.QueryExtensionScope)ReadInt();
 							var builderType   = ReadType();
-							var arguments     = new Dictionary<string,ISqlExpression>();
+							var arguments     = new Dictionary<string,ISqlExpression>(StringComparer.Ordinal);
 
 							var cnt = ReadInt();
 
@@ -2824,7 +2824,7 @@ namespace LinqToDB.Internal.Remote
 								Configuration = configuration,
 								Scope         = scope,
 								BuilderType   = builderType,
-								Arguments     = arguments
+								Arguments     = arguments,
 							};
 							break;
 						}

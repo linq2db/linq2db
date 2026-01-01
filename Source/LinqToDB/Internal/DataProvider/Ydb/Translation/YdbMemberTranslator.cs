@@ -232,14 +232,14 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 			protected override Expression? ConvertBit(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 			{
 				//return base.ConvertBit(translationContext, memberExpression, translationFlags);
-				throw new NotImplementedException("55");
+				throw new NotSupportedException("55");
 			}
 #if SUPPORTS_DATEONLY
 
 			protected override Expression? ConvertDateOnly(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 			{
 				//return base.ConvertDateOnly(translationContext, memberExpression, translationFlags);
-				throw new NotImplementedException("52");
+				throw new NotSupportedException("52");
 			}
 #endif
 
@@ -262,19 +262,19 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 			protected override ISqlExpression? TranslateDateTimeOffsetDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
 				//return base.TranslateDateTimeOffsetDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
-				throw new NotImplementedException("11");
+				throw new NotSupportedException("11");
 			}
 
 			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
 				//return base.TranslateDateTimeOffsetTruncationToDate(translationContext, dateExpression, translationFlags);
-				throw new NotImplementedException("10");
+				throw new NotSupportedException("10");
 			}
 
 			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
 				//return base.TranslateDateTimeOffsetTruncationToTime(translationContext, dateExpression, translationFlags);
-				throw new NotImplementedException("09");
+				throw new NotSupportedException("09");
 			}
 
 			protected override ISqlExpression? TranslateDateTimeTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
@@ -318,7 +318,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 					Sql.DateParts.Second      => "DateTime::GetSecond",
 					Sql.DateParts.Millisecond => "DateTime::GetMillisecondOfSecond",
 					Sql.DateParts.WeekDay     => "DateTime::GetDayOfWeek",
-					_                         => null
+					_                         => null,
 				};
 
 				if (fn == null)
@@ -357,7 +357,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 						Sql.DateParts.Year    => "DateTime::ShiftYears",
 						Sql.DateParts.Month   => "DateTime::ShiftMonths",
 						Sql.DateParts.Quarter => "DateTime::ShiftMonths",
-						_                     => throw new InvalidOperationException()
+						_                     => throw new InvalidOperationException(),
 					};
 
 					var shiftArg = increment;
@@ -379,7 +379,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 					Sql.DateParts.Minute      => "DateTime::IntervalFromMinutes",
 					Sql.DateParts.Second      => "DateTime::IntervalFromSeconds",
 					Sql.DateParts.Millisecond => "DateTime::IntervalFromMilliseconds",
-					_                         => null
+					_                         => null,
 				};
 
 				if (intervalFn == null)

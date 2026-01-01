@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.Internal.SqlQuery
+namespace LinqToDB.Internal.SqlQuery
 {
 	/// <summary>
 	/// Type of JOIN operation.
@@ -46,6 +46,6 @@
 		/// <summary>
 		/// Intermediate fake JOIN type, added by SelectManyBuilder and replaced with real type in query optimizer.
 		/// </summary>
-		FullApply
+		FullApply,
 	}
 }

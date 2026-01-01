@@ -30,41 +30,41 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				case ProviderName.PostgreSQL18 : return _postgreSQLDataProvider18.Value;
 				case ""                        :
 				case null                      :
-					if (options.ConfigurationString == "PostgreSQL")
+					if (string.Equals(options.ConfigurationString, "PostgreSQL", StringComparison.Ordinal))
 						goto case NpgsqlProviderAdapter.ClientNamespace;
 					break;
 				case NpgsqlProviderAdapter.ClientNamespace :
-				case var providerName when providerName.Contains("PostgreSQL") || providerName.Contains(NpgsqlProviderAdapter.AssemblyName):
+				case var providerName when providerName.Contains("PostgreSQL", StringComparison.Ordinal) || providerName.Contains(NpgsqlProviderAdapter.AssemblyName, StringComparison.Ordinal):
 					if (options.ConfigurationString != null)
 					{
-						if (options.ConfigurationString.Contains("18"))
+						if (options.ConfigurationString.Contains("18", StringComparison.Ordinal))
 							return _postgreSQLDataProvider18.Value;
 
-						if (options.ConfigurationString.Contains("15")
-							|| options.ConfigurationString.Contains("16")
-							|| options.ConfigurationString.Contains("17"))
+						if (options.ConfigurationString.Contains("15", StringComparison.Ordinal)
+							|| options.ConfigurationString.Contains("16", StringComparison.Ordinal)
+							|| options.ConfigurationString.Contains("17", StringComparison.Ordinal))
 						{
 							return _postgreSQLDataProvider15.Value;
 						}
 
-						if (options.ConfigurationString.Contains("14")
-							|| options.ConfigurationString.Contains("13"))
+						if (options.ConfigurationString.Contains("14", StringComparison.Ordinal)
+							|| options.ConfigurationString.Contains("13", StringComparison.Ordinal))
 						{
 							return _postgreSQLDataProvider13.Value;
 						}
 
-						if (options.ConfigurationString.Contains("92") || options.ConfigurationString.Contains("9.2"))
+						if (options.ConfigurationString.Contains("92", StringComparison.Ordinal) || options.ConfigurationString.Contains("9.2", StringComparison.Ordinal))
 							return _postgreSQLDataProvider92.Value;
 
-						if (options.ConfigurationString.Contains("93") || options.ConfigurationString.Contains("9.3") ||
-							options.ConfigurationString.Contains("94") || options.ConfigurationString.Contains("9.4"))
+						if (options.ConfigurationString.Contains("93", StringComparison.Ordinal) || options.ConfigurationString.Contains("9.3", StringComparison.Ordinal) ||
+							options.ConfigurationString.Contains("94", StringComparison.Ordinal) || options.ConfigurationString.Contains("9.4", StringComparison.Ordinal))
 							return _postgreSQLDataProvider93.Value;
 
-						if (options.ConfigurationString.Contains("95") || options.ConfigurationString.Contains("9.5") ||
-							options.ConfigurationString.Contains("96") || options.ConfigurationString.Contains("9.6") ||
-							options.ConfigurationString.Contains("10") ||
-							options.ConfigurationString.Contains("11") ||
-							options.ConfigurationString.Contains("12"))
+						if (options.ConfigurationString.Contains("95", StringComparison.Ordinal) || options.ConfigurationString.Contains("9.5", StringComparison.Ordinal) ||
+							options.ConfigurationString.Contains("96", StringComparison.Ordinal) || options.ConfigurationString.Contains("9.6", StringComparison.Ordinal) ||
+							options.ConfigurationString.Contains("10", StringComparison.Ordinal) ||
+							options.ConfigurationString.Contains("11", StringComparison.Ordinal) ||
+							options.ConfigurationString.Contains("12", StringComparison.Ordinal))
 							return _postgreSQLDataProvider95.Value;
 					}
 

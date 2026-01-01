@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -54,7 +54,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				nameof(AsyncExtensions.SingleOrDefaultAsync)             => MethodKind.SingleOrDefault,
 				nameof(LinqInternalExtensions.AssociationRecord)         => MethodKind.AssociationRecord,
 				nameof(LinqInternalExtensions.AssociationOptionalRecord) => MethodKind.AssociationOptionalRecord,
-				_ => throw new ArgumentOutOfRangeException(nameof(methodName), methodName, "Not supported method.")
+				_ => throw new ArgumentOutOfRangeException(nameof(methodName), methodName, "Not supported method."),
 			};
 		}
 
@@ -94,7 +94,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, argument)
 			{
-				SourceCardinality = cardinality
+				SourceCardinality = cardinality,
 			});
 
 			if (buildResult.BuildContext == null)
@@ -329,7 +329,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return new FirstSingleContext(null, context.CloneContext(Sequence),
 					_methodKind, IsSubQuery, IsAssociation, IsSubqueryExpression, CanBeWeak, Cardinality)
 				{
-					_isJoinCreated = _isJoinCreated
+					_isJoinCreated = _isJoinCreated,
 				};
 			}
 
