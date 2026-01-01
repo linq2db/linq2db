@@ -582,7 +582,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (_items == null)
 					{
-						_items = new Dictionary<TKey, List<T>>();
+						_items = new Dictionary<TKey, List<T>>(ValueComparer.GetDefaultValueComparer<TKey>(favorStructuralComparisons: true));
 						list   = new List<T>();
 						_items.Add(key, list);
 					}
