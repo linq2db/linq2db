@@ -1689,5 +1689,112 @@ namespace Tests.Data
 		}
 
 		public sealed class TestException() : Exception("Test Exception");
+
+		sealed class CancelCommandInterceptor : CommandInterceptor
+		{
+			private DbCommand? _lastCommand;
+
+			public override Option<DbDataReader> ExecuteReader(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result)
+			{
+				_lastCommand = command;
+				return base.ExecuteReader(eventData, command, commandBehavior, result);
+			}
+
+			public override Task<Option<DbDataReader>> ExecuteReaderAsync(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result, CancellationToken cancellationToken)
+			{
+				cancellationToken.Register(CancelCurrentCommand);
+				_lastCommand = command;
+				return base.ExecuteReaderAsync(eventData, command, commandBehavior, result, cancellationToken);
+			}
+
+			public void CancelCurrentCommand()
+			{
+				_lastCommand?.Cancel();
+			}
+		}
+
+		[Test]
+		public void CancelCommandInterceptorTest([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var interceptor = new CancelCommandInterceptor();
+			using var db = GetDataContext(context);
+			db.AddInterceptor(interceptor);
+
+			var lastId = 0L;
+			try
+			{
+				foreach (var id in db.Query<long>("SELECT * FROM generate_series(1,1000000)"))
+				{
+					lastId = id;
+					if (id == 10)
+					{
+						interceptor.CancelCurrentCommand();
+					}
+				}
+
+				Assert.Fail($"Command wasn't cancelled");
+			}
+			catch (OperationCanceledException)
+			{
+				Assert.That(lastId, Is.LessThan(1_000_000));
+			}
+		}
+
+		[Test]
+		public async Task CancelCommandInterceptorAsyncTest([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var interceptor = new CancelCommandInterceptor();
+			using var db = GetDataContext(context);
+			db.AddInterceptor(interceptor);
+
+			var lastId = 0L;
+			try
+			{
+				await foreach (var id in db.QueryToAsyncEnumerable<long>("SELECT * FROM generate_series(1,1000000)"))
+				{
+					lastId = id;
+					if (id == 10)
+					{
+						interceptor.CancelCurrentCommand();
+					}
+				}
+
+				Assert.Fail($"Command wasn't cancelled");
+			}
+			catch (OperationCanceledException)
+			{
+				Assert.That(lastId, Is.LessThan(1_000_000));
+			}
+		}
+
+		[Test]
+		public async Task CancelCommandInterceptorAsyncTest_UsingToken([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var interceptor = new CancelCommandInterceptor();
+			using var db = GetDataContext(context);
+			db.AddInterceptor(interceptor);
+
+			using var cts = new CancellationTokenSource();
+
+			var lastId = 0L;
+			try
+			{
+				await foreach (var id in db.QueryToAsyncEnumerable<long>("SELECT * FROM generate_series(1,1000000)")
+					.WithCancellation(cts.Token))
+				{
+					lastId = id;
+					if (id == 10)
+					{
+						cts.Cancel();
+					}
+				}
+
+				Assert.Fail($"Command wasn't cancelled");
+			}
+			catch (OperationCanceledException)
+			{
+				Assert.That(lastId, Is.LessThan(1_000_000));
+			}
+		}
 	}
 }
