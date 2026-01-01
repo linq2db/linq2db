@@ -189,10 +189,10 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		private const string ParametersPattern = /* lang=regex */ @"PARAMETERS ((\[(?<name>[^\]]+)\]|(?<name>[^\s]+))\s(?<type>[^,;\s]+(\s\([^\)]+\))?)[,;]\s)*";
 #if SUPPORTS_REGEX_GENERATORS
-		[GeneratedRegex(ParametersPattern, RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 1)]
+		[GeneratedRegex(ParametersPattern, RegexOptions.ExplicitCapture)]
 		private static partial Regex ParametersRegex();
 #else
-		static readonly Regex _paramsExp = new (ParametersPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(1));
+		static readonly Regex _paramsExp = new (ParametersPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 		private static Regex ParametersRegex() => _paramsExp;
 #endif
 

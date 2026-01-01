@@ -61,7 +61,7 @@ public sealed partial class LinqToDBDriver : DynamicDataContextDriver
 	public override bool ShowConnectionDialog(IConnectionInfo cxInfo, ConnectionDialogOptions dialogOptions) => DriverHelper.ShowConnectionDialog(cxInfo, true);
 
 #if !NETFRAMEWORK
-	[GeneratedRegex(@"^.+\\(?<token>[^\\]+)\\[^\\]+$", RegexOptions.ExplicitCapture | RegexOptions.Compiled, matchTimeoutMilliseconds: 1_000)]
+	[GeneratedRegex(@"^.+\\(?<token>[^\\]+)\\[^\\]+$", RegexOptions.ExplicitCapture | RegexOptions.Compiled)]
 	private static partial Regex RuntimeTokenExtractor();
 
 	private static IEnumerable<string> GetFallbackTokens(string forToken)

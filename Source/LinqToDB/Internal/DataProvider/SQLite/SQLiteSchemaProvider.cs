@@ -275,10 +275,10 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		private const string TypeExtractPattern = /* lang=regex */ @"^(?<type>\w+)(\((?<facet1>\d+)(,\s*(?<facet2>\d+))?\))?$";
 #if SUPPORTS_REGEX_GENERATORS
-		[GeneratedRegex(TypeExtractPattern, RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 1)]
+		[GeneratedRegex(TypeExtractPattern, RegexOptions.ExplicitCapture)]
 		private static partial Regex TypeExtractRegex();
 #else
-		private static readonly Regex _extract = new (TypeExtractPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(1));
+		private static readonly Regex _extract = new (TypeExtractPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 		private static Regex TypeExtractRegex() => _extract;
 #endif
 

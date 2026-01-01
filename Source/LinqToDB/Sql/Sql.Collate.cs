@@ -28,10 +28,10 @@ namespace LinqToDB
 		{
 			private const string CollationValidationPattern = /* lang=regex */ @"^[a-zA-Z0-9_\.\-@]+$";
 #if SUPPORTS_REGEX_GENERATORS
-            [GeneratedRegex(CollationValidationPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 1)]
+            [GeneratedRegex(CollationValidationPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture)]
             private static partial Regex CollationValidationRegex();
 #else
-			private static readonly Regex _collationValidator = new(CollationValidationPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(1));
+			private static readonly Regex _collationValidator = new(CollationValidationPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 			private static Regex CollationValidationRegex() => _collationValidator;
 #endif
 

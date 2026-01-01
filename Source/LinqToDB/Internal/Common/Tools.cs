@@ -52,10 +52,10 @@ namespace LinqToDB.Internal.Common
 
 		private const string WhitespacePattern = /* lang=regex */ @"[\r\n\s]+";
 #if SUPPORTS_REGEX_GENERATORS
-		[GeneratedRegex(WhitespacePattern, RegexOptions.ExplicitCapture, matchTimeoutMilliseconds: 1)]
+		[GeneratedRegex(WhitespacePattern, RegexOptions.ExplicitCapture)]
 		private static partial Regex WhitespaceRegex();
 #else
-		private static readonly Regex _whitespaceRegex = new(WhitespacePattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture, TimeSpan.FromMilliseconds(1));
+		private static readonly Regex _whitespaceRegex = new(WhitespacePattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 		private static Regex WhitespaceRegex() => _whitespaceRegex;
 #endif
 

@@ -269,6 +269,7 @@ dotnet_diagnostic.IDE0370.severity = none # IDE0370: Remove unnecessary suppress
 dotnet_diagnostic.SYSLIB1054.severity = none # Use LibraryImportAttribute
 
 ###### Meziantou.Analyzers
+dotnet_diagnostic.MA0009.severity = none # MA0009: Add regex evaluation timeout
 dotnet_diagnostic.MA0016.severity = none # MA0016: Prefer using collection abstraction instead of implementation
 dotnet_diagnostic.MA0018.severity = none # MA0018: Do not declare static members on generic types (deprecated; use CA1000 instead)
 dotnet_diagnostic.MA0036.severity = none # MA0036: Make class static (enable when CA1822 enabled)

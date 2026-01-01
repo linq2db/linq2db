@@ -1732,10 +1732,10 @@ namespace LinqToDB.Internal.SqlProvider
 
 		private const string SelectPattern = /* lang=regex */ @"^[\W\r\n]*select\b";
 #if SUPPORTS_REGEX_GENERATORS
-		[GeneratedRegex(SelectPattern, RegexOptions.ExplicitCapture | RegexOptions.IgnoreCase, matchTimeoutMilliseconds: 1)]
+		[GeneratedRegex(SelectPattern, RegexOptions.ExplicitCapture | RegexOptions.IgnoreCase)]
 		private static partial Regex SelectRegex();
 #else
-		private static readonly Regex _selectDetector = new (SelectPattern, RegexOptions.Compiled | RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(1));
+		private static readonly Regex _selectDetector = new (SelectPattern, RegexOptions.Compiled | RegexOptions.IgnoreCase);
 		private static Regex SelectRegex() => _selectDetector;
 #endif
 
