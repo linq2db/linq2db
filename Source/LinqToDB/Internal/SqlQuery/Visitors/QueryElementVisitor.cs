@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
+using LinqToDB.Internal.Common;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.SqlQuery.Visitors
@@ -24,9 +25,19 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 	/// </summary>
 	public abstract class QueryElementVisitor
 	{
+		readonly StackGuard _guard = new();
+
 		protected QueryElementVisitor(VisitMode visitMode)
 		{
 			VisitMode = visitMode;
+		}
+
+		/// <summary>
+		/// Resets visitor to initial state.
+		/// </summary>
+		public virtual void Cleanup()
+		{
+			_guard.Reset();
 		}
 
 		/// <summary>
@@ -59,7 +70,17 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// Visitor dispatch method.
 		/// </summary>
 		[return: NotNullIfNotNull(nameof(element))]
-		public virtual IQueryElement? Visit(IQueryElement? element) => element?.Accept(this);
+		public virtual IQueryElement? Visit(IQueryElement? element)
+		{
+			if (element == null)
+				return element;
+
+			element = _guard.Enter(element.Accept, this) ?? element.Accept(this);
+
+			_guard.Exit();
+
+			return element;
+		}
 
 		#region Query element VisitSqlXXX methods
 
@@ -1861,29 +1882,45 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			switch (GetVisitMode(element))
 			{
 				case VisitMode.ReadOnly:
+					VisitReadOnly(element);
+					break;
+
+				case VisitMode.Modify:
+					VisitModify(element);
+					break;
+
+				case VisitMode.Transform:
+					return VisitTransform(element)
+						?? element;
+
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+
+			void VisitReadOnly(SqlJoinedTable element)
 				{
 					Visit(element.Table);
 					Visit(element.Condition);
 					VisitElements(element.SqlQueryExtensions, VisitMode.ReadOnly);
-
-					break;
 				}
-				case VisitMode.Modify:
+
+			void VisitModify(SqlJoinedTable element)
 				{
-					element.Table     = (SqlTableSource)Visit(element.Table);
+				element.Table = (SqlTableSource)Visit(element.Table);
 					element.Condition = (SqlSearchCondition)Visit(element.Condition);
 					VisitElements(element.SqlQueryExtensions, VisitMode.Modify);
-
-					break;
 				}
-				case VisitMode.Transform:
+
+			IQueryElement? VisitTransform(SqlJoinedTable element)
 				{
 					var table = (SqlTableSource)Visit(element.Table);
 					var cond  = (SqlSearchCondition)Visit(element.Condition);
 					var ext   = VisitElements(element.SqlQueryExtensions, VisitMode.Transform);
 
-					if (ShouldReplace(element)                    ||
-					    !ReferenceEquals(table, element.Table)    ||
+				if (ShouldReplace(element) ||
+					!ReferenceEquals(table, element.Table) ||
 					    !ReferenceEquals(cond, element.Condition) ||
 					    element.SqlQueryExtensions != ext)
 					{
@@ -1894,14 +1931,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							}, element);
 					}
 
-					break;
+				return null;
 				}
-				default:
-					return ThrowInvalidVisitModeException();
 			}
-
-			return element;
-		}
 
 		protected internal virtual IQueryElement VisitSqlTableSource(SqlTableSource element)
 		{
