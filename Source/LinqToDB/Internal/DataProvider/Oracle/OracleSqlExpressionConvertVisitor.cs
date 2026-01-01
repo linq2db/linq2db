@@ -3,6 +3,7 @@
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
 {
@@ -126,6 +127,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		public override ISqlExpression ConvertSqlExpression(SqlExpression element)
 		{
+			if (element is { Expr: "~{0}", Parameters: [var arg] })
+				return new SqlBinaryExpression(element.Type, new SqlValue(-1), "-", arg);
+
 			if (element.Expr.StartsWith("To_Number(To_Char(") && element.Expr.EndsWith(", 'FF'))"))
 				return Div(new SqlExpression(element.Type, element.Expr.Replace("To_Number(To_Char(", "to_Number(To_Char("), element.Parameters), 1000);
 

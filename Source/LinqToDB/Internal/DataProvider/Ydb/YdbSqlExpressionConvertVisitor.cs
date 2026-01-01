@@ -38,6 +38,21 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		#endregion
 
+		public override ISqlExpression ConvertSqlExpression(SqlExpression element)
+		{
+			if (element is { Expr: "~{0}", Parameters: [var arg] })
+			{
+				var argType = QueryHelper.GetDbDataType(arg, MappingSchema);
+				if (!argType.IsUnsignedType())
+				{
+					arg = new SqlCastExpression(arg, argType.ToUnsigned(), null, false);
+					return new SqlExpression(element.Type, element.Expr, arg);
+				}
+			}
+
+			return base.ConvertSqlExpression(element);
+		}
+
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			switch (element.Operation)

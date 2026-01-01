@@ -185,6 +185,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			var paramType        = elementType ?? paramExpression.UnwrapConvertToNotObject().Type;
 
 			var paramDataType = columnDescriptor?.GetDbDataType(true) ?? mappingSchema.GetDbDataType(paramType);
+			if (paramDataType.DataType == DataType.Undefined)
+				paramDataType = mappingSchema.GetUnderlyingDataType(paramType, out _).Type;
 
 			var        objParam                   = ItemParameter;
 			Expression defaultProviderValueGetter = Expression.Convert(objParam, valueType);

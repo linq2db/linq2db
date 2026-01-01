@@ -20,6 +20,14 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		#endregion
 
+		public override ISqlExpression ConvertSqlExpression(SqlExpression element)
+		{
+			if (element is { Expr: "~{0}", Parameters: [var arg] })
+				return new SqlFunction(element.Type, "BITNOT", arg);
+
+			return base.ConvertSqlExpression(element);
+		}
+
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			switch (element.Operation)

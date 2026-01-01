@@ -2172,7 +2172,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				case ExpressionType.Not:
 				{
-					if (node.Type == typeof(bool))
+					if (node.Type.UnwrapNullableType() == typeof(bool))
 					{
 						if (_buildPurpose is BuildPurpose.Sql)
 						{
