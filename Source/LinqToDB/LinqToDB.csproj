@@ -11,7 +11,7 @@
 	</PropertyGroup>
 	
 	<ItemGroup Label="Nuget">
-		<None Include="../../Nuget/README.linq2db.md" Pack="true" PackagePath="readme.md" Visible="False" />
+		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
 	</ItemGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Testing' OR '$(Configuration)'=='Azure'">

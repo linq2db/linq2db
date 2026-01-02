@@ -1,33 +1,54 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<RootNamespace>LinqToDB.CLI</RootNamespace>
 		<AssemblyName>dotnet-linq2db</AssemblyName>
 		<TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
 		<OutputType>Exe</OutputType>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
 		<SignAssembly>False</SignAssembly>
 		<RollForward>Major</RollForward>
 		<SelfContained>false</SelfContained>
-		<RuntimeIdentifiers>win-x64;win-arm64;osx-x64;osx-arm64;linux-x64;linux-arm64</RuntimeIdentifiers>
+		<RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Nuget">
-		<PackageId>linq2db.cli</PackageId>
-		<Title>LINQ to DB command-line tools</Title>
-		<Description>LINQ to DB CLI is a dotnet tool for Linq To DB database model scaffolding.</Description>
-		<Product>$(Title)</Product>
-
-		<IsTool>true</IsTool>
-		<PackAsTool>true</PackAsTool>
-		<PackageType>DotnetTool</PackageType>
 		<PackageTags>$(PackageTags);cli</PackageTags>
+		
+		<!-- Difficult to pack all runtimes into single nupkg using <IsTool>true</> -->
+		<NuspecFile>linq2db.cli.nuspec</NuspecFile>
+		<NuspecProperties>output=$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration);authors=$(Authors);version=$(PackageVersion);tags=$(PackageTags.Replace(";", " "))</NuspecProperties>
 
 		<EnablePackageValidation>false</EnablePackageValidation>
 	</PropertyGroup>
 
 	<ItemGroup Label="Nuget">
-		<None Include="../../Nuget/CLI/README.md" Pack="true" PackagePath="readme.md" Visible="False" />
+		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
 	</ItemGroup>
+	
+	<!--build windows executables, inspired by https://github.com/dotnet/sdk/issues/43317-->
+	<Target Name="MultiArchPublish" AfterTargets="Build" Condition="$(RuntimeIdentifier) == ''">
+		<ItemGroup>
+			<!--either property set depends on build type: VS, msbuild, dotnet-->
+			<TFM Include="$(TargetFramework)" />
+			<TFM Include="$(TargetFrameworks)" />
+
+			<!--generate TMF+RID pairs-->
+			<PublishTarget Include="$(RuntimeIdentifiers)">
+				<TargetFramework>%(TFM.Identity)</TargetFramework>
+			</PublishTarget>
+		</ItemGroup>
+
+		<!--publish each RID+TFM-->
+		<MSBuild Projects="$(MSBuildProjectFullPath)" Targets="Publish" BuildInParallel="true" Properties="_IsPublishing=true;RuntimeIdentifier=%(PublishTarget.Identity);TargetFramework=%(PublishTarget.TargetFramework);TargetFrameworks=%(PublishTarget.TargetFramework)" />
+	</Target>
+
+	<Target Name="MultiArchCleanup" AfterTargets="CopyFilesToPublishDirectory" Condition="$(RuntimeIdentifier) != ''">
+		<!--copy built executables-->
+		<Copy SourceFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\$(AssemblyName).exe" DestinationFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).$(RuntimeIdentifier).exe" />
+		<!--cleanup bin from RID builds-->
+		<RemoveDir Directories="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)" />
+	</Target>
 
 	<ItemGroup>
 		<EmbeddedResource Include="Template.tt" />

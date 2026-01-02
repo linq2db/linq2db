@@ -80,7 +80,7 @@
 		<RepositoryUrl>https://github.com/linq2db/linq2db</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 
-		<PackageProjectUrl>https://linq2db.com</PackageProjectUrl>
+		<PackageProjectUrl>https://linq2db.github.io</PackageProjectUrl>
 		<PackageReleaseNotes>https://github.com/linq2db/linq2db/wiki/releases-and-roadmap#release-$(Version.Replace(".",""))</PackageReleaseNotes>
 		<PackageIcon>images\icon.png</PackageIcon>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>

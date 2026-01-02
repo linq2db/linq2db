@@ -15,7 +15,7 @@
 	</PropertyGroup>
 
 	<ItemGroup Label="Nuget">
-		<None Include="../../Nuget/README.Remote.SignalR.Client.md" Pack="true" PackagePath="readme.md" Visible="False" />
+		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
 	</ItemGroup>
 
 	<ItemGroup>

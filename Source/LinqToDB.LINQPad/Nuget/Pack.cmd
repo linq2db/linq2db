@@ -8,7 +8,8 @@ set "EXT=%~2"
 echo Packing %EXT%
 REM .build\bin\LinqToDB.LINQPad\Debug\TFM\..\..\..\..\lpx -> .build\lpx
 set "RELDIR=%OUTDIR%..\..\..\..\lpx"
-set "RESDIR=%OUTDIR%..\..\..\..\..\NuGet\LINQPad"
+REM .build\bin\LinqToDB.LINQPad\Debug\TFM\..\..\..\..\..\Source\LinqToDB.LINQPad\Nuget
+set "RESDIR=%OUTDIR%..\..\..\..\..\Source\LinqToDB.LINQPad\Nuget"
 
 if not exist "%RELDIR%" mkdir "%RELDIR%"
 
@@ -16,7 +17,7 @@ REM Clean previous artifacts, but don't fail if they don't exist
 if exist "%RELDIR%\linq2db.LINQPad.%EXT%" del /q "%RELDIR%\linq2db.LINQPad.%EXT%"
 if exist "%RELDIR%\linq2db.LINQPad.%EXT%.zip" del /q "%RELDIR%\linq2db.LINQPad.%EXT%.zip"
 
-REM For LP5 remove satellite folders and extra files
+REM For LP5/LP6 remove satellite folders and extra files
 if /i "%EXT%"=="lpx" (
   for %%L in (cs,de,es,fr,it,ja,ko,pl,pt,pt-BR,ru,tr,zh-Hans,zh-Hant) do (
     if exist "%OUTDIR%%%L" rd /s /q "%OUTDIR%%%L"
@@ -24,6 +25,9 @@ if /i "%EXT%"=="lpx" (
   del /q "%OUTDIR%linq2db*.xml" 2>nul
   del /q "%OUTDIR%*.pdb"        2>nul
 )
+
+if exist "%OUTDIR%clidriver" rd /s /q "%OUTDIR%clidriver"  2>nul
+if exist "%OUTDIR%sds"       rd /s /q "%OUTDIR%sds"        2>nul
 
 REM Look for 7z; if not found, fall back to PowerShell Compress-Archive
 set "SEVENZ=%ProgramFiles%\7-Zip\7z.exe"
