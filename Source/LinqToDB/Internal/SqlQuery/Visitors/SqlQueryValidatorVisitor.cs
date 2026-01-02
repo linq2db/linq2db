@@ -32,13 +32,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 		}
 
-		public void Cleanup()
+		public override void Cleanup()
 		{
 			_parentQuery         = null;
 			_providerFlags       = default!;
 			_isValid             = true;
 			_columnSubqueryLevel = default;
 			_errorMessage        = default!;
+
+			base.Cleanup();
 		}
 
 		public void SetInvalid(string errorMessage)
