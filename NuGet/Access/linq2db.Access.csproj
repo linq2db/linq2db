@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net462</TargetFrameworks>
+		<IsPackable>true</IsPackable>
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<ToolsPath>$(ArtifactsPath)/bin/NuGet/$(Configuration)/net462</ToolsPath>
+	</PropertyGroup>
+
+	<PropertyGroup Label="Nuget">
+		<Title>LINQ to DB T4 Scaffold Templates for Access</Title>
+		<Description>T4 scaffolding templates for Access database to generate LINQ to DB data models. It provides only scaffolding functionality and to use Linq To DB in your project you should add reference to linq2db nuget and corresponding database provider explicitly.</Description>
+		<PackageTags>$(GenericPackageTags);T4;datamodel;Access;OleDb;ODBC</PackageTags>
+
+		<EnablePackageValidation>false</EnablePackageValidation>
+		<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="../readme.t4.txt"                   Pack="true" PackagePath="readme.txt"                               Visible="false" />
+		<None Include="../readme.t4.md"                    Pack="true" PackagePath="readme.md"                                Visible="false" />
+		<None Include="../../Source/LinqToDB.Templates/**" Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" Visible="false" />
+		<None Include="../../Source/LinqToDB.Templates/**" Pack="true" PackagePath="content\LinqToDB.Templates\"              Visible="false" />
+
+		<None Include="*.props"                            Pack="true" PackagePath="build\" />
+		<None Include="*.ttinclude"                        Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="*.ttinclude"                        Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="*.txt"                              Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="*.txt"                              Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="$(ToolsPath)/linq2db.dll"								   Pack="true" PackagePath="tools" Visible="false" />
+		<None Include="$(ToolsPath)/linq2db.Tools.dll"							   Pack="true" PackagePath="tools" Visible="false" />
+		<None Include="$(ToolsPath)/linq2db.Scaffold.dll"						   Pack="true" PackagePath="tools" Visible="false" />
+		<None Include="$(ToolsPath)/Humanizer.dll"								   Pack="true" PackagePath="tools" Visible="false" />
+		<None Include="$(ToolsPath)/Microsoft.Bcl.AsyncInterfaces.dll"			   Pack="true" PackagePath="tools" Visible="false" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="../NuGet.csproj" />
+	</ItemGroup>
+
+</Project>
