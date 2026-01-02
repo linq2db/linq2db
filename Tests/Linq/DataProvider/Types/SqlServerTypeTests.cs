@@ -4,8 +4,6 @@ using System.Text.Json;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Data;
 
 using Microsoft.Data.SqlTypes;
 
@@ -60,6 +58,16 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5240")]
+		public async ValueTask TestJSONTypeFallback([IncludeDataSources(TestProvName.AllSqlServer2022Minus)] string context)
+		{
+			const string json1 = /*lang=json,strict*/ "{ \"prop1\": 123 }";
+			const string json2 = /*lang=json,strict*/ "{ \"prop1\": 321 }";
+
+			await TestType<string, string?>(context, new(typeof(string), DataType.Json), "{ }", default, filterByValue: false);
+			await TestType<string, string?>(context, new(typeof(string), DataType.Json), json1, json2, filterByValue: false, filterByNullableValue: false);
+		}
+
 		[Test]
 		public async ValueTask TestVectorType([IncludeDataSources(TestProvName.AllSqlServer2025Plus)] string context)
 		{
@@ -76,7 +84,7 @@ namespace Tests.DataProvider
 
 			var msClient = context.IsAnyOf(TestProvName.AllSqlServerMS);
 
-			//var dt = DataType.Array | DataType.Single;
+			//var dt = DataType.Vector32;
 
 			//const string asString1 = /*lang=json,strict*/ "[1.1, -1.2]";
 			//const string asString2 = /*lang=json,strict*/ "[2.1, -3.2]";
@@ -85,9 +93,9 @@ namespace Tests.DataProvider
 			//var asString2Expected = msClient ? /*lang=json,strict*/ "[2.1,-3.2]" : /*lang=json,strict*/ "[2.1, -3.2]";
 			//var asBinary1 = BitConverter.GetBytes(1.1f).Concat(BitConverter.GetBytes(-1.2f)).ToArray();
 			//var asBinary2 = BitConverter.GetBytes(-7.1f).Concat(BitConverter.GetBytes(-4.2f)).ToArray();
-			var asArray1 = new float[] { 1.2f, -1.1f };
-			var asArray2 = new float[] { 5.2f, -3.1f };
-			var asArray3 = new float[] { 11.2f, -4.1f };
+			var asArray1 = new[] {  1.2f, -1.1f };
+			var asArray2 = new[] {  5.2f, -3.1f };
+			var asArray3 = new[] { 11.2f, -4.1f };
 
 			// string
 			//await TestType<string, string?>(context, new(typeof(string), dt, null, length: 2), asString1, default, filterByValue: false, getExpectedValue: _ => asString1Expected);
@@ -101,9 +109,10 @@ namespace Tests.DataProvider
 			//await TestType<float[], float[]?>(context, new(typeof(float[]), dt, null, length: 2), asArray1, default, filterByValue: false);
 			//await TestType<float[], float[]?>(context, new(typeof(float[]), dt, null, length: 2), asArray2, asArray1, filterByValue: false, filterByNullableValue: false);
 
+			var type = new DbDataType(typeof(SqlVector<float>)).WithLength(2);
+
 			if (msClient)
 			{
-				var type = new DbDataType(typeof(SqlVector<float>)).WithLength(2);
 				var sqlVector1 = new SqlVector<float>(asArray1.AsMemory());
 				var sqlVector2 = new SqlVector<float>(asArray2.AsMemory());
 				var sqlVector3 = new SqlVector<float>(asArray3.AsMemory());
@@ -114,6 +123,12 @@ namespace Tests.DataProvider
 
 				await TestType<SqlVector<float>, SqlVector<float>?>(context, type, sqlVector3, sqlVector2, filterByValue: false, filterByNullableValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v.Memory.ToArray(), sqlVector3.Memory.ToArray()), isExpectedNullableValue: v => v != null && Enumerable.SequenceEqual(v.Value.Memory.ToArray(), sqlVector2.Memory.ToArray()));
 			}
+
+			await TestType<float[],          float[]?>         (context, type, asArray1,   default,               filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v, asArray1));
+
+			await TestType<float[],          float[]?>         (context, type, asArray2,   null,                  filterByValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v, asArray2));
+
+			await TestType<float[],          float[]?>         (context, type, asArray3,   asArray2,              filterByValue: false, filterByNullableValue: false, isExpectedValue: v => Enumerable.SequenceEqual(v, asArray3), isExpectedNullableValue: v => v != null && Enumerable.SequenceEqual(v, asArray2));
 		}
 
 		[ActiveIssue("Waiting for SqlClient support")]
@@ -133,7 +148,7 @@ namespace Tests.DataProvider
 
 			var msClient = context.IsAnyOf(TestProvName.AllSqlServerMS);
 
-			//var dt = DataType.Array | DataType.Single;
+			//var dt = DataType.Vector16;
 
 			//const string asString1 = /*lang=json,strict*/ "[1.1, -1.2]";
 			//const string asString2 = /*lang=json,strict*/ "[2.1, -3.2]";

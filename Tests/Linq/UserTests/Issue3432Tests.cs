@@ -50,8 +50,7 @@ namespace Tests.UserTests
 					.DefaultIfEmpty()
 				select new { task.Description, party.Name };
 
-			var act = () => query.ToArray();
-			act.ShouldNotThrow();
+			query.ToArray();
 		}
 	}
 }

@@ -73,7 +73,7 @@ namespace LinqToDB.Internal.Reflection
 
 			public static readonly MethodInfo Distinct    = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.Distinct());
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			public static readonly MethodInfo DistinctBy = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.DistinctBy(x => 1));
 			public static readonly MethodInfo MinBy      = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.MinBy(x => 1));
 			public static readonly MethodInfo MaxBy      = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.MaxBy(x => 1));
@@ -120,7 +120,7 @@ namespace LinqToDB.Internal.Reflection
 
 			public static readonly MethodInfo OrderBy = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.OrderBy(x => 1));
 
-#if NET6_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			public static readonly MethodInfo DistinctBy = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.DistinctBy(x => 1));
 			public static readonly MethodInfo MinBy      = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.MinBy(x => 1));
 			public static readonly MethodInfo MaxBy      = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.MaxBy(x => 1));

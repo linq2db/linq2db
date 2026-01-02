@@ -9,6 +9,8 @@ namespace LinqToDB.Internal.SqlQuery
 	{
 		sealed class WrapQueryVisitor<TContext> : SqlQueryVisitor
 		{
+			private readonly bool _doNotRemove;
+
 			public TContext                                         Context  { get; }
 			public Func<TContext, SelectQuery, IQueryElement?, int> WrapTest { get; }
 			public Action<TContext, IReadOnlyList<SelectQuery>>     OnWrap   { get; }
@@ -17,15 +19,17 @@ namespace LinqToDB.Internal.SqlQuery
 				VisitMode                                        visitMode,
 				TContext                                         context,
 				Func<TContext, SelectQuery, IQueryElement?, int> wrapTest,
-				Action<TContext, IReadOnlyList<SelectQuery>>     onWrap
+				Action<TContext, IReadOnlyList<SelectQuery>>     onWrap,
+				bool                                             doNotRemove
 				) : base(visitMode, null)
 			{
-				Context  = context;
-				WrapTest = wrapTest;
-				OnWrap   = onWrap;
+				Context      = context;
+				WrapTest     = wrapTest;
+				OnWrap       = onWrap;
+				_doNotRemove = doNotRemove;
 			}
 
-			protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+			protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 			{
 				selectQuery = (SelectQuery)base.VisitSqlQuery(selectQuery);
 
@@ -39,6 +43,7 @@ namespace LinqToDB.Internal.SqlQuery
 					var newQuery = new SelectQuery
 					{
 						IsParameterDependent = selectQuery.IsParameterDependent,
+						DoNotRemove          = _doNotRemove
 					};
 					queries.Add(newQuery);
 				}
@@ -118,14 +123,15 @@ namespace LinqToDB.Internal.SqlQuery
 			TStatement                                       statement,
 			Func<TContext, SelectQuery, IQueryElement?, int> wrapTest,
 			Action<TContext, IReadOnlyList<SelectQuery>>     onWrap,
-			bool                                             allowMutation)
+			bool                                             allowMutation,
+			bool                                             doNotRemove = false)
 			where TStatement : SqlStatement
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
 			if (wrapTest  == null) throw new ArgumentNullException(nameof(wrapTest));
 			if (onWrap    == null) throw new ArgumentNullException(nameof(onWrap));
 
-			var visitor = new WrapQueryVisitor<TContext>(allowMutation ? VisitMode.Modify : VisitMode.Transform, context, wrapTest, onWrap);
+			var visitor = new WrapQueryVisitor<TContext>(allowMutation ? VisitMode.Modify : VisitMode.Transform, context, wrapTest, onWrap, doNotRemove);
 			var newStatement = (TStatement)visitor.ProcessElement(statement);
 
 			return newStatement;
@@ -154,12 +160,13 @@ namespace LinqToDB.Internal.SqlQuery
 		public static TStatement WrapQuery<TStatement>(
 			TStatement  statement,
 			SelectQuery queryToWrap,
-			bool        allowMutation)
+			bool        allowMutation,
+			bool        doNotRemove = false)
 			where TStatement : SqlStatement
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
 
-			return WrapQuery(queryToWrap, statement, static (queryToWrap, q, _) => q == queryToWrap, null, allowMutation);
+			return WrapQuery(queryToWrap, statement, static (queryToWrap, q, _) => q == queryToWrap, null, allowMutation, doNotRemove);
 		}
 
 		/// <summary>
@@ -179,7 +186,8 @@ namespace LinqToDB.Internal.SqlQuery
 			TStatement                                        statement,
 			Func<TContext, SelectQuery, IQueryElement?, bool> wrapTest,
 			Action<TContext, SelectQuery, SelectQuery>?       onWrap,
-			bool                                              allowMutation)
+			bool                                              allowMutation,
+			bool                                              doNotRemove = false)
 			where TStatement : SqlStatement
 		{
 			if (statement == null) throw new ArgumentNullException(nameof(statement));
@@ -190,7 +198,8 @@ namespace LinqToDB.Internal.SqlQuery
 				statement,
 				static (context, q, pe  ) => context.wrapTest(context.context, q, pe) ? 1 : 0,
 				static (context, queries) => context.onWrap?.Invoke(context.context, queries[0], queries[1]),
-				allowMutation);
+				allowMutation,
+				doNotRemove);
 		}
 	}
 }

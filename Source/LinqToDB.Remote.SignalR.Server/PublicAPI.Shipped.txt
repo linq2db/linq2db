@@ -5,14 +5,9 @@ LinqToDB.Remote.SignalR.LinqToDBHub<T>
 LinqToDB.Remote.SignalR.LinqToDBHub<T>.LinqToDBHub(LinqToDB.Remote.ILinqService<T>! linqService) -> void
 override LinqToDB.Remote.SignalR.LinqToDBHub<T>.LinqService.get -> LinqToDB.Remote.ILinqService!
 virtual LinqToDB.Remote.SignalR.LinqToDBHub.CreateLinqService() -> LinqToDB.Remote.ILinqService!
-virtual LinqToDB.Remote.SignalR.LinqToDBHub.ExecuteBatch(string? configuration, string! queryData) -> int
 virtual LinqToDB.Remote.SignalR.LinqToDBHub.ExecuteBatchAsync(string? configuration, string! queryData) -> System.Threading.Tasks.Task<int>!
-virtual LinqToDB.Remote.SignalR.LinqToDBHub.ExecuteNonQuery(string? configuration, string! queryData) -> int
 virtual LinqToDB.Remote.SignalR.LinqToDBHub.ExecuteNonQueryAsync(string? configuration, string! queryData) -> System.Threading.Tasks.Task<int>!
-virtual LinqToDB.Remote.SignalR.LinqToDBHub.ExecuteReader(string? configuration, string! queryData) -> string!
 virtual LinqToDB.Remote.SignalR.LinqToDBHub.ExecuteReaderAsync(string? configuration, string! queryData) -> System.Threading.Tasks.Task<string!>!
-virtual LinqToDB.Remote.SignalR.LinqToDBHub.ExecuteScalar(string? configuration, string! queryData) -> string?
 virtual LinqToDB.Remote.SignalR.LinqToDBHub.ExecuteScalarAsync(string? configuration, string! queryData) -> System.Threading.Tasks.Task<string?>!
-virtual LinqToDB.Remote.SignalR.LinqToDBHub.GetInfo(string? configuration) -> LinqToDB.Remote.LinqServiceInfo!
 virtual LinqToDB.Remote.SignalR.LinqToDBHub.GetInfoAsync(string? configuration) -> System.Threading.Tasks.Task<LinqToDB.Remote.LinqServiceInfo!>!
 virtual LinqToDB.Remote.SignalR.LinqToDBHub.LinqService.get -> LinqToDB.Remote.ILinqService!

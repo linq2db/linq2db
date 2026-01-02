@@ -14,12 +14,8 @@ using LinqToDB.Internal.Common;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer
 {
-	public class SqlServerProviderDetector : ProviderDetectorBase<SqlServerProvider,SqlServerVersion>
+	public class SqlServerProviderDetector() : ProviderDetectorBase<SqlServerProvider,SqlServerVersion>(SqlServerVersion.AutoDetect, SqlServerVersion.v2012)
 	{
-		public SqlServerProviderDetector() : base(SqlServerVersion.AutoDetect, SqlServerVersion.v2012)
-		{
-		}
-
 		// System.Data
 		// and/or
 		// System.Data.SqlClient
@@ -78,13 +74,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
-			var provider = options.ProviderName switch
-			{
-				SqlServerProviderAdapter.MicrosoftClientNamespace => SqlServerProvider.MicrosoftDataSqlClient,
-				SqlServerProviderAdapter.SystemClientNamespace    => SqlServerProvider.SystemDataSqlClient,
-				_                                                 => DetectProvider()
-			};
-
+			// don't merge this method and DetectProvider(provider type) logic because this method could return null
+			// and other method returns default provider type
 			switch (options.ProviderName)
 			{
 				case ""                      :
@@ -95,6 +86,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					// SqlClient use dot prefix, as SqlClient itself used by some other providers
 				case var providerName when providerName.Contains("SqlServer") || providerName.Contains(".SqlClient"):
 				case ProviderName.SqlServer:
+					var provider = DetectProvider(options, SqlServerProvider.AutoDetect);
+
 					if (options.ConfigurationString?.Contains("2005") == true || options.ProviderName?.Contains("2005") == true) return GetDataProvider(options, provider, SqlServerVersion.v2005);
 					if (options.ConfigurationString?.Contains("2008") == true || options.ProviderName?.Contains("2008") == true) return GetDataProvider(options, provider, SqlServerVersion.v2008);
 					if (options.ConfigurationString?.Contains("2012") == true || options.ProviderName?.Contains("2012") == true) return GetDataProvider(options, provider, SqlServerVersion.v2012);
@@ -127,8 +120,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		public override IDataProvider GetDataProvider(ConnectionOptions options, SqlServerProvider provider, SqlServerVersion version)
 		{
-			if (provider == SqlServerProvider.AutoDetect)
-				provider = DetectProvider();
+			provider = DetectProvider(options, provider);
 
 			return (provider, version) switch
 			{
@@ -155,17 +147,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			};
 		}
 
-		public static SqlServerProvider DetectProvider()
-		{
-			var fileName = typeof(SqlServerProviderDetector).Assembly.GetFileName();
-			var dirName  = Path.GetDirectoryName(fileName);
-
-			return File.Exists(Path.Combine(dirName ?? ".", SqlServerProviderAdapter.MicrosoftAssemblyName + ".dll"))
-				? SqlServerProvider.MicrosoftDataSqlClient
-				: SqlServerProvider.SystemDataSqlClient;
-		}
-
-		public override SqlServerVersion? DetectServerVersion(DbConnection connection)
+		protected override SqlServerVersion? DetectServerVersion(DbConnection connection, DbTransaction? transaction)
 		{
 			if (!int.TryParse(connection.ServerVersion.Split('.')[0], NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var version))
 				return null;
@@ -175,6 +157,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				return null;
 
 			using var cmd = connection.CreateCommand();
+
+			if (transaction != null)
+				cmd.Transaction = transaction;
 
 			cmd.CommandText = "SELECT compatibility_level FROM sys.databases WHERE name = db_name()";
 
@@ -210,6 +195,27 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		protected override DbConnection CreateConnection(SqlServerProvider provider, string connectionString)
 		{
 			return SqlServerProviderAdapter.GetInstance(provider).CreateConnection(connectionString);
+		}
+
+		protected override SqlServerProvider DetectProvider(ConnectionOptions options, SqlServerProvider provider)
+		{
+			if (provider is SqlServerProvider.MicrosoftDataSqlClient or SqlServerProvider.SystemDataSqlClient)
+				return provider;
+
+			switch (options.ProviderName)
+			{
+				case SqlServerProviderAdapter.MicrosoftClientNamespace:
+					return SqlServerProvider.MicrosoftDataSqlClient;
+				case SqlServerProviderAdapter.SystemClientNamespace   :
+					return SqlServerProvider.SystemDataSqlClient;
+			}
+
+			var fileName = typeof(SqlServerProviderDetector).Assembly.GetFileName();
+			var dirName  = Path.GetDirectoryName(fileName);
+
+			return File.Exists(Path.Combine(dirName ?? ".", SqlServerProviderAdapter.MicrosoftAssemblyName + ".dll"))
+				? SqlServerProvider.MicrosoftDataSqlClient
+				: SqlServerProvider.SystemDataSqlClient;
 		}
 	}
 }

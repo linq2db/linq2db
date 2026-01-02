@@ -2629,11 +2629,6 @@ static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Configuration.DataOptionsWithT
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Configuration.DataOptions_ConnectionOptions.get -> LinqToDB.CodeModel.CodeReference!
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Configuration.DataOptions_Options.get -> LinqToDB.CodeModel.CodeReference!
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Data.DataConnection.get -> LinqToDB.CodeModel.IType!
-static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Data.DataConnectionExtensions.get -> LinqToDB.CodeModel.IType!
-static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Data.DataConnectionExtensions_ExecuteProc.get -> LinqToDB.CodeModel.CodeIdentifier!
-static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Data.DataConnectionExtensions_ExecuteProcAsync.get -> LinqToDB.CodeModel.CodeIdentifier!
-static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Data.DataConnectionExtensions_QueryProc.get -> LinqToDB.CodeModel.CodeIdentifier!
-static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Data.DataConnectionExtensions_QueryProcAsync.get -> LinqToDB.CodeModel.CodeIdentifier!
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Data.DataConnection_CommandTimeout.get -> LinqToDB.CodeModel.CodeReference!
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Data.DataParameter.get -> LinqToDB.CodeModel.IType!
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Data.DataParameterArray.get -> LinqToDB.CodeModel.IType!
@@ -2967,3 +2962,9 @@ virtual LinqToDB.Tools.ModelGeneration.TypeBase.ClassKeyword.get -> string!
 virtual LinqToDB.Tools.ModelGeneration.TypeBase.ClassKeyword.set -> void
 virtual LinqToDB.Tools.ModelGeneration.TypeBase.EndConditional(LinqToDB.Tools.ModelGeneration.ModelGenerator! tt) -> void
 virtual LinqToDB.Tools.ModelGeneration.TypeBase.OnNameChangedHandler.Invoke(object! sender, LinqToDB.Tools.ModelGeneration.NameChangedArgs! e) -> void
+static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Data.DataContextExtensions.get -> LinqToDB.CodeModel.IType!
+static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Data.DataContextExtensions_ExecuteProc.get -> LinqToDB.CodeModel.CodeIdentifier!
+static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Data.DataContextExtensions_ExecuteProcAsync.get -> LinqToDB.CodeModel.CodeIdentifier!
+static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Data.DataContextExtensions_QueryProc.get -> LinqToDB.CodeModel.CodeIdentifier!
+static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Data.DataContextExtensions_QueryProcAsync.get -> LinqToDB.CodeModel.CodeIdentifier!
+static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.DataContext.get -> LinqToDB.CodeModel.IType!

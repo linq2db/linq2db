@@ -964,7 +964,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			await ctx.IssueEnum.ToListAsyncLinqToDB();
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4816")]
 		public void Issue4816Test([EFIncludeDataSources(TestProvName.AllSqlServer2017Plus)] string provider)
 		{
@@ -1031,6 +1030,16 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var record = ctx.GetTable<Issue5177Table>().Where(r => r.Value == null).SingleOrDefault();
 
 			Assert.That(record, Is.Not.Null);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5225")]
+		public void AttachToExistingTransaction([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			ctx.Database.BeginTransaction();
+
+			using var db = ctx.CreateLinqToDBConnection();
 		}
 	}
 

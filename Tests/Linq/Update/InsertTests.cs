@@ -1596,7 +1596,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// Access, SQLite, Firebird before v4, Informix and SAP Hana do not support DEFAULT in inserted values,
+		// YDB, Access, SQLite, Firebird before v4, Informix and SAP Hana do not support DEFAULT in inserted values,
 		// see https://github.com/linq2db/linq2db/pull/2954#issuecomment-821798021
 		[Test]
 		public void InsertDefault([DataSources(
@@ -1604,6 +1604,7 @@ namespace Tests.xUpdate
 			TestProvName.AllFirebirdLess4,
 			TestProvName.AllInformix,
 			TestProvName.AllSapHana,
+			ProviderName.Ydb,
 			TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2127,7 +2128,34 @@ namespace Tests.xUpdate
 				Assert.That(entities, Has.Count.EqualTo(2));
 			}
 		}
-  
+
+		sealed class TableWithMoney
+		{
+			[PrimaryKey]
+			public int       ID;
+			[Column(DataType = DataType.Decimal, Scale = 4)]
+			public decimal   MoneyValue;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5272")]
+		public void InsertOrReplaceDecimal([InsertOrUpdateDataSources] string context)
+		{
+			var       values = new decimal[] { 0, 0.5m, 0.05m, 0.0005m, 1.5m, 1.05m, 1.0005m };
+			using var db     = GetDataContext(context);
+			using var table  = db.CreateLocalTable<TableWithMoney>();
+
+			for (var i = 0; i < values.Length; i++)
+			{
+				var data = new TableWithMoney()
+				{
+					ID         = i + 1,
+					MoneyValue = values[i]
+				};
+				db.Insert(data);
+				db.InsertOrReplace(data);
+			}
+		}
+
 		#region InsertIfNotExists (https://github.com/linq2db/linq2db/issues/3005)
 		private int GetEmptyRowCount(string context)
 		{
@@ -2488,7 +2516,7 @@ namespace Tests.xUpdate
 
 		[ActiveIssue(
 			Details = "Update test to test different RetrieveIdentity modes for all providers with sequences",
-			Configurations = [TestProvName.AllFirebird, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllPostgreSQL, ProviderName.SqlCe, TestProvName.AllSapHana])]
+			Configurations = [TestProvName.AllFirebird, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllPostgreSQL, ProviderName.SqlCe, TestProvName.AllSapHana, ProviderName.Ydb])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4702")]
 		public void Issue4702Test([DataSources(false)] string context, [Values] bool useSequence)
 		{

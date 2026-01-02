@@ -8,7 +8,7 @@
 		<UseWPF>true</UseWPF>
 
 		<!--don't forget to (un)comment reference in nuspec file!-->
-		<!--<DefineConstants>WITH_ISERIES;$(DefineConstants)</DefineConstants>-->
+		<DefineConstants>WITH_ISERIES;$(DefineConstants)</DefineConstants>
 
 		<!--disable DB2 provider arch warnings-->
 		<MSBuildWarningsAsMessages>MSB3270</MSBuildWarningsAsMessages>
@@ -123,7 +123,8 @@
 	<ItemGroup>
 		<Resource Include="..\..\NuGet\icon.png" Link="Resources\Logo.png" />
 
-		<AdditionalFiles Include="PublicAPI.*.txt" />
+		<AdditionalFiles Include="PublicAPI/PublicAPI.*.txt" />
+		<AdditionalFiles Include="PublicAPI/$(TargetFramework)/PublicAPI.*.txt" />
 	</ItemGroup>
 
 	<Import Project="$(MSBuildThisFileDirectory)\..\..\SQLite.Runtime.props" />

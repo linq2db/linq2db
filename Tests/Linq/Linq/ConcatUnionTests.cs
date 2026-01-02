@@ -947,6 +947,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbCteAsSource]
 		[ActiveIssue("UNION in subquery not supported by Access. We should transform it if we want to support such cases", Configuration = TestProvName.AllAccess)]
 		[Test]
 		public void ConcatInAny([DataSources] string context)
@@ -1194,8 +1195,7 @@ namespace Tests.Linq
 
 			var query = query1.UnionAll(query2);
 
-			var act = () => query.ToArray();
-			act.ShouldNotThrow();
+			query.ToArray();
 		}
 
 		[Test]
@@ -1208,8 +1208,7 @@ namespace Tests.Linq
 
 			var query = query1.UnionAll(query2);
 
-			var act = () => query.ToArray();
-			act.ShouldNotThrow();
+			query.ToArray();
 		}
 
 		[Test]
@@ -1225,8 +1224,7 @@ namespace Tests.Linq
 
 			var query = query1.UnionAll(query2);
 
-			var act = () => query.ToArray();
-			act.ShouldNotThrow();
+			query.ToArray();
 		}
 
 		[Test]
@@ -1253,8 +1251,7 @@ namespace Tests.Linq
 
 			query = query.Where(x => x.StrValue != null);
 
-			var act = () => query.ToArray();
-			act.ShouldNotThrow();
+			query.ToArray();
 		}
 
 		[Test(Description = "Test that we generate plain UNION without sub-queries")]
@@ -1878,6 +1875,7 @@ namespace Tests.Linq
 			res[0].Name.ShouldBe("John");
 		}
 
+		[YdbMemberNotFound]
 		[Test(Description = "invalid SQL for Any() subquery")]
 		public void Issue2932_Broken([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -1888,6 +1886,7 @@ namespace Tests.Linq
 			query.Concat(query).ToArray();
 		}
 
+		[YdbMemberNotFound]
 		[Test(Description = "invalid SQL for Any() subquery")]
 		public void Issue2932_Works([DataSources(TestProvName.AllClickHouse)] string context)
 		{

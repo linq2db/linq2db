@@ -189,7 +189,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return element;
 		}
 
-		protected override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
+		protected internal override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
 		{
 			var element = base.VisitInListPredicate(predicate);
 
@@ -206,7 +206,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return element;
 		}
 
-		protected override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		protected internal override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
 		{
 			var element = base.VisitInSubQueryPredicate(predicate);
 
@@ -246,7 +246,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return InformixSqlOptimizer.WrapParameters(base.ConvertIsDistinctPredicateAsIntersect(predicate));
 		}
 
-		protected override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
+		protected internal override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
 		{
 			var newElement = (SqlSetExpression)base.VisitSqlSetExpression(element);
 
@@ -270,7 +270,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return newElement;
 		}
 
-		protected override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
+		protected internal override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
 		{
 			var newElement = base.VisitExprPredicate(predicate);
 

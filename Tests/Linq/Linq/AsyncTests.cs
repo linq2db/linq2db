@@ -176,6 +176,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public async Task ContainsAsyncTest([DataSources] string context)
 		{

@@ -129,7 +129,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 					return _mysqlConnectorInstance;
 				}
-				default:
+				case MySqlProvider.MySqlData:
 				{
 					if (_mysqlDataInstance == null)
 					{
@@ -142,6 +142,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					return _mysqlDataInstance;
 				}
 			}
+
+			throw new InvalidOperationException($"Unsupported provider type: {provider}");
 		}
 
 		private static void AppendAction(StringBuilder sb, string value) => sb.Append(value);

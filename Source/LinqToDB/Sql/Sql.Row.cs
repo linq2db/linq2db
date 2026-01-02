@@ -9,7 +9,7 @@ namespace LinqToDB
 	{
 		sealed class RowBuilder : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var args = Array.ConvertAll(builder.Arguments, x => builder.ConvertExpressionToSql(x));
 
@@ -25,7 +25,7 @@ namespace LinqToDB
 
 		sealed class OverlapsBuilder : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var args = Array.ConvertAll(builder.Arguments, x => builder.ConvertExpressionToSql(x));
 

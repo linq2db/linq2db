@@ -60,7 +60,7 @@ namespace LinqToDB.Internal.SqlProvider
 				statement = new JoinsOptimizer().Optimize(statement, evaluationContext);
 
 				// Do it again after JOIN Optimization
-				FinalizeCte(statement);
+			FinalizeCte(statement);
 			}
 
 			statement = FinalizeInsert(statement);
@@ -70,8 +70,6 @@ namespace LinqToDB.Internal.SqlProvider
 
 			// provider specific query correction
 			statement = FinalizeStatement(statement, evaluationContext, dataOptions, mappingSchema);
-
-//statement.EnsureFindTables();
 
 			return statement;
 		}
@@ -438,7 +436,7 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 			}
 
-			protected override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
+			protected internal override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
 			{
 				var newElement = base.VisitSqlSelectClause(element);
 
@@ -465,7 +463,7 @@ namespace LinqToDB.Internal.SqlProvider
 				return element;
 			}
 
-			protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
+			protected internal override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 			{
 				base.VisitExprExprPredicate(predicate);
 
@@ -479,7 +477,7 @@ namespace LinqToDB.Internal.SqlProvider
 				return predicate;
 			}
 
-			protected override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
+			protected internal override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
 			{
 				var saveUpdateSelect = _updateSelect;
 				_updateSelect = element.SelectQuery;
@@ -705,7 +703,7 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 		}
 
-		sealed class CteCollectorVisitor : SqlQueryVisitor
+		sealed class CteCollectorVisitor : QueryElementVisitor
 		{
 			public sealed class CteDependencyHolder
 			{
@@ -735,7 +733,7 @@ namespace LinqToDB.Internal.SqlProvider
 			Dictionary<CteClause, CteDependencyHolder>? _foundCtes;
 			Stack<CteDependencyHolder>?                  _currentCteStack;
 
-			public CteCollectorVisitor() : base(VisitMode.ReadOnly, null)
+			public CteCollectorVisitor() : base(VisitMode.ReadOnly)
 			{
 			}
 
@@ -749,18 +747,18 @@ namespace LinqToDB.Internal.SqlProvider
 
 			public override void Cleanup()
 			{
-				base.Cleanup();
-
 				_foundCtes       = null;
 				_currentCteStack = null;
+
+				base.Cleanup();
 			}
 
-			protected override IQueryElement VisitSqlWithClause(SqlWithClause element)
+			protected internal override IQueryElement VisitSqlWithClause(SqlWithClause element)
 			{
 				return element;
 			}
 
-			protected override IQueryElement VisitSqlCteTable(SqlCteTable element)
+			protected internal override IQueryElement VisitSqlCteTable(SqlCteTable element)
 			{
 				var cteClause = element.Cte;
 
@@ -2095,7 +2093,7 @@ namespace LinqToDB.Internal.SqlProvider
 				return result;
 			}
 
-			protected override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
+			protected internal override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
 			{
 				if (_disableParameters)
 					sqlParameter.IsQueryParameter = false;

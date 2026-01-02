@@ -8,7 +8,6 @@ using System.Runtime.CompilerServices;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
@@ -157,8 +156,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override void Cleanup()
 			{
-				base.Cleanup();
-
 				_visited   = default!;
 				_generator = default!;
 				_context   = default!;
@@ -166,6 +163,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				_duplicates             = default;
 				_constructed            = default;
 				_constructedAssignments = default;
+
+				base.Cleanup();
 			}
 		}
 
@@ -434,16 +433,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#region PreferServerSide
 
-		FindVisitor<ExpressionBuilder>? _enforceServerSideVisitorTrue;
-		FindVisitor<ExpressionBuilder>? _enforceServerSideVisitorFalse;
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		FindVisitor<ExpressionBuilder> GetVisitor(bool enforceServerSide)
+		bool PreferServerSide(bool enforceServerSide, Expression expr)
 		{
-			if (enforceServerSide)
-				return _enforceServerSideVisitorTrue ??= FindVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.PreferServerSide(e, true));
-			else
-				return _enforceServerSideVisitorFalse ??= FindVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.PreferServerSide(e, false));
+			return expr.Find((builder: this, enforceServerSide), static (ctx, e) => ctx.builder.PreferServerSide(e, ctx.enforceServerSide)) != null;
 		}
 
 		internal bool PreferServerSide(Expression expr, bool enforceServerSide)
@@ -465,7 +458,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (l.Parameters.Count == 1 && pi.Expression != null)
 							info = info.Replace(l.Parameters[0], pi.Expression);
 
-						return GetVisitor(enforceServerSide).Find(info) != null;
+						return PreferServerSide(enforceServerSide, info);
 					}
 
 					var attr = pi.Member.GetExpressionAttribute(MappingSchema);
@@ -478,7 +471,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var l  = LinqToDB.Linq.Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
 
 					if (l != null)
-						return GetVisitor(enforceServerSide).Find(l.Body.Unwrap()) != null;
+						return PreferServerSide(enforceServerSide, l.Body.Unwrap());
 
 					var attr = pi.Method.GetExpressionAttribute(MappingSchema);
 					return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeEvaluatedOnClient(expr);
@@ -572,7 +565,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (placeholder.Type != readerExpression.Type)
 					{
-						var convertExpression = MappingSchema.GetConvertExpression(readerExpression.Type, placeholder.Type, false, true, ConversionType.FromDatabase);
+						var convertExpression = MappingSchema.GetConvertExpression(readerExpression.Type, placeholder.Type, checkNull: canBeNull, true, ConversionType.FromDatabase);
 
 						if (convertExpression is null)
 							throw new InvalidOperationException($"No conversions defined from {readerExpression.Type} to {placeholder.Type}");

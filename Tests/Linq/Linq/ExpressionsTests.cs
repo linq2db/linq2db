@@ -507,6 +507,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void LeftJoinTest2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -1121,6 +1122,7 @@ namespace Tests.Linq
 		#endregion
 
 		#region Regression: query comparison
+		[YdbCteAsSource]
 		[Test(Description = "Tests regression introduced in 3.5.2")]
 		public void ComparisonTest1([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context, [Values(1, 2)] int iteration)
 		{
@@ -1143,6 +1145,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test(Description = "Tests regression introduced in 3.5.2")]
 		public void ComparisonTest2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{

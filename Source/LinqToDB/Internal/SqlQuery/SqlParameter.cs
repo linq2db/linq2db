@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -41,6 +44,20 @@ namespace LinqToDB.Internal.SqlQuery
 
 			var valueConverter = ValueConverter;
 			return valueConverter == null ? value : valueConverter(value);
+		}
+
+		public SqlParameter WithIsQueryParameter(bool isQueryParameter)
+		{
+			if (IsQueryParameter == isQueryParameter)
+				return this;
+
+			return new SqlParameter(Type, Name, Value)
+			{
+				IsQueryParameter = isQueryParameter,
+				AccessorId       = AccessorId,
+				NeedsCast        = NeedsCast,
+				_valueConverter  = _valueConverter,
+			};
 		}
 
 		#region Value Converter
@@ -145,6 +162,8 @@ namespace LinqToDB.Internal.SqlQuery
 			return hash.ToHashCode();
 		}
 
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlParameter(this);
 		#endregion
 	}
 }

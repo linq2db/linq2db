@@ -28,7 +28,7 @@ namespace LinqToDB
 		{
 			private static readonly Regex _collationValidator = new Regex(@"^[a-zA-Z0-9_\.\-@]+$", RegexOptions.Compiled);
 
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var expr = builder.GetExpression("expr")!;
 				var collation = builder.GetValue<string>("collation");
@@ -54,7 +54,7 @@ namespace LinqToDB
 
 		internal sealed class PostgreSQLCollationBuilder : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var expr      = builder.GetExpression("expr")!;
 				var collation = builder.GetValue<string>("collation").Replace("\"", "\"\"");
@@ -67,7 +67,7 @@ namespace LinqToDB
 
 		internal sealed class DB2LUWCollationBuilder : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var expr      = builder.GetExpression("expr")!;
 				var collation = builder.GetValue<string>("collation");

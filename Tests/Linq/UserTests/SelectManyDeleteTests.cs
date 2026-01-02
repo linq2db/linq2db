@@ -39,6 +39,7 @@ namespace Tests.UserTests
 			public List<Child> Children { get; set; } = null!;
 		}
 
+		[YdbMemberNotFound]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedDelete)]
 		[Test]
 		public void Test([DataSources] string context)

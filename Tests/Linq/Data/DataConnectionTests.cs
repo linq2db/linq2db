@@ -738,8 +738,8 @@ namespace Tests.Data
 		public class Category
 		{
 			[PrimaryKey, Identity] public int     CategoryID;
-			[Column, NotNull]      public string  CategoryName = null!;
-			[Column]               public string? Description;
+			[Column, NotNull] public string  CategoryName = null!;
+			[Column]          public string? Description;
 
 			[Association(ThisKey = "CategoryID", OtherKey = "CategoryID")]
 			public List<Product> Products = null!;
@@ -1340,6 +1340,7 @@ namespace Tests.Data
 		public void MARS_Supported(
 			[DataSources(false,
 				TestProvName.AllMySql,
+				ProviderName.Ydb,
 				ProviderName.ClickHouseMySql,
 				// depends on connection pool size
 				ProviderName.ClickHouseDriver,
@@ -1371,6 +1372,7 @@ namespace Tests.Data
 		public void MARS_Unsupported(
 			[IncludeDataSources(false,
 				TestProvName.AllMySql,
+				ProviderName.Ydb,
 				ProviderName.ClickHouseMySql,
 				ProviderName.ClickHouseOctonica,
 				TestProvName.AllPostgreSQL)] string context)
@@ -1431,6 +1433,7 @@ namespace Tests.Data
 		public async Task MARS_SupportedAsync(
 			[DataSources(false,
 				TestProvName.AllMySql,
+				ProviderName.Ydb,
 				ProviderName.ClickHouseMySql,
 				// depends on connection pool size
 				ProviderName.ClickHouseDriver,
@@ -1462,6 +1465,7 @@ namespace Tests.Data
 		public async Task MARS_UnsupportedAsync(
 			[IncludeDataSources(false,
 				TestProvName.AllMySql,
+				ProviderName.Ydb,
 				TestProvName.AllPostgreSQL,
 				ProviderName.ClickHouseMySql,
 				ProviderName.ClickHouseOctonica)] string context)

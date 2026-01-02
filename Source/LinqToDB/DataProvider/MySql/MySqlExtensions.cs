@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.MySql
 		#region FTS
 		sealed class ModifierBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var modifier = builder.GetValue<MatchModifier>("modifier");
 

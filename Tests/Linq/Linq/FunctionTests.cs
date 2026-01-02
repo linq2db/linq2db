@@ -420,6 +420,7 @@ namespace Tests.Linq
 		public void NewGuid1(
 			[DataSources(
 				ProviderName.DB2,
+				ProviderName.Ydb,
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL12Minus,
 				TestProvName.AllSQLite,
@@ -450,6 +451,7 @@ namespace Tests.Linq
 		public void NewGuidOrder(
 			[DataSources(false,
 				ProviderName.DB2,
+				ProviderName.Ydb,
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
@@ -690,7 +692,7 @@ namespace Tests.Linq
 	{
 		sealed class MatchBuilder : Sql.IExtensionCallBuilder
 		{
-			public void Build(Sql.ISqExtensionBuilder builder)
+			public void Build(Sql.ISqlExtensionBuilder builder)
 			{
 				var srcExpr = builder.GetExpression("src");
 				if (srcExpr == null)

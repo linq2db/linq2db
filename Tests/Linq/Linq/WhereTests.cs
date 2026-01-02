@@ -1233,6 +1233,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void GroupBySubQquery2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -1252,6 +1253,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void GroupBySubQquery2In([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -1655,6 +1657,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void ExistsSqlTest1([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
@@ -1666,6 +1669,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void ExistsSqlTest2([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
@@ -2133,6 +2137,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void Issue_SubQueryFilter2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -2284,6 +2289,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void Issue_CompareQueries1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -2298,6 +2304,7 @@ namespace Tests.Linq
 			Assert.That(result1 && result2, Is.False);
 		}
 
+		[YdbCteAsSource]
 		[Test]
 		public void Issue_CompareQueries2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -2484,7 +2491,7 @@ namespace Tests.Linq
 			using var db = GetDataConnection(context);
 			db.Types.Where(r => !r.BoolValue).ToList();
 
-			if (context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllFirebird3Plus, TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllDB2, TestProvName.AllClickHouse, TestProvName.AllAccess, TestProvName.AllInformix))
+			if (context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllFirebird3Plus, TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllDB2, TestProvName.AllClickHouse, TestProvName.AllAccess, TestProvName.AllInformix, ProviderName.Ydb))
 			{
 				Assert.That(db.LastQuery, Does.Not.Contain(" = "));
 				Assert.That(db.LastQuery, Does.Contain("NOT "));

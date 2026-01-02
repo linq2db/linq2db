@@ -119,7 +119,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				case DataType.DecFloat:
 					StringBuilder.Append("DECIMAL");
 					return;
-				case DataType.Array | DataType.Single:
+				case DataType.Vector32:
 					StringBuilder.Append("REAL_VECTOR");
 					if (type.Length != null)
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Length})");

@@ -53,7 +53,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			SqlProviderFlags.CalculateSupportedCorrelatedLevelWithAggregateQueries = true;
 			SqlProviderFlags.RowConstructorSupport                                 = RowFeature.Equality | RowFeature.Comparisons | RowFeature.CompareToSelect | RowFeature.In;
 
-			SqlProviderFlags.IsUpdateTakeSupported     = true;
+			SqlProviderFlags.IsUpdateTakeSupported                   = true;
+			SqlProviderFlags.IsTakeWithInAllAnySomeSubquerySupported = false;
 
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
 
@@ -180,7 +181,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			object? type = null;
 			switch (dataType.DataType)
 			{
-				case DataType.Array | DataType.Single:
+				case DataType.Vector32:
 					type = Provider == MySqlProvider.MySqlConnector
 						? MySqlProviderAdapter.MySqlConnector.MySqlDbType.Vector
 						: MySqlProviderAdapter.MySqlData.MySqlDbType.Vector;

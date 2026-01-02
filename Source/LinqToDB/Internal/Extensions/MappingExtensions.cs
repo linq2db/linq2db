@@ -110,6 +110,12 @@ namespace LinqToDB.Internal.Extensions
 				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
 		}
 
+		public static bool IsServerSideOnly(this MemberInfo member, MappingSchema mappingSchema)
+		{
+			return mappingSchema.HasAttribute<ServerSideOnlyAttribute>(member.ReflectedType!, member)
+				|| member.GetExpressionAttribute(mappingSchema)?.ServerSideOnly == true;
+		}
+
 		public static Sql.ExpressionAttribute? GetExpressionAttribute(this MemberInfo member, MappingSchema mappingSchema)
 		{
 			return mappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType!, member);
@@ -124,9 +130,8 @@ namespace LinqToDB.Internal.Extensions
 		{
 			if (mappingSchema.IsScalarType(type))
 				return false;
-			if (!typeof(IEnumerable<>).IsSameOrParentOf(type))
-				return false;
-			return true;
+
+			return typeof(IEnumerable<>).IsSameOrParentOf(type);
 		}
 	}
 }

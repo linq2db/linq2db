@@ -16,7 +16,7 @@ namespace Tests.UserTests
 {
 	internal sealed class DbObjectSetExtensionCallBuilder : Sql.IExtensionCallBuilder
 	{
-		public void Build(Sql.ISqExtensionBuilder builder)
+		public void Build(Sql.ISqlExtensionBuilder builder)
 		{
 			builder.Expression = "JSON_MODIFY({source}, {path}, {value})";
 

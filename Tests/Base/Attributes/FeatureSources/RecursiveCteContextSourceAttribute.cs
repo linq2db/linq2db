@@ -10,6 +10,7 @@ namespace Tests
 	{
 		private static readonly string[] RecursiveCteUnsupportedProviders = new[]
 			{
+				ProviderName.Ydb,
 				TestProvName.AllSapHana,
 			}.SelectMany(_ => _.Split(',')).ToArray();
 

@@ -26,7 +26,7 @@ namespace Tests.xUpdate
 	public class UpdateTests : TestBase
 	{
 		[Test]
-		public void Update1([DataSources] string context)
+		public void Update1([DataSources(ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -46,7 +46,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task Update1Async([DataSources] string context)
+		public async Task Update1Async([DataSources(ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -66,7 +66,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Update2([DataSources] string context)
+		public void Update2([DataSources(ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -86,7 +86,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task Update2Async([DataSources] string context)
+		public async Task Update2Async([DataSources(ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -744,6 +744,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Obsolete("Remove test after API removed")]
 		[Test]
 		public void UpdateAssociation1Old([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
@@ -766,6 +767,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Obsolete("Remove test after API removed")]
 		[Test]
 		public async Task UpdateAssociation1AsyncOld([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
@@ -788,6 +790,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void UpdateAssociation1([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
@@ -809,6 +812,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public async Task UpdateAssociation1Async([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
@@ -830,6 +834,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void UpdateAssociation2([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
@@ -851,6 +856,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void UpdateAssociation3([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
@@ -929,6 +935,7 @@ namespace Tests.xUpdate
 			public Table1 Table1 = null!;
 		}
 
+		[YdbUnexpectedSqlQuery]
 		[Test]
 		public void UpdateAssociation5(
 			[DataSources(
@@ -1041,7 +1048,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateNullablePrimaryKey([DataSources] string context)
+		public void UpdateNullablePrimaryKey([DataSources(ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1058,7 +1065,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateTop([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void UpdateTop([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -1112,6 +1119,7 @@ namespace Tests.xUpdate
 		public void TestUpdateOrdered(
 			[DataSources(
 			ProviderName.SqlCe,
+			ProviderName.Ydb,
 			TestProvName.AllInformix,
 			TestProvName.AllClickHouse,
 			TestProvName.AllDB2,
@@ -1218,7 +1226,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestUpdateTakeNotOrdered([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void TestUpdateTakeNotOrdered([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, ProviderName.Ydb)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (new RestoreBaseTables(db))
@@ -2082,6 +2090,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void UpdateByAssociation2Optional([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -2110,6 +2119,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[YdbMemberNotFound]
 		[Test]
 		public void UpdateByAssociation2Required([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{

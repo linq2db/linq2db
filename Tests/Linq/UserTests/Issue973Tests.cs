@@ -28,7 +28,7 @@ namespace Tests.UserTests
 		/// <exception cref="ArgumentNullException">Values for \"In\" operation should not be empty - values</exception>
 		/// <see cref="SqlExtensions.In{T}(Sql.ISqlExtension,T,IEnumerable{T})"/>
 		/// <seealso cref="SqlExtensions.In{T}(Sql.ISqlExtension,T,IEnumerable{T})"/>
-		public void Build(Sql.ISqExtensionBuilder builder)
+		public void Build(Sql.ISqlExtensionBuilder builder)
 		{
 			var parameterName = (builder.Arguments[2] as MemberExpression)?.Member.Name ?? "p";
 

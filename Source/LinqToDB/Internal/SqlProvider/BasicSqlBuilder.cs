@@ -3842,6 +3842,18 @@ namespace LinqToDB.Internal.SqlProvider
 				StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Precision}{InlineComma}{type.Scale})");
 		}
 
+		protected static DbDataType CorrectDecimalFacets(DbDataType dataType, decimal decValue, bool updateNullsOnly = false)
+		{
+			if (updateNullsOnly && dataType.Precision != null && dataType.Scale != null)
+				return dataType;
+
+			var (precision, scale) = DecimalHelper.GetFacets(decValue);
+
+			return updateNullsOnly
+					? dataType.WithPrecision(dataType.Precision ?? precision).WithScale(dataType.Scale ?? scale)
+					: dataType.WithPrecision(precision).WithScale(scale);
+		}
+
 		#endregion
 
 		#region GetPrecedence
@@ -4255,7 +4267,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return sb;
 		}
 
-		private bool PrintParameterValue(StringBuilder sb, object? value)
+		protected virtual bool PrintParameterValue(StringBuilder sb, object? value)
 		{
 			var maxBinaryLogging = LinqToDB.Common.Configuration.MaxBinaryParameterLengthLogging;
 			var maxStringLogging = LinqToDB.Common.Configuration.MaxStringParameterLengthLogging;

@@ -415,7 +415,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 				return _devartAdapter;
 			}
-			else
+			else if (provider == OracleProvider.Managed)
 			{
 				if (_managedAdapter == null)
 				{
@@ -427,6 +427,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 				return _managedAdapter;
 			}
+
+			throw new InvalidOperationException($"Unsupported provider type: {provider}");
 		}
 
 		sealed class OracleNativeClientAdapterMappingSchema : LockedMappingSchema

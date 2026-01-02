@@ -118,17 +118,17 @@ namespace LinqToDB.Internal.Conversion
 
 			return type.TypeCode
 				is TypeCode.Boolean
-				or TypeCode.Byte    
-				or TypeCode.SByte   
-				or TypeCode.Int16   
-				or TypeCode.Int32   
-				or TypeCode.Int64   
-				or TypeCode.UInt16  
-				or TypeCode.UInt32  
-				or TypeCode.UInt64  
-				or TypeCode.Single  
-				or TypeCode.Double  
-				or TypeCode.Decimal 
+				or TypeCode.Byte
+				or TypeCode.SByte
+				or TypeCode.Int16
+				or TypeCode.Int32
+				or TypeCode.Int64
+				or TypeCode.UInt16
+				or TypeCode.UInt32
+				or TypeCode.UInt64
+				or TypeCode.Single
+				or TypeCode.Double
+				or TypeCode.Decimal
 				or TypeCode.Char;
 		}
 
@@ -493,32 +493,34 @@ namespace LinqToDB.Internal.Conversion
 			return null;
 		}
 
-		static Tuple<Expression,bool>? GetConverter(MappingSchema mappingSchema, Expression expr, Type from, Type to)
+		record struct Conversion(Expression Expression, bool IsSchemaSpecific);
+
+		static Conversion? GetConverter(MappingSchema mappingSchema, Expression expr, Type from, Type to)
 		{
 			if (from == to)
-				return Tuple.Create(expr, false);
+				return new(expr, false);
 
 			var le = Converter.GetConverter(from, to);
 
 			if (le != null)
-				return Tuple.Create(le.GetBody(expr), false);
+				return new(le.GetBody(expr), false);
 
 			var lex = mappingSchema.TryGetConvertExpression(from, to);
 
 			if (lex != null)
-				return Tuple.Create(lex.GetBody(expr), true);
+				return new(lex.GetBody(expr), true);
 
 			var cex = mappingSchema.GetConvertExpression(from, to, false, false);
 
 			if (cex != null)
-				return Tuple.Create(cex.GetBody(expr), true);
+				return new(cex.GetBody(expr), true);
 
 			var ex =
 				GetFromEnum  (from, to, expr, mappingSchema) ??
 				GetToEnum    (from, to, expr, mappingSchema);
 
 			if (ex != null)
-				return Tuple.Create(ex, true);
+				return new(ex, true);
 
 			ex =
 				GetConversion       (from, to, expr) ??
@@ -531,16 +533,16 @@ namespace LinqToDB.Internal.Conversion
 				GetToString         (from, to, expr) ??
 				GetParseEnum        (from, to, expr);
 
-			return ex != null ? Tuple.Create(ex, false) : null;
+			return ex != null ? new(ex, false) : null;
 		}
 
-		static Tuple<Expression,bool>? ConvertUnderlying(
+		static Conversion? ConvertUnderlying(
 			MappingSchema mappingSchema,
 			Expression    expr,
 			Type from, Type ufrom,
 			Type to,   Type uto)
 		{
-			Tuple<Expression,bool>? ex = null;
+			Conversion? ex = null;
 
 			if (from != ufrom)
 			{
@@ -554,7 +556,7 @@ namespace LinqToDB.Internal.Conversion
 				ex = GetConverter(mappingSchema, expr, from, uto);
 
 				if (ex != null)
-					ex = Tuple.Create(Expression.Convert(ex.Item1, to) as Expression, ex.Item2);
+					ex = new(Expression.Convert(ex.Value.Expression, to), ex.Value.IsSchemaSpecific);
 			}
 
 			if (ex == null && from != ufrom && to != uto)
@@ -564,46 +566,47 @@ namespace LinqToDB.Internal.Conversion
 				ex = GetConverter(mappingSchema, cp, ufrom, uto);
 
 				if (ex != null)
-					ex = Tuple.Create(Expression.Convert(ex.Item1, to) as Expression, ex.Item2);
+					ex = new(Expression.Convert(ex.Value.Expression, to), ex.Value.IsSchemaSpecific);
 			}
 
 			return ex;
 		}
 
-		public static Tuple<LambdaExpression,LambdaExpression?,bool> GetConverter(MappingSchema? mappingSchema, Type from, Type to)
+		public static ConverterLambda GetConverter(MappingSchema? mappingSchema, Type from, Type to)
 		{
 			mappingSchema ??= MappingSchema.Default;
 
 			var p  = Expression.Parameter(from, "p");
-			var ne = null as LambdaExpression;
 
 			if (from == to)
-				return Tuple.Create(Expression.Lambda(p, p), ne, false);
+				return new(Expression.Lambda(p, p), null, false);
 
 			if (to == typeof(object))
-				return Tuple.Create(Expression.Lambda(Expression.Convert(p, typeof(object)), p), ne, false);
+				return new(Expression.Lambda(Expression.Convert(p, typeof(object)), p), null, false);
 
 			var ex =
 				GetConverter     (mappingSchema, p, from, to) ??
 				ConvertUnderlying(mappingSchema, p, from, from.UnwrapNullableType(), to, to.UnwrapNullableType()) ??
 				ConvertUnderlying(mappingSchema, p, from, from.ToUnderlying(),       to, to.ToUnderlying());
 
+			LambdaExpression? ne = null;
+
 			if (ex != null)
 			{
-				ne = Expression.Lambda(ex.Item1, p);
+				ne = Expression.Lambda(ex.Value.Expression, p);
 
 				if (from.IsNullableType)
-					ex = Tuple.Create(
-						Expression.Condition(ExpressionHelper.Property(p, nameof(Nullable<>.HasValue)), ex.Item1, new DefaultValueExpression(mappingSchema, to)) as Expression,
-						ex.Item2);
+					ex = new(
+						Expression.Condition(ExpressionHelper.Property(p, nameof(Nullable<>.HasValue)), ex.Value.Expression, new DefaultValueExpression(mappingSchema, to)),
+						ex.Value.IsSchemaSpecific);
 				else if (from.IsClass)
-					ex = Tuple.Create(
-						Expression.Condition(Expression.NotEqual(p, Expression.Constant(null, from)), ex.Item1, new DefaultValueExpression(mappingSchema, to)) as Expression,
-						ex.Item2);
+					ex = new(
+						Expression.Condition(Expression.NotEqual(p, Expression.Constant(null, from)), ex.Value.Expression, new DefaultValueExpression(mappingSchema, to)),
+						ex.Value.IsSchemaSpecific);
 			}
 
 			if (ex != null)
-				return Tuple.Create(Expression.Lambda(ex.Item1, p), ne, ex.Item2);
+				return new(Expression.Lambda(ex.Value.Expression, p), ne, ex.Value.IsSchemaSpecific);
 
 			if (to.IsNullableType)
 			{
@@ -618,7 +621,7 @@ namespace LinqToDB.Internal.Conversion
 
 				defex = GetCtor(uto, to, defex)!;
 
-				return Tuple.Create(Expression.Lambda(defex, p), ne, false);
+				return new(Expression.Lambda(defex, p), ne, false);
 			}
 			else
 			{
@@ -629,7 +632,7 @@ namespace LinqToDB.Internal.Conversion
 				if (defex.Type != to)
 					defex = Expression.Convert(defex, to);
 
-				return Tuple.Create(Expression.Lambda(defex, p), ne, false);
+				return new(Expression.Lambda(defex, p), ne, false);
 			}
 		}
 

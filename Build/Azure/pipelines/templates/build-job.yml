@@ -11,6 +11,9 @@ jobs:
   pool:
     vmImage: 'windows-2025'
   displayName: 'Build'
+  variables:
+    with_analyzers: ${{ parameters.with_analyzers }}
+    with_api_analyzers: ${{ parameters.with_api_analyzers }}
 
   steps:
 
@@ -208,7 +211,7 @@ jobs:
     inputs:
       command: build
       projects: $(solution)
-      arguments: -property:RunAnalyzersDuringBuild=${{ parameters.with_analyzers }} -property:RunApiAnalyzersDuringBuild=${{ parameters.with_api_analyzers }} --configuration $(release_configuration)
+      arguments: -property:RunAnalyzersDuringBuild=${{ variables['with_analyzers'] }} -property:RunApiAnalyzersDuringBuild=${{ variables['with_api_analyzers'] }} --configuration $(release_configuration)
     displayName: Build Solution for Release and Nuget
     condition: and(succeeded(), ${{ parameters.with_nugets }})
 
@@ -367,9 +370,9 @@ jobs:
     inputs:
       targetType: 'inline'
       script: |
-        $relnotesVersion = '$(assemblyVersion)' -replace '\.',''
-        Write-Host "Create release v$(assemblyVersion) draft"
-        $output = gh release create v$(assemblyVersion) "$(Build.SourcesDirectory)/.build/lpx/linq2db.LINQPad.lpx" "$(Build.SourcesDirectory)/.build/lpx/linq2db.LINQPad.lpx6" --draft --fail-on-no-commits --generate-notes --latest --notes "[Release notes](https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap#release-$relnotesVersion) [Nugets](https://www.nuget.org/profiles/LinqToDB)" --title "Release $(assemblyVersion)"
+        $relnotesVersion = '$(packageVersion)' -replace '\.',''
+        Write-Host "Create release v$(packageVersion) draft"
+        $output = gh release create v$(packageVersion) "$(Build.SourcesDirectory)/.build/lpx/linq2db.LINQPad.lpx" "$(Build.SourcesDirectory)/.build/lpx/linq2db.LINQPad.lpx6" --draft --fail-on-no-commits --generate-notes --latest --notes "[Release notes](https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap#release-$relnotesVersion) [Nugets](https://www.nuget.org/profiles/LinqToDB)" --title "Release $(packageVersion)"
         if ($LASTEXITCODE -ne 0) {
             Write-Host "Command failed. Error code ${LASTEXITCODE}, output: ${output}"
             exit 1

@@ -10,7 +10,7 @@
 
 		<Authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko, and others</Authors>
 		<Company>linq2db.net</Company>
-		<Copyright>2002-2025 linq2db.net</Copyright>
+		<Copyright>2002-2026 linq2db.net</Copyright>
 		<RepositoryUrl>https://github.com/linq2db/linq2db</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 
@@ -43,9 +43,6 @@
 
 		<AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
 		<ProduceReferenceAssembly>true</ProduceReferenceAssembly>
-
-		<!-- Temporary; remove with release of .net10, with completion of issue https://github.com/dotnet/sdk/issues/51265 -->
-		<RestoreEnablePackagePruning>false</RestoreEnablePackagePruning>
 
 		<!--feature flags to manage floating tfm in one place-->
 		<!--CompositeFormat type-->

@@ -20,7 +20,7 @@ namespace LinqToDB
 	{
 		private sealed class FieldsExprBuilderDirect : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var fieldsExpr = (LambdaExpression)builder.Arguments[1].Unwrap();
 				var qualified = builder.Arguments.Length <= 2 || builder.GetValue<bool>(2);
@@ -45,7 +45,7 @@ namespace LinqToDB
 
 		private sealed class FieldNameBuilderDirect : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var fieldExpr    = (LambdaExpression) builder.Arguments[1].Unwrap();
 				var qualified    = builder.Arguments.Length <= 2 || builder.GetValue<bool>(2);
@@ -73,7 +73,7 @@ namespace LinqToDB
 
 		sealed class FieldNameBuilder : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var fieldExpr    = builder.GetExpression(0)!;
 				var qualified    = builder.Arguments.Length <= 1 || builder.GetValue<bool>(1);
@@ -274,7 +274,7 @@ namespace LinqToDB
 
 		private sealed class TableNameBuilderDirect : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var tableExpr    = builder.EvaluateExpression(builder.Arguments[0]);
 				var tableType    = ((MethodInfo)builder.Member).GetGenericArguments()[0];
@@ -330,7 +330,7 @@ namespace LinqToDB
 
 		private sealed class TableNameBuilder : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var tableExpr = builder.GetExpression(0);
 				var sqlTable  = QueryHelper.ExtractSqlTable(tableExpr);
@@ -370,7 +370,7 @@ namespace LinqToDB
 
 		private sealed class TableSourceBuilder : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				builder.ResultExpression = SqlAliasPlaceholder.Instance;
 			}
@@ -378,7 +378,7 @@ namespace LinqToDB
 
 		private sealed class TableOrColumnAsFieldBuilder : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var tableOrColumnExpr = builder.GetExpression(0)!;
 
@@ -390,7 +390,7 @@ namespace LinqToDB
 
 		private sealed class TableAsFieldBuilder : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				var tableExpr = builder.GetExpression(0)!;
 
@@ -503,7 +503,7 @@ namespace LinqToDB
 
 		sealed class AliasExprBuilder : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				builder.ResultExpression = SqlAliasPlaceholder.Instance;
 			}
@@ -529,7 +529,7 @@ namespace LinqToDB
 
 		sealed class ExprBuilder : IExtensionCallBuilder
 		{
-			public void Build(ISqExtensionBuilder builder)
+			public void Build(ISqlExtensionBuilder builder)
 			{
 				Internal.Linq.Builder.TableBuilder.PrepareRawSqlArguments(builder.Arguments[0],
 					builder.Arguments.Length > 1 ? builder.Arguments[1] : null,

@@ -1,8 +1,8 @@
-<#@ assembly name="System.Data.dll"                                                            #>
-<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude"                    once="true" #>
-<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude"              once="true" #>
-<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.SqlServer.SqlTypes.ttinclude" once="true" #>
-<#@ import namespace="LinqToDB.DataProvider.SqlServer"                                         #>
+<#@ assembly name="System.Data.dll"                                                                     #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude"                             once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude"                       once="true" #>
+<#@ include file="$(LinqToDBT4SqlServerTemplatesPath)LinqToDB.SqlServer.SqlTypes.ttinclude" once="true" #>
+<#@ import namespace="LinqToDB.DataProvider.SqlServer"                                                  #>
 <#
 	{
 		var _ = typeof(System.Data.SqlClient.SqlConnection).Assembly;
@@ -62,9 +62,11 @@ void DoGenerateSqlServerFreeText()
 	);
 }
 
+static SqlServerProvider DefaultSqlServerProvider = SqlServerProvider.SystemDataSqlClient;
+
 LinqToDB.Data.DataConnection GetSqlServerConnection(string connectionString, SqlServerVersion version)
 {
-	return LinqToDB.DataProvider.SqlServer.SqlServerTools.CreateDataConnection(connectionString, version, SqlServerProvider.SystemDataSqlClient);
+	return LinqToDB.DataProvider.SqlServer.SqlServerTools.CreateDataConnection(connectionString, version, DefaultSqlServerProvider);
 }
 
 LinqToDB.Data.DataConnection GetSqlServerConnection(string server, string database, SqlServerVersion version)

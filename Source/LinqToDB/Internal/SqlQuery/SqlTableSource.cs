@@ -1,12 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
 {
 	public sealed class SqlTableSource : SqlExpressionBase, ISqlTableSource
 	{
 #if DEBUG
+#pragma warning disable CA1823 // Avoid unused private fields
 		readonly int id = System.Threading.Interlocked.Increment(ref SelectQuery.SourceIDCounter);
+#pragma warning restore CA1823 // Avoid unused private fields
 #endif
 
 		public SqlTableSource(ISqlTableSource source, string? alias)
@@ -207,6 +212,9 @@ namespace LinqToDB.Internal.SqlQuery
 
 			return hash.ToHashCode();
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlTableSource(this);
 
 		#endregion
 

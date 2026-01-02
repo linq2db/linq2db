@@ -19,6 +19,7 @@ namespace Tests.SchemaProvider
 		// or other failures
 		// doesn't test that actual data returned
 		[Test]
+		[YdbNotImplementedYet]
 		public void TestApiImplemented([DataSources(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -36,6 +37,7 @@ namespace Tests.SchemaProvider
 
 		// TODO: temporary disabled for oracle, as it takes 10 minutes for Oracle12 to process schema exceptions
 		[Test]
+		[YdbNotImplementedYet]
 		public void Test([DataSources(false, TestProvName.AllOracle12)] string context)
 		{
 			using (var conn = GetDataConnection(context))
@@ -256,6 +258,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
+		[YdbNotImplementedYet]
 		public void IncludeExcludeCatalogTest([DataSources(false)] string context)
 		{
 			using (var conn = GetDataConnection(context))
@@ -275,6 +278,7 @@ namespace Tests.SchemaProvider
 		}
 
 		[Test]
+		[YdbNotImplementedYet]
 		public void IncludeExcludeSchemaTest([DataSources(false)] string context)
 		{
 			using (new DisableBaseline("TODO: exclude schema list is not stable, db2 schema provider needs refactoring", GetProviderName(context, out var _) == ProviderName.DB2))
@@ -340,6 +344,7 @@ namespace Tests.SchemaProvider
 		// TODO: temporary disabled for oracle, as it takes 10 minutes for Oracle12 to process schema exceptions
 		// Access.Odbc: no FK information available for provider
 		[Test]
+		[YdbNotImplementedYet]
 		public void PrimaryForeignKeyTest([DataSources(false, TestProvName.AllOracle12, TestProvName.AllAccessOdbc)] string context)
 		{
 			var skipFK = context.IsAnyOf(TestProvName.AllClickHouse);
