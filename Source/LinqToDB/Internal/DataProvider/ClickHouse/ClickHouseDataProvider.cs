@@ -222,6 +222,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					// https://github.com/ClickHouse/clickhouse-cs/issues/109
 					(ClickHouseProvider.ClickHouseDriver, DataType.VarBinary, byte[] val) => Encoding.UTF8.GetString(val),
 
+					(ClickHouseProvider.ClickHouseDriver, DataType.NChar or DataType.Char, string val) => FixSize(Encoding.UTF8.GetBytes(val), dataType.Length ?? ClickHouseMappingSchema.DEFAULT_FIXED_STRING_LENGTH),
+					(ClickHouseProvider.ClickHouseDriver, DataType.Binary, byte[] val)                 => FixSize(val, dataType.Length ?? ClickHouseMappingSchema.DEFAULT_FIXED_STRING_LENGTH),
+
 					_ => value
 				};
 			}
@@ -229,7 +232,17 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-#endregion
+		private byte[] FixSize(byte[] bytes, int length)
+		{
+			if (length <= bytes.Length)
+				return bytes;
+
+			var arr = new byte[length];
+			Array.Copy(bytes, arr, bytes.Length);
+			return arr;
+		}
+
+		#endregion
 
 		#region BulkCopy
 

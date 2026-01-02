@@ -603,7 +603,8 @@ namespace Tests.DataProvider
 			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.VarBinary), new byte[] { 0 }, new byte[] { 1 });
 			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.VarBinary), new byte[] { 2 }, new byte[] { 3 });
 			// https://github.com/ClickHouse/ClickHouse/issues/38790
-			if (!context.IsAnyOf(ProviderName.ClickHouseMySql))
+			// https://github.com/ClickHouse/clickhouse-cs/issues/109
+			if (!context.IsAnyOf(ProviderName.ClickHouseMySql, ProviderName.ClickHouseDriver))
 			{
 				await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.VarBinary), new byte[] { 255 }, new byte[] { 254 });
 			}
