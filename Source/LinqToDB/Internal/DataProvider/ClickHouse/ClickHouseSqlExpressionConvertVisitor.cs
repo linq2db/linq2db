@@ -103,6 +103,14 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			return base.ConvertSearchStringPredicate(predicate);
 		}
 
+		public override ISqlExpression ConvertSqlExpression(SqlExpression element)
+		{
+			if (element is { Expr: "~{0}", Parameters: [var arg] })
+				return new SqlFunction(element.Type, "bitNot", arg);
+
+			return base.ConvertSqlExpression(element);
+		}
+
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			var newElement = base.ConvertSqlBinaryExpression(element);

@@ -1906,9 +1906,8 @@ namespace Tests.Linq
 			if (!context.IsAnyOf(TestProvName.AllClickHouse))
 			{
 				// test parameter in update
-				tb.Update(r => new TestBool()
+				tb.Where(r => r.Id == 1).Update(r => new TestBool()
 				{
-					Id = 1,
 					Value = !value
 				});
 
