@@ -38,9 +38,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// <summary>
 		/// Resets visitor to initial state.
 		/// </summary>
-		public virtual void Cleanup()
+		public override void Cleanup()
 		{
 			_transformationInfo = null;
+			base.Cleanup();
 		}
 
 		protected void SetTransformationInfo(IVisitorTransformationInfo? transformationInfo)

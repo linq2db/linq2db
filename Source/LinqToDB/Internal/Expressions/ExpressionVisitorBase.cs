@@ -2,18 +2,32 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
+using LinqToDB.Internal.Common;
+
 namespace LinqToDB.Internal.Expressions
 {
 	public abstract class ExpressionVisitorBase : ExpressionVisitor
 	{
-#if DEBUG
+		readonly StackGuard _guard = new();
+
 		[DebuggerStepThrough]
 		[return: NotNullIfNotNull(nameof(node))]
 		public override Expression? Visit(Expression? node)
 		{
-			return base.Visit(node);
+			if (node == null)
+				return null;
+
+			node = _guard.Enter(base.Visit, node) ?? base.Visit(node);
+
+			_guard.Exit();
+
+			return node;
 		}
-#endif
+
+		public virtual void Cleanup()
+		{
+			_guard.Reset();
+		}
 
 		public virtual Expression VisitSqlPlaceholderExpression(SqlPlaceholderExpression node)
 		{
@@ -93,10 +107,6 @@ namespace LinqToDB.Internal.Expressions
 		internal virtual Expression VisitSqlPathExpression(SqlPathExpression node)
 		{
 			return node;
-		}
-
-		public virtual void Cleanup()
-		{
 		}
 
 		public virtual Expression VisitMarkerExpression(MarkerExpression node)
