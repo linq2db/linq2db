@@ -409,5 +409,58 @@ namespace Tests.Linq
 				Assert.That(arr1, Has.Length.EqualTo(arr2.Length + 1));
 			}
 		}
+
+		[Table]
+		public partial class Issue5289Table
+		{
+			[PrimaryKey] public int  Id        { get; set; }
+			[Column    ] public int? PictureId { get; set; }
+			[Column    ] public bool  Deleted  { get; init; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5289")]
+		public void InsertOrUpdate([InsertOrUpdateDataSources] string context)
+		{
+			var builder = new FluentMappingBuilder();
+			builder.Entity<Issue5289Table>().HasQueryFilter((r, db) => !r.Deleted);
+			builder.Build();
+
+			using var db = GetDataContext(context, builder.MappingSchema);
+			using var tb = db.CreateLocalTable<Issue5289Table>();
+
+			tb.InsertOrUpdate(
+				() => new Issue5289Table()
+				{
+					Id = 1,
+					PictureId = 2,
+					Deleted = false
+				},
+				r => new Issue5289Table()
+				{
+					PictureId = 3,
+				});
+
+			var record = tb.SingleOrDefault(r => r.Id == 1);
+
+			Assert.That(record, Is.Not.Null);
+			Assert.That(record.PictureId, Is.EqualTo(2));
+
+			tb.InsertOrUpdate(
+				() => new Issue5289Table()
+				{
+					Id = 1,
+					PictureId = 2,
+					Deleted = false
+				},
+				r => new Issue5289Table()
+				{
+					PictureId = 3
+				});
+
+			record = tb.SingleOrDefault(r => r.Id == 1);
+
+			Assert.That(record, Is.Not.Null);
+			Assert.That(record.PictureId, Is.EqualTo(3));
+		}
 	}
 }
