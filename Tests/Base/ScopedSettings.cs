@@ -95,6 +95,20 @@ namespace Tests
 		}
 	}
 
+	public class ThreadHopsScope : IDisposable
+	{
+		private readonly int _original = Configuration.TranslationThreadMaxHopCount;
+		public ThreadHopsScope(int maxHops)
+		{
+			Configuration.TranslationThreadMaxHopCount = maxHops;
+		}
+
+		public void Dispose()
+		{
+			Configuration.TranslationThreadMaxHopCount = _original;
+		}
+	}
+
 	public class DisableBaseline : IDisposable
 	{
 		private readonly CustomTestContext _ctx;
