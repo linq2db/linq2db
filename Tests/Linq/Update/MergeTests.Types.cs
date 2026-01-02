@@ -459,8 +459,9 @@ namespace Tests.xUpdate
 						expected = new byte[] { 0 };
 				}
 
-				if (provider.IsAnyOf(ProviderName.ClickHouseMySql))
+				if (provider.IsAnyOf(ProviderName.ClickHouseMySql, ProviderName.ClickHouseDriver))
 				{
+					// https://github.com/ClickHouse/clickhouse-cs/issues/109
 					// https://github.com/ClickHouse/ClickHouse/issues/38790
 					expected = Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(expected));
 				}

@@ -118,8 +118,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 			if (Provider == ClickHouseProvider.ClickHouseDriver)
 			{
-				SetProviderField<DbDataReader, Guid, byte[]>((rd, idx) => ReadGuid((byte[])rd.GetValue(idx)));
-				SetProviderField<DbDataReader, char, byte[]>((rd, idx) => Encoding.UTF8.GetString((byte[])rd.GetValue(idx)).First());
+				SetProviderField<DbDataReader, byte[], byte[]>((rd, idx) => (byte[])rd.GetValue(idx));
+				SetProviderField<DbDataReader, Guid, byte[]>((rd, idx)   => ReadGuid((byte[])rd.GetValue(idx)));
+				SetProviderField<DbDataReader, char, byte[]>((rd, idx)   => Encoding.UTF8.GetString((byte[])rd.GetValue(idx)).First());
+
+				// https://github.com/ClickHouse/clickhouse-cs/issues/109
+				ReaderExpressions[new ReaderInfo { ProviderFieldType = typeof(byte[]) }] = (DbDataReader rd, int idx) => Encoding.UTF8.GetString((byte[])rd.GetValue(idx));
 			}
 		}
 
