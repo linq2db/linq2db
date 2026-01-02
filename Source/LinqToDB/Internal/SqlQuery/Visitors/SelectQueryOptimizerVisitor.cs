@@ -2875,6 +2875,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							{
 								if (joinQuery.Select.Columns.Count > 1)
 								{
+									TryRemoveNotUsedColumns(sq, joinQuery);
+								}
+
+								if (joinQuery.Select.Columns.Count > 1)
+								{
 									if (!processMultiColumn)
 										continue;
 
@@ -3049,6 +3054,34 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 
 			return isModified;
+		}
+
+		static void TryRemoveNotUsedColumns(SelectQuery parentQuery, SelectQuery subQuery)
+		{
+			for (var i = subQuery.Select.Columns.Count - 1; i >= 0; i--)
+			{
+				var column = subQuery.Select.Columns[i];
+				var isUsed = false;
+
+				parentQuery.VisitParentFirst(e =>
+				{
+					if (ReferenceEquals(e, column))
+					{
+						isUsed = true;
+						return false;
+					}
+
+					if (ReferenceEquals(e, subQuery))
+						return false;
+
+					return true;
+				});
+
+				if (!isUsed)
+				{
+					subQuery.Select.Columns.RemoveAt(i);
+				}
+			}
 		}
 
 		protected internal override IQueryElement VisitCteClause(CteClause element)
