@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text.Json;
 
 using Microsoft.EntityFrameworkCore;
@@ -65,6 +66,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public DbSet<Issue4783Record> Issue4783Records { get; set; } = null!;
 
 		public DbSet<Issue5177Table> Issue5177 { get; set; } = null!;
+
+		public DbSet<Issue5267Department> Issue5267Departments { get; set; } = null!;
+		public DbSet<Issue5267Role> Issue5267Roles { get; set; } = null!;
 
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
@@ -347,6 +351,62 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 				e.Property(e => e.Value).HasConversion(converter);
 			});
+
+			modelBuilder.Entity<Issue5267Role>(e =>
+			{
+				e.Property(e => e.Id).ValueGeneratedNever();
+				var filterExpression = CreateFilterExpression<Issue5267Role>();
+				e.HasQueryFilter(filterExpression);
+				e.Property(e => e.DepartmentId);
+				e.Property(e => e.IsDeleted);
+				e.Property(e => e.TenantId);
+			});
+
+			modelBuilder.Entity<Issue5267Department>(e =>
+			{
+				e.Property(e => e.Id).ValueGeneratedNever();
+				e.Property(e => e.ParentGuid);
+			});
+
+			Expression<Func<TEntity, bool>> CreateFilterExpression<TEntity>()
+					where TEntity : class
+			{
+				Expression<Func<TEntity, bool>> filter1 = e => !EF.Property<bool>(e, "IsDeleted");
+				Expression<Func<TEntity, bool>> filter2 = e => EF.Property<Guid>(e, "TenantId") == Issue5267CurrentTenantId;
+				return CombineExpressions(filter1, filter2);
+			}
+
+			static Expression<Func<T, bool>> CombineExpressions<T>(Expression<Func<T, bool>> expression1, Expression<Func<T, bool>> expression2)
+			{
+				var parameter = Expression.Parameter(typeof(T));
+
+				var leftVisitor = new ReplaceExpressionVisitor(expression1.Parameters[0], parameter);
+				var left = leftVisitor.Visit(expression1.Body);
+
+				var rightVisitor = new ReplaceExpressionVisitor(expression2.Parameters[0], parameter);
+				var right = rightVisitor.Visit(expression2.Body);
+
+				return Expression.Lambda<Func<T, bool>>(Expression.AndAlso(left!, right!), parameter);
+			}
+		}
+
+		public Guid? Issue5267CurrentTenantId { get; set; }
+
+		private class ReplaceExpressionVisitor : ExpressionVisitor
+		{
+			private readonly Expression _oldValue;
+			private readonly Expression _newValue;
+
+			public ReplaceExpressionVisitor(Expression oldValue, Expression newValue)
+			{
+				_oldValue = oldValue;
+				_newValue = newValue;
+			}
+
+			public override Expression? Visit(Expression? node)
+			{
+				return node == _oldValue ? _newValue : base.Visit(node);
+			}
 		}
 	}
 }
