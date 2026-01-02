@@ -390,6 +390,9 @@ namespace LinqToDB.Internal.Reflection
 			{
 				public static readonly PropertyInfo DbDataType = MemberHelper.PropertyOf<Data.DataParameter>(dp => dp.DbDataType);
 				public static readonly PropertyInfo Value      = MemberHelper.PropertyOf<Data.DataParameter>(dp => dp.Value);
+
+				internal static readonly MethodInfo ClearValue = MemberHelper.MethodOf<Data.DataParameter>(dp => dp.ClearValue(false));
+				internal static readonly MethodInfo WithType   = MemberHelper.MethodOf<Data.DataParameter>(dp => dp.WithType(default));
 			}
 
 			internal static class Exceptions
