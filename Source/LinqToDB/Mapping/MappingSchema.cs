@@ -869,7 +869,7 @@ namespace LinqToDB.Mapping
 			var nullableType = from.SystemType.MakeNullable();
 			var fromNullable = from.WithSystemType(nullableType);
 
-			// we probably shouldn't rewrite exsting conversions implicitly
+			// we probably shouldn't rewrite existing conversions implicitly
 			if (GetConverter(fromNullable, to, false, conversionType) != null)
 				return;
 
