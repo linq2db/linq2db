@@ -227,8 +227,6 @@ namespace LinqToDB.Mapping
 
 		#region Default Values
 
-		const FieldAttributes EnumField = FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal;
-
 		/// <summary>
 		/// Returns default value for specified type.
 		/// Default value is a value, used instead of <c>NULL</c> value, read from database.
@@ -246,25 +244,22 @@ namespace LinqToDB.Mapping
 
 			if (type.IsEnum)
 			{
-				var mapValues = GetMapValues(type);
+				var mapValues = GetMapValues(type)!;
 
-				if (mapValues != null)
+				object? value = null;
+
+				foreach (var f in mapValues)
+					if (f.MapValues.Any(static a => a.Value == null))
+						value = f.OrigValue;
+
+				if (value != null)
 				{
-					object? value = null;
-
-					foreach (var f in mapValues)
-						if (f.MapValues.Any(static a => a.Value == null))
-							value = f.OrigValue;
-
-					if (value != null)
+					lock (_syncRoot)
 					{
-						lock (_syncRoot)
-						{
-							Schemas[0].SetDefaultValue(type, value, resetId: false);
-						}
-
-						return value;
+						Schemas[0].SetDefaultValue(type, value, resetId: false);
 					}
+
+					return value;
 				}
 			}
 
@@ -306,25 +301,22 @@ namespace LinqToDB.Mapping
 
 			if (type.IsEnum)
 			{
-				var mapValues = GetMapValues(type);
+				var mapValues = GetMapValues(type)!;
 
-				if (mapValues != null)
+				object? value = null;
+
+				foreach (var f in mapValues)
+					if (f.MapValues.Any(static a => a.Value == null))
+						value = f.OrigValue;
+
+				if (value != null)
 				{
-					object? value = null;
-
-					foreach (var f in mapValues)
-						if (f.MapValues.Any(static a => a.Value == null))
-							value = f.OrigValue;
-
-					if (value != null)
+					lock (_syncRoot)
 					{
-						lock (_syncRoot)
-						{
-							Schemas[0].SetCanBeNull(type, true, resetId: false);
-						}
-
-						return true;
+						Schemas[0].SetCanBeNull(type, true, resetId: false);
 					}
+
+					return true;
 				}
 			}
 
@@ -1637,11 +1629,7 @@ namespace LinqToDB.Mapping
 
 			if (underlyingType.IsEnum)
 			{
-				var attrs = new List<MapValueAttribute>();
-
-				foreach (var f in underlyingType.GetFields())
-					if ((f.Attributes & EnumField) == EnumField)
-						attrs.AddRange(GetAttributes<MapValueAttribute>(underlyingType, f));
+				var attrs = GetMapValues(underlyingType)!.SelectMany(f => f.MapValues).ToList();
 
 				if (attrs.Count == 0)
 				{
@@ -1707,6 +1695,9 @@ namespace LinqToDB.Mapping
 
 		ConcurrentDictionary<Type,MapValue[]?>? _mapValues;
 
+		const FieldAttributes EnumField = FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal;
+
+		// TODO: v7: make it throw for non-enum type
 		/// <summary>
 		/// Returns enum type mapping information or <c>null</c> for non-enum types.
 		/// </summary>
@@ -1725,17 +1716,10 @@ namespace LinqToDB.Mapping
 
 						if (underlyingType.IsEnum)
 						{
-							List<MapValue>? fields = null;
-
-							foreach (var f in underlyingType.GetFields())
-								if ((f.Attributes & EnumField) == EnumField)
-								{
-									var attrs = GetAttributes<MapValueAttribute>(underlyingType, f);
-									(fields ??= new()).Add(new MapValue(Enum.Parse(underlyingType, f.Name, false), attrs));
-								}
-
-							if (fields?.Any(f => f.MapValues.Length > 0) == true)
-								return fields.ToArray();
+							return type.GetFields()
+								.Where(f => (f.Attributes & EnumField) == EnumField)
+								.Select(f => new MapValue(f.GetValue(null)!, GetAttributes<MapValueAttribute>(underlyingType, f)))
+								.ToArray();
 						}
 
 						return null;

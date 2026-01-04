@@ -10,7 +10,7 @@ namespace Tests.Mapping
 {
 	public class MapValueTests : TestBase
 	{
-		enum TestEnum1
+		public enum TestEnum1
 		{
 			[MapValue("F")] First,
 			[MapValue("S")] Second,
@@ -18,20 +18,20 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void Test1([DataSources] string context)
+		public void Test1([DataSources] string context, [Values] TestEnum1 val)
 		{
 			using var db  = GetDataContext(context);
-			using var tmp = db.CreateLocalTable([new { EnumValue = TestEnum1.First }]);
+			using var tmp = db.CreateLocalTable([new { EnumValue = val }]);
 
 			var value = tmp.Select(t =>
 				t.EnumValue == TestEnum1.First  ? "First"  :
 				t.EnumValue == TestEnum1.Second ? "Second" : t.EnumValue.ToString()
 			).First();
 
-			Assert.That(value, Is.EqualTo("First"));
+			Assert.That(value, Is.EqualTo(val.ToString()));
 		}
 
-		enum TestEnum2
+		public enum TestEnum2
 		{
 			[MapValue('F')] First,
 			[MapValue('S')] Second,
@@ -39,31 +39,31 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void Test2([DataSources] string context)
+		public void Test2([DataSources] string context, [Values] TestEnum2 val)
 		{
 			using var db  = GetDataContext(context);
-			using var tmp = db.CreateLocalTable([new { EnumValue = TestEnum2.First }]);
+			using var tmp = db.CreateLocalTable([new { EnumValue = val }]);
 
 			var value = tmp.Select(t =>
 				t.EnumValue == TestEnum2.First  ? "First"  :
 				t.EnumValue == TestEnum2.Second ? "Second" : t.EnumValue.ToString()
 			).First();
 
-			Assert.That(value, Is.EqualTo("First"));
+			Assert.That(value, Is.EqualTo(val.ToString()));
 		}
 
 		[Test]
-		public void Test3([DataSources] string context)
+		public void Test3([DataSources] string context, [Values] TestEnum1 val)
 		{
 			using var db  = GetDataContext(context);
-			using var tmp = db.CreateLocalTable([new { EnumValue = TestEnum1.First }]);
+			using var tmp = db.CreateLocalTable([new { EnumValue = val }]);
 
 			var value = tmp.Select(t =>
 				t.EnumValue == TestEnum1.Second ? "Second" :
 				t.EnumValue == TestEnum1.Third  ? "Third"  : t.EnumValue.ToString()
 			).First();
 
-			Assert.That(value, Is.EqualTo("First"));
+			Assert.That(value, Is.EqualTo(val.ToString()));
 		}
 	}
 }
