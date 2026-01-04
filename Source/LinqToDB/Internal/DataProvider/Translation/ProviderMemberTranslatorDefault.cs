@@ -150,7 +150,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						}
 					}
 
-					var defaultSql = translationContext.ExpressionFactory.Cast(objPlaceholder.Sql, toType);
+					var defaultSql = objPlaceholder.Sql;
 
 					var expr = cases == null ? defaultSql : new SqlCaseExpression(toType, cases, defaultSql);
 

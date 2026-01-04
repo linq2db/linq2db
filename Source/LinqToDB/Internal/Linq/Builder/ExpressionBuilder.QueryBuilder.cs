@@ -544,21 +544,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var columnDescriptor = QueryHelper.GetColumnDescriptor(placeholder.Sql);
 
-					var valueType = columnDescriptor?.GetDbDataType(true).SystemType
-					                ?? placeholder.Type;
+					var valueType = placeholder.Type;
 
 					var canBeNull = nullability.CanBeNull(placeholder.Sql) || placeholder.Type.IsNullableType;
-
-					if (canBeNull && valueType != placeholder.Type && !valueType.IsNullableOrReferenceType())
-					{
-						valueType = valueType.AsNullable();
-					}
-
-					if (placeholder.Type != valueType && valueType.IsNullableType && placeholder.Type == valueType.UnwrapNullableType())
-					{
-						// let ConvertFromDataReaderExpression handle default value
-						valueType = placeholder.Type;
-					}
 
 					var readerExpression = (Expression)new ConvertFromDataReaderExpression(valueType, placeholder.Index.Value,
 						columnDescriptor?.ValueConverter, Expression.Property(QueryRunnerParam, QueryRunner.DataContextInfo), DataReaderParam, canBeNull);
