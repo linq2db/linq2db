@@ -543,12 +543,35 @@ namespace LinqToDB.Internal.Linq.Builder
 						throw new InvalidOperationException();
 
 					var columnDescriptor = QueryHelper.GetColumnDescriptor(placeholder.Sql);
-					var columnType       = columnDescriptor?.GetDbDataType(true).SystemType;
+					var sqlType          = QueryHelper.GetDbDataType(placeholder.Sql, MappingSchema);
+
+					var valueType = sqlType.SystemType;
 
 					var canBeNull = nullability.CanBeNull(placeholder.Sql) || placeholder.Type.IsNullableType;
 
-					var readerExpression = (Expression)new ConvertFromDataReaderExpression(placeholder.Type, placeholder.Index.Value,
-						columnType != placeholder.Type ? null : columnDescriptor?.ValueConverter, Expression.Property(QueryRunnerParam, QueryRunner.DataContextInfo), DataReaderParam, canBeNull);
+					if (canBeNull && valueType != placeholder.Type && !valueType.IsNullableOrReferenceType())
+					{
+						valueType = valueType.AsNullable();
+					}
+
+					if (placeholder.Type != valueType && valueType.IsNullableType && placeholder.Type == valueType.UnwrapNullableType())
+					{
+						// let ConvertFromDataReaderExpression handle default value
+						valueType = placeholder.Type;
+					}
+
+					var readerExpression = (Expression)new ConvertFromDataReaderExpression(valueType, placeholder.Index.Value,
+						columnDescriptor?.ValueConverter, Expression.Property(QueryRunnerParam, QueryRunner.DataContextInfo), DataReaderParam, canBeNull);
+
+					if (placeholder.Type != readerExpression.Type)
+					{
+						var convertExpression = MappingSchema.GetConvertExpression(readerExpression.Type, placeholder.Type, checkNull: canBeNull, true, ConversionType.FromDatabase);
+
+						if (convertExpression is null)
+							throw new InvalidOperationException($"No conversions defined from {readerExpression.Type} to {placeholder.Type}");
+
+						readerExpression = InternalExtensions.ApplyLambdaToExpression(convertExpression, readerExpression);
+					}
 
 					if (!canBeNull && readerExpression.Type == typeof(string) && DataContext.SqlProviderFlags.DoesProviderTreatsEmptyStringAsNull)
 					{
