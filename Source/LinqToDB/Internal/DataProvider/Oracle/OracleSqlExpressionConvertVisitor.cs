@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB.Internal.Extensions;
@@ -156,23 +157,31 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			};
 		}
 
-		protected override ISqlExpression ConvertSqlCaseExpression(SqlCaseExpression element)
+		protected internal override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
 		{
-			var hasChar  = false;
-			var hasNChar = false;
-
-			foreach (var expr in element.Cases.Select(c => c.ResultExpression).Concat(element.ElseExpression == null ? [] : [element.ElseExpression]))
+			if (NeedsCharTypeCorrection(element.Expressions))
 			{
-				var type = QueryHelper.GetDbDataType(expr, MappingSchema);
+				for (var i = 0; i < element.Expressions.Length; i++)
+				{
+					var type = QueryHelper.GetDbDataType(element.Expressions[i], MappingSchema);
 
-				hasChar  = hasChar  || type.DataType is DataType.Char or DataType.VarChar;
-				hasNChar = hasNChar || type.DataType is DataType.NChar or DataType.NVarChar;
-
-				if (hasChar && hasNChar)
-					break;
+					if (type.DataType is DataType.Char or DataType.VarChar)
+					{
+						element.Expressions[i] = new SqlCastExpression(
+							element.Expressions[i],
+							type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
+							null,
+							isMandatory: true);
+					}
+				}
 			}
 
-			if (hasChar && hasNChar)
+			return base.VisitSqlCoalesceExpression(element);
+		}
+
+		protected override ISqlExpression ConvertSqlCaseExpression(SqlCaseExpression element)
+		{
+			if (NeedsCharTypeCorrection(element.Cases.Select(c => c.ResultExpression).Concat(element.ElseExpression == null ? [] : [element.ElseExpression])))
 			{
 				foreach (var caseItem in element.Cases)
 				{
@@ -204,6 +213,25 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			}
 
 			return base.ConvertSqlCaseExpression(element);
+		}
+
+		private bool NeedsCharTypeCorrection(IEnumerable<ISqlExpression> expressions)
+		{
+			var hasChar = false;
+			var hasNChar = false;
+
+			foreach (var expr in expressions)
+			{
+				var type = QueryHelper.GetDbDataType(expr, MappingSchema);
+
+				hasChar  = hasChar  || type.DataType is DataType.Char or DataType.VarChar;
+				hasNChar = hasNChar || type.DataType is DataType.NChar or DataType.NVarChar;
+
+				if (hasChar && hasNChar)
+					return true;
+			}
+
+			return false;
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
