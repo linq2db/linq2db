@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
@@ -153,6 +154,56 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				default:
 					return base.ConvertSqlFunction(func);
 			};
+		}
+
+		protected override ISqlExpression ConvertSqlCaseExpression(SqlCaseExpression element)
+		{
+			var hasChar  = false;
+			var hasNChar = false;
+
+			foreach (var expr in element.Cases.Select(c => c.ResultExpression).Concat(element.ElseExpression == null ? [] : [element.ElseExpression]))
+			{
+				var type = QueryHelper.GetDbDataType(expr, MappingSchema);
+
+				hasChar  = hasChar  || type.DataType is DataType.Char or DataType.VarChar;
+				hasNChar = hasNChar || type.DataType is DataType.NChar or DataType.NVarChar;
+
+				if (hasChar && hasNChar)
+					break;
+			}
+
+			if (hasChar && hasNChar)
+			{
+				foreach (var caseItem in element.Cases)
+				{
+					var type = QueryHelper.GetDbDataType(caseItem.ResultExpression, MappingSchema);
+
+					if (type.DataType is DataType.Char or DataType.VarChar)
+					{
+						caseItem.ResultExpression = new SqlCastExpression(
+							caseItem.ResultExpression,
+							type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
+							null,
+							isMandatory: true);
+					}
+				}
+
+				if (element.ElseExpression != null)
+				{
+					var type = QueryHelper.GetDbDataType(element.ElseExpression, MappingSchema);
+
+					if (type.DataType is DataType.Char or DataType.VarChar)
+					{
+						element.ElseExpression = new SqlCastExpression(
+							element.ElseExpression,
+							type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
+							null,
+							isMandatory: true);
+					}
+				}
+			}
+
+			return base.ConvertSqlCaseExpression(element);
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)

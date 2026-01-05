@@ -126,9 +126,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					break;
 				case DataType.NVarChar       :
 					if (type.Length == null || type.Length > 4000 || type.Length < 1)
-						StringBuilder.Append("VarChar2(4000)");
+						StringBuilder.Append("NVarChar2(4000)");
 					else
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"VarChar2({type.Length})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"NVarChar2({type.Length})");
 					break;
 				case DataType.Boolean        : StringBuilder.Append("NUMBER(1)");                 break;
 				case DataType.NText          : StringBuilder.Append("NClob");                     break;

@@ -45,7 +45,7 @@ namespace LinqToDB.Internal.SqlQuery
 		internal List<CaseItem> _cases;
 		readonly DbDataType     _dataType;
 
-		public ISqlExpression?         ElseExpression { get; private set; }
+		public ISqlExpression?         ElseExpression { get; set; }
 		public IReadOnlyList<CaseItem> Cases          => _cases;
 		public DbDataType              Type           => _dataType;
 

@@ -17,11 +17,21 @@ namespace Tests.Mapping
 			[MapValue("T")] Third
 		}
 
+		[Table("MapValueTable")]
+		sealed class TestRecord<T>
+			where T : Enum
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+			[Column]
+			public T EnumValue { get; set; } = default!;
+		}
+
 		[Test]
 		public void Test1([DataSources] string context, [Values] TestEnum1 val)
 		{
 			using var db  = GetDataContext(context);
-			using var tmp = db.CreateLocalTable([new { EnumValue = val }]);
+			using var tmp = db.CreateLocalTable([new TestRecord<TestEnum1> { Id = 1, EnumValue = val }]);
 
 			var value = tmp.Select(t =>
 				t.EnumValue == TestEnum1.First  ? "First"  :
@@ -42,7 +52,7 @@ namespace Tests.Mapping
 		public void Test2([DataSources] string context, [Values] TestEnum2 val)
 		{
 			using var db  = GetDataContext(context);
-			using var tmp = db.CreateLocalTable([new { EnumValue = val }]);
+			using var tmp = db.CreateLocalTable([new TestRecord<TestEnum2> { Id = 1, EnumValue = val }]);
 
 			var value = tmp.Select(t =>
 				t.EnumValue == TestEnum2.First  ? "First"  :
@@ -56,7 +66,7 @@ namespace Tests.Mapping
 		public void Test3([DataSources] string context, [Values] TestEnum1 val)
 		{
 			using var db  = GetDataContext(context);
-			using var tmp = db.CreateLocalTable([new { EnumValue = val }]);
+			using var tmp = db.CreateLocalTable([new TestRecord<TestEnum1> { Id = 1, EnumValue = val }]);
 
 			var value = tmp.Select(t =>
 				t.EnumValue == TestEnum1.Second ? "Second" :
