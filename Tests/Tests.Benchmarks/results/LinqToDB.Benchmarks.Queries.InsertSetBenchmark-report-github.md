@@ -11,8 +11,8 @@ AMD Ryzen 9 5950X 3.39GHz, 2 CPU, 32 logical and 16 physical cores
 Jit=RyuJit  Platform=X64  
 
 ```
-| Method | Runtime              | Mean       | Allocated |
-|------- |--------------------- |-----------:|----------:|
-| Test   | .NET 8.0             |   983.5 μs | 611.98 KB |
-| Test   | .NET 9.0             | 1,161.4 μs | 525.92 KB |
-| Test   | .NET Framework 4.6.2 | 2,427.3 μs | 931.35 KB |
+| Method | Runtime              | Mean     | Allocated  |
+|------- |--------------------- |---------:|-----------:|
+| Test   | .NET 8.0             | 1.495 ms |  823.41 KB |
+| Test   | .NET 9.0             | 1.549 ms |  739.58 KB |
+| Test   | .NET Framework 4.6.2 | 3.936 ms | 1146.14 KB |

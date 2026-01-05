@@ -13,21 +13,21 @@ Jit=RyuJit  Platform=X64
 ```
 | Method             | Runtime              | Mean         | Allocated |
 |------------------- |--------------------- |-------------:|----------:|
-| LinqSet            | .NET 8.0             | 152,315.9 ns |   43008 B |
-| LinqObject         | .NET 8.0             | 107,212.6 ns |   32384 B |
-| Object             | .NET 8.0             |   9,287.9 ns |    8272 B |
-| CompiledLinqSet    | .NET 8.0             |   7,090.3 ns |    8032 B |
-| CompiledLinqObject | .NET 8.0             |   7,926.0 ns |    8032 B |
-| RawAdoNet          | .NET 8.0             |     218.8 ns |     712 B |
-| LinqSet            | .NET 9.0             | 139,537.1 ns |   42512 B |
-| LinqObject         | .NET 9.0             | 100,568.3 ns |   32272 B |
-| Object             | .NET 9.0             |   6,691.1 ns |    8224 B |
-| CompiledLinqSet    | .NET 9.0             |   6,626.8 ns |    7984 B |
-| CompiledLinqObject | .NET 9.0             |   5,649.5 ns |    7984 B |
-| RawAdoNet          | .NET 9.0             |     162.3 ns |     712 B |
-| LinqSet            | .NET Framework 4.6.2 | 459,351.6 ns |   77418 B |
-| LinqObject         | .NET Framework 4.6.2 | 252,160.5 ns |   47913 B |
-| Object             | .NET Framework 4.6.2 |  20,815.1 ns |    8842 B |
-| CompiledLinqSet    | .NET Framework 4.6.2 |  15,919.0 ns |    8264 B |
-| CompiledLinqObject | .NET Framework 4.6.2 |  17,294.5 ns |    8265 B |
-| RawAdoNet          | .NET Framework 4.6.2 |     344.7 ns |     810 B |
+| LinqSet            | .NET 8.0             | 200,306.6 ns |   86864 B |
+| LinqObject         | .NET 8.0             | 152,654.7 ns |   76800 B |
+| Object             | .NET 8.0             |  15,927.6 ns |   22752 B |
+| CompiledLinqSet    | .NET 8.0             |  78,557.0 ns |   58080 B |
+| CompiledLinqObject | .NET 8.0             |  78,231.1 ns |   58080 B |
+| RawAdoNet          | .NET 8.0             |     221.3 ns |     712 B |
+| LinqSet            | .NET 9.0             | 209,278.6 ns |   86624 B |
+| LinqObject         | .NET 9.0             | 148,562.8 ns |   76176 B |
+| Object             | .NET 9.0             |  32,962.4 ns |   22704 B |
+| CompiledLinqSet    | .NET 9.0             |  51,907.2 ns |   57136 B |
+| CompiledLinqObject | .NET 9.0             |  47,933.6 ns |   57136 B |
+| RawAdoNet          | .NET 9.0             |     122.0 ns |     712 B |
+| LinqSet            | .NET Framework 4.6.2 | 412,672.5 ns |  123836 B |
+| LinqObject         | .NET Framework 4.6.2 | 305,056.1 ns |  100182 B |
+| Object             | .NET Framework 4.6.2 |  81,123.1 ns |   23236 B |
+| CompiledLinqSet    | .NET Framework 4.6.2 | 158,126.7 ns |   67832 B |
+| CompiledLinqObject | .NET Framework 4.6.2 |  73,394.6 ns |   67831 B |
+| RawAdoNet          | .NET Framework 4.6.2 |     751.3 ns |     810 B |

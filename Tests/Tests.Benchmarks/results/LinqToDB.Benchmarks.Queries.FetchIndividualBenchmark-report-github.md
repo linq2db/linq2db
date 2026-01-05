@@ -11,14 +11,14 @@ AMD Ryzen 9 5950X 3.39GHz, 2 CPU, 32 logical and 16 physical cores
 Jit=RyuJit  Platform=X64  
 
 ```
-| Method    | Runtime              | Mean        | Allocated |
-|---------- |--------------------- |------------:|----------:|
-| Linq      | .NET 8.0             | 17,658.3 ns |    6.4 KB |
-| Compiled  | .NET 8.0             |  4,239.1 ns |   3.05 KB |
-| RawAdoNet | .NET 8.0             |    409.0 ns |   1.48 KB |
-| Linq      | .NET 9.0             | 17,196.9 ns |   6.41 KB |
-| Compiled  | .NET 9.0             |  3,662.2 ns |   3.05 KB |
-| RawAdoNet | .NET 9.0             |    178.1 ns |   1.48 KB |
-| Linq      | .NET Framework 4.6.2 | 73,851.4 ns |  11.69 KB |
-| Compiled  | .NET Framework 4.6.2 |  9,561.5 ns |   4.42 KB |
-| RawAdoNet | .NET Framework 4.6.2 |    763.9 ns |   1.54 KB |
+| Method    | Runtime              | Mean         | Allocated |
+|---------- |--------------------- |-------------:|----------:|
+| Linq      | .NET 8.0             |  15,312.6 ns |  13.05 KB |
+| Compiled  | .NET 8.0             |  19,594.6 ns |  10.53 KB |
+| RawAdoNet | .NET 8.0             |     340.2 ns |   1.48 KB |
+| Linq      | .NET 9.0             |  29,557.1 ns |  13.09 KB |
+| Compiled  | .NET 9.0             |  16,753.2 ns |  10.56 KB |
+| RawAdoNet | .NET 9.0             |     269.7 ns |   1.48 KB |
+| Linq      | .NET Framework 4.6.2 | 100,930.9 ns |  16.54 KB |
+| Compiled  | .NET Framework 4.6.2 |  49,880.7 ns |   10.7 KB |
+| RawAdoNet | .NET Framework 4.6.2 |     708.2 ns |   1.54 KB |

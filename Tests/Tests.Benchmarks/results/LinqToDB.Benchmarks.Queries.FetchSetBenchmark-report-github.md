@@ -13,12 +13,12 @@ Jit=RyuJit  Platform=X64
 ```
 | Method    | Runtime              | Mean      | Allocated |
 |---------- |--------------------- |----------:|----------:|
-| Linq      | .NET 8.0             | 16.193 ms |   7.95 MB |
-| Compiled  | .NET 8.0             | 16.509 ms |   7.94 MB |
-| RawAdoNet | .NET 8.0             | 10.222 ms |   7.94 MB |
-| Linq      | .NET 9.0             | 12.143 ms |   7.95 MB |
-| Compiled  | .NET 9.0             | 13.246 ms |   7.94 MB |
-| RawAdoNet | .NET 9.0             |  9.229 ms |   7.94 MB |
-| Linq      | .NET Framework 4.6.2 | 31.532 ms |   7.97 MB |
-| Compiled  | .NET Framework 4.6.2 | 32.719 ms |   7.97 MB |
-| RawAdoNet | .NET Framework 4.6.2 | 17.571 ms |   7.96 MB |
+| Linq      | .NET 8.0             | 14.107 ms |   7.94 MB |
+| Compiled  | .NET 8.0             | 11.604 ms |   7.94 MB |
+| RawAdoNet | .NET 8.0             | 10.015 ms |   7.94 MB |
+| Linq      | .NET 9.0             | 13.761 ms |   7.94 MB |
+| Compiled  | .NET 9.0             | 12.990 ms |   7.94 MB |
+| RawAdoNet | .NET 9.0             |  9.894 ms |   7.94 MB |
+| Linq      | .NET Framework 4.6.2 | 32.446 ms |   7.97 MB |
+| Compiled  | .NET Framework 4.6.2 | 26.219 ms |   7.97 MB |
+| RawAdoNet | .NET Framework 4.6.2 | 18.395 ms |   7.96 MB |
