@@ -2203,12 +2203,11 @@ namespace LinqToDB.Internal.Linq.Builder
 								return CreatePlaceholder(placeholder.Sql, node);
 
 							case ExpressionType.Not:
-								// TODO: should we add SqlUnaryExpression?
-								return CreatePlaceholder(new SqlExpression(MappingSchema.GetDbDataType(t), "~{0}", placeholder.Sql), node);
+								return CreatePlaceholder(new SqlUnaryExpression(MappingSchema.GetDbDataType(t), placeholder.Sql, SqlUnaryOperation.BitwiseNegation, Precedence.Bitwise), node);
 
 							case ExpressionType.Negate:
 							case ExpressionType.NegateChecked:
-								return CreatePlaceholder(new SqlBinaryExpression(t, new SqlValue(-1), "*", placeholder.Sql, Precedence.Multiplicative), node);
+								return CreatePlaceholder(new SqlUnaryExpression(MappingSchema.GetDbDataType(t), placeholder.Sql, SqlUnaryOperation.Negation, Precedence.Unary), node);
 						}
 					}
 

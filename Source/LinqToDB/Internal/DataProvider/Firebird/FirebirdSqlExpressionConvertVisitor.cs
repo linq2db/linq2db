@@ -22,12 +22,12 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		#endregion
 
-		public override ISqlExpression ConvertSqlExpression(SqlExpression element)
+		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
 		{
-			if (element is { Expr: "~{0}", Parameters: [var arg] })
-				return new SqlFunction(element.Type, "BIN_NOT", arg);
+			if (element.Operation is SqlUnaryOperation.Negation)
+				return new SqlFunction(element.Type, "BIN_NOT", element.Expr);
 
-			return base.ConvertSqlExpression(element);
+			return base.ConvertSqlUnaryExpression(element);
 		}
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)

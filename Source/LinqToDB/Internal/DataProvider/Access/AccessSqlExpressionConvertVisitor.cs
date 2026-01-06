@@ -184,12 +184,12 @@ namespace LinqToDB.Internal.DataProvider.Access
 			}
 		}
 
-		public override ISqlExpression ConvertSqlExpression(SqlExpression element)
+		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
 		{
-			if (element is { Expr: "~{0}", Parameters: [var arg] })
-				return new SqlBinaryExpression(element.Type, new SqlValue(-1), "-", arg);
+			if (element.Operation is SqlUnaryOperation.BitwiseNegation)
+				return new SqlBinaryExpression(element.Type, new SqlValue(-1), "-", element.Expr);
 
-			return base.ConvertSqlExpression(element);
+			return base.ConvertSqlUnaryExpression(element);
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)

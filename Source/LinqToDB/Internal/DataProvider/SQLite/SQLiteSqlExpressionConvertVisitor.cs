@@ -63,10 +63,10 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 									MappingSchema.GetDbDataType(typeof(string)),
 									"Substr",
 									predicate.Expr1,
-									new SqlBinaryExpression(
+									new SqlUnaryExpression(
 										typeof(int),
-										Factory.Length(predicate.Expr2), "*", new SqlValue(-1),
-										Precedence.Multiplicative
+										Factory.Length(predicate.Expr2), SqlUnaryOperation.Negation,
+										Precedence.Unary
 									)
 								),
 								SqlPredicate.Operator.Equal,

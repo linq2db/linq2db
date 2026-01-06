@@ -13,6 +13,7 @@
 		SqlAnchor,
 		SqlObjectExpression,
 		SqlBinaryExpression,
+		SqlUnaryExpression,
 		SqlValue,
 		SqlDataType,
 		SqlTable,

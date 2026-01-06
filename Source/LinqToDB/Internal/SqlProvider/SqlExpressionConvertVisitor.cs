@@ -953,6 +953,22 @@ namespace LinqToDB.Internal.SqlProvider
 			return newElement;
 		}
 
+		protected internal override IQueryElement VisitSqlUnaryExpression(SqlUnaryExpression element)
+		{
+			var newElement = base.VisitSqlUnaryExpression(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			newElement = ConvertSqlUnaryExpression(element);
+			if (!ReferenceEquals(newElement, element))
+			{
+				newElement = Visit(Optimize(newElement));
+			}
+
+			return newElement;
+		}
+
 		protected internal override IQueryElement VisitSqlInlinedSqlExpression(SqlInlinedSqlExpression element)
 		{
 			var newElement = base.VisitSqlInlinedSqlExpression(element);
@@ -1414,6 +1430,11 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 			}
 
+			return element;
+		}
+
+		public virtual ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
+		{
 			return element;
 		}
 

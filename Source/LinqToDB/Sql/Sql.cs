@@ -583,7 +583,7 @@ namespace LinqToDB
 					return;
 				}
 
-				lengthExpr = new SqlBinaryExpression(lengthExpr.SystemType!, new SqlValue(-1), "*", lengthExpr, Precedence.Multiplicative);
+				lengthExpr = builder.Negate(lengthExpr, lengthExpr.SystemType!);
 
 				builder.ResultExpression = new SqlFunction(QueryHelper.GetDbDataType(stringExpr, builder.Mapping), "substr", canBeNull: true, stringExpr, lengthExpr);
 			}

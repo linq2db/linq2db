@@ -171,6 +171,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 		}
 
+		protected internal override IQueryElement VisitSqlUnaryExpression(SqlUnaryExpression element)
+		{
+			ReduceOrAdd(element.Expr);
+			return element;
+		}
+
 		protected internal override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			if (element.Operation is "+" or "-" or "*" or "/" or "%" or "&" or "||")

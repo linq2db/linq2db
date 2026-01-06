@@ -38,19 +38,19 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		#endregion
 
-		public override ISqlExpression ConvertSqlExpression(SqlExpression element)
+		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
 		{
-			if (element is { Expr: "~{0}", Parameters: [var arg] })
+			if (element.Operation is SqlUnaryOperation.BitwiseNegation)
 			{
-				var argType = QueryHelper.GetDbDataType(arg, MappingSchema);
+				var argType = QueryHelper.GetDbDataType(element.Expr, MappingSchema);
 				if (!argType.IsUnsignedType())
 				{
-					arg = new SqlCastExpression(arg, argType.ToUnsigned(), null, false);
-					return new SqlExpression(element.Type, element.Expr, arg);
+					var expr = new SqlCastExpression(element.Expr, argType.ToUnsigned(), null, false);
+					return new SqlUnaryExpression(element.Type, expr, element.Operation, element.Precedence);
 				}
 			}
 
-			return base.ConvertSqlExpression(element);
+			return base.ConvertSqlUnaryExpression(element);
 		}
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)

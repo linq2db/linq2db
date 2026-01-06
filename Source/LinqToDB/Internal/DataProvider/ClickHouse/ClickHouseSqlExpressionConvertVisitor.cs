@@ -103,12 +103,17 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			return base.ConvertSearchStringPredicate(predicate);
 		}
 
-		public override ISqlExpression ConvertSqlExpression(SqlExpression element)
+		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
 		{
-			if (element is { Expr: "~{0}", Parameters: [var arg] })
-				return new SqlFunction(element.Type, "bitNot", arg);
+			switch (element.Operation)
+			{
+				case SqlUnaryOperation.BitwiseNegation:
+					return new SqlFunction(element.Type, "bitNot", element.Expr);
+				case SqlUnaryOperation.Negation:
+					return new SqlFunction(element.Type, "negate", element.Expr);
+			}
 
-			return base.ConvertSqlExpression(element);
+			return base.ConvertSqlUnaryExpression(element);
 		}
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
@@ -180,8 +185,6 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					return new SqlFunction(type, "bitAnd", left, right);
 				case SqlBinaryExpression(var type, var left, "^", var right)    :
 					return new SqlFunction(type, "bitXor", left, right);
-				case SqlBinaryExpression(var type, SqlValue(-1), "*", var right):
-					return new SqlFunction(type, "negate", right);
 
 				case SqlBinaryExpression(var type, var ex1, "+", var ex2) when type.SystemType == typeof(string):
 				{

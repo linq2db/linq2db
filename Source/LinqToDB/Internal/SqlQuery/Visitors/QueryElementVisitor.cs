@@ -2851,6 +2851,44 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
+		protected internal virtual IQueryElement VisitSqlUnaryExpression(SqlUnaryExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Expr);
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Expr = (ISqlExpression)Visit(element.Expr);
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var expr = (ISqlExpression)Visit(element.Expr);
+
+					if (ShouldReplace(element) ||
+						!ReferenceEquals(expr, element.Expr))
+					{
+						return NotifyReplaced(new SqlUnaryExpression(
+								element.SystemType,
+								expr,
+								element.Operation,
+								element.Precedence),
+							element);
+					}
+
+					break;
+				}
+				default:
+					return ThrowInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
 		protected internal virtual IQueryElement VisitSqlObjectExpression(SqlObjectExpression element)
 		{
 			switch (GetVisitMode(element))
