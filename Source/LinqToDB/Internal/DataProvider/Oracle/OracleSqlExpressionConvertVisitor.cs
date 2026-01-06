@@ -179,6 +179,42 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			return base.VisitSqlCoalesceExpression(element);
 		}
 
+		protected override ISqlExpression ConvertSqlCondition(SqlConditionExpression element)
+		{
+			if (NeedsCharTypeCorrection([element.TrueValue, element.FalseValue]))
+			{
+				var type = QueryHelper.GetDbDataType(element.TrueValue, MappingSchema);
+
+				if (type.DataType is DataType.Char or DataType.VarChar)
+				{
+					var trueValue = new SqlCastExpression(
+						element.TrueValue,
+						type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
+						null,
+						isMandatory: true);
+
+					return new SqlConditionExpression(element.Condition, trueValue, element.FalseValue);
+				}
+				else
+				{
+					type = QueryHelper.GetDbDataType(element.FalseValue, MappingSchema);
+
+					if (type.DataType is DataType.Char or DataType.VarChar)
+					{
+						var falseValue = new SqlCastExpression(
+							element.FalseValue,
+							type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
+							null,
+							isMandatory: true);
+
+						return new SqlConditionExpression(element.Condition, element.TrueValue, falseValue);
+					}
+				}
+			}
+
+			return base.ConvertSqlCondition(element);
+		}
+
 		protected override ISqlExpression ConvertSqlCaseExpression(SqlCaseExpression element)
 		{
 			if (NeedsCharTypeCorrection(element.Cases.Select(c => c.ResultExpression).Concat(element.ElseExpression == null ? [] : [element.ElseExpression])))
