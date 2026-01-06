@@ -532,6 +532,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				return GetCacheRootContext(methodCallExpression.Arguments[0]);
 			}
 
+			if (expression is ContextRefExpression { BuildContext: DefaultIfEmptyBuilder.DefaultIfEmptyContext })
+			{
+				return null;
+			}
+
 			return expression as ContextRefExpression;
 		}
 
@@ -2557,7 +2562,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (cacheRoot != null)
 			{
 				calculatedContext = cacheRoot.BuildContext;
-				onContext = calculatedContext;
+				onContext         = calculatedContext;
 			}
 			else
 			{

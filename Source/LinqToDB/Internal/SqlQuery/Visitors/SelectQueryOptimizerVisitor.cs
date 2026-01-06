@@ -2875,7 +2875,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							{
 								if (joinQuery.Select.Columns.Count > 1)
 								{
-									TryRemoveNotUsedColumns(sq, joinQuery);
+									EnsureReferencesCorrected(selectQuery);
+									TryRemoveNotUsedColumns(joinQuery);
 								}
 
 								if (joinQuery.Select.Columns.Count > 1)
@@ -3056,14 +3057,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return isModified;
 		}
 
-		static void TryRemoveNotUsedColumns(SelectQuery parentQuery, SelectQuery subQuery)
+		void TryRemoveNotUsedColumns(SelectQuery subQuery)
 		{
 			for (var i = subQuery.Select.Columns.Count - 1; i >= 0; i--)
 			{
 				var column = subQuery.Select.Columns[i];
 				var isUsed = false;
 
-				parentQuery.VisitParentFirst(e =>
+				_rootElement.VisitParentFirst(e =>
 				{
 					if (ReferenceEquals(e, column))
 					{
