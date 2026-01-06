@@ -6,6 +6,13 @@
 		<EF8Version>8.4.0</EF8Version>
 		<EF9Version>9.3.0</EF9Version>
 		<EF10Version>10.2.0</EF10Version>
+		
+		<!-- Baselines update on next major release -->
+		<BaselineVersion>6.0.0</BaselineVersion>
+		<EF3BaselineVersion>3.28.0</EF3BaselineVersion>
+		<EF8BaselineVersion>8.2.0</EF8BaselineVersion>
+		<EF9BaselineVersion>9.1.0</EF9BaselineVersion>
+		<EF10BaselineVersion>10.0.0</EF10BaselineVersion>
 
 		<AssemblyVersion>$(Version)</AssemblyVersion>
 		<VersionSuffix Condition=" '$(VersionSuffix)' == '' ">-local.1</VersionSuffix>
@@ -88,7 +95,7 @@
 		<PackageVersion Condition=" '$(ApplyVersionSuffix)' == 'true' ">$(Version)$(VersionSuffix)</PackageVersion>
 
 		<EnablePackageValidation>true</EnablePackageValidation>
-		<PackageValidationBaselineVersion>6.0.0</PackageValidationBaselineVersion>
+		<PackageValidationBaselineVersion>$(BaselineVersion)</PackageValidationBaselineVersion>
 	</PropertyGroup>
 
 	<ItemGroup Label="Nuget">

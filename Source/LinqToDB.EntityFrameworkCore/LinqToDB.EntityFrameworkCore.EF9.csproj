@@ -20,7 +20,7 @@
 		<Product>$(Title)</Product>
 
 		<PackageVersion Condition=" '$(ApplyVersionSuffix)' == 'true' ">$(Version)$(VersionSuffix)</PackageVersion>
-		<PackageValidationBaselineVersion>9.1.0</PackageValidationBaselineVersion>
+		<PackageValidationBaselineVersion>$(EF9BaselineVersion)</PackageValidationBaselineVersion>
 
 		<PackageTags>$(PackageTags);entity-framework-core;EntityFrameworkCore;EFCore</PackageTags>
 	</PropertyGroup>
