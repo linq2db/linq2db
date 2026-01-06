@@ -24,7 +24,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
 		{
-			if (element.Operation is SqlUnaryOperation.Negation)
+			if (element.Operation is SqlUnaryOperation.BitwiseNegation)
 				return new SqlFunction(element.Type, "BIN_NOT", element.Expr);
 
 			return base.ConvertSqlUnaryExpression(element);

@@ -101,7 +101,7 @@ namespace LinqToDB
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "builder is an extension point")]
 		public static ISqlExpression Negate(this Sql.ISqlExtensionBuilder builder, ISqlExpression expr, Type type)
 		{
-			return new SqlUnaryExpression(type, expr, SqlUnaryOperation.Negation, Precedence.Bitwise);
+			return new SqlUnaryExpression(type, expr, SqlUnaryOperation.Negation, Precedence.Unary);
 		}
 	}
 }

@@ -37,7 +37,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
 		{
-			if (element.Operation is SqlUnaryOperation.Negation)
+			if (element.Operation is SqlUnaryOperation.BitwiseNegation)
 				return new SqlFunction(element.Type, "BITNOT", element.Expr);
 
 			return base.ConvertSqlUnaryExpression(element);

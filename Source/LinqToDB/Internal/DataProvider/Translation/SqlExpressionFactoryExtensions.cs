@@ -173,7 +173,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression Negate(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression v)
 		{
-			return new SqlUnaryExpression(dbDataType, v, SqlUnaryOperation.Negation, Precedence.Bitwise);
+			return new SqlUnaryExpression(dbDataType, v, SqlUnaryOperation.Negation, Precedence.Unary);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
