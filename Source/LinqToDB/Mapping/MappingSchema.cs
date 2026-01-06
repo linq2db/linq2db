@@ -883,7 +883,7 @@ namespace LinqToDB.Mapping
 							static (context, e) => e == context.oldParam ? Expression.Coalesce(context.newParam, context.defaultValue) : e),
 						Methods.LinqToDB.DataParameter.ClearValue,
 						Expression.Equal(p, Expression.Constant(null, p.Type))),
-					Methods.LinqToDB.DataParameter.WithType,
+					Methods.LinqToDB.DataParameter.SetType,
 					Expression.Constant(fromNullable)),
 				p);
 

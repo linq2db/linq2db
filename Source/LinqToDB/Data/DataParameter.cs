@@ -179,7 +179,7 @@ namespace LinqToDB.Data
 			return this;
 		}
 
-		internal DataParameter WithType(DbDataType type)
+		internal DataParameter SetType(DbDataType type)
 		{
 			DbDataType = type;
 			return this;
