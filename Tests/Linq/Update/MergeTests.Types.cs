@@ -459,7 +459,7 @@ namespace Tests.xUpdate
 
 				if (provider.IsAnyOf(ProviderName.ClickHouseMySql, ProviderName.ClickHouseDriver))
 				{
-					// https://github.com/DarkWanderer/ClickHouse.Client/issues/138
+					// https://github.com/ClickHouse/clickhouse-cs/issues/109
 					// https://github.com/ClickHouse/ClickHouse/issues/38790
 					expected = Encoding.UTF8.GetBytes(Encoding.UTF8.GetString(expected));
 				}
@@ -639,9 +639,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestTypesInsertByMerge([MergeDataContextSource(
-			TestProvName.AllInformix, TestProvName.AllSybase)]
-			string context)
+		public void TestTypesInsertByMerge([MergeDataContextSource(TestProvName.AllInformix, TestProvName.AllSybase)] string context)
 		{
 			using var _ = context.IsAnyOf(TestProvName.AllPostgreSQL) ? new DisableBaseline("TODO: https://github.com/linq2db/linq2db/issues/5169") : null;
 

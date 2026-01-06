@@ -602,9 +602,9 @@ namespace Tests.DataProvider
 
 			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.VarBinary), new byte[] { 0 }, new byte[] { 1 });
 			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.VarBinary), new byte[] { 2 }, new byte[] { 3 });
-			// https://github.com/DarkWanderer/ClickHouse.Client/issues/138
 			// https://github.com/ClickHouse/ClickHouse/issues/38790
-			if (!context.IsAnyOf(ProviderName.ClickHouseDriver, ProviderName.ClickHouseMySql))
+			// https://github.com/ClickHouse/clickhouse-cs/issues/109
+			if (!context.IsAnyOf(ProviderName.ClickHouseMySql, ProviderName.ClickHouseDriver))
 			{
 				await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.VarBinary), new byte[] { 255 }, new byte[] { 254 });
 			}
@@ -641,9 +641,8 @@ namespace Tests.DataProvider
 
 			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary, null, length: 7), new byte[] { 0 }, new byte[] { 1 }, getExpectedValue: v => { if (trimAllZeros) return Array.Empty<byte>(); Array.Resize(ref v, 7); return v; }, getExpectedNullableValue: v => { Array.Resize(ref v, 7); return v; });
 			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary, null, length: 7), new byte[] { 2 }, new byte[] { 3 }, getExpectedValue: v => { Array.Resize(ref v, 7); return v; }, getExpectedNullableValue: v => { Array.Resize(ref v, 7); return v; });
-			// https://github.com/DarkWanderer/ClickHouse.Client/issues/138
 			// https://github.com/ClickHouse/ClickHouse/issues/38790
-			if (!context.IsAnyOf(ProviderName.ClickHouseDriver, ProviderName.ClickHouseMySql))
+			if (!context.IsAnyOf(ProviderName.ClickHouseMySql))
 			{
 				await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary, null, length: 7), new byte[] { 255 }, new byte[] { 254 }, getExpectedValue: v => { Array.Resize(ref v, 7); return v; }, getExpectedNullableValue: v => { Array.Resize(ref v, 7); return v; });
 			}

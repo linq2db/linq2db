@@ -9,6 +9,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Numerics;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Xml;
@@ -26,6 +27,7 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Mapping;
+using LinqToDB.Internal.Reflection;
 using LinqToDB.Metadata;
 using LinqToDB.SqlQuery;
 
@@ -584,6 +586,8 @@ namespace LinqToDB.Mapping
 				ResetID();
 			}
 
+			SetNullableConversion(new DbDataType(fromType), new DbDataType(toType), expr, conversionType);
+
 			return this;
 		}
 
@@ -619,6 +623,8 @@ namespace LinqToDB.Mapping
 				ResetID();
 			}
 
+			SetNullableConversion(fromType, toType, expr, conversionType);
+
 			return this;
 		}
 
@@ -652,6 +658,8 @@ namespace LinqToDB.Mapping
 				ResetID();
 			}
 
+			SetNullableConversion(new(typeof(TFrom)), new(typeof(TTo)), expr, conversionType);
+
 			return this;
 		}
 
@@ -675,6 +683,8 @@ namespace LinqToDB.Mapping
 				Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), conversionType, new (checkNullExpr, expr, null, false));
 				ResetID();
 			}
+
+			SetNullableConversion(new(typeof(TFrom)), new(typeof(TTo)), expr, conversionType);
 
 			return this;
 		}
@@ -700,6 +710,8 @@ namespace LinqToDB.Mapping
 				Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), conversionType, new (ex, null, func, false));
 				ResetID();
 			}
+
+			SetNullableConversion(new(typeof(TFrom)), new(typeof(TTo)), ex, conversionType);
 
 			return this;
 		}
@@ -735,6 +747,8 @@ namespace LinqToDB.Mapping
 				Schemas[0].SetConvertInfo(from, to, conversionType, new (ex, null, func, false), true);
 				ResetID();
 			}
+
+			SetNullableConversion(from, to, ex, conversionType);
 
 			return this;
 		}
@@ -845,26 +859,47 @@ namespace LinqToDB.Mapping
 			return false;
 		}
 
+		void SetNullableConversion(DbDataType from, DbDataType to, LambdaExpression conversion, ConversionType conversionType)
+		{
+			if (to.SystemType != typeof(DataParameter)
+				|| !from.SystemType.IsValueType || from.SystemType.IsNullableType)
+				return;
+
+			// generate T? -> DataParameter conversion from T -> DataParameter conversion
+			var nullableType = from.SystemType.MakeNullable();
+			var fromNullable = from.WithSystemType(nullableType);
+
+			// we probably shouldn't rewrite existing conversions implicitly
+			if (GetConverter(fromNullable, to, false, conversionType) != null)
+				return;
+
+			var p = Expression.Parameter(nullableType, conversion.Parameters[0].Name);
+
+			var nullableConversion = Expression.Lambda(
+				Expression.Call(
+					Expression.Call(
+						conversion.Body.Transform(
+							(oldParam: conversion.Parameters[0], newParam: p, defaultValue: Expression.Default(conversion.Parameters[0].Type)),
+							static (context, e) => e == context.oldParam ? Expression.Coalesce(context.newParam, context.defaultValue) : e),
+						Methods.LinqToDB.DataParameter.ClearValue,
+						Expression.Equal(p, Expression.Constant(null, p.Type))),
+					Methods.LinqToDB.DataParameter.SetType,
+					Expression.Constant(fromNullable)),
+				p);
+
+			lock (_syncRoot)
+			{
+				Schemas[0].SetConvertInfo(fromNullable, to, conversionType, new(nullableConversion, null, null, false), true);
+				ResetID();
+			}
+		}
+
 		internal ConvertInfo.LambdaInfo? GetConverter(DbDataType from, DbDataType to, bool create, ConversionType conversionType)
 		{
-			var currentFrom = from;
-			do
-			{
-				var currentTo = to;
-				do
-				{
-					for (var i = 0; i < Schemas.Length; i++)
-					{
-						var info = Schemas[i];
-						var li   = info.GetConvertInfo(currentFrom, currentTo, conversionType);
+			var conversion = TryFindExistingConversion(from, to, conversionType);
 
-						if (li != null && (i == 0 || !li.IsSchemaSpecific))
-							return i == 0 ? li : new ConvertInfo.LambdaInfo(li.CheckNullLambda, li.Lambda, null, false);
-					}
-
-				} while (Simplify(ref currentTo));
-
-			} while (Simplify(ref currentFrom));
+			if (conversion != null)
+				return conversion;
 
 			var isFromGeneric = from.SystemType is { IsGenericType: true, IsGenericTypeDefinition: false };
 			var isToGeneric   = to.  SystemType is { IsGenericType: true, IsGenericTypeDefinition: false };
@@ -966,6 +1001,29 @@ namespace LinqToDB.Mapping
 			}
 
 			return null;
+
+			ConvertInfo.LambdaInfo? TryFindExistingConversion(DbDataType from, DbDataType to, ConversionType conversionType)
+			{
+				var currentFrom = from;
+				do
+				{
+					var currentTo = to;
+					do
+					{
+						for (var i = 0; i < Schemas.Length; i++)
+						{
+							var info = Schemas[i];
+							var li   = info.GetConvertInfo(currentFrom, currentTo, conversionType);
+
+							if (li != null && (i == 0 || !li.IsSchemaSpecific))
+								return i == 0 ? li : new ConvertInfo.LambdaInfo(li.CheckNullLambda, li.Lambda, null, false);
+						}
+
+					} while (Simplify(ref currentTo));
+
+				} while (Simplify(ref currentFrom));
+				return null;
+			}
 		}
 
 		Expression ReduceDefaultValue(Expression expr)
