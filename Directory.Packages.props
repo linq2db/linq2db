@@ -86,7 +86,7 @@
 
 	<ItemGroup Label="Database Providers">
 		<PackageVersion Include="AdoNetCore.AseClient"                                  Version="0.19.2"                       />
-		<PackageVersion Include="ClickHouse.Driver"                                     Version="0.8.1"                        />
+		<PackageVersion Include="ClickHouse.Driver"                                     Version="0.9.0"                        />
 		<PackageVersion Include="Devart.Data.Oracle"                                    Version="11.0.0"                       />
 		<PackageVersion Include="dotMorten.Microsoft.SqlServer.TNET.Testypes"                   Version="1.5.0"                />
 		<!--<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="2.5.0"                 />-->
@@ -149,7 +149,7 @@
 		<PackageVersion Include="MiniProfiler.Minimal"                                  Version="4.5.4"                        />
 		<PackageVersion Include="NodaTime"                                              Version="3.2.3"                        />
 		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.2.2"                        />
-		<PackageVersion Include="System.Linq.Dynamic.Core"                              Version="1.7.0"                        />
+		<PackageVersion Include="System.Linq.Dynamic.Core"                              Version="1.7.1"                        />
 		<PackageVersion Include="FSharp.Core"                                           Version="9.0.303"                      Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))" />
 		<PackageVersion Include="FSharp.Core"                                           Version="10.0.101"                     Condition="'$(TargetFramework)'=='net10.0'" />
 		<PackageVersion Include="LinqKit"                                               Version="1.3.9"                        />
@@ -186,7 +186,7 @@
 	</ItemGroup>
 
 	<ItemGroup Label="Benchmarks">
-		<PackageVersion Include="BenchmarkDotNet"                                       Version="0.15.6"                       />
+		<PackageVersion Include="BenchmarkDotNet"                                       Version="0.15.8"                       />
 		<PackageVersion Include="JetBrains.Profiler.Api"                                Version="1.4.10"                       />
 	</ItemGroup>
 
