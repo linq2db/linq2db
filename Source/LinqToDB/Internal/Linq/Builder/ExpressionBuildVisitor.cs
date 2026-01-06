@@ -637,24 +637,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			return false;
 		}
 
-#if DEBUG
-		[DebuggerStepThrough]
-		[return: NotNullIfNotNull(nameof(node))]
-		public override Expression? Visit(Expression? node)
-		{
-			var newNode = base.Visit(node);
-
-			/*
-			if (newNode != null && node != null && !IsSame(newNode, node!))
-			{
-				Debug.WriteLine($"--> Node  {_buildPurpose}, {_buildFlags}, {node.NodeType}, \t {node} \t\t -> {newNode}");
-			}
-			*/
-
-			return newNode;
-		}
-#endif
-
 		[Conditional("DEBUG")]
 		public void LogVisit(Expression node, [CallerMemberName] string callerName = "")
 		{

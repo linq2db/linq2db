@@ -745,10 +745,12 @@ namespace LinqToDB.Internal.SqlProvider
 				return _foundCtes;
 			}
 
-			public void Cleanup()
+			public override void Cleanup()
 			{
 				_foundCtes       = null;
 				_currentCteStack = null;
+
+				base.Cleanup();
 			}
 
 			protected internal override IQueryElement VisitSqlWithClause(SqlWithClause element)

@@ -3152,13 +3152,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 			}
 
-			public void Cleanup()
+			public override void Cleanup()
 			{
 				_ignore            = default!;
 				_expressionToCheck = default!;
 				DoNotAllow         = default;
 
 				_foundCount = 0;
+
+				base.Cleanup();
 			}
 
 			public bool IsAllowedToMove(ISqlExpression testExpression, IQueryElement parent, params IQueryElement?[] ignore)
@@ -3265,11 +3267,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return (ISqlPredicate)Visit(predicate);
 			}
 
-			public void Cleanup()
+			public override void Cleanup()
 			{
 				_forQuery       = default!;
 				_predicate      = default!;
 				_currentSources = default!;
+
+				base.Cleanup();
 			}
 
 			[return: NotNullIfNotNull(nameof(element))]
@@ -3331,10 +3335,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				Visit(element);
 			}
 
-			public void Cleanup()
+			public override void Cleanup()
 			{
 				_usedColumns = null!;
 				_visitedFromCte.Clear();
+
+				base.Cleanup();
 			}
 
 			protected internal override IQueryElement VisitCteClause(CteClause element)
