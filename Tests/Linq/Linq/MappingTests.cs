@@ -1220,7 +1220,6 @@ namespace Tests.Linq
 					ms.SetConverter<Guid?, TenderId?>(From);
 
 					ms.SetConverter<TenderId, LinqToDB.Data.DataParameter>(id => new LinqToDB.Data.DataParameter { DataType = DataType.Guid, Value = id.Value });
-					ms.SetConverter<TenderId?, LinqToDB.Data.DataParameter>(id => new LinqToDB.Data.DataParameter { DataType = DataType.Guid, Value = id?.Value });
 					// sqlite.ms returns byte[]
 					ms.SetConverter<byte[], TenderId>(raw => From(new Guid(raw)));
 
@@ -1275,7 +1274,6 @@ namespace Tests.Linq
 				ms.SetConverter<Guid?, TenderId?>(From);
 
 				ms.SetConverter<TenderId, DataParameter>(id => new DataParameter { DataType = DataType.Guid, Value = id.Value });
-				ms.SetConverter<TenderId?, DataParameter>(id => new DataParameter { DataType = DataType.Guid, Value = id?.Value });
 
 				return ms;
 			}
