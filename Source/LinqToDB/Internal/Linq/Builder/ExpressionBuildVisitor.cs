@@ -2271,6 +2271,9 @@ namespace LinqToDB.Internal.Linq.Builder
 								return Visit(placeholder.WithType(node.Type));
 							}
 
+							if (placeholder.Sql.SystemType == node.Type)
+								return Visit(placeholder);
+
 							return Visit(CreatePlaceholder(PseudoFunctions.MakeCast(placeholder.Sql, MappingSchema.GetDbDataType(node.Type), s), node));
 						}
 					}
