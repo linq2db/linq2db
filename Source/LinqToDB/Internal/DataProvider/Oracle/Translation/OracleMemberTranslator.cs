@@ -355,6 +355,14 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 								withinGroup = [new SqlWindowOrderItem(info.Value, false, Sql.NullsPosition.None)];
 							}
 
+							// LISTAGG doesn't work with NVARCHAR values
+							if (valueType.DataType is DataType.NVarChar or DataType.NChar)
+							{
+								// return type also will be VARCHAR
+								valueType = valueType.WithDataType(valueType.DataType is DataType.NVarChar ? DataType.VarChar : DataType.Char);
+								value     = factory.Cast(value, valueType);
+							}
+
 							var fn = factory.Function(valueType, "LISTAGG",
 								[new SqlFunctionArgument(value, modifier : aggregateModifier), new SqlFunctionArgument(separator)],
 								[true, true],
