@@ -1572,7 +1572,7 @@ namespace LinqToDB.Mapping
 					return o.Value;
 			}
 
-			return SqlDataType.Undefined;
+			return SqlDataType.MakeUndefined(type);
 		}
 
 		/// <summary>
@@ -1686,7 +1686,7 @@ namespace LinqToDB.Mapping
 			if (underlyingType != type)
 				return GetDataType(underlyingType);
 
-			return SqlDataType.Undefined;
+			return SqlDataType.MakeUndefined(type);
 		}
 
 		#endregion
