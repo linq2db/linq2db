@@ -144,13 +144,10 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 						datepart = Sql.DateParts.Month;
 						number   = factory.Multiply(number, 3);
 						break;
-					}				
+					}
 					case Sql.DateParts.DayOfYear:
 					case Sql.DateParts.WeekDay:
-					{
-						datepart = Sql.DateParts.Day;
-						break;
-					}	
+						return null;
 					case Sql.DateParts.Week:
 					{
 						datepart = Sql.DateParts.Day;
