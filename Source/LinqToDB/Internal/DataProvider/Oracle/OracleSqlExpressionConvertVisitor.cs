@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
 {
@@ -159,7 +161,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		protected internal override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
 		{
-			if (NeedsCharTypeCorrection(element.Expressions))
+			if (NeedsCharTypeCorrection(MappingSchema, element.Expressions))
 			{
 				for (var i = 0; i < element.Expressions.Length; i++)
 				{
@@ -181,7 +183,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		protected override ISqlExpression ConvertSqlCondition(SqlConditionExpression element)
 		{
-			if (NeedsCharTypeCorrection([element.TrueValue, element.FalseValue]))
+			if (NeedsCharTypeCorrection(MappingSchema, [element.TrueValue, element.FalseValue]))
 			{
 				var type = QueryHelper.GetDbDataType(element.TrueValue, MappingSchema);
 
@@ -215,9 +217,36 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			return base.ConvertSqlCondition(element);
 		}
 
+		protected internal override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
+		{
+			if (element.Rows?.Count > 1)
+			{
+				for (var i = 0; i < element.Rows[0].Count; i++)
+				{
+					if (NeedsCharTypeCorrection(MappingSchema, element.Rows.Select(r => r[i])))
+					{
+						foreach (var row in element.Rows)
+						{
+							var type = QueryHelper.GetDbDataType(row[i], MappingSchema);
+							if (type.DataType is DataType.Char or DataType.VarChar)
+							{
+								row[i] = new SqlCastExpression(
+									row[i],
+									type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
+									null,
+									isMandatory: true);
+							}
+						}
+					}
+				}
+			}
+
+			return base.VisitSqlValuesTable(element);
+		}
+
 		protected override ISqlExpression ConvertSqlCaseExpression(SqlCaseExpression element)
 		{
-			if (NeedsCharTypeCorrection(element.Cases.Select(c => c.ResultExpression).Concat(element.ElseExpression == null ? [] : [element.ElseExpression])))
+			if (NeedsCharTypeCorrection(MappingSchema, element.Cases.Select(c => c.ResultExpression).Concat(element.ElseExpression == null ? [] : [element.ElseExpression])))
 			{
 				foreach (var caseItem in element.Cases)
 				{
@@ -251,14 +280,14 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			return base.ConvertSqlCaseExpression(element);
 		}
 
-		private bool NeedsCharTypeCorrection(IEnumerable<ISqlExpression> expressions)
+		internal static bool NeedsCharTypeCorrection(MappingSchema mappingSchema, IEnumerable<ISqlExpression> expressions)
 		{
 			var hasChar = false;
 			var hasNChar = false;
 
 			foreach (var expr in expressions)
 			{
-				var type = QueryHelper.GetDbDataType(expr, MappingSchema);
+				var type = QueryHelper.GetDbDataType(expr, mappingSchema);
 
 				hasChar  = hasChar  || type.DataType is DataType.Char or DataType.VarChar;
 				hasNChar = hasNChar || type.DataType is DataType.NChar or DataType.NVarChar;

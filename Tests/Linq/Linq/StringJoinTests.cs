@@ -21,7 +21,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class SampleClass
 		{
-			[Column]                                                              public int     Id               { get; set; }
+			[PrimaryKey]                                                          public int     Id               { get; set; }
 			[Column(Length = 50, CanBeNull = true)]                               public string? NullableValue    { get; set; }
 			[Column(Length = 50, CanBeNull = false)]                              public string  NotNullableValue { get; set; } = string.Empty;
 			[Column(Length = 50, CanBeNull = true, DataType = DataType.VarChar)]  public string? VarcharValue     { get; set; }
