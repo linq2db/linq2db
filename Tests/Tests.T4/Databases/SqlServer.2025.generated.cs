@@ -28,46 +28,56 @@ namespace Sql2025
 	{
 		#region Tables
 
-		public ITable<AllType>                  AllTypes                 { get { return this.GetTable<AllType>(); } }
-		public ITable<AllTypes2>                AllTypes2                { get { return this.GetTable<AllTypes2>(); } }
-		public ITable<Child>                    Children                 { get { return this.GetTable<Child>(); } }
-		public ITable<CollatedTable>            CollatedTables           { get { return this.GetTable<CollatedTable>(); } }
-		public ITable<DataType>                 DataTypes                { get { return this.GetTable<DataType>(); } }
-		public ITable<DecimalOverflow>          DecimalOverflows         { get { return this.GetTable<DecimalOverflow>(); } }
-		public ITable<Doctor>                   Doctors                  { get { return this.GetTable<Doctor>(); } }
-		public ITable<GrandChild>               GrandChildren            { get { return this.GetTable<GrandChild>(); } }
-		public ITable<GuidID>                   GuidIds                  { get { return this.GetTable<GuidID>(); } }
-		public ITable<GuidID2>                  GuidID2                  { get { return this.GetTable<GuidID2>(); } }
-		public ITable<IndexTable>               IndexTables              { get { return this.GetTable<IndexTable>(); } }
-		public ITable<IndexTable2>              IndexTable2              { get { return this.GetTable<IndexTable2>(); } }
-		public ITable<InheritanceChild>         InheritanceChildren      { get { return this.GetTable<InheritanceChild>(); } }
-		public ITable<InheritanceParent>        InheritanceParents       { get { return this.GetTable<InheritanceParent>(); } }
-		public ITable<Issue1115>                Issue1115                { get { return this.GetTable<Issue1115>(); } }
-		public ITable<Issue1144>                Issue1144                { get { return this.GetTable<Issue1144>(); } }
-		public ITable<LinqDataType>             LinqDataTypes            { get { return this.GetTable<LinqDataType>(); } }
-		public ITable<Member>                   Members                  { get { return this.GetTable<Member>(); } }
-		public ITable<NameTest>                 NameTests                { get { return this.GetTable<NameTest>(); } }
+		public ITable<AllType>                           AllTypes                          { get { return this.GetTable<AllType>(); } }
+		public ITable<AllTypes2>                         AllTypes2                         { get { return this.GetTable<AllTypes2>(); } }
+		public ITable<Child>                             Children                          { get { return this.GetTable<Child>(); } }
+		public ITable<CollatedTable>                     CollatedTables                    { get { return this.GetTable<CollatedTable>(); } }
+		public ITable<DataType>                          DataTypes                         { get { return this.GetTable<DataType>(); } }
+		public ITable<DecimalOverflow>                   DecimalOverflows                  { get { return this.GetTable<DecimalOverflow>(); } }
+		public ITable<Doctor>                            Doctors                           { get { return this.GetTable<Doctor>(); } }
+		public ITable<GrandChild>                        GrandChildren                     { get { return this.GetTable<GrandChild>(); } }
+		public ITable<GuidID>                            GuidIds                           { get { return this.GetTable<GuidID>(); } }
+		public ITable<GuidID2>                           GuidID2                           { get { return this.GetTable<GuidID2>(); } }
+		public ITable<IndexTable>                        IndexTables                       { get { return this.GetTable<IndexTable>(); } }
+		public ITable<IndexTable2>                       IndexTable2                       { get { return this.GetTable<IndexTable2>(); } }
+		public ITable<InheritanceChild>                  InheritanceChildren               { get { return this.GetTable<InheritanceChild>(); } }
+		public ITable<InheritanceParent>                 InheritanceParents                { get { return this.GetTable<InheritanceParent>(); } }
+		public ITable<Issue1115>                         Issue1115                         { get { return this.GetTable<Issue1115>(); } }
+		public ITable<Issue1144>                         Issue1144                         { get { return this.GetTable<Issue1144>(); } }
+		public ITable<LinqDataType>                      LinqDataTypes                     { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<Member>                            Members                           { get { return this.GetTable<Member>(); } }
+		public ITable<MssqlTemporalHistoryFor1035150733> MssqlTemporalHistoryFor1035150733 { get { return this.GetTable<MssqlTemporalHistoryFor1035150733>(); } }
+		public ITable<MssqlTemporalHistoryFor1179151246> MssqlTemporalHistoryFor1179151246 { get { return this.GetTable<MssqlTemporalHistoryFor1179151246>(); } }
+		public ITable<MssqlTemporalHistoryFor843150049>  MssqlTemporalHistoryFor843150049  { get { return this.GetTable<MssqlTemporalHistoryFor843150049>(); } }
+		public ITable<MssqlTemporalHistoryFor987150562>  MssqlTemporalHistoryFor987150562  { get { return this.GetTable<MssqlTemporalHistoryFor987150562>(); } }
+		public ITable<NameTest>                          NameTests                         { get { return this.GetTable<NameTest>(); } }
 		/// <summary>
 		/// This is Parent table
 		/// </summary>
-		public ITable<Parent>                   Parents                  { get { return this.GetTable<Parent>(); } }
-		public ITable<ParentChildView>          ParentChildViews         { get { return this.GetTable<ParentChildView>(); } }
-		public ITable<ParentView>               ParentViews              { get { return this.GetTable<ParentView>(); } }
-		public ITable<Patient>                  Patients                 { get { return this.GetTable<Patient>(); } }
-		public ITable<Person>                   People                   { get { return this.GetTable<Person>(); } }
-		public ITable<Provider>                 Providers                { get { return this.GetTable<Provider>(); } }
-		public ITable<SameTableName>            SameTableNames           { get { return this.GetTable<SameTableName>(); } }
-		public ITable<TestSchema_SameTableName> SameTableNames0          { get { return this.GetTable<TestSchema_SameTableName>(); } }
-		public ITable<SqlType>                  SqlTypes                 { get { return this.GetTable<SqlType>(); } }
-		public ITable<TestIdentity>             TestIdentities           { get { return this.GetTable<TestIdentity>(); } }
-		public ITable<TestMerge1>               TestMerge1               { get { return this.GetTable<TestMerge1>(); } }
-		public ITable<TestMerge2>               TestMerge2               { get { return this.GetTable<TestMerge2>(); } }
-		public ITable<TestMergeIdentity>        TestMergeIdentities      { get { return this.GetTable<TestMergeIdentity>(); } }
-		public ITable<TestSchema_TestSchemaA>   TestSchemaA              { get { return this.GetTable<TestSchema_TestSchemaA>(); } }
-		public ITable<TestSchema_TestSchemaB>   TestSchemaB              { get { return this.GetTable<TestSchema_TestSchemaB>(); } }
-		public ITable<TestSchemaSameTableName>  TestSchemaSameTableNames { get { return this.GetTable<TestSchemaSameTableName>(); } }
-		public ITable<TestSchemaX>              TestSchemaX              { get { return this.GetTable<TestSchemaX>(); } }
-		public ITable<TestSchemaY>              TestSchemaY              { get { return this.GetTable<TestSchemaY>(); } }
+		public ITable<Parent>                            Parents                           { get { return this.GetTable<Parent>(); } }
+		public ITable<ParentChildView>                   ParentChildViews                  { get { return this.GetTable<ParentChildView>(); } }
+		public ITable<ParentView>                        ParentViews                       { get { return this.GetTable<ParentView>(); } }
+		public ITable<Patient>                           Patients                          { get { return this.GetTable<Patient>(); } }
+		public ITable<Person>                            People                            { get { return this.GetTable<Person>(); } }
+		public ITable<Provider>                          Providers                         { get { return this.GetTable<Provider>(); } }
+		public ITable<SameTableName>                     SameTableNames                    { get { return this.GetTable<SameTableName>(); } }
+		public ITable<TestSchema_SameTableName>          SameTableNames0                   { get { return this.GetTable<TestSchema_SameTableName>(); } }
+		public ITable<SqlType>                           SqlTypes                          { get { return this.GetTable<SqlType>(); } }
+		public ITable<TemporalTest>                      TemporalTests                     { get { return this.GetTable<TemporalTest>(); } }
+		public ITable<TemporalTestHistory>               TemporalTestHistories             { get { return this.GetTable<TemporalTestHistory>(); } }
+		public ITable<TestClass>                         TestClasses                       { get { return this.GetTable<TestClass>(); } }
+		public ITable<TestIdentity>                      TestIdentities                    { get { return this.GetTable<TestIdentity>(); } }
+		public ITable<TestMerge1>                        TestMerge1                        { get { return this.GetTable<TestMerge1>(); } }
+		public ITable<TestMerge2>                        TestMerge2                        { get { return this.GetTable<TestMerge2>(); } }
+		public ITable<TestMergeIdentity>                 TestMergeIdentities               { get { return this.GetTable<TestMergeIdentity>(); } }
+		public ITable<TestSchema_TestSchemaA>            TestSchemaA                       { get { return this.GetTable<TestSchema_TestSchemaA>(); } }
+		public ITable<TestSchema_TestSchemaB>            TestSchemaB                       { get { return this.GetTable<TestSchema_TestSchemaB>(); } }
+		public ITable<TestSchemaSameTableName>           TestSchemaSameTableNames          { get { return this.GetTable<TestSchemaSameTableName>(); } }
+		public ITable<TestSchemaX>                       TestSchemaX                       { get { return this.GetTable<TestSchemaX>(); } }
+		public ITable<TestSchemaY>                       TestSchemaY                       { get { return this.GetTable<TestSchemaY>(); } }
+		public ITable<TestTable1>                        TestTable1                        { get { return this.GetTable<TestTable1>(); } }
+		public ITable<TestTable2>                        TestTable2                        { get { return this.GetTable<TestTable2>(); } }
+		public ITable<TestTable3>                        TestTable3                        { get { return this.GetTable<TestTable3>(); } }
 
 		#endregion
 
@@ -391,6 +401,42 @@ namespace Sql2025
 		#endregion
 	}
 
+	[Table(Schema="dbo", Name="MSSQL_TemporalHistoryFor_1035150733")]
+	public partial class MssqlTemporalHistoryFor1035150733
+	{
+		[Column(DbType="int"),                     NotNull    ] public int      Id        { get; set; } // int
+		[Column(DbType="nvarchar(10)", Length=10),    Nullable] public string?  Name      { get; set; } // nvarchar(10)
+		[Column(DbType="datetime2(7)"),            NotNull    ] public DateTime ValidFrom { get; set; } // datetime2(7)
+		[Column(DbType="datetime2(7)"),            NotNull    ] public DateTime ValidTo   { get; set; } // datetime2(7)
+	}
+
+	[Table(Schema="dbo", Name="MSSQL_TemporalHistoryFor_1179151246")]
+	public partial class MssqlTemporalHistoryFor1179151246
+	{
+		[Column(DbType="int"),                     NotNull    ] public int      Id        { get; set; } // int
+		[Column(DbType="nvarchar(10)", Length=10),    Nullable] public string?  Name      { get; set; } // nvarchar(10)
+		[Column(DbType="datetime2(7)"),            NotNull    ] public DateTime ValidFrom { get; set; } // datetime2(7)
+		[Column(DbType="datetime2(7)"),            NotNull    ] public DateTime ValidTo   { get; set; } // datetime2(7)
+	}
+
+	[Table(Schema="dbo", Name="MSSQL_TemporalHistoryFor_843150049")]
+	public partial class MssqlTemporalHistoryFor843150049
+	{
+		[Column(DbType="int"),                     NotNull    ] public int      Id        { get; set; } // int
+		[Column(DbType="nvarchar(10)", Length=10),    Nullable] public string?  Name      { get; set; } // nvarchar(10)
+		[Column(DbType="datetime2(7)"),            NotNull    ] public DateTime ValidFrom { get; set; } // datetime2(7)
+		[Column(DbType="datetime2(7)"),            NotNull    ] public DateTime ValidTo   { get; set; } // datetime2(7)
+	}
+
+	[Table(Schema="dbo", Name="MSSQL_TemporalHistoryFor_987150562")]
+	public partial class MssqlTemporalHistoryFor987150562
+	{
+		[Column(DbType="int"),                     NotNull    ] public int      Id        { get; set; } // int
+		[Column(DbType="nvarchar(10)", Length=10),    Nullable] public string?  Name      { get; set; } // nvarchar(10)
+		[Column(DbType="datetime2(7)"),            NotNull    ] public DateTime ValidFrom { get; set; } // datetime2(7)
+		[Column(DbType="datetime2(7)"),            NotNull    ] public DateTime ValidTo   { get; set; } // datetime2(7)
+	}
+
 	[Table(Schema="dbo", Name="Name.Test")]
 	public partial class NameTest
 	{
@@ -501,6 +547,30 @@ namespace Sql2025
 	{
 		[Column(DbType="int"),         PrimaryKey,  NotNull] public int             ID  { get; set; } // int
 		[Column(DbType="hierarchyid"),    Nullable         ] public SqlHierarchyId? HID { get; set; } // hierarchyid
+	}
+
+	[Table(Schema="dbo", Name="TemporalTest")]
+	public partial class TemporalTest
+	{
+		[Column(DbType="int"),                                                 PrimaryKey, NotNull] public int      ID        { get; set; } // int
+		[Column(DbType="nvarchar(100)", Length=100),                                       NotNull] public string   Name      { get; set; } = null!; // nvarchar(100)
+		[Column(DbType="datetime2(7)",  SkipOnInsert=true, SkipOnUpdate=true),             NotNull] public DateTime StartedOn { get; set; } // datetime2(7)
+		[Column(DbType="datetime2(7)",  SkipOnInsert=true, SkipOnUpdate=true),             NotNull] public DateTime EndedOn   { get; set; } // datetime2(7)
+	}
+
+	[Table(Schema="dbo", Name="TemporalTestHistory")]
+	public partial class TemporalTestHistory
+	{
+		[Column(DbType="int",           SkipOnInsert=true, SkipOnUpdate=true),             NotNull] public int      ID        { get; set; } // int
+		[Column(DbType="nvarchar(100)", Length=100, SkipOnInsert=true, SkipOnUpdate=true), NotNull] public string   Name      { get; set; } = null!; // nvarchar(100)
+		[Column(DbType="datetime2(7)",  SkipOnInsert=true, SkipOnUpdate=true),             NotNull] public DateTime StartedOn { get; set; } // datetime2(7)
+		[Column(DbType="datetime2(7)",  SkipOnInsert=true, SkipOnUpdate=true),             NotNull] public DateTime EndedOn   { get; set; } // datetime2(7)
+	}
+
+	[Table(Schema="dbo", Name="TestClass")]
+	public partial class TestClass
+	{
+		[Column(DbType="char(1)", Length=1), Nullable] public char? EnumValue { get; set; } // char(1)
 	}
 
 	[Table(Schema="dbo", Name="TestIdentity")]
@@ -695,6 +765,29 @@ namespace Sql2025
 		public TestSchemaX TestSchemaX { get; set; } = null!;
 
 		#endregion
+	}
+
+	[Table(Schema="dbo", Name="TestTable1")]
+	public partial class TestTable1
+	{
+		[Column(DbType="int"), NotNull    ] public int  ID  { get; set; } // int
+		[Column(DbType="int"),    Nullable] public int? ID2 { get; set; } // int
+	}
+
+	[Table(Schema="dbo", Name="TestTable2")]
+	public partial class TestTable2
+	{
+		[Column(DbType="int"),          NotNull    ] public int       ID3   { get; set; } // int
+		[Column(DbType="int"),          NotNull    ] public int       ID4   { get; set; } // int
+		[Column(DbType="datetime2(7)"), NotNull    ] public DateTime  Date1 { get; set; } // datetime2(7)
+		[Column(DbType="datetime2(7)"),    Nullable] public DateTime? Date2 { get; set; } // datetime2(7)
+	}
+
+	[Table(Schema="dbo", Name="TestTable3")]
+	public partial class TestTable3
+	{
+		[Column(DbType="int"),                         NotNull    ] public int     ID5   { get; set; } // int
+		[Column(DbType="nvarchar(4000)", Length=4000),    Nullable] public string? Value { get; set; } // nvarchar(4000)
 	}
 
 	public static partial class TestDataDBStoredProcedures
@@ -1353,6 +1446,12 @@ namespace Sql2025
 		}
 
 		public static SqlType? Find(this ITable<SqlType> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static TemporalTest? Find(this ITable<TemporalTest> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
