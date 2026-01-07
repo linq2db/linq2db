@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Internal.SqlQuery
+﻿using LinqToDB.Internal.SqlQuery.Visitors;
+
+namespace LinqToDB.Internal.SqlQuery
 {
 	/// <summary>
 	/// Sql AST node interface.
@@ -16,6 +18,11 @@
 		/// Generates debug text representation of AST node.
 		/// </summary>
 		QueryElementTextWriter ToString(QueryElementTextWriter writer);
+
+		/// <summary>
+		/// Visitor support.
+		/// </summary>
+		IQueryElement Accept(QueryElementVisitor visitor);
 
 		int GetElementHashCode();
 	}

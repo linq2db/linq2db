@@ -1220,7 +1220,6 @@ namespace Tests.Linq
 					ms.SetConverter<Guid?, TenderId?>(From);
 
 					ms.SetConverter<TenderId, LinqToDB.Data.DataParameter>(id => new LinqToDB.Data.DataParameter { DataType = DataType.Guid, Value = id.Value });
-					ms.SetConverter<TenderId?, LinqToDB.Data.DataParameter>(id => new LinqToDB.Data.DataParameter { DataType = DataType.Guid, Value = id?.Value });
 					// sqlite.ms returns byte[]
 					ms.SetConverter<byte[], TenderId>(raw => From(new Guid(raw)));
 
@@ -1275,7 +1274,6 @@ namespace Tests.Linq
 				ms.SetConverter<Guid?, TenderId?>(From);
 
 				ms.SetConverter<TenderId, DataParameter>(id => new DataParameter { DataType = DataType.Guid, Value = id.Value });
-				ms.SetConverter<TenderId?, DataParameter>(id => new DataParameter { DataType = DataType.Guid, Value = id?.Value });
 
 				return ms;
 			}
@@ -1473,6 +1471,25 @@ namespace Tests.Linq
 			var query = tb.Where(r => r.Value == -new TimeSpan(1200000000L));
 
 			query.ToArray();
+		}
+
+		sealed class TimespanAsTicksRegressionTable
+		{
+			[PrimaryKey] public Guid Id { get; set; }
+			[Column    ] public DateTimeOffset Value { get; set; }
+		}
+
+		[Test]
+		public void TimespanAsTicksRegression([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetDataType(typeof(TimeSpan), DataType.Int64);
+
+			using var bl = new DisableBaseline("Use of DateTimeOffset.Now");
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<TimespanAsTicksRegressionTable>();
+
+			_ = tb.Where(r => r.Value > DateTimeOffset.Now - TimeSpan.FromDays(1)).ToArray();
 		}
 
 		#region Issue 4955
@@ -1761,6 +1778,97 @@ namespace Tests.Linq
 			{
 				Assert.That(result[0].Value, Is.EqualTo(1));
 				Assert.That(result[1].Value, Is.Null);
+			}
+		}
+
+		sealed class Child1
+		{
+			public string? Name { get; set; }
+		}
+
+		sealed class Child2
+		{
+			public string? Name { get; set; }
+		}
+
+		[Column("child1_name", $"{nameof(Customer)}.{nameof(Child1.Name)}")]
+		[Column("child2_name", $"{nameof(CustomerOther)}.{nameof(Child2.Name)}")]
+		sealed class Issue5266Table
+		{
+			[PrimaryKey] public int Id { get; set; }
+			public Child1? Customer { get; set; }
+			public Child2? CustomerOther { get; set; }
+		}
+
+		sealed class Issue5266TableFluent
+		{
+			public int Id { get; set; }
+			public Child1? Customer { get; set; }
+			public Child2? CustomerOther { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5266")]
+		public void TestCompositeNamesConflicts_Attributes([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue5266Table>();
+
+			db.Insert(new Issue5266Table()
+			{
+				Id = 1,
+				Customer = new () { Name = "name1" },
+				CustomerOther = new () { Name = "name2" },
+			});
+
+			var result = tb.Single();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.Customer, Is.Not.Null);
+				Assert.That(result.CustomerOther, Is.Not.Null);
+				Assert.That(result.Id, Is.EqualTo(1));
+			}
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.Customer.Name, Is.EqualTo("name1"));
+				Assert.That(result.CustomerOther.Name, Is.EqualTo("name2"));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5266")]
+		public void TestCompositeNamesConflicts_Fluent([DataSources] string context)
+		{
+			var builder = new FluentMappingBuilder()
+				.Entity<Issue5266TableFluent>()
+					.HasPrimaryKey(e => e.Id)
+					.Property(e => e.Customer!.Name).HasColumnName("child1_name")
+					.Property(e => e.CustomerOther!.Name).HasColumnName("child2_name")
+					.Build();
+
+			using var db = GetDataContext(context, builder.MappingSchema);
+			using var tb = db.CreateLocalTable<Issue5266TableFluent>();
+
+			db.Insert(new Issue5266TableFluent()
+			{
+				Id = 1,
+				Customer = new() { Name = "name1" },
+				CustomerOther = new() { Name = "name2" },
+			});
+
+			var result = tb.Single();
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.Customer, Is.Not.Null);
+				Assert.That(result.CustomerOther, Is.Not.Null);
+				Assert.That(result.Id, Is.EqualTo(1));
+			}
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.Customer.Name, Is.EqualTo("name1"));
+				Assert.That(result.CustomerOther.Name, Is.EqualTo("name2"));
 			}
 		}
 	}
