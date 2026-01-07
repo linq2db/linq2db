@@ -16,6 +16,7 @@ namespace LinqToDB.Tools.ModelGeneration
 		bool    IsStatic   { get; set; }
 		bool    HasGetter  { get; set; }
 		bool    HasSetter  { get; set; }
+		bool    IsNullable { get; set; }
 
 		List<Func<IEnumerable<string>>> GetBodyBuilders { get; set; }
 		List<Func<IEnumerable<string>>> SetBodyBuilders { get; set; }
