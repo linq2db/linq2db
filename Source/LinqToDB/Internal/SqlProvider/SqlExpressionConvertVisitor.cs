@@ -1404,7 +1404,7 @@ namespace LinqToDB.Internal.SqlProvider
 							len = 100;
 
 						return new SqlBinaryExpression(
-							element.SystemType,
+							element.Type,
 							element.Expr1,
 							element.Operation,
 							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr2, QueryHelper.GetDbDataType(element.Expr1, MappingSchema).WithLength(len.Value))),
@@ -1419,10 +1419,72 @@ namespace LinqToDB.Internal.SqlProvider
 							len = 100;
 
 						return new SqlBinaryExpression(
-							element.SystemType,
+							element.Type,
 							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr1, QueryHelper.GetDbDataType(element.Expr2, MappingSchema).WithLength(len.Value))),
 							element.Operation,
 							element.Expr2,
+							element.Precedence);
+					}
+
+					if (element.Expr2 is SqlUnaryExpression { Operation: SqlUnaryOperation.Negation, Expr: var expr2 })
+					{
+						return new SqlBinaryExpression(
+							element.Type,
+							element.Expr1,
+							"-",
+							expr2,
+							element.Precedence);
+					}
+
+					break;
+				}
+
+				case "-":
+				{
+					if (element.Expr2 is SqlUnaryExpression { Operation: SqlUnaryOperation.Negation, Expr: var expr2 })
+					{
+						return new SqlBinaryExpression(
+							element.Type,
+							element.Expr1,
+							"+",
+							expr2,
+							element.Precedence);
+					}
+
+					break;
+				}
+
+				case "*":
+				{
+					if (element.Expr2 is SqlValue { Value: -1 })
+					{
+						return new SqlUnaryExpression(
+							element.Type,
+							element.Expr1,
+							SqlUnaryOperation.Negation,
+							element.Precedence);
+					}
+
+					if (element.Expr1 is SqlValue { Value: -1 })
+					{
+						return new SqlUnaryExpression(
+							element.Type,
+							element.Expr2,
+							SqlUnaryOperation.Negation,
+							element.Precedence);
+					}
+
+					break;
+				}
+
+				case "/":
+				{
+					if (element.Expr2 is SqlValue { Value: -1 })
+					{
+						return new SqlUnaryExpression(
+							element.Type,
+							element.Expr1,
+							SqlUnaryOperation.Negation,
 							element.Precedence);
 					}
 

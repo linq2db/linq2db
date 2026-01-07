@@ -38,7 +38,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				case "&": return new SqlFunction(element.Type, "BitAnd", element.Expr1, element.Expr2);
 				case "|": return new SqlFunction(element.Type, "BitOr", element.Expr1, element.Expr2);
 				case "^": return new SqlFunction(element.Type, "BitXor", element.Expr1, element.Expr2);
-				case "+": return element.SystemType.IsStringType ? new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence) : element;
+				case "+" when element.SystemType.IsStringType: return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
 			}
 
 			return base.ConvertSqlBinaryExpression(element);

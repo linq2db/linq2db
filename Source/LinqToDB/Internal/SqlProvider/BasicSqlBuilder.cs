@@ -3747,7 +3747,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		#endregion
 
-		#region BuildBinaryExpression
+		#region BuildUnaryExpression
 
 		protected virtual void BuildUnaryExpression(SqlUnaryExpression expr)
 		{
