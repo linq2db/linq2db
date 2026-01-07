@@ -29,46 +29,56 @@ namespace SqlServerNEDataContext
 	{
 		#region Tables
 
-		public ITable<AllType>                  AllTypes                 { get { return this.GetTable<AllType>(); } }
-		public ITable<AllTypes2>                AllTypes2                { get { return this.GetTable<AllTypes2>(); } }
-		public ITable<Child>                    Children                 { get { return this.GetTable<Child>(); } }
-		public ITable<CollatedTable>            CollatedTables           { get { return this.GetTable<CollatedTable>(); } }
-		public ITable<DataType>                 DataTypes                { get { return this.GetTable<DataType>(); } }
-		public ITable<DecimalOverflow>          DecimalOverflows         { get { return this.GetTable<DecimalOverflow>(); } }
-		public ITable<Doctor>                   Doctors                  { get { return this.GetTable<Doctor>(); } }
-		public ITable<GrandChild>               GrandChildren            { get { return this.GetTable<GrandChild>(); } }
-		public ITable<GuidID>                   GuidIds                  { get { return this.GetTable<GuidID>(); } }
-		public ITable<GuidID2>                  GuidID2                  { get { return this.GetTable<GuidID2>(); } }
-		public ITable<IndexTable>               IndexTables              { get { return this.GetTable<IndexTable>(); } }
-		public ITable<IndexTable2>              IndexTable2              { get { return this.GetTable<IndexTable2>(); } }
-		public ITable<InheritanceChild>         InheritanceChildren      { get { return this.GetTable<InheritanceChild>(); } }
-		public ITable<InheritanceParent>        InheritanceParents       { get { return this.GetTable<InheritanceParent>(); } }
-		public ITable<Issue1115>                Issue1115                { get { return this.GetTable<Issue1115>(); } }
-		public ITable<Issue1144>                Issue1144                { get { return this.GetTable<Issue1144>(); } }
-		public ITable<LinqDataType>             LinqDataTypes            { get { return this.GetTable<LinqDataType>(); } }
-		public ITable<Member>                   Members                  { get { return this.GetTable<Member>(); } }
-		public ITable<NameTest>                 NameTests                { get { return this.GetTable<NameTest>(); } }
+		public ITable<AllType>                           AllTypes                          { get { return this.GetTable<AllType>(); } }
+		public ITable<AllTypes2>                         AllTypes2                         { get { return this.GetTable<AllTypes2>(); } }
+		public ITable<Child>                             Children                          { get { return this.GetTable<Child>(); } }
+		public ITable<CollatedTable>                     CollatedTables                    { get { return this.GetTable<CollatedTable>(); } }
+		public ITable<DataType>                          DataTypes                         { get { return this.GetTable<DataType>(); } }
+		public ITable<DecimalOverflow>                   DecimalOverflows                  { get { return this.GetTable<DecimalOverflow>(); } }
+		public ITable<Doctor>                            Doctors                           { get { return this.GetTable<Doctor>(); } }
+		public ITable<GrandChild>                        GrandChildren                     { get { return this.GetTable<GrandChild>(); } }
+		public ITable<GuidID>                            GuidIds                           { get { return this.GetTable<GuidID>(); } }
+		public ITable<GuidID2>                           GuidID2                           { get { return this.GetTable<GuidID2>(); } }
+		public ITable<IndexTable>                        IndexTables                       { get { return this.GetTable<IndexTable>(); } }
+		public ITable<IndexTable2>                       IndexTable2                       { get { return this.GetTable<IndexTable2>(); } }
+		public ITable<InheritanceChild>                  InheritanceChildren               { get { return this.GetTable<InheritanceChild>(); } }
+		public ITable<InheritanceParent>                 InheritanceParents                { get { return this.GetTable<InheritanceParent>(); } }
+		public ITable<Issue1115>                         Issue1115                         { get { return this.GetTable<Issue1115>(); } }
+		public ITable<Issue1144>                         Issue1144                         { get { return this.GetTable<Issue1144>(); } }
+		public ITable<LinqDataType>                      LinqDataTypes                     { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<Member>                            Members                           { get { return this.GetTable<Member>(); } }
+		public ITable<MssqlTemporalHistoryFor1035150733> MssqlTemporalHistoryFor1035150733 { get { return this.GetTable<MssqlTemporalHistoryFor1035150733>(); } }
+		public ITable<MssqlTemporalHistoryFor1179151246> MssqlTemporalHistoryFor1179151246 { get { return this.GetTable<MssqlTemporalHistoryFor1179151246>(); } }
+		public ITable<MssqlTemporalHistoryFor843150049>  MssqlTemporalHistoryFor843150049  { get { return this.GetTable<MssqlTemporalHistoryFor843150049>(); } }
+		public ITable<MssqlTemporalHistoryFor987150562>  MssqlTemporalHistoryFor987150562  { get { return this.GetTable<MssqlTemporalHistoryFor987150562>(); } }
+		public ITable<NameTest>                          NameTests                         { get { return this.GetTable<NameTest>(); } }
 		/// <summary>
 		/// This is Parent table
 		/// </summary>
-		public ITable<Parent>                   Parents                  { get { return this.GetTable<Parent>(); } }
-		public ITable<ParentChildView>          ParentChildViews         { get { return this.GetTable<ParentChildView>(); } }
-		public ITable<ParentView>               ParentViews              { get { return this.GetTable<ParentView>(); } }
-		public ITable<Patient>                  Patients                 { get { return this.GetTable<Patient>(); } }
-		public ITable<Person>                   People                   { get { return this.GetTable<Person>(); } }
-		public ITable<Provider>                 Providers                { get { return this.GetTable<Provider>(); } }
-		public ITable<SameTableName>            SameTableNames           { get { return this.GetTable<SameTableName>(); } }
-		public ITable<TestSchema_SameTableName> SameTableNames0          { get { return this.GetTable<TestSchema_SameTableName>(); } }
-		public ITable<SqlType>                  SqlTypes                 { get { return this.GetTable<SqlType>(); } }
-		public ITable<TestIdentity>             TestIdentities           { get { return this.GetTable<TestIdentity>(); } }
-		public ITable<TestMerge1>               TestMerge1               { get { return this.GetTable<TestMerge1>(); } }
-		public ITable<TestMerge2>               TestMerge2               { get { return this.GetTable<TestMerge2>(); } }
-		public ITable<TestMergeIdentity>        TestMergeIdentities      { get { return this.GetTable<TestMergeIdentity>(); } }
-		public ITable<TestSchema_TestSchemaA>   TestSchemaA              { get { return this.GetTable<TestSchema_TestSchemaA>(); } }
-		public ITable<TestSchema_TestSchemaB>   TestSchemaB              { get { return this.GetTable<TestSchema_TestSchemaB>(); } }
-		public ITable<TestSchemaSameTableName>  TestSchemaSameTableNames { get { return this.GetTable<TestSchemaSameTableName>(); } }
-		public ITable<TestSchemaX>              TestSchemaX              { get { return this.GetTable<TestSchemaX>(); } }
-		public ITable<TestSchemaY>              TestSchemaY              { get { return this.GetTable<TestSchemaY>(); } }
+		public ITable<Parent>                            Parents                           { get { return this.GetTable<Parent>(); } }
+		public ITable<ParentChildView>                   ParentChildViews                  { get { return this.GetTable<ParentChildView>(); } }
+		public ITable<ParentView>                        ParentViews                       { get { return this.GetTable<ParentView>(); } }
+		public ITable<Patient>                           Patients                          { get { return this.GetTable<Patient>(); } }
+		public ITable<Person>                            People                            { get { return this.GetTable<Person>(); } }
+		public ITable<Provider>                          Providers                         { get { return this.GetTable<Provider>(); } }
+		public ITable<SameTableName>                     SameTableNames                    { get { return this.GetTable<SameTableName>(); } }
+		public ITable<TestSchema_SameTableName>          SameTableNames0                   { get { return this.GetTable<TestSchema_SameTableName>(); } }
+		public ITable<SqlType>                           SqlTypes                          { get { return this.GetTable<SqlType>(); } }
+		public ITable<TemporalTest>                      TemporalTests                     { get { return this.GetTable<TemporalTest>(); } }
+		public ITable<TemporalTestHistory>               TemporalTestHistories             { get { return this.GetTable<TemporalTestHistory>(); } }
+		public ITable<TestClass>                         TestClasses                       { get { return this.GetTable<TestClass>(); } }
+		public ITable<TestIdentity>                      TestIdentities                    { get { return this.GetTable<TestIdentity>(); } }
+		public ITable<TestMerge1>                        TestMerge1                        { get { return this.GetTable<TestMerge1>(); } }
+		public ITable<TestMerge2>                        TestMerge2                        { get { return this.GetTable<TestMerge2>(); } }
+		public ITable<TestMergeIdentity>                 TestMergeIdentities               { get { return this.GetTable<TestMergeIdentity>(); } }
+		public ITable<TestSchema_TestSchemaA>            TestSchemaA                       { get { return this.GetTable<TestSchema_TestSchemaA>(); } }
+		public ITable<TestSchema_TestSchemaB>            TestSchemaB                       { get { return this.GetTable<TestSchema_TestSchemaB>(); } }
+		public ITable<TestSchemaSameTableName>           TestSchemaSameTableNames          { get { return this.GetTable<TestSchemaSameTableName>(); } }
+		public ITable<TestSchemaX>                       TestSchemaX                       { get { return this.GetTable<TestSchemaX>(); } }
+		public ITable<TestSchemaY>                       TestSchemaY                       { get { return this.GetTable<TestSchemaY>(); } }
+		public ITable<TestTable1>                        TestTable1                        { get { return this.GetTable<TestTable1>(); } }
+		public ITable<TestTable2>                        TestTable2                        { get { return this.GetTable<TestTable2>(); } }
+		public ITable<TestTable3>                        TestTable3                        { get { return this.GetTable<TestTable3>(); } }
 
 		#endregion
 
@@ -146,7 +156,7 @@ namespace SqlServerNEDataContext
 
 		private int _id;
 		[Column()                          , PrimaryKey, Identity]
-		public  int  ID // int
+		public int ID // int
 		{
 			get { return _id; }
 			set
@@ -184,7 +194,7 @@ namespace SqlServerNEDataContext
 
 		private long? _bigintDataType;
 		[Column("bigintDataType")          , Nullable]
-		public  long?  BigintDataType // bigint
+		public long? BigintDataType // bigint
 		{
 			get { return _bigintDataType; }
 			set
@@ -222,7 +232,7 @@ namespace SqlServerNEDataContext
 
 		private decimal? _numericDataType;
 		[Column("numericDataType")         , Nullable]
-		public  decimal?  NumericDataType // numeric(18, 1)
+		public decimal? NumericDataType // numeric(18, 1)
 		{
 			get { return _numericDataType; }
 			set
@@ -260,7 +270,7 @@ namespace SqlServerNEDataContext
 
 		private bool? _bitDataType;
 		[Column("bitDataType")             , Nullable]
-		public  bool?  BitDataType // bit
+		public bool? BitDataType // bit
 		{
 			get { return _bitDataType; }
 			set
@@ -298,7 +308,7 @@ namespace SqlServerNEDataContext
 
 		private short? _smallintDataType;
 		[Column("smallintDataType")        , Nullable]
-		public  short?  SmallintDataType // smallint
+		public short? SmallintDataType // smallint
 		{
 			get { return _smallintDataType; }
 			set
@@ -336,7 +346,7 @@ namespace SqlServerNEDataContext
 
 		private decimal? _decimalDataType;
 		[Column("decimalDataType")         , Nullable]
-		public  decimal?  DecimalDataType // decimal(18, 1)
+		public decimal? DecimalDataType // decimal(18, 1)
 		{
 			get { return _decimalDataType; }
 			set
@@ -374,7 +384,7 @@ namespace SqlServerNEDataContext
 
 		private decimal? _smallmoneyDataType;
 		[Column("smallmoneyDataType")      , Nullable]
-		public  decimal?  SmallmoneyDataType // smallmoney
+		public decimal? SmallmoneyDataType // smallmoney
 		{
 			get { return _smallmoneyDataType; }
 			set
@@ -412,7 +422,7 @@ namespace SqlServerNEDataContext
 
 		private int? _intDataType;
 		[Column("intDataType")             , Nullable]
-		public  int?  IntDataType // int
+		public int? IntDataType // int
 		{
 			get { return _intDataType; }
 			set
@@ -450,7 +460,7 @@ namespace SqlServerNEDataContext
 
 		private byte? _tinyintDataType;
 		[Column("tinyintDataType")         , Nullable]
-		public  byte?  TinyintDataType // tinyint
+		public byte? TinyintDataType // tinyint
 		{
 			get { return _tinyintDataType; }
 			set
@@ -488,7 +498,7 @@ namespace SqlServerNEDataContext
 
 		private decimal? _moneyDataType;
 		[Column("moneyDataType")           , Nullable]
-		public  decimal?  MoneyDataType // money
+		public decimal? MoneyDataType // money
 		{
 			get { return _moneyDataType; }
 			set
@@ -526,7 +536,7 @@ namespace SqlServerNEDataContext
 
 		private double? _floatDataType;
 		[Column("floatDataType")           , Nullable]
-		public  double?  FloatDataType // float
+		public double? FloatDataType // float
 		{
 			get { return _floatDataType; }
 			set
@@ -564,7 +574,7 @@ namespace SqlServerNEDataContext
 
 		private float? _realDataType;
 		[Column("realDataType")            , Nullable]
-		public  float?  RealDataType // real
+		public float? RealDataType // real
 		{
 			get { return _realDataType; }
 			set
@@ -602,7 +612,7 @@ namespace SqlServerNEDataContext
 
 		private DateTime? _datetimeDataType;
 		[Column("datetimeDataType")        , Nullable]
-		public  DateTime?  DatetimeDataType // datetime
+		public DateTime? DatetimeDataType // datetime
 		{
 			get { return _datetimeDataType; }
 			set
@@ -640,7 +650,7 @@ namespace SqlServerNEDataContext
 
 		private DateTime? _smalldatetimeDataType;
 		[Column("smalldatetimeDataType")   , Nullable]
-		public  DateTime?  SmalldatetimeDataType // smalldatetime
+		public DateTime? SmalldatetimeDataType // smalldatetime
 		{
 			get { return _smalldatetimeDataType; }
 			set
@@ -678,7 +688,7 @@ namespace SqlServerNEDataContext
 
 		private char? _charDataType;
 		[Column("charDataType")            , Nullable]
-		public  char?  CharDataType // char(1)
+		public char? CharDataType // char(1)
 		{
 			get { return _charDataType; }
 			set
@@ -716,7 +726,7 @@ namespace SqlServerNEDataContext
 
 		private string? _char20DataType;
 		[Column("char20DataType")          , Nullable]
-		public  string?  Char20DataType // char(20)
+		public string? Char20DataType // char(20)
 		{
 			get { return _char20DataType; }
 			set
@@ -754,7 +764,7 @@ namespace SqlServerNEDataContext
 
 		private string? _varcharDataType;
 		[Column("varcharDataType")         , Nullable]
-		public  string?  VarcharDataType // varchar(20)
+		public string? VarcharDataType // varchar(20)
 		{
 			get { return _varcharDataType; }
 			set
@@ -792,7 +802,7 @@ namespace SqlServerNEDataContext
 
 		private string? _textDataType;
 		[Column("textDataType")            , Nullable]
-		public  string?  TextDataType // text
+		public string? TextDataType // text
 		{
 			get { return _textDataType; }
 			set
@@ -830,7 +840,7 @@ namespace SqlServerNEDataContext
 
 		private string? _ncharDataType;
 		[Column("ncharDataType")           , Nullable]
-		public  string?  NcharDataType // nchar(20)
+		public string? NcharDataType // nchar(20)
 		{
 			get { return _ncharDataType; }
 			set
@@ -868,7 +878,7 @@ namespace SqlServerNEDataContext
 
 		private string? _nvarcharDataType;
 		[Column("nvarcharDataType")        , Nullable]
-		public  string?  NvarcharDataType // nvarchar(20)
+		public string? NvarcharDataType // nvarchar(20)
 		{
 			get { return _nvarcharDataType; }
 			set
@@ -906,7 +916,7 @@ namespace SqlServerNEDataContext
 
 		private string? _ntextDataType;
 		[Column("ntextDataType")           , Nullable]
-		public  string?  NtextDataType // ntext
+		public string? NtextDataType // ntext
 		{
 			get { return _ntextDataType; }
 			set
@@ -944,7 +954,7 @@ namespace SqlServerNEDataContext
 
 		private byte[]? _binaryDataType;
 		[Column("binaryDataType")          , Nullable]
-		public  byte[]?  BinaryDataType // binary(1)
+		public byte[]? BinaryDataType // binary(1)
 		{
 			get { return _binaryDataType; }
 			set
@@ -982,7 +992,7 @@ namespace SqlServerNEDataContext
 
 		private byte[]? _varbinaryDataType;
 		[Column("varbinaryDataType")       , Nullable]
-		public  byte[]?  VarbinaryDataType // varbinary(1)
+		public byte[]? VarbinaryDataType // varbinary(1)
 		{
 			get { return _varbinaryDataType; }
 			set
@@ -1020,7 +1030,7 @@ namespace SqlServerNEDataContext
 
 		private byte[]? _imageDataType;
 		[Column("imageDataType")           , Nullable]
-		public  byte[]?  ImageDataType // image
+		public byte[]? ImageDataType // image
 		{
 			get { return _imageDataType; }
 			set
@@ -1058,7 +1068,7 @@ namespace SqlServerNEDataContext
 
 		private byte[]? _timestampDataType;
 		[Column("timestampDataType",        SkipOnInsert=true, SkipOnUpdate=true), Nullable]
-		public  byte[]?  TimestampDataType // timestamp
+		public byte[]? TimestampDataType // timestamp
 		{
 			get { return _timestampDataType; }
 			set
@@ -1096,7 +1106,7 @@ namespace SqlServerNEDataContext
 
 		private Guid? _uniqueidentifierDataType;
 		[Column("uniqueidentifierDataType"), Nullable]
-		public  Guid?  UniqueidentifierDataType // uniqueidentifier
+		public Guid? UniqueidentifierDataType // uniqueidentifier
 		{
 			get { return _uniqueidentifierDataType; }
 			set
@@ -1134,7 +1144,7 @@ namespace SqlServerNEDataContext
 
 		private object? _sqlVariantDataType;
 		[Column("sql_variantDataType")     , Nullable]
-		public  object?  SqlVariantDataType // sql_variant
+		public object? SqlVariantDataType // sql_variant
 		{
 			get { return _sqlVariantDataType; }
 			set
@@ -1172,7 +1182,7 @@ namespace SqlServerNEDataContext
 
 		private string? _nvarcharMaxDataType;
 		[Column("nvarchar_max_DataType")   , Nullable]
-		public  string?  NvarcharMaxDataType // nvarchar(max)
+		public string? NvarcharMaxDataType // nvarchar(max)
 		{
 			get { return _nvarcharMaxDataType; }
 			set
@@ -1210,7 +1220,7 @@ namespace SqlServerNEDataContext
 
 		private string? _varcharMaxDataType;
 		[Column("varchar_max_DataType")    , Nullable]
-		public  string?  VarcharMaxDataType // varchar(max)
+		public string? VarcharMaxDataType // varchar(max)
 		{
 			get { return _varcharMaxDataType; }
 			set
@@ -1248,7 +1258,7 @@ namespace SqlServerNEDataContext
 
 		private byte[]? _varbinaryMaxDataType;
 		[Column("varbinary_max_DataType")  , Nullable]
-		public  byte[]?  VarbinaryMaxDataType // varbinary(max)
+		public byte[]? VarbinaryMaxDataType // varbinary(max)
 		{
 			get { return _varbinaryMaxDataType; }
 			set
@@ -1286,7 +1296,7 @@ namespace SqlServerNEDataContext
 
 		private string? _xmlDataType;
 		[Column("xmlDataType")             , Nullable]
-		public  string?  XmlDataType // xml
+		public string? XmlDataType // xml
 		{
 			get { return _xmlDataType; }
 			set
@@ -1324,7 +1334,7 @@ namespace SqlServerNEDataContext
 
 		private string? _jsonDataType;
 		[Column("jsonDataType")            , Nullable]
-		public  string?  JsonDataType // json
+		public string? JsonDataType // json
 		{
 			get { return _jsonDataType; }
 			set
@@ -1358,11 +1368,11 @@ namespace SqlServerNEDataContext
 
 		#endregion
 
-		#region VectorDataType : string?
+		#region VectorDataType : float[]?
 
-		private string? _vectorDataType;
+		private float[]? _vectorDataType;
 		[Column("vectorDataType")          , Nullable]
-		public  string?  VectorDataType // vector
+		public float[]? VectorDataType // vector(5)
 		{
 			get { return _vectorDataType; }
 			set
@@ -1380,7 +1390,7 @@ namespace SqlServerNEDataContext
 
 		#region INotifyPropertyChanged support
 
-		partial void BeforeVectorDataTypeChanged(string? newValue);
+		partial void BeforeVectorDataTypeChanged(float[]? newValue);
 		partial void AfterVectorDataTypeChanged ();
 
 		public const string NameOfVectorDataType = "VectorDataType";
@@ -1400,7 +1410,7 @@ namespace SqlServerNEDataContext
 
 		private DateTime? _datetime2DataType;
 		[Column("datetime2DataType")       , Nullable]
-		public  DateTime?  Datetime2DataType // datetime2(7)
+		public DateTime? Datetime2DataType // datetime2(7)
 		{
 			get { return _datetime2DataType; }
 			set
@@ -1438,7 +1448,7 @@ namespace SqlServerNEDataContext
 
 		private DateTimeOffset? _datetimeoffsetDataType;
 		[Column("datetimeoffsetDataType")  , Nullable]
-		public  DateTimeOffset?  DatetimeoffsetDataType // datetimeoffset(7)
+		public DateTimeOffset? DatetimeoffsetDataType // datetimeoffset(7)
 		{
 			get { return _datetimeoffsetDataType; }
 			set
@@ -1476,7 +1486,7 @@ namespace SqlServerNEDataContext
 
 		private DateTimeOffset? _datetimeoffset0DataType;
 		[Column("datetimeoffset0DataType") , Nullable]
-		public  DateTimeOffset?  Datetimeoffset0DataType // datetimeoffset(0)
+		public DateTimeOffset? Datetimeoffset0DataType // datetimeoffset(0)
 		{
 			get { return _datetimeoffset0DataType; }
 			set
@@ -1514,7 +1524,7 @@ namespace SqlServerNEDataContext
 
 		private DateTimeOffset? _datetimeoffset1DataType;
 		[Column("datetimeoffset1DataType") , Nullable]
-		public  DateTimeOffset?  Datetimeoffset1DataType // datetimeoffset(1)
+		public DateTimeOffset? Datetimeoffset1DataType // datetimeoffset(1)
 		{
 			get { return _datetimeoffset1DataType; }
 			set
@@ -1552,7 +1562,7 @@ namespace SqlServerNEDataContext
 
 		private DateTimeOffset? _datetimeoffset2DataType;
 		[Column("datetimeoffset2DataType") , Nullable]
-		public  DateTimeOffset?  Datetimeoffset2DataType // datetimeoffset(2)
+		public DateTimeOffset? Datetimeoffset2DataType // datetimeoffset(2)
 		{
 			get { return _datetimeoffset2DataType; }
 			set
@@ -1590,7 +1600,7 @@ namespace SqlServerNEDataContext
 
 		private DateTimeOffset? _datetimeoffset3DataType;
 		[Column("datetimeoffset3DataType") , Nullable]
-		public  DateTimeOffset?  Datetimeoffset3DataType // datetimeoffset(3)
+		public DateTimeOffset? Datetimeoffset3DataType // datetimeoffset(3)
 		{
 			get { return _datetimeoffset3DataType; }
 			set
@@ -1628,7 +1638,7 @@ namespace SqlServerNEDataContext
 
 		private DateTimeOffset? _datetimeoffset4DataType;
 		[Column("datetimeoffset4DataType") , Nullable]
-		public  DateTimeOffset?  Datetimeoffset4DataType // datetimeoffset(4)
+		public DateTimeOffset? Datetimeoffset4DataType // datetimeoffset(4)
 		{
 			get { return _datetimeoffset4DataType; }
 			set
@@ -1666,7 +1676,7 @@ namespace SqlServerNEDataContext
 
 		private DateTimeOffset? _datetimeoffset5DataType;
 		[Column("datetimeoffset5DataType") , Nullable]
-		public  DateTimeOffset?  Datetimeoffset5DataType // datetimeoffset(5)
+		public DateTimeOffset? Datetimeoffset5DataType // datetimeoffset(5)
 		{
 			get { return _datetimeoffset5DataType; }
 			set
@@ -1704,7 +1714,7 @@ namespace SqlServerNEDataContext
 
 		private DateTimeOffset? _datetimeoffset6DataType;
 		[Column("datetimeoffset6DataType") , Nullable]
-		public  DateTimeOffset?  Datetimeoffset6DataType // datetimeoffset(6)
+		public DateTimeOffset? Datetimeoffset6DataType // datetimeoffset(6)
 		{
 			get { return _datetimeoffset6DataType; }
 			set
@@ -1742,7 +1752,7 @@ namespace SqlServerNEDataContext
 
 		private DateTimeOffset? _datetimeoffset7DataType;
 		[Column("datetimeoffset7DataType") , Nullable]
-		public  DateTimeOffset?  Datetimeoffset7DataType // datetimeoffset(7)
+		public DateTimeOffset? Datetimeoffset7DataType // datetimeoffset(7)
 		{
 			get { return _datetimeoffset7DataType; }
 			set
@@ -1780,7 +1790,7 @@ namespace SqlServerNEDataContext
 
 		private DateTime? _dateDataType;
 		[Column("dateDataType")            , Nullable]
-		public  DateTime?  DateDataType // date
+		public DateTime? DateDataType // date
 		{
 			get { return _dateDataType; }
 			set
@@ -1818,7 +1828,7 @@ namespace SqlServerNEDataContext
 
 		private TimeSpan? _timeDataType;
 		[Column("timeDataType")            , Nullable]
-		public  TimeSpan?  TimeDataType // time(7)
+		public TimeSpan? TimeDataType // time(7)
 		{
 			get { return _timeDataType; }
 			set
@@ -1887,7 +1897,7 @@ namespace SqlServerNEDataContext
 
 		private int _id;
 		[Column()                        , PrimaryKey, Identity]
-		public  int  ID // int
+		public int ID // int
 		{
 			get { return _id; }
 			set
@@ -1925,7 +1935,7 @@ namespace SqlServerNEDataContext
 
 		private DateTime? _dateDataType;
 		[Column("dateDataType")          , Nullable]
-		public  DateTime?  DateDataType // date
+		public DateTime? DateDataType // date
 		{
 			get { return _dateDataType; }
 			set
@@ -1963,7 +1973,7 @@ namespace SqlServerNEDataContext
 
 		private DateTimeOffset? _datetimeoffsetDataType;
 		[Column("datetimeoffsetDataType"), Nullable]
-		public  DateTimeOffset?  DatetimeoffsetDataType // datetimeoffset(7)
+		public DateTimeOffset? DatetimeoffsetDataType // datetimeoffset(7)
 		{
 			get { return _datetimeoffsetDataType; }
 			set
@@ -2001,7 +2011,7 @@ namespace SqlServerNEDataContext
 
 		private DateTime? _datetime2DataType;
 		[Column("datetime2DataType")     , Nullable]
-		public  DateTime?  Datetime2DataType // datetime2(7)
+		public DateTime? Datetime2DataType // datetime2(7)
 		{
 			get { return _datetime2DataType; }
 			set
@@ -2039,7 +2049,7 @@ namespace SqlServerNEDataContext
 
 		private TimeSpan? _timeDataType;
 		[Column("timeDataType")          , Nullable]
-		public  TimeSpan?  TimeDataType // time(7)
+		public TimeSpan? TimeDataType // time(7)
 		{
 			get { return _timeDataType; }
 			set
@@ -2077,7 +2087,7 @@ namespace SqlServerNEDataContext
 
 		private SqlHierarchyId? _hierarchyidDataType;
 		[Column("hierarchyidDataType")   , Nullable]
-		public  SqlHierarchyId?  HierarchyidDataType // hierarchyid
+		public SqlHierarchyId? HierarchyidDataType // hierarchyid
 		{
 			get { return _hierarchyidDataType; }
 			set
@@ -2115,7 +2125,7 @@ namespace SqlServerNEDataContext
 
 		private SqlGeography? _geographyDataType;
 		[Column("geographyDataType")     , Nullable]
-		public  SqlGeography?  GeographyDataType // geography
+		public SqlGeography? GeographyDataType // geography
 		{
 			get { return _geographyDataType; }
 			set
@@ -2153,7 +2163,7 @@ namespace SqlServerNEDataContext
 
 		private SqlGeometry? _geometryDataType;
 		[Column("geometryDataType")      , Nullable]
-		public  SqlGeometry?  GeometryDataType // geometry
+		public SqlGeometry? GeometryDataType // geometry
 		{
 			get { return _geometryDataType; }
 			set
@@ -2222,7 +2232,7 @@ namespace SqlServerNEDataContext
 
 		private int? _parentID;
 		[Column()     , Nullable]
-		public  int?  ParentID // int
+		public int? ParentID // int
 		{
 			get { return _parentID; }
 			set
@@ -2263,7 +2273,7 @@ namespace SqlServerNEDataContext
 		/// This ChildID column
 		/// </summary>
 		[Column()     , Nullable]
-		public  int?  ChildID // int
+		public int? ChildID // int
 		{
 			get { return _childID; }
 			set
@@ -2301,7 +2311,7 @@ namespace SqlServerNEDataContext
 
 		private int _id;
 		[Column("_ID"), PrimaryKey, Identity]
-		public  int  Id // int
+		public int Id // int
 		{
 			get { return _id; }
 			set
@@ -2370,7 +2380,7 @@ namespace SqlServerNEDataContext
 
 		private int _id;
 		[Column, NotNull]
-		public  int  Id // int
+		public int Id // int
 		{
 			get { return _id; }
 			set
@@ -2408,7 +2418,7 @@ namespace SqlServerNEDataContext
 
 		private string _caseSensitive = null!;
 		[Column, NotNull]
-		public  string  CaseSensitive // nvarchar(20)
+		public string CaseSensitive // nvarchar(20)
 		{
 			get { return _caseSensitive; }
 			set
@@ -2446,7 +2456,7 @@ namespace SqlServerNEDataContext
 
 		private string _caseInsensitive = null!;
 		[Column, NotNull]
-		public  string  CaseInsensitive // nvarchar(20)
+		public string CaseInsensitive // nvarchar(20)
 		{
 			get { return _caseInsensitive; }
 			set
@@ -2515,7 +2525,7 @@ namespace SqlServerNEDataContext
 
 		private int _id;
 		[Column("id"), NotNull]
-		public  int  Id // int
+		public int Id // int
 		{
 			get { return _id; }
 			set
@@ -2584,7 +2594,7 @@ namespace SqlServerNEDataContext
 
 		private decimal _decimal1;
 		[PrimaryKey, NotNull]
-		public  decimal  Decimal1 // decimal(38, 20)
+		public decimal Decimal1 // decimal(38, 20)
 		{
 			get { return _decimal1; }
 			set
@@ -2622,7 +2632,7 @@ namespace SqlServerNEDataContext
 
 		private decimal? _decimal2;
 		[Column,    Nullable]
-		public  decimal?  Decimal2 // decimal(31, 2)
+		public decimal? Decimal2 // decimal(31, 2)
 		{
 			get { return _decimal2; }
 			set
@@ -2660,7 +2670,7 @@ namespace SqlServerNEDataContext
 
 		private decimal? _decimal3;
 		[Column,    Nullable]
-		public  decimal?  Decimal3 // decimal(38, 36)
+		public decimal? Decimal3 // decimal(38, 36)
 		{
 			get { return _decimal3; }
 			set
@@ -2698,7 +2708,7 @@ namespace SqlServerNEDataContext
 
 		private decimal? _decimal4;
 		[Column,    Nullable]
-		public  decimal?  Decimal4 // decimal(29, 0)
+		public decimal? Decimal4 // decimal(29, 0)
 		{
 			get { return _decimal4; }
 			set
@@ -2736,7 +2746,7 @@ namespace SqlServerNEDataContext
 
 		private decimal? _decimal5;
 		[Column,    Nullable]
-		public  decimal?  Decimal5 // decimal(38, 38)
+		public decimal? Decimal5 // decimal(38, 38)
 		{
 			get { return _decimal5; }
 			set
@@ -2805,7 +2815,7 @@ namespace SqlServerNEDataContext
 
 		private int _personID;
 		[PrimaryKey, NotNull]
-		public  int  PersonID // int
+		public int PersonID // int
 		{
 			get { return _personID; }
 			set
@@ -2843,7 +2853,7 @@ namespace SqlServerNEDataContext
 
 		private string _taxonomy = null!;
 		[Column, NotNull]
-		public  string  Taxonomy // nvarchar(50)
+		public string Taxonomy // nvarchar(50)
 		{
 			get { return _taxonomy; }
 			set
@@ -2922,7 +2932,7 @@ namespace SqlServerNEDataContext
 
 		private int? _parentID;
 		[Column()     , Nullable]
-		public  int?  ParentID // int
+		public int? ParentID // int
 		{
 			get { return _parentID; }
 			set
@@ -2960,7 +2970,7 @@ namespace SqlServerNEDataContext
 
 		private int? _childID;
 		[Column()     , Nullable]
-		public  int?  ChildID // int
+		public int? ChildID // int
 		{
 			get { return _childID; }
 			set
@@ -2998,7 +3008,7 @@ namespace SqlServerNEDataContext
 
 		private int? _grandChildID;
 		[Column()     , Nullable]
-		public  int?  GrandChildID // int
+		public int? GrandChildID // int
 		{
 			get { return _grandChildID; }
 			set
@@ -3036,7 +3046,7 @@ namespace SqlServerNEDataContext
 
 		private int _id;
 		[Column("_ID"), PrimaryKey, Identity]
-		public  int  Id // int
+		public int Id // int
 		{
 			get { return _id; }
 			set
@@ -3105,7 +3115,7 @@ namespace SqlServerNEDataContext
 
 		private Guid _id;
 		[PrimaryKey, NotNull]
-		public  Guid  ID // uniqueidentifier
+		public Guid ID // uniqueidentifier
 		{
 			get { return _id; }
 			set
@@ -3143,7 +3153,7 @@ namespace SqlServerNEDataContext
 
 		private int? _field1;
 		[Column,    Nullable]
-		public  int?  Field1 // int
+		public int? Field1 // int
 		{
 			get { return _field1; }
 			set
@@ -3212,7 +3222,7 @@ namespace SqlServerNEDataContext
 
 		private Guid _id;
 		[PrimaryKey, NotNull]
-		public  Guid  ID // uniqueidentifier
+		public Guid ID // uniqueidentifier
 		{
 			get { return _id; }
 			set
@@ -3281,7 +3291,7 @@ namespace SqlServerNEDataContext
 
 		private int _pkField1;
 		[PrimaryKey(2), NotNull]
-		public  int  PKField1 // int
+		public int PKField1 // int
 		{
 			get { return _pkField1; }
 			set
@@ -3319,7 +3329,7 @@ namespace SqlServerNEDataContext
 
 		private int _pkField2;
 		[PrimaryKey(1), NotNull]
-		public  int  PKField2 // int
+		public int PKField2 // int
 		{
 			get { return _pkField2; }
 			set
@@ -3357,7 +3367,7 @@ namespace SqlServerNEDataContext
 
 		private int _uniqueField;
 		[Column, NotNull]
-		public  int  UniqueField // int
+		public int UniqueField // int
 		{
 			get { return _uniqueField; }
 			set
@@ -3395,7 +3405,7 @@ namespace SqlServerNEDataContext
 
 		private int _indexField;
 		[Column, NotNull]
-		public  int  IndexField // int
+		public int IndexField // int
 		{
 			get { return _indexField; }
 			set
@@ -3474,7 +3484,7 @@ namespace SqlServerNEDataContext
 
 		private int _pkField1;
 		[PrimaryKey(2), NotNull]
-		public  int  PKField1 // int
+		public int PKField1 // int
 		{
 			get { return _pkField1; }
 			set
@@ -3512,7 +3522,7 @@ namespace SqlServerNEDataContext
 
 		private int _pkField2;
 		[PrimaryKey(1), NotNull]
-		public  int  PKField2 // int
+		public int PKField2 // int
 		{
 			get { return _pkField2; }
 			set
@@ -3591,7 +3601,7 @@ namespace SqlServerNEDataContext
 
 		private int _inheritanceChildId;
 		[PrimaryKey, NotNull]
-		public  int  InheritanceChildId // int
+		public int InheritanceChildId // int
 		{
 			get { return _inheritanceChildId; }
 			set
@@ -3629,7 +3639,7 @@ namespace SqlServerNEDataContext
 
 		private int _inheritanceParentId;
 		[Column, NotNull]
-		public  int  InheritanceParentId // int
+		public int InheritanceParentId // int
 		{
 			get { return _inheritanceParentId; }
 			set
@@ -3667,7 +3677,7 @@ namespace SqlServerNEDataContext
 
 		private int? _typeDiscriminator;
 		[Column,    Nullable]
-		public  int?  TypeDiscriminator // int
+		public int? TypeDiscriminator // int
 		{
 			get { return _typeDiscriminator; }
 			set
@@ -3705,7 +3715,7 @@ namespace SqlServerNEDataContext
 
 		private string? _name;
 		[Column,    Nullable]
-		public  string?  Name // nvarchar(50)
+		public string? Name // nvarchar(50)
 		{
 			get { return _name; }
 			set
@@ -3774,7 +3784,7 @@ namespace SqlServerNEDataContext
 
 		private int _inheritanceParentId;
 		[PrimaryKey, NotNull]
-		public  int  InheritanceParentId // int
+		public int InheritanceParentId // int
 		{
 			get { return _inheritanceParentId; }
 			set
@@ -3812,7 +3822,7 @@ namespace SqlServerNEDataContext
 
 		private int? _typeDiscriminator;
 		[Column,    Nullable]
-		public  int?  TypeDiscriminator // int
+		public int? TypeDiscriminator // int
 		{
 			get { return _typeDiscriminator; }
 			set
@@ -3850,7 +3860,7 @@ namespace SqlServerNEDataContext
 
 		private string? _name;
 		[Column,    Nullable]
-		public  string?  Name // nvarchar(50)
+		public string? Name // nvarchar(50)
 		{
 			get { return _name; }
 			set
@@ -3919,7 +3929,7 @@ namespace SqlServerNEDataContext
 
 		private SqlHierarchyId _id;
 		[Column("id"), PrimaryKey, NotNull]
-		public  SqlHierarchyId  Id // hierarchyid
+		public SqlHierarchyId Id // hierarchyid
 		{
 			get { return _id; }
 			set
@@ -3991,7 +4001,7 @@ namespace SqlServerNEDataContext
 		/// Column description
 		/// </summary>
 		[Column("id"), PrimaryKey, NotNull]
-		public  int  Id // int
+		public int Id // int
 		{
 			get { return _id; }
 			set
@@ -4060,7 +4070,7 @@ namespace SqlServerNEDataContext
 
 		private int _iD2;
 		[Column("_ID"), PrimaryKey, Identity]
-		public  int  ID2 // int
+		public int ID2 // int
 		{
 			get { return _iD2; }
 			set
@@ -4098,7 +4108,7 @@ namespace SqlServerNEDataContext
 
 		private int? _id;
 		[Column()     , Nullable]
-		public  int?  ID // int
+		public int? ID // int
 		{
 			get { return _id; }
 			set
@@ -4136,7 +4146,7 @@ namespace SqlServerNEDataContext
 
 		private decimal? _moneyValue;
 		[Column()     , Nullable]
-		public  decimal?  MoneyValue // decimal(10, 4)
+		public decimal? MoneyValue // decimal(10, 4)
 		{
 			get { return _moneyValue; }
 			set
@@ -4174,7 +4184,7 @@ namespace SqlServerNEDataContext
 
 		private DateTime? _dateTimeValue;
 		[Column()     , Nullable]
-		public  DateTime?  DateTimeValue // datetime
+		public DateTime? DateTimeValue // datetime
 		{
 			get { return _dateTimeValue; }
 			set
@@ -4212,7 +4222,7 @@ namespace SqlServerNEDataContext
 
 		private DateTime? _dateTimeValue2;
 		[Column()     , Nullable]
-		public  DateTime?  DateTimeValue2 // datetime2(7)
+		public DateTime? DateTimeValue2 // datetime2(7)
 		{
 			get { return _dateTimeValue2; }
 			set
@@ -4250,7 +4260,7 @@ namespace SqlServerNEDataContext
 
 		private bool? _boolValue;
 		[Column()     , Nullable]
-		public  bool?  BoolValue // bit
+		public bool? BoolValue // bit
 		{
 			get { return _boolValue; }
 			set
@@ -4288,7 +4298,7 @@ namespace SqlServerNEDataContext
 
 		private Guid? _guidValue;
 		[Column()     , Nullable]
-		public  Guid?  GuidValue // uniqueidentifier
+		public Guid? GuidValue // uniqueidentifier
 		{
 			get { return _guidValue; }
 			set
@@ -4326,7 +4336,7 @@ namespace SqlServerNEDataContext
 
 		private byte[]? _binaryValue;
 		[Column()     , Nullable]
-		public  byte[]?  BinaryValue // varbinary(5000)
+		public byte[]? BinaryValue // varbinary(5000)
 		{
 			get { return _binaryValue; }
 			set
@@ -4364,7 +4374,7 @@ namespace SqlServerNEDataContext
 
 		private short? _smallIntValue;
 		[Column()     , Nullable]
-		public  short?  SmallIntValue // smallint
+		public short? SmallIntValue // smallint
 		{
 			get { return _smallIntValue; }
 			set
@@ -4402,7 +4412,7 @@ namespace SqlServerNEDataContext
 
 		private int? _intValue;
 		[Column()     , Nullable]
-		public  int?  IntValue // int
+		public int? IntValue // int
 		{
 			get { return _intValue; }
 			set
@@ -4440,7 +4450,7 @@ namespace SqlServerNEDataContext
 
 		private long? _bigIntValue;
 		[Column()     , Nullable]
-		public  long?  BigIntValue // bigint
+		public long? BigIntValue // bigint
 		{
 			get { return _bigIntValue; }
 			set
@@ -4478,7 +4488,7 @@ namespace SqlServerNEDataContext
 
 		private string? _stringValue;
 		[Column()     , Nullable]
-		public  string?  StringValue // nvarchar(50)
+		public string? StringValue // nvarchar(50)
 		{
 			get { return _stringValue; }
 			set
@@ -4547,7 +4557,7 @@ namespace SqlServerNEDataContext
 
 		private int _memberId;
 		[PrimaryKey, Identity]
-		public  int  MemberId // int
+		public int MemberId // int
 		{
 			get { return _memberId; }
 			set
@@ -4585,7 +4595,7 @@ namespace SqlServerNEDataContext
 
 		private string _alias = null!;
 		[Column, NotNull]
-		public  string  Alias // nvarchar(50)
+		public string Alias // nvarchar(50)
 		{
 			get { return _alias; }
 			set
@@ -4657,6 +4667,738 @@ namespace SqlServerNEDataContext
 		#endregion
 	}
 
+	[Table(Schema="dbo", Name="MSSQL_TemporalHistoryFor_1035150733")]
+	public partial class MssqlTemporalHistoryFor1035150733 : INotifyPropertyChanged
+	{
+		#region Id : int
+
+		private int _id;
+		[Column, NotNull]
+		public int Id // int
+		{
+			get { return _id; }
+			set
+			{
+				if (_id != value)
+				{
+					BeforeIdChanged(value);
+					_id = value;
+					AfterIdChanged();
+
+					OnIdChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeIdChanged(int newValue);
+		partial void AfterIdChanged ();
+
+		public const string NameOfId = "Id";
+
+		private static readonly PropertyChangedEventArgs _idChangedEventArgs = new PropertyChangedEventArgs(NameOfId);
+
+		private void OnIdChanged()
+		{
+			OnPropertyChanged(_idChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region Name : string?
+
+		private string? _name;
+		[Column,    Nullable]
+		public string? Name // nvarchar(10)
+		{
+			get { return _name; }
+			set
+			{
+				if (!object.Equals(_name, value))
+				{
+					BeforeNameChanged(value);
+					_name = value;
+					AfterNameChanged();
+
+					OnNameChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeNameChanged(string? newValue);
+		partial void AfterNameChanged ();
+
+		public const string NameOfName = "Name";
+
+		private static readonly PropertyChangedEventArgs _nameChangedEventArgs = new PropertyChangedEventArgs(NameOfName);
+
+		private void OnNameChanged()
+		{
+			OnPropertyChanged(_nameChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region ValidFrom : DateTime
+
+		private DateTime _validFrom;
+		[Column, NotNull]
+		public DateTime ValidFrom // datetime2(7)
+		{
+			get { return _validFrom; }
+			set
+			{
+				if (_validFrom != value)
+				{
+					BeforeValidFromChanged(value);
+					_validFrom = value;
+					AfterValidFromChanged();
+
+					OnValidFromChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeValidFromChanged(DateTime newValue);
+		partial void AfterValidFromChanged ();
+
+		public const string NameOfValidFrom = "ValidFrom";
+
+		private static readonly PropertyChangedEventArgs _validFromChangedEventArgs = new PropertyChangedEventArgs(NameOfValidFrom);
+
+		private void OnValidFromChanged()
+		{
+			OnPropertyChanged(_validFromChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region ValidTo : DateTime
+
+		private DateTime _validTo;
+		[Column, NotNull]
+		public DateTime ValidTo // datetime2(7)
+		{
+			get { return _validTo; }
+			set
+			{
+				if (_validTo != value)
+				{
+					BeforeValidToChanged(value);
+					_validTo = value;
+					AfterValidToChanged();
+
+					OnValidToChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeValidToChanged(DateTime newValue);
+		partial void AfterValidToChanged ();
+
+		public const string NameOfValidTo = "ValidTo";
+
+		private static readonly PropertyChangedEventArgs _validToChangedEventArgs = new PropertyChangedEventArgs(NameOfValidTo);
+
+		private void OnValidToChanged()
+		{
+			OnPropertyChanged(_validToChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region INotifyPropertyChanged support
+
+		[field : NonSerialized]
+		public virtual event PropertyChangedEventHandler? PropertyChanged;
+
+		protected void OnPropertyChanged(string propertyName)
+		{
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
+			{
+				propertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+
+		protected void OnPropertyChanged(PropertyChangedEventArgs arg)
+		{
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
+			{
+				propertyChanged(this, arg);
+			}
+		}
+
+		#endregion
+	}
+
+	[Table(Schema="dbo", Name="MSSQL_TemporalHistoryFor_1179151246")]
+	public partial class MssqlTemporalHistoryFor1179151246 : INotifyPropertyChanged
+	{
+		#region Id : int
+
+		private int _id;
+		[Column, NotNull]
+		public int Id // int
+		{
+			get { return _id; }
+			set
+			{
+				if (_id != value)
+				{
+					BeforeIdChanged(value);
+					_id = value;
+					AfterIdChanged();
+
+					OnIdChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeIdChanged(int newValue);
+		partial void AfterIdChanged ();
+
+		public const string NameOfId = "Id";
+
+		private static readonly PropertyChangedEventArgs _idChangedEventArgs = new PropertyChangedEventArgs(NameOfId);
+
+		private void OnIdChanged()
+		{
+			OnPropertyChanged(_idChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region Name : string?
+
+		private string? _name;
+		[Column,    Nullable]
+		public string? Name // nvarchar(10)
+		{
+			get { return _name; }
+			set
+			{
+				if (!object.Equals(_name, value))
+				{
+					BeforeNameChanged(value);
+					_name = value;
+					AfterNameChanged();
+
+					OnNameChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeNameChanged(string? newValue);
+		partial void AfterNameChanged ();
+
+		public const string NameOfName = "Name";
+
+		private static readonly PropertyChangedEventArgs _nameChangedEventArgs = new PropertyChangedEventArgs(NameOfName);
+
+		private void OnNameChanged()
+		{
+			OnPropertyChanged(_nameChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region ValidFrom : DateTime
+
+		private DateTime _validFrom;
+		[Column, NotNull]
+		public DateTime ValidFrom // datetime2(7)
+		{
+			get { return _validFrom; }
+			set
+			{
+				if (_validFrom != value)
+				{
+					BeforeValidFromChanged(value);
+					_validFrom = value;
+					AfterValidFromChanged();
+
+					OnValidFromChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeValidFromChanged(DateTime newValue);
+		partial void AfterValidFromChanged ();
+
+		public const string NameOfValidFrom = "ValidFrom";
+
+		private static readonly PropertyChangedEventArgs _validFromChangedEventArgs = new PropertyChangedEventArgs(NameOfValidFrom);
+
+		private void OnValidFromChanged()
+		{
+			OnPropertyChanged(_validFromChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region ValidTo : DateTime
+
+		private DateTime _validTo;
+		[Column, NotNull]
+		public DateTime ValidTo // datetime2(7)
+		{
+			get { return _validTo; }
+			set
+			{
+				if (_validTo != value)
+				{
+					BeforeValidToChanged(value);
+					_validTo = value;
+					AfterValidToChanged();
+
+					OnValidToChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeValidToChanged(DateTime newValue);
+		partial void AfterValidToChanged ();
+
+		public const string NameOfValidTo = "ValidTo";
+
+		private static readonly PropertyChangedEventArgs _validToChangedEventArgs = new PropertyChangedEventArgs(NameOfValidTo);
+
+		private void OnValidToChanged()
+		{
+			OnPropertyChanged(_validToChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region INotifyPropertyChanged support
+
+		[field : NonSerialized]
+		public virtual event PropertyChangedEventHandler? PropertyChanged;
+
+		protected void OnPropertyChanged(string propertyName)
+		{
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
+			{
+				propertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+
+		protected void OnPropertyChanged(PropertyChangedEventArgs arg)
+		{
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
+			{
+				propertyChanged(this, arg);
+			}
+		}
+
+		#endregion
+	}
+
+	[Table(Schema="dbo", Name="MSSQL_TemporalHistoryFor_843150049")]
+	public partial class MssqlTemporalHistoryFor843150049 : INotifyPropertyChanged
+	{
+		#region Id : int
+
+		private int _id;
+		[Column, NotNull]
+		public int Id // int
+		{
+			get { return _id; }
+			set
+			{
+				if (_id != value)
+				{
+					BeforeIdChanged(value);
+					_id = value;
+					AfterIdChanged();
+
+					OnIdChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeIdChanged(int newValue);
+		partial void AfterIdChanged ();
+
+		public const string NameOfId = "Id";
+
+		private static readonly PropertyChangedEventArgs _idChangedEventArgs = new PropertyChangedEventArgs(NameOfId);
+
+		private void OnIdChanged()
+		{
+			OnPropertyChanged(_idChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region Name : string?
+
+		private string? _name;
+		[Column,    Nullable]
+		public string? Name // nvarchar(10)
+		{
+			get { return _name; }
+			set
+			{
+				if (!object.Equals(_name, value))
+				{
+					BeforeNameChanged(value);
+					_name = value;
+					AfterNameChanged();
+
+					OnNameChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeNameChanged(string? newValue);
+		partial void AfterNameChanged ();
+
+		public const string NameOfName = "Name";
+
+		private static readonly PropertyChangedEventArgs _nameChangedEventArgs = new PropertyChangedEventArgs(NameOfName);
+
+		private void OnNameChanged()
+		{
+			OnPropertyChanged(_nameChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region ValidFrom : DateTime
+
+		private DateTime _validFrom;
+		[Column, NotNull]
+		public DateTime ValidFrom // datetime2(7)
+		{
+			get { return _validFrom; }
+			set
+			{
+				if (_validFrom != value)
+				{
+					BeforeValidFromChanged(value);
+					_validFrom = value;
+					AfterValidFromChanged();
+
+					OnValidFromChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeValidFromChanged(DateTime newValue);
+		partial void AfterValidFromChanged ();
+
+		public const string NameOfValidFrom = "ValidFrom";
+
+		private static readonly PropertyChangedEventArgs _validFromChangedEventArgs = new PropertyChangedEventArgs(NameOfValidFrom);
+
+		private void OnValidFromChanged()
+		{
+			OnPropertyChanged(_validFromChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region ValidTo : DateTime
+
+		private DateTime _validTo;
+		[Column, NotNull]
+		public DateTime ValidTo // datetime2(7)
+		{
+			get { return _validTo; }
+			set
+			{
+				if (_validTo != value)
+				{
+					BeforeValidToChanged(value);
+					_validTo = value;
+					AfterValidToChanged();
+
+					OnValidToChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeValidToChanged(DateTime newValue);
+		partial void AfterValidToChanged ();
+
+		public const string NameOfValidTo = "ValidTo";
+
+		private static readonly PropertyChangedEventArgs _validToChangedEventArgs = new PropertyChangedEventArgs(NameOfValidTo);
+
+		private void OnValidToChanged()
+		{
+			OnPropertyChanged(_validToChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region INotifyPropertyChanged support
+
+		[field : NonSerialized]
+		public virtual event PropertyChangedEventHandler? PropertyChanged;
+
+		protected void OnPropertyChanged(string propertyName)
+		{
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
+			{
+				propertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+
+		protected void OnPropertyChanged(PropertyChangedEventArgs arg)
+		{
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
+			{
+				propertyChanged(this, arg);
+			}
+		}
+
+		#endregion
+	}
+
+	[Table(Schema="dbo", Name="MSSQL_TemporalHistoryFor_987150562")]
+	public partial class MssqlTemporalHistoryFor987150562 : INotifyPropertyChanged
+	{
+		#region Id : int
+
+		private int _id;
+		[Column, NotNull]
+		public int Id // int
+		{
+			get { return _id; }
+			set
+			{
+				if (_id != value)
+				{
+					BeforeIdChanged(value);
+					_id = value;
+					AfterIdChanged();
+
+					OnIdChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeIdChanged(int newValue);
+		partial void AfterIdChanged ();
+
+		public const string NameOfId = "Id";
+
+		private static readonly PropertyChangedEventArgs _idChangedEventArgs = new PropertyChangedEventArgs(NameOfId);
+
+		private void OnIdChanged()
+		{
+			OnPropertyChanged(_idChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region Name : string?
+
+		private string? _name;
+		[Column,    Nullable]
+		public string? Name // nvarchar(10)
+		{
+			get { return _name; }
+			set
+			{
+				if (!object.Equals(_name, value))
+				{
+					BeforeNameChanged(value);
+					_name = value;
+					AfterNameChanged();
+
+					OnNameChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeNameChanged(string? newValue);
+		partial void AfterNameChanged ();
+
+		public const string NameOfName = "Name";
+
+		private static readonly PropertyChangedEventArgs _nameChangedEventArgs = new PropertyChangedEventArgs(NameOfName);
+
+		private void OnNameChanged()
+		{
+			OnPropertyChanged(_nameChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region ValidFrom : DateTime
+
+		private DateTime _validFrom;
+		[Column, NotNull]
+		public DateTime ValidFrom // datetime2(7)
+		{
+			get { return _validFrom; }
+			set
+			{
+				if (_validFrom != value)
+				{
+					BeforeValidFromChanged(value);
+					_validFrom = value;
+					AfterValidFromChanged();
+
+					OnValidFromChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeValidFromChanged(DateTime newValue);
+		partial void AfterValidFromChanged ();
+
+		public const string NameOfValidFrom = "ValidFrom";
+
+		private static readonly PropertyChangedEventArgs _validFromChangedEventArgs = new PropertyChangedEventArgs(NameOfValidFrom);
+
+		private void OnValidFromChanged()
+		{
+			OnPropertyChanged(_validFromChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region ValidTo : DateTime
+
+		private DateTime _validTo;
+		[Column, NotNull]
+		public DateTime ValidTo // datetime2(7)
+		{
+			get { return _validTo; }
+			set
+			{
+				if (_validTo != value)
+				{
+					BeforeValidToChanged(value);
+					_validTo = value;
+					AfterValidToChanged();
+
+					OnValidToChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeValidToChanged(DateTime newValue);
+		partial void AfterValidToChanged ();
+
+		public const string NameOfValidTo = "ValidTo";
+
+		private static readonly PropertyChangedEventArgs _validToChangedEventArgs = new PropertyChangedEventArgs(NameOfValidTo);
+
+		private void OnValidToChanged()
+		{
+			OnPropertyChanged(_validToChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region INotifyPropertyChanged support
+
+		[field : NonSerialized]
+		public virtual event PropertyChangedEventHandler? PropertyChanged;
+
+		protected void OnPropertyChanged(string propertyName)
+		{
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
+			{
+				propertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+
+		protected void OnPropertyChanged(PropertyChangedEventArgs arg)
+		{
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
+			{
+				propertyChanged(this, arg);
+			}
+		}
+
+		#endregion
+	}
+
 	[Table(Schema="dbo", Name="Name.Test")]
 	public partial class NameTest : INotifyPropertyChanged
 	{
@@ -4664,7 +5406,7 @@ namespace SqlServerNEDataContext
 
 		private int? _nameTestColumn;
 		[Column("Name.Test"), Nullable]
-		public  int?  NameTestColumn // int
+		public int? NameTestColumn // int
 		{
 			get { return _nameTestColumn; }
 			set
@@ -4736,7 +5478,7 @@ namespace SqlServerNEDataContext
 
 		private int? _parentID;
 		[Column()     , Nullable]
-		public  int?  ParentID // int
+		public int? ParentID // int
 		{
 			get { return _parentID; }
 			set
@@ -4774,7 +5516,7 @@ namespace SqlServerNEDataContext
 
 		private int? _value1;
 		[Column()     , Nullable]
-		public  int?  Value1 // int
+		public int? Value1 // int
 		{
 			get { return _value1; }
 			set
@@ -4812,7 +5554,7 @@ namespace SqlServerNEDataContext
 
 		private int _id;
 		[Column("_ID"), PrimaryKey, Identity]
-		public  int  Id // int
+		public int Id // int
 		{
 			get { return _id; }
 			set
@@ -4881,7 +5623,7 @@ namespace SqlServerNEDataContext
 
 		private int? _parentID;
 		[Column, Nullable]
-		public  int?  ParentID // int
+		public int? ParentID // int
 		{
 			get { return _parentID; }
 			set
@@ -4919,7 +5661,7 @@ namespace SqlServerNEDataContext
 
 		private int? _value1;
 		[Column, Nullable]
-		public  int?  Value1 // int
+		public int? Value1 // int
 		{
 			get { return _value1; }
 			set
@@ -4957,7 +5699,7 @@ namespace SqlServerNEDataContext
 
 		private int? _childID;
 		[Column, Nullable]
-		public  int?  ChildID // int
+		public int? ChildID // int
 		{
 			get { return _childID; }
 			set
@@ -5026,7 +5768,7 @@ namespace SqlServerNEDataContext
 
 		private int? _parentID;
 		[Column()     , Nullable]
-		public  int?  ParentID // int
+		public int? ParentID // int
 		{
 			get { return _parentID; }
 			set
@@ -5064,7 +5806,7 @@ namespace SqlServerNEDataContext
 
 		private int? _value1;
 		[Column()     , Nullable]
-		public  int?  Value1 // int
+		public int? Value1 // int
 		{
 			get { return _value1; }
 			set
@@ -5102,7 +5844,7 @@ namespace SqlServerNEDataContext
 
 		private int _id;
 		[Column("_ID"), Identity]
-		public  int  Id // int
+		public int Id // int
 		{
 			get { return _id; }
 			set
@@ -5171,7 +5913,7 @@ namespace SqlServerNEDataContext
 
 		private int _personID;
 		[PrimaryKey, NotNull]
-		public  int  PersonID // int
+		public int PersonID // int
 		{
 			get { return _personID; }
 			set
@@ -5209,7 +5951,7 @@ namespace SqlServerNEDataContext
 
 		private string _diagnosis = null!;
 		[Column, NotNull]
-		public  string  Diagnosis // nvarchar(256)
+		public string Diagnosis // nvarchar(256)
 		{
 			get { return _diagnosis; }
 			set
@@ -5288,7 +6030,7 @@ namespace SqlServerNEDataContext
 
 		private int _personID;
 		[PrimaryKey, Identity]
-		public  int  PersonID // int
+		public int PersonID // int
 		{
 			get { return _personID; }
 			set
@@ -5326,7 +6068,7 @@ namespace SqlServerNEDataContext
 
 		private string _firstName = null!;
 		[Column, NotNull]
-		public  string  FirstName // nvarchar(50)
+		public string FirstName // nvarchar(50)
 		{
 			get { return _firstName; }
 			set
@@ -5364,7 +6106,7 @@ namespace SqlServerNEDataContext
 
 		private string _lastName = null!;
 		[Column, NotNull]
-		public  string  LastName // nvarchar(50)
+		public string LastName // nvarchar(50)
 		{
 			get { return _lastName; }
 			set
@@ -5402,7 +6144,7 @@ namespace SqlServerNEDataContext
 
 		private string? _middleName;
 		[Column,    Nullable]
-		public  string?  MiddleName // nvarchar(50)
+		public string? MiddleName // nvarchar(50)
 		{
 			get { return _middleName; }
 			set
@@ -5440,7 +6182,7 @@ namespace SqlServerNEDataContext
 
 		private char _gender;
 		[Column, NotNull]
-		public  char  Gender // char(1)
+		public char Gender // char(1)
 		{
 			get { return _gender; }
 			set
@@ -5525,7 +6267,7 @@ namespace SqlServerNEDataContext
 
 		private int _providerId;
 		[PrimaryKey, NotNull]
-		public  int  ProviderId // int
+		public int ProviderId // int
 		{
 			get { return _providerId; }
 			set
@@ -5563,7 +6305,7 @@ namespace SqlServerNEDataContext
 
 		private string _test = null!;
 		[Column, NotNull]
-		public  string  Test // nvarchar(max)
+		public string Test // nvarchar(max)
 		{
 			get { return _test; }
 			set
@@ -5642,7 +6384,7 @@ namespace SqlServerNEDataContext
 
 		private int? _id;
 		[Column("id"), Nullable]
-		public  int?  Id // int
+		public int? Id // int
 		{
 			get { return _id; }
 			set
@@ -5711,7 +6453,7 @@ namespace SqlServerNEDataContext
 
 		private int? _id;
 		[Column("id"), Nullable]
-		public  int?  Id // int
+		public int? Id // int
 		{
 			get { return _id; }
 			set
@@ -5780,7 +6522,7 @@ namespace SqlServerNEDataContext
 
 		private int _id;
 		[PrimaryKey, NotNull]
-		public  int  ID // int
+		public int ID // int
 		{
 			get { return _id; }
 			set
@@ -5818,7 +6560,7 @@ namespace SqlServerNEDataContext
 
 		private SqlHierarchyId? _hid;
 		[Column,    Nullable]
-		public  SqlHierarchyId?  HID // hierarchyid
+		public SqlHierarchyId? HID // hierarchyid
 		{
 			get { return _hid; }
 			set
@@ -5880,6 +6622,441 @@ namespace SqlServerNEDataContext
 		#endregion
 	}
 
+	[Table(Schema="dbo", Name="TemporalTest")]
+	public partial class TemporalTest : INotifyPropertyChanged
+	{
+		#region ID : int
+
+		private int _id;
+		[PrimaryKey, NotNull]
+		public int ID // int
+		{
+			get { return _id; }
+			set
+			{
+				if (_id != value)
+				{
+					BeforeIDChanged(value);
+					_id = value;
+					AfterIDChanged();
+
+					OnIDChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeIDChanged(int newValue);
+		partial void AfterIDChanged ();
+
+		public const string NameOfID = "ID";
+
+		private static readonly PropertyChangedEventArgs _idChangedEventArgs = new PropertyChangedEventArgs(NameOfID);
+
+		private void OnIDChanged()
+		{
+			OnPropertyChanged(_idChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region Name : string
+
+		private string _name = null!;
+		[Column, NotNull]
+		public string Name // nvarchar(100)
+		{
+			get { return _name; }
+			set
+			{
+				if (_name != value)
+				{
+					BeforeNameChanged(value);
+					_name = value;
+					AfterNameChanged();
+
+					OnNameChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeNameChanged(string newValue);
+		partial void AfterNameChanged ();
+
+		public const string NameOfName = "Name";
+
+		private static readonly PropertyChangedEventArgs _nameChangedEventArgs = new PropertyChangedEventArgs(NameOfName);
+
+		private void OnNameChanged()
+		{
+			OnPropertyChanged(_nameChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region StartedOn : DateTime
+
+		private DateTime _startedOn;
+		[Column(SkipOnInsert=true, SkipOnUpdate=true), NotNull]
+		public DateTime StartedOn // datetime2(7)
+		{
+			get { return _startedOn; }
+			set
+			{
+				if (_startedOn != value)
+				{
+					BeforeStartedOnChanged(value);
+					_startedOn = value;
+					AfterStartedOnChanged();
+
+					OnStartedOnChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeStartedOnChanged(DateTime newValue);
+		partial void AfterStartedOnChanged ();
+
+		public const string NameOfStartedOn = "StartedOn";
+
+		private static readonly PropertyChangedEventArgs _startedOnChangedEventArgs = new PropertyChangedEventArgs(NameOfStartedOn);
+
+		private void OnStartedOnChanged()
+		{
+			OnPropertyChanged(_startedOnChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region EndedOn : DateTime
+
+		private DateTime _endedOn;
+		[Column(SkipOnInsert=true, SkipOnUpdate=true), NotNull]
+		public DateTime EndedOn // datetime2(7)
+		{
+			get { return _endedOn; }
+			set
+			{
+				if (_endedOn != value)
+				{
+					BeforeEndedOnChanged(value);
+					_endedOn = value;
+					AfterEndedOnChanged();
+
+					OnEndedOnChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeEndedOnChanged(DateTime newValue);
+		partial void AfterEndedOnChanged ();
+
+		public const string NameOfEndedOn = "EndedOn";
+
+		private static readonly PropertyChangedEventArgs _endedOnChangedEventArgs = new PropertyChangedEventArgs(NameOfEndedOn);
+
+		private void OnEndedOnChanged()
+		{
+			OnPropertyChanged(_endedOnChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region INotifyPropertyChanged support
+
+		[field : NonSerialized]
+		public virtual event PropertyChangedEventHandler? PropertyChanged;
+
+		protected void OnPropertyChanged(string propertyName)
+		{
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
+			{
+				propertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+
+		protected void OnPropertyChanged(PropertyChangedEventArgs arg)
+		{
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
+			{
+				propertyChanged(this, arg);
+			}
+		}
+
+		#endregion
+	}
+
+	[Table(Schema="dbo", Name="TemporalTestHistory")]
+	public partial class TemporalTestHistory : INotifyPropertyChanged
+	{
+		#region ID : int
+
+		private int _id;
+		[Column(SkipOnInsert=true, SkipOnUpdate=true), NotNull]
+		public int ID // int
+		{
+			get { return _id; }
+			set
+			{
+				if (_id != value)
+				{
+					BeforeIDChanged(value);
+					_id = value;
+					AfterIDChanged();
+
+					OnIDChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeIDChanged(int newValue);
+		partial void AfterIDChanged ();
+
+		public const string NameOfID = "ID";
+
+		private static readonly PropertyChangedEventArgs _idChangedEventArgs = new PropertyChangedEventArgs(NameOfID);
+
+		private void OnIDChanged()
+		{
+			OnPropertyChanged(_idChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region Name : string
+
+		private string _name = null!;
+		[Column(SkipOnInsert=true, SkipOnUpdate=true), NotNull]
+		public string Name // nvarchar(100)
+		{
+			get { return _name; }
+			set
+			{
+				if (_name != value)
+				{
+					BeforeNameChanged(value);
+					_name = value;
+					AfterNameChanged();
+
+					OnNameChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeNameChanged(string newValue);
+		partial void AfterNameChanged ();
+
+		public const string NameOfName = "Name";
+
+		private static readonly PropertyChangedEventArgs _nameChangedEventArgs = new PropertyChangedEventArgs(NameOfName);
+
+		private void OnNameChanged()
+		{
+			OnPropertyChanged(_nameChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region StartedOn : DateTime
+
+		private DateTime _startedOn;
+		[Column(SkipOnInsert=true, SkipOnUpdate=true), NotNull]
+		public DateTime StartedOn // datetime2(7)
+		{
+			get { return _startedOn; }
+			set
+			{
+				if (_startedOn != value)
+				{
+					BeforeStartedOnChanged(value);
+					_startedOn = value;
+					AfterStartedOnChanged();
+
+					OnStartedOnChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeStartedOnChanged(DateTime newValue);
+		partial void AfterStartedOnChanged ();
+
+		public const string NameOfStartedOn = "StartedOn";
+
+		private static readonly PropertyChangedEventArgs _startedOnChangedEventArgs = new PropertyChangedEventArgs(NameOfStartedOn);
+
+		private void OnStartedOnChanged()
+		{
+			OnPropertyChanged(_startedOnChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region EndedOn : DateTime
+
+		private DateTime _endedOn;
+		[Column(SkipOnInsert=true, SkipOnUpdate=true), NotNull]
+		public DateTime EndedOn // datetime2(7)
+		{
+			get { return _endedOn; }
+			set
+			{
+				if (_endedOn != value)
+				{
+					BeforeEndedOnChanged(value);
+					_endedOn = value;
+					AfterEndedOnChanged();
+
+					OnEndedOnChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeEndedOnChanged(DateTime newValue);
+		partial void AfterEndedOnChanged ();
+
+		public const string NameOfEndedOn = "EndedOn";
+
+		private static readonly PropertyChangedEventArgs _endedOnChangedEventArgs = new PropertyChangedEventArgs(NameOfEndedOn);
+
+		private void OnEndedOnChanged()
+		{
+			OnPropertyChanged(_endedOnChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region INotifyPropertyChanged support
+
+		[field : NonSerialized]
+		public virtual event PropertyChangedEventHandler? PropertyChanged;
+
+		protected void OnPropertyChanged(string propertyName)
+		{
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
+			{
+				propertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+
+		protected void OnPropertyChanged(PropertyChangedEventArgs arg)
+		{
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
+			{
+				propertyChanged(this, arg);
+			}
+		}
+
+		#endregion
+	}
+
+	[Table(Schema="dbo", Name="TestClass")]
+	public partial class TestClass : INotifyPropertyChanged
+	{
+		#region EnumValue : char?
+
+		private char? _enumValue;
+		[Column, Nullable]
+		public char? EnumValue // char(1)
+		{
+			get { return _enumValue; }
+			set
+			{
+				if (!object.Equals(_enumValue, value))
+				{
+					BeforeEnumValueChanged(value);
+					_enumValue = value;
+					AfterEnumValueChanged();
+
+					OnEnumValueChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeEnumValueChanged(char? newValue);
+		partial void AfterEnumValueChanged ();
+
+		public const string NameOfEnumValue = "EnumValue";
+
+		private static readonly PropertyChangedEventArgs _enumValueChangedEventArgs = new PropertyChangedEventArgs(NameOfEnumValue);
+
+		private void OnEnumValueChanged()
+		{
+			OnPropertyChanged(_enumValueChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region INotifyPropertyChanged support
+
+		[field : NonSerialized]
+		public virtual event PropertyChangedEventHandler? PropertyChanged;
+
+		protected void OnPropertyChanged(string propertyName)
+		{
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
+			{
+				propertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+
+		protected void OnPropertyChanged(PropertyChangedEventArgs arg)
+		{
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
+			{
+				propertyChanged(this, arg);
+			}
+		}
+
+		#endregion
+	}
+
 	[Table(Schema="dbo", Name="TestIdentity")]
 	public partial class TestIdentity : INotifyPropertyChanged
 	{
@@ -5887,7 +7064,7 @@ namespace SqlServerNEDataContext
 
 		private int _id;
 		[PrimaryKey, Identity]
-		public  int  ID // int
+		public int ID // int
 		{
 			get { return _id; }
 			set
@@ -5956,7 +7133,7 @@ namespace SqlServerNEDataContext
 
 		private int _id;
 		[PrimaryKey, NotNull]
-		public  int  Id // int
+		public int Id // int
 		{
 			get { return _id; }
 			set
@@ -5994,7 +7171,7 @@ namespace SqlServerNEDataContext
 
 		private int? _field1;
 		[Column,    Nullable]
-		public  int?  Field1 // int
+		public int? Field1 // int
 		{
 			get { return _field1; }
 			set
@@ -6032,7 +7209,7 @@ namespace SqlServerNEDataContext
 
 		private int? _field2;
 		[Column,    Nullable]
-		public  int?  Field2 // int
+		public int? Field2 // int
 		{
 			get { return _field2; }
 			set
@@ -6070,7 +7247,7 @@ namespace SqlServerNEDataContext
 
 		private int? _field3;
 		[Column,    Nullable]
-		public  int?  Field3 // int
+		public int? Field3 // int
 		{
 			get { return _field3; }
 			set
@@ -6108,7 +7285,7 @@ namespace SqlServerNEDataContext
 
 		private int? _field4;
 		[Column,    Nullable]
-		public  int?  Field4 // int
+		public int? Field4 // int
 		{
 			get { return _field4; }
 			set
@@ -6146,7 +7323,7 @@ namespace SqlServerNEDataContext
 
 		private int? _field5;
 		[Column,    Nullable]
-		public  int?  Field5 // int
+		public int? Field5 // int
 		{
 			get { return _field5; }
 			set
@@ -6184,7 +7361,7 @@ namespace SqlServerNEDataContext
 
 		private long? _fieldInt64;
 		[Column,    Nullable]
-		public  long?  FieldInt64 // bigint
+		public long? FieldInt64 // bigint
 		{
 			get { return _fieldInt64; }
 			set
@@ -6222,7 +7399,7 @@ namespace SqlServerNEDataContext
 
 		private bool? _fieldBoolean;
 		[Column,    Nullable]
-		public  bool?  FieldBoolean // bit
+		public bool? FieldBoolean // bit
 		{
 			get { return _fieldBoolean; }
 			set
@@ -6260,7 +7437,7 @@ namespace SqlServerNEDataContext
 
 		private string? _fieldString;
 		[Column,    Nullable]
-		public  string?  FieldString // varchar(20)
+		public string? FieldString // varchar(20)
 		{
 			get { return _fieldString; }
 			set
@@ -6298,7 +7475,7 @@ namespace SqlServerNEDataContext
 
 		private string? _fieldNString;
 		[Column,    Nullable]
-		public  string?  FieldNString // nvarchar(20)
+		public string? FieldNString // nvarchar(20)
 		{
 			get { return _fieldNString; }
 			set
@@ -6336,7 +7513,7 @@ namespace SqlServerNEDataContext
 
 		private char? _fieldChar;
 		[Column,    Nullable]
-		public  char?  FieldChar // char(1)
+		public char? FieldChar // char(1)
 		{
 			get { return _fieldChar; }
 			set
@@ -6374,7 +7551,7 @@ namespace SqlServerNEDataContext
 
 		private char? _fieldNChar;
 		[Column,    Nullable]
-		public  char?  FieldNChar // nchar(1)
+		public char? FieldNChar // nchar(1)
 		{
 			get { return _fieldNChar; }
 			set
@@ -6412,7 +7589,7 @@ namespace SqlServerNEDataContext
 
 		private float? _fieldFloat;
 		[Column,    Nullable]
-		public  float?  FieldFloat // real
+		public float? FieldFloat // real
 		{
 			get { return _fieldFloat; }
 			set
@@ -6450,7 +7627,7 @@ namespace SqlServerNEDataContext
 
 		private double? _fieldDouble;
 		[Column,    Nullable]
-		public  double?  FieldDouble // float
+		public double? FieldDouble // float
 		{
 			get { return _fieldDouble; }
 			set
@@ -6488,7 +7665,7 @@ namespace SqlServerNEDataContext
 
 		private DateTime? _fieldDateTime;
 		[Column,    Nullable]
-		public  DateTime?  FieldDateTime // datetime
+		public DateTime? FieldDateTime // datetime
 		{
 			get { return _fieldDateTime; }
 			set
@@ -6526,7 +7703,7 @@ namespace SqlServerNEDataContext
 
 		private DateTimeOffset? _fieldDateTime2;
 		[Column,    Nullable]
-		public  DateTimeOffset?  FieldDateTime2 // datetimeoffset(7)
+		public DateTimeOffset? FieldDateTime2 // datetimeoffset(7)
 		{
 			get { return _fieldDateTime2; }
 			set
@@ -6564,7 +7741,7 @@ namespace SqlServerNEDataContext
 
 		private byte[]? _fieldBinary;
 		[Column,    Nullable]
-		public  byte[]?  FieldBinary // varbinary(20)
+		public byte[]? FieldBinary // varbinary(20)
 		{
 			get { return _fieldBinary; }
 			set
@@ -6602,7 +7779,7 @@ namespace SqlServerNEDataContext
 
 		private Guid? _fieldGuid;
 		[Column,    Nullable]
-		public  Guid?  FieldGuid // uniqueidentifier
+		public Guid? FieldGuid // uniqueidentifier
 		{
 			get { return _fieldGuid; }
 			set
@@ -6640,7 +7817,7 @@ namespace SqlServerNEDataContext
 
 		private decimal? _fieldDecimal;
 		[Column,    Nullable]
-		public  decimal?  FieldDecimal // decimal(24, 10)
+		public decimal? FieldDecimal // decimal(24, 10)
 		{
 			get { return _fieldDecimal; }
 			set
@@ -6678,7 +7855,7 @@ namespace SqlServerNEDataContext
 
 		private DateTime? _fieldDate;
 		[Column,    Nullable]
-		public  DateTime?  FieldDate // date
+		public DateTime? FieldDate // date
 		{
 			get { return _fieldDate; }
 			set
@@ -6716,7 +7893,7 @@ namespace SqlServerNEDataContext
 
 		private TimeSpan? _fieldTime;
 		[Column,    Nullable]
-		public  TimeSpan?  FieldTime // time(7)
+		public TimeSpan? FieldTime // time(7)
 		{
 			get { return _fieldTime; }
 			set
@@ -6754,7 +7931,7 @@ namespace SqlServerNEDataContext
 
 		private string? _fieldEnumString;
 		[Column,    Nullable]
-		public  string?  FieldEnumString // varchar(20)
+		public string? FieldEnumString // varchar(20)
 		{
 			get { return _fieldEnumString; }
 			set
@@ -6792,7 +7969,7 @@ namespace SqlServerNEDataContext
 
 		private int? _fieldEnumNumber;
 		[Column,    Nullable]
-		public  int?  FieldEnumNumber // int
+		public int? FieldEnumNumber // int
 		{
 			get { return _fieldEnumNumber; }
 			set
@@ -6861,7 +8038,7 @@ namespace SqlServerNEDataContext
 
 		private int _id;
 		[PrimaryKey, NotNull]
-		public  int  Id // int
+		public int Id // int
 		{
 			get { return _id; }
 			set
@@ -6899,7 +8076,7 @@ namespace SqlServerNEDataContext
 
 		private int? _field1;
 		[Column,    Nullable]
-		public  int?  Field1 // int
+		public int? Field1 // int
 		{
 			get { return _field1; }
 			set
@@ -6937,7 +8114,7 @@ namespace SqlServerNEDataContext
 
 		private int? _field2;
 		[Column,    Nullable]
-		public  int?  Field2 // int
+		public int? Field2 // int
 		{
 			get { return _field2; }
 			set
@@ -6975,7 +8152,7 @@ namespace SqlServerNEDataContext
 
 		private int? _field3;
 		[Column,    Nullable]
-		public  int?  Field3 // int
+		public int? Field3 // int
 		{
 			get { return _field3; }
 			set
@@ -7013,7 +8190,7 @@ namespace SqlServerNEDataContext
 
 		private int? _field4;
 		[Column,    Nullable]
-		public  int?  Field4 // int
+		public int? Field4 // int
 		{
 			get { return _field4; }
 			set
@@ -7051,7 +8228,7 @@ namespace SqlServerNEDataContext
 
 		private int? _field5;
 		[Column,    Nullable]
-		public  int?  Field5 // int
+		public int? Field5 // int
 		{
 			get { return _field5; }
 			set
@@ -7089,7 +8266,7 @@ namespace SqlServerNEDataContext
 
 		private long? _fieldInt64;
 		[Column,    Nullable]
-		public  long?  FieldInt64 // bigint
+		public long? FieldInt64 // bigint
 		{
 			get { return _fieldInt64; }
 			set
@@ -7127,7 +8304,7 @@ namespace SqlServerNEDataContext
 
 		private bool? _fieldBoolean;
 		[Column,    Nullable]
-		public  bool?  FieldBoolean // bit
+		public bool? FieldBoolean // bit
 		{
 			get { return _fieldBoolean; }
 			set
@@ -7165,7 +8342,7 @@ namespace SqlServerNEDataContext
 
 		private string? _fieldString;
 		[Column,    Nullable]
-		public  string?  FieldString // varchar(20)
+		public string? FieldString // varchar(20)
 		{
 			get { return _fieldString; }
 			set
@@ -7203,7 +8380,7 @@ namespace SqlServerNEDataContext
 
 		private string? _fieldNString;
 		[Column,    Nullable]
-		public  string?  FieldNString // nvarchar(20)
+		public string? FieldNString // nvarchar(20)
 		{
 			get { return _fieldNString; }
 			set
@@ -7241,7 +8418,7 @@ namespace SqlServerNEDataContext
 
 		private char? _fieldChar;
 		[Column,    Nullable]
-		public  char?  FieldChar // char(1)
+		public char? FieldChar // char(1)
 		{
 			get { return _fieldChar; }
 			set
@@ -7279,7 +8456,7 @@ namespace SqlServerNEDataContext
 
 		private char? _fieldNChar;
 		[Column,    Nullable]
-		public  char?  FieldNChar // nchar(1)
+		public char? FieldNChar // nchar(1)
 		{
 			get { return _fieldNChar; }
 			set
@@ -7317,7 +8494,7 @@ namespace SqlServerNEDataContext
 
 		private float? _fieldFloat;
 		[Column,    Nullable]
-		public  float?  FieldFloat // real
+		public float? FieldFloat // real
 		{
 			get { return _fieldFloat; }
 			set
@@ -7355,7 +8532,7 @@ namespace SqlServerNEDataContext
 
 		private double? _fieldDouble;
 		[Column,    Nullable]
-		public  double?  FieldDouble // float
+		public double? FieldDouble // float
 		{
 			get { return _fieldDouble; }
 			set
@@ -7393,7 +8570,7 @@ namespace SqlServerNEDataContext
 
 		private DateTime? _fieldDateTime;
 		[Column,    Nullable]
-		public  DateTime?  FieldDateTime // datetime
+		public DateTime? FieldDateTime // datetime
 		{
 			get { return _fieldDateTime; }
 			set
@@ -7431,7 +8608,7 @@ namespace SqlServerNEDataContext
 
 		private DateTimeOffset? _fieldDateTime2;
 		[Column,    Nullable]
-		public  DateTimeOffset?  FieldDateTime2 // datetimeoffset(7)
+		public DateTimeOffset? FieldDateTime2 // datetimeoffset(7)
 		{
 			get { return _fieldDateTime2; }
 			set
@@ -7469,7 +8646,7 @@ namespace SqlServerNEDataContext
 
 		private byte[]? _fieldBinary;
 		[Column,    Nullable]
-		public  byte[]?  FieldBinary // varbinary(20)
+		public byte[]? FieldBinary // varbinary(20)
 		{
 			get { return _fieldBinary; }
 			set
@@ -7507,7 +8684,7 @@ namespace SqlServerNEDataContext
 
 		private Guid? _fieldGuid;
 		[Column,    Nullable]
-		public  Guid?  FieldGuid // uniqueidentifier
+		public Guid? FieldGuid // uniqueidentifier
 		{
 			get { return _fieldGuid; }
 			set
@@ -7545,7 +8722,7 @@ namespace SqlServerNEDataContext
 
 		private decimal? _fieldDecimal;
 		[Column,    Nullable]
-		public  decimal?  FieldDecimal // decimal(24, 10)
+		public decimal? FieldDecimal // decimal(24, 10)
 		{
 			get { return _fieldDecimal; }
 			set
@@ -7583,7 +8760,7 @@ namespace SqlServerNEDataContext
 
 		private DateTime? _fieldDate;
 		[Column,    Nullable]
-		public  DateTime?  FieldDate // date
+		public DateTime? FieldDate // date
 		{
 			get { return _fieldDate; }
 			set
@@ -7621,7 +8798,7 @@ namespace SqlServerNEDataContext
 
 		private TimeSpan? _fieldTime;
 		[Column,    Nullable]
-		public  TimeSpan?  FieldTime // time(7)
+		public TimeSpan? FieldTime // time(7)
 		{
 			get { return _fieldTime; }
 			set
@@ -7659,7 +8836,7 @@ namespace SqlServerNEDataContext
 
 		private string? _fieldEnumString;
 		[Column,    Nullable]
-		public  string?  FieldEnumString // varchar(20)
+		public string? FieldEnumString // varchar(20)
 		{
 			get { return _fieldEnumString; }
 			set
@@ -7697,7 +8874,7 @@ namespace SqlServerNEDataContext
 
 		private int? _fieldEnumNumber;
 		[Column,    Nullable]
-		public  int?  FieldEnumNumber // int
+		public int? FieldEnumNumber // int
 		{
 			get { return _fieldEnumNumber; }
 			set
@@ -7766,7 +8943,7 @@ namespace SqlServerNEDataContext
 
 		private int _id;
 		[PrimaryKey, Identity]
-		public  int  Id // int
+		public int Id // int
 		{
 			get { return _id; }
 			set
@@ -7804,7 +8981,7 @@ namespace SqlServerNEDataContext
 
 		private int? _field;
 		[Column, Nullable]
-		public  int?  Field // int
+		public int? Field // int
 		{
 			get { return _field; }
 			set
@@ -7873,7 +9050,7 @@ namespace SqlServerNEDataContext
 
 		private int _testSchemaAID;
 		[PrimaryKey, NotNull]
-		public  int  TestSchemaAID // int
+		public int TestSchemaAID // int
 		{
 			get { return _testSchemaAID; }
 			set
@@ -7911,7 +9088,7 @@ namespace SqlServerNEDataContext
 
 		private int _field1;
 		[Column, NotNull]
-		public  int  Field1 // int
+		public int Field1 // int
 		{
 			get { return _field1; }
 			set
@@ -8002,7 +9179,7 @@ namespace SqlServerNEDataContext
 
 		private int _testSchemaBID;
 		[Column()                         , PrimaryKey, NotNull]
-		public  int  TestSchemaBID // int
+		public int TestSchemaBID // int
 		{
 			get { return _testSchemaBID; }
 			set
@@ -8040,7 +9217,7 @@ namespace SqlServerNEDataContext
 
 		private int _originTestSchemaAID;
 		[Column()                         , NotNull]
-		public  int  OriginTestSchemaAID // int
+		public int OriginTestSchemaAID // int
 		{
 			get { return _originTestSchemaAID; }
 			set
@@ -8078,7 +9255,7 @@ namespace SqlServerNEDataContext
 
 		private int _targetTestSchemaAID;
 		[Column()                         , NotNull]
-		public  int  TargetTestSchemaAID // int
+		public int TargetTestSchemaAID // int
 		{
 			get { return _targetTestSchemaAID; }
 			set
@@ -8116,7 +9293,7 @@ namespace SqlServerNEDataContext
 
 		private int _targetTestSchemaAId;
 		[Column("Target_Test_Schema_A_ID"), NotNull]
-		public  int  TargetTestSchemaAId // int
+		public int TargetTestSchemaAId // int
 		{
 			get { return _targetTestSchemaAId; }
 			set
@@ -8207,7 +9384,7 @@ namespace SqlServerNEDataContext
 
 		private int? _id;
 		[Column("id"), Nullable]
-		public  int?  Id // int
+		public int? Id // int
 		{
 			get { return _id; }
 			set
@@ -8276,7 +9453,7 @@ namespace SqlServerNEDataContext
 
 		private int _testSchemaXID;
 		[PrimaryKey, NotNull]
-		public  int  TestSchemaXID // int
+		public int TestSchemaXID // int
 		{
 			get { return _testSchemaXID; }
 			set
@@ -8314,7 +9491,7 @@ namespace SqlServerNEDataContext
 
 		private int _field1;
 		[Column, NotNull]
-		public  int  Field1 // int
+		public int Field1 // int
 		{
 			get { return _field1; }
 			set
@@ -8405,7 +9582,7 @@ namespace SqlServerNEDataContext
 
 		private int _testSchemaXID;
 		[Column, NotNull]
-		public  int  TestSchemaXID // int
+		public int TestSchemaXID // int
 		{
 			get { return _testSchemaXID; }
 			set
@@ -8443,7 +9620,7 @@ namespace SqlServerNEDataContext
 
 		private int _parentTestSchemaXID;
 		[Column, NotNull]
-		public  int  ParentTestSchemaXID // int
+		public int ParentTestSchemaXID // int
 		{
 			get { return _parentTestSchemaXID; }
 			set
@@ -8481,7 +9658,7 @@ namespace SqlServerNEDataContext
 
 		private int _otherID;
 		[Column, NotNull]
-		public  int  OtherID // int
+		public int OtherID // int
 		{
 			get { return _otherID; }
 			set
@@ -8534,6 +9711,403 @@ namespace SqlServerNEDataContext
 		/// </summary>
 		[Association(ThisKey=nameof(TestSchemaXID), OtherKey=nameof(SqlServerNEDataContext.TestSchemaX.TestSchemaXID), CanBeNull=false)]
 		public TestSchemaX TestSchemaX { get; set; } = null!;
+
+		#endregion
+
+		#region INotifyPropertyChanged support
+
+		[field : NonSerialized]
+		public virtual event PropertyChangedEventHandler? PropertyChanged;
+
+		protected void OnPropertyChanged(string propertyName)
+		{
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
+			{
+				propertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+
+		protected void OnPropertyChanged(PropertyChangedEventArgs arg)
+		{
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
+			{
+				propertyChanged(this, arg);
+			}
+		}
+
+		#endregion
+	}
+
+	[Table(Schema="dbo", Name="TestTable1")]
+	public partial class TestTable1 : INotifyPropertyChanged
+	{
+		#region ID : int
+
+		private int _id;
+		[Column, NotNull]
+		public int ID // int
+		{
+			get { return _id; }
+			set
+			{
+				if (_id != value)
+				{
+					BeforeIDChanged(value);
+					_id = value;
+					AfterIDChanged();
+
+					OnIDChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeIDChanged(int newValue);
+		partial void AfterIDChanged ();
+
+		public const string NameOfID = "ID";
+
+		private static readonly PropertyChangedEventArgs _idChangedEventArgs = new PropertyChangedEventArgs(NameOfID);
+
+		private void OnIDChanged()
+		{
+			OnPropertyChanged(_idChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region ID2 : int?
+
+		private int? _iD2;
+		[Column,    Nullable]
+		public int? ID2 // int
+		{
+			get { return _iD2; }
+			set
+			{
+				if (!object.Equals(_iD2, value))
+				{
+					BeforeID2Changed(value);
+					_iD2 = value;
+					AfterID2Changed();
+
+					OnID2Changed();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeID2Changed(int? newValue);
+		partial void AfterID2Changed ();
+
+		public const string NameOfID2 = "ID2";
+
+		private static readonly PropertyChangedEventArgs _iD2ChangedEventArgs = new PropertyChangedEventArgs(NameOfID2);
+
+		private void OnID2Changed()
+		{
+			OnPropertyChanged(_iD2ChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region INotifyPropertyChanged support
+
+		[field : NonSerialized]
+		public virtual event PropertyChangedEventHandler? PropertyChanged;
+
+		protected void OnPropertyChanged(string propertyName)
+		{
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
+			{
+				propertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+
+		protected void OnPropertyChanged(PropertyChangedEventArgs arg)
+		{
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
+			{
+				propertyChanged(this, arg);
+			}
+		}
+
+		#endregion
+	}
+
+	[Table(Schema="dbo", Name="TestTable2")]
+	public partial class TestTable2 : INotifyPropertyChanged
+	{
+		#region ID3 : int
+
+		private int _iD3;
+		[Column, NotNull]
+		public int ID3 // int
+		{
+			get { return _iD3; }
+			set
+			{
+				if (_iD3 != value)
+				{
+					BeforeID3Changed(value);
+					_iD3 = value;
+					AfterID3Changed();
+
+					OnID3Changed();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeID3Changed(int newValue);
+		partial void AfterID3Changed ();
+
+		public const string NameOfID3 = "ID3";
+
+		private static readonly PropertyChangedEventArgs _iD3ChangedEventArgs = new PropertyChangedEventArgs(NameOfID3);
+
+		private void OnID3Changed()
+		{
+			OnPropertyChanged(_iD3ChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region ID4 : int
+
+		private int _iD4;
+		[Column, NotNull]
+		public int ID4 // int
+		{
+			get { return _iD4; }
+			set
+			{
+				if (_iD4 != value)
+				{
+					BeforeID4Changed(value);
+					_iD4 = value;
+					AfterID4Changed();
+
+					OnID4Changed();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeID4Changed(int newValue);
+		partial void AfterID4Changed ();
+
+		public const string NameOfID4 = "ID4";
+
+		private static readonly PropertyChangedEventArgs _iD4ChangedEventArgs = new PropertyChangedEventArgs(NameOfID4);
+
+		private void OnID4Changed()
+		{
+			OnPropertyChanged(_iD4ChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region Date1 : DateTime
+
+		private DateTime _date1;
+		[Column, NotNull]
+		public DateTime Date1 // datetime2(7)
+		{
+			get { return _date1; }
+			set
+			{
+				if (_date1 != value)
+				{
+					BeforeDate1Changed(value);
+					_date1 = value;
+					AfterDate1Changed();
+
+					OnDate1Changed();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeDate1Changed(DateTime newValue);
+		partial void AfterDate1Changed ();
+
+		public const string NameOfDate1 = "Date1";
+
+		private static readonly PropertyChangedEventArgs _date1ChangedEventArgs = new PropertyChangedEventArgs(NameOfDate1);
+
+		private void OnDate1Changed()
+		{
+			OnPropertyChanged(_date1ChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region Date2 : DateTime?
+
+		private DateTime? _date2;
+		[Column,    Nullable]
+		public DateTime? Date2 // datetime2(7)
+		{
+			get { return _date2; }
+			set
+			{
+				if (!object.Equals(_date2, value))
+				{
+					BeforeDate2Changed(value);
+					_date2 = value;
+					AfterDate2Changed();
+
+					OnDate2Changed();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeDate2Changed(DateTime? newValue);
+		partial void AfterDate2Changed ();
+
+		public const string NameOfDate2 = "Date2";
+
+		private static readonly PropertyChangedEventArgs _date2ChangedEventArgs = new PropertyChangedEventArgs(NameOfDate2);
+
+		private void OnDate2Changed()
+		{
+			OnPropertyChanged(_date2ChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region INotifyPropertyChanged support
+
+		[field : NonSerialized]
+		public virtual event PropertyChangedEventHandler? PropertyChanged;
+
+		protected void OnPropertyChanged(string propertyName)
+		{
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
+			{
+				propertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+
+		protected void OnPropertyChanged(PropertyChangedEventArgs arg)
+		{
+			var propertyChanged = PropertyChanged;
+
+			if (propertyChanged != null)
+			{
+				propertyChanged(this, arg);
+			}
+		}
+
+		#endregion
+	}
+
+	[Table(Schema="dbo", Name="TestTable3")]
+	public partial class TestTable3 : INotifyPropertyChanged
+	{
+		#region ID5 : int
+
+		private int _iD5;
+		[Column, NotNull]
+		public int ID5 // int
+		{
+			get { return _iD5; }
+			set
+			{
+				if (_iD5 != value)
+				{
+					BeforeID5Changed(value);
+					_iD5 = value;
+					AfterID5Changed();
+
+					OnID5Changed();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeID5Changed(int newValue);
+		partial void AfterID5Changed ();
+
+		public const string NameOfID5 = "ID5";
+
+		private static readonly PropertyChangedEventArgs _iD5ChangedEventArgs = new PropertyChangedEventArgs(NameOfID5);
+
+		private void OnID5Changed()
+		{
+			OnPropertyChanged(_iD5ChangedEventArgs);
+		}
+
+		#endregion
+
+		#endregion
+
+		#region Value : string?
+
+		private string? _value;
+		[Column,    Nullable]
+		public string? Value // nvarchar(4000)
+		{
+			get { return _value; }
+			set
+			{
+				if (!object.Equals(_value, value))
+				{
+					BeforeValueChanged(value);
+					_value = value;
+					AfterValueChanged();
+
+					OnValueChanged();
+				}
+			}
+		}
+
+		#region INotifyPropertyChanged support
+
+		partial void BeforeValueChanged(string? newValue);
+		partial void AfterValueChanged ();
+
+		public const string NameOfValue = "Value";
+
+		private static readonly PropertyChangedEventArgs _valueChangedEventArgs = new PropertyChangedEventArgs(NameOfValue);
+
+		private void OnValueChanged()
+		{
+			OnPropertyChanged(_valueChangedEventArgs);
+		}
+
+		#endregion
 
 		#endregion
 
@@ -9098,174 +10672,180 @@ namespace SqlServerNEDataContext
 
 	public static partial class TableExtensions
 	{
-		public static AllType? Find(this ITable<AllType> table,  int  ID)
+		public static AllType? Find(this ITable<AllType> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
-				t. ID ==  ID);
+				t.ID == ID);
 		}
 
-		public static AllTypes2? Find(this ITable<AllTypes2> table,  int  ID)
+		public static AllTypes2? Find(this ITable<AllTypes2> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
-				t. ID ==  ID);
+				t.ID == ID);
 		}
 
-		public static Child? Find(this ITable<Child> table,  int  Id)
+		public static Child? Find(this ITable<Child> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
-				t. Id ==  Id);
+				t.Id == Id);
 		}
 
-		public static DecimalOverflow? Find(this ITable<DecimalOverflow> table,  decimal  Decimal1)
+		public static DecimalOverflow? Find(this ITable<DecimalOverflow> table, decimal Decimal1)
 		{
 			return table.FirstOrDefault(t =>
-				t. Decimal1 ==  Decimal1);
+				t.Decimal1 == Decimal1);
 		}
 
-		public static Doctor? Find(this ITable<Doctor> table,  int  PersonID)
+		public static Doctor? Find(this ITable<Doctor> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
-				t. PersonID ==  PersonID);
+				t.PersonID == PersonID);
 		}
 
-		public static GrandChild? Find(this ITable<GrandChild> table,  int  Id)
+		public static GrandChild? Find(this ITable<GrandChild> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
-				t. Id ==  Id);
+				t.Id == Id);
 		}
 
-		public static GuidID? Find(this ITable<GuidID> table,  Guid  ID)
+		public static GuidID? Find(this ITable<GuidID> table, Guid ID)
 		{
 			return table.FirstOrDefault(t =>
-				t. ID ==  ID);
+				t.ID == ID);
 		}
 
-		public static GuidID2? Find(this ITable<GuidID2> table,  Guid  ID)
+		public static GuidID2? Find(this ITable<GuidID2> table, Guid ID)
 		{
 			return table.FirstOrDefault(t =>
-				t. ID ==  ID);
+				t.ID == ID);
 		}
 
-		public static IndexTable? Find(this ITable<IndexTable> table,  int  PKField1,  int  PKField2)
+		public static IndexTable? Find(this ITable<IndexTable> table, int PKField1, int PKField2)
 		{
 			return table.FirstOrDefault(t =>
-				t. PKField1 ==  PKField1 &&
-				t. PKField2 ==  PKField2);
+				t.PKField1 == PKField1 &&
+				t.PKField2 == PKField2);
 		}
 
-		public static IndexTable2? Find(this ITable<IndexTable2> table,  int  PKField1,  int  PKField2)
+		public static IndexTable2? Find(this ITable<IndexTable2> table, int PKField1, int PKField2)
 		{
 			return table.FirstOrDefault(t =>
-				t. PKField1 ==  PKField1 &&
-				t. PKField2 ==  PKField2);
+				t.PKField1 == PKField1 &&
+				t.PKField2 == PKField2);
 		}
 
-		public static InheritanceChild? Find(this ITable<InheritanceChild> table,  int  InheritanceChildId)
+		public static InheritanceChild? Find(this ITable<InheritanceChild> table, int InheritanceChildId)
 		{
 			return table.FirstOrDefault(t =>
-				t. InheritanceChildId ==  InheritanceChildId);
+				t.InheritanceChildId == InheritanceChildId);
 		}
 
-		public static InheritanceParent? Find(this ITable<InheritanceParent> table,  int  InheritanceParentId)
+		public static InheritanceParent? Find(this ITable<InheritanceParent> table, int InheritanceParentId)
 		{
 			return table.FirstOrDefault(t =>
-				t. InheritanceParentId ==  InheritanceParentId);
+				t.InheritanceParentId == InheritanceParentId);
 		}
 
-		public static Issue1115? Find(this ITable<Issue1115> table,  SqlHierarchyId  Id)
+		public static Issue1115? Find(this ITable<Issue1115> table, SqlHierarchyId Id)
 		{
 			return table.FirstOrDefault(t =>
-				(bool)(t. Id ==  Id));
+				(bool)(t.Id == Id));
 		}
 
-		public static Issue1144? Find(this ITable<Issue1144> table,  int  Id)
+		public static Issue1144? Find(this ITable<Issue1144> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
-				t. Id ==  Id);
+				t.Id == Id);
 		}
 
-		public static LinqDataType? Find(this ITable<LinqDataType> table,  int  ID2)
+		public static LinqDataType? Find(this ITable<LinqDataType> table, int ID2)
 		{
 			return table.FirstOrDefault(t =>
-				t. ID2 ==  ID2);
+				t.ID2 == ID2);
 		}
 
-		public static Member? Find(this ITable<Member> table,  int  MemberId)
+		public static Member? Find(this ITable<Member> table, int MemberId)
 		{
 			return table.FirstOrDefault(t =>
-				t. MemberId ==  MemberId);
+				t.MemberId == MemberId);
 		}
 
-		public static Parent? Find(this ITable<Parent> table,  int  Id)
+		public static Parent? Find(this ITable<Parent> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
-				t. Id ==  Id);
+				t.Id == Id);
 		}
 
-		public static Patient? Find(this ITable<Patient> table,  int  PersonID)
+		public static Patient? Find(this ITable<Patient> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
-				t. PersonID ==  PersonID);
+				t.PersonID == PersonID);
 		}
 
-		public static Person? Find(this ITable<Person> table,  int  PersonID)
+		public static Person? Find(this ITable<Person> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
-				t. PersonID ==  PersonID);
+				t.PersonID == PersonID);
 		}
 
-		public static Provider? Find(this ITable<Provider> table,  int  ProviderId)
+		public static Provider? Find(this ITable<Provider> table, int ProviderId)
 		{
 			return table.FirstOrDefault(t =>
-				t. ProviderId ==  ProviderId);
+				t.ProviderId == ProviderId);
 		}
 
-		public static SqlType? Find(this ITable<SqlType> table,  int  ID)
+		public static SqlType? Find(this ITable<SqlType> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
-				t. ID ==  ID);
+				t.ID == ID);
 		}
 
-		public static TestIdentity? Find(this ITable<TestIdentity> table,  int  ID)
+		public static TemporalTest? Find(this ITable<TemporalTest> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
-				t. ID ==  ID);
+				t.ID == ID);
 		}
 
-		public static TestMerge1? Find(this ITable<TestMerge1> table,  int  Id)
+		public static TestIdentity? Find(this ITable<TestIdentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
-				t. Id ==  Id);
+				t.ID == ID);
 		}
 
-		public static TestMerge2? Find(this ITable<TestMerge2> table,  int  Id)
+		public static TestMerge1? Find(this ITable<TestMerge1> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
-				t. Id ==  Id);
+				t.Id == Id);
 		}
 
-		public static TestMergeIdentity? Find(this ITable<TestMergeIdentity> table,  int  Id)
+		public static TestMerge2? Find(this ITable<TestMerge2> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
-				t. Id ==  Id);
+				t.Id == Id);
 		}
 
-		public static TestSchema_TestSchemaA? Find(this ITable<TestSchema_TestSchemaA> table,  int  TestSchemaAID)
+		public static TestMergeIdentity? Find(this ITable<TestMergeIdentity> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
-				t. TestSchemaAID ==  TestSchemaAID);
+				t.Id == Id);
 		}
 
-		public static TestSchema_TestSchemaB? Find(this ITable<TestSchema_TestSchemaB> table,  int  TestSchemaBID)
+		public static TestSchema_TestSchemaA? Find(this ITable<TestSchema_TestSchemaA> table, int TestSchemaAID)
 		{
 			return table.FirstOrDefault(t =>
-				t. TestSchemaBID ==  TestSchemaBID);
+				t.TestSchemaAID == TestSchemaAID);
 		}
 
-		public static TestSchemaX? Find(this ITable<TestSchemaX> table,  int  TestSchemaXID)
+		public static TestSchema_TestSchemaB? Find(this ITable<TestSchema_TestSchemaB> table, int TestSchemaBID)
 		{
 			return table.FirstOrDefault(t =>
-				t. TestSchemaXID ==  TestSchemaXID);
+				t.TestSchemaBID == TestSchemaBID);
+		}
+
+		public static TestSchemaX? Find(this ITable<TestSchemaX> table, int TestSchemaXID)
+		{
+			return table.FirstOrDefault(t =>
+				t.TestSchemaXID == TestSchemaXID);
 		}
 	}
 }

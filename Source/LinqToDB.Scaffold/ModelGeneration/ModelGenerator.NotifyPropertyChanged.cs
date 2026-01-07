@@ -80,8 +80,8 @@ namespace LinqToDB.Tools.ModelGeneration
 
 					gr.Members.Insert(0, field);
 
-					prop.Name        = " " + name;
-					prop.TypeBuilder = () => " " + type;
+					prop.Name        = name;
+					prop.TypeBuilder = () => type;
 					prop.IsAuto      = false;
 
 					if (prop.HasGetter) prop.GetBodyBuilders.Add(() => [$"return {field.Name};"]);
