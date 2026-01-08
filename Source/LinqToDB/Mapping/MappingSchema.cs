@@ -1767,12 +1767,10 @@ namespace LinqToDB.Mapping
 
 			return (_mapValues ??= new ConcurrentDictionary<Type, MapValue[]?>())
 				.GetOrAdd(
-					type,
+					type.UnwrappedNullableType,
 					type =>
 					{
-						var underlyingType = type.UnwrappedNullableType;
-
-						if (underlyingType.IsEnum)
+						if (type.IsEnum)
 						{
 							return type.GetFields()
 								.Where(f => (f.Attributes & EnumField) == EnumField)
