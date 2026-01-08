@@ -1221,7 +1221,7 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						var newElements = new ISqlExpression[element.Expressions.Length - 1];
 						Array.Copy(element.Expressions, newElements, i);
-						Array.Copy(element.Expressions, i, newElements, i + 1, element.Expressions.Length - 1 - i);
+						Array.Copy(element.Expressions, i + 1, newElements, i, element.Expressions.Length - 1 - i);
 
 						return new SqlCoalesceExpression(newElements);
 					}
