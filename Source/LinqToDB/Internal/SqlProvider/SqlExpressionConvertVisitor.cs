@@ -1516,6 +1516,19 @@ namespace LinqToDB.Internal.SqlProvider
 
 		public virtual ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
 		{
+			if (element is
+				{
+					Operation: SqlUnaryOperation.Negation,
+					Expr: SqlUnaryExpression
+					{
+						Operation: SqlUnaryOperation.Negation,
+						Expr: var expr
+					}
+				})
+			{
+				return expr;
+			}
+
 			return element;
 		}
 
