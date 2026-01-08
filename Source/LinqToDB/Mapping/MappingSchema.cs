@@ -1767,7 +1767,7 @@ namespace LinqToDB.Mapping
 
 			return (_mapValues ??= new ConcurrentDictionary<Type, MapValue[]?>())
 				.GetOrAdd(
-					type.UnwrappedNullableType,
+					type,
 					type =>
 					{
 						if (type.IsEnum)
