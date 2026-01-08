@@ -1774,7 +1774,7 @@ namespace LinqToDB.Mapping
 						{
 							return type.GetFields()
 								.Where(f => (f.Attributes & EnumField) == EnumField)
-								.Select(f => new MapValue(f.GetValue(null)!, GetAttributes<MapValueAttribute>(underlyingType, f)))
+								.Select(f => new MapValue(f.GetValue(null)!, GetAttributes<MapValueAttribute>(type, f)))
 								.ToArray();
 						}
 
