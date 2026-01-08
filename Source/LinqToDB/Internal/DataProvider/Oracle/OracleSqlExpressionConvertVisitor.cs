@@ -248,17 +248,33 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		{
 			if (NeedsCharTypeCorrection(MappingSchema, element.Cases.Select(c => c.ResultExpression).Concat(element.ElseExpression == null ? [] : [element.ElseExpression])))
 			{
-				foreach (var caseItem in element.Cases)
+				ISqlExpression? elseExpr = null;
+				List<SqlCaseExpression.CaseItem>? cases = null;
+
+				for (var i = 0; i < element.Cases.Count; i++)
 				{
+					var caseItem = element.Cases[i];
 					var type = QueryHelper.GetDbDataType(caseItem.ResultExpression, MappingSchema);
 
 					if (type.DataType is DataType.Char or DataType.VarChar)
 					{
-						caseItem.ResultExpression = new SqlCastExpression(
-							caseItem.ResultExpression,
-							type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
-							null,
-							isMandatory: true);
+						if (cases == null)
+						{
+							cases = new(element.Cases.Count);
+							cases.AddRange(element.Cases.Take(i));
+						}
+
+						cases.Add(new SqlCaseExpression.CaseItem(
+							caseItem.Condition,
+							new SqlCastExpression(
+								caseItem.ResultExpression,
+								type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
+								null,
+								isMandatory: true)));
+					}
+					else if (cases != null)
+					{
+						cases.Add(caseItem);
 					}
 				}
 
@@ -268,12 +284,17 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 					if (type.DataType is DataType.Char or DataType.VarChar)
 					{
-						element.ElseExpression = new SqlCastExpression(
+						elseExpr = new SqlCastExpression(
 							element.ElseExpression,
 							type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
 							null,
 							isMandatory: true);
 					}
+				}
+
+				if (elseExpr != null || cases != null)
+				{
+					return new SqlCaseExpression(element.Type, cases ?? element.Cases, elseExpr ?? element.ElseExpression);
 				}
 			}
 
