@@ -7,6 +7,7 @@ using System.Linq;
 using LinqToDB.Common;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Linq.Translation;
@@ -1210,6 +1211,23 @@ namespace LinqToDB.Internal.SqlProvider
 
 		public virtual ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
 		{
+			for (var i = 0; i < element.Expressions.Length; i++)
+			{
+				if (element.Expressions[i] is SqlValue { Value: null })
+				{
+					if (element.Expressions.Length == 2)
+						return element.Expressions[(i + 1) % 2];
+					else
+					{
+						var newElements = new ISqlExpression[element.Expressions.Length - 1];
+						Array.Copy(element.Expressions, newElements, i);
+						Array.Copy(element.Expressions, i, newElements, i + 1, element.Expressions.Length - 1 - i);
+
+						return new SqlCoalesceExpression(newElements);
+					}
+				}
+			}
+
 			var type = QueryHelper.GetDbDataType(element.Expressions[0], MappingSchema);
 			return new SqlFunction(type, "Coalesce", parametersNullability: ParametersNullabilityType.IfAllParametersNullable, element.Expressions);
 		}
