@@ -1445,7 +1445,7 @@ namespace LinqToDB.Internal.SqlProvider
 							element.Precedence);
 					}
 
-					if (element.Expr2 is SqlUnaryExpression { Operation: SqlUnaryOperation.Negation, Expr: var expr2 })
+					if (element.Operation == "+" && element.Expr2 is SqlUnaryExpression { Operation: SqlUnaryOperation.Negation, Expr: var expr2 })
 					{
 						return new SqlBinaryExpression(
 							element.Type,
@@ -1481,7 +1481,7 @@ namespace LinqToDB.Internal.SqlProvider
 							element.Type,
 							element.Expr1,
 							SqlUnaryOperation.Negation,
-							element.Precedence);
+							Precedence.Unary);
 					}
 
 					if (element.Expr1 is SqlValue { Value: -1 })
@@ -1490,7 +1490,7 @@ namespace LinqToDB.Internal.SqlProvider
 							element.Type,
 							element.Expr2,
 							SqlUnaryOperation.Negation,
-							element.Precedence);
+							Precedence.Unary);
 					}
 
 					break;
@@ -1504,7 +1504,7 @@ namespace LinqToDB.Internal.SqlProvider
 							element.Type,
 							element.Expr1,
 							SqlUnaryOperation.Negation,
-							element.Precedence);
+							Precedence.Unary);
 					}
 
 					break;
