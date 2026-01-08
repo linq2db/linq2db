@@ -1413,6 +1413,7 @@ namespace LinqToDB.Internal.SqlProvider
 			switch (element.Operation)
 			{
 				case "+":
+				case "||":
 				{
 					if (element.Expr1.SystemType == typeof(string) && element.Expr2.SystemType != typeof(string))
 					{
