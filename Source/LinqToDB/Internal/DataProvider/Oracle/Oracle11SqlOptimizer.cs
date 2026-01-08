@@ -175,10 +175,10 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			{
 				if (e is SelectQuery { HasSetOperators: true } query)
 				{
+					IEnumerable<SelectQuery> queries = [query, .. query.SetOperators.Select(o => o.SelectQuery)];
+
 					for (var i = 0; i < query.Select.Columns.Count; i++)
 					{
-						IEnumerable<SelectQuery> queries = [query, .. query.SetOperators.Select(o => o.SelectQuery)];
-
 						if (OracleSqlExpressionConvertVisitor.NeedsCharTypeCorrection(mappingSchema, queries.Select(q => q.Select.Columns[i].Expression)))
 						{
 							foreach (var qry in queries)

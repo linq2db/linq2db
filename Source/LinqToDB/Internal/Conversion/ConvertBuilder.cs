@@ -346,7 +346,7 @@ namespace LinqToDB.Internal.Conversion
 						valueType = valueType.UnwrapNullableType();
 
 					var toTypeFields = fromFields
-						.Select(f => new { f.OrigValue, Attrs = f.MapValues
+						.Select(f => ( f.OrigValue, Attrs: f.MapValues
 							.OrderBy(a =>
 							{
 								var idx = a.Configuration == null ?
@@ -356,7 +356,7 @@ namespace LinqToDB.Internal.Conversion
 							})
 							.ThenBy(a => !a.IsDefault)
 							.ThenBy(a => a.Value == null)
-							.FirstOrDefault(a => a.Value == null || a.Value.GetType() == valueType) })
+							.FirstOrDefault(a => a.Value == null || a.Value.GetType() == valueType) ))
 						.ToList();
 
 					if (toTypeFields.All(f => f.Attrs != null))
@@ -379,13 +379,13 @@ namespace LinqToDB.Internal.Conversion
 
 					if (toTypeFields.Any(f => f.Attrs != null))
 					{
-						var field = toTypeFields.First(f => f.Attrs == null);
+						(var origValue, _) = toTypeFields.First(f => f.Attrs == null);
 
 						return Expression.Convert(
 							Expression.Call(
 								_throwLinqToDBConvertException,
 								Expression.Constant(
-									$"Inconsistent mapping. '{from.FullName}.{field.OrigValue}' does not have MapValue(<{to.FullName}>) attribute.")),
+									$"Inconsistent mapping. '{from.FullName}.{origValue}' does not have MapValue(<{to.FullName}>) attribute.")),
 								to);
 					}
 				}
