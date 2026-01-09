@@ -263,6 +263,8 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!ReferenceEquals(newExpr, element))
 				return Visit(newExpr);
 
+			HashSet<ISqlPredicate>? seen = null;
+
 			if (GetVisitMode(element) == VisitMode.Modify)
 			{
 				for (int i = 0; i < element._cases.Count; i++)
@@ -275,7 +277,8 @@ namespace LinqToDB.Internal.SqlProvider
 						break;
 					}
 
-					if (caseItem.Condition == SqlPredicate.False)
+					if (caseItem.Condition == SqlPredicate.False
+						|| !(seen ??= new HashSet<ISqlPredicate>(ISqlPredicateEqualityComparer.Instance)).Add(caseItem.Condition))
 					{
 						element._cases.RemoveAt(i);
 						--i;
@@ -298,7 +301,8 @@ namespace LinqToDB.Internal.SqlProvider
 						return Visit(newCaseExpression);
 					}
 
-					if (caseItem.Condition == SqlPredicate.False)
+					if (caseItem.Condition == SqlPredicate.False
+						|| !(seen ??= new HashSet<ISqlPredicate>(ISqlPredicateEqualityComparer.Instance)).Add(caseItem.Condition))
 					{
 						var newCases = new List<SqlCaseExpression.CaseItem>(element._cases.Count);
 						newCases.AddRange(element._cases);

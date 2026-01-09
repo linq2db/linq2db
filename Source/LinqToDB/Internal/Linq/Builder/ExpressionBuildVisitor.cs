@@ -2281,6 +2281,9 @@ namespace LinqToDB.Internal.Linq.Builder
 								return Visit(placeholder.WithType(node.Type));
 							}
 
+							if (placeholder.Sql.SystemType == node.Type)
+								return Visit(placeholder);
+
 							return Visit(CreatePlaceholder(PseudoFunctions.MakeCast(placeholder.Sql, MappingSchema.GetDbDataType(node.Type), s), node));
 						}
 					}
@@ -4634,32 +4637,18 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!type.UnwrapNullableType().IsEnum)
 				return null;
 
-			var dic = new Dictionary<object, object?>();
-
-			var mapValues = MappingSchema.GetMapValues(type);
-
-			if (mapValues != null)
-				foreach (var mv in mapValues)
-					if (!dic.ContainsKey(mv.OrigValue))
-						dic.Add(mv.OrigValue, mv.MapValues[0].Value);
-
 			switch (value.NodeType)
 			{
 				case ExpressionType.Constant:
 				{
-					var name = Enum.GetName(type, ((ConstantExpression)value).Value!);
+					var origValue = ((ConstantExpression)value).Value!;
+					var mapValue  = origValue;
 
-					// ReSharper disable ConditionIsAlwaysTrueOrFalse
-					// ReSharper disable HeuristicUnreachableCode
-					if (name == null)
-						return null;
-					// ReSharper restore HeuristicUnreachableCode
-					// ReSharper restore ConditionIsAlwaysTrueOrFalse
-
-					var origValue = Enum.Parse(type, name, false);
-
-					if (!dic.TryGetValue(origValue, out var mapValue))
-						mapValue = origValue;
+					foreach (var enumVal in MappingSchema.GetMapValues(type.UnwrapNullableType())!)
+					{
+						if (origValue.Equals(enumVal.OrigValue) && enumVal.MapValues.Length > 0)
+							mapValue = enumVal.MapValues[0].Value;
+					}
 
 					SqlValue sqlvalue;
 					var ce = MappingSchema.GetConverter(new DbDataType(type), new DbDataType(typeof(DataParameter)), false, ConversionType.Common);
