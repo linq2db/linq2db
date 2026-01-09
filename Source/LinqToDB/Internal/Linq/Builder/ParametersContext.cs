@@ -186,7 +186,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var paramType        = elementType ?? paramExpression.UnwrapConvertToNotObject().Type;
 
 			var paramDataType = columnDescriptor?.GetDbDataType(true) ?? mappingSchema.GetDbDataType(paramType);
-			if (paramDataType.Equals(SqlDataType.MakeUndefined(paramType).Type))
+			if (paramDataType.EqualsDbOnly(SqlDataType.MakeUndefined(paramType).Type))
 				paramDataType = mappingSchema.GetUnderlyingDataType(paramType, out _).Type;
 
 			var        objParam                   = ItemParameter;
