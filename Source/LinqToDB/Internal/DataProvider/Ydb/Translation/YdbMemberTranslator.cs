@@ -61,9 +61,11 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				var factory = translationContext.ExpressionFactory;
 				var valueTypeString = factory.GetDbDataType(value);
 
-				return paddingChar != null
+				return factory.Cast(
+					paddingChar != null
 					? factory.Function(valueTypeString, "String::LeftPad", value, padding, paddingChar)
-					: factory.Function(valueTypeString, "String::LeftPad", value, padding);
+					: factory.Function(valueTypeString, "String::LeftPad", value, padding)
+					, valueTypeString, isMandatory: true);
 			}
 
 			public override ISqlExpression? TranslateReplace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression oldValue, ISqlExpression newValue)
@@ -71,7 +73,9 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				var factory = translationContext.ExpressionFactory;
 				var valueTypeString = factory.GetDbDataType(value);
 
-				return factory.Function(valueTypeString, "String::ReplaceAll", value, oldValue, newValue);
+				newValue = factory.Coalesce(newValue, factory.Value(string.Empty));
+
+				return factory.Function(valueTypeString, "Unicode::ReplaceAll", value, oldValue, newValue);
 			}
 
 			protected override Expression? TranslateLike(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
