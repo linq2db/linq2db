@@ -2154,28 +2154,33 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				case ExpressionType.Not:
 				{
-					if (_buildPurpose is BuildPurpose.Sql)
+					if (node.Type.UnwrapNullableType() == typeof(bool))
 					{
-						var predicateExpr = Visit(node.Operand);
-
-						if (predicateExpr is SqlPlaceholderExpression placeholder)
+						if (_buildPurpose is BuildPurpose.Sql)
 						{
-							var predicate = placeholder.Sql as ISqlPredicate;
-							if (predicate is null)
+							var predicateExpr = Visit(node.Operand);
+
+							if (predicateExpr is SqlPlaceholderExpression placeholder)
 							{
-								var withNull = !node.Operand.Type.IsNullableType;
+								var predicate = placeholder.Sql as ISqlPredicate;
+								if (predicate is null)
+								{
+									var withNull = !node.Operand.Type.IsNullableType;
 
-								predicate = ConvertExpressionToPredicate(
-									placeholder.Sql,
-									withNull: withNull,
-									forceEquality: withNull && placeholder.Sql.CanBeNullableOrUnknown(GetNullabilityContext(), false));
+									predicate = ConvertExpressionToPredicate(
+										placeholder.Sql,
+										withNull: withNull,
+										forceEquality: withNull && placeholder.Sql.CanBeNullableOrUnknown(GetNullabilityContext(), false));
+								}
+
+								var condition = new SqlSearchCondition();
+								condition.Add(predicate.MakeNot());
+								return CreatePlaceholder(condition, node);
 							}
-
-							var condition = new SqlSearchCondition();
-							condition.Add(predicate.MakeNot());
-							return CreatePlaceholder(condition, node);
 						}
 					}
+					else
+						goto case ExpressionType.UnaryPlus;
 
 					break;
 				}
@@ -2194,10 +2199,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						switch (node.NodeType)
 						{
-							case ExpressionType.UnaryPlus: return CreatePlaceholder(placeholder.Sql, node);
+							case ExpressionType.UnaryPlus:
+								return CreatePlaceholder(placeholder.Sql, node);
+
+							case ExpressionType.Not:
+								return CreatePlaceholder(new SqlUnaryExpression(MappingSchema.GetDbDataType(t), placeholder.Sql, SqlUnaryOperation.BitwiseNegation, Precedence.Bitwise), node);
+
 							case ExpressionType.Negate:
 							case ExpressionType.NegateChecked:
-								return CreatePlaceholder(new SqlBinaryExpression(t, new SqlValue(-1), "*", placeholder.Sql, Precedence.Multiplicative), node);
+								return CreatePlaceholder(new SqlUnaryExpression(MappingSchema.GetDbDataType(t), placeholder.Sql, SqlUnaryOperation.Negation, Precedence.Unary), node);
 						}
 					}
 

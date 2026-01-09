@@ -3,6 +3,7 @@
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
 {
@@ -118,10 +119,18 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 						Add(element.Expr1, element.Expr2, element.SystemType),
 						Mul(new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2), 2),
 						element.SystemType);
-				case "+": return element.SystemType == typeof(string) ? new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence) : element;
+				case "+" when element.SystemType == typeof(string): return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
 			}
 
 			return base.ConvertSqlBinaryExpression(element);
+		}
+
+		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
+		{
+			if (element.Operation is SqlUnaryOperation.BitwiseNegation)
+				return new SqlBinaryExpression(element.Type, new SqlValue(-1), "-", element.Expr);
+
+			return base.ConvertSqlUnaryExpression(element);
 		}
 
 		public override ISqlExpression ConvertSqlExpression(SqlExpression element)

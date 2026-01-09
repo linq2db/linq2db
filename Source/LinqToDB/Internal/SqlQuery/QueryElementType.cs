@@ -13,6 +13,7 @@
 		SqlAnchor,
 		SqlObjectExpression,
 		SqlBinaryExpression,
+		SqlUnaryExpression,
 		SqlValue,
 		SqlDataType,
 		SqlTable,
@@ -20,7 +21,7 @@
 		SqlRow,
 
 		NotPredicate,
-		TruePredicate, 
+		TruePredicate,
 		FalsePredicate,
 		ExprPredicate,
 		ExprExprPredicate,
