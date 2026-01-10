@@ -223,17 +223,13 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
-			switch (element)
+			return element switch
 			{
-				case SqlBinaryExpression(var type, var ex1, "%", var ex2):
-					return new SqlBinaryExpression(type, ex1, "MOD", ex2, Precedence.Additive - 1);
-				case SqlBinaryExpression(var type, var ex1, "&", var ex2):
-					return new SqlBinaryExpression(type, ex1, "BAND", ex2, Precedence.Bitwise);
-				case SqlBinaryExpression(var type, var ex1, "|", var ex2):
-					return new SqlBinaryExpression(type, ex1, "BOR", ex2, Precedence.Bitwise - 1);
-			}
-
-			return base.ConvertSqlBinaryExpression(element);
+				SqlBinaryExpression(var type, var ex1, "%", var ex2) => new SqlBinaryExpression(type, ex1, "MOD", ex2, Precedence.Additive - 1),
+				SqlBinaryExpression(var type, var ex1, "&", var ex2) => new SqlBinaryExpression(type, ex1, "BAND", ex2, Precedence.Bitwise),
+				SqlBinaryExpression(var type, var ex1, "|", var ex2) => new SqlBinaryExpression(type, ex1, "BOR", ex2, Precedence.Bitwise - 1),
+				_ => base.ConvertSqlBinaryExpression(element),
+			};
 		}
 	}
 }

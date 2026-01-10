@@ -105,15 +105,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
 		{
-			switch (element.Operation)
+			return element.Operation switch
 			{
-				case SqlUnaryOperation.BitwiseNegation:
-					return new SqlFunction(element.Type, "bitNot", element.Expr);
-				case SqlUnaryOperation.Negation:
-					return new SqlFunction(element.Type, "negate", element.Expr);
-			}
-
-			return base.ConvertSqlUnaryExpression(element);
+				SqlUnaryOperation.BitwiseNegation => new SqlFunction(element.Type, "bitNot", element.Expr),
+				SqlUnaryOperation.Negation        => new SqlFunction(element.Type, "negate", element.Expr),
+				_                                 => base.ConvertSqlUnaryExpression(element),
+			};
 		}
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
@@ -467,23 +464,16 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		static bool ShouldSkipCast(ISqlExpression expr, DbDataType toDataType)
 		{
-			// TODO: change to single return
-			if (expr is SqlValue { Value: null } sqlValue
+			return expr is SqlValue { Value: null } sqlValue
 				&& toDataType.DataType is DataType.Interval
-				    or DataType.IntervalSecond
-				    or DataType.IntervalMinute
-				    or DataType.IntervalHour
-				    or DataType.IntervalDay
-				    or DataType.IntervalWeek
-				    or DataType.IntervalMonth
-				    or DataType.IntervalQuarter
-				    or DataType.IntervalYear
-			   )
-			{
-				return true;
-			}
-
-			return false;
+					or DataType.IntervalSecond
+					or DataType.IntervalMinute
+					or DataType.IntervalHour
+					or DataType.IntervalDay
+					or DataType.IntervalWeek
+					or DataType.IntervalMonth
+					or DataType.IntervalQuarter
+					or DataType.IntervalYear;
 		}
 	}
 }

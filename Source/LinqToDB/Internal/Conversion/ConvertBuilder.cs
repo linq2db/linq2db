@@ -404,7 +404,7 @@ namespace LinqToDB.Internal.Conversion
 
 						var toAttr = toField.MapValues[0];
 
-						toAttr = toField.MapValues.FirstOrDefault(a => a.Configuration == toAttr.Configuration && a.IsDefault) ?? toAttr;
+						toAttr = toField.MapValues.FirstOrDefault(a => string.Equals(a.Configuration, toAttr.Configuration, StringComparison.Ordinal) && a.IsDefault) ?? toAttr;
 
 						var fromAttrs = fromFields.Where(f => f.MapValues.Any(a =>
 							a.Value?.Equals(toAttr.Value) ?? toAttr.Value == null)).ToList();
@@ -419,7 +419,7 @@ namespace LinqToDB.Internal.Conversion
 								select new
 								{
 									f,
-									a = f.MapValues.First(a => a.Value?.Equals(toAttr.Value) ?? toAttr.Value == null)
+									a = f.MapValues.First(a => a.Value?.Equals(toAttr.Value) ?? toAttr.Value == null),
 								} into fa
 								from c in cl
 								where string.Equals(fa.a.Configuration, c.c, StringComparison.Ordinal)
@@ -638,36 +638,18 @@ namespace LinqToDB.Internal.Conversion
 			foreach (var values in enumMappings)
 			{
 				if (values.MapValues.Length == 0)
-						allFieldsMapped = false;
-					else
-					{
-						// we don't just take first attribute to not break previous implementation
-						// which prefered IsDefault=true value if many values specified
-						var isDefault = false;
+					allFieldsMapped = false;
+				else
+				{
+					// we don't just take first attribute to not break previous implementation
+					// which prefered IsDefault=true value if many values specified
+					var isDefault = false;
 
-						// look for default value
+					// look for default value
 					foreach (var attr in values.MapValues)
+					{
+						if (attr.IsDefault)
 						{
-							if (attr.IsDefault)
-							{
-								if (attr.Value != null)
-								{
-									if (valuesType == null)
-										valuesType = attr.Value.GetType();
-									else if (valuesType != attr.Value.GetType())
-										allValuesHasSameType = false;
-								}
-								else
-									hasNullValue = true;
-
-								isDefault = true;
-								break;
-							}
-						}
-
-						if (!isDefault)
-						{
-						var attr = values.MapValues[0];
 							if (attr.Value != null)
 							{
 								if (valuesType == null)
@@ -677,9 +659,27 @@ namespace LinqToDB.Internal.Conversion
 							}
 							else
 								hasNullValue = true;
+
+							isDefault = true;
+							break;
 						}
 					}
+
+					if (!isDefault)
+					{
+						var attr = values.MapValues[0];
+						if (attr.Value != null)
+						{
+							if (valuesType == null)
+								valuesType = attr.Value.GetType();
+							else if (valuesType != attr.Value.GetType())
+								allValuesHasSameType = false;
+						}
+						else
+							hasNullValue = true;
+					}
 				}
+			}
 
 			Type defaultType;
 

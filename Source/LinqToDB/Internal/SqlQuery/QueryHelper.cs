@@ -378,7 +378,7 @@ namespace LinqToDB.Internal.SqlQuery
 							(_, DataType.NVarChar)            => DataType.NVarChar,
 							(DataType.Char, DataType.VarChar) => DataType.VarChar,
 							(DataType.Char, DataType.NChar)   => DataType.NChar,
-							_                                 => commonType.Value.DataType
+							_                                 => commonType.Value.DataType,
 						};
 
 						commonType = commonType.Value.WithDataType(newType);

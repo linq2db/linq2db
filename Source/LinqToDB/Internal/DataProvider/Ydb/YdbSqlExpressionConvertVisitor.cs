@@ -137,66 +137,64 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			{
 				PseudoFunctions.TO_LOWER => func.WithName("Unicode::ToLower"),
 				PseudoFunctions.TO_UPPER => func.WithName("Unicode::ToUpper"),
+				PseudoFunctions.REPLACE  => func.WithName("Unicode::ReplaceAll"),
 
 				_                        => base.ConvertSqlFunction(func),
 			};
 
-				case PseudoFunctions.REPLACE:
-					return func.WithName("Unicode::ReplaceAll");
+			////----------------------------------------------------------------
+			//// save cast
+			//case PseudoFunctions.TRY_CONVERT:
+			//	// CAST(x AS <type>?) → null
+			//	return new SqlExpression(
+			//		func.Type,
+			//		"CAST({0} AS {1}?)",
+			//		Precedence.Primary,
+			//		func.Parameters[2],      // value
+			//		func.Parameters[0]);     // type
 
-				////----------------------------------------------------------------
-				//// save cast
-				//case PseudoFunctions.TRY_CONVERT:
-				//	// CAST(x AS <type>?) → null
-				//	return new SqlExpression(
-				//		func.Type,
-				//		"CAST({0} AS {1}?)",
-				//		Precedence.Primary,
-				//		func.Parameters[2],      // value
-				//		func.Parameters[0]);     // type
+			//case PseudoFunctions.TRY_CONVERT_OR_DEFAULT:
+			//	// COALESCE(CAST(x AS <type>?), default)
+			//	return new SqlExpression(
+			//			func.Type,
+			//			"COALESCE(CAST({0} AS {1}?), {2})",
+			//			Precedence.Primary,
+			//			func.Parameters[2],    // value
+			//			func.Parameters[0],    // type
+			//			func.Parameters[3])    // default
+			//	{
+			//		CanBeNull =
+			//				func.Parameters[2].CanBeNullable(NullabilityContext) ||
+			//				func.Parameters[3].CanBeNullable(NullabilityContext)
+			//	};
 
-				//case PseudoFunctions.TRY_CONVERT_OR_DEFAULT:
-				//	// COALESCE(CAST(x AS <type>?), default)
-				//	return new SqlExpression(
-				//			func.Type,
-				//			"COALESCE(CAST({0} AS {1}?), {2})",
-				//			Precedence.Primary,
-				//			func.Parameters[2],    // value
-				//			func.Parameters[0],    // type
-				//			func.Parameters[3])    // default
-				//	{
-				//		CanBeNull =
-				//				func.Parameters[2].CanBeNullable(NullabilityContext) ||
-				//				func.Parameters[3].CanBeNullable(NullabilityContext)
-				//	};
+			////----------------------------------------------------------------
+			//// CharIndex (there is no POSITION analog in YDB; using FIND)
+			//case "CharIndex":
+			//	switch (func.Parameters.Length)
+			//	{
+			//		// CharIndex(substr, str)
+			//		case 2:
+			//			return new SqlExpression(
+			//				func.Type,
+			//				"COALESCE(FIND({1}, {0}) + 1, 0)",
+			//				Precedence.Primary,
+			//				func.Parameters[0],    // substring
+			//				func.Parameters[1]);   // source
 
-				////----------------------------------------------------------------
-				//// CharIndex (there is no POSITION analog in YDB; using FIND)
-				//case "CharIndex":
-				//	switch (func.Parameters.Length)
-				//	{
-				//		// CharIndex(substr, str)
-				//		case 2:
-				//			return new SqlExpression(
-				//				func.Type,
-				//				"COALESCE(FIND({1}, {0}) + 1, 0)",
-				//				Precedence.Primary,
-				//				func.Parameters[0],    // substring
-				//				func.Parameters[1]);   // source
+			//		// CharIndex(substr, str, start)
+			//		case 3:
+			//			return new SqlExpression(
+			//				func.Type,
+			//				"COALESCE(FIND(SUBSTRING({1}, {2} - 1), {0}) + {2}, 0)",
+			//				Precedence.Primary,
+			//				func.Parameters[0],    // substring
+			//				func.Parameters[1],    // source
+			//				func.Parameters[2]);   // start
+			//	}
 
-				//		// CharIndex(substr, str, start)
-				//		case 3:
-				//			return new SqlExpression(
-				//				func.Type,
-				//				"COALESCE(FIND(SUBSTRING({1}, {2} - 1), {0}) + {2}, 0)",
-				//				Precedence.Primary,
-				//				func.Parameters[0],    // substring
-				//				func.Parameters[1],    // source
-				//				func.Parameters[2]);   // start
-				//	}
-
-				//	break;
-			}
+			//	break;
+		}
 
 		//// ------------------------------------------------------------------
 		//// CAST bool → CASE

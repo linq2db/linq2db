@@ -138,15 +138,20 @@ namespace LinqToDB.Internal.DataProvider.Translation
 								: translationContext.ExpressionFactory
 									.SearchCondition(isOr: true)
 									.AddRange(
-									field.MapValues.Select(
-										v => translationContext.ExpressionFactory.Equal(
-											objPlaceholder.Sql,
-											translationContext.ExpressionFactory.Value(fromType, v.Value))));
+										field.MapValues.Select(
+											v => translationContext.ExpressionFactory.Equal(
+												objPlaceholder.Sql,
+												translationContext.ExpressionFactory.Value(fromType, v.Value))));
 
 							(cases ??= []).Add(
 								new SqlCaseExpression.CaseItem(
 									cond,
-									translationContext.ExpressionFactory.Value(toType, FormattableString.Invariant($"{field.OrigValue}"))));
+									translationContext.ExpressionFactory.Value(
+										toType,
+										string.Create(CultureInfo.InvariantCulture, $"{field.OrigValue}")
+									)
+								)
+							);
 						}
 					}
 

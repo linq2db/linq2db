@@ -3776,7 +3776,7 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				SqlUnaryOperation.Negation        => '-',
 				SqlUnaryOperation.BitwiseNegation => '~',
-				_                                 => throw new LinqToDBException($"Unsupported unary operation {op}")
+				_                                 => throw new LinqToDBException($"Unsupported unary operation {op}"),
 			};
 
 			StringBuilder.Append(opText);

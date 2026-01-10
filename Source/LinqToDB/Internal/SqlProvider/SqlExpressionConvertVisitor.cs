@@ -1445,7 +1445,7 @@ namespace LinqToDB.Internal.SqlProvider
 							element.Precedence);
 					}
 
-					if (element.Operation == "+" && element.Expr2 is SqlUnaryExpression { Operation: SqlUnaryOperation.Negation, Expr: var expr2 })
+					if (string.Equals(element.Operation, "+", StringComparison.Ordinal) && element.Expr2 is SqlUnaryExpression { Operation: SqlUnaryOperation.Negation, Expr: var expr2 })
 					{
 						return new SqlBinaryExpression(
 							element.Type,

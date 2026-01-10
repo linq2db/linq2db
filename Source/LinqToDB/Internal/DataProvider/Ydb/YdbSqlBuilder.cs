@@ -506,7 +506,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 			var orderBy = ConvertElement(selectQuery.OrderBy);
 
-			IReadOnlyList<SqlOrderByItem> nonConstant = orderBy.Items.All(i => !QueryHelper.IsConstantFast(i.Expression))
+			var nonConstant =
+				orderBy.Items.TrueForAll(i => !QueryHelper.IsConstantFast(i.Expression))
 				? orderBy.Items
 				: orderBy.Items.Where(i => !QueryHelper.IsConstantFast(i.Expression))
 					.ToList();

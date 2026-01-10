@@ -32,16 +32,15 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
-			switch (element.Operation)
+			return element.Operation switch
 			{
-				case "%": return new SqlFunction(element.Type, "Mod", element.Expr1, element.Expr2);
-				case "&": return new SqlFunction(element.Type, "Bin_And", element.Expr1, element.Expr2);
-				case "|": return new SqlFunction(element.Type, "Bin_Or", element.Expr1, element.Expr2);
-				case "^": return new SqlFunction(element.Type, "Bin_Xor", element.Expr1, element.Expr2);
-				case "+" when element.SystemType == typeof(string): return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
-			}
-
-			return base.ConvertSqlBinaryExpression(element);
+				"%"                                           => new SqlFunction(element.Type, "Mod", element.Expr1, element.Expr2),
+				"&"                                           => new SqlFunction(element.Type, "Bin_And", element.Expr1, element.Expr2),
+				"|"                                           => new SqlFunction(element.Type, "Bin_Or", element.Expr1, element.Expr2),
+				"^"                                           => new SqlFunction(element.Type, "Bin_Xor", element.Expr1, element.Expr2),
+				"+" when element.SystemType == typeof(string) => new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
+				_                                             => base.ConvertSqlBinaryExpression(element),
+			};
 		}
 
 		protected virtual bool? GetCaseSensitiveParameter(SqlPredicate.SearchString predicate)
@@ -55,7 +54,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				bool boolValue => boolValue,
 				_ => null,
 			};
-			}
+		}
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
