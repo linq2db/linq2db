@@ -543,9 +543,9 @@ namespace LinqToDB.Internal.Linq.Builder
 						throw new InvalidOperationException();
 
 					var columnDescriptor = QueryHelper.GetColumnDescriptor(placeholder.Sql);
+					var sqlType          = QueryHelper.GetDbDataType(placeholder.Sql, MappingSchema);
 
-					var valueType = columnDescriptor?.GetDbDataType(true).SystemType
-					                ?? placeholder.Type;
+					var valueType = sqlType.SystemType;
 
 					var canBeNull = nullability.CanBeNull(placeholder.Sql) || placeholder.Type.IsNullableType;
 

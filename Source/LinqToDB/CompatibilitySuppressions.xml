@@ -163,6 +163,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Ydb.Translation.YdbMemberTranslator.StringMemberTranslator.ConfigureConcat(LinqToDB.Linq.Translation.AggregateFunctionBuilder,System.Boolean,System.Boolean,System.Func{LinqToDB.Linq.Translation.ISqlExpressionFactory,LinqToDB.DbDataType,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression[],LinqToDB.Internal.SqlQuery.ISqlExpression})</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlQuery.QueryHelper.IsAggregationOrWindowFunction(LinqToDB.Internal.SqlQuery.IQueryElement)</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
@@ -192,6 +199,13 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.Conversion.ConvertBuilder.GetConverter(LinqToDB.Mapping.MappingSchema,System.Type,System.Type)</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Ydb.Translation.YdbMemberTranslator.StringMemberTranslator.ConfigureConcat(LinqToDB.Linq.Translation.AggregateFunctionBuilder,System.Boolean,System.Boolean,System.Func{LinqToDB.Linq.Translation.ISqlExpressionFactory,LinqToDB.DbDataType,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression[],LinqToDB.Internal.SqlQuery.ISqlExpression})</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -227,6 +241,13 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.Conversion.ConvertBuilder.GetConverter(LinqToDB.Mapping.MappingSchema,System.Type,System.Type)</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Ydb.Translation.YdbMemberTranslator.StringMemberTranslator.ConfigureConcat(LinqToDB.Linq.Translation.AggregateFunctionBuilder,System.Boolean,System.Boolean,System.Func{LinqToDB.Linq.Translation.ISqlExpressionFactory,LinqToDB.DbDataType,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression[],LinqToDB.Internal.SqlQuery.ISqlExpression})</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -262,6 +283,13 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.Conversion.ConvertBuilder.GetConverter(LinqToDB.Mapping.MappingSchema,System.Type,System.Type)</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Ydb.Translation.YdbMemberTranslator.StringMemberTranslator.ConfigureConcat(LinqToDB.Linq.Translation.AggregateFunctionBuilder,System.Boolean,System.Boolean,System.Func{LinqToDB.Linq.Translation.ISqlExpressionFactory,LinqToDB.DbDataType,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression[],LinqToDB.Internal.SqlQuery.ISqlExpression})</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -315,6 +343,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.DataProvider.Ydb.Translation.YdbMemberTranslator.StringMemberTranslator.ConfigureConcat(LinqToDB.Linq.Translation.AggregateFunctionBuilder,System.Boolean,System.Boolean,System.Func{LinqToDB.Linq.Translation.ISqlExpressionFactory,LinqToDB.DbDataType,LinqToDB.Internal.SqlQuery.ISqlExpression,LinqToDB.Internal.SqlQuery.ISqlExpression[],LinqToDB.Internal.SqlQuery.ISqlExpression})</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.SqlQuery.QueryHelper.IsAggregationOrWindowFunction(LinqToDB.Internal.SqlQuery.IQueryElement)</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
@@ -441,245 +476,2240 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.CompareTo</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.BetweenPredicate</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlExtendedFunction</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.Column</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlFragment</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.Comment</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlFrameBoundary</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.ConditionalInsertClause</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlFrameClause</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.CreateTableStatement</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlFunctionArgument</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.CteClause</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlWindowOrderItem</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.DeleteStatement</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.CompareTo</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.DropTableStatement</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.ExistsPredicate</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.ExprExprPredicate</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.ExprPredicate</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.FalsePredicate</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.FromClause</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.GroupByClause</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.GroupingSet</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.HavingClause</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InListPredicate</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InsertClause</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InsertOrUpdateStatement</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InsertStatement</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InSubQueryPredicate</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.IsDistinctPredicate</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.IsNullPredicate</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.IsTruePredicate</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.JoinedTable</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.LikePredicate</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.MergeOperationClause</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.MergeStatement</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.MultiInsertStatement</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.NotPredicate</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.OrderByClause</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.OrderByItem</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.OutputClause</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SearchCondition</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SearchStringPredicate</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SelectClause</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SelectStatement</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SetExpression</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SetOperator</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlAliasPlaceholder</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCase</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCast</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCoalesce</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCondition</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCteTable</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlDataType</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlExtension</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlInlinedExpression</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlInlinedToSqlExpression</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlQuery</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlQueryExtension</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlRawSqlTable</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlRow</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlTable</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlTableLikeSource</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlValue</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlValuesTable</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.TableSource</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.TruePredicate</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.TruncateTableStatement</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.UpdateClause</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.UpdateStatement</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.WhereClause</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.WithClause</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.BetweenPredicate</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlExtendedFunction</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.Column</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlFragment</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.Comment</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlFrameBoundary</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.ConditionalInsertClause</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlFrameClause</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.CreateTableStatement</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlFunctionArgument</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.CteClause</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlWindowOrderItem</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.DeleteStatement</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.CompareTo</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.DropTableStatement</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.ExistsPredicate</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.ExprExprPredicate</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.ExprPredicate</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.FalsePredicate</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.FromClause</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.GroupByClause</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.GroupingSet</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.HavingClause</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InListPredicate</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InsertClause</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InsertOrUpdateStatement</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InsertStatement</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InSubQueryPredicate</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.IsDistinctPredicate</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.IsNullPredicate</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.IsTruePredicate</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.JoinedTable</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.LikePredicate</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.MergeOperationClause</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.MergeStatement</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.MultiInsertStatement</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.NotPredicate</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.OrderByClause</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.OrderByItem</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.OutputClause</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SearchCondition</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SearchStringPredicate</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SelectClause</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SelectStatement</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SetExpression</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SetOperator</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlAliasPlaceholder</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCase</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCast</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCoalesce</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCondition</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCteTable</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlDataType</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlExtension</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlInlinedExpression</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlInlinedToSqlExpression</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlQuery</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlQueryExtension</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlRawSqlTable</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlRow</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlTable</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlTableLikeSource</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlValue</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlValuesTable</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.TableSource</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.TruePredicate</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.TruncateTableStatement</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.UpdateClause</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.UpdateStatement</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.WhereClause</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.WithClause</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.BetweenPredicate</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlExtendedFunction</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.Column</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlFragment</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.Comment</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlFrameBoundary</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.ConditionalInsertClause</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlFrameClause</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.CreateTableStatement</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlFunctionArgument</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.CteClause</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlWindowOrderItem</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.DeleteStatement</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.CompareTo</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.DropTableStatement</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.ExistsPredicate</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.ExprExprPredicate</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.ExprPredicate</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.FalsePredicate</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.FromClause</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.GroupByClause</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.GroupingSet</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.HavingClause</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InListPredicate</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InsertClause</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InsertOrUpdateStatement</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InsertStatement</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InSubQueryPredicate</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.IsDistinctPredicate</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.IsNullPredicate</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.IsTruePredicate</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.JoinedTable</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.LikePredicate</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.MergeOperationClause</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.MergeStatement</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.MultiInsertStatement</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.NotPredicate</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.OrderByClause</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.OrderByItem</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.OutputClause</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SearchCondition</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SearchStringPredicate</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SelectClause</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SelectStatement</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SetExpression</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SetOperator</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlAliasPlaceholder</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCase</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCast</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCoalesce</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCondition</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCteTable</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlDataType</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlExtension</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlInlinedExpression</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlInlinedToSqlExpression</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlQuery</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlQueryExtension</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlRawSqlTable</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlRow</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlTable</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlTableLikeSource</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlValue</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlValuesTable</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.TableSource</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.TruePredicate</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.TruncateTableStatement</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.UpdateClause</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.UpdateStatement</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.WhereClause</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.WithClause</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.BetweenPredicate</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlExtendedFunction</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.Column</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlFragment</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.Comment</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlFrameBoundary</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.ConditionalInsertClause</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlFrameClause</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.CreateTableStatement</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlFunctionArgument</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.CteClause</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlWindowOrderItem</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.DeleteStatement</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.CompareTo</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.DropTableStatement</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.ExistsPredicate</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.ExprExprPredicate</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.ExprPredicate</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.FalsePredicate</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.FromClause</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.GroupByClause</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.GroupingSet</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.HavingClause</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InListPredicate</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InsertClause</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InsertOrUpdateStatement</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InsertStatement</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InSubQueryPredicate</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.IsDistinctPredicate</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.IsNullPredicate</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.IsTruePredicate</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.JoinedTable</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.LikePredicate</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.MergeOperationClause</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.MergeStatement</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.MultiInsertStatement</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.NotPredicate</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.OrderByClause</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.OrderByItem</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.OutputClause</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SearchCondition</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SearchStringPredicate</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SelectClause</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SelectStatement</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SetExpression</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SetOperator</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlAliasPlaceholder</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCase</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCast</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCoalesce</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCondition</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCteTable</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlDataType</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlExtension</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlInlinedExpression</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlInlinedToSqlExpression</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlQuery</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlQueryExtension</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlRawSqlTable</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlRow</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlTable</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlTableLikeSource</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlValue</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlValuesTable</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.TableSource</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.TruePredicate</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.TruncateTableStatement</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.UpdateClause</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.UpdateStatement</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.WhereClause</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.WithClause</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.BetweenPredicate</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlExtendedFunction</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.Column</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlFragment</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.Comment</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlFrameBoundary</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.ConditionalInsertClause</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlFrameClause</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.CreateTableStatement</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlFunctionArgument</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.CteClause</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0011</DiagnosticId>
-    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlWindowOrderItem</Target>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.DeleteStatement</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.DropTableStatement</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.ExistsPredicate</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.ExprExprPredicate</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.ExprPredicate</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.FalsePredicate</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.FromClause</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.GroupByClause</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.GroupingSet</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.HavingClause</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InListPredicate</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InsertClause</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InsertOrUpdateStatement</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InsertStatement</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.InSubQueryPredicate</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.IsDistinctPredicate</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.IsNullPredicate</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.IsTruePredicate</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.JoinedTable</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.LikePredicate</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.MergeOperationClause</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.MergeStatement</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.MultiInsertStatement</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.NotPredicate</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.OrderByClause</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.OrderByItem</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.OutputClause</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SearchCondition</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SearchStringPredicate</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SelectClause</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SelectStatement</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SetExpression</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SetOperator</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlAliasPlaceholder</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCase</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCast</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCoalesce</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCondition</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlCteTable</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlDataType</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlExtension</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlInlinedExpression</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlInlinedToSqlExpression</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlQuery</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlQueryExtension</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlRawSqlTable</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlRow</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlTable</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlTableLikeSource</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlValue</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.SqlValuesTable</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.TableSource</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.TruePredicate</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.TruncateTableStatement</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.UpdateClause</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.UpdateStatement</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.WhereClause</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0011</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlQuery.QueryElementType.WithClause</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
