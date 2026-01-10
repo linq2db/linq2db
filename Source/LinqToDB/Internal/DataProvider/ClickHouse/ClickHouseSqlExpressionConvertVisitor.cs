@@ -103,14 +103,22 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			return base.ConvertSearchStringPredicate(predicate);
 		}
 
+		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
+		{
+			switch (element.Operation)
+			{
+				case SqlUnaryOperation.BitwiseNegation:
+					return new SqlFunction(element.Type, "bitNot", element.Expr);
+				case SqlUnaryOperation.Negation:
+					return new SqlFunction(element.Type, "negate", element.Expr);
+			}
+
+			return base.ConvertSqlUnaryExpression(element);
+		}
+
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
-			var newElement = base.ConvertSqlBinaryExpression(element);
-
-			if (newElement is not SqlBinaryExpression binaryExpression)
-				return Visit(newElement);
-
-			switch (binaryExpression)
+			switch (element)
 			{
 				case SqlBinaryExpression(var type, var left, "%", var right):
 				{
@@ -133,9 +141,10 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 						rewrite = true;
 					}
 
-					return !rewrite
-						? element
-						: PseudoFunctions.MakeCast(new SqlBinaryExpression(typeof(double), left, "%", right), QueryHelper.GetDbDataType(element, MappingSchema), new SqlDataType(new DbDataType(typeof(double), DataType.Double)));
+					if (rewrite)
+						return PseudoFunctions.MakeCast(new SqlBinaryExpression(typeof(double), left, "%", right), QueryHelper.GetDbDataType(element, MappingSchema), new SqlDataType(new DbDataType(typeof(double), DataType.Double)));
+
+					break;
 				}
 				case SqlBinaryExpression(var type, var left, "/", var right):
 				{
@@ -163,7 +172,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 						return new SqlCastExpression(newBinary, leftType, null, false);
 					}
 
-					return element;
+					break;
 				}
 
 				case SqlBinaryExpression(var type, var left, "|", var right)    :
@@ -172,8 +181,6 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					return new SqlFunction(type, "bitAnd", left, right);
 				case SqlBinaryExpression(var type, var left, "^", var right)    :
 					return new SqlFunction(type, "bitXor", left, right);
-				case SqlBinaryExpression(var type, SqlValue(-1), "*", var right):
-					return new SqlFunction(type, "negate", right);
 
 				case SqlBinaryExpression(var type, var ex1, "+", var ex2) when type.SystemType == typeof(string):
 				{
@@ -211,9 +218,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 						return func;
 					}
 				}
-
-				default: return element;
 			}
+
+			return base.ConvertSqlBinaryExpression(element);
 		}
 
 		// ClickHouse provides several ways to specify type:

@@ -38,6 +38,21 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		#endregion
 
+		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
+		{
+			if (element.Operation is SqlUnaryOperation.BitwiseNegation)
+			{
+				var argType = QueryHelper.GetDbDataType(element.Expr, MappingSchema);
+				if (!argType.IsUnsignedType())
+				{
+					var expr = new SqlCastExpression(element.Expr, argType.ToUnsigned(), null, false);
+					return new SqlUnaryExpression(element.Type, expr, element.Operation, element.Precedence);
+				}
+			}
+
+			return base.ConvertSqlUnaryExpression(element);
+		}
+
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			switch (element.Operation)
@@ -126,59 +141,62 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				_                        => base.ConvertSqlFunction(func),
 			};
 
-			////----------------------------------------------------------------
-			//// save cast
-			//case PseudoFunctions.TRY_CONVERT:
-			//	// CAST(x AS <type>?) → null
-			//	return new SqlExpression(
-			//		func.Type,
-			//		"CAST({0} AS {1}?)",
-			//		Precedence.Primary,
-			//		func.Parameters[2],      // value
-			//		func.Parameters[0]);     // type
+				case PseudoFunctions.REPLACE:
+					return func.WithName("Unicode::ReplaceAll");
 
-			//case PseudoFunctions.TRY_CONVERT_OR_DEFAULT:
-			//	// COALESCE(CAST(x AS <type>?), default)
-			//	return new SqlExpression(
-			//			func.Type,
-			//			"COALESCE(CAST({0} AS {1}?), {2})",
-			//			Precedence.Primary,
-			//			func.Parameters[2],    // value
-			//			func.Parameters[0],    // type
-			//			func.Parameters[3])    // default
-			//	{
-			//		CanBeNull =
-			//				func.Parameters[2].CanBeNullable(NullabilityContext) ||
-			//				func.Parameters[3].CanBeNullable(NullabilityContext)
-			//	};
+				////----------------------------------------------------------------
+				//// save cast
+				//case PseudoFunctions.TRY_CONVERT:
+				//	// CAST(x AS <type>?) → null
+				//	return new SqlExpression(
+				//		func.Type,
+				//		"CAST({0} AS {1}?)",
+				//		Precedence.Primary,
+				//		func.Parameters[2],      // value
+				//		func.Parameters[0]);     // type
 
-			////----------------------------------------------------------------
-			//// CharIndex (there is no POSITION analog in YDB; using FIND)
-			//case "CharIndex":
-			//	switch (func.Parameters.Length)
-			//	{
-			//		// CharIndex(substr, str)
-			//		case 2:
-			//			return new SqlExpression(
-			//				func.Type,
-			//				"COALESCE(FIND({1}, {0}) + 1, 0)",
-			//				Precedence.Primary,
-			//				func.Parameters[0],    // substring
-			//				func.Parameters[1]);   // source
+				//case PseudoFunctions.TRY_CONVERT_OR_DEFAULT:
+				//	// COALESCE(CAST(x AS <type>?), default)
+				//	return new SqlExpression(
+				//			func.Type,
+				//			"COALESCE(CAST({0} AS {1}?), {2})",
+				//			Precedence.Primary,
+				//			func.Parameters[2],    // value
+				//			func.Parameters[0],    // type
+				//			func.Parameters[3])    // default
+				//	{
+				//		CanBeNull =
+				//				func.Parameters[2].CanBeNullable(NullabilityContext) ||
+				//				func.Parameters[3].CanBeNullable(NullabilityContext)
+				//	};
 
-			//		// CharIndex(substr, str, start)
-			//		case 3:
-			//			return new SqlExpression(
-			//				func.Type,
-			//				"COALESCE(FIND(SUBSTRING({1}, {2} - 1), {0}) + {2}, 0)",
-			//				Precedence.Primary,
-			//				func.Parameters[0],    // substring
-			//				func.Parameters[1],    // source
-			//				func.Parameters[2]);   // start
-			//	}
+				////----------------------------------------------------------------
+				//// CharIndex (there is no POSITION analog in YDB; using FIND)
+				//case "CharIndex":
+				//	switch (func.Parameters.Length)
+				//	{
+				//		// CharIndex(substr, str)
+				//		case 2:
+				//			return new SqlExpression(
+				//				func.Type,
+				//				"COALESCE(FIND({1}, {0}) + 1, 0)",
+				//				Precedence.Primary,
+				//				func.Parameters[0],    // substring
+				//				func.Parameters[1]);   // source
 
-			//	break;
-		}
+				//		// CharIndex(substr, str, start)
+				//		case 3:
+				//			return new SqlExpression(
+				//				func.Type,
+				//				"COALESCE(FIND(SUBSTRING({1}, {2} - 1), {0}) + {2}, 0)",
+				//				Precedence.Primary,
+				//				func.Parameters[0],    // substring
+				//				func.Parameters[1],    // source
+				//				func.Parameters[2]);   // start
+				//	}
+
+				//	break;
+			}
 
 		//// ------------------------------------------------------------------
 		//// CAST bool → CASE

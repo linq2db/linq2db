@@ -229,8 +229,6 @@ namespace LinqToDB.Mapping
 
 		#region Default Values
 
-		const FieldAttributes EnumField = FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal;
-
 		/// <summary>
 		/// Returns default value for specified type.
 		/// Default value is a value, used instead of <c>NULL</c> value, read from database.
@@ -248,10 +246,8 @@ namespace LinqToDB.Mapping
 
 			if (type.IsEnum)
 			{
-				var mapValues = GetMapValues(type);
+				var mapValues = GetMapValues(type)!;
 
-				if (mapValues != null)
-				{
 					object? value = null;
 
 					foreach (var f in mapValues)
@@ -268,7 +264,6 @@ namespace LinqToDB.Mapping
 						return value;
 					}
 				}
-			}
 
 			return DefaultValue.GetValue(type, this);
 		}
@@ -308,10 +303,8 @@ namespace LinqToDB.Mapping
 
 			if (type.IsEnum)
 			{
-				var mapValues = GetMapValues(type);
+				var mapValues = GetMapValues(type)!;
 
-				if (mapValues != null)
-				{
 					object? value = null;
 
 					foreach (var f in mapValues)
@@ -328,7 +321,6 @@ namespace LinqToDB.Mapping
 						return true;
 					}
 				}
-			}
 
 			return type.IsNullableOrReferenceType();
 		}
@@ -1038,15 +1030,15 @@ namespace LinqToDB.Mapping
 				e;
 		}
 
-        /// <summary>
+		/// <summary>
         /// Set conversion expressions for conversion from and to <see langword="string"/> for basic types (<see
         /// langword="byte"/>, <see langword="sbyte"/>, <see langword="short"/>, <see langword="ushort"/>, <see
         /// langword="int"/>, <see langword="uint"/>, <see langword="long"/>, <see langword="ulong"/> , <see
         /// langword="float"/>, <see langword="double"/>, <see langword="decimal"/>, <see cref="DateTime"/>, <see
         /// cref="DateTimeOffset"/>) using provided culture format providers.
-        /// </summary>
-        /// <param name="info">Culture with format providers for conversions.</param>
-        public void SetCultureInfo(CultureInfo info)
+		/// </summary>
+		/// <param name="info">Culture with format providers for conversions.</param>
+		public void SetCultureInfo(CultureInfo info)
 		{
 			SetConvertExpression((sbyte     v) =>           v.      ToString(info.NumberFormat));
 			SetConvertExpression((sbyte?    v) =>           v!.Value.ToString(info.NumberFormat));
@@ -1639,7 +1631,7 @@ namespace LinqToDB.Mapping
 					return o.Value;
 			}
 
-			return SqlDataType.Undefined;
+			return SqlDataType.MakeUndefined(type);
 		}
 
 		/// <summary>
@@ -1696,11 +1688,7 @@ namespace LinqToDB.Mapping
 
 			if (underlyingType.IsEnum)
 			{
-				var attrs = new List<MapValueAttribute>();
-
-				foreach (var f in underlyingType.GetFields())
-					if ((f.Attributes & EnumField) == EnumField)
-						attrs.AddRange(GetAttributes<MapValueAttribute>(underlyingType, f));
+				var attrs = GetMapValues(underlyingType)!.SelectMany(f => f.MapValues).ToList();
 
 				if (attrs.Count == 0)
 				{
@@ -1757,7 +1745,7 @@ namespace LinqToDB.Mapping
 			if (underlyingType != type)
 				return GetDataType(underlyingType);
 
-			return SqlDataType.Undefined;
+			return SqlDataType.MakeUndefined(type);
 		}
 
 		#endregion
@@ -1766,6 +1754,9 @@ namespace LinqToDB.Mapping
 
 		ConcurrentDictionary<Type,MapValue[]?>? _mapValues;
 
+		const FieldAttributes EnumField = FieldAttributes.Public | FieldAttributes.Static | FieldAttributes.Literal;
+
+		// TODO: v7: make it throw for non-enum type
 		/// <summary>
 		/// Returns enum type mapping information or <see langword="null"/> for non-enum types.
 		/// </summary>
@@ -1780,24 +1771,14 @@ namespace LinqToDB.Mapping
 					type,
 					static (type, @this) =>
 					{
-						var underlyingType = type.UnwrappedNullableType;
-
-						if (underlyingType.IsEnum)
+						if (type.IsEnum)
 						{
-							List<MapValue>? fields = null;
-
-							foreach (var f in underlyingType.GetFields())
-							{
-								if ((f.Attributes & EnumField) == EnumField)
-								{
-									var attrs = @this.GetAttributes<MapValueAttribute>(underlyingType, f);
-									(fields ??= new()).Add(new MapValue(Enum.Parse(underlyingType, f.Name, false), attrs));
+							return type.GetFields()
+								.Where(f => (f.Attributes & EnumField) == EnumField)
+								.Select(f => new MapValue(f.GetValue(null)!, GetAttributes<MapValueAttribute>(type, f)))
+								.ToArray();
 								}
 							}
-
-							if (fields?.Exists(f => f.MapValues.Length > 0) == true)
-								return fields.ToArray();
-						}
 
 						return null;
 					},

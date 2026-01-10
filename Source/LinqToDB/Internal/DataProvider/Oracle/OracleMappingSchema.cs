@@ -128,13 +128,16 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		internal static void ConvertStringToSql(StringBuilder stringBuilder, SqlDataType type, string value)
 		{
+			string? prefix = null;
 			switch (type.Type.DataType)
 			{
-				case DataType.Text : stringBuilder.Append("TO_CLOB(");  break;
-				case DataType.NText: stringBuilder.Append("TO_NCLOB("); break;
+				case DataType.Text    : stringBuilder.Append("TO_CLOB(");  break;
+				case DataType.NText   : stringBuilder.Append("TO_NCLOB("); break;
+				case DataType.NVarChar:
+				case DataType.NChar   : prefix = "N"; break;
 			}
-			
-			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversionAction, value, null);
+
+			DataTools.ConvertStringToSql(stringBuilder, "||", prefix, AppendConversionAction, value, null);
 
 			switch (type.Type.DataType)
 			{

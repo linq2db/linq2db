@@ -128,10 +128,12 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					break;
 
 				case DataType.NVarChar       :
+					// 4000 vs 2000: length specified in chars, but type limit is 4000 bytes
+					// which could result in different char limits based on db encoding
 					if (type.Length is null or > 4000 or < 1)
-						StringBuilder.Append("VarChar2(4000)");
+						StringBuilder.Append("NVarChar2(2000)");
 					else
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"VarChar2({type.Length})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"NVarChar2({type.Length})");
 					break;
 
 				case DataType.Boolean        : StringBuilder.Append("NUMBER(1)");                 break;
@@ -434,22 +436,22 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					var sequenceName = ConvertInline(MakeIdentitySequenceName(truncate.Table!.TableName.Name), ConvertType.SequenceName);
 					StringBuilder
 						.AppendFormat(
-							CultureInfo.InvariantCulture,
+						CultureInfo.InvariantCulture,
 							"""
 							DECLARE
-								l_value number;
-							BEGIN
-								-- Select the next value of the sequence
-								EXECUTE IMMEDIATE 'SELECT {0}.NEXTVAL FROM dual' INTO l_value;
+	l_value number;
+BEGIN
+	-- Select the next value of the sequence
+	EXECUTE IMMEDIATE 'SELECT {0}.NEXTVAL FROM dual' INTO l_value;
 
-								-- Set a negative increment for the sequence, with value = the current value of the sequence
-								EXECUTE IMMEDIATE 'ALTER SEQUENCE {0} INCREMENT BY -' || l_value || ' MINVALUE 0';
+	-- Set a negative increment for the sequence, with value = the current value of the sequence
+	EXECUTE IMMEDIATE 'ALTER SEQUENCE {0} INCREMENT BY -' || l_value || ' MINVALUE 0';
 
-								-- Select once from the sequence, to take its current value back to 0
-								EXECUTE IMMEDIATE 'select {0}.NEXTVAL FROM dual' INTO l_value;
+	-- Select once from the sequence, to take its current value back to 0
+	EXECUTE IMMEDIATE 'select {0}.NEXTVAL FROM dual' INTO l_value;
 
-								-- Set the increment back to 1
-								EXECUTE IMMEDIATE 'ALTER SEQUENCE {0} INCREMENT BY 1 MINVALUE 0';
+	-- Set the increment back to 1
+	EXECUTE IMMEDIATE 'ALTER SEQUENCE {0} INCREMENT BY 1 MINVALUE 0';
 							END;
 							""",
 							sequenceName

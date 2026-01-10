@@ -7,6 +7,7 @@ using System.Linq;
 using LinqToDB.Common;
 using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Linq.Translation;
@@ -953,6 +954,22 @@ namespace LinqToDB.Internal.SqlProvider
 			return newElement;
 		}
 
+		protected internal override IQueryElement VisitSqlUnaryExpression(SqlUnaryExpression element)
+		{
+			var newElement = base.VisitSqlUnaryExpression(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			newElement = ConvertSqlUnaryExpression(element);
+			if (!ReferenceEquals(newElement, element))
+			{
+				newElement = Visit(Optimize(newElement));
+			}
+
+			return newElement;
+		}
+
 		protected internal override IQueryElement VisitSqlInlinedSqlExpression(SqlInlinedSqlExpression element)
 		{
 			var newElement = base.VisitSqlInlinedSqlExpression(element);
@@ -1194,6 +1211,23 @@ namespace LinqToDB.Internal.SqlProvider
 
 		public virtual ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
 		{
+			for (var i = 0; i < element.Expressions.Length; i++)
+			{
+				if (element.Expressions[i] is SqlValue { Value: null })
+				{
+					if (element.Expressions.Length == 2)
+						return element.Expressions[(i + 1) % 2];
+					else
+					{
+						var newElements = new ISqlExpression[element.Expressions.Length - 1];
+						Array.Copy(element.Expressions, newElements, i);
+						Array.Copy(element.Expressions, i + 1, newElements, i, element.Expressions.Length - 1 - i);
+
+						return new SqlCoalesceExpression(newElements);
+					}
+				}
+			}
+
 			var type = QueryHelper.GetDbDataType(element.Expressions[0], MappingSchema);
 			return new SqlFunction(type, "Coalesce", parametersNullability: ParametersNullabilityType.IfAllParametersNullable, element.Expressions);
 		}
@@ -1379,6 +1413,7 @@ namespace LinqToDB.Internal.SqlProvider
 			switch (element.Operation)
 			{
 				case "+":
+				case "||":
 				{
 					if (element.Expr1.SystemType == typeof(string) && element.Expr2.SystemType != typeof(string))
 					{
@@ -1388,7 +1423,7 @@ namespace LinqToDB.Internal.SqlProvider
 							len = 100;
 
 						return new SqlBinaryExpression(
-							element.SystemType,
+							element.Type,
 							element.Expr1,
 							element.Operation,
 							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr2, QueryHelper.GetDbDataType(element.Expr1, MappingSchema).WithLength(len.Value))),
@@ -1403,15 +1438,95 @@ namespace LinqToDB.Internal.SqlProvider
 							len = 100;
 
 						return new SqlBinaryExpression(
-							element.SystemType,
+							element.Type,
 							(ISqlExpression)Visit(PseudoFunctions.MakeCast(element.Expr1, QueryHelper.GetDbDataType(element.Expr2, MappingSchema).WithLength(len.Value))),
 							element.Operation,
 							element.Expr2,
 							element.Precedence);
 					}
 
+					if (element.Operation == "+" && element.Expr2 is SqlUnaryExpression { Operation: SqlUnaryOperation.Negation, Expr: var expr2 })
+					{
+						return new SqlBinaryExpression(
+							element.Type,
+							element.Expr1,
+							"-",
+							expr2,
+							element.Precedence);
+					}
+
 					break;
 				}
+
+				case "-":
+				{
+					if (element.Expr2 is SqlUnaryExpression { Operation: SqlUnaryOperation.Negation, Expr: var expr2 })
+					{
+						return new SqlBinaryExpression(
+							element.Type,
+							element.Expr1,
+							"+",
+							expr2,
+							element.Precedence);
+					}
+
+					break;
+				}
+
+				case "*":
+				{
+					if (element.Expr2 is SqlValue { Value: -1 })
+					{
+						return new SqlUnaryExpression(
+							element.Type,
+							element.Expr1,
+							SqlUnaryOperation.Negation,
+							Precedence.Unary);
+					}
+
+					if (element.Expr1 is SqlValue { Value: -1 })
+					{
+						return new SqlUnaryExpression(
+							element.Type,
+							element.Expr2,
+							SqlUnaryOperation.Negation,
+							Precedence.Unary);
+					}
+
+					break;
+				}
+
+				case "/":
+				{
+					if (element.Expr2 is SqlValue { Value: -1 })
+					{
+						return new SqlUnaryExpression(
+							element.Type,
+							element.Expr1,
+							SqlUnaryOperation.Negation,
+							Precedence.Unary);
+					}
+
+					break;
+				}
+			}
+
+			return element;
+		}
+
+		public virtual ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
+		{
+			if (element is
+				{
+					Operation: SqlUnaryOperation.Negation,
+					Expr: SqlUnaryExpression
+					{
+						Operation: SqlUnaryOperation.Negation,
+						Expr: var expr
+					}
+				})
+			{
+				return expr;
 			}
 
 			return element;

@@ -18,6 +18,14 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 		protected override bool SupportsNullIf => false;
 
+		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
+		{
+			if (element.Operation is SqlUnaryOperation.BitwiseNegation)
+				return new SqlFunction(element.Type, "BITNOT", element.Expr);
+
+			return base.ConvertSqlUnaryExpression(element);
+		}
+
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			return element.Operation switch
@@ -33,7 +41,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				"&" => new SqlFunction(element.Type, "BitAnd", element.Expr1, element.Expr2),
 				"|" => new SqlFunction(element.Type, "BitOr", element.Expr1, element.Expr2),
 				"^" => new SqlFunction(element.Type, "BitXor", element.Expr1, element.Expr2),
-				"+" => element.SystemType.IsStringType ? new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence) : element,
+				"+" when element.SystemType.IsStringType => element.SystemType.IsStringType ? new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
 				_   => base.ConvertSqlBinaryExpression(element),
 			};
 		}
@@ -61,7 +69,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				"NChar" or "NVarChar"        => new SqlFunction(func.Type, "Char", func.Parameters),
 				_                            => base.ConvertSqlFunction(func),
 			};
-		}
+			}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{

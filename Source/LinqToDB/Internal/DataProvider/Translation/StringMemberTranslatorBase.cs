@@ -21,6 +21,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod(() => System.Data.Linq.SqlClient.SqlMethods.Like(null, null, '~'), TranslateLike);
 #endif
 			Registration.RegisterMethod(() => Sql.Replace("", "", ""), TranslateSqlReplace);
+			Registration.RegisterMethod(() => Sql.Replace("", (char?)null, null), TranslateSqlReplace);
 			Registration.RegisterMember(() => "".Length, TranslateLength);
 
 			// ReSharper disable ReturnValueOfPureMethodIsNotUsed

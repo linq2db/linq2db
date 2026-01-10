@@ -846,6 +846,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 					case QueryElementType.SqlNullabilityExpression : GetType(((SqlNullabilityExpression)e).SystemType)          ; break;
 					case QueryElementType.SqlAnchor                : GetType(((SqlAnchor)e).SystemType)                         ; break;
 					case QueryElementType.SqlBinaryExpression      : GetType(((SqlBinaryExpression)     e).SystemType)          ; break;
+					case QueryElementType.SqlUnaryExpression       : GetType(((SqlUnaryExpression)      e).SystemType)          ; break;
 					case QueryElementType.SqlDataType              : GetType(((SqlDataType)             e).Type.SystemType)     ; break;
 					case QueryElementType.SqlValue                 : GetType(((SqlValue)                e).ValueType.SystemType); break;
 					case QueryElementType.SqlTable                 : GetType(((SqlTable)                e).ObjectType)          ; break;
@@ -976,6 +977,18 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							Append(elem.Expr1);
 							Append(elem.Operation);
 							Append(elem.Expr2);
+							Append(elem.Precedence);
+
+							break;
+						}
+
+					case QueryElementType.SqlUnaryExpression :
+						{
+							var elem = (SqlUnaryExpression)e;
+
+							Append(elem.SystemType);
+							Append(elem.Expr);
+							Append((int)elem.Operation);
 							Append(elem.Precedence);
 
 							break;
@@ -2030,6 +2043,18 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 
 							break;
 						}
+
+					case QueryElementType.SqlUnaryExpression:
+					{
+						var systemType = ReadType()!;
+						var expr       = Read<ISqlExpression>()!;
+						var operation  = (SqlUnaryOperation)ReadInt()!;
+						var precedence = ReadInt();
+
+						obj = new SqlUnaryExpression(systemType, expr, operation, precedence);
+
+						break;
+					}
 
 					case QueryElementType.SqlValue :
 						{

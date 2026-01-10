@@ -22,22 +22,26 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		#endregion
 
+		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
+		{
+			if (element.Operation is SqlUnaryOperation.BitwiseNegation)
+				return new SqlFunction(element.Type, "BIN_NOT", element.Expr);
+
+			return base.ConvertSqlUnaryExpression(element);
+		}
+
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
-			var newElement = base.ConvertSqlBinaryExpression(element);
-
-			if (!ReferenceEquals(newElement, element))
-				return Visit(newElement);
-
-			return element.Operation switch
+			switch (element.Operation)
 			{
-				"%" => new SqlFunction(element.Type, "Mod", element.Expr1, element.Expr2),
-				"&" => new SqlFunction(element.Type, "Bin_And", element.Expr1, element.Expr2),
-				"|" => new SqlFunction(element.Type, "Bin_Or", element.Expr1, element.Expr2),
-				"^" => new SqlFunction(element.Type, "Bin_Xor", element.Expr1, element.Expr2),
-				"+" when element.SystemType == typeof(string) => new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
-				_ => element,
-			};
+				case "%": return new SqlFunction(element.Type, "Mod", element.Expr1, element.Expr2);
+				case "&": return new SqlFunction(element.Type, "Bin_And", element.Expr1, element.Expr2);
+				case "|": return new SqlFunction(element.Type, "Bin_Or", element.Expr1, element.Expr2);
+				case "^": return new SqlFunction(element.Type, "Bin_Xor", element.Expr1, element.Expr2);
+				case "+" when element.SystemType == typeof(string): return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
+			}
+
+			return base.ConvertSqlBinaryExpression(element);
 		}
 
 		protected virtual bool? GetCaseSensitiveParameter(SqlPredicate.SearchString predicate)
@@ -51,7 +55,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				bool boolValue => boolValue,
 				_ => null,
 			};
-		}
+			}
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
@@ -202,7 +206,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				{ Name: PseudoFunctions.LENGTH } => func.WithName("CHAR_LENGTH"),
 				_                                => base.ConvertSqlFunction(func),
 			};
-		}
+			}
 
 		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
 		{

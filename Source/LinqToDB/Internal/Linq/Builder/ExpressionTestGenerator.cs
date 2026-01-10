@@ -620,18 +620,19 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (type.IsEnum)
 			{
-				// var ed = mappingSchema.GetEntityDescriptor(type); -> todo entity descriptor should contain enum mappings, otherwise fluent mappings will not be included
+				var enumMappings = mappingSchema.GetMapValues(type)!;
 				_typeBuilder.Append("\tenum ").Append(MangleName(isUserName, type.Name, "T")).AppendLine(" {");
-				foreach (var nm in Enum.GetNames(type))
+
+				foreach (var mappings in enumMappings)
 				{
-					var attr = "";
-					var valueAttribute = mappingSchema.GetAttribute<MapValueAttribute>(type, type.GetField(nm)!);
-					if (valueAttribute != null)
+					foreach (var valueAttribute in mappings.MapValues)
 					{
-						attr = "[MapValue(\"" + valueAttribute.Value + "\")] ";
+						// TODO: this is not correct, we should generate literal of proper type instead of always string
+						_typeBuilder.AppendLine(CultureInfo.InvariantCulture, $"\t\t[MapValue(\"{valueAttribute.Value}\")]");
 					}
 
-					_typeBuilder.AppendLine(CultureInfo.InvariantCulture, $"\t\t{attr}{nm} = {Convert.ToInt64(Enum.Parse(type, nm), CultureInfo.InvariantCulture)},");
+					// TODO: will not work for UInt64-based enums, and in general we should generate base type
+					_typeBuilder.AppendLine(CultureInfo.InvariantCulture, $"\t\t{mappings.OrigValue} = {Convert.ToInt64(mappings.OrigValue, CultureInfo.InvariantCulture)},");
 				}
 
 				_typeBuilder.Remove(_typeBuilder.Length - 1, 1);

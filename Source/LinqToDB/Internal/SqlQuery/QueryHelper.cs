@@ -344,6 +344,51 @@ namespace LinqToDB.Internal.SqlQuery
 			return null;
 		}
 
+		public static DbDataType GetCommonDbDataType(IEnumerable<ISqlExpression> expressions, MappingSchema mappingSchema)
+		{
+			DbDataType? commonType = null;
+			foreach (var expr in expressions)
+			{
+				var type = GetDbDataType(expr, mappingSchema);
+				if (commonType == null)
+				{
+					commonType = type;
+				}
+				else
+				{
+					commonType = commonType.Value
+						.WithLength(commonType.Value.Length > type.Length ? commonType.Value.Length : type.Length);
+
+					var commonIntLength = commonType.Value.Precision - commonType.Value.Scale;
+					var newIntLength    = type.Precision - type.Scale;
+
+					commonType = commonType.Value
+						.WithScale(commonType.Value.Scale > type.Scale ? commonType.Value.Scale : type.Scale);
+					commonType = commonType.Value
+						.WithPrecision((commonIntLength > newIntLength ? commonIntLength : newIntLength) + commonType.Value.Scale);
+
+					if (commonType.Value.DataType == DataType.Undefined)
+					{
+						commonType = commonType.Value.WithDataType(type.DataType);
+					}
+					else
+					{
+						var newType = (commonType.Value.DataType, type.DataType) switch
+						{
+							(_, DataType.NVarChar)            => DataType.NVarChar,
+							(DataType.Char, DataType.VarChar) => DataType.VarChar,
+							(DataType.Char, DataType.NChar)   => DataType.NChar,
+							_                                 => commonType.Value.DataType
+						};
+
+						commonType = commonType.Value.WithDataType(newType);
+					}
+				}
+			}
+
+			return commonType ?? SqlDataType.MakeUndefined(typeof(object)).Type;
+		}
+
 		public static DbDataType GetDbDataType(ISqlExpression expr, MappingSchema mappingSchema)
 		{
 			var result = GetDbDataType(expr);

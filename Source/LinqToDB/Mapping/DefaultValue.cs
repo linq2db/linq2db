@@ -55,10 +55,9 @@ namespace LinqToDB.Mapping
 			if (type.IsEnum)
 			{
 				var ms = mappingSchema ?? MappingSchema.Default;
-				var mapValues = ms.GetMapValues(type);
+				var mapValues = ms.GetMapValues(type)!;
 
-				if (mapValues != null)
-					value = mapValues.FirstOrDefault(f => f.MapValues.Any(a => a.Value == null))?.OrigValue;
+				value = mapValues.FirstOrDefault(f => f.MapValues.Any(a => a.Value == null))?.OrigValue;
 			}
 
 			if (value == null && !type.IsNullableOrReferenceType())

@@ -504,11 +504,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 						foreach (var op in setQuery.SetOperators)
 						{
-							if (op.SelectQuery.SourceID == 115)
-							{
-
-							}
-
 							if (index < op.SelectQuery.Select.Columns.Count)
 								op.SelectQuery.Select.Columns.RemoveAt(index);
 						}

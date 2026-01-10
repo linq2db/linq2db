@@ -1406,6 +1406,7 @@ namespace LinqToDB.Linq
 
 		#region Sql specific
 
+		// TODO: move to translators and implement YDB using Re2::Replace regexp function
 		// TODO: Made private or remove in v7
 		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		// Missing support for trimChars: Access, SqlCe, SybaseASE
@@ -1431,6 +1432,7 @@ namespace LinqToDB.Linq
 			return str?.TrimEnd(trimChars);
 		}
 
+		// TODO: move to translators and implement YDB using Re2::Replace regexp function
 		// TODO: Made private or remove in v7
 		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		// Missing support for trimChars: Access, SqlCe, SybaseASE

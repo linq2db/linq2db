@@ -490,5 +490,45 @@ namespace Tests.Linq
 
 			db.Person.Where(p => IsAnyOf2(p.ID, ids)).Delete();
 		}
+
+		sealed class WarehouseTableDto
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+			public SomeEnum Value { get; set; }
+
+			public static readonly WarehouseTableDto[] Data =
+			[
+				new WarehouseTableDto() { Id = 1, Value = SomeEnum.SomeValue | SomeEnum.SomeOtherValue | SomeEnum.FifthValue }
+			];
+
+			[Flags]
+			public enum SomeEnum
+			{
+				SomeValue      = 1,
+				SecondValue    = 2,
+				SomeOtherValue = 4,
+				FourthValue    = 8,
+				FifthValue     = 16,
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5286")]
+		public void MapInvertOperator([DataSources] string context)
+		{
+			using var db  = GetDataContext(context);
+			using var tb  = db.CreateLocalTable(WarehouseTableDto.Data);
+
+			var addMask = WarehouseTableDto.SomeEnum.SomeValue | WarehouseTableDto.SomeEnum.SecondValue;
+			var removeMask = WarehouseTableDto.SomeEnum.SomeOtherValue | WarehouseTableDto.SomeEnum.FourthValue;
+
+			tb
+				.Set(w => w.Value, w => (w.Value | addMask) & ~removeMask)
+				.Update();
+
+			var record = tb.Single();
+
+			Assert.That(record.Value, Is.EqualTo(addMask | WarehouseTableDto.SomeEnum.FifthValue));
+		}
 	}
 }

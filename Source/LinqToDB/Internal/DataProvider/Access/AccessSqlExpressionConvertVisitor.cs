@@ -4,6 +4,7 @@ using LinqToDB.Internal.DataProvider.Translation;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Access
 {
@@ -177,6 +178,14 @@ namespace LinqToDB.Internal.DataProvider.Access
 			};
 		}
 
+		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
+		{
+			if (element.Operation is SqlUnaryOperation.BitwiseNegation)
+				return new SqlBinaryExpression(element.Type, new SqlValue(-1), "-", element.Expr);
+
+			return base.ConvertSqlUnaryExpression(element);
+		}
+
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
 			var expression = cast.Expression;
@@ -212,5 +221,19 @@ namespace LinqToDB.Internal.DataProvider.Access
 			return expression;
 		}
 
+		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
+		{
+			switch (element)
+			{
+				case SqlBinaryExpression(var type, var ex1, "%", var ex2):
+					return new SqlBinaryExpression(type, ex1, "MOD", ex2, Precedence.Additive - 1);
+				case SqlBinaryExpression(var type, var ex1, "&", var ex2):
+					return new SqlBinaryExpression(type, ex1, "BAND", ex2, Precedence.Bitwise);
+				case SqlBinaryExpression(var type, var ex1, "|", var ex2):
+					return new SqlBinaryExpression(type, ex1, "BOR", ex2, Precedence.Bitwise - 1);
+			}
+
+			return base.ConvertSqlBinaryExpression(element);
+		}
 	}
 }

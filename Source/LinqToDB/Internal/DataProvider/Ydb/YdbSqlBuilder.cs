@@ -498,5 +498,52 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 			base.BuildSqlCastExpression(castExpression);
 			StringBuilder.Append(')');
 		}
+
+		protected override void BuildOrderByClause(SelectQuery selectQuery)
+		{
+			if (selectQuery.OrderBy.Items.Count == 0)
+				return;
+
+			var orderBy = ConvertElement(selectQuery.OrderBy);
+
+			IReadOnlyList<SqlOrderByItem> nonConstant = orderBy.Items.All(i => !QueryHelper.IsConstantFast(i.Expression))
+				? orderBy.Items
+				: orderBy.Items.Where(i => !QueryHelper.IsConstantFast(i.Expression))
+					.ToList();
+
+			if (nonConstant.Count == 0)
+				return;
+
+			AppendIndent();
+
+			StringBuilder.Append("ORDER BY").AppendLine();
+
+			Indent++;
+
+			for (var i = 0; i < nonConstant.Count; i++)
+			{
+				AppendIndent();
+
+				var item            = nonConstant[i];
+				var orderExpression = item.Expression;
+
+				// this looks like a bug in YDB. If sort expression present in select with alias - you can sort by alias name only
+				var col = selectQuery.Select.Columns.Find(c => c.Expression.Equals(item.Expression));
+				if (col?.Alias != null)
+					orderExpression = new SqlFragment(col.Alias);
+
+				BuildExpressionForOrderBy(orderExpression);
+
+				if (item.IsDescending)
+					StringBuilder.Append(" DESC");
+
+				if (i + 1 < nonConstant.Count)
+					StringBuilder.AppendLine(Comma);
+				else
+					StringBuilder.AppendLine();
+			}
+
+			Indent--;
+		}
 	}
 }

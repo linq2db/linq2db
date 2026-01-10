@@ -35,6 +35,14 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return predicate;
 		}
 
+		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
+		{
+			if (element.Operation is SqlUnaryOperation.BitwiseNegation)
+				return new SqlFunction(element.Type, "BITNOT", element.Expr);
+
+			return base.ConvertSqlUnaryExpression(element);
+		}
+
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			return element.Operation switch
@@ -44,7 +52,6 @@ namespace LinqToDB.Internal.DataProvider.Informix
 				"|"                                           => new SqlFunction(element.Type, "BitOr", element.Expr1, element.Expr2),
 				"^"                                           => new SqlFunction(element.Type, "BitXor", element.Expr1, element.Expr2),
 				"+" when element.SystemType == typeof(string) => new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
-				"+"                                           => element,
 				_                                             => base.ConvertSqlBinaryExpression(element),
 			};
 		}
