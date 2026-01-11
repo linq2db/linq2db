@@ -124,56 +124,61 @@ namespace LinqToDB.Mapping
 			var schemaInfo = CreateMappingSchemaInfo(configuration, this);
 #pragma warning restore CA2214 // Do not call overridable methods in constructors
 
-			if (schemas == null || schemas.Length == 0)
+			switch (schemas)
 			{
-				Schemas = [schemaInfo, Default.Schemas[0]];
-
-				if (configuration.Length == 0 && !IsLockable)
-					_configurationID = schemaInfo.ConfigurationID;
-
-				ValueToSqlConverter = new (Default.ValueToSqlConverter);
-			}
-			else if (schemas.Length == 1)
-			{
-				Schemas = new MappingSchemaInfo[1 + schemas[0].Schemas.Length];
-				Schemas[0] = schemaInfo;
-
-				Array.Copy(schemas[0].Schemas, 0, Schemas, 1, schemas[0].Schemas.Length);
-
-				var baseConverters = new ValueToSqlConverter[1 + schemas[0].ValueToSqlConverter.BaseConverters.Length];
-
-				baseConverters[0] = schemas[0].ValueToSqlConverter;
-
-				Array.Copy(schemas[0].ValueToSqlConverter.BaseConverters, 0, baseConverters, 1, schemas[0].ValueToSqlConverter.BaseConverters.Length);
-
-				ValueToSqlConverter = new (baseConverters);
-
-				if (configuration!.Length == 0 && !IsLockable)
-					_configurationID = Schemas[1].ConfigurationID;
-			}
-			else
-			{
-				var schemaList     = new Dictionary<MappingSchemaInfo,  int>(schemas.Length);
-				var baseConverters = new Dictionary<ValueToSqlConverter,int>(10);
-
-				var i = 0;
-				var j = 0;
-
-				schemaList[schemaInfo] = i++;
-
-				foreach (var schema in schemas)
+				case null or []:
 				{
-					foreach (var sc in schema.Schemas)
-						schemaList[sc] = i++;
+					Schemas = [schemaInfo, Default.Schemas[0]];
 
-					baseConverters[schema.ValueToSqlConverter] = j++;
+					if (configuration.Length == 0 && !IsLockable)
+						_configurationID = schemaInfo.ConfigurationID;
 
-					foreach (var bc in schema.ValueToSqlConverter.BaseConverters)
-						baseConverters[bc] = j++;
+					ValueToSqlConverter = new (Default.ValueToSqlConverter);
+					break;
 				}
 
-				Schemas             = schemaList.OrderBy(static s => s.Value).Select(static s => s.Key).ToArray();
-				ValueToSqlConverter = new (baseConverters.OrderBy(static c => c.Value).Select(static c => c.Key).ToArray());
+				case [var ms]:
+				{
+					Schemas = [schemaInfo, .. ms.Schemas];
+
+					ValueToSqlConverter = new(
+						[
+							schemas[0].ValueToSqlConverter,
+							.. schemas[0].ValueToSqlConverter.BaseConverters,
+						]
+					);
+
+					if (configuration!.Length == 0 && !IsLockable)
+						_configurationID = Schemas[1].ConfigurationID;
+
+					break;
+				}
+
+				default:
+				{
+					var schemaList     = new Dictionary<MappingSchemaInfo,  int>(schemas.Length);
+					var baseConverters = new Dictionary<ValueToSqlConverter,int>(10);
+
+					var i = 0;
+					var j = 0;
+
+					schemaList[schemaInfo] = i++;
+
+					foreach (var schema in schemas)
+					{
+						foreach (var sc in schema.Schemas)
+							schemaList[sc] = i++;
+
+						baseConverters[schema.ValueToSqlConverter] = j++;
+
+						foreach (var bc in schema.ValueToSqlConverter.BaseConverters)
+							baseConverters[bc] = j++;
+					}
+
+					Schemas             = schemaList.OrderBy(static s => s.Value).Select(static s => s.Key).ToArray();
+					ValueToSqlConverter = new (baseConverters.OrderBy(static c => c.Value).Select(static c => c.Key).ToArray());
+					break;
+				}
 			}
 
 			InitMetadataReaders(schemas?.Length > 1);
@@ -248,22 +253,22 @@ namespace LinqToDB.Mapping
 			{
 				var mapValues = GetMapValues(type)!;
 
-					object? value = null;
+				object? value = null;
 
-					foreach (var f in mapValues)
-						if (f.MapValues.Any(static a => a.Value == null))
-							value = f.OrigValue;
+				foreach (var f in mapValues)
+					if (f.MapValues.Any(static a => a.Value == null))
+						value = f.OrigValue;
 
-					if (value != null)
+				if (value != null)
+				{
+					lock (_syncRoot)
 					{
-						lock (_syncRoot)
-						{
-							Schemas[0].SetDefaultValue(type, value, resetId: false);
-						}
-
-						return value;
+						Schemas[0].SetDefaultValue(type, value, resetId: false);
 					}
+
+					return value;
 				}
+			}
 
 			return DefaultValue.GetValue(type, this);
 		}
@@ -305,22 +310,22 @@ namespace LinqToDB.Mapping
 			{
 				var mapValues = GetMapValues(type)!;
 
-					object? value = null;
+				object? value = null;
 
-					foreach (var f in mapValues)
-						if (f.MapValues.Any(static a => a.Value == null))
-							value = f.OrigValue;
+				foreach (var f in mapValues)
+					if (f.MapValues.Any(static a => a.Value == null))
+						value = f.OrigValue;
 
-					if (value != null)
+				if (value != null)
+				{
+					lock (_syncRoot)
 					{
-						lock (_syncRoot)
-						{
-							Schemas[0].SetCanBeNull(type, true, resetId: false);
-						}
-
-						return true;
+						Schemas[0].SetCanBeNull(type, true, resetId: false);
 					}
+
+					return true;
 				}
+			}
 
 			return type.IsNullableOrReferenceType();
 		}
@@ -1112,11 +1117,14 @@ namespace LinqToDB.Mapping
 
 		void InitMetadataReaders(bool combine)
 		{
-			if (!combine && Schemas[0].MetadataReader == null && Schemas.Length > 1)
+			if (Schemas.Length <= 0)
+				return;
+
+			if (!combine && Schemas[0].MetadataReader == null)
 			{
 				Schemas[0].MetadataReader = Schemas[1].MetadataReader;
 			}
-			else if (Schemas.Length > 1)
+			else
 			{
 				List<IMetadataReader>? readers = null;
 				HashSet<string>?       hash    = null;
@@ -1158,13 +1166,12 @@ namespace LinqToDB.Mapping
 				var currentReader = Schemas[0].MetadataReader;
 				if (currentReader != null)
 				{
-					var readers = new IMetadataReader[currentReader.Readers.Count + 1];
-
-					readers[0] = reader;
-					for (var i = 0; i < currentReader.Readers.Count; i++)
-						readers[i + 1] = currentReader.Readers[i];
-
-					Schemas[0].MetadataReader = new MetadataReader(readers);
+					Schemas[0].MetadataReader = new MetadataReader(
+						[
+							reader,
+							.. currentReader.Readers,
+						]
+					);
 				}
 				else
 					Schemas[0].MetadataReader = new MetadataReader(reader);
@@ -1426,7 +1433,7 @@ namespace LinqToDB.Mapping
 
 			ValueToSqlConverter = new ();
 
-			InitMetadataReaders(false);
+			InitMetadataReaders(combine: false);
 
 			(_cache, _firstOnlyCache) = CreateAttributeCaches();
 		}

@@ -105,18 +105,18 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			var result = (SqlOutputClause)base.VisitSqlOutputClause(element);
 
-			if (result.OutputColumns != null)
+			if (result.OutputColumns == null)
+				return result;
+
+			var newElements = VisitElements(result.OutputColumns, GetVisitMode(element), e => WrapBooleanExpression(e, includeFields : false));
+			if (!ReferenceEquals(newElements, result.OutputColumns))
 			{
-				var newElements = VisitElements(result.OutputColumns, GetVisitMode(element), e => WrapBooleanExpression(e, includeFields : false));
-				if (!ReferenceEquals(newElements, result.OutputColumns))
+				return new SqlOutputClause()
 				{
-					return new SqlOutputClause()
-					{
-						OutputTable = result.OutputTable,
-						OutputItems = result.OutputItems,
-						OutputColumns = newElements,
-					};
-				}
+					OutputTable = result.OutputTable,
+					OutputItems = result.OutputItems,
+					OutputColumns = newElements,
+				};
 			}
 
 			return result;
@@ -332,12 +332,12 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
-			var caseExpression = new SqlCaseExpression(new DbDataType(typeof(int)),
-				new SqlCaseExpression.CaseItem[]
-				{
+			var caseExpression = new SqlCaseExpression(
+				new DbDataType(typeof(int)),
+				[
 					new(new SqlSearchCondition().AddGreater(element.Expression1, element.Expression2, DataOptions.LinqOptions.CompareNulls), new SqlValue(1)),
 					new(new SqlSearchCondition().AddEqual(element.Expression1, element.Expression2, DataOptions.LinqOptions.CompareNulls), new SqlValue(0)),
-				},
+				],
 				new SqlValue(-1));
 
 			return Visit(Optimize(caseExpression));
@@ -378,14 +378,14 @@ namespace LinqToDB.Internal.SqlProvider
 			searchCondition
 				.AddAnd(sc => sc
 					.Add(new SqlPredicate.IsNull(predicate.Expr1, false))
-					.Add(new SqlPredicate.IsNull(predicate.Expr2, true)
-					))
+					.Add(new SqlPredicate.IsNull(predicate.Expr2, true))
+				)
 				.AddAnd(sc => sc
 					.Add(new SqlPredicate.IsNull(predicate.Expr1, true))
-					.Add(new SqlPredicate.IsNull(predicate.Expr2, false)
-					)
+					.Add(new SqlPredicate.IsNull(predicate.Expr2, false))
 				)
-				.Add(new SqlPredicate.ExprExpr(predicate.Expr1, SqlPredicate.Operator.NotEqual, predicate.Expr2, null)
+				.Add(
+					new SqlPredicate.ExprExpr(predicate.Expr1, SqlPredicate.Operator.NotEqual, predicate.Expr2, null)
 				);
 
 			return searchCondition.MakeNot(predicate.IsNot);
@@ -1613,12 +1613,14 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						var toType = QueryHelper.GetDbDataType(expr, MappingSchema);
 
-						expr = new SqlCaseExpression(toType,
+						expr = new SqlCaseExpression(
+							toType,
 							new SqlCaseExpression.CaseItem[]
 							{
 								new(predicate, trueValue),
 								new(new SqlPredicate.Not(predicate), falseValue),
-							}, new SqlValue(toType, null));
+							},
+							new SqlValue(toType, null));
 					}
 					else if (!withNull || !SqlProviderFlags.SupportsBooleanType || forceConvert)
 					{

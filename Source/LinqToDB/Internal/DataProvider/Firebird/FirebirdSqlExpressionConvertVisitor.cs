@@ -58,8 +58,6 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
-			ISqlExpression expr;
-
 			var caseSensitive = GetCaseSensitiveParameter(predicate);
 
 			// for explicit case-sensitive search we apply "CAST({0} AS BLOB)" to searched string as COLLATE's collation is character set-dependent
@@ -87,37 +85,46 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 					return ConvertSearchStringPredicateViaLike(predicate);
 				}
+
 				case SqlPredicate.SearchString.SearchKind.StartsWith:
 				{
-					expr = new SqlExpression(MappingSchema.GetDbDataType(typeof(bool)),
+					var expr = new SqlExpression(MappingSchema.GetDbDataType(typeof(bool)),
 						predicate.IsNot ? "{0} NOT STARTING WITH {1}" : "{0} STARTING WITH {1}",
 						Precedence.Comparison,
 						SqlFlags.IsPredicate,
 						ParametersNullabilityType.IfAnyParameterNullable,
 						TryConvertToValue(
-							caseSensitive == false
-								? PseudoFunctions.MakeToLower(predicate.Expr1, MappingSchema)
-								: caseSensitive == true
-									? new SqlExpression(MappingSchema.GetDbDataType(typeof(string)), "CAST({0} AS BLOB)", Precedence.Primary, predicate.Expr1)
-									: predicate.Expr1,
-							EvaluationContext),
+							caseSensitive switch
+							{
+								false => PseudoFunctions.MakeToLower(predicate.Expr1, MappingSchema),
+								true  => new SqlExpression(MappingSchema.GetDbDataType(typeof(string)), "CAST({0} AS BLOB)", Precedence.Primary, predicate.Expr1),
+								_     => predicate.Expr1,
+							},
+							EvaluationContext
+						),
 						TryConvertToValue(
 							caseSensitive == false
 								? PseudoFunctions.MakeToLower(predicate.Expr2, MappingSchema)
-								: predicate.Expr2, EvaluationContext)) {CanBeNull = false};
-					break;
+								: predicate.Expr2, EvaluationContext
+						)
+					) { CanBeNull = false };
+
+					return new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.Expr(expr));
 				}
+
 				case SqlPredicate.SearchString.SearchKind.Contains:
 				{
 					if (caseSensitive == false)
 					{
-						expr = new SqlExpression(MappingSchema.GetDbDataType(typeof(bool)),
+						var expr = new SqlExpression(MappingSchema.GetDbDataType(typeof(bool)),
 							predicate.IsNot ? "{0} NOT CONTAINING {1}" : "{0} CONTAINING {1}",
 							precedence : Precedence.Comparison,
 							flags : SqlFlags.IsPredicate,
 							nullabilityType : ParametersNullabilityType.IfAnyParameterNullable,
 							TryConvertToValue(predicate.Expr1, EvaluationContext),
 							TryConvertToValue(predicate.Expr2, EvaluationContext)) { CanBeNull = false };
+
+						return new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.Expr(expr));
 					}
 					else
 					{
@@ -133,14 +140,11 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 						return ConvertSearchStringPredicateViaLike(predicate);
 					}
-
-					break;
 				}
+
 				default:
 					throw new InvalidOperationException($"Unexpected predicate: {predicate.Kind}");
 			}
-
-			return new SqlSearchCondition(false, canBeUnknown: null, new SqlPredicate.Expr(expr));
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
@@ -205,7 +209,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				{ Name: PseudoFunctions.LENGTH } => func.WithName("CHAR_LENGTH"),
 				_                                => base.ConvertSqlFunction(func),
 			};
-			}
+		}
 
 		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
 		{

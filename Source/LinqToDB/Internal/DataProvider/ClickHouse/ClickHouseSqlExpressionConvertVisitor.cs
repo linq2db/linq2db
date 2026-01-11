@@ -50,57 +50,54 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			var searchExpr = predicate.Expr2;
 			var dataExpr   = predicate.Expr1;
 
-			SqlPredicate.Expr? subStrPredicate = null;
-
-			switch (predicate.Kind)
+			var subStrPredicate = predicate.Kind switch
 			{
-				case SqlPredicate.SearchString.SearchKind.StartsWith:
-					if (!caseSensitive)
-					{
-						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(
-								MappingSchema.GetDbDataType(typeof(bool)), "startsWith",
-								PseudoFunctions.MakeToLower(dataExpr, MappingSchema), PseudoFunctions.MakeToLower(searchExpr, MappingSchema)));
-					}
-					else
-					{
-						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(MappingSchema.GetDbDataType(typeof(bool)), "startsWith", dataExpr, searchExpr));
-					}
+				SqlPredicate.SearchString.SearchKind.StartsWith when caseSensitive =>
+					new SqlPredicate.Expr(
+						new SqlFunction(MappingSchema.GetDbDataType(typeof(bool)), "startsWith", dataExpr, searchExpr)
+					),
 
-					break;
+				SqlPredicate.SearchString.SearchKind.StartsWith when !caseSensitive =>
+					new SqlPredicate.Expr(
+						new SqlFunction(
+							MappingSchema.GetDbDataType(typeof(bool)),
+							"startsWith",
+							PseudoFunctions.MakeToLower(dataExpr, MappingSchema),
+							PseudoFunctions.MakeToLower(searchExpr, MappingSchema)
+						)
+					),
 
-				case SqlPredicate.SearchString.SearchKind.EndsWith:
-					if (!caseSensitive)
-					{
-						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(
-								MappingSchema.GetDbDataType(typeof(bool)), "endsWith",
-								PseudoFunctions.MakeToLower(dataExpr, MappingSchema), PseudoFunctions.MakeToLower(searchExpr, MappingSchema)));
-					}
-					else
-					{
-						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(MappingSchema.GetDbDataType(typeof(bool)), "endsWith", dataExpr, searchExpr));
-					}
+				SqlPredicate.SearchString.SearchKind.EndsWith when caseSensitive =>
+					new SqlPredicate.Expr(
+						new SqlFunction(MappingSchema.GetDbDataType(typeof(bool)), "endsWith", dataExpr, searchExpr)
+					),
 
-					break;
+				SqlPredicate.SearchString.SearchKind.EndsWith when !caseSensitive =>
+					new SqlPredicate.Expr(
+						new SqlFunction(
+							MappingSchema.GetDbDataType(typeof(bool)),
+							"endsWith",
+							PseudoFunctions.MakeToLower(dataExpr, MappingSchema),
+							PseudoFunctions.MakeToLower(searchExpr, MappingSchema)
+						)
+					),
 
-				case SqlPredicate.SearchString.SearchKind.Contains:
-					subStrPredicate = new SqlPredicate.ExprExpr(
+				SqlPredicate.SearchString.SearchKind.Contains =>
+					new SqlPredicate.ExprExpr(
 						new SqlFunction(MappingSchema.GetDbDataType(typeof(bool)), caseSensitive ? "position" : "positionCaseInsensitive", dataExpr, searchExpr),
 						SqlPredicate.Operator.Greater,
 						new SqlValue(0),
-						null);
-					break;
-			}
+						unknownAsValue: null
+					),
 
-			if (subStrPredicate != null)
+				_ => null,
+			};
+
+			return subStrPredicate switch
 			{
-				return subStrPredicate.MakeNot(predicate.IsNot);
-			}
-
-			return base.ConvertSearchStringPredicate(predicate);
+				{ } => subStrPredicate.MakeNot(predicate.IsNot),
+				_   => base.ConvertSearchStringPredicate(predicate),
+			};
 		}
 
 		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
