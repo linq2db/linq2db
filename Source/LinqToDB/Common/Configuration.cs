@@ -36,6 +36,7 @@ namespace LinqToDB.Common
 		/// If <c>true</c> - Enum values are stored as by calling ToString().
 		/// Default value: <c>true</c>.
 		/// </summary>
+		[Obsolete("This API doesn't have any effect and planned for removal in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static bool UseEnumValueNameForStringColumns = true;
 
 		/// <summary>

@@ -165,9 +165,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
+		public static ISqlExpression BitNot(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression v)
+		{
+			return new SqlUnaryExpression(dbDataType, v, SqlUnaryOperation.BitwiseNegation, Precedence.Bitwise);
+		}
+
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression Negate(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression v)
 		{
-			return new SqlBinaryExpression(dbDataType, factory.Value(-1), "*", v, Precedence.Multiplicative);
+			return new SqlUnaryExpression(dbDataType, v, SqlUnaryOperation.Negation, Precedence.Unary);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
