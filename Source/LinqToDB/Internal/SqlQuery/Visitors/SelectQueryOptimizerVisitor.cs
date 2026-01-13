@@ -2741,31 +2741,74 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return false;
 		}
 
-		int CountUsage(SelectQuery rootQuery, SqlColumn column)
+		[Flags]
+		enum UsageCountResult
 		{
-			IQueryElement root = rootQuery;
+			None         = 0,
+			Multiple     = 1 << 1,
+			UsedInUpdate = 1 << 2
+		}
+
+		UsageCountResult CountUsage(SelectQuery rootQuery, SqlColumn column)
+		{
+			IQueryElement root        = rootQuery;
+			SelectQuery?  exceptQuery = null;
+			
 			if (_rootElement is not SqlSelectStatement)
 			{
 				root = _rootElement;
 			}
 
-			var counter = 0;
-
-			root.VisitParentFirstAll(e =>
+			if (_rootElement is SqlStatementWithQueryBase statement && statement is not SqlSelectStatement)
 			{
-				// do not search in the same query
-				if (e is SelectQuery sq && sq == column.Parent)
-					return false;
+				exceptQuery = statement.SelectQuery;
+			}
 
-				if (Equals(e, column))
+			var result = UsageCountResult.None;
+
+			SqlColumn? testedColumn = column;
+
+			while (testedColumn != null)
+			{
+				var        counter      = 0;
+				var        current      = testedColumn;
+				SqlColumn? parentColumn = null;
+
+				root.VisitParentFirstAll(e =>
 				{
-					++counter;
+					// do not search in the same query
+					if (e is SelectQuery sq && sq == current.Parent)
+						return false;
+
+					if (e is SqlColumn c)
+					{
+						if (c.Expression.Equals(current))
+						{
+							parentColumn = c;
+						}
+						else if (Equals(e, current))
+						{
+							++counter;
+						}
+					}
+
+					return counter < 2;
+				});
+
+				if (_updateQuery == current.Parent || _updateQuery != null && QueryHelper.EnumerateAccessibleSources(_updateQuery).Any(s => s == current.Parent))
+				{
+					result  |= UsageCountResult.UsedInUpdate;
 				}
 
-				return counter < 2;
-			});
+				if (counter > 1 && exceptQuery != current.Parent)
+				{
+					result |= UsageCountResult.Multiple;
+				}
 
-			return counter;
+				testedColumn = parentColumn;
+			}
+
+			return result;
 		}
 
 		static bool IsInSelectPart(SelectQuery rootQuery, SqlColumn column)
@@ -2919,7 +2962,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 									// where we can start analyzing that we can move join to subquery
 
 									var usageCount = CountUsage(sq, testedColumn);
-									var isUnique   = usageCount <= 1;
+									var isUnique   = !usageCount.HasFlag(UsageCountResult.Multiple);
 
 									if (!isUnique)
 									{
@@ -2931,7 +2974,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 										if (_providerFlags.IsApplyJoinSupported)
 										{
-											if (_updateQuery == sq)
+											if (usageCount.HasFlag(UsageCountResult.UsedInUpdate))
 											{
 												// updating query - cannot move multi column usage to subquery
 												isValid = false;
@@ -2947,7 +2990,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 										}
 									}
 
-									if (usageCount == 1 && !IsInSelectPart(sq, testedColumn))
+									if (isUnique && !IsInSelectPart(sq, testedColumn))
 									{
 										var moveToSubquery = IsInOrderByPart(sq, testedColumn) && !_providerFlags.IsSubQueryOrderBySupported;
 										if (moveToSubquery)

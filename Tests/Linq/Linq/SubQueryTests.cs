@@ -982,7 +982,6 @@ namespace Tests.Linq
 			public IEnumerable<Review> Reviews { get; set; } = null!;
 		}
 
-		[ThrowsRequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4458")]
 		public void Issue4458Test1([DataSources] string context)
 		{
@@ -1007,7 +1006,6 @@ namespace Tests.Linq
 			AssertQuery(filteredByScore);
 		}
 
-		[ThrowsRequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4458")]
 		public void Issue4458Test2([DataSources] string context)
 		{
