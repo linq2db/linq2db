@@ -2159,28 +2159,33 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				case ExpressionType.Not:
 				{
-					if (_buildPurpose is BuildPurpose.Sql)
+					if (node.Type.UnwrapNullableType() == typeof(bool))
 					{
-						var predicateExpr = Visit(node.Operand);
-
-						if (predicateExpr is SqlPlaceholderExpression placeholder)
+						if (_buildPurpose is BuildPurpose.Sql)
 						{
-							var predicate = placeholder.Sql as ISqlPredicate;
-							if (predicate is null)
+							var predicateExpr = Visit(node.Operand);
+
+							if (predicateExpr is SqlPlaceholderExpression placeholder)
 							{
-								var withNull = !node.Operand.Type.IsNullableType;
+								var predicate = placeholder.Sql as ISqlPredicate;
+								if (predicate is null)
+								{
+									var withNull = !node.Operand.Type.IsNullableType;
 
-								predicate = ConvertExpressionToPredicate(
-									placeholder.Sql,
-									withNull: withNull,
-									forceEquality: withNull && placeholder.Sql.CanBeNullableOrUnknown(GetNullabilityContext(), false));
+									predicate = ConvertExpressionToPredicate(
+										placeholder.Sql,
+										withNull: withNull,
+										forceEquality: withNull && placeholder.Sql.CanBeNullableOrUnknown(GetNullabilityContext(), false));
+								}
+
+								var condition = new SqlSearchCondition();
+								condition.Add(predicate.MakeNot());
+								return CreatePlaceholder(condition, node);
 							}
-
-							var condition = new SqlSearchCondition();
-							condition.Add(predicate.MakeNot());
-							return CreatePlaceholder(condition, node);
 						}
 					}
+					else
+						goto case ExpressionType.UnaryPlus;
 
 					break;
 				}
@@ -2199,10 +2204,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						switch (node.NodeType)
 						{
-							case ExpressionType.UnaryPlus: return CreatePlaceholder(placeholder.Sql, node);
+							case ExpressionType.UnaryPlus:
+								return CreatePlaceholder(placeholder.Sql, node);
+
+							case ExpressionType.Not:
+								return CreatePlaceholder(new SqlUnaryExpression(MappingSchema.GetDbDataType(t), placeholder.Sql, SqlUnaryOperation.BitwiseNegation, Precedence.Bitwise), node);
+
 							case ExpressionType.Negate:
 							case ExpressionType.NegateChecked:
-								return CreatePlaceholder(new SqlBinaryExpression(t, new SqlValue(-1), "*", placeholder.Sql, Precedence.Multiplicative), node);
+								return CreatePlaceholder(new SqlUnaryExpression(MappingSchema.GetDbDataType(t), placeholder.Sql, SqlUnaryOperation.Negation, Precedence.Unary), node);
 						}
 					}
 
@@ -2275,6 +2285,9 @@ namespace LinqToDB.Internal.Linq.Builder
 							{
 								return Visit(placeholder.WithType(node.Type));
 							}
+
+							if (placeholder.Sql.SystemType == node.Type)
+								return Visit(placeholder);
 
 							return Visit(CreatePlaceholder(PseudoFunctions.MakeCast(placeholder.Sql, MappingSchema.GetDbDataType(node.Type), s), node));
 						}
@@ -2363,7 +2376,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public bool HandleAsParameter(Expression node, [NotNullWhen(true)] out Expression? translated)
 		{
-			if (_buildPurpose is BuildPurpose.Sql)
+			if (_buildPurpose is BuildPurpose.Sql && Builder.CanBeEvaluatedOnClient(node))
 			{
 				var sqlParam = Builder.ParametersContext.BuildParameter(BuildContext, node, CurrentDescriptor, alias: Alias);
 
@@ -4638,32 +4651,18 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!type.UnwrapNullableType().IsEnum)
 				return null;
 
-			var dic = new Dictionary<object, object?>();
-
-			var mapValues = MappingSchema.GetMapValues(type);
-
-			if (mapValues != null)
-				foreach (var mv in mapValues)
-					if (!dic.ContainsKey(mv.OrigValue))
-						dic.Add(mv.OrigValue, mv.MapValues[0].Value);
-
 			switch (value.NodeType)
 			{
 				case ExpressionType.Constant:
 				{
-					var name = Enum.GetName(type, ((ConstantExpression)value).Value!);
+					var origValue = ((ConstantExpression)value).Value!;
+					var mapValue  = origValue;
 
-					// ReSharper disable ConditionIsAlwaysTrueOrFalse
-					// ReSharper disable HeuristicUnreachableCode
-					if (name == null)
-						return null;
-					// ReSharper restore HeuristicUnreachableCode
-					// ReSharper restore ConditionIsAlwaysTrueOrFalse
-
-					var origValue = Enum.Parse(type, name, false);
-
-					if (!dic.TryGetValue(origValue, out var mapValue))
-						mapValue = origValue;
+					foreach (var enumVal in MappingSchema.GetMapValues(type.UnwrapNullableType())!)
+					{
+						if (origValue.Equals(enumVal.OrigValue) && enumVal.MapValues.Length > 0)
+							mapValue = enumVal.MapValues[0].Value;
+					}
 
 					SqlValue sqlvalue;
 					var ce = MappingSchema.GetConverter(new DbDataType(type), new DbDataType(typeof(DataParameter)), false, ConversionType.Common);
