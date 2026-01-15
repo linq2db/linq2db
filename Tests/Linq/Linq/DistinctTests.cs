@@ -164,6 +164,248 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void AssociationAfterDistinct1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child
+				.Distinct()
+				.OrderBy(ch => ch.Parent!.Children.Count);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void AssociationAfterDistinct2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child
+				.LoadWith(c => c.Parent!.Children) // for AssertQuery
+				.Select(c => new { Child = c, Parent = c.Parent })
+				.Distinct()
+				.OrderBy(r => r.Parent!.Children.Count)
+				.Select(r => new { r.Child, r.Parent, Count = r.Parent!.Children.Count });
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void AssociationAfterDistinct3([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child
+				.LoadWith(c => c.Parent) // for AssertQuery
+				.Distinct()
+				.Select(ch => new { ch.ChildID, ch.ParentID, ParentValue = ch.Parent!.Value1 });
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void AssociationAfterDistinctWithWhere([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child
+				.LoadWith(c => c.Parent) // for AssertQuery
+				.Where(c => c.ChildID > 10)
+				.Distinct()
+				.OrderBy(ch => ch.Parent!.ParentID)
+				.ThenBy(ch => ch.ChildID);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void AssociationAfterDistinctWithMultipleNavigations([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.GrandChild
+				.LoadWith(gc => gc.Child!.Parent) // for AssertQuery
+				.Distinct()
+				.Select(gc => new { gc.GrandChildID, ParentID = gc.Child!.ParentID, GrandParentValue = gc.Child!.Parent!.Value1 })
+				.OrderBy(x => x.GrandChildID);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void AssociationAfterDistinctWithFilter([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child
+				.LoadWith(c => c.Parent)
+				.Distinct()
+				.Where(ch => ch.Parent!.ParentID > 1)
+				.OrderBy(ch => ch.ChildID);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void DistinctWithManyToOneAssociation([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child
+				.LoadWith(c => c.Parent) // for AssertQuery
+				.Select(c => new { c.ChildID, c.Parent })
+				.Distinct()
+				.OrderBy(r => r.ChildID);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void DistinctBeforeLoadWith([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child
+				.Where(c => c.ParentID < 4)
+				.Distinct()
+				.LoadWith(c => c.Parent)
+				.OrderBy(c => c.ChildID);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void DistinctWithOneToManyAssociation([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.LoadWith(p => p.Children) // for AssertQuery
+				.Select(p => new { p.ParentID, ChildCount = p.Children.Count })
+				.Distinct()
+				.OrderBy(r => r.ParentID);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void AssociationAfterDistinctWithGroupBy([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child
+				.LoadWith(c => c.Parent) // for AssertQuery
+				.Distinct()
+				.GroupBy(ch => ch.Parent!.ParentID)
+				.Select(g => new { ParentID = g.Key, Count = g.Count() })
+				.OrderBy(r => r.ParentID);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void DistinctAfterAssociationProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child
+				.LoadWith(c => c.Parent) // for AssertQuery
+				.Select(c => new { c.ChildID, ParentValue = c.Parent!.Value1 })
+				.Distinct()
+				.OrderBy(r => r.ChildID);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void MultipleDistinctWithAssociations([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Child
+				.LoadWith(c => c.Parent) // for AssertQuery
+				.Select(c => c.Parent!.ParentID)
+				.Distinct();
+
+			var query2 = db.Parent
+				.Where(p => query1.Contains(p.ParentID))
+				.Select(p => new { p.ParentID, p.Value1 })
+				.Distinct()
+				.OrderBy(r => r.ParentID);
+
+			AssertQuery(query2);
+		}
+
+		[Test]
+		public void DistinctWithAssociationInSubquery([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.LoadWith(p => p.Children) // for AssertQuery
+				.Where(p => p.Children.Select(c => c.ChildID).Distinct().Count() > 0)
+				.Select(p => new { p.ParentID, p.Value1 })
+				.OrderBy(r => r.ParentID);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void DistinctWithNestedAssociationNavigation([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.GrandChild
+				.LoadWith(gc => gc.Child!.Parent) // for AssertQuery
+				.Select(gc => new { gc.GrandChildID, gc.Child!.Parent!.Value1 })
+				.Distinct()
+				.OrderBy(r => r.GrandChildID);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void DistinctWithAssociationAndJoin([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = from c in db.Child.LoadWith(c => c.Parent).Distinct()
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select new { c.ChildID, ParentFromAssociation = c.Parent!.ParentID, ParentFromJoin = p.ParentID };
+
+			AssertQuery(query.OrderBy(r => r.ChildID));
+		}
+
+		[Test]
+		public void AssociationAfterDistinctWithThenLoad([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child
+				.LoadWith(c => c.Parent)
+				.ThenLoad(p => p!.Children)
+				.Distinct()
+				.OrderBy(c => c.ChildID);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void DistinctWithMultipleAssociationLevels([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.GrandChild
+				.LoadWith(gc => gc.Child!.Parent) // for AssertQuery
+				.Distinct()
+				.Where(gc => gc.Child!.Parent!.ParentID > 0)
+				.Select(gc => new { gc.GrandChildID, gc.Child!.ChildID, gc.Child.Parent!.ParentID })
+				.OrderBy(r => r.GrandChildID);
+
+			AssertQuery(query);
+		}
+
 		[Table]
 		public class DistinctOrderByTable
 		{
