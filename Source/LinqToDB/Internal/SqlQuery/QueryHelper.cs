@@ -1623,6 +1623,11 @@ namespace LinqToDB.Internal.SqlQuery
 			return null != root.Find(element, static (tf, e) => ReferenceEquals(tf, e));
 		}
 
+		public static bool Any(this IQueryElement root, Func<IQueryElement, bool> predicate)
+		{
+			return null != root.Find(predicate);
+		}
+
 		public static bool HasQueryParameter(this IQueryElement root)
 		{
 			return null != root.Find(static e =>

@@ -164,6 +164,8 @@ namespace Tests.Linq
 			}
 		}
 
+		[ThrowsRequiredOuterJoins(TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllSybase, TestProvName.AllInformix)]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void AssociationAfterDistinct1([DataSources] string context)
 		{
@@ -176,6 +178,8 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[ThrowsRequiredOuterJoins(TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllSybase, TestProvName.AllInformix)]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void AssociationAfterDistinct2([DataSources] string context)
 		{
@@ -337,8 +341,10 @@ namespace Tests.Linq
 			AssertQuery(query2);
 		}
 
+		[ThrowsRequiredOuterJoins(TestProvName.AllAccess)]
+		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
-		public void DistinctWithAssociationInSubquery([DataSources(TestProvName.AllClickHouse)] string context)
+		public void DistinctWithAssociationInSubquery([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -352,7 +358,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DistinctWithNestedAssociationNavigation([DataSources(TestProvName.AllClickHouse)] string context)
+		public void DistinctWithNestedAssociationNavigation([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 

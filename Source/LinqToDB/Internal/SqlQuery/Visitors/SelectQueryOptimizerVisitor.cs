@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
@@ -1450,6 +1451,46 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return true;
 		}
 
+		bool IsValidForOrderBy(SelectQuery parentQuery, SelectQuery subQuery)
+		{
+			if (parentQuery.OrderBy.IsEmpty)
+			{
+				return true;
+			}
+
+			if (!_providerFlags.IsSubQueryOrderBySupported)
+			{
+				if (parentQuery.OrderBy.Any(e =>
+				    {
+					    if (e is SqlColumn column && column.Parent == subQuery)
+					    {
+						    return true;
+					    }
+
+					    return false;
+				    }))
+				{
+					return false;
+				}
+			}
+
+			if (!_providerFlags.IsOrderByAggregateFunctionSupported && QueryHelper.IsAggregationQuery(subQuery))
+			{
+				if (parentQuery.OrderBy.Any(e =>
+				    {
+					    if (e is SqlColumn column && column.Parent == subQuery)
+						    return true;
+
+					    return false;
+				    }))
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
 		bool IsMovingUpValid(SelectQuery parentQuery, SqlTableSource tableSource, SelectQuery subQuery, out HashSet<ISqlPredicate>? havingDetected)
 		{
 			havingDetected = null;
@@ -1482,22 +1523,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					return false;
 			}
 
-			if (!parentQuery.OrderBy.IsEmpty && !_providerFlags.IsOrderByAggregateFunctionSupported)
+			if (!IsValidForOrderBy(parentQuery, subQuery))
 			{
-				if (parentQuery.OrderBy.Items.Select(o => o.Expression).Any(e =>
-				    {
-					    if (QueryHelper.UnwrapNullablity(e) is SqlColumn column)
-					    {
-							if (column.Parent == subQuery)
-								return QueryHelper.ContainsAggregationFunction(column.Expression);
-					    }
-
-					    return false;
-				    }))
-				{
-					// not allowed to move to parent if it has aggregates
-					return false;
-				}
+				return false;
 			}
 
 			if (!parentQuery.GroupBy.IsEmpty)
@@ -2950,6 +2978,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 										continue;
 								}
 
+								if (!IsValidForOrderBy(sq, joinQuery))
+									continue;
+
 								var isValid = true;
 
 								foreach (var testedColumn in joinQuery.Select.Columns)
@@ -2987,7 +3018,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 									if (isUnique && !IsInSelectPart(sq, testedColumn))
 									{
-										var moveToSubquery = IsInOrderByPart(sq, testedColumn) && !_providerFlags.IsSubQueryOrderBySupported;
+										var moveToSubquery = IsInOrderByPart(sq, testedColumn);
 										if (moveToSubquery)
 										{
 											MoveToSubQuery(sq);

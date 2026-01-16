@@ -26,14 +26,15 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		protected InformixDataProvider(string name, InformixProvider provider)
 			: base(name, GetMappingSchema(provider), InformixProviderAdapter.GetInstance(provider))
 		{
-			SqlProviderFlags.IsParameterOrderDependent                 = !Adapter.IsIDSProvider;
-			SqlProviderFlags.IsSubQueryTakeSupported                   = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported                 = false;
-			SqlProviderFlags.IsCommonTableExpressionsSupported         = true;
-			SqlProviderFlags.IsUpdateFromSupported                     = false;
-			SqlProviderFlags.RowConstructorSupport                     = RowFeature.Equality | RowFeature.In;
-			SqlProviderFlags.IsExistsPreferableForContains             = true;
-			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported         = false;
+			SqlProviderFlags.IsParameterOrderDependent         = !Adapter.IsIDSProvider;
+			SqlProviderFlags.IsSubQueryTakeSupported           = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
+			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
+			SqlProviderFlags.IsUpdateFromSupported             = false;
+			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.In;
+			SqlProviderFlags.IsExistsPreferableForContains     = true;
+			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported = false;
+			SqlProviderFlags.IsSubQueryOrderBySupported        = false;
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd(' '));
