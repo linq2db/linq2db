@@ -38,12 +38,9 @@ namespace Tests.UserTests
 		[Test]
 		public void CountInUnionAll([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using var db = GetDataContext(context);
-			using var lineTable        = db.CreateLocalTable<Line>();
-			using var invoiceLineTable = db.CreateLocalTable<InvoiceLine>();
-
-			db.Insert(new Line { Amount        = 10m });
-			db.Insert(new InvoiceLine { Amount = 5m });
+			using var db               = GetDataContext(context);
+			using var lineTable        = db.CreateLocalTable<Line>([new Line { Amount               = 10m }]);
+			using var invoiceLineTable = db.CreateLocalTable<InvoiceLine>([new InvoiceLine { Amount = 5m }]);
 
 			var queryable =
 				db.GetTable<Line>()
@@ -69,7 +66,7 @@ namespace Tests.UserTests
 					})
 					.Skip(0).Take(10);
 
-			var result = pagedQuery.ToList();
+			AssertQuery(pagedQuery);
 		}
 	}
 }
