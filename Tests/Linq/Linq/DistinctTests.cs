@@ -164,7 +164,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ThrowsRequiredOuterJoins(TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllSybase, TestProvName.AllInformix)]
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void AssociationAfterDistinct1([DataSources] string context)
@@ -178,7 +177,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ThrowsRequiredOuterJoins(TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllSybase, TestProvName.AllInformix)]
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void AssociationAfterDistinct2([DataSources] string context)

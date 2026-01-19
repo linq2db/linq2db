@@ -34,7 +34,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.In;
 			SqlProviderFlags.IsExistsPreferableForContains     = true;
 			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported = false;
-			SqlProviderFlags.IsSubQueryOrderBySupported        = false;
+			SqlProviderFlags.IsOrderBySubQuerySupported        = false;
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("NCHAR", (r,i) => r.GetString(i).TrimEnd(' '));

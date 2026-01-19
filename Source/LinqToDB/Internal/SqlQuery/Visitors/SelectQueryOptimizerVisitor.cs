@@ -1451,20 +1451,22 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return true;
 		}
 
-		bool IsValidForOrderBy(SelectQuery parentQuery, SelectQuery subQuery)
+		bool IsValidForOrderBy(SelectQuery parentQuery, SelectQuery subQuery, bool forMovingToColumn)
 		{
 			if (parentQuery.OrderBy.IsEmpty)
 			{
 				return true;
 			}
 
-			if (!_providerFlags.IsSubQueryOrderBySupported)
+			if (!_providerFlags.IsOrderBySubQuerySupported)
 			{
 				if (parentQuery.OrderBy.Any(e =>
 				    {
 					    if (e is SqlColumn column && column.Parent == subQuery)
 					    {
-						    return true;
+						    if (forMovingToColumn)
+							    return true;
+						    return column.Expression.Any(ce => ce is SelectQuery);
 					    }
 
 					    return false;
@@ -1474,15 +1476,18 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
-			if (!_providerFlags.IsOrderByAggregateFunctionSupported && QueryHelper.IsAggregationQuery(subQuery))
+			if (!_providerFlags.IsOrderByAggregateFunctionSupported)
 			{
+		
 				if (parentQuery.OrderBy.Any(e =>
-				    {
-					    if (e is SqlColumn column && column.Parent == subQuery)
-						    return true;
+					{
+						if (e is SqlColumn column && column.Parent == subQuery)
+						{
+							return column.Expression.Any(QueryHelper.IsAggregationFunction);
+						}
 
-					    return false;
-				    }))
+						return false;
+					}))
 				{
 					return false;
 				}
@@ -1523,7 +1528,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					return false;
 			}
 
-			if (!IsValidForOrderBy(parentQuery, subQuery))
+			if (!IsValidForOrderBy(parentQuery, subQuery, false))
 			{
 				return false;
 			}
@@ -2834,18 +2839,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return result;
 		}
 
-		static bool IsInSelectPart(SelectQuery rootQuery, SqlColumn column)
-		{
-			var result = rootQuery.Select.HasElement(column);
-			return result;
-		}
-
-		static bool IsInOrderByPart(SelectQuery rootQuery, SqlColumn column)
-		{
-			var result = rootQuery.OrderBy.HasElement(column);
-			return result;
-		}
-
 		static bool IsInsideAggregate(IQueryElement testedElement, SqlColumn column)
 		{
 			bool result = false;
@@ -2970,17 +2963,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 								if (_updateTable != null && joinQuery.HasElement(_updateTable))
 									continue;
 
-								var isNoTableQuery = joinQuery.From.Tables.Count == 0;
-
-								if (!isNoTableQuery)
-								{
-									if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery : sq, fakeJoin : null, columnSubqueryLevel : 0, _providerFlags, out _))
-										continue;
-								}
-
-								if (!IsValidForOrderBy(sq, joinQuery))
-									continue;
-
 								var isValid = true;
 
 								foreach (var testedColumn in joinQuery.Select.Columns)
@@ -3008,20 +2990,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 											}
 
 											MoveDuplicateUsageToSubQuery(sq, ref doNotRemoveQueries);
-											// will be processed in the next step
-											ti         = -1;
-											isValid    = false;
-											isModified = true;
-											break;
-										}
-									}
-
-									if (isUnique && !IsInSelectPart(sq, testedColumn))
-									{
-										var moveToSubquery = IsInOrderByPart(sq, testedColumn);
-										if (moveToSubquery)
-										{
-											MoveToSubQuery(sq);
 											// will be processed in the next step
 											ti         = -1;
 											isValid    = false;
@@ -3058,6 +3026,23 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 								if (!isValid)
 									continue;
+
+								if (!IsValidForOrderBy(sq, joinQuery, true))
+								{
+									MoveToSubQuery(sq);
+									// will be processed in the next step
+									ti         = -1;
+									isModified = true;
+									continue;
+								}
+
+								var isNoTableQuery = joinQuery.From.Tables.Count == 0;
+
+								if (!isNoTableQuery)
+								{
+									if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery: sq, fakeJoin: null, columnSubqueryLevel: 0, _providerFlags, out _))
+										continue;
+								}
 
 								// moving whole join to subquery
 
