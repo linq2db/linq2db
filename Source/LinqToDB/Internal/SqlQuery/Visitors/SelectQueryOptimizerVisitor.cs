@@ -36,12 +36,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		ISqlTableSource? _updateTable;
 
 		readonly SqlQueryColumnNestingCorrector _columnNestingCorrector      = new();
-		readonly SqlQueryColumnUsageCollector   _columnUsageCollector        = new();
 		readonly SqlQueryOrderByOptimizer       _orderByOptimizer            = new();
 		readonly MovingComplexityVisitor        _movingComplexityVisitor     = new();
 		readonly SqlExpressionOptimizerVisitor  _expressionOptimizerVisitor  = new(true);
 		readonly MovingOuterPredicateVisitor    _movingOuterPredicateVisitor = new();
-		readonly RemoveUnusedColumnsVisitor     _removeUnusedColumnsVisitor  = new();
+		readonly SqlQueryColumnOptimizerVisitor _columnOptimizerVisitor      = new();
 
 		public SelectQueryOptimizerVisitor() : base(VisitMode.Modify, null)
 		{
@@ -100,8 +99,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (removeWeakJoins)
 				{
 					// It means that we fully optimize query
-					_columnUsageCollector.CollectUsedColumns(_rootElement);
-					_removeUnusedColumnsVisitor.RemoveUnusedColumns(_columnUsageCollector.UsedColumns, _root);
+					_root = _columnOptimizerVisitor.OptimizeColumns(_root);
 
 					// do it always, ignore dataOptions.LinqOptions.OptimizeJoins
 					JoinsOptimizer.UnnestJoins(_root);
@@ -142,7 +140,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_updateTable       = default;
 
 			_columnNestingCorrector.Cleanup();
-			_columnUsageCollector.Cleanup();
 			_orderByOptimizer.Cleanup();
 			_movingComplexityVisitor.Cleanup();
 			_expressionOptimizerVisitor.Cleanup();
