@@ -3548,5 +3548,111 @@ FROM
 		}
 
 		#endregion
+
+		#region Issue 5303
+
+		[Table]
+		public class Issue4797Link
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public int ProductId { get; set; }
+			[Column] public int CategoryId { get; set; }
+			[Column] public bool IsActive { get; set; }
+
+			[Association(ThisKey = nameof(ProductId), OtherKey = nameof(Issue4797Product.Id), CanBeNull = false)]
+			public Issue4797Product Product { get; set; } = default!;
+
+			[Association(ThisKey = nameof(CategoryId), OtherKey = nameof(Issue4797Category.Id), CanBeNull = false)]
+			public Issue4797Category Category { get; set; } = default!;
+
+			public static readonly Issue4797Link[] Data =
+			[
+				new Issue4797Link() { Id = 1, ProductId = 1, CategoryId = 1, IsActive = false },
+				new Issue4797Link() { Id = 2, ProductId = 1, CategoryId = 2, IsActive = false },
+				new Issue4797Link() { Id = 3, ProductId = 1, CategoryId = 3, IsActive = false },
+				new Issue4797Link() { Id = 4, ProductId = 2, CategoryId = 1, IsActive = false },
+				new Issue4797Link() { Id = 5, ProductId = 2, CategoryId = 2, IsActive = true },
+				new Issue4797Link() { Id = 6, ProductId = 2, CategoryId = 3, IsActive = false },
+				new Issue4797Link() { Id = 7, ProductId = 3, CategoryId = 1, IsActive = true },
+				new Issue4797Link() { Id = 8, ProductId = 3, CategoryId = 2, IsActive = true },
+				new Issue4797Link() { Id = 9, ProductId = 3, CategoryId = 3, IsActive = true },
+				new Issue4797Link() { Id = 10, ProductId = 4, CategoryId = 1, IsActive = true },
+				new Issue4797Link() { Id = 11, ProductId = 4, CategoryId = 2, IsActive = false },
+				new Issue4797Link() { Id = 12, ProductId = 4, CategoryId = 3, IsActive = true },
+			];
+		}
+
+		[Table]
+		public class Issue4797Product
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public string Name { get; set; } = default!;
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Issue4797Link.ProductId))]
+			public Issue4797Link[] Fks => throw new ServerSideOnlyException(nameof(Fks));
+
+			public static readonly Issue4797Product[] Data =
+			[
+				new Issue4797Product() { Id = 1, Name = "Product 1" },
+				new Issue4797Product() { Id = 2, Name = "Product 2" },
+				new Issue4797Product() { Id = 3, Name = "Product 3" },
+				new Issue4797Product() { Id = 4, Name = "Product 4" }
+			];
+		}
+
+		[Table]
+		public class Issue4797Category
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public string Name { get; set; } = default!;
+			[Column] public string Description { get; set; } = default!;
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Issue4797Link.CategoryId))]
+			public Issue4797Link[]? Fks { get; set; }
+
+			public static readonly Issue4797Category[] Data =
+			[
+				new Issue4797Category() { Id = 1, Name = "Cat 1", Description = "This is cat 1" },
+				new Issue4797Category() { Id = 2, Name = "Cat 2", Description = "This is cat 2" },
+				new Issue4797Category() { Id = 3, Name = "Cat 3", Description = "This is cat 3" }
+			];
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5303")]
+		[ThrowsRequiresCorrelatedSubquery]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSQLite, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		public void Issue5303Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tp = db.CreateLocalTable(Issue4797Product.Data);
+			using var tc = db.CreateLocalTable(Issue4797Category.Data);
+			using var tl = db.CreateLocalTable(Issue4797Link.Data);
+
+			var res1 = tp
+				.LoadWith(x => x.Fks)
+				.ThenLoad(x => x.Category)
+				.SelectMany(p => p.Fks.Select(pc => new
+				{
+					p.Name,
+					One = p.Fks.First(pc => pc.IsActive == false).Category.Name,
+					Two = p.Fks.First(pc => pc.IsActive == false).Category.Name
+				})).ToList();
+
+			var res2 = tp
+				.LoadWith(x => x.Fks)
+				.ThenLoad(x => x.Category)
+				.SelectMany(p => p.Fks.Select(pc => new
+				{
+					p.Name,
+					One = p.Fks.First(pc => pc.IsActive == false).Category.Name,
+					Two = p.Fks.First(pc => pc.IsActive == false).Category.Description,
+				})).ToList();
+
+			using var _ = Assert.EnterMultipleScope();
+			Assert.That(res1, Has.Count.EqualTo(12));
+			Assert.That(res2, Has.Count.EqualTo(12));
+		}
+
+		#endregion
 	}
 }
