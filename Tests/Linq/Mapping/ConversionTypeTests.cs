@@ -1,10 +1,14 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.Mapping
 {
@@ -225,6 +229,111 @@ namespace Tests.Mapping
 					new { ID = 3, Data = "***III***"},
 				],
 				db1.GetTable<TrimTestTable>().OrderBy(_ => _.ID).Select(r => new { r.ID, r.Data}));
+		}
+
+		class ImplicitValue<TData> : IEquatable<ImplicitValue<TData>>
+		{
+			public TData? Value { get; init; }
+
+			public static implicit operator TData?(ImplicitValue<TData>? value)
+			{
+				return value != null ? value.Value : default;
+			}
+
+			public static implicit operator ImplicitValue<TData>(TData? value)
+			{
+				return new ImplicitValue<TData> { Value = value };
+			}
+
+			public bool Equals(ImplicitValue<TData>? other)
+			{
+				if (other is null)                return false;
+				if (ReferenceEquals(this, other)) return true;
+
+				return EqualityComparer<TData?>.Default.Equals(Value, other.Value);
+			}
+
+			public override bool Equals(object? obj)
+			{
+				if (obj is null)                return false;
+				if (ReferenceEquals(this, obj)) return true;
+				if (obj.GetType() != GetType()) return false;
+
+				return Equals((ImplicitValue<TData>)obj);
+			}
+
+			public override int GetHashCode()
+			{
+				return Value != null ? Value.GetHashCode() : 0;
+			}
+
+			public override string ToString()
+			{
+				return Value == null ? "Value=null" : $"Value={Value}";
+			}
+
+			public static bool operator ==(ImplicitValue<TData>? left, ImplicitValue<TData>? right)
+			{
+				return Equals(left, right);
+			}
+
+			public static bool operator !=(ImplicitValue<TData>? left, ImplicitValue<TData>? right)
+			{
+				return !Equals(left, right);
+			}
+		}
+
+		class ImplicitData
+		{
+			public required ImplicitValue<string?> StringData1 { get; init; }
+			public required ImplicitValue<string?> StringData2 { get; init; }
+			public required ImplicitValue<int?>    IntData1    { get; init; }
+			public required ImplicitValue<int?>    IntData2    { get; init; }
+		}
+
+		[Test]
+		public void ImplicitTest()
+		{
+			using var db = new TestDataConnection();
+
+			using var t = db.CreateLocalTable(
+			[
+				new
+				{
+					StringData1 = "Test1",
+					StringData2 = (string?)null,
+					IntData1    = 123,
+					IntData2    = (int?)null,
+				}
+			]);
+
+			var result1 = t
+				.Select(r => new ImplicitData
+				{
+					StringData1 = r.StringData1,
+					StringData2 = r.StringData2,
+					IntData1    = r.IntData1,
+					IntData2    = r.IntData2,
+				})
+				.Single();
+
+			var result = t.Single();
+
+			var result2 = new ImplicitData
+				{
+					StringData1 = result.StringData1,
+					StringData2 = result.StringData2,
+					IntData1    = result.IntData1,
+					IntData2    = result.IntData2,
+				};
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result1.StringData1, Is.EqualTo(result2.StringData1));
+				Assert.That(result1.StringData2, Is.EqualTo(result2.StringData2));
+				Assert.That(result1.IntData1,    Is.EqualTo(result2.IntData1));
+				Assert.That(result1.IntData2,    Is.EqualTo(result2.IntData2));
+			}
 		}
 	}
 }

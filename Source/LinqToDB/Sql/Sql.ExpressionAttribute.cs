@@ -254,22 +254,43 @@ namespace LinqToDB
 				knownExpressions = new List<(Expression?, ExprParameterAttribute?)>();
 				genericTypes     = null;
 
-				if (expression.NodeType == ExpressionType.Call)
+				if (expression.NodeType is ExpressionType.Call
+					|| expression is UnaryExpression or BinaryExpression)
 				{
-					var mc = (MethodCallExpression) expression;
-					expressionStr ??= mc.Method.Name;
-
-					if (includeInstance && !mc.Method.IsStatic)
-						knownExpressions.Add((mc.Object, null));
-
-					ParameterInfo[]? pis = null;
-
-					for (var i = 0; i < mc.Arguments.Count; i++)
+					var method = expression switch
 					{
-						var arg = mc.Arguments[i];
+						MethodCallExpression mc => mc.Method,
+						UnaryExpression ue      => ue.Method!,
+						BinaryExpression be     => be.Method!,
+						_                       => throw new InvalidOperationException()
+					};
 
-						pis ??= mc.Method.GetParameters();
-						var p              = pis[i];
+					var instance = expression switch
+					{
+						MethodCallExpression mc             => mc.Object,
+						BinaryExpression or UnaryExpression => null,
+						_                                   => throw new InvalidOperationException()
+					};
+
+					if (includeInstance && !method.IsStatic)
+						knownExpressions.Add((instance, null));
+
+					var arguments = expression switch
+					{
+						MethodCallExpression mc => mc.Arguments,
+						UnaryExpression ue      => [ue.Operand],
+						BinaryExpression be     => [be.Left, be.Right],
+						_                       => throw new InvalidOperationException()
+					};
+
+					expressionStr ??= method.Name;
+					var pi = method.GetParameters();
+
+					for (var i = 0; i < arguments.Count; i++)
+					{
+						var arg = arguments[i];
+
+						var p              = pi[i];
 						var paramAttribute = p.GetAttribute<ExprParameterAttribute>();
 
 						if (arg is NewArrayExpression nae)
@@ -294,24 +315,21 @@ namespace LinqToDB
 
 					if (!ignoreGenericParameters)
 					{
-						ParameterInfo[]? pi = null;
-
-						if (mc.Method.DeclaringType!.IsGenericType)
+						if (method.DeclaringType!.IsGenericType)
 						{
 							genericTypes = new List<SqlDataType>();
-							foreach (var t in mc.Method.DeclaringType.GetGenericArguments())
+							foreach (var t in method.DeclaringType.GetGenericArguments())
 							{
 								var type = mappingSchema.GetDataType(t);
 								if (type.Type.DataType == DataType.Undefined)
 								{
-									pi ??= mc.Method.GetParameters();
 									for (var i = 0; i < pi.Length; i++)
 									{
 										if (pi[i].ParameterType == t)
 										{
 											var paramAttribute = pi[i].GetAttribute<ExprParameterAttribute>();
 
-											var converted      = converter(context, mc.Arguments[i], null, forceInlineParameters || paramAttribute?.DoNotParameterize == true);
+											var converted      = converter(context, arguments[i], null, forceInlineParameters || paramAttribute?.DoNotParameterize == true);
 											if (converted is SqlPlaceholderExpression placeholder)
 											{
 												var dbType = QueryHelper.GetDbDataType(placeholder.Sql, mappingSchema);
@@ -326,22 +344,21 @@ namespace LinqToDB
 							}
 						}
 
-						if (mc.Method.IsGenericMethod)
+						if (method.IsGenericMethod)
 						{
 							genericTypes ??= new List<SqlDataType>();
-							foreach (var t in mc.Method.GetGenericArguments())
+							foreach (var t in method.GetGenericArguments())
 							{
 								var type = mappingSchema.GetDataType(t);
 								if (type.Type.DataType == DataType.Undefined)
 								{
-									pi ??= mc.Method.GetParameters();
 									for (var i = 0; i < pi.Length; i++)
 									{
 										if (pi[i].ParameterType == t)
 										{
 											var paramAttribute = pi[i].GetAttribute<ExprParameterAttribute>();
 
-											var converted = converter(context, mc.Arguments[i], null, forceInlineParameters || paramAttribute?.DoNotParameterize == true);
+											var converted = converter(context, arguments[i], null, forceInlineParameters || paramAttribute?.DoNotParameterize == true);
 											if (converted is SqlPlaceholderExpression placeholder)
 											{
 												var dbType = QueryHelper.GetDbDataType(placeholder.Sql, mappingSchema);

@@ -100,6 +100,12 @@ namespace LinqToDB.Expressions
 		/// <exception cref="ArgumentException">Only simple, non-navigational, member names are supported in this context (e.g.: x =&gt; Sql.Property(x, \"SomeProperty\")).</exception>
 		public static MemberInfoWithType GetMemberInfoWithType(Expression expr)
 		{
+			if (expr is UnaryExpression { Method: { } } ue)
+				return new MemberInfoWithType(ue.Method.ReflectedType, ue.Method);
+
+			if (expr is BinaryExpression { Method: { } } be)
+				return new MemberInfoWithType(be.Method.ReflectedType, be.Method);
+
 			while (expr.NodeType == ExpressionType.Convert || expr.NodeType == ExpressionType.ConvertChecked || expr.NodeType == ExpressionType.TypeAs)
 				expr = ((UnaryExpression)expr).Operand;
 

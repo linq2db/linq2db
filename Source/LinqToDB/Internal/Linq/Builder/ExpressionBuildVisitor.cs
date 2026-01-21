@@ -1141,17 +1141,20 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			// Handling ExpressionAttribute
 			//
-			if (expr.NodeType is ExpressionType.Call or ExpressionType.MemberAccess)
+			if (expr
+				is MethodCallExpression
+				or MemberExpression
+				or UnaryExpression
+				or BinaryExpression)
 			{
-				MemberInfo memberInfo;
-				if (expr.NodeType == ExpressionType.Call)
+				var memberInfo = expr switch
 				{
-					memberInfo = ((MethodCallExpression)expr).Method;
-				}
-				else
-				{
-					memberInfo = ((MemberExpression)expr).Member;
-				}
+					MethodCallExpression mc => mc.Method,
+					MemberExpression me     => me.Member,
+					UnaryExpression ue      => ue.Method!,
+					BinaryExpression be     => be.Method!,
+					_                       => throw new InvalidOperationException()
+				};
 
 				var isServerSideOnly = memberInfo.IsServerSideOnly(MappingSchema);
 				var attribute        = memberInfo.GetExpressionAttribute(MappingSchema);
@@ -2136,6 +2139,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitUnary(UnaryExpression node)
 		{
+			if (node.Method != null && IsSqlOrExpression() && BuildContext != null)
+			{
+				if (TranslateMember(BuildContext, node, out var translatedMember))
+					return Visit(translatedMember);
+
+				if (HandleExtension(BuildContext, node, out translatedMember))
+					return Visit(translatedMember);
+			}
+
 			if (_buildPurpose is BuildPurpose.Table)
 			{
 				if (node.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
@@ -2253,10 +2265,10 @@ namespace LinqToDB.Internal.Linq.Builder
 							if (_buildPurpose is BuildPurpose.Expression && node.Type == typeof(object))
 								return base.VisitUnary(node);
 
-							if (node.Method == null && (node.IsLifted || node.Type == typeof(object)))
+							if (node.IsLifted || node.Type == typeof(object))
 								return Visit(placeholder.WithType(node.Type));
 
-							if (node.Method == null && operandExpr is not SqlPlaceholderExpression)
+							if (operandExpr is not SqlPlaceholderExpression)
 								return base.VisitUnary(node);
 
 							if (node.Type == typeof(bool) && node.Operand.Type == typeof(SqlBoolean))
@@ -2371,7 +2383,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public bool HandleAsParameter(Expression node, [NotNullWhen(true)] out Expression? translated)
 		{
-			if (_buildPurpose is BuildPurpose.Sql && Builder.CanBeEvaluatedOnClient(node))
+			if (_buildPurpose is BuildPurpose.Sql)
 			{
 				var sqlParam = Builder.ParametersContext.BuildParameter(BuildContext, node, CurrentDescriptor, alias: Alias);
 
@@ -2771,10 +2783,20 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitBinary(BinaryExpression node)
 		{
+			if (node.Method != null && IsSqlOrExpression() && BuildContext != null)
+			{
+				if (TranslateMember(BuildContext, node, out var translatedMember))
+					return Visit(translatedMember);
+
+				if (HandleExtension(BuildContext, node, out translatedMember))
+					return Visit(translatedMember);
+			}
+
 			if (BuildContext == null || _buildPurpose is not (BuildPurpose.Sql or BuildPurpose.Expression or BuildPurpose.Expand))
 				return base.VisitBinary(node);
 
 			var shouldSkipSqlConversion = false;
+
 			if (_buildPurpose is BuildPurpose.Expression)
 			{
 				if (node.NodeType == ExpressionType.Equal || node.NodeType == ExpressionType.NotEqual)
@@ -2805,7 +2827,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			if (!shouldSkipSqlConversion && TryConvertToSql(node, out var sqlResult))
+			if (node.Method == null && !shouldSkipSqlConversion && TryConvertToSql(node, out var sqlResult))
 			{
 				return sqlResult;
 			}
@@ -2816,7 +2838,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (_buildPurpose is BuildPurpose.Expression)
 				return base.VisitBinary(node);
 
-			if (HandleBinary(node, out var translated))
+			if (node.Method == null && HandleBinary(node, out var translated))
 				return translated; // Do not Visit again
 
 			var exposed = Builder.ConvertSingleExpression(node);
@@ -5411,10 +5433,16 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			translated = null;
 
-			if (memberExpression is MethodCallExpression || memberExpression is MemberExpression || memberExpression is NewExpression)
+			if (memberExpression
+				is MethodCallExpression
+				or MemberExpression
+				or NewExpression
+				or UnaryExpression
+				or BinaryExpression)
 			{
 				// Skip translation if there is a placeholder in the expression. It means that we already tried to translate, but it is failed.
-				if (null != memberExpression.Find(e => e is SqlPlaceholderExpression))
+				// don't skip for binary expressions as we could create them during translation
+				if (memberExpression is not BinaryExpression && null != memberExpression.Find(e => e is SqlPlaceholderExpression))
 				{
 					translated = null;
 					return false;

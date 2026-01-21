@@ -83,5 +83,18 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			=> registration.RegisterConstructorInternal(constructorAccessPattern, translateConstructorFunc);
 
 		#endregion
+
+		#region Register Operators
+
+		public static void RegisterUnaryOperator<T, TResult>(this TranslationRegistration registration, Expression<Func<T, TResult>> operatorAccessPattern, TranslationRegistration.TranslateUnaryOperatorFunc translateOperatorFunc)
+			=> registration.RegisterUnaryOperatorInternal(operatorAccessPattern, translateOperatorFunc, isGenericTypeMatch: false);
+
+		public static void RegisterGenericUnaryOperator<T, TResult>(this TranslationRegistration registration, Expression<Func<T, TResult>> operatorAccessPattern, TranslationRegistration.TranslateUnaryOperatorFunc translateOperatorFunc)
+			=> registration.RegisterUnaryOperatorInternal(operatorAccessPattern, translateOperatorFunc, isGenericTypeMatch: true);
+
+		public static void RegisterBinaryOperator<TLeft, TRight, TResult>(this TranslationRegistration registration, Expression<Func<TLeft, TRight, TResult>> operatorAccessPattern, TranslationRegistration.TranslateBinaryOperatorFunc translateOperatorFunc)
+			=> registration.RegisterBinaryOperatorInternal(operatorAccessPattern, translateOperatorFunc);
+
+		#endregion
 	}
 }
