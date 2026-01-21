@@ -2827,7 +2827,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			if (node.Method == null && !shouldSkipSqlConversion && TryConvertToSql(node, out var sqlResult))
+			if (!shouldSkipSqlConversion && TryConvertToSql(node, out var sqlResult))
 			{
 				return sqlResult;
 			}
@@ -2838,7 +2838,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (_buildPurpose is BuildPurpose.Expression)
 				return base.VisitBinary(node);
 
-			if (node.Method == null && HandleBinary(node, out var translated))
+			if (HandleBinary(node, out var translated))
 				return translated; // Do not Visit again
 
 			var exposed = Builder.ConvertSingleExpression(node);
