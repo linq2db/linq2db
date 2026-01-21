@@ -41,7 +41,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 			SqlProviderFlags.TakeHintsSupported                       = TakeHints.Percent;
 			SqlProviderFlags.IsCrossJoinSupported                     = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported         = false;
-			SqlProviderFlags.IsOrderByAggregateFunctionSupported      = false;
+			SqlProviderFlags.IsOrderByAggregateSubquerySupported      = false;
 			// should be: provider == AccessProvider.ODBC
 			// but OleDb provider has some issues with complex queries
 			// see TestPositionedParameters test

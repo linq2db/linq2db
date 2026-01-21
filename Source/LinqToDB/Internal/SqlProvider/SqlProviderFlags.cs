@@ -519,10 +519,17 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsOrderByAggregateFunctionSupported { get; set; }
 
 		/// <summary>
+		/// Provider supports aggregation subquery in ORDER BY Clause.
+		/// Default <c>true</c>
+		/// </summary>
+		[DataMember(Order = 60), DefaultValue(true)]
+		public bool IsOrderByAggregateSubquerySupported { get; set; } = true;
+
+		/// <summary>
 		/// Provider supports subquery in ORDER BY Clause.
 		/// 
 		/// </summary>
-		[DataMember(Order = 60), DefaultValue(true)]
+		[DataMember(Order = 61), DefaultValue(true)]
 		public bool IsOrderBySubQuerySupported { get; set; } = true;
 
 		/// <summary>
@@ -535,20 +542,20 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </code>
 		/// Default: <c>true</c>.
 		/// </summary>
-		[DataMember(Order = 61), DefaultValue(true)]
+		[DataMember(Order = 62), DefaultValue(true)]
 		public bool IsComplexJoinConditionSupported { get; set; } = true;
 
 		/// <summary>
 		/// When enabled, always prefer "FROM T1 CROSS JOIN T2" over "FROM T1, T2" join syntax.
 		/// Default: <c>false</c>.
 		/// </summary>
-		[DataMember(Order = 62), DefaultValue(false)]
+		[DataMember(Order = 63), DefaultValue(false)]
 		public bool IsCrossJoinSyntaxRequired { get; set; }
 
 		/// <summary>
 		/// When disabled, SQL dialect doesn't support Take/LIMIT &amp; IN/ALL/ANY/SOME subquery.
 		/// </summary>
-		[DataMember(Order = 63), DefaultValue(true)]
+		[DataMember(Order = 64), DefaultValue(true)]
 		public bool IsTakeWithInAllAnySomeSubquerySupported { get; set; } = true;
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
@@ -633,6 +640,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsDistinctFromSupported                              .GetHashCode()
 				^ DoesProviderTreatsEmptyStringAsNull                  .GetHashCode()
 				^ IsOrderByAggregateFunctionSupported                  .GetHashCode()
+				^ IsOrderByAggregateSubquerySupported                  .GetHashCode()
 				^ IsOrderBySubQuerySupported                           .GetHashCode()
 				^ IsComplexJoinConditionSupported                      .GetHashCode()
 				^ IsCrossJoinSyntaxRequired                            .GetHashCode()
@@ -701,6 +709,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsDistinctFromSupported                               == other.IsDistinctFromSupported
 				&& DoesProviderTreatsEmptyStringAsNull                   == other.DoesProviderTreatsEmptyStringAsNull
 				&& IsOrderByAggregateFunctionSupported                   == other.IsOrderByAggregateFunctionSupported
+				&& IsOrderByAggregateSubquerySupported                   == other.IsOrderByAggregateSubquerySupported
 				&& IsOrderBySubQuerySupported                            == other.IsOrderBySubQuerySupported
 				&& IsComplexJoinConditionSupported                       == other.IsComplexJoinConditionSupported
 				&& IsCrossJoinSyntaxRequired                             == other.IsCrossJoinSyntaxRequired

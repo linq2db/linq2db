@@ -1493,7 +1493,47 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
+			if (!_providerFlags.IsOrderByAggregateSubquerySupported)
+			{
+				if (parentQuery.OrderBy.Any(e =>
+					{
+						if (e is SqlColumn column && column.Parent == subQuery)
+						{
+							if (forMovingToColumn)
+							{
+								return IsAggregationQuery(subQuery);
+							}
+							else
+							{
+								return column.Expression.Any(ce =>
+								{
+									if (ce is SelectQuery sq)
+									{
+										return IsAggregationQuery(sq);
+									}
+
+									return false;
+								});
+							}
+						}
+
+						return false;
+					}))
+				{
+					return false;
+				}
+			}
+
 			return true;
+
+			static bool IsAggregationQuery(SelectQuery query)
+			{
+				if (!query.GroupBy.IsEmpty)
+					return true;
+				if (query.Select.Columns.Any(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
+					return true;
+				return false;
+			}
 		}
 
 		bool IsMovingUpValid(SelectQuery parentQuery, SqlTableSource tableSource, SelectQuery subQuery, out HashSet<ISqlPredicate>? havingDetected)
