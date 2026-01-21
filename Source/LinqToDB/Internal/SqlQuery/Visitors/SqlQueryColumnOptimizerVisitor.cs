@@ -195,6 +195,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						usedFields = new HashSet<string>();
 						_usedCteFields[cte.Cte!] = usedFields;
 					}
+
 					usedFields.Add(element.PhysicalName);
 					
 					// Find and mark the corresponding column
@@ -206,6 +207,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							{
 								MarkColumnUsed(cte.Cte.Body!.Select.Columns[i]);
 							}
+
 							break;
 						}
 					}
