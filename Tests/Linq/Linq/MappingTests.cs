@@ -1871,5 +1871,21 @@ namespace Tests.Linq
 				Assert.That(result.CustomerOther.Name, Is.EqualTo("name2"));
 			}
 		}
+
+		[Table]
+		sealed class ListTable : List<ListTable>
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5304")]
+		public void TestListBasedEntity([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<ListTable>();
+
+			_ = tb.Take(10).ToList();
+		}
 	}
 }
