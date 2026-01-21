@@ -133,20 +133,6 @@ internal static class CharExtensions
 	public static bool IsAsciiLetterOrDigit(this char chr) => IsAsciiLetter(chr) || IsAsciiDigit(chr);
 }
 
-internal static class DictionaryExtensions
-{
-	public static bool TryAdd<TKey, TValue>(this Dictionary<TKey, TValue> dict, TKey key, TValue value)
-	{
-		if (!dict.ContainsKey(key))
-		{
-			dict.Add(key, value);
-			return true;
-		}
-
-		return false;
-	}
-}
-
 internal static class AdoAsyncDispose
 {
 	public static ValueTask DisposeAsync(this DbCommand command) => TryDisposeAsync(command);

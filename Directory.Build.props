@@ -104,8 +104,13 @@
 		<Polyfill>$(Polyfill)|M:System.ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual``1(``0,``0,System.String)</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.ArgumentOutOfRangeException.ThrowIfLessThan``1(``0,``0,System.String)</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.ArgumentOutOfRangeException.ThrowIfLessThanOrEqual``1(``0,``0,System.String)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.ArgumentOutOfRangeException.ThrowIfNegative``1(``0,System.String)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.ArgumentOutOfRangeException.ThrowIfNegativeOrZero``1(``0,System.String)</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.ArgumentOutOfRangeException.ThrowIfNotEqual``1(``0,``0,System.String)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.ArgumentOutOfRangeException.ThrowIfZero``1(``0,System.String)</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd``1(`0,System.Func{`0,``0,`1},``0)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Collections.Generic.Dictionary`2.Remove(`0,`1@)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Collections.Generic.Dictionary`2.TryAdd(`0,`1)</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.Enum.GetNames``</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.Enum.GetValues``1</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.Enum.IsDefined``1(``0)</Polyfill>

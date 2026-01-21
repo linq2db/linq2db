@@ -290,6 +290,8 @@ dotnet_diagnostic.MA0136.severity = none # MA0136: Raw String contains an implic
 dotnet_diagnostic.MA0159.severity = none # MA0159: Use 'Order' instead of 'OrderBy'
 # Lots of false positives
 dotnet_diagnostic.MA0165.severity = none # MA0165: Make interpolated string
+# slow
+dotnet_diagnostic.MA0182.severity = none # MA0182: Avoid unused internal types
 
 #########################################################################################################
 # inactive diagnostics (not reviewed yet => disabled to not fail build, basically TODO list for future) #
