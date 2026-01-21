@@ -8,7 +8,6 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -2446,6 +2445,27 @@ DROP TABLE IF EXISTS TemporalTable3History
 		{
 			public int     Id    { get; set; }
 			public object? Value { get; set; }
+		}
+
+		sealed class TestDateTime2DatePartTable
+		{
+			[Column(DbType = "DateTime2")]
+			public DateTime LastModified { get; set; }
+
+			public static readonly TestDateTime2DatePartTable[] Data =
+			[
+				new() { LastModified = TestData.DateTime },
+				new() { LastModified = TestData.DateTime.AddDays(10) },
+			];
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5309")]
+		public void TestDateTime2DatePart([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(TestDateTime2DatePartTable.Data);
+
+			Assert.That(tb.Where(s => s.LastModified.Date == TestData.DateTime.Date).Count(), Is.EqualTo(1));
 		}
 	}
 }
