@@ -597,6 +597,21 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
+			if (!selectQuery.GroupBy.IsEmpty)
+			{
+				if (selectQuery.GroupBy.Items.Count == selectQuery.Select.Columns.Count 
+					&& selectQuery.Having.IsEmpty
+					&& (selectQuery.Where.IsEmpty || !QueryHelper.ContainsAggregationOrWindowFunction(selectQuery.Where.SearchCondition))
+					&& selectQuery.GroupBy.Items.All(gi => selectQuery.Select.Columns.Any(c => c.Expression.Equals(gi))))
+				{
+					// All group by items are already in select columns, we can transform to distinct
+					//
+					selectQuery.GroupBy.Items.Clear();
+					selectQuery.Select.IsDistinct = true;
+					isModified = true;
+				}
+			}
+
 			return isModified;
 		}
 

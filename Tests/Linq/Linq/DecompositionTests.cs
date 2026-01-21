@@ -117,11 +117,11 @@ namespace Tests.Linq
 				let part = i.Top ?? i.Bottom
 				select part;
 
-			//AssertQuery(topOrBottoms);
+			AssertQuery(topOrBottoms);
 			AssertQuery(topOrBottoms.Where(x => x.Color != null));
-			/*AssertQuery(topOrBottoms.Where(x => x.Color == null));
+			AssertQuery(topOrBottoms.Where(x => x.Color == null));
 			AssertQuery(topOrBottoms.Where(x => x.Size  != null));
-			AssertQuery(topOrBottoms.Where(x => x.Size  == null));*/
+			AssertQuery(topOrBottoms.Where(x => x.Size  == null));
 		}
 
 	}

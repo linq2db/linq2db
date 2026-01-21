@@ -28,9 +28,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		private SqlPredicate.Exists? _currentExistsPredicate;
 
-		// Tracks queries that are part of set operators to avoid double-processing
-		private readonly HashSet<SelectQuery> _setOperatorQueries = new();
-
 		public SqlQueryColumnOptimizerVisitor() : base(VisitMode.Modify)
 		{
 		}
@@ -40,7 +37,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			base.Cleanup();
 			_usedColumnsByQuery.Clear();
 			_usedCteFields.Clear();
-			_setOperatorQueries.Clear();
 
 			_currentCte             = null;
 			_currentExistsPredicate = null;
@@ -110,15 +106,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return result;
 		}
 
-		protected internal override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
-		{
-			var prevInExpression = _inExpression;
-			_inExpression = true;
-			var result = base.VisitSqlSelectClause(element);
-			_inExpression = prevInExpression;
-			return result;
-		}
-
 		// It will handle predicates and their expressions
 		protected internal override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
 		{
@@ -138,25 +125,38 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return result;
 		}
 
+		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
+		{
+			return expression;
+		}
+
 		protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
-			if (_isCollecting && _inExpression)
+			if (_isCollecting )
 			{
-				// Collect columns when query is used in expression context
-				foreach (var column in selectQuery.Select.Columns)
+				if (_inExpression || selectQuery.Select.IsDistinct || selectQuery.HasSetOperators && HasNonUnionAllSetOperators(selectQuery))
 				{
-					MarkColumnUsed(column);
+					// Collect columns when query is used in expression context or has non-UNION-ALL set operators
+					foreach (var column in selectQuery.Select.Columns)
+					{
+						MarkColumnUsed(column);
+					}
+				}
+				else if (QueryHelper.IsAggregationQuery(selectQuery))
+				{
+					if (selectQuery.Select.Columns.Count > 0)
+					{
+						// For aggregation queries, mark the first column as used to ensure at least one is kept
+						MarkColumnUsed(selectQuery.Select.Columns[0]);
+					}
 				}
 			}
 
-			// In modify pass, track set operator queries before visiting children
-			if (!_isCollecting && selectQuery.HasSetOperators)
+			// In modify pass, process this query's columns BEFORE visiting children
+			// since all usage info was already collected in Phase 1
+			if (!_isCollecting)
 			{
-				foreach (var setOp in selectQuery.SetOperators)
-				{
-					_setOperatorQueries.Add(setOp.SelectQuery);
-					MarkSetOperatorQueriesRecursive(setOp.SelectQuery);
-				}
+				ProcessQueryColumns(selectQuery);
 			}
 
 			var prevInExpression = _inExpression;
@@ -166,28 +166,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			var result = (SelectQuery)base.VisitSqlQuery(selectQuery);
 
 			_inExpression = prevInExpression;
-
-			// In modify pass, process this query's columns based on collected usage
-			// BUT skip queries that are part of set operators - they will be processed
-			// by their parent query to maintain alignment
-			if (!_isCollecting && !_setOperatorQueries.Contains(result))
-			{
-				ProcessQueryColumns(result);
-			}
 			
 			return result;
-		}
-
-		private void MarkSetOperatorQueriesRecursive(SelectQuery query)
-		{
-			if (query.HasSetOperators)
-			{
-				foreach (var setOp in query.SetOperators)
-				{
-					_setOperatorQueries.Add(setOp.SelectQuery);
-					MarkSetOperatorQueriesRecursive(setOp.SelectQuery);
-				}
-			}
 		}
 
 		protected internal override IQueryElement VisitSqlColumnReference(SqlColumn element)
@@ -198,7 +178,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				MarkColumnUsed(element);
 			}
 			
-			return base.VisitSqlColumnReference(element);
+			// In Phase 2, don't visit column expressions - usage already collected
+			return _isCollecting ? base.VisitSqlColumnReference(element) : element;
 		}
 
 		protected internal override IQueryElement VisitSqlFieldReference(SqlField element)
@@ -231,7 +212,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 			
-			return base.VisitSqlFieldReference(element);
+			// In Phase 2, don't visit field references - usage already collected
+			return _isCollecting ? base.VisitSqlFieldReference(element) : element;
 		}
 
 		protected internal override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
@@ -261,9 +243,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		private void ProcessQueryColumns(SelectQuery selectQuery)
 		{
-			// Check if this query tree has non-UNION-ALL set operators
-			var hasNonUnionAllSetOperators = HasNonUnionAllSetOperators(selectQuery);
-			
 			// Build list of column indices to keep
 			var indicesToKeep = new List<int>();
 			
@@ -271,7 +250,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				var column = selectQuery.Select.Columns[i];
 				
-				if (ShouldKeepColumn(column, selectQuery))
+				if (IsColumnUsed(column))
 				{
 					indicesToKeep.Add(i);
 				}
@@ -303,7 +282,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				
 				// For set operators, only remove columns if all are UNION ALL
 				// For UNION/INTERSECT/EXCEPT, columns must stay aligned
-				if (selectQuery.HasSetOperators && !hasNonUnionAllSetOperators)
+				if (selectQuery.HasSetOperators)
 				{
 					RemoveColumnsFromSetOperators(selectQuery.SetOperators, indicesToKeep);
 				}
@@ -446,36 +425,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 		}
 
-		private bool ShouldKeepColumn(SqlColumn column, SelectQuery selectQuery)
-		{
-
-			// Column is actually referenced somewhere
-			if (IsColumnUsed(column))
-				return true;
-
-			// DISTINCT: keep all columns (they define uniqueness)
-			if (selectQuery.Select.IsDistinct)
-				return true;
-			
-			// Set operators (non UNION ALL): keep all for proper set semantics
-			// This includes the query itself and all recursive set operators
-			if (HasNonUnionAllSetOperators(selectQuery))
-				return true;
-			
-			// Special case: queries with GROUP BY need at least one column
-			if (!selectQuery.GroupBy.IsEmpty && selectQuery.Select.Columns.Count == 1)
-				return true;
-			
-			// Aggregation or window functions are typically needed
-			if (QueryHelper.ContainsAggregationOrWindowFunction(column.Expression))
-			{
-				// But only if the query itself is used
-				return IsQueryUsed(selectQuery);
-			}
-			
-			return false;
-		}
-
 		private void MarkColumnUsed(SqlColumn column)
 		{
 			if (column.Parent == null)
@@ -506,8 +455,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 				}
 				
-				// Visit the column's expression to mark dependent columns
+				// Visit the column's expression to find dependent columns
+				// Only during Phase 1 collection
+				var saveInExpression = _inExpression;
+				_inExpression = true;
+
 				Visit(column.Expression);
+
+				_inExpression = saveInExpression;
 			}
 		}
 
@@ -518,15 +473,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			
 			return _usedColumnsByQuery.TryGetValue(column.Parent, out var usedColumns) 
 				&& usedColumns.Contains(column);
-		}
-
-		private bool IsQueryUsed(SelectQuery query)
-		{
-			// A query is "used" if any of its columns are used
-			if (_usedColumnsByQuery.TryGetValue(query, out var usedColumns))
-				return usedColumns.Count > 0;
-			
-			return false;
 		}
 
 		#endregion
