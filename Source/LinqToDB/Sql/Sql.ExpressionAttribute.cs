@@ -275,7 +275,7 @@ namespace LinqToDB
 					if (includeInstance && !method.IsStatic)
 						knownExpressions.Add((instance, null));
 
-					var arguments = expression switch
+					IReadOnlyList<Expression> arguments = expression switch
 					{
 						MethodCallExpression mc => mc.Arguments,
 						UnaryExpression ue      => [ue.Operand],
