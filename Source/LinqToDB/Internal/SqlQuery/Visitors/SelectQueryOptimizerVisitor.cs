@@ -36,7 +36,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		ISqlTableSource? _updateTable;
 
 		readonly SqlQueryColumnNestingCorrector _columnNestingCorrector      = new();
-		readonly SqlQueryOrderByOptimizer       _orderByOptimizer            = new();
+		readonly SqlQueryOrderByOptimizer2      _orderByOptimizer            = new();
 		readonly MovingComplexityVisitor        _movingComplexityVisitor     = new();
 		readonly SqlExpressionOptimizerVisitor  _expressionOptimizerVisitor  = new(true);
 		readonly MovingOuterPredicateVisitor    _movingOuterPredicateVisitor = new();
@@ -87,12 +87,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					ProcessElement(_root);
 
-					_orderByOptimizer.OptimizeOrderBy(_root, _providerFlags);
+					_orderByOptimizer.OptimizeOrderBy(_root, _providerFlags, _columnNestingCorrector);
 					if (!_orderByOptimizer.IsOptimized)
 						break;
-
-					if (_orderByOptimizer.NeedsNestingUpdate)
-						CorrectColumnsNesting();
 
 				} while (true);
 
@@ -602,6 +599,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (selectQuery.GroupBy.Items.Count == selectQuery.Select.Columns.Count 
 					&& selectQuery.Having.IsEmpty
 					&& (selectQuery.Where.IsEmpty || !QueryHelper.ContainsAggregationOrWindowFunction(selectQuery.Where.SearchCondition))
+					&& (selectQuery.OrderBy.IsEmpty || !QueryHelper.ContainsAggregationOrWindowFunction(selectQuery.OrderBy))
 					&& selectQuery.GroupBy.Items.All(gi => selectQuery.Select.Columns.Any(c => c.Expression.Equals(gi))))
 				{
 					// All group by items are already in select columns, we can transform to distinct
@@ -987,26 +985,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			if (subQuery.OrderBy.Items.Count > 0)
 			{
-				var filterItems = !mainQuery.IsLimited && (mainQuery.Select.IsDistinct || !mainQuery.GroupBy.IsEmpty);
-
 				foreach (var item in subQuery.OrderBy.Items)
 				{
-					if (filterItems)
-					{
-						var skip = true;
-						foreach (var column in mainQuery.Select.Columns)
-						{
-							if (column.Expression is SqlColumn sc && sc.Expression.Equals(item.Expression))
-							{
-								skip = false;
-								break;
-							}
-						}
-
-						if (skip)
-							continue;
-					}
-
 					mainQuery.OrderBy.Expr(item.Expression, item.IsDescending, item.IsPositioned);
 				}
 			}
@@ -1538,10 +1518,31 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			var nullability = NullabilityContext.GetContext(parentQuery);
 
-			if (!subQuery.OrderBy.IsEmpty && QueryHelper.IsAggregationQuery(parentQuery, out var needsOrderBy) && needsOrderBy)
+			if (!subQuery.OrderBy.IsEmpty)
 			{
 				// not allowed to move to parent if it has aggregates
-				return false;
+				if (!parentQuery.IsSimpleButWhere)
+					return false;
+			}
+
+			if (!subQuery.OrderBy.IsEmpty)
+			{
+				if (QueryHelper.IsAggregationQuery(parentQuery, out var needsOrderBy) && needsOrderBy)
+					return false;
+
+				if (parentQuery.Select.IsDistinct)
+				{
+					// Check that all order by columns are in select list
+					foreach (var ob in subQuery.OrderBy.Items)
+					{
+						if (!parentQuery.Select.Columns.Any(c => QueryHelper.SameWithoutNullablity(c.Expression, ob.Expression)))
+						{
+							return false;
+						}
+					}
+
+					return false;
+				}
 			}
 
 			// Check columns
@@ -1774,10 +1775,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (!subQuery.GroupBy.Having.IsEmpty)
 					return false;
 
-				if (subQuery.Select.SkipValue    != null || subQuery.Select.TakeValue    != null ||
-				    parentQuery.Select.SkipValue != null || parentQuery.Select.TakeValue != null)
+				if (!subQuery.OrderBy.IsEmpty)
 				{
-					return false;
+					if (subQuery.IsLimited || parentQuery.IsLimited)
+						return false;
+				}
+				else
+				{
+					if (subQuery.IsLimited)
+						return false;
 				}
 
 				// Common column check for Distincts
