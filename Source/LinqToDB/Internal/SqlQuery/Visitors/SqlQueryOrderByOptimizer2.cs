@@ -222,7 +222,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 		}
 
-
 		protected internal override IQueryElement VisitCteClause(CteClause element)
 		{
 			base.VisitCteClause(element);
