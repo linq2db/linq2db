@@ -2262,13 +2262,14 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							var placeholder = placeholders[0];
 
-							if (_buildPurpose is BuildPurpose.Expression && node.Type == typeof(object))
+							if (_buildPurpose is BuildPurpose.Expression
+								&& (node.Type == typeof(object) || node.Method != null))
 								return base.VisitUnary(node);
 
-							if (node.IsLifted || node.Type == typeof(object))
+							if (node.Method == null && (node.IsLifted || node.Type == typeof(object)))
 								return Visit(placeholder.WithType(node.Type));
 
-							if (operandExpr is not SqlPlaceholderExpression)
+							if (node.Method == null && operandExpr is not SqlPlaceholderExpression)
 								return base.VisitUnary(node);
 
 							if (node.Type == typeof(bool) && node.Operand.Type == typeof(SqlBoolean))
@@ -2297,9 +2298,19 @@ namespace LinqToDB.Internal.Linq.Builder
 								return Visit(placeholder);
 
 							var castTo = MappingSchema.GetDbDataType(node.Type);
-							var sql = castTo.EqualsDbOnly(SqlDataType.MakeUndefined(node.Type).Type)
-								? placeholder.Sql
-								: PseudoFunctions.MakeCast(placeholder.Sql, castTo, s);
+
+							ISqlExpression sql;
+							if (castTo.EqualsDbOnly(SqlDataType.MakeUndefined(node.Type).Type))
+							{
+								if (node.Method != null)
+									return base.VisitUnary(node);
+
+								sql = placeholder.Sql;
+							}
+							else
+							{
+								sql = PseudoFunctions.MakeCast(placeholder.Sql, castTo, s);
+							}
 
 							return Visit(CreatePlaceholder(sql, node));
 						}

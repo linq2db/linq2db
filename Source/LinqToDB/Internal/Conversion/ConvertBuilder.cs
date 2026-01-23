@@ -582,10 +582,10 @@ namespace LinqToDB.Internal.Conversion
 					ex = new(
 						Expression.Condition(ExpressionHelper.Property(p, nameof(Nullable<>.HasValue)), ex.Value.Expression, new DefaultValueExpression(mappingSchema, to)),
 						ex.Value.IsSchemaSpecific);
-				//else if (from.IsClass)
-				//	ex = new(
-				//		Expression.Condition(Expression.NotEqual(p, Expression.Constant(null, from)), ex.Value.Expression, new DefaultValueExpression(mappingSchema, to)),
-				//		ex.Value.IsSchemaSpecific);
+				else if (from.IsClass)
+					ex = new(
+						Expression.Condition(Expression.NotEqual(p, Expression.Constant(null, from)), ex.Value.Expression, new DefaultValueExpression(mappingSchema, to)),
+						ex.Value.IsSchemaSpecific);
 			}
 
 			if (ex != null)
