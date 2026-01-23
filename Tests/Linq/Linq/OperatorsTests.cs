@@ -216,7 +216,6 @@ namespace Tests.Linq
 					return translationContext.CreateErrorExpression(binaryExpression.Right, type: binaryExpression.Method!.DeclaringType);
 
 				var factory = translationContext.ExpressionFactory;
-				var dbType  = factory.GetDbDataType(typeof(bool));
 
 				return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, factory.SearchCondition().Add(factory.Equal(factory.Add(factory.GetDbDataType(leftExpr), leftExpr, factory.Value(3)), rightExpr)), binaryExpression);
 			}
