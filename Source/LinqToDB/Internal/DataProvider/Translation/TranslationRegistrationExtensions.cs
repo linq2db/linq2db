@@ -93,7 +93,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			=> registration.RegisterUnaryOperatorInternal(operatorAccessPattern, translateOperatorFunc, isGenericTypeMatch: true);
 
 		public static void RegisterBinaryOperator<TLeft, TRight, TResult>(this TranslationRegistration registration, Expression<Func<TLeft, TRight, TResult>> operatorAccessPattern, TranslationRegistration.TranslateBinaryOperatorFunc translateOperatorFunc)
-			=> registration.RegisterBinaryOperatorInternal(operatorAccessPattern, translateOperatorFunc);
+			=> registration.RegisterBinaryOperatorInternal(operatorAccessPattern, translateOperatorFunc, isGenericTypeMatch: false);
+
+		public static void RegisterGenericBinaryOperator<TLeft, TRight, TResult>(this TranslationRegistration registration, Expression<Func<TLeft, TRight, TResult>> operatorAccessPattern, TranslationRegistration.TranslateBinaryOperatorFunc translateOperatorFunc)
+			=> registration.RegisterBinaryOperatorInternal(operatorAccessPattern, translateOperatorFunc, isGenericTypeMatch: true);
 
 		#endregion
 	}

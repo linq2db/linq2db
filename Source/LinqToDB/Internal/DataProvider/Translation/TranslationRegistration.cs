@@ -66,7 +66,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			var memberInfoWithType = MemberHelper.GetMemberInfoWithType(operatorAccessPattern);
 
 			if (memberInfoWithType.MemberInfo is not MethodInfo { MemberType: MemberTypes.Method, IsStatic: true } methodInfo)
-				throw new ArgumentException("OperatorAccessPattern must be a static non-generic method call.");
+				throw new ArgumentException("Unary operator access pattern must have static method call.");
 
 			if (!isGenericTypeMatch && methodInfo.IsGenericMethod)
 				memberInfoWithType.MemberInfo = methodInfo.GetGenericMethodDefinitionCached();
@@ -74,12 +74,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			_translations[memberInfoWithType] = (ctx, member, flags) => translateOperatorFunc(ctx, (UnaryExpression)member, flags);
 		}
 
-		public void RegisterBinaryOperatorInternal(LambdaExpression operatorAccessPattern, TranslateBinaryOperatorFunc translateOperatorFunc)
+		public void RegisterBinaryOperatorInternal(LambdaExpression operatorAccessPattern, TranslateBinaryOperatorFunc translateOperatorFunc, bool isGenericTypeMatch)
 		{
 			var memberInfoWithType = MemberHelper.GetMemberInfoWithType(operatorAccessPattern);
 
-			if (memberInfoWithType.MemberInfo is not MethodInfo { MemberType: MemberTypes.Method, IsStatic: true, IsGenericMethod: false } methodInfo)
-				throw new ArgumentException("OperatorAccessPattern must be a static method call.");
+			if (memberInfoWithType.MemberInfo is not MethodInfo { MemberType: MemberTypes.Method, IsStatic: true } methodInfo)
+				throw new ArgumentException("Binary operator access pattern must have static method call.");
+
+			if (!isGenericTypeMatch && methodInfo.IsGenericMethod)
+				memberInfoWithType.MemberInfo = methodInfo.GetGenericMethodDefinitionCached();
 
 			_translations[memberInfoWithType] = (ctx, member, flags) => translateOperatorFunc(ctx, (BinaryExpression)member, flags);
 		}
