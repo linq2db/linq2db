@@ -161,7 +161,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context, SetupMapping(fb =>
 			{
 				// operator== : (L + 3) == R
-				// Equals used intead of == to avoid infinite recursion
+				// Equals used instead of == to avoid infinite recursion
 				fb.Entity<CustomInt>().Member(v => v == 3).HasAttribute(new ExpressionMethodAttribute((Expression<Func<CustomInt, int, bool>>)((l, r) => (l + 3).Equals(r))));
 				fb.Entity<CustomInt?>().Member(v => v == 3).HasAttribute(new ExpressionMethodAttribute((Expression<Func<CustomInt?, int, bool>>)((l, r) => l != null && ((l + 3).Equals(r)))));
 				fb.Entity<CustomIntClass>().Member(v => v == 3).HasAttribute(new ExpressionMethodAttribute((Expression<Func<CustomIntClass, int, bool>>)((l, r) => (l + 3).Equals(r))));
