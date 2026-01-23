@@ -680,8 +680,9 @@ namespace Tests.Linq
 		public void ImplicitTest_WithMapping([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var fb = new FluentMappingBuilder();
-			fb.Entity<string>().Member(v => (ImplicitValue<string>)v).HasAttribute(new Sql.ExpressionAttribute("{0}"));
-			fb.Entity<int?>().Member(v => (ImplicitValue<int?>)v).HasAttribute(new Sql.ExpressionAttribute("{0}"));
+
+			fb.Entity<string?>().Member(v => (ImplicitValue<string?>)v).HasAttribute(new ExpressionMethodAttribute((Expression<Func<string?, ImplicitValue<string?>>>)(v => new ImplicitValue<string?>() { Value = v })));
+			fb.Entity<int?>().Member(v => (ImplicitValue<int?>)v).HasAttribute(new ExpressionMethodAttribute((Expression<Func<int?, ImplicitValue<int?>>>)(v => new ImplicitValue<int?>() { Value = v })));
 
 			using var db = GetDataContext(context, fb.Build().MappingSchema);
 
