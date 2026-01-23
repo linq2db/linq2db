@@ -435,7 +435,7 @@ namespace Tests.Linq
 
 					ms.AddScalarType(typeof(TenderId), DataType.Guid);
 
-					// db-specific mappingss
+					// db-specific mappings
 					ms.SetConverter<byte[], TenderId>(From);
 					ms.SetConverter<string, TenderId>(From);
 				}
