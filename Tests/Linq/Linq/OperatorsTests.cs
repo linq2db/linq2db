@@ -434,13 +434,18 @@ namespace Tests.Linq
 					ms.SetConverter<TenderId?, LinqToDB.Data.DataParameter>(id => new LinqToDB.Data.DataParameter { DataType = DataType.Guid, Value = (Guid?)id });
 
 					ms.AddScalarType(typeof(TenderId), DataType.Guid);
+
+					// db-specific mappingss
+					ms.SetConverter<byte[], TenderId>(From);
+					ms.SetConverter<string, TenderId>(From);
 				}
+
+				// to map values from sqlite.ms and some other databases without native guid
+				public static TenderId From(byte[] value) => new TenderId { Value = new Guid(value) };
+				public static TenderId From(string value) => new TenderId { Value = Guid.Parse(value) };
 			}
 		}
 
-		//[ActiveIssue(
-		//	Configurations = [TestProvName.AllSapHana, TestProvName.AllSybase, ProviderName.SQLiteMS, TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllOracle, ProviderName.ClickHouseMySql],
-		//	Details = "Reader expressions configuration weakness: we ask for reader for TenderId but get reader for byte[], without conversion defined between them")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5254")]
 		public void ClientConversion_UnmappedOperators([DataSources(false)] string context)
 		{
@@ -546,12 +551,18 @@ namespace Tests.Linq
 
 					ms.AddScalarType(typeof(TenderId), DataType.Guid);
 				}
+
+				// to map values from sqlite.ms and some other databases without native guid
+				[ExpressionMethod(nameof(BinaryToId))]
+				public static explicit operator TenderId(byte[] value) => new TenderId { Value = new Guid(value) };
+				[ExpressionMethod(nameof(StringToId))]
+				public static explicit operator TenderId(string value) => new TenderId { Value = Guid.Parse(value) };
+
+				static Expression<Func<byte[], TenderId>> BinaryToId() => value => new TenderId { Value = new Guid(value) };
+				static Expression<Func<string, TenderId>> StringToId() => value => new TenderId { Value = Guid.Parse(value) };
 			}
 		}
 
-		//[ActiveIssue(
-		//	Configurations = [TestProvName.AllSapHana, TestProvName.AllSybase, ProviderName.SQLiteMS, TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllOracle, ProviderName.ClickHouseMySql],
-		//	Details = "Reader expressions configuration weakness: we ask for reader for TenderId but get reader for byte[], without conversion defined between them")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5254")]
 		public void ClientConversion_MappedOperators([DataSources(false)] string context)
 		{
