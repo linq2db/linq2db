@@ -15,7 +15,7 @@ jobs:
     displayName: Download LinqToDB files
     inputs:
       artifactName: '$(artifact_nugets)'
-      targetPath: '$(Build.SourcesDirectory)/.build/package/release'
+      targetPath: '$(Build.SourcesDirectory)/.build/nugets'
 
   - task: NuGetCommand@2
     inputs:
