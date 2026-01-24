@@ -18,7 +18,7 @@
 
 	<PropertyGroup Label="Nuget">
 		<Title>LINQ to DB driver for LINQPad</Title>
-		<Description>Supported databases: IBM DB2 LUW/zOS, Firebird, IBM Informix, Microsoft Access, Microsoft Sql Server (+Azure), Microsoft Sql Server Compact, MySql, MariaDB, Oracle, PostgreSQL, SQLite, SAP HANA, SAP/Sybase ASE, ClickHouse.</Description>
+		<Description>Supported databases: IBM DB2 LUW/zOS/iSeries, Firebird, IBM Informix, Microsoft Access, Microsoft Sql Server (+Azure), Microsoft Sql Server Compact, MySql, MariaDB, Oracle, PostgreSQL, SQLite, SAP HANA, SAP/Sybase ASE, ClickHouse.</Description>
 		<Product>$(Title)</Product>
 
 		<PackageTags>$(PackageTags);linqpaddriver;linqpad;iseries</PackageTags>
