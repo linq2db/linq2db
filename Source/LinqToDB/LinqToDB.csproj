@@ -5,7 +5,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup Label="Nuget">
-		<Title>Linq to DB</Title>
+		<Title>LINQ to DB</Title>
 		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
 		<Product>$(Title)</Product>
 	</PropertyGroup>
