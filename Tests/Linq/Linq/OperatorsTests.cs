@@ -30,8 +30,9 @@ namespace Tests.Linq
 			public int Value;
 
 			public static implicit operator CustomInt(int value) => new CustomInt() { Value = value };
-			// long conversion needed for sqlite
+			// long conversion needed for sqlite, decimal - for oracle
 			public static implicit operator CustomInt(long value) => new CustomInt() { Value = (int)value };
+			public static implicit operator CustomInt(decimal value) => new CustomInt() { Value = (int)value };
 
 			public static bool operator ==(CustomInt left, int right) => left.Value == right;
 			public static bool operator !=(CustomInt left, int right) => left.Value != right;
@@ -51,8 +52,9 @@ namespace Tests.Linq
 			public int Value;
 
 			public static implicit operator CustomIntClass(int value) => new CustomIntClass() { Value = value };
-			// long conversion needed for sqlite
+			// long conversion needed for sqlite, decimal - for oracle
 			public static implicit operator CustomIntClass(long value) => new CustomIntClass() { Value = (int)value };
+			public static implicit operator CustomIntClass(decimal value) => new CustomIntClass() { Value = (int)value };
 
 			public static bool operator ==(CustomIntClass? left, int right) => left?.Value == right;
 			public static bool operator !=(CustomIntClass? left, int right) => left?.Value != right;
