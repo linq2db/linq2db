@@ -201,7 +201,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						var cexpr = (MethodCallExpression)expression;
 
-						if (cexpr.Method.IsSqlPropertyMethodEx())
+						if (cexpr.Method.IsSqlPropertyMethod)
 						{
 							var memberInfo   = MemberHelper.GetMemberInfo(cexpr);
 							var memberAccess = Expression.MakeMemberAccess(cexpr.Arguments[0], memberInfo);

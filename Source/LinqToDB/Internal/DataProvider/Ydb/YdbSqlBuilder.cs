@@ -313,7 +313,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!statement.IsUpdate())
+			if (!statement.IsUpdate)
 				base.BuildFromClause(statement, selectQuery);
 		}
 

@@ -539,7 +539,7 @@ namespace LinqToDB.Data
 
 				if (dataConnection.DataProvider.SqlProviderFlags.IsIdentityParameterRequired)
 				{
-					if (executionQuery.PreparedQuery.Statement.NeedsIdentity())
+					if (executionQuery.PreparedQuery.Statement.NeedsIdentity)
 					{
 						idParam = dataConnection.CurrentCommand!.CreateParameter();
 
@@ -740,7 +740,7 @@ namespace LinqToDB.Data
 
 				if (_dataConnection.DataProvider.SqlProviderFlags.IsIdentityParameterRequired)
 				{
-					if (_executionQuery!.PreparedQuery.Statement.NeedsIdentity())
+					if (_executionQuery!.PreparedQuery.Statement.NeedsIdentity)
 					{
 						idparam = _dataConnection.CurrentCommand!.CreateParameter();
 

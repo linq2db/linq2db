@@ -84,7 +84,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			}
 			else
 			{
-				BuildOutputSubclause(statement.GetOutputClause());
+				BuildOutputSubclause(statement.OutputClause);
 			}
 		}
 
@@ -141,7 +141,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 			Convert(StringBuilder, alias, ConvertType.NameToQueryTableAlias);
 			StringBuilder.AppendLine();
-			BuildOutputSubclause(deleteStatement.GetOutputClause());
+			BuildOutputSubclause(deleteStatement.OutputClause);
 		}
 
 		protected override void BuildOutputSubclause(SqlOutputClause? output)
@@ -158,7 +158,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			SqlUpdateClause                                    updateClause)
 		{
 			base.BuildUpdateClause(statement, selectQuery, updateClause);
-			BuildOutputSubclause(statement.GetOutputClause());
+			BuildOutputSubclause(statement.OutputClause);
 		}
 
 		protected override void BuildUpdateTableName(SelectQuery selectQuery,

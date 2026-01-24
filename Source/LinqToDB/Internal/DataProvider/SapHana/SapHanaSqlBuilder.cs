@@ -31,12 +31,12 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			return statement.NeedsIdentity() ? 2 : 1;
+			return statement.NeedsIdentity ? 2 : 1;
 		}
 
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
-			var insertClause = Statement.GetInsertClause();
+			var insertClause = Statement.InsertClause;
 			if (insertClause != null)
 			{
 				var identityField = insertClause.Into!.GetIdentityField();

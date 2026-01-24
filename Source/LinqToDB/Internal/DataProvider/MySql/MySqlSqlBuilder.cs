@@ -42,7 +42,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			return statement.NeedsIdentity() ? 2 : 1;
+			return statement.NeedsIdentity ? 2 : 1;
 		}
 
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)
@@ -274,7 +274,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count != 0)
 			{
-				BuildStep = Step.WithClause;      BuildWithClause        (statement.GetWithClause());
+				BuildStep = Step.WithClause;      BuildWithClause        (statement.WithClause);
 				BuildStep = Step.SelectClause;    BuildSelectClause      (statement.SelectQuery);
 				BuildStep = Step.FromClause;      BuildFromClause        (statement, statement.SelectQuery);
 				BuildStep = Step.WhereClause;     BuildWhereClause       (statement.SelectQuery);
@@ -289,13 +289,13 @@ namespace LinqToDB.Internal.DataProvider.MySql
 				BuildGetIdentity(insertClause);
 			else
 			{
-				BuildOutputSubclause(statement.GetOutputClause());
+				BuildOutputSubclause(statement.OutputClause);
 			}
 		}
 
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!statement.IsUpdate())
+			if (!statement.IsUpdate)
 				base.BuildFromClause(statement, selectQuery);
 		}
 

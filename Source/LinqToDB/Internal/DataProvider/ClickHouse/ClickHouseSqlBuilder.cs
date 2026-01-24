@@ -437,7 +437,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count != 0)
 			{
-				BuildStep = Step.WithClause     ; BuildWithClause     (statement.GetWithClause());
+				BuildStep = Step.WithClause     ; BuildWithClause     (statement.WithClause);
 				BuildStep = Step.SelectClause   ; BuildSelectClause   (statement.SelectQuery);
 				BuildStep = Step.FromClause     ; BuildFromClause     (statement, statement.SelectQuery);
 				BuildStep = Step.WhereClause    ; BuildWhereClause    (statement.SelectQuery);
@@ -456,7 +456,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					throw new InvalidOperationException();
 
 				BuildStep = Step.Output;
-				BuildOutputSubclause(statement.GetOutputClause());
+				BuildOutputSubclause(statement.OutputClause);
 			}
 		}
 		#endregion

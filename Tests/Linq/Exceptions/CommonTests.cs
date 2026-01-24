@@ -22,7 +22,7 @@ namespace Tests.Exceptions
 
 			protected override SqlStatement ProcessQuery(SqlStatement statement, EvaluationContext context)
 			{
-				if (statement.IsInsert() && statement.RequireInsertClause().Into!.TableName.Name == "Parent")
+				if (statement.IsInsert && statement.RequireInsertClause().Into!.TableName.Name == "Parent")
 				{
 #pragma warning disable IDE0019 // Use pattern matching
 					var expr =

@@ -36,18 +36,12 @@ namespace LinqToDB.Mapping
 			MemberInfo            = memberAccessor.MemberInfo;
 			HasInheritanceMapping = hasInheritanceMapping;
 
-			if (MemberInfo.IsFieldEx())
+			MemberType = MemberInfo switch
 			{
-				var fieldInfo = (FieldInfo)MemberInfo;
-				MemberType    = fieldInfo.FieldType;
-			}
-			else if (MemberInfo.IsPropertyEx())
-			{
-				var propertyInfo = (PropertyInfo)MemberInfo;
-				MemberType       = propertyInfo.PropertyType;
-			}
-			else
-				throw new LinqToDBException($"Column should be mapped to property of field. Was: {MemberInfo.GetType()}.");
+				FieldInfo { MemberType: MemberTypes.Field } fi => fi.FieldType,
+				PropertyInfo { MemberType: MemberTypes.Property } pi => pi.PropertyType,
+				_ => throw new LinqToDBException($"Column should be mapped to property of field. Was: {MemberInfo.GetType()}."),
+			};
 
 			var dataType = mappingSchema.GetDataType(MemberType);
 			if (dataType.Type.DataType == DataType.Undefined)

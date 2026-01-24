@@ -13,45 +13,70 @@ namespace LinqToDB.Internal.SqlQuery
 	/// </summary>
 	public static class SqlExtensions
 	{
-		internal static Func<ISqlExpression,ISqlExpression,bool> DefaultComparer = (x, y) => true;
+		internal static Func<ISqlExpression, ISqlExpression, bool> DefaultComparer = (x, y) => true;
 
-		/// <summary>
-		/// This is internal API and is not intended for use by Linq To DB applications.
-		/// It may change or be removed without further notice.
-		/// </summary>
-		public static bool IsInsert(this SqlStatement statement)
+		extension(SqlStatement statement)
 		{
-			return statement.QueryType 
-				is QueryType.Insert
-				or QueryType.InsertOrUpdate
-				or QueryType.MultiInsert;
-		}
+			/// <summary>
+			/// This is internal API and is not intended for use by Linq To DB applications.
+			/// It may change or be removed without further notice.
+			/// </summary>
+			public bool IsInsert =>
+				statement.QueryType 
+					is QueryType.Insert
+					or QueryType.InsertOrUpdate
+					or QueryType.MultiInsert;
 
-		/// <summary>
-		/// This is internal API and is not intended for use by Linq To DB applications.
-		/// It may change or be removed without further notice.
-		/// </summary>
-		public static bool NeedsIdentity(this SqlStatement statement)
-		{
-			return statement is SqlInsertStatement { QueryType: QueryType.Insert, Insert.WithIdentity: true };
-		}
+			/// <summary>
+			/// This is internal API and is not intended for use by Linq To DB applications.
+			/// It may change or be removed without further notice.
+			/// </summary>
+			public bool NeedsIdentity => 
+				statement is SqlInsertStatement { QueryType: QueryType.Insert, Insert.WithIdentity: true };
 
-		/// <summary>
-		/// This is internal API and is not intended for use by Linq To DB applications.
-		/// It may change or be removed without further notice.
-		/// </summary>
-		public static bool IsUpdate(this SqlStatement statement)
-		{
-			return statement is { QueryType: QueryType.Update };
-		}
+			/// <summary>
+			/// This is internal API and is not intended for use by Linq To DB applications.
+			/// It may change or be removed without further notice.
+			/// </summary>
+			public bool IsUpdate => statement is { QueryType: QueryType.Update };
 
-		/// <summary>
-		/// This is internal API and is not intended for use by Linq To DB applications.
-		/// It may change or be removed without further notice.
-		/// </summary>
-		public static bool IsDelete(this SqlStatement statement)
-		{
-			return statement is { QueryType: QueryType.Delete };
+			/// <summary>
+			/// This is internal API and is not intended for use by Linq To DB applications.
+			/// It may change or be removed without further notice.
+			/// </summary>
+			public bool IsDelete => statement is { QueryType: QueryType.Delete };
+
+			/// <summary>
+			/// This is internal API and is not intended for use by Linq To DB applications.
+			/// It may change or be removed without further notice.
+			/// </summary>
+			public SqlInsertClause? InsertClause =>
+				statement switch
+				{
+					SqlInsertStatement insert => insert.Insert,
+					SqlInsertOrUpdateStatement update => update.Insert,
+					_ => null,
+				};
+
+			public SqlWithClause? WithClause =>
+				statement switch
+				{
+					SqlStatementWithQueryBase query => query.With,
+					_ => null,
+				};
+
+			/// <summary>
+			/// This is internal API and is not intended for use by Linq To DB applications.
+			/// It may change or be removed without further notice.
+			/// </summary>
+			public SqlOutputClause? OutputClause =>
+				statement switch
+				{
+					SqlInsertStatement insert => insert.Output,
+					SqlUpdateStatement update => update.Output,
+					SqlDeleteStatement delete => delete.Output,
+					_ => null,
+				};
 		}
 
 		/// <summary>
@@ -67,44 +92,6 @@ namespace LinqToDB.Internal.SqlQuery
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.
 		/// </summary>
-		public static SqlInsertClause? GetInsertClause(this SqlStatement statement)
-		{
-			return statement switch
-			{
-				SqlInsertStatement insert         => insert.Insert,
-				SqlInsertOrUpdateStatement update => update.Insert,
-				_                                 => null,
-			};
-		}
-
-		public static SqlWithClause? GetWithClause(this SqlStatement statement)
-		{
-			return statement switch
-			{
-				SqlStatementWithQueryBase query => query.With,
-				_                               => null,
-			};
-		}
-
-		/// <summary>
-		/// This is internal API and is not intended for use by Linq To DB applications.
-		/// It may change or be removed without further notice.
-		/// </summary>
-		public static SqlOutputClause? GetOutputClause(this SqlStatement statement)
-		{
-			return statement switch
-			{
-				SqlInsertStatement insert => insert.Output,
-				SqlUpdateStatement update => update.Output,
-				SqlDeleteStatement delete => delete.Output,
-				_ => null,
-			};
-		}
-
-		/// <summary>
-		/// This is internal API and is not intended for use by Linq To DB applications.
-		/// It may change or be removed without further notice.
-		/// </summary>
 		public static SelectQuery EnsureQuery(this SqlStatement statement)
 		{
 			var selectQuery = statement.SelectQuery;
@@ -113,17 +100,11 @@ namespace LinqToDB.Internal.SqlQuery
 			return selectQuery;
 		}
 
-		internal static bool IsSqlRow(this Expression expression)
-			=> expression.Type.IsSqlRow();
-
-		private static bool IsSqlRow(this Type type)
-			=> type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Sql.SqlRow<,>);
-
-		internal static ReadOnlyCollection<Expression> GetSqlRowValues(this Expression expr)
+		extension(Expression expression)
 		{
-			return expr is MethodCallExpression { Method.Name: "Row" } call
-				? call.Arguments
-				: throw new LinqToDBException("Calls to Sql.Row() are the only valid expressions of type SqlRow.");
+			internal bool IsSqlRow => 
+				expression.Type.IsGenericType
+				&& expression.Type.GetGenericTypeDefinition() == typeof(Sql.SqlRow<,>);
 		}
 
 		internal static SqlTable Set(this SqlTable table, bool? set, TableOptions tableOptions)

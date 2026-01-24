@@ -27,7 +27,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 			return statement switch
 			{
 				SqlTruncateTableStatement trun => trun.ResetIdentity ? 1 + trun.Table!.IdentityFields.Count : 1,
-				_ => statement.NeedsIdentity() ? 2 : 1,
+				_ => statement.NeedsIdentity ? 2 : 1,
 			};
 		}
 

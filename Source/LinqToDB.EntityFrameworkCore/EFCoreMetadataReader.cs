@@ -467,14 +467,14 @@ namespace LinqToDB.EntityFrameworkCore
 			// Sql.ExpressionAttribute
 			if (_dependencies != null)
 			{
-				if (memberInfo.IsMethodEx())
+				if (memberInfo.IsMethod)
 				{
 					var methodInfo = (MethodInfo) memberInfo;
 					var func = GetDbFunctionFromMethodCall(type, methodInfo);
 					if (func != null)
 						(result ??= new()).Add(func);
 				}
-				else if (memberInfo.IsPropertyEx())
+				else if (memberInfo.IsProperty)
 				{
 					var propertyInfo = (PropertyInfo) memberInfo;
 					var func = GetDbFunctionFromProperty(type, propertyInfo);
@@ -484,7 +484,7 @@ namespace LinqToDB.EntityFrameworkCore
 			}
 
 			// Sql.FunctionAttribute
-			if (memberInfo.IsMethodEx())
+			if (memberInfo.IsMethod)
 			{
 				var method = (MethodInfo) memberInfo;
 

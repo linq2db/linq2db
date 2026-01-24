@@ -436,7 +436,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				// handling inheritance
 				if (assignment.MemberInfo.DeclaringType?.IsAssignableFrom(typeAccessor.Type) == true)
 				{
-					if (assignment.MemberInfo.IsDynamicColumnPropertyEx())
+					if (assignment.MemberInfo.IsDynamicColumnProperty)
 					{
 						dynamicProperties ??= new List<SqlGenericConstructorExpression.Assignment>();
 						dynamicProperties.Add(assignment);

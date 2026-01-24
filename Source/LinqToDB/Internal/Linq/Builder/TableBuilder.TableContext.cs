@@ -437,7 +437,7 @@ namespace LinqToDB.Internal.Linq.Builder
 								if (field.ColumnDescriptor.MemberInfo.EqualsTo(memberExpression.Member, SqlTable.ObjectType))
 								{
 									if (field.ColumnDescriptor.MemberAccessor.IsComplex
-										&& !field.ColumnDescriptor.MemberAccessor.MemberInfo.IsDynamicColumnPropertyEx())
+										&& !field.ColumnDescriptor.MemberAccessor.MemberInfo.IsDynamicColumnProperty)
 									{
 										var name = memberExpression.Member.Name;
 										var me   = memberExpression;
@@ -477,7 +477,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 							}
 
-							if (memberExpression.Member.IsDynamicColumnPropertyEx())
+							if (memberExpression.Member.IsDynamicColumnProperty)
 							{
 								var fieldName = memberExpression.Member.Name;
 

@@ -205,7 +205,7 @@ namespace LinqToDB.Reflection
 
 			_getterArguments = new[] { objParam };
 
-			if (HasGetter && memberInfo.IsDynamicColumnPropertyEx())
+			if (HasGetter && memberInfo.IsDynamicColumnProperty)
 			{
 				IsComplex = true;
 
@@ -229,7 +229,7 @@ namespace LinqToDB.Reflection
 				_getterExpression = new DefaultValueExpression(ed?.MappingSchema ?? MappingSchema.Default, Type);
 
 			_setterArguments = new[] { objParam, valueParam };
-			if (HasSetter && memberInfo.IsDynamicColumnPropertyEx())
+			if (HasSetter && memberInfo.IsDynamicColumnProperty)
 			{
 				IsComplex = true;
 

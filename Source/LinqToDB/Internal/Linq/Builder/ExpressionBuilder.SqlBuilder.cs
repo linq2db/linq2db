@@ -1852,7 +1852,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (!mc.Method.IsStatic)
 						break;
 
-					if (mc.Method.IsSqlPropertyMethodEx() || mc.IsSqlRow() || mc.Method.DeclaringType == typeof(string))
+					if (mc.Method.IsSqlPropertyMethod || mc.IsSqlRow || mc.Method.DeclaringType == typeof(string))
 						break;
 
 					return new SqlGenericConstructorExpression(mc);

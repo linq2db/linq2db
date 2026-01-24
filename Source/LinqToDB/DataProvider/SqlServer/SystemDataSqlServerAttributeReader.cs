@@ -113,13 +113,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			// (which probably will never happen anyways)
 
 			MappingAttribute[]? result = null;
-			if (memberInfo.IsMethodEx() || memberInfo.IsPropertyEx())
+			if (memberInfo.IsMethod || memberInfo.IsProperty)
 			{
 				result = _cache.GetOrAdd(
 					(memberInfo, attributeType: _sqlMethodAttribute),
 					static (key, nameGetter) =>
 					{
-						if (key.memberInfo.IsMethodEx())
+						if (key.memberInfo.IsMethod)
 						{
 							var attr = FindAttribute(key.memberInfo, key.attributeType);
 

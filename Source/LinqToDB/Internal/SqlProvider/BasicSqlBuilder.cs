@@ -393,7 +393,7 @@ namespace LinqToDB.Internal.SqlProvider
 			BuildStep = Step.HavingClause;      BuildHavingClause(deleteStatement.SelectQuery);
 			BuildStep = Step.OrderByClause;     BuildOrderByClause(deleteStatement.SelectQuery);
 			BuildStep = Step.OffsetLimit;       BuildOffsetLimit(deleteStatement.SelectQuery);
-			BuildStep = Step.Output;            BuildOutputSubclause(deleteStatement.GetOutputClause());
+			BuildStep = Step.Output;            BuildOutputSubclause(deleteStatement.OutputClause);
 			BuildStep = Step.QueryExtensions;   BuildSubQueryExtensions(deleteStatement);
 		}
 
@@ -411,7 +411,7 @@ namespace LinqToDB.Internal.SqlProvider
 			++Indent;
 
 			var selectStatement = new SqlSelectStatement(deleteStatement.SelectQuery)
-			{ ParentStatement = deleteStatement, With = deleteStatement.GetWithClause() };
+			{ ParentStatement = deleteStatement, With = deleteStatement.WithClause };
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			sqlBuilder.BuildSql(0, selectStatement, StringBuilder, OptimizationContext, AliasesContext, NullabilityContext, Indent);
@@ -425,7 +425,7 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual void BuildUpdateQuery(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
 			BuildStep = Step.Tag;          BuildTag(statement);
-			BuildStep = Step.WithClause;   BuildWithClause(statement.GetWithClause());
+			BuildStep = Step.WithClause;   BuildWithClause(statement.WithClause);
 			BuildStep = Step.UpdateClause; BuildUpdateClause(Statement, selectQuery, updateClause);
 
 			if (SqlProviderFlags.IsUpdateFromSupported)
@@ -438,7 +438,7 @@ namespace LinqToDB.Internal.SqlProvider
 			BuildStep = Step.HavingClause;    BuildHavingClause(selectQuery);
 			BuildStep = Step.OrderByClause;   BuildOrderByClause(selectQuery);
 			BuildStep = Step.OffsetLimit;     BuildOffsetLimit(selectQuery);
-			BuildStep = Step.Output;          BuildOutputSubclause(statement.GetOutputClause());
+			BuildStep = Step.Output;          BuildOutputSubclause(statement.OutputClause);
 			BuildStep = Step.QueryExtensions; BuildSubQueryExtensions(statement);
 		}
 
@@ -484,7 +484,7 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			BuildStep = Step.Tag;          BuildTag(statement);
-			BuildStep = Step.WithClause;   BuildWithClause(statement.GetWithClause());
+			BuildStep = Step.WithClause;   BuildWithClause(statement.WithClause);
 			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count != 0)
@@ -504,7 +504,7 @@ namespace LinqToDB.Internal.SqlProvider
 			else
 			{
 				BuildStep = Step.Output;
-				BuildOutputSubclause(statement.GetOutputClause());
+				BuildOutputSubclause(statement.OutputClause);
 			}
 		}
 
@@ -513,7 +513,7 @@ namespace LinqToDB.Internal.SqlProvider
 			BuildStep = Step.Tag;          BuildTag(statement);
 			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
 
-			BuildStep = Step.WithClause;   BuildWithClause(statement.GetWithClause());
+			BuildStep = Step.WithClause;   BuildWithClause(statement.WithClause);
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count != 0)
 			{
@@ -530,7 +530,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (insertClause.WithIdentity)
 				BuildGetIdentity(insertClause);
 			else
-				BuildOutputSubclause(statement.GetOutputClause());
+				BuildOutputSubclause(statement.OutputClause);
 		}
 
 		protected virtual void BuildMultiInsertQuery(SqlMultiInsertStatement statement)

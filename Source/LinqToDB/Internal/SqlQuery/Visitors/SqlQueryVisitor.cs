@@ -65,7 +65,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return VisitMode switch
 			{
 				VisitMode.ReadOnly => VisitMode.ReadOnly,
+
+				// when element was already replaced with new instance, we don't need to replace it again and can modify it inplace
 				VisitMode.Transform when _transformationInfo?.IsReplaced(element) == true => VisitMode.Modify,
+
 				var vm => vm,
 			};
 		}
@@ -186,7 +189,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return VisitMode switch
 				{
 					VisitMode.ReadOnly => VisitMode.ReadOnly,
+
+					// when element was already replaced with new instance, we don't need to replace it again and can modify it inplace
 					VisitMode.Transform when _queryVisitor._transformationInfo?.IsReplaced(element) == true => VisitMode.Modify,
+
 					var vm => vm,
 				};
 			}

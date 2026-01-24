@@ -559,10 +559,10 @@ namespace LinqToDB.EntityFrameworkCore
 					{
 						var member = (MemberExpression) expr;
 
-						if (member.Member.IsFieldEx())
+						if (member.Member.IsField)
 							return ((FieldInfo)member.Member).GetValue(EvaluateExpression(member.Expression));
 
-						if (member.Member.IsPropertyEx())
+						if (member.Member.IsProperty)
 							return ((PropertyInfo)member.Member).GetValue(EvaluateExpression(member.Expression), null);
 
 						break;

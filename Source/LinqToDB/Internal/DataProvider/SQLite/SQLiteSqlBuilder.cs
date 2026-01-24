@@ -34,7 +34,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			return statement switch
 			{
 				SqlTruncateTableStatement trun => trun.ResetIdentity && trun.Table!.IdentityFields.Count > 0 ? 2 : 1,
-				_ => statement.NeedsIdentity() ? 2 : 1,
+				_ => statement.NeedsIdentity ? 2 : 1,
 			};
 		}
 
@@ -261,13 +261,13 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		protected override void BuildUpdateQuery(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
 			BuildStep = Step.Tag;             BuildTag(statement);
-			BuildStep = Step.WithClause;      BuildWithClause(statement.GetWithClause());
+			BuildStep = Step.WithClause;      BuildWithClause(statement.WithClause);
 			BuildStep = Step.UpdateClause;    BuildUpdateClause(Statement, selectQuery, updateClause);
 			BuildStep = Step.FromClause;      BuildFromClause(Statement, selectQuery);
 			BuildStep = Step.WhereClause;     BuildUpdateWhereClause(selectQuery);
 			BuildStep = Step.GroupByClause;   BuildGroupByClause(selectQuery);
 			BuildStep = Step.HavingClause;    BuildHavingClause(selectQuery);
-			BuildStep = Step.Output;          BuildOutputSubclause(statement.GetOutputClause());
+			BuildStep = Step.Output;          BuildOutputSubclause(statement.OutputClause);
 			BuildStep = Step.OrderByClause;   BuildOrderByClause(selectQuery);
 			BuildStep = Step.OffsetLimit;     BuildOffsetLimit(selectQuery);
 			BuildStep = Step.QueryExtensions; BuildSubQueryExtensions(statement);
