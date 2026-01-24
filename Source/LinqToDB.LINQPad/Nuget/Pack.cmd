@@ -17,7 +17,7 @@ REM Clean previous artifacts, but don't fail if they don't exist
 if exist "%RELDIR%\linq2db.LINQPad.%EXT%" del /q "%RELDIR%\linq2db.LINQPad.%EXT%"
 if exist "%RELDIR%\linq2db.LINQPad.%EXT%.zip" del /q "%RELDIR%\linq2db.LINQPad.%EXT%.zip"
 
-REM For LP5/LP6 remove satellite folders and extra files
+REM For LP5 remove satellite folders and extra files
 if /i "%EXT%"=="lpx" (
   for %%L in (cs,de,es,fr,it,ja,ko,pl,pt,pt-BR,ru,tr,zh-Hans,zh-Hant) do (
     if exist "%OUTDIR%%%L" rd /s /q "%OUTDIR%%%L"
