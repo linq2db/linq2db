@@ -1054,7 +1054,12 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					=> new DbContextOptionsBuilder<DbContext>().UseNpgsql(connectionString),
 #if !NET10_0
 				_ when provider.IsAnyOf(TestProvName.AllMySql)
-					=> new DbContextOptionsBuilder<DbContext>().UseMySql(connectionString),
+					=> new DbContextOptionsBuilder<DbContext>()
+#if !NETFRAMEWORK
+					.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)),
+#else
+					.UseMySql(connectionString),
+#endif
 #endif
 				_ when provider.IsAnyOf(TestProvName.AllSQLite)
 					=> new DbContextOptionsBuilder<DbContext>().UseSqlite(connectionString),
