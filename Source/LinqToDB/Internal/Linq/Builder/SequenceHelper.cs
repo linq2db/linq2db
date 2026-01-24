@@ -915,26 +915,23 @@ namespace LinqToDB.Internal.Linq.Builder
 		//TODO: I don't like this. Hints are like mess. Quick workaround before review
 		public static QueryExtensionBuilder.JoinHintContext? GetJoinHintContext(IBuildContext context)
 		{
-			if (context is QueryExtensionBuilder.JoinHintContext hintContext)
-				return hintContext;
-			if (context is PassThroughContext pt)
-				return GetJoinHintContext(pt.Context);
-			if (context is SubQueryContext sc)
-				return GetJoinHintContext(sc.SubQuery);
-			if (context is DefaultIfEmptyBuilder.DefaultIfEmptyContext di)
-				return GetJoinHintContext(di.Sequence);
-
-			return null;
+			return context switch
+			{
+				QueryExtensionBuilder.JoinHintContext hintContext => hintContext,
+				PassThroughContext pt => GetJoinHintContext(pt.Context),
+				SubQueryContext sc => GetJoinHintContext(sc.SubQuery),
+				DefaultIfEmptyBuilder.DefaultIfEmptyContext di => GetJoinHintContext(di.Sequence),
+				_ => null,
+			};
 		}
 
 		public static Expression MakeNotNullCondition(Expression expr)
 		{
-			if (expr.Type.IsValueType && !expr.Type.IsNullableType)
+			if (expr.Type is { IsValueType: true, IsNullableType: false })
 			{
-				if (expr is SqlPlaceholderExpression placeholder)
-					expr = placeholder.MakeNullable();
-				else
-					expr = Expression.Convert(expr, expr.Type.AsNullable());
+				expr = expr is SqlPlaceholderExpression placeholder
+					? placeholder.MakeNullable()
+					: Expression.Convert(expr, expr.Type.AsNullable());
 			}
 
 			return Expression.NotEqual(expr, Expression.Default(expr.Type));

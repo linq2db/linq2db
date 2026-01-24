@@ -856,10 +856,11 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 			static Guid ByteArrayToGuid(byte[] raw)
 			{
-				if (raw.Length == 16)
-					return new Guid(raw);
-
-				return Guid.Parse(Encoding.UTF8.GetString(raw));
+				return raw.Length switch
+				{
+					16 => new Guid(raw),
+					_ => Guid.Parse(Encoding.UTF8.GetString(raw)),
+				};
 			}
 		}
 

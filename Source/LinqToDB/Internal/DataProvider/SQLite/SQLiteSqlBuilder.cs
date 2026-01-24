@@ -31,9 +31,11 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			if (statement is SqlTruncateTableStatement trun)
-				return trun.ResetIdentity && trun.Table!.IdentityFields.Count > 0 ? 2 : 1;
-			return statement.NeedsIdentity() ? 2 : 1;
+			return statement switch
+			{
+				SqlTruncateTableStatement trun => trun.ResetIdentity && trun.Table!.IdentityFields.Count > 0 ? 2 : 1,
+				_ => statement.NeedsIdentity() ? 2 : 1,
+			};
 		}
 
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)

@@ -735,28 +735,22 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static ConstructorInfo? SelectParameterizedConstructor(Type objectType)
 		{
-			var constructors = objectType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-
-			if (constructors.Length == 0)
+			return objectType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public) switch
 			{
-				return null;
-			}
+				[] => null,
 
-			if (constructors.Length > 1)
-			{
-				var noParams = constructors.FirstOrDefault(c => c.GetParameters().Length == 0);
-				if (noParams != null)
-					return noParams;
+				[{ } c] => c,
 
-				var publicConstructors = constructors.Where(c => c.IsPublic).ToList();
+				var constructors
+					when constructors.FirstOrDefault(c => c.GetParameters().Length == 0) is { } noParams =>
+					noParams,
 
-				if (publicConstructors.Count == 1)
-					return publicConstructors[0];
+				var constructors
+					when constructors.Where(c => c.IsPublic).Take(2).ToList() is [{ } pc] =>
+					pc,
 
-				throw new InvalidOperationException($"Type '{objectType.Name}' has ambiguous constructors.");
-			}
-
-			return constructors.Length > 0 ? constructors[0] : null;
+				_ => throw new InvalidOperationException($"Type '{objectType.Name}' has ambiguous constructors."),
+			};
 		}
 
 		public Expression? TryConstructObject(

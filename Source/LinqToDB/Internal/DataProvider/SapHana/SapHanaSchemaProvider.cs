@@ -284,10 +284,10 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			if (SchemasFilter == null)
-				return new List<ForeignKeyInfo>();
-
-			return dataConnection
+			return SchemasFilter switch
+			{
+				null => new List<ForeignKeyInfo>(),
+				_ => dataConnection
 				.Query<ForeignKeyInfo>(
 					$"""
 					SELECT
@@ -301,15 +301,16 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 					WHERE SCHEMA_NAME {SchemasFilter}
 					"""
 				)
-				.ToList();
+				.ToList(),
+			};
 		}
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			if (SchemasFilter == null)
-				return null;
-
-			return dataConnection
+			return SchemasFilter switch
+			{
+				null => null,
+				_ => dataConnection
 				.Query(
 					rd =>
 					{
@@ -321,15 +322,15 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 						var definition      = rd.IsDBNull(4) ? null : rd.GetString(4);
 						return new ProcedureInfo
 						{
-							ProcedureID         = string.Concat(schema, '.', procedure),
-							CatalogName         = null,
+							ProcedureID = string.Concat(schema, '.', procedure),
+							CatalogName = null,
 							IsAggregateFunction = false,
-							IsDefaultSchema     = string.Equals(schema, DefaultSchema, StringComparison.Ordinal),
-							IsFunction          = isFunction,
-							IsTableFunction     = isTableFunction,
+							IsDefaultSchema = string.Equals(schema, DefaultSchema, StringComparison.Ordinal),
+							IsFunction = isFunction,
+							IsTableFunction = isTableFunction,
 							ProcedureDefinition = definition,
-							ProcedureName       = procedure,
-							SchemaName          = schema,
+							ProcedureName = procedure,
+							SchemaName = schema,
 						};
 					},
 					$"""
@@ -352,15 +353,16 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 					WHERE F.SCHEMA_NAME {SchemasFilter}
 					"""
 				)
-				.ToList();
+				.ToList(),
+			};
 		}
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
-			if (SchemasFilter == null)
-				return new List<ProcedureParameterInfo>();
-
-			return dataConnection
+			return SchemasFilter switch
+			{
+				null => new List<ProcedureParameterInfo>(),
+				_ => dataConnection
 				.Query(
 					rd =>
 					{
@@ -382,19 +384,19 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 						return new ProcedureParameterInfo
 						{
-							ProcedureID   = string.Concat(schema, '.', procedure),
-							DataType      = dataType,
-							IsIn          = paramType.Contains("IN", StringComparison.Ordinal),
-							IsOut         = paramType.Contains("OUT", StringComparison.Ordinal),
-							IsResult      = isResult,
-							Length        = length,
-							Ordinal       = position,
+							ProcedureID = string.Concat(schema, '.', procedure),
+							DataType = dataType,
+							IsIn = paramType.Contains("IN", StringComparison.Ordinal),
+							IsOut = paramType.Contains("OUT", StringComparison.Ordinal),
+							IsResult = isResult,
+							Length = length,
+							Ordinal = position,
 							ParameterName = parameter,
-							Precision     = length,
-							Scale         = scale,
-							IsNullable    = isNullable,
+							Precision = length,
+							Scale = scale,
+							IsNullable = isNullable,
 						};
-					}, 
+					},
 					$"""
 					SELECT
 						SCHEMA_NAME,
@@ -426,7 +428,8 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 					ORDER BY SCHEMA_NAME, PROCEDURE_NAME, POSITION
 					"""
 				)
-				.ToList();
+				.ToList(),
+			};
 		}
 
 		protected override List<ColumnSchema> GetProcedureResultColumns(DataTable resultTable, GetSchemaOptions options)
@@ -625,10 +628,10 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		private IEnumerable<TableInfo> GetViewsWithParameters(DataConnection dataConnection)
 		{
-			if (SchemasFilter == null)
-				return new List<TableInfo>();
-
-			return dataConnection
+			return SchemasFilter switch
+			{
+				null => new List<TableInfo>(),
+				_ => dataConnection
 				.Query(
 					rd =>
 					{
@@ -637,13 +640,13 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 						var tableName  = rd.GetString(1);
 						return new TableInfo
 						{
-							CatalogName     = null,
-							Description     = rd.IsDBNull(2) ? null : rd.GetString(2),
+							CatalogName = null,
+							Description = rd.IsDBNull(2) ? null : rd.GetString(2),
 							IsDefaultSchema = string.Equals(schemaName, DefaultSchema, StringComparison.Ordinal),
-							IsView          = true,
-							SchemaName      = schemaName,
-							TableID         = schemaName + '.' + tableName,
-							TableName       = tableName,
+							IsView = true,
+							SchemaName = schemaName,
+							TableID = schemaName + '.' + tableName,
+							TableName = tableName,
 						};
 					},
 					$"""
@@ -662,15 +665,16 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 					{SchemasFilter}
 					"""
 				)
-				.ToList();
+				.ToList(),
+			};
 		}
 
 		private IEnumerable<ProcedureParameterInfo> GetParametersForViews(DataConnection dataConnection)
 		{
-			if (SchemasFilter == null)
-				return new List<ProcedureParameterInfo>();
-
-			return dataConnection
+			return SchemasFilter switch
+			{
+				null => new List<ProcedureParameterInfo>(),
+				_ => dataConnection
 				.Query(
 					rd =>
 					{
@@ -700,17 +704,17 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 						return new ProcedureParameterInfo
 						{
-							ProcedureID   = string.Concat(schema, '.', view),
-							DataType      = dataType,
-							IsIn          = isMandatory,
-							IsOut         = false,
-							IsResult      = false,
-							Length        = length,
-							Ordinal       = position,
+							ProcedureID = string.Concat(schema, '.', view),
+							DataType = dataType,
+							IsIn = isMandatory,
+							IsOut = false,
+							IsResult = false,
+							Length = length,
+							Ordinal = position,
 							ParameterName = parameterName,
-							Precision     = length,
-							Scale         = scale,
-							IsNullable    = true,
+							Precision = length,
+							Scale = scale,
+							IsNullable = true,
 						};
 					},
 					$"""
@@ -728,7 +732,8 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 					ORDER BY v.VIEW_NAME, p."ORDER"
 					"""
 				)
-				.ToList();
+				.ToList(),
+			};
 		}
 
 		protected override List<TableSchema> GetProviderSpecificTables(DataConnection dataConnection, GetSchemaOptions options)

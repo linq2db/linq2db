@@ -691,10 +691,11 @@ namespace LinqToDB.Internal.SqlQuery
 		{
 			var evaluated = expr.EvaluateExpression(context);
 
-			if (evaluated is bool boolValue)
-				return boolValue;
-
-			return defaultValue;
+			return evaluated switch
+			{
+				bool boolValue => boolValue,
+				_ => defaultValue,
+			};
 		}
 
 		public static void ExtractPredicate(ISqlPredicate predicate, out ISqlPredicate underlying, out bool isNot)

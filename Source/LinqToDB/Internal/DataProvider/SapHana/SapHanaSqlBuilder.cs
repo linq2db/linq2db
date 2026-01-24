@@ -164,23 +164,20 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				case ConvertType.NameToQueryField     :
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
-					{
-						if (value.Length > 0 && value[0] == '"')
-							return sb.Append(value);
-						return sb.Append('"').Append(value).Append('"');
-					}
-
-				case ConvertType.NameToServer    :
-				case ConvertType.NameToDatabase  :
-				case ConvertType.NameToSchema    :
-				case ConvertType.NameToPackage   :
-				case ConvertType.NameToQueryTable:
+				case ConvertType.NameToServer         :
+				case ConvertType.NameToDatabase       :
+				case ConvertType.NameToSchema         :
+				case ConvertType.NameToPackage        :
+				case ConvertType.NameToQueryTable     :
 				case ConvertType.NameToCteName        :
-				case ConvertType.NameToProcedure :
-					if (value.Length > 0 && value[0] == '\"')
-						return sb.Append(value);
-
-					return sb.Append('"').Append(value).Append('"');
+				case ConvertType.NameToProcedure      :
+				{
+					return value switch
+					{
+						['"', ..] => sb.Append(value),
+						_ => sb.Append('"').Append(value).Append('"'),
+					};
+				}
 			}
 
 			return sb.Append(value);
@@ -292,10 +289,11 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
 				{
-					if (provider.Provider == SapHanaProvider.ODBC)
-						return provider.Adapter.GetOdbcDbType!(param).ToString();
-					else
-						return provider.Adapter.GetDbType!(param).ToString();
+					return provider.Provider switch
+					{
+						SapHanaProvider.ODBC => provider.Adapter.GetOdbcDbType!(param).ToString(),
+						_ => provider.Adapter.GetDbType!(param).ToString(),
+					};
 				}
 			}
 
@@ -304,18 +302,11 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source, IReadOnlyList<List<ISqlExpression>> rows, int row, int column)
 		{
-			if (row == 0)
-			{
-				if (rows[0][column] is SqlValue
-					{
-						Value: uint or long or ulong or float or double or decimal
-					})
+			return row == 0
+				&& rows[0][column] is SqlValue
 				{
-					return true;
-				}
-			}
-
-			return false;
+					Value: uint or long or ulong or float or double or decimal,
+				};
 		}
 	}
 }

@@ -480,7 +480,7 @@ namespace LinqToDB.Internal.Linq
 							sqlParameter)
 #if DEBUG
 							{
-								AccessorExpr = clientValueGetterLambda
+								AccessorExpr = clientValueGetterLambda,
 							}
 #endif
 							;

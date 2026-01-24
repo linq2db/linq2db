@@ -83,14 +83,14 @@ namespace LinqToDB
 				switch (pi.NodeType)
 				{
 					case ExpressionType.Parameter :
-						{
-							var idx = context.query.Parameters.IndexOf((ParameterExpression)pi);
+					{
+						var idx = context.query.Parameters.IndexOf((ParameterExpression)pi);
 
-							if (idx >= 0)
-								return Expression.Convert(Expression.ArrayIndex(context.ps, ExpressionInstances.Int32(idx)), pi.Type);
+						if (idx >= 0)
+							return Expression.Convert(Expression.ArrayIndex(context.ps, ExpressionInstances.Int32(idx)), pi.Type);
 
-							break;
-						}
+						break;
+					}
 				}
 
 				return pi;
@@ -101,36 +101,36 @@ namespace LinqToDB
 				switch (pi.NodeType)
 				{
 					case ExpressionType.Call :
+					{
+						var expr = (MethodCallExpression)pi;
+
+						if (expr.Method.DeclaringType == typeof(AsyncExtensions) &&
+							expr.Method.HasAttribute<AsyncExtensions.ElementAsyncAttribute>())
 						{
-							var expr = (MethodCallExpression)pi;
+							var type = expr.Type.GetGenericArguments()[0];
 
-							if (expr.Method.DeclaringType == typeof(AsyncExtensions) &&
-								expr.Method.HasAttribute<AsyncExtensions.ElementAsyncAttribute>())
-							{
-								var type = expr.Type.GetGenericArguments()[0];
+							var helper = ActivatorExt.CreateInstance<ITableHelper>(typeof(TableHelper<>).MakeGenericType(type));
 
-								var helper = ActivatorExt.CreateInstance<ITableHelper>(typeof(TableHelper<>).MakeGenericType(type));
+							return helper.CallTable(context.query, expr, context.ps, context.preambles, MethodType.ElementAsync);
+						}
+						else if (expr.IsQueryable())
+						{
+							var type   = typeof(IQueryable).IsSameOrParentOf(expr.Type) ?
+									typeof(IQueryable<>) :
+									typeof(IEnumerable<>);
 
-								return helper.CallTable(context.query, expr, context.ps, context.preambles, MethodType.ElementAsync);
-							}
-							else if (expr.IsQueryable())
-							{
-								var type   = typeof(IQueryable).IsSameOrParentOf(expr.Type) ?
-										typeof(IQueryable<>) :
-										typeof(IEnumerable<>);
+							var qtype  = type.GetGenericType(expr.Type);
+							var helper = ActivatorExt.CreateInstance<ITableHelper>(
+								typeof(TableHelper<>).MakeGenericType(qtype == null ? expr.Type : qtype.GetGenericArguments()[0]));
 
-								var qtype  = type.GetGenericType(expr.Type);
-								var helper = ActivatorExt.CreateInstance<ITableHelper>(
-									typeof(TableHelper<>).MakeGenericType(qtype == null ? expr.Type : qtype.GetGenericArguments()[0]));
-
-								return helper.CallTable(context.query, expr, context.ps, context.preambles, qtype != null ? MethodType.Queryable : MethodType.Element);
-							}
-
-							if (string.Equals(expr.Method.Name, "GetTable", StringComparison.Ordinal) && expr.Method.DeclaringType == typeof(DataExtensions))
-								goto case ExpressionType.MemberAccess;
+							return helper.CallTable(context.query, expr, context.ps, context.preambles, qtype != null ? MethodType.Queryable : MethodType.Element);
 						}
 
+						if (string.Equals(expr.Method.Name, "GetTable", StringComparison.Ordinal) && expr.Method.DeclaringType == typeof(DataExtensions))
+							goto case ExpressionType.MemberAccess;
+
 						break;
+					}
 
 					case ExpressionType.MemberAccess :
 						if (typeof(ITable<>).IsSameOrParentOf(pi.Type))

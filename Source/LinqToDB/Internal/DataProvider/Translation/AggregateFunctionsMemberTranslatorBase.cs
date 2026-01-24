@@ -162,8 +162,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			where TValue : struct
 		{
 			if (maybeNull is null)
+			{
 				throw new InvalidOperationException(
-					$"Function {context} returns non-nullable value, but result is NULL. Use nullable version of the function instead.");
+					$"Function {context} returns non-nullable value, but result is NULL. Use nullable version of the function instead."
+				);
+			}
+
 			return maybeNull.Value;
 		}
 

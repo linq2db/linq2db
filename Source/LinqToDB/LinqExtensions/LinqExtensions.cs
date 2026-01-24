@@ -1317,9 +1317,11 @@ namespace LinqToDB
 
 		static Expression GetSourceExpression<TSource>(IEnumerable<TSource> source)
 		{
-			if (source is IQueryable<TSource> queryable)
-				return queryable.Expression;
-			return Expression.Constant(source, typeof(IEnumerable<TSource>));
+			return source switch
+			{
+				IQueryable<TSource> queryable => queryable.Expression,
+				_ => Expression.Constant(source, typeof(IEnumerable<TSource>)),
+			};
 		}
 
 		/// <summary>Concatenates two sequences, similar to <see cref="Queryable.Concat{TSource}"/>.</summary>

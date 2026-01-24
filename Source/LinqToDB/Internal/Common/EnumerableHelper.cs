@@ -128,8 +128,11 @@ namespace LinqToDB.Internal.Common
 		{
 			ArgumentOutOfRangeException.ThrowIfNegativeOrZero(batchSize);
 
-			if (batchSize < Int32.MaxValue) return new AsyncBatchEnumerable<T>(source, batchSize);
-			return BatchSingle(source);
+			return batchSize switch
+			{
+				< int.MaxValue => new AsyncBatchEnumerable<T>(source, batchSize),
+				_ => BatchSingle(source),
+			};
 		}
 
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously

@@ -386,8 +386,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			var isModified = false;
 
-			if (selectQuery.From.Tables.Count == 1 &&
-			    selectQuery.From.Tables[0].Source is SelectQuery { HasSetOperators: true } mainSubquery)
+			if (selectQuery.From.Tables is [{ Source: SelectQuery { HasSetOperators: true } mainSubquery }])
 			{
 				var isOk = true;
 
@@ -448,8 +447,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				var setOperator = selectQuery.SetOperators[index];
 
-				if (setOperator.SelectQuery.From.Tables.Count == 1 &&
-				    setOperator.SelectQuery.From.Tables[0].Source is SelectQuery { HasSetOperators: true } subQuery)
+				if (setOperator.SelectQuery.From.Tables is [{ Source: SelectQuery { HasSetOperators: true } subQuery }])
 				{
 					if (subQuery.SetOperators.TrueForAll(so => so.Operation == setOperator.Operation))
 					{
@@ -461,9 +459,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 								continue;
 						}
 
-						var newIndexes =
-							new Dictionary<ISqlExpression, int>(Utils.ObjectReferenceEqualityComparer<ISqlExpression>
-								.Default);
+						var newIndexes = new Dictionary<ISqlExpression, int>(Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
 
 						for (var i = 0; i < setOperator.SelectQuery.Select.Columns.Count; i++)
 						{
@@ -748,16 +744,18 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		static bool IsLimitedToOneRecord(SelectQuery query)
 		{
-			if (query.Select.TakeValue is SqlValue { Value: 1 })
-				return true;
+			return query switch
+			{
+				{ Select.TakeValue: SqlValue { Value: 1 } } => true,
 
-			if (query.GroupBy.IsEmpty && query.Select.Columns.Count > 0 && query.Select.Columns.TrueForAll(c => QueryHelper.ContainsAggregationFunction(c.Expression)))
-				return true;
+				{ GroupBy.IsEmpty: true, Select.Columns: { Count: > 0 } columns } when columns.TrueForAll(c => QueryHelper.ContainsAggregationFunction(c.Expression)) =>
+					true,
 
-			if (query.From.Tables.Count == 1 && query.From.Tables[0].Source is SelectQuery subQuery)
-				return IsLimitedToOneRecord(subQuery);
+				{ From.Tables: [{ Source: SelectQuery subQuery }] } =>
+					IsLimitedToOneRecord(subQuery),
 
-			return false;
+				_ => false,
+			};
 		}
 
 		static bool IsComplexQuery(SelectQuery query)

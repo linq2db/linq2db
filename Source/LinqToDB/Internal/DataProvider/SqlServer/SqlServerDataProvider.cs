@@ -251,19 +251,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		protected override IMemberTranslator CreateMemberTranslator()
 		{
-			if (Version >= SqlServerVersion.v2022)
-				return new SqlServer2022MemberTranslator();
-
-			if (Version >= SqlServerVersion.v2017)
-				return new SqlServer2017MemberTranslator();
-
-			if (Version >= SqlServerVersion.v2012)
-				return new SqlServer2012MemberTranslator();
-
-			if (Version == SqlServerVersion.v2005)
-				return new SqlServer2005MemberTranslator();
-
-			return new SqlServerMemberTranslator();
+			return Version switch
+			{
+				>= SqlServerVersion.v2022 => new SqlServer2022MemberTranslator(),
+				>= SqlServerVersion.v2017 => new SqlServer2017MemberTranslator(),
+				>= SqlServerVersion.v2012 => new SqlServer2012MemberTranslator(),
+				SqlServerVersion.v2005 => new SqlServer2005MemberTranslator(),
+				_ => new SqlServerMemberTranslator(),
+			};
 		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)

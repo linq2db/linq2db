@@ -375,11 +375,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 						// if converting from FixedString - just trim trailing \0s
 						var valueType = QueryHelper.GetDbDataType(value, MappingSchema);
-						if (valueType.DataType is DataType.Char or DataType.NChar or DataType.Binary)
+						return valueType.DataType switch
 						{
-							return new SqlFunction(
-								toType, "trim", canBeNull: true,
-								new SqlExpression(
+							DataType.Char or DataType.NChar or DataType.Binary =>
+								new SqlFunction(
+									toType, "trim", canBeNull: true,
+									new SqlExpression(
 										toType,
 										"TRAILING '\x00' FROM {0}",
 										Precedence.Primary,
@@ -387,10 +388,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 										ParametersNullabilityType.IfAnyParameterNullable,
 										value
 									)
-								);
-						}
-
-						return new SqlCastExpression(value, toType, null, true);
+								),
+							_ => new SqlCastExpression(value, toType, null, true),
+						};
 					}
 
 					case DataType.Decimal32:
@@ -399,7 +399,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					case DataType.Decimal256:
 					{
 						// toDecimalX(S)
-						ISqlExpression newFunc = newFunc = suffix == null
+						ISqlExpression newFunc = suffix == null
 							? new SqlCastExpression(value, toType, null, true)
 							: new SqlFunction(toType, name + suffix,
 								value,
@@ -415,7 +415,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					{
 						// toDateTime64(S)
 
-						ISqlExpression newFunc = newFunc = suffix == null
+						ISqlExpression newFunc = suffix == null
 							? new SqlCastExpression(value, toType, null, true)
 							: new SqlFunction(toType, name + suffix,
 								value,

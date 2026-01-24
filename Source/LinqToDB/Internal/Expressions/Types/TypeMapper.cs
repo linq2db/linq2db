@@ -495,12 +495,12 @@ namespace LinqToDB.Internal.Expressions.Types
 
 		static MemberInfo ReplaceMember(MemberInfo memberInfo, Type targetType)
 		{
-			var newMembers = targetType.GetMember(memberInfo.Name);
-			if (newMembers.Length == 0)
-				throw new LinqToDBException($"There is no member '{memberInfo.Name}' in type '{targetType.FullName}'");
-			if (newMembers.Length > 1)
-				throw new LinqToDBException($"Ambiguous member '{memberInfo.Name}' in type '{targetType.FullName}'");
-			return newMembers[0];
+			return targetType.GetMember(memberInfo.Name) switch
+			{
+				[var member] => member,
+				[] => throw new LinqToDBException($"There is no member '{memberInfo.Name}' in type '{targetType.FullName}'"),
+				_ => throw new LinqToDBException($"Ambiguous member '{memberInfo.Name}' in type '{targetType.FullName}'"),
+			};
 		}
 
 		static Expression? ReplaceTypes(Expression expression, ReplaceTypesContext ctx)

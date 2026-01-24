@@ -232,8 +232,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				if (!selectQuery.GroupBy.IsEmpty)
 				{
-					if (selectQuery.Select.Columns.Count == 1)
-						RegisterColumn(selectQuery.Select.Columns[0]);
+					if (selectQuery.Select.Columns is [var c])
+						RegisterColumn(c);
 				}
 				else
 				{

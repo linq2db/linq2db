@@ -101,10 +101,11 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			{
 				var version = int.Parse(result.Split('.')[0], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
 
-				if (version <= 11)
-					return OracleVersion.v11;
-
-				return OracleVersion.v12;
+				return version switch
+				{
+					<= 11 => OracleVersion.v11,
+					_ => OracleVersion.v12,
+				};
 			}
 
 			return DefaultVersion;

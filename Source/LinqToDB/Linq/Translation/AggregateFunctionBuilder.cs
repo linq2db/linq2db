@@ -270,28 +270,23 @@ namespace LinqToDB.Linq.Translation
 					fallbackConfig.ToAllowedOps(),
 					agg => Combine(ctx, agg, functionCall, fallbackConfig, sequenceExpressionIndex, true));
 
-				if (fallbackResult is SqlPlaceholderExpression placeholder)
+				return fallbackResult switch
 				{
-					return BuildAggregationFunctionResult.FromSqlExpression(placeholder.Sql);
-				}
+					SqlPlaceholderExpression placeholder =>
+						BuildAggregationFunctionResult.FromSqlExpression(placeholder.Sql),
 
-				if (fallbackResult is SqlValidateExpression sqlValidateExpression && sqlValidateExpression.InnerExpression is SqlPlaceholderExpression validatePlaceholder)
-				{
-					return BuildAggregationFunctionResult.FromSqlExpression(validatePlaceholder.Sql, sqlValidateExpression.Validator);
-				}
+					SqlValidateExpression { InnerExpression: SqlPlaceholderExpression validatePlaceholder } sqlValidateExpression =>
+						BuildAggregationFunctionResult.FromSqlExpression(validatePlaceholder.Sql, sqlValidateExpression.Validator),
 
-				if (fallbackResult is SqlErrorExpression errorExpression)
-				{
-					return BuildAggregationFunctionResult.Error(errorExpression);
-				}
-			
-				return BuildAggregationFunctionResult.FromFallback(fallbackResult);
+					SqlErrorExpression errorExpression =>
+						BuildAggregationFunctionResult.Error(errorExpression),
+
+					_ => BuildAggregationFunctionResult.FromFallback(fallbackResult),
+				};
 			}
 
 			if (composer.Result == null)
-			{
 				return BuildAggregationFunctionResult.Error(ctx.CreateErrorExpression(functionCall, "Aggregate builder produced no result", functionCall.Type));
-			}
 
 			return BuildAggregationFunctionResult.FromSqlExpression(composer.Result, composer.Validator);
 		}

@@ -317,18 +317,12 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 			}
 
-			if (element.Cases.Count == 1)
+			return element.Cases switch
 			{
-				var conditionExpression = new SqlConditionExpression(element.Cases[0].Condition, element.Cases[0].ResultExpression, element.ElseExpression ?? new SqlValue(element.Type, null));
-				return Visit(conditionExpression);
-			}
-
-			if (element.Cases.Count == 0)
-			{
-				return element.ElseExpression ?? new SqlValue(element.Type, null);
-			}
-
-			return element;
+				[{ } c] => Visit(new SqlConditionExpression(c.Condition, c.ResultExpression, element.ElseExpression ?? new SqlValue(element.Type, null))),
+				[] => element.ElseExpression ?? new SqlValue(element.Type, null),
+				_ => element,
+			};
 		}
 
 		bool IsAllowedToOptimizePredicate(ISqlPredicate testPredicate, ISqlPredicate replacement)
@@ -1237,31 +1231,28 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 				}
 			}
 
-			if (element.Expression is SelectQuery selectQuery && selectQuery.Select.Columns.Count == 1)
+			if (element.Expression is not SelectQuery { Select.Columns: [{ Expression: var columnExpression }] } selectQuery)
+				return base.VisitSqlCastExpression(element);
+
+			var newExpression = (ISqlExpression)Visit(new SqlCastExpression(columnExpression, element.ToType, element.FromType, isMandatory: element.IsMandatory));
+
+			if (GetVisitMode(selectQuery) == VisitMode.Modify)
 			{
-				var columnExpression = selectQuery.Select.Columns[0].Expression;
-				var newExpression = (ISqlExpression)Visit(new SqlCastExpression(columnExpression, element.ToType, element.FromType, isMandatory: element.IsMandatory));
+				selectQuery.Select.Columns[0].Expression = newExpression;
 
-				if (GetVisitMode(selectQuery) == VisitMode.Modify)
-				{
-					selectQuery.Select.Columns[0].Expression = newExpression;
-
-					return selectQuery;
-				}
-				else
-				{
-					NotifyReplaced(newExpression, columnExpression);
-
-					var query = VisitSqlQuery(selectQuery);
-
-					// magic...
-					NotifyReplaced(columnExpression, columnExpression);
-
-					return query;
-				}
+				return selectQuery;
 			}
+			else
+			{
+				NotifyReplaced(newExpression, columnExpression);
 
-			return base.VisitSqlCastExpression(element);
+				var query = VisitSqlQuery(selectQuery);
+
+				// magic...
+				NotifyReplaced(columnExpression, columnExpression);
+
+				return query;
+			}
 		}
 
 		protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
@@ -1384,15 +1375,12 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 				}
 			}
 
-			if (newExpressions != null)
+			return newExpressions switch
 			{
-				if (newExpressions.Count == 1)
-					return newExpressions[0];
-				if (newExpressions.Count > 0)
-					return Visit(new SqlCoalesceExpression(newExpressions.ToArray()));
-			}
-
-			return element;
+				[{ } expr] => expr,
+				{ Count: > 1 } => Visit(new SqlCoalesceExpression([.. newExpressions])),
+				_ => element,
+			};
 		}
 
 		protected internal override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)

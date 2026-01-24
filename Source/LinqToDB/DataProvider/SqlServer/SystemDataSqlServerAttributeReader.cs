@@ -88,17 +88,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			// see https://github.com/linq2db/linq2db/issues/3630
 			try
 			{
-				var methodAttr = Type.GetType(sqlMethodAttributeType, false);
-
-				if (methodAttr == null)
-					return null;
-
-				var typeAttr   = Type.GetType(sqlUserDefinedTypeAttributeType, false);
-
-				if (typeAttr == null)
-					return null;
-
-				return new SystemDataSqlServerAttributeReader(methodAttr, typeAttr);
+				return (Type.GetType(sqlMethodAttributeType, false), Type.GetType(sqlUserDefinedTypeAttributeType, false)) switch
+				{
+					({ } methodAttr, { } typeAttr) => new SystemDataSqlServerAttributeReader(methodAttr, typeAttr),
+					_ => null,
+				};
 			}
 			catch
 			{

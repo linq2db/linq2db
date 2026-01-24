@@ -133,13 +133,12 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 			// note that it will also include MariaDB < 10 as pre-10 release of MariaDB is 5.x
 			// because they are based on MySQL 5.x this is correct to use MySql57 dialect
-			if (version.Major < 8)
-				return MySqlVersion.MySql57;
-
-			if (version.Major >= 10 && isMariaDB)
-				return MySqlVersion.MariaDB10;
-
-			return MySqlVersion.MySql80;
+			return version.Major switch
+			{
+				< 8 => MySqlVersion.MySql57,
+				>= 10 when isMariaDB => MySqlVersion.MariaDB10,
+				_ => MySqlVersion.MySql80,
+			};
 		}
 
 		protected override DbConnection CreateConnection(MySqlProvider provider, string connectionString)

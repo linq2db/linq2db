@@ -199,10 +199,11 @@ namespace LinqToDB.Internal.DataProvider
 
 		private static string GetCharFromString(string str)
 		{
-			if (str.Length > 0)
-				return str[0].ToString();
-
-			return string.Empty;
+			return str.Length switch
+			{
+				> 0 => str[0].ToString(),
+				_ => string.Empty,
+			};
 		}
 
 		#region Create/Drop Database

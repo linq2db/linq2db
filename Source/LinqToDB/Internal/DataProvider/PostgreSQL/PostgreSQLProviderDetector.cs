@@ -104,24 +104,15 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		protected override PostgreSQLVersion? DetectServerVersion(DbConnection connection, DbTransaction? transaction)
 		{
-			var postgreSqlVersion = NpgsqlProviderAdapter.GetInstance().ConnectionWrapper(connection).PostgreSqlVersion;
-
-			if (postgreSqlVersion.Major >= 18)
-				return PostgreSQLVersion.v18;
-
-			if (postgreSqlVersion.Major >= 15)
-				return PostgreSQLVersion.v15;
-
-			if (postgreSqlVersion.Major >= 13)
-				return PostgreSQLVersion.v13;
-
-			if (postgreSqlVersion.Major > 9 || postgreSqlVersion.Major == 9 && postgreSqlVersion.Minor > 4)
-				return PostgreSQLVersion.v95;
-
-			if (postgreSqlVersion.Major == 9 && postgreSqlVersion.Minor > 2)
-				return PostgreSQLVersion.v93;
-
-			return DefaultVersion;
+			return NpgsqlProviderAdapter.GetInstance().ConnectionWrapper(connection).PostgreSqlVersion switch
+			{
+				{ Major: >= 18 } => PostgreSQLVersion.v18,
+				{ Major: >= 15 } => PostgreSQLVersion.v15,
+				{ Major: >= 13 } => PostgreSQLVersion.v13,
+				{ Major: > 9 } or { Major: 9, Minor: > 4 } => PostgreSQLVersion.v95,
+				{ Major: 9, Minor: > 2 } => PostgreSQLVersion.v93,
+				_ => DefaultVersion,
+			};
 		}
 
 		protected override DbConnection CreateConnection(Provider provider, string connectionString)

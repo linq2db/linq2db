@@ -66,9 +66,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		public string ToDebugString()
 		{
 			var str = string.Join(", ", ToDebugStrings());
-			if (str is null or "")
-				return "[empty]";
-			return str;
+			return str switch
+			{
+				null or "" => "[empty]",
+				_ => str,
+			};
 		}
 	}
 }

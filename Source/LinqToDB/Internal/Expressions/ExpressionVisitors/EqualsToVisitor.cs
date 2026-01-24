@@ -54,12 +54,7 @@ namespace LinqToDB.Internal.Expressions.ExpressionVisitors
 			if (expr1.NodeType != expr2.NodeType)
 			{
 				// special cache case
-				if (expr1.NodeType == ExpressionType.Extension && expr2.NodeType == ExpressionType.Constant && expr1 is ConstantPlaceholderExpression)
-				{
-					return true;
-				}
-
-				return false;
+				return expr1.NodeType == ExpressionType.Extension && expr2.NodeType == ExpressionType.Constant && expr1 is ConstantPlaceholderExpression;
 			}
 
 			return expr1.NodeType switch

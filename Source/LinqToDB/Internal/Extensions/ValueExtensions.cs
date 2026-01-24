@@ -22,13 +22,12 @@ namespace LinqToDB.Internal.Extensions
 
 		public static long GetTicks(this TimeSpan ts, int precision)
 		{
-			if (precision >= 7)
-				return ts.Ticks;
-
-			if (precision < 0)
-				throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"Precision must be >= 0: {precision}"));
-
-			return ts.Ticks - (ts.Ticks % TICKS_DIVIDERS[precision]);
+			return precision switch
+			{
+				>= 7 => ts.Ticks,
+				< 0 => throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"Precision must be >= 0: {precision}")),
+				_ => ts.Ticks - ts.Ticks % TICKS_DIVIDERS[precision],
+			};
 		}
 
 		public static DateTimeOffset WithPrecision(this DateTimeOffset dto, int precision)

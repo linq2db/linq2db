@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
@@ -97,7 +97,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var joinContext = new SelectContext(builder.GetTranslationModifier(), buildInfo.Parent, builder, null, selectorBody, outerContext.SelectQuery, buildInfo.IsSubQuery)
 #if DEBUG
 			{
-				Debug_MethodCall = methodCall
+				Debug_MethodCall = methodCall,
 			}
 #endif
 			;

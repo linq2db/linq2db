@@ -603,7 +603,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				"jsonb"                       => DataType.BinaryJson,
 				_                             => DataType.Undefined,
 			};
-			}
+		}
 
 		protected override string GetProviderSpecificTypeNamespace()
 		{
@@ -760,9 +760,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			// because information schema doesn't contain information about function kind like aggregate or table function
 			// we need to query additional data from pg_proc
 			// in postgresql 11 pg_proc some requred columns changed, so we need to execute different queries for pre-11 and 11+ versions
-			if (_version < v11)
+			return _version switch
 			{
-				return dataConnection
+				< v11 => dataConnection
 					.Query(
 						rd =>
 						{
@@ -813,11 +813,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 								WHERE {GenerateSchemaFilter(dataConnection, "n.nspname")}
 						"""
 					)
-					.ToList();
-			}
-			else
-			{
-				return dataConnection
+					.ToList(),
+
+				_ => dataConnection
 					.Query(
 						rd =>
 						{
@@ -866,8 +864,8 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 								WHERE {GenerateSchemaFilter(dataConnection, "n.nspname")}
 						"""
 					)
-					.ToList();
-			}
+					.ToList(),
+			};
 		}
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)

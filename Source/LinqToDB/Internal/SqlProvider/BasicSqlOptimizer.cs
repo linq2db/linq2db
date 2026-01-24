@@ -1055,13 +1055,13 @@ namespace LinqToDB.Internal.SqlProvider
 			replaceTree = replaceTree
 				.Where(pair =>
 				{
-					if (pair.Key is SqlTable table)
-						return table != exceptTable;
-					if (pair.Key is SqlColumn)
-						return true;
-					if (pair.Key is SqlField field)
-						return field.Table != exceptTable;
-					return false;
+					return pair.Key switch
+					{
+						SqlTable table => table != exceptTable,
+						SqlColumn => true,
+						SqlField field => field.Table != exceptTable,
+						_ => false,
+					};
 				})
 				.ToDictionary(pair => pair.Key, pair => pair.Value);
 

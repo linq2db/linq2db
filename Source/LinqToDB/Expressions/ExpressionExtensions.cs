@@ -354,15 +354,16 @@ namespace LinqToDB.Expressions
 
 		public static Expression GetMemberGetter(MemberInfo mi, Expression obj)
 		{
-			if (mi is DynamicColumnInfo)
+			return mi switch
 			{
-				return Expression.Call(
+				DynamicColumnInfo => Expression.Call(
 					Methods.LinqToDB.SqlExt.Property.MakeGenericMethod(mi.GetMemberType()),
 					obj,
-					Expression.Constant(mi.Name));
-			}
-			else
-				return Expression.MakeMemberAccess(obj, mi);
+					Expression.Constant(mi.Name)
+				),
+
+				_ => Expression.MakeMemberAccess(obj, mi),
+			};
 		}
 
 		internal static Expression EnsureType(this Expression expression, Type type)

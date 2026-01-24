@@ -235,19 +235,13 @@ namespace LinqToDB.Internal.SqlQuery
 			return ReferenceEquals(this, other);
 		}
 
-		public override Type? SystemType
-		{
-			get
+		public override Type? SystemType =>
+			this switch
 			{
-				if (Select.Columns.Count == 1)
-					return Select.Columns[0].SystemType;
-
-				if (From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0)
-					return From.Tables[0].SystemType;
-
-				return null;
-			}
-		}
+				{ Select.Columns: [{ SystemType: var type }] } => type,
+				{ From.Tables: [{ Joins.Count: 0, SystemType: var type }] } => type,
+				_ => null,
+			};
 
 		public override string ToString()
 		{

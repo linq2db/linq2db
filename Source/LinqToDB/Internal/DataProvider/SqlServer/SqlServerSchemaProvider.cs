@@ -41,58 +41,66 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 ";
 
 			return dataConnection.Query<TableInfo>(
-				IsAzure ? @"
-				SELECT
-					TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME as TableID,
-					TABLE_CATALOG                                                                  as CatalogName,
-					TABLE_SCHEMA                                                                   as SchemaName,
-					TABLE_NAME                                                                     as TableName,
-					CASE WHEN TABLE_TYPE = 'VIEW' THEN 1 ELSE 0 END                                as IsView,
-					''                                                                             as Description,
-					CASE WHEN TABLE_SCHEMA = 'dbo' THEN 1 ELSE 0 END                               as IsDefaultSchema
-				FROM
-					INFORMATION_SCHEMA.TABLES s
-					LEFT JOIN
-						sys.tables t
-					ON
-						OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = t.object_id
-				WHERE
-					" + temporalFilterStart + @"t.object_id IS NULL OR t.is_ms_shipped <> 1" + temporalFilterEnd
-				: @"
-				SELECT
-					TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME as TableID,
-					TABLE_CATALOG                                                                  as CatalogName,
-					TABLE_SCHEMA                                                                   as SchemaName,
-					TABLE_NAME                                                                     as TableName,
-					CASE WHEN TABLE_TYPE = 'VIEW' THEN 1 ELSE 0 END                                as IsView,
-					ISNULL(CONVERT(varchar(8000), x.value), '')                                    as Description,
-					CASE WHEN TABLE_SCHEMA = 'dbo' THEN 1 ELSE 0 END                               as IsDefaultSchema
-				FROM
-					INFORMATION_SCHEMA.TABLES s
-					LEFT JOIN
-						sys.tables t
-					ON
-						OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = t.object_id
-					LEFT JOIN
-						sys.extended_properties x
-					ON
-						OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
-						x.minor_id = 0 AND
-						x.name = 'MS_Description'
-				WHERE
-					" + temporalFilterStart + @"t.object_id IS NULL OR
-					t.is_ms_shipped <> 1 AND
-					(
+					IsAzure
+					? 
+						$$"""
+
 						SELECT
-							major_id
+							TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME as TableID,
+							TABLE_CATALOG                                                                  as CatalogName,
+							TABLE_SCHEMA                                                                   as SchemaName,
+							TABLE_NAME                                                                     as TableName,
+							CASE WHEN TABLE_TYPE = 'VIEW' THEN 1 ELSE 0 END                                as IsView,
+							''                                                                             as Description,
+							CASE WHEN TABLE_SCHEMA = 'dbo' THEN 1 ELSE 0 END                               as IsDefaultSchema
 						FROM
-							sys.extended_properties
+							INFORMATION_SCHEMA.TABLES s
+							LEFT JOIN
+								sys.tables t
+							ON
+								OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = t.object_id
 						WHERE
-							major_id = t.object_id AND
-							minor_id = 0           AND
-							class    = 1           AND
-							name     = N'microsoft_database_tools_support'
-					) IS NULL" + temporalFilterEnd)
+							{{temporalFilterStart}}t.object_id IS NULL OR t.is_ms_shipped <> 1{{temporalFilterEnd}}
+						"""
+					:
+						$$"""
+
+						SELECT
+							TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME as TableID,
+							TABLE_CATALOG                                                                  as CatalogName,
+							TABLE_SCHEMA                                                                   as SchemaName,
+							TABLE_NAME                                                                     as TableName,
+							CASE WHEN TABLE_TYPE = 'VIEW' THEN 1 ELSE 0 END                                as IsView,
+							ISNULL(CONVERT(varchar(8000), x.value), '')                                    as Description,
+							CASE WHEN TABLE_SCHEMA = 'dbo' THEN 1 ELSE 0 END                               as IsDefaultSchema
+						FROM
+							INFORMATION_SCHEMA.TABLES s
+							LEFT JOIN
+								sys.tables t
+							ON
+								OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = t.object_id
+							LEFT JOIN
+								sys.extended_properties x
+							ON
+								OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
+								x.minor_id = 0 AND
+								x.name = 'MS_Description'
+						WHERE
+							{{temporalFilterStart}}t.object_id IS NULL OR
+							t.is_ms_shipped <> 1 AND
+							(
+								SELECT
+									major_id
+								FROM
+									sys.extended_properties
+								WHERE
+									major_id = t.object_id AND
+									minor_id = 0           AND
+									class    = 1           AND
+									name     = N'microsoft_database_tools_support'
+							) IS NULL{{temporalFilterEnd}}
+						"""
+				)
 				.ToList();
 		}
 
@@ -100,22 +108,24 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			return dataConnection.Query<PrimaryKeyInfo>(
-				@"
-				SELECT
-					k.TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + k.TABLE_SCHEMA + '.' + k.TABLE_NAME as TableID,
-					k.CONSTRAINT_NAME                                                                    as PrimaryKeyName,
-					k.COLUMN_NAME                                                                        as ColumnName,
-					k.ORDINAL_POSITION                                                                   as Ordinal
-				FROM
-					INFORMATION_SCHEMA.KEY_COLUMN_USAGE k
-					JOIN
-						INFORMATION_SCHEMA.TABLE_CONSTRAINTS c
-					ON
-						k.CONSTRAINT_CATALOG = c.CONSTRAINT_CATALOG AND
-						k.CONSTRAINT_SCHEMA  = c.CONSTRAINT_SCHEMA AND
-						k.CONSTRAINT_NAME    = c.CONSTRAINT_NAME
-				WHERE
-					c.CONSTRAINT_TYPE='PRIMARY KEY'")
+					"""
+					SELECT
+						k.TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + k.TABLE_SCHEMA + '.' + k.TABLE_NAME as TableID,
+						k.CONSTRAINT_NAME                                                                    as PrimaryKeyName,
+						k.COLUMN_NAME                                                                        as ColumnName,
+						k.ORDINAL_POSITION                                                                   as Ordinal
+					FROM
+						INFORMATION_SCHEMA.KEY_COLUMN_USAGE k
+						JOIN
+							INFORMATION_SCHEMA.TABLE_CONSTRAINTS c
+						ON
+							k.CONSTRAINT_CATALOG = c.CONSTRAINT_CATALOG AND
+							k.CONSTRAINT_SCHEMA  = c.CONSTRAINT_SCHEMA AND
+							k.CONSTRAINT_NAME    = c.CONSTRAINT_NAME
+					WHERE
+						c.CONSTRAINT_TYPE='PRIMARY KEY'
+					"""
+				)
 				.ToList();
 		}
 
@@ -441,23 +451,23 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		protected override DataParameter BuildProcedureParameter(ParameterSchema p)
 		{
-			if (p.DataType == DataType.Structured)
+			return p.DataType switch
 			{
-				return new DataParameter
+				DataType.Structured => new DataParameter
 				{
-					Name      = p.ParameterName,
-					DataType  = p.DataType,
+					Name = p.ParameterName,
+					DataType = p.DataType,
 					Direction =
 						p.IsIn ?
 							p.IsOut ?
 								ParameterDirection.InputOutput :
 								ParameterDirection.Input :
 							ParameterDirection.Output,
-					DbType   = p.SchemaType,
-				};
-			}
+					DbType = p.SchemaType,
+				},
 
-			return base.BuildProcedureParameter(p);
+				_ => base.BuildProcedureParameter(p),
+			};
 		}
 
 		protected override string BuildTableFunctionLoadTableSchemaCommand(ProcedureSchema procedure, string commandText)

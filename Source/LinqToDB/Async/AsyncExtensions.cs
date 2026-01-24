@@ -220,15 +220,16 @@ namespace LinqToDB.Async
 
 			return Task.Run(
 				() =>
-			{
-					token.ThrowIfCancellationRequested();
-				foreach (var item in source)
 				{
+					token.ThrowIfCancellationRequested();
+					foreach (var item in source)
+					{
 						token.ThrowIfCancellationRequested();
-					action(item);
-				}
-			},
-			token);
+						action(item);
+					}
+				},
+				token
+			);
 		}
 
 		/// <summary>
@@ -249,16 +250,17 @@ namespace LinqToDB.Async
 
 			return Task.Run(
 				() =>
-			{
+				{
 					token.ThrowIfCancellationRequested();
-				foreach (var item in source)
+					foreach (var item in source)
 					{
 						token.ThrowIfCancellationRequested();
 						if (!func(item))
-						break;
+							break;
 					}
-			},
-			token);
+				},
+				token
+			);
 		}
 
 		#endregion

@@ -63,10 +63,11 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		public override ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
 		{
-			if (element.SystemType == null)
-				return element;
-
-			return ConvertCoalesceToBinaryFunc(element, "Nvl", supportsParameters : false);
+			return element.SystemType switch
+			{
+				null => element,
+				_ => ConvertCoalesceToBinaryFunc(element, "Nvl", supportsParameters: false),
+			};
 		}
 
 		//TODO: Move everything to SQLBuilder

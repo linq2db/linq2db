@@ -66,10 +66,11 @@ namespace LinqToDB.Internal.Async
 			ArgumentNullException.ThrowIfNull(connection);
 
 			// no wrap required
-			if (connection is IAsyncDbConnection asyncConnection)
-				return asyncConnection;
-
-			return _connectionFactories.GetOrAdd(connection.GetType(), ConnectionFactory)(connection);
+			return connection switch
+			{
+				IAsyncDbConnection asyncConnection => asyncConnection,
+				_ => _connectionFactories.GetOrAdd(connection.GetType(), ConnectionFactory)(connection),
+			};
 		}
 
 		internal static IAsyncDbConnection CreateAndSetDataContext(DataConnection dataConnection, DbConnection connection)
@@ -92,10 +93,11 @@ namespace LinqToDB.Internal.Async
 			ArgumentNullException.ThrowIfNull(transaction);
 
 			// no wrap required
-			if (transaction is IAsyncDbTransaction asyncTransaction)
-				return asyncTransaction;
-
-			return _transactionFactories.GetOrAdd(transaction.GetType(), TransactionFactory)(transaction);
+			return transaction switch
+			{
+				IAsyncDbTransaction asyncTransaction => asyncTransaction,
+				_ => _transactionFactories.GetOrAdd(transaction.GetType(), TransactionFactory)(transaction),
+			};
 		}
 
 		internal static IAsyncDbConnection SetDataContext(this IAsyncDbConnection connection, DataConnection dataConnection)

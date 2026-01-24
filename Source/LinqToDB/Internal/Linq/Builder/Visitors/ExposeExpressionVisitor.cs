@@ -102,7 +102,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				return AliasCall(converted, alias);
 			}
 
-			if (node.Method.IsSqlPropertyMethodEx())
+			if (node.Method.IsSqlPropertyMethod)
 			{
 				return HandleSqlProperty(node);
 			}
@@ -438,10 +438,11 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 			if (expression.NodeType is ExpressionType.MemberAccess or ExpressionType.Call)
 			{
-				if (EvaluateExpression(expression) is not IQueryable newQuery)
-					return expression;
-
-				return newQuery.Expression;
+				return EvaluateExpression(expression) switch
+				{
+					IQueryable newQuery => newQuery.Expression,
+					_ => expression,
+				};
 			}
 
 			throw new InvalidOperationException();
@@ -722,24 +723,19 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		protected override Expression VisitConstant(ConstantExpression node)
 		{
-			if (node.Value != null)
+			return node.Value switch
 			{
-				if (node.Value is IQueryable queryable)
-				{
-					if (!ExpressionEqualityComparer.Instance.Equals(queryable.Expression, node))
-						return Visit(queryable.Expression);
-				}
-				else if (node.Value is Sql.IQueryableContainer queryableContainer)
-				{
-					return Visit(queryableContainer.Query.Expression);
-				}
-				/*else if (node.Value is Sql.ISqlExtension)
-				{
-					return Expression.Constant(null, node.Type);
-				}*/
-			}
+				IQueryable queryable when !ExpressionEqualityComparer.Instance.Equals(queryable.Expression, node) =>
+					Visit(queryable.Expression),
 
-			return base.VisitConstant(node);
+				Sql.IQueryableContainer queryableContainer =>
+					Visit(queryableContainer.Query.Expression),
+
+				//Sql.ISqlExtension =>
+				//	Expression.Constant(null, node.Type),
+
+				_ => base.VisitConstant(node),
+			};
 		}
 
 		protected override Expression VisitUnary(UnaryExpression node)

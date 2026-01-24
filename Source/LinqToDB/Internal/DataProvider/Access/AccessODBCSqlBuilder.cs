@@ -52,12 +52,11 @@ namespace LinqToDB.Internal.DataProvider.Access
 		protected override bool TryConvertParameterToSql(SqlParameterValue paramValue)
 		{
 			// see BuildValue notes
-			if (paramValue.ProviderValue is Guid g)
+			return paramValue.ProviderValue switch
 			{
-				return false;
-			}
-			
-			return base.TryConvertParameterToSql(paramValue);
+				Guid g => false,
+				_ => base.TryConvertParameterToSql(paramValue),
+			};
 		}
 
 		protected override void BuildValue(DbDataType? dataType, object? value)

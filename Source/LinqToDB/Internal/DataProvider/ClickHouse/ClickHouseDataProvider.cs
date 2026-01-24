@@ -129,12 +129,11 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		static Guid ReadGuid(byte[] bytes)
 		{
-			if (bytes.Length == 36)
+			return bytes.Length switch
 			{
-				return Guid.ParseExact(Encoding.UTF8.GetString(bytes), "D");
-			}
-
-			return new Guid(bytes);
+				36 => Guid.ParseExact(Encoding.UTF8.GetString(bytes), "D"),
+				_ => new Guid(bytes),
+			};
 		}
 
 		protected override IMemberTranslator CreateMemberTranslator()
@@ -174,12 +173,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 			// https://github.com/DarkWanderer/ClickHouse.Client/issues/128
 			var value = st.Rows[idx]["AllowDBNull"];
-			if (value is bool allowDbNull)
-				return allowDbNull;
-			if (value is "False")
-				return false;
-
-			return true;
+			return value switch
+			{
+				bool allowDbNull => allowDbNull,
+				"False" => false,
+				_ => true,
+			};
 		}
 
 		public override IQueryParametersNormalizer GetQueryParameterNormalizer() => throw new NotSupportedException("Parameters not supported by ClickHouse provider. Create issue if you hit this exception from LINQ query.");

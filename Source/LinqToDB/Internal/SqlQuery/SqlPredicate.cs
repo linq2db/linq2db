@@ -251,14 +251,12 @@ namespace LinqToDB.Internal.SqlQuery
 					return UnknownAsValue == null && (Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased));
 				}
 
-				if (Operator == Operator.Equal)
-					return Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased);
-
-				if (Operator == Operator.NotEqual)
-					return Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) && Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased);
-
-				// comparison
-				return UnknownAsValue != true && (Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased));
+				return Operator switch
+				{
+					Operator.Equal => Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased),
+					Operator.NotEqual => Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) && Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased),
+					_ => UnknownAsValue != true && (Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased)),
+				};
 			}
 
 			/// <summary>
@@ -385,12 +383,12 @@ namespace LinqToDB.Internal.SqlQuery
 				{
 					if (this.TryEvaluateExpression(context, out var value))
 					{
-						if (value is null)
+						return value switch
 						{
-							return new Expr(new SqlValue(typeof(bool?), null));
-						}
-
-						return value is true ? True : False;
+							null => new Expr(new SqlValue(typeof(bool?), null)),
+							true => True,
+							_ => False,
+						};
 					}
 					else if (Expr1.TryEvaluateExpression(context, out value) && value == null)
 					{

@@ -133,13 +133,11 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static bool IsSingleTableInQuery(SelectQuery query, SqlTable table)
 		{
-			if (query.From.Tables is [{ Joins.Count: 0, Source: var s }]
-				&& s == table)
+			return query.From.Tables switch
 			{
-				return true;
-			}
-
-			return false;
+				[{ Joins.Count: 0, Source: var s }] when s == table => true,
+				_ => false,
+			};
 		}
 
 		sealed class IsDependsOnElementContext
@@ -1298,13 +1296,12 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static bool IsWindowFunction(IQueryElement expr)
 		{
-			if (expr is SqlParameterizedExpressionBase expression)
-				return expression.IsWindowFunction;
-
-			if (expr is SqlExtendedFunction { IsWindowFunction: true })
-				return true;
-
-			return false;
+			return expr switch
+			{
+				SqlParameterizedExpressionBase expression => expression.IsWindowFunction,
+				SqlExtendedFunction { IsWindowFunction: true } => true,
+				_ => false,
+			};
 		}
 
 		public static bool ContainsAggregationOrWindowFunction(IQueryElement expr)

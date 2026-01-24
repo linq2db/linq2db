@@ -2524,24 +2524,27 @@ namespace LinqToDB.Internal.SqlProvider
 					break;
 
 				case QueryElementType.BetweenPredicate:
-					{
-						BuildExpression(GetPrecedence((SqlPredicate.Between)predicate), ((SqlPredicate.Between)predicate).Expr1);
-						if (((SqlPredicate.Between)predicate).IsNot) StringBuilder.Append(" NOT");
-						StringBuilder.Append(" BETWEEN ");
-						BuildExpression(GetPrecedence((SqlPredicate.Between)predicate), ((SqlPredicate.Between)predicate).Expr2);
-						StringBuilder.Append(" AND ");
-						BuildExpression(GetPrecedence((SqlPredicate.Between)predicate), ((SqlPredicate.Between)predicate).Expr3);
-					}
+				{
+					BuildExpression(GetPrecedence((SqlPredicate.Between)predicate), ((SqlPredicate.Between)predicate).Expr1);
+
+					if (((SqlPredicate.Between)predicate).IsNot)
+						StringBuilder.Append(" NOT");
+
+					StringBuilder.Append(" BETWEEN ");
+					BuildExpression(GetPrecedence((SqlPredicate.Between)predicate), ((SqlPredicate.Between)predicate).Expr2);
+					StringBuilder.Append(" AND ");
+					BuildExpression(GetPrecedence((SqlPredicate.Between)predicate), ((SqlPredicate.Between)predicate).Expr3);
 
 					break;
+				}
 
 				case QueryElementType.IsNullPredicate:
-					{
-						BuildExpression(GetPrecedence((SqlPredicate.IsNull)predicate), ((SqlPredicate.IsNull)predicate).Expr1);
-						StringBuilder.Append(((SqlPredicate.IsNull)predicate).IsNot ? " IS NOT NULL" : " IS NULL");
-					}
+				{
+					BuildExpression(GetPrecedence((SqlPredicate.IsNull)predicate), ((SqlPredicate.IsNull)predicate).Expr1);
+					StringBuilder.Append(((SqlPredicate.IsNull)predicate).IsNot ? " IS NOT NULL" : " IS NULL");
 
 					break;
+				}
 
 				case QueryElementType.IsDistinctPredicate:
 					BuildIsDistinctPredicate((SqlPredicate.IsDistinct)predicate);
@@ -2565,47 +2568,47 @@ namespace LinqToDB.Internal.SqlProvider
 					break;
 
 				case QueryElementType.NotPredicate:
+				{
+					var p = (SqlPredicate.Not)predicate;
+
+					StringBuilder.Append("NOT ");
+
+					BuildPredicate(p.Precedence, GetPrecedence(p.Predicate), p.Predicate);
+
+					break;
+				}
+
+				case QueryElementType.ExprPredicate:
+				{
+					var p = (SqlPredicate.Expr)predicate;
+
+					if (p.Expr1 is SqlValue sqlValue)
 					{
-						var p = (SqlPredicate.Not)predicate;
+						var value = sqlValue.Value;
 
-						StringBuilder.Append("NOT ");
-
-						BuildPredicate(p.Precedence, GetPrecedence(p.Predicate), p.Predicate);
-
-						break;
-					}
-
-					case QueryElementType.ExprPredicate:
-					{
-						var p = (SqlPredicate.Expr)predicate;
-
-						if (p.Expr1 is SqlValue sqlValue)
+						if (value is bool b)
 						{
-							var value = sqlValue.Value;
-
-							if (value is bool b)
-							{
-								StringBuilder.Append(b ? "1 = 1" : "1 = 0");
-								return;
-							}
+							StringBuilder.Append(b ? "1 = 1" : "1 = 0");
+							return;
 						}
-
-						BuildExpression(GetPrecedence(p), p.Expr1);
-
-						break;
 					}
 
-					case QueryElementType.TruePredicate:
-					{
-						StringBuilder.Append("1 = 1");
-						break;
-					}
+					BuildExpression(GetPrecedence(p), p.Expr1);
 
-					case QueryElementType.FalsePredicate:
-					{
-						StringBuilder.Append("1 = 0");
-						break;
-					}
+					break;
+				}
+
+				case QueryElementType.TruePredicate:
+				{
+					StringBuilder.Append("1 = 1");
+					break;
+				}
+
+				case QueryElementType.FalsePredicate:
+				{
+					StringBuilder.Append("1 = 0");
+					break;
+				}
 
 				default:
 					throw new InvalidOperationException($"Unexpected predicate type {predicate.ElementType}");
@@ -2685,7 +2688,7 @@ namespace LinqToDB.Internal.SqlProvider
 			var values = predicate.Values;
 
 			// Handle x.In(IEnumerable variable)
-			if (values.Count == 1 && values[0] is SqlParameter pr)
+			if (values is [SqlParameter pr])
 			{
 				var prValue = pr.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues).ProviderValue;
 				switch (prValue)
@@ -2955,83 +2958,83 @@ namespace LinqToDB.Internal.SqlProvider
 			switch (expr.ElementType)
 			{
 				case QueryElementType.SqlField:
+				{
+					var field = (SqlField)expr;
+
+					if (_disableAlias)
 					{
-						var field = (SqlField)expr;
-
-						if (_disableAlias)
-						{
-							Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
-							break;
-						}
-
-						SqlObjectName? suffixName = null;
-
-						if (BuildFieldTableAlias(field) && buildTableName && field.Table != null)
-						{
-							var ts = field.Table.SqlTableType == SqlTableType.SystemTable
-								? field.Table
-								: Statement.SelectQuery?.GetTableSource(field.Table);
-
-							var noAlias = false;
-							if (ts == null)
-							{
-								var current = Statement;
-
-								do
-								{
-									ts = current.GetTableSource(field.Table, out noAlias);
-									if (ts != null)
-										break;
-									current = current.ParentStatement;
-								}
-								while (current != null);
-							}
-
-							if (ts == null)
-							{
-								if (field != field.Table.All)
-								{
-#if DEBUG
-									//SqlQuery.GetTableSource(field.Table);
-#endif
-									if (throwExceptionIfTableNotFound)
-										throw new LinqToDBException($"Table '{field.Table.ToDebugString()}' not found.");
-								}
-							}
-							else
-							{
-								var table = noAlias ? null : GetTableAlias(ts);
-								var len   = StringBuilder.Length;
-
-								if (table == null)
-								{
-									if (field.Table is SqlTable tbl)
-										suffixName = tbl.TableName;
-									StringBuilder.Append(GetPhysicalTableName(field.Table, null, ignoreTableExpression : true, withoutSuffix : suffixName != null));
-								}
-								else
-									Convert(StringBuilder, table, ConvertType.NameToQueryTableAlias);
-
-								if (len == StringBuilder.Length)
-									throw new LinqToDBException($"Table {field.Table} should have an alias.");
-
-								addAlias = !string.Equals(alias, field.PhysicalName, StringComparison.Ordinal);
-
-								StringBuilder
-									.Append('.');
-							}
-						}
-
-						if (field == field.Table?.All)
-							StringBuilder.Append('*');
-						else
-							Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
-
-						if (suffixName != null)
-							BuildObjectNameSuffix(StringBuilder, suffixName.Value, true);
+						Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+						break;
 					}
 
+					SqlObjectName? suffixName = null;
+
+					if (BuildFieldTableAlias(field) && buildTableName && field.Table != null)
+					{
+						var ts = field.Table.SqlTableType == SqlTableType.SystemTable
+							? field.Table
+							: Statement.SelectQuery?.GetTableSource(field.Table);
+
+						var noAlias = false;
+						if (ts == null)
+						{
+							var current = Statement;
+
+							do
+							{
+								ts = current.GetTableSource(field.Table, out noAlias);
+								if (ts != null)
+									break;
+								current = current.ParentStatement;
+							}
+							while (current != null);
+						}
+
+						if (ts == null)
+						{
+							if (field != field.Table.All)
+							{
+#if DEBUG
+								//SqlQuery.GetTableSource(field.Table);
+#endif
+								if (throwExceptionIfTableNotFound)
+									throw new LinqToDBException($"Table '{field.Table.ToDebugString()}' not found.");
+							}
+						}
+						else
+						{
+							var table = noAlias ? null : GetTableAlias(ts);
+							var len   = StringBuilder.Length;
+
+							if (table == null)
+							{
+								if (field.Table is SqlTable tbl)
+									suffixName = tbl.TableName;
+								StringBuilder.Append(GetPhysicalTableName(field.Table, null, ignoreTableExpression : true, withoutSuffix : suffixName != null));
+							}
+							else
+								Convert(StringBuilder, table, ConvertType.NameToQueryTableAlias);
+
+							if (len == StringBuilder.Length)
+								throw new LinqToDBException($"Table {field.Table} should have an alias.");
+
+							addAlias = !string.Equals(alias, field.PhysicalName, StringComparison.Ordinal);
+
+							StringBuilder
+								.Append('.');
+						}
+					}
+
+					if (field == field.Table?.All)
+						StringBuilder.Append('*');
+					else
+						Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
+
+					if (suffixName != null)
+						BuildObjectNameSuffix(StringBuilder, suffixName.Value, true);
+
 					break;
+				}
 
 				case QueryElementType.Column:
 				{
@@ -3108,16 +3111,16 @@ namespace LinqToDB.Internal.SqlProvider
 					break;
 
 				case QueryElementType.SqlExpression:
-					{
-						var e = (SqlExpression)expr;
+				{
+					var e = (SqlExpression)expr;
 
-						if (string.Equals(e.Expr, "{0}", StringComparison.Ordinal))
-							BuildExpression(e.Parameters[0], buildTableName, checkParentheses, alias, ref addAlias, throwExceptionIfTableNotFound);
-						else
-							BuildFormatValues(e.Expr, e.Parameters, GetPrecedence(e));
-					}
+					if (string.Equals(e.Expr, "{0}", StringComparison.Ordinal))
+						BuildExpression(e.Parameters[0], buildTableName, checkParentheses, alias, ref addAlias, throwExceptionIfTableNotFound);
+					else
+						BuildFormatValues(e.Expr, e.Parameters, GetPrecedence(e));
 
 					break;
+				}
 
 				case QueryElementType.SqlFragment:
 				{
@@ -3127,9 +3130,9 @@ namespace LinqToDB.Internal.SqlProvider
 						BuildExpression(e.Parameters[0], buildTableName, checkParentheses, alias, ref addAlias, throwExceptionIfTableNotFound);
 					else
 						BuildFormatValues(e.Expr, e.Parameters, GetPrecedence(e));
-				}
 
-				break;
+					break;
+				}
 
 				case QueryElementType.SqlNullabilityExpression:
 					BuildExpression(((SqlNullabilityExpression)expr).SqlExpression, buildTableName, checkParentheses, alias, ref addAlias, throwExceptionIfTableNotFound);
@@ -3152,24 +3155,24 @@ namespace LinqToDB.Internal.SqlProvider
 					break;
 
 				case QueryElementType.SqlParameter:
+				{
+					var parm     = (SqlParameter)expr;
+					var inlining = !parm.IsQueryParameter;
+
+					if (inlining)
 					{
-						var parm     = (SqlParameter)expr;
-						var inlining = !parm.IsQueryParameter;
-
-						if (inlining)
-						{
-							var paramValue = parm.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
-							if (!TryConvertParameterToSql(paramValue))
-								inlining = false;
-						}
-
-						if (!inlining)
-						{
-							BuildParameter(parm);
-						}
-
-						break;
+						var paramValue = parm.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+						if (!TryConvertParameterToSql(paramValue))
+							inlining = false;
 					}
+
+					if (!inlining)
+					{
+						BuildParameter(parm);
+					}
+
+					break;
+				}
 
 				case QueryElementType.SqlDataType:
 					BuildDataType(((SqlDataType)expr).Type, forCreateTable: false, canBeNull: true);
@@ -3183,30 +3186,30 @@ namespace LinqToDB.Internal.SqlProvider
 				case QueryElementType.SqlRawSqlTable:
 				case QueryElementType.TableSource:
 				case QueryElementType.SqlCteTable:
-					{
-						var table = (ISqlTableSource) expr;
-						var tableAlias = GetTableAlias(table) ?? GetPhysicalTableName(table, null, ignoreTableExpression : true);
-						StringBuilder.Append(tableAlias);
-					}
+				{
+					var table = (ISqlTableSource) expr;
+					var tableAlias = GetTableAlias(table) ?? GetPhysicalTableName(table, null, ignoreTableExpression : true);
+					StringBuilder.Append(tableAlias);
 
 					break;
+				}
 
 				case QueryElementType.GroupingSet:
+				{
+					var groupingSet = (SqlGroupingSet) expr;
+					StringBuilder.Append('(');
+					for (var index = 0; index < groupingSet.Items.Count; index++)
 					{
-						var groupingSet = (SqlGroupingSet) expr;
-						StringBuilder.Append('(');
-						for (var index = 0; index < groupingSet.Items.Count; index++)
-						{
-							var setItem = groupingSet.Items[index];
-							BuildExpression(setItem, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
-							if (index < groupingSet.Items.Count - 1)
-								StringBuilder.Append(InlineComma);
-						}
-
-						StringBuilder.Append(')');
+						var setItem = groupingSet.Items[index];
+						BuildExpression(setItem, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
+						if (index < groupingSet.Items.Count - 1)
+							StringBuilder.Append(InlineComma);
 					}
 
+					StringBuilder.Append(')');
+
 					break;
+				}
 
 				case QueryElementType.SqlRow:
 					BuildSqlRow((SqlRowExpression) expr, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
@@ -4511,16 +4514,16 @@ namespace LinqToDB.Internal.SqlProvider
 
 		public string BuildSqlID(Sql.SqlID id)
 		{
-			if (TableIDs?.TryGetValue(id.ID, out var path) == true)
-				return id.Type switch
-				{
-					Sql.SqlIDType.TableAlias => path!.TableAlias,
-					Sql.SqlIDType.TableName  => path!.TableName,
-					Sql.SqlIDType.TableSpec  => path!.TableSpec,
-					_ => throw new InvalidOperationException($"Unknown SqlID Type '{id.Type}'."),
-				};
+			if ((TableIDs?.TryGetValue(id.ID, out var path)) != true)
+				throw new InvalidOperationException($"Table ID '{id.ID}' is not defined.");
 
-			throw new InvalidOperationException($"Table ID '{id.ID}' is not defined.");
+			return id.Type switch
+			{
+				Sql.SqlIDType.TableAlias => path!.TableAlias,
+				Sql.SqlIDType.TableName  => path!.TableName,
+				Sql.SqlIDType.TableSpec  => path!.TableSpec,
+				_ => throw new InvalidOperationException($"Unknown SqlID Type '{id.Type}'."),
+			};
 		}
 
 		int  _testReplaceNumber;

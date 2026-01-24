@@ -125,18 +125,20 @@ namespace LinqToDB.Data
 
 		internal DataConnection GetDataConnection()
 		{
-			if (_dataContext is DataContext dctx)
-				return dctx.GetDataConnection();
-
-			return (DataConnection)_dataContext;
+			return _dataContext switch
+			{
+				DataContext dctx => dctx.GetDataConnection(),
+				_ => (DataConnection)_dataContext,
+			};
 		}
 
 		internal DataContext? TryGetDataContext()
 		{
-			if (_dataContext is DataContext dctx)
-				return dctx;
-
-			return null;
+			return _dataContext switch
+			{
+				DataContext dctx => dctx,
+				_ => null,
+			};
 		}
 
 		private CommandBehavior GetCommandBehavior(DataConnection dataConnection)

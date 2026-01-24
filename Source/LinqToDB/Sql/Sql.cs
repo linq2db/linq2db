@@ -227,9 +227,11 @@ namespace LinqToDB
 				var sqlExpr = builder.ConvertExpressionToSql(newExpr)!;
 				sqlExpr = sqlExpr.Convert(static (v, e) =>
 				{
-					if (e is SqlFunction { Name: PseudoFunctions.REMOVE_CONVERT } func)
-						return func.Parameters[0];
-					return e;
+					return e switch
+					{
+						SqlFunction { Name: PseudoFunctions.REMOVE_CONVERT } func => func.Parameters[0],
+						_ => e,
+					};
 				});
 
 				builder.ResultExpression = sqlExpr;

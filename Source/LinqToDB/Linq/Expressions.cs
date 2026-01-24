@@ -14,6 +14,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -131,13 +132,11 @@ namespace LinqToDB.Linq
 
 		static BinaryExpression GetBinaryNode(Expression expr)
 		{
-			while (expr.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.TypeAs)
-				expr = ((UnaryExpression)expr).Operand;
-
-			if (expr is BinaryExpression binary)
-				return binary;
-
-			throw new ArgumentException($"Expression '{expr}' is not BinaryExpression node.");
+			return expr.UnwrapUnary() switch
+			{
+				BinaryExpression binary => binary,
+				_ => throw new ArgumentException($"Expression '{expr}' is not BinaryExpression node."),
+			};
 		}
 
 		/// <summary>

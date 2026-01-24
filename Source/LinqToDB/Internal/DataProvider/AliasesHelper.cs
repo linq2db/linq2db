@@ -64,10 +64,11 @@ namespace LinqToDB.Internal.DataProvider
 
 				string GetCurrentAlias(SqlTableSource tableSource)
 				{
-					if (tableSource.Alias is ("$F" or "$")) 
-						return tableSource.Alias;
-
-					return TruncateAlias(tableSource.Alias ?? string.Empty);
+					return tableSource.Alias switch
+					{
+						"$F" or "$" => tableSource.Alias,
+						_ => TruncateAlias(tableSource.Alias ?? string.Empty),
+					};
 				}
 
 				return _newAliases;

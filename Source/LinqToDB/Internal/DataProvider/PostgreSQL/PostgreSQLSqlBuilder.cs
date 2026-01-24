@@ -304,10 +304,11 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 					try
 					{
 						// fast Enum detection path
-						if (param.DbType == DbType.Object && param.Value?.GetType().IsEnum == true)
-							return "Enum";
-
-						return provider.Adapter.GetDbType(param).ToString();
+						return param.DbType switch
+						{
+							DbType.Object when param.Value?.GetType().IsEnum == true => "Enum",
+							_ => provider.Adapter.GetDbType(param).ToString(),
+						};
 					}
 					catch (NotSupportedException)
 					{

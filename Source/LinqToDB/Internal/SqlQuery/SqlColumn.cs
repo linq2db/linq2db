@@ -78,33 +78,20 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public string? Alias
 		{
-			get
-			{
-				if (RawAlias == null)
-					return GetAlias(Expression);
-
-				return RawAlias;
-			}
+			get => RawAlias ?? GetAlias(Expression);
 			set => RawAlias = value;
 		}
 
 		static string? GetAlias(ISqlExpression? expr)
 		{
-			switch (expr)
+			return expr switch
 			{
-				case SqlField    field  : return field.Alias ?? field.PhysicalName;
-				case SqlColumn   column : return column.Alias;
-				case SelectQuery query  :
-					{
-						if (query.Select.Columns.Count == 1 && !string.Equals(query.Select.Columns[0].Alias, "*", StringComparison.Ordinal))
-							return query.Select.Columns[0].Alias;
-						break;
-					}
-				case SqlExpression e
-					when e.Expr is "{0}": return GetAlias(e.Parameters[0]);
-			}
-
-			return null;
+				SqlField field => field.Alias ?? field.PhysicalName,
+				SqlColumn column => column.Alias,
+				SelectQuery { Select.Columns: [{ Alias: not "*" and var alias }] } => alias,
+				SqlExpression { Expr: "{0}", Parameters: [var parameter] } => GetAlias(parameter),
+				_ => null,
+			};
 		}
 
 		public override int GetElementHashCode()

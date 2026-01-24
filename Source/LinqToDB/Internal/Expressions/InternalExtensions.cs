@@ -93,6 +93,18 @@ namespace LinqToDB.Internal.Expressions
 		}
 
 		[return: NotNullIfNotNull(nameof(ex))]
+		public static Expression? UnwrapUnary(this Expression? ex)
+		{
+			if (ex == null)
+				return null;
+
+			while (ex.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.TypeAs)
+				ex = ((UnaryExpression)ex).Operand;
+
+			return ex;
+		}
+
+		[return: NotNullIfNotNull(nameof(ex))]
 		public static Expression? UnwrapConvert(this Expression? ex)
 		{
 			if (ex == null)
