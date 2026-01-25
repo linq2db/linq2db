@@ -259,7 +259,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						providerValueGetter = Expression.Convert(providerValueGetter, valueType);
 					}
 
-					if (updateType && paramDataType.SystemType.UnwrapNullableType() != paramType.UnwrapNullableType())
+					if (updateType && paramDataType.SystemType.UnwrapNullableType() != paramType.UnwrapNullableType() && paramType != typeof(object))
 					{
 						var newType = mappingSchema.GetDbDataType(paramType);
 						if (!newType.EqualsDbOnly(SqlDataType.MakeUndefined(paramType).Type))
