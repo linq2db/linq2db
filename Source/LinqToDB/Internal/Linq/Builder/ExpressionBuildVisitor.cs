@@ -1149,11 +1149,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				var memberInfo = expr switch
 				{
-					MethodCallExpression mc => mc.Method,
-					MemberExpression me     => me.Member,
-					UnaryExpression ue      => ue.Method!,
-					BinaryExpression be     => be.Method!,
-					_                       => throw new InvalidOperationException()
+					MethodCallExpression { Method: { } method } => method,
+					MemberExpression     { Member: { } member } => member,
+					UnaryExpression      { Method: { } method } => method,
+					BinaryExpression     { Method: { } method } => method,
+					_ => throw new InvalidOperationException("Should be impossible"),
 				};
 
 				var isServerSideOnly = memberInfo.IsServerSideOnly(MappingSchema);
