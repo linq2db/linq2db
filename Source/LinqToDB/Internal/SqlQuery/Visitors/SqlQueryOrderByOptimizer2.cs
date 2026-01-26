@@ -219,18 +219,18 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				RemoveOrderByFromSource(sqlTableSource);
 			}
+		}
 
-			void RemoveOrderByFromSource(SqlTableSource sqlTableSource)
+		void RemoveOrderByFromSource(SqlTableSource sqlTableSource)
+		{
+			if (sqlTableSource.Source is SelectQuery subQuery)
 			{
-				if (sqlTableSource.Source is SelectQuery subQuery)
-				{
-					RemoveOrderBy(subQuery, false);
-				}
+				RemoveOrderBy(subQuery, false);
+			}
 
-				foreach (var join in sqlTableSource.Joins)
-				{
-					RemoveOrderByFromSource(join.Table);
-				}
+			foreach (var join in sqlTableSource.Joins)
+			{
+				RemoveOrderByFromSource(join.Table);
 			}
 		}
 

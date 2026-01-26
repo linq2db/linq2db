@@ -605,8 +605,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					// All group by items are already in select columns, we can transform to distinct
 					//
 					selectQuery.GroupBy.Items.Clear();
-					selectQuery.Select.IsDistinct = true;
-					isModified = true;
+					selectQuery.Select.OptimizeDistinct = true;
+					selectQuery.Select.IsDistinct       = true;
+					isModified                          = true;
 				}
 			}
 
@@ -1368,7 +1369,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 
 			if (subQuery.Select.IsDistinct)
-				parentQuery.Select.IsDistinct = true;
+			{
+				parentQuery.Select.OptimizeDistinct = parentQuery.Select.OptimizeDistinct || subQuery.Select.OptimizeDistinct;
+				parentQuery.Select.IsDistinct       = true;
+			}
 
 			if (subQuery.Select.TakeValue != null)
 			{

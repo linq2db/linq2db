@@ -1347,8 +1347,9 @@ namespace LinqToDB.Internal.Remote
 							Append(elem.SkipValue);
 							Append(elem.TakeValue);
 							Append((int?)elem.TakeHints);
+							Append(elem.OptimizeDistinct);
 
-							Append(elem.Columns);
+						Append(elem.Columns);
 
 							break;
 						}
@@ -2422,13 +2423,17 @@ namespace LinqToDB.Internal.Remote
 
 					case QueryElementType.SelectClause :
 						{
-							var isDistinct = ReadBool();
-							var skipValue  = Read<ISqlExpression>()!;
-							var takeValue  = Read<ISqlExpression>()!;
-							var takeHints  = (TakeHints?)ReadNullableInt();
-							var columns    = ReadArray<SqlColumn>()!;
+							var isDistinct       = ReadBool();
+							var skipValue        = Read<ISqlExpression>()!;
+							var takeValue        = Read<ISqlExpression>()!;
+							var takeHints        = (TakeHints?)ReadNullableInt();
+							var columns          = ReadArray<SqlColumn>()!;
+							var optimizeDistinct = ReadBool();
 
-							obj = new SqlSelectClause(isDistinct, takeValue, takeHints, skipValue, columns);
+							obj = new SqlSelectClause(isDistinct, takeValue, takeHints, skipValue, columns)
+							{
+								OptimizeDistinct = optimizeDistinct
+							};
 
 							break;
 						}

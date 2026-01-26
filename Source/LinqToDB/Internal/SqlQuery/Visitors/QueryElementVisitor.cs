@@ -2086,7 +2086,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							NotifyReplaced(newColumn, oldColumn);
 						}
 
-						return NotifyReplaced(new SqlSelectClause(element.IsDistinct, take, element.TakeHints, skip, newColumns), element);
+						return NotifyReplaced(new SqlSelectClause(element.IsDistinct, take, element.TakeHints, skip, newColumns) { OptimizeDistinct = element.OptimizeDistinct }, element);
 					}
 
 					break;
