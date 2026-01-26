@@ -1349,7 +1349,7 @@ namespace LinqToDB.Internal.Remote
 							Append((int?)elem.TakeHints);
 							Append(elem.OptimizeDistinct);
 
-						Append(elem.Columns);
+							Append(elem.Columns);
 
 							break;
 						}
@@ -2427,8 +2427,8 @@ namespace LinqToDB.Internal.Remote
 							var skipValue        = Read<ISqlExpression>()!;
 							var takeValue        = Read<ISqlExpression>()!;
 							var takeHints        = (TakeHints?)ReadNullableInt();
-							var columns          = ReadArray<SqlColumn>()!;
 							var optimizeDistinct = ReadBool();
+							var columns          = ReadArray<SqlColumn>()!;
 
 							obj = new SqlSelectClause(isDistinct, takeValue, takeHints, skipValue, columns)
 							{
