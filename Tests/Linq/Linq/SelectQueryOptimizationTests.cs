@@ -524,6 +524,33 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void OrderByAndGroupByConstantAndLimitOrderShouldBeRemoved([DataSources] string context)
+		{
+			using var db = GetDataConnection();
+			
+			var qry =
+				from ch in db.Child
+				orderby ch.ChildID
+				select ch;
+
+			var query =
+				from ch in qry
+				group ch by 1 into g
+				select new
+				{
+					Count = g.Count(),
+					Expr  = 1 + g.Min(c => c.ChildID),
+					Max   = g.Max(c => c.ChildID),
+				};
+
+			query = query.Take(1);
+
+			var selectQuery = query.GetSelectQuery();
+			selectQuery.OrderBy.IsEmpty.ShouldBeTrue();
+			selectQuery.IsLimited.ShouldBeTrue();
+		}
+
+		[Test]
 		public void CountOrderByShouldBeRemoved()
 		{
 			using var db = GetDataConnection();

@@ -1520,9 +1520,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (!subQuery.OrderBy.IsEmpty)
 			{
-				// not allowed to move to parent if it has aggregates
-				if (!parentQuery.IsSimpleButWhere)
+				if (!parentQuery.GroupBy.IsEmpty || parentQuery.Select.IsDistinct || QueryHelper.ContainsAggregationOrWindowFunction(parentQuery.Select))
+				{
 					return false;
+				}
 			}
 
 			if (!subQuery.OrderBy.IsEmpty)

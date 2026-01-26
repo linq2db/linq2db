@@ -13,20 +13,21 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 	public sealed class SqlQueryColumnOptimizerVisitor : QueryElementVisitor
 	{
 		// Maps each SelectQuery to its set of used columns
-		private readonly Dictionary<SelectQuery, HashSet<SqlColumn>> _usedColumnsByQuery = new();
+		readonly Dictionary<SelectQuery, HashSet<SqlColumn>> _usedColumnsByQuery = new();
 		
 		// Tracks which CTE fields are actually used
-		private readonly Dictionary<CteClause, HashSet<string>> _usedCteFields = new();
+		readonly Dictionary<CteClause, HashSet<string>> _usedCteFields = new();
 		
 		// Current CTE being processed
-		private CteClause? _currentCte;
+		CteClause? _currentCte;
 		
 		// Current pass: true = collecting, false = removing
-		private bool _isCollecting;
+		bool _isCollecting;
 
-		private bool _inExpression;
+		bool _inExpression;
 
-		private SqlPredicate.Exists? _currentExistsPredicate;
+		SqlPredicate.Exists? _currentExistsPredicate;
+		SqlTableLikeSource?  _currentSqlTableLikeSource;
 
 		public SqlQueryColumnOptimizerVisitor() : base(VisitMode.Modify)
 		{
@@ -38,10 +39,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_usedColumnsByQuery.Clear();
 			_usedCteFields.Clear();
 
-			_currentCte             = null;
-			_currentExistsPredicate = null;
-			_inExpression           = true;
-			_isCollecting           = false;
+			_currentCte                = null;
+			_currentExistsPredicate    = null;
+			_currentSqlTableLikeSource = null;
+			_inExpression              = true;
+			_isCollecting              = false;
 		}
 
 		/// <summary>
@@ -220,8 +222,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		protected internal override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
 		{
+			var saveTableLikeSource = _currentSqlTableLikeSource;
+			_currentSqlTableLikeSource = element;
+
 			var result = (SqlTableLikeSource)base.VisitSqlTableLikeSource(element);
-			
+
+			_currentSqlTableLikeSource = saveTableLikeSource;
+
 			if (!_isCollecting && result.SourceEnumerable != null)
 				SynchronizeEnumerableFields(result);
 			
@@ -243,7 +250,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		#region Column Processing Logic
 
-		private void ProcessQueryColumns(SelectQuery selectQuery)
+		void ProcessQueryColumns(SelectQuery selectQuery)
 		{
 			// Build list of column indices to keep
 			var indicesToKeep = new List<int>();
@@ -291,7 +298,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 			
 			// Ensure non-empty SELECT
-			if (selectQuery.Select.Columns.Count == 0 && _currentExistsPredicate?.SubQuery != selectQuery)
+			if (selectQuery.Select.Columns.Count == 0 && AllowEmptyColumns(selectQuery))
 			{
 				AddDummyColumn(selectQuery);
 				
@@ -307,6 +314,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 				}
 			}
+		}
+
+		bool AllowEmptyColumns(SelectQuery selectQuery)
+		{
+			return _currentExistsPredicate?.SubQuery != selectQuery 
+			       && _currentSqlTableLikeSource?.SourceQuery != selectQuery;
 		}
 
 		private bool HasNonUnionAllSetOperators(SelectQuery selectQuery)

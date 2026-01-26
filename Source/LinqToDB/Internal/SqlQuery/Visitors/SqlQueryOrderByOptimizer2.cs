@@ -60,7 +60,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return selectQuery;
 		}
 
-		bool CorrectOrderByForSelectQuery(SelectQuery selectQuery, SelectQuery? parentSelectQuery, SqlSetOperator? setOperator, Stack<SelectQuery> notAcceptOrder, ref bool needsNestingUpdate)
+		bool CorrectOrderByForSelectQuery(SelectQuery selectQuery, SelectQuery? parentSelectQuery, SqlSetOperator? setOperator, Stack<SelectQuery> doNotAcceptOrder, ref bool needsNestingUpdate)
 		{
 			var optimized = false;
 
@@ -81,17 +81,17 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 				}
 
-				notAcceptOrder.Push(selectQuery);
-				if (CorrectOrderByForSelectQuery(selectQuery, null, firstSetOperation, notAcceptOrder, ref needsNestingUpdate))
+				doNotAcceptOrder.Push(selectQuery);
+				if (CorrectOrderByForSelectQuery(selectQuery, null, firstSetOperation, doNotAcceptOrder, ref needsNestingUpdate))
 					optimized = true;
-				notAcceptOrder.Pop();
+				doNotAcceptOrder.Pop();
 
 				foreach (var so in selectQuery.SetOperators)
 				{
-					notAcceptOrder.Push(so.SelectQuery);
-					if (CorrectOrderByForSelectQuery(so.SelectQuery, null, setOperator, notAcceptOrder, ref needsNestingUpdate))
+					doNotAcceptOrder.Push(so.SelectQuery);
+					if (CorrectOrderByForSelectQuery(so.SelectQuery, null, setOperator, doNotAcceptOrder, ref needsNestingUpdate))
 						optimized = true;
-					notAcceptOrder.Pop();
+					doNotAcceptOrder.Pop();
 				}
 			}
 
@@ -109,7 +109,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				else if (parentSelectQuery != null)
 				{
-					if (!notAcceptOrder.Contains(parentSelectQuery) && !parentSelectQuery.HasSetOperators)
+					if (!parentSelectQuery.HasSetOperators 
+					    && !doNotAcceptOrder.Contains(parentSelectQuery)
+						&& !(parentSelectQuery.GroupBy.IsEmpty && QueryHelper.IsAggregationQuery(parentSelectQuery, out var parentNeedsOrderBy) && parentNeedsOrderBy)
+					    )
 					{
 						for (var i = 0; i < selectQuery.OrderBy.Items.Count; i++)
 						{
@@ -127,7 +130,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 								});
 							}
 
-							if (!parentSelectQuery.GroupBy.IsEmpty)
+							if (canPopulateUpperLevel && !parentSelectQuery.GroupBy.IsEmpty)
 							{
 								canPopulateUpperLevel = selectQuery.Select.Columns.Any(c => QueryHelper.SameWithoutNullablity(c.Expression, orderByItem.Expression));
 							}
@@ -166,7 +169,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				if (sqlTableSource.Source is SelectQuery subQuery)
 				{
-					if (CorrectOrderByForSelectQuery(subQuery, selectQuery, null, notAcceptOrder, ref needsNestingUpdate))
+					if (CorrectOrderByForSelectQuery(subQuery, selectQuery, null, doNotAcceptOrder, ref needsNestingUpdate))
 						optimized = true;
 				}
 
@@ -181,18 +184,25 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			if (selectQuery.OrderBy.IsEmpty)
 				return false;
+
+			if (QueryHelper.IsAggregationQuery(selectQuery, out var needsOrderBy))
+			{
+				if (needsOrderBy)
+					return false;
+				return true;
+			}
+
 			if (selectQuery.IsLimited)
-				return false;
-			if (QueryHelper.IsAggregationQuery(selectQuery, out var needsOrderBy) && needsOrderBy)
 				return false;
 			return true;
 		}
 
-		static void RemoveOrderBy(SelectQuery selectQuery, bool exceptSetOperators)
+		void RemoveOrderBy(SelectQuery selectQuery, bool exceptSetOperators)
 		{
 			if (CanRemoveOrderBy(selectQuery))
 			{
 				selectQuery.OrderBy.Items.Clear();
+				_optimized = true;
 			}
 
 			if (!exceptSetOperators && selectQuery.HasSetOperators)
@@ -208,7 +218,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				RemoveOrderByFromSource(sqlTableSource);
 			}
 
-			static void RemoveOrderByFromSource(SqlTableSource sqlTableSource)
+			void RemoveOrderByFromSource(SqlTableSource sqlTableSource)
 			{
 				if (sqlTableSource.Source is SelectQuery subQuery)
 				{
