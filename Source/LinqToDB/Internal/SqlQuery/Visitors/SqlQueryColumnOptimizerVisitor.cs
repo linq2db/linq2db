@@ -171,6 +171,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return result;
 		}
 
+		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
+		{
+			return expression;
+		}
+
 		protected internal override IQueryElement VisitSqlColumnReference(SqlColumn element)
 		{
 			if (_isCollecting)
