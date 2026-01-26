@@ -68,12 +68,27 @@ namespace Tests.Linq
 			using var db = GetDataConnection();
 
 			var query = db.Child
-				.GroupBy(x => new { x.ParentID, x.ChildID })
+				.GroupBy(x => new { x.ParentID, ChildID = x.ChildID + 1 })
 				.Select(x => x.Key);
 
 			var groupingSelect = query.GetSelectQuery();
 
 			groupingSelect.Select.IsDistinct.ShouldBeTrue();
+			groupingSelect.GroupBy.IsEmpty.ShouldBeTrue();
+		}
+
+		[Test]
+		public void GroupByShouldBeRemovedWhenGroupingKeyIsUnique()
+		{
+			using var db = GetDataConnection();
+
+			var query = db.Child
+				.GroupBy(x => new { x.ParentID, ChildID = x.ChildID })
+				.Select(x => x.Key);
+
+			var groupingSelect = query.GetSelectQuery();
+
+			groupingSelect.Select.IsDistinct.ShouldBeFalse();
 			groupingSelect.GroupBy.IsEmpty.ShouldBeTrue();
 		}
 
