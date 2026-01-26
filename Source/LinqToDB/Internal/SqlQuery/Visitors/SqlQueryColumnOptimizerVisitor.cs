@@ -148,14 +148,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						MarkColumnUsed(column);
 					}
 				}
-				else if (QueryHelper.IsAggregationQuery(selectQuery))
-				{
-					if (selectQuery.Select.Columns.Count > 0)
-					{
-						// For aggregation queries, mark the first column as used to ensure at least one is kept
-						MarkColumnUsed(selectQuery.Select.Columns[0]);
-					}
-				}
 			}
 
 			// In modify pass, process this query's columns BEFORE visiting children
@@ -167,13 +159,26 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			// Visit all children
 			var result = (SelectQuery)base.VisitSqlQuery(selectQuery);
-		
+
+			if (_isCollecting)
+			{
+				// mark at least one column as used
+				if (selectQuery.Select.Columns.Count > 0 
+				    && !selectQuery.Select.Columns.Any(IsColumnUsed) 
+				    && (selectQuery.HasSetOperators || QueryHelper.IsAggregationQuery(selectQuery)))	
+				{
+					MarkColumnUsed(selectQuery.Select.Columns[0]);
+				}
+			}
+
 			return result;
 		}
 
 		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
-			return expression;
+			if (_isCollecting)
+				return expression;
+			return (ISqlExpression)Visit(expression);
 		}
 
 		protected internal override IQueryElement VisitSqlColumnReference(SqlColumn element)
