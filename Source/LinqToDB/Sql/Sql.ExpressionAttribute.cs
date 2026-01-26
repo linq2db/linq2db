@@ -267,7 +267,7 @@ namespace LinqToDB
 
 				var (method, instance, arguments) = expression switch
 				{
-					MethodCallExpression { Method: { } mi, Object: { } obj, Arguments: { } args } =>
+					MethodCallExpression { Method: { } mi, Object: var obj, Arguments: { } args } =>
 						(mi, obj, (IReadOnlyList<Expression>)args),
 
 					UnaryExpression { Method: { } mi, Operand: var operand } =>
