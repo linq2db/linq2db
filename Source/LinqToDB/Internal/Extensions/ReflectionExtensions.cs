@@ -25,8 +25,8 @@ namespace LinqToDB.Internal.Extensions
 				return GetInterfacePublicInstanceValueMembers(type);
 
 			var members = type.GetMembers(BindingFlags.Instance | BindingFlags.Public)
-			.Where(m => m.IsField || m.IsProperty && ((PropertyInfo)m).GetIndexParameters().Length == 0)
-			.ToArray();
+				.Where(m => m.IsField || m.IsProperty && ((PropertyInfo)m).GetIndexParameters().Length == 0)
+				.ToArray();
 
 			var baseType = type.BaseType;
 			if (baseType == null || baseType == typeof(object) || baseType == typeof(ValueType))
@@ -61,8 +61,8 @@ namespace LinqToDB.Internal.Extensions
 		private static MemberInfo[] GetInterfacePublicInstanceValueMembers(Type type)
 		{
 			var members = type
-			.GetMembers(BindingFlags.Instance | BindingFlags.Public)
-			.Where(m => m.IsField || m.IsProperty && ((PropertyInfo)m).GetIndexParameters().Length == 0);
+				.GetMembers(BindingFlags.Instance | BindingFlags.Public)
+				.Where(m => m.IsField || m.IsProperty && ((PropertyInfo)m).GetIndexParameters().Length == 0);
 
 			var interfaces = type.GetInterfaces();
 			if (interfaces.Length == 0)
@@ -129,8 +129,12 @@ namespace LinqToDB.Internal.Extensions
 
 				return memberInfo.MemberType switch
 				{
-					MemberTypes.Field => type.GetField(memberInfo.Name),
-					MemberTypes.Method => type.GetMethodEx(memberInfo.Name, ((MethodInfo)memberInfo).GetParameters().Select(_ => _.ParameterType).ToArray()),
+					MemberTypes.Field =>
+						type.GetField(memberInfo.Name),
+
+					MemberTypes.Method =>
+						type.GetMethodEx(memberInfo.Name, ((MethodInfo)memberInfo).GetParameters().Select(_ => _.ParameterType).ToArray()),
+
 					_ => null,
 				};
 			});
@@ -702,13 +706,13 @@ namespace LinqToDB.Internal.Extensions
 		}
 
 #if NET8_0_OR_GREATER
-	public static object? GetDefaultValue(this Type type)
-	{
-		if (type.IsNullableOrReferenceType())
-			return null;
+		public static object? GetDefaultValue(this Type type)
+		{
+			if (type.IsNullableOrReferenceType())
+				return null;
 
-		return RuntimeHelpers.GetUninitializedObject(type);
-	}
+			return RuntimeHelpers.GetUninitializedObject(type);
+		}
 #else
 		interface IGetDefaultValueHelper
 		{

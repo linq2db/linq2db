@@ -68,7 +68,7 @@ namespace LinqToDB.Internal.Mapping
 
 			var (type, getSource) = key.Source switch
 			{
-				Type { IsInterface: true } t =>
+				Type { IsInterface: false } t =>
 					(t, static (t, s) => t),
 
 				MemberInfo m =>

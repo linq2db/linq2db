@@ -554,12 +554,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		ExprCacheKey GetSqlCacheKey(Expression path)
 		{
-			return FoundRoot switch
-			{
-				null => throw new InvalidOperationException("Called when root is not initialized."),
+			if (FoundRoot == null)
+				throw new InvalidOperationException("Called when root is not initialized.");
 
-				_ => GetSqlCacheKey(path, FoundRoot.BuildContext.SelectQuery),
-			};
+			return GetSqlCacheKey(path, FoundRoot.BuildContext.SelectQuery);
 		}
 
 		ExprCacheKey GetSqlCacheKey(Expression path, SelectQuery selectQuery)

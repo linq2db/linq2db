@@ -9,8 +9,6 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Mapping;
 using LinqToDB.Reflection;
 
-using static LinqToDB.Expressions.MemberHelper;
-
 namespace LinqToDB.Expressions
 {
 	public static class MemberHelper
