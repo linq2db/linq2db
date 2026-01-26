@@ -127,9 +127,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return result;
 		}
 
-		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
+		protected internal override IQueryElement VisitSqlFromClause(SqlFromClause element)
 		{
-			return expression;
+			var prevInExpression = _inExpression;
+			_inExpression = false;
+			var result = base.VisitSqlFromClause(element);
+			_inExpression = prevInExpression;
+			return result;
 		}
 
 		protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
@@ -161,14 +165,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				ProcessQueryColumns(selectQuery);
 			}
 
-			var prevInExpression = _inExpression;
-			_inExpression = false;
-
 			// Visit all children
 			var result = (SelectQuery)base.VisitSqlQuery(selectQuery);
-
-			_inExpression = prevInExpression;
-			
+		
 			return result;
 		}
 

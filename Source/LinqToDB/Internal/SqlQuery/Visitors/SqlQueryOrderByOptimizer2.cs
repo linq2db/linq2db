@@ -57,6 +57,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
+			Visit(selectQuery.From);
+
 			return selectQuery;
 		}
 
@@ -245,6 +247,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 
 			return element;
+		}
+
+		protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
+		{
+			RemoveOrderBy(predicate.SubQuery, false);
+			return base.VisitExistsPredicate(predicate);
 		}
 	}
 }
