@@ -1468,7 +1468,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 				default:
 					return sqlExpression;
-			};
+			}
 		}
 
 		/// <summary>

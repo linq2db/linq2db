@@ -1,297 +1,258 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlProvider;
 
 namespace LinqToDB.Internal.SqlQuery.Visitors
 {
-	public sealed class SqlQueryOrderByOptimizer : SqlQueryVisitor
+	public sealed class SqlQueryOrderByOptimizer : QueryElementVisitor
 	{
-		SqlProviderFlags _providerFlags = default!;
-		bool             _disableOrderBy;
-		bool             _insideSetOperator;
-		bool             _optimized;
-		bool             _needsNestingUpdate;
+		SqlProviderFlags               _providerFlags          = default!;
+		SqlQueryColumnNestingCorrector _columnNestingCorrector = default!;
 
-		public bool IsOptimized => _optimized;
-		public bool NeedsNestingUpdate => _needsNestingUpdate;
+		bool _optimized;
 
-		public SqlQueryOrderByOptimizer() : base(VisitMode.Modify, null)
+		public bool IsOptimized        => _optimized;
+
+		public SqlQueryOrderByOptimizer() : base(VisitMode.Modify)
 		{
 		}
 
 		public override void Cleanup()
 		{
 			base.Cleanup();
-
-			_disableOrderBy     = false;
-			_insideSetOperator  = false;
-			_optimized          = false;
-			_needsNestingUpdate = false;
-			_providerFlags      = default!;
+			_optimized              = false;
+			_providerFlags          = default!;
+			_columnNestingCorrector = default!;
 		}
 
-		public void OptimizeOrderBy(IQueryElement element, SqlProviderFlags providerFlags)
+		public void OptimizeOrderBy(IQueryElement element, SqlProviderFlags providerFlags, SqlQueryColumnNestingCorrector columnNestingCorrector)
 		{
-			_disableOrderBy     = false;
-			_optimized          = false;
-			_insideSetOperator  = false;
-			_needsNestingUpdate = false;
-			_providerFlags      = providerFlags;
+			Cleanup();
 
-			ProcessElement(element);
-		}
+			_providerFlags          = providerFlags;
+			_columnNestingCorrector = columnNestingCorrector;
 
-		void CorrectOrderBy(SelectQuery selectQuery, bool disable)
-		{
-			if (!selectQuery.OrderBy.IsEmpty)
-			{
-				// This is the case when we have 
-				// SELECT [TOP x]
-				//     COUNT(*),
-				//     AVG(Value)
-				// FROM Table
-				// ORDER BY ...
-				if (QueryHelper.IsAggregationQuery(selectQuery, out var needsOrderBy) && !needsOrderBy)
-				{
-					selectQuery.OrderBy.Items.Clear();
-					_optimized = true;
-					return;
-				}
-
-				if (!selectQuery.IsLimited)
-				{
-					if (disable)
-					{
-						selectQuery.OrderBy.Items.Clear();
-						_optimized = true;
-						return;
-					}
-				}
-
-				selectQuery.OrderBy.Items.RemoveDuplicates(item => item.Expression);
-			}
-		
-		}
-
-		protected internal override IQueryElement VisitSqlSetOperator(SqlSetOperator element)
-		{
-			var saveDisableOrderBy    = _disableOrderBy;
-			var saveInsideSetOperator = _insideSetOperator;
-			_insideSetOperator = true;
-			
-			_disableOrderBy = _disableOrderBy                                ||
-			                  element.Operation == SetOperation.Except       ||
-			                  element.Operation == SetOperation.ExceptAll    ||
-			                  element.Operation == SetOperation.Intersect    ||
-			                  element.Operation == SetOperation.IntersectAll ||
-			                  element.Operation == SetOperation.Union;
-
-			var newElement = base.VisitSqlSetOperator(element);
-
-			_disableOrderBy     = saveDisableOrderBy;
-			_insideSetOperator  = saveInsideSetOperator;
-
-			return newElement;
-		}
-
-		protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
-		{
-			var saveDisableOrderBy = _disableOrderBy;
-
-			_disableOrderBy = true;
-
-			var newElement = base.VisitExistsPredicate(predicate);
-
-			_disableOrderBy = saveDisableOrderBy;
-
-			return newElement;
-		}
-
-		protected internal override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
-		{
-			var saveDisableOrderBy = _disableOrderBy;
-
-			_disableOrderBy = true;
-
-			var newElement = base.VisitSqlJoinedTable(element);
-
-			_disableOrderBy = saveDisableOrderBy;
-
-			return newElement;
-		}
-
-		static bool ExtractOrderBy(SelectQuery selectQuery, [NotNullWhen(true)] out SqlOrderByClause? orderBy)
-		{
-			orderBy = null;
-
-			if (!selectQuery.Select.HasModifier && !selectQuery.HasSetOperators)
-			{
-				if (!selectQuery.OrderBy.IsEmpty)
-				{
-					orderBy = selectQuery.OrderBy;
-					return true;
-				}
-
-				if (QueryHelper.IsAggregationQuery(selectQuery, out var needsOrderBy) && needsOrderBy)
-					return false;
-
-				if (selectQuery.From.GroupBy.IsEmpty && selectQuery.From.Tables is [{ Joins.Count: 0, Source: SelectQuery subQuery }])
-				{
-					return ExtractOrderBy(subQuery, out orderBy);
-				}
-			}
-
-			return false;
+			Visit(element);
 		}
 
 		protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
-			var saveDisableOrderBy = _disableOrderBy;
-			
-			if (selectQuery.HasSetOperators)
-			{
-				var setOperator = selectQuery.SetOperators[0];
-				if (setOperator.Operation == SetOperation.Union     || 
-				    setOperator.Operation == SetOperation.Except    || 
-				    setOperator.Operation == SetOperation.Intersect || 
-				    setOperator.Operation == SetOperation.IntersectAll)
-				{
-					_disableOrderBy = true;
-				}
-
-				var saveInsideSetOperator = _insideSetOperator;
-				_insideSetOperator = true;
-
-				Visit(selectQuery.From);
-
-				_insideSetOperator = saveInsideSetOperator;
-			}
-			else
-			{
-				if (!_disableOrderBy)
-				{
-					if (selectQuery.OrderBy.IsEmpty && ExtractOrderBy(selectQuery, out var orderBy))
-					{
-						// we can preserve order in simple cases
-						foreach(var item in orderBy.Items)
-						{
-							selectQuery.OrderBy.Items.Add(item.Clone());
-						}
-
-						orderBy.Items.Clear();
-
-						_optimized          = true;
-						_needsNestingUpdate = true;
-					}
-				}
-
-				Visit(selectQuery.From);
-			}
-
-			CorrectOrderBy(selectQuery, _disableOrderBy);
-
-			Visit(selectQuery.Select );
-			Visit(selectQuery.Where  );
+			Visit(selectQuery.Select);
 			Visit(selectQuery.GroupBy);
-			Visit(selectQuery.Having );
 			Visit(selectQuery.OrderBy);
+			Visit(selectQuery.Where);
+			Visit(selectQuery.Having);
 
-			if (selectQuery.HasSetOperators)
-				VisitElements(selectQuery.SetOperators, VisitMode.Modify);
+			var needsNestingUpdate = false;
 
-			if (selectQuery.HasUniqueKeys)
-				VisitListOfArrays(selectQuery.UniqueKeys, VisitMode.Modify);
+			if (CorrectOrderByForSelectQuery(selectQuery, null, null, [], ref needsNestingUpdate))
+			{
+				_optimized = true;
+				if (needsNestingUpdate)
+				{
+					_columnNestingCorrector.CorrectColumnNesting(selectQuery);
+				}
+			}
 
-			VisitElements(selectQuery.SqlQueryExtensions, VisitMode.Modify);
-
-			_disableOrderBy = saveDisableOrderBy;
+			Visit(selectQuery.From);
 
 			return selectQuery;
 		}
 
-		protected internal override IQueryElement VisitSqlFromClause(SqlFromClause element)
+		bool CorrectOrderByForSelectQuery(SelectQuery selectQuery, SelectQuery? parentSelectQuery, SqlSetOperator? setOperator, Stack<SelectQuery> doNotAcceptOrder, ref bool needsNestingUpdate)
 		{
-			var saveDisableOrderBy = _disableOrderBy;
+			var optimized = false;
 
-			if (!_insideSetOperator)
+			if (selectQuery.HasSetOperators && (setOperator == null || setOperator.SelectQuery == selectQuery))
 			{
-				if (!QueryHelper.IsAggregationQuery(element.SelectQuery, out var needsOrderBy) || !needsOrderBy)
-					_disableOrderBy = true;
-				else
-					_disableOrderBy = false;
+				var firstSetOperation = selectQuery.SetOperators[0];
+
+				if (firstSetOperation.Operation != SetOperation.UnionAll)
+				{
+					RemoveOrderBy(selectQuery, true);
+				}
+
+				foreach (var so in selectQuery.SetOperators)
+				{
+					if (so.Operation != SetOperation.UnionAll)
+					{
+						RemoveOrderBy(so.SelectQuery, false);
+					}
+				}
+
+				doNotAcceptOrder.Push(selectQuery);
+				if (CorrectOrderByForSelectQuery(selectQuery, null, firstSetOperation, doNotAcceptOrder, ref needsNestingUpdate))
+					optimized = true;
+				doNotAcceptOrder.Pop();
+
+				foreach (var so in selectQuery.SetOperators)
+				{
+					doNotAcceptOrder.Push(so.SelectQuery);
+					if (CorrectOrderByForSelectQuery(so.SelectQuery, null, setOperator, doNotAcceptOrder, ref needsNestingUpdate))
+						optimized = true;
+					doNotAcceptOrder.Pop();
+				}
 			}
 
-			var newElement = base.VisitSqlFromClause(element);
+			foreach (var sqlTableSource in selectQuery.From.Tables)
+			{
+				CorrectOrderByInSource(sqlTableSource, ref needsNestingUpdate);
+			}
 
-			_disableOrderBy = saveDisableOrderBy;
+			if (CanRemoveOrderBy(selectQuery))
+			{
+				if (QueryHelper.IsAggregationQuery(selectQuery, out var needsOrderBy))
+				{
+					if (!needsOrderBy)
+						selectQuery.OrderBy.Items.Clear();
+				}
+				else if (parentSelectQuery != null)
+				{
+					if (!parentSelectQuery.HasSetOperators 
+					    && !doNotAcceptOrder.Contains(parentSelectQuery)
+						&& !(parentSelectQuery.GroupBy.IsEmpty && QueryHelper.IsAggregationQuery(parentSelectQuery, out var parentNeedsOrderBy) && parentNeedsOrderBy)
+					    )
+					{
+						for (var i = 0; i < selectQuery.OrderBy.Items.Count; i++)
+						{
+							var orderByItem = selectQuery.OrderBy.Items[i];
 
-			return newElement;
+							var canPopulateUpperLevel = true;
+
+							if (parentSelectQuery.Select.IsDistinct)
+							{
+								canPopulateUpperLevel = parentSelectQuery.Select.Columns.Any(c =>
+								{
+									if (c.Expression is SqlColumn column)
+										return QueryHelper.SameWithoutNullablity(column.Expression, orderByItem.Expression);
+									return false;
+								});
+							}
+
+							if (canPopulateUpperLevel && !parentSelectQuery.GroupBy.IsEmpty)
+							{
+								canPopulateUpperLevel = selectQuery.Select.Columns.Any(c => QueryHelper.SameWithoutNullablity(c.Expression, orderByItem.Expression));
+							}
+
+							if (canPopulateUpperLevel)
+							{
+								var column = selectQuery.Select.AddColumn(orderByItem.Expression);
+								parentSelectQuery.OrderBy.Items.Add(new SqlOrderByItem(column, orderByItem.IsDescending, orderByItem.IsPositioned));
+
+								needsNestingUpdate = true;
+							}
+
+							selectQuery.OrderBy.Items.RemoveAt(i);
+
+							i--;
+							optimized = true;
+						}
+					}
+				}
+			}
+
+			if (selectQuery.OrderBy.Items.Count > 1)
+			{
+				var previousCount = selectQuery.OrderBy.Items.Count;
+				selectQuery.OrderBy.Items.RemoveDuplicates(item => item.Expression);
+
+				if (previousCount != selectQuery.OrderBy.Items.Count)
+					optimized = true;
+			}
+
+			return optimized;
+
+			// Local functions
+
+			void CorrectOrderByInSource(SqlTableSource sqlTableSource, ref bool needsNestingUpdate)
+			{
+				if (sqlTableSource.Source is SelectQuery subQuery)
+				{
+					if (CorrectOrderByForSelectQuery(subQuery, selectQuery, null, doNotAcceptOrder, ref needsNestingUpdate))
+						optimized = true;
+				}
+
+				foreach (var join in sqlTableSource.Joins)
+				{
+					CorrectOrderByInSource(join.Table, ref needsNestingUpdate);
+				}
+			}
 		}
 
-		protected internal override IQueryElement VisitSqlWhereClause(SqlWhereClause element)
+		static bool CanRemoveOrderBy(SelectQuery selectQuery)
 		{
-			var saveDisableOrderBy = _disableOrderBy;
+			if (selectQuery.OrderBy.IsEmpty)
+				return false;
 
-			_disableOrderBy = false;
+			if (QueryHelper.IsAggregationQuery(selectQuery, out var needsOrderBy))
+			{
+				if (needsOrderBy)
+					return false;
+				return true;
+			}
 
-			var newElement = base.VisitSqlWhereClause(element);
-
-			_disableOrderBy = saveDisableOrderBy;
-
-			return newElement;
+			if (selectQuery.IsLimited)
+				return false;
+			return true;
 		}
 
-		protected internal override IQueryElement VisitSqlGroupByClause(SqlGroupByClause element)
+		void RemoveOrderBy(SelectQuery selectQuery, bool exceptSetOperators)
 		{
-			var saveDisableOrderBy = _disableOrderBy;
+			if (CanRemoveOrderBy(selectQuery))
+			{
+				selectQuery.OrderBy.Items.Clear();
+				_optimized = true;
+			}
 
-			_disableOrderBy = false;
+			if (!exceptSetOperators && selectQuery.HasSetOperators)
+			{
+				foreach (var so in selectQuery.SetOperators)
+				{
+					RemoveOrderBy(so.SelectQuery, false);
+				}
+			}
 
-			var newElement = base.VisitSqlGroupByClause(element);
-
-			_disableOrderBy = saveDisableOrderBy;
-
-			return newElement;
+			foreach (var sqlTableSource in selectQuery.From.Tables)
+			{
+				RemoveOrderByFromSource(sqlTableSource);
+			}
 		}
 
-		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
+		void RemoveOrderByFromSource(SqlTableSource sqlTableSource)
 		{
-			var saveDisableOrderBy = _disableOrderBy;
+			if (sqlTableSource.Source is SelectQuery subQuery)
+			{
+				RemoveOrderBy(subQuery, false);
+			}
 
-			_disableOrderBy = false;
-
-			expression = base.VisitSqlColumnExpression(column, expression);
-
-			_disableOrderBy = saveDisableOrderBy;
-
-			return expression;
+			foreach (var join in sqlTableSource.Joins)
+			{
+				RemoveOrderByFromSource(join.Table);
+			}
 		}
 
 		protected internal override IQueryElement VisitCteClause(CteClause element)
 		{
-			var saveDisableOrderBy = _disableOrderBy;
+			base.VisitCteClause(element);
 
-			_disableOrderBy = !_providerFlags.IsCTESupportsOrdering;
+			if (element.Body is { HasSetOperators: false, OrderBy.IsEmpty: false } cteQuery)
+			{
+				if (!_providerFlags.IsCTESupportsOrdering)
+				{
+					RemoveOrderBy(cteQuery, false);
+				}
+			}
 
-			var newElement = base.VisitCteClause(element);
-
-			_disableOrderBy = saveDisableOrderBy;
-
-			return newElement;
+			return element;
 		}
 
-		protected internal override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
 		{
-			var saveDisableOrderBy = _disableOrderBy;
-
-			_disableOrderBy = true;
-
-			var newElement = base.VisitInSubQueryPredicate(predicate);
-
-			_disableOrderBy = saveDisableOrderBy;
-
-			return newElement;
+			RemoveOrderBy(predicate.SubQuery, false);
+			return base.VisitExistsPredicate(predicate);
 		}
 	}
 }

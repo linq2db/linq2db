@@ -36,7 +36,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		ISqlTableSource? _updateTable;
 
 		readonly SqlQueryColumnNestingCorrector _columnNestingCorrector      = new();
-		readonly SqlQueryOrderByOptimizer2      _orderByOptimizer            = new();
+		readonly SqlQueryOrderByOptimizer       _orderByOptimizer            = new();
 		readonly MovingComplexityVisitor        _movingComplexityVisitor     = new();
 		readonly SqlExpressionOptimizerVisitor  _expressionOptimizerVisitor  = new(true);
 		readonly MovingOuterPredicateVisitor    _movingOuterPredicateVisitor = new();
