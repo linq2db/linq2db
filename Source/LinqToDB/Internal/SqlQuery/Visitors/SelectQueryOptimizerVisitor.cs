@@ -138,6 +138,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			_columnNestingCorrector.Cleanup();
 			_orderByOptimizer.Cleanup();
+			_columnOptimizerVisitor.Cleanup();
 			_movingComplexityVisitor.Cleanup();
 			_expressionOptimizerVisitor.Cleanup();
 			_movingOuterPredicateVisitor.Cleanup();
