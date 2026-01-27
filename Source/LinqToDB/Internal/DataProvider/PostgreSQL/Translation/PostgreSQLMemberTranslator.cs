@@ -190,8 +190,6 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 					case Sql.DateParts.Minute:      intervalExpr = ToInterval(increment, "1 Minute"); break;
 					case Sql.DateParts.Second:      intervalExpr = ToInterval(increment, "1 Second"); break;
 					case Sql.DateParts.Millisecond: intervalExpr = ToInterval(increment, "1 Millisecond"); break;
-					case Sql.DateParts.DayOfYear:
-					case Sql.DateParts.WeekDay:
 					case Sql.DateParts.Day: intervalExpr = ToInterval(increment, "1 Day"); break;
 					default:
 						return null;

@@ -231,16 +231,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddDayOfYear([DataSources(DateOnlySkipProviders)] string context)
-		{
-			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.AllData))
-				AreEqual(
-					from t in Transaction.AllData        select           Sql.DateAdd(Sql.DateParts.DayOfYear, 3, t.TransactionDate) !.Value,
-					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.DayOfYear, 3, t.TransactionDate))!.Value);
-		}
-
-		[Test]
 		public void DateAddDay([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -258,16 +248,6 @@ namespace Tests.Linq
 				AreEqual(
 					from t in Transaction.AllData        select           Sql.DateAdd(Sql.DateParts.Week, -1, t.TransactionDate) !.Value,
 					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Week, -1, t.TransactionDate))!.Value);
-		}
-
-		[Test]
-		public void DateAddWeekDay([DataSources(DateOnlySkipProviders)] string context)
-		{
-			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.AllData))
-				AreEqual(
-					from t in Transaction.AllData        select           Sql.DateAdd(Sql.DateParts.WeekDay, 1, t.TransactionDate) !.Value,
-					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.WeekDay, 1, t.TransactionDate))!.Value);
 		}
 
 		[Test]

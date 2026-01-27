@@ -44,10 +44,8 @@ namespace LinqToDB
 				DateParts.Year      => date.Value.AddYears((int)number),
 				DateParts.Quarter   => date.Value.AddMonths((int)number * 3),
 				DateParts.Month     => date.Value.AddMonths((int)number),
-				DateParts.DayOfYear => date.Value.AddDays((int)number.Value),
 				DateParts.Day       => date.Value.AddDays((int)number.Value),
 				DateParts.Week      => date.Value.AddDays((int)number.Value * 7),
-				DateParts.WeekDay   => date.Value.AddDays((int)number.Value),
 				_                   => throw new InvalidOperationException(),
 			};
 		}

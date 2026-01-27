@@ -136,8 +136,6 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 					case Sql.DateParts.Year:        expStr = "Interval {0} Year"; break;
 					case Sql.DateParts.Quarter:     expStr = "Interval {0} Quarter"; break;
 					case Sql.DateParts.Month:       expStr = "Interval {0} Month"; break;
-					case Sql.DateParts.DayOfYear:
-					case Sql.DateParts.WeekDay:
 					case Sql.DateParts.Day:         expStr = "Interval {0} Day"; break;
 					case Sql.DateParts.Week:        expStr = "Interval {0} Week"; break;
 					case Sql.DateParts.Hour:        expStr = "Interval {0} Hour"; break;
