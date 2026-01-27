@@ -117,12 +117,10 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 				ISqlExpression dateExpr;
 				switch (datepart)
 				{
-					case Sql.DateParts.Year:    dateExpr = factory.Concat(stringDbType, CastToString(increment), " Year"); break;
-					case Sql.DateParts.Quarter: dateExpr = factory.Concat(stringDbType, CastToString(factory.Multiply(increment, 3)), " Month"); break;
-					case Sql.DateParts.Month:   dateExpr = factory.Concat(stringDbType, CastToString(increment), " Month"); break;
-					case Sql.DateParts.DayOfYear:
-					case Sql.DateParts.WeekDay:
-					case Sql.DateParts.Day: dateExpr = factory.Concat(stringDbType, CastToString(increment), factory.Value(stringDbType, " Day")); break;
+					case Sql.DateParts.Year:        dateExpr = factory.Concat(stringDbType, CastToString(increment), " Year"); break;
+					case Sql.DateParts.Quarter:     dateExpr = factory.Concat(stringDbType, CastToString(factory.Multiply(increment, 3)), " Month"); break;
+					case Sql.DateParts.Month:       dateExpr = factory.Concat(stringDbType, CastToString(increment), " Month"); break;
+					case Sql.DateParts.Day:         dateExpr = factory.Concat(stringDbType, CastToString(increment), factory.Value(stringDbType, " Day")); break;
 					case Sql.DateParts.Week:        dateExpr = factory.Concat(CastToString(factory.Multiply(increment, 7)), " Day"); break;
 					case Sql.DateParts.Hour:        dateExpr = factory.Concat(CastToString(increment), " Hour"); break;
 					case Sql.DateParts.Minute:      dateExpr = factory.Concat(CastToString(increment), " Minute"); break;
