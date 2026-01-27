@@ -1546,8 +1546,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							return false;
 						}
 					}
-
-					return false;
 				}
 			}
 
