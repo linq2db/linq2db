@@ -555,16 +555,7 @@ namespace LinqToDB.Linq
 			{ M(() => "".CompareTo  ("")      ), N(() => L<string,string,int>              ((obj,p0) => ConvertToCaseCompareTo(obj, p0)!.Value)) },
 #pragma warning disable MA0107 // object.ToString is bad, m'kay?
 			{ M(() => "".CompareTo  (1)       ), N(() => L<string,object,int>              ((obj,p0) => ConvertToCaseCompareTo(obj, p0.ToString())!.Value)) },
-
-			{ M(() => string.Concat((object)null!)                             ), N(() => L<object,string?>                    (p0         => p0.ToString()))           },
-			{ M(() => string.Concat((object)null!,(object)null!)               ), N(() => L<object,object,string>              ((p0,p1)    => p0.ToString() + p1))      },
-			{ M(() => string.Concat((object)null!,(object)null!,(object)null!) ), N(() => L<object,object,object,string>       ((p0,p1,p2) => p0.ToString() + p1 + p2)) },
 #pragma warning restore MA0107 // object.ToString is bad, m'kay?
-			{ M(() => string.Concat((object[])null!)                           ), N(() => L<object?[],string?>                 (ps            => Sql.Concat(ps)))          },
-			{ M(() => string.Concat("","")                                     ), N(() => L<string,string,string>              ((p0,p1)       => p0 + p1))                 },
-			{ M(() => string.Concat("","","")                                  ), N(() => L<string,string,string,string>       ((p0,p1,p2)    => p0 + p1 + p2))            },
-			{ M(() => string.Concat("","","","")                               ), N(() => L<string,string,string,string,string>((p0,p1,p2,p3) => p0 + p1 + p2 + p3))       },
-			{ M(() => string.Concat((string[])null!)                           ), N(() => L<string?[],string?>                 (ps            => Sql.Concat(ps)))          },
 
 			{ M(() => string.IsNullOrEmpty ("")    ),                                         N(() => L<string,bool>                                   (p0                 => p0 == null || p0.Length == 0)) },
 			{ M(() => string.IsNullOrWhiteSpace("")),                                         N(() => L<string,bool>                                   (p0                 => Sql.IsNullOrWhiteSpace(p0))) },

@@ -24,4 +24,8 @@
 	<ItemGroup>
 		<AdditionalFiles Include="PublicAPI.*.txt" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="..\LinqToDB\.editorconfig" Link=".editorconfig" />
+	</ItemGroup>
 </Project>

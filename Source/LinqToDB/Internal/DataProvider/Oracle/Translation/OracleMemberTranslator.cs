@@ -310,7 +310,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 		{
 			protected virtual bool IsWithinGroupRequired => true;
 
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder()
 					.ConfigureAggregate(c => c

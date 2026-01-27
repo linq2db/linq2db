@@ -1,5 +1,4 @@
-[*.{cs,vb}]
+﻿[*.cs]
 
-# Namespaces
-dotnet_style_namespace_match_folder = true:error
-dotnet_diagnostic.IDE0130.severity = error # Namespace does not match folder structure
+# IDE0320: Make anonymous function static
+dotnet_diagnostic.IDE0320.severity = none

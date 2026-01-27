@@ -1085,76 +1085,15 @@ namespace LinqToDB
 			return val?.ToString(FormattableString.Invariant($"d{length}"), NumberFormatInfo.InvariantInfo);
 		}
 
-		sealed class ConcatAttribute : ExpressionAttribute
-		{
-			public ConcatAttribute() : base("")
-			{
-			}
-
-			public override Expression GetExpression<TContext>(
-				TContext              context,
-				IDataContext          dataContext,
-				IExpressionEvaluator  evaluator,
-				SelectQuery           query,
-				Expression            expression,
-				ConvertFunc<TContext> converter)
-			{
-				var expressionStr = Expression;
-				PrepareParameterValues(context, dataContext.MappingSchema, expression, ref expressionStr, true,
-					out var knownExpressions, true, InlineParameters, out _, converter);
-
-				var arr = new ISqlExpression[knownExpressions.Count];
-
-				Expression? current = null;
-
-				for (var i = 0; i < knownExpressions.Count; i++)
-				{
-					var pair      = knownExpressions[i];
-
-					var converted = converter(context, pair.expression!, null, InlineParameters || pair.parameter?.DoNotParameterize == true);
-
-					if (converted is not SqlPlaceholderExpression placeholder)
-						return converted;
-
-					current = placeholder;
-
-					var arg = placeholder.Sql;
-
-					if (arg.SystemType == typeof(string))
-					{
-						arr[i] = arg;
-					}
-					else
-					{
-						var len = arg.SystemType == null || arg.SystemType == typeof(object) ?
-							100 :
-							SqlDataType.GetMaxDisplaySize(dataContext.MappingSchema.GetDataType(arg.SystemType).Type.DataType);
-
-						arr[i] = PseudoFunctions.MakeCast(arg, new DbDataType(typeof(string), DataType.VarChar, null, len));
-					}
-				}
-
-				if (arr.Length == 1 && current != null)
-					return current;
-
-				var expr = new SqlBinaryExpression(typeof(string), arr[0], "+", arr[1]);
-
-				for (var i = 2; i < arr.Length; i++)
-					expr = new SqlBinaryExpression(typeof (string), expr, "+", arr[i]);
-
-				return new SqlPlaceholderExpression(query, expr, expression);
-			}
-		}
-
-		[Concat]
 		public static string? Concat(params object?[] args)
 		{
+			// should we return null if any arg is null? Ideally Sql.* methods should throw ServerSideOnlyException
 			return string.Concat(args);
 		}
 
-		[Concat]
 		public static string? Concat(params string?[] args)
 		{
+			// should we return null if any arg is null? Ideally Sql.* methods should throw ServerSideOnlyException
 			return string.Concat(args);
 		}
 

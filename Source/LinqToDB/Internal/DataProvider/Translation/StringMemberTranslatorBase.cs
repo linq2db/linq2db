@@ -31,13 +31,79 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod(() => "".PadLeft(0), TranslateStringPadLeft);
 			Registration.RegisterMethod(() => "".PadLeft(0, ' '), TranslateStringPadLeft);
 
-			Registration.RegisterMethod(() => string.Join(",", Enumerable.Empty<string>()), TranslateStringJoin);
-			Registration.RegisterMethod(() => string.Join(",", Array.Empty<string>()),      TranslateStringJoin);
+			Registration.RegisterMethod(() => string.Join(string.Empty, Enumerable.Empty<string?>()),  TranslateStringJoin);
+			Registration.RegisterMethod(() => string.Join(string.Empty, Array.Empty<string?>()),       TranslateStringJoin);
+#pragma warning disable RS0030 // Do not use banned APIs
+			Registration.RegisterMethod(() => string.Join(string.Empty, Array.Empty<object?>()),       TranslateStringJoin);
+			Registration.RegisterMethod(() => string.Join(string.Empty, Enumerable.Empty<int>()),      TranslateStringJoin, isGenericTypeMatch: true);
+#pragma warning restore RS0030 // Do not use banned APIs
+#if !NETSTANDARD2_0 && !NETFRAMEWORK
+#pragma warning disable RS0030 // Do not use banned APIs
+			Registration.RegisterMethod(() => string.Join(',', Array.Empty<object?>()),                TranslateStringJoin);
+			Registration.RegisterMethod(() => string.Join(',', Enumerable.Empty<int>()),               TranslateStringJoin, isGenericTypeMatch: true);
+#pragma warning restore RS0030 // Do not use banned APIs
+			Registration.RegisterMethod(() => string.Join(',', Array.Empty<string?>()),                TranslateStringJoin);
+#endif
 
-			Registration.RegisterMethod(() => Sql.ConcatStrings(",", Enumerable.Empty<string>()), TranslateConcatStrings);
-			Registration.RegisterMethod(() => Sql.ConcatStrings(",", Array.Empty<string>()),      TranslateConcatStrings);
+			Registration.RegisterMethod(() => Sql.ConcatStrings(string.Empty, Enumerable.Empty<string>()), TranslateConcatStrings);
+			Registration.RegisterMethod(() => Sql.ConcatStrings(string.Empty, Array.Empty<string>()),      TranslateConcatStrings);
 
 			Registration.RegisterMethod(() => Sql.ConcatStringsNullable(",", Enumerable.Empty<string>()), TranslateConcatStringsNullable);
+
+			// CONCAT
+			Registration.RegisterMethod(() => string.Concat((object?)null),                                              TranslateConcatWithoutNull);
+			Registration.RegisterMethod(() => string.Concat((object?)null, (object?)null),                               TranslateConcatWithoutNull);
+			Registration.RegisterMethod(() => string.Concat((object?)null, (object?)null, (object?)null),                TranslateConcatWithoutNull);
+			Registration.RegisterMethod(() => string.Concat((string?)null, (string?)null),                               TranslateConcatWithoutNull);
+			Registration.RegisterMethod(() => string.Concat((string?)null, (string?)null, (string?)null),                TranslateConcatWithoutNull);
+			Registration.RegisterMethod(() => string.Concat((string?)null, (string?)null, (string?)null, (string?)null), TranslateConcatWithoutNull);
+			Registration.RegisterMethod(() => string.Concat(Array.Empty<string?>()),                                     TranslateConcatWithoutNullList);
+			Registration.RegisterMethod(() => string.Concat(Enumerable.Empty<string?>()),                                TranslateConcatWithoutNullList);
+			Registration.RegisterMethod(() => string.Concat(Array.Empty<object?>()),                                     TranslateConcatWithoutNullList);
+			Registration.RegisterMethod(() => string.Concat(Enumerable.Empty<int>()),                                    TranslateConcatWithoutNullList, isGenericTypeMatch: true);
+			Registration.RegisterMethod(() => Sql.Concat(Array.Empty<string?>()),                                        TranslateConcatNullableList);
+			Registration.RegisterMethod(() => Sql.Concat(Array.Empty<object?>()),                                        TranslateConcatNullableList);
+		}
+
+		Expression? TranslateConcatWithoutNullList(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (translationContext.CanBeEvaluatedOnClient(methodCall))
+				return null;
+
+			return TranslateStringJoin(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: true, isNullableResult: false, withoutSeparator: true);
+		}
+
+		Expression? TranslateConcatNullableList(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (translationContext.CanBeEvaluatedOnClient(methodCall))
+				return null;
+
+			return TranslateStringJoin(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: false, isNullableResult: true, withoutSeparator: true);
+		}
+
+		Expression? TranslateConcatWithoutNull(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			return TranslateConcat(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: true);
+		}
+
+		Expression? TranslateConcat(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags _/*translationFlags*/, bool nullValuesAsEmptyString)
+		{
+			if (translationContext.CanBeEvaluatedOnClient(methodCall))
+				return null;
+
+			var fragments = new ISqlExpression[methodCall.Arguments.Count];
+
+			using var disposable = translationContext.UsingTypeFromExpression(methodCall.Arguments[0], methodCall.Arguments[1]);
+
+			for (var i = 0; i < methodCall.Arguments.Count; i++)
+			{
+				if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[i], out var translatedFragment))
+					return translationContext.CreateErrorExpression(methodCall.Arguments[i], type: methodCall.Type);
+
+				fragments[i] = translatedFragment;
+			}
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, new SqlConcatExpression(!nullValuesAsEmptyString, fragments), methodCall);
 		}
 
 		protected virtual Expression? TranslateLike(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
@@ -169,21 +235,21 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			if (translationContext.CanBeEvaluatedOnClient(methodCall))
 				return null;
-			return TranslateStringJoin(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: true, isNullableResult : false);
+			return TranslateStringJoin(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: true, isNullableResult : false, withoutSeparator: false);
 		}
 
 		Expression? TranslateConcatStrings(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			if (translationContext.CanBeEvaluatedOnClient(methodCall))
 				return null;
-			return TranslateStringJoin(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: false, isNullableResult : false);
+			return TranslateStringJoin(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: false, isNullableResult : false, withoutSeparator: false);
 		}
 
 		Expression? TranslateConcatStringsNullable(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			if (translationContext.CanBeEvaluatedOnClient(methodCall))
 				return null;
-			return TranslateStringJoin(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: false, isNullableResult : true);
+			return TranslateStringJoin(translationContext, methodCall, translationFlags, nullValuesAsEmptyString: false, isNullableResult : true, withoutSeparator: false);
 		}
 
 		protected void ConfigureConcatWs(AggregateFunctionBuilder builder, bool nullValuesAsEmptyString, bool isNullableResult, Func<ISqlExpressionFactory, DbDataType, ISqlExpression, ISqlExpression[], ISqlExpression>? functionFactory = null)
@@ -288,8 +354,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 						if (info.IsNullFiltered || isNullResult || !nullValuesAsEmptyString)
 						{
 							var concatValues = values
-								.Select(v => factory.Coalesce(factory.Concat(dataType, separator, v), factory.Value(dataType, "")))
-								.Aggregate((v1, v2) => factory.Concat(dataType, v1, v2));
+								.Select(v => factory.Coalesce(factory.Concat(separator, v), factory.Value(dataType, "")))
+								.Aggregate((v1, v2) => factory.Concat(v1, v2));
 
 							var substring = substringFunc(factory, dataType, separator, concatValues);
 
@@ -309,7 +375,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		}
 
 		protected virtual Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString,
-			bool                                                              isNullableResult)
+			bool                                                              isNullableResult,
+			bool                                                              withoutSeparator)
 		{
 			return null;
 		}

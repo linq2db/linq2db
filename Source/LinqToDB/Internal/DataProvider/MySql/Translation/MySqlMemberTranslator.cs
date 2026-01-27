@@ -225,7 +225,7 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 
 		protected class MySqlStringMemberTranslator : StringMemberTranslatorBase
 		{
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder()
 					.ConfigureAggregate(c => c

@@ -256,7 +256,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 			static readonly bool[] OneArgumentNullability = new[] { true };
 			static readonly bool[] TwoArgumentNullability = new[] { true, true };
 
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder();
 

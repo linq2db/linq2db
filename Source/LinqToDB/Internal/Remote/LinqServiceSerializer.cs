@@ -1740,6 +1740,15 @@ namespace LinqToDB.Internal.Remote
 						break;
 					}
 
+					case QueryElementType.SqlConcat:
+					{
+						var elem = (SqlConcatExpression)e;
+
+						Append(elem.PreserveNull);
+						Append(elem.Expressions);
+						break;
+					}
+
 					case QueryElementType.SqlExtendedFunction:
 					{
 						var elem = (SqlExtendedFunction)e;
@@ -2914,6 +2923,16 @@ namespace LinqToDB.Internal.Remote
 						var expressions = ReadArray<ISqlExpression>()!;
 
 						obj = new SqlCoalesceExpression(expressions);
+
+						break;
+					}
+
+					case QueryElementType.SqlConcat:
+					{
+						var preserveNull = ReadBool();
+						var expressions  = ReadArray<ISqlExpression>()!;
+
+						obj = new SqlConcatExpression(preserveNull, expressions);
 
 						break;
 					}

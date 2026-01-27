@@ -101,6 +101,7 @@
 
 		SqlCast,
 		SqlCoalesce,
+		SqlConcat,
 		SqlCondition,
 		SqlCase,
 		CompareTo,

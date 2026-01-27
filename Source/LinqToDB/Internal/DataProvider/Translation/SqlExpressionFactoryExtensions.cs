@@ -194,10 +194,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return new SqlBinaryExpression(dbDataType, x, operation, y, Precedence.Additive);
 		}
 
+		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression Concat(this ISqlExpressionFactory factory, ISqlExpression x, ISqlExpression y)
 		{
-			var dbDataType = factory.GetDbDataType(x);
-			return new SqlBinaryExpression(dbDataType, x, "+", y, Precedence.Additive);
+			return new SqlConcatExpression(true, x, y);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
@@ -206,15 +206,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (expressions.Length == 0)
 				throw new InvalidOperationException("At least one expression must be provided for concatenation.");
 
-			var result     = expressions[0];
-			var dbDataType = factory.GetDbDataType(result);
-
-			for (var i = 1; i < expressions.Length; i++)
-			{
-				result = factory.Concat(dbDataType, result, expressions[i]);
-			}
-			
-			return result;
+			return new SqlConcatExpression(true, expressions);
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
@@ -232,23 +224,23 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return new SqlConditionExpression(condition, trueExpression, falseExpression);
 		}
 
-		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
-		public static ISqlExpression Concat(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
-		{
-			return new SqlBinaryExpression(dbDataType, x, "+", y, Precedence.Concatenate);
-		}
+		//[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
+		//public static ISqlExpression Concat(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
+		//{
+		//	return new SqlBinaryExpression(dbDataType, x, "+", y, Precedence.Concatenate);
+		//}
 
-		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
-		public static ISqlExpression Concat(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, string value)
-		{
-			return factory.Concat(dbDataType, x, factory.Value(dbDataType, value));
-		}
+		//[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
+		//public static ISqlExpression Concat(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, string value)
+		//{
+		//	return factory.Concat(dbDataType, x, factory.Value(dbDataType, value));
+		//}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]
 		public static ISqlExpression Concat(this ISqlExpressionFactory factory, ISqlExpression x, string value)
 		{
 			var dbDataType = factory.GetDbDataType(x);
-			return new SqlBinaryExpression(dbDataType, x, "+", factory.Value(dbDataType, value), Precedence.Concatenate);
+			return factory.Concat(x, factory.Value(dbDataType, value));
 		}
 
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "factory is an extension point")]

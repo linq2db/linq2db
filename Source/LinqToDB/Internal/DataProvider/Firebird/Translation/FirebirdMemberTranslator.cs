@@ -252,7 +252,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 			protected virtual bool IsWithinGroupSupported => false;
 			protected virtual bool IsDistinctSupported    => false;
 
-			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult)
+			protected override Expression? TranslateStringJoin(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, bool nullValuesAsEmptyString, bool isNullableResult, bool withoutSeparator)
 			{
 				var builder = new AggregateFunctionBuilder()
 					.ConfigureAggregate(c => c

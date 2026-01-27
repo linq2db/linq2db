@@ -262,6 +262,18 @@ namespace LinqToDB.Internal.SqlQuery
 
 					break;
 				}
+				case QueryElementType.SqlConcat:
+				{
+					var concat = (SqlConcatExpression)expr;
+					foreach (var expression in concat.Expressions)
+					{
+						var descriptor = GetColumnDescriptor(expression);
+						if (descriptor != null)
+							return descriptor;
+					}
+
+					break;
+				}
 				case QueryElementType.SqlCondition:
 				{
 					var condition = (SqlConditionExpression)expr;
