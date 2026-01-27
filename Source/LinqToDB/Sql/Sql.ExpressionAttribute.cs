@@ -254,7 +254,9 @@ namespace LinqToDB
 				knownExpressions = new List<(Expression?, ExprParameterAttribute?)>();
 				genericTypes     = null;
 
-				if (expression is not ({ NodeType: ExpressionType.Call } or UnaryExpression or BinaryExpression))
+				if (expression is not ({ NodeType: ExpressionType.Call }
+					or UnaryExpression { Method: not null }
+					or BinaryExpression { Method: not null }))
 				{
 					var me = (MemberExpression) expression;
 					expressionStr ??= me.Member.Name;
