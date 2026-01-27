@@ -101,9 +101,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 					case Sql.DateParts.Year:    function = "addYears"; break;
 					case Sql.DateParts.Quarter: function = "addQuarters"; break;
 					case Sql.DateParts.Month:   function = "addMonths"; break;
-					case Sql.DateParts.DayOfYear:
-					case Sql.DateParts.Day:
-					case Sql.DateParts.WeekDay: function = "addDays"; break;
+					case Sql.DateParts.Day:     function = "addDays"; break;
 					case Sql.DateParts.Week:    function = "addWeeks"; break;
 					case Sql.DateParts.Hour:    function = "addHours"; break;
 					case Sql.DateParts.Minute:  function = "addMinutes"; break;
