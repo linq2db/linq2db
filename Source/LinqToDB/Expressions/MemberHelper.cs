@@ -124,7 +124,7 @@ namespace LinqToDB.Expressions
 					new MemberInfoWithType(mce.Object?.Type ?? mce.Method.ReflectedType, mce.Method),
 
 				_ =>
-					new MemberInfoWithType(expr.Type, ((NewExpression)expr).Constructor!),
+					throw new InvalidOperationException("Unreachable"),
 			};
 
 			static MemberInfoWithType GetSqlPropertyMethodInfo(MethodCallExpression methodCall)
