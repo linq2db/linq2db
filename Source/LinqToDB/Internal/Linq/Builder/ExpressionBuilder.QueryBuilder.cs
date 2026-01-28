@@ -522,12 +522,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var simplified = expression.Transform(e =>
 			{
-				if (e.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked && e.Type != typeof(object) && e.Type != typeof(Enum))
-				{
-					if (((UnaryExpression)e).Operand is SqlPlaceholderExpression convertPlaceholder)
+				if (e is UnaryExpression
 					{
-						return convertPlaceholder.WithType(e.Type);
-					}
+						NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked,
+						Method: null,
+						Operand: SqlPlaceholderExpression convertPlaceholder
+					} ue
+					&& ue.Type != typeof(object) && ue.Type != typeof(Enum))
+				{
+					return convertPlaceholder.WithType(e.Type);
 				}
 
 				return e;
