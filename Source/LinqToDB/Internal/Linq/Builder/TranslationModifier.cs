@@ -65,7 +65,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				return this;
 			}
 
-			return new TranslationModifier(InlineParameters, ignoreQueryFilters);
+			var newFilters = IgnoreQueryFilters == null
+				? ignoreQueryFilters
+				: ignoreQueryFilters == null
+					? null
+					: IgnoreQueryFilters.Union(ignoreQueryFilters).ToArray();
+
+			return new TranslationModifier(InlineParameters, newFilters);
 		}
 
 		public override bool Equals(object? obj)
