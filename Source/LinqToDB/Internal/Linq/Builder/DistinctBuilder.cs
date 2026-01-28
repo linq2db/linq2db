@@ -41,6 +41,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 			else
 			{
+				subQueryContext.SelectQuery.Select.OptimizeDistinct = true;
+
 				// create all columns
 				var sqlExpr = builder.BuildSqlExpression(
 					outerSubqueryContext,
