@@ -1208,6 +1208,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					var rnColumn = sql.Select.AddNewColumn(rnExpression);
 					rnColumn.RawAlias = "rn";
 
+					// Remove order by items, they are not needed anymore
+					sql.OrderBy.Items.Clear();
+
 					if (skipValue != null)
 					{
 						searchCondition.Add(new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.Greater, skipValue, null));
