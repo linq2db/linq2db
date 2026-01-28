@@ -253,7 +253,7 @@ namespace LinqToDB.Internal.Extensions
 		/// <returns>
 		///   <c>true</c> if member info is Sql.Property method; otherwise, <c>false</c>.
 		/// </returns>
-		public static bool IsSqlPropertyMethodEx(this MemberInfo memberInfo)
+		public static bool	IsSqlPropertyMethodEx(this MemberInfo memberInfo)
 		{
 			return memberInfo is MethodInfo methodCall && methodCall.IsGenericMethod &&
 			       methodCall.GetGenericMethodDefinition() == Methods.LinqToDB.SqlExt.Property;

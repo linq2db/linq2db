@@ -16,11 +16,9 @@ TestResults/
 linq2db.sln.docstates
 **/UserDataProviders.json
 /BuiltNuGet
-linq2db.sln.ide/graph
 linq2db.sln.ide/
 !Redist/**
 /.vs/*
-*.lock.json
 /.idea/
 /.temp
 .vs/

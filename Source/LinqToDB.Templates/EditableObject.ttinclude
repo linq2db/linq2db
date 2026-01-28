@@ -11,7 +11,10 @@
 		SetPropertyValueAction += (obj,prop,val) =>
 		{
 			if (prop == "IsEditable")
-				((Property)obj).IsEditable = (bool)val;
+			{
+				if (obj is Property)
+					((Property)obj).IsEditable = (bool)val;
+			}
 		};
 	}
 #><#+

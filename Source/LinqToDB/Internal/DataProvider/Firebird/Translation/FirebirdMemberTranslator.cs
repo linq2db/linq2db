@@ -144,13 +144,10 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 						datepart = Sql.DateParts.Month;
 						number   = factory.Multiply(number, 3);
 						break;
-					}				
+					}
 					case Sql.DateParts.DayOfYear:
 					case Sql.DateParts.WeekDay:
-					{
-						datepart = Sql.DateParts.Day;
-						break;
-					}	
+						return null;
 					case Sql.DateParts.Week:
 					{
 						datepart = Sql.DateParts.Day;
@@ -160,7 +157,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 				}
 
 				// Firebird does not support dynamic increment in DateAdd function
-				QueryHelper.MarkAsNonQueryParameters(number);
+				number = QueryHelper.MarkAsNonQueryParameters(number);
 
 				var partExpression   = factory.NotNullExpression(factory.GetDbDataType(typeof(string)), datepart.ToString());
 				var resultExpression = factory.Function(factory.GetDbDataType(dateTimeExpression), "DateAdd", partExpression, number, dateTimeExpression);

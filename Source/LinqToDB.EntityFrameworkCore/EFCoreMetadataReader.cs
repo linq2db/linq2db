@@ -667,7 +667,8 @@ namespace LinqToDB.EntityFrameworkCore
 	#else
 						var newExpression = ctx.this_._dependencies!.MethodCallTranslatorProvider.Translate(ctx.this_._model!, objExpr, ctx.methodInfo, parametersArray);
 	#endif
-						if (newExpression != null)
+						// do we want to translate default operators?
+						if (newExpression is not (null or SqlBinaryExpression or SqlUnaryExpression))
 						{
 							if (!ctx.methodInfo.IsStatic)
 								parametersArray = new EfSqlExpression[] { objExpr }.Concat(parametersArray).ToArray();

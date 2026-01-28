@@ -128,7 +128,7 @@ namespace LinqToDB.Internal.DataProvider
 				return true;
 			}
 
-			protected override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
+			protected internal override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
 			{
 				base.VisitSqlTableLikeSource(element);
 
@@ -161,7 +161,7 @@ namespace LinqToDB.Internal.DataProvider
 				return element;
 			}
 
-			protected override IQueryElement VisitCteClause(CteClause element)
+			protected internal override IQueryElement VisitCteClause(CteClause element)
 			{
 				Utils.MakeUniqueNames(
 					element.Fields,
@@ -210,7 +210,7 @@ namespace LinqToDB.Internal.DataProvider
 				return element;
 			}
 
-			protected override IQueryElement VisitSqlCteTable(SqlCteTable element)
+			protected internal override IQueryElement VisitSqlCteTable(SqlCteTable element)
 			{
 				base.VisitSqlCteTable(element);
 
@@ -237,7 +237,7 @@ namespace LinqToDB.Internal.DataProvider
 				return element;
 			}
 
-			protected override IQueryElement VisitSqlTable(SqlTable element)
+			protected internal override IQueryElement VisitSqlTable(SqlTable element)
 			{
 				base.VisitSqlTable(element);
 
@@ -246,7 +246,7 @@ namespace LinqToDB.Internal.DataProvider
 				return element;
 			}
 
-			protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+			protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 			{
 				base.VisitSqlQuery(selectQuery);
 
@@ -291,7 +291,7 @@ namespace LinqToDB.Internal.DataProvider
 				return selectQuery;
 			}
 
-			protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
+			protected internal override IQueryElement VisitSqlTableSource(SqlTableSource element)
 			{
 				base.VisitSqlTableSource(element);
 

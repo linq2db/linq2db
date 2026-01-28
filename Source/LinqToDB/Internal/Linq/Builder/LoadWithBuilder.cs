@@ -275,12 +275,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					case ExpressionType.Extension    :
 					{
-						if (expression is GetItemExpression getItemExpression)
-						{
-							expression = getItemExpression.Expression;
-							break;
-						}
-
 						if (expression is ContextRefExpression contextRef)
 						{
 							var newExpression = builder.BuildTableExpression(expression);

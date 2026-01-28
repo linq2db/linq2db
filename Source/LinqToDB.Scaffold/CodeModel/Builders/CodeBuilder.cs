@@ -82,6 +82,18 @@ namespace LinqToDB.CodeModel
 		public IType Type(Type type, bool nullable) => _languageProvider.TypeParser.Parse(type).WithNullability(nullable);
 
 		/// <summary>
+		/// Create generic type descriptor from open generic type <paramref name="type"/> and type arguments <paramref name="typeArgs"/>.
+		/// </summary>
+		/// <param name="type">Open generic type.</param>
+		/// <param name="nullable">Type nullability.</param>
+		/// <param name="external">External or generated type.</param>
+		/// <param name="typeArgs">Generic type arguments.</param>
+		/// <returns>Type descriptor.</returns>
+		public IType GenericType(IType type, bool nullable, bool external, params IType[] typeArgs) => type.Kind == TypeKind.OpenGeneric
+			? new GenericType(type.Namespace, type.Name!, type.IsValueType, nullable, typeArgs, external)
+			: throw new InvalidOperationException($"{type} is not open generic type");
+
+		/// <summary>
 		/// Create non-void generic method call expression.
 		/// </summary>
 		/// <param name="objOrType">Callee object or type in case of static method.</param>

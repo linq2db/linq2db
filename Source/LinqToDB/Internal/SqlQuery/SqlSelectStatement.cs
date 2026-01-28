@@ -1,4 +1,8 @@
-﻿namespace LinqToDB.Internal.SqlQuery
+﻿using System.Diagnostics;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
+
+namespace LinqToDB.Internal.SqlQuery
 {
 	public sealed class SqlSelectStatement : SqlStatementWithQueryBase
 	{
@@ -26,5 +30,8 @@
 
 			return writer.AppendElement(SelectQuery);
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlSelectStatement(this);
 	}
 }

@@ -155,7 +155,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return base.NotifyReplaced(newElement, oldElement);
 		}
 
-		protected override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
+		protected internal override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
 		{
 			var saveQuery = _applySelect;
 
@@ -171,7 +171,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newElement;
 		}
 
-		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+		protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
 			var saveSetOperatorCount  = selectQuery.HasSetOperators ? selectQuery.SetOperators.Count : 0;
 			var saveParent            = _parentSelect;
@@ -209,7 +209,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					{
 						isModified = true;
 					}
-					
+
 					if (MoveOuterJoinsToSubQuery(selectQuery, ref doNotRemoveQueries, processMultiColumn: false))
 					{
 						isModified = true;
@@ -301,7 +301,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newQuery;
 		}
 
-		protected override IQueryElement VisitSqlSetOperator(SqlSetOperator element)
+		protected internal override IQueryElement VisitSqlSetOperator(SqlSetOperator element)
 		{
 			var saveCurrent = _currentSetOperator;
 
@@ -314,12 +314,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newElement;
 		}
 
-		protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
+		protected internal override IQueryElement VisitSqlTableSource(SqlTableSource element)
 		{
 			var saveCurrent        = _currentSetOperator;
 
 			_currentSetOperator = null;
-			
+
 			var newElement = base.VisitSqlTableSource(element);
 
 			_currentSetOperator = saveCurrent;
@@ -327,7 +327,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newElement;
 		}
 
-		protected override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		protected internal override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
 		{
 			var saveInsubquery = _inSubquery;
 
@@ -338,7 +338,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newNode;
 		}
 
-		protected override IQueryElement VisitSqlOrderByClause(SqlOrderByClause element)
+		protected internal override IQueryElement VisitSqlOrderByClause(SqlOrderByClause element)
 		{
 			var newElement = (SqlOrderByClause)base.VisitSqlOrderByClause(element);
 
@@ -352,7 +352,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newElement;
 		}
 
-		protected override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
+		protected internal override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
 		{
 			_updateQuery = element.SelectQuery;
 			_updateTable = element.Update.Table as ISqlTableSource ?? element.Update.TableSource;
@@ -362,7 +362,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return result;
 		}
 
-		protected override IQueryElement VisitSqlNullabilityExpression(SqlNullabilityExpression element)
+		protected internal override IQueryElement VisitSqlNullabilityExpression(SqlNullabilityExpression element)
 		{
 			var sqlExpression = Visit(element.SqlExpression);
 			if (sqlExpression is SelectQuery { GroupBy.IsEmpty: true } selectQuery)
@@ -501,11 +501,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 						foreach (var op in setQuery.SetOperators)
 						{
-							if (op.SelectQuery.SourceID == 115)
-							{
-
-							}
-
 							if (index < op.SelectQuery.Select.Columns.Count)
 								op.SelectQuery.Select.Columns.RemoveAt(index);
 						}
@@ -1045,7 +1040,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (joinSource.Source.ElementType == QueryElementType.SqlQuery)
 			{
 				var sql   = (SelectQuery)joinSource.Source;
-				var isAgg = sql.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
+				var isAgg = sql.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowExpression(c.Expression));
 
 				isApplySupported = isApplySupported && (joinTable.JoinType == JoinType.CrossApply ||
 				                                        joinTable.JoinType == JoinType.OuterApply);
@@ -1536,7 +1531,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				// not allowed to move to parent if it has aggregates
 				return false;
 			}
-		
+
 			// Check columns
 			//
 
@@ -1626,7 +1621,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					if (!(!parentQuery.Select.HasModifier && parentQuery.Where.IsEmpty && parentQuery.GroupBy.IsEmpty && parentQuery.Having.IsEmpty && parentQuery.From.Tables is [{ Joins.Count: 0 }]))
 					{
-						// not allowed to break query window 
+						// not allowed to break query window
 						return false;
 					}
 				}
@@ -1673,7 +1668,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				// All constants in grouping will be optimized to query which produce different query. Optimization will be done in 'OptimizeGroupBy'.
 				// See 'GroupByConstantsEmpty' test. It will fail if this check is not performed.
-				// 
+				//
 				if (!parentQuery.GroupBy.EnumItems().Except(groupingConstants, Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default).Any())
 				{
 					return false;
@@ -1902,7 +1897,17 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			// Do not optimize t.Field IN (SELECT x FROM o)
 			if (parentQuery == _inSubquery && (subQuery.Select.HasModifier || subQuery.HasSetOperators))
 			{
-				return false;
+				if (_dataOptions.LinqOptions.PreferExistsForScalar || _providerFlags.IsExistsPreferableForContains)
+					return false;
+
+				if (!_providerFlags.IsTakeWithInAllAnySomeSubquerySupported && (subQuery.Select.TakeValue != null || subQuery.Select.SkipValue != null))
+					return false;
+
+				if (!_providerFlags.IsSubQuerySkipSupported && subQuery.Select.SkipValue != null)
+					return false;
+
+				if (!_providerFlags.IsSubQueryTakeSupported && subQuery.Select.TakeValue != null)
+					return false;
 			}
 
 			return true;
@@ -2067,7 +2072,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return true;
 		}
 
-		protected override IQueryElement VisitSqlFromClause(SqlFromClause element)
+		protected internal override IQueryElement VisitSqlFromClause(SqlFromClause element)
 		{
 			element = (SqlFromClause)base.VisitSqlFromClause(element);
 
@@ -2637,7 +2642,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 							isModified = true;
 						}
-						else 
+						else
 						{
 							selectQuery.From.Tables.Insert(queryTableIndex + 1, join.Table);
 							table.Joins.RemoveAt(joinIndex);
@@ -2915,13 +2920,20 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 										if (_providerFlags.IsApplyJoinSupported)
 										{
+											if (_updateQuery == sq)
+											{
+												// updating query - cannot move multi column usage to subquery
+												isValid = false;
+												break;
+											}
+
 											MoveDuplicateUsageToSubQuery(sq, ref doNotRemoveQueries);
 											// will be processed in the next step
 											ti         = -1;
 											isValid    = false;
 											isModified = true;
 											break;
-										}	
+										}
 									}
 
 									if (usageCount == 1 && !IsInSelectPart(sq, testedColumn))
@@ -2971,8 +2983,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 								table.Joins.RemoveAt(j);
 								joinQuery.Where.ConcatSearchCondition(join.Condition);
-
-								var isNullable = join.JoinType is JoinType.Left or JoinType.OuterApply;
 
 								// replacing column with subquery
 
@@ -3036,7 +3046,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return isModified;
 		}
 
-		protected override IQueryElement VisitCteClause(CteClause element)
+		protected internal override IQueryElement VisitCteClause(CteClause element)
 		{
 			var saveIsInRecursiveCte = _isInRecursiveCte;
 			var saveCurrentCteClause = _currentCteClause;
@@ -3046,7 +3056,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			var saveParent = _parentSelect;
 			_parentSelect = null;
 			_currentCteClause = element;
-			
+
 			var newElement = base.VisitCteClause(element);
 
 			_parentSelect = saveParent;
@@ -3057,7 +3067,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newElement;
 		}
 
-		protected override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
+		protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
 		{
 			var result = base.VisitExistsPredicate(predicate);
 
@@ -3103,13 +3113,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 			}
 
-			public void Cleanup()
+			public override void Cleanup()
 			{
 				_ignore            = default!;
 				_expressionToCheck = default!;
 				DoNotAllow         = default;
 
 				_foundCount = 0;
+
+				base.Cleanup();
 			}
 
 			public bool IsAllowedToMove(ISqlExpression testExpression, IQueryElement parent, params IQueryElement?[] ignore)
@@ -3154,7 +3166,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return base.Visit(element);
 			}
 
-			protected override IQueryElement VisitSqlOrderByItem(SqlOrderByItem element)
+			protected internal override IQueryElement VisitSqlOrderByItem(SqlOrderByItem element)
 			{
 				if (element.IsPositioned)
 				{
@@ -3166,7 +3178,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return base.VisitSqlOrderByItem(element);
 			}
 
-			protected override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
+			protected internal override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
 			{
 				using var scope = DoNotAllowScope(predicate.Expr1.ElementType == QueryElementType.SqlObjectExpression);
 				return base.VisitInListPredicate(predicate);
@@ -3216,11 +3228,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return (ISqlPredicate)Visit(predicate);
 			}
 
-			public void Cleanup()
+			public override void Cleanup()
 			{
 				_forQuery       = default!;
 				_predicate      = default!;
 				_currentSources = default!;
+
+				base.Cleanup();
 			}
 
 			[return: NotNullIfNotNull(nameof(element))]
@@ -3256,7 +3270,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return base.Visit(element);
 			}
 
-			protected override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
+			protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
 			{
 				// OuterApplyOptimization test
 				return predicate;
@@ -3282,13 +3296,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				Visit(element);
 			}
 
-			public void Cleanup()
+			public override void Cleanup()
 			{
 				_usedColumns = null!;
 				_visitedFromCte.Clear();
+
+				base.Cleanup();
 			}
 
-			protected override IQueryElement VisitCteClause(CteClause element)
+			protected internal override IQueryElement VisitCteClause(CteClause element)
 			{
 				_visitedFromCte.Add(element.Body!.Select.Select);
 				ProcessSelectClause(element.Body!.Select.Select, element);
@@ -3296,7 +3312,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return base.VisitCteClause(element);
 			}
 
-			protected override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
+			protected internal override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
 			{
 				if (!_visitedFromCte.Contains(element))
 					ProcessSelectClause(element, null);
@@ -3304,7 +3320,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return base.VisitSqlSelectClause(element);
 			}
 
-			protected override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
+			protected internal override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
 			{
 				var newElement = base.VisitSqlTableLikeSource(element);
 
@@ -3318,7 +3334,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					// Synchronizing Enumerable table
 
 					var enumerableSource = element.SourceEnumerable;
-					
+
 					for(var i = enumerableSource.Fields.Count - 1; i >= 0; i--)
 					{
 						var enumerableSourceField = enumerableSource.Fields[i];

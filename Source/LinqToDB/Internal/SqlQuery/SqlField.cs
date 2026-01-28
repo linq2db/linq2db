@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.SqlQuery
@@ -179,5 +181,8 @@ namespace LinqToDB.Internal.SqlQuery
 			CreateOrder      = source.CreateOrder;
 			IsDynamic        = source.IsDynamic;
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlFieldReference(this);
 	}
 }

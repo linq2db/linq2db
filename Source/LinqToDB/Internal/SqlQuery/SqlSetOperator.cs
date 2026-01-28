@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -48,5 +51,8 @@ namespace LinqToDB.Internal.SqlQuery
 				Operation
 			);
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlSetOperator(this);
 	}
 }

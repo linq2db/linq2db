@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
@@ -111,22 +111,56 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return null;
 
 			var fromType = translationContext.ExpressionFactory.GetDbDataType(objPlaceholder.Sql);
+			DbDataType toType;
+
+			if (translationContext.CurrentColumnDescriptor != null)
+				toType = translationContext.CurrentColumnDescriptor.GetDbDataType(true);
+			else
+				toType = translationContext.MappingSchema.GetDbDataType(typeof(string));
 
 			// ToString called on custom type already mapped to text-based db type or string
 			if (fromType.IsTextType())
 			{
+				if (fromType.SystemType.IsEnum)
+				{
+					var enumValues = translationContext.MappingSchema.GetMapValues(fromType.SystemType)!;
+
+					List<SqlCaseExpression.CaseItem>? cases = null;
+
+					foreach (var field in enumValues)
+					{
+						if (field.MapValues.Length > 0)
+						{
+							var cond = field.MapValues.Length == 1
+								? translationContext.ExpressionFactory.Equal(
+									objPlaceholder.Sql,
+									translationContext.ExpressionFactory.Value(fromType, field.MapValues[0].Value))
+								: translationContext.ExpressionFactory
+									.SearchCondition(isOr: true)
+									.AddRange(
+									field.MapValues.Select(
+										v => translationContext.ExpressionFactory.Equal(
+											objPlaceholder.Sql,
+											translationContext.ExpressionFactory.Value(fromType, v.Value))));
+
+							(cases ??= []).Add(
+								new SqlCaseExpression.CaseItem(
+									cond,
+									translationContext.ExpressionFactory.Value(toType, FormattableString.Invariant($"{field.OrigValue}"))));
+						}
+					}
+
+					var defaultSql = objPlaceholder.Sql;
+
+					var expr = cases == null ? defaultSql : new SqlCaseExpression(toType, cases, defaultSql);
+
+					return translationContext.CreatePlaceholder(
+						translationContext.CurrentSelectQuery,
+						expr,
+						methodCall);
+				}
+
 				return objPlaceholder.WithType(typeof(string));
-			}
-
-			DbDataType toType;
-
-			if (translationContext.CurrentColumnDescriptor != null)
-			{
-				toType = translationContext.CurrentColumnDescriptor.GetDbDataType(true);
-			}
-			else
-			{
-				toType = translationContext.MappingSchema.GetDbDataType(typeof(string));
 			}
 
 			return translationContext.CreatePlaceholder(

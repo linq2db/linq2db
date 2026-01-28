@@ -561,16 +561,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddDayOfYear([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
-		{
-			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
-				AreEqual(
-					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.DayOfYear, 3, t.TransactionDate)!. Value.Date,
-					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.DayOfYear, 3, t.TransactionDate))!.Value.Date);
-		}
-
-		[Test]
 		public void DateAddDay([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -588,16 +578,6 @@ namespace Tests.Linq
 				AreEqual(
 					from t in Transaction.GetTestDataForContext(context)  select           Sql.DateAdd(Sql.DateParts.Week, -1, t.TransactionDate)!. Value.Date,
 					from t in db.GetTable<Transaction>()              select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Week, -1, t.TransactionDate))!.Value.Date);
-		}
-
-		[Test]
-		public void DateAddWeekDay([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
-		{
-			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
-				AreEqual(
-					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.WeekDay, 1, t.TransactionDate)!. Value.Date,
-					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.WeekDay, 1, t.TransactionDate))!.Value.Date);
 		}
 
 		[Test]
@@ -734,19 +714,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddDayOfYearExpression([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
-		{
-			var part1 = 6;
-			var part2 = 3;
-
-			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
-				AreEqual(
-					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.DayOfYear, 3, t.TransactionDate)!.             Value.Date,
-					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.DayOfYear, part1 - part2, t.TransactionDate))!.Value.Date);
-		}
-
-		[Test]
 		public void DateAddDayExpression([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
 			var part1 = 2;
@@ -770,19 +737,6 @@ namespace Tests.Linq
 				AreEqual(
 					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.Week, -1, t.TransactionDate)!.            Value.Date,
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Week, part1 - part2, t.TransactionDate))!.Value.Date);
-		}
-
-		[Test]
-		public void DateAddWeekDayExpression([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
-		{
-			var part1 = 2;
-			var part2 = 3;
-
-			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
-				AreEqual(
-					from t in Transaction.GetTestDataForContext(context) select           Sql.DateAdd(Sql.DateParts.WeekDay, 1, t.TransactionDate)!.             Value.Date,
-					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.WeekDay, part2 - part1, t.TransactionDate))!.Value.Date);
 		}
 
 		[Test]

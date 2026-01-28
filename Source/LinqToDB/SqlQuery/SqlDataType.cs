@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data.SqlTypes;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
 
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
@@ -89,7 +92,10 @@ namespace LinqToDB.SqlQuery
 
 		public DbDataType Type { get; internal set; }
 
+		[Obsolete("Use MakeUndefined(Type) method instead. Planned for removal in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static readonly SqlDataType Undefined = new (DataType.Undefined, typeof(object), (int?)null, (int?)null, null, null);
+
+		public static SqlDataType MakeUndefined(Type forType) => new (DataType.Undefined, forType, (int?)null, (int?)null, null, null);
 
 		public bool IsCharDataType =>
 			Type.DataType
@@ -426,6 +432,9 @@ namespace LinqToDB.SqlQuery
 		{
 			return Type.GetHashCode();
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlDataType(this);
 
 		#endregion
 

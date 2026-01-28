@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.SqlQuery
@@ -59,6 +61,9 @@ namespace LinqToDB.Internal.SqlQuery
 
 			return hash.ToHashCode();
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlMultiInsertStatement(this);
 
 		public override bool IsParameterDependent
 		{

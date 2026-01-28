@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -1252,7 +1253,7 @@ namespace Tests.Linq
 		public void Issue4184Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-			
+
 			var subquery =
 				from p in db.Person
 				group p by p.ID
@@ -1448,5 +1449,30 @@ namespace Tests.Linq
 			var totalCount = query3.Count();
 		}
 		#endregion
+
+		[Test]
+		public void DistinctSubqueryTest([DataSources(TestProvName.AllFirebird, TestProvName.AllInformix)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				where
+					p.ParentID.In(db.Child.Select(c => c.ParentID).Distinct())
+				select p;
+
+			var sql = query.ToSqlQuery().Sql;
+
+			Assert.That(sql,
+				Should.Contain(
+					"WHERE",
+					"SELECT",
+					"DISTINCT") &
+				Should.Not.Contain(
+					"WHERE",
+					"SELECT",
+					"SELECT",
+					"DISTINCT"));
+		}
 	}
 }

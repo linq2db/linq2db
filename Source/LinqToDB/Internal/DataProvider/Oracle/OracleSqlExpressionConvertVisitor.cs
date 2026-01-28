@@ -1,8 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
 {
@@ -118,10 +123,18 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 						Add(element.Expr1, element.Expr2, element.SystemType),
 						Mul(new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2), 2),
 						element.SystemType);
-				case "+": return element.SystemType == typeof(string) ? new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence) : element;
+				case "+" when element.SystemType == typeof(string): return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
 			}
 
 			return base.ConvertSqlBinaryExpression(element);
+		}
+
+		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
+		{
+			if (element.Operation is SqlUnaryOperation.BitwiseNegation)
+				return new SqlBinaryExpression(element.Type, new SqlValue(-1), "-", element.Expr);
+
+			return base.ConvertSqlUnaryExpression(element);
 		}
 
 		public override ISqlExpression ConvertSqlExpression(SqlExpression element)
@@ -153,6 +166,167 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				default:
 					return base.ConvertSqlFunction(func);
 			};
+		}
+
+		protected internal override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
+		{
+			if (NeedsCharTypeCorrection(MappingSchema, element.Expressions))
+			{
+				for (var i = 0; i < element.Expressions.Length; i++)
+				{
+					var type = QueryHelper.GetDbDataType(element.Expressions[i], MappingSchema);
+
+					if (type.DataType is DataType.Char or DataType.VarChar)
+					{
+						element.Expressions[i] = new SqlCastExpression(
+							element.Expressions[i],
+							type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
+							null,
+							isMandatory: true);
+					}
+				}
+			}
+
+			return base.VisitSqlCoalesceExpression(element);
+		}
+
+		protected override ISqlExpression ConvertSqlCondition(SqlConditionExpression element)
+		{
+			if (NeedsCharTypeCorrection(MappingSchema, [element.TrueValue, element.FalseValue]))
+			{
+				var type = QueryHelper.GetDbDataType(element.TrueValue, MappingSchema);
+
+				if (type.DataType is DataType.Char or DataType.VarChar)
+				{
+					var trueValue = new SqlCastExpression(
+						element.TrueValue,
+						type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
+						null,
+						isMandatory: true);
+
+					return new SqlConditionExpression(element.Condition, trueValue, element.FalseValue);
+				}
+				else
+				{
+					type = QueryHelper.GetDbDataType(element.FalseValue, MappingSchema);
+
+					if (type.DataType is DataType.Char or DataType.VarChar)
+					{
+						var falseValue = new SqlCastExpression(
+							element.FalseValue,
+							type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
+							null,
+							isMandatory: true);
+
+						return new SqlConditionExpression(element.Condition, element.TrueValue, falseValue);
+					}
+				}
+			}
+
+			return base.ConvertSqlCondition(element);
+		}
+
+		protected internal override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
+		{
+			if (element.Rows?.Count > 1)
+			{
+				for (var i = 0; i < element.Rows[0].Count; i++)
+				{
+					if (NeedsCharTypeCorrection(MappingSchema, element.Rows.Select(r => r[i])))
+					{
+						foreach (var row in element.Rows)
+						{
+							var type = QueryHelper.GetDbDataType(row[i], MappingSchema);
+							if (type.DataType is DataType.Char or DataType.VarChar)
+							{
+								row[i] = new SqlCastExpression(
+									row[i],
+									type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
+									null,
+									isMandatory: true);
+							}
+						}
+					}
+				}
+			}
+
+			return base.VisitSqlValuesTable(element);
+		}
+
+		protected override ISqlExpression ConvertSqlCaseExpression(SqlCaseExpression element)
+		{
+			if (NeedsCharTypeCorrection(MappingSchema, element.Cases.Select(c => c.ResultExpression).Concat(element.ElseExpression == null ? [] : [element.ElseExpression])))
+			{
+				ISqlExpression? elseExpr = null;
+				List<SqlCaseExpression.CaseItem>? cases = null;
+
+				for (var i = 0; i < element.Cases.Count; i++)
+				{
+					var caseItem = element.Cases[i];
+					var type = QueryHelper.GetDbDataType(caseItem.ResultExpression, MappingSchema);
+
+					if (type.DataType is DataType.Char or DataType.VarChar)
+					{
+						if (cases == null)
+						{
+							cases = new(element.Cases.Count);
+							cases.AddRange(element.Cases.Take(i));
+						}
+
+						cases.Add(new SqlCaseExpression.CaseItem(
+							caseItem.Condition,
+							new SqlCastExpression(
+								caseItem.ResultExpression,
+								type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
+								null,
+								isMandatory: true)));
+					}
+					else if (cases != null)
+					{
+						cases.Add(caseItem);
+					}
+				}
+
+				if (element.ElseExpression != null)
+				{
+					var type = QueryHelper.GetDbDataType(element.ElseExpression, MappingSchema);
+
+					if (type.DataType is DataType.Char or DataType.VarChar)
+					{
+						elseExpr = new SqlCastExpression(
+							element.ElseExpression,
+							type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
+							null,
+							isMandatory: true);
+					}
+				}
+
+				if (elseExpr != null || cases != null)
+				{
+					return new SqlCaseExpression(element.Type, cases ?? element.Cases, elseExpr ?? element.ElseExpression);
+				}
+			}
+
+			return base.ConvertSqlCaseExpression(element);
+		}
+
+		internal static bool NeedsCharTypeCorrection(MappingSchema mappingSchema, IEnumerable<ISqlExpression> expressions)
+		{
+			var hasChar = false;
+			var hasNChar = false;
+
+			foreach (var expr in expressions)
+			{
+				var type = QueryHelper.GetDbDataType(expr, mappingSchema);
+
+				hasChar  = hasChar  || type.DataType is DataType.Char or DataType.VarChar;
+				hasNChar = hasNChar || type.DataType is DataType.NChar or DataType.NVarChar;
+
+				if (hasChar && hasNChar)
+					return true;
+			}
+
+			return false;
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)

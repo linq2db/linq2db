@@ -63,18 +63,6 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		protected override bool ParenthesizeJoin(List<SqlJoinedTable> joins) => true;
 
-		protected override void BuildBinaryExpression(SqlBinaryExpression expr)
-		{
-			switch (expr.Operation[0])
-			{
-				case '%': expr = new SqlBinaryExpression(expr.SystemType, expr.Expr1, "MOD", expr.Expr2, Precedence.Additive - 1); break;
-				case '&': expr = new SqlBinaryExpression(expr.SystemType, expr.Expr1, "AND", expr.Expr2, Precedence.Bitwise); break;
-				case '|': expr = new SqlBinaryExpression(expr.SystemType, expr.Expr1, "OR" , expr.Expr2, Precedence.Bitwise); break;
-			}
-
-			base.BuildBinaryExpression(expr);
-		}
-
 		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias,
 			ref bool                                               addAlias)
 		{

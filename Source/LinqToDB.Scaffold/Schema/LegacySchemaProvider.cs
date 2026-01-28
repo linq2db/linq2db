@@ -536,6 +536,23 @@ namespace LinqToDB.Schema
 					case "Microsoft.SqlServer.Types.SqlGeography"  : type = _languageProvider.TypeParser.Parse("Microsoft.SqlServer.Types.SqlGeography", false); break;
 					case "Microsoft.SqlServer.Types.SqlGeometry"   : type = _languageProvider.TypeParser.Parse("Microsoft.SqlServer.Types.SqlGeometry" , false); break;
 
+					// SQL 2025 types
+					case "Microsoft.Data.SqlTypes.SqlJson"               : type = _languageProvider.TypeParser.Parse("Microsoft.Data.SqlTypes.SqlJson", false); break;
+					case "Microsoft.Data.SqlTypes.SqlVector<float>"      :
+						type = _languageProvider.ASTBuilder.GenericType(
+							_languageProvider.TypeParser.Parse("Microsoft.Data.SqlTypes.SqlVector<>", true),
+							false,
+							true,
+							_languageProvider.ASTBuilder.Type(typeof(float), false));
+						break;
+					case "Microsoft.Data.SqlTypes.SqlVector<System.Half>":
+						type = _languageProvider.ASTBuilder.GenericType(
+							_languageProvider.TypeParser.Parse("Microsoft.Data.SqlTypes.SqlVector<>", true),
+							false,
+							true,
+							_languageProvider.TypeParser.Parse("System.Half", true));
+						break;
+
 					// SQL Server/SQL CE Sql* types
 					case "SqlString"  : type = WellKnownTypes.System.Data.SqlTypes.SqlString  ; break;
 					case "SqlByte"    : type = WellKnownTypes.System.Data.SqlTypes.SqlByte    ; break;

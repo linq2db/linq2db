@@ -255,8 +255,6 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 						break;
 					}
 					case Sql.DateParts.Month: fragmentStr = "Month to Month"; break;
-					case Sql.DateParts.DayOfYear:
-					case Sql.DateParts.WeekDay:
 					case Sql.DateParts.Day: fragmentStr = "Day to Day"; break;
 					case Sql.DateParts.Week:
 					{
@@ -282,7 +280,7 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 				}
 
 				// interval literal cannot be dynamic so we should try to disable at least parameters
-				QueryHelper.MarkAsNonQueryParameters(increment);
+				increment = QueryHelper.MarkAsNonQueryParameters(increment);
 
 				var intervalExpr     = factory.NotNullExpression(intervalType, "Interval ({0}) " + fragmentStr, increment);
 				if (multiplier != null)

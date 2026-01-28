@@ -3122,6 +3122,10 @@ namespace LinqToDB.Internal.SqlProvider
 					BuildBinaryExpression((SqlBinaryExpression)expr);
 					break;
 
+				case QueryElementType.SqlUnaryExpression:
+					BuildUnaryExpression((SqlUnaryExpression)expr);
+					break;
+
 				case QueryElementType.SqlFunction:
 					BuildFunction((SqlFunction)expr);
 					break;
@@ -3743,6 +3747,28 @@ namespace LinqToDB.Internal.SqlProvider
 
 		#endregion
 
+		#region BuildUnaryExpression
+
+		protected virtual void BuildUnaryExpression(SqlUnaryExpression expr)
+		{
+			BuildUnaryExpression(expr.Operation, expr);
+		}
+
+		void BuildUnaryExpression(SqlUnaryOperation op, SqlUnaryExpression expr)
+		{
+			var opText = op switch
+			{
+				SqlUnaryOperation.Negation        => '-',
+				SqlUnaryOperation.BitwiseNegation => '~',
+				_                                 => throw new LinqToDBException($"Unsupported unary operation {op}")
+			};
+
+			StringBuilder.Append(opText);
+			BuildExpression(GetPrecedence(expr), expr.Expr);
+		}
+
+		#endregion
+
 		#region BuildFunction
 
 		protected virtual void BuildFunction(SqlFunction func)
@@ -3840,6 +3866,18 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (type.Precision > 0)
 				StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Precision}{InlineComma}{type.Scale})");
+		}
+
+		protected static DbDataType CorrectDecimalFacets(DbDataType dataType, decimal decValue, bool updateNullsOnly = false)
+		{
+			if (updateNullsOnly && dataType.Precision != null && dataType.Scale != null)
+				return dataType;
+
+			var (precision, scale) = DecimalHelper.GetFacets(decValue);
+
+			return updateNullsOnly
+					? dataType.WithPrecision(dataType.Precision ?? precision).WithScale(dataType.Scale ?? scale)
+					: dataType.WithPrecision(precision).WithScale(scale);
 		}
 
 		#endregion

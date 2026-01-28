@@ -53,7 +53,8 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			SqlProviderFlags.CalculateSupportedCorrelatedLevelWithAggregateQueries = true;
 			SqlProviderFlags.RowConstructorSupport                                 = RowFeature.Equality | RowFeature.Comparisons | RowFeature.CompareToSelect | RowFeature.In;
 
-			SqlProviderFlags.IsUpdateTakeSupported     = true;
+			SqlProviderFlags.IsUpdateTakeSupported                   = true;
+			SqlProviderFlags.IsTakeWithInAllAnySomeSubquerySupported = false;
 
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
 

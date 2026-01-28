@@ -58,8 +58,11 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 							}
 
 							var factory   = info.Factory;
-							var separator = info.Argument(0)!;
 							var valueType = factory.GetDbDataType(info.Value);
+
+							var separator = info.Argument(0)!;
+							separator = QueryHelper.MarkAsNonQueryParameters(separator);
+							separator = factory.Cast(separator, valueType);
 
 							var value = info.Value;
 							if (!info.IsNullFiltered && nullValuesAsEmptyString)

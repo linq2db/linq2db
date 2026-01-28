@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.Linq;
 using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
 using System.Net.Sockets;
@@ -114,6 +115,26 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					}]                    = Expression.Lambda(body, dataReaderParameter, indexParameter);
 				}
 			}
+
+			if (Provider == ClickHouseProvider.ClickHouseDriver)
+			{
+				SetProviderField<DbDataReader, byte[], byte[]>((rd, idx) => (byte[])rd.GetValue(idx));
+				SetProviderField<DbDataReader, Guid, byte[]>((rd, idx)   => ReadGuid((byte[])rd.GetValue(idx)));
+				SetProviderField<DbDataReader, char, byte[]>((rd, idx)   => Encoding.UTF8.GetString((byte[])rd.GetValue(idx)).First());
+
+				// https://github.com/ClickHouse/clickhouse-cs/issues/109
+				ReaderExpressions[new ReaderInfo { ProviderFieldType = typeof(byte[]) }] = (DbDataReader rd, int idx) => Encoding.UTF8.GetString((byte[])rd.GetValue(idx));
+			}
+		}
+
+		static Guid ReadGuid(byte[] bytes)
+		{
+			if (bytes.Length == 36)
+			{
+				return Guid.ParseExact(Encoding.UTF8.GetString(bytes), "D");
+			}
+
+			return new Guid(bytes);
 		}
 
 		protected override IMemberTranslator CreateMemberTranslator()
@@ -194,14 +215,19 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					(ClickHouseProvider.ClickHouseDriver, DataType.Date or  DataType.Date32, DateOnly val)      => val.ToDateTime(default),
 #endif
 					(ClickHouseProvider.ClickHouseDriver, DataType.Date or DataType.Date32, DateTimeOffset val) => val.Date,
-					// https://github.com/DarkWanderer/ClickHouse.Client/issues/138
-					(ClickHouseProvider.ClickHouseDriver, DataType.VarBinary or DataType.Binary, byte[] val)    => Encoding.UTF8.GetString(val),
+					(ClickHouseProvider.ClickHouseDriver, DataType.Char or DataType.NChar, Guid val)            => val.ToString("D"),
 					(ClickHouseProvider.ClickHouseDriver, DataType.IPv4, uint val)                              => new IPAddress(new byte[] { (byte)((val >> 24) & 0xFF), (byte)((val >> 16) & 0xFF), (byte)((val >> 8) & 0xFF), (byte)(val & 0xFF) }).ToString(),
 					// https://github.com/DarkWanderer/ClickHouse.Client/issues/145
 					(ClickHouseProvider.ClickHouseDriver, DataType.IPv6, IPAddress val)                         => val.AddressFamily == AddressFamily.InterNetworkV6 ? val : val.MapToIPv6(),
 					// https://github.com/DarkWanderer/ClickHouse.Client/issues/145
 					(ClickHouseProvider.ClickHouseDriver, DataType.IPv6, string val)                            => IPAddress.Parse(val).MapToIPv6(),
 					(ClickHouseProvider.ClickHouseDriver, DataType.IPv6, byte[] val)                            => new IPAddress(val).MapToIPv6(),
+					// TODO: remove after fix as it corrupts data
+					// https://github.com/ClickHouse/clickhouse-cs/issues/109
+					(ClickHouseProvider.ClickHouseDriver, DataType.VarBinary, byte[] val) => Encoding.UTF8.GetString(val),
+
+					(ClickHouseProvider.ClickHouseDriver, DataType.NChar or DataType.Char, string val) => FixSize(Encoding.UTF8.GetBytes(val), dataType.Length ?? ClickHouseMappingSchema.DEFAULT_FIXED_STRING_LENGTH),
+					(ClickHouseProvider.ClickHouseDriver, DataType.Binary, byte[] val)                 => FixSize(val, dataType.Length ?? ClickHouseMappingSchema.DEFAULT_FIXED_STRING_LENGTH),
 
 					_ => value
 				};
@@ -210,7 +236,17 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-#endregion
+		private byte[] FixSize(byte[] bytes, int length)
+		{
+			if (length <= bytes.Length)
+				return bytes;
+
+			var arr = new byte[length];
+			Array.Copy(bytes, arr, bytes.Length);
+			return arr;
+		}
+
+		#endregion
 
 		#region BulkCopy
 

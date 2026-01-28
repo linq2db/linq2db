@@ -125,10 +125,12 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"VarChar({type.Length})");
 					break;
 				case DataType.NVarChar       :
+					// 4000 vs 2000: length specified in chars, but type limit is 4000 bytes
+					// which could result in different char limits based on db encoding
 					if (type.Length == null || type.Length > 4000 || type.Length < 1)
-						StringBuilder.Append("VarChar2(4000)");
+						StringBuilder.Append("NVarChar2(2000)");
 					else
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"VarChar2({type.Length})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"NVarChar2({type.Length})");
 					break;
 				case DataType.Boolean        : StringBuilder.Append("NUMBER(1)");                 break;
 				case DataType.NText          : StringBuilder.Append("NClob");                     break;

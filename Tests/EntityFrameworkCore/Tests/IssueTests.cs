@@ -964,7 +964,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			await ctx.IssueEnum.ToListAsyncLinqToDB();
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4816")]
 		public void Issue4816Test([EFIncludeDataSources(TestProvName.AllSqlServer2017Plus)] string provider)
 		{

@@ -345,6 +345,51 @@ namespace LinqToDB.Internal.SqlQuery
 			return null;
 		}
 
+		public static DbDataType GetCommonDbDataType(IEnumerable<ISqlExpression> expressions, MappingSchema mappingSchema)
+		{
+			DbDataType? commonType = null;
+			foreach (var expr in expressions)
+			{
+				var type = GetDbDataType(expr, mappingSchema);
+				if (commonType == null)
+				{
+					commonType = type;
+				}
+				else
+				{
+					commonType = commonType.Value
+						.WithLength(commonType.Value.Length > type.Length ? commonType.Value.Length : type.Length);
+
+					var commonIntLength = commonType.Value.Precision - commonType.Value.Scale;
+					var newIntLength    = type.Precision - type.Scale;
+
+					commonType = commonType.Value
+						.WithScale(commonType.Value.Scale > type.Scale ? commonType.Value.Scale : type.Scale);
+					commonType = commonType.Value
+						.WithPrecision((commonIntLength > newIntLength ? commonIntLength : newIntLength) + commonType.Value.Scale);
+
+					if (commonType.Value.DataType == DataType.Undefined)
+					{
+						commonType = commonType.Value.WithDataType(type.DataType);
+					}
+					else
+					{
+						var newType = (commonType.Value.DataType, type.DataType) switch
+						{
+							(_, DataType.NVarChar)            => DataType.NVarChar,
+							(DataType.Char, DataType.VarChar) => DataType.VarChar,
+							(DataType.Char, DataType.NChar)   => DataType.NChar,
+							_                                 => commonType.Value.DataType
+						};
+
+						commonType = commonType.Value.WithDataType(newType);
+					}
+				}
+			}
+
+			return commonType ?? SqlDataType.MakeUndefined(typeof(object)).Type;
+		}
+
 		public static DbDataType GetDbDataType(ISqlExpression expr, MappingSchema mappingSchema)
 		{
 			var result = GetDbDataType(expr);
@@ -1097,11 +1142,6 @@ namespace LinqToDB.Internal.SqlQuery
 			return result;
 		}
 
-		public static bool IsAggregationOrWindowFunction(IQueryElement expr)
-		{
-			return IsAggregationFunction(expr) || IsWindowFunction(expr);
-		}
-
 		public static bool IsAggregationFunction(IQueryElement expr)
 		{
 			return expr switch
@@ -1123,12 +1163,14 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 			}
 
-			public void Cleanup()
+			public override void Cleanup()
 			{
 				IsAggregation          = false;
 				IsWindow               = false;
 				HasReference           = false;
 				CanBeAffectedByOrderBy = false;
+
+				base.Cleanup();
 			}
 
 			[return : NotNullIfNotNull(nameof(element))]
@@ -1141,7 +1183,7 @@ namespace LinqToDB.Internal.SqlQuery
 				return base.Visit(element);
 			}
 
-			protected override IQueryElement VisitSqlFunction(SqlFunction element)
+			protected internal override IQueryElement VisitSqlFunction(SqlFunction element)
 			{
 				var isAggregation = IsAggregationFunction(element);
 				var isWindow      = IsWindowFunction(element);
@@ -1157,7 +1199,7 @@ namespace LinqToDB.Internal.SqlQuery
 				return base.VisitSqlFunction(element);
 			}
 
-			protected override IQueryElement VisitSqlExtendedFunction(SqlExtendedFunction element)
+			protected internal override IQueryElement VisitSqlExtendedFunction(SqlExtendedFunction element)
 			{
 				var isAggregation = IsAggregationFunction(element);
 				var isWindow      = IsWindowFunction(element);
@@ -1176,7 +1218,7 @@ namespace LinqToDB.Internal.SqlQuery
 				return base.VisitSqlExtendedFunction(element);
 			}
 
-			protected override IQueryElement VisitSqlExpression(SqlExpression element)
+			protected internal override IQueryElement VisitSqlExpression(SqlExpression element)
 			{
 				var isAggregation = IsAggregationFunction(element);
 				var isWindow      = IsWindowFunction(element);
@@ -1192,16 +1234,21 @@ namespace LinqToDB.Internal.SqlQuery
 				return base.VisitSqlExpression(element);
 			}
 
-			protected override IQueryElement VisitSqlFieldReference(SqlField element)
+			protected internal override IQueryElement VisitSqlFieldReference(SqlField element)
 			{
 				HasReference = true;
 				return base.VisitSqlFieldReference(element);
 			}
 
-			protected override IQueryElement VisitSqlColumnReference(SqlColumn element)
+			protected internal override IQueryElement VisitSqlColumnReference(SqlColumn element)
 			{
 				HasReference = true;
 				return base.VisitSqlColumnReference(element);
+			}
+
+			protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+			{
+				return selectQuery;
 			}
 		}
 
@@ -1235,6 +1282,16 @@ namespace LinqToDB.Internal.SqlQuery
 
 			needsOrderBy = visitor.CanBeAffectedByOrderBy;
 			return hasAggregation;
+		}
+
+		public static bool IsAggregationOrWindowExpression(ISqlExpression expression)
+		{
+			using var visitorRef = AggregationCheckVisitors.Allocate();
+
+			var visitor = visitorRef.Value;
+			visitor.Visit(expression);
+
+			return visitor.IsAggregation || visitor.IsWindow;
 		}
 
 		public static bool IsWindowFunction(IQueryElement expr)
@@ -1593,16 +1650,21 @@ namespace LinqToDB.Internal.SqlQuery
 			});
 		}
 
-		public static void MarkAsNonQueryParameters(IQueryElement root)
+		public static TElement MarkAsNonQueryParameters<TElement>(TElement root)
+		where TElement : class, IQueryElement
 		{
-			root.VisitAll(static e =>
+			var newElement = root.Convert(1, static (_, e) =>
 			{
 				if (e.ElementType == QueryElementType.SqlParameter)
 				{
 					var param = (SqlParameter)e;
-					param.IsQueryParameter = false;
+					return param.WithIsQueryParameter(false);
 				}
+
+				return e;
 			});
+
+			return (TElement)newElement;
 		}
 
 		public static bool? GetBoolValue(IQueryElement element, EvaluationContext evaluationContext)

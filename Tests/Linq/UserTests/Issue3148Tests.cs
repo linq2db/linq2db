@@ -663,7 +663,7 @@ namespace Tests.UserTests
 			var restored = expr.Transform(RestoreDefault);
 
 			Assert.That(restored, Is.Not.EqualTo(expr));
-			Assert.That(restored.Find<object?>(null, (_, e) => e.NodeType == ExpressionType.Default), Is.Not.Null);
+			Assert.That(restored.Find(e => e.NodeType == ExpressionType.Default), Is.Not.Null);
 
 			return (T)restored;
 		}

@@ -227,8 +227,6 @@ namespace LinqToDB.Internal.DataProvider.DB2.Translation
 						break;
 					}
 					case Sql.DateParts.Month: expStr = "MONTH"; break;
-					case Sql.DateParts.DayOfYear:
-					case Sql.DateParts.WeekDay:
 					case Sql.DateParts.Day: expStr = "DAY"; break;
 					case Sql.DateParts.Week:
 					{

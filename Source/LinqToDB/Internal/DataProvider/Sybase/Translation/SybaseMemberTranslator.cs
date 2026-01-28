@@ -47,17 +47,17 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 
 		protected class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{
-			public static string? DatePartToStr(Sql.DateParts part)
+			public static string? DatePartToStr(Sql.DateParts part, bool forDateAdd)
 			{
 				return part switch
 				{
 					Sql.DateParts.Year => "year",
 					Sql.DateParts.Quarter => "quarter",
 					Sql.DateParts.Month => "month",
-					Sql.DateParts.DayOfYear => "dayofyear",
+					Sql.DateParts.DayOfYear when !forDateAdd => "dayofyear",
 					Sql.DateParts.Day => "day",
 					Sql.DateParts.Week => "week",
-					Sql.DateParts.WeekDay => "weekday",
+					Sql.DateParts.WeekDay when !forDateAdd => "weekday",
 					Sql.DateParts.Hour => "hour",
 					Sql.DateParts.Minute => "minute",
 					Sql.DateParts.Second => "second",
@@ -68,7 +68,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 
 			protected override ISqlExpression? TranslateDateTimeDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
 			{
-				var partStr = DatePartToStr(datepart);
+				var partStr = DatePartToStr(datepart, false);
 
 				if (partStr == null)
 					return null;
@@ -90,7 +90,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase.Translation
 				var factory  = translationContext.ExpressionFactory;
 				var dateType = factory.GetDbDataType(dateTimeExpression);
 
-				var partStr = DatePartToStr(datepart);
+				var partStr = DatePartToStr(datepart, true);
 
 				if (partStr == null)
 				{

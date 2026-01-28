@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.SqlQuery
@@ -103,6 +105,9 @@ namespace LinqToDB.Internal.SqlQuery
 		#region IQueryElement Members
 
 		public string SqlText => this.ToDebugString();
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlCteTable(this);
 
 		#endregion
 	}

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.SqlQuery
@@ -52,6 +54,9 @@ namespace LinqToDB.Internal.SqlQuery
 				DefaultNullable
 			);
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlCreateTableStatement(this);
 
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)
 		{

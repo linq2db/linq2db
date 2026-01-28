@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB.Internal.Common;
+
 namespace LinqToDB.Tools.ModelGeneration
 {
 	/// <summary>
@@ -73,15 +75,17 @@ namespace LinqToDB.Tools.ModelGeneration
 
 					if (prop.InitValue != null)
 						field.InitValue = prop.InitValue;
+					else if (prop.EnforceNotNullable)
+						field.InitValue = "null!";
 
 					gr.Members.Insert(0, field);
 
-					prop.Name        = " " + name;
-					prop.TypeBuilder = () => " " + type;
+					prop.Name        = name;
+					prop.TypeBuilder = () => type;
 					prop.IsAuto      = false;
 
-					if (prop.HasGetter) prop.GetBodyBuilders.Add(() => new [] { $"return {field.Name};" });
-					if (prop.HasSetter) prop.SetBodyBuilders.Add(() => new [] { $"{field.Name} = value;" });
+					if (prop.HasGetter) prop.GetBodyBuilders.Add(() => [$"return {field.Name};"]);
+					if (prop.HasSetter) prop.SetBodyBuilders.Add(() => [$"{field.Name} = value;"]);
 				}
 
 				var methods = new TMemberGroup
@@ -109,7 +113,7 @@ namespace LinqToDB.Tools.ModelGeneration
 						{
 							TypeBuilder    = static () => "void",
 							Name           = $"On{name}Changed",
-							BodyBuilders   = { () => new[] { $"OnPropertyChanged(_{ToCamelCase(name)}ChangedEventArgs);" } },
+							BodyBuilders   = { () => [$"OnPropertyChanged(_{ToCamelCase(name)}ChangedEventArgs);"] },
 							AccessModifier = AccessModifier.Private
 						}
 					}
@@ -140,7 +144,7 @@ namespace LinqToDB.Tools.ModelGeneration
 							{
 								TypeBuilder    = static () => "void",
 								Name           = $"On{name}Changing",
-								BodyBuilders   = { () => new[] { $"OnPropertyChanging(_{ToCamelCase(name)}ChangingEventArgs);" } },
+								BodyBuilders   = { () => [$"OnPropertyChanging(_{ToCamelCase(name)}ChangingEventArgs);"] },
 								AccessModifier = AccessModifier.Private
 							}
 						}
@@ -170,16 +174,19 @@ namespace LinqToDB.Tools.ModelGeneration
 					var insSpaces = setBody.Length > 1;
 					var n         = 0;
 
-					prop.SetBodyBuilders.Insert(n++, () => new [] { $"if ({getValue} != value)", "{" });
+					prop.SetBodyBuilders.Insert(n++, () =>
+						prop.IsNullable
+							? [$"if (!object.Equals({getValue}, value))", "{"]
+							: [$"if ({getValue} != value)", "{"]);
 
 					if (ImplementNotifyPropertyChanging)
 					{
 						foreach (var dp in prop.Dependents)
-							prop.SetBodyBuilders.Insert(n++, () => new [] { $"\tOn{dp}Changing();" });
+							prop.SetBodyBuilders.Insert(n++, () => [$"\tOn{dp}Changing();"]);
 						prop.SetBodyBuilders.Insert(n++, static () => [""]);
 					}
 
-					prop.SetBodyBuilders.Insert(n++, () => new [] { $"\tBefore{name}Changed(value);" });
+					prop.SetBodyBuilders.Insert(n++, () => [$"\tBefore{name}Changed(value);"]);
 
 					if (insSpaces)
 					{

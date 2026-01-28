@@ -44,6 +44,12 @@ namespace LinqToDB.Mapping
 		public string? SetterExpressionMethod     { get; set; }
 
 		/// <summary>
+		/// Gets or sets name of dynamic properties storage initialization expression method or property. Method or property must be static.
+		/// Executed once before <see cref="SetterExpressionMethod"/> executed for each dynamic property.
+		/// </summary>
+		public string? StorageInitializerExpressionMethod { get; set; }
+
+		/// <summary>
 		/// Gets or sets name of dynamic properties property getter expression method or property. Method or property
 		/// must be static.
 		/// </summary>
@@ -76,7 +82,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return FormattableString.Invariant($".{Configuration}.{SetterMethod}.{GetterMethod}.{SetterExpressionMethod}.{GetterExpressionMethod}.{IdentifierBuilder.GetObjectID(SetterExpression)}.{IdentifierBuilder.GetObjectID(GetterExpression)}.");
+			return FormattableString.Invariant($".{Configuration}.{SetterMethod}.{GetterMethod}.{SetterExpressionMethod}.{StorageInitializerExpressionMethod}.{GetterExpressionMethod}.{IdentifierBuilder.GetObjectID(SetterExpression)}.{IdentifierBuilder.GetObjectID(GetterExpression)}.");
 		}
 	}
 }

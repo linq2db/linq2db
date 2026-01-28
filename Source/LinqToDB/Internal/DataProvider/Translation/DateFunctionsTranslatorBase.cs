@@ -258,7 +258,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (converted == null)
 				return null;
 
-			//TODO: Why?	
+			//TODO: Why?
 			if (datepart == Sql.DateParts.WeekDay)
 				converted = translationContext.ExpressionFactory.Decrement(converted);
 
@@ -275,7 +275,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (converted == null)
 				return null;
 
-			//TODO: Why?	
+			//TODO: Why?
 			if (datepart == Sql.DateParts.WeekDay)
 				converted = translationContext.ExpressionFactory.Decrement(converted);
 
@@ -561,7 +561,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (converted == null)
 				return null;
 
-			//TODO: Why?	
+			//TODO: Why?
 			if (datepart == Sql.DateParts.WeekDay)
 				converted = translationContext.ExpressionFactory.Decrement(converted);
 

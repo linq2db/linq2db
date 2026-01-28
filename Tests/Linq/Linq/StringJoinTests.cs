@@ -1,11 +1,14 @@
 ﻿extern alias MySqlConnector;
 
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
+using LinqToDB.Schema;
 
 using NUnit.Framework;
 
@@ -18,6 +21,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class SampleClass
 		{
+			[PrimaryKey]                                                          public int     PK               { get; set; }
 			[Column]                                                              public int     Id               { get; set; }
 			[Column(Length = 50, CanBeNull = true)]                               public string? NullableValue    { get; set; }
 			[Column(Length = 50, CanBeNull = false)]                              public string  NotNullableValue { get; set; } = string.Empty;
@@ -28,10 +32,10 @@ namespace Tests.Linq
 			{
 				var data = new[]
 				{
-					new SampleClass { Id = 1, NullableValue = "A", NotNullableValue = "B", VarcharValue = "C", NVarcharValue = "D" },
-					new SampleClass { Id = 2, NullableValue = "E", NotNullableValue = "F", VarcharValue = "G", NVarcharValue = "H" },
-					new SampleClass { Id = 3, NullableValue = "I", NotNullableValue = "J", VarcharValue = "K", NVarcharValue = "L" },
-					new SampleClass { Id = 4, NullableValue = null, NotNullableValue = "M", VarcharValue = null, NVarcharValue = null },
+					new SampleClass { PK = 1, Id = 1, NullableValue = "A", NotNullableValue = "B", VarcharValue = "C", NVarcharValue = "D" },
+					new SampleClass { PK = 2, Id = 2, NullableValue = "E", NotNullableValue = "F", VarcharValue = "G", NVarcharValue = "H" },
+					new SampleClass { PK = 3, Id = 3, NullableValue = "I", NotNullableValue = "J", VarcharValue = "K", NVarcharValue = "L" },
+					new SampleClass { PK = 4, Id = 4, NullableValue = null, NotNullableValue = "M", VarcharValue = null, NVarcharValue = null },
 				};
 				return data;
 			}
@@ -40,13 +44,16 @@ namespace Tests.Linq
 			{
 				var data = new[]
 				{
-					new SampleClass { Id = 1, NullableValue = "A", NotNullableValue  = "B", VarcharValue = "C", NVarcharValue  = "D" },
-					new SampleClass { Id = 1, NullableValue = "E", NotNullableValue  = "F", VarcharValue = "G", NVarcharValue  = "H" },
-					new SampleClass { Id = 2, NullableValue = "I", NotNullableValue  = "J", VarcharValue = "K", NVarcharValue  = "L" },
-					new SampleClass { Id = 2, NullableValue = null, NotNullableValue = "M", VarcharValue = null, NVarcharValue = null },
+					new SampleClass { PK = 1, Id = 1, NullableValue = "A", NotNullableValue  = "B", VarcharValue = "C", NVarcharValue  = "D" },
+					new SampleClass { PK = 2, Id = 1, NullableValue = "E", NotNullableValue  = "F", VarcharValue = "G", NVarcharValue  = "H" },
+					new SampleClass { PK = 3, Id = 2, NullableValue = "I", NotNullableValue  = "J", VarcharValue = "K", NVarcharValue  = "L" },
+					new SampleClass { PK = 4, Id = 2, NullableValue = null, NotNullableValue = "M", VarcharValue = null, NVarcharValue = null },
 				};
 				return data;
 			}
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Id), CanBeNull = true)]
+			public List<SampleClass> Children { get; set; } = null!;
 		}
 
 		[Test]
@@ -61,7 +68,7 @@ namespace Tests.Linq
 				into g
 				select new
 				{
-					Id = g.Key, 
+					Id = g.Key,
 					Nullable = string.Join(", ", g.Select(x => x.NullableValue)),
 					NotNullable = string.Join(", ", g.Select(x => x.NotNullableValue)),
 				}
@@ -84,7 +91,7 @@ namespace Tests.Linq
 				into g
 				select new
 				{
-					Id          = g.Key, 
+					Id          = g.Key,
 					Nullable    = string.Join(separator, g.Select(x => x.NullableValue)),
 					NotNullable = string.Join(separator, g.Select(x => x.NotNullableValue)),
 				}
@@ -138,7 +145,7 @@ namespace Tests.Linq
 				into g
 				select new
 				{
-					Id          = g.Key, 
+					Id          = g.Key,
 					Nullable    = string.Join(", ", g.OrderBy(x => x.NotNullableValue).Select(x => x.NullableValue).Take(2)),
 					NotNullable = string.Join(", ", g.OrderBy(x => x.NotNullableValue).Select(x => x.NotNullableValue).Take(2)),
 				}
@@ -151,7 +158,7 @@ namespace Tests.Linq
 
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
-		public void JoinWithGroupingOrdered([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
+		public void JoinWithGroupingOrdered([DataSources(ProviderName.Ydb, TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
 		{
 			var       data  = SampleClass.GenerateDataNotUniqueId();
 			using var db    = GetDataContext(context);
@@ -165,7 +172,7 @@ namespace Tests.Linq
 				select new
 				{
 					Id          = g.Key,
-					
+
 					Nullable    = string.Join(", ", g
 						.OrderBy(x => x.NotNullableValue)
 						.ThenByDescending(x => x.NullableValue)
@@ -179,11 +186,10 @@ namespace Tests.Linq
 						.Where(x => x != null && x != "")
 					),
 
-                    NotNullable = string.Join(", ", g
+					NotNullable = string.Join(", ", g
 						.OrderByDescending(x => x.NotNullableValue)
 						.ThenByDescending(x => x.NullableValue)
 						.Select(x => x.NotNullableValue)),
-						
 
 					NullableDoubleOrder    = string.Join(", ", g
 						.OrderBy(x => x.NotNullableValue)
@@ -355,7 +361,7 @@ namespace Tests.Linq
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(data);
 
-			var query = 
+			var query =
 				from t in table
 				select new
 				{
@@ -365,7 +371,7 @@ namespace Tests.Linq
 						.Where(x=> x != null)
 						.Distinct()
 						.OrderBy(x => x))),
-						
+
 					AggregatedFilteredDistinct = Sql.AsSql(string.Join(", ", new [] {t.NotNullableValue, t.NotNullableValue, t.NotNullableValue, t.NVarcharValue}
 						.Where(x=> x != "A")
 						.Distinct()
@@ -431,5 +437,54 @@ namespace Tests.Linq
 			Assert.DoesNotThrow(() => _ = query.ToList());
 		}
 
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)]
+		[Test]
+		public void StringJoinAssociationSubqueryUpdate1([DataSources(ProviderName.Ydb, TestProvName.AllClickHouse, TestProvName.AllMySql57)] string context)
+		{
+			var       data  = SampleClass.GenerateDataUniqueId();
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				select new
+				{
+					t,
+					Result = t.Children.Select(ag => ag.VarcharValue).StringAggregate(" | ").ToValue(),
+				};
+
+			query.Update(
+				t => t.t,
+				t => new SampleClass
+				{
+					VarcharValue  = t.Result,
+					NVarcharValue = t.Result
+				});
+		}
+
+		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)]
+		[Test]
+		public void StringJoinAssociationSubqueryUpdate2([DataSources(ProviderName.Ydb, TestProvName.AllClickHouse, TestProvName.AllMySql57)] string context)
+		{
+			var       data  = SampleClass.GenerateDataUniqueId();
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query =
+				from t in table
+				select new
+				{
+					t,
+					Result = string.Join(", ", t.Children!.Select(x => x.VarcharValue))
+				};
+
+			query.Update(
+				t => t.t,
+				t => new SampleClass
+				{
+					VarcharValue  = t.Result,
+					NVarcharValue = t.Result
+				});
+		}
 	}
 }

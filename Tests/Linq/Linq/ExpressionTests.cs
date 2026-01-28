@@ -468,5 +468,71 @@ namespace Tests.Linq
 
 			Assert.That(db.LastQuery, Does.Contain("ORDER"));
 		}
+
+		[LinqToDB.Sql.ExpressionAttribute("{0} = ANY({1})", ServerSideOnly = true, IsPredicate = true)]
+		static bool IsAnyOf1<T>(T left, IReadOnlyList<T> right) => throw new ServerSideOnlyException(nameof(IsAnyOf1));
+
+		[LinqToDB.Sql.ExpressionAttribute("{0} = ANY({1})", ServerSideOnly = true, IsPredicate = true)]
+		static bool IsAnyOf2<T>(T left, T[] right) => throw new ServerSideOnlyException(nameof(IsAnyOf2));
+
+		[ActiveIssue(SkipForNonLinqService = true, Details = "Remote context collections serialization")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5244")]
+		public void CollectionParameterTranslation_IReadOnlyList([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataConnection(context);
+			IReadOnlyList<int> ids = [10, 20];
+
+			db.Person.Where(p => IsAnyOf1(p.ID, ids)).Delete();
+		}
+
+		[ActiveIssue(SkipForNonLinqService = true, Details = "Remote context collections serialization")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5244")]
+		public void CollectionParameterTranslation_Array([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataConnection(context);
+			int[] ids = [10, 20];
+
+			db.Person.Where(p => IsAnyOf2(p.ID, ids)).Delete();
+		}
+
+		sealed class WarehouseTableDto
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+			public SomeEnum Value { get; set; }
+
+			public static readonly WarehouseTableDto[] Data =
+			[
+				new WarehouseTableDto() { Id = 1, Value = SomeEnum.SomeValue | SomeEnum.SomeOtherValue | SomeEnum.FifthValue }
+			];
+
+			[Flags]
+			public enum SomeEnum
+			{
+				SomeValue      = 1,
+				SecondValue    = 2,
+				SomeOtherValue = 4,
+				FourthValue    = 8,
+				FifthValue     = 16,
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5286")]
+		public void MapInvertOperator([DataSources] string context)
+		{
+			using var db  = GetDataContext(context);
+			using var tb  = db.CreateLocalTable(WarehouseTableDto.Data);
+
+			var addMask = WarehouseTableDto.SomeEnum.SomeValue | WarehouseTableDto.SomeEnum.SecondValue;
+			var removeMask = WarehouseTableDto.SomeEnum.SomeOtherValue | WarehouseTableDto.SomeEnum.FourthValue;
+
+			tb
+				.Set(w => w.Value, w => (w.Value | addMask) & ~removeMask)
+				.Update();
+
+			var record = tb.Single();
+
+			Assert.That(record.Value, Is.EqualTo(addMask | WarehouseTableDto.SomeEnum.FifthValue));
+		}
 	}
 }

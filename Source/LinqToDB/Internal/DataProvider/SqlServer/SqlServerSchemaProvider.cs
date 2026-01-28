@@ -236,6 +236,10 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 							c.Precision = null;
 							c.Scale     = null;
 							break;
+						case "vector"      :
+							// Convert binary vector storage size (8-byte header + 4 bytes per float element) to logical dimension count
+							c.Length = (c.Length - 8) / 4;
+							break;
 					}
 
 					return c;
@@ -417,9 +421,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			switch (dataType)
 			{
-				case "json"        : return typeof(string);
-				// TODO: currently string mapping is not usable
-				case "vector"      : return Provider.Adapter.SqlVectorType ?? typeof(string);
+				case "json"        : return (options.PreferProviderSpecificTypes ? Provider.Adapter.SqlJsonType   : null) ?? typeof(string);
+				case "vector"      : return (options.PreferProviderSpecificTypes ? Provider.Adapter.SqlVectorType : null) ?? typeof(float[]);
 				case "tinyint"     : return typeof(byte);
 				case "hierarchyid" :
 				case "geography"   :
@@ -435,9 +438,6 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			// database name for udt not supported by sql server
 			if (udtName != null)
 				return (udtSchema != null ? SqlServerTools.QuoteIdentifier(udtSchema) + '.' : null) + SqlServerTools.QuoteIdentifier(udtName);
-
-			if (columnType == "vector")
-				length = (length - 8) / 4;
 
 			return base.GetDbType(options, columnType, dataType, length, precision, scale, udtCatalog, udtSchema, udtName);
 		}
@@ -542,6 +542,41 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			{
 				return base.GetProcedureSchema(dataConnection, commandText, commandType, parameters, options);
 			}
+		}
+
+		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
+		{
+			var list = base.GetDataTypes(dataConnection);
+
+			if (list.All(t => t.DataType != "json"))
+			{
+				var type = Provider.Adapter.SqlJsonType ?? typeof(string);
+
+				list.Add(new DataTypeInfo
+				{
+					TypeName         = "json",
+					DataType         = type.FullName!,
+					ProviderSpecific = Provider.Adapter.SqlJsonType is not null,
+					ProviderDbType   = 35
+				});
+			}
+
+			if (list.All(t => t.DataType != "vector"))
+			{
+				var type = Provider.Adapter.SqlVectorType ?? typeof(float[]);
+
+				list.Add(new DataTypeInfo
+				{
+					TypeName         = "vector",
+					DataType         = type.FullName!,
+					CreateFormat     = "vector({0})",
+					CreateParameters = "length",
+					ProviderSpecific = true,
+					ProviderDbType   = 36
+				});
+			}
+
+			return list;
 		}
 	}
 }

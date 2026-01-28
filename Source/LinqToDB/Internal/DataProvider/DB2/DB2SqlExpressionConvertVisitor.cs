@@ -18,6 +18,14 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 		protected override bool SupportsNullIf => false;
 
+		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
+		{
+			if (element.Operation is SqlUnaryOperation.BitwiseNegation)
+				return new SqlFunction(element.Type, "BITNOT", element.Expr);
+
+			return base.ConvertSqlUnaryExpression(element);
+		}
+
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			switch (element.Operation)
@@ -30,7 +38,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				case "&": return new SqlFunction(element.Type, "BitAnd", element.Expr1, element.Expr2);
 				case "|": return new SqlFunction(element.Type, "BitOr", element.Expr1, element.Expr2);
 				case "^": return new SqlFunction(element.Type, "BitXor", element.Expr1, element.Expr2);
-				case "+": return element.SystemType.IsStringType ? new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence) : element;
+				case "+" when element.SystemType.IsStringType: return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
 			}
 
 			return base.ConvertSqlBinaryExpression(element);

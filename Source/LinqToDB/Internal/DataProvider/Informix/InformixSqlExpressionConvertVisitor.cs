@@ -35,6 +35,14 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return predicate;
 		}
 
+		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
+		{
+			if (element.Operation is SqlUnaryOperation.BitwiseNegation)
+				return new SqlFunction(element.Type, "BITNOT", element.Expr);
+
+			return base.ConvertSqlUnaryExpression(element);
+		}
+
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			switch (element.Operation)
@@ -43,7 +51,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 				case "&": return new SqlFunction(element.Type, "BitAnd", element.Expr1, element.Expr2);
 				case "|": return new SqlFunction(element.Type, "BitOr", element.Expr1, element.Expr2);
 				case "^": return new SqlFunction(element.Type, "BitXor", element.Expr1, element.Expr2);
-				case "+": return element.SystemType == typeof(string) ? new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence) : element;
+				case "+" when element.SystemType == typeof(string): return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
 			}
 
 			return base.ConvertSqlBinaryExpression(element);
@@ -189,7 +197,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return element;
 		}
 
-		protected override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
+		protected internal override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
 		{
 			var element = base.VisitInListPredicate(predicate);
 
@@ -206,7 +214,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return element;
 		}
 
-		protected override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		protected internal override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
 		{
 			var element = base.VisitInSubQueryPredicate(predicate);
 
@@ -246,7 +254,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return InformixSqlOptimizer.WrapParameters(base.ConvertIsDistinctPredicateAsIntersect(predicate));
 		}
 
-		protected override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
+		protected internal override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
 		{
 			var newElement = (SqlSetExpression)base.VisitSqlSetExpression(element);
 
@@ -270,7 +278,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return newElement;
 		}
 
-		protected override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
+		protected internal override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
 		{
 			var newElement = base.VisitExprPredicate(predicate);
 
