@@ -12,9 +12,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		SqlProviderFlags               _providerFlags          = default!;
 		SqlQueryColumnNestingCorrector _columnNestingCorrector = default!;
 
-		bool _optimized;
-
-		public bool IsOptimized        => _optimized;
+		public bool IsOptimized { get; private set; }
 
 		public SqlQueryOrderByOptimizer() : base(VisitMode.Modify)
 		{
@@ -23,7 +21,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		public override void Cleanup()
 		{
 			base.Cleanup();
-			_optimized              = false;
+			IsOptimized             = false;
 			_providerFlags          = default!;
 			_columnNestingCorrector = default!;
 		}
@@ -50,7 +48,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (CorrectOrderByForSelectQuery(selectQuery, null, null, [], ref needsNestingUpdate))
 			{
-				_optimized = true;
+				IsOptimized = true;
 				if (needsNestingUpdate)
 				{
 					_columnNestingCorrector.CorrectColumnNesting(selectQuery);
@@ -204,7 +202,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (CanRemoveOrderBy(selectQuery))
 			{
 				selectQuery.OrderBy.Items.Clear();
-				_optimized = true;
+				IsOptimized = true;
 			}
 
 			if (!exceptSetOperators && selectQuery.HasSetOperators)

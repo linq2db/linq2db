@@ -187,10 +187,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				// Collecting pass: track that this column is being used
 				MarkColumnUsed(element);
+				return base.VisitSqlColumnReference(element);
 			}
 			
 			// In Phase 2, don't visit column expressions - usage already collected
-			return _isCollecting ? base.VisitSqlColumnReference(element) : element;
+			return element;
 		}
 
 		protected internal override IQueryElement VisitSqlFieldReference(SqlField element)
@@ -223,10 +224,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						}
 					}
 				}
+
+				return base.VisitSqlFieldReference(element);
 			}
 			
 			// In Phase 2, don't visit field references - usage already collected
-			return _isCollecting ? base.VisitSqlFieldReference(element) : element;
+			return element;
 		}
 
 		protected internal override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
