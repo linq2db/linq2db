@@ -740,6 +740,24 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		protected override Expression VisitUnary(UnaryExpression node)
 		{
+			if (node.Method != null)
+			{
+				var convertedMember = _memberConverter.Convert(node, out var handled);
+				if (handled && !ReferenceEquals(node, convertedMember))
+				{
+					return Visit(convertedMember);
+				}
+
+				var l = ConvertExpressionMethodAttribute(node.Method.ReflectedType!, node.Method, out var alias);
+
+				if (l != null)
+				{
+					var converted = ConvertUnary(node, l);
+					converted = Visit(converted);
+					return AliasCall(converted, alias);
+				}
+			}
+
 			switch (node.NodeType)
 			{
 				case ExpressionType.ArrayLength:
@@ -754,22 +772,6 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				
 					break;
 				}
-
-				case ExpressionType.Convert:
-				case ExpressionType.ConvertChecked:
-				{
-					if (node.Method != null)
-					{
-						var l = ConvertExpressionMethodAttribute(node.Method.DeclaringType!, node.Method, out var alias);
-						if (l != null)
-						{
-							var exposed = l.GetBody(node.Operand);
-							return Visit(exposed);
-						}
-					}
-
-					break;
-				}
 			}
 
 			return base.VisitUnary(node);
@@ -777,6 +779,24 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 
 		protected override Expression VisitBinary(BinaryExpression node)
 		{
+			if (node.Method != null)
+			{
+				var convertedMember = _memberConverter.Convert(node, out var handled);
+				if (handled && !ReferenceEquals(node, convertedMember))
+				{
+					return Visit(convertedMember);
+				}
+
+				var l = ConvertExpressionMethodAttribute(node.Method.ReflectedType!, node.Method, out var alias);
+
+				if (l != null)
+				{
+					var converted = ConvertBinary(node, l);
+					converted = Visit(converted);
+					return AliasCall(converted, alias);
+				}
+			}
+
 			switch (node.NodeType)
 			{
 				//This is to handle VB's weird expression generation when dealing with nullable properties.
@@ -931,6 +951,106 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 						}
 
 						var result = n < 0 ? context.node.Object! : context.node.Arguments[n];
+
+						if (result.Type != wpi.Type)
+						{
+							var noConvert = result.UnwrapConvert();
+							if (noConvert.Type == wpi.Type)
+							{
+								result = noConvert;
+							}
+							else
+							{
+								if (noConvert.Type.IsValueType)
+									result = Expression.Convert(noConvert, wpi.Type);
+							}
+						}
+
+						return result;
+					}
+				}
+
+				return wpi;
+			});
+
+			if (node.Method.ReturnType != newNode.Type)
+			{
+				newNode = newNode.UnwrapConvert();
+				if (node.Method.ReturnType != newNode.Type)
+				{
+					newNode = Expression.Convert(newNode, node.Method.ReturnType);
+				}
+			}
+
+			return newNode;
+		}
+
+		public Expression ConvertUnary(UnaryExpression node, LambdaExpression replacementLambda)
+		{
+			var replacementBody = replacementLambda.Body.Unwrap();
+			var parms           = new Dictionary<ParameterExpression,int>(replacementLambda.Parameters.Count);
+			var pn              = node.Method!.IsStatic ? 0 : -1;
+
+			foreach (var p in replacementLambda.Parameters)
+				parms.Add(p, pn++);
+
+			var newNode = replacementBody.Transform((node, parms, MappingSchema), static (context, wpi) =>
+			{
+				if (wpi.NodeType == ExpressionType.Parameter)
+				{
+					if (context.parms.TryGetValue((ParameterExpression)wpi, out var n))
+					{
+						var result = context.node.Operand;
+
+						if (result.Type != wpi.Type)
+						{
+							var noConvert = result.UnwrapConvert();
+							if (noConvert.Type == wpi.Type)
+							{
+								result = noConvert;
+							}
+							else
+							{
+								if (noConvert.Type.IsValueType)
+									result = Expression.Convert(noConvert, wpi.Type);
+							}
+						}
+
+						return result;
+					}
+				}
+
+				return wpi;
+			});
+
+			if (node.Method.ReturnType != newNode.Type)
+			{
+				newNode = newNode.UnwrapConvert();
+				if (node.Method.ReturnType != newNode.Type)
+				{
+					newNode = Expression.Convert(newNode, node.Method.ReturnType);
+				}
+			}
+
+			return newNode;
+		}
+
+		public Expression ConvertBinary(BinaryExpression node, LambdaExpression replacementLambda)
+		{
+			var replacementBody = replacementLambda.Body.Unwrap();
+			var parms           = new Dictionary<ParameterExpression,int>(replacementLambda.Parameters.Count);
+			var pn              = node.Method!.IsStatic ? 0 : -1;
+
+			foreach (var p in replacementLambda.Parameters)
+				parms.Add(p, pn++);
+
+			var newNode = replacementBody.Transform((node, parms, MappingSchema), static (context, wpi) =>
+			{
+				if (wpi.NodeType == ExpressionType.Parameter)
+				{
+					if (context.parms.TryGetValue((ParameterExpression)wpi, out var n))
+					{
+						var result = n == 0 ? context.node.Left : context.node.Right;
 
 						if (result.Type != wpi.Type)
 						{

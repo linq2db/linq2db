@@ -11,9 +11,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 {
 	public sealed class TranslationRegistration
 	{
-		public delegate Expression? TranslateFunc(ITranslationContext             translationContext, Expression           member,           TranslationFlags translationFlags);
-		public delegate Expression? TranslateMethodFunc(ITranslationContext       translationContext, MethodCallExpression methodCall,       TranslationFlags translationFlags);
-		public delegate Expression? TranslateMemberAccessFunc(ITranslationContext translationContext, MemberExpression     memberExpression, TranslationFlags translationFlags);
+		public delegate Expression? TranslateFunc              (ITranslationContext translationContext, Expression           member,           TranslationFlags translationFlags);
+		public delegate Expression? TranslateMethodFunc        (ITranslationContext translationContext, MethodCallExpression methodCall,       TranslationFlags translationFlags);
+		public delegate Expression? TranslateMemberAccessFunc  (ITranslationContext translationContext, MemberExpression     memberExpression, TranslationFlags translationFlags);
+		public delegate Expression? TranslateUnaryOperatorFunc (ITranslationContext translationContext, UnaryExpression      unaryExpression,  TranslationFlags translationFlags);
+		public delegate Expression? TranslateBinaryOperatorFunc(ITranslationContext translationContext, BinaryExpression     binaryExpression, TranslationFlags translationFlags);
 
 		public record MemberReplacement(LambdaExpression Pattern, LambdaExpression Replacement);
 
@@ -34,7 +36,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				memberInfoWithType.MemberInfo = methodInfo.GetGenericMethodDefinitionCached();
 			}
 
-			_translations.Remove(memberInfoWithType);
 			_translations[memberInfoWithType] = (ctx, member, flags) => translateMethodFunc(ctx, (MethodCallExpression)member, flags);
 		}
 
@@ -46,7 +47,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (memberInfo.MemberType is not (MemberTypes.Field or MemberTypes.Property))
 				throw new ArgumentException("MemberAccessPattern must be a field or property access.");
 
-			_translations.Remove(memberInfoWithType);
 			_translations[memberInfoWithType] = (ctx, member, flags) => translateMemberAccessFunc(ctx, (MemberExpression)member, flags);
 		}
 
@@ -58,8 +58,33 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (memberInfo.MemberType is not (MemberTypes.Constructor))
 				throw new ArgumentException("MemberAccessPattern must be a constructor access.");
 
-			_translations.Remove(memberInfoWithType);
 			_translations[memberInfoWithType] = translateConstructorFunc;
+		}
+
+		public void RegisterUnaryOperatorInternal(LambdaExpression operatorAccessPattern, TranslateUnaryOperatorFunc translateOperatorFunc, bool isGenericTypeMatch)
+		{
+			var memberInfoWithType = MemberHelper.GetMemberInfoWithType(operatorAccessPattern);
+
+			if (memberInfoWithType.MemberInfo is not MethodInfo { MemberType: MemberTypes.Method, IsStatic: true } methodInfo)
+				throw new ArgumentException("Unary operator access pattern must have static method call.");
+
+			if (!isGenericTypeMatch && methodInfo.IsGenericMethod)
+				memberInfoWithType.MemberInfo = methodInfo.GetGenericMethodDefinitionCached();
+
+			_translations[memberInfoWithType] = (ctx, member, flags) => translateOperatorFunc(ctx, (UnaryExpression)member, flags);
+		}
+
+		public void RegisterBinaryOperatorInternal(LambdaExpression operatorAccessPattern, TranslateBinaryOperatorFunc translateOperatorFunc, bool isGenericTypeMatch)
+		{
+			var memberInfoWithType = MemberHelper.GetMemberInfoWithType(operatorAccessPattern);
+
+			if (memberInfoWithType.MemberInfo is not MethodInfo { MemberType: MemberTypes.Method, IsStatic: true } methodInfo)
+				throw new ArgumentException("Binary operator access pattern must have static method call.");
+
+			if (!isGenericTypeMatch && methodInfo.IsGenericMethod)
+				memberInfoWithType.MemberInfo = methodInfo.GetGenericMethodDefinitionCached();
+
+			_translations[memberInfoWithType] = (ctx, member, flags) => translateOperatorFunc(ctx, (BinaryExpression)member, flags);
 		}
 
 		public void RegisterMemberReplacement(LambdaExpression pattern, LambdaExpression replacement)

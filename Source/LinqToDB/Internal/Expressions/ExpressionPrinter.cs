@@ -373,6 +373,8 @@ namespace LinqToDB.Internal.Expressions
 				Visit(binaryExpression.Right);
 
 				_stringBuilder.Append("]");
+
+				PrintOperatorMethod(binaryExpression.Method);
 			}
 			else
 			{
@@ -384,6 +386,8 @@ namespace LinqToDB.Internal.Expressions
 				{
 					_stringBuilder.Append(operand);
 				}
+
+				PrintOperatorMethod(binaryExpression.Method);
 
 				Visit(binaryExpression.Right);
 			}
@@ -922,6 +926,8 @@ namespace LinqToDB.Internal.Expressions
 		/// <inheritdoc />
 		protected override Expression VisitUnary(UnaryExpression unaryExpression)
 		{
+			PrintOperatorMethod(unaryExpression.Method);
+
 			// ReSharper disable once SwitchStatementMissingSomeCases
 			switch (unaryExpression.NodeType)
 			{
@@ -1150,5 +1156,22 @@ namespace LinqToDB.Internal.Expressions
 
 		private void UnhandledExpressionType(Expression expression)
 			=> AppendLine(expression.ToString());
+
+		private void PrintOperatorMethod(MethodInfo? method)
+		{
+			if (method != null)
+			{
+				_stringBuilder.Append(" /* ");
+
+				if (method.DeclaringType != null)
+				{
+					_stringBuilder.Append(method.DeclaringType.Name);
+					_stringBuilder.Append(".");
+				}
+
+				_stringBuilder.Append(method.Name);
+				_stringBuilder.Append("(...) */ ");
+			}
+		}
 	}
 }

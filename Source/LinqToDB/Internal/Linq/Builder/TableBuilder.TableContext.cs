@@ -215,12 +215,6 @@ namespace LinqToDB.Internal.Linq.Builder
 						return expr;
 					}
 
-					// Eager load case
-					if (path.Type.IsEnumerableType(ElementType))
-					{
-						return path;
-					}
-
 					if (MappingSchema.IsScalarType(ElementType))
 					{
 						var tablePlaceholder =
@@ -238,6 +232,12 @@ namespace LinqToDB.Internal.Linq.Builder
 							fullEntity = Expression.Convert(fullEntity, path.Type);
 
 						return fullEntity;
+					}
+
+					// Eager load case
+					if (path.Type.IsEnumerableType(ElementType))
+					{
+						return path;
 					}
 
 					return path;

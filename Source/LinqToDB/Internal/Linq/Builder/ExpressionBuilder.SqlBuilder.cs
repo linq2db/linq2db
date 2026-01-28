@@ -247,7 +247,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (expression.NodeType is ExpressionType.Call
 									or ExpressionType.MemberAccess
 									or ExpressionType.New
-				|| expression is BinaryExpression)
+				|| expression is BinaryExpression or UnaryExpression)
 			{
 				var result = ConvertExpression(expression);
 
