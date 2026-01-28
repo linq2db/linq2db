@@ -2749,23 +2749,23 @@ namespace Tests.Linq
 
 		}
 
-		[Test(Description = "ArgumentOutOfRangeException : Index was out of range. Must be non-negative and less than the size of the collection. (Parameter 'index')")]
+		[Test]
 		public void GroupByOverCteField([CteContextSource] string context)
 		{
 			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
 
 			var cte = (from gc1 in db.GrandChild
-					  select new RecursiveCTE
+					  select new
 					  {
 						  ChildID      = gc1.ChildID,
-						  ParentID     = gc1.GrandChildID,
+						  ParentID     = gc1.ParentID,
 						  GrandChildID = gc1.GrandChildID,
 					  }).AsCte();
 
 			_ = cte.GroupBy(r => r.ParentID ?? -1).ToDictionary(r => r.Key);
 		}
 
-		[Test(Description = "ArgumentOutOfRangeException : Index was out of range. Must be non-negative and less than the size of the collection. (Parameter 'index')")]
+		[Test]
 		public void GroupByOverRecursiveCteField([RecursiveCteContextSource] string context)
 		{
 			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
@@ -2813,7 +2813,7 @@ namespace Tests.Linq
 			[PrimaryKey] public int Id { get; set; }
 		}
 
-		[Test(Description = "LinqToDBException : The LINQ expression 'cteParam' could not be converted to SQL.")]
+		[Test]
 		public void GroupByOverRecursiveCteField2([RecursiveCteContextSource] string context)
 		{
 			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));

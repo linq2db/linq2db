@@ -25,7 +25,7 @@ namespace LinqToDB.Internal.SqlQuery
 			Number = System.Threading.Interlocked.Increment(ref _columnCounter);
 
 			// useful for putting breakpoint when finding when SqlColumn was created
-			if (Number is 0)
+			if (Number is 19)
 			{
 
 			}

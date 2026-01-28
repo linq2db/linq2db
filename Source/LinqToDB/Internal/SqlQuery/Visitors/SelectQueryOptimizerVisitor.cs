@@ -100,8 +100,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (removeWeakJoins)
 				{
 					// It means that we fully optimize query
-					_columnUsageCollector.CollectUsedColumns(_rootElement);
-					_removeUnusedColumnsVisitor.RemoveUnusedColumns(_columnUsageCollector.UsedColumns, _root);
+					//_columnUsageCollector.CollectUsedColumns(_rootElement);
+					//_removeUnusedColumnsVisitor.RemoveUnusedColumns(_columnUsageCollector.UsedColumns, _root);
 
 					// do it always, ignore dataOptions.LinqOptions.OptimizeJoins
 					JoinsOptimizer.UnnestJoins(_root);

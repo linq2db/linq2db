@@ -147,6 +147,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				return knownPlaceholder;
 			}
 
+			if (SubQueryContext != null)
+				placeholder = Builder.UpdateNesting(SubQueryContext, placeholder);
+
 			if (placeholder.Sql is not SqlColumn column)
 				throw new InvalidOperationException("Invalid SQL.");
 
@@ -154,7 +157,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var index = CteInnerQueryContext == null ? -1 : CteInnerQueryContext.SelectQuery.Select.Columns.IndexOf(column);
 
-			if (index >= 0 && CteClause.Fields.Count != index)
+			if (index >= 0 && index < CteClause.Fields.Count && CteClause.Fields.Count != index)
 			{
 				field = CteClause.Fields[index];
 
@@ -237,9 +240,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override Expression HandleTranslated(Expression? path, SqlPlaceholderExpression placeholder)
 			{
-				var withNesting = OwnerContext.SubQueryContext == null
-					? placeholder
-					: Builder.UpdateNesting(OwnerContext.SubQueryContext!, placeholder);
+				var withNesting = placeholder;
 
 				if (path != null)
 					withNesting = withNesting.WithPath(path).WithTrackingPath(path);
