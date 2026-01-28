@@ -1,21 +1,29 @@
-# linq2db.EntityFrameworkCore
+# linq2db.EntityFrameworkCore<!-- omit in toc -->
 
-`linq2db.EntityFrameworkCore` is an integration of `LINQ To DB` with existing EntityFrameworkCore projects. It was inspired by [this issue](https://github.com/aspnet/EntityFrameworkCore/issues/11657) in EF.Core repository.
+`linq2db.EntityFrameworkCore` is an integration of `LINQ To DB` with existing EntityFrameworkCore projects. It was
+inspired by [this issue](https://github.com/aspnet/EntityFrameworkCore/issues/11657) in EF.Core repository.
+
+* [Unique features](#unique-features)
+* [How to use](#how-to-use)
+* [Why should I want to use it?](#why-should-i-want-to-use-it)
+* [Current status](#current-status)
+* [Known limitations](#known-limitations)
+* [Help! It doesn't work](#help-it-doesnt-work)
 
 ## Unique features
 
-* Fast Eager Loading (incomparable faster on massive `Include` query)
-* Global Query Filters optimization
+* Fast eager loading (incomparable faster on massive `Include` query)
+* Global query filters optimization
 * Better SQL optimization
-* [Use CTE in LINQ queries](https://linq2db.github.io/articles/sql/CTE.html)
-* [MERGE statement support](https://linq2db.github.io/articles/sql/merge/Merge-API-Description.html)
+* [CTE support](https://linq2db.github.io/articles/sql/CTE.html)
+* [MERGE support](https://linq2db.github.io/articles/sql/merge/Merge-API-Description.html)
 * Table hints
-* [Full Window functions support](https://linq2db.github.io/articles/sql/Window-Functions-(Analytic-Functions).html)
+* [Analytic/Window functions support](https://linq2db.github.io/articles/sql/Window-Functions-(Analytic-Functions).html)
 * Fast [BulkCopy](https://linq2db.github.io/articles/sql/Bulk-Copy.html) of millions records
 * Native SQL operations for updating, deleting, inserting records via LINQ query
-* Temporary Tables support
-* Cross Database/Linked Server queries.
-* Full Text Search extensions
+* Temporary tables support
+* Cross database/linked server queries.
+* Full-Text search extensions
 * A lot of extensions to cover ANSI SQL
 
 ## How to use
@@ -28,7 +36,8 @@ LinqToDBForEFTools.Initialize();
 
 After that you can just call DbContext and IQueryable extension methods, provided by `LINQ To DB`.
 
-You can also register additional options (like interceptors) for LinqToDB during EF context registration, here is an example:
+You can also register additional options like interceptors for LinqToDB during EF context registration, here is an
+example:
 
 ```cs
 var optionsBuilder = new DbContextOptionsBuilder<MyDbContext>();
@@ -44,10 +53,11 @@ optionsBuilder.UseLinqToDB(builder =>
 });
 ```
 
-There are many extensions for CRUD Operations missing in vanilla EF ([watch our video](https://www.youtube.com/watch?v=m--oX73EGeQ)):
+There are many extensions for CRUD Operations missing in vanilla EF ([watch our
+video](https://www.youtube.com/watch?v=m--oX73EGeQ)):
 
 ```cs
-// fast insert big recordsets
+// fast insert of big recordsets
 ctx.BulkCopy(new BulkCopyOptions {...}, items);
 
 // query for retrieving products that do not have duplicates by Name
@@ -67,9 +77,11 @@ query.Update(prev => new Product { Name = "U_" + prev.Name ... });
 query.Delete();
 ```
 
-Some extensions require LINQ To DB `ITable<T>` interface, which could be acquired from  `DbSet<T>` using `ToLinqToDBTable()` extension method. 
+Some extensions require LINQ To DB `ITable<T>` interface, which could be acquired from  `DbSet<T>` using
+`ToLinqToDBTable()` extension method.
 
-For `ITable<T>` interface LINQ To DB provides several extensions that may be useful for complex databases and custom queries:
+For `ITable<T>` interface LINQ To DB provides several extensions that may be useful for complex databases and custom
+queries:
 
 ```cs
 table = table.TableName("NewTableName");     // change table name in query
@@ -80,7 +92,8 @@ table = table.OwnerName("OtherOwner");       // change owner.
 query.Insert(ctx.Products.ToLinqToDBTable().TableName("Products2"), s => new Product { Name = s.Name ... });
 ```
 
-It is not required to work directly with `LINQ To DB` `DataConnection` class but there are several ways to do that. `LINQ To DB` will try to reuse your configuration and select appropriate data provider:
+It is not required to work directly with `LINQ To DB`'s `DataConnection` class but there are several ways to do that.
+`LINQ To DB` will try to reuse your configuration and select appropriate data provider:
 
 ```cs
 // uing DbContext
@@ -96,10 +109,13 @@ using (var dc = options.CreateLinqToDBConnection())
 }
 ```
 
-You can use all `LINQ To DB` extension functions in your EF linq queries. Just ensure you have called `ToLinqToDB()` function before materializing objects for synchronous methods.
+You can use all `LINQ To DB` extension functions in your EF linq queries. Just ensure you have called `ToLinqToDB()`
+function before materializing objects for synchronous methods.
 
-Since EF Core have defined it's own asynchronous methods, we have to duplicate them to resolve naming collisions. 
-Async methods have the same name but with `LinqToDB` suffix. E.g. `ToListAsyncLinqToDB()`, `SumAsyncLinqToDB()`, ect. The same methods are added whe you need `EF Core` query processing but there is collision with `LINQ To DB` and they have extensions with `EF` suffix - `ToListAsyncEF()`, `SumAsyncEF()`, ect.
+Since EF Core have defined it's own asynchronous methods, we have to duplicate them to resolve naming collisions. Async
+methods have the same name but with `LinqToDB` suffix. E.g. `ToListAsyncLinqToDB()`, `SumAsyncLinqToDB()`, ect. The same
+methods are added whe you need `EF Core` query processing but there is collision with `LINQ To DB` and they have
+extensions with `EF` suffix - `ToListAsyncEF()`, `SumAsyncEF()`, ect.
 
 ```cs
 using (var ctx = CreateAdventureWorksContext())
@@ -132,7 +148,7 @@ using (var ctx = CreateAdventureWorksContext())
     var items2 = await neededRecords.ToLinqToDB().ToArrayAsync(); 
     
     // and simple bonus - how to generate SQL
-    var sql = neededRecords.ToLinqToDB().ToString();
+    var command = neededRecords.ToLinqToDB().ToSqlQuery();
 }
 ```
 
@@ -142,9 +158,11 @@ Also check [existing tests](https://github.com/linq2db/linq2db/blob/master/Tests
 
 There are many reasons. Some of them:
 
-* you want to use advanced SQL functionality, not supported or poorly supported by EntityFrameworkCore like BulkCopy support, SQL MERGE operations, convinient DML (Insert/Delete/Update) operations and many-many-many other features LINQ To DB provides, but you need change tracking functionality that EntityFramework provides.
-* you want to migrate to LINQ To DB, but need to do it step-by-step.
-* just because LINQ To DB is cool.
+* You want to use advanced SQL functionality, not supported or poorly supported by EntityFrameworkCore like BulkCopy
+  support, SQL MERGE operations, convinient DML (Insert/Delete/Update) operations and many-many-many other features LINQ
+  To DB provides, but you need change tracking functionality that EntityFramework provides.
+* You want to migrate to LINQ To DB, but need to do it step-by-step.
+* Just because LINQ To DB is cool.
 
 ## Current status
 
