@@ -29,6 +29,10 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		{
 			switch (element)
 			{
+				case SqlBinaryExpression(var type, var ex1, "|", var ex2) when element.Precedence == Precedence.Bitwise:
+					// | has lower priority than & in MySQL...
+					return new SqlBinaryExpression(type, ex1, "|", ex2, Precedence.Bitwise - 1);
+
 				case SqlBinaryExpression(var type, var ex1, "+", var ex2) when type.SystemType == typeof(string) :
 				{
 					return ConvertFunc(new (type, "Concat", ex1, ex2));

@@ -11,6 +11,7 @@ using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
@@ -185,6 +186,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			var paramType        = elementType ?? paramExpression.UnwrapConvertToNotObject().Type;
 
 			var paramDataType = columnDescriptor?.GetDbDataType(true) ?? mappingSchema.GetDbDataType(paramType);
+			if (paramDataType.EqualsDbOnly(SqlDataType.MakeUndefined(paramType).Type))
+				paramDataType = mappingSchema.GetUnderlyingDataType(paramType, out _).Type;
 
 			var        objParam                   = ItemParameter;
 			Expression defaultProviderValueGetter = Expression.Convert(objParam, valueType);
@@ -257,7 +260,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 
 					if (updateType && paramDataType.SystemType.UnwrapNullableType() != paramType.UnwrapNullableType() && paramType != typeof(object))
-						paramDataType = mappingSchema.GetDbDataType(paramType);
+					{
+						var newType = mappingSchema.GetDbDataType(paramType);
+						if (!newType.EqualsDbOnly(SqlDataType.MakeUndefined(paramType).Type))
+							paramDataType = newType;
+					}
 
 					providerValueGetter = columnDescriptor.ApplyConversions(providerValueGetter, paramDataType, true);
 				}
