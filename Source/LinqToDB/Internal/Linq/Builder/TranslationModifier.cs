@@ -69,7 +69,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				? ignoreQueryFilters
 				: ignoreQueryFilters == null
 					? null
-					: IgnoreQueryFilters.Union(ignoreQueryFilters).ToArray();
+					: IgnoreQueryFilters.Length == 0 || ignoreQueryFilters.Length == 0
+						? Array.Empty<Type>()
+						: IgnoreQueryFilters.Union(ignoreQueryFilters).ToArray();
 
 			return new TranslationModifier(InlineParameters, newFilters);
 		}
