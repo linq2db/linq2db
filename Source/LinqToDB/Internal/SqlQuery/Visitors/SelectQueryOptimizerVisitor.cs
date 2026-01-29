@@ -593,6 +593,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						isModified = true;
 					}
 				}
+
+				selectQuery.GroupBy.Items.RemoveDuplicates(item => item);
 			}
 
 			if (!selectQuery.GroupBy.IsEmpty)
