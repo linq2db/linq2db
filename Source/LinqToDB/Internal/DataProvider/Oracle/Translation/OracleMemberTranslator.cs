@@ -128,11 +128,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 				string expStr;
 				switch (datepart)
 				{
-					case Sql.DateParts.Year:    expStr = "INTERVAL '1' YEAR"; break;
-					case Sql.DateParts.Quarter: expStr = "INTERVAL '3' MONTH"; break;
-					case Sql.DateParts.Month:   expStr = "INTERVAL '1' MONTH"; break;
-					case Sql.DateParts.DayOfYear:
-					case Sql.DateParts.WeekDay:
+					case Sql.DateParts.Year:        expStr = "INTERVAL '1' YEAR"; break;
+					case Sql.DateParts.Quarter:     expStr = "INTERVAL '3' MONTH"; break;
+					case Sql.DateParts.Month:       expStr = "INTERVAL '1' MONTH"; break;
 					case Sql.DateParts.Day:         expStr = "INTERVAL '1' DAY"; break;
 					case Sql.DateParts.Week:        expStr = "INTERVAL '7' DAY"; break;
 					case Sql.DateParts.Hour:        expStr = "INTERVAL '1' HOUR"; break;
@@ -353,6 +351,14 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 							if (IsWithinGroupRequired && withinGroup == null)
 							{
 								withinGroup = [new SqlWindowOrderItem(info.Value, false, Sql.NullsPosition.None)];
+							}
+
+							// LISTAGG doesn't work with NVARCHAR values
+							if (valueType.DataType is DataType.NVarChar or DataType.NChar)
+							{
+								// return type also will be VARCHAR
+								valueType = valueType.WithDataType(valueType.DataType is DataType.NVarChar ? DataType.VarChar : DataType.Char);
+								value     = factory.Cast(value, valueType);
 							}
 
 							var fn = factory.Function(valueType, "LISTAGG",

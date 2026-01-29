@@ -3122,6 +3122,10 @@ namespace LinqToDB.Internal.SqlProvider
 					BuildBinaryExpression((SqlBinaryExpression)expr);
 					break;
 
+				case QueryElementType.SqlUnaryExpression:
+					BuildUnaryExpression((SqlUnaryExpression)expr);
+					break;
+
 				case QueryElementType.SqlFunction:
 					BuildFunction((SqlFunction)expr);
 					break;
@@ -3739,6 +3743,28 @@ namespace LinqToDB.Internal.SqlProvider
 			BuildExpression(GetPrecedence(expr), expr.Expr1);
 			StringBuilder.Append(' ').Append(op).Append(' ');
 			BuildExpression(GetPrecedence(expr), expr.Expr2);
+		}
+
+		#endregion
+
+		#region BuildUnaryExpression
+
+		protected virtual void BuildUnaryExpression(SqlUnaryExpression expr)
+		{
+			BuildUnaryExpression(expr.Operation, expr);
+		}
+
+		void BuildUnaryExpression(SqlUnaryOperation op, SqlUnaryExpression expr)
+		{
+			var opText = op switch
+			{
+				SqlUnaryOperation.Negation        => '-',
+				SqlUnaryOperation.BitwiseNegation => '~',
+				_                                 => throw new LinqToDBException($"Unsupported unary operation {op}")
+			};
+
+			StringBuilder.Append(opText);
+			BuildExpression(GetPrecedence(expr), expr.Expr);
 		}
 
 		#endregion

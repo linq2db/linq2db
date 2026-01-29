@@ -255,8 +255,6 @@ namespace LinqToDB.Internal.DataProvider.Informix.Translation
 						break;
 					}
 					case Sql.DateParts.Month: fragmentStr = "Month to Month"; break;
-					case Sql.DateParts.DayOfYear:
-					case Sql.DateParts.WeekDay:
 					case Sql.DateParts.Day: fragmentStr = "Day to Day"; break;
 					case Sql.DateParts.Week:
 					{

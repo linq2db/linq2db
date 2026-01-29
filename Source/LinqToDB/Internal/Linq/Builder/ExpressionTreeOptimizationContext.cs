@@ -277,6 +277,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				_mappingSchema = default!;
 				IsImmutable    = true;
+
+				base.Cleanup();
 			}
 
 			[return : NotNullIfNotNull(nameof(node))]

@@ -89,7 +89,6 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			SetConvertExpression((byte[] v) => new IPAddress(v));
 			SetConvertExpression((IPAddress v) => v.GetAddressBytes());
 
-			// https://github.com/DarkWanderer/ClickHouse.Client/issues/138
 			// https://github.com/ClickHouse/ClickHouse/issues/38790
 			// byte[] <=> string
 			// Binary <=> string

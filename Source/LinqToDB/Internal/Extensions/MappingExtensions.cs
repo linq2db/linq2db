@@ -41,24 +41,13 @@ namespace LinqToDB.Internal.Extensions
 
 			var underlyingType = systemType.UnwrapNullableType();
 
-			if (!mappingSchema.ValueToSqlConverter.CanConvert(underlyingType))
+			if ((originalValue != null || systemType == underlyingType)
+				&& !mappingSchema.ValueToSqlConverter.CanConvert(underlyingType)
+				&& underlyingType.IsEnum && !mappingSchema.HasAttribute<Sql.EnumAttribute>(underlyingType))
 			{
-				if (underlyingType.IsEnum && !mappingSchema.HasAttribute<Sql.EnumAttribute>(underlyingType))
-				{
-					if (originalValue != null || systemType == underlyingType)
-					{
-						var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, systemType)!;
+				var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, systemType)!;
 
-						return new SqlValue(
-							type,
-							LinqToDB.Common.Configuration.UseEnumValueNameForStringColumns
-								&& type == typeof(string)
-								&& mappingSchema.GetMapValues(underlyingType) == null
-								? string.Format(CultureInfo.InvariantCulture, "{0}", originalValue)
-								: Converter.ChangeType(originalValue, type, mappingSchema)
-						);
-					}
-				}
+				return new SqlValue(type, Converter.ChangeType(originalValue, type, mappingSchema));
 			}
 
 			if (systemType == typeof(object) && originalValue != null)
@@ -83,21 +72,12 @@ namespace LinqToDB.Internal.Extensions
 			var systemType     = value.GetType();
 			var underlyingType = systemType.UnwrapNullableType();
 
-			if (!mappingSchema.ValueToSqlConverter.CanConvert(underlyingType))
+			if (systemType == underlyingType
+				&& !mappingSchema.ValueToSqlConverter.CanConvert(underlyingType)
+				&& underlyingType.IsEnum && !mappingSchema.HasAttribute<Sql.EnumAttribute>(underlyingType))
 			{
-				if (underlyingType.IsEnum && !mappingSchema.HasAttribute<Sql.EnumAttribute>(underlyingType))
-				{
-					if (systemType == underlyingType)
-					{
-						var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, systemType)!;
-
-						value = LinqToDB.Common.Configuration.UseEnumValueNameForStringColumns
-							&& type                                       == typeof(string)
-							&& mappingSchema.GetMapValues(underlyingType) == null
-							? string.Format(CultureInfo.InvariantCulture, "{0}", value)
-							: Converter.ChangeType(value, type, mappingSchema);
-					}
-				}
+				var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, systemType)!;
+				value    = Converter.ChangeType(value, type, mappingSchema);
 			}
 
 			return sqlConverter.TryConvert(stringBuilder, mappingSchema, dataType, options, value);

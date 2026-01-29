@@ -20,6 +20,14 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		#endregion
 
+		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
+		{
+			if (element.Operation is SqlUnaryOperation.BitwiseNegation)
+				return new SqlFunction(element.Type, "BITNOT", element.Expr);
+
+			return base.ConvertSqlUnaryExpression(element);
+		}
+
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			switch (element.Operation)
@@ -38,10 +46,8 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 						Add(element.Expr1, element.Expr2, element.SystemType),
 						Mul(new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2), 2),
 						element.SystemType);
-				case "+":
-					return element.SystemType == typeof(string) ?
-						new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence) :
-						element;
+				case "+" when element.SystemType == typeof(string):
+					return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
 			}
 
 			return base.ConvertSqlBinaryExpression(element);

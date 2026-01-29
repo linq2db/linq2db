@@ -632,24 +632,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			return false;
 		}
 
-#if DEBUG
-		[DebuggerStepThrough]
-		[return: NotNullIfNotNull(nameof(node))]
-		public override Expression? Visit(Expression? node)
-		{
-			var newNode = base.Visit(node);
-
-			/*
-			if (newNode != null && node != null && !IsSame(newNode, node!))
-			{
-				Debug.WriteLine($"--> Node  {_buildPurpose}, {_buildFlags}, {node.NodeType}, \t {node} \t\t -> {newNode}");
-			}
-			*/
-
-			return newNode;
-		}
-#endif
-
 		[Conditional("DEBUG")]
 		public void LogVisit(Expression node, [CallerMemberName] string callerName = "")
 		{
@@ -1159,17 +1141,20 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			// Handling ExpressionAttribute
 			//
-			if (expr.NodeType is ExpressionType.Call or ExpressionType.MemberAccess)
+			if (expr
+				is MethodCallExpression
+				or MemberExpression
+				or UnaryExpression
+				or BinaryExpression)
 			{
-				MemberInfo memberInfo;
-				if (expr.NodeType == ExpressionType.Call)
+				var memberInfo = expr switch
 				{
-					memberInfo = ((MethodCallExpression)expr).Method;
-				}
-				else
-				{
-					memberInfo = ((MemberExpression)expr).Member;
-				}
+					MethodCallExpression { Method: { } method } => method,
+					MemberExpression     { Member: { } member } => member,
+					UnaryExpression      { Method: { } method } => method,
+					BinaryExpression     { Method: { } method } => method,
+					_ => throw new InvalidOperationException("Should be impossible"),
+				};
 
 				var isServerSideOnly = memberInfo.IsServerSideOnly(MappingSchema);
 				var attribute        = memberInfo.GetExpressionAttribute(MappingSchema);
@@ -2154,6 +2139,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitUnary(UnaryExpression node)
 		{
+			if (node.Method != null && IsSqlOrExpression() && BuildContext != null)
+			{
+				if (TranslateMember(BuildContext, node, out var translatedMember))
+					return Visit(translatedMember);
+
+				if (HandleExtension(BuildContext, node, out translatedMember))
+					return Visit(translatedMember);
+			}
+
 			if (_buildPurpose is BuildPurpose.Table)
 			{
 				if (node.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
@@ -2172,28 +2166,33 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				case ExpressionType.Not:
 				{
-					if (_buildPurpose is BuildPurpose.Sql)
+					if (node.Type.UnwrapNullableType() == typeof(bool))
 					{
-						var predicateExpr = Visit(node.Operand);
-
-						if (predicateExpr is SqlPlaceholderExpression placeholder)
+						if (_buildPurpose is BuildPurpose.Sql)
 						{
-							var predicate = placeholder.Sql as ISqlPredicate;
-							if (predicate is null)
+							var predicateExpr = Visit(node.Operand);
+
+							if (predicateExpr is SqlPlaceholderExpression placeholder)
 							{
-								var withNull = !node.Operand.Type.IsNullableType;
+								var predicate = placeholder.Sql as ISqlPredicate;
+								if (predicate is null)
+								{
+									var withNull = !node.Operand.Type.IsNullableType;
 
-								predicate = ConvertExpressionToPredicate(
-									placeholder.Sql,
-									withNull: withNull,
-									forceEquality: withNull && placeholder.Sql.CanBeNullableOrUnknown(GetNullabilityContext(), false));
+									predicate = ConvertExpressionToPredicate(
+										placeholder.Sql,
+										withNull: withNull,
+										forceEquality: withNull && placeholder.Sql.CanBeNullableOrUnknown(GetNullabilityContext(), false));
+								}
+
+								var condition = new SqlSearchCondition();
+								condition.Add(predicate.MakeNot());
+								return CreatePlaceholder(condition, node);
 							}
-
-							var condition = new SqlSearchCondition();
-							condition.Add(predicate.MakeNot());
-							return CreatePlaceholder(condition, node);
 						}
 					}
+					else
+						goto case ExpressionType.UnaryPlus;
 
 					break;
 				}
@@ -2212,10 +2211,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						switch (node.NodeType)
 						{
-							case ExpressionType.UnaryPlus: return CreatePlaceholder(placeholder.Sql, node);
+							case ExpressionType.UnaryPlus:
+								return CreatePlaceholder(placeholder.Sql, node);
+
+							case ExpressionType.Not:
+								return CreatePlaceholder(new SqlUnaryExpression(MappingSchema.GetDbDataType(t), placeholder.Sql, SqlUnaryOperation.BitwiseNegation, Precedence.Bitwise), node);
+
 							case ExpressionType.Negate:
 							case ExpressionType.NegateChecked:
-								return CreatePlaceholder(new SqlBinaryExpression(t, new SqlValue(-1), "*", placeholder.Sql, Precedence.Multiplicative), node);
+								return CreatePlaceholder(new SqlUnaryExpression(MappingSchema.GetDbDataType(t), placeholder.Sql, SqlUnaryOperation.Negation, Precedence.Unary), node);
 						}
 					}
 
@@ -2258,7 +2262,8 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							var placeholder = placeholders[0];
 
-							if (_buildPurpose is BuildPurpose.Expression && node.Type == typeof(object))
+							if (_buildPurpose is BuildPurpose.Expression
+								&& (node.Type == typeof(object) || node.Method != null))
 								return base.VisitUnary(node);
 
 							if (node.Method == null && (node.IsLifted || node.Type == typeof(object)))
@@ -2289,7 +2294,25 @@ namespace LinqToDB.Internal.Linq.Builder
 								return Visit(placeholder.WithType(node.Type));
 							}
 
-							return Visit(CreatePlaceholder(PseudoFunctions.MakeCast(placeholder.Sql, MappingSchema.GetDbDataType(node.Type), s), node));
+							if (placeholder.Sql.SystemType == node.Type)
+								return Visit(placeholder);
+
+							var castTo = MappingSchema.GetDbDataType(node.Type);
+
+							ISqlExpression sql;
+							if (castTo.EqualsDbOnly(SqlDataType.MakeUndefined(node.Type).Type))
+							{
+								if (node.Method != null)
+									return base.VisitUnary(node);
+
+								sql = placeholder.Sql;
+							}
+							else
+							{
+								sql = PseudoFunctions.MakeCast(placeholder.Sql, castTo, s);
+							}
+
+							return Visit(CreatePlaceholder(sql, node));
 						}
 					}
 
@@ -2376,7 +2399,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public bool HandleAsParameter(Expression node, [NotNullWhen(true)] out Expression? translated)
 		{
-			if (_buildPurpose is BuildPurpose.Sql)
+			if (_buildPurpose is BuildPurpose.Sql && Builder.CanBeEvaluatedOnClient(node))
 			{
 				var sqlParam = Builder.ParametersContext.BuildParameter(BuildContext, node, CurrentDescriptor, alias: Alias);
 
@@ -2776,10 +2799,20 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitBinary(BinaryExpression node)
 		{
+			if (node.Method != null && IsSqlOrExpression() && BuildContext != null)
+			{
+				if (TranslateMember(BuildContext, node, out var translatedMember))
+					return Visit(translatedMember);
+
+				if (HandleExtension(BuildContext, node, out translatedMember))
+					return Visit(translatedMember);
+			}
+
 			if (BuildContext == null || _buildPurpose is not (BuildPurpose.Sql or BuildPurpose.Expression or BuildPurpose.Expand))
 				return base.VisitBinary(node);
 
 			var shouldSkipSqlConversion = false;
+
 			if (_buildPurpose is BuildPurpose.Expression)
 			{
 				if (node.NodeType == ExpressionType.Equal || node.NodeType == ExpressionType.NotEqual)
@@ -4642,32 +4675,18 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!type.UnwrapNullableType().IsEnum)
 				return null;
 
-			var dic = new Dictionary<object, object?>();
-
-			var mapValues = MappingSchema.GetMapValues(type);
-
-			if (mapValues != null)
-				foreach (var mv in mapValues)
-					if (!dic.ContainsKey(mv.OrigValue))
-						dic.Add(mv.OrigValue, mv.MapValues[0].Value);
-
 			switch (value.NodeType)
 			{
 				case ExpressionType.Constant:
 				{
-					var name = Enum.GetName(type, ((ConstantExpression)value).Value!);
+					var origValue = ((ConstantExpression)value).Value!;
+					var mapValue  = origValue;
 
-					// ReSharper disable ConditionIsAlwaysTrueOrFalse
-					// ReSharper disable HeuristicUnreachableCode
-					if (name == null)
-						return null;
-					// ReSharper restore HeuristicUnreachableCode
-					// ReSharper restore ConditionIsAlwaysTrueOrFalse
-
-					var origValue = Enum.Parse(type, name, false);
-
-					if (!dic.TryGetValue(origValue, out var mapValue))
-						mapValue = origValue;
+					foreach (var enumVal in MappingSchema.GetMapValues(type.UnwrapNullableType())!)
+					{
+						if (origValue.Equals(enumVal.OrigValue) && enumVal.MapValues.Length > 0)
+							mapValue = enumVal.MapValues[0].Value;
+					}
 
 					SqlValue sqlvalue;
 					var ce = MappingSchema.GetConverter(new DbDataType(type), new DbDataType(typeof(DataParameter)), false, ConversionType.Common);
@@ -5430,10 +5449,16 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			translated = null;
 
-			if (memberExpression is MethodCallExpression || memberExpression is MemberExpression || memberExpression is NewExpression)
+			if (memberExpression
+				is MethodCallExpression
+				or MemberExpression
+				or NewExpression
+				or UnaryExpression
+				or BinaryExpression)
 			{
 				// Skip translation if there is a placeholder in the expression. It means that we already tried to translate, but it is failed.
-				if (null != memberExpression.Find(e => e is SqlPlaceholderExpression))
+				// don't skip for binary expressions as we could create them during translation
+				if (memberExpression is not BinaryExpression { Method: not null } && null != memberExpression.Find(e => e is SqlPlaceholderExpression))
 				{
 					translated = null;
 					return false;

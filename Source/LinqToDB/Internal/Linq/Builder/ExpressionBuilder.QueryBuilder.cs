@@ -156,8 +156,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override void Cleanup()
 			{
-				base.Cleanup();
-
 				_visited   = default!;
 				_generator = default!;
 				_context   = default!;
@@ -165,6 +163,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				_duplicates             = default;
 				_constructed            = default;
 				_constructedAssignments = default;
+
+				base.Cleanup();
 			}
 		}
 
@@ -522,12 +522,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var simplified = expression.Transform(e =>
 			{
-				if (e.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked && e.Type != typeof(object) && e.Type != typeof(Enum))
-				{
-					if (((UnaryExpression)e).Operand is SqlPlaceholderExpression convertPlaceholder)
+				if (e is UnaryExpression
 					{
-						return convertPlaceholder.WithType(e.Type);
-					}
+						NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked,
+						Method: null,
+						Operand: SqlPlaceholderExpression convertPlaceholder
+					} ue
+					&& ue.Type != typeof(object) && ue.Type != typeof(Enum))
+				{
+					return convertPlaceholder.WithType(e.Type);
 				}
 
 				return e;
@@ -543,9 +546,9 @@ namespace LinqToDB.Internal.Linq.Builder
 						throw new InvalidOperationException();
 
 					var columnDescriptor = QueryHelper.GetColumnDescriptor(placeholder.Sql);
+					var sqlType          = QueryHelper.GetDbDataType(placeholder.Sql, MappingSchema);
 
-					var valueType = columnDescriptor?.GetDbDataType(true).SystemType
-					                ?? placeholder.Type;
+					var valueType = sqlType.SystemType;
 
 					var canBeNull = nullability.CanBeNull(placeholder.Sql) || placeholder.Type.IsNullableType;
 

@@ -1220,7 +1220,6 @@ namespace Tests.Linq
 					ms.SetConverter<Guid?, TenderId?>(From);
 
 					ms.SetConverter<TenderId, LinqToDB.Data.DataParameter>(id => new LinqToDB.Data.DataParameter { DataType = DataType.Guid, Value = id.Value });
-					ms.SetConverter<TenderId?, LinqToDB.Data.DataParameter>(id => new LinqToDB.Data.DataParameter { DataType = DataType.Guid, Value = id?.Value });
 					// sqlite.ms returns byte[]
 					ms.SetConverter<byte[], TenderId>(raw => From(new Guid(raw)));
 
@@ -1275,7 +1274,6 @@ namespace Tests.Linq
 				ms.SetConverter<Guid?, TenderId?>(From);
 
 				ms.SetConverter<TenderId, DataParameter>(id => new DataParameter { DataType = DataType.Guid, Value = id.Value });
-				ms.SetConverter<TenderId?, DataParameter>(id => new DataParameter { DataType = DataType.Guid, Value = id?.Value });
 
 				return ms;
 			}
@@ -1872,6 +1870,30 @@ namespace Tests.Linq
 				Assert.That(result.Customer.Name, Is.EqualTo("name1"));
 				Assert.That(result.CustomerOther.Name, Is.EqualTo("name2"));
 			}
+		}
+
+		[Table]
+		sealed class ListTable : List<ListTable>
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			public static ListTable[] Data =
+			[
+				new () { Id = 1 },
+			];
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5304")]
+		public void TestListBasedEntity([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(ListTable.Data);
+
+			var res = tb.ToList();
+
+			Assert.That(res, Has.Count.EqualTo(1));
+			Assert.That(res[0].Id, Is.EqualTo(1));
 		}
 	}
 }
