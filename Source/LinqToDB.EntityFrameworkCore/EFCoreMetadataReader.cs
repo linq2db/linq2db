@@ -168,7 +168,7 @@ namespace LinqToDB.EntityFrameworkCore
 				while (baseType.BaseType != null)
 					baseType = baseType.BaseType;
 
-				if (baseType == entityType && e.GetDiscriminatorValue() != null)
+				if (baseType == entityType && e.GetDiscriminatorPropertyName() != null && e.GetDiscriminatorValue() != null)
 				{
 					var entity = e;
 
