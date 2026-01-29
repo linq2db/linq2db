@@ -1065,8 +1065,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					if (!_providerFlags.IsWindowFunctionsSupported)
 						return optimized;
 
-					var parameters = new List<ISqlExpression>();
-
 					var found   = new HashSet<ISqlExpression>();
 
 					if (sql.Select.IsDistinct)
@@ -1204,6 +1202,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					// processing ROW_NUMBER
 
+					var isLimitedToOneRecord = sql.IsLimitedToOneRecord();
+
 					sql.Select.SkipValue = null;
 					sql.Select.TakeValue = null;
 
@@ -1211,7 +1211,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					rnColumn.RawAlias = "rn";
 
 					// Remove order by items, they are not needed anymore
-					sql.OrderBy.Items.Clear();
+					if (isLimitedToOneRecord)
+						sql.OrderBy.Items.Clear();
 
 					if (skipValue != null)
 					{
@@ -1224,7 +1225,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 					else if (takeValue != null)
 					{
-						searchCondition.Add(new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.LessOrEqual, takeValue, null));
+						if (isLimitedToOneRecord)
+							searchCondition.Add(new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.Equal, takeValue, null));
+						else
+							searchCondition.Add(new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.LessOrEqual, takeValue, null));
 					}
 					else if (sql.Select.IsDistinct)
 					{

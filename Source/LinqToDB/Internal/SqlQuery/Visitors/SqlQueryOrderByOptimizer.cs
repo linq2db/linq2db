@@ -118,7 +118,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						{
 							var orderByItem = selectQuery.OrderBy.Items[i];
 
-							var canPopulateUpperLevel = !selectQuery.IsLimited;
+							bool canPopulateUpperLevel = !selectQuery.IsLimitedToOneRecord();
 
 							if (canPopulateUpperLevel && parentSelectQuery.Select.IsDistinct)
 							{
