@@ -429,15 +429,13 @@ namespace Tests.DataProvider
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue5285Table>();
 
-			var query = from i in db.Unnest([1,2,3])
-						from a in tb
-						.Where(x => x.Value > i)
-						.OrderBy(x => x.Value)
-						.Take(1)
-						select new
-						{
-							a.Id
-						};
+			var query =
+				from i in db.Unnest([1, 2, 3])
+				from a in tb
+					.Where(x => x.Value > i)
+					.OrderBy(x => x.Value)
+					.Take(1)
+				select new { a.Id };
 
 			_ = query.ToArray();
 		}
@@ -448,15 +446,13 @@ namespace Tests.DataProvider
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue5285Table>();
 
-			var query = from i in UnnestOld(db, [1,2,3])
-						from a in tb
-						.Where(x => x.Value > i)
-						.OrderBy(x => x.Value)
-						.Take(1)
-						select new
-						{
-							a.Id
-						};
+			var query = 
+				from i in UnnestOld(db, [1, 2, 3])
+				from a in tb
+					.Where(x => x.Value > i)
+					.OrderBy(x => x.Value)
+					.Take(1)
+				select new { a.Id };
 
 			_ = query.ToArray();
 		}
