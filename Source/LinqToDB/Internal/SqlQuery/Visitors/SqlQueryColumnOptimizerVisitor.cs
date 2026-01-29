@@ -17,15 +17,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		
 		// Tracks which CTE fields are actually used
 		readonly Dictionary<CteClause, HashSet<string>> _usedCteFields = new();
-		
-		// Current CTE being processed
-		CteClause? _currentCte;
-		
+	
 		// Current pass: true = collecting, false = removing
 		bool _isCollecting;
 
 		bool _inExpression;
 
+		CteClause?           _currentCte;
+		SelectQuery?         _currentUpdateQuery;
 		SqlPredicate.Exists? _currentExistsPredicate;
 		SqlTableLikeSource?  _currentSqlTableLikeSource;
 
@@ -40,6 +39,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_usedCteFields.Clear();
 
 			_currentCte                = null;
+			_currentUpdateQuery        = null;
 			_currentExistsPredicate    = null;
 			_currentSqlTableLikeSource = null;
 			_inExpression              = true;
@@ -258,6 +258,28 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return result;
 		}
 
+		protected internal override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
+		{
+			var saveUpdateQuery = _currentUpdateQuery;
+			_currentUpdateQuery = element.SelectQuery;
+
+			var result = base.VisitSqlUpdateStatement(element);
+
+			_currentUpdateQuery = saveUpdateQuery;
+			return result;
+		}
+
+		protected internal override IQueryElement VisitSqlInsertOrUpdateStatement(SqlInsertOrUpdateStatement element)
+		{
+			var saveUpdateQuery = _currentUpdateQuery;
+			_currentUpdateQuery = element.SelectQuery;
+
+			var result = base.VisitSqlInsertOrUpdateStatement(element);
+
+			_currentUpdateQuery = saveUpdateQuery;
+			return result;
+		}
+
 		#endregion
 
 		#region Column Processing Logic
@@ -331,7 +353,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		bool AllowEmptyColumns(SelectQuery selectQuery)
 		{
 			return _currentExistsPredicate?.SubQuery != selectQuery 
-			       && _currentSqlTableLikeSource?.SourceQuery != selectQuery;
+			       && _currentSqlTableLikeSource?.SourceQuery != selectQuery
+			       && _currentUpdateQuery != selectQuery;
 		}
 
 		private bool HasNonUnionAllSetOperators(SelectQuery selectQuery)
