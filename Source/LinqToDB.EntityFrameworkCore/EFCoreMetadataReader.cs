@@ -169,7 +169,7 @@ namespace LinqToDB.EntityFrameworkCore
 					baseType = baseType.BaseType;
 
 				if (baseType == entityType
-#if EF10
+#if !NETFRAMEWORK && !NETSTANDARD2_0
 					&& e.GetDiscriminatorPropertyName() != null
 #endif
 					&& e.GetDiscriminatorValue() != null)
