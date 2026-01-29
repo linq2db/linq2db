@@ -70,7 +70,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				: ignoreQueryFilters == null
 					? null
 					: IgnoreQueryFilters.Length == 0 || ignoreQueryFilters.Length == 0
-						? Array.Empty<Type>()
+						? []
 						: IgnoreQueryFilters.Union(ignoreQueryFilters).ToArray();
 
 			return new TranslationModifier(InlineParameters, newFilters);
