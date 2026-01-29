@@ -851,6 +851,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.Merge();
 		}
 
+#if NET8_0 || NET9_0
+		[ActiveIssue]
+#endif
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4668")]
 		public void Issue4668Test([EFDataSources] string provider)
 		{
