@@ -14,7 +14,7 @@
 		<licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
 		<projectUrl>https://linq2db.github.io/</projectUrl>
 		<releaseNotes>$releaseNotes$</releaseNotes>
-		<repository type="git" url="https://github.com/linq2db/linq2db" />
+		<repository type="git" url="https://github.com/linq2db/linq2db" branch="$repositoryBranch$" commit="$repositoryCommit$" />
 		<packageTypes>
 			<packageType name="DotnetTool" />
 		</packageTypes>

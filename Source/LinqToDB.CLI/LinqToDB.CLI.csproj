@@ -14,10 +14,18 @@
 
 	<PropertyGroup Label="Nuget">
 		<PackageTags>$(PackageTags);cli</PackageTags>
-		
+
 		<!-- Difficult to pack all runtimes into single nupkg using <IsTool>true</> -->
 		<NuspecFile>linq2db.cli.nuspec</NuspecFile>
-		<NuspecProperties>output=$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration);authors=$(Authors);copyright=$(Copyright);releaseNotes=$(PackageReleaseNotes);version=$(PackageVersion);tags=$(PackageTags.Replace(";", " "))</NuspecProperties>
+
+		<!-- Transformations in .nuspec file -->
+		<NuspecProperties></NuspecProperties>
+		<NuspecProperties>$(NuspecProperties);output=$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)</NuspecProperties>
+		<NuspecProperties>$(NuspecProperties);authors=$(Authors)</NuspecProperties>
+		<NuspecProperties>$(NuspecProperties);copyright=$(Copyright)</NuspecProperties>
+		<NuspecProperties>$(NuspecProperties);releaseNotes=$(PackageReleaseNotes)</NuspecProperties>
+		<NuspecProperties>$(NuspecProperties);version=$(PackageVersion)</NuspecProperties>
+		<NuspecProperties>$(NuspecProperties);tags=$(PackageTags.Replace(";", " "))</NuspecProperties>
 
 		<EnablePackageValidation>false</EnablePackageValidation>
 	</PropertyGroup>
@@ -25,7 +33,7 @@
 	<ItemGroup Label="Nuget">
 		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
 	</ItemGroup>
-	
+
 	<!--build windows executables, inspired by https://github.com/dotnet/sdk/issues/43317-->
 	<Target Name="MultiArchPublish" AfterTargets="Build" Condition="$(RuntimeIdentifier) == ''">
 		<ItemGroup>
@@ -48,6 +56,13 @@
 		<Copy SourceFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\$(AssemblyName).exe" DestinationFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).$(RuntimeIdentifier).exe" />
 		<!--cleanup bin from RID builds-->
 		<RemoveDir Directories="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)" />
+	</Target>
+
+	<Target Name="SetCustomNuspecProperties" BeforeTargets="GenerateNuspec" DependsOnTargets="InitializeSourceControlInformation">
+		<PropertyGroup>
+			<NuspecProperties>$(NuspecProperties);repositoryBranch=$(RepositoryBranch)</NuspecProperties>
+			<NuspecProperties>$(NuspecProperties);repositoryCommit=$(RepositoryCommit)</NuspecProperties>
+		</PropertyGroup>
 	</Target>
 
 	<ItemGroup>
