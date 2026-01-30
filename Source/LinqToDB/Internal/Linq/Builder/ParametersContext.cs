@@ -260,7 +260,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 
 					if (updateType && paramDataType.SystemType.UnwrapNullableType() != paramType.UnwrapNullableType() && paramType != typeof(object))
-						paramDataType = mappingSchema.GetDbDataType(paramType);
+					{
+						var newType = mappingSchema.GetDbDataType(paramType);
+						if (!newType.EqualsDbOnly(SqlDataType.MakeUndefined(paramType).Type))
+							paramDataType = newType;
+					}
 
 					providerValueGetter = columnDescriptor.ApplyConversions(providerValueGetter, paramDataType, true);
 				}
