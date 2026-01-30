@@ -41,7 +41,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			LoadWithEntity lastLoadWith;
 
-			if (methodCall.Method.Name == "LoadWithInternal")
+			if (string.Equals(methodCall.Method.Name, "LoadWithInternal", StringComparison.Ordinal))
 			{
 				table = SequenceHelper.GetTableOrCteContext(sequence);
 
@@ -93,12 +93,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				table = extractResult.Value.context ?? throw new LinqToDBException("Unable to find table for LoadWith association.");
 
-				if (table.LoadWithRoot == null)
-					table.LoadWithRoot = new();
+				var tableLoadWith = table.LoadWithRoot ??= new();
 
-				var tableLoadWith = table.LoadWithRoot;
-
-				if (methodCall.Method.Name == "ThenLoad")
+				if (string.Equals(methodCall.Method.Name, "ThenLoad", StringComparison.Ordinal))
 				{
 					var prevSequence = (LoadWithContext)sequence;
 
@@ -116,7 +113,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							CheckFilterFunc(lastElement.MemberInfo.GetMemberType(), lastElement.FilterFunc!.Type, sequence.MappingSchema);
 					}
 				}
-				else if (methodCall.Method.Name == "LoadWith" || methodCall.Method.Name == "LoadWithAsTable")
+				else if (methodCall.Method.Name is "LoadWith" or "LoadWithAsTable")
 				{
 					lastLoadWith = tableLoadWith ?? throw new InvalidOperationException();
 
@@ -204,7 +201,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						var cexpr = (MethodCallExpression)expression;
 
-						if (cexpr.Method.IsSqlPropertyMethodEx())
+						if (cexpr.Method.IsSqlPropertyMethod)
 						{
 							var memberInfo   = MemberHelper.GetMemberInfo(cexpr);
 							var memberAccess = Expression.MakeMemberAccess(cexpr.Arguments[0], memberInfo);
@@ -320,7 +317,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var member = defined[index];
 				current.MembersToLoad ??= new List<LoadWithMember>();
 
-				var found = current.MembersToLoad.FirstOrDefault(m => m.MemberInfo.EqualsTo(member.MemberInfo));
+				var found = current.MembersToLoad.Find(m => m.MemberInfo.EqualsTo(member.MemberInfo));
 				if (found == null)
 				{
 					current.MembersToLoad.Add(member);

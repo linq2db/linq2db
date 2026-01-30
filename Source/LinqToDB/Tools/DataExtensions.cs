@@ -19,8 +19,8 @@ namespace LinqToDB.Tools
 		/// <summary>
 		/// Initializes source columns, marked with <see cref="ColumnAttribute.IsIdentity"/> or <see cref="IdentityAttribute" /> with identity values:
 		/// <list type="bullet">
-		/// <item>if column had sequence name set using <see cref="SequenceNameAttribute"/> and <paramref name="useSequenceName"/> set to <c>true</c>, values from sequence used. Implemented for: Oracle, PostgreSQL</item>
-		/// <item>if table has identity configured and <paramref name="useIdentity"/> set to <c>true</c>, values from sequence used. Implemented for: SQL Server 2005+</item>
+		/// <item>if column had sequence name set using <see cref="SequenceNameAttribute"/> and <paramref name="useSequenceName"/> set to <see langword="true"/>, values from sequence used. Implemented for: Oracle, PostgreSQL</item>
+		/// <item>if table has identity configured and <paramref name="useIdentity"/> set to <see langword="true"/>, values from sequence used. Implemented for: SQL Server 2005+</item>
 		/// <item>Otherwise column initialized with values, incremented by 1 starting with max value from database for this column plus 1.</item>
 		/// </list>
 		/// </summary>
@@ -37,8 +37,8 @@ namespace LinqToDB.Tools
 			bool                useIdentity     = false)
 			where T: notnull
 		{
-			if (source  == null) throw new ArgumentNullException(nameof(source));
-			if (context == null) throw new ArgumentNullException(nameof(context));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(context);
 
 			var dataProvider = context.GetDataProvider();
 
@@ -88,8 +88,8 @@ namespace LinqToDB.Tools
 		/// <summary>
 		/// Initializes source columns, marked with <see cref="ColumnAttribute.IsIdentity"/> or <see cref="IdentityAttribute" /> with identity values:
 		/// <list type="bullet">
-		/// <item>if column had sequence name set using <see cref="SequenceNameAttribute"/> and <paramref name="useSequenceName"/> set to <c>true</c>, values from sequence used. Implemented for: Oracle, PostgreSQL</item>
-		/// <item>if table has identity configured and <paramref name="useIdentity"/> set to <c>true</c>, values from sequence used. Implemented for: SQL Server 2005+</item>
+		/// <item>if column had sequence name set using <see cref="SequenceNameAttribute"/> and <paramref name="useSequenceName"/> set to <see langword="true"/>, values from sequence used. Implemented for: Oracle, PostgreSQL</item>
+		/// <item>if table has identity configured and <paramref name="useIdentity"/> set to <see langword="true"/>, values from sequence used. Implemented for: SQL Server 2005+</item>
 		/// <item>Otherwise column initialized with values, incremented by 1 starting with max value from database for this column plus 1.</item>
 		/// </list>
 		/// </summary>
@@ -108,8 +108,8 @@ namespace LinqToDB.Tools
 			CancellationToken   cancellationToken = default)
 			where T : notnull
 		{
-			if (source  == null) throw new ArgumentNullException(nameof(source));
-			if (context == null) throw new ArgumentNullException(nameof(context));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(context);
 
 			var dataProvider = context.GetDataProvider();
 
@@ -184,7 +184,7 @@ namespace LinqToDB.Tools
 					TypeCode.UInt64  => (ulong  )maxValue + 1,
 					TypeCode.Single  => (float  )maxValue + 1,
 					TypeCode.Decimal => (decimal)maxValue + 1,
-					_                => throw new NotImplementedException(),
+					_                => throw new InvalidOperationException($"Invalid identity type `{type}`"),
 				};
 				var value = Converter.ChangeType(maxValue, column.MemberType);
 				column.MemberAccessor.SetValue(item!, value);
@@ -215,7 +215,7 @@ namespace LinqToDB.Tools
 					TypeCode.UInt64  => (ulong  )maxValue + 1,
 					TypeCode.Single  => (float  )maxValue + 1,
 					TypeCode.Decimal => (decimal)maxValue + 1,
-					_                => throw new NotImplementedException(),
+					_                => throw new InvalidOperationException($"Invalid identity type `{type}`"),
 				};
 				var value = Converter.ChangeType(maxValue, column.MemberType);
 				column.MemberAccessor.SetValue(item!, value);
@@ -241,7 +241,7 @@ namespace LinqToDB.Tools
 					TypeCode.UInt64  => (ulong  )last + (ulong)(i + 1) * (ulong)step,
 					TypeCode.Single  => (float  )last + (i + 1) * (float  )step,
 					TypeCode.Decimal => (decimal)last + (i + 1) * (decimal)step,
-					_                => throw new NotImplementedException(),
+					_                => throw new InvalidOperationException($"Invalid identity type `{type}`"),
 				};
 
 				var value = Converter.ChangeType(nextValue, column.MemberType);

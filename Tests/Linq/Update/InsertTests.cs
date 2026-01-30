@@ -37,15 +37,14 @@ namespace Tests.xUpdate
 			string context)
 		{
 			using var _ = context.IsAnyOf(TestProvName.AllSapHana) ? new DisableBaseline("Client-side Guid generation") : null;
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			db.BeginTransaction();
+
+			try
 			{
-				db.BeginTransaction();
+				db.Types.Delete(c => c.ID > 1000);
 
-				try
-				{
-					db.Types.Delete(c => c.ID > 1000);
-
-					var cnt = db
+				var cnt = db
 						.Types
 						.Select(_ => Math.Floor(_.ID / 3.0))
 						.Distinct()
@@ -56,14 +55,13 @@ namespace Tests.xUpdate
 							BoolValue = true
 						});
 
-					if (context.SupportsRowcount())
-						Assert.That(
-							cnt, Is.EqualTo(Types.Select(_ => _.ID / 3).Distinct().Count()));
-				}
-				finally
-				{
-					db.Types.Delete(c => c.ID > 1000);
-				}
+				if (context.SupportsRowcount())
+					Assert.That(
+						cnt, Is.EqualTo(Types.Select(_ => _.ID / 3).Distinct().Count()));
+			}
+			finally
+			{
+				db.Types.Delete(c => c.ID > 1000);
 			}
 		}
 
@@ -81,13 +79,12 @@ namespace Tests.xUpdate
 			string context)
 		{
 			using var _ = context.IsAnyOf(TestProvName.AllSapHana) ? new DisableBaseline("Client-side Guid generation") : null;
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					db.Types.Delete(c => c.ID > 1000);
+				db.Types.Delete(c => c.ID > 1000);
 
-					var cnt = db.Types
+				var cnt = db.Types
 						.Select(_ => Math.Floor(_.ID / 3.0))
 						.Distinct()
 						.Into(db.Types)
@@ -96,174 +93,162 @@ namespace Tests.xUpdate
 							.Value(t => t.BoolValue, t => true)
 						.Insert();
 
-					if (context.SupportsRowcount())
-						Assert.That(
-							cnt, Is.EqualTo(Types.Select(_ => _.ID / 3).Distinct().Count()));
-				}
-				finally
-				{
-					db.Types.Delete(c => c.ID > 1000);
-				}
+				if (context.SupportsRowcount())
+					Assert.That(
+						cnt, Is.EqualTo(Types.Select(_ => _.ID / 3).Distinct().Count()));
+			}
+			finally
+			{
+				db.Types.Delete(c => c.ID > 1000);
 			}
 		}
 
 		[Test]
 		public void Insert1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					var id = 1001;
+				var id = 1001;
 
-					db.Child.Delete(c => c.ChildID > 1000);
+				db.Child.Delete(c => c.ChildID > 1000);
 
-					var cnt = db.Child
+				var cnt = db.Child
 						.Insert(() => new Child
 						{
 							ParentID = 1,
 							ChildID  = id
 						});
-					if (context.SupportsRowcount())
-						Assert.That(cnt, Is.EqualTo(1));
+				if (context.SupportsRowcount())
+					Assert.That(cnt, Is.EqualTo(1));
 
-					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
-				}
-				finally
-				{
-					db.Child.Delete(c => c.ChildID > 1000);
-				}
+				Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
+			}
+			finally
+			{
+				db.Child.Delete(c => c.ChildID > 1000);
 			}
 		}
 
 		[Test]
 		public void Insert2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					var id = 1001;
+				var id = 1001;
 
-					db.Child.Delete(c => c.ChildID > 1000);
+				db.Child.Delete(c => c.ChildID > 1000);
 
-					var cnt = db
+				var cnt = db
 							.Into(db.Child)
 								.Value(c => c.ParentID, () => 1)
 								.Value(c => c.ChildID,  () => id)
 							.Insert();
-					if (context.SupportsRowcount())
-						Assert.That(cnt, Is.EqualTo(1));
+				if (context.SupportsRowcount())
+					Assert.That(cnt, Is.EqualTo(1));
 
-					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
-				}
-				finally
-				{
-					db.Child.Delete(c => c.ChildID > 1000);
-				}
+				Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
+			}
+			finally
+			{
+				db.Child.Delete(c => c.ChildID > 1000);
 			}
 		}
 
 		[Test]
 		public async Task Insert2Async([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					var id = 1001;
+				var id = 1001;
 
-					await db.Child.DeleteAsync(c => c.ChildID > 1000);
+				await db.Child.DeleteAsync(c => c.ChildID > 1000);
 
-					var cnt = await db
+				var cnt = await db
 							.Into(db.Child)
 								.Value(c => c.ParentID, () => 1)
 								.Value(c => c.ChildID,  () => id)
 							.InsertAsync();
-					if (context.SupportsRowcount())
-						Assert.That(cnt, Is.EqualTo(1));
+				if (context.SupportsRowcount())
+					Assert.That(cnt, Is.EqualTo(1));
 
-					Assert.That(await db.Child.CountAsync(c => c.ChildID == id), Is.EqualTo(1));
-				}
-				finally
-				{
-					await db.Child.DeleteAsync(c => c.ChildID > 1000);
-				}
+				Assert.That(await db.Child.CountAsync(c => c.ChildID == id), Is.EqualTo(1));
+			}
+			finally
+			{
+				await db.Child.DeleteAsync(c => c.ChildID > 1000);
 			}
 		}
 
 		[Test]
 		public void Insert3([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					var id = 1001;
+				var id = 1001;
 
-					db.Child.Delete(c => c.ChildID > 1000);
+				db.Child.Delete(c => c.ChildID > 1000);
 
-					var cnt = db.Child
+				var cnt = db.Child
 							.Where(c => c.ChildID == 11)
 							.Insert(db.Child, c => new Child
 							{
 								ParentID = c.ParentID,
 								ChildID  = id
 							});
-					if (context.SupportsRowcount())
-						Assert.That(cnt, Is.EqualTo(1));
+				if (context.SupportsRowcount())
+					Assert.That(cnt, Is.EqualTo(1));
 
-					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
-				}
-				finally
-				{
-					db.Child.Delete(c => c.ChildID > 1000);
-				}
+				Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
+			}
+			finally
+			{
+				db.Child.Delete(c => c.ChildID > 1000);
 			}
 		}
 
 		[Test]
 		public async Task Insert3Async([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					var id = 1001;
+				var id = 1001;
 
-					await db.Child.DeleteAsync(c => c.ChildID > 1000);
+				await db.Child.DeleteAsync(c => c.ChildID > 1000);
 
-					var cnt = await db.Child
+				var cnt = await db.Child
 							.Where(c => c.ChildID == 11)
 							.InsertAsync(db.Child, c => new Child
 							{
 								ParentID = c.ParentID,
 								ChildID  = id
 							});
-					if (context.SupportsRowcount())
-						Assert.That(cnt, Is.EqualTo(1));
+				if (context.SupportsRowcount())
+					Assert.That(cnt, Is.EqualTo(1));
 
-					Assert.That(await db.Child.CountAsync(c => c.ChildID == id), Is.EqualTo(1));
-				}
-				finally
-				{
-					await db.Child.DeleteAsync(c => c.ChildID > 1000);
-				}
+				Assert.That(await db.Child.CountAsync(c => c.ChildID == id), Is.EqualTo(1));
+			}
+			finally
+			{
+				await db.Child.DeleteAsync(c => c.ChildID > 1000);
 			}
 		}
 
 		[Test]
 		public void Insert31([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					var id = 1001;
+				var id = 1001;
 
-					db.Child.Delete(c => c.ChildID > 1000);
+				db.Child.Delete(c => c.ChildID > 1000);
 
-					var cnt = db.Child
+				var cnt = db.Child
 						.Where(c => c.ChildID == 11)
 						.Select(c => new Child
 						{
@@ -271,146 +256,135 @@ namespace Tests.xUpdate
 							ChildID  = id
 						})
 						.Insert(db.Child, c => c);
-					if (context.SupportsRowcount())
-						Assert.That(cnt, Is.EqualTo(1));
+				if (context.SupportsRowcount())
+					Assert.That(cnt, Is.EqualTo(1));
 
-					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
-				}
-				finally
-				{
-					db.Child.Delete(c => c.ChildID > 1000);
-				}
+				Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
+			}
+			finally
+			{
+				db.Child.Delete(c => c.ChildID > 1000);
 			}
 		}
 
 		[Test]
 		public void Insert4([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					var id = 1001;
+				var id = 1001;
 
-					db.Child.Delete(c => c.ChildID > 1000);
+				db.Child.Delete(c => c.ChildID > 1000);
 
-					var cnt = db.Child
+				var cnt = db.Child
 							.Where(c => c.ChildID == 11)
 							.Into(db.Child)
 								.Value(c => c.ParentID, c  => c.ParentID)
 								.Value(c => c.ChildID,  () => id)
 							.Insert();
-					if (context.SupportsRowcount())
-						Assert.That(cnt, Is.EqualTo(1));
+				if (context.SupportsRowcount())
+					Assert.That(cnt, Is.EqualTo(1));
 
-					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
-				}
-				finally
-				{
-					db.Child.Delete(c => c.ChildID > 1000);
-				}
+				Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
+			}
+			finally
+			{
+				db.Child.Delete(c => c.ChildID > 1000);
 			}
 		}
 
 		[Test]
 		public void Insert4String([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var id = 1;
+			using var db = GetDataContext(context);
+			var id = 1;
 
-				var insertable = db.Child
+			var insertable = db.Child
 					.Where(c => c.ChildID == 111)
 					.Into(db.Child)
 					.Value(c => c.ParentID, c => c.ParentID)
 					.Value(c => c.ChildID, () => id);
 
-				var sql = insertable.Insert();
-			}
+			var sql = insertable.Insert();
 		}
 
 		[Test]
 		public async Task Insert4Async([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					var id = 1001;
+				var id = 1001;
 
-					await db.Child.DeleteAsync(c => c.ChildID > 1000);
+				await db.Child.DeleteAsync(c => c.ChildID > 1000);
 
-					var cnt = await db.Child
+				var cnt = await db.Child
 							.Where(c => c.ChildID == 11)
 							.Into(db.Child)
 								.Value(c => c.ParentID, c  => c.ParentID)
 								.Value(c => c.ChildID,  () => id)
 							.InsertAsync();
-					if (context.SupportsRowcount())
-						Assert.That(cnt, Is.EqualTo(1));
+				if (context.SupportsRowcount())
+					Assert.That(cnt, Is.EqualTo(1));
 
-					Assert.That(await db.Child.CountAsync(c => c.ChildID == id), Is.EqualTo(1));
-				}
-				finally
-				{
-					await db.Child.DeleteAsync(c => c.ChildID > 1000);
-				}
+				Assert.That(await db.Child.CountAsync(c => c.ChildID == id), Is.EqualTo(1));
+			}
+			finally
+			{
+				await db.Child.DeleteAsync(c => c.ChildID > 1000);
 			}
 		}
 
 		[Test]
 		public void Insert5([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					var id = 1001;
+				var id = 1001;
 
-					db.Child.Delete(c => c.ChildID > 1000);
+				db.Child.Delete(c => c.ChildID > 1000);
 
-					var cnt = db.Child
+				var cnt = db.Child
 							.Where(c => c.ChildID == 11)
 							.Into(db.Child)
 								.Value(c => c.ParentID, c => c.ParentID)
 								.Value(c => c.ChildID,  id)
 							.Insert();
-					if (context.SupportsRowcount())
-						Assert.That(cnt, Is.EqualTo(1));
+				if (context.SupportsRowcount())
+					Assert.That(cnt, Is.EqualTo(1));
 
-					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
-				}
-				finally
-				{
-					db.Child.Delete(c => c.ChildID > 1000);
-				}
+				Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
+			}
+			finally
+			{
+				db.Child.Delete(c => c.ChildID > 1000);
 			}
 		}
 
 		[Test]
 		public void Insert6([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					db.Parent.Delete(p => p.Value1 == 11);
+				db.Parent.Delete(p => p.Value1 == 11);
 
-					var cnt = db.Child
+				var cnt = db.Child
 							.Where(c => c.ChildID == 11)
 							.Into(db.Parent)
 								.Value(p => p.ParentID, c => c.ParentID + 1000)
 								.Value(p => p.Value1,   c => (int?)c.ChildID)
 							.Insert();
-					if (context.SupportsRowcount())
-						Assert.That(cnt, Is.EqualTo(1));
+				if (context.SupportsRowcount())
+					Assert.That(cnt, Is.EqualTo(1));
 
-					Assert.That(db.Parent.Count(p => p.Value1 == 11), Is.EqualTo(1));
-				}
-				finally
-				{
-					db.Parent.Delete(p => p.Value1 == 11);
-				}
+				Assert.That(db.Parent.Count(p => p.Value1 == 11), Is.EqualTo(1));
+			}
+			finally
+			{
+				db.Parent.Delete(p => p.Value1 == 11);
 			}
 		}
 
@@ -427,14 +401,13 @@ namespace Tests.xUpdate
 		[Test]
 		public void Insert6WithSameFields([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(new []
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(new[]
 			{
 				new InsertTable{Id = 1, CreatedOn = TestData.DateTime, ModifiedOn = TestData.DateTime},
 				new InsertTable{Id = 2, CreatedOn = TestData.DateTime, ModifiedOn = TestData.DateTime},
-			}))
-			{
-				var affected = table
+			});
+			var affected = table
 					.Where(c => c.Id > 0)
 					.Into(table)
 					.Value(p => p.Id, c => c.Id + 10)
@@ -442,98 +415,91 @@ namespace Tests.xUpdate
 					.Value(p => p.ModifiedOn, c => Sql.CurrentTimestamp)
 					.Insert();
 
-				if (context.SupportsRowcount())
-					Assert.That(affected, Is.EqualTo(2));
-			}
+			if (context.SupportsRowcount())
+				Assert.That(affected, Is.EqualTo(2));
 		}
 
 		[Test]
 		public void Insert7([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					var id = 1001;
+				var id = 1001;
 
-					db.Child.Delete(c => c.ChildID > 1000);
+				db.Child.Delete(c => c.ChildID > 1000);
 
-					var cnt = db
+				var cnt = db
 						.Child
 							.Value(c => c.ChildID,  () => id)
 							.Value(c => c.ParentID, 1)
 						.Insert();
-					if (context.SupportsRowcount())
-						Assert.That(cnt, Is.EqualTo(1));
+				if (context.SupportsRowcount())
+					Assert.That(cnt, Is.EqualTo(1));
 
-					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
-				}
-				finally
-				{
-					db.Child.Delete(c => c.ChildID > 1000);
-				}
+				Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
+			}
+			finally
+			{
+				db.Child.Delete(c => c.ChildID > 1000);
 			}
 		}
 
 		[Test]
 		public void Insert8([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					var id = 1001;
+				var id = 1001;
 
-					db.Child.Delete(c => c.ChildID > 1000);
+				db.Child.Delete(c => c.ChildID > 1000);
 
-					var cnt = db
+				var cnt = db
 						.Child
 							.Value(c => c.ParentID, 1)
 							.Value(c => c.ChildID,  () => id)
 						.Insert();
-					if (context.SupportsRowcount())
-						Assert.That(cnt, Is.EqualTo(1));
+				if (context.SupportsRowcount())
+					Assert.That(cnt, Is.EqualTo(1));
 
-					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
-				}
-				finally
-				{
-					db.Child.Delete(c => c.ChildID > 1000);
-				}
+				Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
+			}
+			finally
+			{
+				db.Child.Delete(c => c.ChildID > 1000);
 			}
 		}
 
 		[Test]
 		public void Insert9([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					var id = 1001;
+				var id = 1001;
 
-					db.Child. Delete(c => c.ParentID > 1000);
-					db.Parent.Delete(p => p.ParentID > 1000);
+				db.Child.Delete(c => c.ParentID > 1000);
+				db.Parent.Delete(p => p.ParentID > 1000);
 
-					db.Insert(new Parent { ParentID = id, Value1 = id });
+				db.Insert(new Parent { ParentID = id, Value1 = id });
 
-					var cnt = db.Parent
+				var cnt = db.Parent
 						.Where(p => p.ParentID == id)
 						.Insert(db.Child, p => new Child
 						{
 							ParentID = p.ParentID,
 							ChildID  = p.ParentID,
 						});
-					if (context.SupportsRowcount())
-						Assert.That(cnt, Is.EqualTo(1));
+				if (context.SupportsRowcount())
+					Assert.That(cnt, Is.EqualTo(1));
 
-					Assert.That(db.Child.Count(c => c.ParentID == id), Is.EqualTo(1));
-				}
-				finally
-				{
-					db.Child. Delete(c => c.ParentID > 1000);
-					db.Parent.Delete(p => p.ParentID > 1000);
-				}
+				Assert.That(db.Child.Count(c => c.ParentID == id), Is.EqualTo(1));
+			}
+			finally
+			{
+				db.Child.Delete(c => c.ParentID > 1000);
+				db.Parent.Delete(p => p.ParentID > 1000);
 			}
 		}
 
@@ -552,99 +518,91 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertArray1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var types = db.GetTable<LinqDataTypesArrayTest>();
+
+			try
 			{
-				var types = db.GetTable<LinqDataTypesArrayTest>();
+				types.Delete(t => t.ID > 1000);
+				types.Insert(() => new LinqDataTypesArrayTest { ID = 1001, BoolValue = true, BinaryValue = null });
 
-				try
-				{
-					types.Delete(t => t.ID > 1000);
-					types.Insert(() => new LinqDataTypesArrayTest { ID = 1001, BoolValue = true, BinaryValue = null });
-
-					Assert.That(types.Single(t => t.ID == 1001).BinaryValue, Is.Null);
-				}
-				finally
-				{
-					types.Delete(t => t.ID > 1000);
-				}
+				Assert.That(types.Single(t => t.ID == 1001).BinaryValue, Is.Null);
+			}
+			finally
+			{
+				types.Delete(t => t.ID > 1000);
 			}
 		}
 
 		[Test]
 		public void InsertArray2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var types = db.GetTable<LinqDataTypesArrayTest>();
+
+			try
 			{
-				var types = db.GetTable<LinqDataTypesArrayTest>();
+				types.Delete(t => t.ID > 1000);
 
-				try
-				{
-					types.Delete(t => t.ID > 1000);
+				byte[]? arr = null;
 
-					byte[]? arr = null;
+				types.Insert(() => new LinqDataTypesArrayTest { ID = 1001, BoolValue = true, BinaryValue = arr });
 
-					types.Insert(() => new LinqDataTypesArrayTest { ID = 1001, BoolValue = true, BinaryValue = arr });
+				var res = types.Single(t => t.ID == 1001).BinaryValue;
 
-					var res = types.Single(t => t.ID == 1001).BinaryValue;
-
-					Assert.That(res, Is.Null);
-				}
-				finally
-				{
-					types.Delete(t => t.ID > 1000);
-				}
+				Assert.That(res, Is.Null);
+			}
+			finally
+			{
+				types.Delete(t => t.ID > 1000);
 			}
 		}
 
 		[Test]
 		public void InsertArray3([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var types = db.GetTable<LinqDataTypesArrayTest>();
+
+			try
 			{
-				var types = db.GetTable<LinqDataTypesArrayTest>();
+				types.Delete(t => t.ID > 1000);
 
-				try
-				{
-					types.Delete(t => t.ID > 1000);
+				var arr = new byte[] { 1, 2, 3, 4 };
 
-					var arr = new byte[] { 1, 2, 3, 4 };
+				types.Insert(() => new LinqDataTypesArrayTest { ID = 1001, BoolValue = true, BinaryValue = arr });
 
-					types.Insert(() => new LinqDataTypesArrayTest { ID = 1001, BoolValue = true, BinaryValue = arr });
+				var res = types.Single(t => t.ID == 1001).BinaryValue;
 
-					var res = types.Single(t => t.ID == 1001).BinaryValue;
-
-					Assert.That(res, Is.EqualTo(arr));
-				}
-				finally
-				{
-					types.Delete(t => t.ID > 1000);
-				}
+				Assert.That(res, Is.EqualTo(arr));
+			}
+			finally
+			{
+				types.Delete(t => t.ID > 1000);
 			}
 		}
 
 		[Test]
 		public void InsertArray4([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var types = db.GetTable<LinqDataTypesArrayTest>();
+
+			try
 			{
-				var types = db.GetTable<LinqDataTypesArrayTest>();
+				types.Delete(t => t.ID > 1000);
 
-				try
-				{
-					types.Delete(t => t.ID > 1000);
+				var arr = new byte[] { 1, 2, 3, 4 };
 
-					var arr = new byte[] { 1, 2, 3, 4 };
+				db.Insert(new LinqDataTypesArrayTest { ID = 1001, BoolValue = true, BinaryValue = arr });
 
-					db.Insert(new LinqDataTypesArrayTest { ID = 1001, BoolValue = true, BinaryValue = arr });
+				var res = types.Single(t => t.ID == 1001).BinaryValue;
 
-					var res = types.Single(t => t.ID == 1001).BinaryValue;
-
-					Assert.That(res, Is.EqualTo(arr));
-				}
-				finally
-				{
-					types.Delete(t => t.ID > 1000);
-				}
+				Assert.That(res, Is.EqualTo(arr));
+			}
+			finally
+			{
+				types.Delete(t => t.ID > 1000);
 			}
 		}
 
@@ -653,119 +611,111 @@ namespace Tests.xUpdate
 		{
 			Child.Count();
 
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					db.Parent.Delete(p => p.ParentID > 1000);
+				db.Parent.Delete(p => p.ParentID > 1000);
 
-					var q =
+				var q =
 						db.Child.     Select(c => new Parent { ParentID = c.ParentID,      Value1 = (int) Math.Floor(c.ChildID / 10.0) }).Union(
 						db.GrandChild.Select(c => new Parent { ParentID = c.ParentID ?? 0, Value1 = (int?)Math.Floor((c.GrandChildID ?? 0) / 100.0) }));
 
-					q.Insert(db.Parent, p => new Parent
-					{
-						ParentID = p.ParentID + 1000,
-						Value1   = p.Value1
-					});
-
-					Assert.That(
-						db.Parent.Count(c => c.ParentID > 1000), Is.EqualTo(Child.     Select(c => new { ParentID = c.ParentID      }).Union(
-						GrandChild.Select(c => new { ParentID = c.ParentID ?? 0 })).Count()));
-				}
-				finally
+				q.Insert(db.Parent, p => new Parent
 				{
-					db.Parent.Delete(p => p.ParentID > 1000);
-				}
+					ParentID = p.ParentID + 1000,
+					Value1 = p.Value1
+				});
+
+				Assert.That(
+					db.Parent.Count(c => c.ParentID > 1000), Is.EqualTo(Child.Select(c => new { ParentID = c.ParentID }).Union(
+					GrandChild.Select(c => new { ParentID = c.ParentID ?? 0 })).Count()));
+			}
+			finally
+			{
+				db.Parent.Delete(p => p.ParentID > 1000);
 			}
 		}
 
 		[Test]
 		public void InsertEnum1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
+				var id = 1001;
+
+				db.Parent4.Delete(_ => _.ParentID > 1000);
+
+				var p = new Parent4
 				{
-					var id = 1001;
+					ParentID = id,
+					Value1   = TypeValue.Value2
+				};
 
-					db.Parent4.Delete(_ => _.ParentID > 1000);
-
-					var p = new Parent4
-					{
-						ParentID = id,
-						Value1   = TypeValue.Value2
-					};
-
-					var cnt = db.Parent4
+				var cnt = db.Parent4
 						.Insert(() => new Parent4
 						{
 							ParentID = 1001,
 							Value1   = p.Value1
 						});
-					if (context.SupportsRowcount())
-						Assert.That(cnt, Is.EqualTo(1));
+				if (context.SupportsRowcount())
+					Assert.That(cnt, Is.EqualTo(1));
 
-					Assert.That(db.Parent4.Count(_ => _.ParentID == id && _.Value1 == p.Value1), Is.EqualTo(1));
-				}
-				finally
-				{
-					db.Parent4.Delete(_ => _.ParentID > 1000);
-				}
+				Assert.That(db.Parent4.Count(_ => _.ParentID == id && _.Value1 == p.Value1), Is.EqualTo(1));
+			}
+			finally
+			{
+				db.Parent4.Delete(_ => _.ParentID > 1000);
 			}
 		}
 
 		[Test]
 		public void InsertEnum2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					var id = 1001;
+				var id = 1001;
 
-					db.Parent4.Delete(_ => _.ParentID > 1000);
+				db.Parent4.Delete(_ => _.ParentID > 1000);
 
-					var cnt = db.Parent4
+				var cnt = db.Parent4
 							.Value(_ => _.ParentID, id)
 							.Value(_ => _.Value1,   TypeValue.Value1)
 						.Insert();
-					if (context.SupportsRowcount())
-						Assert.That(cnt, Is.EqualTo(1));
+				if (context.SupportsRowcount())
+					Assert.That(cnt, Is.EqualTo(1));
 
-					Assert.That(db.Parent4.Count(_ => _.ParentID == id), Is.EqualTo(1));
-				}
-				finally
-				{
-					db.Parent4.Delete(_ => _.ParentID > 1000);
-				}
+				Assert.That(db.Parent4.Count(_ => _.ParentID == id), Is.EqualTo(1));
+			}
+			finally
+			{
+				db.Parent4.Delete(_ => _.ParentID > 1000);
 			}
 		}
 
 		[Test]
 		public void InsertEnum3([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					var id = 1001;
+				var id = 1001;
 
-					db.Parent4.Delete(_ => _.ParentID > 1000);
+				db.Parent4.Delete(_ => _.ParentID > 1000);
 
-					var cnt = db.Parent4
+				var cnt = db.Parent4
 							.Value(_ => _.ParentID, id)
 							.Value(_ => _.Value1,   () => TypeValue.Value1)
 						.Insert();
-					if (context.SupportsRowcount())
-						Assert.That(cnt, Is.EqualTo(1));
+				if (context.SupportsRowcount())
+					Assert.That(cnt, Is.EqualTo(1));
 
-					Assert.That(db.Parent4.Count(_ => _.ParentID == id), Is.EqualTo(1));
-				}
-				finally
-				{
-					db.Parent4.Delete(_ => _.ParentID > 1000);
-				}
+				Assert.That(db.Parent4.Count(_ => _.ParentID == id), Is.EqualTo(1));
+			}
+			finally
+			{
+				db.Parent4.Delete(_ => _.ParentID > 1000);
 			}
 		}
 
@@ -989,11 +939,9 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertWithGuidIdentity([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var id = (Guid)db.InsertWithIdentity(new GuidID { Field1 = 1 });
-				Assert.That(id, Is.Not.EqualTo(Guid.Empty));
-			}
+			using var db = GetDataContext(context);
+			var id = (Guid)db.InsertWithIdentity(new GuidID { Field1 = 1 });
+			Assert.That(id, Is.Not.EqualTo(Guid.Empty));
 		}
 
 		[Test]
@@ -1041,10 +989,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertWithGuidIdentity2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var id = (Guid)db.InsertWithIdentity(new GuidID2 {});
-			}
+			using var db = GetDataContext(context);
+			var id = (Guid)db.InsertWithIdentity(new GuidID2 {});
 		}
 
 		[Test]
@@ -1213,16 +1159,14 @@ namespace Tests.xUpdate
 		{
 			Assert.Throws<LinqToDBException>(() =>
 			{
-				using (var db = new DataConnection())
+				using var db = new DataConnection();
+				var p = new Person()
 				{
-					var p = new Person()
-					{
-						FirstName = TestData.Guid1.ToString(),
-						ID = 1000,
-					};
+					FirstName = TestData.Guid1.ToString(),
+					ID = 1000,
+				};
 
-					db.InsertOrReplace(p);
-				}
+				db.InsertOrReplace(p);
 			});
 		}
 
@@ -1397,53 +1341,49 @@ namespace Tests.xUpdate
 		public void InsertBatch1([IncludeDataSources(TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.Types2.Delete(_ => _.ID > 1000);
+			using var db = GetDataContext(context);
+			db.Types2.Delete(_ => _.ID > 1000);
 
-				try
-				{
-					var data = new[]
+			try
+			{
+				var data = new[]
 					{
 						new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null, BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue =  null, IntValue = null },
 						new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = null, BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue =  null, IntValue = null }
 					};
 
-					var options = new BulkCopyOptions { MaxBatchSize = 1 };
+				var options = new BulkCopyOptions { MaxBatchSize = 1 };
 
-					if (context.IsAnyOf(ProviderName.ClickHouseDriver))
-						options = options with { WithoutSession = true };
+				if (context.IsAnyOf(ProviderName.ClickHouseDriver))
+					options = options with { WithoutSession = true };
 
-					((DataConnection)db).BulkCopy(options, data);
-				}
-				finally
-				{
-					db.Types2.Delete(_ => _.ID > 1000);
-				}
+				((DataConnection)db).BulkCopy(options, data);
+			}
+			finally
+			{
+				db.Types2.Delete(_ => _.ID > 1000);
 			}
 		}
 
 		[Test]
 		public void InsertBatch2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			db.Types2.Delete(_ => _.ID > 1000);
+
+			try
 			{
-				db.Types2.Delete(_ => _.ID > 1000);
+				var options = GetDefaultBulkCopyOptions(context) with { MaxBatchSize = 100 };
 
-				try
+				((DataConnection)db).BulkCopy(options, new[]
 				{
-					var options = GetDefaultBulkCopyOptions(context) with { MaxBatchSize = 100 };
-
-					((DataConnection)db).BulkCopy(options, new[]
-					{
 						new LinqDataTypes2 { ID = 1003, MoneyValue = 0m, DateTimeValue = null,              BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue =  null, IntValue = null    },
 						new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = TestData.DateTime, BoolValue = false, GuidValue = null,                                             SmallIntValue =  2,    IntValue = 1532334 }
 					});
-				}
-				finally
-				{
-					db.Types2.Delete(_ => _.ID > 1000);
-				}
+			}
+			finally
+			{
+				db.Types2.Delete(_ => _.ID > 1000);
 			}
 		}
 
@@ -1513,86 +1453,80 @@ namespace Tests.xUpdate
 			TestProvName.AllSybase)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
+				db.Person.Delete(p => p.FirstName.StartsWith("Insert14"));
+				using (Assert.EnterMultipleScope())
 				{
-					db.Person.Delete(p => p.FirstName.StartsWith("Insert14"));
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(db.Person
-											.Insert(() => new Person
-											{
-							FirstName = "Insert14" + db.Person.Where(p => p.ID == 1).Select(p => p.FirstName).SingleOrDefault(),
-												LastName = "Shepard",
-												Gender = Gender.Male
-											}), Is.EqualTo(1));
+					Assert.That(db.Person
+										.Insert(() => new Person
+										{
+											FirstName = "Insert14" + db.Person.Where(p => p.ID == 1).Select(p => p.FirstName).SingleOrDefault(),
+											LastName = "Shepard",
+											Gender = Gender.Male
+										}), Is.EqualTo(1));
 
-						Assert.That(db.Person.Count(p => p.FirstName.StartsWith("Insert14")), Is.EqualTo(1));
-					}
+					Assert.That(db.Person.Count(p => p.FirstName.StartsWith("Insert14")), Is.EqualTo(1));
 				}
-				finally
-				{
-					db.Person.Delete(p => p.FirstName.StartsWith("Insert14"));
-				}
+			}
+			finally
+			{
+				db.Person.Delete(p => p.FirstName.StartsWith("Insert14"));
 			}
 		}
 
 		[Test]
 		public void Insert15([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			db.Person.Where(_ => _.FirstName.StartsWith("Insert15")).Delete();
+
+			try
+			{
+				db.Insert(new ComplexPerson
+				{
+					Name = new FullName
+					{
+						FirstName = "Insert15",
+						LastName = "Insert15"
+					},
+					Gender = Gender.Male,
+				});
+
+				var cnt = db.Person.Where(_ => _.FirstName.StartsWith("Insert15")).Count();
+				Assert.That(cnt, Is.EqualTo(1));
+			}
+			finally
 			{
 				db.Person.Where(_ => _.FirstName.StartsWith("Insert15")).Delete();
-
-				try
-				{
-					db.Insert(new ComplexPerson
-						{
-							Name = new FullName
-							{
-								FirstName = "Insert15",
-								LastName  = "Insert15"
-							},
-							Gender = Gender.Male,
-						});
-
-					var cnt = db.Person.Where(_ => _.FirstName.StartsWith("Insert15")).Count();
-					Assert.That(cnt, Is.EqualTo(1));
-				}
-				finally
-				{
-					db.Person.Where(_ => _.FirstName.StartsWith("Insert15")).Delete();
-				}
 			}
 		}
 
 		[Test]
 		public void Insert16([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			db.Person.Where(_ => _.FirstName.StartsWith("Insert16")).Delete();
+
+			try
+			{
+				var name = "Insert16";
+				var idx = 4;
+
+				db.Person.Insert(() => new Person()
+				{
+					FirstName = "Insert16",
+					LastName = (Sql.AsSql(name).Length + idx).ToString(),
+					Gender = Gender.Male,
+				});
+
+				var cnt = db.Person.Where(_ => _.FirstName.StartsWith("Insert16")).Count();
+				Assert.That(cnt, Is.EqualTo(1));
+			}
+			finally
 			{
 				db.Person.Where(_ => _.FirstName.StartsWith("Insert16")).Delete();
-
-				try
-				{
-					var name = "Insert16";
-					var idx = 4;
-
-					db.Person.Insert(() => new Person()
-					{
-						FirstName = "Insert16",
-						LastName  = (Sql.AsSql(name).Length + idx).ToString(),
-						Gender    = Gender.Male,
-					});
-
-					var cnt = db.Person.Where(_ => _.FirstName.StartsWith("Insert16")).Count();
-					Assert.That(cnt, Is.EqualTo(1));
-				}
-				finally
-				{
-					db.Person.Where(_ => _.FirstName.StartsWith("Insert16")).Delete();
-				}
 			}
 		}
 
@@ -1629,20 +1563,18 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllClickHouse)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					db.TestIdentity.Delete();
+				db.TestIdentity.Delete();
 
-					var id = db.TestIdentity.InsertWithIdentity(() => new TestIdentity {});
+				var id = db.TestIdentity.InsertWithIdentity(() => new TestIdentity {});
 
-					Assert.That(id, Is.Not.Null);
-				}
-				finally
-				{
-					db.TestIdentity.Delete();
-				}
+				Assert.That(id, Is.Not.Null);
+			}
+			finally
+			{
+				db.TestIdentity.Delete();
 			}
 		}
 
@@ -1656,24 +1588,22 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertConverted([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var tbl = db.GetTable<TestConvertTable1>();
+
+			try
 			{
-				var tbl = db.GetTable<TestConvertTable1>();
+				tbl.Delete(r => r.ID >= 1000);
 
-				try
-				{
-					tbl.Delete(r => r.ID >= 1000);
+				var tt = TimeSpan.FromMinutes(1);
 
-					var tt = TimeSpan.FromMinutes(1);
+				tbl.Insert(() => new TestConvertTable1 { ID = 1001, BigIntValue = tt });
 
-					tbl.Insert(() => new TestConvertTable1 { ID = 1001, BigIntValue = tt });
-
-					Assert.That(tbl.First(t => t.ID == 1001).BigIntValue, Is.EqualTo(tt));
-				}
-				finally
-				{
-					tbl.Delete(r => r.ID >= 1000);
-				}
+				Assert.That(tbl.First(t => t.ID == 1001).BigIntValue, Is.EqualTo(tt));
+			}
+			finally
+			{
+				tbl.Delete(r => r.ID >= 1000);
 			}
 		}
 
@@ -1687,24 +1617,22 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertConvertedNullable([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var tbl = db.GetTable<TestConvertTable2>();
+
+			try
 			{
-				var tbl = db.GetTable<TestConvertTable2>();
+				tbl.Delete(r => r.ID >= 1000);
 
-				try
-				{
-					tbl.Delete(r => r.ID >= 1000);
+				var tt = TimeSpan.FromMinutes(1);
 
-					var tt = TimeSpan.FromMinutes(1);
+				tbl.Insert(() => new TestConvertTable2 { ID = 1001, BigIntValue = tt });
 
-					tbl.Insert(() => new TestConvertTable2 { ID = 1001, BigIntValue = tt });
-
-					Assert.That(tbl.First(t => t.ID == 1001).BigIntValue, Is.EqualTo(tt));
-				}
-				finally
-				{
-					tbl.Delete(r => r.ID >= 1000);
-				}
+				Assert.That(tbl.First(t => t.ID == 1001).BigIntValue, Is.EqualTo(tt));
+			}
+			finally
+			{
+				tbl.Delete(r => r.ID >= 1000);
 			}
 		}
 
@@ -1714,17 +1642,15 @@ namespace Tests.xUpdate
 		{
 			var m = null as int?;
 
-			using (var db = GetDataContext(context))
-			{
-				(
-					from c in db.Child.With("INDEX(IX_ChildIndex)")
-					join id in db.GrandChild on c.ParentID equals id.ParentID
-					where id.ChildID == m
-					select c.ChildID
-				)
-				.Distinct()
-				.Insert(db.Parent, t => new Parent { ParentID = t });
-			}
+			using var db = GetDataContext(context);
+			(
+				from c in db.Child.With("INDEX(IX_ChildIndex)")
+				join id in db.GrandChild on c.ParentID equals id.ParentID
+				where id.ChildID == m
+				select c.ChildID
+			)
+			.Distinct()
+			.Insert(db.Parent, t => new Parent { ParentID = t });
 		}
 
 		[Test]
@@ -1888,29 +1814,27 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestInsertWithColumnFilter([DataSources] string context, [Values] bool withMiddleName)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var newName = "InsertColumnFilter";
+			try
 			{
-				var newName = "InsertColumnFilter";
-				try
+				var p = new Person()
 				{
-					var p = new Person()
-					{
-						FirstName  = newName,
-						LastName   = "whatever",
-						MiddleName = "som middle name",
-						Gender     = Gender.Male
-					};
+					FirstName  = newName,
+					LastName   = "whatever",
+					MiddleName = "som middle name",
+					Gender     = Gender.Male
+				};
 
-					db.Insert(p, (a, b) => b.ColumnName != nameof(Model.Person.MiddleName) || withMiddleName);
+				db.Insert(p, (a, b) => b.ColumnName != nameof(Model.Person.MiddleName) || withMiddleName);
 
-					p = db.GetTable<Person>().Where(x => x.FirstName == p.FirstName).First();
+				p = db.GetTable<Person>().Where(x => x.FirstName == p.FirstName).First();
 
-					Assert.That(string.IsNullOrWhiteSpace(p.MiddleName), Is.EqualTo(!withMiddleName));
-				}
-				finally
-				{
-					db.Person.Where(x => x.FirstName == newName).Delete();
-				}
+				Assert.That(string.IsNullOrWhiteSpace(p.MiddleName), Is.EqualTo(!withMiddleName));
+			}
+			finally
+			{
+				db.Person.Where(x => x.FirstName == newName).Delete();
 			}
 		}
 
@@ -1919,38 +1843,36 @@ namespace Tests.xUpdate
 		{
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var newName = "InsertColumnFilter";
+			try
 			{
-				var newName = "InsertColumnFilter";
-				try
+				var p = new Person()
 				{
-					var p = new Person()
-					{
-						FirstName = newName,
-						LastName = "whatever",
-						MiddleName = "som middle name",
-						Gender = Gender.Male
-					};
+					FirstName = newName,
+					LastName = "whatever",
+					MiddleName = "som middle name",
+					Gender = Gender.Male
+				};
 
-					db.Insert(p);
+				db.Insert(p);
 
-					p = db.GetTable<Person>().Where(x => x.FirstName == p.FirstName).First();
+				p = db.GetTable<Person>().Where(x => x.FirstName == p.FirstName).First();
 
-					p.MiddleName = "updated name";
+				p.MiddleName = "updated name";
 
-					db.Update(p, (a, b) => b.ColumnName != nameof(Model.Person.MiddleName) || withMiddleName);
+				db.Update(p, (a, b) => b.ColumnName != nameof(Model.Person.MiddleName) || withMiddleName);
 
-					p = db.GetTable<Person>().Where(x => x.FirstName == p.FirstName).First();
+				p = db.GetTable<Person>().Where(x => x.FirstName == p.FirstName).First();
 
-					if (withMiddleName)
-						Assert.That(p.MiddleName, Is.EqualTo("updated name"));
-					else
-						Assert.That(p.MiddleName, Is.Not.EqualTo("updated name"));
-				}
-				finally
-				{
-					db.Person.Where(x => x.FirstName == newName).Delete();
-				}
+				if (withMiddleName)
+					Assert.That(p.MiddleName, Is.EqualTo("updated name"));
+				else
+					Assert.That(p.MiddleName, Is.Not.EqualTo("updated name"));
+			}
+			finally
+			{
+				db.Person.Where(x => x.FirstName == newName).Delete();
 			}
 		}
 
@@ -1966,61 +1888,55 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestInsertOrReplaceWithColumnFilter([InsertOrUpdateDataSources] string context, [Values] bool withMiddleName, [Values] bool skipOnInsert)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<TestInsertOrReplaceTable>())
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<TestInsertOrReplaceTable>();
+			var newName = "InsertOrReplaceColumnFilter";
+			var p = new TestInsertOrReplaceTable()
 			{
-				var newName = "InsertOrReplaceColumnFilter";
-				var p = new TestInsertOrReplaceTable()
-				{
-					FirstName = newName,
-					LastName = "whatever",
-					MiddleName = "som middle name",
-				};
+				FirstName = newName,
+				LastName = "whatever",
+				MiddleName = "som middle name",
+			};
 
-				db.InsertOrReplace(p, (a, b, isInsert) => b.ColumnName != nameof(TestInsertOrReplaceTable.MiddleName) || withMiddleName || !skipOnInsert);
+			db.InsertOrReplace(p, (a, b, isInsert) => b.ColumnName != nameof(TestInsertOrReplaceTable.MiddleName) || withMiddleName || !skipOnInsert);
 
-				p = db.GetTable<TestInsertOrReplaceTable>().Where(x => x.FirstName == p.FirstName).First();
+			p = db.GetTable<TestInsertOrReplaceTable>().Where(x => x.FirstName == p.FirstName).First();
 
-				Assert.That(string.IsNullOrWhiteSpace(p.MiddleName), Is.EqualTo(!withMiddleName && skipOnInsert));
+			Assert.That(string.IsNullOrWhiteSpace(p.MiddleName), Is.EqualTo(!withMiddleName && skipOnInsert));
 
-				p.MiddleName = "updated name";
-				db.InsertOrReplace(p, (a, b, isInsert) => b.ColumnName != nameof(TestInsertOrReplaceTable.MiddleName) || withMiddleName || skipOnInsert);
+			p.MiddleName = "updated name";
+			db.InsertOrReplace(p, (a, b, isInsert) => b.ColumnName != nameof(TestInsertOrReplaceTable.MiddleName) || withMiddleName || skipOnInsert);
 
-				p = db.GetTable<TestInsertOrReplaceTable>().Where(x => x.FirstName == p.FirstName).First();
+			p = db.GetTable<TestInsertOrReplaceTable>().Where(x => x.FirstName == p.FirstName).First();
 
-				if (skipOnInsert || withMiddleName)
-					Assert.That(p.MiddleName, Is.EqualTo("updated name"));
-				else
-					Assert.That(p.MiddleName, Is.Not.EqualTo("updated name"));
-			}
+			if (skipOnInsert || withMiddleName)
+				Assert.That(p.MiddleName, Is.EqualTo("updated name"));
+			else
+				Assert.That(p.MiddleName, Is.Not.EqualTo("updated name"));
 		}
 
 		[Test]
 		public void AsValueInsertableTest([DataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<TestInsertOrReplaceTable>())
-			{
-				var vi = table.AsValueInsertable();
-				vi = vi.Value(x => x.ID, 123).Value(x => x.FirstName, "John");
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<TestInsertOrReplaceTable>();
+			var vi = table.AsValueInsertable();
+			vi = vi.Value(x => x.ID, 123).Value(x => x.FirstName, "John");
 
-				var cnt = vi.Insert();
-				if (context.SupportsRowcount())
-					Assert.That(cnt, Is.EqualTo(1));
-				Assert.That(table.Count(x => x.ID == 123 && x.FirstName == "John"), Is.EqualTo(1));
-			}
+			var cnt = vi.Insert();
+			if (context.SupportsRowcount())
+				Assert.That(cnt, Is.EqualTo(1));
+			Assert.That(table.Count(x => x.ID == 123 && x.FirstName == "John"), Is.EqualTo(1));
 		}
 
 		[Test]
 		public void AsValueInsertableEmptyTest([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var vi = db.Person.AsValueInsertable();
+			using var db = GetDataContext(context);
+			var vi = db.Person.AsValueInsertable();
 
-				var ex = Assert.Throws<LinqToDBException>(() => vi.Insert())!;
-				Assert.That(ex.Message, Is.EqualTo("Insert query has no setters defined."));
-			}
+			var ex = Assert.Throws<LinqToDBException>(() => vi.Insert())!;
+			Assert.That(ex.Message, Is.EqualTo("Insert query has no setters defined."));
 		}
 
 		class InsertEntity
@@ -2184,232 +2100,216 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertIfNotExists_EmptyInit1([InsertOrUpdateDataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<TestInsertOrReplaceInfo>())
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<TestInsertOrReplaceInfo>();
+			var cnt1 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => new TestInsertOrReplaceInfo() { });
+			var cnt2 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => new TestInsertOrReplaceInfo() { });
+			using (Assert.EnterMultipleScope())
 			{
-				var cnt1 = table.InsertOrUpdate(
-					() => new TestInsertOrReplaceInfo()
-					{
-						Id   = 1,
-						Name = "test"
-					},
-					p => new TestInsertOrReplaceInfo() { });
-				var cnt2 = table.InsertOrUpdate(
-					() => new TestInsertOrReplaceInfo()
-					{
-						Id   = 1,
-						Name = "test"
-					},
-					p => new TestInsertOrReplaceInfo() { });
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
-					Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
-				}
+				Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
+				Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
 			}
 		}
 
 		[Test]
 		public void InsertIfNotExists_EmptyInit2([InsertOrUpdateDataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<TestInsertOrReplaceInfo>())
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<TestInsertOrReplaceInfo>();
+			var cnt1 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => new TestInsertOrReplaceInfo() { },
+					() => new TestInsertOrReplaceInfo() { Id = 1 });
+			var cnt2 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => new TestInsertOrReplaceInfo() { },
+					() => new TestInsertOrReplaceInfo() { Id = 1 });
+			using (Assert.EnterMultipleScope())
 			{
-				var cnt1 = table.InsertOrUpdate(
-					() => new TestInsertOrReplaceInfo()
-					{
-						Id   = 1,
-						Name = "test"
-					},
-					p => new TestInsertOrReplaceInfo() { },
-					() => new TestInsertOrReplaceInfo() { Id = 1 });
-				var cnt2 = table.InsertOrUpdate(
-					() => new TestInsertOrReplaceInfo()
-					{
-						Id   = 1,
-						Name = "test"
-					},
-					p => new TestInsertOrReplaceInfo() { },
-					() => new TestInsertOrReplaceInfo() { Id = 1 });
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
-					Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
-				}
+				Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
+				Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
 			}
 		}
 
 		[Test]
 		public void InsertIfNotExists_EmptyNew1([InsertOrUpdateDataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<TestInsertOrReplaceInfo>())
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<TestInsertOrReplaceInfo>();
+			var cnt1 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => new TestInsertOrReplaceInfo());
+			var cnt2 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => new TestInsertOrReplaceInfo());
+			using (Assert.EnterMultipleScope())
 			{
-				var cnt1 = table.InsertOrUpdate(
-					() => new TestInsertOrReplaceInfo()
-					{
-						Id   = 1,
-						Name = "test"
-					},
-					p => new TestInsertOrReplaceInfo());
-				var cnt2 = table.InsertOrUpdate(
-					() => new TestInsertOrReplaceInfo()
-					{
-						Id   = 1,
-						Name = "test"
-					},
-					p => new TestInsertOrReplaceInfo());
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
-					Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
-				}
+				Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
+				Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
 			}
 		}
 
 		[Test]
 		public void InsertIfNotExists_EmptyNew2([InsertOrUpdateDataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<TestInsertOrReplaceInfo>())
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<TestInsertOrReplaceInfo>();
+			var cnt1 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => new TestInsertOrReplaceInfo(),
+					() => new TestInsertOrReplaceInfo() { Id = 1 });
+			var cnt2 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => new TestInsertOrReplaceInfo(),
+					() => new TestInsertOrReplaceInfo() { Id = 1 });
+			using (Assert.EnterMultipleScope())
 			{
-				var cnt1 = table.InsertOrUpdate(
-					() => new TestInsertOrReplaceInfo()
-					{
-						Id   = 1,
-						Name = "test"
-					},
-					p => new TestInsertOrReplaceInfo(),
-					() => new TestInsertOrReplaceInfo() { Id = 1 });
-				var cnt2 = table.InsertOrUpdate(
-					() => new TestInsertOrReplaceInfo()
-					{
-						Id   = 1,
-						Name = "test"
-					},
-					p => new TestInsertOrReplaceInfo(),
-					() => new TestInsertOrReplaceInfo() { Id = 1 });
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
-					Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
-				}
+				Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
+				Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
 			}
 		}
 
 		[Test]
 		public void InsertIfNotExists_NullExpr1([InsertOrUpdateDataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<TestInsertOrReplaceInfo>())
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<TestInsertOrReplaceInfo>();
+			var cnt1 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => null);
+			var cnt2 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => null);
+			using (Assert.EnterMultipleScope())
 			{
-				var cnt1 = table.InsertOrUpdate(
-					() => new TestInsertOrReplaceInfo()
-					{
-						Id   = 1,
-						Name = "test"
-					},
-					p => null);
-				var cnt2 = table.InsertOrUpdate(
-					() => new TestInsertOrReplaceInfo()
-					{
-						Id   = 1,
-						Name = "test"
-					},
-					p => null);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
-					Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
-				}
+				Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
+				Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
 			}
 		}
 
 		[Test]
 		public void InsertIfNotExists_NullExpr2([InsertOrUpdateDataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<TestInsertOrReplaceInfo>())
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<TestInsertOrReplaceInfo>();
+			var cnt1 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => null,
+					() => new TestInsertOrReplaceInfo() { Id = 1 });
+			var cnt2 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					p => null,
+					() => new TestInsertOrReplaceInfo() { Id = 1 });
+			using (Assert.EnterMultipleScope())
 			{
-				var cnt1 = table.InsertOrUpdate(
-					() => new TestInsertOrReplaceInfo()
-					{
-						Id   = 1,
-						Name = "test"
-					},
-					p => null,
-					() => new TestInsertOrReplaceInfo() { Id = 1 });
-				var cnt2 = table.InsertOrUpdate(
-					() => new TestInsertOrReplaceInfo()
-					{
-						Id   = 1,
-						Name = "test"
-					},
-					p => null,
-					() => new TestInsertOrReplaceInfo() { Id = 1 });
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
-					Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
-				}
+				Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
+				Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
 			}
 		}
 
 		[Test]
 		public void InsertIfNotExists_Null1([InsertOrUpdateDataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<TestInsertOrReplaceInfo>())
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<TestInsertOrReplaceInfo>();
+			var cnt1 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					null);
+			var cnt2 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					null);
+			using (Assert.EnterMultipleScope())
 			{
-				var cnt1 = table.InsertOrUpdate(
-					() => new TestInsertOrReplaceInfo()
-					{
-						Id   = 1,
-						Name = "test"
-					},
-					null);
-				var cnt2 = table.InsertOrUpdate(
-					() => new TestInsertOrReplaceInfo()
-					{
-						Id   = 1,
-						Name = "test"
-					},
-					null);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
-					Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
-				}
+				Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
+				Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
 			}
 		}
 
 		[Test]
 		public void InsertIfNotExists_Null2([InsertOrUpdateDataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<TestInsertOrReplaceInfo>())
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<TestInsertOrReplaceInfo>();
+			var cnt1 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					null,
+					() => new TestInsertOrReplaceInfo() { Id = 1 });
+			var cnt2 = table.InsertOrUpdate(
+					() => new TestInsertOrReplaceInfo()
+					{
+						Id   = 1,
+						Name = "test"
+					},
+					null,
+					() => new TestInsertOrReplaceInfo() { Id = 1 });
+			using (Assert.EnterMultipleScope())
 			{
-				var cnt1 = table.InsertOrUpdate(
-					() => new TestInsertOrReplaceInfo()
-					{
-						Id   = 1,
-						Name = "test"
-					},
-					null,
-					() => new TestInsertOrReplaceInfo() { Id = 1 });
-				var cnt2 = table.InsertOrUpdate(
-					() => new TestInsertOrReplaceInfo()
-					{
-						Id   = 1,
-						Name = "test"
-					},
-					null,
-					() => new TestInsertOrReplaceInfo() { Id = 1 });
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
-					Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
-				}
+				Assert.That(cnt1, Is.EqualTo(GetNonEmptyRowCount(context)));
+				Assert.That(cnt2, Is.EqualTo(GetEmptyRowCount(context)));
 			}
 		}
 		#endregion
@@ -2427,41 +2327,39 @@ namespace Tests.xUpdate
 		[Test]
 		public void Issue2243([InsertOrUpdateDataSources] string context, [Values(1, 2, 3)] int seed)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable<TestInsertOrReplaceInfo>())
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<TestInsertOrReplaceInfo>();
+			var user = $"TEST_USER{seed}";
+			var item = new TestInsertOrReplaceInfo()
 			{
-				var user = $"TEST_USER{seed}";
-				var item = new TestInsertOrReplaceInfo()
-				{
-					Id        = 1,
-					Name      = "Test1",
-					CreatedBy = user
-				};
+				Id        = 1,
+				Name      = "Test1",
+				CreatedBy = user
+			};
 
-				db.InsertOrReplace(item);
+			db.InsertOrReplace(item);
 
-				var res = table.Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(1));
-					Assert.That(res.Name, Is.EqualTo("Test1"));
-					Assert.That(res.CreatedBy, Is.EqualTo(user));
-					Assert.That(res.UpdatedBy, Is.Null);
-				}
+			var res = table.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(res.Id, Is.EqualTo(1));
+				Assert.That(res.Name, Is.EqualTo("Test1"));
+				Assert.That(res.CreatedBy, Is.EqualTo(user));
+				Assert.That(res.UpdatedBy, Is.Null);
+			}
 
-				item.Name      = "Test2";
-				item.UpdatedBy = user;
+			item.Name = "Test2";
+			item.UpdatedBy = user;
 
-				db.InsertOrReplace(item);
+			db.InsertOrReplace(item);
 
-				res = table.Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(1));
-					Assert.That(res.Name, Is.EqualTo("Test2"));
-					Assert.That(res.CreatedBy, Is.EqualTo(user));
-					Assert.That(res.UpdatedBy, Is.EqualTo(user));
-				}
+			res = table.Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(res.Id, Is.EqualTo(1));
+				Assert.That(res.Name, Is.EqualTo("Test2"));
+				Assert.That(res.CreatedBy, Is.EqualTo(user));
+				Assert.That(res.UpdatedBy, Is.EqualTo(user));
 			}
 		}
 		#endregion

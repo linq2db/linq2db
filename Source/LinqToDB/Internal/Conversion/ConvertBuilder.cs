@@ -63,17 +63,17 @@ namespace LinqToDB.Internal.Conversion
 		{
 			var pi = from.GetProperty("Value");
 
-			if (pi == null)
+			if (pi != null)
 			{
-				var fi = from.GetField("Value");
-
-				if (fi != null && fi.FieldType == to)
-					return Expression.Field(p, fi);
-
-				return null;
+				return pi.PropertyType == to ? Expression.Property(p, pi) : null;
 			}
 
-			return pi.PropertyType == to ? Expression.Property(p, pi) : null;
+			var fi = from.GetField("Value");
+
+			if (fi != null && fi.FieldType == to)
+				return Expression.Field(p, fi);
+
+			return null;
 		}
 
 		static Expression? GetOperator(Type from, Type to, Expression p)
@@ -113,30 +113,32 @@ namespace LinqToDB.Internal.Conversion
 
 		static bool IsConvertible(Type type)
 		{
-			if (type.IsEnum)
-				return false;
-
-			return type.TypeCode
-				is TypeCode.Boolean
-				or TypeCode.Byte
-				or TypeCode.SByte
-				or TypeCode.Int16
-				or TypeCode.Int32
-				or TypeCode.Int64
-				or TypeCode.UInt16
-				or TypeCode.UInt32
-				or TypeCode.UInt64
-				or TypeCode.Single
-				or TypeCode.Double
-				or TypeCode.Decimal
-				or TypeCode.Char;
+			return !type.IsEnum
+				&& type.TypeCode
+					is TypeCode.Boolean
+					or TypeCode.Byte
+					or TypeCode.SByte
+					or TypeCode.Int16
+					or TypeCode.Int32
+					or TypeCode.Int64
+					or TypeCode.UInt16
+					or TypeCode.UInt32
+					or TypeCode.UInt64
+					or TypeCode.Single
+					or TypeCode.Double
+					or TypeCode.Decimal
+					or TypeCode.Char;
 		}
 
 		static Expression? GetConversion(Type from, Type to, Expression p)
 		{
-			if (IsConvertible(from) && IsConvertible(to) && to != typeof(bool) ||
-				from.IsAssignableFrom(to) && to.IsAssignableFrom(from))
+			if (
+				(IsConvertible(from) && IsConvertible(to) && to != typeof(bool)) 
+				|| (from.IsAssignableFrom(to) && to.IsAssignableFrom(from))
+			)
+			{
 				return Expression.ConvertChecked(p, to);
+			}
 
 		 	return null;
 		}
@@ -145,29 +147,25 @@ namespace LinqToDB.Internal.Conversion
 
 		static Expression? GetParse(Type from, Type to, Expression p)
 		{
-			if (from == typeof(string))
-			{
-				var mi = to.GetMethodEx("Parse", ParseParameters);
-
-				if (mi != null)
-					return Expression.Call(mi, p, Expression.Property(null, typeof(CultureInfo), nameof(CultureInfo.InvariantCulture)));
-
-				mi = to.GetMethodEx("Parse", from);
-
-				if (mi != null)
-				{
-					return Expression.Convert(p, to, mi);
-				}
-
-				mi = to.GetMethodEx("Parse", typeof(SqlString));
-
-				if (mi != null)
-				{
-					p = GetCtor(from, typeof(SqlString), p)!;
-					return Expression.Convert(p, to, mi);
-				}
-
+			if (from != typeof(string))
 				return null;
+
+			var mi = to.GetMethodEx("Parse", ParseParameters);
+
+			if (mi != null)
+				return Expression.Call(mi, p, Expression.Property(null, typeof(CultureInfo), nameof(CultureInfo.InvariantCulture)));
+
+			mi = to.GetMethodEx("Parse", from);
+
+			if (mi != null)
+				return Expression.Convert(p, to, mi);
+
+			mi = to.GetMethodEx("Parse", typeof(SqlString));
+
+			if (mi != null)
+			{
+				p = GetCtor(from, typeof(SqlString), p)!;
+				return Expression.Convert(p, to, mi);
 			}
 
 			return null;
@@ -177,72 +175,64 @@ namespace LinqToDB.Internal.Conversion
 
 		static Expression? GetToStringInvariant(Type from, Type to, Expression p)
 		{
-			if (to == typeof(string) && !from.IsNullableType)
-			{
-				var mi = from.GetMethodEx("ToString", ToStringInvariantArgTypes);
-				return mi != null ? Expression.Call(p, mi, Expression.Property(null, typeof(CultureInfo), nameof(CultureInfo.InvariantCulture))) : null;
-			}
+			if (to != typeof(string) || from.IsNullableType)
+				return null;
 
-			return null;
+			var mi = from.GetMethodEx("ToString", ToStringInvariantArgTypes);
+			return mi != null ? Expression.Call(p, mi, Expression.Property(null, typeof(CultureInfo), nameof(CultureInfo.InvariantCulture))) : null;
 		}
 
 		static Expression? GetToString(Type from, Type to, Expression p)
 		{
-			if (to == typeof(string) && !from.IsNullableType)
-			{
-				var mi = from.GetMethodEx("ToString", []);
-				return mi != null ? Expression.Call(p, mi) : null;
-			}
+			if (to != typeof(string) || from.IsNullableType)
+				return null;
 
-			return null;
+			var mi = from.GetMethodEx("ToString", []);
+			return mi != null ? Expression.Call(p, mi) : null;
 		}
 
 		static Expression? GetParseEnum(Type from, Type to, Expression p)
 		{
-			if (from == typeof(string) && to.IsEnum)
+			if (from != typeof(string) || !to.IsEnum)
+				return null;
+
+			var values = Enum.GetValues(to);
+			var names  = Enum.GetNames (to);
+
+			var dic = new Dictionary<string,object>(StringComparer.Ordinal);
+
+			for (var i = 0; i < values.Length; i++)
 			{
-				var values = Enum.GetValues(to);
-				var names  = Enum.GetNames (to);
+				var val = values.GetValue(i)!;
+				var lv  = (long)Convert.ChangeType(val, typeof(long), Thread.CurrentThread.CurrentCulture)!;
+				var lvs = lv.ToString(NumberFormatInfo.InvariantInfo);
 
-				var dic = new Dictionary<string,object>();
+				dic[lvs] = val;
 
-				for (var i = 0; i < values.Length; i++)
-				{
-					var val = values.GetValue(i)!;
-					var lv  = (long)Convert.ChangeType(val, typeof(long), Thread.CurrentThread.CurrentCulture)!;
-					var lvs = lv.ToString(NumberFormatInfo.InvariantInfo);
-
-					dic[lvs] = val;
-
-					if (lv > 0)
-						dic["+" + lvs] = val;
-				}
-
-				for (var i = 0; i < values.Length; i++)
-					dic[names[i].ToLowerInvariant()] = values.GetValue(i)!;
-
-				for (var i = 0; i < values.Length; i++)
-					dic[names[i]] = values.GetValue(i)!;
-
-				var cases =
-					from v in dic
-					group v.Key by v.Value
-					into g
-					select Expression.SwitchCase(Expression.Constant(g.Key), g.Select(Expression.Constant));
-
-				var expr = Expression.Switch(
-					p,
-					Expression.Convert(
-						Expression.Call(DefaultConverter,
-							Expression.Convert(p, typeof(string)),
-							Expression.Constant(to)),
-						to),
-					cases.ToArray());
-
-				return expr;
+				if (lv > 0)
+					dic["+" + lvs] = val;
 			}
 
-			return null;
+			for (var i = 0; i < values.Length; i++)
+				dic[names[i].ToLowerInvariant()] = values.GetValue(i)!;
+
+			for (var i = 0; i < values.Length; i++)
+				dic[names[i]] = values.GetValue(i)!;
+
+			var cases = dic
+				.GroupBy(v => v.Value, v => v.Key)
+				.Select(g => Expression.SwitchCase(Expression.Constant(g.Key), g.Select(Expression.Constant)));
+
+			var expr = Expression.Switch(
+				p,
+				Expression.Convert(
+					Expression.Call(DefaultConverter,
+						Expression.Convert(p, typeof(string)),
+						Expression.Constant(to)),
+					to),
+				[.. cases]);
+
+			return expr;
 		}
 
 		static object ThrowLinqToDBException(string text)
@@ -254,81 +244,84 @@ namespace LinqToDB.Internal.Conversion
 
 		static Expression? GetToEnum(Type from, Type to, Expression expression, MappingSchema mappingSchema)
 		{
-			if (to.IsEnum)
+			if (!to.IsEnum)
+				return null;
+
+			var toFields = mappingSchema.GetMapValues(to)!;
+
+			var fromType = from;
+
+			if (fromType.IsNullableType)
+				fromType = fromType.UnwrapNullableType();
+
+			var fromTypeFields = toFields
+				.Select(f => new { f.OrigValue, attrs = f.MapValues.Where(a => a.Value == null || a.Value.GetType() == fromType).ToList() })
+				.ToList();
+
+			if (fromTypeFields.TrueForAll(f => f.attrs.Count != 0))
 			{
-				var toFields = mappingSchema.GetMapValues(to)!;
-
-				var fromType = from;
-
-				if (fromType.IsNullableType)
-					fromType = fromType.UnwrapNullableType();
-
-				var fromTypeFields = toFields
-					.Select(f => new { f.OrigValue, attrs = f.MapValues.Where(a => a.Value == null || a.Value.GetType() == fromType).ToList() })
+				var cases = fromTypeFields
+					.Select(f => (
+						value: f.OrigValue,
+						attrs: f.attrs
+							.Where (a => string.Equals(a.Configuration, f.attrs[0].Configuration, StringComparison.Ordinal))
+							.Select(a => a.Value ?? mappingSchema.GetDefaultValue(from))
+							.ToList()
+					))
 					.ToList();
 
-				if (fromTypeFields.All(f => f.attrs.Count != 0))
+				var ambiguityMappings =
+					from c in cases
+					from a in c.attrs
+					group c by a into g
+					where g.Skip(1).Any()
+					select g;
+
+				var ambiguityMapping = ambiguityMappings.FirstOrDefault();
+
+				if (ambiguityMapping != null)
 				{
-					var cases = fromTypeFields
-						.Select(f => new
-							{
-								value = f.OrigValue,
-								attrs = f.attrs
-									.Where (a => a.Configuration == f.attrs[0].Configuration)
-									.Select(a => a.Value ?? mappingSchema.GetDefaultValue(from))
-									.ToList()
-							})
-						.ToList();
-
-					var ambiguityMappings =
-						from c in cases
-						from a in c.attrs
-						group c by a into g
-						where g.Count() > 1
-						select g;
-
-					var ambiguityMapping = ambiguityMappings.FirstOrDefault();
-
-					if (ambiguityMapping != null)
-					{
-						var enums = ambiguityMapping.ToList();
-
-						return Expression.Convert(
-							Expression.Call(
-								_throwLinqToDBConvertException,
-								Expression.Constant(
-									$"Mapping ambiguity. MapValue({ambiguityMapping.Key}) attribute is defined for both '{to.FullName}.{enums[0].value}' and '{to.FullName}.{enums[1].value}'.")),
-								to);
-					}
-
-					var expr = Expression.Switch(
-						expression,
-						Expression.Convert(
-							Expression.Call(DefaultConverter,
-								Expression.Convert(expression, typeof(object)),
-								Expression.Constant(to)),
-							to),
-						cases
-							.Select(f =>
-								Expression.SwitchCase(
-									Expression.Constant(f.value),
-									f.attrs.Select(a => Expression.Constant(a, from))))
-							.ToArray());
-
-					return expr;
-				}
-
-				if (fromTypeFields.Any(f => f.attrs.Any(a => a.Value != null)))
-				{
-					var field = fromTypeFields.First(f => f.attrs.Count == 0);
+					var enums = ambiguityMapping.ToList();
 
 					return Expression.Convert(
 						Expression.Call(
 							_throwLinqToDBConvertException,
 							Expression.Constant(
-								$"Inconsistent mapping. '{to.FullName}.{field.OrigValue}' does not have MapValue(<{from.FullName}>) attribute.")),
+								$"Mapping ambiguity. MapValue({ambiguityMapping.Key}) attribute is defined for both '{to.FullName}.{enums[0].value}' and '{to.FullName}.{enums[1].value}'.")),
 							to);
 				}
+
+				var expr = Expression.Switch(
+					expression,
+					Expression.Convert(
+						Expression.Call(DefaultConverter,
+							Expression.Convert(expression, typeof(object)),
+							Expression.Constant(to)),
+						to),
+					cases
+						.Select(f =>
+							Expression.SwitchCase(
+								Expression.Constant(f.value),
+								f.attrs.Select(a => Expression.Constant(a, from)))
+						)
+						.ToArray()
+				);
+
+				return expr;
+			}
+
+			if (fromTypeFields.Exists(f => f.attrs.Exists(a => a.Value != null)))
+			{
+				var field = fromTypeFields.First(f => f.attrs.Count == 0);
+
+				return Expression.Convert(
+					Expression.Call(
+						_throwLinqToDBConvertException,
+						Expression.Constant(
+							$"Inconsistent mapping. '{to.FullName}.{field.OrigValue}' does not have MapValue(<{from.FullName}>) attribute.")
+					),
+					to
+				);
 			}
 
 			return null;
@@ -336,130 +329,140 @@ namespace LinqToDB.Internal.Conversion
 
 		static Expression? GetFromEnum(Type from, Type to, Expression expression, MappingSchema mappingSchema)
 		{
-			if (from.IsEnum)
+			if (!from.IsEnum)
+				return null;
+
+			var fromFields = mappingSchema.GetMapValues(from)!;
+
+			var valueType = to;
+			if (valueType.IsNullableType)
+				valueType = valueType.UnwrapNullableType();
+
+			var toTypeFields = fromFields
+				.Select(f => ( 
+					f.OrigValue,
+					Attrs: f.MapValues
+						.OrderBy(a =>
+						{
+							var idx = a.Configuration == null ?
+								int.MaxValue :
+								Array.IndexOf(mappingSchema.ConfigurationList, a.Configuration);
+							return idx < 0 ? int.MaxValue : idx;
+						})
+						.ThenBy(a => !a.IsDefault)
+						.ThenBy(a => a.Value == null)
+						.FirstOrDefault(a => a.Value == null || a.Value.GetType() == valueType)
+				))
+				.ToList();
+
+			if (toTypeFields.TrueForAll(f => f.Attrs != null))
 			{
-				var fromFields = mappingSchema.GetMapValues(from)!;
+				var cases = toTypeFields
+					.Select(f => Expression.SwitchCase(
+						Expression.Constant(f.Attrs!.Value ?? mappingSchema.GetDefaultValue(to), to),
+						Expression.Constant(f.OrigValue)
+					));
 
+				var expr = Expression.Switch(
+					expression,
+					Expression.Convert(
+						Expression.Call(DefaultConverter,
+							Expression.Convert(expression, typeof(object)),
+							Expression.Constant(to)),
+						to),
+					[.. cases]
+				);
+
+				return expr;
+			}
+
+			if (toTypeFields.Exists(f => f.Attrs != null))
+			{
+				(var origValue, _) = toTypeFields.First(f => f.Attrs == null);
+
+				return Expression.Convert(
+					Expression.Call(
+						_throwLinqToDBConvertException,
+						Expression.Constant(
+							$"Inconsistent mapping. '{from.FullName}.{origValue}' does not have MapValue(<{to.FullName}>) attribute."
+						)
+					),
+					to
+				);
+			}
+
+			if (to.IsEnum)
+			{
+				var toFields = mappingSchema.GetMapValues(to)!;
+
+				var dic = new Dictionary<MapValue,MapValue>();
+				var cl  = mappingSchema.ConfigurationList.Concat(new[] { "", null }).Select((c,i) => (c, i)).ToArray();
+
+				foreach (var toField in toFields)
 				{
-					var valueType = to;
-					if (valueType.IsNullableType)
-						valueType = valueType.UnwrapNullableType();
+					if (toField.MapValues.Length == 0)
+						return null;
 
-					var toTypeFields = fromFields
-						.Select(f => ( f.OrigValue, Attrs: f.MapValues
-							.OrderBy(a =>
-							{
-								var idx = a.Configuration == null ?
-									int.MaxValue :
-									Array.IndexOf(mappingSchema.ConfigurationList, a.Configuration);
-								return idx < 0 ? int.MaxValue : idx;
-							})
-							.ThenBy(a => !a.IsDefault)
-							.ThenBy(a => a.Value == null)
-							.FirstOrDefault(a => a.Value == null || a.Value.GetType() == valueType) ))
+					var toAttr = toField.MapValues[0];
+
+					toAttr = toField.MapValues.FirstOrDefault(a => string.Equals(a.Configuration, toAttr.Configuration, StringComparison.Ordinal) && a.IsDefault) ?? toAttr;
+
+					var fromAttrs = fromFields
+						.Where(f => f.MapValues.Any(a =>
+							a.Value?.Equals(toAttr.Value) ?? toAttr.Value == null))
 						.ToList();
 
-					if (toTypeFields.All(f => f.Attrs != null))
+					if (fromAttrs.Count == 0)
+						return null;
+
+					if (fromAttrs.Count > 1)
 					{
-						var cases = toTypeFields.Select(f => Expression.SwitchCase(
-							Expression.Constant(f.Attrs!.Value ?? mappingSchema.GetDefaultValue(to), to),
-							Expression.Constant(f.OrigValue)));
+						var fattrs =
+							from f in fromAttrs
+							let a = f.MapValues.First(a => a.Value?.Equals(toAttr.Value) ?? toAttr.Value == null)
+							from c in cl
+							where string.Equals(a.Configuration, c.c, StringComparison.Ordinal)
+							orderby c.i
+							select f;
 
-						var expr = Expression.Switch(
-							expression,
-							Expression.Convert(
-								Expression.Call(DefaultConverter,
-									Expression.Convert(expression, typeof(object)),
-									Expression.Constant(to)),
-								to),
-							cases.ToArray());
-
-						return expr;
+						fromAttrs = fattrs.Take(1).ToList();
 					}
 
-					if (toTypeFields.Any(f => f.Attrs != null))
-					{
-						(var origValue, _) = toTypeFields.First(f => f.Attrs == null);
+					var prev = dic
+						.Where (a => a.Value.OrigValue.Equals(fromAttrs[0].OrigValue))
+						.Select(pair => new { To = pair.Key, From = pair.Value })
+						.FirstOrDefault();
 
+					if (prev != null)
+					{
 						return Expression.Convert(
 							Expression.Call(
 								_throwLinqToDBConvertException,
 								Expression.Constant(
-									$"Inconsistent mapping. '{from.FullName}.{origValue}' does not have MapValue(<{to.FullName}>) attribute.")),
-								to);
+									string.Format(
+										CultureInfo.InvariantCulture,
+										"Mapping ambiguity. '{0}.{1}' can be mapped to either '{2}.{3}' or '{2}.{4}'.",
+										from.FullName, fromAttrs[0].OrigValue,
+										to.FullName,
+										prev.To.OrigValue,
+										toField.OrigValue
+									)
+								)
+							),
+							to
+						);
 					}
+
+					dic.Add(toField, fromAttrs[0]);
 				}
 
-				if (to.IsEnum)
+				if (dic.Count > 0)
 				{
-					var toFields = mappingSchema.GetMapValues(to)!;
-
-					var dic = new Dictionary<MapValue,MapValue>();
-					var cl  = mappingSchema.ConfigurationList.Concat(new[] { "", null }).Select((c,i) => (c, i)).ToArray();
-
-					foreach (var toField in toFields)
-					{
-						if (toField.MapValues.Length == 0)
-							return null;
-
-						var toAttr = toField.MapValues[0];
-
-						toAttr = toField.MapValues.FirstOrDefault(a => a.Configuration == toAttr.Configuration && a.IsDefault) ?? toAttr;
-
-						var fromAttrs = fromFields.Where(f => f.MapValues.Any(a =>
-							a.Value?.Equals(toAttr.Value) ?? toAttr.Value == null)).ToList();
-
-						if (fromAttrs.Count == 0)
-							return null;
-
-						if (fromAttrs.Count > 1)
-						{
-							var fattrs =
-								from f in fromAttrs
-								select new
-								{
-									f,
-									a = f.MapValues.First(a => a.Value?.Equals(toAttr.Value) ?? toAttr.Value == null)
-								} into fa
-								from c in cl
-								where fa.a.Configuration == c.c
-								orderby c.i
-								select fa.f;
-
-							fromAttrs = fattrs.Take(1).ToList();
-						}
-
-						var prev = dic
-							.Where (a => a.Value.OrigValue.Equals(fromAttrs[0].OrigValue))
-							.Select(pair => new { To = pair.Key, From = pair.Value })
-							.FirstOrDefault();
-
-						if (prev != null)
-						{
-							return Expression.Convert(
-								Expression.Call(
-									_throwLinqToDBConvertException,
-									Expression.Constant(
-										string.Format(
-											CultureInfo.InvariantCulture,
-											"Mapping ambiguity. '{0}.{1}' can be mapped to either '{2}.{3}' or '{2}.{4}'.",
-											from.FullName, fromAttrs[0].OrigValue,
-											to.FullName,
-											prev.To.OrigValue,
-											toField.OrigValue))),
-									to);
-						}
-
-						dic.Add(toField, fromAttrs[0]);
-					}
-
-					if (dic.Count > 0)
-					{
-						var cases = dic.Select(f => Expression.SwitchCase(
+					var cases = dic.Select(f => Expression.SwitchCase(
 							Expression.Constant(f.Key.  OrigValue),
 							Expression.Constant(f.Value.OrigValue)));
 
-						var expr = Expression.Switch(
+					var expr = Expression.Switch(
 							expression,
 							Expression.Convert(
 								Expression.Call(DefaultConverter,
@@ -468,8 +471,7 @@ namespace LinqToDB.Internal.Conversion
 								to),
 							cases.ToArray());
 
-						return expr;
-					}
+					return expr;
 				}
 			}
 

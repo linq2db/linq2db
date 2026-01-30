@@ -692,7 +692,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				idx++;
 			}
 
-			if (values.Count(v => v.Value != null) > 1)
+			if (values.Where(v => v.Value != null).Skip(1).Any())
 			{
 				// for multiple values generate IN predicate
 				cond.Predicates.Add(
@@ -927,7 +927,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					MemberAccessor? foundMember = null;
 					foreach (var tm in typeMembers)
 					{
-						if (tm.Name == param.Name)
+						if (string.Equals(tm.Name, param.Name, StringComparison.Ordinal))
 						{
 							foundMember = tm;
 							break;
@@ -1045,7 +1045,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						var dic  = typeMembers
 							.Select(static (m,i) => new { m, i })
-							.ToDictionary(static _ => _.m.MemberInfo.Name, static _ => _.i);
+							.ToDictionary(static _ => _.m.MemberInfo.Name, static _ => _.i, StringComparer.Ordinal);
 
 						var assignments = new List<(MemberAssignment ma, int order)>();
 						foreach (var ma in expr.Bindings.Cast<MemberAssignment>())
@@ -1251,36 +1251,40 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				next = nextPath[nextIndex];
 
-				if (next is MemberExpression me)
+				switch (next)
 				{
-					member = me.Member;
-				}
-				else if (next is SqlGenericParamAccessExpression paramAccess)
-				{
-					if (body.NodeType == ExpressionType.New)
+					case MemberExpression me:
+						member = me.Member;
+						break;
+
+					case SqlGenericParamAccessExpression paramAccess:
 					{
-						var newExpr = (NewExpression)body;
-						if (newExpr.Constructor == paramAccess.ParameterInfo.Member && paramAccess.ParamIndex < newExpr.Arguments.Count)
+						if (body.NodeType == ExpressionType.New)
 						{
-							return Project(context, null, nextPath, nextIndex - 1, flags,
-								newExpr.Arguments[paramAccess.ParamIndex], strict);
+							var newExpr = (NewExpression)body;
+							if (newExpr.Constructor == paramAccess.ParameterInfo.Member && paramAccess.ParamIndex < newExpr.Arguments.Count)
+							{
+								return Project(context, null, nextPath, nextIndex - 1, flags,
+									newExpr.Arguments[paramAccess.ParamIndex], strict);
+							}
 						}
-					}
-					else if (body.NodeType == ExpressionType.Call)
-					{
-						var methodCall = (MethodCallExpression)body;
-						if (methodCall.Method == paramAccess.ParameterInfo.Member && paramAccess.ParamIndex < methodCall.Arguments.Count)
+						else if (body.NodeType == ExpressionType.Call)
 						{
-							return Project(context, null, nextPath, nextIndex - 1, flags,
-								methodCall.Arguments[paramAccess.ParamIndex], strict);
+							var methodCall = (MethodCallExpression)body;
+							if (methodCall.Method == paramAccess.ParameterInfo.Member && paramAccess.ParamIndex < methodCall.Arguments.Count)
+							{
+								return Project(context, null, nextPath, nextIndex - 1, flags,
+									methodCall.Arguments[paramAccess.ParamIndex], strict);
+							}
 						}
+
+						break;
+
+						// nothing to do right now
 					}
 
-					// nothing to do right now
-				}
-				else
-				{
-					throw new NotImplementedException();
+					default:
+						throw new NotSupportedException($"Invalid Projection `{next.GetType().FullName}`");
 				}
 			}
 
@@ -1384,7 +1388,7 @@ namespace LinqToDB.Internal.Linq.Builder
 								for (int i = 0; i < genericConstructor.Assignments.Count; i++)
 								{
 									var assignment = genericConstructor.Assignments[i];
-									if (assignment.MemberInfo.ReflectedType != member.ReflectedType && assignment.MemberInfo.Name == member.Name)
+									if (assignment.MemberInfo.ReflectedType != member.ReflectedType && string.Equals(assignment.MemberInfo.Name, member.Name, StringComparison.Ordinal))
 									{
 										var mi = assignment.MemberInfo.ReflectedType!.GetMemberEx(member);
 										if (mi != null && IsEqualMembers(assignment.MemberInfo, mi))
@@ -1579,6 +1583,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 									break;
 								}
+
 								case MemberBindingType.MemberBinding:
 								{
 									var memberMemberBinding = (MemberMemberBinding)binding;
@@ -1592,10 +1597,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 									break;
 								}
+
 								case MemberBindingType.ListBinding:
-									throw new NotImplementedException();
+									throw new NotSupportedException($"Unsupported MemberBindingType `{binding.BindingType}`");
+
 								default:
-									throw new NotImplementedException();
+									throw new InvalidOperationException($"Unsupported MemberBindingType `{binding.BindingType}`");
 							}
 						}
 
@@ -1718,7 +1725,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (mc.Method.IsStatic)
 					{
-						if (mc.Method.Name == nameof(Sql.Alias) && mc.Method.DeclaringType == typeof(Sql))
+						if (mc.Method.Name is nameof(Sql.Alias) && mc.Method.DeclaringType == typeof(Sql))
 						{
 							return Project(context, path, nextPath, nextIndex, flags, mc.Arguments[0], strict);
 						}
@@ -1797,7 +1804,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (member1.DeclaringType == null || member2.DeclaringType == null)
 				return false;
 
-			if (member1.Name != member2.Name)
+			if (!string.Equals(member1.Name, member2.Name, StringComparison.Ordinal))
 				return false;
 
 			return member1.EqualsTo(member2);
@@ -1834,7 +1841,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				case ExpressionType.Call:
 				{
-					//TODO: Do we still need Alias?
+					// TODO: Do we still need Alias?
 					var mc = (MethodCallExpression)createExpression;
 					if (mc.IsSameGenericMethod(Methods.LinqToDB.SqlExt.Alias))
 						return ParseGenericConstructor(mc.Arguments[0], flags, columnDescriptor);
@@ -1845,7 +1852,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (!mc.Method.IsStatic)
 						break;
 
-					if (mc.Method.IsSqlPropertyMethodEx() || mc.IsSqlRow() || mc.Method.DeclaringType == typeof(string))
+					if (mc.Method.IsSqlPropertyMethod || mc.IsSqlRow || mc.Method.DeclaringType == typeof(string))
 						break;
 
 					return new SqlGenericConstructorExpression(mc);

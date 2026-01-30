@@ -17,9 +17,9 @@ namespace LinqToDB.Internal.Common
 			string                           defaultName = "t",
 			StringComparer?                  comparer    = null)
 		{
-			if (items      == null) throw new ArgumentNullException(nameof(items));
-			if (nameFunc   == null) throw new ArgumentNullException(nameof(nameFunc));
-			if (nameSetter == null) throw new ArgumentNullException(nameof(nameSetter));
+			ArgumentNullException.ThrowIfNull(items);
+			ArgumentNullException.ThrowIfNull(nameFunc);
+			ArgumentNullException.ThrowIfNull(nameSetter);
 
 			MakeUniqueNames(items, staticNames, nameFunc, nameSetter, t =>
 			{
@@ -56,11 +56,11 @@ namespace LinqToDB.Internal.Common
 			Func<T, string?>                  defaultName,
 			StringComparer?                   comparer = null)
 		{
-			if (items         == null) throw new ArgumentNullException(nameof(items));
-			if (validatorFunc == null) throw new ArgumentNullException(nameof(validatorFunc));
-			if (nameFunc      == null) throw new ArgumentNullException(nameof(nameFunc));
-			if (nameSetter    == null) throw new ArgumentNullException(nameof(nameSetter));
-			if (defaultName   == null) throw new ArgumentNullException(nameof(defaultName));
+			ArgumentNullException.ThrowIfNull(items);
+			ArgumentNullException.ThrowIfNull(validatorFunc);
+			ArgumentNullException.ThrowIfNull(nameFunc);
+			ArgumentNullException.ThrowIfNull(nameSetter);
+			ArgumentNullException.ThrowIfNull(defaultName);
 
 			HashSet<string>?         currentNames    = null;
 			Dictionary<string, int>? currentCounters = null;
@@ -102,7 +102,7 @@ namespace LinqToDB.Internal.Common
 
 					if (!currentCounters.TryGetValue(name, out startDigit))
 					{
-						startDigit = int.Parse(prevName.Substring(prevName.Length - digitCount, digitCount), NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
+						startDigit = int.Parse(prevName.AsSpan(prevName.Length - digitCount, digitCount), NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
 					}
 				}
 
@@ -110,7 +110,7 @@ namespace LinqToDB.Internal.Common
 
 				do
 				{
-					newName = FormattableString.Invariant($"{name}{startDigit}");
+					newName = string.Create(CultureInfo.InvariantCulture, $"{name}{startDigit}");
 					++startDigit;
 				} while (currentNames.Contains(newName) || !validatorFunc(newName, namesParameter));
 
@@ -162,7 +162,7 @@ namespace LinqToDB.Internal.Common
 
 		public class ObjectReferenceEqualityComparer<T> : IEqualityComparer<T>
 		{
-			public static IEqualityComparer<T> Default = new ObjectReferenceEqualityComparer<T>();
+			public static readonly IEqualityComparer<T> Default = new ObjectReferenceEqualityComparer<T>();
 
 			#region IEqualityComparer<T> Members
 

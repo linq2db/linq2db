@@ -90,12 +90,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (translationContext.CanBeEvaluatedOnClient(objExpression))
 				return null;
 
-			var obj = translationContext.Translate(objExpression);
-
-			if (obj is not SqlPlaceholderExpression objPlaceholder)
-				return null;
-
-			return objPlaceholder;
+			return translationContext.Translate(objExpression) switch
+			{
+				SqlPlaceholderExpression objPlaceholder => objPlaceholder,
+				_ => null,
+			};
 		}
 
 		protected virtual Expression? ConvertToString(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
@@ -138,15 +137,20 @@ namespace LinqToDB.Internal.DataProvider.Translation
 								: translationContext.ExpressionFactory
 									.SearchCondition(isOr: true)
 									.AddRange(
-									field.MapValues.Select(
-										v => translationContext.ExpressionFactory.Equal(
-											objPlaceholder.Sql,
-											translationContext.ExpressionFactory.Value(fromType, v.Value))));
+										field.MapValues.Select(
+											v => translationContext.ExpressionFactory.Equal(
+												objPlaceholder.Sql,
+												translationContext.ExpressionFactory.Value(fromType, v.Value))));
 
 							(cases ??= []).Add(
 								new SqlCaseExpression.CaseItem(
 									cond,
-									translationContext.ExpressionFactory.Value(toType, FormattableString.Invariant($"{field.OrigValue}"))));
+									translationContext.ExpressionFactory.Value(
+										toType,
+										string.Create(CultureInfo.InvariantCulture, $"{field.OrigValue}")
+									)
+								)
+							);
 						}
 					}
 
@@ -173,42 +177,40 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			translated = null;
 
-			if (methodCall.Object != null && methodCall.Method.Name == nameof(ToString))
-			{
-				var parameters = methodCall.Method.GetParameters();
-				if (parameters.Length > 1)
-					return true;
+			if (methodCall.Object == null || !string.Equals(methodCall.Method.Name, nameof(ToString), StringComparison.Ordinal))
+				return false;
 
-				if (parameters.Length == 1)
-				{
-					if (parameters[0].ParameterType != typeof(IFormatProvider))
-						return true;
-
-					var cultureExpression = methodCall.Arguments[0];
-
-					if (!translationContext.CanBeEvaluated(cultureExpression))
-						return true;
-
-					var culture = translationContext.Evaluate(cultureExpression);
-					if (culture is not IFormatProvider formatProvider)
-						return true;
-
-					if (formatProvider != CultureInfo.InvariantCulture)
-						return true;
-				}
-
-				if (translationFlags.HasFlag(TranslationFlags.Expression) && translationContext.CanBeEvaluatedOnClient(methodCall.Object))
-					return true;
-
-				translated = ConvertToString(translationContext, methodCall, translationFlags);
-
-				if (translated == null)
-					return false;
-				
+			var parameters = methodCall.Method.GetParameters();
+			if (parameters.Length > 1)
 				return true;
+
+			if (parameters.Length == 1)
+			{
+				if (parameters[0].ParameterType != typeof(IFormatProvider))
+					return true;
+
+				var cultureExpression = methodCall.Arguments[0];
+
+				if (!translationContext.CanBeEvaluated(cultureExpression))
+					return true;
+
+				var culture = translationContext.Evaluate(cultureExpression);
+				if (culture is not IFormatProvider formatProvider)
+					return true;
+
+				if (formatProvider != CultureInfo.InvariantCulture)
+					return true;
 			}
 
-			return false;
+			if (translationFlags.HasFlag(TranslationFlags.Expression) && translationContext.CanBeEvaluatedOnClient(methodCall.Object))
+				return true;
+
+			translated = ConvertToString(translationContext, methodCall, translationFlags);
+
+			if (translated == null)
+				return false;
+
+			return true;
 		}
 
 		protected bool ProcessSqlConvert(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, out Expression? translated)
@@ -218,7 +220,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (methodCall.Method.DeclaringType != typeof(Sql))
 				return false;
 
-			if (methodCall.Method.Name != nameof(Sql.Convert))
+			if (!string.Equals(methodCall.Method.Name, nameof(Sql.Convert), StringComparison.Ordinal))
 				return false;
 
 			if (methodCall.Arguments.Count == 1)
@@ -254,7 +256,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (methodCall.Method.DeclaringType != typeof(Convert))
 				return false;
 
-			if (methodCall.Method.Name != nameof(Convert.ToBoolean))
+			if (!string.Equals(methodCall.Method.Name, nameof(Convert.ToBoolean), StringComparison.Ordinal))
 				return false;
 
 			if (methodCall.Arguments.Count != 1)
@@ -283,7 +285,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (nullableType == null || !typeof(Nullable<>).IsSameOrParentOf(nullableType))
 				return false;
 
-			if (methodCall.Method.Name != nameof(Nullable<>.GetValueOrDefault))
+			if (!string.Equals(methodCall.Method.Name, nameof(Nullable<>.GetValueOrDefault), StringComparison.Ordinal))
 				return false;
 
 			var argumentPlaceholder = TranslateNoRequiredObjectExpression(translationContext, methodCall.Object);

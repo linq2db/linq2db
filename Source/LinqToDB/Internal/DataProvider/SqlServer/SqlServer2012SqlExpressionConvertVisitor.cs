@@ -11,13 +11,11 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func.Name)
+			return func.Name switch
 			{
-				case PseudoFunctions.TRY_CONVERT:
-					return new SqlFunction(func.Type, "TRY_CONVERT", true, func.Parameters[0], func.Parameters[2]);
-			}
-
-			return base.ConvertSqlFunction(func);
+				PseudoFunctions.TRY_CONVERT => new SqlFunction(func.Type, "TRY_CONVERT", true, func.Parameters[0], func.Parameters[2]),
+				_                           => base.ConvertSqlFunction(func),
+			};
 		}
 	}
 }

@@ -40,7 +40,7 @@ namespace LinqToDB.DataModel
 		public IType?               BaseType         { get; set; }
 
 		/// <summary>
-		/// List of implemented interfaces, could be <c>null</c>.
+		/// List of implemented interfaces, could be <see langword="null"/>.
 		/// </summary>
 		public List<IType>?         Interfaces       { get; set; }
 

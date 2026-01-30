@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -46,7 +46,7 @@ namespace LinqToDB.Internal.Linq
 
 				var ei = new Query<int>(dataContext)
 				{
-					Queries = { new QueryInfo { Statement = insertStatement } }
+					Queries = { new QueryInfo { Statement = insertStatement } },
 				};
 
 				var accessorIdGenerator = new UniqueIdGenerator<ParameterAccessor>();

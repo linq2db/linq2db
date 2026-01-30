@@ -184,7 +184,7 @@ namespace LinqToDB.Data
 		)
 			where T : class
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			ArgumentNullException.ThrowIfNull(table);
 
 			var withUpdate = MergeWithUpdate(table);
 			var target     = table;
@@ -239,7 +239,7 @@ namespace LinqToDB.Data
 		)
 			where T : class
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			ArgumentNullException.ThrowIfNull(table);
 
 			var withUpdate = MergeWithUpdate(table);
 
@@ -298,7 +298,7 @@ namespace LinqToDB.Data
 		)
 			where T : class
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			ArgumentNullException.ThrowIfNull(table);
 
 			var withUpdate = MergeWithUpdate(table);
 
@@ -352,7 +352,7 @@ namespace LinqToDB.Data
 		)
 			where T : class
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			ArgumentNullException.ThrowIfNull(table);
 
 			var withUpdate = MergeWithUpdate(table);
 
@@ -543,7 +543,7 @@ namespace LinqToDB.Data
 			CancellationToken        cancellationToken = default)
 			where T : class
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			ArgumentNullException.ThrowIfNull(table);
 
 			var withUpdate = MergeWithUpdate(table);
 			var target     = table;
@@ -599,7 +599,7 @@ namespace LinqToDB.Data
 			CancellationToken        cancellationToken = default)
 			where T : class
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			ArgumentNullException.ThrowIfNull(table);
 
 			var withUpdate = MergeWithUpdate(table);
 
@@ -659,7 +659,7 @@ namespace LinqToDB.Data
 			CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			ArgumentNullException.ThrowIfNull(table);
 
 			var withUpdate = MergeWithUpdate(table);
 
@@ -714,7 +714,7 @@ namespace LinqToDB.Data
 			CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			ArgumentNullException.ThrowIfNull(table);
 
 			var withUpdate = MergeWithUpdate(table);
 

@@ -235,7 +235,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					(SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2022MappingSchemaMicrosoft(),
 					(SqlServerVersion.v2025, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2025MappingSchemaMicrosoft(),
 
-					_ => throw new InvalidOperationException($"Unexpected dialect/provider: {version}, {provider}")
+					_ => throw new InvalidOperationException($"Unexpected dialect/provider: {version}, {provider}"),
 				};
 			}
 		}
@@ -251,19 +251,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		protected override IMemberTranslator CreateMemberTranslator()
 		{
-			if (Version >= SqlServerVersion.v2022)
-				return new SqlServer2022MemberTranslator();
-
-			if (Version >= SqlServerVersion.v2017)
-				return new SqlServer2017MemberTranslator();
-
-			if (Version >= SqlServerVersion.v2012)
-				return new SqlServer2012MemberTranslator();
-
-			if (Version == SqlServerVersion.v2005)
-				return new SqlServer2005MemberTranslator();
-
-			return new SqlServerMemberTranslator();
+			return Version switch
+			{
+				>= SqlServerVersion.v2022 => new SqlServer2022MemberTranslator(),
+				>= SqlServerVersion.v2017 => new SqlServer2017MemberTranslator(),
+				>= SqlServerVersion.v2012 => new SqlServer2012MemberTranslator(),
+				SqlServerVersion.v2005 => new SqlServer2005MemberTranslator(),
+				_ => new SqlServerMemberTranslator(),
+			};
 		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
@@ -292,7 +287,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			return new SqlServerSchemaProvider(this);
 		}
 
-		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ();
+		static readonly ConcurrentDictionary<string,bool> _marsFlags = new (StringComparer.Ordinal);
 
 		// TODO: Remove in v7
 		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -652,7 +647,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		#region UDT support
 
 		private readonly ConcurrentDictionary<Type, string> _udtTypeNames = new ();
-		private readonly ConcurrentDictionary<string, Type> _udtTypes     = new ();
+		private readonly ConcurrentDictionary<string, Type> _udtTypes     = new (StringComparer.Ordinal);
 
 		public void AddUdtType(Type type, string udtName)
 		{

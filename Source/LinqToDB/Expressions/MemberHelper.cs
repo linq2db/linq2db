@@ -30,7 +30,7 @@ namespace LinqToDB.Expressions
 				return Equals(Type, other.Type) && MemberInfo.Equals(other.MemberInfo);
 			}
 
-			public override bool Equals(object? obj)
+			public override readonly bool Equals(object? obj)
 			{
 				return obj is MemberInfoWithType other && Equals(other);
 			}
@@ -106,13 +106,28 @@ namespace LinqToDB.Expressions
 			if (expr is BinaryExpression { Method: { } method2 })
 				return new MemberInfoWithType(method2.ReflectedType, method2);
 
-			while (expr.NodeType == ExpressionType.Convert || expr.NodeType == ExpressionType.ConvertChecked || expr.NodeType == ExpressionType.TypeAs)
-				expr = ((UnaryExpression)expr).Operand;
+			return expr.UnwrapUnary() switch
+			{
+				MethodCallExpression { Method.IsSqlPropertyMethod: true } methodCall =>
+					GetSqlPropertyMethodInfo(methodCall),
 
-			if (expr.NodeType == ExpressionType.New)
-				return new MemberInfoWithType(expr.Type, ((NewExpression)expr).Constructor!);
+				NewExpression { NodeType: ExpressionType.New, Type: { } type, Constructor: { } constructor } =>
+					new MemberInfoWithType(type, constructor),
 
-			if (expr is MethodCallExpression methodCall && methodCall.Method.IsSqlPropertyMethodEx())
+				UnaryExpression { NodeType: ExpressionType.ArrayLength, Operand.Type: { } type } =>
+					new MemberInfoWithType(type, type.GetProperty(nameof(Array.Length))!),
+
+				MemberExpression me =>
+					new MemberInfoWithType(me.Expression?.Type, me.Member),
+
+				MethodCallExpression mce =>
+					new MemberInfoWithType(mce.Object?.Type ?? mce.Method.ReflectedType, mce.Method),
+
+				_ =>
+					throw new InvalidOperationException("Unreachable"),
+			};
+
+			static MemberInfoWithType GetSqlPropertyMethodInfo(MethodCallExpression methodCall)
 			{
 				// validate expression and get member name
 				var objectExpr = methodCall.Arguments[0].UnwrapConvert();
@@ -122,9 +137,13 @@ namespace LinqToDB.Expressions
 #pragma warning restore CA2208 // Instantiate argument exceptions correctly
 
 				// check if member exists on type
-				var existingMember = TypeAccessor.GetAccessor(objectExpr.Type).Members.SingleOrDefault(m =>
-					m.Name == memberName &&
-					(m.MemberInfo.MemberType == MemberTypes.Property || m.MemberInfo.MemberType == MemberTypes.Field));
+				var existingMember = TypeAccessor.GetAccessor(objectExpr.Type)
+					.Members
+					.SingleOrDefault(
+						m => 
+							string.Equals(m.Name, memberName, StringComparison.Ordinal) &&
+							m.MemberInfo.MemberType is MemberTypes.Property or MemberTypes.Field
+					);
 
 				if (existingMember != null)
 					return new MemberInfoWithType(objectExpr.Type, existingMember.MemberInfo);
@@ -132,16 +151,6 @@ namespace LinqToDB.Expressions
 				// create dynamic column info
 				return new MemberInfoWithType(objectExpr.Type, new DynamicColumnInfo(objectExpr.Type, methodCall.Method.GetGenericArguments()[0], memberName));
 			}
-
-			if (expr.NodeType == ExpressionType.ArrayLength)
-				return new MemberInfoWithType(((UnaryExpression)expr).Operand.Type, ((UnaryExpression)expr).Operand.Type.GetProperty(nameof(Array.Length))!);
-
-			return
-				expr is MemberExpression me
-					? new MemberInfoWithType(me.Expression?.Type, me.Member)
-					: expr is MethodCallExpression mce
-						? new MemberInfoWithType(mce.Object?.Type ?? mce.Method.ReflectedType, mce.Method)
-						: new MemberInfoWithType(expr.Type, (MemberInfo)((NewExpression)expr).Constructor!);
 		}
 
 		public static MemberInfo MemberOf<T>(Expression<Func<T,object?>> func)

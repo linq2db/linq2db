@@ -49,18 +49,18 @@ namespace LinqToDB.Tools.ModelGeneration
 				{
 					gr = new TMemberGroup
 					{
-						Region          = $"{name} : {type}",
-						Members         = { prop },
+						Region = $"{name} : {type}",
+						Members = { prop },
 						IsPropertyGroup = true,
 					};
 
 					var index = parentMembers.IndexOf(prop);
 
 					parentMembers.RemoveAt(index);
-					parentMembers.Insert  (index, gr);
+					parentMembers.Insert(index, gr);
 				}
 
-				gr.Conditional   = prop.Conditional;
+				gr.Conditional = prop.Conditional;
 				prop.Conditional = null;
 
 				if (prop.IsAuto)
@@ -128,7 +128,7 @@ namespace LinqToDB.Tools.ModelGeneration
 				{
 					gr.Members.Add(new TMemberGroup
 					{
-						Region  = "INotifyPropertyChanging support",
+						Region = "INotifyPropertyChanging support",
 						Members =
 						{
 							new TField
@@ -205,7 +205,7 @@ namespace LinqToDB.Tools.ModelGeneration
 					methods.Members.Insert(0, new TMemberGroup
 					{
 						IsCompact = true,
-						Members   =
+						Members =
 						{
 							new TMethod { TypeBuilder = static () => "void", Name = $"Before{name}Changed", ParameterBuilders = { () => $"{type} newValue" }, AccessModifier = AccessModifier.Partial },
 							new TMethod { TypeBuilder = static () => "void", Name = $"After{name}Changed",  AccessModifier = AccessModifier.Partial },
@@ -217,24 +217,25 @@ namespace LinqToDB.Tools.ModelGeneration
 
 				var p = prop.Parent;
 
-				while (p != null && p is not IClass)
+				while (p is not null and not IClass)
 					p = p.Parent;
 
-				if (p != null)
+				if (p == null)
+					continue;
+
+				var cl = (IClass)p;
+
+				if (!SkipNotifyPropertyChangedImplementation && !cl.Interfaces.Contains("INotifyPropertyChanged"))
 				{
-					var cl = (IClass)p;
+					if (Model.Usings.Contains("System.ComponentModel") == false)
+						Model.Usings.Add("System.ComponentModel");
 
-					if (!SkipNotifyPropertyChangedImplementation && !cl.Interfaces.Contains("INotifyPropertyChanged"))
+					cl.Interfaces.Add("INotifyPropertyChanged");
+
+					cl.Members.Add(new TMemberGroup
 					{
-						if (Model.Usings.Contains("System.ComponentModel") == false)
-							Model.Usings.Add("System.ComponentModel");
-
-						cl.Interfaces.Add("INotifyPropertyChanged");
-
-						cl.Members.Add(new TMemberGroup
-						{
-							Region  = "INotifyPropertyChanged support",
-							Members =
+						Region = "INotifyPropertyChanged support",
+						Members =
 							{
 								new TEvent
 								{
@@ -260,20 +261,20 @@ namespace LinqToDB.Tools.ModelGeneration
 									AccessModifier    = AccessModifier.Protected
 								},
 							}
-						});
-					}
+					});
+				}
 
-					if (ImplementNotifyPropertyChanging && !cl.Interfaces.Contains("INotifyPropertyChanging"))
+				if (ImplementNotifyPropertyChanging && !cl.Interfaces.Contains("INotifyPropertyChanging"))
+				{
+					if (Model.Usings.Contains("System.ComponentModel") == false)
+						Model.Usings.Add("System.ComponentModel");
+
+					cl.Interfaces.Add("INotifyPropertyChanging");
+
+					cl.Members.Add(new TMemberGroup
 					{
-						if (Model.Usings.Contains("System.ComponentModel") == false)
-							Model.Usings.Add("System.ComponentModel");
-
-						cl.Interfaces.Add("INotifyPropertyChanging");
-
-						cl.Members.Add(new TMemberGroup
-						{
-							Region  = "INotifyPropertyChanging support",
-							Members =
+						Region = "INotifyPropertyChanging support",
+						Members =
 							{
 								new TEvent
 								{
@@ -299,8 +300,7 @@ namespace LinqToDB.Tools.ModelGeneration
 									AccessModifier    = AccessModifier.Protected
 								},
 							}
-						});
-					}
+					});
 				}
 			}
 		}

@@ -108,7 +108,7 @@ namespace LinqToDB.Tools.ModelGeneration
 					{
 						t = "return " + t;
 
-						if (!t.EndsWith(";"))
+						if (!t.EndsWith(';'))
 							t += ";";
 
 						GetBodyBuilders.Clear();

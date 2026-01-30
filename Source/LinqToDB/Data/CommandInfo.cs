@@ -108,7 +108,7 @@ namespace LinqToDB.Data
 		/// <param name="dataContext">Database connection instance.</param>
 		/// <param name="commandText">Command text.</param>
 		/// <param name="parameters">Command parameters. Supported values:
-		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - <see langword="null"/> for command without parameters;</para>
 		/// <para> - single <see cref="DataParameter"/> instance;</para>
 		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
 		/// <para> - mapping class entity.</para>
@@ -123,25 +123,24 @@ namespace LinqToDB.Data
 			Parameters = GetDataParameters(dataContext, parameters);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal DataConnection GetDataConnection()
 		{
-			if (_dataContext is DataContext dctx)
-				return dctx.GetDataConnection();
-
-			return (DataConnection)_dataContext;
+			return _dataContext switch
+			{
+				DataContext dctx => dctx.GetDataConnection(),
+				_ => (DataConnection)_dataContext,
+			};
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal DataContext? TryGetDataContext()
 		{
-			if (_dataContext is DataContext dctx)
-				return dctx;
-
-			return null;
+			return _dataContext switch
+			{
+				DataContext dctx => dctx,
+				_ => null,
+			};
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private CommandBehavior GetCommandBehavior(DataConnection dataConnection)
 		{
 			return dataConnection.GetCommandBehavior(CommandBehavior);
@@ -452,7 +451,7 @@ namespace LinqToDB.Data
 								Command         = rd.Command,
 								StartTime       = startedOn,
 								ExecutionTime   = stopwatch.Elapsed,
-								RecordsAffected = rowCount
+								RecordsAffected = rowCount,
 							});
 						}
 
@@ -897,7 +896,7 @@ namespace LinqToDB.Data
 				_rd          = rd;
 			}
 
-			public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken)
+			public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
 			{
 				return new ReaderAsyncEnumerator<T>(_commandInfo, _rd, cancellationToken);
 			}
@@ -914,7 +913,7 @@ namespace LinqToDB.Data
 			Func<IDataContext,DbDataReader, T> _objectReader;
 			bool                               _isFaulted;
 			bool                               _isFinished;
-			CancellationToken                  _cancellationToken;
+			readonly CancellationToken         _cancellationToken;
 
 			public ReaderAsyncEnumerator(CommandInfo commandInfo, DbDataReader rd, CancellationToken cancellationToken)
 			{
@@ -1465,7 +1464,6 @@ namespace LinqToDB.Data
 			return dataReader;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private bool InitCommand(DataConnection dataConnection)
 		{
 			var hasParameters = Parameters?.Length > 0;
@@ -1624,7 +1622,6 @@ namespace LinqToDB.Data
 			return result;
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		void SetRebindParameters(DataReaderWrapper rd)
 		{
 			if (rd.Command?.Parameters.Count > 0 && Parameters?.Length > 0)
@@ -1711,7 +1708,7 @@ namespace LinqToDB.Data
 																_dataParameterValue,
 																Expression.Convert(
 																	Expression.MakeMemberAccess(pobj, _dataParameterValue),
-																	typeof(object))))
+																	typeof(object)))),
 													});
 											}
 
@@ -1753,7 +1750,7 @@ namespace LinqToDB.Data
 													Expression.Convert(valueGetter, typeof(object))));
 										}
 									)
-								)
+								),
 							]
 						),
 						p);
@@ -1925,7 +1922,7 @@ namespace LinqToDB.Data
 
 				var ctors = typeof(T).GetConstructors().Select(c => new { c, ps = c.GetParameters() }).ToList();
 
-				if (ctors.Count > 0 && ctors.All(c => c.ps.Length > 0))
+				if (ctors.Count > 0 && ctors.TrueForAll(c => c.ps.Length > 0))
 				{
 					var q =
 						from c in ctors
@@ -2057,9 +2054,9 @@ namespace LinqToDB.Data
 
 		struct ReleaseQuery(DataContext? dataContext) : IDisposable, IAsyncDisposable
 		{
-			void IDisposable.Dispose() => dataContext?.ReleaseQuery();
+			readonly void IDisposable.Dispose() => dataContext?.ReleaseQuery();
 
-			ValueTask IAsyncDisposable.DisposeAsync()
+			readonly ValueTask IAsyncDisposable.DisposeAsync()
 			{
 				return dataContext?.ReleaseQueryAsync() ?? default;
 			}

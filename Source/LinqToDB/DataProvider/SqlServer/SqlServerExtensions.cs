@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
@@ -623,7 +623,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="ext">Extension point.</param>
 		/// <param name="term">Full-text search term.</param>
 		/// <param name="tableOrColumns">Full-text columns that should be queried or table, if all FST columns should be queried.</param>
-		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		/// <returns>Returns <see langword="true"/> if full-text search found matching records.</returns>
 		[Sql.Extension("FREETEXT(({tableOrColumns, ', '}), {term})", IsPredicate = true, ServerSideOnly = true)]
 		public static bool FreeText(this ISqlServerExtensions? ext, [ExprParameter] string term, [ExprParameter] params object?[] tableOrColumns)
 			=> throw new ServerSideOnlyException(nameof(FreeText));
@@ -636,7 +636,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="term">Full-text search term.</param>
 		/// <param name="language">Language name (see syslanguages.alias).</param>
 		/// <param name="tableOrColumns">Full-text columns that should be queried or table, if all FST columns should be queried.</param>
-		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		/// <returns>Returns <see langword="true"/> if full-text search found matching records.</returns>
 		[Sql.Extension("FREETEXT(({tableOrColumns, ', '}), {term}, LANGUAGE {language})", IsPredicate = true, ServerSideOnly = true)]
 		public static bool FreeTextWithLanguage(this ISqlServerExtensions? ext, [ExprParameter] string term, [ExprParameter] string language, [ExprParameter] params object?[] tableOrColumns)
 			=> throw new ServerSideOnlyException(nameof(FreeTextWithLanguage));
@@ -649,7 +649,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="term">Full-text search term.</param>
 		/// <param name="language">Language LCID code (see syslanguages.lcid).</param>
 		/// <param name="tableOrColumns">Full-text columns that should be queried or table, if all FST columns should be queried.</param>
-		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		/// <returns>Returns <see langword="true"/> if full-text search found matching records.</returns>
 		[Sql.Extension("FREETEXT(({tableOrColumns, ', '}), {term}, LANGUAGE {language})", IsPredicate = true, ServerSideOnly = true)]
 		public static bool FreeTextWithLanguage(this ISqlServerExtensions? ext, [ExprParameter] string term, [ExprParameter] int language, [ExprParameter] params object?[] tableOrColumns)
 			=> throw new ServerSideOnlyException(nameof(FreeTextWithLanguage));
@@ -664,7 +664,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="ext">Extension point.</param>
 		/// <param name="search">Full-text search condition.</param>
 		/// <param name="tableOrColumns">Full-text columns that should be queried or table, if all FST columns should be queried.</param>
-		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		/// <returns>Returns <see langword="true"/> if full-text search found matching records.</returns>
 		[Sql.Extension("CONTAINS(({tableOrColumns, ', '}), {search})", IsPredicate = true, ServerSideOnly = true)]
 		public static bool Contains(this ISqlServerExtensions? ext, [ExprParameter] string search, [ExprParameter] params object?[] tableOrColumns)
 			=> throw new ServerSideOnlyException(nameof(Contains));
@@ -677,7 +677,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="search">Full-text search condition.</param>
 		/// <param name="language">Language name (see syslanguages.alias).</param>
 		/// <param name="tableOrColumns">Full-text columns that should be queried or table, if all FST columns should be queried.</param>
-		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		/// <returns>Returns <see langword="true"/> if full-text search found matching records.</returns>
 		[Sql.Extension("CONTAINS(({tableOrColumns, ', '}), {search}, LANGUAGE {language})", IsPredicate = true, ServerSideOnly = true)]
 		public static bool ContainsWithLanguage(this ISqlServerExtensions? ext, [ExprParameter] string search, [ExprParameter] string language, [ExprParameter] params object?[] tableOrColumns)
 			=> throw new ServerSideOnlyException(nameof(ContainsWithLanguage));
@@ -690,7 +690,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="search">Full-text search condition.</param>
 		/// <param name="language">Language LCID code (see syslanguages.lcid).</param>
 		/// <param name="tableOrColumns">Full-text columns that should be queried or table, if all FST columns should be queried.</param>
-		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		/// <returns>Returns <see langword="true"/> if full-text search found matching records.</returns>
 		[Sql.Extension("CONTAINS(({tableOrColumns, ', '}), {search}, LANGUAGE {language})", IsPredicate = true, ServerSideOnly = true)]
 		public static bool ContainsWithLanguage(this ISqlServerExtensions? ext, [ExprParameter] string search, [ExprParameter] int language, [ExprParameter] params object?[] tableOrColumns)
 			=> throw new ServerSideOnlyException(nameof(ContainsWithLanguage));
@@ -703,7 +703,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="column">Full-text column that should be queried.</param>
 		/// <param name="property">Name of document property to search in.</param>
 		/// <param name="search">Full-text search condition.</param>
-		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		/// <returns>Returns <see langword="true"/> if full-text search found matching records.</returns>
 		[ExpressionMethod(nameof(ContainsPropertyImpl1))]
 		public static bool ContainsProperty(this ISqlServerExtensions? ext, object? column, string property, string search)
 			=> throw new ServerSideOnlyException(nameof(ContainsProperty));
@@ -722,7 +722,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="property">Name of document property to search in.</param>
 		/// <param name="search">Full-text search condition.</param>
 		/// <param name="language">Language name (see syslanguages.alias).</param>
-		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		/// <returns>Returns <see langword="true"/> if full-text search found matching records.</returns>
 		[ExpressionMethod(nameof(ContainsPropertyImpl2))]
 		public static bool ContainsPropertyWithLanguage(this ISqlServerExtensions? ext, object? column, string property, string search, string language)
 			=> throw new ServerSideOnlyException(nameof(ContainsPropertyWithLanguage));
@@ -741,7 +741,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="property">Name of document property to search in.</param>
 		/// <param name="search">Full-text search condition.</param>
 		/// <param name="language">Language LCID code (see syslanguages.lcid).</param>
-		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
+		/// <returns>Returns <see langword="true"/> if full-text search found matching records.</returns>
 		[ExpressionMethod(nameof(ContainsPropertyImpl3))]
 		public static bool ContainsPropertyWithLanguage(this ISqlServerExtensions? ext, object? column, string property, string search, int language)
 			=> throw new ServerSideOnlyException(nameof(ContainsPropertyWithLanguage));

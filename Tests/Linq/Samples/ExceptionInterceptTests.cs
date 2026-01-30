@@ -96,10 +96,8 @@ namespace Tests.Samples
 		{
 			Assert.Throws<SQLiteException>(() =>
 			{
-				using (var db = GetDataContext(context))
-				{
-					db.GetTable<TestTable>().ToList();
-				}
+				using var db = GetDataContext(context);
+				db.GetTable<TestTable>().ToList();
 			});
 		}
 
@@ -112,10 +110,8 @@ namespace Tests.Samples
 
 			Assert.Throws<DivideByZeroException>(() =>
 			{
-				using (var db = GetDataContext(context, o => o.UseRetryPolicy(ret)))
-				{
-					db.GetTable<TestTable>().ToList();
-				}
+				using var db = GetDataContext(context, o => o.UseRetryPolicy(ret));
+				db.GetTable<TestTable>().ToList();
 			});
 		}
 	}

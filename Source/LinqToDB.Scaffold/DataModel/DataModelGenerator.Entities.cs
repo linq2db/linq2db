@@ -375,7 +375,6 @@ namespace LinqToDB.DataModel
 				.New(context.AST.Name(methodName))
 					.SetModifiers(Modifiers.Public | Modifiers.Static | Modifiers.Extension)
 					.Returns(returnType);
-			;
 			foreach (var param in methodParameters)
 				find.Parameter(param);
 

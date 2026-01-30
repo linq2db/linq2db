@@ -24,9 +24,11 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			if (statement is SqlTruncateTableStatement trun)
-				return trun.ResetIdentity ? 1 + trun.Table!.IdentityFields.Count : 1;
-			return statement.NeedsIdentity() ? 2 : 1;
+			return statement switch
+			{
+				SqlTruncateTableStatement trun => trun.ResetIdentity ? 1 + trun.Table!.IdentityFields.Count : 1,
+				_ => statement.NeedsIdentity ? 2 : 1,
+			};
 		}
 
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)
@@ -161,7 +163,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 				case ConvertType.SprocParameterToName:
 					return value.Length > 0 && value[0] == '@'
-						? sb.Append(value.Substring(1))
+						? sb.Append(value.AsSpan(1))
 						: sb.Append(value);
 			}
 
@@ -177,11 +179,18 @@ namespace LinqToDB.Internal.DataProvider.Access
 		{
 			AppendIndent();
 			StringBuilder.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY CLUSTERED (");
-			StringBuilder.Append(string.Join(InlineComma, fieldNames));
+			StringBuilder.AppendJoinStrings(InlineComma, fieldNames);
 			StringBuilder.Append(')');
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
+		public override StringBuilder BuildObjectName(
+			StringBuilder sb,
+			SqlObjectName name,
+			ConvertType objectType = ConvertType.NameToQueryTable,
+			bool escape = true,
+			TableOptions tableOptions = TableOptions.NotSet,
+			bool withoutSuffix = false
+		)
 		{
 			if (name.Database != null)
 			{
@@ -264,13 +273,12 @@ namespace LinqToDB.Internal.DataProvider.Access
 
 		protected override bool TryConvertParameterToSql(SqlParameterValue paramValue)
 		{
-			// Access literals doesn't support less than second precision
-			if (paramValue.ProviderValue is DateTime dt && dt.Millisecond != 0)
+			return paramValue.ProviderValue switch
 			{
-				return false;
-			}
-
-			return base.TryConvertParameterToSql(paramValue);
+				// Access literals doesn't support less than second precision
+				DateTime { Millisecond: not 0 } => false,
+				_ => base.TryConvertParameterToSql(paramValue),
+			};
 		}
 
 		protected override void BuildValue(DbDataType? dataType, object? value)

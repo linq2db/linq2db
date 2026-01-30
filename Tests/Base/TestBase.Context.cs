@@ -47,7 +47,7 @@ namespace Tests
 			gRPC    = 2,
 			Http    = 3,
 #endif
-			SignalR = 4
+			SignalR = 4,
 		}
 
 		protected ITestDataContext GetDataContext(

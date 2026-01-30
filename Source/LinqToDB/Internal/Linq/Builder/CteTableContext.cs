@@ -19,16 +19,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			get
 			{
-				if (field == null)
+				return field ??= CteContext switch
 				{
-					field = CteContext switch
-					{
-						{ CteClause: var clause } => new SqlCteTable(clause, ObjectType),
-						_ => throw new InvalidOperationException("CteContext not initialized"),
-					};
-				}
-
-				return field;
+					{ CteClause: var clause } => new SqlCteTable(clause, ObjectType),
+					_ => throw new InvalidOperationException("CteContext not initialized"),
+				};
 			}
 			set;
 		}
@@ -79,7 +74,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return context;
 		}
 
-		readonly Dictionary<string, SqlPlaceholderExpression> _fieldsMap = new ();
+		readonly Dictionary<string, SqlPlaceholderExpression> _fieldsMap = new (StringComparer.Ordinal);
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
@@ -196,7 +191,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			var newContext = new CteTableContext(TranslationModifier, Builder, Parent, ObjectType, context.CloneElement(SelectQuery))
 			{
-				LoadWithRoot = LoadWithRoot
+				LoadWithRoot = LoadWithRoot,
 			};
 			context.RegisterCloned(this, newContext);
 			newContext.CteContext = context.CloneContext(CteContext);

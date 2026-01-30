@@ -180,7 +180,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 					for (var i = 0; i < count; i++)
 					{
-						sqlBuilder.BuildExpression(sqlBuilder.StringBuilder, sqlQueryExtension.Arguments[FormattableString.Invariant($"columns.{i}")], false);
+						sqlBuilder.BuildExpression(sqlBuilder.StringBuilder, sqlQueryExtension.Arguments[string.Create(CultureInfo.InvariantCulture, $"columns.{i}")], false);
 						stringBuilder.Append(", ");
 					}
 
@@ -238,7 +238,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					if (i > 0)
 						stringBuilder.Append(", ");
-					var value = (SqlValue)sqlQueryExtension.Arguments[FormattableString.Invariant($"values.{i}")];
+					var value = (SqlValue)sqlQueryExtension.Arguments[string.Create(CultureInfo.InvariantCulture, $"values.{i}")];
 					stringBuilder.Append(CultureInfo.InvariantCulture, $"{value.Value}");
 				}
 
@@ -303,7 +303,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				for (var i = 0; i < count; i++)
 				{
 					stringBuilder.Append(", ");
-					var value = (SqlValue)sqlQueryExtension.Arguments[FormattableString.Invariant($"values.{i}")];
+					var value = (SqlValue)sqlQueryExtension.Arguments[string.Create(CultureInfo.InvariantCulture, $"values.{i}")];
 					stringBuilder.Append(CultureInfo.InvariantCulture, $"{value.Value}");
 				}
 
@@ -866,7 +866,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				var lastLength = stringBuilder.Length;
 
-				if (expression == TemporalTable.ContainedIn)
+				if (string.Equals(expression, TemporalTable.ContainedIn, StringComparison.Ordinal))
 					stringBuilder.Length--;
 
 				var b2016 = sqlBuilder as SqlServer2016SqlBuilder;
@@ -888,7 +888,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 					sqlBuilder.BuildExpression(stringBuilder, dt, true, this);
 
-					if (expression == TemporalTable.ContainedIn)
+					if (string.Equals(expression, TemporalTable.ContainedIn, StringComparison.Ordinal))
 						stringBuilder.Append(')');
 				}
 

@@ -78,7 +78,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		{
 			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(EvaluationContext);
 
-			if (caseSensitive == null || caseSensitive == false)
+			if (caseSensitive is null or false)
 			{
 				var searchExpr = predicate.Expr2;
 				var dataExpr   = predicate.Expr1;
@@ -137,14 +137,11 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func)
+			return func switch
 			{
-				case { Name: PseudoFunctions.LENGTH }:
-					return func.WithName("CHAR_LENGTH");
-
-				default:
-					return base.ConvertSqlFunction(func);
-			}
+				{ Name: PseudoFunctions.LENGTH } => func.WithName("CHAR_LENGTH"),
+				_ => base.ConvertSqlFunction(func),
+			};
 		}
 
 		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)

@@ -16,6 +16,6 @@ namespace LinqToDB.Internal.DataProvider
 		protected string? GetVersion(IEnumerable<NamedValue> attributes)      => GetAttribute(attributes, VERSION);
 		protected string? GetAssemblyName(IEnumerable<NamedValue> attributes) => GetAttribute(attributes, ASSEMBLY_NAME);
 
-		protected string? GetAttribute(IEnumerable<NamedValue> attributes, string attributeName) => attributes.FirstOrDefault(_ => _.Name == attributeName)?.Value;
+		protected string? GetAttribute(IEnumerable<NamedValue> attributes, string attributeName) => attributes.FirstOrDefault(_ => string.Equals(_.Name, attributeName, System.StringComparison.Ordinal))?.Value;
 	}
 }

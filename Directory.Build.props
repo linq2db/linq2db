@@ -118,7 +118,10 @@
 
 	<PropertyGroup Label="Enabled Polyfills">
 		<!--https://github.com/meziantou/Meziantou.Polyfill?tab=readme-ov-file#supported-polyfills-->
-		<Polyfill>T:System.HashCode</Polyfill>
+		<Polyfill></Polyfill>
+		<Polyfill>$(Polyfill)|T:System.Diagnostics.CodeAnalysis</Polyfill>
+		<Polyfill>$(Polyfill)|T:System.Diagnostics.StackTraceHiddenAttribute</Polyfill>
+		<Polyfill>$(Polyfill)|T:System.HashCode</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Index</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Range</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices.CallerArgumentExpressionAttribute</Polyfill>
@@ -126,21 +129,52 @@
 		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices.IsExternalInit</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices.RequiredMemberAttribute</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Runtime.CompilerServices.SkipLocalsInitAttribute</Polyfill>
-		<Polyfill>$(Polyfill)|T:System.Diagnostics.CodeAnalysis</Polyfill>
 		<Polyfill>$(Polyfill)|T:System.Threading.Lock</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.ArgumentException.ThrowIfNullOrEmpty(System.String,System.String)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.ArgumentException.ThrowIfNullOrWhiteSpace(System.String,System.String)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.ArgumentNullException.ThrowIfNull(System.Object,System.String)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.ArgumentOutOfRangeException.ThrowIfEqual``1(``0,``0,System.String)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.ArgumentOutOfRangeException.ThrowIfGreaterThan``1(``0,``0,System.String)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual``1(``0,``0,System.String)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.ArgumentOutOfRangeException.ThrowIfLessThan``1(``0,``0,System.String)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.ArgumentOutOfRangeException.ThrowIfLessThanOrEqual``1(``0,``0,System.String)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.ArgumentOutOfRangeException.ThrowIfNegative``1(``0,System.String)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.ArgumentOutOfRangeException.ThrowIfNegativeOrZero``1(``0,System.String)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.ArgumentOutOfRangeException.ThrowIfNotEqual``1(``0,``0,System.String)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.ArgumentOutOfRangeException.ThrowIfZero``1(``0,System.String)</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd``1(`0,System.Func{`0,``0,`1},``0)</Polyfill>
-		<Polyfill>$(Polyfill)|M:System.String.Contains(System.String,System.StringComparison)</Polyfill>
-		<Polyfill>$(Polyfill)|M:System.Type.GetConstructor(System.Reflection.BindingFlags,System.Type[])</Polyfill>
-		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.ToListAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
-		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.ToArrayAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
-		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.FirstOrDefaultAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
-		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.FirstOrDefaultAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},``0,System.Threading.CancellationToken)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Collections.Generic.Dictionary`2.Remove(`0,`1@)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Collections.Generic.Dictionary`2.TryAdd(`0,`1)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Enum.GetNames``</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Enum.GetValues``1</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Enum.IsDefined``1(``0)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Enum.Parse``1(System.String,System.Boolean)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Enum.Parse``1(System.String</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.FirstAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
-		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.SingleOrDefaultAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
-		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.SingleOrDefaultAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},``0,System.Threading.CancellationToken)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.FirstOrDefaultAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},``0,System.Threading.CancellationToken)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.FirstOrDefaultAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
 		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.SingleAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
-		<!--wait till C# 14 migration-->
-		<!--<Polyfill>$(Polyfill)|M:M:System.Enum.GetNames``1</Polyfill>-->
+		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.SingleOrDefaultAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},``0,System.Threading.CancellationToken)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.SingleOrDefaultAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.ToArrayAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Linq.AsyncEnumerable.ToListAsync``1(System.Collections.Generic.IAsyncEnumerable{``0},System.Threading.CancellationToken)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.ObjectDisposedException.ThrowIf(System.Boolean,System.Object)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.ObjectDisposedException.ThrowIf(System.Boolean,System.Type)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.OperatingSystem.IsLinux</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.OperatingSystem.IsMacOS</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.OperatingSystem.IsWindows</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.String.Contains(System.Char)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.String.Contains(System.Char,System.StringComparison)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.String.Contains(System.String,System.StringComparison)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.String.EndsWith(System.Char)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.String.IndexOf(System.Char,System.StringComparison)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.String.Replace(System.String,System.String,System.StringComparison)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.String.StartsWith(System.Char)</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Text.StringBuilder.AppendJoin(System.Char,System.Object[])</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Text.StringBuilder.AppendJoin(System.Char,System.String[])</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Text.StringBuilder.AppendJoin(System.String,System.Object[])</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Text.StringBuilder.AppendJoin(System.String,System.String[])</Polyfill>
+		<Polyfill>$(Polyfill)|M:System.Type.GetConstructor(System.Reflection.BindingFlags,System.Type[])</Polyfill>
 		<MeziantouPolyfill_IncludedPolyfills>$(Polyfill)</MeziantouPolyfill_IncludedPolyfills>
 	</PropertyGroup>
 

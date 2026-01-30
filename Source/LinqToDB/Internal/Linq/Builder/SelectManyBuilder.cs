@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Expressions;
@@ -47,7 +47,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var collectionInfo = new BuildInfo(sequence, expr, collectionSelectQuery)
 			{
 				CreateSubQuery    = true,
-				SourceCardinality = SourceCardinality.Many
+				SourceCardinality = SourceCardinality.Many,
 			};
 
 			using var snapshot = builder.CreateSnapshot();
@@ -63,7 +63,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			// DefaultIfEmptyContext wil handle correctly projecting NULL objects
 			//
-			if (collectionInfo.JoinType == JoinType.Full || collectionInfo.JoinType == JoinType.Right)
+			if (collectionInfo.JoinType is JoinType.Full or JoinType.Right)
 			{
 				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(
 					buildInfo.Parent,
@@ -91,7 +91,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				JoinType.Left => JoinType.OuterApply,
 				JoinType.Full => JoinType.FullApply,
 				JoinType.Right => JoinType.RightApply,
-				_ => joinType
+				_ => joinType,
 			};
 
 			var expanded = builder.BuildExtractExpression(collection, new ContextRefExpression(collection.ElementType, collection));

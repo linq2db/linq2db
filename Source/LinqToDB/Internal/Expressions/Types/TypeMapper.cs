@@ -27,7 +27,7 @@ namespace LinqToDB.Internal.Expressions.Types
 		private static readonly Type[] _wrapperConstructorParameters2 = [typeof(object), typeof(Delegate[])];
 
 		// [type name] = originalType
-		private readonly IDictionary<string, Type>              _types                    = new Dictionary<string, Type>();
+		private readonly IDictionary<string, Type>              _types                    = new Dictionary<string, Type>(StringComparer.Ordinal);
 
 		// [wrapperType] = originalType?
 		readonly Dictionary<Type, Type?>                        _typeMappingCache         = new ();
@@ -56,8 +56,8 @@ namespace LinqToDB.Internal.Expressions.Types
 
 			var wrapperAttr = wrapperType.GetAttribute<WrapperAttribute>();
 
-			if ((wrapperAttr?.TypeName ?? wrapperType.Name) != originalType.Name)
-				throw new LinqToDBException($"Original and wraped types should have same type name. {wrapperType.Name} != {originalType.Name}");
+			if (!string.Equals(wrapperAttr?.TypeName ?? wrapperType.Name, originalType.Name, StringComparison.Ordinal))
+				throw new LinqToDBException($"Original and wrapped types should have same type name. {wrapperType.Name} != {originalType.Name}");
 
 			var typeName = originalType.FullName ?? originalType.Name;
 			if (_types.ContainsKey(typeName))
@@ -96,8 +96,8 @@ namespace LinqToDB.Internal.Expressions.Types
 			if (baseType != Enum.GetUnderlyingType(originalType))
 				throw new LinqToDBException($"Enums {wrapperType} and {originalType} have different base types: {baseType} vs {Enum.GetUnderlyingType(originalType)}");
 
-			var wrapperValues  = Enum.GetValues(wrapperType) .OfType<object>().Distinct().ToDictionary(v => string.Format(CultureInfo.InvariantCulture, "{0}", v), _ => _);
-			var originalValues = Enum.GetValues(originalType).OfType<object>().Distinct().ToDictionary(v => string.Format(CultureInfo.InvariantCulture, "{0}", v), _ => _);
+			var wrapperValues  = Enum.GetValues(wrapperType) .OfType<object>().Distinct().ToDictionary(v => string.Create(CultureInfo.InvariantCulture, $"{v}"), StringComparer.Ordinal);
+			var originalValues = Enum.GetValues(originalType).OfType<object>().Distinct().ToDictionary(v => string.Create(CultureInfo.InvariantCulture, $"{v}"), StringComparer.Ordinal);
 
 			var hasCommonMembers   = false;
 			var hasDifferentValues = false;
@@ -386,14 +386,17 @@ namespace LinqToDB.Internal.Expressions.Types
 		{
 			var wrappers = wrapperType.GetProperty("Wrappers", BindingFlags.Static | BindingFlags.NonPublic);
 
-			if (wrappers != null)
-				return ((IEnumerable<object>)wrappers.GetValue(null)!)
-					.Select(e => e is Tuple<LambdaExpression, bool> tuple
-						? new { expr = tuple.Item1, optional = tuple.Item2 }
-						: new { expr = (LambdaExpression)e, optional = false })
-					.Select(e => BuildWrapper(e.expr, e.optional)!).ToArray();
+			if (wrappers == null)
+				return null;
 
-			return null;
+			return ((IEnumerable<object>)wrappers.GetValue(null)!)
+				.Select(
+					e => e is Tuple<LambdaExpression, bool> tuple
+						? (Expression: tuple.Item1, Optional: tuple.Item2)
+						: (Expression: (LambdaExpression)e, Optional: false)
+				)
+				.Select(e => BuildWrapper(e.Expression, e.Optional)!)
+				.ToArray();
 		}
 
 		private bool TryMapType(Type type, [NotNullWhen(true)] out Type? replacement)
@@ -401,7 +404,8 @@ namespace LinqToDB.Internal.Expressions.Types
 			if (_typeMappingCache.TryGetValue(type, out replacement))
 				return replacement != null;
 
-			if (type.IsGenericType) {
+			if (type.IsGenericType)
+			{
 				var typeArguments = type.GetGenericArguments().Select(t => TryMapType(t, out var r) ? r : null).ToArray();
 				if (typeArguments.All(t => t != null))
 				{
@@ -491,12 +495,12 @@ namespace LinqToDB.Internal.Expressions.Types
 
 		static MemberInfo ReplaceMember(MemberInfo memberInfo, Type targetType)
 		{
-			var newMembers = targetType.GetMember(memberInfo.Name);
-			if (newMembers.Length == 0)
-				throw new LinqToDBException($"There is no member '{memberInfo.Name}' in type '{targetType.FullName}'");
-			if (newMembers.Length > 1)
-				throw new LinqToDBException($"Ambiguous member '{memberInfo.Name}' in type '{targetType.FullName}'");
-			return newMembers[0];
+			return targetType.GetMember(memberInfo.Name) switch
+			{
+				[var member] => member,
+				[] => throw new LinqToDBException($"There is no member '{memberInfo.Name}' in type '{targetType.FullName}'"),
+				_ => throw new LinqToDBException($"Ambiguous member '{memberInfo.Name}' in type '{targetType.FullName}'"),
+			};
 		}
 
 		static Expression? ReplaceTypes(Expression expression, ReplaceTypesContext ctx)
@@ -530,9 +534,9 @@ namespace LinqToDB.Internal.Expressions.Types
 
 							// other cases?
 						}
-					}
 
-					break;
+						break;
+					}
 
 					case ExpressionType.Convert        :
 					case ExpressionType.ConvertChecked :
@@ -707,19 +711,16 @@ namespace LinqToDB.Internal.Expressions.Types
 									switch (b.BindingType)
 									{
 										case MemberBindingType.Assignment:
-											{
-												var mab = (MemberAssignment)b;
-												return Expression.Bind(ReplaceMember(mab.Member, replacement),
-													ReplaceTypes(mab.Expression, context)!);
-											}
+										{
+											var mab = (MemberAssignment)b;
+											return Expression.Bind(ReplaceMember(mab.Member, replacement),
+												ReplaceTypes(mab.Expression, context)!);
+										}
 										case MemberBindingType.MemberBinding:
-											{
-												throw new NotImplementedException();
-											}
 										case MemberBindingType.ListBinding:
-											{
-												throw new NotImplementedException();
-											}
+										{
+											throw new NotSupportedException();
+										}
 										default:
 											throw new InvalidOperationException($"Unexpected binding type: {b.BindingType}");
 									}
@@ -1027,7 +1028,7 @@ namespace LinqToDB.Internal.Expressions.Types
 
 		#region Setters
 
-		public class MemberBuilder<T, TV>
+		public sealed class MemberBuilder<T, TV>
 		{
 			private readonly TypeMapper _mapper;
 			private readonly Expression<Func<T, TV>> _memberExpression;
@@ -1106,7 +1107,7 @@ namespace LinqToDB.Internal.Expressions.Types
 			}
 		}
 
-		public class TypeBuilder<T>
+		public sealed class TypeBuilder<T>
 		{
 			private readonly TypeMapper _mapper;
 

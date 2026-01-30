@@ -33,10 +33,10 @@ namespace LinqToDB.Tools.ModelGeneration
 
 		public bool GenerateModelOnly
 		{
-			get => _generateModelOnly;
+			get;
 			set
 			{
-				_generateModelOnly = value;
+				field = value;
 
 				if (value)
 					BaseDataContextClass = null;
@@ -45,10 +45,10 @@ namespace LinqToDB.Tools.ModelGeneration
 
 		public bool GenerateModelInterface
 		{
-			get => _generateModelInterface;
+			get;
 			set
 			{
-				_generateModelInterface = value;
+				field = value;
 
 				if (value)
 					BaseDataContextClass = "LinqToDB.IDataContext";
@@ -81,44 +81,40 @@ namespace LinqToDB.Tools.ModelGeneration
 		public bool    NormalizeNamesWithoutUnderscores    { get; set; }
 		public bool    ConvertUpperNamesToLower            { get; set; }
 
-		private Func<string,bool,string>? _toValidName;
-		public  Func<string,bool,string>   ToValidName
+		public Func<string,bool,string>   ToValidName
 		{
-			get => _toValidName ?? ToValidNameDefault;
-			set => _toValidName = value;
+			get => field ?? ToValidNameDefault;
+			set;
 		}
 
-		private Func<string,bool,string>? _convertToCompilable;
-		public  Func<string,bool,string>   ConvertToCompilable
+		public Func<string,bool,string>   ConvertToCompilable
 		{
-			get => _convertToCompilable ?? ConvertToCompilableDefault;
-			set => _convertToCompilable = value;
+			get => field ?? ConvertToCompilableDefault;
+			set;
 		}
 
-		private Func<string,bool,string>? _normalizeName;
-		public  Func<string,bool,string>   NormalizeName
+		public Func<string,bool,string>   NormalizeName
 		{
-			get => _normalizeName ?? NormalizeNameDefault;
-			set => _normalizeName = value;
+			get => field ?? NormalizeNameDefault;
+			set;
 		}
 
-		private Func<IForeignKey,string>? _getAssociationExtensionPluralName;
-		public  Func<IForeignKey,string>   GetAssociationExtensionPluralName
+		public Func<IForeignKey,string>   GetAssociationExtensionPluralName
 		{
-			get => _getAssociationExtensionPluralName ?? GetAssociationExtensionPluralNameDefault;
-			set => _getAssociationExtensionPluralName = value;
+			get => field ?? GetAssociationExtensionPluralNameDefault;
+			set;
 		}
 
-		private Func<IForeignKey,string>? _getAssociationExtensionSingularName;
-		public  Func<IForeignKey,string>   GetAssociationExtensionSingularName
+		public Func<IForeignKey,string>   GetAssociationExtensionSingularName
 		{
-			get => _getAssociationExtensionSingularName ?? GetAssociationExtensionSingularNameDefault;
-			set => _getAssociationExtensionSingularName = value;
+			get => field ?? GetAssociationExtensionSingularNameDefault;
+			set;
 		}
 
 		public GetSchemaOptions GetSchemaOptions { get; set; } = new ();
 
-		public static Func<DataConnection,GetSchemaOptions,DatabaseSchema> LoadDatabaseSchema = (dataConnection, schemaOptions) =>
+		public static Func<DataConnection,GetSchemaOptions,DatabaseSchema> LoadDatabaseSchema = 
+			(dataConnection, schemaOptions) =>
 		{
 			var sp = dataConnection.DataProvider.GetSchemaProvider();
 			return sp.GetSchema(dataConnection, schemaOptions);
@@ -144,84 +140,85 @@ namespace LinqToDB.Tools.ModelGeneration
 
 		static bool IsValueTypeDefault(string typeName)
 		{
-			switch (typeName)
+			return typeName switch
 			{
-				case "bool":
-				case "bool?":
-				case "char":
-				case "char?":
-				case "decimal":
-				case "decimal?":
-				case "int":
-				case "int?":
-				case "uint":
-				case "uint?":
-				case "byte":
-				case "byte?":
-				case "sbyte":
-				case "sbyte?":
-				case "long":
-				case "long?":
-				case "ulong":
-				case "ulong?":
-				case "short":
-				case "short?":
-				case "ushort":
-				case "ushort?":
-				case "float":
-				case "float?":
-				case "double":
-				case "double?":
-				case "DateTime":
-				case "DateTime?":
-				case "DateTimeOffset":
-				case "DateTimeOffset?":
-				case "TimeSpan":
-				case "TimeSpan?":
-				case "Guid":
-				case "Guid?":
-				case "SqlHierarchyId":
-				case "SqlHierarchyId?":
-				case "NpgsqlDate":
-				case "NpgsqlDate?":
-				case "NpgsqlTimeSpan":
-				case "NpgsqlTimeSpan?":
-				case "NpgsqlPoint":
-				case "NpgsqlPoint?":
-				case "NpgsqlLSeg":
-				case "NpgsqlLSeg?":
-				case "NpgsqlBox":
-				case "NpgsqlBox?":
-				case "NpgsqlPath":
-				case "NpgsqlPath?":
-				case "NpgsqlPolygon":
-				case "NpgsqlPolygon?":
-				case "NpgsqlCircle":
-				case "NpgsqlCircle?":
-				case "NpgsqlLine":
-				case "NpgsqlLine?":
-				case "NpgsqlInet":
-				case "NpgsqlInet?":
-				case "NpgsqlDateTime":
-				case "NpgsqlDateTime?":
-				case "NpgsqlCidr":
-				case "NpgsqlCidr?":
-				case "NpgsqlCube":
-				case "NpgsqlCube?":
-					return true;
-				case "object":
-				case "string":
-				case "byte[]":
-				case "BitArray":
-				case "SqlGeography":
-				case "SqlGeometry":
-				case "PhysicalAddress":
-				case "Array":
-				case "DataTable":
-					return false;
-			}
+				"bool" or
+				"bool?" or
+				"char" or
+				"char?" or
+				"decimal" or
+				"decimal?" or
+				"int" or
+				"int?" or
+				"uint" or
+				"uint?" or
+				"byte" or
+				"byte?" or
+				"sbyte" or
+				"sbyte?" or
+				"long" or
+				"long?" or
+				"ulong" or
+				"ulong?" or
+				"short" or
+				"short?" or
+				"ushort" or
+				"ushort?" or
+				"float" or
+				"float?" or
+				"double" or
+				"double?" or
+				"DateTime" or
+				"DateTime?" or
+				"DateTimeOffset" or
+				"DateTimeOffset?" or
+				"TimeSpan" or
+				"TimeSpan?" or
+				"Guid" or
+				"Guid?" or
+				"SqlHierarchyId" or
+				"SqlHierarchyId?" or
+				"NpgsqlDate" or
+				"NpgsqlDate?" or
+				"NpgsqlTimeSpan" or
+				"NpgsqlTimeSpan?" or
+				"NpgsqlPoint" or
+				"NpgsqlPoint?" or
+				"NpgsqlLSeg" or
+				"NpgsqlLSeg?" or
+				"NpgsqlBox" or
+				"NpgsqlBox?" or
+				"NpgsqlPath" or
+				"NpgsqlPath?" or
+				"NpgsqlPolygon" or
+				"NpgsqlPolygon?" or
+				"NpgsqlCircle" or
+				"NpgsqlCircle?" or
+				"NpgsqlLine" or
+				"NpgsqlLine?" or
+				"NpgsqlInet" or
+				"NpgsqlInet?" or
+				"NpgsqlDateTime" or
+				"NpgsqlDateTime?" or
+				"NpgsqlCidr" or
+				"NpgsqlCidr?" or
+				"NpgsqlCube" or
+				"NpgsqlCube?" =>
+					true,
 
-			return typeName.EndsWith("?");
+				"object" or
+				"string" or
+				"byte[]" or
+				"BitArray" or
+				"SqlGeography" or
+				"SqlGeometry" or
+				"PhysicalAddress" or
+				"Array" or
+				"DataTable" =>
+					false,
+
+				_ => typeName.EndsWith('?'),
+			};
 		}
 
 		public HashSet<string> KeyWords =
@@ -247,13 +244,13 @@ namespace LinqToDB.Tools.ModelGeneration
 
 			if (normalize)
 			{
-				if (mayRemoveUnderscore && name.Contains("_"))
+				if (mayRemoveUnderscore && name.Contains('_'))
 					name = SplitAndJoin(name, "", '_');
 				else if (NormalizeNamesWithoutUnderscores)
 					name = NormalizeFragment(name);
 			}
 
-			if (name.Contains("."))
+			if (name.Contains('.'))
 			{
 				name = SplitAndJoin(name, "", '.');
 			}
@@ -324,8 +321,6 @@ namespace LinqToDB.Tools.ModelGeneration
 		}
 
 		public ISqlBuilder? SqlBuilder;
-		bool                _generateModelOnly;
-		bool                _generateModelInterface;
 
 		protected Dictionary<string,TR> ToDictionary<T,TR>(IEnumerable<T> source, Func<T,string> keyGetter, Func<T,TR> objGetter, Func<TR,int,string> getKeyName)
 		{

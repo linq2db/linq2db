@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace LinqToDB.Mapping
 {
@@ -19,6 +19,6 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// A value should be skipped on update.
 		/// </summary>
-		Update = 0x2
+		Update = 0x2,
 	}
 }

@@ -49,7 +49,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			SqlProviderFlags.IsWindowFunctionsSupported        = Version >= MySqlVersion.MySql80;
 
 			SqlProviderFlags.IsSubqueryWithParentReferenceInJoinConditionSupported = false;
-			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel                    = (version > MySqlVersion.MySql57) && version != MySqlVersion.MariaDB10 ? null : 1;
+			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel                    = version is > MySqlVersion.MySql57 and not MySqlVersion.MariaDB10 ? null : 1;
 			SqlProviderFlags.CalculateSupportedCorrelatedLevelWithAggregateQueries = true;
 			SqlProviderFlags.RowConstructorSupport                                 = RowFeature.Equality | RowFeature.Comparisons | RowFeature.CompareToSelect | RowFeature.In;
 
@@ -107,12 +107,12 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
-			if (Version == MySqlVersion.MySql57)
-				return new MySql57SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
-			if (Version == MySqlVersion.MySql80)
-				return new MySql80SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
-
-			return new MariaDBSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
+			return Version switch
+			{
+				MySqlVersion.MySql57 => new MySql57SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				MySqlVersion.MySql80 => new MySql80SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				_ => new MariaDBSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+			};
 		}
 
 		private static MappingSchema GetMappingSchema(MySqlProvider provider, MySqlVersion version)
@@ -205,8 +205,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 
 		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 		{
-			if (source == null)
-				throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(source);
 
 			return new MySqlBulkCopy(this).BulkCopy(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
@@ -220,8 +219,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (source == null)
-				throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(source);
 
 			return new MySqlBulkCopy(this).BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
@@ -236,8 +234,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			if (source == null)
-				throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(source);
 
 			return new MySqlBulkCopy(this).BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?

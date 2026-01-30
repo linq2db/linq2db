@@ -23,16 +23,11 @@ namespace LinqToDB.Data.RetryPolicy
 		/// <param name="coefficient">The coefficient for the exponential function used to compute the delay between retries. </param>
 		protected RetryPolicyBase(int maxRetryCount, TimeSpan maxRetryDelay, double randomFactor, double exponentialBase, TimeSpan coefficient)
 		{
-			if (maxRetryCount < 0)
-				throw new ArgumentOutOfRangeException(nameof(maxRetryCount));
-			if (maxRetryDelay.TotalMilliseconds < 0.0)
-				throw new ArgumentOutOfRangeException(nameof(maxRetryDelay));
-			if (randomFactor < 1.0)
-				throw new ArgumentOutOfRangeException(nameof(randomFactor));
-			if (exponentialBase < 1.0)
-				throw new ArgumentOutOfRangeException(nameof(exponentialBase));
-			if (coefficient.TotalMilliseconds < 0.0)
-				throw new ArgumentOutOfRangeException(nameof(coefficient));
+			ArgumentOutOfRangeException.ThrowIfNegative(maxRetryCount);
+			ArgumentOutOfRangeException.ThrowIfNegative(maxRetryDelay.TotalMilliseconds, nameof(maxRetryDelay));
+			ArgumentOutOfRangeException.ThrowIfLessThan(randomFactor, 1.0);
+			ArgumentOutOfRangeException.ThrowIfLessThan(exponentialBase, 1.0);
+			ArgumentOutOfRangeException.ThrowIfNegative(coefficient.TotalMilliseconds, nameof(coefficient));
 
 			MaxRetryCount   = maxRetryCount;
 			MaxRetryDelay   = maxRetryDelay;
@@ -151,8 +146,8 @@ namespace LinqToDB.Data.RetryPolicy
 					OnRetry();
 				}
 
-				using (var waitEvent = new ManualResetEventSlim(false))
-					waitEvent.WaitHandle.WaitOne(delay.Value);
+				using var waitEvent = new ManualResetEventSlim(false);
+				waitEvent.WaitHandle.WaitOne(delay.Value);
 			}
 		}
 
@@ -252,7 +247,7 @@ namespace LinqToDB.Data.RetryPolicy
 		/// <param name="lastException"> The exception thrown during the last execution attempt. </param>
 		/// <returns>
 		///     Returns the delay indicating how long to wait for before the next execution attempt if the operation should be retried;
-		///     <c>null</c> otherwise
+		///     <see langword="null"/> otherwise
 		/// </returns>
 		protected virtual TimeSpan? GetNextDelay(Exception lastException)
 		{
@@ -279,7 +274,7 @@ namespace LinqToDB.Data.RetryPolicy
 		/// </summary>
 		/// <param name="exception"> The exception object to be verified. </param>
 		/// <returns>
-		///     <c>true</c> if the specified exception is considered as transient, otherwise <c>false</c>.
+		///     <see langword="true"/> if the specified exception is considered as transient, otherwise <see langword="false"/>.
 		/// </returns>
 		protected abstract bool ShouldRetryOn(Exception exception);
 	}

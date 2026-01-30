@@ -47,7 +47,7 @@ namespace LinqToDB.Internal.DataProvider
 			}
 			else
 			{
-				var methodInfo = DataReaderType.GetMethods().FirstOrDefault(m => m.Name == methodName);
+				var methodInfo = DataReaderType.GetMethods().FirstOrDefault(m => string.Equals(m.Name, methodName, StringComparison.Ordinal));
 
 				if (methodInfo == null)
 					return false;
@@ -111,7 +111,7 @@ namespace LinqToDB.Internal.DataProvider
 			}
 			else
 			{
-				var methodInfo = DataReaderType.GetMethods().FirstOrDefault(m => m.Name == methodName);
+				var methodInfo = DataReaderType.GetMethods().FirstOrDefault(m => string.Equals(m.Name, methodName, StringComparison.Ordinal));
 
 				if (methodInfo == null)
 					return false;

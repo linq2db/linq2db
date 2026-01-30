@@ -20,63 +20,62 @@ namespace LinqToDB.CodeModel
 		/// <returns>Returns new node if node were replaced or same node otherwise.</returns>
 		public ICodeElement Visit(ICodeElement node)
 		{
-			ICodeElement newNode;
-			switch (node.ElementType)
+			var newNode = node.ElementType switch
 			{
-				case CodeElementType.Namespace           : newNode = Visit((CodeNamespace           )node); break;
-				case CodeElementType.Identifier          : newNode = Visit((CodeIdentifier          )node); break;
-				case CodeElementType.Class               : newNode = ConvertClass((CodeClass        )node); break;
-				case CodeElementType.Property            : newNode = ConvertProperty((CodeProperty  )node); break;
-				case CodeElementType.ReturnStatement     : newNode = Visit((CodeReturn              )node); break;
-				case CodeElementType.CallStatement       : newNode = Visit((CodeCallStatement       )node); break;
-				case CodeElementType.CallExpression      : newNode = Visit((CodeCallExpression      )node); break;
-				case CodeElementType.This                : newNode = Visit((CodeThis                )node); break;
-				case CodeElementType.Constructor         : newNode = Visit((CodeConstructor         )node); break;
-				case CodeElementType.TypeConstructor     : newNode = Visit((CodeTypeInitializer     )node); break;
-				case CodeElementType.XmlComment          : newNode = Visit((CodeXmlComment          )node); break;
-				case CodeElementType.TypeReference       : newNode = Visit((CodeTypeReference       )node); break;
-				case CodeElementType.TypeToken           : newNode = Visit((CodeTypeToken           )node); break;
-				case CodeElementType.Parameter           : newNode = ConvertParameter((CodeParameter)node); break;
-				case CodeElementType.Method              : newNode = ConvertMethod((CodeMethod      )node); break;
-				case CodeElementType.EmptyLine           : newNode = Visit((CodeEmptyLine           )node); break;
-				case CodeElementType.Comment             : newNode = Visit((CodeComment             )node); break;
-				case CodeElementType.Attribute           : newNode = Visit((CodeAttribute           )node); break;
-				case CodeElementType.Constant            : newNode = Visit((CodeConstant            )node); break;
-				case CodeElementType.Region              : newNode = Visit((CodeRegion              )node); break;
-				case CodeElementType.NameOf              : newNode = Visit((CodeNameOf              )node); break;
-				case CodeElementType.MemberAccess        : newNode = Visit((CodeMember              )node); break;
-				case CodeElementType.Lambda              : newNode = Visit((CodeLambda              )node); break;
-				case CodeElementType.UnaryOperation      : newNode = Visit((CodeUnary               )node); break;
-				case CodeElementType.BinaryOperation     : newNode = Visit((CodeBinary              )node); break;
-				case CodeElementType.TernaryOperation    : newNode = Visit((CodeTernary             )node); break;
-				case CodeElementType.File                : newNode = Visit((CodeFile                )node); break;
-				case CodeElementType.Pragma              : newNode = Visit((CodePragma              )node); break;
-				case CodeElementType.Import              : newNode = Visit((CodeImport              )node); break;
-				case CodeElementType.PropertyGroup       : newNode = Visit((PropertyGroup           )node); break;
-				case CodeElementType.MethodGroup         : newNode = Visit((MethodGroup             )node); break;
-				case CodeElementType.ConstructorGroup    : newNode = Visit((ConstructorGroup        )node); break;
-				case CodeElementType.RegionGroup         : newNode = Visit((RegionGroup             )node); break;
-				case CodeElementType.AssignmentStatement : newNode = Visit((CodeAssignmentStatement )node); break;
-				case CodeElementType.AssignmentExpression: newNode = Visit((CodeAssignmentExpression)node); break;
-				case CodeElementType.AwaitStatement      : newNode = Visit((CodeAwaitStatement      )node); break;
-				case CodeElementType.AwaitExpression     : newNode = Visit((CodeAwaitExpression     )node); break;
-				case CodeElementType.New                 : newNode = Visit((CodeNew                 )node); break;
-				case CodeElementType.ClassGroup          : newNode = Visit((ClassGroup              )node); break;
-				case CodeElementType.FieldGroup          : newNode = Visit((FieldGroup              )node); break;
-				case CodeElementType.PragmaGroup         : newNode = Visit((PragmaGroup             )node); break;
-				case CodeElementType.Field               : newNode = Visit((CodeField               )node); break;
-				case CodeElementType.Default             : newNode = Visit((CodeDefault             )node); break;
-				case CodeElementType.Variable            : newNode = Visit((CodeVariable            )node); break;
-				case CodeElementType.Array               : newNode = Visit((CodeNewArray            )node); break;
-				case CodeElementType.Index               : newNode = Visit((CodeIndex               )node); break;
-				case CodeElementType.Cast                : newNode = Visit((CodeTypeCast            )node); break;
-				case CodeElementType.AsOperator          : newNode = Visit((CodeAsOperator          )node); break;
-				case CodeElementType.SuppressNull        : newNode = Visit((CodeSuppressNull        )node); break;
-				case CodeElementType.ThrowStatement      : newNode = Visit((CodeThrowStatement      )node); break;
-				case CodeElementType.ThrowExpression     : newNode = Visit((CodeThrowExpression     )node); break;
-				case CodeElementType.Reference           : newNode = Visit((CodeReference           )node); break;
-				default                                  : throw new NotImplementedException($"{node.ElementType}");
-			}
+				CodeElementType.Namespace            => Visit((CodeNamespace           )node),
+				CodeElementType.Identifier           => Visit((CodeIdentifier          )node),
+				CodeElementType.Class                => ConvertClass((CodeClass        )node),
+				CodeElementType.Property             => ConvertProperty((CodeProperty  )node),
+				CodeElementType.ReturnStatement      => Visit((CodeReturn              )node),
+				CodeElementType.CallStatement        => Visit((CodeCallStatement       )node),
+				CodeElementType.CallExpression       => Visit((CodeCallExpression      )node),
+				CodeElementType.This                 => Visit((CodeThis                )node),
+				CodeElementType.Constructor          => Visit((CodeConstructor         )node),
+				CodeElementType.TypeConstructor      => Visit((CodeTypeInitializer     )node),
+				CodeElementType.XmlComment           => Visit((CodeXmlComment          )node),
+				CodeElementType.TypeReference        => Visit((CodeTypeReference       )node),
+				CodeElementType.TypeToken            => Visit((CodeTypeToken           )node),
+				CodeElementType.Parameter            => ConvertParameter((CodeParameter)node),
+				CodeElementType.Method               => ConvertMethod((CodeMethod      )node),
+				CodeElementType.EmptyLine            => Visit((CodeEmptyLine           )node),
+				CodeElementType.Comment              => Visit((CodeComment             )node),
+				CodeElementType.Attribute            => Visit((CodeAttribute           )node),
+				CodeElementType.Constant             => Visit((CodeConstant            )node),
+				CodeElementType.Region               => Visit((CodeRegion              )node),
+				CodeElementType.NameOf               => Visit((CodeNameOf              )node),
+				CodeElementType.MemberAccess         => Visit((CodeMember              )node),
+				CodeElementType.Lambda               => Visit((CodeLambda              )node),
+				CodeElementType.UnaryOperation       => Visit((CodeUnary               )node),
+				CodeElementType.BinaryOperation      => Visit((CodeBinary              )node),
+				CodeElementType.TernaryOperation     => Visit((CodeTernary             )node),
+				CodeElementType.File                 => Visit((CodeFile                )node),
+				CodeElementType.Pragma               => Visit((CodePragma              )node),
+				CodeElementType.Import               => Visit((CodeImport              )node),
+				CodeElementType.PropertyGroup        => Visit((PropertyGroup           )node),
+				CodeElementType.MethodGroup          => Visit((MethodGroup             )node),
+				CodeElementType.ConstructorGroup     => Visit((ConstructorGroup        )node),
+				CodeElementType.RegionGroup          => Visit((RegionGroup             )node),
+				CodeElementType.AssignmentStatement  => Visit((CodeAssignmentStatement )node),
+				CodeElementType.AssignmentExpression => Visit((CodeAssignmentExpression)node),
+				CodeElementType.AwaitStatement       => Visit((CodeAwaitStatement      )node),
+				CodeElementType.AwaitExpression      => Visit((CodeAwaitExpression     )node),
+				CodeElementType.New                  => Visit((CodeNew                 )node),
+				CodeElementType.ClassGroup           => Visit((ClassGroup              )node),
+				CodeElementType.FieldGroup           => Visit((FieldGroup              )node),
+				CodeElementType.PragmaGroup          => Visit((PragmaGroup             )node),
+				CodeElementType.Field                => Visit((CodeField               )node),
+				CodeElementType.Default              => Visit((CodeDefault             )node),
+				CodeElementType.Variable             => Visit((CodeVariable            )node),
+				CodeElementType.Array                => Visit((CodeNewArray            )node),
+				CodeElementType.Index                => Visit((CodeIndex               )node),
+				CodeElementType.Cast                 => Visit((CodeTypeCast            )node),
+				CodeElementType.AsOperator           => Visit((CodeAsOperator          )node),
+				CodeElementType.SuppressNull         => Visit((CodeSuppressNull        )node),
+				CodeElementType.ThrowStatement       => Visit((CodeThrowStatement      )node),
+				CodeElementType.ThrowExpression      => Visit((CodeThrowExpression     )node),
+				CodeElementType.Reference            => Visit((CodeReference           )node),
+				_                                    => throw new NotImplementedException($"{node.ElementType}"),
+			};
 
 			if (node != newNode)
 				_replacements.Add(node, newNode);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 
 using LinqToDB.Internal.SqlQuery;
@@ -135,7 +135,7 @@ namespace LinqToDB
 					DateParts.Minute => "minute",
 					DateParts.Second => "second",
 					DateParts.Millisecond => "millisecond",
-					_ => throw new InvalidOperationException($"Unexpected datepart: {part}")
+					_ => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
 			}
 
@@ -427,19 +427,16 @@ namespace LinqToDB
 					return;
 				}
 
-				long divisor;
-				switch (part)
+				var divisor = part switch
 				{
-					case DateParts.Week        : divisor = 1_000_000L * 60 * 60 * 24 * 7; break;
-					case DateParts.Day         : divisor = 1_000_000L * 60 * 60 * 24; break;
-					case DateParts.Hour        : divisor = 1_000_000L * 60 * 60; break;
-					case DateParts.Minute      : divisor = 1_000_000L * 60; break;
-					case DateParts.Second      : divisor = 1_000_000L ; break;
-					case DateParts.Millisecond : divisor = 1_000L ; break;
-
-					default:
-						throw new InvalidOperationException($"Unexpected datepart: {part}");
-				}
+					DateParts.Week        => 1_000_000L * 60 * 60 * 24 * 7,
+					DateParts.Day         => 1_000_000L * 60 * 60 * 24,
+					DateParts.Hour        => 1_000_000L * 60 * 60,
+					DateParts.Minute      => 1_000_000L * 60,
+					DateParts.Second      => 1_000_000L,
+					DateParts.Millisecond => 1_000L,
+					_ => throw new InvalidOperationException($"Unexpected datepart: {part}"),
+				};
 
 				builder.ResultExpression = new SqlBinaryExpression(
 					builder.Mapping.GetDbDataType(typeof(long)),

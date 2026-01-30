@@ -16,11 +16,11 @@ namespace LinqToDB.Internal.Mapping
 		{
 		}
 
-		internal LockedMappingSchema(MappingSchemaInfo mappingSchemaInfo) : base(mappingSchemaInfo)
+		private protected LockedMappingSchema(MappingSchemaInfo mappingSchemaInfo) : base(mappingSchemaInfo)
 		{
 		}
 
-		static Dictionary<Type,int> _configurationIDs = new ();
+		static readonly Dictionary<Type,int> _configurationIDs = new ();
 
 		protected internal override int GenerateID()
 		{

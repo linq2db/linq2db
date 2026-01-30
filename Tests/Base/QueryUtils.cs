@@ -18,7 +18,7 @@ namespace Tests
 		/// </summary>
 		public static SqlInsertClause RequireInsertClause(this SqlStatement statement)
 		{
-			var result = statement.GetInsertClause();
+			var result = statement.InsertClause;
 			if (result == null)
 				throw new LinqToDBException($"Insert clause not found in {statement.GetType().Name}");
 			return result;
@@ -230,7 +230,7 @@ namespace Tests
 				selectQuery.GroupBy,
 				selectQuery.Having,
 				selectQuery.Where,
-				selectQuery.OrderBy
+				selectQuery.OrderBy,
 			};
 
 				items.AddRange(selectQuery.Select.Columns);

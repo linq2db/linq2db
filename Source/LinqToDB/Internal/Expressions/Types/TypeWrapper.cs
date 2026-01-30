@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -24,7 +24,7 @@ namespace LinqToDB.Internal.Expressions.Types
 		/// private static IEumerable&lt;T&gt; Wrappers { get; }
 		/// </code>
 		/// where T could be <see cref="LambdaExpression"/> or <see>Tuple&lt;LambdaExpression, bool&gt;</see>.
-		/// Boolean flag means that mapping expression compilation allowed to fail if it is set to <c>true</c>.
+		/// Boolean flag means that mapping expression compilation allowed to fail if it is set to <see langword="true"/>.
 		/// This could be used to map optional API, that present only in specific versions of provider.
 		/// If wrapper doesn't need any wrapper delegates, this property could be ommited.
 		/// </summary>

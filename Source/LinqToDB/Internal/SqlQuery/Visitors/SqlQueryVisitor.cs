@@ -62,15 +62,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		public override VisitMode GetVisitMode(IQueryElement element)
 		{
-			var visitMode = VisitMode;
-			if (visitMode == VisitMode.ReadOnly)
-				return VisitMode.ReadOnly;
+			return VisitMode switch
+			{
+				VisitMode.ReadOnly => VisitMode.ReadOnly,
 
-			// when element was already replaced with new instance, we don't need to replace it again and can modify it inplace
-			if (visitMode == VisitMode.Transform && _transformationInfo?.IsReplaced(element) == true)
-				return VisitMode.Modify;
+				// when element was already replaced with new instance, we don't need to replace it again and can modify it inplace
+				VisitMode.Transform when _transformationInfo?.IsReplaced(element) == true => VisitMode.Modify,
 
-			return visitMode;
+				var vm => vm,
+			};
 		}
 
 		/// <summary>
@@ -138,7 +138,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			foreach (var pair in replacements)
 			{
 				if (ReferenceEquals(pair.Key, pair.Value))
-					throw new ArgumentException($"{nameof(replacements)} contains entry with key == value");
+					throw new ArgumentException($"{nameof(replacements)} contains entry with key == value", nameof(replacements));
 
 				info.RegisterReplaced(pair.Value, pair.Key);
 			}
@@ -186,16 +186,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			public override VisitMode GetVisitMode(IQueryElement element)
 			{
-				var visitMode = VisitMode;
+				return VisitMode switch
+				{
+					VisitMode.ReadOnly => VisitMode.ReadOnly,
 
-				if (visitMode == VisitMode.ReadOnly)
-					return VisitMode.ReadOnly;
+					// when element was already replaced with new instance, we don't need to replace it again and can modify it inplace
+					VisitMode.Transform when _queryVisitor._transformationInfo?.IsReplaced(element) == true => VisitMode.Modify,
 
-				// when element was already replaced with new instance, we don't need to replace it again and can modify it inplace
-				if (visitMode == VisitMode.Transform && _queryVisitor._transformationInfo?.IsReplaced(element) == true)
-					return VisitMode.Modify;
-
-				return visitMode;
+					var vm => vm,
+				};
 			}
 
 			[return: NotNullIfNotNull(nameof(element))]
@@ -284,7 +283,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					foreach (var pair in _replacements)
 					{
 						if (ReferenceEquals(pair.Key, pair.Value))
-							throw new ArgumentException($"{nameof(objectTree)} contains entry with key == value");
+						{
+							throw new ArgumentException(
+								$"{nameof(objectTree)} contains entry with key == value",
+								nameof(objectTree)
+							);
+						}
 
 						objectTree[pair.Key] = pair.Value;
 					}

@@ -10,7 +10,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 {
 	public class SqlTypesTranslationDefault : IMemberTranslator
 	{
-		TranslationRegistration _registration = new TranslationRegistration();
+		readonly TranslationRegistration _registration = new TranslationRegistration();
 
 		public SqlTypesTranslationDefault()
 		{

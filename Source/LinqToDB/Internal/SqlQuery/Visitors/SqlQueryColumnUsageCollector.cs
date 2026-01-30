@@ -73,7 +73,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					for (var i = 0; i < cte.Cte!.Fields.Count; i++)
 					{
-						if (cte.Cte!.Fields[i].Name == f.PhysicalName)
+						if (string.Equals(cte.Cte!.Fields[i].Name, f.PhysicalName, System.StringComparison.Ordinal))
 						{
 							var cteColumn = cte.Cte.Body!.Select.Columns[i];
 							v.RegisterColumn(cteColumn);
@@ -92,7 +92,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				for (var i = 0; i < cte.Cte!.Fields.Count; i++)
 				{
-					if (cte.Cte!.Fields[i].Name == element.PhysicalName)
+					if (string.Equals(cte.Cte!.Fields[i].Name, element.PhysicalName, System.StringComparison.Ordinal))
 					{
 						var column = cte.Cte.Body!.Select.Columns[i];
 						RegisterColumn(column);
@@ -209,7 +209,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (selectQuery.Select.IsDistinct
 				// we cannot remove unused columns for non-UNION ALL operators as it could affect result
-				|| (selectQuery.HasSetOperators && (selectQuery.Select.Columns.Count == 1 || selectQuery.SetOperators.Any(o => o.Operation != SetOperation.UnionAll)))
+				|| (selectQuery.HasSetOperators && (selectQuery.Select.Columns.Count == 1 || selectQuery.SetOperators.Exists(o => o.Operation != SetOperation.UnionAll)))
 				|| (!isCteQuery && _parentSelectQuery == null))
 			{
 				foreach (var c in selectQuery.Select.Columns)
@@ -232,8 +232,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				if (!selectQuery.GroupBy.IsEmpty)
 				{
-					if (selectQuery.Select.Columns.Count == 1)
-						RegisterColumn(selectQuery.Select.Columns[0]);
+					if (selectQuery.Select.Columns is [var c])
+						RegisterColumn(c);
 				}
 				else
 				{
