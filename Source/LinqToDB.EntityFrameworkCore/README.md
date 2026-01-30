@@ -96,7 +96,7 @@ It is not required to work directly with `LINQ To DB`'s `DataConnection` class b
 `LINQ To DB` will try to reuse your configuration and select appropriate data provider:
 
 ```cs
-// uing DbContext
+// using DbContext
 using (var dc = ctx.CreateLinqToDBConnection())
 {
    // linq queries using linq2db extensions
@@ -114,7 +114,7 @@ function before materializing objects for synchronous methods.
 
 Since EF Core have defined it's own asynchronous methods, we have to duplicate them to resolve naming collisions. Async
 methods have the same name but with `LinqToDB` suffix. E.g. `ToListAsyncLinqToDB()`, `SumAsyncLinqToDB()`, etc. The same
-methods are added whe you need `EF Core` query processing but there is collision with `LINQ To DB` and they have
+methods are added when you need `EF Core` query processing but there is collision with `LINQ To DB` and they have
 extensions with `EF` suffix - `ToListAsyncEF()`, `SumAsyncEF()`, etc.
 
 ```cs
@@ -159,7 +159,7 @@ Also check [existing tests](https://github.com/linq2db/linq2db/blob/master/Tests
 There are many reasons. Some of them:
 
 * You want to use advanced SQL functionality, not supported or poorly supported by EntityFrameworkCore like BulkCopy
-  support, SQL MERGE operations, convinient DML (Insert/Delete/Update) operations and many-many-many other features LINQ
+  support, SQL MERGE operations, convenient DML (Insert/Delete/Update) operations and many-many-many other features LINQ
   To DB provides, but you need change tracking functionality that EntityFramework provides.
 * You want to migrate to LINQ To DB, but need to do it step-by-step.
 * Just because LINQ To DB is cool.
