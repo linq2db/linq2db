@@ -4,8 +4,25 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net10.0</TargetFrameworks>
+		<Version>$(EF10Version)</Version>
 		<AssemblyVersion>$(EF10Version)</AssemblyVersion>
 		<DefineConstants>EF10;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
+
+	<PropertyGroup Label="Nuget">
+		<PackageId>linq2db.EntityFrameworkCore</PackageId>
+		<Title>Linq to DB extensions for Entity Framework Core 10</Title>
+		<Description>Allows to execute Linq to DB queries in Entity Framework Core DbContext.</Description>
+		<Product>$(Title)</Product>
+
+		<PackageVersion Condition=" '$(ApplyVersionSuffix)' == 'true' ">$(Version)$(VersionSuffix)</PackageVersion>
+		<PackageValidationBaselineVersion>$(EF10BaselineVersion)</PackageValidationBaselineVersion>
+
+		<PackageTags>$(PackageTags);entity-framework-core;EntityFrameworkCore;EFCore</PackageTags>
+	</PropertyGroup>
+
+	<ItemGroup Label="Nuget">
+		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
+	</ItemGroup>
 
 </Project>
