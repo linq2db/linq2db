@@ -26,9 +26,6 @@ if /i "%EXT%"=="lpx" (
   del /q "%OUTDIR%*.pdb"        2>nul
 )
 
-if exist "%OUTDIR%clidriver" rd /s /q "%OUTDIR%clidriver"  2>nul
-if exist "%OUTDIR%sds"       rd /s /q "%OUTDIR%sds"        2>nul
-
 REM Look for 7z; if not found, fall back to PowerShell Compress-Archive
 set "SEVENZ=%ProgramFiles%\7-Zip\7z.exe"
 if not exist "%SEVENZ%" set "SEVENZ=%ProgramW6432%\7-Zip\7z.exe"

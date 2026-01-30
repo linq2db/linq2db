@@ -14,27 +14,10 @@
 		<!--disable DB2 provider arch warnings-->
 		<MSBuildWarningsAsMessages>MSB3270</MSBuildWarningsAsMessages>
 		<SignAssembly>False</SignAssembly>
+		
+		<!-- Packing is done via sister `LinqToDB.LINQPad.Pack` csproj -->
+		<IsPackable>false</IsPackable>
 	</PropertyGroup>
-
-	<PropertyGroup Label="Nuget">
-		<Title>LINQ to DB driver for LINQPad</Title>
-		<Description>Supported databases: IBM DB2 LUW/zOS/iSeries, Firebird, IBM Informix, Microsoft Access, Microsoft Sql Server (+Azure), Microsoft Sql Server Compact, MySql, MariaDB, Oracle, PostgreSQL, SQLite, SAP HANA, SAP/Sybase ASE, ClickHouse.</Description>
-		<Product>$(Title)</Product>
-
-		<PackageTags>$(PackageTags);linqpaddriver;linqpad;iseries</PackageTags>
-
-		<EnablePackageValidation>false</EnablePackageValidation>
-
-		<IncludeBuildOutput Condition="'$(TargetFramework)' == 'net472'">False</IncludeBuildOutput>
-		<SuppressDependenciesWhenPacking Condition="'$(TargetFramework)' == 'net472'">True</SuppressDependenciesWhenPacking>
-	</PropertyGroup>
-
-	<ItemGroup Label="Nuget">
-		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
-
-		<None Include="Nuget/Connection.png" Pack="true" PackagePath="lib/net8.0-windows7.0/Connection.png" />
-		<None Include="Nuget/FailedConnection.png" Pack="true" PackagePath="lib/net8.0-windows7.0/FailedConnection.png" />
-	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
@@ -66,7 +49,7 @@
 
 		<PackageReference Include="Oracle.ManagedDataAccess" VersionOverride="$(OracleManagedLinqPadVersion)" />
 
-		<!--PackageReference + Reference beelongs to same nuget-->
+		<!--PackageReference + Reference belongs to same nuget-->
 		<PackageReference Include="IBM.Data.DB.Provider" GeneratePathProperty="true" />
 		<Reference Include="IBM.Data.DB2" Condition=" $(PlatformTarget) != 'x86' ">
 			<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x64\IBM.Data.DB2.dll</HintPath>

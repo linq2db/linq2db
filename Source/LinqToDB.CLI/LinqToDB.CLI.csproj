@@ -17,7 +17,7 @@
 		
 		<!-- Difficult to pack all runtimes into single nupkg using <IsTool>true</> -->
 		<NuspecFile>linq2db.cli.nuspec</NuspecFile>
-		<NuspecProperties>output=$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration);authors=$(Authors);version=$(PackageVersion);tags=$(PackageTags.Replace(";", " "))</NuspecProperties>
+		<NuspecProperties>output=$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration);authors=$(Authors);copyright=$(Copyright);releaseNotes=$(PackageReleaseNotes);version=$(PackageVersion);tags=$(PackageTags.Replace(";", " "))</NuspecProperties>
 
 		<EnablePackageValidation>false</EnablePackageValidation>
 	</PropertyGroup>

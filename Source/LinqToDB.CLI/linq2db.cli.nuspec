@@ -6,7 +6,14 @@
 		<description>LINQ to DB CLI is a dotnet tool for Linq To DB database model scaffolding.</description>
 		<authors>$authors$</authors>
 		<version>$version$</version>
+		<copyright>$copyright$</copyright>
 		<tags>$tags$</tags>
+		<icon>images\icon.png</icon>
+		<readme>readme.md</readme>
+		<license type="expression">MIT</license>
+		<licenseUrl>https://licenses.nuget.org/MIT</licenseUrl>
+		<projectUrl>https://linq2db.github.io/</projectUrl>
+		<releaseNotes>$releaseNotes$</releaseNotes>
 		<packageTypes>
 			<packageType name="DotnetTool" />
 		</packageTypes>
@@ -18,6 +25,7 @@
 		<file src="DotnetToolSettings.xml" target="tools\net9.0\any\"  />
 		<file src="$output$\net10.0\**\*"  target="tools\net10.0\any\" />
 		<file src="DotnetToolSettings.xml" target="tools\net10.0\any\" />
-		<file src="readme.md"              target="README.md"          />
+		<file src="readme.md"              target="readme.md"          />
+		<file src="..\..\Nuget\icon.png"   target="images\icon.png"    />
 	</files>
 </package>
