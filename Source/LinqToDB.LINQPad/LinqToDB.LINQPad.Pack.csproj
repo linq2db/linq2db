@@ -24,9 +24,6 @@
 		<PackageTags>$(PackageTags);linqpaddriver;linqpad;iseries</PackageTags>
 
 		<EnablePackageValidation>false</EnablePackageValidation>
-
-		<IncludeBuildOutput Condition="'$(TargetFramework)' == 'net472'">False</IncludeBuildOutput>
-		<SuppressDependenciesWhenPacking Condition="'$(TargetFramework)' == 'net472'">True</SuppressDependenciesWhenPacking>
 	</PropertyGroup>
 
 	<ItemGroup Label="Nuget">
