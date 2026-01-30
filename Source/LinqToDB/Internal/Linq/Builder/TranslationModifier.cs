@@ -44,8 +44,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			return InlineParameters == other.InlineParameters &&
-			       ((IgnoreQueryFilters == null && other.IgnoreQueryFilters == null) ||
-			        (IgnoreQueryFilters != null && other.IgnoreQueryFilters != null && IgnoreQueryFilters.SequenceEqual(other.IgnoreQueryFilters)));
+				((IgnoreQueryFilters == null && other.IgnoreQueryFilters == null) ||
+				(IgnoreQueryFilters != null && other.IgnoreQueryFilters != null && IgnoreQueryFilters.SequenceEqual(other.IgnoreQueryFilters)));
 		}
 
 		public TranslationModifier WithInlineParameters(bool inlineParameters)
@@ -65,13 +65,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				return this;
 			}
 
-			var newFilters = IgnoreQueryFilters == null
-				? ignoreQueryFilters
-				: ignoreQueryFilters == null
-					? null
-					: IgnoreQueryFilters.Length == 0 || ignoreQueryFilters.Length == 0
-						? []
-						: IgnoreQueryFilters.Union(ignoreQueryFilters).ToArray();
+			var newFilters = (IgnoreQueryFilters, ignoreQueryFilters) switch
+			{
+				(null or [], _) => ignoreQueryFilters,
+				(_, null or []) => IgnoreQueryFilters,
+				_ => IgnoreQueryFilters.Union(ignoreQueryFilters).ToArray(),
+			};
 
 			return new TranslationModifier(InlineParameters, newFilters);
 		}
