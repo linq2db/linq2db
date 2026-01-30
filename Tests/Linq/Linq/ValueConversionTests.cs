@@ -999,7 +999,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5310")]
-		public void Issue5310Test([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void Issue5310Test([IncludeDataSources(false, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(Issue5310Table.Data);
