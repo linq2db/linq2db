@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
@@ -1450,6 +1451,91 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return true;
 		}
 
+		bool IsValidForOrderBy(SelectQuery parentQuery, SelectQuery subQuery, bool forMovingToColumn)
+		{
+			if (parentQuery.OrderBy.IsEmpty)
+			{
+				return true;
+			}
+
+			if (!_providerFlags.IsOrderBySubQuerySupported)
+			{
+				if (parentQuery.OrderBy.Any(e =>
+				    {
+					    if (e is SqlColumn column && column.Parent == subQuery)
+					    {
+						    if (forMovingToColumn)
+							    return true;
+						    return column.Expression.Any(ce => ce is SelectQuery);
+					    }
+
+					    return false;
+				    }))
+				{
+					return false;
+				}
+			}
+
+			if (!_providerFlags.IsOrderByAggregateFunctionSupported)
+			{
+		
+				if (parentQuery.OrderBy.Any(e =>
+					{
+						if (e is SqlColumn column && column.Parent == subQuery)
+						{
+							return column.Expression.Any(QueryHelper.IsAggregationFunction);
+						}
+
+						return false;
+					}))
+				{
+					return false;
+				}
+			}
+
+			if (!_providerFlags.IsOrderByAggregateSubquerySupported)
+			{
+				if (parentQuery.OrderBy.Any(e =>
+					{
+						if (e is SqlColumn column && column.Parent == subQuery)
+						{
+							if (forMovingToColumn)
+							{
+								return IsAggregationQuery(subQuery);
+							}
+							else
+							{
+								return column.Expression.Any(ce =>
+								{
+									if (ce is SelectQuery sq)
+									{
+										return IsAggregationQuery(sq);
+									}
+
+									return false;
+								});
+							}
+						}
+
+						return false;
+					}))
+				{
+					return false;
+				}
+			}
+
+			return true;
+
+			static bool IsAggregationQuery(SelectQuery query)
+			{
+				if (!query.GroupBy.IsEmpty)
+					return true;
+				if (query.Select.Columns.Any(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
+					return true;
+				return false;
+			}
+		}
+
 		bool IsMovingUpValid(SelectQuery parentQuery, SqlTableSource tableSource, SelectQuery subQuery, out HashSet<ISqlPredicate>? havingDetected)
 		{
 			havingDetected = null;
@@ -1482,22 +1568,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					return false;
 			}
 
-			if (!parentQuery.OrderBy.IsEmpty && !_providerFlags.IsOrderByAggregateFunctionSupported)
+			if (!IsValidForOrderBy(parentQuery, subQuery, false))
 			{
-				if (parentQuery.OrderBy.Items.Select(o => o.Expression).Any(e =>
-				    {
-					    if (QueryHelper.UnwrapNullablity(e) is SqlColumn column)
-					    {
-							if (column.Parent == subQuery)
-								return QueryHelper.ContainsAggregationFunction(column.Expression);
-					    }
-
-					    return false;
-				    }))
-				{
-					// not allowed to move to parent if it has aggregates
-					return false;
-				}
+				return false;
 			}
 
 			if (!parentQuery.GroupBy.IsEmpty)
@@ -2736,42 +2809,73 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return false;
 		}
 
-		int CountUsage(SelectQuery rootQuery, SqlColumn column)
+		[Flags]
+		enum UsageCountResult
 		{
-			IQueryElement root = rootQuery;
+			None         = 0,
+			Multiple     = 1 << 1,
+			UsedInUpdate = 1 << 2
+		}
+
+		UsageCountResult CountUsage(SelectQuery rootQuery, SqlColumn column)
+		{
+			IQueryElement root        = rootQuery;
+			SelectQuery?  exceptQuery = null;
+			
 			if (_rootElement is not SqlSelectStatement)
 			{
 				root = _rootElement;
 			}
 
-			var counter = 0;
-
-			root.VisitParentFirstAll(e =>
+			if (_rootElement is SqlStatementWithQueryBase statement && statement is not SqlSelectStatement)
 			{
-				// do not search in the same query
-				if (e is SelectQuery sq && sq == column.Parent)
-					return false;
+				exceptQuery = statement.SelectQuery;
+			}
 
-				if (Equals(e, column))
+			var result = UsageCountResult.None;
+
+			SqlColumn? testedColumn = column;
+
+			while (testedColumn != null)
+			{
+				var        counter      = 0;
+				var        current      = testedColumn;
+				SqlColumn? parentColumn = null;
+
+				root.VisitParentFirstAll(e =>
 				{
-					++counter;
+					// do not search in the same query
+					if (e is SelectQuery sq && sq == current.Parent)
+						return false;
+
+					if (e is SqlColumn c)
+					{
+						if (c.Expression.Equals(current))
+						{
+							parentColumn = c;
+						}
+						else if (Equals(e, current))
+						{
+							++counter;
+						}
+					}
+
+					return counter < 2;
+				});
+
+				if (_updateQuery == current.Parent || _updateQuery != null && QueryHelper.EnumerateAccessibleSources(_updateQuery).Any(s => s == current.Parent))
+				{
+					result  |= UsageCountResult.UsedInUpdate;
 				}
 
-				return counter < 2;
-			});
+				if (counter > 1 && exceptQuery != current.Parent)
+				{
+					result |= UsageCountResult.Multiple;
+				}
 
-			return counter;
-		}
+				testedColumn = parentColumn;
+			}
 
-		static bool IsInSelectPart(SelectQuery rootQuery, SqlColumn column)
-		{
-			var result = rootQuery.Select.HasElement(column);
-			return result;
-		}
-
-		static bool IsInOrderByPart(SelectQuery rootQuery, SqlColumn column)
-		{
-			var result = rootQuery.OrderBy.HasElement(column);
 			return result;
 		}
 
@@ -2870,6 +2974,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							{
 								if (joinQuery.Select.Columns.Count > 1)
 								{
+									EnsureReferencesCorrected(selectQuery);
+									TryRemoveNotUsedColumns(joinQuery);
+								}
+
+								if (joinQuery.Select.Columns.Count > 1)
+								{
 									if (!processMultiColumn)
 										continue;
 
@@ -2893,14 +3003,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 								if (_updateTable != null && joinQuery.HasElement(_updateTable))
 									continue;
 
-								var isNoTableQuery = joinQuery.From.Tables.Count == 0;
-
-								if (!isNoTableQuery)
-								{
-									if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery : sq, fakeJoin : null, columnSubqueryLevel : 0, _providerFlags, out _))
-										continue;
-								}
-
 								var isValid = true;
 
 								foreach (var testedColumn in joinQuery.Select.Columns)
@@ -2908,7 +3010,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 									// where we can start analyzing that we can move join to subquery
 
 									var usageCount = CountUsage(sq, testedColumn);
-									var isUnique   = usageCount <= 1;
+									var isUnique   = !usageCount.HasFlag(UsageCountResult.Multiple);
 
 									if (!isUnique)
 									{
@@ -2920,7 +3022,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 										if (_providerFlags.IsApplyJoinSupported)
 										{
-											if (_updateQuery == sq)
+											if (usageCount.HasFlag(UsageCountResult.UsedInUpdate))
 											{
 												// updating query - cannot move multi column usage to subquery
 												isValid = false;
@@ -2928,20 +3030,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 											}
 
 											MoveDuplicateUsageToSubQuery(sq, ref doNotRemoveQueries);
-											// will be processed in the next step
-											ti         = -1;
-											isValid    = false;
-											isModified = true;
-											break;
-										}
-									}
-
-									if (usageCount == 1 && !IsInSelectPart(sq, testedColumn))
-									{
-										var moveToSubquery = IsInOrderByPart(sq, testedColumn) && !_providerFlags.IsSubQueryOrderBySupported;
-										if (moveToSubquery)
-										{
-											MoveToSubQuery(sq);
 											// will be processed in the next step
 											ti         = -1;
 											isValid    = false;
@@ -2978,6 +3066,23 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 								if (!isValid)
 									continue;
+
+								if (!IsValidForOrderBy(sq, joinQuery, true))
+								{
+									MoveToSubQuery(sq);
+									// will be processed in the next step
+									ti         = -1;
+									isModified = true;
+									continue;
+								}
+
+								var isNoTableQuery = joinQuery.From.Tables.Count == 0;
+
+								if (!isNoTableQuery)
+								{
+									if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery: sq, fakeJoin: null, columnSubqueryLevel: 0, _providerFlags, out _))
+										continue;
+								}
 
 								// moving whole join to subquery
 
@@ -3044,6 +3149,34 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 
 			return isModified;
+		}
+
+		void TryRemoveNotUsedColumns(SelectQuery subQuery)
+		{
+			for (var i = subQuery.Select.Columns.Count - 1; i >= 0; i--)
+			{
+				var column = subQuery.Select.Columns[i];
+				var isUsed = false;
+
+				_rootElement.VisitParentFirst(e =>
+				{
+					if (ReferenceEquals(e, column))
+					{
+						isUsed = true;
+						return false;
+					}
+
+					if (ReferenceEquals(e, subQuery))
+						return false;
+
+					return true;
+				});
+
+				if (!isUsed)
+				{
+					subQuery.Select.Columns.RemoveAt(i);
+				}
+			}
 		}
 
 		protected internal override IQueryElement VisitCteClause(CteClause element)

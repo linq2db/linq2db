@@ -35,7 +35,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 			else
 			{
-				updateContext = new UpdateContext(sequence, UpdateTypeEnum.Update, new SqlUpdateStatement(sequence.SelectQuery), false);
+				updateContext = new UpdateContext(sequence, UpdateTypeEnum.Update, new SqlUpdateStatement(sequence.SelectQuery));
 			}
 
 			updateContext.LastBuildInfo = buildInfo;
@@ -59,9 +59,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var genericArguments = methodCall.Method.GetGenericArguments();
 			var outputExpression = (LambdaExpression?)methodCall.GetArgumentByName("outputExpression")?.Unwrap();
 
-			updateContext.CreateColumns = updateStatement.SelectQuery.Find(e => e is SqlFromClause from && (from.Tables.Count > 1 || from.Tables[0].Joins.Count > 0)) != null;
-
-			Type ? objectType;
+			Type? objectType;
 
 			static LambdaExpression? RewriteOutputExpression(LambdaExpression? expr)
 			{
@@ -616,12 +614,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public sealed class UpdateContext : PassThroughContext
 		{
-			public UpdateContext(IBuildContext querySequence, UpdateTypeEnum updateType, SqlUpdateStatement updateStatement, bool createColumns)
+			public UpdateContext(IBuildContext querySequence, UpdateTypeEnum updateType, SqlUpdateStatement updateStatement)
 				: base(querySequence, querySequence.SelectQuery)
 			{
 				UpdateStatement = updateStatement;
 				UpdateType      = updateType;
-				CreateColumns   = createColumns;
 			}
 
 			public SqlUpdateStatement         UpdateStatement { get; }
@@ -678,7 +675,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				SetExpressions.RemoveDuplicatesFromTail((s1, s2) =>
 					ExpressionEqualityComparer.Instance.Equals(s1.FieldExpression, s2.FieldExpression));
 
-				InitializeSetExpressions(Builder, TargetTable, QuerySequence, SetExpressions, update.Items, CreateColumns);
+				InitializeSetExpressions(Builder, TargetTable, QuerySequence, SetExpressions, update.Items, true);
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)

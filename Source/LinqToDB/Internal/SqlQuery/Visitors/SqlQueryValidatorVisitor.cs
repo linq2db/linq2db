@@ -161,7 +161,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				if (!_providerFlags.IsSubQueryOrderBySupported && !selectQuery.OrderBy.IsEmpty && !selectQuery.IsLimited && IsDependsOnOuterSources())
 				{
-					if (_parentQuery?.From.Tables.Count > 0 || IsDependsOnOuterSources())
+					var checkOrderBy = true;
+
+					if (_parentQuery != null && QueryHelper.IsAggregationQuery(_parentQuery, out var needsOrderBy))
+					{
+						checkOrderBy = !needsOrderBy;
+					}
+
+					if (checkOrderBy && (_parentQuery?.From.Tables.Count > 0 || IsDependsOnOuterSources()))
 					{
 						errorMessage = ErrorHelper.Error_OrderBy_in_Subquery;
 						return false;
