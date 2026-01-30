@@ -128,11 +128,9 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 				string expStr;
 				switch (datepart)
 				{
-					case Sql.DateParts.Year:    expStr = "INTERVAL '1' YEAR"; break;
-					case Sql.DateParts.Quarter: expStr = "INTERVAL '3' MONTH"; break;
-					case Sql.DateParts.Month:   expStr = "INTERVAL '1' MONTH"; break;
-					case Sql.DateParts.DayOfYear:
-					case Sql.DateParts.WeekDay:
+					case Sql.DateParts.Year:        expStr = "INTERVAL '1' YEAR"; break;
+					case Sql.DateParts.Quarter:     expStr = "INTERVAL '3' MONTH"; break;
+					case Sql.DateParts.Month:       expStr = "INTERVAL '1' MONTH"; break;
 					case Sql.DateParts.Day:         expStr = "INTERVAL '1' DAY"; break;
 					case Sql.DateParts.Week:        expStr = "INTERVAL '7' DAY"; break;
 					case Sql.DateParts.Hour:        expStr = "INTERVAL '1' HOUR"; break;

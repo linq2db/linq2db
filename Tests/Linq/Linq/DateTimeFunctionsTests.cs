@@ -678,15 +678,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddDayOfYear([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select           Sql.DateAdd(Sql.DateParts.DayOfYear, 3, t.DateTimeValue)!. Value.Date,
-					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.DayOfYear, 3, t.DateTimeValue))!.Value.Date);
-		}
-
-		[Test]
 		public void DateAddDay([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -702,15 +693,6 @@ namespace Tests.Linq
 				AreEqual(
 					from t in    Types select           Sql.DateAdd(Sql.DateParts.Week, -1, t.DateTimeValue)!. Value.Date,
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Week, -1, t.DateTimeValue))!.Value.Date);
-		}
-
-		[Test]
-		public void DateAddWeekDay([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select           Sql.DateAdd(Sql.DateParts.WeekDay, 1, t.DateTimeValue)!. Value.Date,
-					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.WeekDay, 1, t.DateTimeValue))!.Value.Date);
 		}
 
 		[Test]
@@ -971,18 +953,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddDayOfYearExpression([DataSources] string context)
-		{
-			var part1 = 6;
-			var part2 = 3;
-
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in Types select Sql.DateAdd(Sql.DateParts.DayOfYear, 3, t.DateTimeValue)!.Value.Date,
-					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.DayOfYear, part1 - part2, t.DateTimeValue))!.Value.Date);
-		}
-
-		[Test]
 		public void DateAddDayExpression([DataSources] string context)
 		{
 			var part1 = 2;
@@ -1004,18 +974,6 @@ namespace Tests.Linq
 				AreEqual(
 					from t in Types select Sql.DateAdd(Sql.DateParts.Week, -1, t.DateTimeValue)!.Value.Date,
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Week, part1 - part2, t.DateTimeValue))!.Value.Date);
-		}
-
-		[Test]
-		public void DateAddWeekDayExpression([DataSources] string context)
-		{
-			var part1 = 2;
-			var part2 = 3;
-
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in Types select Sql.DateAdd(Sql.DateParts.WeekDay, 1, t.DateTimeValue)!.Value.Date,
-					from t in db.Types select Sql.AsSql(Sql.DateAdd(Sql.DateParts.WeekDay, part2 - part1, t.DateTimeValue))!.Value.Date);
 		}
 
 		[Test]

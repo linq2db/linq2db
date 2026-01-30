@@ -181,7 +181,8 @@ Example of platform-specific providers:
 					null,
 					false,
 					new (false, false, "x86", "x86 architecture"),
-					new (false, false, "x64", "x64 architecture"));
+					new (false, false, "x64", "x64 architecture"),
+					new (false, false, "arm64", "ARM64 architecture"));
 
 			/// <summary>
 			/// Base options template option.
