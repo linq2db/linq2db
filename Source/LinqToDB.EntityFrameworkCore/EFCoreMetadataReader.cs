@@ -170,7 +170,11 @@ namespace LinqToDB.EntityFrameworkCore
 				while (baseType.BaseType != null)
 					baseType = baseType.BaseType;
 
-				if (baseType == entityType && e.GetDiscriminatorValue() != null)
+				if (baseType == entityType
+#if !NETFRAMEWORK && !NETSTANDARD2_0
+					&& e.GetDiscriminatorPropertyName() != null
+#endif
+					&& e.GetDiscriminatorValue() != null)
 				{
 					var entity = e;
 
@@ -649,7 +653,7 @@ namespace LinqToDB.EntityFrameworkCore
 								ctx.this_._mappingSource?.FindMapping(p.ParameterType));
 						}
 
-	#if !EF31
+#if !EF31
 						// https://github.com/PomeloFoundation/Pomelo.EntityFrameworkCore.MySql/issues/1801
 						if (string.Equals(ctx.this_._dependencies!.MethodCallTranslatorProvider.GetType().Name, "MySqlMethodCallTranslatorProvider", StringComparison.Ordinal))
 						{
@@ -661,13 +665,13 @@ namespace LinqToDB.EntityFrameworkCore
 								contextProperty.SetValue(ctx.this_._dependencies!.MethodCallTranslatorProvider, ctx.this_._databaseDependencies!.QueryCompilationContextFactory.Create(false));
 							}
 						}
-	#endif
+#endif
 
-	#if !EF31
+#if !EF31
 						var newExpression = ctx.this_._dependencies!.MethodCallTranslatorProvider.Translate(ctx.this_._model!, objExpr, ctx.methodInfo, parametersArray, ctx.this_._logger!);
-	#else
+#else
 						var newExpression = ctx.this_._dependencies!.MethodCallTranslatorProvider.Translate(ctx.this_._model!, objExpr, ctx.methodInfo, parametersArray);
-	#endif
+#endif
 						// do we want to translate default operators?
 						if (newExpression is not (null or SqlBinaryExpression or SqlUnaryExpression))
 						{

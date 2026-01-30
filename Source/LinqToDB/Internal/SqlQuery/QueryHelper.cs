@@ -22,23 +22,17 @@ namespace LinqToDB.Internal.SqlQuery
 		internal static ObjectPool<AggregationCheckVisitor> AggregationCheckVisitors =
 			new(() => new AggregationCheckVisitor(), v => v.Cleanup(), 100);
 
-		sealed class IsDependsOnSourcesContext
+		sealed class IsDependsOnSourcesContext(IReadOnlyCollection<ISqlTableSource> onSources, IReadOnlyCollection<IQueryElement>? elementsToIgnore)
 		{
-			public IsDependsOnSourcesContext(IReadOnlyCollection<ISqlTableSource> onSources, IReadOnlyCollection<IQueryElement>? elementsToIgnore)
-			{
-				OnSources = onSources;
-				ElementsToIgnore = elementsToIgnore;
-			}
+			public readonly IReadOnlyCollection<ISqlTableSource> OnSources        = onSources;
+			public readonly IReadOnlyCollection<IQueryElement>?  ElementsToIgnore = elementsToIgnore;
 
-			public readonly IReadOnlyCollection<ISqlTableSource> OnSources;
-			public readonly IReadOnlyCollection<IQueryElement>?  ElementsToIgnore;
-
-			public          bool                     DependencyFound;
+			public bool DependencyFound;
 		}
 
 		public static bool IsDependsOnSource(IQueryElement testedRoot, ISqlTableSource onSource, IReadOnlyCollection<IQueryElement>? elementsToIgnore = null)
 		{
-			return IsDependsOnSources(testedRoot, new [] { onSource }, elementsToIgnore);
+			return IsDependsOnSources(testedRoot, new[] { onSource }, elementsToIgnore);
 		}
 
 		public static bool IsDependsOnSources(IQueryElement testedRoot, IReadOnlyCollection<ISqlTableSource> onSources, IReadOnlyCollection<IQueryElement>? elementsToIgnore = null)
@@ -280,6 +274,10 @@ namespace LinqToDB.Internal.SqlQuery
 
 					return GetColumnDescriptor(caseExpression.ElseExpression);
 				}
+				case QueryElementType.SqlAnchor:
+				{
+					return GetColumnDescriptor(((SqlAnchor)expr).SqlExpression);
+				}
 			}
 
 			return null;
@@ -336,6 +334,10 @@ namespace LinqToDB.Internal.SqlQuery
 					if (sqlValue.ValueType.DbType != null || sqlValue.ValueType.DataType != DataType.Undefined)
 						return sqlValue.ValueType;
 					break;
+				}
+				case QueryElementType.SqlAnchor:
+				{
+					return SuggestDbDataType(((SqlAnchor)expr).SqlExpression);
 				}
 			}
 
@@ -541,18 +543,6 @@ namespace LinqToDB.Internal.SqlQuery
 				if (p is SqlExpression argExpression)
 					return IsTransitiveExpression(argExpression, checkNullability);
 				return true;
-			}
-
-			return false;
-		}
-
-		static bool IsTransitivePredicate(SqlExpression sqlExpression)
-		{
-			if (sqlExpression is { Parameters: [var p] } && sqlExpression.Expr.AsSpan().Trim() is "{0}")
-			{
-				if (p is SqlExpression argExpression)
-					return IsTransitivePredicate(argExpression);
-				return p is ISqlPredicate;
 			}
 
 			return false;
@@ -1173,7 +1163,7 @@ namespace LinqToDB.Internal.SqlQuery
 				base.Cleanup();
 			}
 
-			[return : NotNullIfNotNull(nameof(element))]
+			[return: NotNullIfNotNull(nameof(element))]
 			public override IQueryElement? Visit(IQueryElement? element)
 			{
 				// if we already found aggregation or window function, we can stop
@@ -1729,7 +1719,7 @@ namespace LinqToDB.Internal.SqlQuery
 			else
 			{
 				if (child.IsAnd)
-					return new SqlSearchCondition(false, canBeUnknown: null, [..child.Predicates, parent]);
+					return new SqlSearchCondition(false, canBeUnknown: null, [.. child.Predicates, parent]);
 				else
 					return new SqlSearchCondition(false, canBeUnknown: null, child, parent);
 			}

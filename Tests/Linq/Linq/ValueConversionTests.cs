@@ -936,5 +936,48 @@ namespace Tests.Linq
 				Assert.That(tb.Where(t => t.EnumValueNull == value).Count(), Is.EqualTo(1));
 			}
 		}
+
+		[Table]
+		class Issue5310Table
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column(DbType = "smallint[]"), ValueConverter(ConverterType = typeof(CustomConverter))]
+			public PaymentType[]? Types { get; set; }
+
+			sealed class CustomConverter() : ValueConverter<PaymentType[], short[]>(
+				types => types.Select(t => (short)t).ToArray(),
+				values => values.Select(v => (PaymentType)v).ToArray(),
+				false);
+
+			public enum PaymentType : short
+			{
+				One = 1,
+				Two = 2
+			}
+
+			public static readonly Issue5310Table[] Data =
+			[
+				new () { Id = 1 }
+			];
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5310")]
+		public void Issue5310Test([IncludeDataSources(false, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(Issue5310Table.Data);
+
+			var data = tb
+				.Where(s => s.Id == 1)
+				.Set(s => s.Types, [Issue5310Table.PaymentType.One])
+				.UpdateWithOutput((_, inserted) => inserted)
+				.ToArray();
+
+			Assert.That(data, Has.Length.EqualTo(1));
+			Assert.That(data[0].Types, Is.Not.Null.And.Length.EqualTo(1));
+			Assert.That(data[0].Types[0], Is.EqualTo(Issue5310Table.PaymentType.One));
+		}
 	}
 }

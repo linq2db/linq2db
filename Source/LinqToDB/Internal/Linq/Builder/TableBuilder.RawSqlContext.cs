@@ -41,9 +41,15 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		static BuildSequenceResult BuildRawSqlTable(ExpressionBuilder builder, BuildInfo buildInfo, bool isScalar)
+		static BuildSequenceResult BuildRawSqlTable(ExpressionBuilder builder, BuildInfo buildInfo, bool? isScalar)
 		{
 			var methodCall = (MethodCallExpression)buildInfo.Expression;
+			var entityType = methodCall.Method.GetGenericArguments()[0];
+
+			if (isScalar == null)
+			{
+				isScalar = builder.MappingSchema.IsScalarType(entityType);
+			}
 
 			var formatArg = methodCall.Arguments[1];
 
@@ -63,7 +69,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				sqlArguments[i] = arg;
 			}
 
-			return BuildSequenceResult.FromContext(new RawSqlContext(builder.GetTranslationModifier(), builder, buildInfo, methodCall.Method.GetGenericArguments()[0], isScalar, format, sqlArguments));
+			return BuildSequenceResult.FromContext(new RawSqlContext(builder.GetTranslationModifier(), builder, buildInfo, entityType, isScalar.Value, format, sqlArguments));
 		}
 
 		public static void PrepareRawSqlArguments(Expression formatArg, Expression? parametersArg, out string format, out IReadOnlyList<Expression> arguments)

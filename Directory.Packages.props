@@ -48,7 +48,7 @@
 		<PackageVersion Include="Microsoft.Bcl.AsyncInterfaces"                         Version="$(Net8LatestForNuget)"        />
 		<PackageVersion Include="Microsoft.CSharp"                                      Version="4.7.0"                        />
 		<PackageVersion Include="Nullability.Source"                                    Version="2.3.0"                        />
-		<PackageVersion Include="System.Collections.Immutable"                          Version="$(Net10Latest)"                />
+		<PackageVersion Include="System.Collections.Immutable"                          Version="$(Net10Latest)"               />
 		<PackageVersion Include="System.ComponentModel.Annotations"                     Version="5.0.0"                        />
 		<PackageVersion Include="System.Data.DataSetExtensions"                         Version="4.5.0"                        />
 		<PackageVersion Include="System.ValueTuple"                                     Version="4.6.1"                        />
