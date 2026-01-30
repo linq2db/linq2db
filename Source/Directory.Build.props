@@ -3,6 +3,8 @@
 
 	<PropertyGroup>
 		<RunApiAnalyzersDuringBuild>false</RunApiAnalyzersDuringBuild>
+		
+		<IsPackable>true</IsPackable>
 
 		<!--https://github.com/dotnet/sourcelink/issues/572-->
 		<EmbedUntrackedSources>true</EmbedUntrackedSources>

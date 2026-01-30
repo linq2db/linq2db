@@ -4,8 +4,25 @@
 	
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.0;net462</TargetFrameworks>
+		<Version>$(EF3Version)</Version>
 		<AssemblyVersion>$(EF3Version)</AssemblyVersion>
 		<DefineConstants>EF31;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
+	
+	<PropertyGroup Label="Nuget">
+		<PackageId>linq2db.EntityFrameworkCore</PackageId>
+		<Title>Linq to DB extensions for Entity Framework Core 3.1</Title>
+		<Description>Allows to execute Linq to DB queries in Entity Framework Core DbContext.</Description>
+		<Product>$(Title)</Product>
+
+		<PackageVersion Condition=" '$(ApplyVersionSuffix)' == 'true' ">$(Version)$(VersionSuffix)</PackageVersion>
+		<PackageValidationBaselineVersion>$(EF3BaselineVersion)</PackageValidationBaselineVersion>
+
+		<PackageTags>$(PackageTags);entity-framework-core;EntityFrameworkCore;EFCore</PackageTags>
+	</PropertyGroup>
+
+	<ItemGroup Label="Nuget">
+		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
+	</ItemGroup>
 
 </Project>
