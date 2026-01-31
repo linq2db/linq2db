@@ -2,14 +2,17 @@
 
 	<PropertyGroup>
 		<AssemblyName>linq2db</AssemblyName>
-		<RootNamespace>LinqToDB</RootNamespace>
+	</PropertyGroup>
 
-		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
-
-		<Title>Linq to DB</Title>
+	<PropertyGroup Label="Nuget">
+		<Title>LINQ to DB</Title>
 		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
 		<Product>$(Title)</Product>
 	</PropertyGroup>
+	
+	<ItemGroup Label="Nuget">
+		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
+	</ItemGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Testing' OR '$(Configuration)'=='Azure'">
 		<!--bugchecks to run in debug and during CI tests to discover potential issues-->
@@ -145,7 +148,7 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'netstandard2.0' ">
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
-		<PackageReference Include="Nullability.Source" />
+		<PackageReference Include="Nullability.Source" PrivateAssets="All" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">

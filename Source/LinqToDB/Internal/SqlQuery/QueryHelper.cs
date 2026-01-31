@@ -282,6 +282,10 @@ namespace LinqToDB.Internal.SqlQuery
 
 					return GetColumnDescriptor(caseExpression.ElseExpression);
 				}
+				case QueryElementType.SqlAnchor:
+				{
+					return GetColumnDescriptor(((SqlAnchor)expr).SqlExpression);
+				}
 			}
 
 			return null;
@@ -339,6 +343,10 @@ namespace LinqToDB.Internal.SqlQuery
 					if (sqlValue.ValueType.DbType != null || sqlValue.ValueType.DataType != DataType.Undefined)
 						return sqlValue.ValueType;
 					break;
+				}
+				case QueryElementType.SqlAnchor:
+				{
+					return SuggestDbDataType(((SqlAnchor)expr).SqlExpression);
 				}
 			}
 
@@ -544,18 +552,6 @@ namespace LinqToDB.Internal.SqlQuery
 				if (p is SqlExpression argExpression)
 					return IsTransitiveExpression(argExpression, checkNullability);
 				return true;
-			}
-
-			return false;
-		}
-
-		static bool IsTransitivePredicate(SqlExpression sqlExpression)
-		{
-			if (sqlExpression is { Parameters: [var p] } && sqlExpression.Expr.Trim() == "{0}")
-			{
-				if (p is SqlExpression argExpression)
-					return IsTransitivePredicate(argExpression);
-				return p is ISqlPredicate;
 			}
 
 			return false;

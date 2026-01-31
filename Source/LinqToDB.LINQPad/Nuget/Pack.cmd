@@ -8,7 +8,8 @@ set "EXT=%~2"
 echo Packing %EXT%
 REM .build\bin\LinqToDB.LINQPad\Debug\TFM\..\..\..\..\lpx -> .build\lpx
 set "RELDIR=%OUTDIR%..\..\..\..\lpx"
-set "RESDIR=%OUTDIR%..\..\..\..\..\NuGet\LINQPad"
+REM .build\bin\LinqToDB.LINQPad\Debug\TFM\..\..\..\..\..\Source\LinqToDB.LINQPad\Nuget
+set "RESDIR=%OUTDIR%..\..\..\..\..\Source\LinqToDB.LINQPad\Nuget"
 
 if not exist "%RELDIR%" mkdir "%RELDIR%"
 

@@ -34,7 +34,6 @@ stages:
 ##############
   - template: templates/nuget-job.yml
     parameters:
-      publish: true
       release: eq(variables['Build.SourceBranchName'], variables['release_branch'])
 
 #############

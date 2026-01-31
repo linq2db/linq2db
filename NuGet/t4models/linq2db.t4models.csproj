@@ -1,0 +1,136 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net462</TargetFrameworks>
+		<IsPackable>true</IsPackable>
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<ToolsPath>$(ArtifactsPath)/bin/NuGet/$(Configuration)/net462</ToolsPath>
+	</PropertyGroup>
+
+	<PropertyGroup Label="Nuget">
+		<Title>LINQ to DB T4 Scaffold Templates for All Databases</Title>
+		<Description>T4 scaffolding templates to generate LINQ to DB data models for different databases. It provides scaffolding functionality and reference to linq2db main package only. To use Linq To DB in your project you should add reference to corresponding database provider(s) explicitly.</Description>
+		<PackageTags>$(PackageTags);T4;datamodel</PackageTags>
+
+		<EnablePackageValidation>false</EnablePackageValidation>
+		<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="../readme.t4.txt"                   Pack="true" PackagePath="readme.txt"                               Visible="false" />
+		<None Include="../readme.t4.md"                    Pack="true" PackagePath="readme.md"                                Visible="false" />
+		<None Include="../../Source/LinqToDB.Templates/**" Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" Visible="false" />
+		<None Include="../../Source/LinqToDB.Templates/**" Pack="true" PackagePath="content\LinqToDB.Templates\"              Visible="false" />
+
+		<None Include="*.props"                            Pack="true" PackagePath="build\" />
+
+		<None Include="../Access/*.ttinclude"              Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../Access/*.ttinclude"              Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../Access/*.txt"                    Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../Access/*.txt"                    Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../ClickHouse/*.ttinclude"          Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../ClickHouse/*.ttinclude"          Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../ClickHouse/*.txt"                Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../ClickHouse/*.txt"                Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../DB2/*.ttinclude"                 Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../DB2/*.ttinclude"                 Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../DB2/*.txt"                       Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../DB2/*.txt"                       Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../Firebird/*.ttinclude"            Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../Firebird/*.ttinclude"            Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../Firebird/*.txt"                  Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../Firebird/*.txt"                  Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../Informix/*.ttinclude"            Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../Informix/*.ttinclude"            Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../Informix/*.txt"                  Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../Informix/*.txt"                  Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../MySql/*.ttinclude"               Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../MySql/*.ttinclude"               Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../MySql/*.txt"                     Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../MySql/*.txt"                     Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../Oracle/*.ttinclude"              Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../Oracle/*.ttinclude"              Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../Oracle/*.txt"                    Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../Oracle/*.txt"                    Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../PostgreSQL/*.ttinclude"          Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../PostgreSQL/*.ttinclude"          Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../PostgreSQL/*.txt"                Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../PostgreSQL/*.txt"                Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../SapHana/*.ttinclude"             Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../SapHana/*.ttinclude"             Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../SapHana/*.txt"                   Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../SapHana/*.txt"                   Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../SqlCe/*.ttinclude"               Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../SqlCe/*.ttinclude"               Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../SqlCe/*.txt"                     Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../SqlCe/*.txt"                     Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../SQLite/*.ttinclude"              Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../SQLite/*.ttinclude"              Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../SQLite/*.txt"                    Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../SQLite/*.txt"                    Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../SqlServer/*.ttinclude"           Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../SqlServer/*.ttinclude"           Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../SqlServer/*.txt"                 Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../SqlServer/*.txt"                 Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="../Sybase/*.ttinclude"              Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../Sybase/*.ttinclude"              Pack="true" PackagePath="content\LinqToDB.Templates\" />
+		<None Include="../Sybase/*.txt"                    Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
+		<None Include="../Sybase/*.txt"                    Pack="true" PackagePath="content\LinqToDB.Templates\" />
+
+		<None Include="$(ToolsPath)/linq2db.dll"								   Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/linq2db.Tools.dll"							   Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/linq2db.Scaffold.dll"						   Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/Humanizer.dll"								   Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/Microsoft.Bcl.AsyncInterfaces.dll"			   Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/AdoNetCore.AseClient.dll"                      Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/amd64/**"                                      Pack="true" PackagePath="tools/amd64"               Visible="false" />
+		<None Include="$(ToolsPath)/x64/**"                                        Pack="true" PackagePath="tools/x64"                 Visible="false" />
+		<None Include="$(ToolsPath)/arm64\SqlServerSpatial170.dll"                 Pack="true" PackagePath="tools/arm64"               Visible="false" />
+		<None Include="$(ToolsPath)/ClickHouse.Driver.dll"                         Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/clidriver/**"                                  Pack="true" PackagePath="tools/clidriver"           Visible="false" />
+		<None Include="$(ToolsPath)/FirebirdSql.Data.FirebirdClient.dll"           Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/IBM.Data.DB2.DLL"                              Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/Microsoft.Bcl.HashCode.dll"                    Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/Microsoft.Extensions.Http.dll"                 Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/Microsoft.Extensions.Logging.Abstractions.dll" Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/Microsoft.SqlServer.Server.dll"                Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/Microsoft.SqlServer.Types.dll"                 Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/MySqlConnector.dll"                            Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/NodaTime.dll"                                  Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/Npgsql.dll"                                    Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/Oracle.ManagedDataAccess.dll"                  Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/Sap.Data.Hana.v4.5.dll" 					   Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/sds\runtimes\win-arm64\native\e_sqlite3.dll"   Pack="true" PackagePath="runtimes\win-arm64\native" Visible="false" />
+		<None Include="$(ToolsPath)/sds\runtimes\win-x64\native\e_sqlite3.dll"     Pack="true" PackagePath="runtimes\win-x64\native"   Visible="false" />
+		<None Include="$(ToolsPath)/sds\runtimes\win-x86\native\e_sqlite3.dll"     Pack="true" PackagePath="runtimes\win-x86\native"   Visible="false" />
+		<None Include="$(ToolsPath)/System.Buffers.dll"                            Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/System.Collections.Immutable.dll"              Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/System.Data.Odbc.dll"   					   Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/System.Data.SQLite.dll"                        Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/System.Data.SqlServerCe.dll"                   Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/System.Diagnostics.DiagnosticSource.dll"       Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/System.Memory.dll"                             Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/System.Runtime.CompilerServices.Unsafe.dll"    Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/System.Text.Json.dll"                          Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/System.Threading.Channels.dll"                 Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/System.Threading.Tasks.Extensions.dll"         Pack="true" PackagePath="tools"                     Visible="false" />
+		<None Include="$(ToolsPath)/x86\SqlServerSpatial170.dll"                   Pack="true" PackagePath="tools/x86"                 Visible="false" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="../NuGet.csproj" />
+	</ItemGroup>
+
+</Project>
