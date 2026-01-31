@@ -355,7 +355,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			optionsBuilder = optionsBuilder.UseNpgsql(
 				connectionString,
-				o => o.MapEnum<Issue4940DBStatus>());
+				o => o.MapEnum<Issue4940DBStatus>().MapEnum<Issue4940DBNullableStatus>());
 
 			using var ctx = new Issue4940Context(optionsBuilder.Options);
 			using var db  = ctx.CreateLinqToDBConnection();
@@ -424,8 +424,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			optionsBuilder = optionsBuilder.UseNpgsql(
 				connectionString,
-				o => o.MapEnum<Issue4940DBStatus>()
-					  .MapEnum<Issue4940DBNullableStatus>());
+				o => o.MapEnum<Issue4940DBStatus>().MapEnum<Issue4940DBNullableStatus>());
 
 			using var ctx = new Issue4940Context(optionsBuilder.Options);
 			using var db  = ctx.CreateLinqToDBConnection();
