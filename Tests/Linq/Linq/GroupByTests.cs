@@ -3863,5 +3863,53 @@ namespace Tests.Linq
 
 			query.ToArray();
 		}
+
+		static class Issue5317
+		{
+			[Table]
+			public sealed class TestTable
+			{
+				[PrimaryKey]
+				public int Id { get; set; }
+
+				[Column, NotNull]
+				public string Name { get; set; } = string.Empty;
+
+				[Column]
+				public int ReferenceId { get; set; }
+
+				[Association(ThisKey = nameof(ReferenceId), OtherKey = nameof(Reference.Id), CanBeNull = false)]
+				public Reference Reference => throw new InvalidOperationException();
+			}
+
+			[Table]
+			public sealed class Reference
+			{
+				[PrimaryKey]
+				public int Id { get; set; }
+
+				[Column, NotNull]
+				public string Name { get; set; } = string.Empty;
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5317")]
+		public void Issue5317Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue5317.TestTable>();
+			using var tr = db.CreateLocalTable<Issue5317.Reference>();
+
+			var query = from t1 in tb
+						join t2 in tb on t1.Id equals t2.Id into g
+						from t2 in g.DefaultIfEmpty()
+						group new { t1 } by t1.Id into g
+						select new
+						{
+							ReferenceName = g.First().t1.Reference.Name
+						};
+
+			query.ToArray();
+		}
 	}
 }
