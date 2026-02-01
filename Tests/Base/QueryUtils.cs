@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
 using LinqToDB;
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlQuery;
 
@@ -61,6 +63,19 @@ namespace Tests
 			return info.GetQueries().Single().Statement;
 		}
 
+		public static SqlStatement GetStatement<T, TResult>(this IQueryable<T> query, Expression<Func<IQueryable<T>, TResult>> executeBody)
+		{
+			var queryExpression = executeBody.GetBody(query.Expression);
+
+			var eq          = (IExpressionQuery)query;
+			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(queryExpression);
+			var info        = Query<T>.GetQuery(eq.DataContext, ref expressions, out _);
+
+			InitParameters(eq, info, expressions);
+
+			return info.GetQueries().Single().Statement;
+		}
+
 		private static void InitParameters<T>(IExpressionQuery eq, Query<T> info, IQueryExpressions expressions)
 		{
 			eq.DataContext.GetQueryRunner(info, eq.DataContext, 0, expressions, null, null).GetSqlText();
@@ -69,6 +84,11 @@ namespace Tests
 		public static SelectQuery GetSelectQuery<T>(this IQueryable<T> query)
 		{
 			return query.GetStatement().SelectQuery!;
+		}
+
+		public static SelectQuery GetSelectQuery<T, TResult>(this IQueryable<T> query, Expression<Func<IQueryable<T>, TResult>> executeBody)
+		{
+			return query.GetStatement(executeBody).SelectQuery!;
 		}
 
 		public static IEnumerable<SelectQuery> EnumQueries<T>([NoEnumeration] this IQueryable<T> query)

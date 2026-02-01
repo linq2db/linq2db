@@ -36,12 +36,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		ISqlTableSource? _updateTable;
 
 		readonly SqlQueryColumnNestingCorrector _columnNestingCorrector      = new();
-		readonly SqlQueryColumnUsageCollector   _columnUsageCollector        = new();
 		readonly SqlQueryOrderByOptimizer       _orderByOptimizer            = new();
 		readonly MovingComplexityVisitor        _movingComplexityVisitor     = new();
 		readonly SqlExpressionOptimizerVisitor  _expressionOptimizerVisitor  = new(true);
 		readonly MovingOuterPredicateVisitor    _movingOuterPredicateVisitor = new();
-		readonly RemoveUnusedColumnsVisitor     _removeUnusedColumnsVisitor  = new();
+		readonly SqlQueryColumnOptimizerVisitor _columnOptimizerVisitor      = new();
 
 		public SelectQueryOptimizerVisitor() : base(VisitMode.Modify, null)
 		{
@@ -88,20 +87,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					ProcessElement(_root);
 
-					_orderByOptimizer.OptimizeOrderBy(_root, _providerFlags);
+					_orderByOptimizer.OptimizeOrderBy(_root, _providerFlags, _columnNestingCorrector);
 					if (!_orderByOptimizer.IsOptimized)
 						break;
-
-					if (_orderByOptimizer.NeedsNestingUpdate)
-						CorrectColumnsNesting();
 
 				} while (true);
 
 				if (removeWeakJoins)
 				{
 					// It means that we fully optimize query
-					_columnUsageCollector.CollectUsedColumns(_rootElement);
-					_removeUnusedColumnsVisitor.RemoveUnusedColumns(_columnUsageCollector.UsedColumns, _root);
+					_root = _columnOptimizerVisitor.OptimizeColumns(_root);
 
 					// do it always, ignore dataOptions.LinqOptions.OptimizeJoins
 					JoinsOptimizer.UnnestJoins(_root);
@@ -142,8 +137,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_updateTable       = default;
 
 			_columnNestingCorrector.Cleanup();
-			_columnUsageCollector.Cleanup();
 			_orderByOptimizer.Cleanup();
+			_columnOptimizerVisitor.Cleanup();
 			_movingComplexityVisitor.Cleanup();
 			_expressionOptimizerVisitor.Cleanup();
 			_movingOuterPredicateVisitor.Cleanup();
@@ -598,6 +593,25 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						isModified = true;
 					}
 				}
+
+				selectQuery.GroupBy.Items.RemoveDuplicates(item => item);
+			}
+
+			if (!selectQuery.GroupBy.IsEmpty)
+			{
+				if (selectQuery.GroupBy.Items.Count == selectQuery.Select.Columns.Count 
+					&& selectQuery.Having.IsEmpty
+					&& (selectQuery.Where.IsEmpty || !QueryHelper.ContainsAggregationOrWindowFunction(selectQuery.Where.SearchCondition))
+					&& (selectQuery.OrderBy.IsEmpty || !QueryHelper.ContainsAggregationOrWindowFunction(selectQuery.OrderBy))
+					&& selectQuery.GroupBy.Items.All(gi => selectQuery.Select.Columns.Any(c => c.Expression.Equals(gi))))
+				{
+					// All group by items are already in select columns, we can transform to distinct
+					//
+					selectQuery.GroupBy.Items.Clear();
+					selectQuery.Select.OptimizeDistinct = true;
+					selectQuery.Select.IsDistinct       = true;
+					isModified                          = true;
+				}
 			}
 
 			return isModified;
@@ -975,26 +989,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			if (subQuery.OrderBy.Items.Count > 0)
 			{
-				var filterItems = !mainQuery.IsLimited && (mainQuery.Select.IsDistinct || !mainQuery.GroupBy.IsEmpty);
-
 				foreach (var item in subQuery.OrderBy.Items)
 				{
-					if (filterItems)
-					{
-						var skip = true;
-						foreach (var column in mainQuery.Select.Columns)
-						{
-							if (column.Expression is SqlColumn sc && sc.Expression.Equals(item.Expression))
-							{
-								skip = false;
-								break;
-							}
-						}
-
-						if (skip)
-							continue;
-					}
-
 					mainQuery.OrderBy.Expr(item.Expression, item.IsDescending, item.IsPositioned);
 				}
 			}
@@ -1068,8 +1064,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					if (!_providerFlags.IsWindowFunctionsSupported)
 						return optimized;
-
-					var parameters = new List<ISqlExpression>();
 
 					var found   = new HashSet<ISqlExpression>();
 
@@ -1208,11 +1202,17 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					// processing ROW_NUMBER
 
+					var isLimitedToOneRecord = sql.IsLimitedToOneRecord();
+
 					sql.Select.SkipValue = null;
 					sql.Select.TakeValue = null;
 
 					var rnColumn = sql.Select.AddNewColumn(rnExpression);
 					rnColumn.RawAlias = "rn";
+
+					// Remove order by items, they are not needed anymore
+					if (isLimitedToOneRecord)
+						sql.OrderBy.Items.Clear();
 
 					if (skipValue != null)
 					{
@@ -1225,7 +1225,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 					else if (takeValue != null)
 					{
-						searchCondition.Add(new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.LessOrEqual, takeValue, null));
+						if (isLimitedToOneRecord)
+							searchCondition.Add(new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.Equal, takeValue, null));
+						else
+							searchCondition.Add(new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.LessOrEqual, takeValue, null));
 					}
 					else if (sql.Select.IsDistinct)
 					{
@@ -1376,7 +1379,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 
 			if (subQuery.Select.IsDistinct)
-				parentQuery.Select.IsDistinct = true;
+			{
+				parentQuery.Select.OptimizeDistinct = parentQuery.Select.OptimizeDistinct || subQuery.Select.OptimizeDistinct;
+				parentQuery.Select.IsDistinct       = true;
+			}
 
 			if (subQuery.Select.TakeValue != null)
 			{
@@ -1526,10 +1532,30 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			var nullability = NullabilityContext.GetContext(parentQuery);
 
-			if (!subQuery.OrderBy.IsEmpty && QueryHelper.IsAggregationQuery(parentQuery, out var needsOrderBy) && needsOrderBy)
+			if (!subQuery.OrderBy.IsEmpty)
 			{
-				// not allowed to move to parent if it has aggregates
-				return false;
+				if (!parentQuery.GroupBy.IsEmpty || parentQuery.Select.IsDistinct || QueryHelper.ContainsAggregationOrWindowFunction(parentQuery.Select))
+				{
+					return false;
+				}
+			}
+
+			if (!subQuery.OrderBy.IsEmpty)
+			{
+				if (QueryHelper.IsAggregationQuery(parentQuery, out var needsOrderBy) && needsOrderBy)
+					return false;
+
+				if (parentQuery.Select.IsDistinct)
+				{
+					// Check that all order by columns are in select list
+					foreach (var ob in subQuery.OrderBy.Items)
+					{
+						if (!parentQuery.Select.Columns.Any(c => QueryHelper.SameWithoutNullablity(c.Expression, ob.Expression)))
+						{
+							return false;
+						}
+					}
+				}
 			}
 
 			// Check columns
@@ -1762,10 +1788,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (!subQuery.GroupBy.Having.IsEmpty)
 					return false;
 
-				if (subQuery.Select.SkipValue    != null || subQuery.Select.TakeValue    != null ||
-				    parentQuery.Select.SkipValue != null || parentQuery.Select.TakeValue != null)
+				if (!subQuery.OrderBy.IsEmpty)
 				{
-					return false;
+					if (subQuery.IsLimited || parentQuery.IsLimited)
+						return false;
+				}
+				else
+				{
+					if (subQuery.IsLimited)
+						return false;
 				}
 
 				// Common column check for Distincts
@@ -3274,140 +3305,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				// OuterApplyOptimization test
 				return predicate;
-			}
-		}
-
-		sealed class RemoveUnusedColumnsVisitor : QueryElementVisitor
-		{
-			private readonly HashSet<SqlSelectClause> _visitedFromCte = [];
-			private IReadOnlyCollection<SqlColumn>    _usedColumns    = null!;
-
-			public RemoveUnusedColumnsVisitor() : base(VisitMode.Modify)
-			{
-			}
-
-			public void RemoveUnusedColumns(IReadOnlyCollection<SqlColumn> usedColumns, IQueryElement element)
-			{
-				if (usedColumns.Count == 0)
-					return;
-
-				_usedColumns = usedColumns;
-
-				Visit(element);
-			}
-
-			public override void Cleanup()
-			{
-				_usedColumns = null!;
-				_visitedFromCte.Clear();
-
-				base.Cleanup();
-			}
-
-			protected internal override IQueryElement VisitCteClause(CteClause element)
-			{
-				_visitedFromCte.Add(element.Body!.Select.Select);
-				ProcessSelectClause(element.Body!.Select.Select, element);
-
-				return base.VisitCteClause(element);
-			}
-
-			protected internal override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
-			{
-				if (!_visitedFromCte.Contains(element))
-					ProcessSelectClause(element, null);
-
-				return base.VisitSqlSelectClause(element);
-			}
-
-			protected internal override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
-			{
-				var newElement = base.VisitSqlTableLikeSource(element);
-
-				if (!ReferenceEquals(newElement, element))
-				{
-					return Visit(newElement);
-				}
-
-				if (element.SourceEnumerable != null)
-				{
-					// Synchronizing Enumerable table
-
-					var enumerableSource = element.SourceEnumerable;
-
-					for(var i = enumerableSource.Fields.Count - 1; i >= 0; i--)
-					{
-						var enumerableSourceField = enumerableSource.Fields[i];
-
-						if (element.SourceFields.All(f => f.BasedOn != enumerableSourceField))
-						{
-							enumerableSource.RemoveField(i);
-						}
-					}
-
-					if (element.SourceFields.All(x => x.BasedOn != null))
-					{
-						var newIndexes = element.SourceFields
-							.Select((field, currentIndex) => (field, currentIndex))
-							.OrderBy(t => enumerableSource.Fields.IndexOf(t.field.BasedOn!))
-							.Select((r, newIndex) => (r.field, r.currentIndex, idx : newIndex))
-							.ToList();
-
-						for (var i = 0; i < newIndexes.Count; i++)
-						{
-							var (field, currentIndex, newIndex) = newIndexes[i];
-							if (currentIndex != newIndex)
-							{
-								element.SourceFields.Remove(field);
-								element.SourceFields.Insert(newIndex, field);
-							}
-						}
-					}
-				}
-
-				return element;
-			}
-
-			private void ProcessSelectClause(SqlSelectClause element, CteClause? cte)
-			{
-				for (var i = element.Columns.Count - 1; i >= 0; i--)
-				{
-					var column = element.Columns[i];
-
-					if (!_usedColumns.Contains(column))
-					{
-						element.Columns.RemoveAt(i);
-
-						// cte with unused columns could be defined with empty Field list
-						if (cte?.Fields.Count > 0)
-							cte.Fields.RemoveAt(i);
-					}
-				}
-
-				// add fake 1 column for cases when SELECT * is not valid/undesirable
-				if (element.Columns.Count == 0
-					&& (
-						// see CteTests.TestNoColumns
-						// we don't want SQL like
-						// "WITH cte (SELECT * ..."
-						// to expose all columns implicitly
-						cte != null
-						// see JoinTests.Issue3311Test3
-						// "SELECT *" table-less syntax is not valid
-						// in theory it could be lifted for providers with Fake column, but we don't have this
-						// information here currently (it's in SqlBuilder)
-						|| element.From.Tables.Count == 0
-						// we can replace
-						// SELECT xxx GROUP BY ...
-						// with
-						// SELECT * GROUP BY ...
-						// only if we know that all columns in source are in group-by, which is not worth of extra logic
-						|| !element.GroupBy.IsEmpty
-					))
-				{
-					element.AddNew(new SqlValue(1), alias: cte != null ? "c1" : null);
-					cte?.Fields.Add(new SqlField(new DbDataType(typeof(int)), "c1", false));
-				}
 			}
 		}
 

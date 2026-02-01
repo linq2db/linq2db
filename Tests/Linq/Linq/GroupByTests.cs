@@ -1675,27 +1675,24 @@ namespace Tests.Linq
 			// https://github.com/igor-tkachev/LinqToDB/issues/42
 			// extra field is generated in the GROUP BY clause, for example:
 			// GROUP BY p.LastName, p.LastName <--- the second one is redundant
+			// Update: GroupBy is converted to DISTINCT, so we check that only one column is present
 
-			using (var db = GetDataConnection(context))
-			{
-				var q =
-					from d in db.Doctor
-					join p in db.Person on d.PersonID equals p.ID
-					group d by p.LastName into g
-					select g.Key;
+			using var db = GetDataConnection(context);
 
-				var _ = q.ToList();
+			var q =
+				from d in db.Doctor
+				join p in db.Person on d.PersonID equals p.ID
+				group d by p.LastName into g
+				select g.Key;
 
-				const string fieldName = "LastName";
+			AssertQuery(q);
 
-				var lastQuery  = db.LastQuery!;
-				var groupByPos = lastQuery.IndexOf("GROUP BY");
-				var fieldPos   = lastQuery.IndexOf(fieldName, groupByPos);
+			var selectQuery = q.GetSelectQuery();
 
-				// check that our field does not present in the GROUP BY clause second time.
-				//
-				Assert.That(lastQuery.IndexOf(fieldName, fieldPos + 1), Is.EqualTo(-1));
-			}
+			selectQuery.Select.IsDistinct.ShouldBeTrue();
+			selectQuery.Select.Columns.Count.ShouldBe(1);
+
+			selectQuery.Select.Columns[0].Expression.ShouldBeOfType<SqlField>().Name.ShouldBe("LastName");
 		}
 
 		[Test]
