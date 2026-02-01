@@ -804,6 +804,15 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 				}
 			}
 
+			if (_includeConvert)
+			{
+				var converted = ConvertUnary(node);
+				if (converted != null)
+				{
+					return Visit(converted);
+				}
+			}
+
 			return base.VisitUnary(node);
 		}
 
