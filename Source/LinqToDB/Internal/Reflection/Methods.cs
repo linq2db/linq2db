@@ -32,7 +32,9 @@ namespace LinqToDB.Internal.Reflection
 
 		public static class System
 		{
+#pragma warning disable MA0107
 			public static readonly MethodInfo Object_ToString      = MemberHelper.MethodOf<object>(o => o.ToString());
+#pragma warning restore MA0107
 			public static readonly MethodInfo Guid_NewGuid         = MemberHelper.MethodOf(     () => Guid.NewGuid());
 			public static readonly MethodInfo Guid_ToString        = MemberHelper.MethodOf<Guid>(g => g.ToString());
 			public static readonly MethodInfo Guid_ToByteArray     = MemberHelper.MethodOf<Guid>(g => g.ToByteArray());
