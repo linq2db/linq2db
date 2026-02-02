@@ -4,12 +4,20 @@
 		<RootNamespace>LinqToDB.Remote.HttpClient.Client</RootNamespace>
 
 		<IsAotCompatible Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">true</IsAotCompatible>
-
-		<Title>Linq to DB HttpClient Client Remote</Title>
-		<Description>Linq to DB support for querying remote data contexts over HttpClient</Description>
-		<Product>$(Title)</Product>
 	</PropertyGroup>
 
+	<PropertyGroup Label="Nuget">
+		<Title>LINQ to DB remote data context over HttpClient</Title>
+		<Description>LINQ to DB Remote HttpClient package provides client classes to query database remotely using HttpClient.</Description>
+		<Product>$(Title)</Product>
+
+		<PackageTags>$(PackageTags);HttpClient;RemoteLinq</PackageTags>
+	</PropertyGroup>
+
+	<ItemGroup Label="Nuget">
+		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
+	</ItemGroup>
+	
 	<ItemGroup>
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
 
