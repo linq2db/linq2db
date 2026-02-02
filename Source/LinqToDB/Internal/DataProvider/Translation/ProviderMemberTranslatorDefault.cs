@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
@@ -50,6 +51,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return new AggregateFunctionsMemberTranslatorBase();
 		}
 
+		protected virtual IMemberTranslator CreateConvertMemberTranslator()
+		{
+			return new ConvertMemberTranslatorDefault();
+		}
+
 		protected ProviderMemberTranslatorDefault()
 		{
 			InitDefaultTranslators();
@@ -76,26 +82,11 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			CombinedMemberTranslator.Add(CreateGuidMemberTranslator());
 			CombinedMemberTranslator.Add(CreateSqlFunctionsMemberTranslator());
 			CombinedMemberTranslator.Add(CreateAggregateFunctionsMemberTranslator());
+			CombinedMemberTranslator.Add(CreateConvertMemberTranslator());
 
 			var windowFunctionsTranslator = CreateWindowFunctionsMemberTranslator();
 			if (windowFunctionsTranslator != null)
 				CombinedMemberTranslator.Add(windowFunctionsTranslator);
-		}
-
-		protected SqlPlaceholderExpression? TranslateNoRequiredObjectExpression(ITranslationContext translationContext, Expression? objExpression)
-		{
-			if (objExpression == null)
-				return null;
-
-			if (translationContext.CanBeEvaluatedOnClient(objExpression))
-				return null;
-
-			var obj = translationContext.Translate(objExpression);
-
-			if (obj is not SqlPlaceholderExpression objPlaceholder)
-				return null;
-
-			return objPlaceholder;
 		}
 
 		protected virtual Expression? ConvertToString(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
@@ -105,7 +96,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			var obj = methodCall.Object!;
 
-			var objPlaceholder = TranslateNoRequiredObjectExpression(translationContext, obj);
+			var objPlaceholder = translationContext.TranslateNoRequiredObjectExpression(obj);
 
 			if (objPlaceholder == null)
 				return null;
@@ -227,15 +218,19 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			if (methodCall.Arguments.Count == 2)
 			{
-				if (methodCall.Arguments[0].Type != typeof(bool))
+				if (!translationContext.TranslateExpression(methodCall.Arguments[1], out var argument, out _))
+				{
 					return false;
-				
-				var argumentPlaceholder = TranslateNoRequiredObjectExpression(translationContext, methodCall.Arguments[1]);
+				}
 
-				if (argumentPlaceholder == null)
+				ISqlExpression? translatedSqlExpression;
+
+				if (!translationContext.TranslateExpression(methodCall.Arguments[0], out var typeExpression, out _))
+				{
 					return false;
+				}
 
-				var translatedSqlExpression = TranslateConvertToBoolean(translationContext, argumentPlaceholder.Sql, translationFlags);
+				translatedSqlExpression = TranslateConvert(translationContext, typeExpression, argument, translationFlags);
 
 				if (translatedSqlExpression == null)
 					return false;
@@ -260,7 +255,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (methodCall.Arguments.Count != 1)
 				return false;
 
-			var argumentPlaceholder = TranslateNoRequiredObjectExpression(translationContext, methodCall.Arguments[0]);
+			var argumentPlaceholder = translationContext.TranslateNoRequiredObjectExpression(methodCall.Arguments[0]);
 
 			if (argumentPlaceholder == null)
 				return true;
@@ -286,7 +281,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (methodCall.Method.Name != nameof(Nullable<>.GetValueOrDefault))
 				return false;
 
-			var argumentPlaceholder = TranslateNoRequiredObjectExpression(translationContext, methodCall.Object);
+			var argumentPlaceholder = translationContext.TranslateNoRequiredObjectExpression(methodCall.Object);
 
 			if (argumentPlaceholder == null)
 				return true;
@@ -316,6 +311,19 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			translated = translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, caseExpression, methodCall);
 
 			return true;
+		}
+
+		protected virtual ISqlExpression? TranslateConvert(ITranslationContext translationContext, ISqlExpression typeExpression, ISqlExpression sqlExpression, TranslationFlags translationFlags)
+		{
+			var factory = translationContext.ExpressionFactory;
+
+			if (typeExpression.SystemType == typeof(bool))
+			{
+				return TranslateConvertToBoolean(translationContext, sqlExpression, translationFlags);
+			}
+
+			var toDataType = QueryHelper.GetDbDataType(typeExpression, translationContext.MappingSchema);
+			return factory.Cast(sqlExpression, toDataType);
 		}
 
 		protected virtual ISqlExpression? TranslateConvertToBoolean(ITranslationContext translationContext, ISqlExpression sqlExpression, TranslationFlags translationFlags)
