@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.Internal.DataProvider.Translation
@@ -11,6 +15,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 	{
 		public ConvertMemberTranslatorDefault()
 		{
+			RegisterBoolean();
 			RegisterByte();
 			RegisterChar();
 			RegisterDateTime();
@@ -25,9 +30,31 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			RegisterUInt16();
 			RegisterUInt32();
 			RegisterUInt64();
+
+			HandleGuid();
 		}
 
 #pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
+
+		void RegisterBoolean()
+		{
+			Registration.RegisterMethod((bool     obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+			Registration.RegisterMethod((byte     obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+			Registration.RegisterMethod((char     obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+			Registration.RegisterMethod((DateTime obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+			Registration.RegisterMethod((decimal  obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+			Registration.RegisterMethod((double   obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+			Registration.RegisterMethod((short    obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+			Registration.RegisterMethod((int      obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+			Registration.RegisterMethod((long     obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+			Registration.RegisterMethod((object   obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+			Registration.RegisterMethod((sbyte    obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+			Registration.RegisterMethod((float    obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+			Registration.RegisterMethod((string   obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+			Registration.RegisterMethod((ushort   obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+			Registration.RegisterMethod((uint     obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+			Registration.RegisterMethod((ulong    obj) => Convert.ToBoolean(obj), TranslateConvertToBoolean);
+		}
 
 		void RegisterByte()
 		{
@@ -311,16 +338,238 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 #pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 
+		protected void HandleGuid()
+		{
+			Registration.RegisterReplacement(obj => Sql.Convert<string, Guid>(obj), (Guid obj) => obj.ToString());
+		}
+
+		protected virtual Expression? ConvertToString(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (translationFlags.HasFlag(TranslationFlags.Expression))
+				return null;
+
+			var obj = methodCall.Object!;
+
+			var objPlaceholder = translationContext.TranslateNoRequiredObjectExpression(obj);
+
+			if (objPlaceholder == null)
+				return null;
+
+			var fromType = translationContext.ExpressionFactory.GetDbDataType(objPlaceholder.Sql);
+			DbDataType toType;
+
+			if (translationContext.CurrentColumnDescriptor != null)
+				toType = translationContext.CurrentColumnDescriptor.GetDbDataType(true);
+			else
+				toType = translationContext.MappingSchema.GetDbDataType(typeof(string));
+
+			// ToString called on custom type already mapped to text-based db type or string
+			if (fromType.IsTextType())
+			{
+				if (fromType.SystemType.IsEnum)
+				{
+					var enumValues = translationContext.MappingSchema.GetMapValues(fromType.SystemType)!;
+
+					List<SqlCaseExpression.CaseItem>? cases = null;
+
+					foreach (var field in enumValues)
+					{
+						if (field.MapValues.Length > 0)
+						{
+							var cond = field.MapValues.Length == 1
+								? translationContext.ExpressionFactory.Equal(
+									objPlaceholder.Sql,
+									translationContext.ExpressionFactory.Value(fromType, field.MapValues[0].Value))
+								: translationContext.ExpressionFactory
+									.SearchCondition(isOr: true)
+									.AddRange(
+									field.MapValues.Select(
+										v => translationContext.ExpressionFactory.Equal(
+											objPlaceholder.Sql,
+											translationContext.ExpressionFactory.Value(fromType, v.Value))));
+
+							(cases ??= []).Add(
+								new SqlCaseExpression.CaseItem(
+									cond,
+									translationContext.ExpressionFactory.Value(toType, FormattableString.Invariant($"{field.OrigValue}"))));
+						}
+					}
+
+					var defaultSql = objPlaceholder.Sql;
+
+					var expr = cases == null ? defaultSql : new SqlCaseExpression(toType, cases, defaultSql);
+
+					return translationContext.CreatePlaceholder(
+						translationContext.CurrentSelectQuery,
+						expr,
+						methodCall);
+				}
+
+				return objPlaceholder.WithType(typeof(string));
+			}
+
+			return translationContext.CreatePlaceholder(
+				translationContext.CurrentSelectQuery,
+				translationContext.ExpressionFactory.Cast(objPlaceholder.Sql, toType),
+				methodCall);
+		}
+
+		protected bool ProcessToString(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, out Expression? translated)
+		{
+			translated = null;
+
+			if (methodCall.Object != null && methodCall.Method.Name == nameof(ToString))
+			{
+				var parameters = methodCall.Method.GetParameters();
+				if (parameters.Length > 1)
+					return true;
+
+				if (parameters.Length == 1)
+				{
+					if (parameters[0].ParameterType != typeof(IFormatProvider))
+						return true;
+
+					var cultureExpression = methodCall.Arguments[0];
+
+					if (!translationContext.CanBeEvaluated(cultureExpression))
+						return true;
+
+					var culture = translationContext.Evaluate(cultureExpression);
+					if (culture is not IFormatProvider formatProvider)
+						return true;
+
+					if (formatProvider != CultureInfo.InvariantCulture)
+						return true;
+				}
+
+				if (translationFlags.HasFlag(TranslationFlags.Expression) && translationContext.CanBeEvaluatedOnClient(methodCall.Object))
+					return true;
+
+				translated = ConvertToString(translationContext, methodCall, translationFlags);
+
+				if (translated == null)
+					return false;
+				
+				return true;
+			}
+
+			return false;
+		}
+
+		protected bool ProcessSqlConvert(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, out Expression? translated)
+		{
+			translated = null;
+
+			if (methodCall.Method.DeclaringType != typeof(Sql))
+				return false;
+
+			if (methodCall.Method.Name != nameof(Sql.Convert))
+				return false;
+
+			if (methodCall.Arguments.Count == 1)
+				//TODO: Implement conversion
+				return true;
+
+			if (methodCall.Arguments.Count == 2)
+			{
+				if (!translationContext.TranslateExpression(methodCall.Arguments[1], out var argument, out _))
+				{
+					return false;
+				}
+
+				if (!translationContext.TranslateExpression(methodCall.Arguments[0], out var typeExpression, out _))
+				{
+					return false;
+				}
+
+				var translatedSqlExpression = TranslateConvert(translationContext, typeExpression, argument, translationFlags);
+
+				if (translatedSqlExpression == null)
+					return false;
+
+				translated = translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, translatedSqlExpression, methodCall);
+				return true;
+			}
+
+			return false;
+		}
+
+		protected bool ProcessSqlConvertTo(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, out Expression? translated)
+		{
+			translated = null;
+
+			if (methodCall.Method.DeclaringType == null || !typeof(Sql.ConvertTo<>).IsSameOrParentOf(methodCall.Method.DeclaringType))
+				return false;
+
+			if (!methodCall.Method.Name.Equals(nameof(Sql.ConvertTo<>.From)))
+				return false;
+
+			translated = TranslateSqlConvertTo(translationContext, methodCall, translationFlags);
+
+			return true;
+		}
+
+		protected virtual ISqlExpression? TranslateConvert(ITranslationContext translationContext, ISqlExpression typeExpression, ISqlExpression sqlExpression, TranslationFlags translationFlags)
+		{
+			var factory = translationContext.ExpressionFactory;
+
+			if (typeExpression.SystemType == typeof(bool))
+			{
+				return TranslateConvertToBooleanSql(translationContext, sqlExpression, translationFlags);
+			}
+
+			var toDataType = QueryHelper.GetDbDataType(typeExpression, translationContext.MappingSchema);
+			return factory.Cast(sqlExpression, toDataType);
+		}
+
+		protected virtual ISqlExpression? TranslateConvertToBooleanSql(ITranslationContext translationContext, ISqlExpression sqlExpression, TranslationFlags translationFlags)
+		{
+			var factory = translationContext.ExpressionFactory;
+
+			var sc = factory.SearchCondition();
+			var predicate = factory.Equal(
+					sqlExpression,
+					factory.Value(0),
+					translationContext.DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null)
+				.MakeNot();
+
+			sc.Add(predicate);
+
+			return sc;
+		}
+
+		protected virtual Expression? TranslateConvertToBoolean(ITranslationContext translationContext, MethodCallExpression methodCallExpression, TranslationFlags translationFlags)
+		{
+			if (translationContext.CanBeEvaluatedOnClient(methodCallExpression.Arguments[0]))
+				return null;
+
+			var value = methodCallExpression.Arguments[0].UnwrapConvert();
+
+			if (!translationContext.TranslateToSqlExpression(value, out var sqlExpression, out var error))
+				return error;
+
+			var translatedSql = TranslateConvertToBooleanSql(translationContext, sqlExpression, translationFlags);
+
+			if (translatedSql == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, translatedSql, methodCallExpression);
+		}
+
 		protected override Expression? TranslateOverrideHandler(ITranslationContext translationContext, Expression memberExpression, TranslationFlags translationFlags)
 		{
 			if (memberExpression is MethodCallExpression methodCallExpression)
 			{
-				if (methodCallExpression.Method.DeclaringType != null && typeof(Sql.ConvertTo<>).IsSameOrParentOf(methodCallExpression.Method.DeclaringType) && methodCallExpression.Method.Name.Equals(nameof(Sql.ConvertTo<>.From)))
-				{
-					var result = TranslateSqlConvertTo(translationContext, methodCallExpression, translationFlags);
-					if (result != null)
-						return result;
-				}
+				Expression? translated;
+
+				if (ProcessToString(translationContext, methodCallExpression, translationFlags, out translated))
+					return translated;
+
+				if (ProcessSqlConvert(translationContext, methodCallExpression, translationFlags, out translated))
+					return translated;
+
+				if (ProcessSqlConvertTo(translationContext, methodCallExpression, translationFlags, out translated))
+					return translated;
 			}
 
 			return base.TranslateOverrideHandler(translationContext, memberExpression, translationFlags);
