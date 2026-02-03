@@ -665,7 +665,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						selectQuery.GroupBy.Items.Clear();
 						isModified = true;
 					}
-					else if (!IsComplexQuery(selectQuery) && selectQuery.From.Tables.Count > 0)
+					else if (!IsComplexQuery(selectQuery, true) && selectQuery.From.Tables.Count > 0)
 					{
 						// Check if we're grouping by unique keys
 						var keys = new List<IList<ISqlExpression>>();
@@ -867,14 +867,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return false;
 		}
 
-		static bool IsComplexQuery(SelectQuery query)
+		static bool IsComplexQuery(SelectQuery query, bool ignoreGroupBy)
 		{
 			if (query.From.Tables.Count != 1)
 			{
 				return true;
 			}
 
-			if (!query.GroupBy.IsEmpty)
+			if (!ignoreGroupBy && !query.GroupBy.IsEmpty)
 			{
 				return false;
 			}
@@ -1009,7 +1009,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (!selectQuery.Select.IsDistinct || !selectQuery.Select.OptimizeDistinct)
 				return false;
 
-			if (IsComplexQuery(selectQuery))
+			if (IsComplexQuery(selectQuery, false))
 				return false;
 
 			if (IsLimitedToOneRecord(selectQuery))
