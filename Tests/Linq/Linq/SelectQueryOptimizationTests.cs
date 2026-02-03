@@ -539,7 +539,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByAndGroupByConstantAndLimitOrderShouldBeRemoved([DataSources] string context)
+		public void OrderByAndGroupByConstantAndLimitOrderShouldBeRemoved()
 		{
 			using var db = GetDataConnection();
 			
@@ -563,6 +563,62 @@ namespace Tests.Linq
 			var selectQuery = query.GetSelectQuery();
 			selectQuery.OrderBy.IsEmpty.ShouldBeTrue();
 			selectQuery.IsLimited.ShouldBeTrue();
+		}
+
+		[Test]
+		public void GroupByShouldBeRemovedOnUniqueKeyGrouping()
+		{
+			using var db = GetDataConnection();
+
+			var query =
+				from ch in db.Child
+				group ch by new { ch.ChildID,  ch.ParentID } into g
+				select new
+				{
+					Value = 1,
+					Key   = g.Key,
+				};
+
+			var selectQuery = query.GetSelectQuery();
+
+			selectQuery.GroupBy.IsEmpty.ShouldBeTrue();
+		}
+
+		[Test]
+		public void GroupByWithAggregateShouldRemainOnUniqueKeyGrouping()
+		{
+			using var db = GetDataConnection();
+
+			var query =
+				from ch in db.Child
+				group ch by new { ch.ChildID,  ch.ParentID } into g
+				select new
+				{
+					Value = g.Count(),
+					Key   = g.Key,
+				};
+
+			var selectQuery = query.GetSelectQuery();
+
+			selectQuery.GroupBy.IsEmpty.ShouldBeFalse();
+		}
+
+		[Test]
+		public void GroupByReducedSelectShouldRemain()
+		{
+			using var db = GetDataConnection();
+
+			var query =
+				from ch in db.Child
+				group ch by new { Key1 = ch.ChildID, Key2 = ch.ChildID + 1 } into g
+				select new { Key = g.Key, }
+				into s
+				select s.Key.Key1;
+
+			var selectQuery = query.GetSelectQuery();
+
+			selectQuery.GroupBy.IsEmpty.ShouldBeFalse();
+			selectQuery.Select.IsDistinct.ShouldBeFalse();
 		}
 
 		[Test]

@@ -1357,9 +1357,9 @@ namespace LinqToDB.Internal.SqlQuery
 		/// Collects unique keys from different sources.
 		/// </summary>
 		/// <param name="tableSource"></param>
-		/// <param name="includeDistinct">Flag to include Distinct as unique key.</param>
+		/// <param name="includeDistinctAndGrouping"></param>
 		/// <param name="knownKeys">List with found keys.</param>
-		public static void CollectUniqueKeys(ISqlTableSource tableSource, bool includeDistinct, List<IList<ISqlExpression>> knownKeys)
+		public static void CollectUniqueKeys(ISqlTableSource tableSource, bool includeDistinctAndGrouping, List<IList<ISqlExpression>> knownKeys)
 		{
 			switch (tableSource)
 			{
@@ -1376,10 +1376,10 @@ namespace LinqToDB.Internal.SqlQuery
 					if (selectQuery.HasUniqueKeys)
 						knownKeys.AddRange(selectQuery.UniqueKeys);
 
-					if (includeDistinct && selectQuery.Select.IsDistinct)
+					if (includeDistinctAndGrouping && selectQuery.Select.IsDistinct)
 						knownKeys.Add(selectQuery.Select.Columns.Select(c => c.Expression).ToList());
 
-					if (!selectQuery.Select.GroupBy.IsEmpty)
+					if (includeDistinctAndGrouping && !selectQuery.Select.GroupBy.IsEmpty)
 					{
 						knownKeys.Add(selectQuery.Select.GroupBy.Items);
 					}

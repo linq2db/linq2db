@@ -254,7 +254,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						isModified = true;
 					}
 
-					if (FinalizeAndValidateInternal(selectQuery))
+					if (FinalizeAndValidateInternal(saveParent, selectQuery))
 					{
 						isModified = true;
 					}
@@ -557,11 +557,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return true;
 		}
 
-		bool FinalizeAndValidateInternal(SelectQuery selectQuery)
+		bool FinalizeAndValidateInternal(SelectQuery? parentQuery, SelectQuery selectQuery)
 		{
 			var isModified = false;
 
-			if (OptimizeGroupBy(selectQuery))
+			if (OptimizeGroupBy(parentQuery, selectQuery))
 				isModified = true;
 
 			if (OptimizeUnions(selectQuery))
@@ -633,7 +633,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return false;
 		}
 
-		bool OptimizeGroupBy(SelectQuery selectQuery)
+		bool OptimizeGroupBy(SelectQuery? parentQuery, SelectQuery selectQuery)
 		{
 			var isModified = false;
 
@@ -670,7 +670,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						// Check if we're grouping by unique keys
 						var keys = new List<IList<ISqlExpression>>();
 
-						QueryHelper.CollectUniqueKeys(selectQuery, includeDistinct: false, keys);
+						QueryHelper.CollectUniqueKeys(selectQuery, includeDistinctAndGrouping: false, keys);
 						var table = selectQuery.From.Tables[0];
 						QueryHelper.CollectUniqueKeys(table, keys);
 
@@ -682,15 +682,29 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						}
 					}
 
-					if (!selectQuery.GroupBy.IsEmpty && selectQuery.GroupBy.Items.Count == selectQuery.Select.Columns.Count
-					                                 && selectQuery.GroupBy.Items.All(gi => selectQuery.Select.Columns.Any(c => c.Expression.Equals(gi))))
+					if (!selectQuery.GroupBy.IsEmpty)
 					{
-						// All group by items are already in select columns, we can transform to distinct
-						//
-						selectQuery.GroupBy.Items.Clear();
-						selectQuery.Select.OptimizeDistinct = true;
-						selectQuery.Select.IsDistinct       = true;
-						isModified                          = true;
+						var transformToDistinct = selectQuery.GroupBy.Items.Count == selectQuery.Select.Columns.Count
+							&& selectQuery.GroupBy.Items.All(gi => selectQuery.Select.Columns.Any(c => c.Expression.Equals(gi)));
+
+						if (transformToDistinct && parentQuery != null)
+						{
+							if (parentQuery.GetTableSource(selectQuery) is SqlTableSource ts && IsMovingUpValid(parentQuery, ts, selectQuery, out _))
+							{
+								// We can move group by to parent query, so we cannot transform to distinct
+								transformToDistinct = false;
+							}
+						}
+
+						if (transformToDistinct)
+						{
+							// All group by items are already in select columns, we can transform to distinct
+							//
+							selectQuery.GroupBy.Items.Clear();
+							selectQuery.Select.OptimizeDistinct = true;
+							selectQuery.Select.IsDistinct       = true;
+							isModified                          = true;
+						}
 					}
 
 				}
@@ -881,7 +895,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 
 			var mainKeys = new List<IList<ISqlExpression>>();
-			QueryHelper.CollectUniqueKeys(mainTable.Source, includeDistinct: true, mainKeys);
+			QueryHelper.CollectUniqueKeys(mainTable.Source, includeDistinctAndGrouping: true, mainKeys);
 
 			foreach (var join in mainTable.Joins)
 			{
@@ -889,7 +903,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					continue;
 
 				var joinKeys = new List<IList<ISqlExpression>>();
-				QueryHelper.CollectUniqueKeys(join.Table.Source, includeDistinct: true, joinKeys);
+				QueryHelper.CollectUniqueKeys(join.Table.Source, includeDistinctAndGrouping: true, joinKeys);
 
 				if (!IsUniqueCondition(mainKeys, joinKeys, join.Condition))
 					return true;
@@ -1018,7 +1032,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			var keys = new List<IList<ISqlExpression>>();
 
-			QueryHelper.CollectUniqueKeys(selectQuery, includeDistinct: false, keys);
+			QueryHelper.CollectUniqueKeys(selectQuery, includeDistinctAndGrouping: false, keys);
 			QueryHelper.CollectUniqueKeys(table,       keys);
 		
 			if (ContainsUniqueKey(selectQuery.Select.Columns.Select(static c => c.Expression), keys))
