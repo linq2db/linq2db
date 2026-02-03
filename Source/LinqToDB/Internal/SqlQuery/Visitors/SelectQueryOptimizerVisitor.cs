@@ -576,6 +576,63 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return isModified;
 		}
 
+		static bool HasAggregationInQueryParts(SelectQuery selectQuery)
+		{
+			if (!selectQuery.Having.IsEmpty)
+				return true;
+
+			if (QueryHelper.ContainsAggregationOrWindowFunction(selectQuery.Select))
+				return true;
+
+			if (!selectQuery.Where.IsEmpty && QueryHelper.ContainsAggregationOrWindowFunction(selectQuery.Where.SearchCondition))
+				return true;
+
+			if (!selectQuery.OrderBy.IsEmpty && QueryHelper.ContainsAggregationOrWindowFunction(selectQuery.OrderBy))
+				return true;
+
+			return false;
+		}
+
+		static bool ContainsUniqueKey(IEnumerable<ISqlExpression> expressions, List<IList<ISqlExpression>> keys)
+		{
+			if (keys.Count == 0)
+				return false;
+
+			var expressionsSet = new HashSet<ISqlExpression>(expressions);
+			
+			foreach (var key in keys)
+			{
+				var foundUnique = true;
+				foreach (var expr in key)
+				{
+					if (!expressionsSet.Contains(expr))
+					{
+						foundUnique = false;
+						break;
+					}
+				}
+
+				if (foundUnique)
+					return true;
+
+				foundUnique = true;
+				foreach (var expr in key)
+				{
+					var underlyingField = QueryHelper.GetUnderlyingField(expr);
+					if (underlyingField == null || !expressionsSet.Contains(underlyingField))
+					{
+						foundUnique = false;
+						break;
+					}
+				}
+
+				if (foundUnique)
+					return true;
+			}
+
+			return false;
+		}
+
 		bool OptimizeGroupBy(SelectQuery selectQuery)
 		{
 			var isModified = false;
@@ -599,18 +656,43 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (!selectQuery.GroupBy.IsEmpty)
 			{
-				if (selectQuery.GroupBy.Items.Count == selectQuery.Select.Columns.Count 
-					&& selectQuery.Having.IsEmpty
-					&& (selectQuery.Where.IsEmpty || !QueryHelper.ContainsAggregationOrWindowFunction(selectQuery.Where.SearchCondition))
-					&& (selectQuery.OrderBy.IsEmpty || !QueryHelper.ContainsAggregationOrWindowFunction(selectQuery.OrderBy))
-					&& selectQuery.GroupBy.Items.All(gi => selectQuery.Select.Columns.Any(c => c.Expression.Equals(gi))))
+				// Check if we can remove GROUP BY entirely when there are no aggregations
+				if (!HasAggregationInQueryParts(selectQuery))
 				{
-					// All group by items are already in select columns, we can transform to distinct
-					//
-					selectQuery.GroupBy.Items.Clear();
-					selectQuery.Select.OptimizeDistinct = true;
-					selectQuery.Select.IsDistinct       = true;
-					isModified                          = true;
+					// Check if query is limited to one record
+					if (IsLimitedToOneRecord(selectQuery))
+					{
+						selectQuery.GroupBy.Items.Clear();
+						isModified = true;
+					}
+					else if (!IsComplexQuery(selectQuery) && selectQuery.From.Tables.Count > 0)
+					{
+						// Check if we're grouping by unique keys
+						var keys = new List<IList<ISqlExpression>>();
+
+						QueryHelper.CollectUniqueKeys(selectQuery, includeDistinct: false, keys);
+						var table = selectQuery.From.Tables[0];
+						QueryHelper.CollectUniqueKeys(table, keys);
+
+						if (ContainsUniqueKey(selectQuery.GroupBy.Items, keys))
+						{
+							// We have found that group by contains unique key, so we can remove group by
+							selectQuery.GroupBy.Items.Clear();
+							isModified = true;
+						}
+					}
+
+					if (!selectQuery.GroupBy.IsEmpty && selectQuery.GroupBy.Items.Count == selectQuery.Select.Columns.Count
+					                                 && selectQuery.GroupBy.Items.All(gi => selectQuery.Select.Columns.Any(c => c.Expression.Equals(gi))))
+					{
+						// All group by items are already in select columns, we can transform to distinct
+						//
+						selectQuery.GroupBy.Items.Clear();
+						selectQuery.Select.OptimizeDistinct = true;
+						selectQuery.Select.IsDistinct       = true;
+						isModified                          = true;
+					}
+
 				}
 			}
 
@@ -937,53 +1019,17 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			var keys = new List<IList<ISqlExpression>>();
 
 			QueryHelper.CollectUniqueKeys(selectQuery, includeDistinct: false, keys);
-			QueryHelper.CollectUniqueKeys(table, keys);
-			if (keys.Count == 0)
-				return false;
-
-			var expressions = new HashSet<ISqlExpression>(selectQuery.Select.Columns.Select(static c => c.Expression));
-			var foundUnique = false;
-
-			foreach (var key in keys)
-			{
-				foundUnique = true;
-				foreach (var expr in key)
-				{
-					if (!expressions.Contains(expr))
-					{
-						foundUnique = false;
-						break;
-					}
-				}
-
-				if (foundUnique)
-					break;
-
-				foundUnique = true;
-				foreach (var expr in key)
-				{
-					var underlyingField = QueryHelper.GetUnderlyingField(expr);
-					if (underlyingField == null || !expressions.Contains(underlyingField))
-					{
-						foundUnique = false;
-						break;
-					}
-				}
-
-				if (foundUnique)
-					break;
-			}
-
-			var isModified = false;
-			if (foundUnique)
+			QueryHelper.CollectUniqueKeys(table,       keys);
+		
+			if (ContainsUniqueKey(selectQuery.Select.Columns.Select(static c => c.Expression), keys))
 			{
 				// We have found that distinct columns has unique key, so we can remove distinct
 				selectQuery.Select.IsDistinct = false;
-				isModified = true;
+				return true;
 			}
 
-			return isModified;
-		}
+			return false;
+	}
 
 		static void ApplySubsequentOrder(SelectQuery mainQuery, SelectQuery subQuery)
 		{
