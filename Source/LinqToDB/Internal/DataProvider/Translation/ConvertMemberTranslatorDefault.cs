@@ -579,12 +579,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			// For Sql.ConvertTo<T>.From - no rounding, direct cast
 			var targetType = methodCallExpression.Method.ReturnType;
-			return TranslateConvertDefault(translationContext, methodCallExpression, methodCallExpression.Arguments[0], targetType, translationFlags);
+			return TranslateConvertDefault(translationContext, methodCallExpression, methodCallExpression.Arguments[0], targetType, translationFlags, true);
 		}
 
-		protected virtual Expression? TranslateConvertDefault(ITranslationContext translationContext, MethodCallExpression methodCallExpression, Expression value, Type targetType, TranslationFlags translationFlags)
+		protected virtual Expression? TranslateConvertDefault(ITranslationContext translationContext, MethodCallExpression methodCallExpression, Expression value, Type targetType, TranslationFlags translationFlags, bool serverSideOnly)
 		{
-			if (translationContext.CanBeEvaluatedOnClient(value))
+			if (!serverSideOnly && translationContext.CanBeEvaluatedOnClient(value))
 				return null;
 
 			value = value.UnwrapConvert();
@@ -607,7 +607,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				value = Expression.Call(typeof(Math), nameof(Math.Round), [], value);
 			}
 
-			return TranslateConvertDefault(translationContext, methodCallExpression, value, typeof(byte), translationFlags);
+			return TranslateConvertDefault(translationContext, methodCallExpression, value, typeof(byte), translationFlags, false);
 		}
 
 		protected virtual Expression? TranslateConvertToChar(ITranslationContext translationContext, MethodCallExpression methodCallExpression, TranslationFlags translationFlags)
@@ -620,22 +620,22 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				value = Expression.Call(typeof(Math), nameof(Math.Round), [], value);
 			}
 
-			return TranslateConvertDefault(translationContext, methodCallExpression, value, typeof(char), translationFlags);
+			return TranslateConvertDefault(translationContext, methodCallExpression, value, typeof(char), translationFlags, false);
 		}
 
 		protected virtual Expression? TranslateConvertToDateTime(ITranslationContext translationContext, MethodCallExpression methodCallExpression, TranslationFlags translationFlags)
 		{
-			return TranslateConvertDefault(translationContext, methodCallExpression, methodCallExpression.Arguments[0], typeof(DateTime), translationFlags);
+			return TranslateConvertDefault(translationContext, methodCallExpression, methodCallExpression.Arguments[0], typeof(DateTime), translationFlags, false);
 		}
 
 		protected virtual Expression? TranslateConvertToDecimal(ITranslationContext translationContext, MethodCallExpression methodCallExpression, TranslationFlags translationFlags)
 		{
-			return TranslateConvertDefault(translationContext, methodCallExpression, methodCallExpression.Arguments[0], typeof(decimal), translationFlags);
+			return TranslateConvertDefault(translationContext, methodCallExpression, methodCallExpression.Arguments[0], typeof(decimal), translationFlags, false);
 		}
 
 		protected virtual Expression? TranslateConvertToDouble(ITranslationContext translationContext, MethodCallExpression methodCallExpression, TranslationFlags translationFlags)
 		{
-			return TranslateConvertDefault(translationContext, methodCallExpression, methodCallExpression.Arguments[0], typeof(double), translationFlags);
+			return TranslateConvertDefault(translationContext, methodCallExpression, methodCallExpression.Arguments[0], typeof(double), translationFlags, false);
 		}
 
 		protected virtual Expression? TranslateConvertToInt16(ITranslationContext translationContext, MethodCallExpression methodCallExpression, TranslationFlags translationFlags)
@@ -648,7 +648,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				value = Expression.Call(typeof(Math), nameof(Math.Round), [], value);
 			}
 
-			return TranslateConvertDefault(translationContext, methodCallExpression, value, typeof(short), translationFlags);
+			return TranslateConvertDefault(translationContext, methodCallExpression, value, typeof(short), translationFlags, false);
 		}
 
 		protected virtual Expression? TranslateConvertToInt32(ITranslationContext translationContext, MethodCallExpression methodCallExpression, TranslationFlags translationFlags)
@@ -661,7 +661,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				value = Expression.Call(typeof(Math), nameof(Math.Round), [], value);
 			}
 
-			return TranslateConvertDefault(translationContext, methodCallExpression, value, typeof(int), translationFlags);
+			return TranslateConvertDefault(translationContext, methodCallExpression, value, typeof(int), translationFlags, false);
 		}
 
 		protected virtual Expression? TranslateConvertToInt64(ITranslationContext translationContext, MethodCallExpression methodCallExpression, TranslationFlags translationFlags)
@@ -674,7 +674,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				value = Expression.Call(typeof(Math), nameof(Math.Round), [], value);
 			}
 
-			return TranslateConvertDefault(translationContext, methodCallExpression, value, typeof(long), translationFlags);
+			return TranslateConvertDefault(translationContext, methodCallExpression, value, typeof(long), translationFlags, false);
 		}
 
 		protected virtual Expression? TranslateConvertToSByte(ITranslationContext translationContext, MethodCallExpression methodCallExpression, TranslationFlags translationFlags)
@@ -687,17 +687,17 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				value = Expression.Call(typeof(Math), nameof(Math.Round), [], value);
 			}
 
-			return TranslateConvertDefault(translationContext, methodCallExpression, value, typeof(sbyte), translationFlags);
+			return TranslateConvertDefault(translationContext, methodCallExpression, value, typeof(sbyte), translationFlags, false);
 		}
 
 		protected virtual Expression? TranslateConvertToSingle(ITranslationContext translationContext, MethodCallExpression methodCallExpression, TranslationFlags translationFlags)
 		{
-			return TranslateConvertDefault(translationContext, methodCallExpression, methodCallExpression.Arguments[0], typeof(float), translationFlags);
+			return TranslateConvertDefault(translationContext, methodCallExpression, methodCallExpression.Arguments[0], typeof(float), translationFlags, false);
 		}
 
 		protected virtual Expression? TranslateConvertToString(ITranslationContext translationContext, MethodCallExpression methodCallExpression, TranslationFlags translationFlags)
 		{
-			return TranslateConvertDefault(translationContext, methodCallExpression, methodCallExpression.Arguments[0], typeof(string), translationFlags);
+			return TranslateConvertDefault(translationContext, methodCallExpression, methodCallExpression.Arguments[0], typeof(string), translationFlags, false);
 		}
 
 		protected virtual Expression? TranslateConvertToUInt16(ITranslationContext translationContext, MethodCallExpression methodCallExpression, TranslationFlags translationFlags)
@@ -710,7 +710,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				value = Expression.Call(typeof(Math), nameof(Math.Round), [], value);
 			}
 
-			return TranslateConvertDefault(translationContext, methodCallExpression, value, typeof(ushort), translationFlags);
+			return TranslateConvertDefault(translationContext, methodCallExpression, value, typeof(ushort), translationFlags, false);
 		}
 
 		protected virtual Expression? TranslateConvertToUInt32(ITranslationContext translationContext, MethodCallExpression methodCallExpression, TranslationFlags translationFlags)
@@ -723,7 +723,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				value = Expression.Call(typeof(Math), nameof(Math.Round), [], value);
 			}
 
-			return TranslateConvertDefault(translationContext, methodCallExpression, value, typeof(uint), translationFlags);
+			return TranslateConvertDefault(translationContext, methodCallExpression, value, typeof(uint), translationFlags, false);
 		}
 
 		protected virtual Expression? TranslateConvertToUInt64(ITranslationContext translationContext, MethodCallExpression methodCallExpression, TranslationFlags translationFlags)
@@ -736,7 +736,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				value = Expression.Call(typeof(Math), nameof(Math.Round), [], value);
 			}
 
-			return TranslateConvertDefault(translationContext, methodCallExpression, value, typeof(ulong), translationFlags);
+			return TranslateConvertDefault(translationContext, methodCallExpression, value, typeof(ulong), translationFlags, false);
 		}
 	}
 }
