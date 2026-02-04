@@ -2088,24 +2088,24 @@ END
 
 				var proc = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "ExecuteProcStringParameters")!;
 				Assert.That(proc, Is.Not.Null);
-				Assert.That(proc.Description, Is.EqualTo("This is <test> procedure!"));
+				Assert.That(proc.Description, Is.EqualTo("This is <тест> procedure!"));
 				var param = proc.Parameters.FirstOrDefault(p => p.ParameterName == "@input")!;
 				Assert.That(param, Is.Not.Null);
-				Assert.That(param.Description, Is.EqualTo("This is <test> procedure parameter!"));
+				Assert.That(param.Description, Is.EqualTo("This is <тест> procedure parameter!"));
 
 				var func = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "GetParentByID")!;
 				Assert.That(func, Is.Not.Null);
-				Assert.That(func.Description, Is.EqualTo("This is <test> table function!"));
+				Assert.That(func.Description, Is.EqualTo("This is <тест> table function!"));
 				param = func.Parameters.FirstOrDefault(p => p.ParameterName == "@id")!;
 				Assert.That(param, Is.Not.Null);
-				Assert.That(param.Description, Is.EqualTo("This is <test> table function parameter!"));
+				Assert.That(param.Description, Is.EqualTo("This is <тест> table function parameter!"));
 
 				func = schema.Procedures.FirstOrDefault(p => p.ProcedureName == "ScalarFunction")!;
 				Assert.That(func, Is.Not.Null);
-				Assert.That(func.Description, Is.EqualTo("This is <test> scalar function!"));
+				Assert.That(func.Description, Is.EqualTo("This is <тест> scalar function!"));
 				param = func.Parameters.FirstOrDefault(p => p.ParameterName == "@value")!;
 				Assert.That(param, Is.Not.Null);
-				Assert.That(param.Description, Is.EqualTo("This is <test> scalar function parameter!"));
+				Assert.That(param.Description, Is.EqualTo("This is <тест> scalar function parameter!"));
 			}
 		}
 

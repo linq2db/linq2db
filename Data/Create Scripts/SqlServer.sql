@@ -1399,12 +1399,12 @@ END
 GO
 
 
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is <test> procedure!', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'PROCEDURE', @level1name=N'ExecuteProcStringParameters'
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is <test> procedure parameter!', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'PROCEDURE', @level1name=N'ExecuteProcStringParameters', @level2type=N'PARAMETER', @level2name=N'@input'
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is <test> table function!', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'FUNCTION', @level1name=N'GetParentByID'
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is <test> table function parameter!', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'FUNCTION', @level1name=N'GetParentByID', @level2type=N'PARAMETER', @level2name=N'@id'
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is <test> scalar function!', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'FUNCTION', @level1name=N'ScalarFunction'
-EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is <test> scalar function parameter!', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'FUNCTION', @level1name=N'ScalarFunction', @level2type=N'PARAMETER', @level2name=N'@value'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is <тест> procedure!', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'PROCEDURE', @level1name=N'ExecuteProcStringParameters'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is <тест> procedure parameter!', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'PROCEDURE', @level1name=N'ExecuteProcStringParameters', @level2type=N'PARAMETER', @level2name=N'@input'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is <тест> table function!', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'FUNCTION', @level1name=N'GetParentByID'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is <тест> table function parameter!', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'FUNCTION', @level1name=N'GetParentByID', @level2type=N'PARAMETER', @level2name=N'@id'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is <тест> scalar function!', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'FUNCTION', @level1name=N'ScalarFunction'
+EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is <тест> scalar function parameter!', @level0type=N'SCHEMA', @level0name=N'dbo',  @level1type=N'FUNCTION', @level1name=N'ScalarFunction', @level2type=N'PARAMETER', @level2name=N'@value'
 GO
 
 -- test T4 name conflict
