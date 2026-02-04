@@ -138,7 +138,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
-			if (_isCollecting )
+			if (_isCollecting)
 			{
 				if (_inExpression || selectQuery.Select.IsDistinct || selectQuery.HasSetOperators && HasNonUnionAllSetOperators(selectQuery))
 				{
@@ -334,7 +334,18 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			// Ensure non-empty SELECT
 			if (selectQuery.Select.Columns.Count == 0 && AllowEmptyColumns(selectQuery))
 			{
-				AddDummyColumn(selectQuery);
+				if (selectQuery.GroupBy is { IsEmpty: false, GroupingType: GroupingType.Default })
+				{
+					var nonGroupingSet = selectQuery.GroupBy.Items.FirstOrDefault(it => it is not SqlGroupingSet);
+					if (nonGroupingSet != null)
+						selectQuery.Select.AddColumn(nonGroupingSet);
+					else
+						AddDummyColumn(selectQuery);
+				}
+				else
+				{
+					AddDummyColumn(selectQuery);
+				}
 				
 				// If we added a dummy column and have set operators, add dummy to them too
 				if (selectQuery.HasSetOperators)

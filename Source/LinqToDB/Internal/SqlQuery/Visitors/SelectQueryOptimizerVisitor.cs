@@ -576,21 +576,27 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return isModified;
 		}
 
-		static bool HasAggregationInQueryParts(SelectQuery selectQuery)
+		static bool IsGroupingQueryCanBeOptimized(SelectQuery selectQuery)
 		{
 			if (!selectQuery.Having.IsEmpty)
-				return true;
+				return false;
+
+			if (selectQuery.GroupBy.GroupingType != GroupingType.Default)
+				return false;
 
 			if (QueryHelper.ContainsAggregationOrWindowFunction(selectQuery.Select))
-				return true;
+				return false;
 
 			if (!selectQuery.Where.IsEmpty && QueryHelper.ContainsAggregationOrWindowFunction(selectQuery.Where.SearchCondition))
-				return true;
+				return false;
 
 			if (!selectQuery.OrderBy.IsEmpty && QueryHelper.ContainsAggregationOrWindowFunction(selectQuery.OrderBy))
-				return true;
+				return false;
 
-			return false;
+			if (selectQuery.GroupBy.Items.Any(i => i is SqlGroupingSet))
+				return false;
+
+			return true;
 		}
 
 		static bool ContainsUniqueKey(IEnumerable<ISqlExpression> expressions, List<IList<ISqlExpression>> keys)
@@ -657,7 +663,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (!selectQuery.GroupBy.IsEmpty)
 			{
 				// Check if we can remove GROUP BY entirely when there are no aggregations
-				if (!HasAggregationInQueryParts(selectQuery))
+				if (IsGroupingQueryCanBeOptimized(selectQuery))
 				{
 					// Check if query is limited to one record
 					if (IsLimitedToOneRecord(selectQuery))

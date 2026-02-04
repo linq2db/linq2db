@@ -12,8 +12,8 @@ namespace Tests.Linq
 	public class SelectQueryOptimizationTests : TestBase
 	{
 		[Test]
-		public void CountFromGroupByShouldIgnoreAllColumnsAndReplaceWithValue()
-		{
+		public void CountFromGroupByShouldIgnoreAllColumnsAndReplaceWithGroupingKey()
+			{
 			using var db = GetDataConnection();
 
 			var query = db.Child
@@ -27,7 +27,7 @@ namespace Tests.Linq
 			var select = query.GetSelectQuery(q => q.Count());
 
 			var groupingQuery = (SelectQuery)select.Select.From.Tables[0].Source;
-			groupingQuery.Select.Columns[0].Expression.ShouldBeOfType<SqlValue>();
+			groupingQuery.Select.Columns.Count.ShouldBe(1);
 		}
 
 		[Test]
@@ -604,7 +604,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByReducedSelectShouldRemain()
+		public void GroupByWithReducedSelectShouldRemain()
 		{
 			using var db = GetDataConnection();
 
@@ -614,6 +614,24 @@ namespace Tests.Linq
 				select new { Key = g.Key, }
 				into s
 				select s.Key.Key1;
+
+			var selectQuery = query.GetSelectQuery();
+
+			selectQuery.GroupBy.IsEmpty.ShouldBeFalse();
+			selectQuery.Select.IsDistinct.ShouldBeFalse();
+		}
+
+		[Test]
+		public void GroupByWithGroupingSetsShouldRemain()
+		{
+			using var db = GetDataConnection();
+
+			var query =
+				from ch in db.Child
+				group ch by Sql.GroupBy.GroupingSets(new { Set1 = new { ch.ChildID, ch.ParentID }, Set2 = new { ch.ParentID }, Set3 = new {}}) into g
+				select new { Key = g.Key.Set1, }
+				into s
+				select s.Key.ChildID;
 
 			var selectQuery = query.GetSelectQuery();
 
