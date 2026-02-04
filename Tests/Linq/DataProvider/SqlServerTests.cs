@@ -2080,7 +2080,6 @@ END
 			using (var db = GetDataConnection(context))
 			{
 				var options = new GetSchemaOptions();
-				options.GetTables = false;
 
 				var schema = db.DataProvider
 					.GetSchemaProvider()
@@ -2106,6 +2105,16 @@ END
 				param = func.Parameters.FirstOrDefault(p => p.ParameterName == "@value")!;
 				Assert.That(param, Is.Not.Null);
 				Assert.That(param.Description, Is.EqualTo("This is <тест> scalar function parameter!"));
+
+				var table = schema.Tables.Where(_ => _.TableName == "Issue1144").SingleOrDefault();
+				Assert.That(table, Is.Not.Null);
+				var column = table.Columns.Where(c => c.ColumnName == "id").SingleOrDefault();
+				Assert.That(column, Is.Not.Null);
+				Assert.That(column.Description, Is.EqualTo("Column <тест> description"));
+
+				table = schema.Tables.Where(_ => _.TableName == "Parent").SingleOrDefault();
+				Assert.That(table, Is.Not.Null);
+				Assert.That(table.Description, Is.EqualTo("This <тест> is Parent table"));
 			}
 		}
 
