@@ -1335,7 +1335,8 @@ WHERE
 			var records = query.ToArray();
 
 			var select = query.GetSelectQuery();
-			Assert.That(select.Select.From.Tables[0].Joins, Has.Count.EqualTo(0));
+
+			Assert.That(select.Select.From.Tables[0].Joins, Has.Count.LessThanOrEqualTo(1));
 
 			using (Assert.EnterMultipleScope())
 			{

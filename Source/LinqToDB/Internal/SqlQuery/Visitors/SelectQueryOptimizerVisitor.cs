@@ -1906,7 +1906,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					return false;
 
 				if (!parentQuery.Select.OrderBy.IsEmpty)
-					return false;
+				{
+					if (subQuery.IsLimited)
+						return false;
+				}
 
 				if (!parentQuery.Select.Where.IsEmpty)
 				{
