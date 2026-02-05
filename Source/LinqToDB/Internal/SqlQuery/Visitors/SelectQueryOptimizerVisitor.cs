@@ -561,7 +561,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			var isModified = false;
 
-			if (OptimizeGroupBy(parentQuery, selectQuery))
+			if (OptimizeGroupBy(selectQuery))
 				isModified = true;
 
 			if (OptimizeUnions(selectQuery))
@@ -639,7 +639,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return false;
 		}
 
-		bool OptimizeGroupBy(SelectQuery? parentQuery, SelectQuery selectQuery)
+		bool OptimizeGroupBy(SelectQuery selectQuery)
 		{
 			var isModified = false;
 
@@ -692,15 +692,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					{
 						var transformToDistinct = selectQuery.GroupBy.Items.Count == selectQuery.Select.Columns.Count
 							&& selectQuery.GroupBy.Items.All(gi => selectQuery.Select.Columns.Any(c => c.Expression.Equals(gi)));
-
-						if (transformToDistinct && parentQuery != null)
-						{
-							if (parentQuery.GetTableSource(selectQuery) is SqlTableSource ts && IsMovingUpValid(parentQuery, ts, selectQuery, out _))
-							{
-								// We can move group by to parent query, so we cannot transform to distinct
-								transformToDistinct = false;
-							}
-						}
 
 						if (transformToDistinct)
 						{

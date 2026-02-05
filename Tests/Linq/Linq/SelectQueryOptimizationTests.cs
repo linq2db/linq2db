@@ -13,7 +13,7 @@ namespace Tests.Linq
 	{
 		[Test]
 		public void CountFromGroupByShouldIgnoreAllColumnsAndReplaceWithGroupingKey()
-			{
+		{
 			using var db = GetDataConnection();
 
 			var query = db.Child
