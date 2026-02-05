@@ -144,8 +144,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							}
 
 							selectQuery.OrderBy.Items.RemoveAt(i);
-
 							i--;
+
 							optimized = true;
 						}
 					}
