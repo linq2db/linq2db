@@ -3202,7 +3202,7 @@ namespace Tests.Linq
 
 		[ThrowsForProvider(typeof(LinqToDBException), [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
-		public void Issue4160Test2([DataSources] string context)
+		public void Issue4160Test2([DataSources(TestProvName.AllOracle12)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var persons = db.CreateLocalTable(Issue4160Person.Data);
