@@ -3200,7 +3200,7 @@ namespace Tests.Linq
 			//Assert.That(query.GetSelectQuery().Select.Columns.Count, Is.EqualTo(1));
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), [TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllSybase, TestProvName.AllMySql57], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
 		public void Issue4160Test2([DataSources] string context)
 		{

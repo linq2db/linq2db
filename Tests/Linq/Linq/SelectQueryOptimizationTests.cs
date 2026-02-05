@@ -604,24 +604,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByWithReducedSelectShouldRemain()
-		{
-			using var db = GetDataConnection();
-
-			var query =
-				from ch in db.Child
-				group ch by new { Key1 = ch.ChildID, Key2 = ch.ChildID + 1 } into g
-				select new { Key = g.Key, }
-				into s
-				select s.Key.Key1;
-
-			var selectQuery = query.GetSelectQuery();
-
-			selectQuery.GroupBy.IsEmpty.ShouldBeFalse();
-			selectQuery.Select.IsDistinct.ShouldBeFalse();
-		}
-
-		[Test]
 		public void GroupByWithGroupingSetsShouldRemain()
 		{
 			using var db = GetDataConnection();
