@@ -1073,7 +1073,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newJoinType;
 		}
 
-		bool OptimizeApply(SqlJoinedTable joinTable, bool isApplySupported)
+		bool OptimizeApply(SelectQuery parentQuery, SqlJoinedTable joinTable, bool isApplySupported)
 		{
 			var joinSource = joinTable.Table;
 
@@ -1098,8 +1098,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				isApplySupported = isApplySupported && (joinTable.JoinType == JoinType.CrossApply ||
 				                                        joinTable.JoinType == JoinType.OuterApply);
 
-				if (isApplySupported && sql.Select.HasModifier && _providerFlags.IsSubQueryTakeSupported)
-					return optimized;
+				if (sql.IsLimited)
+				{
+					if (isApplySupported || SqlProviderHelper.IsValidQuery(sql, parentQuery: parentQuery, fakeJoin: null, columnSubqueryLevel: 0, _providerFlags, out _))
+						return optimized;
+				}
 
 				if (isApplySupported && isAgg)
 					return optimized;
@@ -1238,6 +1241,21 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							else if (isAgg)
 							{
 								return optimized;
+							}
+
+							if (sql.Select.IsDistinct)
+							{
+								// we can only optimize SqlPredicate.ExprExpr
+								if (predicate is not SqlPredicate.ExprExpr expExpr)
+								{
+									return optimized;
+								}
+
+								// check that used key in distinct
+								if (!sql.Select.Columns.Any(c => QueryHelper.SameWithoutNullablity(c.Expression, expExpr.Expr1) || QueryHelper.SameWithoutNullablity(c.Expression, expExpr.Expr2)))
+								{
+									return optimized;
+								}
 							}
 
 							toRemove ??= new List<ISqlPredicate>();
@@ -2683,7 +2701,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply || join.JoinType == JoinType.FullApply || join.JoinType == JoinType.RightApply)
 					{
-						if (OptimizeApply(join, isApplySupported))
+						if (OptimizeApply(selectQuery, join, isApplySupported))
 						{
 							optimized = true;
 						}
@@ -2887,31 +2905,62 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		void MoveDuplicateUsageToSubQuery(SelectQuery query, ref List<SelectQuery>? doNotRemoveQueries)
 		{
-			var subQuery = new SelectQuery();
+			var subQuery = MoveTablesToSubQuery(query);
 
 			doNotRemoveQueries ??= new();
 			doNotRemoveQueries.Add(subQuery);
-
-			subQuery.From.Tables.AddRange(query.From.Tables);
-
-			query.Select.From.Tables.Clear();
-			_ = query.Select.From.Table(subQuery);
-
-			_columnNestingCorrector.CorrectColumnNesting(query);
 		}
 
 		void MoveToSubQuery(SelectQuery query)
 		{
-			var subQuery = new SelectQuery();
-
+			var subQuery = MoveTablesToSubQuery(query);
 			subQuery.DoNotRemove = true;
+		}
+
+		SelectQuery MoveTablesToSubQuery(SelectQuery query)
+		{
+			var subQuery = new SelectQuery();
 
 			subQuery.From.Tables.AddRange(query.From.Tables);
 
 			query.Select.From.Tables.Clear();
 			_ = query.Select.From.Table(subQuery);
 
+			if (query.OrderBy.Items.Count > 0)
+			{
+				subQuery.OrderBy.Items.AddRange(query.OrderBy.Items);
+				query.OrderBy.Items.Clear();
+			}
+
+			if (!query.GroupBy.IsEmpty)
+			{
+				subQuery.GroupBy.Items.AddRange(query.GroupBy.Items);
+				query.GroupBy.Items.Clear();
+			}
+
+			if (!query.Where.IsEmpty)
+			{
+				subQuery.Where.SearchCondition.Predicates.AddRange(query.Where.SearchCondition.Predicates);
+				subQuery.Where.SearchCondition.IsOr = query.Where.SearchCondition.IsOr;
+				query.Where.SearchCondition.Predicates.Clear();
+			}
+
+			if (!query.Having.IsEmpty)
+			{
+				subQuery.Having.SearchCondition.Predicates.AddRange(query.Having.SearchCondition.Predicates);
+				subQuery.Having.SearchCondition.IsOr = query.Having.SearchCondition.IsOr;
+				query.Having.SearchCondition.Predicates.Clear();
+			}
+
+			if (query.Select.IsDistinct)
+			{
+				subQuery.Select.IsDistinct = true;
+				query.Select.IsDistinct    = false;
+			}
+
 			_columnNestingCorrector.CorrectColumnNesting(query);
+
+			return subQuery;
 		}
 
 		bool MoveOuterJoinsToSubQuery(SelectQuery selectQuery, ref List<SelectQuery>? doNotRemoveQueries, bool processMultiColumn)
@@ -2973,6 +3022,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 									if (_providerFlags.IsApplyJoinSupported)
 									{
 										// provider can handle this query
+										continue;
+									}
+
+									if (joinQuery.Select.IsDistinct)
+									{
+										if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery: sq, fakeJoin: null, columnSubqueryLevel: 1, _providerFlags, out _))
+											continue;
+
+										MoveToSubQuery(joinQuery);
+										--j; // will be processed in the next step
 										continue;
 									}
 								}
