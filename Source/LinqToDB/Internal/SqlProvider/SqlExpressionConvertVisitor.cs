@@ -184,7 +184,7 @@ namespace LinqToDB.Internal.SqlProvider
 				return selectQuery;
 
 			var saveNullabilityContext = NullabilityContext;
-			NullabilityContext = NullabilityContext.WithJoinSource(selectQuery);
+			NullabilityContext = NullabilityContext.WithJoinSources([selectQuery]);
 
 			var newQuery = base.VisitSqlQuery(selectQuery);
 
@@ -897,7 +897,7 @@ namespace LinqToDB.Internal.SqlProvider
 		protected internal override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
 		{
 			var saveNullabilityContext = NullabilityContext;
-			NullabilityContext = NullabilityContext.WithJoinSource(element.Table.Source);
+			NullabilityContext = NullabilityContext.WithJoinSources([element.Table.Source]);
 
 			var newElement = base.VisitSqlJoinedTable(element);
 

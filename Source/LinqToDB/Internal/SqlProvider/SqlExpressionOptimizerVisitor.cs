@@ -128,7 +128,7 @@ namespace LinqToDB.Internal.SqlProvider
 		protected internal override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
 		{
 			var saveNullabilityContext = _nullabilityContext;
-			_nullabilityContext = _nullabilityContext.WithJoinSource(element.Table.Source);
+			_nullabilityContext = _nullabilityContext.WithJoinSources([element.Table.Source]);
 
 			var newElement = base.VisitSqlJoinedTable(element);
 

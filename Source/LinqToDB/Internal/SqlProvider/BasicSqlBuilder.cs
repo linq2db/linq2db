@@ -1706,8 +1706,13 @@ namespace LinqToDB.Internal.SqlProvider
 
 				BuildTableName(ts, true, true);
 
-				foreach (var jt in ts.Joins)
-					BuildJoinTable(selectQuery, ts, jt, ref jn);
+				if (ts.Joins.Count != 0)
+				{
+					var sources = ts.Joins.Select(j => j.Table.Source).ToList();
+
+					foreach (var jt in ts.Joins)
+						BuildJoinTable(selectQuery, ts, jt, sources, ref jn);
+				}
 			}
 
 			BuildFromExtensions(selectQuery);
@@ -2066,7 +2071,7 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 		}
 
-		protected void BuildJoinTable(SelectQuery selectQuery, SqlTableSource tableSource, SqlJoinedTable join, ref int joinCounter)
+		protected void BuildJoinTable(SelectQuery selectQuery, SqlTableSource tableSource, SqlJoinedTable join, List<ISqlTableSource> joinSources, ref int joinCounter)
 		{
 			StringBuilder.AppendLine();
 			Indent++;
@@ -2082,8 +2087,13 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (IsNestedJoinSupported && join.Table.Joins.Count != 0)
 			{
-				foreach (var jt in join.Table.Joins)
-					BuildJoinTable(selectQuery, tableSource, jt, ref joinCounter);
+				if (join.Table.Joins.Count != 0)
+				{
+					var nestedSources = joinSources.Concat(join.Table.Joins.Select(j => j.Table.Source)).ToList();
+
+					foreach (var jt in join.Table.Joins)
+						BuildJoinTable(selectQuery, tableSource, jt, nestedSources, ref joinCounter);
+				}
 
 				if (IsNestedJoinParenthesisRequired && join.Table.Joins.Count != 0)
 					StringBuilder.Append(')');
@@ -2106,7 +2116,7 @@ namespace LinqToDB.Internal.SqlProvider
 				if (!condition.IsTrue())
 				{
 					var saveNullability = NullabilityContext;
-					NullabilityContext = NullabilityContext.WithJoinSource(join.Table.Source).WithQuery(selectQuery);
+					NullabilityContext = NullabilityContext.WithJoinSources(joinSources).WithQuery(selectQuery);
 
 					BuildSearchCondition(Precedence.Unknown, condition, wrapCondition : false);
 
@@ -2125,9 +2135,13 @@ namespace LinqToDB.Internal.SqlProvider
 				StringBuilder.Append(')');
 			}
 
-			if (!IsNestedJoinSupported)
+			if (!IsNestedJoinSupported && join.Table.Joins.Count != 0)
+			{
+				var nestedSources = joinSources.Concat(join.Table.Joins.Select(j => j.Table.Source)).ToList();
+
 				foreach (var jt in join.Table.Joins)
-					BuildJoinTable(selectQuery, tableSource, jt, ref joinCounter);
+					BuildJoinTable(selectQuery, tableSource, jt, nestedSources, ref joinCounter);
+			}
 
 			Indent--;
 		}

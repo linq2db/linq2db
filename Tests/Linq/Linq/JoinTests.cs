@@ -3525,5 +3525,54 @@ namespace Tests.Linq
 			if (db is DataConnection { DataProvider: FirebirdDataProvider })
 				FirebirdTools.ClearAllPools();
 		}
+
+		static class JoinConditionNullabilityPreservedTables
+		{
+			public sealed class MainTable
+			{
+				[PrimaryKey] public int Id { get; set; }
+				public int? FK { get; set; }
+
+				[Association(ThisKey = nameof(FK), OtherKey = nameof(Ref1.Id), CanBeNull = true)]
+				public Ref1 Ref => throw new InvalidOperationException();
+
+				public static readonly MainTable[] Data =
+				[
+					new () { Id = 1 },
+				];
+			}
+
+			public sealed class Ref1
+			{
+				[PrimaryKey] public int Id { get; set; }
+
+				[Association(ThisKey = nameof(Id), OtherKey = nameof(Ref2.FK), CanBeNull = true)]
+				public Ref2 Ref => throw new InvalidOperationException();
+			}
+
+			public sealed class Ref2
+			{
+				[PrimaryKey] public int Id { get; set; }
+				public int? FK { get; set; }
+				public int? Prop { get; set; }
+
+				public static readonly Ref2[] Data =
+				[
+					new () { Id = 1 },
+					new () { Id = 2 },
+				];
+			}
+		}
+
+		[Test(Description = "Reported issue")]
+		public void TestJoinConditionNullabilityPreserved([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable(JoinConditionNullabilityPreservedTables.MainTable.Data);
+			using var t2 = db.CreateLocalTable<JoinConditionNullabilityPreservedTables.Ref1>();
+			using var t3 = db.CreateLocalTable(JoinConditionNullabilityPreservedTables.Ref2.Data);
+
+			_ = t1.Where(r => r.Id == 1).Select(r => r.Ref.Ref.Prop).SingleOrDefault();
+		}
 	}
 }

@@ -2213,19 +2213,23 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				if (tableSource.Joins.Count > 0)
 				{
+					List<ISqlTableSource>? joinSources = null;
 					for (var j = 0; j < tableSource.Joins.Count; j++)
 					{
 						var join = tableSource.Joins[j];
 
 						if (join.JoinType is (JoinType.Inner or JoinType.Left) && !join.Condition.IsOr && join.Condition.Predicates.Count != 0)
-							modified |= MoveJoinConditionsToWhere(root, tableSource, join, selectQuery.Where, NullabilityContext.GetContext(selectQuery));
+						{
+							joinSources ??= tableSource.Joins.Select(j => j.Table.Source).ToList();
+							modified |= MoveJoinConditionsToWhere(root, tableSource, join, joinSources, selectQuery.Where, NullabilityContext.GetContext(selectQuery));
+						}
 					}
 				}
 			}
 
 			return modified;
 
-			bool MoveJoinConditionsToWhere(SqlStatement root, SqlTableSource left, SqlJoinedTable join, SqlWhereClause where, NullabilityContext nullabilityContext)
+			bool MoveJoinConditionsToWhere(SqlStatement root, SqlTableSource left, SqlJoinedTable join, List<ISqlTableSource> joinSources, SqlWhereClause where, NullabilityContext nullabilityContext)
 			{
 				var modified                   = false;
 				var isLeft                     = join.JoinType == JoinType.Left;
@@ -2239,7 +2243,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					var predicate = join.Condition.Predicates[i];
 
 					var move = predicate is not SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr
-						|| exprExpr.Reduce(nullabilityContext.WithJoinSource(join.Table.Source), _evaluationContext, false, _dataOptions.LinqOptions) is not SqlPredicate.ExprExpr
+						|| exprExpr.Reduce(nullabilityContext.WithJoinSources(joinSources), _evaluationContext, false, _dataOptions.LinqOptions) is not SqlPredicate.ExprExpr
 						|| exprExpr.Expr1 is SqlValue || exprExpr.Expr2 is SqlValue;
 
 					if (move && isLeft)

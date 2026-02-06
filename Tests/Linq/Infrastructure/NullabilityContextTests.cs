@@ -121,7 +121,7 @@ namespace Tests.Infrastructure
 
 		static void AssertJoinNotNullable(NullabilityContext nullabilityContext, SqlJoinedTable joinTable)
 		{
-			nullabilityContext = nullabilityContext.WithJoinSource(joinTable.Table.Source);
+			nullabilityContext = nullabilityContext.WithJoinSources([joinTable.Table.Source]);
 
 			foreach (var p in joinTable.Condition.Predicates)
 			{
