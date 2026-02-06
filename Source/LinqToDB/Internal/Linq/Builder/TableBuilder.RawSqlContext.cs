@@ -46,10 +46,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var methodCall = (MethodCallExpression)buildInfo.Expression;
 			var entityType = methodCall.Method.GetGenericArguments()[0];
 
-			if (isScalar == null)
-			{
-				isScalar = builder.MappingSchema.IsScalarType(entityType);
-			}
+			isScalar ??= builder.MappingSchema.IsScalarType(entityType);
 
 			var formatArg = methodCall.Arguments[1];
 

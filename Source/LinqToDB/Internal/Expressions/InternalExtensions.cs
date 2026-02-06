@@ -540,16 +540,12 @@ namespace LinqToDB.Internal.Expressions
 				}
 
 				// Optimize boolean operations
-				switch (newExpr.NodeType)
+				return newExpr.NodeType switch
 				{
-					case ExpressionType.AndAlso:
-						return OptimizeAndAlso((BinaryExpression)newExpr);
-					
-					case ExpressionType.OrElse:
-						return OptimizeOrElse((BinaryExpression)newExpr);
-				}
-
-				return newExpr;
+					ExpressionType.AndAlso => OptimizeAndAlso((BinaryExpression)newExpr),
+					ExpressionType.OrElse  => OptimizeOrElse((BinaryExpression)newExpr),
+					_                      => newExpr,
+				};
 			}
 
 			protected override Expression VisitUnary(UnaryExpression node)
