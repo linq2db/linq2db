@@ -110,9 +110,15 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 				if (wrap && param.IsQueryParameter)
 				{
-					var paramValue = param.GetParameterValue(EvaluationContext.ParameterValues);
-
-					wrap = paramValue.ProviderValue == null;
+					if (!EvaluationContext.IsParametersInitialized)
+					{
+						wrap = false;
+					}
+					else
+					{
+						var paramValue = param.GetParameterValue(EvaluationContext.ParameterValues);
+						wrap = paramValue.ProviderValue == null;
+					}
 				}
 
 				if (wrap)

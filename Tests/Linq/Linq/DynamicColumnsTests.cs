@@ -856,5 +856,42 @@ namespace Tests.Linq
 			tb.ToArray();
 		}
 		#endregion
+
+		sealed class ConvertTable
+		{
+			[PrimaryKey] public int Id { get; set; }
+			public string? Name { get; set; }
+
+			public static readonly ConvertTable[] Data =
+			[
+				new() { Id = 1, Name = "test" }
+			];
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5298")]
+		public void TestConvert1([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(ConvertTable.Data);
+
+			object id = 1;
+
+			var res = tb.Where(r => Sql.Property<int>(r, "Id") == Convert.ToInt32(id)).ToList();
+
+			Assert.That(res, Has.Count.EqualTo(1));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5298")]
+		public void TestConvert2([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(ConvertTable.Data);
+
+			object id = 1;
+
+			var res = tb.Where(r => Sql.Property<int>(r, "Id") == (int)id).ToList();
+
+			Assert.That(res, Has.Count.EqualTo(1));
+		}
 	}
 }

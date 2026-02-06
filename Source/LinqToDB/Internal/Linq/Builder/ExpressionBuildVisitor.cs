@@ -3085,12 +3085,30 @@ namespace LinqToDB.Internal.Linq.Builder
 			return true;
 		}
 
+		static Expression GenerateToStringCall(Expression expr)
+		{
+			if (expr.Type == typeof(string))
+				return expr;
+
+			expr = expr.UnwrapConvertToObject();
+
+			return Expression.Call(expr, Methods.System.Object_ToString);
+		}
+
 		bool HandleBinaryMath(BinaryExpression node, out Expression translated)
 		{
 			translated = node;
 
 			var left  = node.Left;
 			var right = node.Right;
+
+			var isStringObjectConcat = node.NodeType == ExpressionType.Add && node.Method == Methods.System.String_ObjectsConcat;
+
+			if (isStringObjectConcat)
+			{
+				left = GenerateToStringCall(left);
+				right = GenerateToStringCall(right);
+			}
 
 			var shouldCheckColumn = node.Left.Type.UnwrapNullableType() == node.Right.Type.UnwrapNullableType();
 

@@ -71,7 +71,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 							TABLE_SCHEMA                                                                   as SchemaName,
 							TABLE_NAME                                                                     as TableName,
 							CASE WHEN TABLE_TYPE = 'VIEW' THEN 1 ELSE 0 END                                as IsView,
-							ISNULL(CONVERT(varchar(8000), x.value), '')                                    as Description,
+							ISNULL(CONVERT(NVARCHAR(MAX), x.value), N'')                                   as Description,
 							CASE WHEN TABLE_SCHEMA = 'dbo' THEN 1 ELSE 0 END                               as IsDefaultSchema
 						FROM
 							INFORMATION_SCHEMA.TABLES s
@@ -98,7 +98,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 									minor_id = 0           AND
 									class    = 1           AND
 									name     = N'microsoft_database_tools_support'
-							) IS NULL{{temporalFilterEnd}}
+									) IS NULL{{temporalFilterEnd}}
 						"""
 				)
 				.ToList();
@@ -123,7 +123,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 							k.CONSTRAINT_SCHEMA  = c.CONSTRAINT_SCHEMA AND
 							k.CONSTRAINT_NAME    = c.CONSTRAINT_NAME
 					WHERE
-						c.CONSTRAINT_TYPE='PRIMARY KEY'
+							c.CONSTRAINT_TYPE='PRIMARY KEY'
 					"""
 				)
 				.ToList();
@@ -143,53 +143,59 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					LEFT JOIN sys.tables t ON OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = t.object_id";
 
 			return dataConnection.Query<ColumnInfo>(
-				IsAzure ? @"
-				SELECT
-					TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME                      as TableID,
-					COLUMN_NAME                                                                                         as Name,
-					CASE WHEN IS_NULLABLE = 'YES' THEN 1 ELSE 0 END                                                     as IsNullable,
-					ORDINAL_POSITION                                                                                    as Ordinal,
-					c.DATA_TYPE                                                                                         as DataType,
-					CHARACTER_MAXIMUM_LENGTH                                                                            as Length,
-					ISNULL(NUMERIC_PRECISION, DATETIME_PRECISION)                                                       as [Precision],
-					NUMERIC_SCALE                                                                                       as Scale,
-					''                                                                                                  as [Description],
-					COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') as IsIdentity,
-					CASE WHEN c.DATA_TYPE = 'timestamp'
-						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1" + temporalClause + @"
-						THEN 1 ELSE 0 END as SkipOnInsert,
-					CASE WHEN c.DATA_TYPE = 'timestamp'
-						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1" + temporalClause + @"
-						THEN 1 ELSE 0 END as SkipOnUpdate
-				FROM
-					INFORMATION_SCHEMA.COLUMNS c" + temporalJoin
-				: @"
-				SELECT
-					TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME                      as TableID,
-					COLUMN_NAME                                                                                         as Name,
-					CASE WHEN IS_NULLABLE = 'YES' THEN 1 ELSE 0 END                                                     as IsNullable,
-					ORDINAL_POSITION                                                                                    as Ordinal,
-					c.DATA_TYPE                                                                                         as DataType,
-					CHARACTER_MAXIMUM_LENGTH                                                                            as Length,
-					ISNULL(NUMERIC_PRECISION, DATETIME_PRECISION)                                                       as [Precision],
-					NUMERIC_SCALE                                                                                       as Scale,
-					ISNULL(CONVERT(varchar(8000), x.value), '')                                                         as [Description],
-					COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') as IsIdentity,
-					CASE WHEN c.DATA_TYPE = 'timestamp'
-						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1" + temporalClause + @"
-						THEN 1 ELSE 0 END as SkipOnInsert,
-					CASE WHEN c.DATA_TYPE = 'timestamp'
-						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1" + temporalClause + @"
-						THEN 1 ELSE 0 END as SkipOnUpdate
-				FROM
-					INFORMATION_SCHEMA.COLUMNS c
-					LEFT JOIN
-						sys.extended_properties x
-					ON
-						--OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
-						OBJECT_ID('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
-						COLUMNPROPERTY(OBJECT_ID('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'ColumnID') = x.minor_id AND
-						x.name = 'MS_Description' AND x.class = 1" + temporalJoin)
+					IsAzure ? 
+						$$"""
+
+						SELECT
+							TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME                      as TableID,
+							COLUMN_NAME                                                                                         as Name,
+							CASE WHEN IS_NULLABLE = 'YES' THEN 1 ELSE 0 END                                                     as IsNullable,
+							ORDINAL_POSITION                                                                                    as Ordinal,
+							c.DATA_TYPE                                                                                         as DataType,
+							CHARACTER_MAXIMUM_LENGTH                                                                            as Length,
+							ISNULL(NUMERIC_PRECISION, DATETIME_PRECISION)                                                       as [Precision],
+							NUMERIC_SCALE                                                                                       as Scale,
+							''                                                                                                  as [Description],
+							COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') as IsIdentity,
+							CASE WHEN c.DATA_TYPE = 'timestamp'
+								OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1" + temporalClause + @"
+								THEN 1 ELSE 0 END as SkipOnInsert,
+							CASE WHEN c.DATA_TYPE = 'timestamp'
+								OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1" + temporalClause + @"
+								THEN 1 ELSE 0 END as SkipOnUpdate
+						FROM
+							INFORMATION_SCHEMA.COLUMNS c{{temporalJoin}}
+						"""
+					: $$"""
+
+						SELECT
+							TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME                      as TableID,
+							COLUMN_NAME                                                                                         as Name,
+							CASE WHEN IS_NULLABLE = 'YES' THEN 1 ELSE 0 END                                                     as IsNullable,
+							ORDINAL_POSITION                                                                                    as Ordinal,
+							c.DATA_TYPE                                                                                         as DataType,
+							CHARACTER_MAXIMUM_LENGTH                                                                            as Length,
+							ISNULL(NUMERIC_PRECISION, DATETIME_PRECISION)                                                       as [Precision],
+							NUMERIC_SCALE                                                                                       as Scale,
+							ISNULL(CONVERT(NVARCHAR(MAX), x.value), N'')                                                        as [Description],
+							COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') as IsIdentity,
+							CASE WHEN c.DATA_TYPE = 'timestamp'
+								OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1" + temporalClause + @"
+								THEN 1 ELSE 0 END as SkipOnInsert,
+							CASE WHEN c.DATA_TYPE = 'timestamp'
+								OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1" + temporalClause + @"
+								THEN 1 ELSE 0 END as SkipOnUpdate
+						FROM
+							INFORMATION_SCHEMA.COLUMNS c
+							LEFT JOIN
+								sys.extended_properties x
+							ON
+								--OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
+								OBJECT_ID('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
+								COLUMNPROPERTY(OBJECT_ID('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'ColumnID') = x.minor_id AND
+								x.name = 'MS_Description' AND x.class = 1{{temporalJoin}}
+						"""
+				)
 				.Select(c =>
 				{
 					var dti = GetDataType(c.DataType, null, options);
@@ -260,46 +266,52 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			return dataConnection.Query<ForeignKeyInfo>(@"
-				SELECT
-					fk.name                                                     as Name,
-					DB_NAME() + '.' + SCHEMA_NAME(po.schema_id) + '.' + po.name as ThisTableID,
-					pc.name                                                     as ThisColumn,
-					DB_NAME() + '.' + SCHEMA_NAME(fo.schema_id) + '.' + fo.name as OtherTableID,
-					fc.name                                                     as OtherColumn,
-					fkc.constraint_column_id                                    as Ordinal
-				FROM sys.foreign_keys fk
-					inner join sys.foreign_key_columns fkc ON fk.object_id = fkc.constraint_object_id
-					inner join sys.columns             pc  ON fkc.parent_column_id = pc.column_id and fkc.parent_object_id = pc.object_id
-					inner join sys.objects             po  ON fk.parent_object_id = po.object_id
-					inner join sys.columns             fc  ON fkc.referenced_column_id = fc.column_id and fkc.referenced_object_id = fc.object_id
-					inner join sys.objects             fo  ON fk.referenced_object_id = fo.object_id
-				ORDER BY
-					ThisTableID,
-					Ordinal")
+			return dataConnection.Query<ForeignKeyInfo>(
+					"""
+					SELECT
+						fk.name                                                     as Name,
+						DB_NAME() + '.' + SCHEMA_NAME(po.schema_id) + '.' + po.name as ThisTableID,
+						pc.name                                                     as ThisColumn,
+						DB_NAME() + '.' + SCHEMA_NAME(fo.schema_id) + '.' + fo.name as OtherTableID,
+						fc.name                                                     as OtherColumn,
+						fkc.constraint_column_id                                    as Ordinal
+					FROM sys.foreign_keys fk
+						inner join sys.foreign_key_columns fkc ON fk.object_id = fkc.constraint_object_id
+						inner join sys.columns             pc  ON fkc.parent_column_id = pc.column_id and fkc.parent_object_id = pc.object_id
+						inner join sys.objects             po  ON fk.parent_object_id = po.object_id
+						inner join sys.columns             fc  ON fkc.referenced_column_id = fc.column_id and fkc.referenced_object_id = fc.object_id
+						inner join sys.objects             fo  ON fk.referenced_object_id = fo.object_id
+					ORDER BY
+						ThisTableID,
+						Ordinal
+					"""
+				)
 				.ToList();
 		}
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			return dataConnection.Query<ProcedureInfo>(
-				@"SELECT
-					SPECIFIC_CATALOG COLLATE DATABASE_DEFAULT + '.' + SPECIFIC_SCHEMA + '.' + SPECIFIC_NAME as ProcedureID,
-					SPECIFIC_CATALOG                                                                        as CatalogName,
-					SPECIFIC_SCHEMA                                                                         as SchemaName,
-					SPECIFIC_NAME                                                                           as ProcedureName,
-					CASE WHEN ROUTINE_TYPE = 'FUNCTION'                         THEN 1 ELSE 0 END           as IsFunction,
-					CASE WHEN ROUTINE_TYPE = 'FUNCTION' AND DATA_TYPE = 'TABLE' THEN 1 ELSE 0 END           as IsTableFunction,
-					CASE WHEN EXISTS(SELECT * FROM sys.objects where name = SPECIFIC_NAME AND type='AF')
-					                                                            THEN 1 ELSE 0 END           as IsAggregateFunction,
-					CASE WHEN SPECIFIC_SCHEMA = 'dbo'                           THEN 1 ELSE 0 END           as IsDefaultSchema,
-					ISNULL(CONVERT(varchar(8000), x.value), '')                                             as Description
-				FROM
-					INFORMATION_SCHEMA.ROUTINES
-					LEFT JOIN sys.extended_properties x
-						ON OBJECT_ID('[' + SPECIFIC_SCHEMA + '].[' + SPECIFIC_NAME + ']') = x.major_id AND
-							x.name = 'MS_Description' AND x.class = 1
-				ORDER BY SPECIFIC_CATALOG, SPECIFIC_SCHEMA, SPECIFIC_NAME")
+					"""
+					SELECT
+						SPECIFIC_CATALOG COLLATE DATABASE_DEFAULT + '.' + SPECIFIC_SCHEMA + '.' + SPECIFIC_NAME as ProcedureID,
+						SPECIFIC_CATALOG                                                                        as CatalogName,
+						SPECIFIC_SCHEMA                                                                         as SchemaName,
+						SPECIFIC_NAME                                                                           as ProcedureName,
+						CASE WHEN ROUTINE_TYPE = 'FUNCTION'                         THEN 1 ELSE 0 END           as IsFunction,
+						CASE WHEN ROUTINE_TYPE = 'FUNCTION' AND DATA_TYPE = 'TABLE' THEN 1 ELSE 0 END           as IsTableFunction,
+						CASE WHEN EXISTS(SELECT * FROM sys.objects where name = SPECIFIC_NAME AND type='AF')
+																					THEN 1 ELSE 0 END           as IsAggregateFunction,
+						CASE WHEN SPECIFIC_SCHEMA = 'dbo'                           THEN 1 ELSE 0 END           as IsDefaultSchema,
+						ISNULL(CONVERT(NVARCHAR(MAX), x.value), N'')                                            as Description
+					FROM
+						INFORMATION_SCHEMA.ROUTINES
+						LEFT JOIN sys.extended_properties x
+							ON OBJECT_ID('[' + SPECIFIC_SCHEMA + '].[' + SPECIFIC_NAME + ']') = x.major_id AND
+								x.name = 'MS_Description' AND x.class = 1
+					ORDER BY SPECIFIC_CATALOG, SPECIFIC_SCHEMA, SPECIFIC_NAME
+					"""
+				)
 				.ToList();
 		}
 
@@ -309,29 +321,32 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			// SQL25 CTP2.1 returns vector parameter type as varbinary(len), e.g. for vector(3) : varbinary(20)
 			// and sp_describe_first_result_set returns ntext
 			return dataConnection.Query<ProcedureParameterInfo>(
-				@"SELECT
-					SPECIFIC_CATALOG COLLATE DATABASE_DEFAULT + '.' + SPECIFIC_SCHEMA + '.' + SPECIFIC_NAME as ProcedureID,
-					ORDINAL_POSITION                                                                        as Ordinal,
-					PARAMETER_MODE                                                                          as Mode,
-					PARAMETER_NAME                                                                          as ParameterName,
-					DATA_TYPE                                                                               as DataType,
-					CHARACTER_MAXIMUM_LENGTH                                                                as Length,
-					NUMERIC_PRECISION                                                                       as [Precision],
-					NUMERIC_SCALE                                                                           as Scale,
-					CASE WHEN PARAMETER_MODE = 'IN'  OR PARAMETER_MODE = 'INOUT' THEN 1 ELSE 0 END          as IsIn,
-					CASE WHEN PARAMETER_MODE = 'OUT' OR PARAMETER_MODE = 'INOUT' THEN 1 ELSE 0 END          as IsOut,
-					CASE WHEN IS_RESULT      = 'YES'                             THEN 1 ELSE 0 END          as IsResult,
-					USER_DEFINED_TYPE_CATALOG                                                               as UDTCatalog,
-					USER_DEFINED_TYPE_SCHEMA                                                                as UDTSchema,
-					USER_DEFINED_TYPE_NAME                                                                  as UDTName,
-					1                                                                                       as IsNullable,
-					ISNULL(CONVERT(varchar(8000), x.value), '')                                             as Description
-				FROM
-					INFORMATION_SCHEMA.PARAMETERS
-					LEFT JOIN sys.extended_properties x
-						ON OBJECT_ID('[' + SPECIFIC_SCHEMA + '].[' + SPECIFIC_NAME + ']') = x.major_id AND
-							ORDINAL_POSITION = x.minor_id AND
-							x.name = 'MS_Description' AND x.class = 2")
+					"""
+					SELECT
+						SPECIFIC_CATALOG COLLATE DATABASE_DEFAULT + '.' + SPECIFIC_SCHEMA + '.' + SPECIFIC_NAME as ProcedureID,
+						ORDINAL_POSITION                                                                        as Ordinal,
+						PARAMETER_MODE                                                                          as Mode,
+						PARAMETER_NAME                                                                          as ParameterName,
+						DATA_TYPE                                                                               as DataType,
+						CHARACTER_MAXIMUM_LENGTH                                                                as Length,
+						NUMERIC_PRECISION                                                                       as [Precision],
+						NUMERIC_SCALE                                                                           as Scale,
+						CASE WHEN PARAMETER_MODE = 'IN'  OR PARAMETER_MODE = 'INOUT' THEN 1 ELSE 0 END          as IsIn,
+						CASE WHEN PARAMETER_MODE = 'OUT' OR PARAMETER_MODE = 'INOUT' THEN 1 ELSE 0 END          as IsOut,
+						CASE WHEN IS_RESULT      = 'YES'                             THEN 1 ELSE 0 END          as IsResult,
+						USER_DEFINED_TYPE_CATALOG                                                               as UDTCatalog,
+						USER_DEFINED_TYPE_SCHEMA                                                                as UDTSchema,
+						USER_DEFINED_TYPE_NAME                                                                  as UDTName,
+						1                                                                                       as IsNullable,
+						ISNULL(CONVERT(NVARCHAR(MAX), x.value), N'')                                            as Description
+					FROM
+						INFORMATION_SCHEMA.PARAMETERS
+						LEFT JOIN sys.extended_properties x
+							ON OBJECT_ID('[' + SPECIFIC_SCHEMA + '].[' + SPECIFIC_NAME + ']') = x.major_id AND
+								ORDINAL_POSITION = x.minor_id AND
+								x.name = 'MS_Description' AND x.class = 2
+					"""
+				)
 				.ToList();
 		}
 
@@ -452,7 +467,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		protected override DataParameter BuildProcedureParameter(ParameterSchema p)
 		{
 			return p.DataType switch
-			{
+				{
 				DataType.Structured => new DataParameter
 				{
 					Name = p.ParameterName,
@@ -512,19 +527,21 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					new DataColumn { ColumnName = "IsIdentity",       DataType = typeof(bool)   },
 				});
 
-				foreach (var item in dataConnection.QueryProc(new
-					{
-						name               = "",
-						is_nullable        = false,
-						system_type_name   = "",
-						max_length         = 0,
-						precision          = 0,
-						scale              = 0,
-						is_identity_column = false,
-					},
-					"sp_describe_first_result_set",
-					new DataParameter("tsql", tsql),
-					new DataParameter("params", parms)
+				foreach (var item in dataConnection
+					.QueryProc(
+						new
+						{
+							name               = "",
+							is_nullable        = false,
+							system_type_name   = "",
+							max_length         = 0,
+							precision          = 0,
+							scale              = 0,
+							is_identity_column = false,
+						},
+						"sp_describe_first_result_set",
+						new DataParameter("tsql", tsql),
+						new DataParameter("params", parms)
 					)
 				)
 				{
