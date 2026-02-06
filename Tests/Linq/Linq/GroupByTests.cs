@@ -3911,5 +3911,62 @@ namespace Tests.Linq
 
 			query.ToArray();
 		}
+
+		sealed class Issue5327Table
+		{
+			[PrimaryKey]
+			public int Id    { get; set; }
+			public int Key   { get; set; }
+			public int Value { get; set; }
+
+			public static readonly Issue5327Table[] Data =
+			[
+				new() { Id = 1, Key = 2, Value = 1 },
+				new() { Id = 2, Key = 2, Value = 2 },
+				new() { Id = 3, Key = 2, Value = 3 },
+				new() { Id = 4, Key = 2, Value = 4 },
+				new() { Id = 5, Key = 1, Value = 5 },
+				new() { Id = 6, Key = 1, Value = 6 },
+				new() { Id = 7, Key = 1, Value = 7 },
+				new() { Id = 8, Key = 1, Value = 8 },
+				new() { Id = 9, Key = 3, Value = 9 },
+				new() { Id = 10, Key = 3, Value = 10 },
+				new() { Id = 11, Key = 3, Value = 11 },
+				new() { Id = 12, Key = 3, Value = 12 },
+			];
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5327")]
+		public void Issue5327Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(Issue5327Table.Data);
+
+			var query = tb
+				.Select(c => new { c.Key, c.Value })
+				.GroupBy(c => c.Key)
+				.Select(c => new { c.Key, Sum = c.Sum(d => d.Value)})
+				.OrderByDescending(c => c.Sum)
+				.Select(c => c.Key);
+
+			AssertQuery(query);
+			Assert.That(query.GetSelectQuery().Select.OrderBy.IsEmpty, Is.Not.True);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5327")]
+		public void Issue5327Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(Issue5327Table.Data);
+
+			var query = tb
+				.Select(c => new { c.Key, c.Value})
+				.GroupBy(c => c.Key)
+				.Select(c => new { c.Key, Sum = c.Sum(d => d.Value)})
+				.OrderByDescending(c => c.Sum);
+
+			AssertQuery(query);
+			Assert.That(query.GetSelectQuery().Select.OrderBy.IsEmpty, Is.Not.True);
+		}
 	}
 }
