@@ -1082,6 +1082,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (!QueryHelper.IsDependsOnOuterSources(joinSource.Source))
 			{
+				if (!_providerFlags.IsSupportsJoinWithoutCondition && joinTable.Condition.IsTrue())
+					return false;
+
 				var newJoinType = ConvertApplyJoinType(joinTable.JoinType);
 
 				joinTable.JoinType = newJoinType;
@@ -1097,7 +1100,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				var isApplySupported = _providerFlags.IsApplyJoinSupported;
 
-				if (sql.IsLimited)
+				if (sql.Select.HasModifier || !sql.GroupBy.IsEmpty)
 				{
 					if (isApplySupported)
 						return optimized;
