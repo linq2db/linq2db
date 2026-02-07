@@ -12,8 +12,8 @@ namespace LinqToDB.Internal.DataProvider.Translation
 	{
 		public GuidMemberTranslatorBase()
 		{
-			Registration.RegisterMethod(() => Guid.NewGuid().ToString(), TranslateGuildToStringMethod);
-			Registration.RegisterMethod(() => ((Guid?)Guid.NewGuid()).ToString(), TranslateGuildToStringMethod);
+			Registration.RegisterMethod(() => Guid.Empty.ToString(),          TranslateGuildToStringMethod);
+			Registration.RegisterMethod(() => ((Guid?)Guid.Empty).ToString(), TranslateGuildToStringMethod);
 		}
 
 		Expression? TranslateGuildToStringMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
