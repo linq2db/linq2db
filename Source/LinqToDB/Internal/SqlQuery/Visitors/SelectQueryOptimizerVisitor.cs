@@ -205,20 +205,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						isModified = true;
 					}
 
-					if (MoveOuterJoinsToSubQuery(selectQuery, ref doNotRemoveQueries, processMultiColumn: false))
-					{
-						isModified = true;
-					}
-
-					if (OptimizeApplies(selectQuery, _providerFlags.IsApplyJoinSupported))
+					if (OptimizeJoins(selectQuery, ref doNotRemoveQueries))
 					{
 						isModified = true;
 						EnsureReferencesCorrected(selectQuery);
-					}
-
-					if (MoveOuterJoinsToSubQuery(selectQuery, ref doNotRemoveQueries, processMultiColumn: true))
-					{
-						isModified = true;
 					}
 
 					if (ResolveWeakJoins(selectQuery))
@@ -254,7 +244,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						isModified = true;
 					}
 
-					if (FinalizeAndValidateInternal(saveParent, selectQuery))
+					if (FinalizeAndValidateInternal(selectQuery))
 					{
 						isModified = true;
 					}
@@ -354,6 +344,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			var result = base.VisitSqlUpdateStatement(element);
 			_updateQuery = null;
 			_updateTable = null;
+			return result;
+		}
+
+		protected internal override IQueryElement VisitSqlInsertOrUpdateStatement(SqlInsertOrUpdateStatement element)
+		{
+			_updateQuery = element.SelectQuery;
+			_updateTable = element.Update.Table as ISqlTableSource ?? element.Update.TableSource;
+			var result = base.VisitSqlInsertOrUpdateStatement(element);
+			_updateQuery = null;
 			return result;
 		}
 
@@ -557,7 +556,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return true;
 		}
 
-		bool FinalizeAndValidateInternal(SelectQuery? parentQuery, SelectQuery selectQuery)
+		bool FinalizeAndValidateInternal(SelectQuery selectQuery)
 		{
 			var isModified = false;
 
@@ -1073,7 +1072,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newJoinType;
 		}
 
-		bool OptimizeApply(SelectQuery parentQuery, SqlJoinedTable joinTable, bool isApplySupported)
+		bool OptimizeApplyJoin(SqlJoinedTable joinTable, bool doNotEmulate)
 		{
 			var joinSource = joinTable.Table;
 
@@ -1093,18 +1092,21 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (joinSource.Source.ElementType == QueryElementType.SqlQuery)
 			{
 				var sql   = (SelectQuery)joinSource.Source;
+
 				var isAgg = sql.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowExpression(c.Expression));
 
-				isApplySupported = isApplySupported && (joinTable.JoinType == JoinType.CrossApply ||
-				                                        joinTable.JoinType == JoinType.OuterApply);
+				var isApplySupported = _providerFlags.IsApplyJoinSupported;
 
 				if (sql.IsLimited)
 				{
-					if (isApplySupported || SqlProviderHelper.IsValidQuery(sql, parentQuery: parentQuery, fakeJoin: null, columnSubqueryLevel: 0, _providerFlags, out _))
+					if (isApplySupported)
 						return optimized;
 				}
 
 				if (isApplySupported && isAgg)
+					return optimized;
+
+				if (doNotEmulate)
 					return optimized;
 
 				var skipValue = sql.Select.SkipValue;
@@ -1112,9 +1114,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				if (sql.Select.TakeHints != null)
 				{
-					if (isApplySupported)
-						return optimized;
-					throw new LinqToDBException("SQL query requires TakeHints in CROSS/OUTER query, which are not supported by provider");
+					return optimized;
 				}
 
 				ISqlExpression?       rnExpression = null;
@@ -1125,12 +1125,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					if (!_providerFlags.IsWindowFunctionsSupported)
 						return optimized;
 
-					var found   = new HashSet<ISqlExpression>();
+					if (doNotEmulate)
+						return optimized;
 
-					if (sql.Select.IsDistinct)
-					{
-						found.AddRange(sql.Select.Columns.Select(c => c.Expression));
-					}
+					var found   = new HashSet<ISqlExpression>();
 
 					sql.Where.VisitAll(1, (ctx, e) =>
 					{
@@ -1152,6 +1150,19 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							}
 						}
 					});
+
+					if (sql.Select.IsDistinct)
+					{
+						if (found.Count == 0)
+						{
+							found.AddRange(sql.Select.Columns.Select(c => c.Expression));
+						}
+						else
+						{
+							if (!sql.Select.Columns.All(c => found.Contains(c.Expression)))
+								return optimized;
+						}
+					}
 
 					if (found.Count > 0)
 					{
@@ -2691,28 +2702,101 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return isModified;
 		}
 
-		bool OptimizeApplies(SelectQuery selectQuery, bool isApplySupported)
+		bool OptimizeJoins(SelectQuery selectQuery, ref List<SelectQuery>? doNotRemoveQueries)
 		{
-			var optimized = false;
+			var isModified     = false;
 
-			foreach (var table in selectQuery.From.Tables)
+			for (var i = selectQuery.From.Tables.Count - 1; i >= 0; i--)
 			{
-				foreach (var join in table.Joins)
+				var table = selectQuery.From.Tables[i];
+
+				for (var index = 0; index < table.Joins.Count; index++)
 				{
-					if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply || join.JoinType == JoinType.FullApply || join.JoinType == JoinType.RightApply)
+					var join = table.Joins[index];
+
+					if (join.JoinType is JoinType.CrossApply or JoinType.OuterApply or JoinType.FullApply or JoinType.RightApply)
 					{
-						if (OptimizeApply(selectQuery, join, isApplySupported))
+						if (OptimizeApplyJoin(join, doNotEmulate : true))
 						{
-							optimized = true;
+							isModified = true;
 						}
+					}
+
+					// First run
+					if (MoveSingleOuterJoinToSubQuery(selectQuery, join, ref doNotRemoveQueries, processMultiColumn : false, deduplicate : join.JoinType is JoinType.OuterApply && !_providerFlags.IsApplyJoinSupported, out var modified))
+					{
+						table.Joins.RemoveAt(index);
+
+						isModified = true;
+
+						--index;
+						continue;
+					}
+
+					isModified = isModified || modified;
+
+					if (join.JoinType is JoinType.CrossApply or JoinType.OuterApply or JoinType.FullApply or JoinType.RightApply)
+					{
+						if (OptimizeApplyJoin(join, doNotEmulate : false))
+						{
+							isModified = true;
+						}
+					}
+
+					if (!_providerFlags.IsApplyJoinSupported && join.JoinType is JoinType.OuterApply)
+					{
+						// last chance to remove apply join before finalizing query.
+						if (MoveSingleOuterJoinToSubQuery(selectQuery, join, ref doNotRemoveQueries, processMultiColumn : true, deduplicate : true, out modified))
+						{
+							table.Joins.RemoveAt(index);
+							OptimizeInnerQueries(selectQuery, doNotRemoveQueries);
+
+							isModified = true;
+
+							--index;
+							continue;
+						}
+
+						isModified = isModified || modified;
 					}
 				}
 			}
 
-			return optimized;
+			if (isModified)
+			{
+				EnsureReferencesCorrected(selectQuery);
+				_columnNestingCorrector.CorrectColumnNesting(selectQuery);
+
+				OptimizeInnerQueries(selectQuery, doNotRemoveQueries);
+			}
+
+			return isModified;
 		}
 
-		void CorrectEmptyInnerJoinsRecursive(SelectQuery selectQuery)
+		void RemoveNonUsedOuterJoins(SelectQuery selectQuery)
+		{
+			for (var i = selectQuery.From.Tables.Count - 1; i >= 0; i--)
+			{
+				var table = selectQuery.From.Tables[i];
+
+				for (var index = table.Joins.Count - 1; index >= 0; index--)
+				{
+					var join = table.Joins[index];
+
+					if (join.JoinType is not (JoinType.Left or JoinType.OuterApply))
+					{
+						continue;
+					}
+
+					if (!QueryHelper.IsDependsOnSource(selectQuery, join.Table.Source, [join]) && IsRemovableJoin(join))
+					{
+						table.Joins.RemoveAt(index);
+					}
+				}
+			}
+		}
+
+			void CorrectEmptyInnerJoinsRecursive(SelectQuery selectQuery)
 		{
 			selectQuery.Visit(e =>
 			{
@@ -2905,10 +2989,17 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		void MoveDuplicateUsageToSubQuery(SelectQuery query, ref List<SelectQuery>? doNotRemoveQueries)
 		{
-			var subQuery = MoveTablesToSubQuery(query);
+			var subQuery = new SelectQuery();
 
 			doNotRemoveQueries ??= new();
 			doNotRemoveQueries.Add(subQuery);
+
+			subQuery.From.Tables.AddRange(query.From.Tables);
+
+			query.Select.From.Tables.Clear();
+			_ = query.Select.From.Table(subQuery);
+
+			_columnNestingCorrector.CorrectColumnNesting(query);
 		}
 
 		void MoveToSubQuery(SelectQuery query)
@@ -2963,237 +3054,190 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return subQuery;
 		}
 
-		bool MoveOuterJoinsToSubQuery(SelectQuery selectQuery, ref List<SelectQuery>? doNotRemoveQueries, bool processMultiColumn)
+		bool MoveSingleOuterJoinToSubQuery(SelectQuery parentQuery, SqlJoinedTable join, ref List<SelectQuery>? doNotRemoveQueries, bool processMultiColumn, bool deduplicate, out bool isModified)
 		{
-			var currentVersion = _version;
+			isModified = false;
 
-			var isModified        = false;
-			var isMovedToSubquery = false;
-
-			EvaluationContext? evaluationContext = null;
-
-			var selectQueries = QueryHelper.EnumerateAccessibleSources(selectQuery).OfType<SelectQuery>().ToList();
-			foreach (var sq in selectQueries)
+			if (!(join.JoinType == JoinType.OuterApply ||
+			      join.JoinType == JoinType.Left       ||
+			      join.JoinType == JoinType.CrossApply ||
+			      join.JoinType == JoinType.Inner
+				  ))
 			{
-				for (var ti = 0; ti < sq.From.Tables.Count; ti++)
+				return false;
+			}
+
+			var joinQuery       = join.Table.Source as SelectQuery;
+			if (joinQuery == null || joinQuery.Select.Columns.Count == 0)
+			{
+				return false;
+			}
+
+			bool? isSingleRecord = null;
+
+			if (join.JoinType is JoinType.CrossApply or JoinType.Inner)
+			{
+				if (!join.IsSubqueryExpression)
 				{
-					var table = sq.From.Tables[ti];
+					return false;
+				}
 
-					for (int j = table.Joins.Count - 1; j >= 0; j--)
+				isSingleRecord = true;
+			}
+
+			var evaluationContext = new EvaluationContext();
+
+			if (joinQuery.Select.Columns.Count > 1)
+			{
+				if (!processMultiColumn)
+					return false;
+
+				if (join.JoinType == JoinType.Left)
+				{
+					if (_providerFlags.IsSupportsJoinWithoutCondition || join.Condition.Predicates.Count > 0)
+						return false;
+				}
+
+				if (_providerFlags.IsApplyJoinSupported)
+				{
+					// provider can handle this query
+					return false;
+				}
+			}
+
+			if (!(isSingleRecord == true || IsLimitedToOneRecord(parentQuery, joinQuery, evaluationContext)))
+				return false;
+
+			// do not move to subquery expression if update table in the query.
+			if (_updateTable != null && joinQuery.HasElement(_updateTable))
+				return false;
+
+			var isNoTableQuery = joinQuery.From.Tables.Count == 0;
+
+			if (!isNoTableQuery)
+			{
+				if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery: parentQuery, fakeJoin: null, columnSubqueryLevel: 0, _providerFlags, out _))
+					return false;
+			}
+
+			if (joinQuery.Select.Columns.Count > 1 && joinQuery.Select.IsDistinct)
+			{
+				if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery: parentQuery, fakeJoin: null, columnSubqueryLevel: 1, _providerFlags, out _))
+					return false;
+
+				MoveToSubQuery(joinQuery);
+			}
+
+			foreach (var testedColumn in joinQuery.Select.Columns)
+			{
+				// where we can start analyzing that we can move join to subquery
+
+				var usageCount = CountUsage(parentQuery, testedColumn);
+				var isUnique   = usageCount <= 1;
+
+				if (!isUnique && !deduplicate)
+				{
+					return false;
+				}
+
+				if (!isUnique)
+				{
+					if (join.JoinType == JoinType.Left)
 					{
-						var join            = table.Joins[j];
-						var joinQuery       = join.Table.Source as SelectQuery;
+						return false;
+					}
 
-						if (join.JoinType == JoinType.OuterApply ||
-						    join.JoinType == JoinType.Left       ||
-						    join.JoinType == JoinType.CrossApply)
+					if (_updateQuery != parentQuery)
+					{
+						if (SqlProviderHelper.IsValidQuery(joinQuery, parentQuery : parentQuery, fakeJoin : null, columnSubqueryLevel : 1, _providerFlags, out _))
 						{
-							bool? isSingleRecord = null;
+							MoveDuplicateUsageToSubQuery(parentQuery, ref doNotRemoveQueries);
 
-							if (join.JoinType == JoinType.CrossApply)
-							{
-								if ((join.Cardinality & SourceCardinality.One) != 0)
-								{
-									if (join.IsSubqueryExpression)
-										isSingleRecord = true;
-								}
-
-								if (_applySelect is null && isSingleRecord is null)
-								{
-									continue;
-								}
-							}
-
-							evaluationContext ??= new EvaluationContext();
-
-							if (joinQuery != null && joinQuery.Select.Columns.Count > 0)
-							{
-								if (joinQuery.Select.Columns.Count > 1)
-								{
-									if (!processMultiColumn)
-										continue;
-
-									if (join.JoinType == JoinType.Left)
-									{
-										if (_providerFlags.IsSupportsJoinWithoutCondition || join.Condition.Predicates.Count > 0)
-											continue;
-									}
-
-									if (_providerFlags.IsApplyJoinSupported)
-									{
-										// provider can handle this query
-										continue;
-									}
-
-									if (joinQuery.Select.IsDistinct)
-									{
-										if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery: sq, fakeJoin: null, columnSubqueryLevel: 1, _providerFlags, out _))
-											continue;
-
-										MoveToSubQuery(joinQuery);
-										--j; // will be processed in the next step
-										continue;
-									}
-								}
-
-								if (!(isSingleRecord == true || IsLimitedToOneRecord(sq, joinQuery, evaluationContext)))
-									continue;
-
-								// do not move to subquery expression if update table in the query.
-								if (_updateTable != null && joinQuery.HasElement(_updateTable))
-									continue;
-
-								var isNoTableQuery = joinQuery.From.Tables.Count == 0;
-
-								if (!isNoTableQuery)
-								{
-									if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery : sq, fakeJoin : null, columnSubqueryLevel : 0, _providerFlags, out _))
-										continue;
-								}
-
-								var isValid = true;
-
-								foreach (var testedColumn in joinQuery.Select.Columns)
-								{
-									// where we can start analyzing that we can move join to subquery
-
-									var usageCount = CountUsage(sq, testedColumn);
-									var isUnique   = usageCount <= 1;
-
-									if (!isUnique)
-									{
-										if (!processMultiColumn || join.JoinType == JoinType.Left)
-										{
-											isValid = false;
-											break;
-										};
-
-										if (_providerFlags.IsApplyJoinSupported)
-										{
-											if (_updateQuery == sq)
-											{
-												// updating query - cannot move multi column usage to subquery
-												isValid = false;
-												break;
-											}
-
-											MoveDuplicateUsageToSubQuery(sq, ref doNotRemoveQueries);
-											// will be processed in the next step
-											ti         = -1;
-											isValid    = false;
-											isModified = true;
-											break;
-										}
-									}
-
-									if (usageCount == 1 && !IsInSelectPart(sq, testedColumn))
-									{
-										var moveToSubquery = IsInOrderByPart(sq, testedColumn) && !_providerFlags.IsSubQueryOrderBySupported;
-										if (moveToSubquery)
-										{
-											MoveToSubQuery(sq);
-											// will be processed in the next step
-											ti         = -1;
-											isValid    = false;
-											isModified = true;
-											break;
-										}
-									}
-
-									if (QueryHelper.IsAggregationFunction(testedColumn.Expression))
-									{
-										if (!_providerFlags.AcceptsOuterExpressionInAggregate && IsInsideAggregate(sq.Select, testedColumn))
-										{
-											if (_providerFlags.IsApplyJoinSupported)
-											{
-												// Well, provider can process this query as OUTER APPLY
-												isValid = false;
-												break;
-											}
-
-											MoveToSubQuery(sq);
-											// will be processed in the next step
-											ti      = -1;
-											isValid = false;
-											break;
-										}
-
-										if (!_providerFlags.IsCountSubQuerySupported)
-										{
-											isValid = false;
-											break;
-										}
-									}
-								}
-
-								if (!isValid)
-									continue;
-
-								// moving whole join to subquery
-
-								table.Joins.RemoveAt(j);
-								joinQuery.Where.ConcatSearchCondition(join.Condition);
-
-								// replacing column with subquery
-
-								for (var index = joinQuery.Select.Columns.Count - 1; index >= 0; index--)
-								{
-									var queryToReplace = joinQuery;
-									var testedColumn   = joinQuery.Select.Columns[index];
-
-									// cloning if there are many columns
-									if (index > 0)
-									{
-										queryToReplace = joinQuery.Clone();
-									}
-
-									if (queryToReplace.Select.Columns.Count > 1)
-									{
-										var sourceColumn = queryToReplace.Select.Columns[index];
-										queryToReplace.Select.Columns.Clear();
-										queryToReplace.Select.Columns.Add(sourceColumn);
-									}
-
-									isMovedToSubquery = true;
-									isModified        = true;
-
-									NotifyReplaced(queryToReplace, testedColumn);
-								}
-							}
+							// will be processed in the next step
+							isModified = true;
 						}
+					}
+				}
+
+				if (usageCount == 1 && !IsInSelectPart(parentQuery, testedColumn))
+				{
+					var moveToSubquery = IsInOrderByPart(parentQuery, testedColumn) && !_providerFlags.IsSubQueryOrderBySupported;
+					if (moveToSubquery)
+					{
+						MoveToSubQuery(parentQuery);
+						isModified = true;
+					}
+				}
+
+				if (QueryHelper.IsAggregationFunction(testedColumn.Expression))
+				{
+					if (!_providerFlags.AcceptsOuterExpressionInAggregate && IsInsideAggregate(parentQuery.Select, testedColumn))
+					{
+						if (_providerFlags.IsApplyJoinSupported)
+						{
+							return false;
+						}
+
+						MoveToSubQuery(parentQuery);
+						isModified = true;
+					}
+
+					if (!_providerFlags.IsCountSubQuerySupported)
+					{
+						return false;
 					}
 				}
 			}
 
-			if (_version != currentVersion)
+			// moving whole join to subquery
+
+			joinQuery.Where.ConcatSearchCondition(join.Condition);
+
+			// replacing column with subquery
+
+			for (var index = joinQuery.Select.Columns.Count - 1; index >= 0; index--)
 			{
-				EnsureReferencesCorrected(selectQuery);
+				var queryToReplace = joinQuery;
+				var testedColumn   = joinQuery.Select.Columns[index];
 
-				_columnNestingCorrector.CorrectColumnNesting(selectQuery);
+				// cloning if there are many columns
+				if (index > 0)
+				{
+					queryToReplace = joinQuery.Clone();
+				}
 
-				isModified = true;
+				if (queryToReplace.Select.Columns.Count > 1)
+				{
+					var sourceColumn = queryToReplace.Select.Columns[index];
+					queryToReplace.Select.Columns.Clear();
+					queryToReplace.Select.Columns.Add(sourceColumn);
+				}
+
+				isModified        = true;
+
+				NotifyReplaced(queryToReplace, testedColumn);
 			}
 
-			if (isMovedToSubquery)
-			{
-				var queries = QueryHelper.EnumerateAccessibleSources(selectQuery).OfType<SelectQuery>().ToList();
-				foreach (var sq in queries)
-				{
-					var nullabilityContext = NullabilityContext.GetContext(sq);
-					foreach (var column in sq.Select.Columns)
-					{
-						var optimized = _expressionOptimizerVisitor.Optimize(_evaluationContext, nullabilityContext, null, _dataOptions, _mappingSchema, column.Expression, visitQueries: false, reducePredicates: false);
+			return true;
+		}
 
-						if (!ReferenceEquals(optimized, column.Expression))
-						{
-							column.Expression = (ISqlExpression)optimized;
-							doNotRemoveQueries?.Clear();
-						}
+		void OptimizeInnerQueries(SelectQuery selectQuery, List<SelectQuery>? doNotRemoveQueries)
+		{
+			var queries = QueryHelper.EnumerateAccessibleSources(selectQuery).OfType<SelectQuery>().ToList();
+			foreach (var sq in queries)
+			{
+				var nullabilityContext = NullabilityContext.GetContext(sq);
+				foreach (var column in sq.Select.Columns)
+				{
+					var optimized = _expressionOptimizerVisitor.Optimize(_evaluationContext, nullabilityContext, null, _dataOptions, _mappingSchema, column.Expression, visitQueries: false, reducePredicates: false);
+
+					if (!ReferenceEquals(optimized, column.Expression))
+					{
+						column.Expression = (ISqlExpression)optimized;
+						doNotRemoveQueries?.Clear();
 					}
 				}
 			}
-
-			return isModified;
 		}
 
 		protected internal override IQueryElement VisitCteClause(CteClause element)
@@ -3244,6 +3288,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 				}
 			}
+
+			RemoveNonUsedOuterJoins(sq);
 
 			return predicate;
 		}
