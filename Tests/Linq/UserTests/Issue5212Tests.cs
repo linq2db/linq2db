@@ -19,10 +19,11 @@ namespace Tests.UserTests
 
 		static Issue5212Tests()
 		{
-			Expressions.MapUnary<int, int>((v) => -v, (v) => UnaryTest(v));
+			//Expressions.MapUnary<int, int>((v) => -v, (v) => UnaryTest(v));
 		}
 
-		[Test]
+		//[Test]
+		//Test disabled, cause MapUnary/MapBinary calls could not be removed and could so break other tests.
 		public void MapUnary([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
