@@ -223,6 +223,10 @@ namespace LinqToDB.Internal.SqlQuery
 				{
 					return ((SqlField)expr).ColumnDescriptor;
 				}
+				case QueryElementType.SqlCast:
+				{
+					return GetColumnDescriptor(((SqlCastExpression)expr).Expression);
+				}
 				case QueryElementType.SqlExpression:
 				{
 					var sqlExpr = (SqlExpression)expr;
@@ -241,6 +245,8 @@ namespace LinqToDB.Internal.SqlQuery
 				{
 					var binary = (SqlBinaryExpression)expr;
 					var found = GetColumnDescriptor(binary.Expr1) ?? GetColumnDescriptor(binary.Expr2);
+					if (binary.SystemType == typeof(TimeSpan)) //TODO: special case when TimeSpan is Mapped to Int, then the check below returns false.
+						return found;
 					if (found?.GetDbDataType(true).SystemType != binary.SystemType)
 						return null;
 					return found;
@@ -396,6 +402,21 @@ namespace LinqToDB.Internal.SqlQuery
 			}
 
 			return commonType ?? SqlDataType.MakeUndefined(typeof(object)).Type;
+		}
+
+		public static DbDataType GetExpressionType(this ISqlExpression expr)
+		{
+			switch (expr.ElementType)
+			{
+				case QueryElementType.SqlParameter: return ((SqlParameter)expr).Type;
+				case QueryElementType.SqlValue: return ((SqlValue)expr).ValueType;
+			}
+
+			var descriptor = GetColumnDescriptor(expr);
+			if (descriptor != null)
+				return descriptor.GetDbDataType(true);
+
+			return new DbDataType(expr.SystemType!);
 		}
 
 		public static DbDataType GetDbDataType(ISqlExpression expr, MappingSchema mappingSchema)
