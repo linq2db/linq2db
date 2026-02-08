@@ -765,3 +765,11 @@ dotnet_diagnostic.MA0176.severity = none
 # LindhartAnalyserMissingAwaitWarningVariable: Possible unwanted Task returned from method.
 dotnet_diagnostic.LindhartAnalyserMissingAwaitWarningVariable.severity = error
 ################################################################################################
+# AsyncFixer: https://github.com/semihokur/AsyncFixer
+################################################################################################
+dotnet_diagnostic.AsyncFixer01.severity = error # Unnecessary async/await usage
+dotnet_diagnostic.AsyncFixer02.severity = error # Blocking calls inside async methods
+dotnet_diagnostic.AsyncFixer03.severity = error # Async void methods and delegates
+dotnet_diagnostic.AsyncFixer04.severity = error # Unawaited async call in using block
+dotnet_diagnostic.AsyncFixer05.severity = error # Nested Task from TaskFactory.StartNew
+dotnet_diagnostic.AsyncFixer06.severity = error # Task<T> to Task implicit conversion
