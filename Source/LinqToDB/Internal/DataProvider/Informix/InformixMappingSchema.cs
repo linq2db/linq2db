@@ -43,6 +43,39 @@ namespace LinqToDB.Internal.DataProvider.Informix
 #if SUPPORTS_DATEONLY
 			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
 #endif
+			SetConvertExpression((string v) => StringToTimeSpan(v));
+		}
+
+		private static TimeSpan StringToTimeSpan(string raw)
+		{
+			if (long.TryParse(raw, NumberStyles.Integer | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var ticks))
+				return TimeSpan.FromTicks(ticks);
+
+			var days = 0;
+#if NETSTANDARD2_1
+			var parts = raw.AsSpan();
+#else
+			var parts = raw;
+#endif
+			var idx = parts.IndexOf(' ');
+			if (idx > 0)
+			{
+				days = int.Parse(parts[0..idx], NumberStyles.None, CultureInfo.InvariantCulture);
+#if NETSTANDARD2_1
+				parts = parts.Slice(idx + 1);
+#else
+				parts = parts.Substring(idx + 1);
+#endif
+			}
+
+			var hours = int.Parse(parts[0..2], NumberStyles.None, CultureInfo.InvariantCulture);
+			var minutes = int.Parse(parts[3..5], NumberStyles.None, CultureInfo.InvariantCulture);
+			var seconds = int.Parse(parts[6..8], NumberStyles.None, CultureInfo.InvariantCulture);
+			var decimalPart = decimal.Parse(parts[8..], NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture);
+			var miliseconds = (int)(decimalPart * 1000);
+			ticks = (int)((decimalPart * 1000 - miliseconds) * 10000);
+
+			return new TimeSpan(days, hours, minutes, seconds, miliseconds).Add(TimeSpan.FromTicks(ticks)); ;
 		}
 
 		private static void BuildIntervalLiteral(StringBuilder sb, TimeSpan interval)
