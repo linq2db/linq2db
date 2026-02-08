@@ -117,7 +117,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						return result;
 					}
 
-					if (flags.IsTable() || flags.IsAssociationRoot())
+					if (flags.IsTable())
 					{
 						if (InnerContext != null)
 							return new ContextRefExpression(InnerContext.ElementType, InnerContext);

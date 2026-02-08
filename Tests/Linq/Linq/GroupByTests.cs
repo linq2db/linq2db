@@ -3879,7 +3879,7 @@ namespace Tests.Linq
 				public int ReferenceId { get; set; }
 
 				[Association(ThisKey = nameof(ReferenceId), OtherKey = nameof(Reference.Id), CanBeNull = false)]
-				public Reference Reference => throw new InvalidOperationException();
+				public Reference Reference { get; set; } = null!;
 			}
 
 			[Table]
@@ -3893,6 +3893,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ThrowsRequiredOuterJoins(TestProvName.AllAccess, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSybase)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5317")]
 		public void Issue5317Test([DataSources] string context)
 		{
@@ -3900,7 +3901,7 @@ namespace Tests.Linq
 			using var tb = db.CreateLocalTable<Issue5317.TestTable>();
 			using var tr = db.CreateLocalTable<Issue5317.Reference>();
 
-			var query = from t1 in tb
+			var query = from t1 in tb.LoadWith(x => x.Reference) // for AssertQuery
 						join t2 in tb on t1.Id equals t2.Id into g
 						from t2 in g.DefaultIfEmpty()
 						group new { t1 } by t1.Id into g
@@ -3909,7 +3910,7 @@ namespace Tests.Linq
 							ReferenceName = g.First().t1.Reference.Name
 						};
 
-			query.ToArray();
+			AssertQuery(query);
 		}
 
 		sealed class Issue5327Table
