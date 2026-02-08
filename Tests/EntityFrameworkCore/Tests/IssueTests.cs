@@ -1038,6 +1038,44 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			using var db = ctx.CreateLinqToDBConnection();
 		}
+
+		sealed record DepartmentCTE(int Id, int? ParentId, int HierarchyLevel);
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5267")]
+		public async ValueTask Issue5267Test([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			ctx.Issue5267CurrentTenantId = null;
+
+			var depId = 1;
+			using var db = ctx.CreateLinqToDBContext();
+			var departmentCte = db.GetCte<DepartmentCTE>(deptCte =>
+			{
+				return
+				(
+					from d in ctx.Issue5267Departments
+					where d.Id == depId
+					select new DepartmentCTE(d.Id, d.ParentGuid, 0)
+				)
+				.Concat
+				(
+					from d in ctx.Issue5267Departments
+					join dc in deptCte on d.ParentGuid equals dc.Id
+					select new DepartmentCTE(d.Id, d.ParentGuid, dc.HierarchyLevel+1)
+				);
+			});
+
+			var roleQuery = from r in ctx.Issue5267Roles
+							join d in departmentCte on r.DepartmentId equals d.Id
+							select new
+							{
+								r.Id,
+								r.DepartmentId
+							};
+
+			_ = await roleQuery.ToListAsyncLinqToDB();
+		}
 	}
 
 	#region Test Extensions
