@@ -148,7 +148,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					result = Builder.Project(this, path, null, 0, flags, Body, true);
 					if (result is not SqlErrorExpression)
+					{
 						return result;
+					}
 				}
 
 				result = Body;

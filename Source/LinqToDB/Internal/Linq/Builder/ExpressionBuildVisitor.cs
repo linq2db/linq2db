@@ -532,6 +532,11 @@ namespace LinqToDB.Internal.Linq.Builder
 				return GetCacheRootContext(methodCallExpression.Arguments[0]);
 			}
 
+			if (expression is ContextRefExpression { BuildContext: DefaultIfEmptyBuilder.DefaultIfEmptyContext })
+			{
+				return null;
+			}
+
 			return expression as ContextRefExpression;
 		}
 
@@ -2568,6 +2573,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (node is ContextRefExpression contextRef)
 				calculatedContext = contextRef.BuildContext;
 
+			var onContext = calculatedContext;
+
 			var traversed = BuildExpression(node, BuildPurpose.Traverse);
 
 			if (_disableSubqueries.Contains(traversed, ExpressionEqualityComparer.Instance))
@@ -2578,12 +2585,19 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (cacheRoot != null)
 			{
 				calculatedContext = cacheRoot.BuildContext;
+				onContext         = calculatedContext;
 			}
 			else
 			{
 				var root = BuildAggregationRoot(new ContextRefExpression(calculatedContext.ElementType, calculatedContext)) as ContextRefExpression;
 				if (root != null)
+				{
 					calculatedContext = root.BuildContext;
+					if (calculatedContext is GroupByBuilder.GroupByContext)
+					{
+						onContext = calculatedContext;
+					}
+				}
 			}
 
 			var cacheKey = new ExprCacheKey(traversed, null, null, calculatedContext.SelectQuery, ProjectFlags.SQL | ProjectFlags.Subquery);
@@ -2596,7 +2610,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			_disableSubqueries.Push(traversed);
 			_disableSubqueries.Push(node);
-			var ctx = GetSubQuery(node, out var isSequence, out var errorMessage);
+			var ctx = GetSubQuery(node, onContext, out var isSequence, out var errorMessage);
 			_disableSubqueries.Pop();
 			_disableSubqueries.Pop();
 
@@ -5104,9 +5118,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		int _gettingSubquery;
 
-		public IBuildContext? GetSubQuery(Expression expr, out bool isSequence, out string? errorMessage)
+		public IBuildContext? GetSubQuery(Expression expr, IBuildContext onContext, out bool isSequence, out string? errorMessage)
 		{
-			var info = new BuildInfo(BuildContext, expr, new SelectQuery())
+			var info = new BuildInfo(onContext, expr, new SelectQuery())
 			{
 				CreateSubQuery = true,
 				IsSubqueryExpression = true
@@ -5137,7 +5151,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (_gettingSubquery == 0)
 				{
 					++_gettingSubquery;
-					var isSupported = Builder.IsSupportedSubquery(BuildContext!, buildResult.BuildContext, out errorMessage);
+					var isSupported = Builder.IsSupportedSubquery(onContext, buildResult.BuildContext, out errorMessage);
 					--_gettingSubquery;
 					if (!isSupported)
 					{

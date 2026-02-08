@@ -88,12 +88,19 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (RootContext == null)
 					throw new InvalidOperationException("Root context is not set for aggregation function.");
 
+				var onContext = RootContext;
+
+				if (IsGroupBy && onContext.BuildContext is GroupByBuilder.GroupByContext groupBy)
+				{
+					onContext = SequenceHelper.CreateRef(groupBy.Element);
+				}
+
 				var paramToReplace = lambda.Parameters[parameterIndex];
 				var newBody = lambda.Body.Transform(e =>
 				{
 					if (e == paramToReplace)
 					{
-						var contextTyped = RootContext.WithType(e.Type);
+						var contextTyped = onContext.WithType(e.Type);
 						return contextTyped;
 					}
 
@@ -394,6 +401,22 @@ namespace LinqToDB.Internal.Linq.Builder
 			return executeExpression;
 		}
 
+		Expression TraverseToAggregate(Expression expression)
+		{
+			var root = BuildTraverseExpression(expression);
+
+			if (root is ContextRefExpression refExpression)
+			{
+				// See Issue4458Test1, Issue4458Test2
+				if (refExpression.BuildContext is DefaultIfEmptyBuilder.DefaultIfEmptyContext defaultIfEmpty)
+				{
+					return TraverseToAggregate(SequenceHelper.CreateRef(defaultIfEmpty.Sequence));
+				}
+			}
+
+			return root;
+		}
+
 		public Expression? BuildAggregationFunction( 
 			int                                                       sequenceExpressionIndex,
 			Expression                                                functionExpression,
@@ -420,7 +443,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (current is ContextRefExpression refExpression)
 				{
-					var root = BuildTraverseExpression(current);
+					var root = TraverseToAggregate(current);
 					if (ExpressionEqualityComparer.Instance.Equals(root, current))
 					{
 						contextRef = refExpression;

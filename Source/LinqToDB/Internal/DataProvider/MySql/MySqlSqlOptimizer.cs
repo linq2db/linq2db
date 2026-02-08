@@ -59,6 +59,11 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					return false;
 				}
 
+				if (e is SqlJoinedTable)
+				{
+					return false;
+				}
+
 				if (e is SqlTableSource ts)
 				{
 					if (ts.Source is SqlTable table 

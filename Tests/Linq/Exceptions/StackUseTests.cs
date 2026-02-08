@@ -119,7 +119,7 @@ namespace Tests.Exceptions
 			const int LKG_SIZE = 200 * 1024;
 #else
 			// initial: 390K
-			const int LKG_SIZE = 190 * 1024;
+			const int LKG_SIZE = 200 * 1024;
 #endif
 			var thread = new Thread(ThreadBody, LKG_SIZE);
 			thread.Start();

@@ -65,7 +65,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (SequenceHelper.IsSameContext(path, this) && (flags.IsRoot() || flags.IsAssociationRoot()))
+				if (flags.IsTraverse() || flags.IsRoot() || flags.IsAssociationRoot())
 					return path;
 
 				var corrected = SequenceHelper.CorrectExpression(path, this, Context);
