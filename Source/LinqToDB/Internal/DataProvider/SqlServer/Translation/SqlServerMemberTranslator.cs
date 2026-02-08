@@ -110,7 +110,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 				if (datepart == Sql.DateParts.Tick)
 				{
-					fragment = factory.Div(fragment, 10);
+					increment = factory.Div(increment, 10);
 				}
 
 				var resultExpression = factory.Function(dateType, "DateAdd", fragment, increment, dateTimeExpression);

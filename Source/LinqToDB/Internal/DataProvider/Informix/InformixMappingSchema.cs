@@ -75,7 +75,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			var miliseconds = (int)(decimalPart * 1000);
 			ticks = (int)((decimalPart * 1000 - miliseconds) * 10000);
 
-			return new TimeSpan(days, hours, minutes, seconds, miliseconds).Add(TimeSpan.FromTicks(ticks)); ;
+			return new TimeSpan(days, hours, minutes, seconds, miliseconds).Add(TimeSpan.FromTicks(ticks));
 		}
 
 		private static void BuildIntervalLiteral(StringBuilder sb, TimeSpan interval)
