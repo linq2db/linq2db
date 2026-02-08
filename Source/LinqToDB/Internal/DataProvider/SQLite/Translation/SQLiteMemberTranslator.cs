@@ -79,7 +79,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 						return result;
 					}	
 					default:
-						return null;
+						throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented");
 				}
 
 				var resultExpression = StrFTimeInt(factory, intDbType, stringDbType, partStr, dateTimeExpression);
@@ -127,7 +127,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 					case Sql.DateParts.Second:      dateExpr = factory.Concat(CastToString(increment), " Second"); break;
 					case Sql.DateParts.Millisecond: dateExpr = factory.Concat(CastToString(factory.Div(doubleDbType, factory.Cast(increment, doubleDbType), 1000)), " Second"); break;
 					default:
-						return null;
+						throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented");
 				}
 
 				var resultExpression = factory.Function(dateType, StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(stringDbType, DateFormat), dateTimeExpression, dateExpr);

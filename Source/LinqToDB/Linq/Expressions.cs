@@ -1155,6 +1155,71 @@ namespace LinqToDB.Linq
 
 		#endregion
 
+		/// <summary>
+		/// Enables TimespanMapping to an Interval Type (instead of the Time Type in the datbases)
+		/// If you do so, you need to also add a mapping according the interval type of your database
+		/// in your mapping schema, with
+		/// mappingSchema.AddScalarType(typeof(TimeSpan), DataType.Int64);
+		/// or
+		/// mappingSchema.AddScalarType(typeof(TimeSpan), DataType.Interval);
+		/// </summary>
+		public static void AddTimeSpanMappings()
+		{
+			Common.Configuration.Sql.Options = Common.Configuration.Sql.Options with { DisableBuiltInTimeSpanConversion = true };
+			MapMember<TimeSpan>(p => p.Days,              (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.Days,              p)!.Value));
+			MapMember<TimeSpan>(p => p.TotalDays,         (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.TotalDays,         p)!.Value));
+			MapMember<TimeSpan>(p => p.Hours,             (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.Hours,             p)!.Value));
+			MapMember<TimeSpan>(p => p.TotalHours,        (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.TotalHours,        p)!.Value));
+			MapMember<TimeSpan>(p => p.Minutes,           (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.Minutes,           p)!.Value));
+			MapMember<TimeSpan>(p => p.TotalMinutes,      (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.TotalMinutes,      p)!.Value));
+			MapMember<TimeSpan>(p => p.Seconds,           (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.Seconds,           p)!.Value));
+			MapMember<TimeSpan>(p => p.TotalSeconds,      (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.TotalSeconds,      p)!.Value));
+			MapMember<TimeSpan>(p => p.Milliseconds,      (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.Milliseconds,      p)!.Value));
+			MapMember<TimeSpan>(p => p.TotalMilliseconds, (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.TotalMilliseconds, p)!.Value));
+
+#if NET7_0_OR_GREATER
+			MapMember<TimeSpan>(p => p.Microseconds,      (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.Microseconds,      p)!.Value));
+			MapMember<TimeSpan>(p => p.TotalMicroseconds, (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.TotalMicroseconds, p)!.Value));
+			MapMember<TimeSpan>(p => p.Nanoseconds,       (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.Nanoseconds,       p)!.Value));
+			MapMember<TimeSpan>(p => p.TotalNanoseconds,  (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.TotalNanoseconds,  p)!.Value));
+#endif
+
+			MapBinary((DateTime  d, DateTime  t) => d - t, (d, t) => Sql.DateDiffInterval(t, d)!.Value);
+			MapBinary((DateTime  d, DateTime? t) => d - t, (d, t) => Sql.DateDiffInterval(t, d)!.Value);
+			MapBinary((DateTime? d, DateTime  t) => d - t, (d, t) => Sql.DateDiffInterval(t, d)!.Value);
+			MapBinary((DateTime? d, DateTime? t) => d - t, (d, t) => Sql.DateDiffInterval(t, d)!.Value);
+
+			MapBinary((DateTimeOffset  d, DateTimeOffset  t) => d - t, (d, t) => Sql.DateDiffInterval(t, d)!.Value);
+			MapBinary((DateTimeOffset  d, DateTimeOffset? t) => d - t, (d, t) => Sql.DateDiffInterval(t, d)!.Value);
+			MapBinary((DateTimeOffset? d, DateTimeOffset  t) => d - t, (d, t) => Sql.DateDiffInterval(t, d)!.Value);
+			MapBinary((DateTimeOffset? d, DateTimeOffset? t) => d - t, (d, t) => Sql.DateDiffInterval(t, d)!.Value);
+
+			MapBinary((DateTime  d, TimeSpan  t) => d + t, (d, t) => Sql.DateAdd(d, t)!.Value);
+			MapBinary((DateTime  d, TimeSpan? t) => d + t, (d, t) => Sql.DateAdd(d, t)!.Value);
+			MapBinary((DateTime? d, TimeSpan  t) => d + t, (d, t) => Sql.DateAdd(d, t)!.Value);
+			MapBinary((DateTime? d, TimeSpan? t) => d + t, (d, t) => Sql.DateAdd(d, t)!.Value);
+
+			MapBinary((DateTimeOffset  d, TimeSpan  t) => d + t, (d, t) => Sql.DateAdd(d, t)!.Value);
+			MapBinary((DateTimeOffset  d, TimeSpan? t) => d + t, (d, t) => Sql.DateAdd(d, t)!.Value);
+			MapBinary((DateTimeOffset? d, TimeSpan  t) => d + t, (d, t) => Sql.DateAdd(d, t)!.Value);
+			MapBinary((DateTimeOffset? d, TimeSpan? t) => d + t, (d, t) => Sql.DateAdd(d, t)!.Value);
+
+#pragma warning disable IDE0350
+			MapUnary<TimeSpan, TimeSpan?>((TimeSpan   t) => -t, (t) => Sql.NegateInterval(t)!.Value);
+			MapUnary<TimeSpan?, TimeSpan?>((TimeSpan? t) => -t, (t) => Sql.NegateInterval(t)!.Value);
+#pragma warning restore
+
+			MapBinary((DateTime  d, TimeSpan  t) => d - t, (d, t) => Sql.DateAdd(d, -t)!.Value);
+			MapBinary((DateTime  d, TimeSpan? t) => d - t, (d, t) => Sql.DateAdd(d, -t)!.Value);
+			MapBinary((DateTime? d, TimeSpan  t) => d - t, (d, t) => Sql.DateAdd(d, -t)!.Value);
+			MapBinary((DateTime? d, TimeSpan? t) => d - t, (d, t) => Sql.DateAdd(d, -t)!.Value);
+
+			MapBinary((DateTimeOffset  d, TimeSpan  t) => d - t, (d, t) => Sql.DateAdd(d, -t)!.Value);
+			MapBinary((DateTimeOffset  d, TimeSpan? t) => d - t, (d, t) => Sql.DateAdd(d, -t)!.Value);
+			MapBinary((DateTimeOffset? d, TimeSpan  t) => d - t, (d, t) => Sql.DateAdd(d, -t)!.Value);
+			MapBinary((DateTimeOffset? d, TimeSpan? t) => d - t, (d, t) => Sql.DateAdd(d, -t)!.Value);
+		}
+
 		public static void MapMember(string providerName, Type objectType, MemberInfo memberInfo, LambdaExpression expression)
 		{
 			if (!Members.TryGetValue(providerName, out var dic))

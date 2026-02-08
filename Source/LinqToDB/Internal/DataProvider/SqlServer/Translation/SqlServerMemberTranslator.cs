@@ -61,6 +61,9 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 					Sql.DateParts.Minute => "minute",
 					Sql.DateParts.Second => "second",
 					Sql.DateParts.Millisecond => "millisecond",
+					Sql.DateParts.Microsecond => "microsecond",
+					Sql.DateParts.Tick => "microsecond",
+					Sql.DateParts.Nanosecond => "nanosecond",
 					_ => null
 				};
 			}
@@ -70,12 +73,17 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 				var partStr = DatePartToStr(datepart, false);
 
 				if (partStr == null)
-					return null;
+					throw new NotImplementedException($"TranslateDateTimeDatePart for datepart (${datepart}) not implemented");
 
 				var factory   = translationContext.ExpressionFactory;
 				var intDbType = factory.GetDbDataType(typeof(int));
 
 				var resultExpression = factory.Function(intDbType, "DatePart", ParametersNullabilityType.SameAsSecondParameter, factory.NotNullExpression(intDbType, partStr), dateTimeExpression);
+
+				if (datepart == Sql.DateParts.Tick)
+				{
+					resultExpression = factory.Div(resultExpression, 10);
+				}
 
 				return resultExpression;
 			}
@@ -95,10 +103,18 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 
 				if (partStr == null)
 				{
-					return null;
+					throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented");
 				}
 
-				var resultExpression = factory.Function(dateType, "DateAdd", factory.NotNullExpression(factory.GetDbDataType(typeof(string)), partStr), increment, dateTimeExpression);
+				var fragment = factory.NotNullExpression(factory.GetDbDataType(typeof(string)), partStr);
+
+				if (datepart == Sql.DateParts.Tick)
+				{
+					fragment = factory.Div(fragment, 10);
+				}
+
+				var resultExpression = factory.Function(dateType, "DateAdd", fragment, increment, dateTimeExpression);
+
 				return resultExpression;
 			}
 

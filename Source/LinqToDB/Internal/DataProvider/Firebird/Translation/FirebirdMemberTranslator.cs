@@ -92,7 +92,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 					case Sql.DateParts.Second:      partStr = "second"; break;
 					case Sql.DateParts.Millisecond: partStr = "millisecond"; break;
 					default:
-						return null;
+						throw new NotImplementedException($"TranslateDateTimeDatePart for datepart (${datepart}) not implemented");
 				}
 
 				// Cast(Floor(Extract({part} from {date})) as int)

@@ -432,7 +432,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				};
 
 				if (fn == null)
-					return null;
+					throw new NotImplementedException($"TranslateDateTimeDatePart for datepart (${datepart}) not implemented");
 
 				var baseExpr = f.Function(intType, fn, dateTimeExpression);
 
@@ -493,7 +493,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				};
 
 				if (intervalFn == null)
-					return null;
+					throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented");
 
 				if (datepart == Sql.DateParts.Week)
 				{
