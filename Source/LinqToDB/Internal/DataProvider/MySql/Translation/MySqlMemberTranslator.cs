@@ -111,8 +111,12 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 						var microsecondFunc = factory.Div(intDataType, factory.Function(intDataType, "Microsecond", dateTimeExpression), 1000);
 						return microsecondFunc;
 					}
+					case Sql.DateParts.Microsecond:
+					{
+						return factory.Function(intDataType, "Microsecond", dateTimeExpression);
+					}
 					default:
-						return null;
+						throw new NotImplementedException($"TranslateDateTimePart for datepart (${datepart}) not implemented");
 				}
 
 				var extractDbType = intDataType;
@@ -143,7 +147,7 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 					case Sql.DateParts.Second:      expStr = "Interval {0} Second"; break;
 					case Sql.DateParts.Millisecond: expStr = "Interval {0} Millisecond"; break;
 					default:
-						return null;
+						throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented");
 				}
 
 				var resultExpression = factory.Function(dateType, "Date_Add", dateTimeExpression, factory.Expression(intervalType, expStr, increment));

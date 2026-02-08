@@ -149,7 +149,7 @@ namespace LinqToDB.Common
 			/// <summary>
 			/// Default <see cref="LinqOptions"/> options. Automatically synchronized with other settings in <see cref="Linq"/> class.
 			/// </summary>
-			public  static LinqOptions Options
+			public static LinqOptions Options
 			{
 				get => LinqOptions.Default;
 				set => LinqOptions.Default = value;
