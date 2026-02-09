@@ -27,5 +27,7 @@ namespace LinqToDB.Internal.SqlProvider
 		SqlExpressionConvertVisitor        CreateConvertVisitor(bool   allowModify);
 
 		ISqlExpressionFactory CreateSqlExpressionFactory(MappingSchema mappingSchema, DataOptions dataOptions);
+
+		SqlProviderFlags SqlProviderFlags { get; }
 	}
 }

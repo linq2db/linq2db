@@ -28,7 +28,7 @@ namespace LinqToDB.Internal.SqlProvider
 			SqlProviderFlags = sqlProviderFlags;
 		}
 
-		protected SqlProviderFlags SqlProviderFlags { get; }
+		public SqlProviderFlags SqlProviderFlags { get; }
 
 		public virtual bool RequiresCastingParametersForSetOperations => true;
 
@@ -51,16 +51,16 @@ namespace LinqToDB.Internal.SqlProvider
 			FixEmptySelect(statement);
 			FinalizeCte   (statement);
 
-			var evaluationContext = new EvaluationContext(null);
+			var optimizationContext = this.CreateOptimizationContext(mappingSchema, dataOptions);
 
-			statement = (SqlStatement)OptimizeQueries(statement, statement, dataOptions, mappingSchema, evaluationContext);
+			statement = (SqlStatement)OptimizeQueries(statement, statement, optimizationContext);
 
 			if (dataOptions.LinqOptions.OptimizeJoins)
 			{
-				statement = new JoinsOptimizer().Optimize(statement, evaluationContext);
+				statement = new JoinsOptimizer().Optimize(statement, optimizationContext.EvaluationContext);
 
 				// Do it again after JOIN Optimization
-			FinalizeCte(statement);
+				FinalizeCte(statement);
 			}
 
 			statement = FinalizeInsert(statement);
@@ -69,7 +69,7 @@ namespace LinqToDB.Internal.SqlProvider
 			statement = FixSetOperationValues(mappingSchema, statement);
 
 			// provider specific query correction
-			statement = FinalizeStatement(statement, evaluationContext, dataOptions, mappingSchema);
+			statement = FinalizeStatement(statement, optimizationContext.EvaluationContext, dataOptions, mappingSchema);
 
 			return statement;
 		}
@@ -1349,7 +1349,9 @@ namespace LinqToDB.Internal.SqlProvider
 
 				updateStatement = newUpdateStatement;
 
-				OptimizeQueries(updateStatement, updateStatement, dataOptions, mappingSchema, new EvaluationContext());
+				var optimizationContext = this.CreateOptimizationContext(mappingSchema, dataOptions);
+
+				OptimizeQueries(updateStatement, updateStatement, optimizationContext);
 			}
 
 			var (tableSource, _) = FindTableSource(new Stack<IQueryElement>(), updateStatement.SelectQuery, updateStatement.Update.Table!);
@@ -1519,7 +1521,10 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 
 			if (isModified)
-				OptimizeQueries(statement, statement, dataOptions, mappingSchema, new EvaluationContext());
+			{
+				var optimizationContext = this.CreateOptimizationContext(mappingSchema, dataOptions);
+				OptimizeQueries(statement, statement, optimizationContext);
+			}
 
 			statement.Update.Table       = tableToUpdate;
 			statement.Update.TableSource = tableSource;
@@ -1559,7 +1564,9 @@ namespace LinqToDB.Internal.SqlProvider
 							statement.SelectQuery.From.Tables.Insert(0, removedTableSource!);
 						}
 
-						OptimizeQueries(statement, statement, dataOptions, mappingSchema, new EvaluationContext());
+						var optimizationContext = this.CreateOptimizationContext(mappingSchema, dataOptions);
+
+						OptimizeQueries(statement, statement, optimizationContext);
 					}
 					else if (leaveUpdateTableInQuery)
 					{
@@ -1976,7 +1983,7 @@ namespace LinqToDB.Internal.SqlProvider
 				allowMutation: true);
 		}
 
-		protected IQueryElement OptimizeQueries(IQueryElement startFrom, IQueryElement root, DataOptions dataOptions, MappingSchema mappingSchema, EvaluationContext evaluationContext)
+		protected IQueryElement OptimizeQueries(IQueryElement startFrom, IQueryElement root, OptimizationContext optimizationContext)
 		{
 			using var visitor = QueryHelper.SelectOptimizer.Allocate();
 
@@ -1990,7 +1997,7 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 #endif
 
-			var result = visitor.Value.Optimize(startFrom, root, SqlProviderFlags, true, dataOptions, mappingSchema, evaluationContext);
+			var result = visitor.Value.Optimize(startFrom, root, SqlProviderFlags, true, optimizationContext);
 
 #if DEBUG
 			// ReSharper disable once NotAccessedVariable
