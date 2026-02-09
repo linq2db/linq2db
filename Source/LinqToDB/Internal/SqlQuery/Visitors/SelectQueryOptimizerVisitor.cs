@@ -1082,9 +1082,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (!QueryHelper.IsDependsOnOuterSources(joinSource.Source))
 			{
-				if (!_providerFlags.IsSupportsJoinWithoutCondition && joinTable.Condition.IsTrue())
-					return false;
-
 				var newJoinType = ConvertApplyJoinType(joinTable.JoinType);
 
 				joinTable.JoinType = newJoinType;
@@ -2746,7 +2743,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						}
 					}
 
-					if (!_providerFlags.IsApplyJoinSupported && join.JoinType is JoinType.OuterApply)
+					if (!_providerFlags.IsApplyJoinSupported && join.JoinType is JoinType.OuterApply || !_providerFlags.IsSupportsJoinWithoutCondition && join.Condition.IsTrue())
 					{
 						// last chance to remove apply join before finalizing query.
 						if (MoveSingleOuterJoinToSubQuery(selectQuery, join, ref doNotRemoveQueries, processMultiColumn : true, deduplicate : true, out modified))
