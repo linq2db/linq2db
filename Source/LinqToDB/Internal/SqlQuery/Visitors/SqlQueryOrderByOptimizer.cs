@@ -152,6 +152,17 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
+			if (!selectQuery.OrderBy.IsEmpty)
+			{
+				if (selectQuery.From.Tables.Count == 1 && selectQuery.From.Tables[0].Source is SelectQuery sunQuery)
+				{
+					if (sunQuery.HasSetOperators)
+					{
+						RemoveOrderBy(sunQuery, false);
+					}
+				}
+			}
+
 			if (selectQuery.OrderBy.Items.Count > 1)
 			{
 				var previousCount = selectQuery.OrderBy.Items.Count;
