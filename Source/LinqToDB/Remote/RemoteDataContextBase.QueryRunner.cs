@@ -180,7 +180,7 @@ namespace LinqToDB.Remote
 
 				await _dataContext.PreloadConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
 
-				var q = ((IDataContext)_dataContext).GetSqlOptimizer(_dataContext.Options).PrepareStatementForRemoting(queryContext.Statement, ((IDataContext)_dataContext).SqlProviderFlags, _dataContext.MappingSchema, _dataContext.Options, _evaluationContext);
+				var q = ((IDataContext)_dataContext).GetSqlOptimizer(_dataContext.Options).PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _dataContext.Options, _evaluationContext);
 
 				var data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
@@ -212,7 +212,7 @@ namespace LinqToDB.Remote
 
 				await _dataContext.PreloadConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
 
-				var q = ((IDataContext)_dataContext).GetSqlOptimizer(_dataContext.Options).PrepareStatementForRemoting(queryContext.Statement, ((IDataContext)_dataContext).SqlProviderFlags, _dataContext.MappingSchema, _dataContext.Options, _evaluationContext);
+				var q = ((IDataContext)_dataContext).GetSqlOptimizer(_dataContext.Options).PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _dataContext.Options, _evaluationContext);
 
 				var data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
@@ -247,7 +247,7 @@ namespace LinqToDB.Remote
 
 				await _dataContext.PreloadConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
 
-				var q = ((IDataContext)_dataContext).GetSqlOptimizer(_dataContext.Options).PrepareStatementForRemoting(queryContext.Statement, ((IDataContext)_dataContext).SqlProviderFlags, _dataContext.MappingSchema, _dataContext.Options, _evaluationContext);
+				var q = ((IDataContext)_dataContext).GetSqlOptimizer(_dataContext.Options).PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _dataContext.Options, _evaluationContext);
 
 				var data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,

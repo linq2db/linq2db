@@ -7,10 +7,9 @@ namespace LinqToDB.Internal.SqlProvider
 	internal static class SqlOptimizerExtensions
 	{
 		public static SqlStatement PrepareStatementForRemoting(this ISqlOptimizer optimizer, SqlStatement statement,
-			SqlProviderFlags sqlProviderFlags,
 			MappingSchema mappingSchema, DataOptions dataOptions, EvaluationContext evaluationContext)
 		{
-			var optimizationContext = optimizer.CreateOptimizationContext(mappingSchema, dataOptions);
+			var optimizationContext = optimizer.CreateOptimizationContext(mappingSchema, dataOptions, evaluationContext);
 			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
 			var newStatement = optimizationContext.OptimizeAndConvertAll(statement, nullability);
 
@@ -26,9 +25,9 @@ namespace LinqToDB.Internal.SqlProvider
 			return newStatement;
 		}
 
-		public static OptimizationContext CreateOptimizationContext(this ISqlOptimizer sqlOptimizer, MappingSchema mappingSchema, DataOptions dataOptions)
+		public static OptimizationContext CreateOptimizationContext(this ISqlOptimizer sqlOptimizer, MappingSchema mappingSchema, DataOptions dataOptions, EvaluationContext? evaluationContext = null)
 		{
-			var evaluationContext = new EvaluationContext(null);
+			evaluationContext ??= new EvaluationContext(null);
 			var treeOptimizer     = sqlOptimizer.CreateOptimizerVisitor(false);
 			var convertVisitor    = sqlOptimizer.CreateConvertVisitor(false);
 			var factory           = sqlOptimizer.CreateSqlExpressionFactory(mappingSchema, dataOptions);

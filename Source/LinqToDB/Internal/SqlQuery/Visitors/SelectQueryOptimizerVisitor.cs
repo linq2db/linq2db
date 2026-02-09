@@ -1620,12 +1620,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					return false;
 				}
-			}
 
-			if (!subQuery.OrderBy.IsEmpty)
-			{
 				if (QueryHelper.IsAggregationQuery(parentQuery, out var needsOrderBy) && needsOrderBy)
+				{
 					return false;
+				}
 
 				if (parentQuery.Select.IsDistinct)
 				{
