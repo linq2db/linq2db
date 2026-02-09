@@ -1546,7 +1546,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (root is not (SqlErrorExpression or MethodCallExpression or SqlGenericConstructorExpression or SqlPlaceholderExpression))
 					{
-						if (root.Type != node.Expression!.Type && _buildPurpose is BuildPurpose.Table or BuildPurpose.AggregationRoot or BuildPurpose.AssociationRoot)
+						if (root.Type != node.Expression!.Type && _buildPurpose is BuildPurpose.Table or BuildPurpose.AggregationRoot)
 							return Visit(root);
 
 						var updated = node.Update(root);
