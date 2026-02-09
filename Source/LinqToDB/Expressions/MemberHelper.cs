@@ -111,8 +111,9 @@ namespace LinqToDB.Expressions
 				MethodCallExpression { Method.IsSqlPropertyMethod: true } methodCall =>
 					GetSqlPropertyMethodInfo(methodCall),
 
-				NewExpression { NodeType: ExpressionType.New, Type: { } type, Constructor: { } constructor } =>
-					new MemberInfoWithType(type, constructor),
+				NewExpression { NodeType: ExpressionType.New, Type: { } type, Constructor: var constructor } =>
+					// TODO: address to avoid potential bugs from representation as not-null	
+					new MemberInfoWithType(type, constructor!),
 
 				UnaryExpression { NodeType: ExpressionType.ArrayLength, Operand.Type: { } type } =>
 					new MemberInfoWithType(type, type.GetProperty(nameof(Array.Length))!),
