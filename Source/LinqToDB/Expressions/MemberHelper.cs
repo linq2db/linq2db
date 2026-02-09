@@ -14,16 +14,10 @@ namespace LinqToDB.Expressions
 	public static class MemberHelper
 	{
 		[DebuggerDisplay("{Type.Name}.{MemberInfo.Name}")]
-		public struct MemberInfoWithType : IEquatable<MemberInfoWithType>
+		public struct MemberInfoWithType(Type? type, MemberInfo memberInfo) : IEquatable<MemberInfoWithType>
 		{
-			public MemberInfoWithType(Type? type, MemberInfo memberInfo)
-			{
-				Type       = type;
-				MemberInfo = memberInfo;
-			}
-
-			public readonly Type?      Type;
-			public          MemberInfo MemberInfo;
+			public readonly Type?      Type       = type;
+			public          MemberInfo MemberInfo = memberInfo;
 
 			public readonly bool Equals(MemberInfoWithType other)
 			{
@@ -46,7 +40,7 @@ namespace LinqToDB.Expressions
 		/// </summary>
 		/// <param name="func">The lambda expression.</param>
 		/// <returns></returns>
-		/// <exception cref="ArgumentException">Only simple, non-navigational, member names are supported in this context (e.g.: x =&gt; Sql.Property(x, \"SomeProperty\")).</exception>
+		/// <exception cref="ArgumentException">Only simple, non-navigational, member names are supported in this context (e.g.: <c>x =&gt; Sql.Property&lt;int&gt;(x, "SomeProperty")</c>).</exception>
 		public static MemberInfo GetMemberInfo(LambdaExpression func)
 		{
 			return GetMemberInfo(func.Body);
@@ -57,7 +51,7 @@ namespace LinqToDB.Expressions
 		/// </summary>
 		/// <param name="func">The lambda expression.</param>
 		/// <returns></returns>
-		/// <exception cref="ArgumentException">Only simple, non-navigational, member names are supported in this context (e.g.: x =&gt; Sql.Property(x, \"SomeProperty\")).</exception>
+		/// <exception cref="ArgumentException">Only simple, non-navigational, member names are supported in this context (e.g.: <c>x =&gt; Sql.Property&lt;int&gt;(x, "SomeProperty")</c>).</exception>
 		public static MemberInfoWithType GetMemberInfoWithType(LambdaExpression func)
 		{
 			return GetMemberInfoWithType(func.Body);
@@ -69,15 +63,16 @@ namespace LinqToDB.Expressions
 		/// <remarks>
 		/// Returns member information for given expressions, e.g.:
 		/// <list type="bullet">
-		/// <item><description>For: x =&gt; x.SomeProperty, returns MemberInfo of SomeProperty.</description></item>
-		/// <item><description>For: x =&gt; x.SomeMethod(), returns MethodInfo of SomeMethod.</description></item>
-		/// <item><description>For: x =&gt; new { X = x.Name }, return ConstructorInfo of anonymous type.</description></item>
-		/// <item><description>For: x =&gt; Sql.Property&lt;int&gt;(x, "SomeProperty"), returns MemberInfo of "SomeProperty" if exists on type, otherwise returns DynamicColumnInfo for SomeProperty on given type.</description></item>
+		/// <item><description>For: <c>x =&gt; x.SomeProperty</c>, returns <see cref="MemberInfo"/> of SomeProperty.</description></item>
+		/// <item><description>For: <c>x =&gt; x.SomeMethod()</c>, returns <see cref="MethodInfo"/> of SomeMethod.</description></item>
+		/// <item><description>For: <c>x =&gt; new { X = x.Name }</c>, return <see cref="ConstructorInfo"/> of anonymous type.</description></item>
+		/// <item><description>For: <c>x =&gt; Sql.Property&lt;int&gt;(x, "SomeProperty")</c>, returns <see cref="MemberInfo"/> of "SomeProperty" 
+		/// if exists on type, otherwise returns <see cref="DynamicColumnInfo"/> for SomeProperty on given type.</description></item>
 		/// </list>
 		/// </remarks>
 		/// <param name="expr">The expression.</param>
 		/// <returns></returns>
-		/// <exception cref="ArgumentException">Only simple, non-navigational, member names are supported in this context (e.g.: x =&gt; Sql.Property(x, \"SomeProperty\")).</exception>
+		/// <exception cref="ArgumentException">Only simple, non-navigational, member names are supported in this context (e.g.: <c>x =&gt; Sql.Property&lt;int&gt;(x, "SomeProperty")</c>).</exception>
 		public static MemberInfo GetMemberInfo(Expression expr)
 		{
 			return GetMemberInfoWithType(expr).MemberInfo;
@@ -89,15 +84,16 @@ namespace LinqToDB.Expressions
 		/// <remarks>
 		/// Returns member information for given expressions, e.g.:
 		/// <list type="bullet">
-		/// <item><description>For: x =&gt; x.SomeProperty, returns MemberInfo of SomeProperty.</description></item>
-		/// <item><description>For: x =&gt; x.SomeMethod(), returns MethodInfo of SomeMethod.</description></item>
-		/// <item><description>For: x =&gt; new { X = x.Name }, return ConstructorInfo of anonymous type.</description></item>
-		/// <item><description>For: x =&gt; Sql.Property&lt;int&gt;(x, "SomeProperty"), returns MemberInfo of "SomeProperty" if exists on type, otherwise returns DynamicColumnInfo for SomeProperty on given type.</description></item>
+		/// <item><description>For: <c>x =&gt; x.SomeProperty</c>, returns <see cref="MemberInfo"/> of SomeProperty.</description></item>
+		/// <item><description>For: <c>x =&gt; x.SomeMethod()</c>, returns <see cref="MethodInfo"/> of SomeMethod.</description></item>
+		/// <item><description>For: <c>x =&gt; new { X = x.Name }</c>, return <see cref="ConstructorInfo"/> of anonymous type.</description></item>
+		/// <item><description>For: <c>x =&gt; Sql.Property&lt;int&gt;(x, "SomeProperty")</c>, returns <see cref="MemberInfo"/> of "SomeProperty" 
+		/// if exists on type, otherwise returns <see cref="DynamicColumnInfo"/> for SomeProperty on given type.</description></item>
 		/// </list>
 		/// </remarks>
 		/// <param name="expr">The expression.</param>
 		/// <returns></returns>
-		/// <exception cref="ArgumentException">Only simple, non-navigational, member names are supported in this context (e.g.: x =&gt; Sql.Property(x, \"SomeProperty\")).</exception>
+		/// <exception cref="ArgumentException">Only simple, non-navigational, member names are supported in this context (e.g.: <c>x =&gt; Sql.Property&lt;int&gt;(x, "SomeProperty")</c>).</exception>
 		public static MemberInfoWithType GetMemberInfoWithType(Expression expr)
 		{
 			if (expr is UnaryExpression { Method: { } method1 })
