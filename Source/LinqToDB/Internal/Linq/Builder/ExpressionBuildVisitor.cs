@@ -1724,7 +1724,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			Expression? notNullCheck = null;
-			if (associationDescriptor.IsList && (isOptional == true && _buildPurpose is BuildPurpose.SubQuery))
+			if (isOptional == true)
 			{
 				var keys = BuildExpression(forContext, rootContext, BuildPurpose.Sql, BuildFlags.ForKeys);
 				if (forContext != null)
@@ -1787,14 +1787,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		Expression? ExtractNotNullCheck(IBuildContext context, Expression expr)
 		{
-			SqlPlaceholderExpression? notNull = null;
+			Expression? notNullPath = null;
 
 			if (expr is SqlPlaceholderExpression placeholder)
 			{
-				notNull = placeholder.MakeNullable();
+				notNullPath = placeholder.Path is not SqlPathExpression ? placeholder.Path : placeholder;
 			}
 
-			if (notNull == null)
+			if (notNullPath == null)
 			{
 				List<Expression> expressions = new();
 				if (!Builder.CollectNullCompareExpressions(context, expr, expressions) || expressions.Count == 0)
@@ -1811,16 +1811,30 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 				}
 
-				notNull = placeholders
-					.FirstOrDefault(pl => !pl.Sql.CanBeNullable(NullabilityContext.NonQuery));
+				SqlPlaceholderExpression? anyPlaceholder = null;
+				foreach (var p in placeholders)
+				{
+					if (p.Sql.CanBeNullable(NullabilityContext.NonQuery))
+					{
+						continue;
+					}
+
+					if (p.Path is not SqlPathExpression)
+					{
+						notNullPath = p;
+						break;
+					}
+
+					anyPlaceholder ??= p;
+				}
+
+				notNullPath ??= anyPlaceholder;
 			}
 
-			if (notNull == null)
+			if (notNullPath == null)
 			{
 				return null;
 			}
-
-			var notNullPath = notNull.Path;
 
 			if (!notNullPath.Type.IsNullableOrReferenceType())
 			{
@@ -3104,7 +3118,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							sqlExpr = new SqlSearchCondition(false, canBeUnknown: null, predicateSql);
 						}
 
-						var placeholder = CreatePlaceholder(sqlExpr, itemNode);
+						var placeholder = itemNode as SqlPlaceholderExpression ?? CreatePlaceholder(sqlExpr, itemNode);
 						translated = translated.Replace(itemNode, placeholder);
 					}
 					else

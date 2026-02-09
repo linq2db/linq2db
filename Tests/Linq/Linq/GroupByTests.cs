@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Linq;
 
-using Grpc.Core;
-
 using LinqToDB;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.SqlQuery;
