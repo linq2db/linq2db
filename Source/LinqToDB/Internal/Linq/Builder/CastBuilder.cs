@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+using System;
+using System.Linq.Expressions;
 
 using LinqToDB.Internal.Expressions;
 
@@ -29,6 +30,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			readonly MethodCallExpression _methodCall;
 
+			public override Type ElementType => _methodCall.Method.GetGenericArguments()[0];
+
 			public override IBuildContext Clone(CloningContext context)
 			{
 				return new CastContext(context.CloneContext(Context), _methodCall);
@@ -44,7 +47,19 @@ namespace LinqToDB.Internal.Linq.Builder
 				var type = _methodCall.Method.GetGenericArguments()[0];
 
 				if (corrected.Type != type)
+				{
+					// Check if the corrected type is compatible with the target type
+					// (e.g., derived type can be used as base type)
+					if (type.IsAssignableFrom(corrected.Type))
+					{
+						// If corrected type is derived from target type, we can use it as-is
+						// No explicit conversion is needed
+						return corrected;
+					}
+
+					// Otherwise, attempt the conversion
 					corrected = Expression.Convert(corrected, type);
+				}
 
 				return corrected;
 			}
