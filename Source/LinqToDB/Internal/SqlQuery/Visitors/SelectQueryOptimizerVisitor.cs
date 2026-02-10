@@ -1371,7 +1371,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
-			var allowed = _movingComplexityVisitor.IsAllowedToMove(column, parent : parentQuery,
+			var allowed = _movingComplexityVisitor.IsAllowedToMove(_providerFlags, column, parent : parentQuery,
 				// Elements which should be ignored while searching for usage
 				column.Parent,
 				_applySelect == parentQuery ? parentQuery.Where : null,
@@ -2937,21 +2937,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				root = _rootElement;
 			}
 
-			var counter = 0;
+			var counter = 1;
 
-			root.VisitParentFirstAll(e =>
+			if (!_movingComplexityVisitor.IsAllowedToMove(_providerFlags, column, root, [column.Parent]))
 			{
-				// do not search in the same query
-				if (e is SelectQuery sq && sq == column.Parent)
-					return false;
-
-				if (Equals(e, column))
-				{
-					++counter;
-				}
-
-				return counter < 2;
-			});
+				counter = 2;
+			}
 
 			return counter;
 		}
@@ -3149,7 +3140,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					if (_updateQuery != parentQuery)
 					{
-						if (SqlProviderHelper.IsValidQuery(joinQuery, parentQuery : parentQuery, fakeJoin : null, columnSubqueryLevel : 1, _providerFlags, out _))
+						if (SqlProviderHelper.IsValidQuery(joinQuery, parentQuery : parentQuery, fakeJoin : null, columnSubqueryLevel : 0, _providerFlags, out _))
 						{
 							MoveDuplicateUsageToSubQuery(parentQuery, ref doNotRemoveQueries);
 
@@ -3298,10 +3289,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		sealed class MovingComplexityVisitor : QueryElementVisitor
 		{
-			ISqlExpression                _expressionToCheck = default!;
-			IQueryElement?[]              _ignore            = default!;
-			int                           _foundCount;
-			bool                          _notAllowedScope;
+			ISqlExpression   _expressionToCheck = default!;
+			IQueryElement?[] _ignore            = default!;
+			SqlProviderFlags _sqlProviderFlags  = default!;
+			int              _foundCount;
+			int              _multiplier;
+			bool             _notAllowedScope;
 
 			public bool DoNotAllow { get; private set; }
 
@@ -3314,18 +3307,21 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				_ignore            = default!;
 				_expressionToCheck = default!;
 				DoNotAllow         = default;
+				_sqlProviderFlags  = default!;
+				_multiplier        = 1;
 
 				_foundCount = 0;
 
 				base.Cleanup();
 			}
 
-			public bool IsAllowedToMove(ISqlExpression testExpression, IQueryElement parent, params IQueryElement?[] ignore)
+			public bool IsAllowedToMove(SqlProviderFlags sqlProviderFlags, ISqlExpression testExpression, IQueryElement parent, params IQueryElement?[] ignore)
 			{
+				Cleanup();
+
+				_sqlProviderFlags  = sqlProviderFlags;
 				_ignore            = ignore;
 				_expressionToCheck = testExpression;
-				DoNotAllow         = default;
-				_foundCount        = 0;
 
 				Visit(parent);
 
@@ -3351,7 +3347,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						return element;
 					}
 
-					++_foundCount;
+					_foundCount += _multiplier;
 
 					if (_foundCount > 1)
 						DoNotAllow = true;
@@ -3378,6 +3374,19 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				using var scope = DoNotAllowScope(predicate.Expr1.ElementType == QueryElementType.SqlObjectExpression);
 				return base.VisitInListPredicate(predicate);
+			}
+
+			protected internal override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
+			{
+				if (!_sqlProviderFlags.IsSimpleCoalesceSupported)
+					++_multiplier;
+
+				base.VisitSqlCoalesceExpression(element);
+
+				if (!_sqlProviderFlags.IsSimpleCoalesceSupported)
+					--_multiplier;
+
+				return element;
 			}
 
 			readonly struct DoNotAllowScopeStruct : IDisposable

@@ -54,6 +54,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 			SqlProviderFlags.IsMultiTablesSupportsJoins                            = false;
 			SqlProviderFlags.IsAccessBuggyLeftJoinConstantNullability              = true;
 			SqlProviderFlags.SupportsPredicatesComparison                          = true;
+			SqlProviderFlags.IsSimpleCoalesceSupported                             = false;
 
 			if (provider == AccessProvider.OleDb)
 			{
