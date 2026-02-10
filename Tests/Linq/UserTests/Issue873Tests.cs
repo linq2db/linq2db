@@ -11,7 +11,7 @@ namespace Tests.UserTests
 	{
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
-		public void Test([DataSources(ProviderName.SqlCe)] string context)
+		public void Test([DataSources(ProviderName.SqlCe, ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
