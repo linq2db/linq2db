@@ -15,14 +15,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 {
 	public sealed class SelectQueryOptimizerVisitor : SqlQueryVisitor
 	{
-		SqlProviderFlags    _providerFlags       = default!;
-		OptimizationContext _optimizationContext = default!;
-		IQueryElement       _root                = default!;
-		IQueryElement       _rootElement         = default!;
-		IQueryElement[]     _dependencies        = default!;
-		SelectQuery?        _correcting;
-		int                 _version;
-		bool                _removeWeakJoins;
+		SqlProviderFlags  _providerFlags     = default!;
+		DataOptions       _dataOptions       = default!;
+		EvaluationContext _evaluationContext = default!;
+		IQueryElement     _root              = default!;
+		IQueryElement     _rootElement       = default!;
+		IQueryElement[]   _dependencies      = default!;
+		MappingSchema     _mappingSchema     = default!;
+		SelectQuery?      _correcting;
+		int               _version;
+		bool              _removeWeakJoins;
 
 		SelectQuery?     _parentSelect;
 		SqlSetOperator?  _currentSetOperator;
@@ -33,13 +35,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		SelectQuery?     _updateQuery;
 		ISqlTableSource? _updateTable;
 
-		readonly SqlQueryColumnNestingCorrector _columnNestingCorrector     = new();
-		readonly SqlQueryOrderByOptimizer       _orderByOptimizer           = new();
-		readonly MovingComplexityVisitor        _movingComplexityVisitor    = new();
-		readonly SqlExpressionOptimizerVisitor  _expressionOptimizerVisitor = new(true); 
+		readonly SqlQueryColumnNestingCorrector _columnNestingCorrector      = new();
+		readonly SqlQueryOrderByOptimizer       _orderByOptimizer            = new();
+		readonly MovingComplexityVisitor        _movingComplexityVisitor     = new();
+		readonly SqlExpressionOptimizerVisitor  _expressionOptimizerVisitor  = new(true);
 		readonly MovingOuterPredicateVisitor    _movingOuterPredicateVisitor = new();
-		readonly SqlQueryColumnOptimizerVisitor _columnOptimizerVisitor     = new();
-			
+		readonly SqlQueryColumnOptimizerVisitor _columnOptimizerVisitor      = new();
+
 		public SelectQueryOptimizerVisitor() : base(VisitMode.Modify, null)
 		{
 		}
@@ -49,7 +51,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			IQueryElement          rootElement,
 			SqlProviderFlags       providerFlags,
 			bool                   removeWeakJoins,
-			OptimizationContext    optimizationContext,
+			DataOptions            dataOptions,
+			MappingSchema          mappingSchema,
+			EvaluationContext      evaluationContext,
 			params IQueryElement[] dependencies)
 		{
 #if DEBUG
@@ -59,17 +63,19 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 #endif
 
-			_providerFlags       = providerFlags;
-			_removeWeakJoins     = removeWeakJoins;
-			_optimizationContext = optimizationContext;
-			_root                = root;
-			_rootElement         = rootElement;
-			_dependencies        = dependencies;
-			_parentSelect        = default!;
-			_applySelect         = default!;
-			_inSubquery          = default!;
-			_updateQuery         = default!;
-			_updateTable         = default!;
+			_providerFlags     = providerFlags;
+			_removeWeakJoins   = removeWeakJoins;
+			_dataOptions       = dataOptions;
+			_mappingSchema     = mappingSchema;
+			_evaluationContext = evaluationContext;
+			_root              = root;
+			_rootElement       = rootElement;
+			_dependencies      = dependencies;
+			_parentSelect      = default!;
+			_applySelect       = default!;
+			_inSubquery        = default!;
+			_updateQuery       = default!;
+			_updateTable       = default!;
 
 			// OUTER APPLY Queries usually may have wrong nesting in WHERE clause.
 			// Making it consistent in LINQ Translator is bad for performance and it is hard to implement task.
@@ -116,6 +122,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			base.Cleanup();
 
 			_providerFlags     = default!;
+			_dataOptions       = default!;
+			_mappingSchema     = default!;
+			_evaluationContext = default!;
 			_root              = default!;
 			_rootElement       = default!;
 			_dependencies      = default!;
@@ -157,10 +166,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return newElement;
 		}
 
-		EvaluationContext EvaluationContext => _optimizationContext.EvaluationContext;
-		DataOptions       DataOptions       => _optimizationContext.DataOptions;
-		MappingSchema     MappingSchema     => _optimizationContext.MappingSchema;
-
 		protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
 			var saveSetOperatorCount  = selectQuery.HasSetOperators ? selectQuery.SetOperators.Count : 0;
@@ -174,7 +179,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				var before = selectQuery.ToDebugString();
 #endif
 				// only once
-				_expressionOptimizerVisitor.Optimize(EvaluationContext, NullabilityContext.GetContext(selectQuery), null, DataOptions, MappingSchema, selectQuery, visitQueries: true, reducePredicates: false);
+				_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, _mappingSchema, selectQuery, visitQueries: true, reducePredicates: false);
 			}
 
 			var newQuery = (SelectQuery)base.VisitSqlQuery(selectQuery);
@@ -265,7 +270,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 #endif
 					CorrectEmptyInnerJoinsRecursive(selectQuery);
 
-					_expressionOptimizerVisitor.Optimize(EvaluationContext, NullabilityContext.GetContext(selectQuery), null, DataOptions, MappingSchema, selectQuery, visitQueries: true, reducePredicates: false);			
+					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, _mappingSchema, selectQuery, visitQueries : true, reducePredicates: false);
 				}
 
 				if (saveSetOperatorCount != (selectQuery.HasSetOperators ? selectQuery.SetOperators.Count : 0))
@@ -824,7 +829,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 								var nullValue = column.Expression as SqlValue;
 								if (nullValue is not { Value: null })
 								{
-									var dbType = QueryHelper.GetDbDataType(column.Expression, MappingSchema);
+									var dbType = QueryHelper.GetDbDataType(column.Expression, _mappingSchema);
 									var type   = dbType.SystemType;
 									if (!type.IsNullableOrReferenceType())
 										type = type.AsNullable();
@@ -1183,7 +1188,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					var orderItems = orderByItems.Select(o => new SqlWindowOrderItem(o.Expression, o.IsDescending, Sql.NullsPosition.None));
 
-					var longType = MappingSchema.GetDbDataType(typeof(long));
+					var longType = _mappingSchema.GetDbDataType(typeof(long));
 					rnExpression = new SqlExtendedFunction(longType, "ROW_NUMBER", [], [], partitionBy : partitionBy, orderBy : orderItems);
 				}
 
@@ -1366,8 +1371,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
-			var allowed = _movingComplexityVisitor.IsAllowedToMove(_optimizationContext, nullability,
-				column, parent : parentQuery,
+			var allowed = _movingComplexityVisitor.IsAllowedToMove(column, parent : parentQuery,
 				// Elements which should be ignored while searching for usage
 				column.Parent,
 				_applySelect == parentQuery ? parentQuery.Where : null,
@@ -1620,11 +1624,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					return false;
 				}
+			}
 
+			if (!subQuery.OrderBy.IsEmpty)
+			{
 				if (QueryHelper.IsAggregationQuery(parentQuery, out var needsOrderBy) && needsOrderBy)
-				{
 					return false;
-				}
 
 				if (parentQuery.Select.IsDistinct)
 				{
@@ -2012,7 +2017,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			// Do not optimize t.Field IN (SELECT x FROM o)
 			if (parentQuery == _inSubquery && (subQuery.Select.HasModifier || subQuery.HasSetOperators))
 			{
-				if (DataOptions.LinqOptions.PreferExistsForScalar || _providerFlags.IsExistsPreferableForContains)
+				if (_dataOptions.LinqOptions.PreferExistsForScalar || _providerFlags.IsExistsPreferableForContains)
 					return false;
 
 				if (!_providerFlags.IsTakeWithInAllAnySomeSubquerySupported && (subQuery.Select.TakeValue != null || subQuery.Select.SkipValue != null))
@@ -2354,7 +2359,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					var predicate = join.Condition.Predicates[i];
 
 					var move = predicate is not SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr
-						|| exprExpr.Reduce(nullabilityContext.WithJoinSource(join.Table.Source), EvaluationContext, false, DataOptions.LinqOptions) is not SqlPredicate.ExprExpr
+						|| exprExpr.Reduce(nullabilityContext.WithJoinSource(join.Table.Source), _evaluationContext, false, _dataOptions.LinqOptions) is not SqlPredicate.ExprExpr
 						|| exprExpr.Expr1 is SqlValue || exprExpr.Expr2 is SqlValue;
 
 					if (move && isLeft)
@@ -2932,12 +2937,21 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				root = _rootElement;
 			}
 
-			var counter = 1;
+			var counter = 0;
 
-			if (!_movingComplexityVisitor.IsAllowedToMove(_optimizationContext, NullabilityContext.GetContext(rootQuery), column, root))
+			root.VisitParentFirstAll(e =>
 			{
-				counter = 2;
-			}
+				// do not search in the same query
+				if (e is SelectQuery sq && sq == column.Parent)
+					return false;
+
+				if (Equals(e, column))
+				{
+					++counter;
+				}
+
+				return counter < 2;
+			});
 
 			return counter;
 		}
@@ -3135,7 +3149,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					if (_updateQuery != parentQuery)
 					{
-						if (SqlProviderHelper.IsValidQuery(joinQuery, parentQuery : parentQuery, fakeJoin : null, columnSubqueryLevel : 0, _providerFlags, out _))
+						if (SqlProviderHelper.IsValidQuery(joinQuery, parentQuery : parentQuery, fakeJoin : null, columnSubqueryLevel : 1, _providerFlags, out _))
 						{
 							MoveDuplicateUsageToSubQuery(parentQuery, ref doNotRemoveQueries);
 
@@ -3204,8 +3218,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				NotifyReplaced(queryToReplace, testedColumn);
 			}
 
-			EnsureReferencesCorrected(parentQuery);
-
 			return true;
 		}
 
@@ -3217,7 +3229,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				var nullabilityContext = NullabilityContext.GetContext(sq);
 				foreach (var column in sq.Select.Columns)
 				{
-					var optimized = _optimizationContext.OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, column.Expression, visitQueries: false, reducePredicates: false);
+					var optimized = _expressionOptimizerVisitor.Optimize(_evaluationContext, nullabilityContext, null, _dataOptions, _mappingSchema, column.Expression, visitQueries: false, reducePredicates: false);
 
 					if (!ReferenceEquals(optimized, column.Expression))
 					{
@@ -3286,12 +3298,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		sealed class MovingComplexityVisitor : QueryElementVisitor
 		{
-			ISqlExpression      _expressionToCheck   = default!;
-			IQueryElement?[]    _ignore              = default!;
-			OptimizationContext _optimizationContext = default!;
-			NullabilityContext  _nullabilityContext  = default!;
-			int                 _foundCount;
-			bool                _notAllowedScope;
+			ISqlExpression                _expressionToCheck = default!;
+			IQueryElement?[]              _ignore            = default!;
+			int                           _foundCount;
+			bool                          _notAllowedScope;
 
 			public bool DoNotAllow { get; private set; }
 
@@ -3301,64 +3311,25 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			public override void Cleanup()
 			{
-				_ignore              = default!;
-				_expressionToCheck   = default!;
-				_optimizationContext = default!;
-				_nullabilityContext  = default!;
-				DoNotAllow           = default;
+				_ignore            = default!;
+				_expressionToCheck = default!;
+				DoNotAllow         = default;
 
 				_foundCount = 0;
 
 				base.Cleanup();
 			}
 
-			public bool IsAllowedToMove(OptimizationContext optimizationContext, NullabilityContext nullabilityContext, ISqlExpression testExpression, IQueryElement parent, params IQueryElement?[] ignore)
+			public bool IsAllowedToMove(ISqlExpression testExpression, IQueryElement parent, params IQueryElement?[] ignore)
 			{
-				Cleanup();
-				_optimizationContext = optimizationContext;
-				_nullabilityContext  = nullabilityContext;
-				_ignore              = ignore;
-				_expressionToCheck   = testExpression;
+				_ignore            = ignore;
+				_expressionToCheck = testExpression;
+				DoNotAllow         = default;
+				_foundCount        = 0;
 
 				Visit(parent);
 
 				return !DoNotAllow;
-			}
-
-			TElement ConvertElement<TElement>(TElement element)
-				where TElement : IQueryElement
-			{
-				return (TElement)_optimizationContext.ConvertVisitor.Convert(_optimizationContext, _nullabilityContext, element, visitQueries: true, ignoreTransformation: true);
-			}
-
-			protected internal override IQueryElement VisitSqlWhereClause(SqlWhereClause element)
-			{
-				base.VisitSqlWhereClause(ConvertElement(element));
-				return element;
-			}
-
-			protected internal override IQueryElement VisitSqlHavingClause(SqlHavingClause element)
-			{
-				base.VisitSqlHavingClause(ConvertElement(element));
-				return element;
-			}
-
-			protected internal override IQueryElement VisitSqlOrderByClause(SqlOrderByClause element)
-			{
-				base.VisitSqlOrderByClause(ConvertElement(element));
-				return element;
-			}
-
-			protected internal override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
-			{
-				base.VisitSqlSelectClause(ConvertElement(element));
-				return element;
-			}
-
-			protected internal override IQueryElement VisitSqlGroupByClause(SqlGroupByClause element)
-			{
-				base.VisitSqlGroupByClause(ConvertElement(element));
-				return element;
 			}
 
 			public override IQueryElement? Visit(IQueryElement? element)

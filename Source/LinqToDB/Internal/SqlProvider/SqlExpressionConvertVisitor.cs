@@ -40,16 +40,14 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual bool SupportsDistinctAsExistsIntersect => false;
 		protected virtual bool SupportsNullIf => true;
 
-		public virtual IQueryElement Convert(OptimizationContext optimizationContext, NullabilityContext nullabilityContext, IQueryElement element, bool visitQueries, bool ignoreTransformation)
+		public virtual IQueryElement Convert(OptimizationContext optimizationContext, NullabilityContext nullabilityContext, IQueryElement element, bool visitQueries)
 		{
 			Cleanup();
 
 			OptimizationContext = optimizationContext;
 			NullabilityContext = nullabilityContext;
 			VisitQueries = visitQueries;
-
-			if (!ignoreTransformation)
-				SetTransformationInfo(optimizationContext.TransformationInfoConvert);
+			SetTransformationInfo(optimizationContext.TransformationInfoConvert);
 
 			var newElement = ProcessElement(element);
 

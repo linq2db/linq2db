@@ -16,7 +16,6 @@ using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
-using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
@@ -204,15 +203,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 #endif
 
-				var sqlOptimizer        = DataContext.GetSqlOptimizer(DataOptions);
-				var optimizationContext = sqlOptimizer.CreateOptimizationContext(context.MappingSchema, parent.Builder.DataOptions);
-
 				var optimizedQuery = (SelectQuery)visitor.Value.Optimize(
 					root: clonedParentContext.SelectQuery,
 					rootElement: clonedParentContext.SelectQuery,
 					providerFlags: parent.Builder.DataContext.SqlProviderFlags,
 					removeWeakJoins: false,
-					optimizationContext: optimizationContext
+					dataOptions: parent.Builder.DataOptions,
+					mappingSchema: context.MappingSchema,
+					evaluationContext: new EvaluationContext()
 				);
 
 				if (!SqlProviderHelper.IsValidQuery(optimizedQuery,

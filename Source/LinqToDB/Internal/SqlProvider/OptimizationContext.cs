@@ -123,7 +123,7 @@ namespace LinqToDB.Internal.SqlProvider
 			where T : class, IQueryElement
 		{
 			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, element, visitQueries : true, reducePredicates: false);
-			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, visitQueries : true, ignoreTransformation: false);
+			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, visitQueries : true);
 
 			return result;
 		}
@@ -139,7 +139,7 @@ namespace LinqToDB.Internal.SqlProvider
 				return null;
 
 			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, element, visitQueries : false, reducePredicates : false);
-			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, visitQueries : false, ignoreTransformation: false);
+			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, false);
 
 			return result;
 		}

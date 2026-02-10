@@ -130,8 +130,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 						updateStatement = DetachUpdateTableFromUpdateQuery(updateStatement, dataOptions, moveToJoin: false, addNewSource: true, out var sqlTableSource);
 						updateStatement.Update.TableSource = sqlTableSource;
 
-						var optimizationContext = this.CreateOptimizationContext(mappingSchema, dataOptions);
-						OptimizeQueries(updateStatement, updateStatement, optimizationContext);
+						OptimizeQueries(updateStatement, updateStatement, dataOptions, mappingSchema, new EvaluationContext());
 					}
 				}
 			}
