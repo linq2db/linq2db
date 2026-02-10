@@ -58,5 +58,20 @@ namespace Tests.UserTests
 				Assert.That(existingDto, Is.Not.Null);
 			}
 		}
+
+		[Test]
+		public void FixedQuery([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<TestDtoWithPks>())
+			{
+				var dto = new TestDtoWithPks() { Id = Guid.NewGuid(), Number = 5, Test = "aaa" };
+				var id = dto.Id;
+				var nr = dto.Number;
+				db.Insert(dto);
+				var existingDto = ((IQueryable) db.GetTable<TestDtoWithPks>()).Cast<BasicDto>().FirstOrDefault(x => ((TestDtoWithPks)x).Id == id && ((TestDtoWithPks)x).Number == nr);
+				Assert.That(existingDto, Is.Not.Null);
+			}
+		}
 	}
 }
