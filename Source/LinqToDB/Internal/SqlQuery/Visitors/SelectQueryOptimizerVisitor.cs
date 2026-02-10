@@ -1370,6 +1370,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, binary.Expr1, ignoreWhere, inGrouping);
 				}
 			}
+			else if (underlying is SqlCastExpression castExpression)
+			{
+				return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, castExpression.Expression, ignoreWhere, inGrouping);
+			}
 
 			var allowed = _movingComplexityVisitor.IsAllowedToMove(_providerFlags, column, parent : parentQuery,
 				// Elements which should be ignored while searching for usage
