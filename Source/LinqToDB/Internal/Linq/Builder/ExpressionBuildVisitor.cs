@@ -2345,9 +2345,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (node.IsNull)
 				{
-					var dataType = (node.MappingSchema ?? MappingSchema).GetDbDataType(node.Type);
-					var value    = new SqlValue(dataType, null);
-					return CreatePlaceholder(value, node);
+					var mappingSchema = node.MappingSchema ?? MappingSchema;
+					if (mappingSchema.IsScalarType(node.Type))
+					{
+						var dataType = mappingSchema.GetDbDataType(node.Type);
+						var value    = new SqlValue(dataType, null);
+						return CreatePlaceholder(value, node);
+					}
 				}
 
 				if (HandleValue(node, out var translated))
