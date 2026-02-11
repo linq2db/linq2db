@@ -10,7 +10,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 	/// Pass 1: Collects all column references (read-only behavior)
 	/// Pass 2: Removes unused columns (modify)
 	/// </summary>
-	public sealed class SqlQueryColumnOptimizerVisitor : QueryElementVisitor
+	public sealed class SqlQueryColumnOptimizerVisitor() : QueryElementVisitor(VisitMode.Modify)
 	{
 		// Maps each SelectQuery to its set of used columns
 		readonly Dictionary<SelectQuery, HashSet<SqlColumn>> _usedColumnsByQuery = new();
@@ -27,10 +27,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		SelectQuery?         _currentUpdateQuery;
 		SqlPredicate.Exists? _currentExistsPredicate;
 		SqlTableLikeSource?  _currentSqlTableLikeSource;
-
-		public SqlQueryColumnOptimizerVisitor() : base(VisitMode.Modify)
-		{
-		}
 
 		public override void Cleanup()
 		{

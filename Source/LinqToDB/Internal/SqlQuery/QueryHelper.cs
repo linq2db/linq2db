@@ -426,35 +426,31 @@ namespace LinqToDB.Internal.SqlQuery
 
 		static DbDataType GetDbDataType(ISqlExpression? expr)
 		{
-			switch (expr)
+			return expr switch
 			{
-				case null: return DbDataType.Undefined;
-				case SqlValue { ValueType: var vt }: return vt;
+				null => DbDataType.Undefined,
+				SqlValue { ValueType: var vt } => vt,
 
-				case SqlParameter        { Type: var t }: return t;
-				case SqlField            { Type: var t }: return t;
-				case SqlDataType         { Type: var t }: return t;
-				case SqlCastExpression   { Type: var t }: return t;
-				case SqlBinaryExpression { Type: var t }: return t;
+				SqlParameter        { Type: var t } => t,
+				SqlField            { Type: var t } => t,
+				SqlDataType         { Type: var t } => t,
+				SqlCastExpression   { Type: var t } => t,
+				SqlBinaryExpression { Type: var t } => t,
 
-				case SqlParameterizedExpressionBase { Type: var t }: return t;
+				SqlParameterizedExpressionBase { Type: var t } => t,
 
-				case SqlColumn                { Expression:    var e }: return GetDbDataType(e);
-				case SqlNullabilityExpression { SqlExpression: var e }: return GetDbDataType(e);
+				SqlColumn                { Expression:    var e } => GetDbDataType(e),
+				SqlNullabilityExpression { SqlExpression: var e } => GetDbDataType(e),
 
-				case SelectQuery selectQuery:
-				{
-					return selectQuery is { Select.Columns: [{ Expression: var e }] }
-						? GetDbDataType(e)
-						: DbDataType.Undefined;
-				}
+				SelectQuery { Select.Columns: [{ Expression: var e }] } => GetDbDataType(e),
+				SelectQuery                                             => DbDataType.Undefined,
 
-				case SqlCaseExpression caseExpression          : return GetCaseExpressionType(caseExpression);
-				case SqlConditionExpression conditionExpression: return GetConditionExpressionType(conditionExpression);
+				SqlCaseExpression caseExpression           => GetCaseExpressionType(caseExpression),
+				SqlConditionExpression conditionExpression => GetConditionExpressionType(conditionExpression),
 
-				case { SystemType: null } : return DbDataType.Undefined;
-				case { SystemType: var t }: return new(t);
-			}
+				{ SystemType: null }  => DbDataType.Undefined,
+				{ SystemType: var t } => new(t),
+			};
 
 			static DbDataType GetCaseExpressionType(SqlCaseExpression caseExpression)
 			{

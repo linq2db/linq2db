@@ -1747,7 +1747,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				if (QueryHelper.ContainsWindowFunction(column.Expression))
 				{
-					if (!(!parentQuery.Select.HasModifier && parentQuery.Where.IsEmpty && parentQuery.GroupBy.IsEmpty && parentQuery.Having.IsEmpty && parentQuery.From.Tables is [{ Joins.Count: 0 }]))
+					if (parentQuery is not
+						{
+							Select.HasModifier: false,
+							Where.IsEmpty: true,
+							GroupBy.IsEmpty: true,
+							Having.IsEmpty: true,
+							From.Tables: [{ Joins.Count: 0 }]
+						})
 					{
 						// not allowed to break query window
 						return false;
@@ -1919,16 +1926,17 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					// Columns in parent query should match
 					//
-
-					if (!(parentQuery.Select.Columns.Count == 0 || subQuery.Select.Columns.TrueForAll(sc =>
-							parentQuery.Select.Columns.Exists(pc => ReferenceEquals(QueryHelper.UnwrapNullablity(pc.Expression), sc)))))
+					if (parentQuery.Select.Columns.Count > 0)
 					{
-						return false;
-					}
+						if (parentQuery.Select.Columns.Count != subQuery.Select.Columns.Count)
+						{
+							return false;
+						}
 
-					if (parentQuery.Select.Columns.Count > 0 && parentQuery.Select.Columns.Count != subQuery.Select.Columns.Count)
-					{
-						return false;
+						if (!subQuery.Select.Columns.TrueForAll(sc => parentQuery.Select.Columns.Exists(pc => ReferenceEquals(QueryHelper.UnwrapNullablity(pc.Expression), sc))))
+						{
+							return false;
+						}
 					}
 				}
 				else
