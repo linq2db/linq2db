@@ -338,7 +338,7 @@ namespace Tests.Linq
 					join o1 in db.Order on od.OrderID equals o1.OrderID
 					join o2 in db.Order on od.OrderID equals o2.OrderID
 					join o3 in db.Order on od.OrderID equals o3.OrderID
-					where o1.OrderDate == TestData.DateTime || o2.OrderDate < TestData.DateTime && o3.EmployeeID != null
+					where o1.OrderDate == TestData.DateTime || (o2.OrderDate < TestData.DateTime && o3.EmployeeID != null)
 					orderby od.OrderID
 					select new
 					{

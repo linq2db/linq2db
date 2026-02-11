@@ -336,7 +336,7 @@ namespace LinqToDB.Remote
 				if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(Task<>))
 					fieldType = fieldType.GetGenericArguments()[0];
 
-				if (fieldType.IsEnum || fieldType.IsNullableType && fieldType.UnwrapNullableType().IsEnum)
+				if (fieldType.IsEnum || (fieldType.IsNullableType && fieldType.UnwrapNullableType().IsEnum))
 				{
 					var stringConverter = db.MappingSchema.GetConverter(new DbDataType(typeof(string)), new DbDataType(fieldType), false, ConversionType.Common);
 					if (stringConverter != null)

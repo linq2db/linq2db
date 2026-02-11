@@ -25,7 +25,7 @@ namespace LinqToDB.Internal.Extensions
 				return GetInterfacePublicInstanceValueMembers(type);
 
 			var members = type.GetMembers(BindingFlags.Instance | BindingFlags.Public)
-				.Where(m => m.IsField || m.IsProperty && ((PropertyInfo)m).GetIndexParameters().Length == 0)
+				.Where(m => m.IsField || (m.IsProperty && ((PropertyInfo)m).GetIndexParameters().Length == 0))
 				.ToArray();
 
 			var baseType = type.BaseType;
@@ -62,7 +62,7 @@ namespace LinqToDB.Internal.Extensions
 		{
 			var members = type
 				.GetMembers(BindingFlags.Instance | BindingFlags.Public)
-				.Where(m => m.IsField || m.IsProperty && ((PropertyInfo)m).GetIndexParameters().Length == 0);
+				.Where(m => m.IsField || (m.IsProperty && ((PropertyInfo)m).GetIndexParameters().Length == 0));
 
 			var interfaces = type.GetInterfaces();
 			if (interfaces.Length == 0)
@@ -75,7 +75,7 @@ namespace LinqToDB.Internal.Extensions
 			{
 				foreach (var member in iface
 					.GetMembers(BindingFlags.Instance | BindingFlags.Public)
-					.Where(m => m.MemberType == MemberTypes.Field || m.MemberType == MemberTypes.Property && ((PropertyInfo)m).GetIndexParameters().Length == 0))
+					.Where(m => m.MemberType == MemberTypes.Field || (m.MemberType == MemberTypes.Property && ((PropertyInfo)m).GetIndexParameters().Length == 0)))
 				{
 					if (seen.Add(member.Name))
 						results.Add(member);
@@ -429,7 +429,7 @@ namespace LinqToDB.Internal.Extensions
 			{
 				var (parent, child) = key;
 
-				if (child.IsEnum && Enum.GetUnderlyingType(child) == parent ||
+				if ((child.IsEnum && Enum.GetUnderlyingType(child) == parent) ||
 					child.IsSubclassOf(parent))
 					return true;
 

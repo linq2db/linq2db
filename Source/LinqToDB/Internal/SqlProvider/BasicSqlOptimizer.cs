@@ -82,10 +82,8 @@ namespace LinqToDB.Internal.SqlProvider
 			if (statement is SqlInsertStatement insertStatement)
 			{
 				var tables = insertStatement.SelectQuery.From.Tables;
-				var isSelfInsert =
-					tables.Count     == 0 ||
-					tables.Count     == 1 &&
-					tables[0].Source == insertStatement.Insert.Into;
+				var isSelfInsert = tables.Count == 0
+					|| (tables.Count == 1 && tables[0].Source == insertStatement.Insert.Into);
 
 				if (isSelfInsert)
 				{
@@ -262,10 +260,8 @@ namespace LinqToDB.Internal.SqlProvider
 				{
 					statement.Update.TableSource = tableSource;
 
-					var forceWrapping = wrapForOutput && statement.Output != null &&
-										(statement.SelectQuery.From.Tables.Count != 1 ||
-										 statement.SelectQuery.From.Tables.Count          == 1 &&
-										 statement.SelectQuery.From.Tables[0].Joins.Count == 0);
+					var forceWrapping = wrapForOutput && statement.Output != null
+						&& statement.SelectQuery.From.Tables is [{ Joins.Count: 0 }] or { Count: not 1 };
 
 					if (forceWrapping || !IsCompatibleForUpdate(queryPath))
 					{

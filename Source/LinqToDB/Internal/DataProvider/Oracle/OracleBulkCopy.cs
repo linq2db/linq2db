@@ -55,7 +55,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				if (connection != null)
 				{
 					var ed        = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
-					var columns   = ed.Columns.Where(c => !c.SkipOnInsert || opts.KeepIdentity == true && c.IsIdentity).ToList();
+					var columns   = ed.Columns.Where(c => !c.SkipOnInsert || (opts.KeepIdentity == true && c.IsIdentity)).ToList();
 					var sb        = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 
 					// ODP.NET doesn't bulk copy doesn't work if columns that require escaping:

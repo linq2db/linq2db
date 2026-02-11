@@ -63,9 +63,10 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				if (attr != null)
 				{
 					return new SqlFragment(
-							(attr.Schema != null ? ConvertInline(attr.Schema, ConvertType.NameToSchema) + "." : null) +
-							ConvertInline(attr.SequenceName, ConvertType.SequenceName) +
-							".nextval");
+						(attr.Schema != null ? ConvertInline(attr.Schema, ConvertType.NameToSchema) + "." : null) +
+						ConvertInline(attr.SequenceName, ConvertType.SequenceName) +
+						".nextval"
+					);
 				}
 			}
 
@@ -78,9 +79,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 			return
 				base.ShouldBuildWhere(selectQuery, out condition) ||
-				!NeedSkip(takeExpr, skipEpr) &&
-				 NeedTake(takeExpr) &&
-				selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty;
+				(!NeedSkip(takeExpr, skipEpr) && NeedTake(takeExpr) && selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty);
 		}
 
 		protected override void BuildSetOperation(SetOperation operation, StringBuilder sb)
@@ -190,7 +189,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			return !IsReserved(name)                                                                                               &&
 				((ProviderOptions.DontEscapeLowercaseIdentifiers && name[0] is >= 'a' and <= 'z') || name[0] is >= 'A' and <= 'Z') &&
 				name.All(c =>
-					(ProviderOptions.DontEscapeLowercaseIdentifiers && c is >= 'a' and <= 'z') || c is >= 'A' and <= 'Z' or >= '0' and <= '9' or '$' or '#' or '_');
+					(ProviderOptions.DontEscapeLowercaseIdentifiers && c is >= 'a' and <= 'z') || c is (>= 'A' and <= 'Z') or (>= '0' and <= '9') or '$' or '#' or '_'
+				);
 		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)

@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var defaultValue = methodCall.Arguments.Count == 1 ? null : methodCall.Arguments[1].Unwrap();
 
 			// Generating LEFT JOIN from one record resultset
-			if (buildInfo.SourceCardinality == SourceCardinality.Unknown || defaultValue != null && buildInfo.SourceCardinality.HasFlag(SourceCardinality.Zero))
+			if (buildInfo.SourceCardinality == SourceCardinality.Unknown || (defaultValue != null && buildInfo.SourceCardinality.HasFlag(SourceCardinality.Zero)))
 			{
 				var sequenceResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()));
 				if (sequenceResult.BuildContext == null)

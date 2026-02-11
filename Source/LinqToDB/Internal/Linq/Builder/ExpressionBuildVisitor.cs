@@ -2265,9 +2265,11 @@ namespace LinqToDB.Internal.Linq.Builder
 								s = MappingSchema.GetDataType(t);
 							}
 
-							if (node.Type == t ||
-								t.IsEnum && Enum.GetUnderlyingType(t) == node.Type ||
-								node.Type.IsEnum && Enum.GetUnderlyingType(node.Type) == t)
+							if (
+								node.Type == t ||
+								(t.IsEnum && Enum.GetUnderlyingType(t) == node.Type) ||
+								(node.Type.IsEnum && Enum.GetUnderlyingType(node.Type) == t)
+							)
 							{
 								return Visit(placeholder.WithType(node.Type));
 							}
@@ -3806,12 +3808,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			Expression GenerateConstructorComparison(SqlGenericConstructorExpression leftConstructor, SqlGenericConstructorExpression rightConstructor)
 			{
-				var strict = leftConstructor.ConstructType  == SqlGenericConstructorExpression.CreateType.Full &&
-							 rightConstructor.ConstructType == SqlGenericConstructorExpression.CreateType.Full ||
-							 (leftConstructor.ConstructType  == SqlGenericConstructorExpression.CreateType.New &&
-							  rightConstructor.ConstructType == SqlGenericConstructorExpression.CreateType.New) ||
-							 (leftConstructor.ConstructType  == SqlGenericConstructorExpression.CreateType.MemberInit &&
-							  rightConstructor.ConstructType == SqlGenericConstructorExpression.CreateType.MemberInit);
+				var strict = (leftConstructor.ConstructType, rightConstructor.ConstructType) is
+					(SqlGenericConstructorExpression.CreateType.Full, SqlGenericConstructorExpression.CreateType.Full)
+					or (SqlGenericConstructorExpression.CreateType.New, SqlGenericConstructorExpression.CreateType.New)
+					or (SqlGenericConstructorExpression.CreateType.MemberInit, SqlGenericConstructorExpression.CreateType.MemberInit);
 
 				var isNot           = nodeType == ExpressionType.NotEqual;
 				var searchCondition = new SqlSearchCondition(isNot);

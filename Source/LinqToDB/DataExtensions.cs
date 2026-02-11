@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -1223,7 +1223,7 @@ namespace LinqToDB
 			{
 				QueryRunner.DropTable<T>.Query(dataContext, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, !throwExceptionIfNotExists, tableOptions: tableOptions);
 			}
-			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists() || SqlTable.Create<T>(dataContext).TableOptions.HasDropIfExists())
+			catch when (!throwExceptionIfNotExists ?? (tableOptions.HasDropIfExists() || SqlTable.Create<T>(dataContext).TableOptions.HasDropIfExists()))
 			{
 				// ignore
 			}
@@ -1266,7 +1266,7 @@ namespace LinqToDB
 					!throwExceptionIfNotExists,
 					tableOptions.IsSet() ? tableOptions : table.TableOptions);
 			}
-			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists() || SqlTable.Create<T>(table.DataContext).TableOptions.HasDropIfExists())
+			catch when (!throwExceptionIfNotExists ?? (tableOptions.HasDropIfExists() || SqlTable.Create<T>(table.DataContext).TableOptions.HasDropIfExists()))
 			{
 				// ignore
 			}
@@ -1306,7 +1306,7 @@ namespace LinqToDB
 					.QueryAsync(dataContext, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, !throwExceptionIfNotExists, tableOptions: tableOptions, token)
 					.ConfigureAwait(false);
 			}
-			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists() || SqlTable.Create<T>(dataContext).TableOptions.HasDropIfExists())
+			catch when (!throwExceptionIfNotExists ?? (tableOptions.HasDropIfExists() || SqlTable.Create<T>(dataContext).TableOptions.HasDropIfExists()))
 			{
 				// ignore
 			}
@@ -1356,7 +1356,7 @@ namespace LinqToDB
 						token)
 					.ConfigureAwait(false);
 			}
-			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists() || SqlTable.Create<T>(table.DataContext).TableOptions.HasDropIfExists())
+			catch when (!throwExceptionIfNotExists ?? (tableOptions.HasDropIfExists() || SqlTable.Create<T>(table.DataContext).TableOptions.HasDropIfExists()))
 			{
 				// ignore
 			}

@@ -553,12 +553,12 @@ namespace LinqToDB.Internal.SqlProvider
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
-			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null;
+			return AcceptsTakeAsParameter || (AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null);
 		}
 
 		public bool GetIsSkipSupportedFlag(ISqlExpression? takeExpression)
 		{
-			return IsSkipSupported || IsSkipSupportedIfTake && takeExpression != null;
+			return IsSkipSupported || (IsSkipSupportedIfTake && takeExpression != null);
 		}
 
 		public bool GetIsTakeHintsSupported(TakeHints hints)

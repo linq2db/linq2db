@@ -143,10 +143,10 @@ internal static class StaticSchemaGenerator
 			let id = ma.MemberInfo.GetAttribute<IdentityAttribute>()
 			let pk = ma.MemberInfo.GetAttribute<PrimaryKeyAttribute>()
 			where
-				ca != null && ca.IsColumn ||
+				(ca != null && ca.IsColumn) ||
 				pk != null ||
 				id != null ||
-				ca == null && !table.IsColumnAttributeRequired && MappingSchema.Default.IsScalarType(ma.Type)
+				(ca == null && !table.IsColumnAttributeRequired && MappingSchema.Default.IsScalarType(ma.Type))
 			orderby
 				ca == null ? 1 : ca.Order >= 0 ? 0 : 2,
 				ca?.Order,
@@ -154,7 +154,7 @@ internal static class StaticSchemaGenerator
 			select new ExplorerItem(
 				ma.Name,
 				ExplorerItemKind.Property,
-				pk != null || ca != null && ca.IsPrimaryKey ? ExplorerIcon.Key : ExplorerIcon.Column)
+				pk != null || (ca != null && ca.IsPrimaryKey) ? ExplorerIcon.Key : ExplorerIcon.Column)
 			{
 				Text     = $"{ma.Name} : {GetTypeName(ma.Type)}",
 				DragText = CSharpUtils.EscapeIdentifier(ma.Name),

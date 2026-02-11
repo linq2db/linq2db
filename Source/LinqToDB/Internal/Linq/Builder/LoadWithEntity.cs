@@ -55,7 +55,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override bool Equals(object? obj)
 		{
-			return ReferenceEquals(this, obj) || obj is LoadWithEntity other && Equals(other);
+			return ReferenceEquals(this, obj) || (obj is LoadWithEntity other && Equals(other));
 		}
 
 		public override int GetHashCode()

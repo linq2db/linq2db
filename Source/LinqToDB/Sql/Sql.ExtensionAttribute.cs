@@ -472,7 +472,7 @@ namespace LinqToDB
 								{
 									isQueryable = false;
 									var firstArgType = call.Arguments[0].Type;
-									if (call.Arguments.Count > 0 && typeof(IQueryableContainer).IsSameOrParentOf(firstArgType) || typeof(IEnumerable<>).IsSameOrParentOf(firstArgType))
+									if ((call.Arguments.Count > 0 && typeof(IQueryableContainer).IsSameOrParentOf(firstArgType)) || typeof(IEnumerable<>).IsSameOrParentOf(firstArgType))
 									{
 										var paramAttribute = call.Method.GetParameters()[0].GetAttribute<ExprParameterAttribute>();
 										if (paramAttribute == null ||
@@ -574,7 +574,7 @@ namespace LinqToDB
 							}
 
 							continueChain = continueChain || !string.IsNullOrEmpty(param.Name) ||
-							                param.Extension != null && param.Extension.ChainPrecedence != -1;
+							                (param.Extension != null && param.Extension.ChainPrecedence != -1);
 							chains.Add(param);
 						}
 

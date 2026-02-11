@@ -22,8 +22,8 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected bool IsInsidePredicate { get; private set; }
 
-		protected OptimizationContext   OptimizationContext = default!;
-		protected NullabilityContext    NullabilityContext  = default!;
+		protected OptimizationContext OptimizationContext = default!;
+		protected NullabilityContext  NullabilityContext  = default!;
 		protected ISqlExpressionFactory Factory => OptimizationContext.Factory;
 
 		protected EvaluationContext EvaluationContext => OptimizationContext.EvaluationContext;
@@ -1824,8 +1824,8 @@ namespace LinqToDB.Internal.SqlProvider
 					// We use `a >= null` instead, which is equivalent (always evaluates to `unknown`) but is never reduced by ExprExpr.
 					// Reducing to `false` is an inaccuracy that causes problems when composed in more complicated ways,
 					// e.g. the NOT IN SqlRow tests fail.
-					SqlPredicate.Operator nullSafeOp = a.TryEvaluateExpression(context, out var val) && val == null ||
-													   b.TryEvaluateExpression(context, out     val) && val == null
+					SqlPredicate.Operator nullSafeOp = (a.TryEvaluateExpression(context, out var val) && val == null) ||
+													   (b.TryEvaluateExpression(context, out     val) && val == null)
 						? SqlPredicate.Operator.GreaterOrEqual
 						: op;
 					return new SqlPredicate.ExprExpr(a, nullSafeOp, b, unknownAsValue: null);

@@ -489,7 +489,7 @@ namespace Tests.Linq
 						return false;
 					}
 
-					if (x.Authors == null && y.Authors != null || x.Authors != null && y.Authors == null)
+					if ((x.Authors == null && y.Authors != null) || (x.Authors != null && y.Authors == null))
 					{
 						return false;
 					}

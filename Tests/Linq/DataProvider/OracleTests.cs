@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -3354,8 +3354,8 @@ namespace Tests.DataProvider
 			// This filter used by T4 generator
 			Assert.That(schema.Procedures.Where(
 				proc => proc.IsLoaded
-				|| proc.IsFunction && !proc.IsTableFunction
-				|| proc.IsTableFunction && proc.ResultException != null).Count(), Is.EqualTo(11));
+				|| (proc.IsFunction && !proc.IsTableFunction)
+				|| (proc.IsTableFunction && proc.ResultException != null)).Count(), Is.EqualTo(11));
 		}
 
 		[Table("TYPESTEST")]

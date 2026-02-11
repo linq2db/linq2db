@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -45,11 +45,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var elementType = methodCall.Method.GetGenericArguments()[0];
 
-			var needsEmulation = !builder.DataContext.SqlProviderFlags.IsAllSetOperationsSupported &&
-			                     (setOperation is SetOperation.ExceptAll or SetOperation.IntersectAll)
-			                     ||
-			                     !builder.DataContext.SqlProviderFlags.IsDistinctSetOperationsSupported &&
-			                     (setOperation is SetOperation.Except or SetOperation.Intersect);
+			var needsEmulation =
+				(!builder.DataContext.SqlProviderFlags.IsAllSetOperationsSupported && setOperation is SetOperation.ExceptAll or SetOperation.IntersectAll)
+				|| (!builder.DataContext.SqlProviderFlags.IsDistinctSetOperationsSupported && setOperation is SetOperation.Except or SetOperation.Intersect);
 
 			var set1 = new SubQueryContext(sequence1);
 			var set2 = new SubQueryContext(sequence2);

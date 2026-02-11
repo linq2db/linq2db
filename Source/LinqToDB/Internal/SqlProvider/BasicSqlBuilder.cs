@@ -363,8 +363,8 @@ namespace LinqToDB.Internal.SqlProvider
 			if (Statement.SelectQuery?.SqlQueryExtensions is not null)
 			{
 				var isUnion =
-					Statement.SelectQuery is {HasSetOperators: true} ||
-					Statement.ParentStatement?.SelectQuery is {HasSetOperators: true} sq && sq.SetOperators.Exists(s => s.SelectQuery == Statement.SelectQuery);
+					Statement.SelectQuery is { HasSetOperators: true } ||
+					(Statement.ParentStatement?.SelectQuery is { HasSetOperators: true } sq && sq.SetOperators.Exists(s => s.SelectQuery == Statement.SelectQuery));
 
 				if (isUnion)
 				{
@@ -2478,7 +2478,7 @@ namespace LinqToDB.Internal.SqlProvider
 				{
 					StringBuilder.Append(condition.IsOr ? " OR" : " AND");
 
-					if (condition.Predicates.Count < 4 && StringBuilder.Length - len < 50 || !wrapCondition)
+					if ((condition.Predicates.Count < 4 && StringBuilder.Length - len < 50) || !wrapCondition)
 					{
 						StringBuilder.Append(' ');
 					}

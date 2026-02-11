@@ -44,6 +44,13 @@ end_of_line = lf
 dotnet_sort_system_directives_first = true
 dotnet_separate_import_directive_groups = true
 
+# Parenthesis
+dotnet_code_quality_unused_parameters = all:suggestion
+dotnet_style_parentheses_in_arithmetic_binary_operators = always_for_clarity:warning
+dotnet_style_parentheses_in_other_binary_operators = always_for_clarity:warning
+dotnet_style_parentheses_in_relational_binary_operators = always_for_clarity:warning
+dotnet_style_parentheses_in_other_operators = never_if_unnecessary:suggestion
+
 # Use language keywords instead of framework type names for type references
 dotnet_style_predefined_type_for_locals_parameters_members = true:error
 dotnet_style_predefined_type_for_member_access = true:suggestion
@@ -206,6 +213,8 @@ dotnet_diagnostic.IDE0001.severity = error # IDE0001: Simplify name
 dotnet_diagnostic.IDE0002.severity = error # IDE0002: Simplify member access
 dotnet_diagnostic.IDE0003.severity = error # IDE0003: Remove this or Me qualification
 dotnet_diagnostic.IDE0009.severity = error # IDE0009: Qualify member access
+dotnet_diagnostic.IDE0047.severity = suggestion # IDE0047: Remove unnecessary parentheses
+dotnet_diagnostic.IDE0048.severity = suggestion # IDE0048: Add parentheses for clarity
 dotnet_diagnostic.IDE0051.severity = error # IDE0051: Remove unused private members
 dotnet_diagnostic.IDE0052.severity = error # IDE0052: Remove unread private member
 dotnet_diagnostic.IDE0060.severity = error # IDE0060: Remove unused parameter
@@ -413,8 +422,6 @@ dotnet_diagnostic.IDE0041.severity = none # IDE0041: Use is null check
 dotnet_diagnostic.IDE0044.severity = none # IDE0044: Add readonly modifier
 dotnet_diagnostic.IDE0045.severity = none # IDE0045: Use conditional expression for assignment
 dotnet_diagnostic.IDE0046.severity = none # IDE0046: Convert to conditional expression
-dotnet_diagnostic.IDE0047.severity = none # IDE0047: Remove unnecessary parentheses
-dotnet_diagnostic.IDE0048.severity = none # IDE0048: Add parentheses for clarity
 dotnet_diagnostic.IDE0049.severity = none # IDE0049: Use language keywords instead of framework type names for type references
 dotnet_diagnostic.IDE0050.severity = none # IDE0050: Convert to tuple
 dotnet_diagnostic.IDE0055.severity = none # IDE0055: Formatting rules

@@ -327,8 +327,8 @@ namespace Tests.Linq
 				}
 
 				Assert.That(
-					 item.Product.Discontinued && item.Product is Northwind.DiscontinuedProduct ||
-					!item.Product.Discontinued && item.Product is Northwind.ActiveProduct, Is.True);
+					 (item.Product.Discontinued && item.Product is Northwind.DiscontinuedProduct) ||
+					(!item.Product.Discontinued && item.Product is Northwind.ActiveProduct), Is.True);
 			}
 		}
 

@@ -136,7 +136,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			if (_isCollecting)
 			{
-				if (_inExpression || selectQuery.Select.IsDistinct || selectQuery.HasSetOperators && HasNonUnionAllSetOperators(selectQuery))
+				if (_inExpression || selectQuery.Select.IsDistinct || (selectQuery.HasSetOperators && HasNonUnionAllSetOperators(selectQuery)))
 				{
 					// Collect columns when query is used in expression context or has non-UNION-ALL set operators
 					foreach (var column in selectQuery.Select.Columns)
@@ -185,7 +185,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				MarkColumnUsed(element);
 				return base.VisitSqlColumnReference(element);
 			}
-			
+
 			// In Phase 2, don't visit column expressions - usage already collected
 			return element;
 		}
@@ -205,7 +205,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 
 					usedFields.Add(element.PhysicalName);
-					
+
 					// Find and mark the corresponding column
 					for (var i = 0; i < cte.Cte!.Fields.Count; i++)
 					{

@@ -173,7 +173,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 							// force quote enabled
 							ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote
 							// only for Auto mode - contains upper-case letter
-							|| ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && value.Any(char.IsUpper)
+							|| (ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && value.Any(char.IsUpper))
 							// is a keyword
 							|| IsReserved(value)
 							// starts from non-letter/underscore

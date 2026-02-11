@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -78,7 +78,7 @@ namespace Tests.Linq
 					join p  in Parent on ch.ParentID equals p.ParentID
 					join gc in q1     on p.ParentID  equals gc.ParentID into g
 					from gc in g.DefaultIfEmpty()
-					where gc == null || gc.GrandChildID != 111 && gc.GrandChildID != 222
+					where gc == null || (gc.GrandChildID != 111 && gc.GrandChildID != 222)
 					select new
 					{
 						Parent       = p,
@@ -100,7 +100,7 @@ namespace Tests.Linq
 					join p  in db.Parent on ch.ParentID equals p.ParentID
 					join gc in q2        on p.ParentID  equals gc.ParentID into g
 					from gc in g.DefaultIfEmpty()
-					where gc == null || gc.GrandChildID != 111 && gc.GrandChildID != 222
+					where gc == null || (gc.GrandChildID != 111 && gc.GrandChildID != 222)
 					select new
 					{
 						Parent       = p,

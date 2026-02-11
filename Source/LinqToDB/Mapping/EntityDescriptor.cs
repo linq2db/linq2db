@@ -252,7 +252,7 @@ namespace LinqToDB.Mapping
 					}
 				}
 				else if (
-					!IsColumnAttributeRequired && MappingSchema.IsScalarType(member.Type) ||
+					(!IsColumnAttributeRequired && MappingSchema.IsScalarType(member.Type)) ||
 					MappingSchema.HasAttribute<IdentityAttribute  >(TypeAccessor.Type, member.MemberInfo) ||
 					MappingSchema.HasAttribute<PrimaryKeyAttribute>(TypeAccessor.Type, member.MemberInfo))
 				{

@@ -112,10 +112,10 @@ namespace LinqToDB.Schema
 		/// <param name="onlyInputParameters">Ignore non-input parameters.</param>
 		private void ParseCallable(ProcedureSchema proc, SchemaObjects loadedObjects, bool onlyInputParameters)
 		{
-			var load =    !proc.IsFunction          && loadedObjects.HasFlag(SchemaObjects.StoredProcedure)
-						|| proc.IsTableFunction     && loadedObjects.HasFlag(SchemaObjects.TableFunction)
-						|| proc.IsAggregateFunction && loadedObjects.HasFlag(SchemaObjects.AggregateFunction)
-						|| proc.IsFunction          && !proc.IsAggregateFunction && !proc.IsTableFunction && loadedObjects.HasFlag(SchemaObjects.ScalarFunction);
+			var load =    (!proc.IsFunction          && loadedObjects.HasFlag(SchemaObjects.StoredProcedure))
+						|| (proc.IsTableFunction     && loadedObjects.HasFlag(SchemaObjects.TableFunction))
+						|| (proc.IsAggregateFunction && loadedObjects.HasFlag(SchemaObjects.AggregateFunction))
+						|| (proc.IsFunction          && !proc.IsAggregateFunction && !proc.IsTableFunction && loadedObjects.HasFlag(SchemaObjects.ScalarFunction));
 
 			if (!load)
 				return;
@@ -344,8 +344,8 @@ namespace LinqToDB.Schema
 		/// <param name="loadedObjects">Database object load filter.</param>
 		private void ParseTable(TableSchema table, SchemaObjects loadedObjects)
 		{
-			var load =  table.IsView && loadedObjects.HasFlag(SchemaObjects.View)
-					|| !table.IsView && loadedObjects.HasFlag(SchemaObjects.Table);
+			var load =  (table.IsView && loadedObjects.HasFlag(SchemaObjects.View))
+					|| (!table.IsView && loadedObjects.HasFlag(SchemaObjects.Table));
 
 			if (!load)
 				return;

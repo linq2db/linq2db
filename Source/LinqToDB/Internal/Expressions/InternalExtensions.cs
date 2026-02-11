@@ -266,20 +266,18 @@ namespace LinqToDB.Internal.Expressions
 			var type = method.Method.DeclaringType;
 
 			return
-				type == typeof(Queryable)                ||
-				enumerable && type == typeof(Enumerable) ||
-				type == typeof(LinqExtensions)           ||
-				type == typeof(LinqInternalExtensions)   ||
-				type == typeof(DataExtensions)           ||
-				type == typeof(TableExtensions)          ||
+				type == typeof(Queryable)                  ||
+				(enumerable && type == typeof(Enumerable)) ||
+				type == typeof(LinqExtensions)             ||
+				type == typeof(LinqInternalExtensions)     ||
+				type == typeof(DataExtensions)             ||
+				type == typeof(TableExtensions)            ||
 				MemberCache.GetMemberInfo(method.Method).IsQueryable;
 		}
 
 		public static bool IsAsyncExtension(this MethodCallExpression method)
 		{
-			var type = method.Method.DeclaringType;
-
-			return type == typeof(AsyncExtensions);
+			return method.Method.DeclaringType == typeof(AsyncExtensions);
 		}
 
 		public static bool IsExtensionMethod(this MethodCallExpression methodCall, MappingSchema mapping)

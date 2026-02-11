@@ -135,7 +135,7 @@ namespace Tests.xUpdate
 				from p in db.Parent
 				join ch in db.Child on p.ParentID equals ch.ParentID into lj1
 				from ch in lj1.DefaultIfEmpty()
-				where ch != null && ch.ParentID == -1 || ch == null && p.ParentID == -1
+				where (ch != null && ch.ParentID == -1) || (ch == null && p.ParentID == -1)
 				select p;
 
 			q.Delete();

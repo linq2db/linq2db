@@ -853,11 +853,11 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			AreEqual(
 				from p in Parent
-				where p.ParentID == 1 && p.Value1 == 1 || p.ParentID == 2 && p.Value1.HasValue
+				where (p.ParentID == 1 && p.Value1 == 1) || (p.ParentID == 2 && p.Value1.HasValue)
 				select p
 				,
 				from p in db.Parent
-				where p.ParentID == 1 && p.Value1 == 1 || p.ParentID == 2 && p.Value1.HasValue
+				where (p.ParentID == 1 && p.Value1 == 1) || (p.ParentID == 2 && p.Value1.HasValue)
 				select p);
 		}
 
@@ -867,11 +867,11 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			AreEqual(
 				from p in Parent
-				where p.ParentID == 1 && p.Value1 == 1 || p.ParentID == 2 && (p.ParentID != 3 || p.ParentID == 4) && p.Value1.HasValue
+				where (p.ParentID == 1 && p.Value1 == 1) || (p.ParentID == 2 && (p.ParentID != 3 || p.ParentID == 4) && p.Value1.HasValue)
 				select p
 				,
 				from p in db.Parent
-				where p.ParentID == 1 && p.Value1 == 1 || p.ParentID == 2 && (p.ParentID != 3 || p.ParentID == 4) && p.Value1.HasValue
+				where (p.ParentID == 1 && p.Value1 == 1) || (p.ParentID == 2 && (p.ParentID != 3 || p.ParentID == 4) && p.Value1.HasValue)
 				select p);
 		}
 
@@ -942,10 +942,10 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			AreEqual(
 				from p in Parent
-				where p.ParentID == 1 || (p.ParentID == 2 || p.ParentID == 3) && (p.ParentID == 3 || p.ParentID == 1)
+				where p.ParentID == 1 || ((p.ParentID == 2 || p.ParentID == 3) && (p.ParentID == 3 || p.ParentID == 1))
 				select p,
 				from p in db.Parent
-				where p.ParentID == 1 || (p.ParentID == 2 || p.ParentID == 3) && (p.ParentID == 3 || p.ParentID == 1)
+				where p.ParentID == 1 || ((p.ParentID == 2 || p.ParentID == 3) && (p.ParentID == 3 || p.ParentID == 1))
 				select p);
 		}
 
@@ -1549,7 +1549,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			var results = (from c in db.Parent
 						   where c.ParentID == id
-								   && (!flag.HasValue || flag.Value && c.Value1 == null || !flag.Value && c.Value1 != null)
+								   && (!flag.HasValue || (flag.Value && c.Value1 == null) || (!flag.Value && c.Value1 != null))
 						   select c);
 
 			var sql = results.ToSqlQuery().Sql;
@@ -1557,7 +1557,7 @@ namespace Tests.Linq
 			AreEqual(
 				from c in db.Parent.AsEnumerable()
 				where c.ParentID == id
-					&& (!flag.HasValue || flag.Value && c.Value1 == null || !flag.Value && c.Value1 != null)
+					&& (!flag.HasValue || (flag.Value && c.Value1 == null) || (!flag.Value && c.Value1 != null))
 				select c,
 				results,
 				true);
@@ -1571,7 +1571,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			var results = (from c in db.Parent
 						   where c.ParentID == id
-								   && (flag == null || flag.Value && c.Value1 == null || !flag.Value && c.Value1 != null)
+								   && (flag == null || (flag.Value && c.Value1 == null) || (!flag.Value && c.Value1 != null))
 						   select c);
 
 			var sql = results.ToSqlQuery().Sql;
@@ -1579,7 +1579,7 @@ namespace Tests.Linq
 			AreEqual(
 				from c in db.Parent.AsEnumerable()
 				where c.ParentID == id
-					&& (flag == null || flag.Value && c.Value1 == null || !flag.Value && c.Value1 != null)
+					&& (flag == null || (flag.Value && c.Value1 == null) || (!flag.Value && c.Value1 != null))
 				select c,
 				results,
 				true);

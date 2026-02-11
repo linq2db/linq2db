@@ -2771,7 +2771,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						}
 					}
 
-					if (!_providerFlags.IsApplyJoinSupported && join.JoinType is JoinType.OuterApply || !_providerFlags.IsSupportsJoinWithoutCondition && join.Condition.IsTrue())
+					if (
+						(!_providerFlags.IsApplyJoinSupported && join.JoinType is JoinType.OuterApply)
+						|| (!_providerFlags.IsSupportsJoinWithoutCondition && join.Condition.IsTrue())
+					)
 					{
 						// last chance to remove apply join before finalizing query.
 						if (MoveSingleOuterJoinToSubQuery(selectQuery, join, ref doNotRemoveQueries, processMultiColumn: true, deduplicate: true, out modified))

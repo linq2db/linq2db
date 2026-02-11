@@ -159,7 +159,7 @@ namespace LinqToDB.Linq.Translation
 
 							var binary = (BinaryExpression)expr;
 
-							if (binary.Left == raw.ValueParameter && binary.Right.IsNullValue() || binary.Right == raw.ValueParameter && binary.Left.IsNullValue())
+							if ((binary.Left == raw.ValueParameter && binary.Right.IsNullValue()) || (binary.Right == raw.ValueParameter && binary.Left.IsNullValue()))
 							{
 								if (alreadySpottedNullCheck || config.AllowNotNullCheckMode == true)
 								{

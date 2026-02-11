@@ -120,7 +120,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 				if (Adapter.TimeSpanFactory != null && dataType.DataType != DataType.Int64)
 					value = Adapter.TimeSpanFactory(ts);
 			}
-			else if (value is Guid || value == null && dataType.DataType == DataType.Guid)
+			else if (value is Guid || (value == null && dataType.DataType == DataType.Guid))
 			{
 				value    = value == null ? null : string.Format(CultureInfo.InvariantCulture, "{0}", value);
 				dataType = dataType.WithDataType(DataType.Char);

@@ -240,7 +240,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 		public string ToValidNameDefault(string name, bool mayRemoveUnderscore)
 		{
-			var normalize = IsParameter && NormalizeParameterName || IsProcedureColumn && NormalizeProcedureColumnName || (!IsParameter && !IsProcedureColumn && NormalizeNames);
+			var normalize = (IsParameter && NormalizeParameterName) || (IsProcedureColumn && NormalizeProcedureColumnName) || (!IsParameter && !IsProcedureColumn && NormalizeNames);
 
 			if (normalize)
 			{
@@ -263,7 +263,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 			if (normalize)
 			{
-				var isAllUpper = name.All(c => char.IsDigit(c) || char.IsLetter(c) && char.IsUpper(c));
+				var isAllUpper = name.All(c => char.IsDigit(c) || (char.IsLetter(c) && char.IsUpper(c)));
 
 				if (IsParameter)
 				{
@@ -502,7 +502,7 @@ namespace LinqToDB.Tools.ModelGeneration
 					{
 						TableSchema             = t,
 						IsDefaultSchema         = t.IsDefaultSchema,
-						Schema                  = t.IsDefaultSchema && !IncludeDefaultSchema || string.IsNullOrEmpty(t.GroupName ?? t.SchemaName) ? null : t.GroupName ?? t.SchemaName,
+						Schema                  = (t.IsDefaultSchema && !IncludeDefaultSchema) || string.IsNullOrEmpty(t.GroupName ?? t.SchemaName) ? null : t.GroupName ?? t.SchemaName,
 						BaseClass               = BaseEntityClass,
 						TableName               = t.TableName,
 						TypeName                = t.TypeName,

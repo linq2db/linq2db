@@ -481,7 +481,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 			root.VisitParentFirst((hash, hashIgnore, found, singleColumnLevel), static (context, e) =>
 			{
-				if (e is ISqlTableSource source && context.hash.Contains(source) || context.hashIgnore.Contains(e))
+				if ((e is ISqlTableSource source && context.hash.Contains(source)) || context.hashIgnore.Contains(e))
 					return false;
 
 				switch (e.ElementType)

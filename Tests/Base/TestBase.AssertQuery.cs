@@ -57,7 +57,7 @@ namespace Tests
 
 			private bool IsLINQMethod(MethodInfo method)
 			{
-				return method.IsStatic && method.DeclaringType == typeof(Enumerable) || method.DeclaringType == typeof(Queryable);
+				return (method.IsStatic && method.DeclaringType == typeof(Enumerable)) || method.DeclaringType == typeof(Queryable);
 			}
 
 			[return: NotNullIfNotNull(nameof(node))]

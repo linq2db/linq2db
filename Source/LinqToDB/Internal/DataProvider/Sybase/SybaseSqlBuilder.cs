@@ -157,7 +157,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
-					if (_skipBrackets || value.Length > 28 || value.Length > 0 && value[0] == '[')
+					if (_skipBrackets || value.Length > 28 || (value.Length > 0 && value[0] == '['))
 						return sb.Append(value);
 
 					// https://github.com/linq2db/linq2db/issues/1064
@@ -170,7 +170,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 				case ConvertType.NameToSchema    :
 				case ConvertType.NameToQueryTable:
 				case ConvertType.NameToProcedure :
-					if (_skipBrackets || value.Length > 28 || value.Length > 0 && (value[0] == '[' || value[0] == '#'))
+					if (_skipBrackets || value.Length > 28 || (value.Length > 0 && (value[0] == '[' || value[0] == '#')))
 						return sb.Append(value);
 
 					if (value.IndexOf('.', StringComparison.Ordinal) > 0)

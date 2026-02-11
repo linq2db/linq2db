@@ -38,8 +38,8 @@ namespace Tests.Linq
 
 			using var db = GetDataContext(context);
 			AreEqual(
-				from p in    Parent where p.ParentID > 2 && value || true && !false select p,
-				from p in db.Parent where p.ParentID > 2 && value || true && !false select p);
+				from p in    Parent where (p.ParentID > 2 && value) || (true && !false) select p,
+				from p in db.Parent where (p.ParentID > 2 && value) || (true && !false) select p);
 		}
 
 		[Test]
@@ -49,8 +49,8 @@ namespace Tests.Linq
 
 			using var db = GetDataContext(context);
 			AreEqual(
-				from p in    Parent where values.Contains(p.ParentID) && !false || p.ParentID > 2 select p,
-				from p in db.Parent where values.Contains(p.ParentID) && !false || p.ParentID > 2 select p);
+				from p in    Parent where (values.Contains(p.ParentID) && !false) || p.ParentID > 2 select p,
+				from p in db.Parent where (values.Contains(p.ParentID) && !false) || p.ParentID > 2 select p);
 		}
 
 		[Test]

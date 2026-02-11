@@ -86,7 +86,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				throw new InvalidOperationException("VisitMode is readonly but element changed.");
 
 			// Execute replacer to correct elements
-			if ((_transformationInfo?.Version ?? -1) != version && (VisitMode == VisitMode.Modify || VisitMode == VisitMode.Transform && !ReferenceEquals(newElement, element)))
+			if (
+				(_transformationInfo?.Version ?? -1) != version
+				&& (VisitMode == VisitMode.Modify || (VisitMode == VisitMode.Transform && !ReferenceEquals(newElement, element)))
+			)
 			{
 				if (_transformationInfo != null)
 				{

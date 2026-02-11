@@ -70,7 +70,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			
 			if (left is ConditionalExpression conditional)
 			{
-				if (right.IsNullValue() || right is SqlPlaceholderExpression p && p.Sql.IsNullValue())
+				if (right.IsNullValue() || (right is SqlPlaceholderExpression p && p.Sql.IsNullValue()))
 				{
 					if (conditional.IfTrue is SqlGenericConstructorExpression)
 					{

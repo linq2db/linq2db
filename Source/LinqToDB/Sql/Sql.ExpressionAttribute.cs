@@ -223,7 +223,7 @@ namespace LinqToDB
 						if (!string.IsNullOrEmpty(calculated))
 						{
 							var e = expression;
-							if (prevMatch == match.Index && prevNotEmptyMatch == match.Index - 3 || (prevNotEmptyMatch >= 0 && e[prevNotEmptyMatch] != ' '))
+							if ((prevMatch == match.Index && prevNotEmptyMatch == match.Index - 3) || (prevNotEmptyMatch >= 0 && e[prevNotEmptyMatch] != ' '))
 								res = " " + calculated;
 						}
 

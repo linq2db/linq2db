@@ -2646,7 +2646,7 @@ namespace Tests.Linq
 
 			// use two parameters with different types to ensure fix works with positional parameters
 			var result = db.Person
-				.Where(x => x.ID == id && x.LastName != name || x.FirstName != name && x.ID - 1 == id)
+				.Where(x => (x.ID == id && x.LastName != name) || (x.FirstName != name && x.ID - 1 == id))
 				.GroupBy(x => x.ID, x => x).DisableGuard()
 				.ToList();
 

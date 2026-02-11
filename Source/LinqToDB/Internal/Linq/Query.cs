@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -109,7 +109,7 @@ namespace LinqToDB.Internal.Linq
 				{
 					var value1 = main(matchedQueryExpressions, dataContext, null);
 					var value2 = other(matchedQueryExpressions, dataContext, null);
-					result = value1 == null && value2 == null || value1 != null && value1.Equals(value2);
+					result = (value1 == null && value2 == null) || (value1 != null && value1.Equals(value2));
 
 					if (!result)
 						return false;

@@ -879,9 +879,13 @@ namespace LinqToDB.Internal.Linq.Builder
 							{
 								return RemoveNullPropagationTransformation(conditional.IfFalse, forSearch);
 							}
-							else if (IsNullConstant(conditional.IfFalse)
-								&& ((nullRight && IsAcceptableType(binary.Left.Type) ||
-									(nullLeft  && IsAcceptableType(binary.Right.Type)))))
+							else if (
+								IsNullConstant(conditional.IfFalse)
+								&& (
+									(nullRight && IsAcceptableType(binary.Left.Type)) 
+									|| (nullLeft && IsAcceptableType(binary.Right.Type))
+								)
+							)
 							{
 								return RemoveNullPropagationTransformation(conditional.IfTrue, forSearch);
 							}
@@ -899,7 +903,7 @@ namespace LinqToDB.Internal.Linq.Builder
 								return RemoveNullPropagationTransformation(conditional.IfTrue, forSearch);
 							}
 							else if (IsNullConstant(conditional.IfTrue)
-									 && ((nullRight && IsAcceptableType(binary.Left.Type) ||
+									 && (((nullRight && IsAcceptableType(binary.Left.Type)) ||
 										  (nullLeft && IsAcceptableType(binary.Right.Type)))))
 							{
 								return RemoveNullPropagationTransformation(conditional.IfFalse, forSearch);

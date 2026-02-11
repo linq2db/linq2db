@@ -486,7 +486,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			Expression result = Expression.MemberInit(newExpression, bindings);
 
-			if (additionalSteps != null || dynamicProperties?.Count > 0 && ed.DynamicColumnSetter != null)
+			if (additionalSteps != null || (dynamicProperties?.Count > 0 && ed.DynamicColumnSetter != null))
 			{
 				var generator   = new ExpressionGenerator();
 				var objVariable = generator.AssignToVariable(result, "obj");

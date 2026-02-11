@@ -95,7 +95,7 @@ namespace LinqToDB.Internal.SqlQuery
 			return
 				other is SqlValue value
 				&& ValueType.Equals(value.ValueType)
-				&& (Value == null && value.Value == null || Value != null && Value.Equals(value.Value))
+				&& ((Value == null && value.Value == null) || (Value != null && Value.Equals(value.Value)))
 				&& comparer(this, other);
 		}
 

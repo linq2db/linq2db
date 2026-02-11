@@ -202,7 +202,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (typeof(IQueryable<>).IsSameOrParentOf(node.Type))
 				{
 					if (node.Arguments.Any(static a => typeof(IDataContext).IsSameOrParentOf(a.Type)) ||
-						node.Object != null && typeof(IDataContext).IsSameOrParentOf(node.Object.Type))
+						(node.Object != null && typeof(IDataContext).IsSameOrParentOf(node.Object.Type)))
 					{
 						CanBeEvaluated = false;
 						return node;
@@ -227,8 +227,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			public override Expression VisitSqlQueryRootExpression(SqlQueryRootExpression node)
 			{
 				if (InMethod
-					&& ((IConfigurationID)node.MappingSchema).ConfigurationID ==
-					((IConfigurationID)_mappingSchema).ConfigurationID)
+					&& ((IConfigurationID)node.MappingSchema).ConfigurationID == ((IConfigurationID)_mappingSchema).ConfigurationID)
 				{
 					return node;
 				}

@@ -135,10 +135,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			_typeNames = new()
 			{
-				{ typeof(object), "object" },
-				{ typeof(bool),   "bool"   },
-				{ typeof(int),    "int"    },
-				{ typeof(string), "string" },
+				[typeof(object)] = "object",
+				[typeof(bool)  ] = "bool"  ,
+				[typeof(int)   ] = "int"   ,
+				[typeof(string)] = "string",
 			};
 
 			using var sb1 = Pools.StringBuilder.Allocate();
@@ -152,16 +152,21 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			foreach (var typeNamespaceList in _usedTypes.OrderBy(t => t.Namespace, StringComparer.Ordinal).GroupBy(x => x.Namespace, StringComparer.Ordinal))
 			{
-				if (typeNamespaceList.All(type =>
+				if (
+					typeNamespaceList.All(type =>
+						!IsUserType(type)
+						|| IsAnonymous(type)
+						|| type.Assembly == GetType().Assembly
+						|| (type.IsGenericType && type.GetGenericTypeDefinition() != type)
+					)
+				)
 				{
-					return (!IsUserType(type) ||
-							IsAnonymous(type) ||
-							type.Assembly == GetType().Assembly ||
-							type.IsGenericType && type.GetGenericTypeDefinition() != type);
-				}))
 					continue;
+				}
+
 				_typeBuilder.Append("namespace ").AppendLine(MangleName(IsUserNamespace(typeNamespaceList.Key), typeNamespaceList.Key, "T"));
 				_typeBuilder.AppendLine("{");
+
 				foreach (var type in typeNamespaceList.OrderBy(t => t.Name, StringComparer.Ordinal))
 				{
 					BuildType(type, _dataContext.MappingSchema, _dataContext.Options);
@@ -379,7 +384,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (typeof(Table<>).IsSameOrParentOf(node.Type))
 				_exprBuilder.Append(CultureInfo.InvariantCulture, $"db.GetTable<{GetTypeName(node.Type.GetGenericArguments()[0])}>()");
-			else if (node.Value == _dataContext || node.Value == null && typeof(IDataContext).IsSameOrParentOf(node.Type))
+			else if (node.Value == _dataContext || (node.Value == null && typeof(IDataContext).IsSameOrParentOf(node.Type)))
 				_exprBuilder.Append("db");
 			else if (string.Equals(node.ToString(), "value(" + node.Type + ")", StringComparison.Ordinal))
 				_exprBuilder.Append("value(").Append(GetTypeName(node.Type)).Append(')');
@@ -605,8 +610,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (!IsUserType(type) ||
 				IsAnonymous(type) ||
 				type.Assembly == GetType().Assembly ||
-				type.IsGenericType && type.GetGenericTypeDefinition() != type)
+				(type.IsGenericType && type.GetGenericTypeDefinition() != type))
+			{
 				return;
+			}
 
 			var isUserName = IsUserType(type);
 			var name       = MangleName(isUserName, type.Name, "T");

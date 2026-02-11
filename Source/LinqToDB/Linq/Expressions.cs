@@ -356,7 +356,7 @@ namespace LinqToDB.Linq
 			if (expr == null)
 			{
 				if (mi is MethodInfo method &&
-				    (method.IsVirtual || method.DeclaringType != null && method.ReflectedType != null && method.DeclaringType.IsAssignableFrom(method.ReflectedType)))
+				    (method.IsVirtual || (method.DeclaringType != null && method.ReflectedType != null && method.DeclaringType.IsAssignableFrom(method.ReflectedType))))
 				{
 					// walking up through hierarchy to find registered converter
 					//

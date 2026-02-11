@@ -205,7 +205,7 @@ namespace LinqToDB.SqlQuery
 
 		static bool CheckNulls(object? expr1, object? expr2)
 		{
-			return expr1 == null && expr2 == null || expr1 != null && expr2 != null;
+			return (expr1 == null && expr2 == null) || (expr1 != null && expr2 != null);
 		}
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)

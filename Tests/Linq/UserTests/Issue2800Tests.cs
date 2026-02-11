@@ -23,12 +23,12 @@ namespace Tests.UserTests
 			[ExpressionMethod(nameof(FilterBySpecialStringExpression))]
 			public static bool FilterBySpecialString(Car car, bool? isSpecial = false)
 			{
-				return !isSpecial.HasValue || isSpecial.Value && car.Name == "Special" || !isSpecial.Value && car.Name != "Special";
+				return !isSpecial.HasValue || (isSpecial.Value && car.Name == "Special") || (!isSpecial.Value && car.Name != "Special");
 			}
 
 			public static Expression<Func<Car, bool?, bool>> FilterBySpecialStringExpression()
 			{
-				return (x, isSpecial) => isSpecial == null || isSpecial.Value && x.Name == "Special" || !isSpecial.Value && x.Name != "Special";
+				return (x, isSpecial) => isSpecial == null || (isSpecial.Value && x.Name == "Special") || (!isSpecial.Value && x.Name != "Special");
 			}
 		}
 

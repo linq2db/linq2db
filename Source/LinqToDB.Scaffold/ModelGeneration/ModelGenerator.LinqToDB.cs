@@ -169,7 +169,7 @@ namespace LinqToDB.Tools.ModelGeneration
 					foreach (var m in GetAllClassMembers(mm.Members, exceptMethods!))
 						yield return m;
 				// constructors don't have own type/flag
-				else if (!(member is IMethod mt && (mt.BuildType() == null || exceptMethods != null && exceptMethods.Contains(mt.Name))))
+				else if (!(member is IMethod mt && (mt.BuildType() == null || (exceptMethods != null && exceptMethods.Contains(mt.Name)))))
 					yield return member;
 			}
 		}
@@ -514,21 +514,21 @@ namespace LinqToDB.Tools.ModelGeneration
 						canBeReplaced = false;
 					}
 
-					if (GenerateDataTypes && !GenerateLengthProperty.HasValue || GenerateLengthProperty == true)
+					if ((GenerateDataTypes && !GenerateLengthProperty.HasValue) || GenerateLengthProperty == true)
 					{
 						if (c.Length != null)
 							ca.Parameters.Add("Length=" + (c.Length == int.MaxValue ? "int.MaxValue" : c.Length?.ToString(CultureInfo.InvariantCulture)));
 						canBeReplaced = false;
 					}
 
-					if (GenerateDataTypes && !GeneratePrecisionProperty.HasValue || GeneratePrecisionProperty == true)
+					if ((GenerateDataTypes && !GeneratePrecisionProperty.HasValue) || GeneratePrecisionProperty == true)
 					{
 						if (c.Precision != null)
 							ca.Parameters.Add(FormattableString.Invariant($"Precision={c.Precision}"));
 						canBeReplaced = false;
 					}
 
-					if (GenerateDataTypes && !GenerateScaleProperty.HasValue || GenerateScaleProperty == true)
+					if ((GenerateDataTypes && !GenerateScaleProperty.HasValue) || GenerateScaleProperty == true)
 					{
 						if (c.Scale != null)
 							ca.Parameters.Add(FormattableString.Invariant($"Scale={c.Scale}"));

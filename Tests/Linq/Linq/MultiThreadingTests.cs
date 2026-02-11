@@ -106,11 +106,11 @@ namespace Tests.Linq
 			ConcurrentRunner(db, context, 2,
 				(threadDb, p) =>
 				{
-					var query = threadDb.GetTable<MultiThreadedData>().Where(x => p % 2 == 0 && x.Id == p || x.Id == p % 3 + 1);
+					var query = threadDb.GetTable<MultiThreadedData>().Where(x => (p % 2 == 0 && x.Id == p) || x.Id == p % 3 + 1);
 					return query.Select(q => q.Id).ToArray();
 				}, (result, p) =>
 				{
-					var query = testData.Where(x => p % 2 == 0 && x.Id == p || x.Id == p % 3  + 1);
+					var query = testData.Where(x => (p % 2 == 0 && x.Id == p) || x.Id == p % 3  + 1);
 					var expected = query.Select(q => q.Id).ToArray();
 					AreEqual(expected, result);
 				}, Enumerable.Range(1, 50).ToArray());

@@ -41,7 +41,7 @@ namespace LinqToDB.Internal.DataProvider
 			SqlBuilder      = DataConnection.DataProvider.CreateSqlBuilder(MappingSchema, DataConnection.Options);
 			Descriptor      = MappingSchema.GetEntityDescriptor(entityType, options.ConnectionOptions.OnEntityDescriptorCreated);
 			Columns         = Descriptor.Columns
-				.Where(c => !c.SkipOnInsert || c.IsIdentity && options.BulkCopyOptions.KeepIdentity == true)
+				.Where(c => !c.SkipOnInsert || (c.IsIdentity && options.BulkCopyOptions.KeepIdentity == true))
 				.ToArray();
 			//TODO: check how to remove SqlDataType here
 			ColumnTypes   = Columns.Select(c => new SqlDataType(c).Type).ToArray();
