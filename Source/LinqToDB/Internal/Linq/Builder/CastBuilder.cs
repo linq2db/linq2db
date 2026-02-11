@@ -47,19 +47,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var type = _methodCall.Method.GetGenericArguments()[0];
 
 				if (corrected.Type != type)
-				{
-					// Check if the corrected type is compatible with the target type
-					// (e.g., derived type can be used as base type)
-					if (type.IsAssignableFrom(corrected.Type))
-					{
-						// If corrected type is derived from target type, we can use it as-is
-						// No explicit conversion is needed
-						return corrected;
-					}
-
-					// Otherwise, attempt the conversion
 					corrected = Expression.Convert(corrected, type);
-				}
 
 				return corrected;
 			}
