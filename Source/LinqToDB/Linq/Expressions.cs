@@ -127,6 +127,98 @@ namespace LinqToDB.Linq
 
 		#endregion
 
+		#region MapUnary
+
+		static UnaryExpression GetUnaryNode(Expression expr)
+		{
+			while (expr.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.TypeAs)
+				expr = ((UnaryExpression) expr).Operand;
+
+			if (expr is UnaryExpression unary)
+				return unary;
+
+			throw new ArgumentException($"Expression '{expr}' is not UnaryExpression node.");
+		}
+
+		/// <summary>
+		/// Maps specific UnaryExpression to another Lambda expression during SQL generation.
+		/// </summary>
+		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
+		/// <param name="nodeType">NodeType of UnaryExpression <see cref="ExpressionType"/> which needs mapping.</param>
+		/// <param name="operandType">Exact type of <see cref="UnaryExpression.Operand"/> member.</param>
+		/// <param name="expression">Lambda expression which has to replace <see cref="UnaryExpression"/></param>
+		/// <remarks>Note that method is not thread safe and has to be used only in Application's initialization section.</remarks>
+		public static void MapUnary(
+			string providerName,
+			ExpressionType nodeType,
+			Type operandType,
+			LambdaExpression expression)
+		{
+			if (providerName == null) throw new ArgumentNullException(nameof(providerName));
+			if (operandType == null) throw new ArgumentNullException(nameof(operandType));
+			if (expression == null) throw new ArgumentNullException(nameof(expression));
+
+			if (!_unaries.Value.TryGetValue(providerName, out var dic))
+				_unaries.Value.Add(providerName, dic = new Dictionary<Tuple<ExpressionType, Type>, IExpressionInfo>());
+
+			var expr = new LazyExpressionInfo();
+
+			expr.SetExpression(expression);
+
+			dic[Tuple.Create(nodeType, operandType)] = expr;
+
+			_checkUserNamespace = false;
+		}
+
+		/// <summary>
+		/// Maps specific <see cref="UnaryExpression"/> to another <see cref="LambdaExpression"/> during SQL generation.
+		/// </summary>
+		/// <param name="nodeType">NodeType of UnaryExpression <see cref="ExpressionType"/> which needs mapping.</param>
+		/// <param name="operandType">Exact type of <see cref="UnaryExpression.Operand"/> member.</param>
+		/// <param name="expression">Lambda expression which has to replace <see cref="UnaryExpression"/>.</param>
+		/// <remarks>Note that method is not thread safe and has to be used only in Application's initialization section.</remarks>
+		public static void MapUnary(
+			ExpressionType nodeType,
+			Type operandType,
+			LambdaExpression expression)
+		{
+			MapUnary("", nodeType, operandType, expression);
+		}
+
+		/// <summary>
+		/// Maps specific <see cref="UnaryExpression"/> to another <see cref="LambdaExpression"/> during SQL generation.
+		/// </summary>
+		/// <typeparam name="TOperand">Exact type of  <see cref="UnaryExpression.Operand"/> member.</typeparam>
+		/// <typeparam name="TR">Result type of <paramref name="unaryExpression"/>.</typeparam>
+		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
+		/// <param name="unaryExpression">Expression which has to be replaced.</param>
+		/// <param name="expression">Lambda expression which has to replace <paramref name="unaryExpression"/>.</param>
+		/// <remarks>Note that method is not thread safe and has to be used only in Application's initialization section.</remarks>
+		public static void MapUnary<TOperand, TR>(
+			string providerName,
+			Expression<Func<TOperand, TR>> unaryExpression,
+			Expression<Func<TOperand, TR>> expression)
+		{
+			MapUnary(providerName, GetUnaryNode(unaryExpression.Body).NodeType, typeof(TOperand), expression);
+		}
+
+		/// <summary>
+		/// Maps specific <see cref="UnaryExpression"/> to another <see cref="LambdaExpression"/> during SQL generation.
+		/// </summary>
+		/// <typeparam name="TOperand">Exact type of  <see cref="UnaryExpression.Operand"/> member.</typeparam>
+		/// <typeparam name="TR">Result type of <paramref name="unaryExpression"/>.</typeparam>
+		/// <param name="unaryExpression">Expression which has to be replaced.</param>
+		/// <param name="expression">Lambda expression which has to replace <paramref name="unaryExpression"/>.</param>
+		/// <remarks>Note that method is not thread safe and has to be used only in Application's initialization section.</remarks>
+		public static void MapUnary<TOperand, TR>(
+			Expression<Func<TOperand, TR>> unaryExpression,
+			Expression<Func<TOperand, TR>> expression)
+		{
+			MapUnary("", unaryExpression, expression);
+		}
+
+		#endregion
+
 		#region MapBinary
 
 		static BinaryExpression GetBinaryNode(Expression expr)
@@ -388,6 +480,41 @@ namespace LinqToDB.Linq
 		}
 
 		/// <summary>
+		/// Searches for registered UnaryExpression mapping and returns LambdaExpression which has to replace this expression.
+		/// </summary>
+		/// <param name="mappingSchema">Current mapping schema.</param>
+		/// <param name="unaryExpression">Expression which has to be replaced.</param>
+		/// <returns>Returns registered LambdaExpression or <see langword="null"/>.</returns>
+		public static LambdaExpression? ConvertUnary(MappingSchema mappingSchema, UnaryExpression unaryExpression)
+		{
+			if (!_unaries.IsValueCreated)
+				return null;
+
+			IExpressionInfo? expr;
+			Dictionary<Tuple<ExpressionType,Type>,IExpressionInfo>? dic;
+
+			var unaries = _unaries.Value;
+			var key      = Tuple.Create(unaryExpression.NodeType, unaryExpression.Operand.Type);
+
+			foreach (var configuration in mappingSchema.ConfigurationList)
+			{
+				if (unaries.TryGetValue(configuration, out dic))
+				{
+					if (dic.TryGetValue(key, out expr))
+						return expr.GetExpression(mappingSchema);
+				}
+			}
+
+			if (unaries.TryGetValue("", out dic))
+			{
+				if (dic.TryGetValue(key, out expr))
+					return expr.GetExpression(mappingSchema);
+			}
+
+			return null;
+		}
+
+		/// <summary>
 		/// Searches for registered BinaryExpression mapping and returns LambdaExpression which has to replace this expression.
 		/// </summary>
 		/// <param name="mappingSchema">Current mapping schema.</param>
@@ -502,6 +629,9 @@ namespace LinqToDB.Linq
 		#region Mapping
 
 		private static readonly Lock _memberSync = new();
+
+		static readonly Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type>,IExpressionInfo>>> _unaries =
+			new Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type>,IExpressionInfo>>>(() => new Dictionary<string,Dictionary<Tuple<ExpressionType,Type>,IExpressionInfo>>());
 
 		static readonly Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>> _binaries =
 			new Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>>(() => new Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>());
@@ -1024,6 +1154,71 @@ namespace LinqToDB.Linq
 #pragma warning restore CS0618 // Type or member is obsolete
 
 		#endregion
+
+		/// <summary>
+		/// Enables TimespanMapping to an Interval Type (instead of the Time Type in the datbases)
+		/// If you do so, you need to also add a mapping according the interval type of your database
+		/// in your mapping schema, with
+		/// mappingSchema.AddScalarType(typeof(TimeSpan), DataType.Int64);
+		/// or
+		/// mappingSchema.AddScalarType(typeof(TimeSpan), DataType.Interval);
+		/// </summary>
+		public static void AddTimeSpanMappings()
+		{
+			Common.Configuration.Sql.Options = Common.Configuration.Sql.Options with { DisableBuiltInTimeSpanConversion = true };
+			MapMember<TimeSpan>(p => p.Days,              (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.Days,              p)!.Value));
+			MapMember<TimeSpan>(p => p.TotalDays,         (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.TotalDays,         p)!.Value));
+			MapMember<TimeSpan>(p => p.Hours,             (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.Hours,             p)!.Value));
+			MapMember<TimeSpan>(p => p.TotalHours,        (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.TotalHours,        p)!.Value));
+			MapMember<TimeSpan>(p => p.Minutes,           (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.Minutes,           p)!.Value));
+			MapMember<TimeSpan>(p => p.TotalMinutes,      (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.TotalMinutes,      p)!.Value));
+			MapMember<TimeSpan>(p => p.Seconds,           (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.Seconds,           p)!.Value));
+			MapMember<TimeSpan>(p => p.TotalSeconds,      (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.TotalSeconds,      p)!.Value));
+			MapMember<TimeSpan>(p => p.Milliseconds,      (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.Milliseconds,      p)!.Value));
+			MapMember<TimeSpan>(p => p.TotalMilliseconds, (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.TotalMilliseconds, p)!.Value));
+
+#if NET7_0_OR_GREATER
+			MapMember<TimeSpan>(p => p.Microseconds,      (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.Microseconds,      p)!.Value));
+			MapMember<TimeSpan>(p => p.TotalMicroseconds, (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.TotalMicroseconds, p)!.Value));
+			MapMember<TimeSpan>(p => p.Nanoseconds,       (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.Nanoseconds,       p)!.Value));
+			MapMember<TimeSpan>(p => p.TotalNanoseconds,  (Expression<Func<TimeSpan, long>>)(p => Sql.TimeSpanPart(Sql.TimeSpanParts.TotalNanoseconds,  p)!.Value));
+#endif
+
+			MapBinary((DateTime  d, DateTime  t) => d - t, (d, t) => Sql.DateDiffInterval(t, d)!.Value);
+			MapBinary((DateTime  d, DateTime? t) => d - t, (d, t) => Sql.DateDiffInterval(t, d)!.Value);
+			MapBinary((DateTime? d, DateTime  t) => d - t, (d, t) => Sql.DateDiffInterval(t, d)!.Value);
+			MapBinary((DateTime? d, DateTime? t) => d - t, (d, t) => Sql.DateDiffInterval(t, d)!.Value);
+
+			MapBinary((DateTimeOffset  d, DateTimeOffset  t) => d - t, (d, t) => Sql.DateDiffInterval(t, d)!.Value);
+			MapBinary((DateTimeOffset  d, DateTimeOffset? t) => d - t, (d, t) => Sql.DateDiffInterval(t, d)!.Value);
+			MapBinary((DateTimeOffset? d, DateTimeOffset  t) => d - t, (d, t) => Sql.DateDiffInterval(t, d)!.Value);
+			MapBinary((DateTimeOffset? d, DateTimeOffset? t) => d - t, (d, t) => Sql.DateDiffInterval(t, d)!.Value);
+
+			MapBinary((DateTime  d, TimeSpan  t) => d + t, (d, t) => Sql.DateAdd(d, t)!.Value);
+			MapBinary((DateTime  d, TimeSpan? t) => d + t, (d, t) => Sql.DateAdd(d, t)!.Value);
+			MapBinary((DateTime? d, TimeSpan  t) => d + t, (d, t) => Sql.DateAdd(d, t)!.Value);
+			MapBinary((DateTime? d, TimeSpan? t) => d + t, (d, t) => Sql.DateAdd(d, t)!.Value);
+
+			MapBinary((DateTimeOffset  d, TimeSpan  t) => d + t, (d, t) => Sql.DateAdd(d, t)!.Value);
+			MapBinary((DateTimeOffset  d, TimeSpan? t) => d + t, (d, t) => Sql.DateAdd(d, t)!.Value);
+			MapBinary((DateTimeOffset? d, TimeSpan  t) => d + t, (d, t) => Sql.DateAdd(d, t)!.Value);
+			MapBinary((DateTimeOffset? d, TimeSpan? t) => d + t, (d, t) => Sql.DateAdd(d, t)!.Value);
+
+#pragma warning disable IDE0350
+			MapUnary<TimeSpan, TimeSpan?>((TimeSpan   t) => -t, (t) => Sql.NegateInterval(t)!.Value);
+			MapUnary<TimeSpan?, TimeSpan?>((TimeSpan? t) => -t, (t) => Sql.NegateInterval(t)!.Value);
+#pragma warning restore
+
+			MapBinary((DateTime  d, TimeSpan  t) => d - t, (d, t) => Sql.DateAdd(d, -t)!.Value);
+			MapBinary((DateTime  d, TimeSpan? t) => d - t, (d, t) => Sql.DateAdd(d, -t)!.Value);
+			MapBinary((DateTime? d, TimeSpan  t) => d - t, (d, t) => Sql.DateAdd(d, -t)!.Value);
+			MapBinary((DateTime? d, TimeSpan? t) => d - t, (d, t) => Sql.DateAdd(d, -t)!.Value);
+
+			MapBinary((DateTimeOffset  d, TimeSpan  t) => d - t, (d, t) => Sql.DateAdd(d, -t)!.Value);
+			MapBinary((DateTimeOffset  d, TimeSpan? t) => d - t, (d, t) => Sql.DateAdd(d, -t)!.Value);
+			MapBinary((DateTimeOffset? d, TimeSpan  t) => d - t, (d, t) => Sql.DateAdd(d, -t)!.Value);
+			MapBinary((DateTimeOffset? d, TimeSpan? t) => d - t, (d, t) => Sql.DateAdd(d, -t)!.Value);
+		}
 
 		public static void MapMember(string providerName, Type objectType, MemberInfo memberInfo, LambdaExpression expression)
 		{

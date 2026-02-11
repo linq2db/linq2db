@@ -111,7 +111,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 						return castExpression;
 					}
 					default:
-						return null;
+						throw new NotImplementedException($"TranslateDateTimeDatePart for datepart (${datepart}) not implemented");
 				}
 
 				ISqlExpression resultExpression;
@@ -190,9 +190,10 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 					case Sql.DateParts.Minute:      intervalExpr = ToInterval(increment, "1 Minute"); break;
 					case Sql.DateParts.Second:      intervalExpr = ToInterval(increment, "1 Second"); break;
 					case Sql.DateParts.Millisecond: intervalExpr = ToInterval(increment, "1 Millisecond"); break;
+					case Sql.DateParts.Microsecond: intervalExpr = ToInterval(increment, "1 Microsecond"); break;
 					case Sql.DateParts.Day: intervalExpr = ToInterval(increment, "1 Day"); break;
 					default:
-						return null;
+						throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented");
 				}
 
 				var resultExpression = factory.Add(factory.GetDbDataType(dateTimeExpression), dateTimeExpression, intervalExpr);
