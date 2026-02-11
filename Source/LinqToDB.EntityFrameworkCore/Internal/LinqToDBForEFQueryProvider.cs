@@ -190,7 +190,8 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 
 		Expression IExpressionQuery.Expression => ((IExpressionQuery)QueryProvider).Expression;
 
-		IDataContext IExpressionQuery.DataContext => ((IExpressionQuery)QueryProvider).DataContext;
+		public IDataContext DataContext => ((IExpressionQuery)QueryProvider).DataContext;
+		public QueryDebugView DebugView => ((IExpressionQuery)QueryProvider).DebugView;
 
 		IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options) =>
 			((IExpressionQuery)QueryProvider).GetSqlQueries(options);
