@@ -6,7 +6,7 @@ namespace LinqToDB.Tools.Comparers
 {
 	sealed class EnumerableEqualityComparer<T> : EqualityComparer<IEnumerable<T>>
 	{
-		public new static EnumerableEqualityComparer<T> Default { get; } = new EnumerableEqualityComparer<T>();
+		public static new EnumerableEqualityComparer<T> Default { get; } = new EnumerableEqualityComparer<T>();
 
 		private readonly IEqualityComparer<T> _elementComparer;
 

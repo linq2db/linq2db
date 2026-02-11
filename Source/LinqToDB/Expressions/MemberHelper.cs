@@ -29,7 +29,7 @@ namespace LinqToDB.Expressions
 				return obj is MemberInfoWithType other && Equals(other);
 			}
 
-			public readonly override int GetHashCode()
+			public override readonly int GetHashCode()
 			{
 				return HashCode.Combine(Type, MemberInfo);
 			}

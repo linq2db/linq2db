@@ -24,7 +24,7 @@ namespace Tests.UserTests
 				AddMappingSchema(new MappingSchema());
 			}
 
-			private new static IDataProvider GetDataProvider(string configuration)
+			private static new IDataProvider GetDataProvider(string configuration)
 			{
 				return DataConnection.GetDataProvider(configuration);
 			}
@@ -46,7 +46,7 @@ namespace Tests.UserTests
 				AddMappingSchema(new MappingSchema());
 			}
 
-			private new static IDataProvider GetDataProvider(string configuration)
+			private static new IDataProvider GetDataProvider(string configuration)
 			{
 				return DataConnection.GetDataProvider(configuration);
 			}

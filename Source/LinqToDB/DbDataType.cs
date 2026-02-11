@@ -94,7 +94,7 @@ namespace LinqToDB
 		public readonly DbDataType WithScale         (int?     scale                ) => new (SystemType, DataType, DbType, Length, Precision, scale);
 		public readonly DbDataType WithPrecisionScale(int?     precision, int? scale) => new (SystemType, DataType, DbType, Length, precision, scale);
 
-		public readonly override string ToString()
+		public override readonly string ToString()
 		{
 			var dataTypeStr  = DataType == DataType.Undefined ? string.Empty : $", {DataType}";
 			var dbTypeStr    = string.IsNullOrEmpty(DbType)   ? string.Empty : $", \"{DbType}\"";

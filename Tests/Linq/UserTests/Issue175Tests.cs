@@ -9,12 +9,12 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue175Tests : TestBase
 	{
-		new public class Parent
+		public new class Parent
 		{
 			public int? ParentID;
 		}
 
-		new public class Child
+		public new class Child
 		{
 			public int? ParentID;
 			public int? ChildID;

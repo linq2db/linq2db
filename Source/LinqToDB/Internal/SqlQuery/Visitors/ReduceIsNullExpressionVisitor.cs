@@ -8,7 +8,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 {
 	sealed class ReduceIsNullExpressionVisitor : SqlQueryVisitor
 	{
-		public readonly static ObjectPool<ReduceIsNullExpressionVisitor> Pool = new(() => new(), v => v.Cleanup(), 100);
+		public static readonly ObjectPool<ReduceIsNullExpressionVisitor> Pool = new(() => new(), v => v.Cleanup(), 100);
 
 		readonly List<ISqlPredicate> _predicates         = [];
 		         NullabilityContext  _nullabilityContext = default!;
