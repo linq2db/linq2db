@@ -2663,28 +2663,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				subqueryExpression = new ContextRefExpression(node.Type, ctx, alias: Alias);
-
-				/*if (_buildFlags.HasFlag(BuildFlags.ForExpanding))
-				{
-					Expression testExpression;
-
-					// Translate subqueries only if they are SQL
-					using (UsingBuildFlags(_buildFlags & ~BuildFlags.ForExpanding))
-					{
-						testExpression = BuildSqlExpression(subqueryExpression);
-					}
-
-					if (testExpression is SqlPlaceholderExpression placeholder)
-					{
-						//snapshot.Accept();
-						subqueryExpression = placeholder;
-						return true;
-					}
-
-					ctx.Detach();
-
-					return false;
-				}*/
 			}
 
 			if (!isCollection)
