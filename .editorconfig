@@ -271,6 +271,9 @@ dotnet_diagnostic.CA3076.severity = none # CA3076: Insecure XSLT Script Executio
 dotnet_diagnostic.IDE0004.severity = none # IDE0004: Remove unnecessary cast
 dotnet_diagnostic.IDE0005.severity = none # IDE0005: Remove unnecessary import
 
+# IDE0055: linq2db style is not representable by .editorconfig; specifically vertical alignments
+dotnet_diagnostic.IDE0055.severity = none # IDE0055: Formatting rules
+
 # IDE0370: too many false positives; probably due to net462
 dotnet_diagnostic.IDE0370.severity = none # IDE0370: Remove unnecessary suppression
 
@@ -424,7 +427,6 @@ dotnet_diagnostic.IDE0045.severity = none # IDE0045: Use conditional expression 
 dotnet_diagnostic.IDE0046.severity = none # IDE0046: Convert to conditional expression
 dotnet_diagnostic.IDE0049.severity = none # IDE0049: Use language keywords instead of framework type names for type references
 dotnet_diagnostic.IDE0050.severity = none # IDE0050: Convert to tuple
-dotnet_diagnostic.IDE0055.severity = none # IDE0055: Formatting rules
 dotnet_diagnostic.IDE0056.severity = none # IDE0056: Use index operator
 dotnet_diagnostic.IDE0057.severity = none # IDE0057: Use range operator
 dotnet_diagnostic.IDE0058.severity = none # IDE0058: computed value is never used
