@@ -333,7 +333,7 @@ namespace Tests.Linq
 			Assert.That(res[0].ID, Is.EqualTo(1));
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2156")]
 		public void Issue2156Test([DataSources(TestProvName.AllClickHouse)] string context)
 		{

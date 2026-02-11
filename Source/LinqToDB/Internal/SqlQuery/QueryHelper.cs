@@ -183,10 +183,7 @@ namespace LinqToDB.Internal.SqlQuery
 		/// <returns>Associated column descriptor or <see langword="null"/>.</returns>
 		public static ColumnDescriptor? GetColumnDescriptor(ISqlExpression? expr)
 		{
-			if (expr == null)
-				return null;
-
-			switch (expr.ElementType)
+			switch (expr?.ElementType)
 			{
 				case QueryElementType.Column:
 				{
@@ -211,10 +208,12 @@ namespace LinqToDB.Internal.SqlQuery
 
 					return null;
 				}
+
 				case QueryElementType.SqlField:
 				{
 					return ((SqlField)expr).ColumnDescriptor;
 				}
+
 				case QueryElementType.SqlExpression:
 				{
 					var sqlExpr = (SqlExpression)expr;
@@ -222,6 +221,7 @@ namespace LinqToDB.Internal.SqlQuery
 						return GetColumnDescriptor(sqlExpr.Parameters[0]);
 					break;
 				}
+
 				case QueryElementType.SqlQuery:
 				{
 					var query = (SelectQuery)expr;
@@ -229,6 +229,7 @@ namespace LinqToDB.Internal.SqlQuery
 						return GetColumnDescriptor(query.Select.Columns[0]);
 					break;
 				}
+
 				case QueryElementType.SqlBinaryExpression:
 				{
 					var binary = (SqlBinaryExpression)expr;
@@ -237,11 +238,13 @@ namespace LinqToDB.Internal.SqlQuery
 						return null;
 					return found;
 				}
+
 				case QueryElementType.SqlNullabilityExpression:
 				{
 					var nullability = (SqlNullabilityExpression)expr;
 					return GetColumnDescriptor(nullability.SqlExpression);
 				}
+
 				case QueryElementType.SqlCoalesce:
 				{
 					var coalesce = (SqlCoalesceExpression)expr;
@@ -254,13 +257,16 @@ namespace LinqToDB.Internal.SqlQuery
 
 					break;
 				}
+
 				case QueryElementType.SqlCondition:
 				{
 					var condition = (SqlConditionExpression)expr;
 
-					return GetColumnDescriptor(condition.TrueValue) ??
-					       GetColumnDescriptor(condition.FalseValue);
+					return 
+						GetColumnDescriptor(condition.TrueValue) ??
+						GetColumnDescriptor(condition.FalseValue);
 				}
+
 				case QueryElementType.SqlCase:
 				{
 					var caseExpression = (SqlCaseExpression)expr;
@@ -274,6 +280,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 					return GetColumnDescriptor(caseExpression.ElseExpression);
 				}
+
 				case QueryElementType.SqlAnchor:
 				{
 					return GetColumnDescriptor(((SqlAnchor)expr).SqlExpression);
@@ -311,16 +318,19 @@ namespace LinqToDB.Internal.SqlQuery
 
 					break;
 				}
+
 				case QueryElementType.SqlField:
 				{
 					return ((SqlField)expr).ColumnDescriptor?.GetDbDataType(completeDataType: true);
 				}
+
 				case QueryElementType.SqlExpression:
 				{
 					if (expr is SqlExpression { Expr: "{0}", Parameters: [var parameter] })
 						return SuggestDbDataType(parameter);
 					break;
 				}
+
 				case QueryElementType.SqlQuery:
 				{
 					var query = (SelectQuery)expr;
@@ -335,6 +345,7 @@ namespace LinqToDB.Internal.SqlQuery
 						return sqlValue.ValueType;
 					break;
 				}
+
 				case QueryElementType.SqlAnchor:
 				{
 					return SuggestDbDataType(((SqlAnchor)expr).SqlExpression);
@@ -1350,9 +1361,9 @@ namespace LinqToDB.Internal.SqlQuery
 		/// Collects unique keys from different sources.
 		/// </summary>
 		/// <param name="tableSource"></param>
-		/// <param name="includeDistinct">Flag to include Distinct as unique key.</param>
+		/// <param name="includeDistinctAndGrouping"></param>
 		/// <param name="knownKeys">List with found keys.</param>
-		public static void CollectUniqueKeys(ISqlTableSource tableSource, bool includeDistinct, List<IList<ISqlExpression>> knownKeys)
+		public static void CollectUniqueKeys(ISqlTableSource tableSource, bool includeDistinctAndGrouping, List<IList<ISqlExpression>> knownKeys)
 		{
 			switch (tableSource)
 			{
@@ -1369,10 +1380,10 @@ namespace LinqToDB.Internal.SqlQuery
 					if (selectQuery.HasUniqueKeys)
 						knownKeys.AddRange(selectQuery.UniqueKeys);
 
-					if (includeDistinct && selectQuery.Select.IsDistinct)
+					if (includeDistinctAndGrouping && selectQuery.Select.IsDistinct)
 						knownKeys.Add(selectQuery.Select.Columns.Select(c => c.Expression).ToList());
 
-					if (!selectQuery.Select.GroupBy.IsEmpty)
+					if (includeDistinctAndGrouping && !selectQuery.Select.GroupBy.IsEmpty)
 					{
 						knownKeys.Add(selectQuery.Select.GroupBy.Items);
 					}
@@ -1465,6 +1476,7 @@ namespace LinqToDB.Internal.SqlQuery
 		public static SqlSearchCondition CorrectComparisonForJoin(SqlSearchCondition sc)
 		{
 			var newSc = new SqlSearchCondition(false);
+
 			for (var index = 0; index < sc.Predicates.Count; index++)
 			{
 				var predicate = sc.Predicates[index];

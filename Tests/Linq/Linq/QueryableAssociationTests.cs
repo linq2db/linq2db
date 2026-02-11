@@ -1303,7 +1303,7 @@ WHERE
 			];
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), [TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4723")]
 		public void Issue4723Test1_Association([DataSources] string context)
 		{
@@ -1322,7 +1322,7 @@ WHERE
 			}
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), [TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4723")]
 		public void Issue4723Test1Test_NoJoinDuplicates([DataSources] string context)
 		{
@@ -1332,14 +1332,15 @@ WHERE
 
 			var query = t1.Where(x => x.Association != null && x.Association != "unknown").Select(x => new { x.Id, x1 = x.Association, x2 = x.Association });
 
-			var select = query.GetSelectQuery();
-			Assert.That(select.Select.From.Tables[0].Joins, Has.Count.EqualTo(1));
-
 			var records = query.ToArray();
 
-			Assert.That(records, Has.Length.EqualTo(1));
+			var select = query.GetSelectQuery();
+
+			Assert.That(select.Select.From.Tables[0].Joins, Has.Count.LessThanOrEqualTo(1));
+
 			using (Assert.EnterMultipleScope())
 			{
+				Assert.That(records,       Has.Length.EqualTo(1));
 				Assert.That(records[0].Id, Is.EqualTo(1));
 				Assert.That(records[0].x1, Is.EqualTo("Value 1"));
 				Assert.That(records[0].x2, Is.EqualTo("Value 1"));

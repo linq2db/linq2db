@@ -1347,6 +1347,7 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 							Append(elem.SkipValue);
 							Append(elem.TakeValue);
 							Append((int?)elem.TakeHints);
+							Append(elem.OptimizeDistinct);
 
 							Append(elem.Columns);
 
@@ -2422,13 +2423,17 @@ string.Create(CultureInfo.InvariantCulture, $"TypeIndex or TypeArrayIndex ({Type
 
 					case QueryElementType.SelectClause :
 						{
-							var isDistinct = ReadBool();
-							var skipValue  = Read<ISqlExpression>()!;
-							var takeValue  = Read<ISqlExpression>()!;
-							var takeHints  = (TakeHints?)ReadNullableInt();
-							var columns    = ReadArray<SqlColumn>()!;
+							var isDistinct       = ReadBool();
+							var skipValue        = Read<ISqlExpression>()!;
+							var takeValue        = Read<ISqlExpression>()!;
+							var takeHints        = (TakeHints?)ReadNullableInt();
+							var optimizeDistinct = ReadBool();
+							var columns          = ReadArray<SqlColumn>()!;
 
-							obj = new SqlSelectClause(isDistinct, takeValue, takeHints, skipValue, columns);
+							obj = new SqlSelectClause(isDistinct, takeValue, takeHints, skipValue, columns)
+							{
+								OptimizeDistinct = optimizeDistinct,
+							};
 
 							break;
 						}

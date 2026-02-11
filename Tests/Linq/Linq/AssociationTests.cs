@@ -1983,7 +1983,6 @@ namespace Tests.Linq
 
 		#region Issue 3822
 
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess], ErrorMessage = ErrorHelper.Error_Join_Without_Condition)]
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3822")]
 		public void Issue3822Test([DataSources] string context)

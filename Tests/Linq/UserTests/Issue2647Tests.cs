@@ -27,16 +27,18 @@ namespace Tests.UserTests
 		{
 			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable<IssueClass>();
-			var qryUnsorted = db.GetTable<IssueClass>();
-			var query = qryUnsorted.OrderBy(x => x.LanguageId);
-			query = query.ThenByDescending(ss => db.GetTable<IssueClass>().Count(ss2 => ss2.Id == ss.Id) * 10000 /
-												 db.GetTable<IssueClass>().Count(ss3 => ss3.Id == ss.Id));
+
+			var query = db.GetTable<IssueClass>()
+				.OrderBy(x => x.LanguageId)
+				.ThenByDescending(ss => 
+					db.GetTable<IssueClass>().Count(ss2 => ss2.Id == ss.Id) * 10000 / db.GetTable<IssueClass>().Count(ss3 => ss3.Id == ss.Id)
+				);
 
 			query.ToList();
 
 			var selectQuery = query.GetSelectQuery();
 			Assert.That(selectQuery.OrderBy.Items, Has.Count.EqualTo(2));
-			Assert.That(selectQuery.OrderBy.Items[0].Expression.ElementType, Is.EqualTo(QueryElementType.SqlField));
+			Assert.That(selectQuery.OrderBy.Items[0].Expression.ElementType, Is.EqualTo(QueryElementType.Column));
 		}
 	}
 }

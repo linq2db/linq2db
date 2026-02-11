@@ -377,7 +377,7 @@ namespace LinqToDB.Internal.SqlProvider
 				BuildTableName(merge.Target, true, false);
 
 			StringBuilder
-				.AppendLine("\tWHERE 1 = 0")
+				.AppendLine(" WHERE 1 = 0")
 				.AppendLine(")");
 		}
 

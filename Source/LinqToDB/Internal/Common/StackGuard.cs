@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -14,6 +15,7 @@ namespace LinqToDB.Internal.Common
 
 		int? _maxHops;
 
+		[DebuggerStepThrough]
 		public void Reset()
 		{
 			_maxHops       = default;
@@ -21,6 +23,7 @@ namespace LinqToDB.Internal.Common
 			_internalDepth = default;
 		}
 
+		[DebuggerStepThrough]
 		public TResult? Enter<T, TResult>(Func<T, TResult> action, T arg)
 		{
 			_internalDepth++;
@@ -38,11 +41,13 @@ namespace LinqToDB.Internal.Common
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[DebuggerStepThrough]
 		public void Exit()
 		{
 			_internalDepth--;
 		}
 
+		[DebuggerStepThrough]
 		TResult RunOnEmptyStack<T, TResult>(Func<T, TResult> action, T arg)
 		{
 			Interlocked.Increment(ref _hopCount);
@@ -84,6 +89,7 @@ namespace LinqToDB.Internal.Common
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[DebuggerStepThrough]
 		public static bool TryEnsureSufficientExecutionStack()
 		{
 #if NET

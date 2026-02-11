@@ -10,7 +10,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class JoinToLimitedTests : TestBase
 	{
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
 		public void LeftJoinToTop([DataSources] string context)
 		{
@@ -28,7 +28,7 @@ namespace Tests.Linq
 			AreEqual(exp, act);
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
 		public void LeftJoinToTopWhere([DataSources] string context)
 		{
@@ -78,7 +78,7 @@ namespace Tests.Linq
 			AreEqual(exp, act);
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
 		public void LeftJoinLimited2([DataSources] string context)
 		{
