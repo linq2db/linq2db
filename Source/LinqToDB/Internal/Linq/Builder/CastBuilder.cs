@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+using System;
+using System.Linq.Expressions;
 
 using LinqToDB.Internal.Expressions;
 
@@ -28,6 +29,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			readonly MethodCallExpression _methodCall;
+
+			public override Type ElementType => _methodCall.Method.GetGenericArguments()[0];
 
 			public override IBuildContext Clone(CloningContext context)
 			{
