@@ -357,6 +357,9 @@ namespace LinqToDB.Internal.SqlProvider
 
 			_doNotOptimizeNulls = saveDoNotOptimizeNulls;
 
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
 			// Optimizations: PREDICATE vs PREDICATE:
 			// 1. A IS NOT NULL AND A = B => A = B, when B is not nullable
 			// 2. A OR B OR A => A OR B

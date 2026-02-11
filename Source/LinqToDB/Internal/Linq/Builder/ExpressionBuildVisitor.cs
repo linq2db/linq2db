@@ -508,9 +508,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					throw new ArgumentOutOfRangeException();
 			}
 
-			if (_buildFlags.HasFlag(BuildFlags.ForExpanding))
-				flags |= ProjectFlags.Expand;
-
 			if (_buildFlags.HasFlag(BuildFlags.ForMemberRoot))
 				flags |= ProjectFlags.MemberRoot;
 
@@ -640,7 +637,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitLambda<T>(Expression<T> node)
 		{
-			var shouldProcess = _buildPurpose is BuildPurpose.Extract or BuildPurpose.Expand || _buildFlags.HasFlag(BuildFlags.ForExpanding);
+			var shouldProcess = _buildPurpose is BuildPurpose.Extract or BuildPurpose.Expand;
 
 			if (!shouldProcess)
 				return node;
@@ -1408,7 +1405,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			Expression? result;
 			LogVisit(node);
 
-			if (_buildFlags.HasFlag(BuildFlags.ForExpanding))
+			if (_buildPurpose is BuildPurpose.Expand)
 			{
 				if (!HasContextReferenceOrSql(node))
 					return node;
@@ -1742,8 +1739,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var doNotBuild =
 				associationDescriptor.IsList
-				|| _buildPurpose is BuildPurpose.SubQuery or BuildPurpose.Extract or BuildPurpose.Expand or BuildPurpose.AggregationRoot
-				|| _buildFlags.HasFlag(BuildFlags.ForExpanding);
+				|| _buildPurpose is BuildPurpose.SubQuery or BuildPurpose.Extract or BuildPurpose.Expand or BuildPurpose.AggregationRoot;
 
 			if (!doNotBuild)
 			{
@@ -1821,7 +1817,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (p.Path is not SqlPathExpression)
 					{
-						notNullPath = p;
+						notNullPath = p.Path;
 						break;
 					}
 
@@ -1880,7 +1876,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return Visit(condition);
 			}
 
-			if ((_buildFlags.HasFlag(BuildFlags.ForMemberRoot) && _buildFlags.HasFlag(BuildFlags.ForExpanding)))
+			if ((_buildFlags.HasFlag(BuildFlags.ForMemberRoot) && _buildPurpose is BuildPurpose.Expand))
 			{
 				if (innerExpression is ContextRefExpression contextRef)
 				{
@@ -1911,14 +1907,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (_buildPurpose is BuildPurpose.Root or BuildPurpose.AssociationRoot or BuildPurpose.AggregationRoot)
 				return node;
-
-			if (_buildPurpose is not BuildPurpose.Sql && _buildFlags.HasFlag(BuildFlags.ForExpanding))
-			{
-				if (!HasContextReferenceOrSql(node))
-				{
-					return node;
-				}
-			}
 
 			if (!IsSqlOrExpression() || BuildContext == null)
 			{
@@ -2568,7 +2556,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			subqueryExpression = null;
 
-			if (BuildContext == null || _buildPurpose is BuildPurpose.SubQuery or BuildPurpose.Traverse)
+			if (BuildContext == null || _buildPurpose is BuildPurpose.SubQuery or BuildPurpose.Traverse or BuildPurpose.Expand)
 				return false;
 
 			if (null != subqueryExpression.Find(e => e is SqlEagerLoadExpression or SqlErrorExpression))
@@ -2676,7 +2664,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				subqueryExpression = new ContextRefExpression(node.Type, ctx, alias: Alias);
 
-				if (_buildFlags.HasFlag(BuildFlags.ForExpanding))
+				/*if (_buildFlags.HasFlag(BuildFlags.ForExpanding))
 				{
 					Expression testExpression;
 
@@ -2696,7 +2684,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					ctx.Detach();
 
 					return false;
-				}
+				}*/
 			}
 
 			if (!isCollection)
@@ -2826,7 +2814,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					return Visit(translatedMember);
 			}
 
-			if (BuildContext == null || _buildPurpose is not (BuildPurpose.Sql or BuildPurpose.Expression or BuildPurpose.Expand))
+			if (BuildContext == null || _buildPurpose is not (BuildPurpose.Sql or BuildPurpose.Expression))
 				return base.VisitBinary(node);
 
 			var shouldSkipSqlConversion = false;
@@ -2988,7 +2976,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (compareExpr is SqlErrorExpression error)
 				{
-					if (_buildPurpose is BuildPurpose.Expand || _buildFlags.HasFlag(BuildFlags.ForExpanding))
+					if (_buildPurpose is BuildPurpose.Expand)
 					{
 						translated = base.VisitBinary(node);
 						return true;

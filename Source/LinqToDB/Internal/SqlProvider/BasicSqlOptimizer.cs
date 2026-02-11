@@ -941,7 +941,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (query.Select.HasModifier || !query.GroupBy.IsEmpty)
 				return true;
 
-			if (!query.Where.IsEmpty)
+			if (query.HasWhere())
 			{
 				if (QueryHelper.ContainsAggregationFunction(query.Where))
 					return true;
