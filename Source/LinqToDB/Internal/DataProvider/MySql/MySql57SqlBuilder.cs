@@ -26,7 +26,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		{
 			// mysql < 8 doesn't support WHERE without FROM
 			// https://docs.oracle.com/cd/E19957-01/mysql-refman-5.5/sql-syntax.html#select
-			if (selectQuery.From.Tables.Count == 0 && selectQuery.HasWhere())
+			if (selectQuery.From.Tables.Count == 0 && !selectQuery.Where.IsEmpty)
 			{
 				AppendIndent().Append("SELECT").AppendLine();
 				BuildColumns(selectQuery);
