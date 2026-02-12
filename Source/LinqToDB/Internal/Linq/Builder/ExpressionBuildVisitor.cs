@@ -1931,7 +1931,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				using var saveFlags = CombineBuildFlags(BuildFlags.ForceOuter);
 
 				using (UsingColumnDescriptor(null))
-				using (UsingAlias("test"))
+				using (UsingAlias(null))
 				{
 					test = Visit(node.Test);
 				}
@@ -2944,7 +2944,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			Expression compareExpr;
-			using (UsingAlias("cond"))
+			using (UsingAlias(null))
 			using (UsingColumnDescriptor(null))
 			{
 				compareExpr = ConvertCompareExpression(node.NodeType, node.Left, node.Right, node);
@@ -3015,7 +3015,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var predicates = new List<ISqlPredicate?>(items.Count + clientItems?.Count > 0 ? 1 : 0);
 			var hasError   = false;
 
-			using var saveAlias            = UsingAlias("cond");
+			using var saveAlias            = UsingAlias(null);
 			using var saveColumnDescriptor = UsingColumnDescriptor(null);
 
 			var errorOffset = 0;
