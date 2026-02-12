@@ -1721,7 +1721,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			Expression? notNullCheck = null;
-			if (isOptional == true)
+			if (isOptional == true && (associationDescriptor.IsList || associationDescriptor.CanBeNull))
 			{
 				var keys = BuildExpression(forContext, rootContext, BuildPurpose.Sql, BuildFlags.ForKeys);
 				if (forContext != null)
