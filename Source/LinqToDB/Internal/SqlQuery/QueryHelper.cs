@@ -282,6 +282,10 @@ namespace LinqToDB.Internal.SqlQuery
 
 					return GetColumnDescriptor(caseExpression.ElseExpression);
 				}
+				case QueryElementType.SqlAnchor:
+				{
+					return GetColumnDescriptor(((SqlAnchor)expr).SqlExpression);
+				}
 			}
 
 			return null;
@@ -339,6 +343,10 @@ namespace LinqToDB.Internal.SqlQuery
 					if (sqlValue.ValueType.DbType != null || sqlValue.ValueType.DataType != DataType.Undefined)
 						return sqlValue.ValueType;
 					break;
+				}
+				case QueryElementType.SqlAnchor:
+				{
+					return SuggestDbDataType(((SqlAnchor)expr).SqlExpression);
 				}
 			}
 
@@ -544,18 +552,6 @@ namespace LinqToDB.Internal.SqlQuery
 				if (p is SqlExpression argExpression)
 					return IsTransitiveExpression(argExpression, checkNullability);
 				return true;
-			}
-
-			return false;
-		}
-
-		static bool IsTransitivePredicate(SqlExpression sqlExpression)
-		{
-			if (sqlExpression is { Parameters: [var p] } && sqlExpression.Expr.Trim() == "{0}")
-			{
-				if (p is SqlExpression argExpression)
-					return IsTransitivePredicate(argExpression);
-				return p is ISqlPredicate;
 			}
 
 			return false;
@@ -1361,9 +1357,9 @@ namespace LinqToDB.Internal.SqlQuery
 		/// Collects unique keys from different sources.
 		/// </summary>
 		/// <param name="tableSource"></param>
-		/// <param name="includeDistinct">Flag to include Distinct as unique key.</param>
+		/// <param name="includeDistinctAndGrouping"></param>
 		/// <param name="knownKeys">List with found keys.</param>
-		public static void CollectUniqueKeys(ISqlTableSource tableSource, bool includeDistinct, List<IList<ISqlExpression>> knownKeys)
+		public static void CollectUniqueKeys(ISqlTableSource tableSource, bool includeDistinctAndGrouping, List<IList<ISqlExpression>> knownKeys)
 		{
 			switch (tableSource)
 			{
@@ -1380,10 +1376,10 @@ namespace LinqToDB.Internal.SqlQuery
 					if (selectQuery.HasUniqueKeys)
 						knownKeys.AddRange(selectQuery.UniqueKeys);
 
-					if (includeDistinct && selectQuery.Select.IsDistinct)
+					if (includeDistinctAndGrouping && selectQuery.Select.IsDistinct)
 						knownKeys.Add(selectQuery.Select.Columns.Select(c => c.Expression).ToList());
 
-					if (!selectQuery.Select.GroupBy.IsEmpty)
+					if (includeDistinctAndGrouping && !selectQuery.Select.GroupBy.IsEmpty)
 					{
 						knownKeys.Add(selectQuery.Select.GroupBy.Items);
 					}
@@ -1468,7 +1464,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 				default:
 					return sqlExpression;
-			};
+			}
 		}
 
 		/// <summary>

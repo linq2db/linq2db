@@ -1675,27 +1675,24 @@ namespace Tests.Linq
 			// https://github.com/igor-tkachev/LinqToDB/issues/42
 			// extra field is generated in the GROUP BY clause, for example:
 			// GROUP BY p.LastName, p.LastName <--- the second one is redundant
+			// Update: GroupBy is converted to DISTINCT, so we check that only one column is present
 
-			using (var db = GetDataConnection(context))
-			{
+			using var db = GetDataConnection(context);
+
 				var q =
 					from d in db.Doctor
 					join p in db.Person on d.PersonID equals p.ID
 					group d by p.LastName into g
 					select g.Key;
 
-				var _ = q.ToList();
+			AssertQuery(q);
 
-				const string fieldName = "LastName";
+			var selectQuery = q.GetSelectQuery();
 
-				var lastQuery  = db.LastQuery!;
-				var groupByPos = lastQuery.IndexOf("GROUP BY");
-				var fieldPos   = lastQuery.IndexOf(fieldName, groupByPos);
+			selectQuery.Select.IsDistinct.ShouldBeTrue();
+			selectQuery.Select.Columns.Count.ShouldBe(1);
 
-				// check that our field does not present in the GROUP BY clause second time.
-				//
-				Assert.That(lastQuery.IndexOf(fieldName, fieldPos + 1), Is.EqualTo(-1));
-			}
+			selectQuery.Select.Columns[0].Expression.ShouldBeOfType<SqlField>().Name.ShouldBe("LastName");
 		}
 
 		[Test]
@@ -3685,7 +3682,10 @@ namespace Tests.Linq
 
 			query.ToList();
 
-			db.LastQuery!.ShouldContain("SELECT", Exactly.Once());
+			if (context.IsAnyOf(TestProvName.AllAccess))
+				db.LastQuery!.ShouldContain("SELECT", Exactly.Twice());
+			else
+				db.LastQuery!.ShouldContain("SELECT", Exactly.Once());
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3250")]
@@ -3862,6 +3862,112 @@ namespace Tests.Linq
 				});
 
 			query.ToArray();
+		}
+
+		static class Issue5317
+		{
+			[Table]
+			public sealed class TestTable
+			{
+				[PrimaryKey]
+				public int Id { get; set; }
+
+				[Column, NotNull]
+				public string Name { get; set; } = string.Empty;
+
+				[Column]
+				public int ReferenceId { get; set; }
+
+				[Association(ThisKey = nameof(ReferenceId), OtherKey = nameof(Reference.Id), CanBeNull = false)]
+				public Reference Reference { get; set; } = null!;
+			}
+
+			[Table]
+			public sealed class Reference
+			{
+				[PrimaryKey]
+				public int Id { get; set; }
+
+				[Column, NotNull]
+				public string Name { get; set; } = string.Empty;
+			}
+		}
+
+		[ThrowsRequiredOuterJoins(TestProvName.AllAccess, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3, TestProvName.AllSybase)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5317")]
+		public void Issue5317Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue5317.TestTable>();
+			using var tr = db.CreateLocalTable<Issue5317.Reference>();
+
+			var query = from t1 in tb.LoadWith(x => x.Reference) // for AssertQuery
+						join t2 in tb on t1.Id equals t2.Id into g
+						from t2 in g.DefaultIfEmpty()
+						group new { t1 } by t1.Id into g
+						select new
+						{
+							ReferenceName = g.First().t1.Reference.Name
+						};
+
+			AssertQuery(query);
+		}
+
+		sealed class Issue5327Table
+		{
+			[PrimaryKey]
+			public int Id    { get; set; }
+			public int Key   { get; set; }
+			public int Value { get; set; }
+
+			public static readonly Issue5327Table[] Data =
+			[
+				new() { Id = 1, Key = 2, Value = 1 },
+				new() { Id = 2, Key = 2, Value = 2 },
+				new() { Id = 3, Key = 2, Value = 3 },
+				new() { Id = 4, Key = 2, Value = 4 },
+				new() { Id = 5, Key = 1, Value = 5 },
+				new() { Id = 6, Key = 1, Value = 6 },
+				new() { Id = 7, Key = 1, Value = 7 },
+				new() { Id = 8, Key = 1, Value = 8 },
+				new() { Id = 9, Key = 3, Value = 9 },
+				new() { Id = 10, Key = 3, Value = 10 },
+				new() { Id = 11, Key = 3, Value = 11 },
+				new() { Id = 12, Key = 3, Value = 12 },
+			];
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5327")]
+		public void Issue5327Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(Issue5327Table.Data);
+
+			var query = tb
+				.Select(c => new { c.Key, c.Value })
+				.GroupBy(c => c.Key)
+				.Select(c => new { c.Key, Sum = c.Sum(d => d.Value)})
+				.OrderByDescending(c => c.Sum)
+				.Select(c => c.Key);
+
+			AssertQuery(query);
+			Assert.That(query.GetSelectQuery().Select.OrderBy.IsEmpty, Is.Not.True);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5327")]
+		public void Issue5327Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(Issue5327Table.Data);
+
+			var query = tb
+				.Select(c => new { c.Key, c.Value})
+				.GroupBy(c => c.Key)
+				.Select(c => new { c.Key, Sum = c.Sum(d => d.Value)})
+				.OrderByDescending(c => c.Sum);
+
+			AssertQuery(query);
+			Assert.That(query.GetSelectQuery().Select.OrderBy.IsEmpty, Is.Not.True);
 		}
 	}
 }

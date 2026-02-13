@@ -82,6 +82,11 @@ namespace LinqToDB.Internal.SqlQuery
 		public bool             IsLimited        => Select.SkipValue != null || Select.TakeValue != null;
 		public bool             IsParameterDependent { get; set; }
 
+		public bool IsLimitedToOneRecord()
+		{
+			return Select.TakeValue is SqlValue { Value: 1 };
+		}
+
 		/// <summary>
 		/// Gets or sets flag when sub-query can be removed during optimization.
 		/// </summary>

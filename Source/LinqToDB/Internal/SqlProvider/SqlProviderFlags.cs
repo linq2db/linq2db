@@ -544,6 +544,12 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 62), DefaultValue(true)]
 		public bool IsTakeWithInAllAnySomeSubquerySupported { get; set; } = true;
 
+		/// <summary>
+		/// Indicates that provider supports simple COALESCE translation without complex translation.
+		/// </summary>
+		[DataMember(Order = 63), DefaultValue(true)]
+		public bool IsSimpleCoalesceSupported { get; set; } = true;
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null;
@@ -629,6 +635,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsComplexJoinConditionSupported                      .GetHashCode()
 				^ IsCrossJoinSyntaxRequired                            .GetHashCode()
 				^ IsTakeWithInAllAnySomeSubquerySupported              .GetHashCode()
+				^ IsSimpleCoalesceSupported                            .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -695,6 +702,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsOrderByAggregateFunctionSupported                   == other.IsOrderByAggregateFunctionSupported
 				&& IsComplexJoinConditionSupported                       == other.IsComplexJoinConditionSupported
 				&& IsCrossJoinSyntaxRequired                             == other.IsCrossJoinSyntaxRequired
+				&& IsSimpleCoalesceSupported                             == other.IsSimpleCoalesceSupported
 				&& IsTakeWithInAllAnySomeSubquerySupported               == other.IsTakeWithInAllAnySomeSubquerySupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}

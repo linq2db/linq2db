@@ -255,27 +255,8 @@ namespace LinqToDB
 
 		#region Convert Functions
 
-		sealed class ConvertBuilder : IExtensionCallBuilder
-		{
-			public void Build(ISqlExtensionBuilder builder)
-			{
-				var from = builder.GetExpression("from");
-				var to = builder.GetExpression("to");
-
-				if (from is null || to is null)
-				{
-					builder.IsConvertible = false;
-					return;
-				}
-
-				var toDataType = QueryHelper.GetDbDataType(to, builder.Mapping);
-
-				builder.ResultExpression = new SqlCastExpression(from, toDataType, null, true);
-			}
-		}
-
 		[CLSCompliant(false)]
-		[Extension("", BuilderType = typeof(ConvertBuilder))]
+		[ServerSideOnly]
 		[SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Used to specify generic parameter")]
 		public static TTo Convert<TTo,TFrom>(TTo to, TFrom from)
 		{
@@ -290,43 +271,21 @@ namespace LinqToDB
 			return Common.ConvertTo<TTo>.From(from);
 		}
 
-		sealed class ConvertBuilderSimple : IExtensionCallBuilder
-		{
-			public void Build(ISqlExtensionBuilder builder)
-			{
-				var obj = builder.GetExpression("obj")!;
-
-				var toType     = ((MethodInfo)builder.Member).GetGenericArguments()[0];
-				var toDataType = builder.Mapping.GetDbDataType(toType);
-
-				builder.ResultExpression = new SqlCastExpression(obj, toDataType, null, true);
-			}
-		}
-
 		[CLSCompliant(false)]
-		[Extension("", BuilderType = typeof(ConvertBuilderSimple))]
+		[ExpressionMethod(nameof(ConvertImpl))]
 		public static TTo Convert<TTo,TFrom>(TFrom obj)
 		{
 			return Common.ConvertTo<TTo>.From(obj);
 		}
 
-		sealed class ConvertBuilderInner : IExtensionCallBuilder
+		static Expression<Func<TFrom, TTo>> ConvertImpl<TTo, TFrom>()
 		{
-			public void Build(ISqlExtensionBuilder builder)
-			{
-				var obj = builder.GetExpression("obj", unwrap: true)!;
-
-				var toType     = ((MethodInfo)builder.Member).ReturnType;
-				var toDataType = builder.Mapping.GetDbDataType(toType);
-
-				builder.ResultExpression = new SqlCastExpression(obj, toDataType, null, false);
-			}
+			return f => Sql.ConvertTo<TTo>.From(f);
 		}
 
 		public static class ConvertTo<TTo>
 		{
 			[CLSCompliant(false)]
-			[Extension("", BuilderType = typeof(ConvertBuilderInner))]
 			public static TTo From<TFrom>(TFrom obj)
 			{
 				return Common.ConvertTo<TTo>.From(obj);

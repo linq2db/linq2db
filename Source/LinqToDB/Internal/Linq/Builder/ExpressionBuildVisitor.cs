@@ -1567,7 +1567,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (root is not (SqlErrorExpression or MethodCallExpression or SqlGenericConstructorExpression or SqlPlaceholderExpression))
 					{
-						if (root.Type != node.Expression!.Type && _buildPurpose is BuildPurpose.Table or BuildPurpose.AggregationRoot or BuildPurpose.AssociationRoot)
+						if (root.Type != node.Expression!.Type && _buildPurpose is BuildPurpose.Table or BuildPurpose.AggregationRoot)
 							return Visit(root);
 
 						var updated = node.Update(root);
@@ -2345,9 +2345,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (node.IsNull)
 				{
-					var dataType = (node.MappingSchema ?? MappingSchema).GetDbDataType(node.Type);
-					var value    = new SqlValue(dataType, null);
-					return CreatePlaceholder(value, node);
+					var mappingSchema = node.MappingSchema ?? MappingSchema;
+					if (mappingSchema.IsScalarType(node.Type))
+					{
+						var dataType = mappingSchema.GetDbDataType(node.Type);
+						var value    = new SqlValue(dataType, null);
+						return CreatePlaceholder(value, node);
+					}
 				}
 
 				if (HandleValue(node, out var translated))
@@ -3126,12 +3130,30 @@ namespace LinqToDB.Internal.Linq.Builder
 			return true;
 		}
 
+		static Expression GenerateToStringCall(Expression expr)
+		{
+			if (expr.Type == typeof(string))
+				return expr;
+
+			expr = expr.UnwrapConvertToObject();
+
+			return Expression.Call(expr, Methods.System.Object_ToString);
+		}
+
 		bool HandleBinaryMath(BinaryExpression node, out Expression translated)
 		{
 			translated = node;
 
 			var left  = node.Left;
 			var right = node.Right;
+
+			var isStringObjectConcat = node.NodeType == ExpressionType.Add && node.Method == Methods.System.String_ObjectsConcat;
+
+			if (isStringObjectConcat)
+			{
+				left = GenerateToStringCall(left);
+				right = GenerateToStringCall(right);
+			}
 
 			var shouldCheckColumn = node.Left.Type.UnwrapNullableType() == node.Right.Type.UnwrapNullableType();
 
