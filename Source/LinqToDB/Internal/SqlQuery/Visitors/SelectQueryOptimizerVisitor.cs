@@ -1552,7 +1552,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			havingDetected = null;
 
-			if (subQuery.IsSimple && parentQuery.IsSimple)
+			if (subQuery.IsSimple() && parentQuery.IsSimple())
 			{
 				if (parentQuery.Select.Columns.All(c => c.Expression is SqlColumn))
 				{
