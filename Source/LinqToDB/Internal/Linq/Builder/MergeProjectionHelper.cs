@@ -78,7 +78,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			} while (true);
 
 			var pathBuilder = new ExpressionPathVisitor();
-			var withPath    = pathBuilder.Visit(current);
+			var withPath    = pathBuilder.ProcessExpression(current);
 
 			foundPlaceholders = pathBuilder.FoundPlaceholders;
 			foundEager        = pathBuilder.FoundEager;
@@ -279,10 +279,25 @@ namespace LinqToDB.Internal.Linq.Builder
 			Stack<Expression> _stack = new();
 
 			bool _isDictionary;
+			bool _insideLambda;
+			bool _isStep2;
 
 			public List<(SqlPlaceholderExpression placeholder, Expression[] path)> FoundPlaceholders { get; } = new();
 
 			public List<SqlEagerLoadExpression> FoundEager { get; } = new();
+
+			public Expression ProcessExpression(Expression expression)
+			{
+				_isStep2 = false;
+
+				var result = Visit(expression);
+
+				_isStep2 = true;
+
+				result = Visit(result);
+
+				return result;
+			}
 
 			protected override Expression VisitConditional(ConditionalExpression node)
 			{
@@ -321,12 +336,36 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override Expression VisitSqlPlaceholderExpression(SqlPlaceholderExpression node)
 			{
+				if (_insideLambda)
+				{
+					var (placeholder, path) = FoundPlaceholders.FirstOrDefault(p => ExpressionEqualityComparer.Instance.Equals(p.placeholder.Path, node.Path));
+					if (placeholder != null)
+						return new SqlPathExpression(path, node.Type);
+				}
+
 				var stack = _stack.ToArray();
 				Array.Reverse(stack);
 
 				FoundPlaceholders.Add((node, stack));
 
 				return new SqlPathExpression(stack, node.Type);
+			}
+
+			protected override Expression VisitLambda<T>(Expression<T> node)
+			{
+				if (!_isStep2)
+				{
+					return node;
+				}
+
+				var saveInsideLambda = _insideLambda;
+				_insideLambda = true;
+
+				var result = base.VisitLambda(node);
+
+				_insideLambda = saveInsideLambda;
+
+				return result;
 			}
 
 			public override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
@@ -577,6 +616,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			internal override Expression VisitSqlEagerLoadExpression(SqlEagerLoadExpression node)
 			{
+				if (!_isStep2)
+				{
+					return node;
+				}
+
 				var saveStack = _stack;
 				_stack = new();
 

@@ -58,12 +58,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public Expression BuildExpandExpression(Expression expression)
 		{
-			return _buildVisitor.BuildExpression(expression, BuildPurpose.Expand, BuildFlags.ForExpanding);
+			return _buildVisitor.BuildExpression(expression, BuildPurpose.Expand, BuildFlags.None);
 		}
 
 		public Expression BuildExpandExpression(IBuildContext context, Expression expression)
 		{
-			return _buildVisitor.BuildExpression(context, expression, BuildPurpose.Expand, BuildFlags.ForExpanding);
+			return _buildVisitor.BuildExpression(context, expression, BuildPurpose.Expand, BuildFlags.None);
 		}
 
 		public Expression BuildSubqueryExpression(Expression expression)
