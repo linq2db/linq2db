@@ -158,10 +158,10 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 							''                                                                                                  as [Description],
 							COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') as IsIdentity,
 							CASE WHEN c.DATA_TYPE = 'timestamp'
-								OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1" + temporalClause + @"
+								OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1{{temporalJoin}}
 								THEN 1 ELSE 0 END as SkipOnInsert,
 							CASE WHEN c.DATA_TYPE = 'timestamp'
-								OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1" + temporalClause + @"
+								OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1{{temporalJoin}}
 								THEN 1 ELSE 0 END as SkipOnUpdate
 						FROM
 							INFORMATION_SCHEMA.COLUMNS c{{temporalJoin}}
@@ -180,10 +180,10 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 							ISNULL(CONVERT(NVARCHAR(MAX), x.value), N'')                                                        as [Description],
 							COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') as IsIdentity,
 							CASE WHEN c.DATA_TYPE = 'timestamp'
-								OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1" + temporalClause + @"
+								OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1{{temporalJoin}}
 								THEN 1 ELSE 0 END as SkipOnInsert,
 							CASE WHEN c.DATA_TYPE = 'timestamp'
-								OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1" + temporalClause + @"
+								OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1{{temporalJoin}}
 								THEN 1 ELSE 0 END as SkipOnUpdate
 						FROM
 							INFORMATION_SCHEMA.COLUMNS c
