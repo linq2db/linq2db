@@ -149,12 +149,12 @@ namespace LinqToDB.Internal.Linq.Builder
 						else
 						{
 							var queryToUpdate = sequence.SelectQuery;
-							if (sequence is AsSubqueryContext subquery && subquery.SelectQuery.IsSimple())
+							if (sequence is AsSubqueryContext { SelectQuery.IsSimple: true } subquery)
 							{
 								queryToUpdate = subquery.SubQuery.SelectQuery;
 							}
 
-							if (!queryToUpdate.IsSimple())
+							if (!queryToUpdate.IsSimple)
 							{
 								sequence      = new SubQueryContext(sequence);
 								queryToUpdate = sequence.SelectQuery;

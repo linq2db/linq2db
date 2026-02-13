@@ -384,7 +384,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				if (!selectQuery.HasSetOperators)
 				{
-					isOk = !selectQuery.HasOrderBy() && !selectQuery.HasWhere() && !selectQuery.HasGroupBy() && !selectQuery.Select.HasModifier;
+					isOk = !selectQuery.HasOrderBy && !selectQuery.HasWhere && !selectQuery.HasGroupBy && !selectQuery.Select.HasModifier;
 					if (isOk)
 					{
 						if (_currentSetOperator != null)
@@ -577,7 +577,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		static bool IsGroupingQueryCanBeOptimized(SelectQuery selectQuery)
 		{
-			if (selectQuery.HasHaving())
+			if (selectQuery.HasHaving)
 				return false;
 
 			if (selectQuery.GroupBy.GroupingType != GroupingType.Default)
@@ -586,10 +586,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (QueryHelper.ContainsAggregationOrWindowFunction(selectQuery.Select))
 				return false;
 
-			if (selectQuery.HasWhere() && QueryHelper.ContainsAggregationOrWindowFunction(selectQuery.Where.SearchCondition))
+			if (selectQuery.HasWhere && QueryHelper.ContainsAggregationOrWindowFunction(selectQuery.Where.SearchCondition))
 				return false;
 
-			if (selectQuery.HasOrderBy() && QueryHelper.ContainsAggregationOrWindowFunction(selectQuery.OrderBy))
+			if (selectQuery.HasOrderBy && QueryHelper.ContainsAggregationOrWindowFunction(selectQuery.OrderBy))
 				return false;
 
 			if (selectQuery.GroupBy.Items.Any(i => i is SqlGroupingSet))
@@ -642,7 +642,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			var isModified = false;
 
-			if (selectQuery.HasGroupBy())
+			if (selectQuery.HasGroupBy)
 			{
 				// Remove constants.
 				//
@@ -659,7 +659,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				selectQuery.GroupBy.Items.RemoveDuplicates(item => item);
 			}
 
-			if (selectQuery.HasGroupBy())
+			if (selectQuery.HasGroupBy)
 			{
 				// Check if we can remove GROUP BY entirely when there are no aggregations
 				if (IsGroupingQueryCanBeOptimized(selectQuery))
@@ -687,7 +687,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						}
 					}
 
-					if (selectQuery.HasGroupBy())
+					if (selectQuery.HasGroupBy)
 					{
 						var transformToDistinct = selectQuery.GroupBy.Items.Count == selectQuery.Select.Columns.Count
 						                          && selectQuery.GroupBy.Items.All(gi => selectQuery.Select.Columns.Any(c => c.Expression.Equals(gi)));
@@ -712,7 +712,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		bool CorrectColumns(SelectQuery selectQuery)
 		{
 			var isModified = false;
-			if (selectQuery.HasGroupBy() && selectQuery.Select.Columns.Count == 0)
+			if (selectQuery.HasGroupBy && selectQuery.Select.Columns.Count == 0)
 			{
 				isModified = true;
 				foreach (var item in selectQuery.GroupBy.Items)
@@ -854,7 +854,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (query.Select.TakeValue is SqlValue { Value: 1 })
 				return true;
 
-			if (!query.HasGroupBy() && query.Select.Columns.Count > 0 && query.Select.Columns.All(c => QueryHelper.ContainsAggregationFunction(c.Expression)))
+			if (!query.HasGroupBy && query.Select.Columns.Count > 0 && query.Select.Columns.All(c => QueryHelper.ContainsAggregationFunction(c.Expression)))
 				return true;
 
 			if (query.From.Tables.Count == 1 && query.From.Tables[0].Source is SelectQuery subQuery)
@@ -870,7 +870,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return true;
 			}
 
-			if (!ignoreGroupBy && query.HasGroupBy())
+			if (!ignoreGroupBy && query.HasGroupBy)
 			{
 				return false;
 			}
@@ -1015,7 +1015,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return true;
 			}
 
-			if (selectQuery.HasGroupBy())
+			if (selectQuery.HasGroupBy)
 			{
 				if (selectQuery.GroupBy.Items.All(gi => selectQuery.Select.Columns.Any(c => c.Expression.Equals(gi))))
 				{
@@ -1043,7 +1043,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		static void ApplySubsequentOrder(SelectQuery mainQuery, SelectQuery subQuery)
 		{
-			if (subQuery.HasOrderBy())
+			if (subQuery.HasOrderBy)
 			{
 				foreach (var item in subQuery.OrderBy.Items)
 				{
@@ -1097,7 +1097,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				var isApplySupported = _providerFlags.IsApplyJoinSupported;
 
-				if (sql.Select.HasModifier || sql.HasGroupBy())
+				if (sql.Select.HasModifier || sql.HasGroupBy)
 				{
 					if (isApplySupported)
 						return optimized;
@@ -1171,7 +1171,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					var orderByItems = sql.OrderBy.Items.ToList();
 
-					if (!sql.HasOrderBy())
+					if (!sql.HasOrderBy)
 					{
 						if (partitionBy != null)
 						{
@@ -1237,7 +1237,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 								}
 							}
 
-							if (sql.HasGroupBy())
+							if (sql.HasGroupBy)
 							{
 								// we can only optimize SqlPredicate.ExprExpr
 								if (predicate is not SqlPredicate.ExprExpr expExpr)
@@ -1447,7 +1447,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			parentQuery.QueryName ??= subQuery.QueryName;
 
-			if (subQuery.HasGroupBy())
+			if (subQuery.HasGroupBy)
 			{
 				parentQuery.GroupBy.Items.InsertRange(0, subQuery.GroupBy.Items);
 				parentQuery.GroupBy.GroupingType = subQuery.GroupBy.GroupingType;
@@ -1460,12 +1460,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				parentQuery.Where.SearchCondition.Predicates.Clear();
 			}
 
-			if (subQuery.HasWhere())
+			if (subQuery.HasWhere)
 			{
 				parentQuery.Where.SearchCondition = QueryHelper.MergeConditions(parentQuery.Where.SearchCondition, subQuery.Where.SearchCondition);
 			}
 
-			if (subQuery.HasHaving())
+			if (subQuery.HasHaving)
 			{
 				parentQuery.Having.SearchCondition = QueryHelper.MergeConditions(parentQuery.Having.SearchCondition, subQuery.Having.SearchCondition);
 			}
@@ -1540,7 +1540,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			ApplySubQueryExtensions(parentQuery, subQuery);
 
-			if (subQuery.HasOrderBy())
+			if (subQuery.HasOrderBy)
 			{
 				ApplySubsequentOrder(parentQuery, subQuery);
 			}
@@ -1552,7 +1552,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			havingDetected = null;
 
-			if (subQuery.IsSimple() && parentQuery.IsSimple())
+			if (subQuery.IsSimple && parentQuery.IsSimple)
 			{
 				if (parentQuery.Select.Columns.All(c => c.Expression is SqlColumn))
 				{
@@ -1580,7 +1580,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					return false;
 			}
 
-			if (parentQuery.HasOrderBy() && !_providerFlags.IsOrderByAggregateFunctionSupported)
+			if (parentQuery.HasOrderBy && !_providerFlags.IsOrderByAggregateFunctionSupported)
 			{
 				if (parentQuery.OrderBy.Items.Select(o => o.Expression).Any(e =>
 				    {
@@ -1598,9 +1598,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
-			if (parentQuery.HasGroupBy())
+			if (parentQuery.HasGroupBy)
 			{
-				if (subQuery.HasGroupBy())
+				if (subQuery.HasGroupBy)
 					return false;
 
 				if (parentQuery.Select.Columns.Count == 0)
@@ -1624,20 +1624,20 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			var nullability = NullabilityContext.GetContext(parentQuery);
 
-			if (subQuery.HasOrderBy())
+			if (subQuery.HasOrderBy)
 			{
-				if (parentQuery.HasGroupBy() || parentQuery.IsDistinct() || QueryHelper.ContainsAggregationOrWindowFunction(parentQuery.Select))
+				if (parentQuery.HasGroupBy || parentQuery.IsDistinct || QueryHelper.ContainsAggregationOrWindowFunction(parentQuery.Select))
 				{
 					return false;
 				}
 			}
 
-			if (subQuery.HasOrderBy())
+			if (subQuery.HasOrderBy)
 			{
 				if (QueryHelper.IsAggregationQuery(parentQuery, out var needsOrderBy) && needsOrderBy)
 					return false;
 
-				if (parentQuery.IsDistinct())
+				if (parentQuery.IsDistinct)
 				{
 					// Check that all order by columns are in select list
 					foreach (var ob in subQuery.OrderBy.Items)
@@ -1699,7 +1699,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				if (containsAggregateFunction)
 				{
-					if (subQuery.Select.HasModifier || subQuery.HasSetOperators || subQuery.HasGroupBy())
+					if (subQuery.Select.HasModifier || subQuery.HasSetOperators || subQuery.HasGroupBy)
 					{
 						// not allowed to move to parent if it has aggregates
 						return false;
@@ -1708,14 +1708,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				if (containsWindowFunction)
 				{
-					if (subQuery.Select.HasModifier || subQuery.HasSetOperators || (parentQuery.HasWhere() && subQuery.HasWhere()) || subQuery.HasGroupBy())
+					if (subQuery.Select.HasModifier || subQuery.HasSetOperators || (parentQuery.HasWhere && subQuery.HasWhere) || subQuery.HasGroupBy)
 					{
 						// not allowed to break window
 						return false;
 					}
 				}
 
-				if (parentQuery.HasGroupBy())
+				if (parentQuery.HasGroupBy)
 				{
 					if (QueryHelper.UnwrapNullablity(parentColumn.Expression) is SqlColumn sc && sc.Parent == subQuery)
 					{
@@ -1737,7 +1737,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				if (QueryHelper.ContainsWindowFunction(column.Expression))
 				{
-					if (!(!parentQuery.Select.HasModifier && !parentQuery.HasWhere() && !parentQuery.HasGroupBy() && !parentQuery.HasHaving() && parentQuery.From.Tables is [{ Joins.Count: 0 }]))
+					if (!(!parentQuery.Select.HasModifier && !parentQuery.HasWhere && !parentQuery.HasGroupBy && !parentQuery.HasHaving && parentQuery.From.Tables is [{ Joins.Count: 0 }]))
 					{
 						// not allowed to break query window
 						return false;
@@ -1757,7 +1757,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						return false;
 					}
 
-					if (!IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, column.Expression, ignoreWhere : true, inGrouping: subQuery.HasGroupBy()))
+					if (!IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, column.Expression, ignoreWhere : true, inGrouping: subQuery.HasGroupBy))
 					{
 						// Column expression is complex and Column has more than one reference
 						return false;
@@ -1765,7 +1765,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 				else
 				{
-					if (!QueryHelper.HasCteClauseReference(subQuery, _currentCteClause) && !IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, column.Expression, ignoreWhere : false, inGrouping: subQuery.HasGroupBy()))
+					if (!QueryHelper.HasCteClauseReference(subQuery, _currentCteClause) && !IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, column.Expression, ignoreWhere : false, inGrouping: subQuery.HasGroupBy))
 					{
 						// Column expression is complex and Column has more than one reference
 						return false;
@@ -1795,13 +1795,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			HashSet<ISqlExpression>? aggregates = null;
 
-			if (subQuery.HasGroupBy() && parentQuery.HasGroupBy())
+			if (subQuery.HasGroupBy && parentQuery.HasGroupBy)
 				return false;
 
 			// Check possible moving Where to Having
 			//
 			{
-				if (parentQuery.HasWhere())
+				if (parentQuery.HasWhere)
 				{
 					var searchCondition = parentQuery.Where.SearchCondition;
 					if (searchCondition.Predicates is [SqlSearchCondition subCondition])
@@ -1836,7 +1836,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					if (havingDetected?.Count != searchCondition.Predicates.Count)
 					{
-						if (!parentQuery.HasGroupBy() && subQuery.HasGroupBy())
+						if (!parentQuery.HasGroupBy && subQuery.HasGroupBy)
 						{
 							// everything should be moved to having
 							return false;
@@ -1867,27 +1867,27 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (subQuery.Select.HasModifier)
 					return false;
 
-				if (subQuery.HasOrderBy())
+				if (subQuery.HasOrderBy)
 				{
 					return false;
 				}
 			}
 
-			if (parentQuery.IsDistinct())
+			if (parentQuery.IsDistinct)
 			{
 				// Common check for Distincts
 
-				if (subQuery.HasHaving())
+				if (subQuery.HasHaving)
 					return false;
 
-				if (subQuery.HasOrderBy())
+				if (subQuery.HasOrderBy)
 				{
-					if (subQuery.IsLimited() || parentQuery.IsLimited())
+					if (subQuery.IsLimited || parentQuery.IsLimited)
 						return false;
 				}
 				else
 				{
-					if (subQuery.IsLimited())
+					if (subQuery.IsLimited)
 						return false;
 				}
 
@@ -1902,9 +1902,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
-			if (subQuery.IsDistinct() != parentQuery.IsDistinct())
+			if (subQuery.IsDistinct != parentQuery.IsDistinct)
 			{
-				if (subQuery.IsDistinct())
+				if (subQuery.IsDistinct)
 				{
 					// Columns in parent query should match
 					//
@@ -1940,13 +1940,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (parentQuery.From.Tables.Count > 1)
 					return false;
 
-				if (parentQuery.HasOrderBy())
+				if (parentQuery.HasOrderBy)
 				{
-					if (subQuery.IsLimited())
+					if (subQuery.IsLimited)
 						return false;
 				}
 
-				if (parentQuery.HasWhere())
+				if (parentQuery.HasWhere)
 				{
 					if (subQuery.Select.TakeValue != null || subQuery.Select.SkipValue != null)
 						return false;
@@ -1958,7 +1958,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
-			if (subQuery.Select.HasModifier || subQuery.HasWhere())
+			if (subQuery.Select.HasModifier || subQuery.HasWhere)
 			{
 				if (tableSource.Joins.Any(j => j.JoinType == JoinType.Right || j.JoinType == JoinType.RightApply ||
 				                               j.JoinType == JoinType.Full  || j.JoinType == JoinType.FullApply))
@@ -1979,7 +1979,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
-			if (!parentQuery.HasGroupBy() && subQuery.HasGroupBy())
+			if (!parentQuery.HasGroupBy && subQuery.HasGroupBy)
 			{
 				if (tableSource.Joins.Count > 0)
 					return false;
@@ -2008,7 +2008,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						return false;
 				}
 
-				if (parentQuery.HasWhere() || parentQuery.HasHaving() || parentQuery.Select.HasModifier || parentQuery.HasOrderBy())
+				if (parentQuery.HasWhere || parentQuery.HasHaving || parentQuery.Select.HasModifier || parentQuery.HasOrderBy)
 					return false;
 
 				var operation = subQuery.SetOperators[0].Operation;
@@ -2057,7 +2057,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (subQuery.QueryName != null)
 				return false;
 
-			if (subQuery.HasGroupBy())
+			if (subQuery.HasGroupBy)
 				return false;
 
 			if (subQuery.Select.HasModifier)
@@ -2066,7 +2066,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (subQuery.HasSetOperators)
 				return false;
 
-			if (subQuery.HasGroupBy())
+			if (subQuery.HasGroupBy)
 				return false;
 
 			// Rare case when LEFT join is empty. We move search condition up. See TestDefaultExpression_22 test.
@@ -2084,7 +2084,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (joinTable.JoinType != JoinType.Inner)
 			{
-				if (subQuery.HasWhere())
+				if (subQuery.HasWhere)
 				{
 					if (joinTable.JoinType == JoinType.OuterApply)
 					{
@@ -2155,7 +2155,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			// Actual modification starts from this point
 			//
 
-			if (subQuery.HasWhere())
+			if (subQuery.HasWhere)
 			{
 				if (moveConditionToQuery)
 				{
@@ -2180,7 +2180,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				NotifyReplaced(column.Expression, column);
 			}
 
-			if (subQuery.HasOrderBy() && !QueryHelper.IsAggregationQuery(selectQuery))
+			if (subQuery.HasOrderBy && !QueryHelper.IsAggregationQuery(selectQuery))
 			{
 				ApplySubsequentOrder(selectQuery, subQuery);
 			}
@@ -2240,15 +2240,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					if (selectQuery.From.Tables.Count == 1)
 					{
-						if (selectQuery.HasGroupBy()
-						    || selectQuery.HasHaving()
-						    || selectQuery.HasOrderBy())
+						if (selectQuery.HasGroupBy
+						    || selectQuery.HasHaving
+						    || selectQuery.HasOrderBy)
 						{
 							continue;
 						}
 					}
 
-					if (subQuery.HasWhere())
+					if (subQuery.HasWhere)
 					{
 						if (!QueryHelper.IsAggregationQuery(selectQuery))
 							continue;
@@ -2261,7 +2261,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						NotifyReplaced(c.Expression, c);
 					}
 
-					if (subQuery.HasWhere())
+					if (subQuery.HasWhere)
 					{
 						selectQuery.Where.SearchCondition = QueryHelper.MergeConditions(selectQuery.Where.SearchCondition, subQuery.Where.SearchCondition);
 					}
@@ -2893,7 +2893,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					return true;
 			}
 
-			if (selectQuery.HasWhere())
+			if (selectQuery.HasWhere)
 			{
 				var keys = new List<IList<ISqlExpression>>();
 				QueryHelper.CollectUniqueKeys(selectQuery, true, keys);
@@ -3014,33 +3014,33 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			query.Select.From.Tables.Clear();
 			_ = query.Select.From.Table(subQuery);
 
-			if (query.HasOrderBy())
+			if (query.HasOrderBy)
 			{
 				subQuery.OrderBy.Items.AddRange(query.OrderBy.Items);
 				query.OrderBy.Items.Clear();
 			}
 
-			if (query.HasGroupBy())
+			if (query.HasGroupBy)
 			{
 				subQuery.GroupBy.Items.AddRange(query.GroupBy.Items);
 				query.GroupBy.Items.Clear();
 			}
 
-			if (query.HasWhere())
+			if (query.HasWhere)
 			{
 				subQuery.Where.SearchCondition.Predicates.AddRange(query.Where.SearchCondition.Predicates);
 				subQuery.Where.SearchCondition.IsOr = query.Where.SearchCondition.IsOr;
 				query.Where.SearchCondition.Predicates.Clear();
 			}
 
-			if (query.HasHaving())
+			if (query.HasHaving)
 			{
 				subQuery.Having.SearchCondition.Predicates.AddRange(query.Having.SearchCondition.Predicates);
 				subQuery.Having.SearchCondition.IsOr = query.Having.SearchCondition.IsOr;
 				query.Having.SearchCondition.Predicates.Clear();
 			}
 
-			if (query.IsDistinct())
+			if (query.IsDistinct)
 			{
 				subQuery.Select.IsDistinct = true;
 				query.Select.IsDistinct    = false;
@@ -3273,7 +3273,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				sq.Select.IsDistinct = false;
 			}
 
-			if (!sq.HasGroupBy() && !sq.HasSetOperators)
+			if (!sq.HasGroupBy && !sq.HasSetOperators)
 			{
 				// non aggregation columns can be removed
 				for (int i = sq.Select.Columns.Count - 1; i >= 0; i--)

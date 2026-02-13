@@ -254,7 +254,7 @@ namespace Tests
 				};
 
 				items.AddRange(selectQuery.Select.Columns);
-				if (selectQuery.HasWhere())
+				if (selectQuery.HasWhere)
 					items.Add(selectQuery.Where);
 
 				var ctx = new BuildParentHierarchyContext(this, selectQuery);
