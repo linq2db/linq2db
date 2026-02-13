@@ -19,7 +19,7 @@ namespace LinqToDB.Metadata
 			{
 				MetadataSource.Attributes    => AttributeBasedMetadataBuilder.Instance,
 				MetadataSource.FluentMapping => new FluentMetadataBuilder(languageProvider.ASTBuilder),
-				_                            => null
+				_                            => null,
 			};
 		}
 	}

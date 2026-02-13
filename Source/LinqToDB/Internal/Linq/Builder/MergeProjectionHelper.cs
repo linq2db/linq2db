@@ -338,7 +338,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (_insideLambda)
 				{
-					var (placeholder, path) = FoundPlaceholders.FirstOrDefault(p => ExpressionEqualityComparer.Instance.Equals(p.placeholder.Path, node.Path));
+					var (placeholder, path) = FoundPlaceholders.Find(p => ExpressionEqualityComparer.Instance.Equals(p.placeholder.Path, node.Path));
 					if (placeholder != null)
 						return new SqlPathExpression(path, node.Type);
 				}

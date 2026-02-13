@@ -205,7 +205,7 @@ namespace LinqToDB.DataModel
 		private static void BuildFindExtensions(IDataModelGenerationContext context, EntityModel model)
 		{
 			// if entity doesn't have primary key, skip extension generation
-			if (!model.Columns.Any(static c => c.Metadata.IsPrimaryKey))
+			if (!model.Columns.Exists(static c => c.Metadata.IsPrimaryKey))
 				return;
 
 			BuildFindExtension(context, model, FindTypes.FindByPkOnTable           );
@@ -283,7 +283,7 @@ namespace LinqToDB.DataModel
 			if (context.Options.OrderFindParametersByColumnOrdinal)
 				pks = pks.OrderBy(static c => c.Metadata.PrimaryKeyOrder);
 			else
-				pks = pks.OrderBy(static c => c.Property.Name);
+				pks = pks.OrderBy(static c => c.Property.Name, StringComparer.Ordinal);
 
 			// apply ordinal sort to primary key columns for parameters generation if by-name sort not
 			if (context.Options.OrderFindParametersByColumnOrdinal)

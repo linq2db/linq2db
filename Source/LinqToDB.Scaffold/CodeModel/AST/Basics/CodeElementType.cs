@@ -220,7 +220,7 @@
 		/// </summary>
 		Cast,
 		/// <summary>
-		/// <c>as</c> operator expression.
+		/// <see langword="as"/> operator expression.
 		/// </summary>
 		AsOperator,
 		/// <summary>

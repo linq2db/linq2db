@@ -26,7 +26,7 @@ namespace LinqToDB.Naming
 		/// <returns>Normalized identifier.</returns>
 		public string NormalizeIdentifier(NormalizationOptions settings, string name)
 		{
-			var mixedCase = name.ToUpperInvariant() != name;
+			var mixedCase = !string.Equals(name.ToUpperInvariant(), name, System.StringComparison.Ordinal);
 			// skip normalization for ALLCAPS names
 			if (!settings.DontCaseAllCaps || name.EnumerateCharacters().Any(c => c.category != UnicodeCategory.UppercaseLetter))
 			{
@@ -67,7 +67,7 @@ namespace LinqToDB.Naming
 						if (lastTextIndex == i)
 						{
 							var normalized = word.ToLowerInvariant();
-							var toUpperCase = settings.Casing == NameCasing.T4CompatNonPluralized && normalized != word && word == word.ToUpperInvariant();
+							var toUpperCase = settings.Casing == NameCasing.T4CompatNonPluralized && !string.Equals(normalized, word, System.StringComparison.Ordinal) && string.Equals(word, word.ToUpperInvariant(), System.StringComparison.Ordinal);
 
 							word = _pluralizationProvider.GetConverter(settings.Pluralization)(normalized);
 							if (toUpperCase)
@@ -110,10 +110,10 @@ namespace LinqToDB.Naming
 			if (casing == NameCasing.None)
 				return word;
 
-			if (casing == NameCasing.T4CompatPluralized && !lastWord && word.ToUpperInvariant() == word && word.Length <= 2)
+			if (casing == NameCasing.T4CompatPluralized && !lastWord && string.Equals(word.ToUpperInvariant(), word, System.StringComparison.Ordinal) && word.Length <= 2)
 				return word;
 
-			if (casing == NameCasing.T4CompatNonPluralized && mixedCase && word.ToUpperInvariant() == word)
+			if (casing == NameCasing.T4CompatNonPluralized && mixedCase && string.Equals(word.ToUpperInvariant(), word, System.StringComparison.Ordinal))
 				return word;
 
 			var firstLetter = true;
@@ -169,7 +169,7 @@ namespace LinqToDB.Naming
 		/// <list type="bullet">
 		/// <item>their letter/non-letter unicode categories;</item>
 		/// <item>for string with mixed letter cases, uses uppercase letter as indicator of new word start character;</item>
-		/// <item>when <paramref name="removeUnderscores"/> set to <c>true</c>, underscore used as additional separator between words and removed from results</item>
+		/// <item>when <paramref name="removeUnderscores"/> set to <see langword="true" />, underscore used as additional separator between words and removed from results</item>
 		/// </list>
 		/// </summary>
 		/// <param name="str">String to split.</param>
@@ -188,7 +188,7 @@ namespace LinqToDB.Naming
 
 				var isText                = false; // current word is text (contains letters)
 				var uppercaseWord         = false; // current word contains only uppercase letters
-				var splitByUpperCase      = fragment.ToUpperInvariant() != fragment; // apply split-by-uppercase-letter logic to current fragment
+				var splitByUpperCase      = !string.Equals(fragment.ToUpperInvariant(), fragment, System.StringComparison.Ordinal); // apply split-by-uppercase-letter logic to current fragment
 				var length                = 0;
 				string? previousCharacter = null; // previous identified character in current fragment
 

@@ -164,9 +164,11 @@ namespace Tests.Linq
 			{
 				// operator== : (L + 3) == R
 				// Equals used instead of == to avoid infinite recursion
+#pragma warning disable MA0065 // Default ValueType.Equals or HashCode is used for struct equality
 				fb.Entity<CustomInt>().Member(v => v == 3).HasAttribute(new ExpressionMethodAttribute((Expression<Func<CustomInt, int, bool>>)((l, r) => (l + 3).Equals(r))));
-				fb.Entity<CustomInt?>().Member(v => v == 3).HasAttribute(new ExpressionMethodAttribute((Expression<Func<CustomInt?, int, bool>>)((l, r) => l != null && ((l + 3).Equals(r)))));
+				fb.Entity<CustomInt?>().Member(v => v == 3).HasAttribute(new ExpressionMethodAttribute((Expression<Func<CustomInt?, int, bool>>)((l, r) => l != null && (l + 3).Equals(r))));
 				fb.Entity<CustomIntClass>().Member(v => v == 3).HasAttribute(new ExpressionMethodAttribute((Expression<Func<CustomIntClass, int, bool>>)((l, r) => (l + 3).Equals(r))));
+#pragma warning restore MA0065 // Default ValueType.Equals or HashCode is used for struct equality
 			}));
 			using var tb = db.CreateLocalTable(OperatorTable.Data);
 
@@ -416,9 +418,9 @@ namespace Tests.Linq
 				public static explicit operator TenderId(Guid value) => new TenderId { Value = value };
 				public static explicit operator Guid(TenderId value) => value.Value;
 
-				public bool Equals(TenderId other) => Value.Equals(other.Value);
-				public override bool Equals(object? obj) => obj is TenderId other && Equals(other);
-				public override int GetHashCode() => Value.GetHashCode();
+				public readonly bool Equals(TenderId other) => Value.Equals(other.Value);
+				public override readonly bool Equals(object? obj) => obj is TenderId other && Equals(other);
+				public override readonly int GetHashCode() => Value.GetHashCode();
 
 				internal static void LinqToDbMapping(LinqToDB.Mapping.MappingSchema ms)
 				{
@@ -542,9 +544,9 @@ namespace Tests.Linq
 				public static Expression<Func<Guid, TenderId>> GuidToId() => value => new TenderId { Value = value };
 				public static Expression<Func<TenderId, Guid>> IdToGuid() => value => value.Value;
 
-				public bool Equals(TenderId other) => Value.Equals(other.Value);
-				public override bool Equals(object? obj) => obj is TenderId other && Equals(other);
-				public override int GetHashCode() => Value.GetHashCode();
+				public readonly bool Equals(TenderId other) => Value.Equals(other.Value);
+				public override readonly bool Equals(object? obj) => obj is TenderId other && Equals(other);
+				public override readonly int GetHashCode() => Value.GetHashCode();
 
 				internal static void LinqToDbMapping(LinqToDB.Mapping.MappingSchema ms)
 				{

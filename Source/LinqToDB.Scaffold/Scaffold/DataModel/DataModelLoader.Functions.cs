@@ -34,7 +34,7 @@ namespace LinqToDB.Scaffold
 			{
 				Name           = name,
 				ServerSideOnly = true,
-				IsAggregate    = true
+				IsAggregate    = true,
 			};
 
 			if (func.Parameters.Count > 0)
@@ -76,13 +76,13 @@ namespace LinqToDB.Scaffold
 				(func.Name.Package != null ? $"{func.Name.Package}_" : null) + name.Name))
 			{
 				Modifiers = Modifiers.Public | Modifiers.Static,
-				Summary   = func.Description
+				Summary   = func.Description,
 			};
 
 			var metadata = new FunctionMetadata()
 			{
 				Name           = name,
-				ServerSideOnly = true
+				ServerSideOnly = true,
 			};
 
 			var funcModel = new ScalarFunctionModel(name, method, metadata);
@@ -110,11 +110,11 @@ namespace LinqToDB.Scaffold
 							_options.DataModel.FunctionTupleResultClassNameOptions,
 							func.Name.Name))
 					{
-						Modifiers = Modifiers.Public | Modifiers.Partial
+						Modifiers = Modifiers.Public | Modifiers.Partial,
 					};
 					funcModel.ReturnTuple = new TupleModel(@class)
 					{
-						CanBeNull = tupleResult.Nullable
+						CanBeNull = tupleResult.Nullable,
 					};
 
 					// fields order must be preserved, as tuple fields mapped by ordinal
@@ -126,11 +126,11 @@ namespace LinqToDB.Scaffold
 						{
 							Modifiers = Modifiers.Public,
 							IsDefault = true,
-							HasSetter = true
+							HasSetter = true,
 						};
 						funcModel.ReturnTuple.Fields.Add(new TupleFieldModel(prop, field.Type)
 						{
-							DataType = typeMapping.DataType
+							DataType = typeMapping.DataType,
 						});
 					}
 
@@ -166,7 +166,7 @@ namespace LinqToDB.Scaffold
 				(func.Name.Package != null ? $"{func.Name.Package}_" : null) + name.Name))
 			{
 				Modifiers = Modifiers.Public,
-				Summary   = func.Description
+				Summary   = func.Description,
 			};
 
 			var metadata  = new TableFunctionMetadata() { Name = name };
@@ -175,7 +175,7 @@ namespace LinqToDB.Scaffold
 				method,
 				metadata)
 			{
-				Error = func.SchemaError?.Message
+				Error = func.SchemaError?.Message,
 			};
 
 			BuildParameters(func.Parameters, funcModel.Parameters);
@@ -211,7 +211,7 @@ namespace LinqToDB.Scaffold
 
 			var funcModel = new StoredProcedureModel(name, method)
 			{
-				Error = func.SchemaError?.Message
+				Error = func.SchemaError?.Message,
 			};
 
 			BuildParameters(func.Parameters, funcModel.Parameters);
@@ -237,7 +237,7 @@ namespace LinqToDB.Scaffold
 						Type       = scalarResult.Type,
 						DataType   = typeMapping.DataType,
 						DbName     = scalarResult.Name,
-						IsNullable = scalarResult.Nullable
+						IsNullable = scalarResult.Nullable,
 					};
 					break;
 				}
@@ -266,12 +266,12 @@ namespace LinqToDB.Scaffold
 							_options.DataModel.AsyncProcedureResultClassNameOptions,
 							func.Name.Name))
 					{
-						Modifiers = Modifiers.Public
+						Modifiers = Modifiers.Public,
 					}, new PropertyModel("Result")
 					{
 						Modifiers = Modifiers.Public,
 						IsDefault = true,
-						HasSetter = true
+						HasSetter = true,
 					});
 
 				foreach (var parameter in returningParameters)
@@ -282,7 +282,7 @@ namespace LinqToDB.Scaffold
 						{
 							Modifiers = Modifiers.Public,
 							IsDefault = true,
-							HasSetter = true
+							HasSetter = true,
 						});
 				}
 
@@ -327,7 +327,7 @@ namespace LinqToDB.Scaffold
 					typeMapping.CLRType.WithNullability(param.Nullable),
 					direction)
 				{
-					Description = param.Description
+					Description = param.Description,
 				};
 
 				var fp = new FunctionParameterModel(parameterModel, metadataDirection)
@@ -335,7 +335,7 @@ namespace LinqToDB.Scaffold
 					DbName     = param.Name,
 					Type       = param.Type,
 					DataType   = typeMapping.DataType,
-					IsNullable = param.Nullable
+					IsNullable = param.Nullable,
 				};
 
 				models.Add(fp);
@@ -366,11 +366,11 @@ namespace LinqToDB.Scaffold
 				var wrapperClass = new ClassModel(_options.CodeGeneration.ClassPerFile ? schemaClassName : dataContext.Class.FileName!, schemaClassName)
 				{
 					Modifiers = Modifiers.Public | Modifiers.Partial | Modifiers.Static,
-					Namespace = _options.CodeGeneration.Namespace
+					Namespace = _options.CodeGeneration.Namespace,
 				};
 				var contextClass = new ClassModel("DataContext")
 				{
-					Modifiers = Modifiers.Public | Modifiers.Partial
+					Modifiers = Modifiers.Public | Modifiers.Partial,
 				};
 				schemaModel = new AdditionalSchemaModel(contextPropertyName, wrapperClass, contextClass);
 				dataContext.AdditionalSchemas.Add(schemaName, schemaModel);
@@ -391,7 +391,7 @@ namespace LinqToDB.Scaffold
 			// column equality check includes: name, database type and nullability
 			if (_options.DataModel.MapProcedureResultToEntity)
 			{
-				var names = new Dictionary<string, (DatabaseType type, bool isNullable)>();
+				var names = new Dictionary<string, (DatabaseType type, bool isNullable)>(StringComparer.Ordinal);
 				foreach (var column in columns)
 				{
 					// columns without name or duplicate names indicate that it is not entity and requires custom
@@ -432,7 +432,7 @@ namespace LinqToDB.Scaffold
 					_options.DataModel.ProcedureResultClassNameOptions,
 					(funcName.Package != null ? $"{funcName.Package}_" : null) + funcName.Name))
 			{
-				Modifiers = Modifiers.Partial | Modifiers.Public
+				Modifiers = Modifiers.Partial | Modifiers.Public,
 			};
 			var model = new ResultTableModel(resultClass);
 
@@ -445,7 +445,7 @@ namespace LinqToDB.Scaffold
 					Name      = col.Name ?? string.Empty,
 					DbType    = _options.DataModel.GenerateDbType   ? col.Type             : null,
 					DataType  = _options.DataModel.GenerateDataType ? typeMapping.DataType : null,
-					CanBeNull = col.Nullable
+					CanBeNull = col.Nullable,
 				};
 
 				var property  = new PropertyModel(

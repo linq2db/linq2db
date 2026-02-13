@@ -105,7 +105,7 @@ namespace LinqToDB.DataModel
 				// otherwise we should bind columns manually by ordinal (as we don't have by-ordinal mapping conventions support)
 				useOrdinalMapping = customTable != null
 					// number of columns remains same after empty names and duplicates removed?
-					&& customTable.Columns.Select(c => c.Metadata.Name).Where(_ => !string.IsNullOrEmpty(_)).Distinct().Count() != customTable.Columns.Count;
+					&& customTable.Columns.Select(c => c.Metadata.Name).Where(_ => !string.IsNullOrEmpty(_)).Distinct(StringComparer.Ordinal).Take(customTable.Columns.Count + 1).Count() != customTable.Columns.Count;
 
 				if (customTable != null)
 					(returnElementType, customRecordProperties) = BuildCustomResultClass(context, customTable, classes, !useOrdinalMapping);
@@ -125,13 +125,13 @@ namespace LinqToDB.DataModel
 		/// <param name="context">Model generation context.</param>
 		/// <param name="storedProcedure">Stored procedure model.</param>
 		/// <param name="methodsGroup">Method group to add new mapping method.</param>
-		/// <param name="useOrdinalMapping">If <c>true</c>, by-ordinal mapping used for result mapping instead of by-name mapping.</param>
+		/// <param name="useOrdinalMapping">If <see langword="true" />, by-ordinal mapping used for result mapping instead of by-name mapping.</param>
 		/// <param name="customTable">Custom result record model.</param>
 		/// <param name="returnElementType">Type of result record for procedure with result.</param>
 		/// <param name="customRecordProperties">Column properties for custom result record type.</param>
 		/// <param name="classes">Procedure classes group.</param>
 		/// <param name="asyncResult">Optional result class model for async signature.</param>
-		/// <param name="async">If <c>true</c>, generate async version of mapping.</param>
+		/// <param name="async">If <see langword="true" />, generate async version of mapping.</param>
 		private static void BuildStoredProcedureMethod(
 			IDataModelGenerationContext context,
 			StoredProcedureModel        storedProcedure,
@@ -149,7 +149,7 @@ namespace LinqToDB.DataModel
 			// generate ToList materialization call or mark method async in two cases:
 			// - when return type of mapping is List<T>
 			// - when procedure has non-input parameters
-			var hasReturnParameters = storedProcedure.Return != null || storedProcedure.Parameters.Any(p => p.Parameter.Direction != CodeParameterDirection.In);
+			var hasReturnParameters = storedProcedure.Return != null || storedProcedure.Parameters.Exists(p => p.Parameter.Direction != CodeParameterDirection.In);
 			var isQueryProc         = storedProcedure.Results.Count == 1 && (storedProcedure.Results[0].Entity != null || storedProcedure.Results[0].CustomTable != null);
 			var generateToList      = isQueryProc && (hasReturnParameters || context.Options.GenerateProcedureResultAsList);
 
@@ -476,7 +476,7 @@ namespace LinqToDB.DataModel
 
 					// order parameters to always generate properties in same order
 					var idx = 0;
-					foreach (var parameter in asyncResult.ParameterProperties.OrderBy(k => k.Value.Name))
+					foreach (var parameter in asyncResult.ParameterProperties.OrderBy(k => k.Value.Name, StringComparer.Ordinal))
 					{
 						prop                  = context.DefineProperty(properties, parameter.Value);
 						initializers[idx + 1] = context.AST.Assign(prop.Property.Reference, parameterRebinds[rebindedParametersIndexes![parameter.Key]].RValue);
@@ -558,7 +558,7 @@ namespace LinqToDB.DataModel
 			{
 				if (dbType.Name != null && context.Options.GenerateProcedureParameterDbType)
 					initializersCount++;
-				if (dbType.Length is not null and >= int.MinValue and <= int.MaxValue)
+				if (dbType.Length is not null)
 					initializersCount++;
 				if (dbType.Precision != null)
 					initializersCount++;

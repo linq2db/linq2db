@@ -17,6 +17,6 @@
 		/// <summary>
 		/// Output parameter.
 		/// </summary>
-		Out
+		Out,
 	}
 }

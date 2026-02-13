@@ -216,13 +216,13 @@ namespace LinqToDB.CodeModel
 				var fullName = FixName(
 					_globalTypeNames,
 					name,
-					n => string.Join(".", @namespace.Name.Take(i).Select(n => string.Format(CultureInfo.InvariantCulture, "{0}", n.Name))) + (i > 0 ? "." : null) + n,
+					n => string.JoinStrings('.', @namespace.Name.Take(i).Select(n => string.Format(CultureInfo.InvariantCulture, "{0}", n.Name))) + (i > 0 ? "." : null) + n,
 					false);
 				_globalNames.Add(fullName);
 			}
 
 			// save namespace name to context only after it was fixed
-			_namespace = string.Join(".", @namespace.Name.Select(_ => _.Name));
+			_namespace = string.JoinStrings('.', @namespace.Name.Select(_ => _.Name));
 
 			base.Visit(@namespace);
 
@@ -312,7 +312,7 @@ namespace LinqToDB.CodeModel
 			}
 
 			// save new name back to identifier instance
-			if (name.Name != identifierName)
+			if (!string.Equals(name.Name, identifierName, StringComparison.Ordinal))
 				name.Name = identifierName;
 
 			// register new name in scope

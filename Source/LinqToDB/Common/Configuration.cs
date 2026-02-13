@@ -24,7 +24,7 @@ namespace LinqToDB.Common
 	public static class Configuration
 	{
 		/// <summary>
-		/// If <c>true</c> - structures (except primitive values including enums) will be treated as scalar types during mapping;
+		/// If <see langword="true" /> - structures (except primitive values including enums) will be treated as scalar types during mapping;
 		/// otherwise they will be treated the same way as classes.
 		/// Default value: <c>false</c>.
 		/// </summary>
@@ -33,8 +33,8 @@ namespace LinqToDB.Common
 		public static bool IsStructIsScalarType = false;
 
 		/// <summary>
-		/// If <c>true</c> - Enum values are stored as by calling ToString().
-		/// Default value: <c>true</c>.
+		/// If <see langword="true" /> - Enum values are stored as by calling ToString().
+		/// Default value: <see langword="true" />.
 		/// </summary>
 		[Obsolete("This API doesn't have any effect and planned for removal in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static bool UseEnumValueNameForStringColumns = true;
@@ -123,7 +123,7 @@ namespace LinqToDB.Common
 		{
 			/// <summary>
 			/// Enables throwing of <see cref="ObjectDisposedException"/> when access disposed <see cref="DataConnection"/> instance.
-			/// Default value: <c>true</c>.
+			/// Default value: <see langword="true" />.
 			/// </summary>
 			// TODO: Remove in v7
 			[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -131,7 +131,7 @@ namespace LinqToDB.Common
 
 			/// <summary>
 			/// Controls behavior of bulk copy timeout if <see cref="BulkCopyOptions.BulkCopyTimeout"/> is not provided.
-			/// - if <c>true</c> - the currently set command timeout on the <see cref="DataConnection"/> is used
+			/// - if <see langword="true" /> - the currently set command timeout on the <see cref="DataConnection"/> is used
 			/// - if <c>false</c> - command timeout is infinite.
 			/// Default value: <c>false</c>.
 			/// </summary>
@@ -457,7 +457,7 @@ namespace LinqToDB.Common
 		public static class SqlServer
 		{
 			/// <summary>
-			/// if set to <c>true</c>, SchemaProvider uses <see cref="CommandBehavior.SchemaOnly"/> to get metadata.
+			/// if set to <see langword="true" />, SchemaProvider uses <see cref="CommandBehavior.SchemaOnly"/> to get metadata.
 			/// Otherwise, the <c>sp_describe_first_result_set</c> sproc is used.
 			/// Default value: <c>false</c>.
 			/// </summary>
@@ -472,7 +472,7 @@ namespace LinqToDB.Common
 		{
 			/// <summary>
 			/// Controls format of type name, sent over remote context:
-			/// - if <c>true</c> - name from <see cref="Type.AssemblyQualifiedName"/> used;
+			/// - if <see langword="true" /> - name from <see cref="Type.AssemblyQualifiedName"/> used;
 			/// - if <c>false</c> - name from <see cref="Type.FullName"/> used.
 			/// Default value: <c>false</c>.
 			/// </summary>
@@ -480,7 +480,7 @@ namespace LinqToDB.Common
 
 			/// <summary>
 			/// Controls behavior of Linq To DB, when it cannot load <see cref="Type"/> by type name on query deserialization:
-			/// - if <c>true</c> - <see cref="LinqToDBException"/> will be thrown;
+			/// - if <see langword="true" /> - <see cref="LinqToDBException"/> will be thrown;
 			/// - if <c>false</c> - type load error will be ignored.
 			/// Default value: <c>false</c>.
 			/// </summary>

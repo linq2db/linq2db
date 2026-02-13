@@ -340,11 +340,11 @@ namespace LinqToDB.CodeModel
 		public CodeTypeCast Cast(IType type, ICodeExpression value) => new(type, value);
 
 		/// <summary>
-		/// Creates type conversion expression using <c>as</c> operator.
+		/// Creates type conversion expression using <see langword="as"/> operator.
 		/// </summary>
 		/// <param name="type">Target type.</param>
 		/// <param name="expression">Casted value expression.</param>
-		/// <returns><c>as</c> operator expression.</returns>
+		/// <returns><see langword="as"/> operator expression.</returns>
 		public CodeAsOperator As(IType type, ICodeExpression expression) => new(type, expression);
 
 		/// <summary>

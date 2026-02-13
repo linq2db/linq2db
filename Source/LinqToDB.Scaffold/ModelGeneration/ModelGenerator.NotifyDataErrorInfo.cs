@@ -27,7 +27,7 @@ namespace LinqToDB.Tools.ModelGeneration
 				
 				var cl = (IClass)p;
 
-				if (!cl.Interfaces.Contains("INotifyDataErrorInfo"))
+				if (!cl.Interfaces.Contains("INotifyDataErrorInfo", System.StringComparer.Ordinal))
 				{
 					Model.Usings.Add("System.ComponentModel");
 					Model.Usings.Add("System.Collections");
@@ -45,7 +45,7 @@ namespace LinqToDB.Tools.ModelGeneration
 									TypeBuilder = static () => new ModelType("EventHandler<DataErrorsChangedEventArgs>", true, true).ToTypeName(),
 									Name        = "ErrorsChanged",
 									IsVirtual   = true,
-									Attributes  = { new TAttribute { Name = "field : NonSerialized" } }
+									Attributes  = { new TAttribute { Name = "field : NonSerialized" } },
 								},
 								new TField
 								{
@@ -54,7 +54,7 @@ namespace LinqToDB.Tools.ModelGeneration
 									InitValue      = "new Dictionary<string,List<string>>()",
 									AccessModifier = AccessModifier.Private,
 									IsReadonly     = true,
-									Attributes     = { new TAttribute { Name = "field : NonSerialized" } }
+									Attributes     = { new TAttribute { Name = "field : NonSerialized" } },
 								},
 								new TMethod
 								{
@@ -79,9 +79,9 @@ namespace LinqToDB.Tools.ModelGeneration
 												"\treturn;",
 											"",
 											"OnErrorsChanged(propertyName);",
-										]
+										],
 									},
-									AccessModifier = AccessModifier.Public
+									AccessModifier = AccessModifier.Public,
 								},
 								new TMethod
 								{
@@ -99,9 +99,9 @@ namespace LinqToDB.Tools.ModelGeneration
 												"\t_validationErrors.Clear();",
 												"\tOnErrorsChanged(propertyName);",
 											"}",
-										]
+										],
 									},
-									AccessModifier = AccessModifier.Public
+									AccessModifier = AccessModifier.Public,
 								},
 								new TMethod
 								{
@@ -120,9 +120,9 @@ namespace LinqToDB.Tools.ModelGeneration
 													"\t\tSystem.Windows.Application.Current.Dispatcher.BeginInvoke(",
 														"\t\t\t(Action)(() => ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName))));",
 											"}",
-										]
+										],
 									},
-									AccessModifier = AccessModifier.Protected
+									AccessModifier = AccessModifier.Protected,
 								},
 								new TMethod
 								{
@@ -135,17 +135,17 @@ namespace LinqToDB.Tools.ModelGeneration
 										[
 											$"List<string>{(EnableNullableReferenceTypes ? "?" : "")} errors;",
 											"return propertyName != null && _validationErrors.TryGetValue(propertyName, out errors) ? errors : null;",
-										]
+										],
 									},
-									AccessModifier = AccessModifier.Public
+									AccessModifier = AccessModifier.Public,
 								},
 								new TProperty
 								{
 									TypeBuilder = static () => "bool",
-									Name        = "HasErrors"
+									Name        = "HasErrors",
 								}
-								.InitGetter("_validationErrors.Values.Any(e => e.Count > 0)")
-							}
+								.InitGetter("_validationErrors.Values.Any(e => e.Count > 0)"),
+							},
 					});
 				}
 			}

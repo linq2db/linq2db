@@ -230,7 +230,7 @@ namespace LinqToDB.Tools.ModelGeneration
 			"null",     "object",   "operator", "out",     "override",  "params",    "private",    "protected", "public",  "readonly",
 			"ref",      "return",   "sbyte",    "sealed",  "short",     "sizeof",    "stackalloc", "static",    "struct",  "switch",
 			"this",     "throw",    "true",     "try",     "typeof",    "uint",      "ulong",      "unchecked", "unsafe",  "ushort",
-			"using",    "virtual",  "volatile", "void",    "while",     "namespace", "string"
+			"using",    "virtual",  "volatile", "void",    "while",     "namespace", "string",
 		];
 
 		int _counter;
@@ -244,13 +244,13 @@ namespace LinqToDB.Tools.ModelGeneration
 
 			if (normalize)
 			{
-				if (mayRemoveUnderscore && name.Contains('_'))
+				if (mayRemoveUnderscore && name.Contains('_', StringComparison.Ordinal))
 					name = SplitAndJoin(name, "", '_');
 				else if (NormalizeNamesWithoutUnderscores)
 					name = NormalizeFragment(name);
 			}
 
-			if (name.Contains('.'))
+			if (name.Contains('.', StringComparison.Ordinal))
 			{
 				name = SplitAndJoin(name, "", '.');
 			}
@@ -288,7 +288,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 		static string NormalizeFragment(string s)
 		{
-			return s.Length == 0 ? s : char.ToUpper(s[0]) + (s.Substring(1).All(char.IsUpper) ? s.Substring(1).ToLower() : s.Substring(1));
+			return s.Length == 0 ? s : char.ToUpper(s[0]) + (s.Substring(1).All(char.IsUpper) ? s.Substring(1).ToLowerInvariant() : s.Substring(1));
 		}
 
 		public string ConvertToCompilableDefault(string name, bool mayRemoveUnderscore)
@@ -324,7 +324,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 		protected Dictionary<string,TR> ToDictionary<T,TR>(IEnumerable<T> source, Func<T,string> keyGetter, Func<T,TR> objGetter, Func<TR,int,string> getKeyName)
 		{
-			var dic     = new Dictionary<string,TR>();
+			var dic     = new Dictionary<string,TR>(StringComparer.Ordinal);
 			var current = 1;
 
 			foreach (var item in source)
@@ -347,7 +347,7 @@ namespace LinqToDB.Tools.ModelGeneration
 		{
 			type ??= typeof(object);
 
-			if (Model.Usings.Contains(type.Namespace ?? "") == false)
+			if (!Model.Usings.Contains(type.Namespace ?? ""))
 				Model.Usings.Add(type.Namespace ?? "");
 
 			if (type.IsGenericType)
@@ -366,19 +366,19 @@ namespace LinqToDB.Tools.ModelGeneration
 			else
 			{
 				memberName = memberName
-					.Replace("%",      "Percent")
-					.Replace(">",      "Greater")
-					.Replace("<",      "Lower")
-					.Replace("+",      "Plus")
+					.Replace("%",      "Percent", StringComparison.Ordinal)
+					.Replace(">",      "Greater", StringComparison.Ordinal)
+					.Replace("<",      "Lower", StringComparison.Ordinal)
+					.Replace("+",      "Plus", StringComparison.Ordinal)
 					.Replace('(',      '_')
 					.Replace(')',      '_')
 					.Replace('-',      '_')
 					.Replace('|',      '_')
 					.Replace(',',      '_')
 					.Replace('"',      '_')
-					.Replace("'",      "_")
-					.Replace(".",      "_")
-					.Replace("\u00A3", "Pound");
+					.Replace('\'',     '_')
+					.Replace('.',      '_')
+					.Replace("\u00A3", "Pound", StringComparison.Ordinal);
 
 				IsProcedureColumn = true;
 				memberName        = NormalizeName(memberName, false);
@@ -392,12 +392,12 @@ namespace LinqToDB.Tools.ModelGeneration
 		{
 			var invalidParameterNames = new List<string>
 			{
-				"@DataType"
+				"@DataType",
 			};
 
 			var result = parameterName;
 
-			while (invalidParameterNames.Contains(result))
+			while (invalidParameterNames.Contains(result, StringComparer.Ordinal))
 				result += "_";
 
 			return result;
@@ -405,7 +405,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 		protected string SuggestNoDuplicate(IEnumerable<string> currentNames, string newName, string? prefix)
 		{
-			var names  = new HashSet<string>(currentNames);
+			var names  = new HashSet<string>(currentNames, StringComparer.Ordinal);
 			var result = newName;
 
 			if (names.Contains(result))
@@ -462,8 +462,8 @@ namespace LinqToDB.Tools.ModelGeneration
 		{
 		}
 
-		public Dictionary<string,TTable>     Tables     { get; set; } = new ();
-		public Dictionary<string,TProcedure> Procedures { get; set; } = new ();
+		public Dictionary<string,TTable>     Tables     { get; set; } = new (StringComparer.Ordinal);
+		public Dictionary<string,TProcedure> Procedures { get; set; } = new (StringComparer.Ordinal);
 
 		public Func<TableSchema,TTable?> LoadProviderSpecificTable = _ => null;
 
@@ -535,14 +535,14 @@ namespace LinqToDB.Tools.ModelGeneration
 									SkipOnUpdate    = c.SkipOnUpdate,
 									Description     = c.Description,
 								};
-							})
-					}
+							}, StringComparer.Ordinal),
+					},
 				})
 				.ToList();
 
 			if (PluralizeClassNames || SingularizeClassNames)
 			{
-				var foundNames = new HashSet<string>(tables.Select(t => t.table!.Schema + '.' + t.table.TypeName));
+				var foundNames = new HashSet<string>(tables.Select(t => t.table!.Schema + '.' + t.table.TypeName), StringComparer.Ordinal);
 
 				foreach (var t in tables)
 				{
@@ -551,7 +551,7 @@ namespace LinqToDB.Tools.ModelGeneration
 							PluralizeClassNames   ? ToPlural  (newName!) :
 							SingularizeClassNames ? ToSingular(newName!) : newName;
 
-					if (newName != t.table.TypeName)
+					if (!string.Equals(newName, t.table.TypeName, StringComparison.Ordinal))
 					{
 						if (!foundNames.Contains(t.table.Schema + '.' + newName))
 						{
@@ -564,7 +564,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 			if (PluralizeDataContextPropertyNames || SingularizeDataContextPropertyNames)
 			{
-				var foundNames = new HashSet<string>(tables.Select(t => t.table!.Schema + '.' + t.table.DataContextPropertyName));
+				var foundNames = new HashSet<string>(tables.Select(t => t.table!.Schema + '.' + t.table.DataContextPropertyName), StringComparer.Ordinal);
 
 				foreach (var t in tables)
 				{
@@ -573,7 +573,7 @@ namespace LinqToDB.Tools.ModelGeneration
 							PluralizeDataContextPropertyNames   ? ToPlural  (newName!) :
 							SingularizeDataContextPropertyNames ? ToSingular(newName!) : newName;
 
-					if (newName != t.table.TypeName)
+					if (!string.Equals(newName, t.table.TypeName, StringComparison.Ordinal))
 					{
 						if (!foundNames.Contains(t.table.Schema + '.' + newName))
 						{
@@ -590,7 +590,7 @@ namespace LinqToDB.Tools.ModelGeneration
 				{
 					t,
 					key   = t.IsDefaultSchema ? t.TableName : t.SchemaName + "." + t.TableName,
-					table = LoadProviderSpecificTable(t)
+					table = LoadProviderSpecificTable(t),
 				})
 				.Where(t => t.table != null));
 
@@ -618,7 +618,7 @@ namespace LinqToDB.Tools.ModelGeneration
 						CanBeNull       = k.CanBeNull,
 						MemberName      = k.MemberName,
 						AssociationType = (AssociationType)(int)k.AssociationType,
-					}
+					},
 				}
 			).ToList();
 
@@ -633,7 +633,7 @@ namespace LinqToDB.Tools.ModelGeneration
 				if (key.k.BackReference != null)
 					key.key.BackReference = keys.First(k => k.k == key.k.BackReference).key;
 
-				key.key.MemberName = key.key.MemberName!.Replace(".", string.Empty);
+				key.key.MemberName = key.key.MemberName!.Replace(".", string.Empty, StringComparison.Ordinal);
 
 				key.key.MemberName = key.key.AssociationType == AssociationType.OneToMany
 					? PluralizeForeignKeyNames   ? ToPlural  (key.key.MemberName) : key.key.MemberName
@@ -690,7 +690,7 @@ namespace LinqToDB.Tools.ModelGeneration
 									{
 										c.IsDuplicateOrEmpty = true;
 										return "$" + (c.MemberName = $"Column{n}");
-									})
+									}),
 							},
 						ResultException = p.ResultException,
 						SimilarTables   = p.SimilarTables == null ? [] :
@@ -714,14 +714,14 @@ namespace LinqToDB.Tools.ModelGeneration
 								Description   = pr.Description,
 							})
 							.ToList(),
-					}
+					},
 				})
 				.ToList();
 
 			foreach (var p in procedures)
 			{
 				if (ReplaceSimilarTables)
-					if (p.proc.SimilarTables.Count == 1 || p.proc.SimilarTables.Count(t => !t.IsView) == 1)
+					if (p.proc.SimilarTables.Count == 1 || p.proc.SimilarTables.Where(t => !t.IsView).Take(2).Count() == 1)
 						p.proc.ResultTable = p.proc.SimilarTables.Count == 1 ?
 							p.proc.SimilarTables[0] :
 							p.proc.SimilarTables.First(t => !t.IsView);
@@ -871,7 +871,7 @@ namespace LinqToDB.Tools.ModelGeneration
 				{
 					col.MemberName = NormalizeName(col.MemberName!, true);
 
-					if (col.MemberName == t.TypeName)
+					if (string.Equals(col.MemberName, t.TypeName, StringComparison.Ordinal))
 						col.MemberName += "Column";
 				}
 
@@ -879,7 +879,7 @@ namespace LinqToDB.Tools.ModelGeneration
 				{
 					fk.MemberName = NormalizeName(fk.MemberName, true);
 
-					if (fk.MemberName == t.TypeName)
+					if (string.Equals(fk.MemberName, t.TypeName, StringComparison.Ordinal))
 						fk.MemberName += "_FK";
 				}
 			}
@@ -889,8 +889,8 @@ namespace LinqToDB.Tools.ModelGeneration
 				var hasDuplicates = t.Columns.Values
 					.Select(c => c.MemberName)
 					.Concat(t.ForeignKeys.Values.Select(f => f.MemberName))
-					.ToLookup(n => n)
-					.Any(g => g.Count() > 1);
+					.ToLookup(n => n, StringComparer.Ordinal)
+					.Any(g => g.Skip(1).Any());
 
 				if (hasDuplicates)
 				{

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.CodeModel
@@ -49,7 +50,7 @@ namespace LinqToDB.CodeModel
 				// "." (as name components separator)
 				// other characters expected to be valid namespace/type name characters with regards to their position in name
 				// (like first character or rest character)
-				if (chr == " ")
+				if (string.Equals(chr, " ", StringComparison.Ordinal))
 				{
 					switch (parserState)
 					{
@@ -67,7 +68,7 @@ namespace LinqToDB.CodeModel
 							throw new InvalidOperationException($"Invalid name parser state: {parserState}");
 					}
 				}
-				else if (chr == ".")
+				else if (string.Equals(chr, ".", StringComparison.Ordinal))
 				{
 					switch (parserState)
 					{
@@ -83,7 +84,7 @@ namespace LinqToDB.CodeModel
 							continue;
 						case ParserState.SearchForIdentifierStart              : // identifier cannot start with .
 						case ParserState.ParseTrailingSpaces                   : // only spaces allowed after type
-							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse name \"{name}\": unexpected dot found at {position}"));
+							throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"Cannot parse name \"{name}\": unexpected dot found at {position}"));
 						default:
 							throw new InvalidOperationException($"Invalid name parser state: {parserState}");
 					}
@@ -106,7 +107,7 @@ namespace LinqToDB.CodeModel
 							currentIdentifier.Append(chr);
 							continue;
 						case ParserState.ParseTrailingSpaces                   : // spaces expected
-							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse name \"{name}\": unexpected character at {position}"));
+							throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"Cannot parse name \"{name}\": unexpected character at {position}"));
 						default:
 							throw new InvalidOperationException($"Invalid name parser state: {parserState}");
 					}
@@ -208,7 +209,7 @@ namespace LinqToDB.CodeModel
 				// other characters expected to be valid namespace/type name characters with regrards to their position in name
 				// (like first character or rest character)
 				
-				if (chr == " ")
+				if (string.Equals(chr, " ", StringComparison.Ordinal))
 				{
 					switch (parserState)
 					{
@@ -233,7 +234,7 @@ namespace LinqToDB.CodeModel
 							throw new InvalidOperationException($"Invalid type parser state: {parserState}");
 					}
 				}
-				else if (chr == ".")
+				else if (string.Equals(chr, ".", StringComparison.Ordinal))
 				{
 					switch (parserState)
 					{
@@ -252,12 +253,12 @@ namespace LinqToDB.CodeModel
 						case ParserState.ParseNullablity                       : // type cannot end with .
 						case ParserState.ParseTrailingSpaces                   : // only spaces allowed after type
 						case ParserState.SearchNextTypeArgument                : // type arguments list cannot have .
-							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected dot found at {position}"));
+							throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"Cannot parse type \"{typeName}\": unexpected dot found at {position}"));
 						default                                                :
 							throw new InvalidOperationException($"Invalid type parser state: {parserState}");
 					}
 				}
-				else if (chr == "+")
+				else if (string.Equals(chr, "+", StringComparison.Ordinal))
 				{
 					switch (parserState)
 					{
@@ -281,12 +282,12 @@ namespace LinqToDB.CodeModel
 						case ParserState.ParseTrailingSpaces                   : // space expected
 						case ParserState.SearchForIdentifierStart              : // identifier start character expected or space
 						case ParserState.SearchNextTypeArgument                : // ,> or identifier start character expected
-							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected + found at {position}"));
+							throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"Cannot parse type \"{typeName}\": unexpected + found at {position}"));
 						default                                                :
 							throw new InvalidOperationException($"Invalid type parser state: {parserState}");
 					}
 				}
-				else if (chr == "<")
+				else if (string.Equals(chr, "<", StringComparison.Ordinal))
 				{
 					switch (parserState)
 					{
@@ -317,12 +318,12 @@ namespace LinqToDB.CodeModel
 						case ParserState.ParseTrailingSpaces                   :
 						case ParserState.SearchForIdentifierStart              :
 						case ParserState.SearchNextTypeArgument                :
-							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected < found at {position}"));
+							throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"Cannot parse type \"{typeName}\": unexpected < found at {position}"));
 						default                                                :
 							throw new InvalidOperationException($"Invalid type parser state: {parserState}");
 					}
 				}
-				else if (chr == ",")
+				else if (string.Equals(chr, ",", StringComparison.Ordinal))
 				{
 					switch (parserState)
 					{
@@ -374,7 +375,7 @@ namespace LinqToDB.CodeModel
 							continue;
 						case ParserState.SearchForIdentifierStart              : // unexpected comma outside of generic type arguments list
 							if (!typeArgument)
-								throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected identifier at {position}"));
+								throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"Cannot parse type \"{typeName}\": unexpected identifier at {position}"));
 
 							// emtpy type argument position (open generic type argument)
 							return (null, position - chr.Length);
@@ -382,7 +383,7 @@ namespace LinqToDB.CodeModel
 							throw new InvalidOperationException($"Invalid type parser state: {parserState}");
 					}
 				}
-				else if (chr == ">")
+				else if (string.Equals(chr, ">", StringComparison.Ordinal))
 				{
 					switch (parserState)
 					{
@@ -420,14 +421,14 @@ namespace LinqToDB.CodeModel
 								break;
 							}
 
-							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected > at {position}"));
+							throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"Cannot parse type \"{typeName}\": unexpected > at {position}"));
 						case ParserState.ParseTrailingSpaces                   : // only spaces expected after type
-							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected > at {position}"));
+							throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"Cannot parse type \"{typeName}\": unexpected > at {position}"));
 						default                                                :
 							throw new InvalidOperationException($"Invalid type parser state: {parserState}");
 					}
 				}
-				else if (chr == "?")
+				else if (string.Equals(chr, "?", StringComparison.Ordinal))
 				{
 					switch (parserState)
 					{
@@ -453,7 +454,7 @@ namespace LinqToDB.CodeModel
 						case ParserState.SearchNextTypeArgument                : // type argument or , or > expected
 						case ParserState.ParseTrailingSpaces                   : // only spaces expected
 						case ParserState.SearchForIdentifierStart              : // identifier expected
-							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected ? at {position}"));
+							throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"Cannot parse type \"{typeName}\": unexpected ? at {position}"));
 						default                                                :
 							throw new InvalidOperationException($"Invalid type parser state: {parserState}");
 					}
@@ -479,7 +480,7 @@ namespace LinqToDB.CodeModel
 						case ParserState.SearchNextTypeArgument                : // < or , expected
 						case ParserState.ParseNullablity                       : // ? or space expected
 						case ParserState.ParseTrailingSpaces                   : // spaces expected
-							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected character at {position}"));
+							throw new InvalidOperationException(string.Create(CultureInfo.InvariantCulture, $"Cannot parse type \"{typeName}\": unexpected character at {position}"));
 						default                                                :
 							throw new InvalidOperationException($"Invalid type parser state: {parserState}");
 					}
@@ -609,7 +610,7 @@ namespace LinqToDB.CodeModel
 			if (type.Namespace != null)
 				ns = ((ITypeParser)this).ParseNamespaceOrRegularTypeName(type.Namespace, false);
 
-			var name  = new CodeIdentifier(type.IsGenericType ? type.Name.Substring(0, type.Name.IndexOf('`')) : type.Name, true);
+			var name  = new CodeIdentifier(type.IsGenericType ? type.Name.Substring(0, type.Name.IndexOf('`', StringComparison.Ordinal)) : type.Name, true);
 
 			// generic/open generic type
 			if (type.IsGenericType)

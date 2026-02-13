@@ -10,6 +10,6 @@
 		Internal,
 		Private,
 		Partial,
-		None
+		None,
 	}
 }

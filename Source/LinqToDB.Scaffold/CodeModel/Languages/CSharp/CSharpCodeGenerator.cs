@@ -36,7 +36,7 @@ namespace LinqToDB.CodeModel
 
 		// C# keywords and contextual words
 		// https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/
-		private static readonly HashSet<string> KeyWords = new ()
+		private static readonly HashSet<string> KeyWords = new (StringComparer.Ordinal)
 		{
 			"abstract", "as"      , "base"     , "bool"     , "break"    , "byte"    , "case"   , "catch"     , "char"     , "checked",
 			"class"   , "const"   , "continue" , "decimal"  , "default"  , "delegate", "do"     , "double"    , "else"     , "enum",
@@ -51,7 +51,7 @@ namespace LinqToDB.CodeModel
 			"add"     , "and"     , "alias"    , "ascending", "async"    , "await"   , "by"     , "descending", "dynamic"  , "equals",
 			"from"    , "get"     , "global"   , "group"    , "init"     , "into"    , "join"   , "let"       , "managed"  , "nameof",
 			"nint"    , "not"     , "notnull"  , "nuint"    , "on"       , "or"      , "orderby", "partial"   , "record"   , "remove",
-			"select"  , "set"     , "unmanaged", "value"    , "var"      , "when"    , "where"  , "with"      , "yield"
+			"select"  , "set"     , "unmanaged", "value"    , "var"      , "when"    , "where"  , "with"      , "yield",
 		};
 
 		// generate NRT annotations
@@ -896,8 +896,8 @@ namespace LinqToDB.CodeModel
 		/// <param name="customAttributes">Attributes to generate.</param>
 		/// <param name="inline">
 		/// <list type="bullet">
-		/// <item><c>true</c>: all attributes generates inside same [] brackets in single line</item>
-		/// <item><c>false</c>: each attribute generated inside own [] brackets on separate line</item>
+		/// <item><see langword="true" />: all attributes generates inside same [] brackets in single line</item>
+		/// <item><see langword="false"/>: each attribute generated inside own [] brackets on separate line</item>
 		/// </list>
 		/// </param>
 		private void WriteCustomAttributes(IReadOnlyList<CodeAttribute> customAttributes, bool inline)
@@ -988,7 +988,7 @@ namespace LinqToDB.CodeModel
 		/// Render closing curly bracket for block statement.
 		/// </summary>
 		/// <param name="inline">Indicates wether block is inline or multiline block.</param>
-		/// <param name="newLine">Indicates that block should be followed by new line sequence. Used only when <paramref name="inline"/> is <c>false</c>.</param>
+		/// <param name="newLine">Indicates that block should be followed by new line sequence. Used only when <paramref name="inline"/> is <see langword="false"/>.</param>
 		private void CloseBlock(bool inline, bool newLine)
 		{
 			if (inline)
@@ -1014,7 +1014,7 @@ namespace LinqToDB.CodeModel
 			if (attribute.Type.Type.Name == null)
 				throw new InvalidOperationException($"Invalid custom attribute type {attribute.Type.Type} ({attribute.Type.Type.Kind})");
 
-			if (attribute.Type.Type.Name.Name.EndsWith("Attribute"))
+			if (attribute.Type.Type.Name.Name.EndsWith("Attribute", StringComparison.Ordinal))
 				newTypeName = new CodeIdentifier(attribute.Type.Type.Name.Name.Substring(0, attribute.Type.Type.Name.Name.Length - 9), true);
 
 			RenderType(attribute.Type.Type, newTypeName, true);
