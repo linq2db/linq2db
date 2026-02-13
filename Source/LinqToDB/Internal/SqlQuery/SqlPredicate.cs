@@ -248,14 +248,29 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 				if (!withoutUnknownErased)
 				{
-					return UnknownAsValue == null && (Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased));
+					return UnknownAsValue == null
+						&& (
+							(!NotNullableExpr1 && Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased))
+							|| (!NotNullableExpr2 && Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased))
+						);
 				}
 
 				return Operator switch
 				{
-					Operator.Equal => Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased),
-					Operator.NotEqual => Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) && Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased),
-					_ => UnknownAsValue != true && (Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased)),
+					Operator.Equal =>
+						(!NotNullableExpr1 && Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased))
+						|| (!NotNullableExpr2 && Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased)),
+
+					Operator.NotEqual =>
+						!NotNullableExpr1 && Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) && !NotNullableExpr2 && Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased),
+
+					// comparison
+					_ =>
+						UnknownAsValue != true
+						&& (
+							(!NotNullableExpr1 && Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased))
+							|| (!NotNullableExpr2 && Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased))
+						),
 				};
 			}
 

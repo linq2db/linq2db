@@ -346,7 +346,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				if (!_providerFlags.IsSupportsJoinWithoutCondition && element.JoinType is JoinType.Left or JoinType.Inner)
 				{
-					if (element.Condition.IsTrue() || element.Condition.IsFalse())
+					if (element.Condition.IsTrue || element.Condition.IsFalse)
 					{
 						SetInvalid(ErrorHelper.Error_Join_Without_Condition);
 						return element;

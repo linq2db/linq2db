@@ -2124,7 +2124,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			if (buildOn)
 			{
-				if (!condition.IsTrue())
+				if (!condition.IsTrue)
 				{
 					var saveNullability = NullabilityContext;
 					NullabilityContext = NullabilityContext.WithJoinSource(join.Table.Source).WithQuery(selectQuery);
@@ -2176,10 +2176,7 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			condition = PrepareSearchCondition(selectQuery.Where.SearchCondition);
 
-			if (condition.IsTrue())
-				return false;
-
-			return true;
+			return condition.IsTrue;
 		}
 
 		protected virtual void BuildWhereClause(SelectQuery selectQuery)
@@ -2270,7 +2267,7 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual void BuildHavingClause(SelectQuery selectQuery)
 		{
 			var condition = PrepareSearchCondition(selectQuery.Having.SearchCondition);
-			if (condition.IsTrue())
+			if (condition.IsTrue)
 				return;
 
 			++_binaryOptimized;

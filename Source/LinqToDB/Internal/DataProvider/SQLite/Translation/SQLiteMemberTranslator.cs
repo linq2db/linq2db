@@ -92,7 +92,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 
 			ISqlExpression StrFTime(ISqlExpressionFactory factory, DbDataType resultDbType, string format, ISqlExpression date)
 			{
-				return factory!.Function(resultDbType, StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(format), date);
+				return factory.Function(resultDbType, StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(format), date);
 			}
 
 			ISqlExpression StrFTimeInt(ISqlExpressionFactory factory, DbDataType intDbType, DbDataType stringDbType, string format, ISqlExpression date)
@@ -100,8 +100,13 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 				return factory.Cast(StrFTime(factory, stringDbType, format, date), intDbType);
 			}
 
-			protected override ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment,
-				Sql.DateParts                                                       datepart)
+			protected override ISqlExpression? TranslateDateTimeDateAdd(
+				ITranslationContext translationContext,
+				TranslationFlags translationFlag,
+				ISqlExpression dateTimeExpression,
+				ISqlExpression increment,
+				Sql.DateParts datepart
+			)
 			{
 				var factory      = translationContext.ExpressionFactory;
 				var stringDbType = factory.GetDbDataType(typeof(string));
@@ -269,7 +274,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 							if (!info.IsNullFiltered && nullValuesAsEmptyString)
 								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
 
-							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
+							if (info is { FilterCondition.IsTrue: false })
 							{
 								value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
 							}

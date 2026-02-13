@@ -334,7 +334,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			StringBuilder.Append("DELETE ");
 
 			// WHERE clause is required for DELETE queries
-			if (deleteStatement.SelectQuery.Where.IsEmpty)
+			if (!deleteStatement.SelectQuery.HasWhere)
 				StringBuilder.Append("WHERE 1");
 		}
 
@@ -359,7 +359,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		protected override void BuildUpdateWhereClause(SelectQuery selectQuery)
 		{
 			// WHERE clause required for UPDATE query
-			if (selectQuery.Where.IsEmpty)
+			if (!selectQuery.HasWhere)
 				StringBuilder.Append("WHERE 1");
 			else
 				BuildWhereClause(selectQuery);

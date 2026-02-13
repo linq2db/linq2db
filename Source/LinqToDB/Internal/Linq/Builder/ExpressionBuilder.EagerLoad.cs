@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Expressions;
-using LinqToDB.Internal.Async;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
@@ -25,7 +24,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		void CollectDependencies(IBuildContext context, Expression expression, HashSet<Expression> dependencies)
 		{
-			var toIgnore     = new HashSet<Expression>();
+			var toIgnore     = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
 			expression.Visit((dependencies, context, builder: this, toIgnore), static (ctx, e) =>
 			{
 				if (ctx.toIgnore.Contains(e))

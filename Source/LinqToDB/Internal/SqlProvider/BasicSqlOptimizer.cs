@@ -87,7 +87,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				if (isSelfInsert)
 				{
-					if (insertStatement.SelectQuery.IsSimple || insertStatement.SelectQuery.From.Tables.Count == 0)
+					if (insertStatement.SelectQuery is { IsSimple: true, From.Tables.Count: 0 })
 					{
 						// simplify insert
 						//
@@ -938,7 +938,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (query.Select.HasModifier || !query.GroupBy.IsEmpty)
 				return true;
 
-			if (!query.Where.IsEmpty)
+			if (query.HasWhere)
 			{
 				if (QueryHelper.ContainsAggregationFunction(query.Where))
 					return true;

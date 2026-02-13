@@ -235,6 +235,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				CanBeEvaluated = false;
 				return node;
 			}
+
+			internal override Expression VisitSqlPathExpression(SqlPathExpression node)
+			{
+				CanBeEvaluated = false;
+				return node;
+			}
 		}
 
 		/// <summary>

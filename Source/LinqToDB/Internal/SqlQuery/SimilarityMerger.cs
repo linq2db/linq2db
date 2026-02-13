@@ -85,19 +85,44 @@ namespace LinqToDB.Internal.SqlQuery
 			}
 			else if (predicate1 is SqlPredicate.ExprExpr exprExpr1 && predicate2 is SqlPredicate.ExprExpr exprExpr2)
 			{
-				if ((exprExpr1.Operator == exprExpr2.Operator
-				     && exprExpr1.Expr1.Equals(exprExpr2.Expr1, SqlExtensions.DefaultComparer)
-				     && exprExpr1.Expr2.Equals(exprExpr2.Expr2, SqlExtensions.DefaultComparer)
-				     && exprExpr1.NotNullableExpr1 == exprExpr2.NotNullableExpr1 && exprExpr1.NotNullableExpr2 == exprExpr2.NotNullableExpr2)
-				    ||
-				    (SqlPredicate.ExprExpr.SwapOperator(exprExpr1.Operator) == exprExpr2.Operator
-				     && exprExpr1.Expr1.Equals(exprExpr2.Expr2, SqlExtensions.DefaultComparer)
-				     && exprExpr1.Expr2.Equals(exprExpr2.Expr1, SqlExtensions.DefaultComparer)
-				     && exprExpr1.NotNullableExpr1 == exprExpr2.NotNullableExpr2
-				     && exprExpr1.NotNullableExpr2 == exprExpr2.NotNullableExpr1))
+				if (exprExpr1.Operator == exprExpr2.Operator
+				    && exprExpr1.Expr1.Equals(exprExpr2.Expr1, SqlExtensions.DefaultComparer)
+				    && exprExpr1.Expr2.Equals(exprExpr2.Expr2, SqlExtensions.DefaultComparer))
 				{
-					mergedPredicate = predicate1;
-					return true;
+					if (exprExpr1.NotNullableExpr1 != exprExpr2.NotNullableExpr1 || exprExpr1.NotNullableExpr2 != exprExpr2.NotNullableExpr2)
+					{
+						if (!isLogicalOr)
+						{
+							mergedPredicate = new SqlPredicate.ExprExpr(exprExpr1.Expr1, exprExpr1.Operator, exprExpr1.Expr2, exprExpr1.UnknownAsValue,
+								exprExpr1.NotNullableExpr1 || exprExpr2.NotNullableExpr1, exprExpr1.NotNullableExpr2 || exprExpr2.NotNullableExpr2);
+							return true;
+						}
+					}
+					else
+					{
+						mergedPredicate = predicate1;
+						return true;
+					}
+				}
+
+				if (SqlPredicate.ExprExpr.SwapOperator(exprExpr1.Operator) == exprExpr2.Operator
+				    && exprExpr1.Expr1.Equals(exprExpr2.Expr2, SqlExtensions.DefaultComparer)
+				    && exprExpr1.Expr2.Equals(exprExpr2.Expr1, SqlExtensions.DefaultComparer))
+				{
+					if (exprExpr1.NotNullableExpr1 != exprExpr2.NotNullableExpr2 || exprExpr1.NotNullableExpr2 != exprExpr2.NotNullableExpr1)
+					{
+						if (!isLogicalOr)
+						{
+							mergedPredicate = new SqlPredicate.ExprExpr(exprExpr1.Expr1, exprExpr1.Operator, exprExpr1.Expr2, exprExpr1.UnknownAsValue,
+								exprExpr1.NotNullableExpr1 || exprExpr2.NotNullableExpr2, exprExpr1.NotNullableExpr2 || exprExpr2.NotNullableExpr1);
+							return true;
+						}
+					}
+					else
+					{
+						mergedPredicate = predicate1;
+						return true;
+					}
 				}
 			}
 			else if (predicate1 is SqlPredicate.Not notPredicate1)
