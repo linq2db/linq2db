@@ -1992,7 +1992,7 @@ namespace Tests.Linq
 			// TODO: FTS not configured properly
 			//q.ToArray();
 
-			q.ToSqlQuery().Sql.ShouldContain($"CONTAINS(PROPERTY([c_1].[Description], @property), @search)");
+			q.ToSqlQuery().Sql.ShouldContain("CONTAINS(PROPERTY([c_1].[Description], @property), @search)");
 		}
 
 		[Test]
@@ -2012,7 +2012,7 @@ namespace Tests.Linq
 			// TODO: FTS not configured properly
 			//q.ToArray();
 
-			q.ToSqlQuery().Sql.ShouldContain($"CONTAINS(PROPERTY([c_1].[Description], @property), @search, LANGUAGE @lang)");
+			q.ToSqlQuery().Sql.ShouldContain("CONTAINS(PROPERTY([c_1].[Description], @property), @search, LANGUAGE @lang)");
 		}
 
 		[Test]
@@ -2032,7 +2032,7 @@ namespace Tests.Linq
 			// TODO: FTS not configured properly
 			//q.ToArray();
 
-			q.ToSqlQuery().Sql.ShouldContain($"CONTAINS(PROPERTY([c_1].[CategoryName], @property), @search, LANGUAGE @lang)");
+			q.ToSqlQuery().Sql.ShouldContain("CONTAINS(PROPERTY([c_1].[CategoryName], @property), @search, LANGUAGE @lang)");
 		}
 		#endregion
 

@@ -3463,7 +3463,7 @@ namespace Tests.DataProvider
 						Enumerable.Range(1, 10).Select(id => new BulkCopyTable { Id = id }));
 
 				if (withServer)
-					Assert.That(trace, Does.Not.Contain($"INSERT BULK"));
+					Assert.That(trace, Does.Not.Contain("INSERT BULK"));
 				else
 					Assert.That(trace, Does.Contain("INSERT BULK BULKCOPYTABLE"));
 			}
@@ -3488,7 +3488,7 @@ namespace Tests.DataProvider
 						new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific },
 						Enumerable.Range(1, 10).Select(id => new BulkCopyTable2 { Id = id }));
 
-				Assert.That(trace, Does.Not.Contain($"INSERT BULK"));
+				Assert.That(trace, Does.Not.Contain("INSERT BULK"));
 			}
 		}
 
@@ -3525,7 +3525,7 @@ namespace Tests.DataProvider
 							new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific, UseInternalTransaction = withInternalTransaction },
 							Enumerable.Range(1, 10).Select(id => new BulkCopyTable { Id = id }));
 
-						Assert.That(trace, Does.Contain($"INSERT BULK"));
+						Assert.That(trace, Does.Contain("INSERT BULK"));
 					}
 				}
 				finally

@@ -76,13 +76,13 @@ namespace LinqToDB.CommandLine
 								case "name":
 									if (name != null)
 									{
-										errorDetails = $"duplicate 'name' property";
+										errorDetails = "duplicate 'name' property";
 										return null;
 									}
 
 									if (regex != null)
 									{
-										errorDetails = $"both 'name' and 'regex' properties specified";
+										errorDetails = "both 'name' and 'regex' properties specified";
 										return null;
 									}
 
@@ -97,13 +97,13 @@ namespace LinqToDB.CommandLine
 								case "regex":
 									if (name != null)
 									{
-										errorDetails = $"duplicate 'regex' property";
+										errorDetails = "duplicate 'regex' property";
 										return null;
 									}
 
 									if (regex != null)
 									{
-										errorDetails = $"both 'name' and 'regex' properties specified";
+										errorDetails = "both 'name' and 'regex' properties specified";
 										return null;
 									}
 
@@ -118,7 +118,7 @@ namespace LinqToDB.CommandLine
 								case "schema":
 									if (hasSchema)
 									{
-										errorDetails = $"duplicate 'schema' property";
+										errorDetails = "duplicate 'schema' property";
 										return null;
 									}
 
@@ -147,7 +147,7 @@ namespace LinqToDB.CommandLine
 							filter.AddRegularExpression(schema, regex);
 						else
 						{
-							errorDetails = $"'name' or 'regex' property required";
+							errorDetails = "'name' or 'regex' property required";
 							return null;
 						}
 					}

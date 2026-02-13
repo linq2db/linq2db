@@ -1613,7 +1613,7 @@ namespace Tests.Linq
 
 				var result = db.GetTable<UserIssue3128>()
 					.LoadWithAsTable( _ => _.Details)
-					.WithTableExpression($"{{0}} {{1}}")
+					.WithTableExpression("{0} {1}")
 					.ToList();
 
 				Assert.That(result, Has.Count.EqualTo(1));
@@ -1631,7 +1631,7 @@ namespace Tests.Linq
 				db.Insert(new UserDetailsIssue3128 { UserId = 10, Age = 18 });
 
 				var result = db.GetTable<UserIssue3128>()
-					.WithTableExpression($"{{0}} {{1}}")
+					.WithTableExpression("{0} {1}")
 					.LoadWithAsTable( _ => _.Details)
 					.ToList();
 

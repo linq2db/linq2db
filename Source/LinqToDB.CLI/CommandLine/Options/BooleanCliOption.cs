@@ -53,7 +53,7 @@ namespace LinqToDB.CommandLine
 				return false;
 			}
 
-			errorDetails = $"expected true or false";
+			errorDetails = "expected true or false";
 			return null;
 		}
 

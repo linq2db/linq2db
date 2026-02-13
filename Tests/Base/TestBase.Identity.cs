@@ -53,9 +53,9 @@ namespace Tests
 						// reset serial to next value
 						$"ALTER TABLE Person MODIFY (PersonID SERIAL({lastValue + 1}))",
 						// MODIFY erase all PK/FK constraints for modified column
-						$"ALTER TABLE Person ADD CONSTRAINT PRIMARY KEY (PersonID)",
-						$"ALTER TABLE Patient ADD CONSTRAINT(FOREIGN KEY (PersonID) REFERENCES Person (PersonID))",
-						$"ALTER TABLE Doctor ADD CONSTRAINT(FOREIGN KEY (PersonID) REFERENCES Person (PersonID))",
+						"ALTER TABLE Person ADD CONSTRAINT PRIMARY KEY (PersonID)",
+						"ALTER TABLE Patient ADD CONSTRAINT(FOREIGN KEY (PersonID) REFERENCES Person (PersonID))",
+						"ALTER TABLE Doctor ADD CONSTRAINT(FOREIGN KEY (PersonID) REFERENCES Person (PersonID))",
 
 					};
 						break;
@@ -64,7 +64,7 @@ namespace Tests
 						break;
 					case string prov when prov.IsAnyOf(TestProvName.AllOracle):
 						sql = new[] {
-						$"DROP SEQUENCE \"PersonSeq\"",
+						"DROP SEQUENCE \"PersonSeq\"",
 						$"CREATE SEQUENCE \"PersonSeq\" MINVALUE 1 START WITH {lastValue + 1}",
 					};
 						break;
@@ -167,7 +167,7 @@ CREATE COLUMN TABLE ""Person"" (
 						// reset serial to next value
 						$"ALTER TABLE AllTypes MODIFY (ID SERIAL({lastValue + 1}))",
 						// MODIFY erase all PK/FK constraints for modified column
-						$"ALTER TABLE AllTypes ADD CONSTRAINT PRIMARY KEY (ID)",
+						"ALTER TABLE AllTypes ADD CONSTRAINT PRIMARY KEY (ID)",
 					};
 						break;
 					case string prov when prov.IsAnyOf(TestProvName.AllMySql):
@@ -175,7 +175,7 @@ CREATE COLUMN TABLE ""Person"" (
 						break;
 					case string prov when prov.IsAnyOf(TestProvName.AllOracle):
 						sql = new[] {
-						$"DROP SEQUENCE \"AllTypesSeq\"",
+						"DROP SEQUENCE \"AllTypesSeq\"",
 						$"CREATE SEQUENCE \"AllTypesSeq\" MINVALUE 1 START WITH {lastValue + 1}",
 					};
 						break;

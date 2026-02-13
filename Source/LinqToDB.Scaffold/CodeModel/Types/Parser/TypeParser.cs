@@ -495,7 +495,7 @@ namespace LinqToDB.CodeModel
 			// assert parser state once more
 			if ((currentIdentifier.Length != 0 && name != null)
 				|| (currentIdentifier.Length == 0 && name == null))
-				throw new InvalidOperationException($"Invalid type parser state");
+				throw new InvalidOperationException("Invalid type parser state");
 
 			// TODO: should it be possible or we save name in parser always so we should throw assert exception here?
 			if (currentIdentifier.Length != 0)
@@ -603,7 +603,7 @@ namespace LinqToDB.CodeModel
 			// type is generic type argument token
 			if (type.IsGenericParameter)
 				// TODO: not needed currently
-				throw new InvalidOperationException($"Generic type arguments not supported by type parser");
+				throw new InvalidOperationException("Generic type arguments not supported by type parser");
 
 			// regular or generic type
 			CodeIdentifier[]? ns = null;

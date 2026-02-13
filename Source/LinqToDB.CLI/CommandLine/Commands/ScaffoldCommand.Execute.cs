@@ -220,7 +220,7 @@ namespace LinqToDB.CommandLine
 				{
 					if (!OperatingSystem.IsWindows())
 					{
-						Console.Error.WriteLine($"SQL Server Compact Edition not supported on non-Windows platforms");
+						Console.Error.WriteLine("SQL Server Compact Edition not supported on non-Windows platforms");
 						return null;
 					}
 
@@ -245,7 +245,7 @@ Possible reasons:
 					var isOdbc = connectionString.Contains("HDBODBC", StringComparison.OrdinalIgnoreCase);
 					if (!isOdbc && !OperatingSystem.IsWindows())
 					{
-						Console.Error.WriteLine($"Only ODBC provider for SAP HANA supported on non-Windows platforms. Provided connection string doesn't look like HANA ODBC connection string.");
+						Console.Error.WriteLine("Only ODBC provider for SAP HANA supported on non-Windows platforms. Provided connection string doesn't look like HANA ODBC connection string.");
 						return null;
 					}
 
@@ -304,7 +304,7 @@ Possible reasons:
 					if (providerLocation == null || !File.Exists(providerLocation))
 					{
 						// we cannot add 90 Megabytes (compressed size) of native provider for single db just because we can
-						Console.Error.WriteLine(@$"Cannot locate IBM.Data.Db2.dll provider assembly.
+						Console.Error.WriteLine(@"Cannot locate IBM.Data.Db2.dll provider assembly.
 Due to huge size of it, we don't include Net.IBM.Data.Db2 provider into installation.
 You need to install it manually and specify provider path using '--provider-location <path_to_assembly>' option.
 Provider could be downloaded from:
@@ -322,7 +322,7 @@ Provider could be downloaded from:
 				{
 					if (!OperatingSystem.IsWindows())
 					{
-						Console.Error.WriteLine($"MS Access not supported on non-Windows platforms");
+						Console.Error.WriteLine("MS Access not supported on non-Windows platforms");
 						return null;
 					}
 
@@ -333,7 +333,7 @@ Provider could be downloaded from:
 						provider = ProviderName.AccessOdbc;
 
 					if (additionalConnectionString == null)
-						Console.Out.WriteLine($"WARNING: it is recommended to use '--additional-connection <secondary_connection>' option with Access for better results");
+						Console.Out.WriteLine("WARNING: it is recommended to use '--additional-connection <secondary_connection>' option with Access for better results");
 					else
 					{
 						var isSecondaryOleDb = additionalConnectionString.Contains("Microsoft.Jet.OLEDB", StringComparison.OrdinalIgnoreCase)
@@ -341,7 +341,7 @@ Provider could be downloaded from:
 
 						if (isOleDb == isSecondaryOleDb)
 						{
-							Console.Error.WriteLine($"Main and secondary connection strings must use different providers. One should be OLE DB provider and another ODBC provider.");
+							Console.Error.WriteLine("Main and secondary connection strings must use different providers. One should be OLE DB provider and another ODBC provider.");
 							return null;
 						}
 

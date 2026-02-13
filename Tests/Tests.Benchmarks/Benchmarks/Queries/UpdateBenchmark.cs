@@ -179,7 +179,7 @@ namespace LinqToDB.Benchmarks.Queries
 
 			using (var cmd = _cn.CreateCommand())
 			{
-				cmd.CommandText = $"UPDATE workflow w SET w.status = :status, w.result = :result, w.error = :error, w.steps = :steps, w.update_time = :update_time, w.row_version = :row_version + 1, w. start_time = :start_time, w.processed_time = :processed_time, w.complete_time = :complete_time WHERE w.id = :id AND w.row_version = :rowversion";
+				cmd.CommandText = "UPDATE workflow w SET w.status = :status, w.result = :result, w.error = :error, w.steps = :steps, w.update_time = :update_time, w.row_version = :row_version + 1, w. start_time = :start_time, w.processed_time = :processed_time, w.complete_time = :complete_time WHERE w.id = :id AND w.row_version = :rowversion";
 
 				cmd.Parameters.Add(new MockDbParameter(":status"        , _record.Status));
 				cmd.Parameters.Add(new MockDbParameter(":result"        , _record.Result));

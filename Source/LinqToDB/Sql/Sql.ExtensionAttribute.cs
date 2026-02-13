@@ -187,7 +187,7 @@ namespace LinqToDB
 #if DEBUG
 				var paramPrefix = $"Param[{ParamNumber.ToString(CultureInfo.InvariantCulture)}]";
 #else
-				var paramPrefix = $"Param";
+				var paramPrefix = "Param";
 #endif
 
 				if (Extension != null)

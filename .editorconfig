@@ -305,6 +305,7 @@ dotnet_diagnostic.MA0159.severity = none # MA0159: Use 'Order' instead of 'Order
 dotnet_diagnostic.MA0165.severity = none # MA0165: Make interpolated string
 # slow
 dotnet_diagnostic.MA0182.severity = none # MA0182: Avoid unused internal types
+dotnet_diagnostic.MA0185.severity = none # MA0185: Simplify string.Create when all parameters are culture invariant
 
 #########################################################################################################
 # inactive diagnostics (not reviewed yet => disabled to not fail build, basically TODO list for future) #

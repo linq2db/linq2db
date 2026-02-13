@@ -222,7 +222,7 @@ namespace LinqToDB.Scaffold
 					break;
 				case ResultKind.Tuple:
 					// no support from db (maybe pgsql could do it?) and schema API now
-					throw new NotImplementedException($"Tuple return type support not implemented for stored procedures");
+					throw new NotImplementedException("Tuple return type support not implemented for stored procedures");
 				case ResultKind.Scalar:
 				{
 					var scalarResult = (ScalarResult)func.Result;
@@ -247,7 +247,7 @@ namespace LinqToDB.Scaffold
 			if (func.ResultSets?.Count > 1)
 			{
 				// TODO: to support multi-result sets we need at least one implementation in schema provider
-				throw new NotImplementedException($"Multi-set stored procedures not supported");
+				throw new NotImplementedException("Multi-set stored procedures not supported");
 			}
 			else if (func.ResultSets?.Count == 1)
 			{

@@ -72,7 +72,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 						var p0, var p1, _,
 						SqlValue { Value: string @string, ValueType: var valueType }
 					],
-					Type: var type
+					Type: var type,
 				} when string.IsNullOrEmpty(@string) =>
 					new SqlFunction(
 						type,
@@ -92,7 +92,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		{
 			if (expr is SqlValue
 				{
-					Value: uint or long or ulong or float or double or decimal
+					Value: uint or long or ulong or float or double or decimal,
 				} value)
 			{
 				expr = new SqlCastExpression(expr, value.ValueType, null, isMandatory: true);

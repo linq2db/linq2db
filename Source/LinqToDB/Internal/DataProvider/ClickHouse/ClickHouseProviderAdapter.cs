@@ -204,7 +204,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			var parameterType               = assembly.GetType($"{DriverClientNamespace}.Parameters.ClickHouseDbParameter" , true)!;
 			var dataReaderType              = assembly.GetType($"{DriverClientNamespace}.Readers.ClickHouseDataReader"     , true)!;
 			var connectionStringBuilderType = assembly.GetType($"{DriverClientNamespace}.ClickHouseConnectionStringBuilder", true)!;
-			var bulkCopyType                = assembly.GetType($"ClickHouse.Driver.Copy.ClickHouseBulkCopy"                , true)!;
+			var bulkCopyType                = assembly.GetType("ClickHouse.Driver.Copy.ClickHouseBulkCopy"                 , true)!;
 			var decimalType                 = assembly.GetType($"{DriverProviderTypesNamespace}.ClickHouseDecimal"         , true)!;
 
 			var typeMapper = new TypeMapper();
@@ -436,7 +436,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				public Task InitAsync() => ((Func<ClickHouseBulkCopy, Task>)CompiledWrappers[9])(this);
 				public IReadOnlyCollection<string> ColumnNames
 				{
-					get => throw new InvalidOperationException($"get_ColumnNames is not mapped");
+					get => throw new InvalidOperationException("get_ColumnNames is not mapped");
 					set => ((Action<ClickHouseBulkCopy, IReadOnlyCollection<string>>)CompiledWrappers[10])(this, value);
 				}
 			}

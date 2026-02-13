@@ -27,7 +27,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						Type.IsInterface: true,
 						BuildContext.ElementType: var elementType,
 					} contextRef,
-					Member: var member
+					Member: var member,
 				}
 				&& elementType != contextRef.Type)
 			{

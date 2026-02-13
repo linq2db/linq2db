@@ -1016,7 +1016,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				|| node.DefaultBody is not UnaryExpression
 				{
 					NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked,
-					Operand: MethodCallExpression { Method: var m }
+					Operand: MethodCallExpression { Method: var m },
 				}
 				|| m != ConvertBuilder.DefaultConverter;
 
@@ -3455,7 +3455,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						},
 							var value,
 							..
-						]
+						],
 					}:
 						predicate = ConvertInPredicate(value, spanSource!.UnwrapConvertToSelf());
 						break;

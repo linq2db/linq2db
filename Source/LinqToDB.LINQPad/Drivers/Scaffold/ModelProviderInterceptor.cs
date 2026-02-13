@@ -273,7 +273,7 @@ internal sealed class ModelProviderInterceptor(ConnectionSettings settings, ISql
 			if (schema.Length == 0)
 				model.Add(new ExplorerItem("<default>", ExplorerItemKind.Schema, ExplorerIcon.Schema)
 				{
-					ToolTipText = $"default schema",
+					ToolTipText = "default schema",
 					SqlName     = string.Empty,
 					Children    = PopulateSchemaMembers(schema, tablesLookup),
 				});

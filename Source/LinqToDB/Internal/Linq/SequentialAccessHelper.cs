@@ -399,7 +399,7 @@ namespace LinqToDB.Internal.Linq
 				throw new LinqToDBException($"{nameof(OptimizeColumnReaderForSequentialAccess)} optimization failed (slow mode): {ctx.FailMessage}");
 
 			if (ctx.RawCall == null)
-				throw new LinqToDBException($"Cannot find column value reader in expression");
+				throw new LinqToDBException("Cannot find column value reader in expression");
 
 			return ctx.RawCall;
 		}

@@ -526,7 +526,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked,
 						Method: null,
-						Operand: SqlPlaceholderExpression convertPlaceholder
+						Operand: SqlPlaceholderExpression convertPlaceholder,
 					} ue
 					&& ue.Type != typeof(object) && ue.Type != typeof(Enum))
 				{

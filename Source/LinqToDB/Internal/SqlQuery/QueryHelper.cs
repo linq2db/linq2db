@@ -1459,7 +1459,7 @@ namespace LinqToDB.Internal.SqlQuery
 				{
 					Select.Columns: [{ Expression: var expr }],
 					From.Tables: [],
-					HasSetOperators: false
+					HasSetOperators: false,
 				} => SimplifyColumnExpression(expr),
 
 				_ => sqlExpression,

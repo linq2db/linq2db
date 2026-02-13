@@ -1522,8 +1522,8 @@ namespace LinqToDB.Internal.SqlProvider
 					Expr: SqlUnaryExpression
 					{
 						Operation: SqlUnaryOperation.Negation,
-						Expr: var expr
-					}
+						Expr: var expr,
+					},
 				})
 			{
 				return expr;

@@ -218,7 +218,7 @@ namespace Tests.DataProvider
 			var value = -1.7900000000000002E+308;
 
 			// SELECT CAST(-1.7900000000000002E+308 as real)
-			using var rd = conn.ExecuteReader(FormattableString.Invariant($"SELECT CAST({value:G17} as real)"));
+			using var rd = conn.ExecuteReader($"SELECT CAST({value:G17} as real)");
 			rd.Reader!.Read();
 			var valueFromDB = rd.Reader.GetDouble(0);
 

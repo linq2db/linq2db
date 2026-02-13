@@ -306,7 +306,7 @@ namespace LinqToDB.CodeModel
 			if (comment.Inline)
 			{
 				// TODO: implement (not implemented as it is not used right now)
-				throw new NotImplementedException($"Inline comment generation missing for C# code generator");
+				throw new NotImplementedException("Inline comment generation missing for C# code generator");
 			}
 			else
 			{
@@ -753,7 +753,7 @@ namespace LinqToDB.CodeModel
 		{
 			if (group.TableLayout)
 				// TODO: not implemented as not used yet
-				throw new NotImplementedException($"Table layout not implemented for fields in C# code generator");
+				throw new NotImplementedException("Table layout not implemented for fields in C# code generator");
 			else
 				WriteNewLineDelimitedList(group.Members);
 		}
@@ -819,7 +819,7 @@ namespace LinqToDB.CodeModel
 
 			if (expression.Values.Count == 0)
 				// TODO: not used right now. Should generate Array.Empty when implemented
-				throw new NotImplementedException($"Generation of new array without items not supported by C# code generator");
+				throw new NotImplementedException("Generation of new array without items not supported by C# code generator");
 			{
 				Write("[]");
 
@@ -1159,7 +1159,7 @@ namespace LinqToDB.CodeModel
 			if (statements == null || statements.Items.Count == 0)
 			{
 				if (!allowEmpty)
-					throw new InvalidOperationException($"Emty code block encountered in unsuppored context");
+					throw new InvalidOperationException("Empty code block encountered in unsuppored context");
 
 				// generate empty block {} according to formatting parameters
 				if (preferInline)

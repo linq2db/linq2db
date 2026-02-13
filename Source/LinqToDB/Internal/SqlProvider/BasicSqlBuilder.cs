@@ -4300,7 +4300,7 @@ namespace LinqToDB.Internal.SqlProvider
 					var trimmed = PrintParameterValue(sb, p.Value);
 					sb.AppendLine();
 					if (trimmed)
-						sb.AppendLine($"-- value above truncated for logging");
+						sb.AppendLine("-- value above truncated for logging");
 				}
 
 				sb.AppendLine();

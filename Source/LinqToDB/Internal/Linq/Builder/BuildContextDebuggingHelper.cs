@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 
@@ -28,7 +28,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 			else if (context is SubQueryContext sc)
 			{
-				result += $"(SC)";
+				result += "(SC)";
 			}
 
 			return result;

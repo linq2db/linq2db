@@ -1757,7 +1757,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							HasWhere: false,
 							HasGroupBy: false,
 							HasHaving: false,
-							From.Tables: [{ Joins.Count: 0 }]
+							From.Tables: [{ Joins.Count: 0 }],
 						})
 					{
 						// not allowed to break query window

@@ -78,7 +78,7 @@ namespace LinqToDB.CommandLine
 				// this method loads assemblies from both assembly folder and nuget cache and requires deps.json file
 				// see https://github.com/dotnet/runtime/issues/18527#issuecomment-611499261
 				var dependencyContext = DependencyContext.Load(interceptorsAssembly)
-					?? throw new InvalidOperationException($"DependencyContext.Load cannot load interceptor assembly");
+					?? throw new InvalidOperationException("DependencyContext.Load cannot load interceptor assembly");
 
 				var resolver          = new ICompilationAssemblyResolver[]
 				{

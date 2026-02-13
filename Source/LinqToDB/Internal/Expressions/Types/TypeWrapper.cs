@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -56,7 +56,7 @@ namespace LinqToDB.Internal.Expressions.Types
 		protected static Expression<Action<TI, TP>> PropertySetter<TI, TP>(Expression<Func<TI, TP>> getter)
 		{
 			if (getter.Body is not MemberExpression { Member: PropertyInfo pi })
-				throw new LinqToDBException($"Expected property accessor expression");
+				throw new LinqToDBException("Expected property accessor expression");
 
 			var pThis  = Expression.Parameter(typeof(TI));
 			var pValue = Expression.Parameter(typeof(TP));

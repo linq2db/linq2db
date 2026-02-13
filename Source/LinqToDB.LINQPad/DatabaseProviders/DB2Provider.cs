@@ -43,7 +43,7 @@ internal sealed class DB2Provider : DatabaseProviderBase
 #if NETFRAMEWORK
 	internal static void LoadAssembly()
 	{
-		var assemblyPath = Path.Combine(Path.GetDirectoryName(typeof(DB2Provider).Assembly.Location), "IBM.Data.DB2.DLL_provider", IntPtr.Size == 4 ? "x86" : "x64", $"IBM.Data.DB2.dll");
+		var assemblyPath = Path.Combine(Path.GetDirectoryName(typeof(DB2Provider).Assembly.Location), "IBM.Data.DB2.DLL_provider", IntPtr.Size == 4 ? "x86" : "x64", "IBM.Data.DB2.dll");
 		if (!File.Exists(assemblyPath))
 			throw new LinqToDBLinqPadException($"Failed to locate IBM.Data.DB2 assembly at {assemblyPath}");
 

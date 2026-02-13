@@ -249,7 +249,7 @@ namespace LinqToDB.Benchmarks.Queries
 		public void RawAdoNet()
 		{
 			using var cmd = _cn.CreateCommand();
-			cmd.CommandText = $"UPDATE TESTTABLE w SET w.COLUMN2 = :col2, w.COLUMN12 = :col12, w.COLUMN15 = :col15, w.COLUMN16 = :col16 WHERE w.COLUMN1 = :col1";
+			cmd.CommandText = "UPDATE TESTTABLE w SET w.COLUMN2 = :col2, w.COLUMN12 = :col12, w.COLUMN15 = :col15, w.COLUMN16 = :col16 WHERE w.COLUMN1 = :col1";
 
 			cmd.Parameters.Add(new MockDbParameter(":col1", "61a018e7-6e43-44b7-ad53-5a55e626fbbe"));
 			cmd.Parameters.Add(new MockDbParameter(":col2", "VALUE"));

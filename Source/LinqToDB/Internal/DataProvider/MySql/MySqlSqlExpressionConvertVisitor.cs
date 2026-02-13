@@ -125,7 +125,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			else
 			{
 				predicate = new SqlPredicate.SearchString(
-					new SqlExpression(MappingSchema.GetDbDataType(typeof(string)), $"{{0}} COLLATE utf8_bin", Precedence.Primary, predicate.Expr1),
+					new SqlExpression(MappingSchema.GetDbDataType(typeof(string)), "{0} COLLATE utf8_bin", Precedence.Primary, predicate.Expr1),
 					predicate.IsNot,
 					predicate.Expr2,
 					predicate.Kind,
@@ -148,7 +148,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 		{
 			if (expr is SqlValue
 				{
-					Value: decimal or uint or ulong or long or double
+					Value: decimal or uint or ulong or long or double,
 				} value)
 			{
 				expr = new SqlCastExpression(expr, value.ValueType, null, isMandatory: true);

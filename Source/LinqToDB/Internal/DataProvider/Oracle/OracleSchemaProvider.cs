@@ -309,7 +309,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 						PKCON.OWNER {SchemasFilter}
 					"""
 				// This is significally faster
-				: $"""
+				: """
 					SELECT
 	
 						FKCON.CONSTRAINT_NAME                    as Name,
