@@ -333,7 +333,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 							if (!info.IsNullFiltered && nullValuesAsEmptyString)
 								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
 
-							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
+							if (info is { FilterCondition.IsTrue: false })
 							{
 								if (!info.IsGroupBy)
 								{

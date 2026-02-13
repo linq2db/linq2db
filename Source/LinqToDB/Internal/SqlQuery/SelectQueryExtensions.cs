@@ -14,7 +14,7 @@ namespace LinqToDB.Internal.SqlQuery
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool HasWhere(this SelectQuery selectQuery)
 		{
-			return !selectQuery.Where.SearchCondition.IsTrue();
+			return !selectQuery.Where.SearchCondition.IsTrue;
 		}
 
 		/// <summary>
@@ -38,7 +38,7 @@ namespace LinqToDB.Internal.SqlQuery
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool HasHaving(this SelectQuery selectQuery)
 		{
-			return !selectQuery.Having.SearchCondition.IsTrue();
+			return !selectQuery.Having.SearchCondition.IsTrue;
 		}
 
 		/// <summary>

@@ -287,7 +287,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse.Translation
 							value = f.Function(strType, "toString", value);
 
 							// 2) FILTER
-							var hasCond = info.FilterCondition != null && !info.FilterCondition.IsTrue();
+							var hasCond = info is { FilterCondition.IsTrue: false };
 							var cond    = hasCond ? info.FilterCondition! : null;
 
 							// ---------------------------

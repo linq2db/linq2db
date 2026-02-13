@@ -276,7 +276,7 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 								? factory.Fragment("{0} SEPARATOR {1}", suffix, separator)
 								: factory.Fragment("SEPARATOR {0}",     separator);
 
-							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
+							if (info is { FilterCondition.IsTrue: false })
 							{
 								value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
 							}

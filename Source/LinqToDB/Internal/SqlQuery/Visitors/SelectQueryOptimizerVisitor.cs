@@ -743,7 +743,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (join.JoinType == JoinType.Left)
 			{
-				if (join.Condition.IsFalse())
+				if (join.Condition.IsFalse)
 					return true;
 			}
 
@@ -754,7 +754,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				if (join.Table.Source is SelectQuery joinQuery)
 				{
-					if (joinQuery.Where.SearchCondition.IsFalse())
+					if (joinQuery.Where.SearchCondition.IsFalse)
 						return true;
 
 					if (IsLimitedToOneRecord(joinQuery))
@@ -811,14 +811,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					var join = table.Joins[i];
 
-					if (join.Table.Source is SelectQuery subQuery && (join.JoinType is JoinType.Left or JoinType.OuterApply))
+					if (join is { Table.Source: SelectQuery subQuery, JoinType: JoinType.Left or JoinType.OuterApply })
 					{
-						var canRemoveEmptyJoin = false;
-
-						if (join.JoinType == JoinType.Left && join.Condition.IsFalse())
-							canRemoveEmptyJoin = true;
-						else if (join.JoinType == JoinType.OuterApply && subQuery.Where.SearchCondition.IsFalse())
-							canRemoveEmptyJoin = true;
+						var canRemoveEmptyJoin = join switch
+						{
+							{ JoinType: JoinType.Left, Condition.IsFalse: true } => true,
+							{ JoinType: JoinType.OuterApply } when subQuery.Where.SearchCondition.IsFalse => true,
+							_ => false,
+						};
 
 						if (canRemoveEmptyJoin)
 						{
@@ -2070,7 +2070,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return false;
 
 			// Rare case when LEFT join is empty. We move search condition up. See TestDefaultExpression_22 test.
-			if (joinTable.JoinType == JoinType.Left && subQuery.Where.SearchCondition.IsFalse())
+			if (joinTable.JoinType == JoinType.Left && subQuery.Where.SearchCondition.IsFalse)
 			{
 				subQuery.Where.SearchCondition.Predicates.Clear();
 				joinTable.Condition.Predicates.Clear();
@@ -2106,7 +2106,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 					else if (joinTable.JoinType == JoinType.Left)
 					{
-						if (joinTable.Condition.IsTrue())
+						if (joinTable.Condition.IsTrue)
 						{
 							// See `PostgreSQLExtensionsTests.GenerateSeries`
 							if (subQuery.From.Tables[0].Joins.Count > 0)
@@ -2749,7 +2749,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						}
 					}
 
-					if (!_providerFlags.IsApplyJoinSupported && join.JoinType is JoinType.OuterApply || !_providerFlags.IsSupportsJoinWithoutCondition && join.Condition.IsTrue())
+					if (!_providerFlags.IsApplyJoinSupported && join.JoinType is JoinType.OuterApply || !_providerFlags.IsSupportsJoinWithoutCondition && join.Condition.IsTrue)
 					{
 						// last chance to remove apply join before finalizing query.
 						if (MoveSingleOuterJoinToSubQuery(selectQuery, join, ref doNotRemoveQueries, processMultiColumn : true, deduplicate : true, out modified))
@@ -2821,7 +2821,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				for (var joinIndex = 0; joinIndex < table.Joins.Count; joinIndex++)
 				{
 					var join = table.Joins[joinIndex];
-					if (join.JoinType == JoinType.Inner && join.Condition.IsTrue())
+					if (join is { JoinType: JoinType.Inner, Condition.IsTrue: true })
 					{
 						if (_providerFlags.IsCrossJoinSupported
 							&& (table.Joins.Count > (_providerFlags.IsCrossJoinSyntaxRequired ? 0 : 1)

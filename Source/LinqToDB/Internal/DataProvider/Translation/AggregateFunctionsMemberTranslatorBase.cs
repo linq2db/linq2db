@@ -109,7 +109,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 								var valueType = factory.GetDbDataType(value);
 
-								if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
+								if (info is { FilterCondition.IsTrue: false })
 								{
 									if (IsFilterSupported)
 									{
@@ -126,7 +126,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							}
 							else
 							{
-								if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
+								if (info is { FilterCondition.IsTrue: false })
 								{
 									if (IsFilterSupported)
 									{
@@ -269,7 +269,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							var resultType = factory.GetDbDataType(methodCall.Method.ReturnType);
 							var hasFilter  = false;
 
-							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
+							if (info is { FilterCondition.IsTrue: false })
 							{
 								hasFilter = true;
 								if (IsFilterSupported)
