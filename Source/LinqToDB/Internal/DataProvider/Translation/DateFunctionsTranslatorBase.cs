@@ -21,7 +21,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod((int? year, int? month, int? day) => Sql.MakeDateTime(year, month, day), TranslateMakeDateTime);
 			Registration.RegisterMethod((int year, int month, int day, int hour, int minute, int second) => Sql.MakeDateTime(year, month, day, hour, minute, second), TranslateMakeDateTime);
 
-			Registration.RegisterReplacement(() => Sql.CurrentTimestamp2, () => Sql.GetDate());
 
 		}
 
@@ -36,8 +35,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			Registration.RegisterMethod((int year, int month, int day, int hour, int minute, int second)
 				=> Sql.MakeDateTime(year, month, day, hour, minute, second), TranslateMakeDateTimeMethod);
-
-			Registration.RegisterMember(() => DateTime.Now,              TranslateDateTimeNow);
 
 			Registration.RegisterMember((DateTime dt) => dt.Year,        (tc, me, tf) => TranslateDateTimeMember(tc, me, tf, Sql.DateParts.Year));
 			Registration.RegisterMember((DateTime dt) => dt.Month,       (tc, me, tf) => TranslateDateTimeMember(tc, me, tf, Sql.DateParts.Month));
@@ -65,15 +62,18 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod((DateTime dt) => Sql.DatePart(Sql.DateParts.Year, dt), TranslateDateTimeSqlDatepart);
 			Registration.RegisterMember((DateTime dt) => Sql.CurrentTimestamp, TranslateSqlCurrentTimestamp);
 
-			Registration.RegisterReplacement(() => DateTime.Now, () => Sql.GetDate());
-			Registration.RegisterMethod((DateTime dt) => Sql.GetDate(), TranslateSqlGetDate);
+			Registration.RegisterMethod(() => Sql.GetDate(), TranslateSqlGetDate);
+			Registration.RegisterReplacement(() => DateTime.Now,          () => Sql.GetDate());
+			Registration.RegisterReplacement(() => Sql.CurrentTimestamp2, () => Sql.GetDate());
+
+			Registration.RegisterMember(() => DateTime.UtcNow,         TranslateSqlCurrentTimestampUtc);
+			Registration.RegisterMember(() => Sql.CurrentTimestampUtc, TranslateSqlCurrentTimestampUtc);
 		}
 
 		void RegisterDateTimeOffset()
 		{
 			Registration.RegisterMember(() => DateTimeOffset.Now,      TranslateSqlCurrentTimestampUtc);
 			Registration.RegisterMember(() => DateTimeOffset.UtcNow,   TranslateSqlCurrentTimestampUtc);
-			Registration.RegisterMember(() => Sql.CurrentTimestampUtc, TranslateSqlCurrentTimestampUtc);
 
 			Registration.RegisterMember((DateTimeOffset dt) => dt.Year, (tc,        me, tf) => TranslateDateTimeOffsetMember(tc, me, tf, Sql.DateParts.Year));
 			Registration.RegisterMember((DateTimeOffset dt) => dt.Month, (tc,       me, tf) => TranslateDateTimeOffsetMember(tc, me, tf, Sql.DateParts.Month));
@@ -237,15 +237,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return null;
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, translated, methodCall);
-		}
-
-		Expression? TranslateDateTimeNow(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
-		{
-			var converted = TranslateSqlGetDate(translationContext, translationFlags);
-			if (converted == null)
-				return null;
-
-			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, converted, memberExpression);
 		}
 
 		Expression? TranslateDateTimeMember(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags, Sql.DateParts datepart)

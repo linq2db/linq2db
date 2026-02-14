@@ -2231,15 +2231,15 @@ namespace LinqToDB.Internal.Linq.Builder
 				case ExpressionType.Convert:
 				case ExpressionType.ConvertChecked:
 				{
-					if (node.Type != typeof(object) &&
-						(HandleSqlRelated(node, out var translated) || HandleValue(node, out translated)))
+					if (_buildPurpose is BuildPurpose.Root && node.Operand is ContextRefExpression contextRef)
 					{
-						return Visit(translated);
+						throw new InvalidOperationException("CASE:01");
+						//return Visit(contextRef.WithType(node.Type));
 					}
 
-					if ((_buildPurpose is BuildPurpose.Root || _buildFlags.HasFlag(BuildFlags.ForMemberRoot)) && node.Operand is ContextRefExpression contextRef)
+					if (_buildFlags.HasFlag(BuildFlags.ForMemberRoot) && node.Operand is ContextRefExpression contextRef2)
 					{
-						return Visit(contextRef.WithType(node.Type));
+						return Visit(contextRef2.WithType(node.Type));
 					}
 
 					if (_buildPurpose is BuildPurpose.Expression && !_buildFlags.HasFlag(BuildFlags.ForSetProjection))
@@ -2249,76 +2249,134 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var operandExpr = Visit(node.Operand);
 
+					if (node.Type != typeof(object) && _buildPurpose is BuildPurpose.Sql)
+					{
+						if (operandExpr is SqlPlaceholderExpression { Sql: SqlParameter or SqlValue })
+						{
+							if (HandleValue(node, out var operandExpr1))
+							{
+								return Visit(operandExpr1);
+							}
+						}
+					}
+
 					if (_buildPurpose is BuildPurpose.Sql && operandExpr is SqlDefaultIfEmptyExpression defaultIfEmpty)
 					{
 						if (defaultIfEmpty.InnerExpression is SqlPlaceholderExpression)
-							operandExpr = defaultIfEmpty.InnerExpression;
+						{
+							throw new InvalidOperationException("CASE:05");
+							//operandExpr = defaultIfEmpty.InnerExpression;
+						}
 					}
 
 					if (SequenceHelper.IsSqlReady(operandExpr))
 					{
 						operandExpr = UpdateNesting(operandExpr);
+
 						var placeholders = CollectPlaceholdersStraight(operandExpr);
 
 						if (placeholders.Count == 1)
 						{
 							var placeholder = placeholders[0];
 
-							if (_buildPurpose is BuildPurpose.Expression
-								&& (node.Type == typeof(object) || node.Method != null))
-								return base.VisitUnary(node);
+							if (_buildPurpose is BuildPurpose.Expression && node.Type == typeof(object))
+							{
+								throw new InvalidOperationException("CASE:08");
+								//return base.VisitUnary(node);
+							}
 
-							if (node.Method == null && (node.IsLifted || node.Type == typeof(object)))
+							if (_buildPurpose is BuildPurpose.Expression && node.Method != null)
+							{
+								throw new InvalidOperationException("CASE:09");
+								//return base.VisitUnary(node);
+							}
+
+							if (node.Method == null && node.IsLifted && placeholder.Sql.SystemType != typeof(object))
+							{
 								return Visit(placeholder.WithType(node.Type));
+							}
+
+							if (node.Method == null && node.Type == typeof(object))
+							{
+								return Visit(placeholder.WithType(node.Type));
+							}
 
 							if (node.Method == null && operandExpr is not SqlPlaceholderExpression)
+							{
 								return base.VisitUnary(node);
+							}
 
 							if (node.Type == typeof(bool) && node.Operand.Type == typeof(SqlBoolean))
-								return Visit(placeholder.WithType(node.Type));
+							{
+								throw new InvalidOperationException("CASE:13");
+								//return Visit(placeholder.WithType(node.Type));
+							}
 
 							if (node.Type == typeof(Enum) && node.Operand.Type.IsEnum)
-								return base.VisitUnary(node);
+							{
+								throw new InvalidOperationException("CASE:14");
+								//return base.VisitUnary(node);
+							}
 
 							var t = node.Operand.Type;
 							var s = MappingSchema.GetDataType(t);
 
 							if (placeholder.Sql.SystemType != null && s.Type.SystemType == typeof(object))
 							{
-								t = placeholder.Sql.SystemType;
-								s = MappingSchema.GetDataType(t);
+								throw new InvalidOperationException("CASE:15");
+								//t = placeholder.Sql.SystemType;
 							}
 
-							if (node.Type == t ||
-								t.IsEnum && Enum.GetUnderlyingType(t) == node.Type ||
-								node.Type.IsEnum && Enum.GetUnderlyingType(node.Type) == t)
+							if (node.Type == t)
 							{
 								return Visit(placeholder.WithType(node.Type));
 							}
 
-							if (placeholder.Sql.SystemType == node.Type)
-								return Visit(placeholder);
+							if (t.IsEnum && Enum.GetUnderlyingType(t) == node.Type)
+							{
+								return Visit(placeholder.WithType(node.Type));
+							}
+
+							if (node.Type.IsEnum && Enum.GetUnderlyingType(node.Type) == t)
+							{
+								return Visit(placeholder.WithType(node.Type));
+							}
+
+							if (_buildPurpose is BuildPurpose.Sql && placeholder.Sql.SystemType == node.Type)
+							{
+								return Visit(CreatePlaceholder(placeholder.Sql, node));
+							}
+
+							if (_buildPurpose is not BuildPurpose.Sql && placeholder.Sql.SystemType == node.Type)
+							{
+								throw new InvalidOperationException("CASE:20");
+								//return Visit(placeholder);
+							}
 
 							var castTo = MappingSchema.GetDbDataType(node.Type);
 
-							ISqlExpression sql;
-							if (castTo.EqualsDbOnly(SqlDataType.MakeUndefined(node.Type).Type))
+							if (!castTo.EqualsDbOnly(SqlDataType.MakeUndefined(node.Type).Type))
 							{
-								if (node.Method != null)
-									return base.VisitUnary(node);
-
-								sql = placeholder.Sql;
+								var sql = PseudoFunctions.MakeCast(placeholder.Sql, castTo);
+								return Visit(CreatePlaceholder(sql, node));
 							}
-							else
-							{
-								sql = PseudoFunctions.MakeCast(placeholder.Sql, castTo, s);
-							}
-
-							return Visit(CreatePlaceholder(sql, node));
 						}
 					}
 
-					if (HandleValue(node, out var translatedValue))
+					if (HandleSqlRelated(node, out var translatedValue))
+					{
+						return Visit(translatedValue);
+					}
+
+					if (node.Type == typeof(object))
+					{
+						if (_buildPurpose is BuildPurpose.Sql && HandleValue(node.Operand, out translatedValue))
+						{
+							throw new InvalidOperationException("CASE:24");
+							//return Visit(translatedValue);
+						}
+					}
+					else if (HandleValue(node, out translatedValue))
 					{
 						return Visit(translatedValue);
 					}
