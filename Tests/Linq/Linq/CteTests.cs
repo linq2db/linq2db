@@ -4,7 +4,6 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -2748,6 +2747,95 @@ namespace Tests.Linq
 				result.Select(_ => _.Counter)
 				);
 
+		}
+
+		[Test]
+		public void GroupByOverCteField([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
+
+			var cte = (from gc1 in db.GrandChild
+					  select new
+					  {
+						  ChildID      = gc1.ChildID,
+						  ParentID     = gc1.ParentID,
+						  GrandChildID = gc1.GrandChildID,
+					  }).AsCte();
+
+			_ = cte.GroupBy(r => r.ParentID ?? -1).ToDictionary(r => r.Key);
+		}
+
+		[Test]
+		public void GroupByOverRecursiveCteField([RecursiveCteContextSource] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
+
+			var cte = db.GetCte<RecursiveCTE>(cte =>
+						(
+							from gc1 in db.GrandChild
+							select new RecursiveCTE
+							{
+								ChildID      = gc1.ChildID,
+								ParentID     = gc1.GrandChildID,
+								GrandChildID = gc1.GrandChildID,
+							}
+						)
+						.Concat
+						(
+							from gc in db.GrandChild
+							from p in db.Parent.InnerJoin(p => p.ParentID == gc.ParentID)
+							from ct in cte.InnerJoin(ct => Sql.AsNotNull(ct.ChildID) == gc.ChildID)
+							where ct.GrandChildID <= 10
+							select new RecursiveCTE
+							{
+								ChildID      = ct.ChildID,
+								ParentID     = ct.ParentID,
+								GrandChildID = ct.ChildID + 1
+							}
+						));
+
+			_ = cte.GroupBy(r => r.ParentID ?? -1).ToDictionary(r => r.Key);
+		}
+
+		sealed record class CteGroupByRecord(int Field1, int Field2, int? Field3);
+
+		[Table]
+		public class CteGroupByTable1
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public int Field1 { get; set; }
+			[Column] public int? Field2 { get; set; }
+		}
+
+		[Table]
+		public class CteGroupByTable2
+		{
+			[PrimaryKey] public int Id { get; set; }
+		}
+
+		[Test]
+		public void GroupByOverRecursiveCteField2([RecursiveCteContextSource] string context)
+		{
+			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
+			using var t1 = db.CreateLocalTable<CteGroupByTable1>();
+			using var t2 = db.CreateLocalTable<CteGroupByTable2>();
+
+			var id = 1;
+
+			_ = db.GetCte<CteGroupByRecord>(cte =>
+			{
+				return
+					(from le in t1
+						join l in t2 on le.Field1 equals l.Id
+						where le.Field1 == id
+						select new CteGroupByRecord(le.Id, le.Field1, le.Field2))
+					.Concat(
+						from le in cte
+						join suble in t1 on le.Field3 equals suble.Field1
+						join l in t2 on suble.Field1 equals l.Id
+						where suble.Field2 != null
+						select new CteGroupByRecord(suble.Id, suble.Field1, suble.Field2));
+			}).GroupBy(le => le.Field2).ToDictionary(g => g.Key);
 		}
 	}
 }

@@ -64,7 +64,7 @@ namespace LinqToDB.Internal.SqlProvider
 		protected int                 Indent;
 		protected Step                BuildStep;
 		protected ISqlOptimizer       SqlOptimizer;
-		protected bool                SkipAlias;
+		protected ColumnAliasMode     AliasMode;
 
 		#endregion
 
@@ -145,6 +145,14 @@ namespace LinqToDB.Internal.SqlProvider
 
 		#endregion
 
+		[Flags]
+		public enum ColumnAliasMode
+		{
+			None              = 0,
+			SkipAlias         = 1 << 0,
+			CompareFieldNames = 1 << 1
+		}
+
 		#region Helpers
 
 		[return: NotNullIfNotNull(nameof(element))]
@@ -171,7 +179,12 @@ namespace LinqToDB.Internal.SqlProvider
 			int startIndent = 0)
 		{
 			AliasesContext = aliases;
-			BuildSql(commandNumber, statement, sb, optimizationContext, startIndent, !DataOptions.SqlOptions.GenerateFinalAliases && CanSkipRootAliases(statement), nullabilityContext: nullabilityContext);
+
+			var columnAliasMode = ColumnAliasMode.CompareFieldNames;
+			if (!DataOptions.SqlOptions.GenerateFinalAliases && CanSkipRootAliases(statement))
+				columnAliasMode |= ColumnAliasMode.SkipAlias;
+
+			BuildSql(commandNumber, statement, sb, optimizationContext, startIndent, columnAliasMode, nullabilityContext: nullabilityContext);
 		}
 
 		protected virtual void BuildSetOperation(SetOperation operation, StringBuilder sb)
@@ -188,13 +201,13 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 		}
 
-		protected virtual void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, bool skipAlias, NullabilityContext? nullabilityContext)
+		protected virtual void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, ColumnAliasMode aliasMode, NullabilityContext? nullabilityContext)
 		{
 			Statement           = statement;
 			StringBuilder       = sb;
 			OptimizationContext = optimizationContext;
 			Indent              = indent;
-			SkipAlias           = skipAlias;
+			AliasMode           = aliasMode;
 
 			if (commandNumber == 0)
 			{
@@ -216,7 +229,7 @@ namespace LinqToDB.Internal.SqlProvider
 						sqlBuilder.BuildSql(commandNumber,
 							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb,
 							optimizationContext, indent, 
-							skipAlias, NullabilityContext);
+							aliasMode, NullabilityContext);
 						MergeSqlBuilderData(sqlBuilder);
 					}
 				}
@@ -271,7 +284,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			sqlBuilder.BuildSql(0,
-				new SqlSelectStatement(selectQuery) { ParentStatement = Statement }, StringBuilder, OptimizationContext, indent, skipAlias, NullabilityContext);
+				new SqlSelectStatement(selectQuery) { ParentStatement = Statement }, StringBuilder, OptimizationContext, indent, AliasMode & ~ColumnAliasMode.SkipAlias, NullabilityContext);
 			MergeSqlBuilderData(sqlBuilder);
 		}
 
@@ -471,7 +484,7 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual void BuildCteBody(SelectQuery selectQuery)
 		{
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
-			sqlBuilder.BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, OptimizationContext, Indent, SkipAlias, NullabilityContext);
+			sqlBuilder.BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, OptimizationContext, Indent, AliasMode, NullabilityContext);
 			MergeSqlBuilderData(sqlBuilder);
 		}
 
@@ -724,7 +737,7 @@ namespace LinqToDB.Internal.SqlProvider
 				AppendIndent();
 				BuildColumnExpression(selectQuery, expr, col.Alias, ref addAlias);
 
-				if (!SkipAlias && addAlias && !string.IsNullOrEmpty(col.Alias))
+				if (!AliasMode.HasFlag(ColumnAliasMode.SkipAlias) && addAlias && !string.IsNullOrEmpty(col.Alias))
 				{
 					StringBuilder.Append(" as ");
 					Convert(StringBuilder, col.Alias!, ConvertType.NameToQueryFieldAlias);
@@ -1139,11 +1152,11 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected virtual void BuildInsertOrUpdateQueryAsMerge(SqlInsertOrUpdateStatement insertOrUpdate, string? fromDummyTable)
 		{
-			SkipAlias = false;
+			AliasMode = ColumnAliasMode.None;
 
 			var table       = insertOrUpdate.Insert.Into;
 			var targetAlias = ConvertInline(insertOrUpdate.SelectQuery.From.Tables[0].Alias!, ConvertType.NameToQueryTableAlias);
-			var sourceAlias = ConvertInline(GetTempAliases(1, "s")[0],        ConvertType.NameToQueryTableAlias);
+			var sourceAlias = ConvertInline(GetTempAliases(1, "s")[0],                        ConvertType.NameToQueryTableAlias);
 			var keys        = insertOrUpdate.Update.Keys;
 
 			BuildTag(insertOrUpdate);
@@ -2994,7 +3007,7 @@ namespace LinqToDB.Internal.SqlProvider
 								if (len == StringBuilder.Length)
 									throw new LinqToDBException($"Table {field.Table} should have an alias.");
 
-								addAlias = alias != field.PhysicalName;
+								addAlias = alias != field.PhysicalName || !AliasMode.HasFlag(ColumnAliasMode.CompareFieldNames);
 
 								StringBuilder
 									.Append('.');
@@ -3052,7 +3065,7 @@ namespace LinqToDB.Internal.SqlProvider
 						if (string.IsNullOrEmpty(tableAlias))
 							throw new LinqToDBException($"Table {column.Parent} should have an alias.");
 
-						addAlias = alias != column.Alias;
+						addAlias  = alias != column.Alias || !AliasMode.HasFlag(ColumnAliasMode.CompareFieldNames);
 
 						Convert(StringBuilder, tableAlias, ConvertType.NameToQueryTableAlias);
 						StringBuilder.Append('.');

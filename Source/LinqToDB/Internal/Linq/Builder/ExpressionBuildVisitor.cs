@@ -117,10 +117,17 @@ namespace LinqToDB.Internal.Linq.Builder
 					ExprCacheKey.SqlCacheKeyComparer
 				);
 
+			var cteContexts = _cteContexts?
+				.ToDictionary(
+					p => cloningContext.CorrectExpression(p.Key),
+					p => cloningContext.CloneContext(p.Value)
+				);
+
 			var newVisitor = new ExpressionBuildVisitor(Builder);
-			newVisitor._associations = associations == null ? null : new SnapshotDictionary<ExprCacheKey, Expression>(associations);
+			newVisitor._associations     = associations == null ? null : new SnapshotDictionary<ExprCacheKey, Expression>(associations);
 			newVisitor._translationCache = new(translationCache);
-			newVisitor._columnCache = new(columnCache);
+			newVisitor._columnCache      = new(columnCache);
+			newVisitor._cteContexts      = cteContexts;
 
 			return newVisitor;
 		}
@@ -424,6 +431,29 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			return new SqlInlinedToSqlExpression(param, innerExpr);
 		}
+
+		#region CTE
+
+		Dictionary<Expression, CteContext>? _cteContexts;
+
+		public void RegisterCteContext(CteContext cteContext, Expression cteExpression)
+		{
+			_cteContexts ??= new(ExpressionEqualityComparer.Instance);
+
+			_cteContexts.Add(cteExpression, cteContext);
+		}
+
+		public CteContext? FindRegisteredCteContext(Expression cteExpression)
+		{
+			if (_cteContexts == null)
+				return null;
+
+			_cteContexts.TryGetValue(cteExpression, out var cteContext);
+
+			return cteContext;
+		}
+
+		#endregion
 
 		Expression MakeWithCache(IBuildContext context, Expression expression)
 		{
