@@ -538,9 +538,6 @@ namespace LinqToDB.Internal.Linq.Builder
 					throw new ArgumentOutOfRangeException();
 			}
 
-			if (_buildFlags.HasFlag(BuildFlags.ForExpanding))
-				flags |= ProjectFlags.Expand;
-
 			if (_buildFlags.HasFlag(BuildFlags.ForMemberRoot))
 				flags |= ProjectFlags.MemberRoot;
 
@@ -670,7 +667,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override Expression VisitLambda<T>(Expression<T> node)
 		{
-			var shouldProcess = _buildPurpose is BuildPurpose.Extract or BuildPurpose.Expand || _buildFlags.HasFlag(BuildFlags.ForExpanding);
+			var shouldProcess = _buildPurpose is BuildPurpose.Extract or BuildPurpose.Expand;
 
 			if (!shouldProcess)
 				return node;
@@ -1438,7 +1435,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			Expression? result;
 			LogVisit(node);
 
-			if (_buildFlags.HasFlag(BuildFlags.ForExpanding))
+			if (_buildPurpose is BuildPurpose.Expand)
 			{
 				if (!HasContextReferenceOrSql(node))
 					return node;
@@ -1754,7 +1751,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			Expression? notNullCheck = null;
-			if (associationDescriptor.IsList && (isOptional == true && _buildPurpose is BuildPurpose.SubQuery))
+			if (isOptional == true && (associationDescriptor.IsList || associationDescriptor.CanBeNull))
 			{
 				var keys = BuildExpression(forContext, rootContext, BuildPurpose.Sql, BuildFlags.ForKeys);
 				if (forContext != null)
@@ -1772,8 +1769,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var doNotBuild =
 				associationDescriptor.IsList
-				|| _buildPurpose is BuildPurpose.SubQuery or BuildPurpose.Extract or BuildPurpose.Expand or BuildPurpose.AggregationRoot
-				|| _buildFlags.HasFlag(BuildFlags.ForExpanding);
+				|| _buildPurpose is BuildPurpose.SubQuery or BuildPurpose.Extract or BuildPurpose.Expand or BuildPurpose.AggregationRoot;
 
 			if (!doNotBuild)
 			{
@@ -1817,14 +1813,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		Expression? ExtractNotNullCheck(IBuildContext context, Expression expr)
 		{
-			SqlPlaceholderExpression? notNull = null;
+			Expression? notNullPath = null;
 
 			if (expr is SqlPlaceholderExpression placeholder)
 			{
-				notNull = placeholder.MakeNullable();
+				notNullPath = placeholder.Path is not SqlPathExpression ? placeholder.Path : placeholder;
 			}
 
-			if (notNull == null)
+			if (notNullPath == null)
 			{
 				List<Expression> expressions = new();
 				if (!Builder.CollectNullCompareExpressions(context, expr, expressions) || expressions.Count == 0)
@@ -1841,16 +1837,30 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 				}
 
-				notNull = placeholders
-					.FirstOrDefault(pl => !pl.Sql.CanBeNullable(NullabilityContext.NonQuery));
+				SqlPlaceholderExpression? anyPlaceholder = null;
+				foreach (var p in placeholders)
+				{
+					if (p.Sql.CanBeNullable(NullabilityContext.NonQuery))
+					{
+						continue;
+					}
+
+					if (p.Path is not SqlPathExpression)
+					{
+						notNullPath = p.Path;
+						break;
+					}
+
+					anyPlaceholder ??= p;
+				}
+
+				notNullPath ??= anyPlaceholder;
 			}
 
-			if (notNull == null)
+			if (notNullPath == null)
 			{
 				return null;
 			}
-
-			var notNullPath = notNull.Path;
 
 			if (!notNullPath.Type.IsNullableOrReferenceType())
 			{
@@ -1896,7 +1906,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return Visit(condition);
 			}
 
-			if ((_buildFlags.HasFlag(BuildFlags.ForMemberRoot) && _buildFlags.HasFlag(BuildFlags.ForExpanding)))
+			if ((_buildFlags.HasFlag(BuildFlags.ForMemberRoot) && _buildPurpose is BuildPurpose.Expand))
 			{
 				if (innerExpression is ContextRefExpression contextRef)
 				{
@@ -1928,14 +1938,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (_buildPurpose is BuildPurpose.Root or BuildPurpose.AssociationRoot or BuildPurpose.AggregationRoot)
 				return node;
 
-			if (_buildPurpose is not BuildPurpose.Sql && _buildFlags.HasFlag(BuildFlags.ForExpanding))
-			{
-				if (!HasContextReferenceOrSql(node))
-				{
-					return node;
-				}
-			}
-
 			if (!IsSqlOrExpression() || BuildContext == null)
 			{
 				var newNode = base.VisitConditional(node);
@@ -1959,7 +1961,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				using var saveFlags = CombineBuildFlags(BuildFlags.ForceOuter);
 
 				using (UsingColumnDescriptor(null))
-				using (UsingAlias("test"))
+				using (UsingAlias(null))
 				{
 					test = Visit(node.Test);
 				}
@@ -2584,7 +2586,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			subqueryExpression = null;
 
-			if (BuildContext == null || _buildPurpose is BuildPurpose.SubQuery or BuildPurpose.Traverse)
+			if (BuildContext == null || _buildPurpose is BuildPurpose.SubQuery or BuildPurpose.Traverse or BuildPurpose.Expand)
 				return false;
 
 			if (null != subqueryExpression.Find(e => e is SqlEagerLoadExpression or SqlErrorExpression))
@@ -2691,28 +2693,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				subqueryExpression = new ContextRefExpression(node.Type, ctx, alias: Alias);
-
-				if (_buildFlags.HasFlag(BuildFlags.ForExpanding))
-				{
-					Expression testExpression;
-
-					// Translate subqueries only if they are SQL
-					using (UsingBuildFlags(_buildFlags & ~BuildFlags.ForExpanding))
-					{
-						testExpression = BuildSqlExpression(subqueryExpression);
-					}
-
-					if (testExpression is SqlPlaceholderExpression placeholder)
-					{
-						//snapshot.Accept();
-						subqueryExpression = placeholder;
-						return true;
-					}
-
-					ctx.Detach();
-
-					return false;
-				}
 			}
 
 			if (!isCollection)
@@ -2842,7 +2822,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					return Visit(translatedMember);
 			}
 
-			if (BuildContext == null || _buildPurpose is not (BuildPurpose.Sql or BuildPurpose.Expression or BuildPurpose.Expand))
+			if (BuildContext == null || _buildPurpose is not (BuildPurpose.Sql or BuildPurpose.Expression))
 				return base.VisitBinary(node);
 
 			var shouldSkipSqlConversion = false;
@@ -2994,7 +2974,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			Expression compareExpr;
-			using (UsingAlias("cond"))
+			using (UsingAlias(null))
 			using (UsingColumnDescriptor(null))
 			{
 				compareExpr = ConvertCompareExpression(node.NodeType, node.Left, node.Right, node);
@@ -3004,7 +2984,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (compareExpr is SqlErrorExpression error)
 				{
-					if (_buildPurpose is BuildPurpose.Expand || _buildFlags.HasFlag(BuildFlags.ForExpanding))
+					if (_buildPurpose is BuildPurpose.Expand)
 					{
 						translated = base.VisitBinary(node);
 						return true;
@@ -3065,7 +3045,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var predicates = new List<ISqlPredicate?>(items.Count + clientItems?.Count > 0 ? 1 : 0);
 			var hasError   = false;
 
-			using var saveAlias            = UsingAlias("cond");
+			using var saveAlias            = UsingAlias(null);
 			using var saveColumnDescriptor = UsingColumnDescriptor(null);
 
 			var errorOffset = 0;
@@ -3138,7 +3118,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							sqlExpr = new SqlSearchCondition(false, canBeUnknown: null, predicateSql);
 						}
 
-						var placeholder = CreatePlaceholder(sqlExpr, itemNode);
+						var placeholder = itemNode as SqlPlaceholderExpression ?? CreatePlaceholder(sqlExpr, itemNode);
 						translated = translated.Replace(itemNode, placeholder);
 					}
 					else

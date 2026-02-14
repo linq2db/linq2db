@@ -562,7 +562,7 @@ namespace Tests.Linq
 
 			var selectQuery = query.GetSelectQuery();
 			selectQuery.OrderBy.IsEmpty.ShouldBeTrue();
-			selectQuery.IsLimited.ShouldBeTrue();
+			selectQuery.IsLimited().ShouldBeTrue();
 		}
 
 		[Test]
