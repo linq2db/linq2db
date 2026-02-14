@@ -2749,23 +2749,23 @@ namespace Tests.Linq
 
 		}
 
-		[Test(Description = "ArgumentOutOfRangeException : Index was out of range. Must be non-negative and less than the size of the collection. (Parameter 'index')")]
+		[Test]
 		public void GroupByOverCteField([CteContextSource] string context)
 		{
 			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
 
 			var cte = (from gc1 in db.GrandChild
-					  select new RecursiveCTE
+					  select new
 					  {
 						  ChildID      = gc1.ChildID,
-						  ParentID     = gc1.GrandChildID,
+						  ParentID     = gc1.ParentID,
 						  GrandChildID = gc1.GrandChildID,
 					  }).AsCte();
 
 			_ = cte.GroupBy(r => r.ParentID ?? -1).ToDictionary(r => r.Key);
 		}
 
-		[Test(Description = "ArgumentOutOfRangeException : Index was out of range. Must be non-negative and less than the size of the collection. (Parameter 'index')")]
+		[Test]
 		public void GroupByOverRecursiveCteField([RecursiveCteContextSource] string context)
 		{
 			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
@@ -2813,7 +2813,7 @@ namespace Tests.Linq
 			[PrimaryKey] public int Id { get; set; }
 		}
 
-		[Test(Description = "LinqToDBException : The LINQ expression 'cteParam' could not be converted to SQL.")]
+		[Test]
 		public void GroupByOverRecursiveCteField2([RecursiveCteContextSource] string context)
 		{
 			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
@@ -2824,16 +2824,17 @@ namespace Tests.Linq
 
 			_ = db.GetCte<CteGroupByRecord>(cte =>
 			{
-				return (from le in t1
+				return
+					(from le in t1
 						join l in t2 on le.Field1 equals l.Id
 						where le.Field1 == id
 						select new CteGroupByRecord(le.Id, le.Field1, le.Field2))
-				  .Concat(
-					from le in cte
-					join suble in t1 on le.Field3 equals suble.Field1
-					join l in t2 on suble.Field1 equals l.Id
-					where suble.Field2 != null
-					select new CteGroupByRecord(suble.Id, suble.Field1, suble.Field2));
+					.Concat(
+						from le in cte
+						join suble in t1 on le.Field3 equals suble.Field1
+						join l in t2 on suble.Field1 equals l.Id
+						where suble.Field2 != null
+						select new CteGroupByRecord(suble.Id, suble.Field1, suble.Field2));
 			}).GroupBy(le => le.Field2).ToDictionary(g => g.Key);
 		}
 	}

@@ -84,7 +84,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.ExtractProjection))
+			if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsExtractProjection() || flags.IsExpand())
 				return path;
 
 			if (_isRecursiveCall)
@@ -147,6 +147,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				return knownPlaceholder;
 			}
 
+			if (SubQueryContext != null)
+				placeholder = Builder.UpdateNesting(SubQueryContext, placeholder);
+
 			if (placeholder.Sql is not SqlColumn column)
 				throw new InvalidOperationException("Invalid SQL.");
 
@@ -154,7 +157,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var index = CteInnerQueryContext == null ? -1 : CteInnerQueryContext.SelectQuery.Select.Columns.IndexOf(column);
 
-			if (index >= 0 && CteClause.Fields.Count != index)
+			if (index >= 0 && index < CteClause.Fields.Count && CteClause.Fields.Count != index)
 			{
 				field = CteClause.Fields[index];
 
@@ -237,9 +240,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override Expression HandleTranslated(Expression? path, SqlPlaceholderExpression placeholder)
 			{
-				var withNesting = OwnerContext.SubQueryContext == null
-					? placeholder
-					: Builder.UpdateNesting(OwnerContext.SubQueryContext!, placeholder);
+				var withNesting = placeholder;
 
 				if (path != null)
 					withNesting = withNesting.WithPath(path).WithTrackingPath(path);
@@ -264,11 +265,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			context.RegisterCloned(this, newContext);
 
-			newContext.SubQueryContext      = context.CloneContext(SubQueryContext);
-			newContext.CteInnerQueryContext = context.CloneContext(CteInnerQueryContext);
-			newContext.CteClause            = context.CloneElement(CteClause);
-			newContext.CteExpression        = context.CloneExpression(CteExpression);
-
 			foreach (var fm in _fieldsMap)
 			{
 				newContext._fieldsMap.Add(context.CloneExpression(fm.Key), (field: context.CloneElement(fm.Value.field), placeholder: context.CloneExpression(fm.Value.placeholder)));
@@ -283,6 +279,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				newContext._recursiveMap.Add(context.CloneExpression(rm.Key), context.CloneExpression(rm.Value));
 			}
+
+			newContext.SelectQuery          = context.CloneElement(SelectQuery);
+			newContext.SubQueryContext      = context.CloneContext(SubQueryContext);
+			newContext.CteInnerQueryContext = context.CloneContext(CteInnerQueryContext);
+			newContext.CteClause            = context.CloneElement(CteClause);
+			newContext.CteExpression        = context.CloneExpression(CteExpression);
 
 			return newContext;
 		}

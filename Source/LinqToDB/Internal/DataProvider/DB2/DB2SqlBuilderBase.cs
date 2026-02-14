@@ -82,7 +82,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, bool skipAlias, NullabilityContext? nullabilityContext)
+		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, ColumnAliasMode aliasMode, NullabilityContext? nullabilityContext)
 		{
 			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
 
@@ -90,7 +90,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			StringBuilder       = sb;
 			OptimizationContext = optimizationContext;
 			Indent              = indent;
-			SkipAlias           = skipAlias;
+			AliasMode           = aliasMode;
 
 			if (_identityField != null)
 			{
@@ -105,7 +105,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				AppendIndent().Append('\t').AppendLine(OpenParens);
 			}
 
-			base.BuildSql(commandNumber, statement, sb, optimizationContext, indent, skipAlias, nullabilityContext);
+			base.BuildSql(commandNumber, statement, sb, optimizationContext, indent, aliasMode, nullabilityContext);
 
 			if (_identityField != null)
 				sb.AppendLine("\t)");
