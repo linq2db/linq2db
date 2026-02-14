@@ -1038,6 +1038,40 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			using var db = ctx.CreateLinqToDBConnection();
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5296")]
+		public async ValueTask BrokenConnection([EFDataSources] string provider)
+		{
+			var connectionString = GetConnectionString(provider);
+			var optionsBuilder = provider switch
+			{
+				_ when provider.IsAnyOf(TestProvName.AllSqlServer)
+					=> new DbContextOptionsBuilder<DbContext>().UseSqlServer(connectionString),
+				_ when provider.IsAnyOf(TestProvName.AllPostgreSQL)
+					=> new DbContextOptionsBuilder<DbContext>().UseNpgsql(connectionString),
+#if !NET10_0
+				_ when provider.IsAnyOf(TestProvName.AllMySql)
+					=> new DbContextOptionsBuilder<DbContext>()
+#if !NETFRAMEWORK
+					.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)),
+#else
+					.UseMySql(connectionString),
+#endif
+#endif
+				_ when provider.IsAnyOf(TestProvName.AllSQLite)
+					=> new DbContextOptionsBuilder<DbContext>().UseSqlite(connectionString),
+				_ => throw new NotImplementedException($"Add required code for {provider}")
+			};
+
+			await using var dbContext = new DbContext(optionsBuilder.Options);
+			await dbContext.Database.EnsureCreatedAsync();
+
+			await using var dataConnection = dbContext.CreateLinqToDBConnection();
+			//await dataConnection.TryGetDbConnection().CloseAsync();
+
+			await dbContext.Database.EnsureDeletedAsync();
+			await dbContext.Database.EnsureCreatedAsync();
+		}
 	}
 
 	#region Test Extensions
