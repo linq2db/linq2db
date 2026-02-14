@@ -45,115 +45,115 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		protected Expression? TranslateCount(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
 			var builder = new AggregateFunctionBuilder()
-					.ConfigureAggregate(c => c
-						.HasSequenceIndex(0)
-						.AllowFilter()
-						.AllowDistinct(IsCountDistinctSupported)
-						.HasFilterLambda(methodCall.Arguments.Count > 1 ? 1 : null)
-						.HasValue(false)
-						.OnBuildFunction(composer =>
+				.ConfigureAggregate(c => c
+					.HasSequenceIndex(0)
+					.AllowFilter()
+					.AllowDistinct(IsCountDistinctSupported)
+					.HasFilterLambda(methodCall.Arguments.Count > 1 ? 1 : null)
+					.HasValue(false)
+					.OnBuildFunction(composer =>
+					{
+						var info = composer.BuildInfo;
+
+						if (info.SelectQuery == null)
+							return;
+
+						if (!info.IsGroupBy)
 						{
-							var info = composer.BuildInfo;
-
-							if (info.SelectQuery == null)
-								return;
-
-							if (!info.IsGroupBy)
+							if (methodCall.Arguments.Count > 1)
 							{
-								if (methodCall.Arguments.Count > 1)
-								{
-									// Translate Count with predicate in non-aggregate query to Where + Count
+								// Translate Count with predicate in non-aggregate query to Where + Count
 
-									var lambda           = methodCall.Arguments[1].UnwrapLambda();
-									var genericArguments = methodCall.Method.GetGenericArguments();
-									var whereCall        = Expression.Call(typeof(Enumerable), nameof(Enumerable.Where), genericArguments, methodCall.Arguments[0], lambda);
-									var countCall        = Expression.Call(typeof(Enumerable), methodCall.Method.Name,   genericArguments, whereCall);
+								var lambda           = methodCall.Arguments[1].UnwrapLambda();
+								var genericArguments = methodCall.Method.GetGenericArguments();
+								var whereCall        = Expression.Call(typeof(Enumerable), nameof(Enumerable.Where), genericArguments, methodCall.Arguments[0], lambda);
+								var countCall        = Expression.Call(typeof(Enumerable), methodCall.Method.Name,   genericArguments, whereCall);
 
-									composer.SetFallback(c => c
-										.AllowFilter(false)
-										.HasFilterLambda(null)
-										.FallbackExpression(countCall)
-									);
+								composer.SetFallback(c => c
+									.AllowFilter(false)
+									.HasFilterLambda(null)
+									.FallbackExpression(countCall)
+								);
 
-									return;
-								}
-
-								if (info.FilterCondition != null)
-								{
-									composer.SetFallback(c => c
-										.AllowFilter(false)
-									);
-
-									return;
-								}
+								return;
 							}
 
-							var factory   = info.Factory;
-							var resultType = factory.GetDbDataType(methodCall.Method.ReturnType);
-
-							SqlSearchCondition? filterCondition = null;
-							ISqlExpression      argumentValue;
-
-							if (info.IsDistinct)
+							if (info.FilterCondition != null)
 							{
-								if (info.ValueExpression == null)
-								{
-									return;
-								}
+								composer.SetFallback(c => c
+									.AllowFilter(false)
+								);
 
-								if (!composer.Translator.TranslateExpression(info.ValueExpression, out var value, out var error))
-								{
-									composer.SetError(error);
-									return;
-								}
+								return;
+							}
+						}
 
-								var valueType = factory.GetDbDataType(value);
+						var factory   = info.Factory;
+						var resultType = factory.GetDbDataType(methodCall.Method.ReturnType);
 
-								if (info is { FilterCondition.IsTrue: false })
+						SqlSearchCondition? filterCondition = null;
+						ISqlExpression      argumentValue;
+
+						if (info.IsDistinct)
+						{
+							if (info.ValueExpression == null)
+							{
+								return;
+							}
+
+							if (!composer.Translator.TranslateExpression(info.ValueExpression, out var value, out var error))
+							{
+								composer.SetError(error);
+								return;
+							}
+
+							var valueType = factory.GetDbDataType(value);
+
+							if (info is { FilterCondition.IsTrue: false })
+							{
+								if (IsFilterSupported)
 								{
-									if (IsFilterSupported)
-									{
-										filterCondition = info.FilterCondition;
-										argumentValue   = value;
-									}
-									else
-										argumentValue = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
+									filterCondition = info.FilterCondition;
+									argumentValue   = value;
 								}
 								else
-								{
-									argumentValue = value;
-								}
+									argumentValue = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
 							}
 							else
 							{
-								if (info is { FilterCondition.IsTrue: false })
+								argumentValue = value;
+							}
+						}
+						else
+						{
+							if (info is { FilterCondition.IsTrue: false })
+							{
+								if (IsFilterSupported)
 								{
-									if (IsFilterSupported)
-									{
-										filterCondition = info.FilterCondition;
-										argumentValue   = factory.Fragment("*", factory.Value(info.SelectQuery.SourceID));
-									}
-									else
-										argumentValue = factory.Condition(info.FilterCondition, factory.Value(resultType, 1), factory.Null(resultType));
+									filterCondition = info.FilterCondition;
+									argumentValue   = factory.Fragment("*", factory.Value(info.SelectQuery.SourceID));
 								}
 								else
-								{
-									argumentValue = factory.Fragment("*", factory.Value(info.SelectQuery.SourceID));
-								}
+									argumentValue = factory.Condition(info.FilterCondition, factory.Value(resultType, 1), factory.Null(resultType));
 							}
+							else
+							{
+								argumentValue = factory.Fragment("*", factory.Value(info.SelectQuery.SourceID));
+							}
+						}
 
-							var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
+						var aggregateModifier = info.IsDistinct ? Sql.AggregateModifier.Distinct : Sql.AggregateModifier.None;
 
-							var fn = factory.Function(resultType, "COUNT",
-								[new SqlFunctionArgument(argumentValue, modifier : aggregateModifier)],
-								[true, true],
-								isAggregate : true,
-								filter: filterCondition,
-								canBeAffectedByOrderBy : false
-							);
+						var fn = factory.Function(resultType, "COUNT",
+							[new SqlFunctionArgument(argumentValue, modifier : aggregateModifier)],
+							[true, true],
+							isAggregate : true,
+							filter: filterCondition,
+							canBeAffectedByOrderBy : false
+						);
 
-							composer.SetResult(fn);
-						}));
+						composer.SetResult(fn);
+					}));
 
 			return builder.Build(translationContext, methodCall);
 		}
@@ -202,8 +202,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				return null;
 
 			var methodName = methodCall.Method.Name;
-			if (methodName is not nameof(Enumerable.Min) and not nameof(Enumerable.Max)
-					and not nameof(Enumerable.Average) and not nameof(Enumerable.Sum))
+			if (methodName is not (
+					nameof(Enumerable.Min)
+					or nameof(Enumerable.Max)
+					or nameof(Enumerable.Average)
+					or nameof(Enumerable.Sum)
+				))
 			{
 				return null;
 			}

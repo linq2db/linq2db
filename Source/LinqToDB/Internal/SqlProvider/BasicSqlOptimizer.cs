@@ -87,7 +87,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				if (isSelfInsert)
 				{
-					if (insertStatement.SelectQuery is { IsSimple: true, From.Tables.Count: 0 })
+					if (insertStatement.SelectQuery is { IsSimple: true } or { From.Tables.Count: 0 })
 					{
 						// simplify insert
 						//

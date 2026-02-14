@@ -2176,7 +2176,7 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			condition = PrepareSearchCondition(selectQuery.Where.SearchCondition);
 
-			return condition.IsTrue;
+			return !condition.IsTrue;
 		}
 
 		protected virtual void BuildWhereClause(SelectQuery selectQuery)
