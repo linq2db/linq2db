@@ -73,7 +73,7 @@ namespace LinqToDB.CodeModel
 			var sb = new StringBuilder();
 			foreach (var (chr, cat) in name.EnumerateCharacters())
 			{
-				if (chr == ".")
+				if (string.Equals(chr, ".", System.StringComparison.Ordinal))
 				{
 					sb.Append(chr);
 					continue;

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -77,13 +78,13 @@ namespace LinqToDB.CommandLine
 				// this method loads assemblies from both assembly folder and nuget cache and requires deps.json file
 				// see https://github.com/dotnet/runtime/issues/18527#issuecomment-611499261
 				var dependencyContext = DependencyContext.Load(interceptorsAssembly)
-					?? throw new InvalidOperationException($"DependencyContext.Load cannot load interceptor assembly");
+					?? throw new InvalidOperationException("DependencyContext.Load cannot load interceptor assembly");
 
 				var resolver          = new ICompilationAssemblyResolver[]
 				{
 					new AppBaseCompilationAssemblyResolver(assemblyFolder),
 					new ReferenceAssemblyPathResolver(),
-					new PackageCompilationAssemblyResolver()
+					new PackageCompilationAssemblyResolver(),
 				};
 				var assemblyResolver  = new CompositeCompilationAssemblyResolver(resolver);
 				var loadContext       = AssemblyLoadContext.GetLoadContext(interceptorsAssembly);
@@ -99,7 +100,7 @@ namespace LinqToDB.CommandLine
 							{
 								foreach (var l in group.RuntimeFiles)
 								{
-									if (Path.GetFileNameWithoutExtension(l.Path) == name.Name)
+									if (string.Equals(Path.GetFileNameWithoutExtension(l.Path), name.Name, StringComparison.Ordinal))
 										return true;
 								}
 							}
@@ -123,7 +124,7 @@ namespace LinqToDB.CommandLine
 
 					var assemblies = new List<string>();
 					assemblyResolver.TryResolveAssemblyPaths(wrapper, assemblies);
-					var assembly   = assemblies.FirstOrDefault(a => Path.GetFileNameWithoutExtension(a) == name.Name);
+					var assembly   = assemblies.Find(a => string.Equals(Path.GetFileNameWithoutExtension(a), name.Name, StringComparison.Ordinal));
 
 					Console.WriteLine($"Load from: {assembly}");
 					return assembly == null ? null : Assembly.LoadFile(assembly);
@@ -224,7 +225,7 @@ namespace LinqToDB.CommandLine
 		/// </summary>
 		/// <param name="type">Type to check for inheritance.</param>
 		/// <param name="baseType">Type that should present in inheritance chain for <paramref name="type"/>.</param>
-		/// <returns><c>true</c> if <paramref name="type"/> inherits from <paramref name="baseType"/> and <c>false</c> otherwise.</returns>
+		/// <returns><see langword="true"/> if <paramref name="type"/> inherits from <paramref name="baseType"/> and <see langword="false"/> otherwise.</returns>
 		private static bool Inherits(Type type, Type baseType)
 		{
 			while (type.BaseType != null)
@@ -272,15 +273,14 @@ namespace LinqToDB.CommandLine
 			var (status, templateAsembly) = CompileAndLoadAssembly(TEMPLATE_ASSEMBLY_NAME, templateCode, references);
 
 			// find and instantiate template host class
-			var type = templateAsembly!.GetTypes().FirstOrDefault(type => type.Name == TEMPLATE_CLASS_NAME);
+			var type = templateAsembly!.GetTypes().FirstOrDefault(type => string.Equals(type.Name, TEMPLATE_CLASS_NAME, StringComparison.Ordinal));
 			if (type == null)
 			{
 				Console.Error.WriteLine("Cannot find template in T4 file. Make sure you didn't changed @template directive");
 				return (StatusCodes.EXPECTED_ERROR, null);
 			}
 
-			var instance = ActivatorExt.CreateInstance(type) as LinqToDBHost;
-			if (instance == null)
+			if (ActivatorExt.CreateInstance(type) is not LinqToDBHost instance)
 			{
 				Console.Error.WriteLine("Cannot create template object. Make sure you didn't changed @template directive");
 				return (StatusCodes.EXPECTED_ERROR, null);
@@ -330,7 +330,7 @@ namespace LinqToDB.CommandLine
 
 				Console.Error.WriteLine("T4 compilation failed:");
 				foreach (var diag in result.Diagnostics)
-					Console.Error.WriteLine(FormattableString.Invariant($"\t{diag}"));
+					Console.Error.WriteLine(string.Create(CultureInfo.InvariantCulture, $"\t{diag}"));
 
 				return (StatusCodes.EXPECTED_ERROR, null);
 			}
@@ -364,14 +364,14 @@ namespace LinqToDB.CommandLine
 				foreach (CompilerError? error in generator.Errors)
 				{
 					if (error != null)
-						Console.Error.WriteLine(FormattableString.Invariant($"\t{error.FileName} ({error.Line}, {error.Column}): {error.ErrorText}"));
+						Console.Error.WriteLine(string.Create(CultureInfo.InvariantCulture, $"\t{error.FileName} ({error.Line}, {error.Column}): {error.ErrorText}"));
 				}
 
 				return StatusCodes.T4_ERROR;
 			}
 
 			// make some basic assertions
-			if (language != "C#")
+			if (!string.Equals(language, "C#", StringComparison.Ordinal))
 			{
 				Console.Error.WriteLine($"T4 template language should be C# but got '{language}'");
 				return StatusCodes.T4_ERROR;
@@ -413,7 +413,7 @@ namespace LinqToDB.CommandLine
 			var usings = new List<string>();
 			foreach (var directive in template.Directives)
 			{
-				if (directive.Name.ToLowerInvariant() == "import")
+				if (string.Equals(directive.Name.ToLowerInvariant(), "import", StringComparison.Ordinal))
 					usings.Add(directive.Extract("namespace"));
 			}
 
@@ -431,7 +431,9 @@ namespace LinqToDB.CommandLine
 			if (assemblyFiles.Length == 0)
 				return;
 
-			var assemblyLookup = assemblyFiles.Distinct().ToDictionary(_ => Path.GetFileNameWithoutExtension(Path.GetFileName(_)));
+			var assemblyLookup = assemblyFiles
+				.Distinct(StringComparer.Ordinal)
+				.ToDictionary(_ => Path.GetFileNameWithoutExtension(Path.GetFileName(_)), StringComparer.Ordinal);
 
 			AssemblyLoadContext.Default.Resolving += (context, name) =>
 			{

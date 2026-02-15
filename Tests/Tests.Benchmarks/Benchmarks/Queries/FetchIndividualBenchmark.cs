@@ -32,7 +32,7 @@ namespace LinqToDB.Benchmarks.Queries
 				DbTypes    = SalesOrderHeader.DbTypes,
 				Data       = new object?[][]
 				{
-					SalesOrderHeader.SampleRow
+					SalesOrderHeader.SampleRow,
 				},
 			};
 
@@ -44,19 +44,17 @@ namespace LinqToDB.Benchmarks.Queries
 		[Benchmark]
 		public SalesOrderHeader? Linq()
 		{
-			using (var db = new Db(_provider, _result))
-			{
-				return db.SalesOrderHeader
-					.Where(p => p.SalesOrderID == _key)
-					.FirstOrDefault();
-			}
+			using var db = new Db(_provider, _result);
+			return db.SalesOrderHeader
+				.Where(p => p.SalesOrderID == _key)
+				.FirstOrDefault();
 		}
 
 		[Benchmark]
 		public SalesOrderHeader? Compiled()
 		{
-			using (var db = new Db(_provider, _result))
-				return _compiled(db, _key);
+			using var db = new Db(_provider, _result);
+			return _compiled(db, _key);
 		}
 
 		[Benchmark(Baseline = true)]

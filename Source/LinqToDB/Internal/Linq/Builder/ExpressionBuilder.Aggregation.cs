@@ -175,7 +175,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							if (orderDefined)
 								continue;
-							if (methodCall.Method.Name.StartsWith(nameof(Queryable.OrderBy)))
+							if (methodCall.Method.Name.StartsWith(nameof(Queryable.OrderBy), StringComparison.Ordinal))
 								orderDefined = true;
 						}
 
@@ -285,7 +285,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				OrderBy           = orderBy?.ToArray() ?? [],
 				IsDistinct        = isDistinct,
 				IsGroupBy         = isGroupBy,
-				IsEmptyGroupBy    = isEmptyGroupBy
+				IsEmptyGroupBy    = isEmptyGroupBy,
 			};
 
 			if (sqlContext != null)
@@ -357,7 +357,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public static Expression BuildAggregateExecuteExpression(MethodCallExpression methodCall, int sequenceExpressionIndex, Expression dataSequence, MethodCallExpression? allowedBody)
 		{
-			if (methodCall == null) throw new ArgumentNullException(nameof(methodCall));
+			ArgumentNullException.ThrowIfNull(methodCall);
 
 			var sequenceExpression = methodCall.Arguments[sequenceExpressionIndex];
 
@@ -462,7 +462,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							if (orderDefined)
 								continue;
-							if (methodCall.Method.Name.StartsWith(nameof(Queryable.OrderBy)))
+							if (methodCall.Method.Name.StartsWith(nameof(Queryable.OrderBy), StringComparison.Ordinal))
 								orderDefined = true;
 						}
 
@@ -648,7 +648,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				OrderBy           = orderBy?.ToArray() ?? [],
 				IsDistinct        = isDistinct,
 				IsGroupBy         = isGroupBy,
-				IsEmptyGroupBy    = isEmptyGroupBy
+				IsEmptyGroupBy    = isEmptyGroupBy,
 			};
 
 			var result = functionFactory(aggregationInfo);

@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 namespace LinqToDB.Internal.DataProvider
 {
@@ -110,7 +111,7 @@ namespace LinqToDB.Internal.DataProvider
 				// if the name is reserved or already in use, generate a unique name for the parameter
 				var cnt = 0;
 				while (IsReserved(name) || _usedParameterNames?.Contains(name) == true)
-					name = FormattableString.Invariant($"{originalName}{CounterSeparator}{++cnt}");
+					name = string.Create(CultureInfo.InvariantCulture, $"{originalName}{CounterSeparator}{++cnt}");
 
 				// if name is not too long, return it
 				if (name.Length <= MaxLength)

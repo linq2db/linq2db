@@ -61,8 +61,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						var targetExpr = ExpressionExtensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, targetProp);
 
 						var tgtExpr = builder.ConvertToSql(mergeContext.SourceContext.SourceContextRef.BuildContext, targetExpr);
-						var srcExpr = builder.ConvertToSql(mergeContext.SourceContext.SourceContextRef.BuildContext, sourceExpr);;
-
+						var srcExpr = builder.ConvertToSql(mergeContext.SourceContext.SourceContextRef.BuildContext, sourceExpr);
 						operation.Items.Add(new SqlSetExpression(tgtExpr, srcExpr));
 					}
 				}

@@ -34,7 +34,7 @@ namespace LinqToDB.Tools.Mapper
 		public static Mapper<TFrom,TTo> GetMapper<TFrom,TTo>(
 			Func<MapperBuilder<TFrom,TTo>,MapperBuilder<TFrom,TTo>> setter)
 		{
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			ArgumentNullException.ThrowIfNull(setter);
 			return new Mapper<TFrom,TTo>(setter(new MapperBuilder<TFrom,TTo>()));
 		}
 

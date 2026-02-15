@@ -20,29 +20,29 @@ namespace LinqToDB.Remote
 
 		public DataService()
 		{
-			_defaultMetadata ??= Tuple.Create(default(T)!, new MetadataInfo(new DataOptions(), MappingSchema.Default));
+			_defaultMetadata ??= new(new DataOptions(), MappingSchema.Default);
 
-			_metadata = new MetadataProvider(_defaultMetadata.Item2);
-			_query    = new QueryProvider   (_defaultMetadata.Item2);
-			_update   = new UpdateProvider  (_defaultMetadata.Item2, _metadata);
+			_metadata = new MetadataProvider(_defaultMetadata);
+			_query    = new QueryProvider   (_defaultMetadata);
+			_update   = new UpdateProvider  (_defaultMetadata, _metadata);
 		}
 
-		static Tuple<T,MetadataInfo>? _defaultMetadata;
+		static MetadataInfo? _defaultMetadata;
 
 		public DataService(DataOptions options, MappingSchema mappingSchema)
 		{
 			lock (_cache)
 			{
 				if (!_cache.TryGetValue(mappingSchema, out var data))
-					data = Tuple.Create(default(T)!, new MetadataInfo(options, mappingSchema));
+					data = new (options, mappingSchema);
 
-				_metadata = new MetadataProvider(data.Item2);
-				_query    = new QueryProvider   (data.Item2);
-				_update   = new UpdateProvider  (data.Item2, _metadata);
+				_metadata = new MetadataProvider(data);
+				_query    = new QueryProvider   (data);
+				_update   = new UpdateProvider  (data, _metadata);
 			}
 		}
 
-		static readonly Dictionary<MappingSchema,Tuple<T,MetadataInfo>> _cache = new();
+		static readonly Dictionary<MappingSchema, MetadataInfo> _cache = [];
 
 		readonly MetadataProvider _metadata;
 		readonly QueryProvider    _query;
@@ -85,9 +85,9 @@ namespace LinqToDB.Remote
 			readonly MappingSchema _mappingSchema;
 
 			public readonly Dictionary<Type,TypeInfo>                   TypeDic     = new();
-			public readonly Dictionary<string,ResourceType>             Types       = new();
-			public readonly Dictionary<string,ResourceSet>              Sets        = new();
-			public readonly Dictionary<string,Func<object?,IQueryable>> RootGetters = new();
+			public readonly Dictionary<string,ResourceType>             Types       = new(StringComparer.Ordinal);
+			public readonly Dictionary<string,ResourceSet>              Sets        = new(StringComparer.Ordinal);
+			public readonly Dictionary<string,Func<object?,IQueryable>> RootGetters = new(StringComparer.Ordinal);
 
 			void LoadMetadata()
 			{
@@ -100,14 +100,14 @@ namespace LinqToDB.Remote
 					let tt  = t.GetGenericArguments()[0]
 					let m   = _mappingSchema.GetEntityDescriptor(tt, _options.ConnectionOptions.OnEntityDescriptorCreated)
 					let tbl = new SqlTable(m)
-					where tbl.Fields.Any(f => f.IsPrimaryKey)
+					where tbl.Fields.Exists(f => f.IsPrimaryKey)
 					select new
 					{
 						p.Name,
 						ID     = n++,
 						Type   = tt,
 						Table  = tbl,
-						Mapper = m
+						Mapper = m,
 					}
 				).ToList();
 
@@ -230,7 +230,7 @@ namespace LinqToDB.Remote
 
 			public ResourceAssociationSet GetResourceAssociationSet(ResourceSet resourceSet, ResourceType resourceType, ResourceProperty resourceProperty)
 			{
-				throw new NotImplementedException();
+				throw new NotSupportedException();
 			}
 
 			public bool TryResolveResourceType(string name, out ResourceType resourceType)
@@ -305,22 +305,22 @@ namespace LinqToDB.Remote
 
 			public object GetPropertyValue(object target, ResourceProperty resourceProperty)
 			{
-				throw new NotImplementedException();
+				throw new NotSupportedException();
 			}
 
 			public object GetOpenPropertyValue(object target, string propertyName)
 			{
-				throw new NotImplementedException();
+				throw new NotSupportedException();
 			}
 
 			public IEnumerable<KeyValuePair<string,object>> GetOpenPropertyValues(object target)
 			{
-				throw new NotImplementedException();
+				throw new NotSupportedException();
 			}
 
 			public object InvokeServiceOperation(ServiceOperation serviceOperation, object[] parameters)
 			{
-				throw new NotImplementedException();
+				throw new NotSupportedException();
 			}
 
 			public object? CurrentDataSource         { get; set; }
@@ -366,12 +366,12 @@ namespace LinqToDB.Remote
 
 			public void SetConcurrencyValues(object resourceCookie, bool? checkForEquality, IEnumerable<KeyValuePair<string,object>> concurrencyValues)
 			{
-				throw new NotImplementedException();
+				throw new NotSupportedException();
 			}
 
 			public void AddReferenceToCollection(object targetResource, string propertyName, object resourceToBeAdded)
 			{
-				throw new NotImplementedException();
+				throw new NotSupportedException();
 			}
 
 			public void ClearChanges()
@@ -418,7 +418,7 @@ namespace LinqToDB.Remote
 
 			public void RemoveReferenceFromCollection(object targetResource, string propertyName, object resourceToBeRemoved)
 			{
-				throw new NotImplementedException();
+				throw new NotSupportedException();
 			}
 
 			public object ResetResource(object resource)
@@ -434,12 +434,12 @@ namespace LinqToDB.Remote
 
 			public void SaveChanges()
 			{
-				throw new NotImplementedException();
+				throw new NotSupportedException();
 			}
 
 			public void SetReference(object targetResource, string propertyName, object? propertyValue)
 			{
-				throw new NotImplementedException();
+				throw new NotSupportedException();
 			}
 
 			public void SetValue(object targetResource, string propertyName, object? propertyValue)

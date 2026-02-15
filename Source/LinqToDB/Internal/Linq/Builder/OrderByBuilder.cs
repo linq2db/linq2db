@@ -45,7 +45,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var sequence = sequenceResult.BuildContext;
 
-			var isNewOrder = methodCall.Method.Name.StartsWith(nameof(Queryable.OrderBy)) && !builder.DataContext.Options.LinqOptions.ConcatenateOrderBy;
+			var isNewOrder = methodCall.Method.Name.StartsWith(nameof(Queryable.OrderBy), StringComparison.Ordinal) && !builder.DataContext.Options.LinqOptions.ConcatenateOrderBy;
 
 			if (isNewOrder)
 				sequence = new SubQueryContext(sequence);
@@ -96,7 +96,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			Expression sqlExpr;
 			bool       byIndex;
 
-			if (body is MethodCallExpression mc && mc.Method.DeclaringType == typeof(Sql) && mc.Method.Name == nameof(Sql.Ordinal))
+			if (body is MethodCallExpression mc && mc.Method.DeclaringType == typeof(Sql) && string.Equals(mc.Method.Name, nameof(Sql.Ordinal), StringComparison.Ordinal))
 			{
 				sqlExpr = builder.BuildSqlExpression(sequence, mc.Arguments[0], BuildPurpose.Sql, BuildFlags.ForKeys);
 				byIndex = true;
@@ -140,7 +140,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 				}
 
-				sequence.SelectQuery.OrderBy.Expr(orderSql, methodCall.Method.Name.EndsWith("Descending"), isPositioned);
+				sequence.SelectQuery.OrderBy.Expr(orderSql, methodCall.Method.Name.EndsWith("Descending", StringComparison.Ordinal), isPositioned);
 			}
 
 			return BuildSequenceResult.FromContext(sequence);

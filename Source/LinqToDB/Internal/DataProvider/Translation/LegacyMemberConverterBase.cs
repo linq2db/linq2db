@@ -27,7 +27,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		static readonly MethodInfo _stringAggregateMethodInfoQS = MemberHelper.MethodOfGeneric<IQueryable<string>>(e => e.StringAggregate(" ", x => x));
 		static readonly MethodInfo _concatStringMethodInfo      = MemberHelper.MethodOfGeneric<IEnumerable<string>>(e => Sql.ConcatStringsNullable(" ", e));
 
-		static string[] _allowedSequqnceMethods = new[]
+		static readonly string[] _allowedSequqnceMethods = new[]
 		{
 			nameof(Queryable.Select),
 			nameof(Queryable.Distinct),
@@ -141,7 +141,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				if (isThenBy || methodName is nameof(Queryable.OrderBy) or nameof(Queryable.OrderByDescending) or
 					nameof(Enumerable.OrderBy) or nameof(Enumerable.OrderByDescending))
 				{
-					var isDescending = methodName.EndsWith("Descending");
+					var isDescending = methodName.EndsWith("Descending", StringComparison.Ordinal);
 
 					LambdaExpression lambda;
 					if (methodCall.Arguments.Count > 1)

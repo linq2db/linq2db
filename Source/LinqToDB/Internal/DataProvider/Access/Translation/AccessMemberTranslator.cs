@@ -206,9 +206,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 				var valueType = factory.GetDbDataType(value);
 				var intType   = factory.GetDbDataType(typeof(int));
 
-				ISqlExpression? result = null;
-
-				if (precision == null || precision is SqlValue { Value: 0 })
+				if (precision is null or SqlValue { Value: 0 })
 				{
 					/*
 					 IIf(Abs([Value] * 10 Mod 10) = 5 And Int([Value]) Mod 2 = 0,
@@ -232,14 +230,12 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 					var trueValue  = intCast;
 					var falseValue = factory.Function(valueType, "ROUND", value);
 
-					result = factory.Condition(condition, trueValue, falseValue);
+					return factory.Condition(condition, trueValue, falseValue);
 				}
 				else
 				{
-					result = base.TranslateRoundToEven(translationContext, methodCall, value, precision);
+					return base.TranslateRoundToEven(translationContext, methodCall, value, precision);
 				}
-
-				return result;
 			}
 
 			protected override ISqlExpression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)

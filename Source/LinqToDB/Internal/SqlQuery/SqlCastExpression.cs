@@ -55,7 +55,7 @@ namespace LinqToDB.Internal.SqlQuery
 			if (ReferenceEquals(other, this))
 				return true;
 
-			if (!(other is SqlCastExpression otherCast))
+			if (other is not SqlCastExpression otherCast)
 				return false;
 
 			return ToType.Equals(otherCast.ToType) && Expression.Equals(otherCast.Expression, comparer);

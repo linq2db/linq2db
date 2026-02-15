@@ -22,23 +22,17 @@ namespace LinqToDB.Internal.SqlQuery
 		internal static ObjectPool<AggregationCheckVisitor> AggregationCheckVisitors =
 			new(() => new AggregationCheckVisitor(), v => v.Cleanup(), 100);
 
-		sealed class IsDependsOnSourcesContext
+		sealed class IsDependsOnSourcesContext(IReadOnlyCollection<ISqlTableSource> onSources, IReadOnlyCollection<IQueryElement>? elementsToIgnore)
 		{
-			public IsDependsOnSourcesContext(IReadOnlyCollection<ISqlTableSource> onSources, IReadOnlyCollection<IQueryElement>? elementsToIgnore)
-			{
-				OnSources = onSources;
-				ElementsToIgnore = elementsToIgnore;
-			}
+			public readonly IReadOnlyCollection<ISqlTableSource> OnSources        = onSources;
+			public readonly IReadOnlyCollection<IQueryElement>?  ElementsToIgnore = elementsToIgnore;
 
-			public readonly IReadOnlyCollection<ISqlTableSource> OnSources;
-			public readonly IReadOnlyCollection<IQueryElement>?  ElementsToIgnore;
-
-			public          bool                     DependencyFound;
+			public bool DependencyFound;
 		}
 
 		public static bool IsDependsOnSource(IQueryElement testedRoot, ISqlTableSource onSource, IReadOnlyCollection<IQueryElement>? elementsToIgnore = null)
 		{
-			return IsDependsOnSources(testedRoot, new [] { onSource }, elementsToIgnore);
+			return IsDependsOnSources(testedRoot, new[] { onSource }, elementsToIgnore);
 		}
 
 		public static bool IsDependsOnSources(IQueryElement testedRoot, IReadOnlyCollection<ISqlTableSource> onSources, IReadOnlyCollection<IQueryElement>? elementsToIgnore = null)
@@ -133,13 +127,11 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static bool IsSingleTableInQuery(SelectQuery query, SqlTable table)
 		{
-			if (query.From.Tables is [{ Joins.Count: 0, Source: var s }]
-				&& s == table)
+			return query.From.Tables switch
 			{
-				return true;
-			}
-
-			return false;
+				[{ Joins.Count: 0, Source: var s }] when s == table => true,
+				_ => false,
+			};
 		}
 
 		sealed class IsDependsOnElementContext
@@ -178,7 +170,7 @@ namespace LinqToDB.Internal.SqlQuery
 		/// Returns <see cref="IValueConverter"/> for <paramref name="expr"/>.
 		/// </summary>
 		/// <param name="expr">Tested SQL Expression.</param>
-		/// <returns>Associated converter or <c>null</c>.</returns>
+		/// <returns>Associated converter or <see langword="null"/>.</returns>
 		public static IValueConverter? GetValueConverter(ISqlExpression? expr)
 		{
 			return GetColumnDescriptor(expr)?.ValueConverter;
@@ -188,13 +180,10 @@ namespace LinqToDB.Internal.SqlQuery
 		/// Returns <see cref="ColumnDescriptor"/> for <paramref name="expr"/>.
 		/// </summary>
 		/// <param name="expr">Tested SQL Expression.</param>
-		/// <returns>Associated column descriptor or <c>null</c>.</returns>
+		/// <returns>Associated column descriptor or <see langword="null"/>.</returns>
 		public static ColumnDescriptor? GetColumnDescriptor(ISqlExpression? expr)
 		{
-			if (expr == null)
-				return null;
-
-			switch (expr.ElementType)
+			switch (expr?.ElementType)
 			{
 				case QueryElementType.Column:
 				{
@@ -219,17 +208,20 @@ namespace LinqToDB.Internal.SqlQuery
 
 					return null;
 				}
+
 				case QueryElementType.SqlField:
 				{
 					return ((SqlField)expr).ColumnDescriptor;
 				}
+
 				case QueryElementType.SqlExpression:
 				{
 					var sqlExpr = (SqlExpression)expr;
-					if (sqlExpr.Parameters.Length == 1 && sqlExpr.Expr == "{0}")
+					if (sqlExpr.Parameters.Length == 1 && string.Equals(sqlExpr.Expr, "{0}", StringComparison.Ordinal))
 						return GetColumnDescriptor(sqlExpr.Parameters[0]);
 					break;
 				}
+
 				case QueryElementType.SqlQuery:
 				{
 					var query = (SelectQuery)expr;
@@ -237,6 +229,7 @@ namespace LinqToDB.Internal.SqlQuery
 						return GetColumnDescriptor(query.Select.Columns[0]);
 					break;
 				}
+
 				case QueryElementType.SqlBinaryExpression:
 				{
 					var binary = (SqlBinaryExpression)expr;
@@ -245,11 +238,13 @@ namespace LinqToDB.Internal.SqlQuery
 						return null;
 					return found;
 				}
+
 				case QueryElementType.SqlNullabilityExpression:
 				{
 					var nullability = (SqlNullabilityExpression)expr;
 					return GetColumnDescriptor(nullability.SqlExpression);
 				}
+
 				case QueryElementType.SqlCoalesce:
 				{
 					var coalesce = (SqlCoalesceExpression)expr;
@@ -262,13 +257,16 @@ namespace LinqToDB.Internal.SqlQuery
 
 					break;
 				}
+
 				case QueryElementType.SqlCondition:
 				{
 					var condition = (SqlConditionExpression)expr;
 
-					return GetColumnDescriptor(condition.TrueValue) ??
-					       GetColumnDescriptor(condition.FalseValue);
+					return 
+						GetColumnDescriptor(condition.TrueValue) ??
+						GetColumnDescriptor(condition.FalseValue);
 				}
+
 				case QueryElementType.SqlCase:
 				{
 					var caseExpression = (SqlCaseExpression)expr;
@@ -282,6 +280,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 					return GetColumnDescriptor(caseExpression.ElseExpression);
 				}
+
 				case QueryElementType.SqlAnchor:
 				{
 					return GetColumnDescriptor(((SqlAnchor)expr).SqlExpression);
@@ -319,17 +318,19 @@ namespace LinqToDB.Internal.SqlQuery
 
 					break;
 				}
+
 				case QueryElementType.SqlField:
 				{
-					return ((SqlField)expr).ColumnDescriptor?.GetDbDataType(true);
+					return ((SqlField)expr).ColumnDescriptor?.GetDbDataType(completeDataType: true);
 				}
+
 				case QueryElementType.SqlExpression:
 				{
-					var sqlExpr = (SqlExpression)expr;
-					if (sqlExpr.Parameters.Length == 1 && sqlExpr.Expr == "{0}")
-						return SuggestDbDataType(sqlExpr.Parameters[0]);
+					if (expr is SqlExpression { Expr: "{0}", Parameters: [var parameter] })
+						return SuggestDbDataType(parameter);
 					break;
 				}
+
 				case QueryElementType.SqlQuery:
 				{
 					var query = (SelectQuery)expr;
@@ -344,6 +345,7 @@ namespace LinqToDB.Internal.SqlQuery
 						return sqlValue.ValueType;
 					break;
 				}
+
 				case QueryElementType.SqlAnchor:
 				{
 					return SuggestDbDataType(((SqlAnchor)expr).SqlExpression);
@@ -387,7 +389,7 @@ namespace LinqToDB.Internal.SqlQuery
 							(_, DataType.NVarChar)            => DataType.NVarChar,
 							(DataType.Char, DataType.VarChar) => DataType.VarChar,
 							(DataType.Char, DataType.NChar)   => DataType.NChar,
-							_                                 => commonType.Value.DataType
+							_                                 => commonType.Value.DataType,
 						};
 
 						commonType = commonType.Value.WithDataType(newType);
@@ -424,34 +426,30 @@ namespace LinqToDB.Internal.SqlQuery
 
 		static DbDataType GetDbDataType(ISqlExpression? expr)
 		{
-			switch (expr)
+			return expr switch
 			{
-				case null: return DbDataType.Undefined;
-				case SqlValue { ValueType: var vt }: return vt;
+				null => DbDataType.Undefined,
+				SqlValue { ValueType: var vt } => vt,
 
-				case SqlParameter        { Type: var t }: return t;
-				case SqlField            { Type: var t }: return t;
-				case SqlDataType         { Type: var t }: return t;
-				case SqlCastExpression   { Type: var t }: return t;
-				case SqlBinaryExpression { Type: var t }: return t;
+				SqlParameter        { Type: var t } => t,
+				SqlField            { Type: var t } => t,
+				SqlDataType         { Type: var t } => t,
+				SqlCastExpression   { Type: var t } => t,
+				SqlBinaryExpression { Type: var t } => t,
 
-				case SqlParameterizedExpressionBase { Type: var t }: return t;
+				SqlParameterizedExpressionBase { Type: var t } => t,
 
-				case SqlColumn                { Expression:    var e }: return GetDbDataType(e);
-				case SqlNullabilityExpression { SqlExpression: var e }: return GetDbDataType(e);
+				SqlColumn                { Expression:    var e } => GetDbDataType(e),
+				SqlNullabilityExpression { SqlExpression: var e } => GetDbDataType(e),
 
-				case SelectQuery selectQuery:
-				{
-					return selectQuery is { Select.Columns: [{ Expression: var e }] }
-						? GetDbDataType(e)
-						: DbDataType.Undefined;
-				}
+				SelectQuery { Select.Columns: [{ Expression: var e }] } => GetDbDataType(e),
+				SelectQuery                                             => DbDataType.Undefined,
 
-				case SqlCaseExpression caseExpression          : return GetCaseExpressionType(caseExpression);
-				case SqlConditionExpression conditionExpression: return GetConditionExpressionType(conditionExpression);
+				SqlCaseExpression caseExpression           => GetCaseExpressionType(caseExpression),
+				SqlConditionExpression conditionExpression => GetConditionExpressionType(conditionExpression),
 
-				case { SystemType: null } : return DbDataType.Undefined;
-				case { SystemType: var t }: return new(t);
+				{ SystemType: null }  => DbDataType.Undefined,
+				{ SystemType: var t } => new(t),
 			};
 
 			static DbDataType GetCaseExpressionType(SqlCaseExpression caseExpression)
@@ -483,7 +481,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 			root.VisitParentFirst((hash, hashIgnore, found, singleColumnLevel), static (context, e) =>
 			{
-				if (e is ISqlTableSource source && context.hash.Contains(source) || context.hashIgnore.Contains(e))
+				if ((e is ISqlTableSource source && context.hash.Contains(source)) || context.hashIgnore.Contains(e))
 					return false;
 
 				switch (e.ElementType)
@@ -546,7 +544,7 @@ namespace LinqToDB.Internal.SqlQuery
 		static bool IsTransitiveExpression(SqlExpression sqlExpression, bool checkNullability)
 		{
 			if (sqlExpression is { Parameters: [var p] }
-				&& sqlExpression.Expr.Trim() == "{0}" 
+				&& sqlExpression.Expr.AsSpan().Trim() is "{0}"
 				&& (!checkNullability || sqlExpression.CanBeNullable(NullabilityContext.NonQuery) == p.CanBeNullable(NullabilityContext.NonQuery)))
 			{
 				if (p is SqlExpression argExpression)
@@ -584,23 +582,20 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static bool IsConstantFast(ISqlExpression expr)
 		{
-			if (expr.ElementType == QueryElementType.SqlValue || expr.ElementType == QueryElementType.SqlParameter)
-				return true;
-
-			if (expr.ElementType == QueryElementType.SqlBinaryExpression)
+			return expr switch
 			{
-				var be = (SqlBinaryExpression)expr;
-				return IsConstantFast(be.Expr1) && IsConstantFast(be.Expr2);
-			}
+				{ ElementType: QueryElementType.SqlValue or QueryElementType.SqlParameter } => true,
 
-			if (expr.ElementType == QueryElementType.SqlNullabilityExpression)
-				return IsConstantFast(((SqlNullabilityExpression)expr).SqlExpression);
+				SqlBinaryExpression { ElementType: QueryElementType.SqlBinaryExpression } be => IsConstantFast(be.Expr1) && IsConstantFast(be.Expr2),
 
-			return false;
+				SqlNullabilityExpression { ElementType: QueryElementType.SqlNullabilityExpression, SqlExpression: { } expression } => IsConstantFast(expression),
+
+				_ => false,
+			};
 		}
 
 		/// <summary>
-		/// Returns <c>true</c> if tested expression is constant during query execution (e.g. value or parameter).
+		/// Returns <see langword="true"/> if tested expression is constant during query execution (e.g. value or parameter).
 		/// </summary>
 		/// <param name="expr">Tested expression.</param>
 		/// <returns></returns>
@@ -747,7 +742,7 @@ namespace LinqToDB.Internal.SqlQuery
 			var result =
 				table1.ObjectType   == table2.ObjectType &&
 				table1.TableName    == table2.TableName  &&
-				table1.Expression   == table2.Expression;
+				string.Equals(table1.Expression, table2.Expression, StringComparison.Ordinal);
 
 			if (result && withExtensions)
 			{
@@ -945,7 +940,7 @@ namespace LinqToDB.Internal.SqlQuery
 					current = cast.Expression;
 				else if (current is SqlExpression expr)
 				{
-					if (IsTransitiveExpression(expr, true))
+					if (IsTransitiveExpression(expr, checkNullability: true))
 						current = expr.Parameters[0];
 					else
 						break;
@@ -987,7 +982,7 @@ namespace LinqToDB.Internal.SqlQuery
 		/// <param name="foundSources">Output container for detected sources/</param>
 		public static void GetUsedSources(ISqlExpression root, HashSet<ISqlTableSource> foundSources)
 		{
-			if (foundSources == null) throw new ArgumentNullException(nameof(foundSources));
+			ArgumentNullException.ThrowIfNull(foundSources);
 
 			root.Visit(foundSources, static (foundSources, e) =>
 			{
@@ -1043,18 +1038,19 @@ namespace LinqToDB.Internal.SqlQuery
 			}
 		}
 
+		private const string ParamsRegexPattern = /* lang=regex */ @"(?<open>{+)(?<key>\w+)(?<format>:[^}]+)?(?<close>}+)";
 #if SUPPORTS_REGEX_GENERATORS
-		[GeneratedRegex(@"(?<open>{+)(?<key>\w+)(?<format>:[^}]+)?(?<close>}+)")]
+		[GeneratedRegex(ParamsRegexPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture)]
 		private static partial Regex ParamsRegex();
 #else
-		static Regex _paramsRegex = new (@"(?<open>{+)(?<key>\w+)(?<format>:[^}]+)?(?<close>}+)", RegexOptions.Compiled);
+		static readonly Regex _paramsRegex = new(ParamsRegexPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture);
 		static Regex ParamsRegex() => _paramsRegex;
 #endif
 
 		public static string TransformExpressionIndexes<TContext>(TContext context, string expression, Func<TContext, int, int> transformFunc)
 		{
-			if (expression    == null) throw new ArgumentNullException(nameof(expression));
-			if (transformFunc == null) throw new ArgumentNullException(nameof(transformFunc));
+			ArgumentNullException.ThrowIfNull(expression);
+			ArgumentNullException.ThrowIfNull(transformFunc);
 
 			var str = ParamsRegex().Replace(expression, match =>
 			{
@@ -1072,7 +1068,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 				var newIndex = transformFunc(context, idx);
 
-				return FormattableString.Invariant($"{{{newIndex}}}");
+				return string.Create(CultureInfo.InvariantCulture, $"{{{newIndex}}}");
 			});
 
 			return str;
@@ -1080,13 +1076,13 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static ISqlExpression ConvertFormatToConcatenation(string format, IReadOnlyList<ISqlExpression> parameters)
 		{
-			if (format     == null) throw new ArgumentNullException(nameof(format));
-			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
+			ArgumentNullException.ThrowIfNull(format);
+			ArgumentNullException.ThrowIfNull(parameters);
 
 			string StripDoubleQuotes(string str)
 			{
-				str = str.Replace("{{", "{");
-				str = str.Replace("}}", "}");
+				str = str.Replace("{{", "{", StringComparison.Ordinal);
+				str = str.Replace("}}", "}", StringComparison.Ordinal);
 				return str;
 			}
 
@@ -1129,8 +1125,13 @@ namespace LinqToDB.Internal.SqlQuery
 			if (result != null && lastMatchPosition < format.Length)
 			{
 				var value = StripDoubleQuotes(format.Substring(lastMatchPosition));
-				result = new SqlBinaryExpression(typeof(string),
-					result, "+", new SqlValue(typeof(string), value), Precedence.Additive);
+				result = new SqlBinaryExpression(
+					typeof(string),
+					result,
+					"+",
+					new SqlValue(typeof(string), value),
+					Precedence.Additive
+				);
 			}
 
 			result ??= new SqlValue(typeof(string), format);
@@ -1169,7 +1170,7 @@ namespace LinqToDB.Internal.SqlQuery
 				base.Cleanup();
 			}
 
-			[return : NotNullIfNotNull(nameof(element))]
+			[return: NotNullIfNotNull(nameof(element))]
 			public override IQueryElement? Visit(IQueryElement? element)
 			{
 				// if we already found aggregation or window function, we can stop
@@ -1292,13 +1293,12 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static bool IsWindowFunction(IQueryElement expr)
 		{
-			if (expr is SqlParameterizedExpressionBase expression)
-				return expression.IsWindowFunction;
-
-			if (expr is SqlExtendedFunction { IsWindowFunction: true })
-				return true;
-
-			return false;
+			return expr switch
+			{
+				SqlParameterizedExpressionBase expression => expression.IsWindowFunction,
+				SqlExtendedFunction { IsWindowFunction: true } => true,
+				_ => false,
+			};
 		}
 
 		public static bool ContainsAggregationOrWindowFunction(IQueryElement expr)
@@ -1431,10 +1431,11 @@ namespace LinqToDB.Internal.SqlQuery
 			if (expr.ElementType == QueryElementType.SqlBinaryExpression)
 				return false;
 
-			if (expr.ElementType == QueryElementType.SqlField ||
-				expr.ElementType == QueryElementType.Column   ||
-				expr.ElementType == QueryElementType.SqlValue ||
-				expr.ElementType == QueryElementType.SqlParameter)
+			if (expr.ElementType
+					is QueryElementType.SqlField
+					or QueryElementType.Column
+					or QueryElementType.SqlValue
+					or QueryElementType.SqlParameter)
 				return true;
 
 			if ((expr.ElementType == QueryElementType.SqlFunction) && ((SqlFunction)expr).Parameters.Length == 1)
@@ -1452,19 +1453,17 @@ namespace LinqToDB.Internal.SqlQuery
 			if (sqlExpression == null)
 				return null;
 
-			switch (UnwrapNullablity(sqlExpression))
+			return UnwrapNullablity(sqlExpression) switch
 			{
-				case SelectQuery
+				SelectQuery
 				{
 					Select.Columns: [{ Expression: var expr }],
 					From.Tables: [],
-					HasSetOperators: false
-				}:
-					return SimplifyColumnExpression(expr);
+					HasSetOperators: false,
+				} => SimplifyColumnExpression(expr),
 
-				default:
-					return sqlExpression;
-			}
+				_ => sqlExpression,
+			};
 		}
 
 		/// <summary>
@@ -1473,6 +1472,7 @@ namespace LinqToDB.Internal.SqlQuery
 		public static SqlSearchCondition CorrectComparisonForJoin(SqlSearchCondition sc)
 		{
 			var newSc = new SqlSearchCondition(false);
+
 			for (var index = 0; index < sc.Predicates.Count; index++)
 			{
 				var predicate = sc.Predicates[index];
@@ -1524,7 +1524,7 @@ namespace LinqToDB.Internal.SqlQuery
 				ParametersNullabilityType.SameAsLastParameter          => SameAs(parameters.Length - 1),
 				ParametersNullabilityType.IfAnyParameterNullable       => parameters.Any(static p => p),
 				ParametersNullabilityType.IfAllParametersNullable      => parameters.All(static p => p),
-				_ => null
+				_ => null,
 			};
 
 			bool SameAs(int parameterNumber)
@@ -1565,7 +1565,7 @@ namespace LinqToDB.Internal.SqlQuery
 				var newParam = new SqlParameter(dbDataType, foundParam.Name, value)
 				{
 					IsQueryParameter = foundParam.IsQueryParameter,
-					NeedsCast = foundParam.NeedsCast
+					NeedsCast = foundParam.NeedsCast,
 				};
 
 				return newParam;
@@ -1727,14 +1727,14 @@ namespace LinqToDB.Internal.SqlQuery
 			else
 			{
 				if (child.IsAnd)
-					return new SqlSearchCondition(false, canBeUnknown: null, [..child.Predicates, parent]);
+					return new SqlSearchCondition(false, canBeUnknown: null, [.. child.Predicates, parent]);
 				else
 					return new SqlSearchCondition(false, canBeUnknown: null, child, parent);
 			}
 		}
 
 		/// <summary>
-		/// Returns <c>true</c> if expression typed by predicate (returns SQL BOOLEAN-typed value).
+		/// Returns <see langword="true"/> if expression typed by predicate (returns SQL BOOLEAN-typed value).
 		/// </summary>
 		public static bool IsBoolean(ISqlExpression expr, bool includeFields = false)
 		{
@@ -1803,7 +1803,7 @@ namespace LinqToDB.Internal.SqlQuery
 				DataType.Int64 => DataType.UInt64,
 				DataType.Int128 => DataType.UInt128,
 				DataType.Int256 => DataType.UInt256,
-				_ => throw new InvalidOperationException($"Unsigned DB type expected: {type}")
+				_ => throw new InvalidOperationException($"Unsigned DB type expected: {type}"),
 			};
 
 			return type.WithDataType(newType);

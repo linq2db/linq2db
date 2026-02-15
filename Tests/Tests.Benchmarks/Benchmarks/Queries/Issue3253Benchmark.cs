@@ -248,17 +248,15 @@ namespace LinqToDB.Benchmarks.Queries
 		[Benchmark(Baseline = true)]
 		public void RawAdoNet()
 		{
-			using (var cmd = _cn.CreateCommand())
-			{
-				cmd.CommandText = $"UPDATE TESTTABLE w SET w.COLUMN2 = :col2, w.COLUMN12 = :col12, w.COLUMN15 = :col15, w.COLUMN16 = :col16 WHERE w.COLUMN1 = :col1";
+			using var cmd = _cn.CreateCommand();
+			cmd.CommandText = "UPDATE TESTTABLE w SET w.COLUMN2 = :col2, w.COLUMN12 = :col12, w.COLUMN15 = :col15, w.COLUMN16 = :col16 WHERE w.COLUMN1 = :col1";
 
-				cmd.Parameters.Add(new MockDbParameter(":col1", "61a018e7-6e43-44b7-ad53-5a55e626fbbe"));
-				cmd.Parameters.Add(new MockDbParameter(":col2", "VALUE"));
-				cmd.Parameters.Add(new MockDbParameter(":col12", "N"));
-				cmd.Parameters.Add(new MockDbParameter(":col15", 654645));
-				cmd.Parameters.Add(new MockDbParameter(":col16", 4547667897689));
-				cmd.ExecuteNonQuery();
-			}
+			cmd.Parameters.Add(new MockDbParameter(":col1", "61a018e7-6e43-44b7-ad53-5a55e626fbbe"));
+			cmd.Parameters.Add(new MockDbParameter(":col2", "VALUE"));
+			cmd.Parameters.Add(new MockDbParameter(":col12", "N"));
+			cmd.Parameters.Add(new MockDbParameter(":col15", 654645));
+			cmd.Parameters.Add(new MockDbParameter(":col16", 4547667897689));
+			cmd.ExecuteNonQuery();
 		}
 
 		[Benchmark]

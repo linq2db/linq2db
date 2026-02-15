@@ -23,7 +23,7 @@ namespace LinqToDB.Reflection
 		{
 			TypeAccessor = typeAccessor;
 
-			if (memberName.IndexOf('.') < 0)
+			if (memberName.IndexOf('.', StringComparison.Ordinal) < 0)
 			{
 				SetSimple(ExpressionHelper.PropertyOrField(Expression.Constant(null, typeAccessor.Type), memberName).Member, ed);
 			}
@@ -205,7 +205,7 @@ namespace LinqToDB.Reflection
 
 			_getterArguments = new[] { objParam };
 
-			if (HasGetter && memberInfo.IsDynamicColumnPropertyEx())
+			if (HasGetter && memberInfo.IsDynamicColumnProperty)
 			{
 				IsComplex = true;
 
@@ -229,7 +229,7 @@ namespace LinqToDB.Reflection
 				_getterExpression = new DefaultValueExpression(ed?.MappingSchema ?? MappingSchema.Default, Type);
 
 			_setterArguments = new[] { objParam, valueParam };
-			if (HasSetter && memberInfo.IsDynamicColumnPropertyEx())
+			if (HasSetter && memberInfo.IsDynamicColumnProperty)
 			{
 				IsComplex = true;
 

@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
@@ -53,10 +53,7 @@ namespace LinqToDB.Internal.Cache
 			IChangeToken expirationToken)
 			where TKey : notnull
 		{
-			if (expirationToken == null)
-			{
-				throw new ArgumentNullException(nameof(expirationToken));
-			}
+			ArgumentNullException.ThrowIfNull(expirationToken);
 
 			options.ExpirationTokens.Add(expirationToken);
 			return options;
@@ -119,10 +116,7 @@ namespace LinqToDB.Internal.Cache
 			PostEvictionDelegate<TKey> callback)
 			where TKey : notnull
 		{
-			if (callback == null)
-			{
-				throw new ArgumentNullException(nameof(callback));
-			}
+			ArgumentNullException.ThrowIfNull(callback);
 
 			return options.RegisterPostEvictionCallback(callback, state: null);
 		}
@@ -140,15 +134,12 @@ namespace LinqToDB.Internal.Cache
 			object? state)
 			where TKey : notnull
 		{
-			if (callback == null)
-			{
-				throw new ArgumentNullException(nameof(callback));
-			}
+			ArgumentNullException.ThrowIfNull(callback);
 
 			options.PostEvictionCallbacks.Add(new PostEvictionCallbackRegistration<TKey>()
 			{
 				EvictionCallback = callback,
-				State = state
+				State = state,
 			});
 			return options;
 		}

@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
@@ -18,7 +18,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var insertContext = new InsertBuilder.InsertContext(sequence,
 				InsertBuilder.InsertContext.InsertTypeEnum.Insert, new SqlInsertStatement(sequence.SelectQuery), null, false)
 			{
-				RequiresSetters = true
+				RequiresSetters = true,
 			};
 
 			return BuildSequenceResult.FromContext(insertContext);

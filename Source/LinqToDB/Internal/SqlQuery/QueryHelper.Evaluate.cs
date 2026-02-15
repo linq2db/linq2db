@@ -185,7 +185,7 @@ namespace LinqToDB.Internal.SqlQuery
 						}
 						default:
 						{
-							if (!(value1 is IComparable comp1) || !(value2 is IComparable comp2))
+							if (value1 is not IComparable comp1 || value2 is not IComparable comp2)
 							{
 								result = false;
 								return true;
@@ -691,10 +691,11 @@ namespace LinqToDB.Internal.SqlQuery
 		{
 			var evaluated = expr.EvaluateExpression(context);
 
-			if (evaluated is bool boolValue)
-				return boolValue;
-
-			return defaultValue;
+			return evaluated switch
+			{
+				bool boolValue => boolValue,
+				_ => defaultValue,
+			};
 		}
 
 		public static void ExtractPredicate(ISqlPredicate predicate, out ISqlPredicate underlying, out bool isNot)

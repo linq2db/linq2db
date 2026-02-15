@@ -50,70 +50,64 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			var searchExpr = predicate.Expr2;
 			var dataExpr   = predicate.Expr1;
 
-			SqlPredicate.Expr? subStrPredicate = null;
-
-			switch (predicate.Kind)
+			var subStrPredicate = predicate.Kind switch
 			{
-				case SqlPredicate.SearchString.SearchKind.StartsWith:
-					if (!caseSensitive)
-					{
-						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(
-								MappingSchema.GetDbDataType(typeof(bool)), "startsWith",
-								PseudoFunctions.MakeToLower(dataExpr, MappingSchema), PseudoFunctions.MakeToLower(searchExpr, MappingSchema)));
-					}
-					else
-					{
-						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(MappingSchema.GetDbDataType(typeof(bool)), "startsWith", dataExpr, searchExpr));
-					}
+				SqlPredicate.SearchString.SearchKind.StartsWith when caseSensitive =>
+					new SqlPredicate.Expr(
+						new SqlFunction(MappingSchema.GetDbDataType(typeof(bool)), "startsWith", dataExpr, searchExpr)
+					),
 
-					break;
+				SqlPredicate.SearchString.SearchKind.StartsWith when !caseSensitive =>
+					new SqlPredicate.Expr(
+						new SqlFunction(
+							MappingSchema.GetDbDataType(typeof(bool)),
+							"startsWith",
+							PseudoFunctions.MakeToLower(dataExpr, MappingSchema),
+							PseudoFunctions.MakeToLower(searchExpr, MappingSchema)
+						)
+					),
 
-				case SqlPredicate.SearchString.SearchKind.EndsWith:
-					if (!caseSensitive)
-					{
-						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(
-								MappingSchema.GetDbDataType(typeof(bool)), "endsWith",
-								PseudoFunctions.MakeToLower(dataExpr, MappingSchema), PseudoFunctions.MakeToLower(searchExpr, MappingSchema)));
-					}
-					else
-					{
-						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(MappingSchema.GetDbDataType(typeof(bool)), "endsWith", dataExpr, searchExpr));
-					}
+				SqlPredicate.SearchString.SearchKind.EndsWith when caseSensitive =>
+					new SqlPredicate.Expr(
+						new SqlFunction(MappingSchema.GetDbDataType(typeof(bool)), "endsWith", dataExpr, searchExpr)
+					),
 
-					break;
+				SqlPredicate.SearchString.SearchKind.EndsWith when !caseSensitive =>
+					new SqlPredicate.Expr(
+						new SqlFunction(
+							MappingSchema.GetDbDataType(typeof(bool)),
+							"endsWith",
+							PseudoFunctions.MakeToLower(dataExpr, MappingSchema),
+							PseudoFunctions.MakeToLower(searchExpr, MappingSchema)
+						)
+					),
 
-				case SqlPredicate.SearchString.SearchKind.Contains:
-					subStrPredicate = new SqlPredicate.ExprExpr(
+				SqlPredicate.SearchString.SearchKind.Contains =>
+					new SqlPredicate.ExprExpr(
 						new SqlFunction(MappingSchema.GetDbDataType(typeof(bool)), caseSensitive ? "position" : "positionCaseInsensitive", dataExpr, searchExpr),
 						SqlPredicate.Operator.Greater,
 						new SqlValue(0),
-						null);
-					break;
-			}
+						unknownAsValue: null
+					),
 
-			if (subStrPredicate != null)
+				_ => null,
+			};
+
+			return subStrPredicate switch
 			{
-				return subStrPredicate.MakeNot(predicate.IsNot);
-			}
-
-			return base.ConvertSearchStringPredicate(predicate);
+				{ } => subStrPredicate.MakeNot(predicate.IsNot),
+				_   => base.ConvertSearchStringPredicate(predicate),
+			};
 		}
 
 		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
 		{
-			switch (element.Operation)
+			return element.Operation switch
 			{
-				case SqlUnaryOperation.BitwiseNegation:
-					return new SqlFunction(element.Type, "bitNot", element.Expr);
-				case SqlUnaryOperation.Negation:
-					return new SqlFunction(element.Type, "negate", element.Expr);
-			}
-
-			return base.ConvertSqlUnaryExpression(element);
+				SqlUnaryOperation.BitwiseNegation => new SqlFunction(element.Type, "bitNot", element.Expr),
+				SqlUnaryOperation.Negation        => new SqlFunction(element.Type, "negate", element.Expr),
+				_                                 => base.ConvertSqlUnaryExpression(element),
+			};
 		}
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
@@ -354,7 +348,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 						toType      = sqlDataType.Type;
 					}
 
-					return MakeConversion(func.Parameters[2], toType, true, func.Name == PseudoFunctions.TRY_CONVERT_OR_DEFAULT ? func.Parameters[3] : null);
+					return MakeConversion(func.Parameters[2], toType, true, string.Equals(func.Name, PseudoFunctions.TRY_CONVERT_OR_DEFAULT, System.StringComparison.Ordinal) ? func.Parameters[3] : null);
 				}
 			}
 
@@ -381,11 +375,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 						// if converting from FixedString - just trim trailing \0s
 						var valueType = QueryHelper.GetDbDataType(value, MappingSchema);
-						if (valueType.DataType is DataType.Char or DataType.NChar or DataType.Binary)
+						return valueType.DataType switch
 						{
-							return new SqlFunction(
-								toType, "trim", canBeNull: true,
-								new SqlExpression(
+							DataType.Char or DataType.NChar or DataType.Binary =>
+								new SqlFunction(
+									toType, "trim", canBeNull: true,
+									new SqlExpression(
 										toType,
 										"TRAILING '\x00' FROM {0}",
 										Precedence.Primary,
@@ -393,10 +388,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 										ParametersNullabilityType.IfAnyParameterNullable,
 										value
 									)
-								);
-						}
-
-						return new SqlCastExpression(value, toType, null, true);
+								),
+							_ => new SqlCastExpression(value, toType, null, true),
+						};
 					}
 
 					case DataType.Decimal32:
@@ -405,7 +399,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					case DataType.Decimal256:
 					{
 						// toDecimalX(S)
-						ISqlExpression newFunc = newFunc = suffix == null
+						ISqlExpression newFunc = suffix == null
 							? new SqlCastExpression(value, toType, null, true)
 							: new SqlFunction(toType, name + suffix,
 								value,
@@ -421,7 +415,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					{
 						// toDateTime64(S)
 
-						ISqlExpression newFunc = newFunc = suffix == null
+						ISqlExpression newFunc = suffix == null
 							? new SqlCastExpression(value, toType, null, true)
 							: new SqlFunction(toType, name + suffix,
 								value,
@@ -467,23 +461,16 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		static bool ShouldSkipCast(ISqlExpression expr, DbDataType toDataType)
 		{
-			// TODO: change to single return
-			if (expr is SqlValue { Value: null } sqlValue
+			return expr is SqlValue { Value: null } sqlValue
 				&& toDataType.DataType is DataType.Interval
-				    or DataType.IntervalSecond
-				    or DataType.IntervalMinute
-				    or DataType.IntervalHour
-				    or DataType.IntervalDay
-				    or DataType.IntervalWeek
-				    or DataType.IntervalMonth
-				    or DataType.IntervalQuarter
-				    or DataType.IntervalYear
-			   )
-			{
-				return true;
-			}
-
-			return false;
+					or DataType.IntervalSecond
+					or DataType.IntervalMinute
+					or DataType.IntervalHour
+					or DataType.IntervalDay
+					or DataType.IntervalWeek
+					or DataType.IntervalMonth
+					or DataType.IntervalQuarter
+					or DataType.IntervalYear;
 		}
 	}
 }

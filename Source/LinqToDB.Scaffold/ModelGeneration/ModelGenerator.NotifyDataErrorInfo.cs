@@ -19,32 +19,33 @@ namespace LinqToDB.Tools.ModelGeneration
 			{
 				var p = prop.Parent!;
 
-				while (p != null && p is not IClass)
+				while (p is not null and not IClass)
 					p = p.Parent;
 
-				if (p != null)
+				if (p == null)
+					continue;
+				
+				var cl = (IClass)p;
+
+				if (!cl.Interfaces.Contains("INotifyDataErrorInfo", System.StringComparer.Ordinal))
 				{
-					var cl = (IClass)p;
+					Model.Usings.Add("System.ComponentModel");
+					Model.Usings.Add("System.Collections");
+					Model.Usings.Add("System.Linq");
 
-					if (!cl.Interfaces.Contains("INotifyDataErrorInfo"))
+					cl.Interfaces.Add("INotifyDataErrorInfo");
+
+					cl.Members.Add(new TMemberGroup
 					{
-						Model.Usings.Add("System.ComponentModel");
-						Model.Usings.Add("System.Collections");
-						Model.Usings.Add("System.Linq");
-
-						cl.Interfaces.Add("INotifyDataErrorInfo");
-
-						cl.Members.Add(new TMemberGroup
-						{
-							Region  = "INotifyDataErrorInfo support",
-							Members =
+						Region = "INotifyDataErrorInfo support",
+						Members =
 							{
 								new TEvent
 								{
 									TypeBuilder = static () => new ModelType("EventHandler<DataErrorsChangedEventArgs>", true, true).ToTypeName(),
 									Name        = "ErrorsChanged",
 									IsVirtual   = true,
-									Attributes  = { new TAttribute { Name = "field : NonSerialized" } }
+									Attributes  = { new TAttribute { Name = "field : NonSerialized" } },
 								},
 								new TField
 								{
@@ -53,7 +54,7 @@ namespace LinqToDB.Tools.ModelGeneration
 									InitValue      = "new Dictionary<string,List<string>>()",
 									AccessModifier = AccessModifier.Private,
 									IsReadonly     = true,
-									Attributes     = { new TAttribute { Name = "field : NonSerialized" } }
+									Attributes     = { new TAttribute { Name = "field : NonSerialized" } },
 								},
 								new TMethod
 								{
@@ -78,9 +79,9 @@ namespace LinqToDB.Tools.ModelGeneration
 												"\treturn;",
 											"",
 											"OnErrorsChanged(propertyName);",
-										]
+										],
 									},
-									AccessModifier = AccessModifier.Public
+									AccessModifier = AccessModifier.Public,
 								},
 								new TMethod
 								{
@@ -98,9 +99,9 @@ namespace LinqToDB.Tools.ModelGeneration
 												"\t_validationErrors.Clear();",
 												"\tOnErrorsChanged(propertyName);",
 											"}",
-										]
+										],
 									},
-									AccessModifier = AccessModifier.Public
+									AccessModifier = AccessModifier.Public,
 								},
 								new TMethod
 								{
@@ -119,9 +120,9 @@ namespace LinqToDB.Tools.ModelGeneration
 													"\t\tSystem.Windows.Application.Current.Dispatcher.BeginInvoke(",
 														"\t\t\t(Action)(() => ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(propertyName))));",
 											"}",
-										]
+										],
 									},
-									AccessModifier = AccessModifier.Protected
+									AccessModifier = AccessModifier.Protected,
 								},
 								new TMethod
 								{
@@ -134,19 +135,18 @@ namespace LinqToDB.Tools.ModelGeneration
 										[
 											$"List<string>{(EnableNullableReferenceTypes ? "?" : "")} errors;",
 											"return propertyName != null && _validationErrors.TryGetValue(propertyName, out errors) ? errors : null;",
-										]
+										],
 									},
-									AccessModifier = AccessModifier.Public
+									AccessModifier = AccessModifier.Public,
 								},
 								new TProperty
 								{
 									TypeBuilder = static () => "bool",
-									Name        = "HasErrors"
+									Name        = "HasErrors",
 								}
-								.InitGetter("_validationErrors.Values.Any(e => e.Count > 0)")
-							}
-						});
-					}
+								.InitGetter("_validationErrors.Values.Any(e => e.Count > 0)"),
+							},
+					});
 				}
 			}
 		}

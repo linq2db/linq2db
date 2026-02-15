@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 using JetBrains.Annotations;
 
@@ -17,7 +17,7 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				SQLiteProviderAdapter.SystemDataSQLiteAssemblyName    => SQLiteProvider.System,
 				SQLiteProviderAdapter.MicrosoftDataSQLiteAssemblyName => SQLiteProvider.Microsoft,
-				_                                                     => SQLiteProvider.AutoDetect
+				_                                                     => SQLiteProvider.AutoDetect,
 			};
 
 			return SQLiteTools.GetDataProvider(provider);

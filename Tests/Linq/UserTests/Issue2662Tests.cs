@@ -35,23 +35,21 @@ namespace Tests.UserTests
 		public void GroupPropertyValueAndDistinct([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var testData = TestRow.MakeTestData();
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var query =
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+			var query =
 					from row in table
 					group row.LinkCol by row.GroupCol
 					into grp
 					select new {grp.Key, c1 = grp.Count(), c2 = grp.Distinct().Count()};
 
-				var expected =
+			var expected =
 					from row in testData
 					group row.LinkCol by row.GroupCol
 					into grp
 					select new {grp.Key, c1 = grp.Count(), c2 = grp.Distinct().Count()};
 
-				Assert.That(query, Is.EqualTo(expected));
-			}
+			Assert.That(query, Is.EqualTo(expected));
 		}
 	}
 }

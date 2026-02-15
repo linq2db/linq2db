@@ -128,12 +128,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				for (var i = 0; i < association.ThisKey.Length; i++)
 				{
 					var parentName   = association.ThisKey[i];
-					var parentMember = parentMembers.Find(m => m.MemberInfo.Name == parentName);
+					var parentMember = parentMembers.Find(m => string.Equals(m.MemberInfo.Name, parentName, StringComparison.Ordinal));
 					var currentParentParam = (Expression)parentParam;
 
 					if (parentMember == null)
 					{
-						parentMember = parentOriginalMembers.Find(m => m.MemberInfo.Name == parentName);
+						parentMember = parentOriginalMembers.Find(m => string.Equals(m.MemberInfo.Name, parentName, StringComparison.Ordinal));
 						currentParentParam = Expression.Convert(currentParentParam, parentOriginalType);
 					}
 
@@ -141,7 +141,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						throw new LinqToDBException($"Association key '{parentName}' not found for type '{parentType}.");
 
 					var childName = association.OtherKey[i];
-					var childMember = childMembers.Find(m => m.MemberInfo.Name == childName);
+					var childMember = childMembers.Find(m => string.Equals(m.MemberInfo.Name, childName, StringComparison.Ordinal));
 
 					if (childMember == null)
 						throw new LinqToDBException($"Association key '{childName}' not found for type '{objectType}.");
@@ -241,7 +241,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (loadWith != null)
 			{
-				var associationLoadWith = loadWith.MembersToLoad?.Where(x => x.MemberInfo.EqualsTo(association.MemberInfo)).FirstOrDefault();
+				var associationLoadWith = loadWith.MembersToLoad?.Find(x => x.MemberInfo.EqualsTo(association.MemberInfo));
 
 				if (associationLoadWith == null)
 				{

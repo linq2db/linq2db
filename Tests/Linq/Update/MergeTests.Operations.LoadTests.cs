@@ -39,41 +39,39 @@ namespace Tests.xUpdate
 
 		private void RunTest(string context, int size)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetBigSource(size))
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(size, rows, context);
+			AssertRowCount(size, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(size + 4));
+			Assert.That(result, Has.Count.EqualTo(size + 4));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
 
-				for (var i = 4; i < size + 4; i++)
+			for (var i = 4; i < size + 4; i++)
+			{
+				using (Assert.EnterMultipleScope())
 				{
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(result[i].Id, Is.EqualTo(i + 1));
-						Assert.That(result[i].Field1, Is.EqualTo(i + 2));
-						Assert.That(result[i].Field2, Is.EqualTo(i + 3));
-						Assert.That(result[i].Field3, Is.Null);
-						Assert.That(result[i].Field4, Is.EqualTo(i + 5));
-						Assert.That(result[i].Field5, Is.Null);
-					}
+					Assert.That(result[i].Id, Is.EqualTo(i + 1));
+					Assert.That(result[i].Field1, Is.EqualTo(i + 2));
+					Assert.That(result[i].Field2, Is.EqualTo(i + 3));
+					Assert.That(result[i].Field3, Is.Null);
+					Assert.That(result[i].Field4, Is.EqualTo(i + 5));
+					Assert.That(result[i].Field5, Is.Null);
 				}
 			}
 		}

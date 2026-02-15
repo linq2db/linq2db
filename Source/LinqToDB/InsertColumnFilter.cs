@@ -1,4 +1,4 @@
-﻿using LinqToDB.Mapping;
+using LinqToDB.Mapping;
 
 namespace LinqToDB
 {
@@ -8,6 +8,6 @@ namespace LinqToDB
 	/// <typeparam name="T">Entity type.</typeparam>
 	/// <param name="entity">Entity instance.</param>
 	/// <param name="column">Descriptor of column.</param>
-	/// <returns><c>true</c>, if column should be included in operation and <c>false</c> otherwise.</returns>
+	/// <returns><see langword="true"/>, if column should be included in operation and <see langword="false"/> otherwise.</returns>
 	public delegate bool InsertColumnFilter<T>(T entity, ColumnDescriptor column);
 }

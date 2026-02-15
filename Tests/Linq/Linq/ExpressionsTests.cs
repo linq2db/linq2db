@@ -47,18 +47,16 @@ namespace Tests.Linq
 		[Test]
 		public void MapOperator([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query = from p in db.Parent
-					where p.ParentID >> 1 > 0
-					select p;
+			using var db = GetDataContext(context);
+			var query = from p in db.Parent
+						where p.ParentID >> 1 > 0
+						select p;
 
-				var expected = from p in Parent
-					where p.ParentID >> 1 > 0
-					select p;
+			var expected = from p in Parent
+						   where p.ParentID >> 1 > 0
+						   select p;
 
-				AreEqual(expected, query);
-			}
+			AreEqual(expected, query);
 		}
 
 		[Flags]
@@ -92,19 +90,17 @@ namespace Tests.Linq
 				})
 				.ToArray();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
-				var query = from t in table
-					where t.Flags.HasFlag(flag)
-					select t;
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var query = from t in table
+						where t.Flags.HasFlag(flag)
+						select t;
 
-				var expected = from t in data
-					where t.Flags.HasFlag(flag)
-					select t;
+			var expected = from t in data
+						   where t.Flags.HasFlag(flag)
+						   select t;
 
-				AreEqualWithComparer(expected, query);
-			}
+			AreEqualWithComparer(expected, query);
 		}
 
 		static int Count1(Parent p) { return p.Children.Count(c => c.ChildID > 0); }
@@ -114,8 +110,8 @@ namespace Tests.Linq
 		{
 			Expressions.MapMember<Parent,int>(p => Count1(p), p => p.Children.Count(c => c.ChildID > 0));
 
-			using (var db = GetDataContext(context))
-				AreEqual(Parent.Select(Count1), db.Parent.Select(p => Count1(p)));
+			using var db = GetDataContext(context);
+			AreEqual(Parent.Select(Count1), db.Parent.Select(p => Count1(p)));
 		}
 
 		static int Count2(Parent p, int id) { return p.Children.Count(c => c.ChildID > id); }
@@ -125,8 +121,8 @@ namespace Tests.Linq
 		{
 			Expressions.MapMember<Parent,int,int>((p,id) => Count2(p, id), (p, id) => p.Children.Count(c => c.ChildID > id));
 
-			using (var db = GetDataContext(context))
-				AreEqual(Parent.Select(p => Count2(p, 1)), db.Parent.Select(p => Count2(p, 1)));
+			using var db = GetDataContext(context);
+			AreEqual(Parent.Select(p => Count2(p, 1)), db.Parent.Select(p => Count2(p, 1)));
 		}
 
 		static int Count3(Parent p, int id) { return p.Children.Count(c => c.ChildID > id) + 2; }
@@ -138,8 +134,8 @@ namespace Tests.Linq
 
 			var n = 2;
 
-			using (var db = GetDataContext(context))
-				AreEqual(Parent.Select(p => Count3(p, n)), db.Parent.Select(p => Count3(p, n)));
+			using var db = GetDataContext(context);
+			AreEqual(Parent.Select(p => Count3(p, n)), db.Parent.Select(p => Count3(p, n)));
 		}
 
 		[ExpressionMethod(nameof(Count4Expression))]
@@ -161,10 +157,10 @@ namespace Tests.Linq
 		{
 			var n = 3;
 
-			using (var db = GetDataContext(context))
-				AreEqual(
-					   Parent.Select(p => Count4(p, n, 4)),
-					db.Parent.Select(p => Count4(p, n, 4)));
+			using var db = GetDataContext(context);
+			AreEqual(
+				   Parent.Select(p => Count4(p, n, 4)),
+				db.Parent.Select(p => Count4(p, n, 4)));
 		}
 
 		[ExpressionMethod(nameof(Count5Expression))]
@@ -184,10 +180,10 @@ namespace Tests.Linq
 		[ThrowsRequiresCorrelatedSubquery]
 		public void MethodExpression5([DataSources(ProviderName.SqlCe)] string context, [Values(1, 2) ]int n)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					   Parent.Select(p => Child.Where(c => c.ParentID == p.ParentID).Count() + n),
-					db.Parent.Select(p => Count5(db, p, n)));
+			using var db = GetDataContext(context);
+			AreEqual(
+				   Parent.Select(p => Child.Where(c => c.ParentID == p.ParentID).Count() + n),
+				db.Parent.Select(p => Count5(db, p, n)));
 		}
 
 		[ExpressionMethod(nameof(Count6Expression))]
@@ -207,10 +203,10 @@ namespace Tests.Linq
 		[ThrowsRequiresCorrelatedSubquery]
 		public void MethodExpression6([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					   Parent.Select(p => Child.Where(c => c.ParentID == p.ParentID).Count()),
-					db.Parent.Select(p => Count6(db.Child, p)));
+			using var db = GetDataContext(context);
+			AreEqual(
+				   Parent.Select(p => Child.Where(c => c.ParentID == p.ParentID).Count()),
+				db.Parent.Select(p => Count6(db.Child, p)));
 		}
 
 		[ExpressionMethod(nameof(Count7Expression))]
@@ -232,10 +228,10 @@ namespace Tests.Linq
 		{
 			var n = 2;
 
-			using (var db = GetDataContext(context))
-				AreEqual(
-					   Parent.Select(p => Child.Where(c => c.ParentID == p.ParentID).Count() + n),
-					db.Parent.Select(p => Count7(db.Child, p, n)));
+			using var db = GetDataContext(context);
+			AreEqual(
+				   Parent.Select(p => Child.Where(c => c.ParentID == p.ParentID).Count() + n),
+				db.Parent.Select(p => Count7(db.Child, p, n)));
 		}
 
 		[ExpressionMethod(nameof(Expression8))]
@@ -255,58 +251,58 @@ namespace Tests.Linq
 		[Test]
 		public void MethodExpression8([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from ch in Child
-					from p in
-						from p in Parent
-						where p.ParentID == ch.ChildID / 10
-						select p
-					where ch.ParentID == p.ParentID
-					select ch
-					,
-					from ch in db.Child
-					from p in GetParent(db, ch)
-					where ch.ParentID == p.ParentID
-					select ch);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from ch in Child
+				from p in
+					from p in Parent
+					where p.ParentID == ch.ChildID / 10
+					select p
+				where ch.ParentID == p.ParentID
+				select ch
+				,
+				from ch in db.Child
+				from p in GetParent(db, ch)
+				where ch.ParentID == p.ParentID
+				select ch);
 		}
 
 		[Test]
 		public void MethodExpression9([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from ch in Child
-					from p in
-						from p in Parent
-						where p.ParentID == ch.ChildID / 10
-						select p
-					where ch.ParentID == p.ParentID
-					select ch
-					,
-					from ch in db.Child
-					from p in TestDataConnection.GetParent9(db, ch)
-					where ch.ParentID == p.ParentID
-					select ch);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from ch in Child
+				from p in
+					from p in Parent
+					where p.ParentID == ch.ChildID / 10
+					select p
+				where ch.ParentID == p.ParentID
+				select ch
+				,
+				from ch in db.Child
+				from p in TestDataConnection.GetParent9(db, ch)
+				where ch.ParentID == p.ParentID
+				select ch);
 		}
 
 		[Test]
 		public void MethodExpression10([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
-				AreEqual(
-					from ch in Child
-					from p in
-						from p in Parent
-						where p.ParentID == ch.ChildID / 10
-						select p
-					where ch.ParentID == p.ParentID
-					select ch
-					,
-					from ch in db.Child
-					from p in db.GetParent10(ch)
-					where ch.ParentID == p.ParentID
-					select ch);
+			using var db = GetDataConnection(context);
+			AreEqual(
+				from ch in Child
+				from p in
+					from p in Parent
+					where p.ParentID == ch.ChildID / 10
+					select p
+				where ch.ParentID == p.ParentID
+				select ch
+				,
+				from ch in db.Child
+				from p in db.GetParent10(ch)
+				where ch.ParentID == p.ParentID
+				select ch);
 		}
 
 		[ExpressionMethod("GetBoolExpression1")]
@@ -324,15 +320,13 @@ namespace Tests.Linq
 		[Test]
 		public void TestGenerics1()
 		{
-			using (var db = new TestDataConnection())
-			{
-				var q =
+			using var db = new TestDataConnection();
+			var q =
 					from ch in db.Child
 					where GetBool1(ch.Parent)
 					select ch;
 
-				var _ = q.ToList();
-			}
+			var _ = q.ToList();
 		}
 
 		[ExpressionMethod("GetBoolExpression2_{0}")]
@@ -349,15 +343,13 @@ namespace Tests.Linq
 		[Test]
 		public void TestGenerics2()
 		{
-			using (var db = new TestDataConnection())
-			{
-				var q =
+			using var db = new TestDataConnection();
+			var q =
 					from ch in db.Child
 					where GetBool2(ch.Parent)
 					select ch;
 
-				var _ = q.ToList();
-			}
+			var _ = q.ToList();
 		}
 
 		sealed class TestClass<T>
@@ -377,15 +369,13 @@ namespace Tests.Linq
 		[Test]
 		public void TestGenerics3()
 		{
-			using (var db = new TestDataConnection())
-			{
-				var q =
+			using var db = new TestDataConnection();
+			var q =
 					from ch in db.Child
 					where TestClass<int>.GetBool3(ch.Parent)
 					select ch;
 
-				q.ToList();
-			}
+			q.ToList();
 		}
 
 		[ExpressionMethod(nameof(AssociationExpression))]
@@ -403,54 +393,50 @@ namespace Tests.Linq
 		[ThrowsRequiresCorrelatedSubquery]
 		public void AssociationMethodExpression([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in Parent
-					select p.Children.SelectMany(gc => gc.GrandChildren).Count()
-					,
-					from p in db.Parent
-					select GrandChildren(p).Count());
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Parent
+				select p.Children.SelectMany(gc => gc.GrandChildren).Count()
+				,
+				from p in db.Parent
+				select GrandChildren(p).Count());
 		}
 
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public async Task AssociationMethodExpressionAsync([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var _ = await db.Parent.ToListAsync();
+			using var db = GetDataContext(context);
+			var _ = await db.Parent.ToListAsync();
 
-				AreEqual(
-					from p in Parent
-					select p.Children.SelectMany(gc => gc.GrandChildren).Count()
-					,
-					await (
-						from p in db.Parent
-						select GrandChildren(p).Count()
-					).ToListAsync());
-			}
+			AreEqual(
+				from p in Parent
+				select p.Children.SelectMany(gc => gc.GrandChildren).Count()
+				,
+				await (
+					from p in db.Parent
+					select GrandChildren(p).Count()
+				).ToListAsync());
 		}
 
 		[Test]
 		public void ParameterlessExpression()
 		{
-			using (var db = new TestDataConnection())
-			{
-				var parameter = Expression.Parameter(typeof(Parent));
-				var selector  = Expression.Lambda(parameter, parameter);
-				var table     = db.Parent;
-				var exp       = Expression.Call(
+			using var db = new TestDataConnection();
+			var parameter = Expression.Parameter(typeof(Parent));
+			var selector  = Expression.Lambda(parameter, parameter);
+			var table     = db.Parent;
+			var exp       = Expression.Call(
 					typeof(Queryable),
 					"Select",
 					new [] { typeof(Parent), typeof(Parent) },
 					table.Expression,
 					selector);
 
-				var res = table.Provider.CreateQuery<Parent>(exp);
+			var res = table.Provider.CreateQuery<Parent>(exp);
 
-				foreach (var parent in res)
-				{
-				}
+			foreach (var parent in res)
+			{
 			}
 		}
 
@@ -479,46 +465,38 @@ namespace Tests.Linq
 		[Test]
 		public void PredicateExpressionTest1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var _ = MyWhere(db.Parent, p => p.ParentID == 1).ToList();
-			}
+			using var db = GetDataContext(context);
+			var _ = MyWhere(db.Parent, p => p.ParentID == 1).ToList();
 		}
 
 		[Test]
 		public void PredicateExpressionTest2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var _ = (
+			using var db = GetDataContext(context);
+			var _ = (
 					from c in db.Child
 					from p in MyWhere(db.Parent, p => p.ParentID == c.ParentID)
 					select p
 				).ToList();
-			}
 		}
 
 		[Test]
 		public void LeftJoinTest1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var _ = db.Child.LeftJoin(db.Parent, c => c.ParentID, p => p.ParentID).ToList();
-			}
+			using var db = GetDataContext(context);
+			var _ = db.Child.LeftJoin(db.Parent, c => c.ParentID, p => p.ParentID).ToList();
 		}
 
 		[YdbMemberNotFound]
 		[Test]
 		public void LeftJoinTest2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var _ = (
+			using var db = GetDataContext(context);
+			var _ = (
 					from g in db.GrandChild
 					where db.Child.LeftJoin(db.Parent, c => c.ParentID, p => p.ParentID).Any(t => t.Outer.ChildID == g.ChildID)
 					select g
 				).ToList();
-			}
 		}
 
 		[Test]
@@ -526,12 +504,10 @@ namespace Tests.Linq
 		{
 			Expressions.MapMember((string s) => s.ToLowerInvariant(), s => s.ToLower());
 
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					   Doctor.Where(p => p.Taxonomy.ToLowerInvariant() == "psychiatry").Select(p => p.Taxonomy.ToLower()),
-					db.Doctor.Where(p => p.Taxonomy.ToLowerInvariant() == "psychiatry").Select(p => p.Taxonomy.ToLower()));
-			}
+			using var db = GetDataContext(context);
+			AreEqual(
+				   Doctor.Where(p => p.Taxonomy.ToLowerInvariant() == "psychiatry").Select(p => p.Taxonomy.ToLower()),
+				db.Doctor.Where(p => p.Taxonomy.ToLowerInvariant() == "psychiatry").Select(p => p.Taxonomy.ToLower()));
 		}
 
 		/*
@@ -552,23 +528,19 @@ namespace Tests.Linq
 		[Test]
 		public void AssociationTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					   Parent.SelectMany(p => p.Children.SelectMany(c => c.GrandChildren)),
-					db.Parent.SelectMany(p => p.GrandChildren2));
-			}
+			using var db = GetDataContext(context);
+			AreEqual(
+				   Parent.SelectMany(p => p.Children.SelectMany(c => c.GrandChildren)),
+				db.Parent.SelectMany(p => p.GrandChildren2));
 		}
 
 		[Test]
 		public void AssociationTest2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					   Parent.SelectMany(p => p.Children.Where(c => c.ChildID == 22).SelectMany(c => c.GrandChildren)),
-					db.Parent.SelectMany(p => p.GrandChildrenByID(22)));
-			}
+			using var db = GetDataContext(context);
+			AreEqual(
+				   Parent.SelectMany(p => p.Children.Where(c => c.ChildID == 22).SelectMany(c => c.GrandChildren)),
+				db.Parent.SelectMany(p => p.GrandChildrenByID(22)));
 		}
 
 		[ExpressionMethod(nameof(WrapExpression))]
@@ -585,217 +557,177 @@ namespace Tests.Linq
 		[Test(Description = "InvalidOperationException : Code supposed to be unreachable")]
 		public void ExpressionCompilerCrash([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.Person.Where(p => Wrap<IList<int>>(new int[] { 1, 2, 3 }).Contains(p.ID)).ToList();
-			}
+			using var db = GetDataContext(context);
+			db.Person.Where(p => Wrap<IList<int>>(new int[] { 1, 2, 3 }).Contains(p.ID)).ToList();
 		}
 
 		[Test]
 		public void ExpressionCompilerNoCrash([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.Person.Where(p => Wrap<int[]>(new int[] { 1, 2, 3 }).Contains(p.ID)).ToList();
-			}
+			using var db = GetDataContext(context);
+			db.Person.Where(p => Wrap<int[]>(new int[] { 1, 2, 3 }).Contains(p.ID)).ToList();
 		}
 
 		[Test]
 		public void CompareWithNullCheck1([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				// NULL == NULL
-				Assert.That(db.Parent
-					.Any(p => p.ParentID == 2 && p.Value1 == Noop(FirstIfNullOrSecondAsNumber(null, "-1"))), Is.True);
-			}
+			using var db = GetDataContext(context);
+			// NULL == NULL
+			Assert.That(db.Parent
+				.Any(p => p.ParentID == 2 && p.Value1 == Noop(FirstIfNullOrSecondAsNumber(null, "-1"))), Is.True);
 		}
 
 		[Test]
 		public void CompareWithNullCheck2([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				// NULL == NULL
-				Assert.That(db.Parent
-					.Any(p => p.ParentID == 2 && Noop(FirstIfNullOrSecondAsNumber(null, "-1")) == p.Value1), Is.True);
-			}
+			using var db = GetDataContext(context);
+			// NULL == NULL
+			Assert.That(db.Parent
+				.Any(p => p.ParentID == 2 && Noop(FirstIfNullOrSecondAsNumber(null, "-1")) == p.Value1), Is.True);
 		}
 
 		[Test]
 		public void CompareWithNullCheck3([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				// 3 == 3
-				Assert.That(db.Parent
-					.Any(p => p.ParentID == 3 && p.Value1 == Noop(FirstIfNullOrSecondAsNumber("", "3"))), Is.True);
-			}
+			using var db = GetDataContext(context);
+			// 3 == 3
+			Assert.That(db.Parent
+				.Any(p => p.ParentID == 3 && p.Value1 == Noop(FirstIfNullOrSecondAsNumber("", "3"))), Is.True);
 		}
 
 		[Test]
 		public void CompareWithNullCheck4([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				// 3 == 3
-				Assert.That(db.Parent
-					.Any(p => p.ParentID == 3 && Noop(FirstIfNullOrSecondAsNumber("", "3")) == p.Value1), Is.True);
-			}
+			using var db = GetDataContext(context);
+			// 3 == 3
+			Assert.That(db.Parent
+				.Any(p => p.ParentID == 3 && Noop(FirstIfNullOrSecondAsNumber("", "3")) == p.Value1), Is.True);
 		}
 
 		[Test]
 		public void CompareWithNullCheck5([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				// 3 != NULL
-				Assert.That(db.Parent
-					.Any(p => p.ParentID == 3 && p.Value1 != Noop(FirstIfNullOrSecondAsNumber(null, "-1"))), Is.True);
-			}
+			using var db = GetDataContext(context);
+			// 3 != NULL
+			Assert.That(db.Parent
+				.Any(p => p.ParentID == 3 && p.Value1 != Noop(FirstIfNullOrSecondAsNumber(null, "-1"))), Is.True);
 		}
 
 		[Test]
 		public void CompareWithNullCheck6([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				// NULL != 3
-				Assert.That(db.Parent
-					.Any(p => p.ParentID == 3 && Noop(FirstIfNullOrSecondAsNumber(null, "-1")) != p.Value1), Is.True);
-			}
+			using var db = GetDataContext(context);
+			// NULL != 3
+			Assert.That(db.Parent
+				.Any(p => p.ParentID == 3 && Noop(FirstIfNullOrSecondAsNumber(null, "-1")) != p.Value1), Is.True);
 		}
 
 		[Test]
 		public void CompareWithNullCheck7([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				// NULL != 4
-				Assert.That(db.Parent
-					.Any(p => p.ParentID == 2 && p.Value1 != Noop(FirstIfNullOrSecondAsNumber("4", "4"))), Is.True);
-			}
+			using var db = GetDataContext(context);
+			// NULL != 4
+			Assert.That(db.Parent
+				.Any(p => p.ParentID == 2 && p.Value1 != Noop(FirstIfNullOrSecondAsNumber("4", "4"))), Is.True);
 		}
 
 		[Test]
 		public void CompareWithNullCheck8([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				// 4 != NULL
-				Assert.That(db.Parent
-					.Any(p => p.ParentID == 2 && Noop(FirstIfNullOrSecondAsNumber("4", "4")) != p.Value1), Is.True);
-			}
+			using var db = GetDataContext(context);
+			// 4 != NULL
+			Assert.That(db.Parent
+				.Any(p => p.ParentID == 2 && Noop(FirstIfNullOrSecondAsNumber("4", "4")) != p.Value1), Is.True);
 		}
 
 		[Test]
 		public void CompareWithNullCheck9([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				// 5 != 6
-				Assert.That(db.Parent
-					.Any(p => p.ParentID == 5 && p.Value1 != Noop(FirstIfNullOrSecondAsNumber("not5", "6"))), Is.True);
-			}
+			using var db = GetDataContext(context);
+			// 5 != 6
+			Assert.That(db.Parent
+				.Any(p => p.ParentID == 5 && p.Value1 != Noop(FirstIfNullOrSecondAsNumber("not5", "6"))), Is.True);
 		}
 
 		[Test]
 		public void CompareWithNullCheck10([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				// 6 != 5
-				Assert.That(db.Parent
-					.Any(p => p.ParentID == 5 && Noop(FirstIfNullOrSecondAsNumber("not5", "6")) != p.Value1), Is.True);
-			}
+			using var db = GetDataContext(context);
+			// 6 != 5
+			Assert.That(db.Parent
+				.Any(p => p.ParentID == 5 && Noop(FirstIfNullOrSecondAsNumber("not5", "6")) != p.Value1), Is.True);
 		}
 
 		[Test]
 		public void CompareWithNullCheck21([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				// NULL == NULL
-				Assert.That(db.GetTable<AllTypes>()
-					.Any(p => p.ID == 1 && p.intDataType == Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "-1"))), Is.True);
-			}
+			using var db = GetDataContext(context);
+			// NULL == NULL
+			Assert.That(db.GetTable<AllTypes>()
+				.Any(p => p.ID == 1 && p.intDataType == Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "-1"))), Is.True);
 		}
 
 		[Test]
 		public void CompareWithNullCheck22([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				// NULL == NULL
-				Assert.That(db.GetTable<AllTypes>()
-					.Any(p => p.ID == 1 && Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "-1")) == p.intDataType), Is.True);
-			}
+			using var db = GetDataContext(context);
+			// NULL == NULL
+			Assert.That(db.GetTable<AllTypes>()
+				.Any(p => p.ID == 1 && Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "-1")) == p.intDataType), Is.True);
 		}
 
 		[Test]
 		public void CompareWithNullCheck23([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				// 7777777 == 7777777
-				Assert.That(db.GetTable<AllTypes>()
-					.Any(p => p.ID == 2 && p.intDataType == Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "7777777"))), Is.True);
-			}
+			using var db = GetDataContext(context);
+			// 7777777 == 7777777
+			Assert.That(db.GetTable<AllTypes>()
+				.Any(p => p.ID == 2 && p.intDataType == Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "7777777"))), Is.True);
 		}
 
 		[Test]
 		public void CompareWithNullCheck24([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				// 7777777 == 7777777
-				Assert.That(db.GetTable<AllTypes>()
-					.Any(p => p.ID == 2 && Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "7777777")) == p.intDataType), Is.True);
-			}
+			using var db = GetDataContext(context);
+			// 7777777 == 7777777
+			Assert.That(db.GetTable<AllTypes>()
+				.Any(p => p.ID == 2 && Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "7777777")) == p.intDataType), Is.True);
 		}
 
 		[Test]
 		public void CompareWithNullCheck25([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				// 7777777 != NULL
-				Assert.That(db.GetTable<AllTypes>()
-					.Any(p => p.ID == 2 && p.intDataType != Noop(FirstIfNullOrSecondAsNumber(p.char20DataType, "1"))), Is.True);
-			}
+			using var db = GetDataContext(context);
+			// 7777777 != NULL
+			Assert.That(db.GetTable<AllTypes>()
+				.Any(p => p.ID == 2 && p.intDataType != Noop(FirstIfNullOrSecondAsNumber(p.char20DataType, "1"))), Is.True);
 		}
 
 		[Test]
 		public void CompareWithNullCheck26([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				// NULL != 7777777
-				Assert.That(db.GetTable<AllTypes>()
-					.Any(p => p.ID == 2 && Noop(FirstIfNullOrSecondAsNumber(p.char20DataType, "1")) != p.intDataType), Is.True);
-			}
+			using var db = GetDataContext(context);
+			// NULL != 7777777
+			Assert.That(db.GetTable<AllTypes>()
+				.Any(p => p.ID == 2 && Noop(FirstIfNullOrSecondAsNumber(p.char20DataType, "1")) != p.intDataType), Is.True);
 		}
 
 		[Test]
 		public void CompareWithNullCheck27([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				// 7777777 != 1
-				Assert.That(db.GetTable<AllTypes>()
-					.Any(p => p.ID == 2 && p.intDataType != Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "1"))), Is.True);
-			}
+			using var db = GetDataContext(context);
+			// 7777777 != 1
+			Assert.That(db.GetTable<AllTypes>()
+				.Any(p => p.ID == 2 && p.intDataType != Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "1"))), Is.True);
 		}
 
 		[Test]
 		public void CompareWithNullCheck28([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				// 1 != 7777777
-				Assert.That(db.GetTable<AllTypes>()
-					.Any(p => p.ID == 2 && Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "1")) != p.intDataType), Is.True);
-			}
+			using var db = GetDataContext(context);
+			// 1 != 7777777
+			Assert.That(db.GetTable<AllTypes>()
+				.Any(p => p.ID == 2 && Noop(FirstIfNullOrSecondAsNumber(p.varcharDataType, "1")) != p.intDataType), Is.True);
 		}
 
 		[LinqToDB.Mapping.Table("AllTypes")]
@@ -834,46 +766,36 @@ namespace Tests.Linq
 		[Test]
 		public void NullableNullValueTest1([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.Person.Where(p => p.ID != GetTernaryExpressionValue1(null)).ToList();
-			}
+			using var db = GetDataContext(context);
+			db.Person.Where(p => p.ID != GetTernaryExpressionValue1(null)).ToList();
 		}
 
 		[Test]
 		public void NullableNullValueTest2([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.Person.Where(p => p.ID != GetTernaryExpressionValue2(null)).ToList();
-			}
+			using var db = GetDataContext(context);
+			db.Person.Where(p => p.ID != GetTernaryExpressionValue2(null)).ToList();
 		}
 
 		[Test]
 		public void NullableNullValueTest3([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.Person.Where(p => p.ID != GetTernaryExpressionValue3(null)).ToList();
-			}
+			using var db = GetDataContext(context);
+			db.Person.Where(p => p.ID != GetTernaryExpressionValue3(null)).ToList();
 		}
 
 		[Test]
 		public void NullableNullValueTest4([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.Person.Where(p => p.ID != GetTernaryExpressionValue4(null)).ToList();
-			}
+			using var db = GetDataContext(context);
+			db.Person.Where(p => p.ID != GetTernaryExpressionValue4(null)).ToList();
 		}
 
 		[Test]
 		public void NullableNullValueTest5([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.Person.Where(p => p.ID != GetTernaryExpressionValue5(null)).ToList();
-			}
+			using var db = GetDataContext(context);
+			db.Person.Where(p => p.ID != GetTernaryExpressionValue5(null)).ToList();
 		}
 
 		[ExpressionMethod(nameof(GetTernaryExpressionValue1Expr))]
@@ -967,11 +889,9 @@ namespace Tests.Linq
 		[Test]
 		public void Issue2431Test([IncludeDataSources(true, TestProvName.AllPostgreSQL93Plus)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(Issue2431Table.Data))
-			{
-				db.GetTable<Issue2431Table>().Where(r => JsonExtractPathText(r.Json, json => json!.Text) == "test" ? true : false).ToList();
-			}
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(Issue2431Table.Data);
+			db.GetTable<Issue2431Table>().Where(r => JsonExtractPathText(r.Json, json => json!.Text) == "test" ? true : false).ToList();
 		}
 
 		[ExpressionMethod(nameof(JsonExtractPathExpression))]
@@ -1010,11 +930,9 @@ namespace Tests.Linq
 		[Test]
 		public void Issue2434Test([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var tb = db.CreateLocalTable<Issue2434Table>())
-			{
-				tb.OrderBy(x => x.FullName).ToArray();
-			}
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue2434Table>();
+			tb.OrderBy(x => x.FullName).ToArray();
 		}
 		#endregion
 
@@ -1064,37 +982,29 @@ namespace Tests.Linq
 		[Test]
 		public void TestNullCheckInExpressionLeft([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.Person.Any(p => p.ID == Function2(Function1Left(null)));
-			}
+			using var db = GetDataContext(context);
+			db.Person.Any(p => p.ID == Function2(Function1Left(null)));
 		}
 
 		[Test]
 		public void TestNullCheckInExpressionRight([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.Person.Any(p => p.ID == Function2(Function1Right(null)));
-			}
+			using var db = GetDataContext(context);
+			db.Person.Any(p => p.ID == Function2(Function1Right(null)));
 		}
 
 		[Test]
 		public void TestNullCheckInExpressionUsingFieldLeft([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.Parent.Where(p => p.Value1 == null).Any(p => p.ParentID == Function2(Function1Left(p.Value1)));
-			}
+			using var db = GetDataContext(context);
+			db.Parent.Where(p => p.Value1 == null).Any(p => p.ParentID == Function2(Function1Left(p.Value1)));
 		}
 
 		[Test]
 		public void TestNullCheckInExpressionUsingFieldRight([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.Parent.Where(p => p.Value1 == null).Any(p => p.ParentID == Function2(Function1Right(p.Value1)));
-			}
+			using var db = GetDataContext(context);
+			db.Parent.Where(p => p.Value1 == null).Any(p => p.ParentID == Function2(Function1Right(p.Value1)));
 		}
 
 		[Sql.Expression("{0}", ServerSideOnly = true, IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
@@ -1126,41 +1036,37 @@ namespace Tests.Linq
 		[Test(Description = "Tests regression introduced in 3.5.2")]
 		public void ComparisonTest1([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context, [Values(1, 2)] int iteration)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var left  = GetQuery(db, 0);
-				var right = GetQuery(db, 2);
+			using var db = GetDataContext(context);
+			var left  = GetQuery(db, 0);
+			var right = GetQuery(db, 2);
 
-				var cacheMiss = db.Patient.GetCacheMissCount();
+			var cacheMiss = db.Patient.GetCacheMissCount();
 
-				Assert.That(
-					db.Person.Where(_ =>
-					left.Where(rec => !right.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Select(_ => Sql.Ext.Count(_.PersonID, Sql.AggregateModifier.None).ToValue()).Single() == 0
-					&&
-					right.Where(rec => !left.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Select(_ => Sql.Ext.Count(_.PersonID, Sql.AggregateModifier.None).ToValue()).Single() == 0)
-					.Any(), Is.False);
+			Assert.That(
+				db.Person.Where(_ =>
+				left.Where(rec => !right.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Select(_ => Sql.Ext.Count(_.PersonID, Sql.AggregateModifier.None).ToValue()).Single() == 0
+				&&
+				right.Where(rec => !left.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Select(_ => Sql.Ext.Count(_.PersonID, Sql.AggregateModifier.None).ToValue()).Single() == 0)
+				.Any(), Is.False);
 
-				if (iteration > 1)
-					db.Patient.GetCacheMissCount().ShouldBe(cacheMiss);
-			}
+			if (iteration > 1)
+				db.Patient.GetCacheMissCount().ShouldBe(cacheMiss);
 		}
 
 		[YdbCteAsSource]
 		[Test(Description = "Tests regression introduced in 3.5.2")]
 		public void ComparisonTest2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var left  = GetQuery(db, 0);
-				var right = GetQuery(db, 2);
+			using var db = GetDataContext(context);
+			var left  = GetQuery(db, 0);
+			var right = GetQuery(db, 2);
 
-				Assert.That(
-					db.Person.Where(_ =>
-					left.Where(rec => !right.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Count() == 0
-					&&
-					right.Where(rec => !left.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Count() == 0)
-					.Any(), Is.False);
-			}
+			Assert.That(
+				db.Person.Where(_ =>
+				left.Where(rec => !right.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Count() == 0
+				&&
+				right.Where(rec => !left.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Count() == 0)
+				.Any(), Is.False);
 		}
 
 		private static IQueryable<Patient> GetQuery(ITestDataContext db, int? personId)

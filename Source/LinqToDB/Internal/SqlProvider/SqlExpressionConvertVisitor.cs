@@ -22,8 +22,8 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected bool IsInsidePredicate { get; private set; }
 
-		protected OptimizationContext   OptimizationContext = default!;
-		protected NullabilityContext    NullabilityContext  = default!;
+		protected OptimizationContext OptimizationContext = default!;
+		protected NullabilityContext  NullabilityContext  = default!;
 		protected ISqlExpressionFactory Factory => OptimizationContext.Factory;
 
 		protected EvaluationContext EvaluationContext => OptimizationContext.EvaluationContext;
@@ -105,18 +105,18 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			var result = (SqlOutputClause)base.VisitSqlOutputClause(element);
 
-			if (result.OutputColumns != null)
+			if (result.OutputColumns == null)
+				return result;
+
+			var newElements = VisitElements(result.OutputColumns, GetVisitMode(element), e => WrapBooleanExpression(e, includeFields : false));
+			if (!ReferenceEquals(newElements, result.OutputColumns))
 			{
-				var newElements = VisitElements(result.OutputColumns, GetVisitMode(element), e => WrapBooleanExpression(e, includeFields : false));
-				if (!ReferenceEquals(newElements, result.OutputColumns))
+				return new SqlOutputClause()
 				{
-					return new SqlOutputClause()
-					{
-						OutputTable = result.OutputTable,
-						OutputItems = result.OutputItems,
-						OutputColumns = newElements
-					};
-				}
+					OutputTable = result.OutputTable,
+					OutputItems = result.OutputItems,
+					OutputColumns = newElements,
+				};
 			}
 
 			return result;
@@ -332,12 +332,12 @@ namespace LinqToDB.Internal.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
-			var caseExpression = new SqlCaseExpression(new DbDataType(typeof(int)),
-				new SqlCaseExpression.CaseItem[]
-				{
+			var caseExpression = new SqlCaseExpression(
+				new DbDataType(typeof(int)),
+				[
 					new(new SqlSearchCondition().AddGreater(element.Expression1, element.Expression2, DataOptions.LinqOptions.CompareNulls), new SqlValue(1)),
-					new(new SqlSearchCondition().AddEqual(element.Expression1, element.Expression2, DataOptions.LinqOptions.CompareNulls), new SqlValue(0))
-				},
+					new(new SqlSearchCondition().AddEqual(element.Expression1, element.Expression2, DataOptions.LinqOptions.CompareNulls), new SqlValue(0)),
+				],
 				new SqlValue(-1));
 
 			return Visit(Optimize(caseExpression));
@@ -378,14 +378,14 @@ namespace LinqToDB.Internal.SqlProvider
 			searchCondition
 				.AddAnd(sc => sc
 					.Add(new SqlPredicate.IsNull(predicate.Expr1, false))
-					.Add(new SqlPredicate.IsNull(predicate.Expr2, true)
-					))
+					.Add(new SqlPredicate.IsNull(predicate.Expr2, true))
+				)
 				.AddAnd(sc => sc
 					.Add(new SqlPredicate.IsNull(predicate.Expr1, true))
-					.Add(new SqlPredicate.IsNull(predicate.Expr2, false)
-					)
+					.Add(new SqlPredicate.IsNull(predicate.Expr2, false))
 				)
-				.Add(new SqlPredicate.ExprExpr(predicate.Expr1, SqlPredicate.Operator.NotEqual, predicate.Expr2, null)
+				.Add(
+					new SqlPredicate.ExprExpr(predicate.Expr1, SqlPredicate.Operator.NotEqual, predicate.Expr2, null)
 				);
 
 			return searchCondition.MakeNot(predicate.IsNot);
@@ -717,14 +717,14 @@ namespace LinqToDB.Internal.SqlProvider
 		public virtual bool LikePatternParameterSupport => true;
 		public virtual bool LikeValueParameterSupport => true;
 		/// <summary>
-		/// Should be <c>true</c> for provider with <c>LIKE ... ESCAPE</c> modifier support.
-		/// Default: <c>true</c>.
+		/// Should be <see langword="true"/> for provider with <c>LIKE ... ESCAPE</c> modifier support.
+		/// Default: <see langword="true"/>.
 		/// </summary>
 		public virtual bool LikeIsEscapeSupported => true;
 
 		public virtual ISqlExpression CreateLikeEscapeCharacter() => new SqlValue(LikeEscapeCharacter);
 
-		protected static string[] StandardLikeCharactersToEscape = {"%", "_", "?", "*", "#", "[", "]"};
+		protected static readonly string[] StandardLikeCharactersToEscape = {"%", "_", "?", "*", "#", "[", "]"};
 
 		/// <summary>
 		/// Characters with special meaning in LIKE predicate (defined by <see cref="LikeCharactersToEscape"/>) that should be escaped to be used as matched character.
@@ -736,12 +736,12 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			var newStr = str;
 
-			newStr = newStr.Replace(escape, escape + escape);
+			newStr = newStr.Replace(escape, escape + escape, StringComparison.Ordinal);
 
 			var toEscape = LikeCharactersToEscape;
 			foreach (var s in toEscape)
 			{
-				newStr = newStr.Replace(s, escape + s);
+				newStr = newStr.Replace(s, escape + s, StringComparison.Ordinal);
 			}
 
 			return newStr;
@@ -754,7 +754,7 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		/// <summary>
-		/// Implements LIKE pattern escaping logic for provider without ESCAPE clause support (<see cref="LikeIsEscapeSupported"/> is <c>false</c>).
+		/// Implements LIKE pattern escaping logic for provider without ESCAPE clause support (<see cref="LikeIsEscapeSupported"/> is <see langword="false"/>).
 		/// Default logic prefix characters from <see cref="LikeCharactersToEscape"/> with <see cref="LikeEscapeCharacter"/>.
 		/// </summary>
 		/// <param name="str">Raw pattern value.</param>
@@ -762,7 +762,7 @@ namespace LinqToDB.Internal.SqlProvider
 		protected virtual string EscapeLikePattern(string str)
 		{
 			foreach (var s in LikeCharactersToEscape)
-				str = str.Replace(s, LikeEscapeCharacter + s);
+				str = str.Replace(s, LikeEscapeCharacter + s, StringComparison.Ordinal);
 
 			return str;
 		}
@@ -801,7 +801,7 @@ namespace LinqToDB.Internal.SqlProvider
 					SqlPredicate.SearchString.SearchKind.StartsWith => patternValue + LikeWildcardCharacter,
 					SqlPredicate.SearchString.SearchKind.EndsWith => LikeWildcardCharacter + patternValue,
 					SqlPredicate.SearchString.SearchKind.Contains => LikeWildcardCharacter + patternValue + LikeWildcardCharacter,
-					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}")
+					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}"),
 				};
 
 				var patternExpr = LikePatternParameterSupport
@@ -819,7 +819,7 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 
 				return new SqlPredicate.Like(valueExpr, predicate.IsNot, patternExpr,
-					LikeIsEscapeSupported && (patternValue != patternRawValue) ? CreateLikeEscapeCharacter() : null);
+					LikeIsEscapeSupported && (!string.Equals(patternValue, patternRawValue, StringComparison.Ordinal)) ? CreateLikeEscapeCharacter() : null);
 			}
 			else
 			{
@@ -834,7 +834,7 @@ namespace LinqToDB.Internal.SqlProvider
 					SqlPredicate.SearchString.SearchKind.StartsWith => new SqlBinaryExpression(typeof(string), patternExpr, "+", anyCharacterExpr, Precedence.Additive),
 					SqlPredicate.SearchString.SearchKind.EndsWith => new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive),
 					SqlPredicate.SearchString.SearchKind.Contains => new SqlBinaryExpression(typeof(string), new SqlBinaryExpression(typeof(string), anyCharacterExpr, "+", patternExpr, Precedence.Additive), "+", anyCharacterExpr, Precedence.Additive),
-					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}")
+					_ => throw new InvalidOperationException($"Unexpected predicate kind: {predicate.Kind}"),
 				};
 
 				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, patternExpr, LikeIsEscapeSupported ? escape : null);
@@ -1419,7 +1419,7 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						var len = element.Expr2.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(MappingSchema.GetDataType(element.Expr2.SystemType).Type.DataType);
 
-						if (len == null || len <= 0)
+						if (len is null or <= 0)
 							len = 100;
 
 						return new SqlBinaryExpression(
@@ -1434,7 +1434,7 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						var len = element.Expr1.SystemType == null ? 100 : SqlDataType.GetMaxDisplaySize(MappingSchema.GetDataType(element.Expr1.SystemType).Type.DataType);
 
-						if (len == null || len <= 0)
+						if (len is null or <= 0)
 							len = 100;
 
 						return new SqlBinaryExpression(
@@ -1445,7 +1445,7 @@ namespace LinqToDB.Internal.SqlProvider
 							element.Precedence);
 					}
 
-					if (element.Operation == "+" && element.Expr2 is SqlUnaryExpression { Operation: SqlUnaryOperation.Negation, Expr: var expr2 })
+					if (string.Equals(element.Operation, "+", StringComparison.Ordinal) && element.Expr2 is SqlUnaryExpression { Operation: SqlUnaryOperation.Negation, Expr: var expr2 })
 					{
 						return new SqlBinaryExpression(
 							element.Type,
@@ -1522,8 +1522,8 @@ namespace LinqToDB.Internal.SqlProvider
 					Expr: SqlUnaryExpression
 					{
 						Operation: SqlUnaryOperation.Negation,
-						Expr: var expr
-					}
+						Expr: var expr,
+					},
 				})
 			{
 				return expr;
@@ -1613,12 +1613,14 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						var toType = QueryHelper.GetDbDataType(expr, MappingSchema);
 
-						expr = new SqlCaseExpression(toType,
+						expr = new SqlCaseExpression(
+							toType,
 							new SqlCaseExpression.CaseItem[]
 							{
 								new(predicate, trueValue),
-								new(new SqlPredicate.Not(predicate), falseValue)
-							}, new SqlValue(toType, null));
+								new(new SqlPredicate.Not(predicate), falseValue),
+							},
+							new SqlValue(toType, null));
 					}
 					else if (!withNull || !SqlProviderFlags.SupportsBooleanType || forceConvert)
 					{
@@ -1687,7 +1689,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (toDataType.Length > 0)
 			{
 				var maxLength = toDataType.SystemType == typeof(string) ? GetMaxDisplaySize(fromDbType) : GetMaxLength(fromDbType);
-				var newLength = maxLength != null && maxLength >= 0 ? Math.Min(toDataType.Length ?? 0, maxLength.Value) : fromDbType.Length;
+				var newLength = maxLength is not null and >= 0 ? Math.Min(toDataType.Length ?? 0, maxLength.Value) : fromDbType.Length;
 
 				var newDataType = toDataType.WithLength(newLength);
 				if (!newDataType.EqualsDbOnly(toDataType))
@@ -1822,8 +1824,8 @@ namespace LinqToDB.Internal.SqlProvider
 					// We use `a >= null` instead, which is equivalent (always evaluates to `unknown`) but is never reduced by ExprExpr.
 					// Reducing to `false` is an inaccuracy that causes problems when composed in more complicated ways,
 					// e.g. the NOT IN SqlRow tests fail.
-					SqlPredicate.Operator nullSafeOp = a.TryEvaluateExpression(context, out var val) && val == null ||
-													   b.TryEvaluateExpression(context, out     val) && val == null
+					SqlPredicate.Operator nullSafeOp = (a.TryEvaluateExpression(context, out var val) && val == null) ||
+													   (b.TryEvaluateExpression(context, out     val) && val == null)
 						? SqlPredicate.Operator.GreaterOrEqual
 						: op;
 					return new SqlPredicate.ExprExpr(a, nullSafeOp, b, unknownAsValue: null);
@@ -2047,22 +2049,22 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected static bool IsDateDataType(DbDataType dataType, string typeName)
 		{
-			return dataType.DataType == DataType.Date || dataType.DbType == typeName;
+			return dataType.DataType == DataType.Date || string.Equals(dataType.DbType, typeName, StringComparison.Ordinal);
 		}
 
 		protected static bool IsSmallDateTimeType(DbDataType dataType, string typeName)
 		{
-			return dataType.DataType == DataType.SmallDateTime || dataType.DbType == typeName;
+			return dataType.DataType == DataType.SmallDateTime || string.Equals(dataType.DbType, typeName, StringComparison.Ordinal);
 		}
 
 		protected static bool IsDateTime2Type(DbDataType dataType, string typeName)
 		{
-			return dataType.DataType == DataType.DateTime2 || dataType.DbType == typeName;
+			return dataType.DataType == DataType.DateTime2 || string.Equals(dataType.DbType, typeName, StringComparison.Ordinal);
 		}
 
 		protected static bool IsDateTimeType(DbDataType dataType, string typeName)
 		{
-			return dataType.DataType == DataType.DateTime2 || dataType.DbType == typeName;
+			return dataType.DataType == DataType.DateTime2 || string.Equals(dataType.DbType, typeName, StringComparison.Ordinal);
 		}
 
 		protected static bool IsDateDataOffsetType(DbDataType dataType)
@@ -2072,7 +2074,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		protected static bool IsTimeDataType(DbDataType dataType)
 		{
-			return dataType.DataType == DataType.Time || dataType.DbType == "Time";
+			return dataType.DataType == DataType.Time || string.Equals(dataType.DbType, "Time", StringComparison.Ordinal);
 		}
 
 		protected SqlCastExpression FloorBeforeConvert(SqlCastExpression cast)

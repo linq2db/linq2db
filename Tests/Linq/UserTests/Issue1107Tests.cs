@@ -22,12 +22,10 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([DataSources(false)] string configuration)
 		{
-			using (var db = GetDataContext(configuration))
+			using var db = GetDataContext(configuration);
+			using (db.CreateLocalTable<Issue1107TestsClass>())
 			{
-				using (db.CreateLocalTable<Issue1107TestsClass>())
-				{
-					((DataConnection)db).BulkCopy(GetDefaultBulkCopyOptions(configuration), new[] { new Issue1107TestsClass() { TestDate = new DateTime(2018, 1, 1) } });
-				}
+				((DataConnection)db).BulkCopy(GetDefaultBulkCopyOptions(configuration), new[] { new Issue1107TestsClass() { TestDate = new DateTime(2018, 1, 1) } });
 			}
 		}
 	}

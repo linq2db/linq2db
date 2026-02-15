@@ -112,14 +112,14 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			if (precision == null && type.Type.DbType != null)
 			{
 				var dbtype = type.Type.DbType.ToLowerInvariant();
-				if (dbtype.StartsWith("timestamp("))
+				if (dbtype.StartsWith("timestamp(", StringComparison.Ordinal))
 				{
-					if (int.TryParse(dbtype.Substring(10, dbtype.Length - 11), NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var fromDbType))
+					if (int.TryParse(dbtype.AsSpan(10, dbtype.Length - 11), NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var fromDbType))
 						precision = fromDbType;
 				}
 			}
 
-			precision = precision == null || precision < 0 ? 6 : (precision > 7 ? 7 : precision);
+			precision = precision is null or < 0 ? 6 : (precision > 7 ? 7 : precision);
 			return precision switch
 			{
 				0    => TIMESTAMP0_FORMAT,
@@ -199,18 +199,8 @@ namespace LinqToDB.Internal.DataProvider.DB2
 
 		internal static readonly DB2MappingSchema Instance = new ();
 
-		public sealed class DB2zOSMappingSchema : LockedMappingSchema
-		{
-			public DB2zOSMappingSchema() : base(ProviderName.DB2zOS,  DB2ProviderAdapter.Instance.MappingSchema, Instance)
-			{
-			}
-		}
+		public sealed class DB2zOSMappingSchema() : LockedMappingSchema(ProviderName.DB2zOS, DB2ProviderAdapter.Instance.MappingSchema, Instance);
 
-		public sealed class DB2LUWMappingSchema : LockedMappingSchema
-		{
-			public DB2LUWMappingSchema() : base(ProviderName.DB2LUW, DB2ProviderAdapter.Instance.MappingSchema, Instance)
-			{
-			}
-		}
+		public sealed class DB2LUWMappingSchema() : LockedMappingSchema(ProviderName.DB2LUW, DB2ProviderAdapter.Instance.MappingSchema, Instance);
 	}
 }

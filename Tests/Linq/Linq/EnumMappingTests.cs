@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.InteropServices;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -1094,6 +1095,7 @@ namespace Tests.Linq
 			[Column("IntValue")]    public int?       TargetID;
 		}
 
+		[StructLayout(LayoutKind.Auto)]
 		struct ObjectReference
 		{
 			public TestEnum1 TargetType;
@@ -1146,6 +1148,7 @@ namespace Tests.Linq
 			[Column("IntValue")]    public int?       TargetID;
 		}
 
+		[StructLayout(LayoutKind.Auto)]
 		struct ObjectReference2
 		{
 			public TestEnum2 TargetType;
@@ -1239,19 +1242,17 @@ namespace Tests.Linq
 		[Test]
 		public void TestFlagEnum([DataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var result =
+			using var db = GetDataContext(context);
+			var result =
 					from t in db.GetTable<TestTable5>()
 					where (t.IntValue & TestFlag.Value1) != 0
 					select t;
 
-				result.ToArray();
+			result.ToArray();
 
-				var sql = result.ToSqlQuery().Sql;
+			var sql = result.ToSqlQuery().Sql;
 
-				Assert.That(sql, Is.Not.Contains("Convert").And.Not.Contains("Int(").And.Not.Contains("Cast"));
-			}
+			Assert.That(sql, Is.Not.Contains("Convert").And.Not.Contains("Int(").And.Not.Contains("Cast"));
 		}
 
 		[Test]
@@ -1728,24 +1729,22 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/363")]
 		public void EnumMappingWriteUndefinedValue([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using (new Cleaner(db))
 			{
-				using (new Cleaner(db))
+				db.GetTable<UndefinedValueTest>().Insert(() => new UndefinedValueTest
 				{
-					db.GetTable<UndefinedValueTest>().Insert(() => new UndefinedValueTest
-					{
-						Id = RID,
-						TestField = (UndefinedEnum)5
-					});
+					Id = RID,
+					TestField = (UndefinedEnum)5
+				});
 
-					var result = db.GetTable<RawTable>()
+				var result = db.GetTable<RawTable>()
 						.Select(r => new { r.Id, r.TestField })
 						.Where(r => r.Id == RID)
 						.ToList();
 
-					Assert.That(result, Has.Count.EqualTo(1));
-					Assert.That(result[0].TestField, Is.EqualTo(5));
-				}
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.That(result[0].TestField, Is.EqualTo(5));
 			}
 		}
 
@@ -1754,22 +1753,20 @@ namespace Tests.Linq
 		{
 			GetProviderName(context, out var isLinqService);
 
-			using (var db = GetDataContext(context, suppressSequentialAccess: true))
+			using var db = GetDataContext(context, suppressSequentialAccess: true);
+			using (new Cleaner(db))
 			{
-				using (new Cleaner(db))
+				db.GetTable<RawTable>().Insert(() => new RawTable
 				{
-					db.GetTable<RawTable>().Insert(() => new RawTable
-					{
-						Id = RID,
-						TestField = 5
-					});
+					Id = RID,
+					TestField = 5
+				});
 
-					Assert.Throws<LinqToDBConvertException>(() =>
-						db.GetTable<UndefinedValueTest>()
-							.Select(r => new { r.Id, r.TestField })
-							.Where(r => r.Id == RID)
-							.ToList());
-				}
+				Assert.Throws<LinqToDBConvertException>(() =>
+					db.GetTable<UndefinedValueTest>()
+						.Select(r => new { r.Id, r.TestField })
+						.Where(r => r.Id == RID)
+						.ToList());
 			}
 		}
 
@@ -1800,23 +1797,19 @@ namespace Tests.Linq
 						sb.Append('\'').Append(((Issue1622Enum)v).ToString()).Append("_suffix'");
 					});
 
-			using (var db = GetDataContext(context, ms))
-			{
-				using (var table = db.CreateLocalTable<Issue1622Table>())
-				{
-					var item = new Issue1622Table() { Id = 1, SomeText = "Value1_suffix" };
-					db.Insert(item);
+			using var db = GetDataContext(context, ms);
+			using var table = db.CreateLocalTable<Issue1622Table>();
+			var item = new Issue1622Table() { Id = 1, SomeText = "Value1_suffix" };
+			db.Insert(item);
 
-					var res = table.Where(e => SomeComparison(e.SomeText, Issue1622Enum.Value1)).Single();
-					var res2 = table.Where(e => e.Id == 1).Single();
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(item.Id, Is.EqualTo(res.Id));
-						Assert.That(item.SomeText, Is.EqualTo(res.SomeText));
-						Assert.That(item.Id, Is.EqualTo(res2.Id));
-						Assert.That(item.SomeText, Is.EqualTo(res2.SomeText));
-					}
-				}
+			var res = table.Where(e => SomeComparison(e.SomeText, Issue1622Enum.Value1)).Single();
+			var res2 = table.Where(e => e.Id == 1).Single();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(item.Id, Is.EqualTo(res.Id));
+				Assert.That(item.SomeText, Is.EqualTo(res.SomeText));
+				Assert.That(item.Id, Is.EqualTo(res2.Id));
+				Assert.That(item.SomeText, Is.EqualTo(res2.SomeText));
 			}
 		}
 
@@ -1875,360 +1868,312 @@ namespace Tests.Linq
 		[Test]
 		public void TestCardinalityOperators_Less([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property1 < CharEnum.B).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property1 < CharEnum.B).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(1));
-					Assert.That(res.Property1, Is.EqualTo(CharEnum.A));
-				}
+				Assert.That(res.Id, Is.EqualTo(1));
+				Assert.That(res.Property1, Is.EqualTo(CharEnum.A));
 			}
 		}
 
 		[Test]
 		public void TestCardinalityOperators_LessOrEqual([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property1 <= CharEnum.A).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property1 <= CharEnum.A).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(1));
-					Assert.That(res.Property1, Is.EqualTo(CharEnum.A));
-				}
+				Assert.That(res.Id, Is.EqualTo(1));
+				Assert.That(res.Property1, Is.EqualTo(CharEnum.A));
 			}
 		}
 
 		[Test]
 		public void TestCardinalityOperators_Greater([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property1 > CharEnum.B).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property1 > CharEnum.B).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(3));
-					Assert.That(res.Property1, Is.EqualTo(CharEnum.C));
-				}
+				Assert.That(res.Id, Is.EqualTo(3));
+				Assert.That(res.Property1, Is.EqualTo(CharEnum.C));
 			}
 		}
 
 		[Test]
 		public void TestCardinalityOperators_GreaterOrEqual([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property1 >= CharEnum.C).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property1 >= CharEnum.C).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(3));
-					Assert.That(res.Property1, Is.EqualTo(CharEnum.C));
-				}
+				Assert.That(res.Id, Is.EqualTo(3));
+				Assert.That(res.Property1, Is.EqualTo(CharEnum.C));
 			}
 		}
 
 		[Test]
 		public void TestCardinalityOperators_Less_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property2 < CharEnum.B).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property2 < CharEnum.B).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(1));
-					Assert.That(res.Property2, Is.EqualTo(CharEnum.A));
-				}
+				Assert.That(res.Id, Is.EqualTo(1));
+				Assert.That(res.Property2, Is.EqualTo(CharEnum.A));
 			}
 		}
 
 		[Test]
 		public void TestCardinalityOperators_LessOrEqual_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property2 <= CharEnum.A).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property2 <= CharEnum.A).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(1));
-					Assert.That(res.Property2, Is.EqualTo(CharEnum.A));
-				}
+				Assert.That(res.Id, Is.EqualTo(1));
+				Assert.That(res.Property2, Is.EqualTo(CharEnum.A));
 			}
 		}
 
 		[Test]
 		public void TestCardinalityOperators_Greater_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property2 > CharEnum.B).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property2 > CharEnum.B).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(3));
-					Assert.That(res.Property2, Is.EqualTo(CharEnum.C));
-				}
+				Assert.That(res.Id, Is.EqualTo(3));
+				Assert.That(res.Property2, Is.EqualTo(CharEnum.C));
 			}
 		}
 
 		[Test]
 		public void TestCardinalityOperators_GreaterOrEqual_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property2 >= CharEnum.C).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property2 >= CharEnum.C).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(3));
-					Assert.That(res.Property2, Is.EqualTo(CharEnum.C));
-				}
+				Assert.That(res.Id, Is.EqualTo(3));
+				Assert.That(res.Property2, Is.EqualTo(CharEnum.C));
 			}
 		}
 
 		[Test]
 		public void TestCardinalityOperators_Less_Short([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property3 < CharEnumS.B).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property3 < CharEnumS.B).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(1));
-					Assert.That(res.Property3, Is.EqualTo(CharEnumS.A));
-				}
+				Assert.That(res.Id, Is.EqualTo(1));
+				Assert.That(res.Property3, Is.EqualTo(CharEnumS.A));
 			}
 		}
 
 		[Test]
 		public void TestCardinalityOperators_LessOrEqual_Short([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property3 <= CharEnumS.A).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property3 <= CharEnumS.A).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(1));
-					Assert.That(res.Property3, Is.EqualTo(CharEnumS.A));
-				}
+				Assert.That(res.Id, Is.EqualTo(1));
+				Assert.That(res.Property3, Is.EqualTo(CharEnumS.A));
 			}
 		}
 
 		[Test]
 		public void TestCardinalityOperators_Greater_Short([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property3 > CharEnumS.B).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property3 > CharEnumS.B).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(3));
-					Assert.That(res.Property3, Is.EqualTo(CharEnumS.C));
-				}
+				Assert.That(res.Id, Is.EqualTo(3));
+				Assert.That(res.Property3, Is.EqualTo(CharEnumS.C));
 			}
 		}
 
 		[Test]
 		public void TestCardinalityOperators_GreaterOrEqual_Short([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property3 >= CharEnumS.C).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property3 >= CharEnumS.C).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(3));
-					Assert.That(res.Property3, Is.EqualTo(CharEnumS.C));
-				}
+				Assert.That(res.Id, Is.EqualTo(3));
+				Assert.That(res.Property3, Is.EqualTo(CharEnumS.C));
 			}
 		}
 
 		[Test]
 		public void TestCardinalityOperators_Less_Short_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property4 < CharEnumS.B).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property4 < CharEnumS.B).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(1));
-					Assert.That(res.Property4, Is.EqualTo(CharEnumS.A));
-				}
+				Assert.That(res.Id, Is.EqualTo(1));
+				Assert.That(res.Property4, Is.EqualTo(CharEnumS.A));
 			}
 		}
 
 		[Test]
 		public void TestCardinalityOperators_LessOrEqual_Short_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property4 <= CharEnumS.A).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property4 <= CharEnumS.A).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(1));
-					Assert.That(res.Property4, Is.EqualTo(CharEnumS.A));
-				}
+				Assert.That(res.Id, Is.EqualTo(1));
+				Assert.That(res.Property4, Is.EqualTo(CharEnumS.A));
 			}
 		}
 
 		[Test]
 		public void TestCardinalityOperators_Greater_Short_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property4 > CharEnumS.B).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property4 > CharEnumS.B).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(3));
-					Assert.That(res.Property4, Is.EqualTo(CharEnumS.C));
-				}
+				Assert.That(res.Id, Is.EqualTo(3));
+				Assert.That(res.Property4, Is.EqualTo(CharEnumS.C));
 			}
 		}
 
 		[Test]
 		public void TestCardinalityOperators_GreaterOrEqual_Short_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property4 >= CharEnumS.C).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property4 >= CharEnumS.C).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(3));
-					Assert.That(res.Property4, Is.EqualTo(CharEnumS.C));
-				}
+				Assert.That(res.Id, Is.EqualTo(3));
+				Assert.That(res.Property4, Is.EqualTo(CharEnumS.C));
 			}
 		}
 
 		[Test]
 		public void TestCardinalityOperators_Less_Long([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property5 < CharEnumL.B).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property5 < CharEnumL.B).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(1));
-					Assert.That(res.Property5, Is.EqualTo(CharEnumL.A));
-				}
+				Assert.That(res.Id, Is.EqualTo(1));
+				Assert.That(res.Property5, Is.EqualTo(CharEnumL.A));
 			}
 		}
 
 		[Test]
 		public void TestCardinalityOperators_LessOrEqual_Long([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property5 <= CharEnumL.A).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property5 <= CharEnumL.A).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(1));
-					Assert.That(res.Property5, Is.EqualTo(CharEnumL.A));
-				}
+				Assert.That(res.Id, Is.EqualTo(1));
+				Assert.That(res.Property5, Is.EqualTo(CharEnumL.A));
 			}
 		}
 
 		[Test]
 		public void TestCardinalityOperators_Greater_Long([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property5 > CharEnumL.B).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property5 > CharEnumL.B).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(3));
-					Assert.That(res.Property5, Is.EqualTo(CharEnumL.C));
-				}
+				Assert.That(res.Id, Is.EqualTo(3));
+				Assert.That(res.Property5, Is.EqualTo(CharEnumL.C));
 			}
 		}
 
 		[Test]
 		public void TestCardinalityOperators_GreaterOrEqual_Long([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property5 >= CharEnumL.C).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property5 >= CharEnumL.C).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(3));
-					Assert.That(res.Property5, Is.EqualTo(CharEnumL.C));
-				}
+				Assert.That(res.Id, Is.EqualTo(3));
+				Assert.That(res.Property5, Is.EqualTo(CharEnumL.C));
 			}
 		}
 
 		[Test]
 		public void TestCardinalityOperators_Less_Long_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property6 < CharEnumL.B).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property6 < CharEnumL.B).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(1));
-					Assert.That(res.Property6, Is.EqualTo(CharEnumL.A));
-				}
+				Assert.That(res.Id, Is.EqualTo(1));
+				Assert.That(res.Property6, Is.EqualTo(CharEnumL.A));
 			}
 		}
 
 		[Test]
 		public void TestCardinalityOperators_LessOrEqual_Long_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property6 <= CharEnumL.A).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property6 <= CharEnumL.A).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(1));
-					Assert.That(res.Property6, Is.EqualTo(CharEnumL.A));
-				}
+				Assert.That(res.Id, Is.EqualTo(1));
+				Assert.That(res.Property6, Is.EqualTo(CharEnumL.A));
 			}
 		}
 
 		[Test]
 		public void TestCardinalityOperators_Greater_Long_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property6 > CharEnumL.B).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property6 > CharEnumL.B).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(3));
-					Assert.That(res.Property6, Is.EqualTo(CharEnumL.C));
-				}
+				Assert.That(res.Id, Is.EqualTo(3));
+				Assert.That(res.Property6, Is.EqualTo(CharEnumL.C));
 			}
 		}
 
 		[Test]
 		public void TestCardinalityOperators_GreaterOrEqual_Long_Nullable([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db    = GetDataContext(context))
-			using (var table = db.CreateLocalTable(EnumCardinality.Seed))
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(EnumCardinality.Seed);
+			var res = table.Where(_ => _.Property6 >= CharEnumL.C).Single();
+			using (Assert.EnterMultipleScope())
 			{
-				var res = table.Where(_ => _.Property6 >= CharEnumL.C).Single();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res.Id, Is.EqualTo(3));
-					Assert.That(res.Property6, Is.EqualTo(CharEnumL.C));
-				}
+				Assert.That(res.Id, Is.EqualTo(3));
+				Assert.That(res.Property6, Is.EqualTo(CharEnumL.C));
 			}
 		}
 

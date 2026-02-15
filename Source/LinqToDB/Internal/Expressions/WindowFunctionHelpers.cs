@@ -139,8 +139,8 @@ namespace LinqToDB.Internal.Expressions
 
 		public static Expression BuildAggregateExecuteExpression<TSource, TResult>(IQueryable<TSource> source, Expression<Func<IEnumerable<TSource>, TResult>> aggregate)
 		{
-			if (source    == null) throw new ArgumentNullException(nameof(source));
-			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(aggregate);
 
 			var executeExpression = Expression.Call(typeof(LinqExtensions), nameof(LinqExtensions.AggregateExecute), [typeof(TSource), typeof(TResult)], source.Expression, aggregate);
 
@@ -149,7 +149,7 @@ namespace LinqToDB.Internal.Expressions
 
 		public static Expression BuildAggregateExecuteExpression(MethodCallExpression methodCall, int sequenceIndex = 0)
 		{
-			if (methodCall == null) throw new ArgumentNullException(nameof(methodCall));
+			ArgumentNullException.ThrowIfNull(methodCall);
 
 			var sequenceArgument = methodCall.Arguments[sequenceIndex];
 			var elementType      = TypeHelper.GetEnumerableElementType(sequenceArgument.Type);
@@ -184,7 +184,7 @@ namespace LinqToDB.Internal.Expressions
 		static MethodInfo? FindMethodInfoInType(Type type, string methodName, int paramCount)
 		{
 			var method = type.GetRuntimeMethods()
-				.FirstOrDefault(m => m.Name == methodName && m.GetParameters().Length == paramCount);
+				.FirstOrDefault(m => string.Equals(m.Name, methodName, StringComparison.Ordinal) && m.GetParameters().Length == paramCount);
 			return method;
 		}
 

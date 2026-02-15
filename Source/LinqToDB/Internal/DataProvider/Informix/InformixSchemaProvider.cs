@@ -103,26 +103,29 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			return dataConnection.Query<TableInfo>(@"
-				SELECT
-					tabid              as TableID,
-					tabname            as TableName,
-					owner = 'informix' as IsDefaultSchema,
-					trim(owner)        as SchemaName,
-					tabtype = 'V'      as IsView
-				FROM
-					systables
-				WHERE
-					tabid >= 100")
+			return dataConnection
+				.Query<TableInfo>(
+					"""
+					SELECT
+						tabid              as TableID,
+						tabname            as TableName,
+						owner = 'informix' as IsDefaultSchema,
+						trim(owner)        as SchemaName,
+						tabtype = 'V'      as IsView
+					FROM
+						systables
+					WHERE
+						tabid >= 100
+					"""
+				)
 				.ToList();
 		}
 
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			return
-			(
-				from pk in dataConnection.Query(
+			return dataConnection
+				.Query(
 					rd =>
 					{
 						// IMPORTANT: reader calls must be ordered to support SequentialAccess
@@ -133,7 +136,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 						for (var i = 0; i < arr.Length; i++)
 						{
-							var value = rd[FormattableString.Invariant($"col{i + 1}")];
+							var value = rd[string.Create(CultureInfo.InvariantCulture, $"col{i + 1}")];
 							arr[i] = value.IsNullValue() ? null : (string)value;
 						}
 
@@ -141,43 +144,45 @@ namespace LinqToDB.Internal.DataProvider.Informix
 						{
 							TableID        = tableId,
 							PrimaryKeyName = pkName,
-							arr
+							arr,
 						};
-					}, @"
-						SELECT
-							t.tabid,
-							x.idxname,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part1)  as col1,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part2)  as col2,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part3)  as col3,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part4)  as col4,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part5)  as col5,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part6)  as col6,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part7)  as col7,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part8)  as col8,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part9)  as col9,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part10) as col10,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part11) as col11,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part12) as col12,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part13) as col13,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part14) as col14,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part15) as col15,
-							(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part16) as col16
-						FROM systables t
-							JOIN sysindexes x ON t.tabid = x.tabid
-						WHERE t.tabid >= 100 AND x.idxtype = 'U'")
-				group pk by pk.TableID into gr
-				select gr.First() into pk
-				from c in pk.arr.Select((c,i) => new { c, i })
-				where c.c != null
-				select new PrimaryKeyInfo
+					},
+					"""
+					SELECT
+						t.tabid,
+						x.idxname,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part1)  as col1,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part2)  as col2,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part3)  as col3,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part4)  as col4,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part5)  as col5,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part6)  as col6,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part7)  as col7,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part8)  as col8,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part9)  as col9,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part10) as col10,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part11) as col11,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part12) as col12,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part13) as col13,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part14) as col14,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part15) as col15,
+						(SELECT colname FROM syscolumns c WHERE c.tabid = t.tabid AND c.colno = x.part16) as col16
+					FROM systables t
+						JOIN sysindexes x ON t.tabid = x.tabid
+					WHERE t.tabid >= 100 AND x.idxtype = 'U'
+					"""
+				)
+				.GroupBy(pk => pk.TableID, (_, g) => g.First(), StringComparer.Ordinal)
+				.SelectMany(pk => pk.arr.Select((c,i) => new { pk, c, i }))
+				.Where(pk => pk.c != null)
+				.Select(c => new PrimaryKeyInfo
 				{
-					TableID        = pk.TableID,
-					PrimaryKeyName = pk.PrimaryKeyName,
-					ColumnName     = c.c,
-					Ordinal        = c.i
-				}
-			).ToList();
+					TableID        = c.pk.TableID,
+					PrimaryKeyName = c.pk.PrimaryKeyName,
+					ColumnName     = c.c!,
+					Ordinal        = c.i,
+				})
+				.ToList();
 		}
 
 		static void SetDate(ColumnInfo c, int num)
@@ -244,7 +249,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 			if (len == 0 || j > 11) // is the default 12 on have the precision already coded
 			{
-				c.ColumnType = FormattableString.Invariant($"{c.DataType} {arr[j].datetype} TO {arr[i].datetype}");
+				c.ColumnType = string.Create(CultureInfo.InvariantCulture, $"{c.DataType} {arr[j].datetype} TO {arr[i].datetype}");
 			}
 			else // # isn't the default
 			{
@@ -254,7 +259,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 				// add in the extra
 				k += len;
 
-				c.ColumnType = FormattableString.Invariant($"{c.DataType} {arr[j].datetype} ({k}) TO {arr[i].datetype}");
+				c.ColumnType = string.Create(CultureInfo.InvariantCulture, $"{c.DataType} {arr[j].datetype} ({k}) TO {arr[i].datetype}");
 				c.Precision = 5;
 			}
 		}
@@ -262,7 +267,8 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			return dataConnection
-				.Query<ColumnInfo>(@"
+				.Query<ColumnInfo>(
+					"""
 					SELECT
 						c.tabid     as TableID,
 						c.colname   as Name,
@@ -271,7 +277,9 @@ namespace LinqToDB.Internal.DataProvider.Informix
 						c.collength as Length
 					FROM systables t
 						JOIN syscolumns c ON t.tabid = c.tabid
-					WHERE t.tabid >= 100")
+					WHERE t.tabid >= 100
+					"""
+				)
 				.Select(c =>
 				{
 					var typeid = ConvertTo<int>.From(c.DataType);
@@ -364,59 +372,61 @@ namespace LinqToDB.Internal.DataProvider.Informix
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var names = new HashSet<string>();
+			var names = new HashSet<string>(StringComparer.Ordinal);
 
 			return
 			(
-				from fk in dataConnection.Query(
-					rd =>
-					{
-						// IMPORTANT: reader calls must be ordered to support SequentialAccess
-						var id           = string.Format(CultureInfo.InvariantCulture, "{0}", rd["ID"]);
-						var name         = string.Format(CultureInfo.InvariantCulture, "{0}", rd["Name"]);
-						var thisTableID  = string.Format(CultureInfo.InvariantCulture, "{0}", rd["ThisTableID"]);
-						var otherTableID = string.Format(CultureInfo.InvariantCulture, "{0}", rd["OtherTableID"]);
-
-						var arr = new string?[16][];
-
-						for (var i = 0; i < arr.Length; i++)
+				from fk in dataConnection
+					.Query(
+						rd =>
 						{
-							var value1 = rd[FormattableString.Invariant($"ThisCol{i + 1}")];
-							var value2 = rd[FormattableString.Invariant($"OtherCol{i + 1}")];
+							// IMPORTANT: reader calls must be ordered to support SequentialAccess
+							var id           = string.Format(CultureInfo.InvariantCulture, "{0}", rd["ID"]);
+							var name         = string.Format(CultureInfo.InvariantCulture, "{0}", rd["Name"]);
+							var thisTableID  = string.Format(CultureInfo.InvariantCulture, "{0}", rd["ThisTableID"]);
+							var otherTableID = string.Format(CultureInfo.InvariantCulture, "{0}", rd["OtherTableID"]);
 
-							arr[i] = new[]
+							var arr = new string?[16][];
+
+							for (var i = 0; i < arr.Length; i++)
 							{
-								value1.IsNullValue() ? null : (string)value1,
-								value2.IsNullValue() ? null : (string)value2
-							};
-						}
+								var value1 = rd[string.Create(CultureInfo.InvariantCulture, $"ThisCol{i + 1}")];
+								var value2 = rd[string.Create(CultureInfo.InvariantCulture, $"OtherCol{i + 1}")];
 
-						if (name.StartsWith("r"))
-						{
-							var ns = name.Substring(1).Split('_');
-
-							if (ns.Length == 2 && ns[0] == thisTableID && ns[1] == id)
-							{
-								name = "FK_" + rd["ThisTableName"] + "_" + rd["OtherTableName"];
-
-								var origName = name;
-								var n        = 0;
-
-								while (names.Contains(name))
-									name = FormattableString.Invariant($"{origName}_{++n}");
-
-								names.Add(name);
+								arr[i] = new[]
+								{
+									value1.IsNullValue() ? null : (string)value1,
+									value2.IsNullValue() ? null : (string)value2,
+								};
 							}
-						}
 
-						return new
-						{
-							Name         = name,
-							ThisTableID  = thisTableID,
-							OtherTableID = otherTableID,
-							arr
-						};
-					}, @"
+							if (name.StartsWith('r'))
+							{
+								var ns = name.Substring(1).Split('_');
+
+								if (ns.Length == 2 && string.Equals(ns[0], thisTableID, StringComparison.Ordinal) && string.Equals(ns[1], id, StringComparison.Ordinal))
+								{
+									name = "FK_" + rd["ThisTableName"] + "_" + rd["OtherTableName"];
+
+									var origName = name;
+									var n        = 0;
+
+									while (names.Contains(name))
+										name = string.Create(CultureInfo.InvariantCulture, $"{origName}_{++n}");
+
+									names.Add(name);
+								}
+							}
+
+							return new
+							{
+								Name         = name,
+								ThisTableID  = thisTableID,
+								OtherTableID = otherTableID,
+								arr,
+							};
+						},
+						"""
 						SELECT
 							r.constrid    as ID,
 							tc.constrname as Name,
@@ -463,7 +473,9 @@ namespace LinqToDB.Internal.DataProvider.Informix
 									JOIN systables  tt ON tc.tabid   = tt.tabid
 								JOIN sysconstraints oc ON r.primary  = oc.constrid
 									JOIN sysindexes ox ON oc.tabid   = ox.tabid AND oc.idxname = ox.idxname
-									JOIN systables  ot ON oc.tabid   = ot.tabid")
+									JOIN systables  ot ON oc.tabid   = ot.tabid
+						"""
+					)
 				from c in fk.arr.Select((c,i) => new { c, i })
 				where c.c[0] != null
 				select new ForeignKeyInfo
@@ -473,7 +485,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 					ThisColumn   = c.c[0],
 					OtherTableID = fk.OtherTableID,
 					OtherColumn  = c.c[1],
-					Ordinal      = c.i
+					Ordinal      = c.i,
 				}
 			).ToList();
 		}

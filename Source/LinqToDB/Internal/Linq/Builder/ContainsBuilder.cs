@@ -79,7 +79,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return new SqlSelectStatement(OuterQuery);
 			}
 
-			static IEnumerable<(Expression, SqlPlaceholderExpression)> EnumerateAssignments(Expression currentPath, Expression expr)
+			static IEnumerable<Expression> EnumerateAssignments(Expression currentPath, Expression expr)
 			{
 				if (expr is SqlGenericConstructorExpression generic)
 				{
@@ -91,9 +91,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						var newPath = Expression.MakeMemberAccess(currentPath, memberInfo);
 
-						if (assignment.Expression is SqlPlaceholderExpression placeholder)
+						if (assignment.Expression is SqlPlaceholderExpression)
 						{
-							yield return (newPath, placeholder);
+							yield return newPath;
 						}
 
 						if (assignment.Expression is SqlGenericConstructorExpression subGeneric)
@@ -155,8 +155,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				var testExpr         = Builder.BuildSqlExpression(placeholderContext, expr, BuildPurpose.Sql, BuildFlags.ForKeys);
 				var testPlaceholders = ExpressionBuilder.CollectPlaceholders(testExpr, false);
 
-				ISqlPredicate predicate;
-
 				var placeholderQuery = OuterQuery;
 
 				if (Parent != null)
@@ -167,9 +165,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (useExists && testPlaceholders.Count == 0)
 				{
 					var availableComparisons = EnumerateAssignments(expr, sequenceExpr).Take(2).ToList();
-					if (availableComparisons.Count == 1)
+					if (availableComparisons is [var newPath])
 					{
-						testExpr  = Builder.BuildSqlExpression(placeholderContext, availableComparisons[0].Item1, BuildPurpose.Sql, BuildFlags.ForKeys);
+						testExpr  = Builder.BuildSqlExpression(placeholderContext, newPath, BuildPurpose.Sql, BuildFlags.ForKeys);
 						if (testExpr is SqlPlaceholderExpression placeholder)
 						{
 							testPlaceholders.Add(placeholder);
@@ -177,6 +175,8 @@ namespace LinqToDB.Internal.Linq.Builder
 						}
 					}
 				}
+
+				ISqlPredicate predicate;
 
 				if (useExists)
 				{

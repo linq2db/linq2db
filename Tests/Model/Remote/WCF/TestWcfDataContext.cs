@@ -1,5 +1,6 @@
 ﻿#if NETFRAMEWORK
 using System;
+using System.Globalization;
 using System.ServiceModel;
 using System.Threading.Tasks;
 
@@ -21,7 +22,7 @@ namespace Tests.Model.Remote.Wcf
 				ReceiveTimeout         = new TimeSpan(00, 10, 00),
 				SendTimeout            = new TimeSpan(00, 10, 00),
 			},
-			new EndpointAddress("net.tcp://localhost:" + port + "/LinqOverWcf"),
+			new EndpointAddress(string.Create(CultureInfo.InvariantCulture, $"net.tcp://localhost:{port}/LinqOverWcf")),
 			optionBuilder)
 		{
 			((NetTcpBinding)Binding!).ReaderQuotas.MaxStringContentLength = 1000000;

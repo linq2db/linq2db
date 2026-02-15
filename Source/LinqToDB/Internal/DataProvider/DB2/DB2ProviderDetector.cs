@@ -17,7 +17,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
 			// DB2 ODS provider could be used by Informix
-			if (options.ConfigurationString?.Contains("Informix") == true)
+			if (options.ConfigurationString?.Contains("Informix", StringComparison.Ordinal) == true)
 				return null;
 
 			switch (options.ProviderName)
@@ -28,7 +28,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				case "":
 				case null:
 
-					if (options.ConfigurationString == "DB2")
+					if (string.Equals(options.ConfigurationString, "DB2", StringComparison.Ordinal))
 						goto case ProviderName.DB2;
 					break;
 
@@ -36,9 +36,9 @@ namespace LinqToDB.Internal.DataProvider.DB2
 				case DB2ProviderAdapter.NetFxClientNamespace:
 				case DB2ProviderAdapter.CoreClientNamespace:
 
-					if (options.ConfigurationString?.Contains("LUW") == true)
+					if (options.ConfigurationString?.Contains("LUW", StringComparison.Ordinal) == true)
 						return _db2DataProviderLUW.Value;
-					if (options.ConfigurationString?.Contains("z/OS") == true || options.ConfigurationString?.Contains("zOS") == true)
+					if (options.ConfigurationString?.Contains("z/OS", StringComparison.Ordinal) == true || options.ConfigurationString?.Contains("zOS", StringComparison.Ordinal) == true)
 						return _db2DataProviderzOS.Value;
 
 					if (AutoDetectProvider)
@@ -77,7 +77,7 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			return DB2ProviderAdapter.Instance.ConnectionWrapper(connection).eServerType switch
 			{
 				DB2ProviderAdapter.DB2ServerTypes.DB2_390 => DB2Version.zOS,
-				_                                         => DB2Version.LUW
+				_                                         => DB2Version.LUW,
 			};
 		}
 

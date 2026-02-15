@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace LinqToDB.Internal.Extensions
 {
@@ -13,10 +13,10 @@ namespace LinqToDB.Internal.Extensions
 				: typeof(Nullable<>).MakeGenericType(type);
 
 		/// <summary>
-		/// Returns <c>true</c> if type is reference type or <see cref="Nullable{T}"/>.
+		/// Returns <see langword="true"/> if type is reference type or <see cref="Nullable{T}"/>.
 		/// </summary>
 		/// <param name="type">Type to test.</param>
-		/// <returns><c>true</c> if type is reference type or <see cref="Nullable{T}"/>.</returns>
+		/// <returns><see langword="true"/> if type is reference type or <see cref="Nullable{T}"/>.</returns>
 		internal static bool IsNullableOrReferenceType(this Type type) =>
 			!type.IsValueType || type.IsNullableType;
 

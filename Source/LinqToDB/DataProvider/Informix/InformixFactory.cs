@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 using JetBrains.Annotations;
 
@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.Informix
 #if !NETFRAMEWORK
 				DB2ProviderAdapter.AssemblyNameOld      => InformixProvider.DB2,
 #endif
-				_                                       => InformixProvider.AutoDetect
+				_                                       => InformixProvider.AutoDetect,
 			};
 
 			return InformixTools.GetDataProvider(provider);

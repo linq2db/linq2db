@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var defaultValue = methodCall.Arguments.Count == 1 ? null : methodCall.Arguments[1].Unwrap();
 
 			// Generating LEFT JOIN from one record resultset
-			if (buildInfo.SourceCardinality == SourceCardinality.Unknown || defaultValue != null && buildInfo.SourceCardinality.HasFlag(SourceCardinality.Zero))
+			if (buildInfo.SourceCardinality == SourceCardinality.Unknown || (defaultValue != null && buildInfo.SourceCardinality.HasFlag(SourceCardinality.Zero)))
 			{
 				var sequenceResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()));
 				if (sequenceResult.BuildContext == null)
@@ -158,9 +158,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public ReadOnlyCollection<Expression> GetNotNullConditions()
 			{
-				if (_notNullConditions == null)
-					_notNullConditions = PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence) ?? throw new InvalidOperationException();
-				return _notNullConditions;
+				return _notNullConditions ??= PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence) ?? throw new InvalidOperationException();
 			}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
@@ -220,10 +218,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						return placeholder;
 					}
 
-					if (_notNullConditions == null)
-					{
-						_notNullConditions = PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence);
-					}
+					_notNullConditions ??= PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence);
 
 					if (_notNullConditions != null)
 					{

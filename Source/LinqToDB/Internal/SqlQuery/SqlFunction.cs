@@ -81,7 +81,7 @@ namespace LinqToDB.Internal.SqlQuery
 				return true;
 
 			if (!base.Equals(other, comparer)
-				|| other is SqlFunction func && DoNotOptimize != func.DoNotOptimize)
+				|| (other is SqlFunction func && DoNotOptimize != func.DoNotOptimize))
 				return false;
 
 			return comparer(this, other!);

@@ -73,7 +73,7 @@ namespace LinqToDB
 			IDataContext            db,
 			CreateTempTableOptions? createOptions)
 		{
-			if (db == null) throw new ArgumentNullException(nameof(db));
+			ArgumentNullException.ThrowIfNull(db);
 
 			_table = db.CreateTable<T>(createOptions ?? CreateTableOptions.Default);
 		}
@@ -133,8 +133,8 @@ namespace LinqToDB
 			IEnumerable<T>          items,
 			BulkCopyOptions?        bulkCopyOptions)
 		{
-			if (db    == null) throw new ArgumentNullException(nameof(db));
-			if (items == null) throw new ArgumentNullException(nameof(items));
+			ArgumentNullException.ThrowIfNull(db);
+			ArgumentNullException.ThrowIfNull(items);
 
 			_table           = db.CreateTable<T>(tableDescriptor?.EntityDescriptor, createOptions ?? CreateTableOptions.Default);
 			_tableDescriptor = tableDescriptor;
@@ -247,8 +247,8 @@ namespace LinqToDB
 			IQueryable<T>           items,
 			Action<ITable<T>>?      action)
 		{
-			if (db    == null) throw new ArgumentNullException(nameof(db));
-			if (items == null) throw new ArgumentNullException(nameof(items));
+			ArgumentNullException.ThrowIfNull(db);
+			ArgumentNullException.ThrowIfNull(items);
 
 			_table           = db.CreateTable<T>(tableDescriptor?.EntityDescriptor, createOptions ?? CreateTableOptions.Default);
 			_tableDescriptor = tableDescriptor;
@@ -326,7 +326,7 @@ namespace LinqToDB
 			TableOptions      tableOptions      = default,
 			CancellationToken cancellationToken = default)
 		{
-			if (db == null) throw new ArgumentNullException(nameof(db));
+			ArgumentNullException.ThrowIfNull(db);
 
 			return CreateAsync(
 				db,
@@ -350,7 +350,7 @@ namespace LinqToDB
 			CreateTempTableOptions? createOptions,
 			CancellationToken       cancellationToken = default)
 		{
-			if (db == null) throw new ArgumentNullException(nameof(db));
+			ArgumentNullException.ThrowIfNull(db);
 
 			return CreateAsync(db, null, createOptions, cancellationToken);
 		}
@@ -369,7 +369,7 @@ namespace LinqToDB
 			CreateTempTableOptions? createOptions,
 			CancellationToken       cancellationToken)
 		{
-			if (db == null) throw new ArgumentNullException(nameof(db));
+			ArgumentNullException.ThrowIfNull(db);
 
 			return new TempTable<T>(await db
 				.CreateTableAsync<T>(tableDescriptor, createOptions ?? CreateTableOptions.Default, token: cancellationToken)
@@ -428,8 +428,8 @@ namespace LinqToDB
 			BulkCopyOptions?        bulkCopyOptions   = default,
 			CancellationToken       cancellationToken = default)
 		{
-			if (db    == null) throw new ArgumentNullException(nameof(db));
-			if (items == null) throw new ArgumentNullException(nameof(items));
+			ArgumentNullException.ThrowIfNull(db);
+			ArgumentNullException.ThrowIfNull(items);
 
 			return CreateAsync(db, null, createOptions, items, bulkCopyOptions, cancellationToken);
 		}
@@ -535,8 +535,8 @@ namespace LinqToDB
 			TableOptions           tableOptions      = default,
 			CancellationToken      cancellationToken = default)
 		{
-			if (db    == null) throw new ArgumentNullException(nameof(db));
-			if (items == null) throw new ArgumentNullException(nameof(items));
+			ArgumentNullException.ThrowIfNull(db);
+			ArgumentNullException.ThrowIfNull(items);
 
 			return CreateAsync(
 				db,
@@ -566,8 +566,8 @@ namespace LinqToDB
 			Func<ITable<T>, Task>?  action            = default,
 			CancellationToken       cancellationToken = default)
 		{
-			if (db    == null) throw new ArgumentNullException(nameof(db));
-			if (items == null) throw new ArgumentNullException(nameof(items));
+			ArgumentNullException.ThrowIfNull(db);
+			ArgumentNullException.ThrowIfNull(items);
 
 			return CreateAsync(db, null, createOptions, items, action, cancellationToken);
 		}

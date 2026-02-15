@@ -105,7 +105,7 @@ namespace LinqToDB.Remote
 			public IMemberConverter  MemberConverter  = null!;
 		}
 
-		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new();
+		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new(StringComparer.Ordinal);
 
 		sealed class RemoteMappingSchema : MappingSchema
 		{
@@ -128,9 +128,9 @@ namespace LinqToDB.Remote
 
 			static MappingSchema GetMappingSchema(Type type)
 			{
-				if (type.Namespace == _sqlServerMappingSchemaNamespaceName) return Internal.DataProvider.SqlServer.SqlServerMappingSchema.GetRemoteMappingSchema(type);
-				if (type.Namespace == _firebirdMappingSchemaNamespaceName)  return Internal.DataProvider.Firebird. FirebirdMappingSchema. GetRemoteMappingSchema(type);
-				if (type.Namespace == _oracleMappingSchemaNamespaceName)    return Internal.DataProvider.Oracle.   OracleMappingSchema.   GetRemoteMappingSchema(type);
+				if (string.Equals(type.Namespace, _sqlServerMappingSchemaNamespaceName, StringComparison.Ordinal)) return Internal.DataProvider.SqlServer.SqlServerMappingSchema.GetRemoteMappingSchema(type);
+				if (string.Equals(type.Namespace, _firebirdMappingSchemaNamespaceName, StringComparison.Ordinal))  return Internal.DataProvider.Firebird. FirebirdMappingSchema. GetRemoteMappingSchema(type);
+				if (string.Equals(type.Namespace, _oracleMappingSchemaNamespaceName, StringComparison.Ordinal))    return Internal.DataProvider.Oracle.   OracleMappingSchema.   GetRemoteMappingSchema(type);
 
 				return ActivatorExt.CreateInstance<MappingSchema>(type);
 			}
@@ -418,7 +418,10 @@ namespace LinqToDB.Remote
 			return null;
 		}
 
-		static readonly ConcurrentDictionary<Tuple<Type,MappingSchema,Type,SqlProviderFlags,DataOptions>,Func<ISqlBuilder>> _sqlBuilders = new ();
+		static readonly ConcurrentDictionary<
+			(Type SqlProviderType, MappingSchema MappingSchema, Type SqlOptimizerType, SqlProviderFlags SqlProviderFlags, DataOptions Options),
+			Func<ISqlBuilder>
+		> _sqlBuilders = new ();
 
 		Func<ISqlBuilder> IDataContext.CreateSqlBuilder
 		{
@@ -426,43 +429,36 @@ namespace LinqToDB.Remote
 			{
 				ThrowOnDisposed();
 
-				if (field == null)
-				{
-					var key = Tuple.Create(SqlProviderType, MappingSchema, SqlOptimizerType, ((IDataContext)this).SqlProviderFlags, Options);
-
-					field = _sqlBuilders.GetOrAdd(
-						key,
-						static (key, args) =>
-						{
-							return Expression.Lambda<Func<ISqlBuilder>>(
-								Expression.New(
-									key.Item1.GetConstructor(new[]
-									{
-										typeof(IDataProvider),
-										typeof(MappingSchema),
-										typeof(DataOptions),
-										typeof(ISqlOptimizer),
-										typeof(SqlProviderFlags)
-									}) ?? throw new InvalidOperationException($"Constructor for type '{key.Item1.Name}' not found."),
-									new Expression[]
-									{
-										Expression.Constant(null, typeof(IDataProvider)),
-										Expression.Constant(args.mappingSchema, typeof(MappingSchema)),
-										Expression.Constant(key.Item5),
-										Expression.Constant(args.sqlOptimizer),
-										Expression.Constant(key.Item4)
-									}))
-								.CompileExpression();
-						},
-						(mappingSchema: MappingSchema, sqlOptimizer: ((IDataContext)this).GetSqlOptimizer(Options))
-					);
-				}
-
-				return field;
+				return field ??= _sqlBuilders.GetOrAdd(
+					(SqlProviderType, MappingSchema, SqlOptimizerType, ((IDataContext)this).SqlProviderFlags, Options),
+					static (key, args) =>
+					{
+						return Expression.Lambda<Func<ISqlBuilder>>(
+							Expression.New(
+								key.SqlProviderType.GetConstructor(new[]
+								{
+									typeof(IDataProvider),
+									typeof(MappingSchema),
+									typeof(DataOptions),
+									typeof(ISqlOptimizer),
+									typeof(SqlProviderFlags),
+								}) ?? throw new InvalidOperationException($"Constructor for type '{key.SqlProviderType.Name}' not found."),
+								new Expression[]
+								{
+									Expression.Constant(null, typeof(IDataProvider)),
+									Expression.Constant(args.mappingSchema, typeof(MappingSchema)),
+									Expression.Constant(key.Options),
+									Expression.Constant(args.sqlOptimizer),
+									Expression.Constant(key.SqlProviderFlags),
+								}))
+							.CompileExpression();
+					},
+					(mappingSchema: MappingSchema, sqlOptimizer: ((IDataContext)this).GetSqlOptimizer(Options))
+				);
 			}
 		}
 
-		static readonly ConcurrentDictionary<Tuple<Type,SqlProviderFlags>,Func<DataOptions,ISqlOptimizer>> _sqlOptimizers = new ();
+		static readonly ConcurrentDictionary<(Type SqlOptimizerType, SqlProviderFlags SqlProviderFlags), Func<DataOptions,ISqlOptimizer>> _sqlOptimizers = new ();
 
 		Func<DataOptions,ISqlOptimizer> IDataContext.GetSqlOptimizer
 		{
@@ -470,32 +466,34 @@ namespace LinqToDB.Remote
 			{
 				ThrowOnDisposed();
 
-				if (field == null)
-				{
-					var key = Tuple.Create(SqlOptimizerType, ((IDataContext)this).SqlProviderFlags);
-
-					field = _sqlOptimizers.GetOrAdd(key, static key =>
+				return field ??= _sqlOptimizers.GetOrAdd(
+					(SqlOptimizerType, ((IDataContext)this).SqlProviderFlags),
+					static key =>
 					{
 						var p = Expression.Parameter(typeof(DataOptions));
-						var c = key.Item1.GetConstructor(new[] {typeof(SqlProviderFlags)});
+						var c = key.SqlOptimizerType.GetConstructor(new[] {typeof(SqlProviderFlags)});
 
 						if (c != null)
-							return Expression.Lambda<Func<DataOptions,ISqlOptimizer>>(
-								Expression.New(c, Expression.Constant(key.Item2)),
-								p)
+							return Expression
+								.Lambda<Func<DataOptions, ISqlOptimizer>>(
+									Expression.New(c, Expression.Constant(key.SqlProviderFlags)),
+									p
+								)
 								.CompileExpression();
 
-						return Expression.Lambda<Func<DataOptions,ISqlOptimizer>>(
-							Expression.New(
-								key.Item1.GetConstructor(new[] {typeof(SqlProviderFlags), typeof(DataOptions)}) ?? throw new InvalidOperationException($"Constructor for type '{key.Item1.Name}' not found."),
-								Expression.Constant(key.Item2),
-								p),
-							p)
+						return Expression
+							.Lambda<Func<DataOptions, ISqlOptimizer>>(
+								Expression.New(
+									key.SqlOptimizerType.GetConstructor(new[] {typeof(SqlProviderFlags), typeof(DataOptions)}) 
+										?? throw new InvalidOperationException($"Constructor for type '{key.SqlOptimizerType.Name}' not found."),
+									Expression.Constant(key.SqlProviderFlags),
+									p
+								),
+								p
+							)
 							.CompileExpression();
-					});
-				}
-
-				return field;
+					}
+				);
 			}
 		}
 
@@ -634,9 +632,9 @@ namespace LinqToDB.Remote
 				// For ConnectionOptions we reapply only mapping schema and connection interceptor.
 				// Connection string, configuration, data provider, etc. are not reapplyable.
 				//
-				if (options.ConfigurationString       != previousOptions?.ConfigurationString)       throw new LinqToDBException($"Option '{nameof(options.ConfigurationString)} cannot be changed for context dynamically.");
-				if (options.ConnectionString          != previousOptions?.ConnectionString)          throw new LinqToDBException($"Option '{nameof(options.ConnectionString)} cannot be changed for context dynamically.");
-				if (options.ProviderName              != previousOptions?.ProviderName)              throw new LinqToDBException($"Option '{nameof(options.ProviderName)} cannot be changed for context dynamically.");
+				if (!string.Equals(options.ConfigurationString, previousOptions?.ConfigurationString, StringComparison.Ordinal))       throw new LinqToDBException($"Option '{nameof(options.ConfigurationString)} cannot be changed for context dynamically.");
+				if (!string.Equals(options.ConnectionString, previousOptions?.ConnectionString, StringComparison.Ordinal))          throw new LinqToDBException($"Option '{nameof(options.ConnectionString)} cannot be changed for context dynamically.");
+				if (!string.Equals(options.ProviderName, previousOptions?.ProviderName, StringComparison.Ordinal))              throw new LinqToDBException($"Option '{nameof(options.ProviderName)} cannot be changed for context dynamically.");
 				if (options.DbConnection              != previousOptions?.DbConnection)              throw new LinqToDBException($"Option '{nameof(options.DbConnection)} cannot be changed for context dynamically.");
 				if (options.DbTransaction             != previousOptions?.DbTransaction)             throw new LinqToDBException($"Option '{nameof(options.DbTransaction)} cannot be changed for context dynamically.");
 				if (options.DisposeConnection         != previousOptions?.DisposeConnection)         throw new LinqToDBException($"Option '{nameof(options.DisposeConnection)} cannot be changed for context dynamically.");

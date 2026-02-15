@@ -24,16 +24,15 @@ namespace Tests.UserTests
 			var ms = new MappingSchema();
 			ms.AddScalarType(typeof(DateTimeOffset), DataType.DateTimeOffset);
 
-			using (var db = GetDataContext(context, ms))
-			using (var tb = db.CreateLocalTable<PgTimestampTest>())
-			{
-				var dc = ((DataConnection)db);
-				var sql = "ALTER TABLE pgtimestamptest ALTER COLUMN updatedon TYPE timestamptz;";
-				dc.Execute(sql);
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<PgTimestampTest>();
+			var dc = ((DataConnection)db);
+			var sql = "ALTER TABLE pgtimestamptest ALTER COLUMN updatedon TYPE timestamptz;";
+			dc.Execute(sql);
 
-				var obj = new PgTimestampTest() { Id = 0, UpdatedOn = DateTime.UtcNow };
+			var obj = new PgTimestampTest() { Id = 0, UpdatedOn = DateTime.UtcNow };
 
-				var ret =
+			var ret =
 					dc.BulkCopy(new BulkCopyOptions
 					{
 						CheckConstraints = false,
@@ -44,7 +43,6 @@ namespace Tests.UserTests
 						BulkCopyTimeout = 0,
 						TableName = "pgtimestamptest",
 					}, new [] {obj });
-			}
 		}
 	}
 }

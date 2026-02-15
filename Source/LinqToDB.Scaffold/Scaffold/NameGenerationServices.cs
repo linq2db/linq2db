@@ -34,7 +34,7 @@ namespace LinqToDB.Scaffold.Internal
 				var isOneToOne = !isBackReference && thisColumns.All(c => isPrimaryKeyColumn(thisTable, c));
 
 				// if column name provided - generate association name based on column name
-				if (!isOneToOne && thisColumns.Length == 1 && thisColumns[0].ToLowerInvariant().EndsWith("id"))
+				if (!isOneToOne && thisColumns.Length == 1 && thisColumns[0].ToLowerInvariant().EndsWith("id", StringComparison.Ordinal))
 				{
 					// if column name provided and ends with ID suffix
 					// we trim ID part and possible _ connectors before it
@@ -47,7 +47,7 @@ namespace LinqToDB.Scaffold.Internal
 					// if column name not provided - use FK name for association name
 
 					// remove FK_ prefix
-					if (newName.StartsWith("FK_"))
+					if (newName.StartsWith("FK_", StringComparison.Ordinal))
 						newName = newName.Substring(3);
 
 					// - split name into words using _ as separator
@@ -56,8 +56,8 @@ namespace LinqToDB.Scaffold.Internal
 					newName = string.Concat(newName
 						.Split('_')
 						.Where(_ =>
-							_.Length > 0 && _ != thisTable.Name &&
-							(thisTable.Schema == null || defaultSchemas.Contains(thisTable.Schema) || _ != thisTable.Schema)));
+							_.Length > 0 && !string.Equals(_, thisTable.Name, StringComparison.Ordinal) &&
+							(thisTable.Schema == null || defaultSchemas.Contains(thisTable.Schema) || !string.Equals(_, thisTable.Schema, StringComparison.Ordinal))));
 
 					// remove trailing digits
 					// note that new implementation match all digits, not just 0-9 as it was in T4

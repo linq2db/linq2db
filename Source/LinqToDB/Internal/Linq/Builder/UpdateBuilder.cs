@@ -564,34 +564,36 @@ namespace LinqToDB.Internal.Linq.Builder
 				correctedSetter = builder.BuildSqlExpression(sourceRef.BuildContext, correctedSetter);
 			}
 
-			if (correctedSetter is SqlGenericConstructorExpression generic)
+			switch (correctedSetter)
 			{
-				foreach (var assignment in generic.Assignments)
+				case SqlGenericConstructorExpression generic:
 				{
-					var memberAccess = Expression.MakeMemberAccess(targetRef, assignment.MemberInfo);
-
-					ParseSet(builder, sourceRef.BuildContext, memberAccess, memberAccess, assignment.Expression, envelopes, false);
-				}
-
-				foreach (var parameter in generic.Parameters)
-				{
-					if (parameter.MemberInfo != null)
+					foreach (var assignment in generic.Assignments)
 					{
-						var memberAccess = Expression.MakeMemberAccess(targetRef, parameter.MemberInfo);
+						var memberAccess = Expression.MakeMemberAccess(targetRef, assignment.MemberInfo);
 
-						ParseSet(builder, sourceRef.BuildContext, memberAccess, memberAccess, parameter.Expression, envelopes, false);
+						ParseSet(builder, sourceRef.BuildContext, memberAccess, memberAccess, assignment.Expression, envelopes, false);
 					}
+
+					foreach (var parameter in generic.Parameters)
+					{
+						if (parameter.MemberInfo != null)
+						{
+							var memberAccess = Expression.MakeMemberAccess(targetRef, parameter.MemberInfo);
+
+							ParseSet(builder, sourceRef.BuildContext, memberAccess, memberAccess, parameter.Expression, envelopes, false);
+						}
+					}
+
+					break;
 				}
-			}
-			else
-			{
-				if (correctedSetter is SqlPlaceholderExpression { Sql: SqlValue { Value: null } })
+
+				case SqlPlaceholderExpression { Sql: SqlValue { Value: null } }:
+				case ConstantExpression { Value: null }:
 					return;
 
-				if (correctedSetter is ConstantExpression { Value: null })
-					return;
-
-				throw new NotImplementedException();
+				default:
+					throw new NotSupportedException();
 			}
 		}
 
@@ -795,7 +797,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				throw new NotImplementedException();
+				throw new NotSupportedException();
 			}
 
 			public override SqlStatement GetResultStatement()

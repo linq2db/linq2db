@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -10,7 +10,7 @@ namespace LinqToDB.Internal.SqlQuery
 		ISqlPredicate Invert   (NullabilityContext nullability);
 
 		/// <summary>
-		/// Returns <c>true</c> if predicate could be evaluated to UNKNOWN.
+		/// Returns <see langword="true"/> if predicate could be evaluated to UNKNOWN.
 		/// </summary>
 		bool CanBeUnknown(NullabilityContext nullability, bool withoutUnknownErased);
 

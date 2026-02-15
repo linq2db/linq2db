@@ -4,7 +4,7 @@ using LinqToDB.Configuration;
 
 namespace Tests
 {
-	public class TxtSettings : ILinqToDBSettings
+	public sealed class TxtSettings : ILinqToDBSettings
 	{
 		sealed class DataProviderSettings : IDataProviderSettings
 		{
@@ -43,7 +43,7 @@ namespace Tests
 				ConnectionString = connectionString,
 				Name             = name,
 				ProviderName     = providerName,
-				IsGlobal         = false
+				IsGlobal         = false,
 			};
 
 			_strings.Add(s);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Linq.Expressions;
 
@@ -11,15 +11,15 @@ namespace LinqToDB
 {
 	/// <param name="PreloadGroups">
 	/// Controls how group data for LINQ queries ended with GroupBy will be loaded:
-	/// - if <c>true</c> - group data will be loaded together with main query, resulting in 1 + N queries, where N - number of groups;
-	/// - if <c>false</c> - group data will be loaded when you call enumerator for specific group <see cref="System.Linq.IGrouping{TKey, TElement}"/>.
-	/// Default value: <c>false</c>.
+	/// - if <see langword="true"/> - group data will be loaded together with main query, resulting in 1 + N queries, where N - number of groups;
+	/// - if <see langword="false"/> - group data will be loaded when you call enumerator for specific group <see cref="System.Linq.IGrouping{TKey, TElement}"/>.
+	/// Default value: <see langword="false"/>.
 	/// </param>
 	/// <param name="IgnoreEmptyUpdate">
 	/// Controls behavior of linq2db when there is no updateable fields in Update query:
-	/// - if <c>true</c> - query not executed and Update operation returns 0 as number of affected records;
-	/// - if <c>false</c> - <see cref="LinqToDBException"/> will be thrown.
-	/// Default value: <c>false</c>.
+	/// - if <see langword="true"/> - query not executed and Update operation returns 0 as number of affected records;
+	/// - if <see langword="false"/> - <see cref="LinqToDBException"/> will be thrown.
+	/// Default value: <see langword="false"/>.
 	/// </param>
 	/// <param name="GenerateExpressionTest">
 	/// Enables generation of test class for each LINQ query, executed while this option is enabled.
@@ -27,18 +27,18 @@ namespace LinqToDB
 	/// Test file will be placed to <c>linq2db</c> subfolder of temp folder and exact file path will be logged
 	/// to data connection tracing infrastructure.
 	/// See <see cref="DataConnection.TraceSwitch"/> for more details.
-	/// Default value: <c>false</c>.
+	/// Default value: <see langword="false"/>.
 	/// </param>
 	/// <param name="TraceMapperExpression">
 	/// Enables logging of generated mapping expression to data connection tracing infrastructure.
 	/// See <see cref="DataConnection.TraceSwitch"/> for more details.
-	/// Default value: <c>false</c>.
+	/// Default value: <see langword="false"/>.
 	/// </param>
 	/// <param name="ConcatenateOrderBy">
 	/// Controls behavior, when LINQ query chain contains multiple <see cref="System.Linq.Queryable.OrderBy{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> or <see cref="System.Linq.Queryable.OrderByDescending{TSource, TKey}(System.Linq.IQueryable{TSource}, Expression{Func{TSource, TKey}})"/> calls:
-	/// - if <c>true</c> - non-first OrderBy* call will be treated as ThenBy* call;
-	/// - if <c>false</c> - OrderBy* call will discard sort specifications, added by previous OrderBy* and ThenBy* calls.
-	/// Default value: <c>false</c>.
+	/// - if <see langword="true"/> - non-first OrderBy* call will be treated as ThenBy* call;
+	/// - if <see langword="false"/> - OrderBy* call will discard sort specifications, added by previous OrderBy* and ThenBy* calls.
+	/// Default value: <see langword="false"/>.
 	/// </param>
 	/// <param name="OptimizeJoins">
 	/// If enabled, linq2db will try to reduce number of generated SQL JOINs for LINQ query.
@@ -46,7 +46,7 @@ namespace LinqToDB
 	/// - removes duplicate joins by unique target table key;
 	/// - removes self-joins by unique key;
 	/// - removes left joins if joined table is not used in query.
-	/// Default value: <c>true</c>.
+	/// Default value: <see langword="true"/>.
 	/// </param>
 	/// <param name="CompareNulls">
 	/// <summary>
@@ -91,9 +91,9 @@ namespace LinqToDB
 	/// <param name="GuardGrouping">
 	/// <summary>
 	/// Controls behavior of LINQ query, which ends with GroupBy call.
-	/// - if <c>true</c> - <seealso cref="LinqToDBException"/> will be thrown for such queries;
-	/// - if <c>false</c> - eager loading used.
-	/// Default value: <c>true</c>.
+	/// - if <see langword="true"/> - <seealso cref="LinqToDBException"/> will be thrown for such queries;
+	/// - if <see langword="false"/> - eager loading used.
+	/// Default value: <see langword="true"/>.
 	/// </summary>
 	/// <remarks>
 	/// <a href="https://github.com/linq2db/linq2db/issues/365">More details</a>.
@@ -108,7 +108,7 @@ namespace LinqToDB
 	/// <para />
 	/// - cache access synchronization could lead to bigger latencies than it saves.
 	/// <para />
-	/// Default value: <c>false</c>.
+	/// Default value: <see langword="false"/>.
 	/// <para />
 	/// It is not recommended to enable this option as it could lead to severe slowdown. Better approach will be
 	/// to use <see cref="NoLinqCache"/> scope around queries, that produce severe memory leaks you need to fix.
@@ -122,27 +122,27 @@ namespace LinqToDB
 	/// </param>
 	/// <param name="PreferApply">
 	/// Used to generate CROSS APPLY or OUTER APPLY if possible.
-	/// Default value: <c>true</c>.
+	/// Default value: <see langword="true"/>.
 	/// </param>
 	/// <param name="KeepDistinctOrdered">
 	/// Allows SQL generation to automatically transform
 	/// <code>SELECT DISTINCT value FROM Table ORDER BY date</code>
 	/// Into GROUP BY equivalent if syntax is not supported
-	/// Default value: <c>true</c>.
+	/// Default value: <see langword="true"/>.
 	/// </param>
 	/// <param name="ParameterizeTakeSkip">
 	/// Enables Take/Skip parameterization.
-	/// Default value: <c>true</c>.
+	/// Default value: <see langword="true"/>.
 	/// </param>
 	/// <param name="EnableContextSchemaEdit">
-	/// If <c>true</c>, user could add new mappings to context mapping schems (<see cref="IDataContext.MappingSchema"/>).
+	/// If <see langword="true"/>, user could add new mappings to context mapping schems (<see cref="IDataContext.MappingSchema"/>).
 	/// Otherwise, <see cref="LinqToDBException"/> will be generated on locked mapping schema edit attempt.
 	/// It is not recommended to enable this option as it has performance implications.
 	/// Proper approach is to create single <see cref="Mapping.MappingSchema"/> instance once, configure mappings for it and use this <see cref="Mapping.MappingSchema"/> instance for all context instances.
-	/// Default value: <c>false</c>.
+	/// Default value: <see langword="false"/>.
 	/// </param>
 	/// <param name="PreferExistsForScalar">
-	/// If <c>true</c>, EXISTS operator will be generated instead of IN operator for scalar values.
+	/// If <see langword="true"/>, EXISTS operator will be generated instead of IN operator for scalar values.
 	/// <code>
 	/// SELECT Value FROM MyEntity e WHERE EXISTS(SELECT * FROM MyEntity2 e2 WHERE e2.Value = e.Value)
 	/// </code>
@@ -150,7 +150,7 @@ namespace LinqToDB
 	/// <code>
 	/// SELECT Value FROM MyEntity e WHERE Value IN (SELECT Value FROM MyEntity2 e2)
 	/// </code>
-	/// Default value: <c>false</c>.
+	/// Default value: <see langword="false"/>.
 	/// </param>
 	public sealed record LinqOptions
 	(

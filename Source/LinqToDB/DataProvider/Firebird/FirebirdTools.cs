@@ -28,13 +28,13 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public static void ResolveFirebird(string path)
 		{
-			if (path == null) throw new ArgumentNullException(nameof(path));
+			ArgumentNullException.ThrowIfNull(path);
 			_ = new AssemblyResolver(path, FirebirdProviderAdapter.AssemblyName);
 		}
 
 		public static void ResolveFirebird(Assembly assembly)
 		{
-			if (assembly == null) throw new ArgumentNullException(nameof(assembly));
+			ArgumentNullException.ThrowIfNull(assembly);
 			_ = new AssemblyResolver(assembly, FirebirdProviderAdapter.AssemblyName);
 		}
 

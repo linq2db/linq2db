@@ -20,10 +20,7 @@ namespace LinqToDB.Internal.Linq
 
 				if (!mappingSchema.IsScalarType(valueType))
 				{
-					if (node.Value is Array or FormattableString or RawSqlString)
-						return false;
-
-					return true;
+					return node.Value is not (Array or FormattableString or RawSqlString);
 				}
 			}
 

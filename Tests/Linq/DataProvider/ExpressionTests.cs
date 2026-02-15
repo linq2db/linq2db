@@ -19,26 +19,24 @@ namespace Tests.DataProvider
 			var connectionString = DataConnection.GetConnectionString(context);
 			var dataProvider     = DataConnection.GetDataProvider(context);
 
-			using (var conn = new DataConnection(new DataOptions().UseConnectionString(dataProvider, connectionString)))
-			using (var rd = conn.ExecuteReader("SELECT 1"))
+			using var conn = new DataConnection(new DataOptions().UseConnectionString(dataProvider, connectionString));
+			using var rd = conn.ExecuteReader("SELECT 1");
+			if (rd.Reader!.Read())
 			{
-				if (rd.Reader!.Read())
-				{
-					var dp   = conn.DataProvider;
-					var p    = Expression.Parameter(typeof(DbDataReader));
-					var dr   = Expression.Convert(p, dp.DataReaderType);
-					var ex   = (Expression<Func<DbDataReader,int,int>>)dp.GetReaderExpression(rd.Reader, 0, dr, typeof(int));
-					var func = ex.CompileExpression();
+				var dp   = conn.DataProvider;
+				var p    = Expression.Parameter(typeof(DbDataReader));
+				var dr   = Expression.Convert(p, dp.DataReaderType);
+				var ex   = (Expression<Func<DbDataReader,int,int>>)dp.GetReaderExpression(rd.Reader, 0, dr, typeof(int));
+				var func = ex.CompileExpression();
 
-					do
-					{
-						var value = func(rd.Reader, 0);
-						Assert.That(value, Is.EqualTo(1));
-					} while (rd.Reader!.Read());
-				}
-				else
-					Assert.Fail();
+				do
+				{
+					var value = func(rd.Reader, 0);
+					Assert.That(value, Is.EqualTo(1));
+				} while (rd.Reader!.Read());
 			}
+			else
+				Assert.Fail();
 		}
 	}
 }

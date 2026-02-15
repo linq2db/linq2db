@@ -55,7 +55,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				if (connection != null)
 				{
 					var ed        = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
-					var columns   = ed.Columns.Where(c => !c.SkipOnInsert || opts.KeepIdentity == true && c.IsIdentity).ToList();
+					var columns   = ed.Columns.Where(c => !c.SkipOnInsert || (opts.KeepIdentity == true && c.IsIdentity)).ToList();
 					var sb        = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 
 					// ODP.NET doesn't bulk copy doesn't work if columns that require escaping:
@@ -67,7 +67,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					var supported = true;
 
 					foreach (var column in columns)
-						if (column.ColumnName != sb.ConvertInline(column.ColumnName, ConvertType.NameToQueryField))
+						if (!string.Equals(column.ColumnName, sb.ConvertInline(column.ColumnName, ConvertType.NameToQueryField), StringComparison.Ordinal))
 						{
 							// fallback to sql-based copy
 							// TODO: we should add support for by-ordinal column mapping to workaround it
@@ -166,23 +166,23 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			switch (_useAlternativeBulkCopy)
+			return _useAlternativeBulkCopy switch
 			{
-				case AlternativeBulkCopy.InsertInto: return OracleMultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
-				case AlternativeBulkCopy.InsertDual: return OracleMultipleRowsCopy3Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
-				default                            : return OracleMultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
-			}
+				AlternativeBulkCopy.InsertInto => OracleMultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken),
+				AlternativeBulkCopy.InsertDual => OracleMultipleRowsCopy3Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken),
+				_                              => OracleMultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken),
+			};
 		}
 
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			switch (_useAlternativeBulkCopy)
+			return _useAlternativeBulkCopy switch
 			{
-				case AlternativeBulkCopy.InsertInto: return OracleMultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
-				case AlternativeBulkCopy.InsertDual: return OracleMultipleRowsCopy3Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
-				default                            : return OracleMultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
-			}
+				AlternativeBulkCopy.InsertInto => OracleMultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken),
+				AlternativeBulkCopy.InsertDual => OracleMultipleRowsCopy3Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken),
+				_                              => OracleMultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken),
+			};
 		}
 
 		static void OracleMultipleRowsCopy1Prep(MultipleRowsHelper helper)
@@ -378,7 +378,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					value[j] = valueConverter.Value;
 				}
 
-				helper.Parameters.Add(new DataParameter(FormattableString.Invariant($":p{i + 1}"), value, columnType.DataType, columnType.DbType)
+				helper.Parameters.Add(new DataParameter(string.Create(CultureInfo.InvariantCulture, $":p{i + 1}"), value, columnType.DataType, columnType.DbType)
 				{
 					Direction = ParameterDirection.Input,
 					IsArray   = true,
@@ -416,7 +416,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					value[j] = valueConverter.Value;
 				}
 
-				helper.Parameters.Add(new DataParameter(FormattableString.Invariant($":p{i + 1}"), value, columnType.DataType, columnType.DbType)
+				helper.Parameters.Add(new DataParameter(string.Create(CultureInfo.InvariantCulture, $":p{i + 1}"), value, columnType.DataType, columnType.DbType)
 				{
 					Direction = ParameterDirection.Input,
 					IsArray   = true,

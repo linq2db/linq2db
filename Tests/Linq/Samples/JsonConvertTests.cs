@@ -26,16 +26,9 @@ namespace Tests.Samples
 
 	public static class MappingHelper
 	{
-		private static MethodInfo _deserializeMethod;
-		private static MethodInfo _serializeMethod;
-		private static ConstructorInfo _dataParamContructor;
-
-		static MappingHelper()
-		{
-			_deserializeMethod   = MemberHelper.MethodOf(() => JsonConvert.DeserializeObject(null!, typeof(int)));
-			_serializeMethod     = MemberHelper.MethodOf(() => JsonConvert.SerializeObject(null));
-			_dataParamContructor = typeof(DataParameter).GetConstructor(new[] { typeof(string), typeof(object) })!;
-		}
+		private static MethodInfo _deserializeMethod = MemberHelper.MethodOf(() => JsonConvert.DeserializeObject(null!, typeof(int)));
+		private static MethodInfo _serializeMethod = MemberHelper.MethodOf(() => JsonConvert.SerializeObject(null));
+		private static ConstructorInfo _dataParamContructor = typeof(DataParameter).GetConstructor(new[] { typeof(string), typeof(object) })!;
 
 		public static void GenerateConvertorsForTables(Type dataConnectionType, MappingSchema ms)
 		{
@@ -78,11 +71,10 @@ namespace Tests.Samples
 
 	public class MyDataConnection : DataConnection
 	{
-		private static MappingSchema _convertorSchema;
+		private static MappingSchema _convertorSchema = new();
 
 		static MyDataConnection()
 		{
-			_convertorSchema = new MappingSchema();
 			MappingHelper.GenerateConvertorsForTables(typeof(MyDataConnection), _convertorSchema);
 		}
 
@@ -167,22 +159,20 @@ namespace Tests.Samples
 		[Test]
 		public void SampleSelectTest([IncludeDataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = new MyDataConnection(context))
-			using (var table = db.CreateLocalTable<SampleClass>())
-			{
-				db.Insert(new SampleClass { Id = 1, Data = new DataClass { Property1 = "Pr1" } });
+			using var db = new MyDataConnection(context);
+			using var table = db.CreateLocalTable<SampleClass>();
+			db.Insert(new SampleClass { Id = 1, Data = new DataClass { Property1 = "Pr1" } });
 
-				var objects = table.Where(t => Json.Value(t.Data!.Property1) == "Pr1")
+			var objects = table.Where(t => Json.Value(t.Data!.Property1) == "Pr1")
 					.ToArray();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(db.LastQuery!, Does.Not.Contain("IS NULL"));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(db.LastQuery!, Does.Not.Contain("IS NULL"));
 
-					Assert.That(objects, Has.Length.EqualTo(1));
-				}
-
-				Assert.That(objects[0].Data!.Property1, Is.EqualTo("Pr1"));
+				Assert.That(objects, Has.Length.EqualTo(1));
 			}
+
+			Assert.That(objects[0].Data!.Property1, Is.EqualTo("Pr1"));
 		}
 	}
 }

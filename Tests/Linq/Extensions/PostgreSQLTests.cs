@@ -131,9 +131,9 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"\n\t\t\tFOR UPDATE").Using(StringComparison.Ordinal));
-			Assert.That(LastQuery, Contains.Substring($"\nFOR SHARE").Using(StringComparison.Ordinal));
-			Assert.That(LastQuery, Contains.Substring($"\nFOR KEY SHARE NOWAIT").Using(StringComparison.Ordinal));
+			Assert.That(LastQuery, Contains.Substring("\n\t\t\tFOR UPDATE").Using(StringComparison.Ordinal));
+			Assert.That(LastQuery, Contains.Substring("\nFOR SHARE").Using(StringComparison.Ordinal));
+			Assert.That(LastQuery, Contains.Substring("\nFOR KEY SHARE NOWAIT").Using(StringComparison.Ordinal));
 		}
 
 		[Test]

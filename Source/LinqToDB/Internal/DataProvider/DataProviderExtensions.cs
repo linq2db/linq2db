@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.Common;
 using System.Linq.Expressions;
 
@@ -56,7 +56,7 @@ namespace LinqToDB.Internal.DataProvider
 				ToType            = toType,
 				ProviderFieldType = providerFieldType,
 				FieldType         = fieldType,
-				DataTypeName      = dataTypeName
+				DataTypeName      = dataTypeName,
 			}] = expr;
 
 			LinqToDB.Linq.Tools.ClearAllCaches();

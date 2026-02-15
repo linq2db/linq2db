@@ -180,7 +180,7 @@ namespace Tests.Exceptions
 		{
 			using var sc  = new ThreadHopsScope(hops);
 
-			var iterations = RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+			var iterations = OperatingSystem.IsLinux()
 				? 300_000
 				: 30_000;
 
@@ -234,7 +234,7 @@ namespace Tests.Exceptions
 		{
 			using var sc  = new ThreadHopsScope(hops);
 
-			var iterations = RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+			var iterations = OperatingSystem.IsLinux()
 				? 100_000
 				: 10_000;
 

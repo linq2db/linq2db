@@ -20,12 +20,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			if (SequenceHelper.IsSameContext(path, this))
+			if (!SequenceHelper.IsSameContext(path, this))
 			{
-				return ExpressionBuilder.CreatePlaceholder(this, SqlExpression, path);
+				throw new NotSupportedException();
 			}
 
-			throw new NotImplementedException();
+			return ExpressionBuilder.CreatePlaceholder(this, SqlExpression, path);
 		}
 
 		public override IBuildContext Clone(CloningContext context)

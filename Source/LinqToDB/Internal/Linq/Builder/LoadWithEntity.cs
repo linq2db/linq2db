@@ -55,7 +55,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override bool Equals(object? obj)
 		{
-			return ReferenceEquals(this, obj) || obj is LoadWithEntity other && Equals(other);
+			return ReferenceEquals(this, obj) || (obj is LoadWithEntity other && Equals(other));
 		}
 
 		public override int GetHashCode()
@@ -66,9 +66,11 @@ namespace LinqToDB.Internal.Linq.Builder
 		public string ToDebugString()
 		{
 			var str = string.Join(", ", ToDebugStrings());
-			if (str is null or "")
-				return "[empty]";
-			return str;
+			return str switch
+			{
+				null or "" => "[empty]",
+				_ => str,
+			};
 		}
 	}
 }

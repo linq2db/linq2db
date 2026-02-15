@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 
 using LinqToDB.Internal.SqlQuery.Visitors;
@@ -151,7 +150,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		internal static SqlTableSource? CheckTableSource(SqlTableSource ts, ISqlTableSource table, string? alias)
 		{
-			if (ts.Source == table && (alias == null || ts.Alias == alias))
+			if (ts.Source == table && (alias == null || string.Equals(ts.Alias, alias, StringComparison.Ordinal)))
 				return ts;
 
 			var jt = ts[table, alias];
@@ -183,7 +182,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		#region ISqlTableSource Members
 
-		public static int SourceIDCounter;
+		internal static int SourceIDCounter;
 
 		public int           SourceID { get; }
 		public SqlTableType  SqlTableType => SqlTableType.Table;
@@ -223,7 +222,7 @@ namespace LinqToDB.Internal.SqlQuery
 				if (column.CanBeNullable(nullability))
 					return true;
 
-			var allAggregation = Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression));
+			var allAggregation = Select.Columns.TrueForAll(c => QueryHelper.IsAggregationFunction(c.Expression));
 			if (allAggregation)
 				return false;
 
@@ -237,17 +236,25 @@ namespace LinqToDB.Internal.SqlQuery
 			return ReferenceEquals(this, other);
 		}
 
-		public override Type? SystemType
-		{
-			get
+		public override Type? SystemType =>
+			this switch
 			{
-				if (Select.Columns.Count == 1)
-					return Select.Columns[0].SystemType;
+				{ Select.Columns: [{ SystemType: var type }] } => type,
+				{ From.Tables: [{ Joins.Count: 0, SystemType: var type }] } => type,
+				_ => null,
+			};
 
-				if (From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0)
-					return From.Tables[0].SystemType;
-
-				return null;
+		public override string ToString()
+		{
+			try
+			{
+				var writer = new QueryElementTextWriter(NullabilityContext.GetContext(this));
+				ToString(writer);
+				return writer.ToString();
+			}
+			catch
+			{
+				return $"FAIL ToString('{typeof(SelectQuery).FullName}').";
 			}
 		}
 

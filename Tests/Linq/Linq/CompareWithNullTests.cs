@@ -30,18 +30,16 @@ namespace Tests.Linq
 		private static MappingSchema BuildMappingSchema()
 		{
 			var ms = new MappingSchema();
-#pragma warning disable CA2263 // Prefer generic overload when type is known, but Enum.Parse<E> is not available in .net fx
 			var entity = new FluentMappingBuilder(ms).Entity<Src>();
 			entity.Property(e => e.CEnumA)
 				.HasDataType(DataType.VarChar)
 				.HasLength(20)
-				.HasConversion(v => $"___{v}___", v => (CE)Enum.Parse(typeof(CE), v.Substring(3, v.Length - 6)));
+				.HasConversion(v => $"___{v}___", v => Enum.Parse<CE>(v.Substring(3, v.Length - 6)));
 			entity.Property(e => e.CEnumB)
 				.HasDataType(DataType.VarChar)
 				.HasLength(20)
-				.HasConversion(v => $"___{v}___", v => (CE)Enum.Parse(typeof(CE), v.Substring(3, v.Length - 6)));
+				.HasConversion(v => $"___{v}___", v => Enum.Parse<CE>(v.Substring(3, v.Length - 6)));
 			entity.Build();
-#pragma warning restore CA2263 // Prefer generic overload when type is known
 			return ms;
 		}
 

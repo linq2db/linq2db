@@ -37,8 +37,8 @@ namespace LinqToDB.Internal.Linq
 		internal static ITable<T> UseTableDescriptor<T>(this ITable<T> table, [SqlQueryDependent] EntityDescriptor tableDescriptor)
 			where T : class
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
-			if (tableDescriptor == null) throw new ArgumentNullException(nameof(tableDescriptor));
+			ArgumentNullException.ThrowIfNull(table);
+			ArgumentNullException.ThrowIfNull(tableDescriptor);
 
 			var result = ((ITableMutable<T>)table).ChangeTableDescriptor(tableDescriptor);
 			return result;
@@ -63,7 +63,7 @@ namespace LinqToDB.Internal.Linq
 
 		internal static IQueryable<T> AsCte<T>(IQueryable<T> cteTable, IQueryable<T> cteBody, string? tableName)
 		{
-			throw new NotImplementedException();
+			throw new NotSupportedException();
 		}
 
 		#endregion
@@ -80,7 +80,7 @@ namespace LinqToDB.Internal.Linq
 		[Pure]
 		public static IQueryable<TSource> DisableFilterInternal<TSource>(this IQueryable<TSource> source)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(source);
 
 			var expr = Expression.Call(
 				null,
@@ -91,7 +91,7 @@ namespace LinqToDB.Internal.Linq
 
 		public static IQueryable<TSource> ApplyModifierInternal<TSource>(this IQueryable<TSource> source, TranslationModifier modifier)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(source);
 			var expr = Expression.Call(
 				null,
 				MethodHelper.GetMethodInfo(ApplyModifierInternal, source, modifier), source.Expression, Expression.Constant(modifier));
@@ -123,7 +123,7 @@ namespace LinqToDB.Internal.Linq
 		[Pure]
 		public static IQueryable<TSource> SelectDistinct<TSource>(this IQueryable<TSource> source)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(source);
 
 			var currentSource = source.ProcessIQueryable();
 

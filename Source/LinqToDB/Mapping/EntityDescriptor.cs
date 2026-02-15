@@ -80,7 +80,7 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Gets or sets column mapping rules for current mapping class or interface.
-		/// If <c>true</c>, properties and fields should be marked with one of those attributes to be used for mapping:
+		/// If <see langword="true"/>, properties and fields should be marked with one of those attributes to be used for mapping:
 		/// - <see cref="ColumnAttribute"/>;
 		/// - <see cref="PrimaryKeyAttribute"/>;
 		/// - <see cref="IdentityAttribute"/>;
@@ -119,12 +119,12 @@ namespace LinqToDB.Mapping
 
 		List<MemberAccessor>? _calculatedMembers;
 		/// <summary>
-		/// Gets list of calculated column members (properties with <see cref="ExpressionMethodAttribute.IsColumn"/> set to <c>true</c>).
+		/// Gets list of calculated column members (properties with <see cref="ExpressionMethodAttribute.IsColumn"/> set to <see langword="true"/>).
 		/// </summary>
 		public IReadOnlyList<MemberAccessor>? CalculatedMembers => _calculatedMembers;
 
 		/// <summary>
-		/// Returns <c>true</c>, if entity has calculated columns.
+		/// Returns <see langword="true"/>, if entity has calculated columns.
 		/// Also see <seealso cref="CalculatedMembers"/>.
 		/// </summary>
 		public bool HasCalculatedMembers => CalculatedMembers != null && CalculatedMembers.Count > 0;
@@ -149,7 +149,7 @@ namespace LinqToDB.Mapping
 		public Type ObjectType => TypeAccessor.Type;
 
 		/// <summary>
-		/// Returns <c>true</c>, if entity has complex columns (with <see cref="MemberAccessor.IsComplex"/> flag set).
+		/// Returns <see langword="true"/>, if entity has complex columns (with <see cref="MemberAccessor.IsComplex"/> flag set).
 		/// </summary>
 		internal bool HasComplexColumns { get; private set; }
 
@@ -233,7 +233,7 @@ namespace LinqToDB.Mapping
 
 				if (columnAttributes.Length > 0)
 				{
-					var mappedMembers = new HashSet<string>();
+					var mappedMembers = new HashSet<string>(StringComparer.Ordinal);
 					foreach (var ca in columnAttributes)
 					{
 						if (mappedMembers.Add(ca.MemberName ?? string.Empty) && ca.IsColumn)
@@ -252,7 +252,7 @@ namespace LinqToDB.Mapping
 					}
 				}
 				else if (
-					!IsColumnAttributeRequired && MappingSchema.IsScalarType(member.Type) ||
+					(!IsColumnAttributeRequired && MappingSchema.IsScalarType(member.Type)) ||
 					MappingSchema.HasAttribute<IdentityAttribute  >(TypeAccessor.Type, member.MemberInfo) ||
 					MappingSchema.HasAttribute<PrimaryKeyAttribute>(TypeAccessor.Type, member.MemberInfo))
 				{
@@ -265,7 +265,7 @@ namespace LinqToDB.Mapping
 
 				if (caa != null)
 				{
-					_aliases ??= new Dictionary<string, string>();
+					_aliases ??= new Dictionary<string, string>(StringComparer.Ordinal);
 
 					_aliases.Add(
 						member.Name,
@@ -301,13 +301,13 @@ namespace LinqToDB.Mapping
 			if (attr.MemberName == null)
 				throw new LinqToDBException($"The Column attribute of the '{TypeAccessor.Type}' type must have MemberName.");
 
-			if (attr.MemberName.IndexOf('.') < 0)
+			if (attr.MemberName.IndexOf('.', StringComparison.Ordinal) < 0)
 			{
 				var ex = TypeAccessor[attr.MemberName];
 				var cd = new ColumnDescriptor(MappingSchema, this, attr, ex, hasInheritanceMapping);
 
 				if (_columnNames.Remove(attr.MemberName))
-					_columns.RemoveAll(c => c.MemberName == attr.MemberName);
+					_columns.RemoveAll(c => string.Equals(c.MemberName, attr.MemberName, StringComparison.Ordinal));
 
 				AddColumn(cd);
 				_columnNames.Add(attr.MemberName, cd);
@@ -319,7 +319,7 @@ namespace LinqToDB.Mapping
 				if (!string.IsNullOrWhiteSpace(attr.MemberName))
 				{
 					if (_columnNames.Remove(attr.MemberName))
-						_columns.RemoveAll(c => c.MemberName == attr.MemberName);
+						_columns.RemoveAll(c => string.Equals(c.MemberName, attr.MemberName, StringComparison.Ordinal));
 
 					AddColumn(cd);
 					_columnNames.Add(attr.MemberName, cd);
@@ -327,19 +327,19 @@ namespace LinqToDB.Mapping
 			}
 		}
 
-		readonly Dictionary<string, ColumnDescriptor> _columnNames = new ();
+		readonly Dictionary<string, ColumnDescriptor> _columnNames = new (StringComparer.Ordinal);
 
 		/// <summary>
 		/// Gets column descriptor by member name.
 		/// </summary>
 		/// <param name="memberName">Member name.</param>
-		/// <returns>Returns column descriptor or <c>null</c>, if descriptor not found.</returns>
+		/// <returns>Returns column descriptor or <see langword="null"/>, if descriptor not found.</returns>
 		public ColumnDescriptor? this[string memberName]
 		{
 			get
 			{
 				if (!_columnNames.TryGetValue(memberName, out var cd))
-					if (Aliases != null && Aliases.TryGetValue(memberName, out var alias) && memberName != alias)
+					if (Aliases != null && Aliases.TryGetValue(memberName, out var alias) && !string.Equals(memberName, alias, StringComparison.Ordinal))
 						return this[alias];
 
 				return cd;
@@ -370,7 +370,7 @@ namespace LinqToDB.Mapping
 				_inheritanceMappings[i] = mapping;
 			}
 
-			var allColumnMemberNames = new HashSet<string>();
+			var allColumnMemberNames = new HashSet<string>(StringComparer.Ordinal);
 
 			foreach (var cd in Columns)
 				allColumnMemberNames.Add(cd.MemberName);
@@ -518,7 +518,7 @@ namespace LinqToDB.Mapping
 				{
 					var orderedAttributes = MappingSchema.SortByConfiguration(dynamicStoreAttributes).Take(2).ToArray();
 
-					if (orderedAttributes[1].Configuration == orderedAttributes[0].Configuration)
+					if (string.Equals(orderedAttributes[1].Configuration, orderedAttributes[0].Configuration, StringComparison.Ordinal))
 						throw new LinqToDBException($"Multiple dynamic store configuration attributes with same configuration found for {TypeAccessor.Type}");
 
 					dynamicStoreAttribute = orderedAttributes[0];

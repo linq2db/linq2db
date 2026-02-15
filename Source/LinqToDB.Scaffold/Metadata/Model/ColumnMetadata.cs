@@ -69,7 +69,7 @@ namespace LinqToDB.Metadata
 		public string?       CreateFormat      { get; set; }
 		/// <summary>
 		/// When set to false, marks member as non-column propery/field, which shold be ignored by linq2db.
-		/// Default value: <c>true</c>.
+		/// Default value: <see langword="true" />.
 		/// </summary>
 		public bool          IsColumn          { get; set; } = true;
 		/// <summary>
@@ -77,7 +77,7 @@ namespace LinqToDB.Metadata
 		/// </summary>
 		public bool          IsDiscriminator   { get; set; }
 		/// <summary>
-		/// When set to <c>true</c>, column will be excuded from select operation with implicit columns. E.g.
+		/// When set to <see langword="true" />, column will be excuded from select operation with implicit columns. E.g.
 		/// <c>db.Table.ToList()</c>.
 		/// </summary>
 		public bool          SkipOnEntityFetch { get; set; }

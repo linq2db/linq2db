@@ -59,7 +59,7 @@ namespace LinqToDB.DataProvider
 		/// DataConnection.ExecuteReader.
 		/// </summary>
 		/// <param name="dataConnection">Data connection instance used with scope.</param>
-		/// <returns>Returns disposable scope object. Can be <c>null</c>.</returns>
+		/// <returns>Returns disposable scope object. Can be <see langword="null"/>.</returns>
 		IExecutionScope?   ExecuteScope          (DataConnection dataConnection);
 
 		ISchemaProvider    GetSchemaProvider     ();

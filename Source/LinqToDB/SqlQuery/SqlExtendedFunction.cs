@@ -205,7 +205,7 @@ namespace LinqToDB.SqlQuery
 
 		static bool CheckNulls(object? expr1, object? expr2)
 		{
-			return expr1 == null && expr2 == null || expr1 != null && expr2 != null;
+			return (expr1 == null && expr2 == null) || (expr1 != null && expr2 != null);
 		}
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
@@ -213,7 +213,7 @@ namespace LinqToDB.SqlQuery
 			if (other is not SqlExtendedFunction otherFunction)
 				return false;
 
-			if (FunctionName != otherFunction.FunctionName)
+			if (!string.Equals(FunctionName, otherFunction.FunctionName, StringComparison.Ordinal))
 				return false;
 
 			if (Arguments.Count != otherFunction.Arguments.Count)
@@ -236,7 +236,7 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var argument in Arguments)
 			{
-				if (!otherFunction.Arguments.Any(a => argument.Modifier == a.Modifier && argument.Expression.Equals(a.Expression, comparer) && argument.Suffix.AreEqual(a.Suffix, comparer)))
+				if (!otherFunction.Arguments.Exists(a => argument.Modifier == a.Modifier && argument.Expression.Equals(a.Expression, comparer) && argument.Suffix.AreEqual(a.Suffix, comparer)))
 					return false;
 			}
 
@@ -278,9 +278,9 @@ namespace LinqToDB.SqlQuery
 			if (CanBeNull.HasValue)
 				return CanBeNull.Value;
 
-			return Arguments.Any(a => a.Expression.CanBeNullable(nullability)) ||
-				   (PartitionBy?.Any(p => p.CanBeNullable(nullability)) ?? false) ||
-				   (OrderBy?.Any(o => o.Expression.CanBeNullable(nullability)) ?? false) ||
+			return Arguments.Exists(a => a.Expression.CanBeNullable(nullability)) ||
+				   (PartitionBy?.Exists(p => p.CanBeNullable(nullability)) ?? false) ||
+				   (OrderBy?.Exists(o => o.Expression.CanBeNullable(nullability)) ?? false) ||
 				   (Filter?.CanBeNullable(nullability) ?? false);
 		}
 

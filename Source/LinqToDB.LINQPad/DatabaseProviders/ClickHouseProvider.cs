@@ -35,7 +35,7 @@ internal sealed class ClickHouseProvider : DatabaseProviderBase
 	{
 		// octonica provider doesn't implement connection pooling
 		// client provider use http connections pooling
-		if (providerName == ProviderName.ClickHouseMySql)
+		if (string.Equals(providerName, ProviderName.ClickHouseMySql, StringComparison.Ordinal))
 			MySqlConnection.ClearAllPools();
 	}
 
@@ -47,10 +47,10 @@ internal sealed class ClickHouseProvider : DatabaseProviderBase
 
 	public override DbProviderFactory GetProviderFactory(string providerName)
 	{
-		if (providerName == ProviderName.ClickHouseDriver)
+		if (string.Equals(providerName, ProviderName.ClickHouseDriver, StringComparison.Ordinal))
 			return new ClickHouseConnectionFactory();
 #if !NETFRAMEWORK
-		if (providerName == ProviderName.ClickHouseOctonica)
+		if (string.Equals(providerName, ProviderName.ClickHouseOctonica, StringComparison.Ordinal))
 			return new ClickHouseDbProviderFactory();
 #endif
 

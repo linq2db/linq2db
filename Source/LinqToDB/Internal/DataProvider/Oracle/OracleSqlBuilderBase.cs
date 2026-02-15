@@ -63,9 +63,10 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				if (attr != null)
 				{
 					return new SqlFragment(
-							(attr.Schema != null ? ConvertInline(attr.Schema, ConvertType.NameToSchema) + "." : null) +
-							ConvertInline(attr.SequenceName, ConvertType.SequenceName) +
-							".nextval");
+						(attr.Schema != null ? ConvertInline(attr.Schema, ConvertType.NameToSchema) + "." : null) +
+						ConvertInline(attr.SequenceName, ConvertType.SequenceName) +
+						".nextval"
+					);
 				}
 			}
 
@@ -78,9 +79,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 			return
 				base.ShouldBuildWhere(selectQuery, out condition) ||
-				!NeedSkip(takeExpr, skipEpr) &&
-				 NeedTake(takeExpr) &&
-				selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty;
+				(!NeedSkip(takeExpr, skipEpr) && NeedTake(takeExpr) && selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty);
 		}
 
 		protected override void BuildSetOperation(SetOperation operation, StringBuilder sb)
@@ -101,17 +100,19 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				case DataType.Date           :
 				case DataType.DateTime       : StringBuilder.Append("date");                      break;
 				case DataType.DateTime2      :
-					if (type.Precision == 6 || type.Precision == null)
+					if (type.Precision is 6 or null)
 						StringBuilder.Append("timestamp");
 					else
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"timestamp({type.Precision})");
 					break;
+
 				case DataType.DateTimeOffset :
-					if (type.Precision == 6 || type.Precision == null)
+					if (type.Precision is 6 or null)
 						StringBuilder.Append("timestamp with time zone");
 					else
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"timestamp({type.Precision}) with time zone");
 					break;
+
 				case DataType.UInt32         :
 				case DataType.Int64          : StringBuilder.Append("Number(19)");                break;
 				case DataType.SByte          :
@@ -119,30 +120,33 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				case DataType.Money          : StringBuilder.Append("Number(19, 4)");             break;
 				case DataType.SmallMoney     : StringBuilder.Append("Number(10, 4)");             break;
 				case DataType.VarChar        :
-					if (type.Length == null || type.Length > 4000 || type.Length < 1)
+					if (type.Length is null or > 4000 or < 1)
 						StringBuilder.Append("VarChar(4000)");
 					else
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"VarChar({type.Length})");
 					break;
+
 				case DataType.NVarChar       :
 					// 4000 vs 2000: length specified in chars, but type limit is 4000 bytes
 					// which could result in different char limits based on db encoding
-					if (type.Length == null || type.Length > 4000 || type.Length < 1)
+					if (type.Length is null or > 4000 or < 1)
 						StringBuilder.Append("NVarChar2(2000)");
 					else
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"NVarChar2({type.Length})");
 					break;
+
 				case DataType.Boolean        : StringBuilder.Append("NUMBER(1)");                 break;
 				case DataType.NText          : StringBuilder.Append("NClob");                     break;
 				case DataType.Text           : StringBuilder.Append("Clob");                      break;
 				case DataType.Guid           : StringBuilder.Append("Raw(16)");                   break;
 				case DataType.Binary         :
 				case DataType.VarBinary      :
-					if (type.Length == null || type.Length == 0)
+					if (type.Length is null or 0)
 						StringBuilder.Append("BLOB");
 					else
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"Raw({type.Length})");
 					break;
+
 				default: base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);         break;
 			}
 		}
@@ -185,7 +189,8 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 			return !IsReserved(name)                                                                                               &&
 				((ProviderOptions.DontEscapeLowercaseIdentifiers && name[0] is >= 'a' and <= 'z') || name[0] is >= 'A' and <= 'Z') &&
 				name.All(c =>
-					(ProviderOptions.DontEscapeLowercaseIdentifiers && c is >= 'a' and <= 'z') || c is >= 'A' and <= 'Z' or >= '0' and <= '9' or '$' or '#' or '_');
+					(ProviderOptions.DontEscapeLowercaseIdentifiers && c is >= 'a' and <= 'z') || c is (>= 'A' and <= 'Z') or (>= '0' and <= '9') or '$' or '#' or '_'
+				);
 		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
@@ -268,7 +273,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		public override string GetReserveSequenceValuesSql(int count, string sequenceName)
 		{
-			return FormattableString.Invariant($"SELECT {ConvertInline(sequenceName, ConvertType.SequenceName)}.nextval ID from DUAL connect by level <= {count}");
+			return string.Create(CultureInfo.InvariantCulture, $"SELECT {ConvertInline(sequenceName, ConvertType.SequenceName)}.nextval ID from DUAL connect by level <= {count}");
 		}
 
 		protected override void BuildEmptyInsert(SqlInsertClause insertClause)
@@ -306,7 +311,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 			var identityField = dropTable.Table!.IdentityFields.Count > 0 ? dropTable.Table!.IdentityFields[0] : null;
 
-			if (identityField == null && dropTable.Table.TableOptions.HasDropIfExists() == false && dropTable.Table.TableOptions.HasIsTemporary() == false)
+			if (identityField == null && !dropTable.Table.TableOptions.HasDropIfExists() && !dropTable.Table.TableOptions.HasIsTemporary())
 			{
 				base.BuildDropTableStatement(dropTable);
 			}
@@ -315,7 +320,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				BuildTag(dropTable);
 
 				StringBuilder
-					.AppendLine(@"BEGIN");
+					.AppendLine("BEGIN");
 
 				if (identityField == null)
 				{
@@ -431,23 +436,26 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 					var sequenceName = ConvertInline(MakeIdentitySequenceName(truncate.Table!.TableName.Name), ConvertType.SequenceName);
 					StringBuilder
 						.AppendFormat(
-						CultureInfo.InvariantCulture,
-						@"DECLARE
-	l_value number;
-BEGIN
-	-- Select the next value of the sequence
-	EXECUTE IMMEDIATE 'SELECT {0}.NEXTVAL FROM dual' INTO l_value;
+							CultureInfo.InvariantCulture,
+							"""
+							DECLARE
+								l_value number;
+							BEGIN
+								-- Select the next value of the sequence
+								EXECUTE IMMEDIATE 'SELECT {0}.NEXTVAL FROM dual' INTO l_value;
 
-	-- Set a negative increment for the sequence, with value = the current value of the sequence
-	EXECUTE IMMEDIATE 'ALTER SEQUENCE {0} INCREMENT BY -' || l_value || ' MINVALUE 0';
+								-- Set a negative increment for the sequence, with value = the current value of the sequence
+								EXECUTE IMMEDIATE 'ALTER SEQUENCE {0} INCREMENT BY -' || l_value || ' MINVALUE 0';
 
-	-- Select once from the sequence, to take its current value back to 0
-	EXECUTE IMMEDIATE 'select {0}.NEXTVAL FROM dual' INTO l_value;
+								-- Select once from the sequence, to take its current value back to 0
+								EXECUTE IMMEDIATE 'select {0}.NEXTVAL FROM dual' INTO l_value;
 
-	-- Set the increment back to 1
-	EXECUTE IMMEDIATE 'ALTER SEQUENCE {0} INCREMENT BY 1 MINVALUE 0';
-END;",
-							sequenceName)
+								-- Set the increment back to 1
+								EXECUTE IMMEDIATE 'ALTER SEQUENCE {0} INCREMENT BY 1 MINVALUE 0';
+							END;
+							""",
+							sequenceName
+						)
 						.AppendLine()
 						;
 
@@ -500,7 +508,14 @@ END;",
 			StringBuilder.Append("TRUNCATE TABLE ");
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
+		public override StringBuilder BuildObjectName(
+			StringBuilder sb,
+			SqlObjectName name,
+			ConvertType objectType = ConvertType.NameToQueryTable,
+			bool escape = true,
+			TableOptions tableOptions = TableOptions.NotSet,
+			bool withoutSuffix = false
+		)
 		{
 			if (name.Schema != null)
 			{
@@ -562,31 +577,25 @@ END;",
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			string command;
+			var command = table.TableOptions.TemporaryOptionValue switch
+			{
+				TableOptions.IsTemporary                                                                                     or
+				TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData       or
+				TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure                                           or
+				TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       or
+				                                                                     TableOptions.IsLocalTemporaryData       or
+				                                                                     TableOptions.IsTransactionTemporaryData or
+				                           TableOptions.IsGlobalTemporaryStructure                                           or
+				                           TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       or
+				                           TableOptions.IsGlobalTemporaryStructure | TableOptions.IsTransactionTemporaryData =>
+					"CREATE GLOBAL TEMPORARY TABLE ",
 
-			if (table.TableOptions.IsTemporaryOptionSet())
-			{
-				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-				{
-					case TableOptions.IsTemporary                                                                                     :
-					case TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData       :
-					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure                                           :
-					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
-					case                                                                      TableOptions.IsLocalTemporaryData       :
-					case                                                                      TableOptions.IsTransactionTemporaryData :
-					case                            TableOptions.IsGlobalTemporaryStructure                                           :
-					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
-					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsTransactionTemporaryData :
-						command = "CREATE GLOBAL TEMPORARY TABLE ";
-						break;
-					case var value :
-						throw new InvalidOperationException($"Incompatible table options '{value}'");
-				}
-			}
-			else
-			{
-				command = "CREATE TABLE ";
-			}
+				0 =>
+					"CREATE TABLE ",
+
+				var value =>
+					throw new InvalidOperationException($"Incompatible table options '{value}'"),
+			};
 
 			StringBuilder.Append(command);
 		}
@@ -595,11 +604,11 @@ END;",
 		{
 			if (createTable.StatementHeader == null && (createTable.Table.TableOptions.HasCreateIfNotExists() || createTable.Table.TableOptions.HasIsTemporary()))
 			{
-				AppendIndent().AppendLine(@"BEGIN");
+				AppendIndent().AppendLine("BEGIN");
 
 				Indent++;
 
-				AppendIndent().AppendLine(@"EXECUTE IMMEDIATE '");
+				AppendIndent().AppendLine("EXECUTE IMMEDIATE '");
 
 				Indent++;
 			}
@@ -742,7 +751,7 @@ END;",
 				HintBuilder.Insert(0, " /*+ ");
 				HintBuilder.Append(" */");
 
-				StringBuilder.Insert(_hintPosition, HintBuilder.ToString());
+				StringBuilder.InsertBuilder(_hintPosition, HintBuilder);
 			}
 		}
 

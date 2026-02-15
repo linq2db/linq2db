@@ -54,158 +54,145 @@ namespace Tests.DataProvider
 		public void Unnest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			var testData = SampleClass.Seed();
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var query = from t in table
-					from v in db.Unnest(t.StrArray)
-					where v.StartsWith("V")
-					select v;
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+			var query = from t in table
+						from v in db.Unnest(t.StrArray)
+						where v.StartsWith("V")
+						select v;
 
-				var actual = query.ToArray();
+			var actual = query.ToArray();
 
-				var expected = from t in testData
-					from v in t.StrArray
-					where v.StartsWith("V")
-					select v;
+			var expected = from t in testData
+						   from v in t.StrArray
+						   where v.StartsWith("V")
+						   select v;
 
-				AreEqual(expected, actual);
-			}
+			AreEqual(expected, actual);
 		}
 
 		[Test]
 		public void UnnestSubquery([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			var testData = SampleClass.Seed();
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var query = from t in table
-					select new
-					{
-						t.Id,
-						First = db.Unnest(t.StrArray).FirstOrDefault()
-					};
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+			var query = from t in table
+						select new
+						{
+							t.Id,
+							First = db.Unnest(t.StrArray).FirstOrDefault()
+						};
 
-				var actual = query.ToArray();
+			var actual = query.ToArray();
 
-				var expected = from t in testData
-					select new
-					{
-						t.Id,
-						First = t.StrArray.FirstOrDefault()
-					};
-				
-				AreEqual(expected, actual);
-			}
+			var expected = from t in testData
+						   select new
+						   {
+							   t.Id,
+							   First = t.StrArray.FirstOrDefault()
+						   };
+
+			AreEqual(expected, actual);
 		}
 
 		[Test]
 		public void UnnestWithOrdinality([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			var testData = SampleClass.Seed();
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var query = from t in table
-					from v in db.UnnestWithOrdinality(t.StrArray)
-					where v.Value.StartsWith("V")
-					select v;
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+			var query = from t in table
+						from v in db.UnnestWithOrdinality(t.StrArray)
+						where v.Value.StartsWith("V")
+						select v;
 
-				var actual = query.ToArray();
+			var actual = query.ToArray();
 
-				var expected = from t in testData
-					from v in t.StrArray.Select((e, i) => new PostgreSQLExtensions.Ordinality<string>{Index = i + 1, Value = e})
-					where v.Value.StartsWith("V")
-					select v;
+			var expected = from t in testData
+						   from v in t.StrArray.Select((e, i) => new PostgreSQLExtensions.Ordinality<string>{Index = i + 1, Value = e})
+						   where v.Value.StartsWith("V")
+						   select v;
 
-				AreEqualWithComparer(expected, actual);
-			}
+			AreEqualWithComparer(expected, actual);
 		}
 
 		[Test]
 		public void UnnestWithOrdinalitySubquery([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			var testData = SampleClass.Seed();
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var query = from t in table
-					select new
-					{
-						t.Id,
-						First = db.UnnestWithOrdinality(t.StrArray).Skip(1).Select(e => e.Index + " - " + e.Value).FirstOrDefault()
-					};
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+			var query = from t in table
+						select new
+						{
+							t.Id,
+							First = db.UnnestWithOrdinality(t.StrArray).Skip(1).Select(e => e.Index + " - " + e.Value).FirstOrDefault()
+						};
 
-				var actual = query.ToArray();
+			var actual = query.ToArray();
 
-				var expectedQuery = from t in testData
-					select new
-					{
-						t.Id,
-						First = t.StrArray.Skip(1).Select((e, i) => i + 2 + " - " + e).FirstOrDefault()
-					};
+			var expectedQuery = from t in testData
+								select new
+								{
+									t.Id,
+									First = t.StrArray.Skip(1).Select((e, i) => i + 2 + " - " + e).FirstOrDefault()
+								};
 
-				var expected = expectedQuery.ToArray();
-				
-				AreEqual(expected, actual);
-			}
+			var expected = expectedQuery.ToArray();
+
+			AreEqual(expected, actual);
 		}
 
 		[Test]
 		public void ArrayAggregateGrouping([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			var testData = SampleClass.Seed();
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var query = from t in table
-					from v in db.Unnest(t.StrArray)
-					group new {v, t} by t.Id / 3 into g
-					select new
-					{
-						Id = g.Key,
-						Items = g.ArrayAggregate(e => e.v, Sql.AggregateModifier.All).OrderBy(e => e.t.Id).ToValue(),
-						AllItems = g.ArrayAggregate(e => e.v, Sql.AggregateModifier.None).OrderByDescending(e => e.t.Id).ThenBy(e => e.v).ToValue(),
-						DistinctItems = g.ArrayAggregate(e => e.v, Sql.AggregateModifier.None).ToValue()
-					};
-				
-				var selectResult = query.ToArray();
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+			var query = from t in table
+						from v in db.Unnest(t.StrArray)
+						group new {v, t} by t.Id / 3 into g
+						select new
+						{
+							Id = g.Key,
+							Items = g.ArrayAggregate(e => e.v, Sql.AggregateModifier.All).OrderBy(e => e.t.Id).ToValue(),
+							AllItems = g.ArrayAggregate(e => e.v, Sql.AggregateModifier.None).OrderByDescending(e => e.t.Id).ThenBy(e => e.v).ToValue(),
+							DistinctItems = g.ArrayAggregate(e => e.v, Sql.AggregateModifier.None).ToValue()
+						};
 
-				var query2 = from t in table
-					from v in db.Unnest(t.StrArray)
-					select new { t, v };
+			var selectResult = query.ToArray();
 
-				var result1 = query2.ArrayAggregate(e => e.v).ToValue();
-				var result2 = query2.ArrayAggregate(e => e.v, Sql.AggregateModifier.Distinct).ToValue();
-				var result3 = query2.ArrayAggregate(e => e.v).OrderBy(e => e.v).ToValue();
+			var query2 = from t in table
+						 from v in db.Unnest(t.StrArray)
+						 select new { t, v };
 
-			}
+			var result1 = query2.ArrayAggregate(e => e.v).ToValue();
+			var result2 = query2.ArrayAggregate(e => e.v, Sql.AggregateModifier.Distinct).ToValue();
+			var result3 = query2.ArrayAggregate(e => e.v).OrderBy(e => e.v).ToValue();
 		}
 
 		[Test]
 		public void AnalyticFunctions([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
 			var testData = SampleClass.Seed();
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var subQuery = from t in table
-					from v in db.Unnest(t.StrArray)
-					select new
-					{
-						Id = t.Id / 3,
-						Items1 = Sql.Ext.ArrayAggregate(v).Over().PartitionBy(t.Id / 3, t.Id / 2).ToValue(),
-						Items2 = Sql.Ext.ArrayAggregate(v, Sql.AggregateModifier.None).Over().PartitionBy(t.Id / 3, t.Id / 2).ToValue(),
-						AllItems = Sql.Ext.ArrayAggregate(v, Sql.AggregateModifier.All).Over().PartitionBy(t.Id / 3).ToValue(),
-						ItemsFiltered = Sql.Ext.ArrayAggregate(v, Sql.AggregateModifier.None).Filter(v.StartsWith("V0")).Over().PartitionBy(t.Id / 3).ToValue(),
-						AllItemsFiltered = Sql.Ext.ArrayAggregate(v, Sql.AggregateModifier.All).Filter(v.StartsWith("V0")).Over().PartitionBy(t.Id / 3).ToValue(),
-						Ordered = Sql.Ext.ArrayAggregate(v, Sql.AggregateModifier.All).Filter(v.StartsWith("V0")).Over().PartitionBy(t.Id / 3).OrderBy(t.Id).ThenBy(t.Id - 1).ToValue(),
-						RN = Sql.Ext.RowNumber().Over().PartitionBy(t.Id / 3).OrderBy(t.Id).ToValue()
-					};
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+			var subQuery = from t in table
+						   from v in db.Unnest(t.StrArray)
+						   select new
+						   {
+							   Id = t.Id / 3,
+							   Items1 = Sql.Ext.ArrayAggregate(v).Over().PartitionBy(t.Id / 3, t.Id / 2).ToValue(),
+							   Items2 = Sql.Ext.ArrayAggregate(v, Sql.AggregateModifier.None).Over().PartitionBy(t.Id / 3, t.Id / 2).ToValue(),
+							   AllItems = Sql.Ext.ArrayAggregate(v, Sql.AggregateModifier.All).Over().PartitionBy(t.Id / 3).ToValue(),
+							   ItemsFiltered = Sql.Ext.ArrayAggregate(v, Sql.AggregateModifier.None).Filter(v.StartsWith("V0")).Over().PartitionBy(t.Id / 3).ToValue(),
+							   AllItemsFiltered = Sql.Ext.ArrayAggregate(v, Sql.AggregateModifier.All).Filter(v.StartsWith("V0")).Over().PartitionBy(t.Id / 3).ToValue(),
+							   Ordered = Sql.Ext.ArrayAggregate(v, Sql.AggregateModifier.All).Filter(v.StartsWith("V0")).Over().PartitionBy(t.Id / 3).OrderBy(t.Id).ThenBy(t.Id - 1).ToValue(),
+							   RN = Sql.Ext.RowNumber().Over().PartitionBy(t.Id / 3).OrderBy(t.Id).ToValue()
+						   };
 
-				var result = subQuery.ToArray();
-			}
+			var result = subQuery.ToArray();
 		}
 
 		[Test]
@@ -214,12 +201,11 @@ namespace Tests.DataProvider
 		{
 			var arr = new int [] { 1, 2, 3 };
 			var testData = SampleClass.Seed();
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData))
-			{
-				var query = from t1 in table
-					from t2 in table.InnerJoin(t2 => t2.Id != t1.Id)
-					where
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+			var query = from t1 in table
+						from t2 in table.InnerJoin(t2 => t2.Id != t1.Id)
+						where
 						   Sql.Ext.PostgreSQL().GreaterThan(t1.StrArray, t2.StrArray)
 						|| Sql.Ext.PostgreSQL().GreaterThanOrEqual(t1.StrArray, t2.StrArray)
 						|| Sql.Ext.PostgreSQL().Contains(t1.StrArray, t2.StrArray)
@@ -247,54 +233,53 @@ namespace Tests.DataProvider
 						|| Sql.Ext.PostgreSQL().ValueIsGreaterThanOrEqualToAny(t1.IntValue, arr)
 						|| Sql.Ext.PostgreSQL().ValueIsNotEqualToAny(t1.IntValue, arr)
 
-					select new
-					{
-						TwoArrays          = Sql.Ext.PostgreSQL().ConcatArrays(t1.StrArray, t2.StrArray),
-						ThreeArrays        = Sql.Ext.PostgreSQL().ConcatArrays(t1.StrArray, t2.StrArray, t1.StrArray),
-						LessThen           = Sql.Ext.PostgreSQL().LessThan(t1.StrArray, t2.StrArray),
-						LessThenOrEqual    = Sql.Ext.PostgreSQL().LessThanOrEqual(t1.StrArray, t2.StrArray),
-						GreaterThen        = Sql.Ext.PostgreSQL().GreaterThan(t1.StrArray, t2.StrArray),
-						GreaterThanOrEqual = Sql.Ext.PostgreSQL().GreaterThanOrEqual(t1.StrArray, t2.StrArray),
-						Contains           = Sql.Ext.PostgreSQL().Contains(t1.StrArray, t2.StrArray),
-						ContainedBy        = Sql.Ext.PostgreSQL().ContainedBy(t1.StrArray, t2.StrArray),
-						Overlaps           = Sql.Ext.PostgreSQL().Overlaps(t1.StrArray, t2.StrArray),
+						select new
+						{
+							TwoArrays          = Sql.Ext.PostgreSQL().ConcatArrays(t1.StrArray, t2.StrArray),
+							ThreeArrays        = Sql.Ext.PostgreSQL().ConcatArrays(t1.StrArray, t2.StrArray, t1.StrArray),
+							LessThen           = Sql.Ext.PostgreSQL().LessThan(t1.StrArray, t2.StrArray),
+							LessThenOrEqual    = Sql.Ext.PostgreSQL().LessThanOrEqual(t1.StrArray, t2.StrArray),
+							GreaterThen        = Sql.Ext.PostgreSQL().GreaterThan(t1.StrArray, t2.StrArray),
+							GreaterThanOrEqual = Sql.Ext.PostgreSQL().GreaterThanOrEqual(t1.StrArray, t2.StrArray),
+							Contains           = Sql.Ext.PostgreSQL().Contains(t1.StrArray, t2.StrArray),
+							ContainedBy        = Sql.Ext.PostgreSQL().ContainedBy(t1.StrArray, t2.StrArray),
+							Overlaps           = Sql.Ext.PostgreSQL().Overlaps(t1.StrArray, t2.StrArray),
 
-						ValueEqualToAny              = Sql.Ext.PostgreSQL().ValueIsEqualToAny(t1.IntValue, t2.IntArray),
-						ValueLessThanAny             = Sql.Ext.PostgreSQL().ValueIsLessThanAny(t1.IntValue, t2.IntArray),
-						ValueLessThanOrEqualToAny    = Sql.Ext.PostgreSQL().ValueIsLessThanOrEqualToAny(t1.IntValue, t2.IntArray),
-						ValueGreaterThanAny          = Sql.Ext.PostgreSQL().ValueIsGreaterThanAny(t1.IntValue, t2.IntArray),
-						ValueGreaterThanOrEqualToAny = Sql.Ext.PostgreSQL().ValueIsGreaterThanOrEqualToAny(t1.IntValue, t2.IntArray),
-						ValueNotEqualToAny           = Sql.Ext.PostgreSQL().ValueIsNotEqualToAny(t1.IntValue, t2.IntArray),
+							ValueEqualToAny              = Sql.Ext.PostgreSQL().ValueIsEqualToAny(t1.IntValue, t2.IntArray),
+							ValueLessThanAny             = Sql.Ext.PostgreSQL().ValueIsLessThanAny(t1.IntValue, t2.IntArray),
+							ValueLessThanOrEqualToAny    = Sql.Ext.PostgreSQL().ValueIsLessThanOrEqualToAny(t1.IntValue, t2.IntArray),
+							ValueGreaterThanAny          = Sql.Ext.PostgreSQL().ValueIsGreaterThanAny(t1.IntValue, t2.IntArray),
+							ValueGreaterThanOrEqualToAny = Sql.Ext.PostgreSQL().ValueIsGreaterThanOrEqualToAny(t1.IntValue, t2.IntArray),
+							ValueNotEqualToAny           = Sql.Ext.PostgreSQL().ValueIsNotEqualToAny(t1.IntValue, t2.IntArray),
 
-						//TODO: Other types
-						ArrayAppendStr     = Sql.Ext.PostgreSQL().ArrayAppend(t1.StrArray, t2.StrValue),
-						ArrayAppendInt     = Sql.Ext.PostgreSQL().ArrayAppend(t1.IntArray, t2.Id),
-						ArrayAppendLong    = Sql.Ext.PostgreSQL().ArrayAppend(t1.LongArray, t2.LongValue),
-						ArrayAppendLong2   = Sql.Ext.PostgreSQL().ArrayAppend(t1.LongArray, Sql.ConvertTo<long>.From(t2.IntValue + 2)),
-						ArrayAppendDouble  = Sql.Ext.PostgreSQL().ArrayAppend(t1.DoubleArray, t2.DoubleValue),
-						ArrayAppendDecimal = Sql.Ext.PostgreSQL().ArrayAppend(t1.DecimalArray, t2.DecimalValue),
+							//TODO: Other types
+							ArrayAppendStr     = Sql.Ext.PostgreSQL().ArrayAppend(t1.StrArray, t2.StrValue),
+							ArrayAppendInt     = Sql.Ext.PostgreSQL().ArrayAppend(t1.IntArray, t2.Id),
+							ArrayAppendLong    = Sql.Ext.PostgreSQL().ArrayAppend(t1.LongArray, t2.LongValue),
+							ArrayAppendLong2   = Sql.Ext.PostgreSQL().ArrayAppend(t1.LongArray, Sql.ConvertTo<long>.From(t2.IntValue + 2)),
+							ArrayAppendDouble  = Sql.Ext.PostgreSQL().ArrayAppend(t1.DoubleArray, t2.DoubleValue),
+							ArrayAppendDecimal = Sql.Ext.PostgreSQL().ArrayAppend(t1.DecimalArray, t2.DecimalValue),
 
-						ArrayCat       = Sql.Ext.PostgreSQL().ArrayCat(t1.StrArray, t2.StrArray),
-						ArrayNDims     = Sql.Ext.PostgreSQL().ArrayNDims(t1.StrArray),
-						ArrayDims      = Sql.Ext.PostgreSQL().ArrayDims(t1.StrArray),
-						Length         = Sql.Ext.PostgreSQL().ArrayLength(t1.StrArray, 1),
-						ArrayLower     = Sql.Ext.PostgreSQL().ArrayLower(t1.StrArray, 1),
-						ArrayPosition1 = Sql.Ext.PostgreSQL().ArrayPosition(t1.StrArray, t2.StrValue),
-						ArrayPosition2 = Sql.Ext.PostgreSQL().ArrayPosition(t1.StrArray, t2.StrValue, 1),
-						ArrayPositions = Sql.Ext.PostgreSQL().ArrayPositions(t1.StrArray, t2.StrValue),
-						ArrayPrepend   = Sql.Ext.PostgreSQL().ArrayPrepend(t2.StrValue, t1.StrArray),
-						ArrayRemove    = Sql.Ext.PostgreSQL().ArrayRemove(t1.StrArray, t2.StrValue),
-						ArrayReplace   = Sql.Ext.PostgreSQL().ArrayReplace(t1.StrArray, t2.StrValue, "NN"),
-						ArrayToString1 = Sql.Ext.PostgreSQL().ArrayToString(t1.StrArray, ","),
-						ArrayToString2 = Sql.Ext.PostgreSQL().ArrayToString(t1.StrArray, ",", "*"),
-						ArrayUpper     = Sql.Ext.PostgreSQL().ArrayUpper(t1.StrArray, 1),
-						Cardinality    = Sql.Ext.PostgreSQL().Cardinality(t1.StrArray),
-						StringToArray1 = Sql.Ext.PostgreSQL().StringToArray("T1,T2,T3", ","),
-						StringToArray2 = Sql.Ext.PostgreSQL().StringToArray("T1,T2,T3", ",", "T2"),
-					};
+							ArrayCat       = Sql.Ext.PostgreSQL().ArrayCat(t1.StrArray, t2.StrArray),
+							ArrayNDims     = Sql.Ext.PostgreSQL().ArrayNDims(t1.StrArray),
+							ArrayDims      = Sql.Ext.PostgreSQL().ArrayDims(t1.StrArray),
+							Length         = Sql.Ext.PostgreSQL().ArrayLength(t1.StrArray, 1),
+							ArrayLower     = Sql.Ext.PostgreSQL().ArrayLower(t1.StrArray, 1),
+							ArrayPosition1 = Sql.Ext.PostgreSQL().ArrayPosition(t1.StrArray, t2.StrValue),
+							ArrayPosition2 = Sql.Ext.PostgreSQL().ArrayPosition(t1.StrArray, t2.StrValue, 1),
+							ArrayPositions = Sql.Ext.PostgreSQL().ArrayPositions(t1.StrArray, t2.StrValue),
+							ArrayPrepend   = Sql.Ext.PostgreSQL().ArrayPrepend(t2.StrValue, t1.StrArray),
+							ArrayRemove    = Sql.Ext.PostgreSQL().ArrayRemove(t1.StrArray, t2.StrValue),
+							ArrayReplace   = Sql.Ext.PostgreSQL().ArrayReplace(t1.StrArray, t2.StrValue, "NN"),
+							ArrayToString1 = Sql.Ext.PostgreSQL().ArrayToString(t1.StrArray, ","),
+							ArrayToString2 = Sql.Ext.PostgreSQL().ArrayToString(t1.StrArray, ",", "*"),
+							ArrayUpper     = Sql.Ext.PostgreSQL().ArrayUpper(t1.StrArray, 1),
+							Cardinality    = Sql.Ext.PostgreSQL().Cardinality(t1.StrArray),
+							StringToArray1 = Sql.Ext.PostgreSQL().StringToArray("T1,T2,T3", ","),
+							StringToArray2 = Sql.Ext.PostgreSQL().StringToArray("T1,T2,T3", ",", "T2"),
+						};
 
-				var result = query.ToArray();
-			}
+			var result = query.ToArray();
 		}
 
 		#region 4562
@@ -357,59 +342,55 @@ namespace Tests.DataProvider
 		[Test]
 		public void GenerateSeries([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var series1 = db.GenerateSeries(1, 10).ToArray();
-				var series2 = db.GenerateSeries(1, 10, 2).ToArray();
-				
-				var dateSeries = db.GenerateSeries(TestData.DateTime.AddDays(-10), TestData.DateTime, TimeSpan.FromHours(5)).ToArray();
+			using var db = GetDataContext(context);
+			var series1 = db.GenerateSeries(1, 10).ToArray();
+			var series2 = db.GenerateSeries(1, 10, 2).ToArray();
 
-				var allInQuery = from t1 in db.GenerateSeries(1, 10)
-					from t2 in db.GenerateSeries(1, 10, 2).LeftJoin(t2 => t2 == t1)
-					from d in db.GenerateSeries(TestData.DateTime - TimeSpan.FromDays(10), TestData.DateTime,
+			var dateSeries = db.GenerateSeries(TestData.DateTime.AddDays(-10), TestData.DateTime, TimeSpan.FromHours(5)).ToArray();
+
+			var allInQuery = from t1 in db.GenerateSeries(1, 10)
+							 from t2 in db.GenerateSeries(1, 10, 2).LeftJoin(t2 => t2 == t1)
+							 from d in db.GenerateSeries(TestData.DateTime - TimeSpan.FromDays(10), TestData.DateTime,
 						TimeSpan.FromHours(1))
-					select new
-					{
-						t1,
-						t2,
-						Date = d
-					};
+							 select new
+							 {
+								 t1,
+								 t2,
+								 Date = d
+							 };
 
-				var allResult = allInQuery.ToArray();
-			}
+			var allResult = allInQuery.ToArray();
 		}
 
 		[Test]
 		public void SystemFunctions([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var allResult = db.Select(() => new
 			{
-				var allResult = db.Select(() => new
-				{
-					Version = Sql.Ext.PostgreSQL().Version(db),
-					CurrentCatalog = Sql.Ext.PostgreSQL().CurrentCatalog(db),
-					CurrentDatabase = Sql.Ext.PostgreSQL().CurrentDatabase(db),
-					CurrentRole = Sql.Ext.PostgreSQL().CurrentRole(db),
-					CurrentSchema = Sql.Ext.PostgreSQL().CurrentSchema(db),
-					//CurrentSchemas = Sql.Ext.PostgreSQL().CurrentSchemas(db),
-					CurrentUser = Sql.Ext.PostgreSQL().CurrentUser(db),
-					SessionUser = Sql.Ext.PostgreSQL().SessionUser(db),
-				});
+				Version = Sql.Ext.PostgreSQL().Version(db),
+				CurrentCatalog = Sql.Ext.PostgreSQL().CurrentCatalog(db),
+				CurrentDatabase = Sql.Ext.PostgreSQL().CurrentDatabase(db),
+				CurrentRole = Sql.Ext.PostgreSQL().CurrentRole(db),
+				CurrentSchema = Sql.Ext.PostgreSQL().CurrentSchema(db),
+				//CurrentSchemas = Sql.Ext.PostgreSQL().CurrentSchemas(db),
+				CurrentUser = Sql.Ext.PostgreSQL().CurrentUser(db),
+				SessionUser = Sql.Ext.PostgreSQL().SessionUser(db),
+			});
 
-				var separateResult = new
-				{
-					Version = Sql.Ext.PostgreSQL().Version(db),
-					CurrentCatalog = Sql.Ext.PostgreSQL().CurrentCatalog(db),
-					CurrentDatabase = Sql.Ext.PostgreSQL().CurrentDatabase(db),
-					CurrentRole = Sql.Ext.PostgreSQL().CurrentRole(db),
-					CurrentSchema = Sql.Ext.PostgreSQL().CurrentSchema(db),
-					//CurrentSchemas = Sql.Ext.PostgreSQL().CurrentSchemas(db),
-					CurrentUser = Sql.Ext.PostgreSQL().CurrentUser(db),
-					SessionUser = Sql.Ext.PostgreSQL().SessionUser(db),
-				};
+			var separateResult = new
+			{
+				Version = Sql.Ext.PostgreSQL().Version(db),
+				CurrentCatalog = Sql.Ext.PostgreSQL().CurrentCatalog(db),
+				CurrentDatabase = Sql.Ext.PostgreSQL().CurrentDatabase(db),
+				CurrentRole = Sql.Ext.PostgreSQL().CurrentRole(db),
+				CurrentSchema = Sql.Ext.PostgreSQL().CurrentSchema(db),
+				//CurrentSchemas = Sql.Ext.PostgreSQL().CurrentSchemas(db),
+				CurrentUser = Sql.Ext.PostgreSQL().CurrentUser(db),
+				SessionUser = Sql.Ext.PostgreSQL().SessionUser(db),
+			};
 
-				Assert.That(allResult, Is.EqualTo(separateResult));
-			}
+			Assert.That(allResult, Is.EqualTo(separateResult));
 		}
 
 		public class Issue5285Table

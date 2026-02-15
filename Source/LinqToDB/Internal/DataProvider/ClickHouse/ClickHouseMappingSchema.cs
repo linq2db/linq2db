@@ -200,7 +200,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		{
 			if (dt.Type.DataType == DataType.IPv6)
 			{
-				if (value.Length != 4 && value.Length != 16)
+				if (value.Length is not 4 and not 16)
 					throw new LinqToDBConvertException($"IPv6 address should have 4 or 16 bytes, but got {value.Length}");
 
 				stringBuilder.Append('\'');
@@ -483,12 +483,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				case DataType.Int128   : BuildInt128Literal(sb, value);                  return;
 				case DataType.UInt128  :
 					if (value < 0)
-						throw new LinqToDBConvertException(FormattableString.Invariant($"Value {value} cannot be converted to unsigned UInt128 literal"));
+						throw new LinqToDBConvertException(string.Create(CultureInfo.InvariantCulture, $"Value {value} cannot be converted to unsigned UInt128 literal"));
 					BuildUInt128Literal(sb, value);                                      return;
 				case DataType.Int256   : BuildInt256Literal(sb, value);                  return;
 				case DataType.UInt256  :
 					if (value < 0)
-						throw new LinqToDBConvertException(FormattableString.Invariant($"Value {value} cannot be converted to unsigned UInt256 literal"));
+						throw new LinqToDBConvertException(string.Create(CultureInfo.InvariantCulture, $"Value {value} cannot be converted to unsigned UInt256 literal"));
 					BuildUInt256Literal(sb, value);                                      return;
 			}
 
@@ -537,13 +537,13 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				case DataType.Int128   : BuildInt128Literal(sb, value);                  return;
 				case DataType.UInt128  :
 					if (value < 0)
-						throw new LinqToDBConvertException(FormattableString.Invariant($"Value {value} cannot be converted to unsigned UInt128 literal"));
+						throw new LinqToDBConvertException(string.Create(CultureInfo.InvariantCulture, $"Value {value} cannot be converted to unsigned UInt128 literal"));
 					BuildUInt128Literal(sb, value);                                      return;
 				case DataType.Undefined:
 				case DataType.Int256   : BuildInt256Literal(sb, value);                  return;
 				case DataType.UInt256  :
 					if (value < 0)
-						throw new LinqToDBConvertException(FormattableString.Invariant($"Value {value} cannot be converted to unsigned UInt256 literal"));
+						throw new LinqToDBConvertException(string.Create(CultureInfo.InvariantCulture, $"Value {value} cannot be converted to unsigned UInt256 literal"));
 					BuildUInt256Literal(sb, value);                                      return;
 			}
 
@@ -716,7 +716,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		private static void BuildDateTime64Literal(StringBuilder sb, DateTime value, int precision)
 		{
 			if (precision < 0)
-				throw new LinqToDBConvertException(FormattableString.Invariant($"Invalid DateTime64 precision: {precision}"));
+				throw new LinqToDBConvertException(string.Create(CultureInfo.InvariantCulture, $"Invalid DateTime64 precision: {precision}"));
 
 			if (precision > 9)
 				precision = 9;
@@ -798,7 +798,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				DataType.IntervalMonth   => "INTERVAL {0} MONTH",
 				DataType.IntervalQuarter => "INTERVAL {0} QUARTER",
 				DataType.IntervalYear    => "INTERVAL {0} YEAR",
-				_                        => null
+				_                        => null,
 			};
 		}
 
@@ -856,10 +856,11 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 			static Guid ByteArrayToGuid(byte[] raw)
 			{
-				if (raw.Length == 16)
-					return new Guid(raw);
-
-				return Guid.Parse(Encoding.UTF8.GetString(raw));
+				return raw.Length switch
+				{
+					16 => new Guid(raw),
+					_ => Guid.Parse(Encoding.UTF8.GetString(raw)),
+				};
 			}
 		}
 
@@ -950,18 +951,18 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 			static float StringToFloat(string raw)
 			{
-				if (raw == "-inf") return float.NegativeInfinity;
-				if (raw == "inf" ) return float.PositiveInfinity;
-				if (raw == "nan" ) return float.NaN;
+				if (string.Equals(raw, "-inf", StringComparison.Ordinal)) return float.NegativeInfinity;
+				if (string.Equals(raw, "inf", StringComparison.Ordinal)) return float.PositiveInfinity;
+				if (string.Equals(raw, "nan", StringComparison.Ordinal)) return float.NaN;
 
 				return float.Parse(raw, CultureInfo.InvariantCulture);
 			}
 
 			static double StringToDouble(string raw)
 			{
-				if (raw == "-inf") return double.NegativeInfinity;
-				if (raw == "inf" ) return double.PositiveInfinity;
-				if (raw == "nan" ) return double.NaN;
+				if (string.Equals(raw, "-inf", StringComparison.Ordinal)) return double.NegativeInfinity;
+				if (string.Equals(raw, "inf", StringComparison.Ordinal)) return double.PositiveInfinity;
+				if (string.Equals(raw, "nan", StringComparison.Ordinal)) return double.NaN;
 
 				return double.Parse(raw, CultureInfo.InvariantCulture);
 			}

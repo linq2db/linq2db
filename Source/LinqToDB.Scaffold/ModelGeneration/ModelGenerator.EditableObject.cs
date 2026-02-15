@@ -103,11 +103,11 @@ namespace LinqToDB.Tools.ModelGeneration
 
 				if (props.Count > 0)
 				{
-					if (props.Any(p => p.IsEditable))
+					if (props.Exists(p => p.IsEditable))
 					{
 						var ctor = GetTreeNodes(cl)
 							.OfType<TMethod>()
-							.FirstOrDefault(m => m.Name == cl.Name && m.ParameterBuilders.Count == 0);
+							.FirstOrDefault(m => string.Equals(m.Name, cl.Name, System.StringComparison.Ordinal) && m.ParameterBuilders.Count == 0);
 
 						if (ctor == null)
 						{
@@ -159,7 +159,7 @@ namespace LinqToDB.Tools.ModelGeneration
 								{
 									new TMethod { TypeBuilder = static () => "void", Name = "BeforeAcceptChanges", AccessModifier = AccessModifier.Partial },
 									new TMethod { TypeBuilder = static () => "void", Name = "AfterAcceptChanges",  AccessModifier = AccessModifier.Partial },
-								}
+								},
 							},
 							ac,
 							new TMemberGroup
@@ -169,17 +169,16 @@ namespace LinqToDB.Tools.ModelGeneration
 								{
 									new TMethod { TypeBuilder = static () => "void", Name = "BeforeRejectChanges", AccessModifier = AccessModifier.Partial },
 									new TMethod { TypeBuilder = static () => "void", Name = "AfterRejectChanges",  AccessModifier = AccessModifier.Partial },
-								}
+								},
 							},
 							rc,
-							id
+							id,
 						},
 					});
 
-					if (!cl.Interfaces.Contains("IEditableObject"))
+					if (!cl.Interfaces.Contains("IEditableObject", System.StringComparer.Ordinal))
 					{
-						if (Model.Usings.Contains("System.ComponentModel") == false)
-							Model.Usings.Add("System.ComponentModel");
+						Model.Usings.Add("System.ComponentModel");
 
 						cl.Interfaces.Add("IEditableObject");
 
@@ -195,7 +194,7 @@ namespace LinqToDB.Tools.ModelGeneration
 									{
 										new TField    { TypeBuilder = static () => "bool", Name = "_isEditing", AccessModifier = AccessModifier.Private },
 										new TProperty { TypeBuilder = static () => "bool", Name = " IsEditing" }.InitGetter(() => ["_isEditing"]),
-									}
+									},
 								},
 								new TMemberGroup
 								{
@@ -205,9 +204,9 @@ namespace LinqToDB.Tools.ModelGeneration
 										new TMethod { TypeBuilder = static () => "void", Name = "BeginEdit",  BodyBuilders = { static () => ["AcceptChanges();",    "_isEditing = true;"] }, IsVirtual = true },
 										new TMethod { TypeBuilder = static () => "void", Name = "CancelEdit", BodyBuilders = { static () => ["_isEditing = false;", "RejectChanges();"  ] }, IsVirtual = true },
 										new TMethod { TypeBuilder = static () => "void", Name = "EndEdit",    BodyBuilders = { static () => ["_isEditing = false;", "AcceptChanges();"  ] }, IsVirtual = true },
-									}
+									},
 								},
-							}
+							},
 						});
 					}
 				}

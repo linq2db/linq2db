@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 
 using LinqToDB;
@@ -42,7 +43,7 @@ namespace Tests.DataProvider
 			Debug.WriteLine("{0} {1}:{2} -> NULL", fieldName, type.Name, dataType);
 
 			tableName = conn.DataProvider.CreateSqlBuilder(conn.DataProvider.MappingSchema, conn.Options).ConvertInline(tableName, ConvertType.NameToQueryTable);
-			var sql   = string.Format(GetNullSql(conn),  fieldName, tableName);
+			var sql   = string.Format(CultureInfo.InvariantCulture, GetNullSql(conn),  fieldName, tableName);
 			var value = conn.Execute<T>(sql);
 
 			Assert.That(value, Is.EqualTo(conn.MappingSchema.GetDefaultValue(typeof(T))));
@@ -52,7 +53,7 @@ namespace Tests.DataProvider
 			var nullSql = PassNullSql(conn, out var paramCount);
 			if (!skipNull && !skipPass && nullSql != null)
 			{
-				sql = string.Format(nullSql, fieldName, tableName);
+				sql = string.Format(CultureInfo.InvariantCulture, nullSql, fieldName, tableName);
 
 				if (!skipDefinedNull && dataType != DataType.Undefined)
 				{
@@ -87,12 +88,12 @@ namespace Tests.DataProvider
 			// Get value.
 			//
 			Debug.WriteLine("{0} {1}:{2} -> value", fieldName, type.Name, dataType);
-			sql   = string.Format(GetValueSql(conn),  fieldName, tableName);
+			sql   = string.Format(CultureInfo.InvariantCulture, GetValueSql(conn),  fieldName, tableName);
 			value = conn.Execute<T>(sql);
 
 			if (!skipNotNull && !skipPass)
 			{
-				sql = string.Format(PassValueSql(conn), fieldName, tableName);
+				sql = string.Format(CultureInfo.InvariantCulture, PassValueSql(conn), fieldName, tableName);
 
 				if (!skipDefined && dataType != DataType.Undefined)
 				{

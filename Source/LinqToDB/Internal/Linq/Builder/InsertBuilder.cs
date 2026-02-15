@@ -159,33 +159,23 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var intoContextRef = new ContextRefExpression(targetType, insertContext.Into);
 
-					Expression setterExpr;
-					switch (arg)
+					var setterExpr = arg switch
 					{
-						case LambdaExpression lambda
-							when lambda.Parameters.Count != 0:
-						{
-							throw new NotImplementedException();
-						}
+						LambdaExpression { Parameters.Count: > 0 } lambda =>
+							throw new NotSupportedException(),
 
-						case LambdaExpression lambda:
-						{
-							setterExpr = lambda.Body;
-							break;
-						}
+						LambdaExpression lambda =>
+							lambda.Body,
 
-						default:
-						{
-							setterExpr = builder.BuildFullEntityExpression(sequence.MappingSchema, arg, targetType, ProjectFlags.SQL, EntityConstructorBase.FullEntityPurpose.Insert);
-							break;
-						}
-					}
+						_ =>
+							builder.BuildFullEntityExpression(sequence.MappingSchema, arg, targetType, ProjectFlags.SQL, EntityConstructorBase.FullEntityPurpose.Insert),
+					};
 
 					var sourceSequence = new SelectContext(
 						builder.GetTranslationModifier(), 
 						buildInfo.Parent,
 						builder,
-						null,
+						innerContext: null,
 						setterExpr,
 						new SelectQuery(), buildInfo.IsSubQuery);
 
@@ -209,7 +199,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					outputExpression =
 						methodCall.GetArgumentByName("outputExpression")?.UnwrapLambda()
-						?? BuildDefaultOutputExpression(genericArguments.Last());
+						?? BuildDefaultOutputExpression(genericArguments[^1]);
 
 					insertStatement.Output = new SqlOutputClause();
 					insertContext.OutputExpression = outputExpression;
@@ -277,7 +267,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				Insert,
 				InsertWithIdentity,
 				InsertOutput,
-				InsertOutputInto
+				InsertOutputInto,
 			}
 
 			public InsertContext(IBuildContext querySequence, InsertTypeEnum insertType, SqlInsertStatement insertStatement, LambdaExpression? outputExpression, bool createColumns)
@@ -483,7 +473,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				insertContext = new InsertContext(sequence, InsertContext.InsertTypeEnum.Insert, insertStatement, null, createColumns)
 				{
 					Into = destinationSequence,
-					LastBuildInfo = buildInfo
+					LastBuildInfo = buildInfo,
 				};
 
 				return BuildSequenceResult.FromContext(insertContext);

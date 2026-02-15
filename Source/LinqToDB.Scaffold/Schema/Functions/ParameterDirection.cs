@@ -17,6 +17,6 @@
 		/// <summary>
 		/// Input/output (IN OUT) parameter.
 		/// </summary>
-		InputOutput
+		InputOutput,
 	}
 }

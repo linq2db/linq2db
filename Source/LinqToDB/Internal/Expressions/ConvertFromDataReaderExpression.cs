@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Data.Common;
 using System.Linq.Expressions;
@@ -255,7 +255,7 @@ namespace LinqToDB.Internal.Expressions
 					throw new LinqToDBConvertException(
 							$"Mapping of column '{name}' value failed, see inner exception for details", ex)
 					{
-						ColumnName = name
+						ColumnName = name,
 					};
 				}
 			}
@@ -326,7 +326,7 @@ namespace LinqToDB.Internal.Expressions
 					throw new LinqToDBConvertException(
 							$"Mapping of column '{name}' value failed, see inner exception for details", ex)
 					{
-						ColumnName = name
+						ColumnName = name,
 					};
 				}
 			}

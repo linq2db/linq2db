@@ -23,28 +23,26 @@ namespace Tests.Linq
 		[Test]
 		public void UnionTest([DataSources(TestProvName.AllAccess)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<SampleClass>())
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<SampleClass>();
+			var values1 = from t in db.GetTable<SampleClass>()
+						  where t.Value == 1
+						  select new
+						  {
+							  Value1 = Sql.DateAdd(Sql.DateParts.Day, t.Value, Sql.CurrentTimestamp),
+							  Value2 = Sql.DateAdd(Sql.DateParts.Day, 2, Sql.CurrentTimestamp)
+						  };
+
+			var values2 = db.SelectQuery(() => new
 			{
-				var values1 = from t in db.GetTable<SampleClass>()
-					where t.Value == 1
-					select new
-					{
-						Value1 = Sql.DateAdd(Sql.DateParts.Day, t.Value, Sql.CurrentTimestamp),
-						Value2 = Sql.DateAdd(Sql.DateParts.Day, 2, Sql.CurrentTimestamp)
-					};
+				Value1 = Sql.DateAdd(Sql.DateParts.Day, 3, Sql.CurrentTimestamp),
+				Value2 = Sql.DateAdd(Sql.DateParts.Day, 4, Sql.CurrentTimestamp)
+			});
 
-				var values2 = db.SelectQuery(() => new
-				{
-					Value1 = Sql.DateAdd(Sql.DateParts.Day, 3, Sql.CurrentTimestamp),
-					Value2 = Sql.DateAdd(Sql.DateParts.Day, 4, Sql.CurrentTimestamp)
-				});
+			var query = values1.Union(values2);
+			var result = query.ToArray();
 
-				var query = values1.Union(values2);
-				var result = query.ToArray();
-
-				var result2 = query.Select(v => v.Value2).ToArray();
-			}
+			var result2 = query.Select(v => v.Value2).ToArray();
 		}
 
 		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix interval cannot be created from non-literal value")]
@@ -155,35 +153,30 @@ namespace Tests.Linq
 		[Test]
 		public void FirstTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable<SampleClass>())
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<SampleClass>();
+			var values = db.SelectQuery(() => new
 			{
-				var values = db.SelectQuery(() => new
-				{
-					Value1 = Sql.DateAdd(Sql.DateParts.Day, 1, Sql.CurrentTimestamp),
-					Value2 = Sql.DateAdd(Sql.DateParts.Day, 2, Sql.CurrentTimestamp)
-				}).First();
-			}
+				Value1 = Sql.DateAdd(Sql.DateParts.Day, 1, Sql.CurrentTimestamp),
+				Value2 = Sql.DateAdd(Sql.DateParts.Day, 2, Sql.CurrentTimestamp)
+			}).First();
 		}
 
 		[Test]
 		public void TestAliasesCollision([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query = db.Child.Where(child => child.ChildID == -1);
-				query.ToArray();
-				var sql = query.ToSqlQuery().Sql;
-				Assert.That(sql, Does.Contain("child_1"));
-			}
+			using var db = GetDataContext(context);
+			var query = db.Child.Where(child => child.ChildID == -1);
+			query.ToArray();
+			var sql = query.ToSqlQuery().Sql;
+			Assert.That(sql, Does.Contain("child_1"));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4284")]
 		public void Select_GroupBy_SelectAgain([DataSources(ProviderName.Firebird25, TestProvName.AllAccess, TestProvName.AllSqlServer2017, ProviderName.SqlCe, TestProvName.AllMySql57, TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query = db.Person
+			using var db = GetDataContext(context);
+			var query = db.Person
 					.GroupBy(g => g.LastName)
 					.Select(group => new
 					{
@@ -195,8 +188,7 @@ namespace Tests.Linq
 					.Skip(1).Take(1)
 					.Select(x => new { Count = Sql.Ext.Count().Over().ToValue(), Value = x });
 
-				query.ToArray();
-			}
+			query.ToArray();
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2494")]

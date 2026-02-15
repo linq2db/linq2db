@@ -39,6 +39,6 @@ namespace LinqToDB.DataModel
 		/// <summary>
 		/// Contains descriptors of addtional database schemas.
 		/// </summary>
-		public Dictionary<string,     AdditionalSchemaModel> AdditionalSchemas { get;      } = new();
+		public Dictionary<string,     AdditionalSchemaModel> AdditionalSchemas { get;      } = new(System.StringComparer.Ordinal);
 	}
 }

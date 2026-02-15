@@ -81,8 +81,7 @@ namespace LinqToDB.Internal.SqlQuery
 			if (other is not SqlParameterizedExpressionBase expr
 				|| GetType()         != other.GetType()
 				|| Type              != expr.Type
-				|| ExprOrName        != expr.ExprOrName
-				|| Precedence        != expr.Precedence
+				|| !string.Equals(ExprOrName, expr.ExprOrName, StringComparison.Ordinal) || Precedence        != expr.Precedence
 				|| Flags             != expr.Flags
 				|| NullabilityType   != expr.NullabilityType
 				|| CanBeNullNullable != expr.CanBeNullNullable

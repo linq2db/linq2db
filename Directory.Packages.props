@@ -36,8 +36,8 @@
 	
 	<ItemGroup Label="Build: Analyzers and Tools">
 		<PackageVersion Include="DotNet.ReproducibleBuilds"                             Version="1.2.39"                       />
-		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.266"                      />
-		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.80"                       />
+		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.301"                      />
+		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.101"                      />
 		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                      Version="5.0.0-1.25277.114"            />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="5.0.0-1.25277.114"            />
 		<PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers"             Version="5.0.0-1.25277.114"            />

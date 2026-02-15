@@ -128,22 +128,20 @@ namespace Tests.UserTests
 					.Property(e => e.Text)
 				.Build();
 
-			using (var db = GetDataContext(context, ms))
+			using var db = GetDataContext(context, ms);
+			using (db.CreateLocalTable<Topic>())
+			using (db.CreateLocalTable<Message>())
 			{
-				using (db.CreateLocalTable<Topic>())
-				using (db.CreateLocalTable<Message>())
-				{
-					db.Insert(new Topic() { Id = 6, Title = "title", Text = "text" });
+				db.Insert(new Topic() { Id = 6, Title = "title", Text = "text" });
 
-					db.GetTable<Topic>()
-						.Where(x => x.Id == 6)
-						.Select(x =>
-						new
-						{
-							Topic = x,
-							MessagesIds = x.MessagesF1.Select(t => t.Id).ToList()
-						}).FirstOrDefault();
-				}
+				db.GetTable<Topic>()
+					.Where(x => x.Id == 6)
+					.Select(x =>
+					new
+					{
+						Topic = x,
+						MessagesIds = x.MessagesF1.Select(t => t.Id).ToList()
+					}).FirstOrDefault();
 			}
 		}
 
@@ -164,22 +162,20 @@ namespace Tests.UserTests
 					.Property(e => e.Text)
 				.Build();
 
-			using (var db = GetDataContext(context, ms))
+			using var db = GetDataContext(context, ms);
+			using (db.CreateLocalTable<Topic>())
+			using (db.CreateLocalTable<Message>())
 			{
-				using (db.CreateLocalTable<Topic>())
-				using (db.CreateLocalTable<Message>())
-				{
-					db.Insert(new Topic() { Id = 6, Title = "title", Text = "text" });
+				db.Insert(new Topic() { Id = 6, Title = "title", Text = "text" });
 
-					db.GetTable<Topic>()
-						.Where(x => x.Id == 6)
-						.Select(x =>
-						new
-						{
-							Topic = x,
-							MessagesIds = x.MessagesF2.Select(t => t.Id).ToList()
-						}).FirstOrDefault();
-				}
+				db.GetTable<Topic>()
+					.Where(x => x.Id == 6)
+					.Select(x =>
+					new
+					{
+						Topic = x,
+						MessagesIds = x.MessagesF2.Select(t => t.Id).ToList()
+					}).FirstOrDefault();
 			}
 		}
 
@@ -200,16 +196,15 @@ namespace Tests.UserTests
 					.Property(e => e.Text)
 				.Build();
 
-			using (var db = GetDataContext(context, ms))
+			using var db = GetDataContext(context, ms);
+			using (db.CreateLocalTable<Topic>())
+			using (db.CreateLocalTable<Message>())
 			{
-				using (db.CreateLocalTable<Topic>())
-				using (db.CreateLocalTable<Message>())
-				{
-					db.Insert(new Topic() { Id = 6, Title = "title", Text = "text" });
-					db.Insert(new Message() { Id = 60, Text = "message", TopicId = 6});
-					db.Insert(new Message() { Id = 61, Text = "message", TopicId = 7});
+				db.Insert(new Topic() { Id = 6, Title = "title", Text = "text" });
+				db.Insert(new Message() { Id = 60, Text = "message", TopicId = 6 });
+				db.Insert(new Message() { Id = 61, Text = "message", TopicId = 7 });
 
-					var result = db.GetTable<Topic>()
+				var result = db.GetTable<Topic>()
 						.Where(x => x.Id == 6)
 						.Select(x =>
 						new
@@ -218,9 +213,8 @@ namespace Tests.UserTests
 							MessagesIds = x.MessagesF3.Select(t => t.Id).ToList()
 						}).FirstOrDefault()!;
 
-					Assert.That(result, Is.Not.Null);
-					Assert.That(result.MessagesIds.Single(), Is.EqualTo(60));
-				}
+				Assert.That(result, Is.Not.Null);
+				Assert.That(result.MessagesIds.Single(), Is.EqualTo(60));
 			}
 		}
 
@@ -241,18 +235,17 @@ namespace Tests.UserTests
 					.Property(e => e.Text)
 				.Build();
 
-			using (var db = GetDataContext(context, ms))
+			using var db = GetDataContext(context, ms);
+			using (db.CreateLocalTable<Topic>())
+			using (db.CreateLocalTable<Message>())
 			{
-				using (db.CreateLocalTable<Topic>())
-				using (db.CreateLocalTable<Message>())
-				{
-					var topic = new Topic { Id = 6, Text = "text", Title = "title" };
+				var topic = new Topic { Id = 6, Text = "text", Title = "title" };
 
-					db.Insert(topic);
-					db.Insert(new Message { Id = 60, Text = "message", TopicId = 6});
-					db.Insert(new Message { Id = 61, Text = "message", TopicId = 7});
+				db.Insert(topic);
+				db.Insert(new Message { Id = 60, Text = "message", TopicId = 6 });
+				db.Insert(new Message { Id = 61, Text = "message", TopicId = 7 });
 
-					var result = db.GetTable<Topic>()
+				var result = db.GetTable<Topic>()
 						.Where(x => x.Id == 6)
 						.Select(x =>
 						new
@@ -260,14 +253,13 @@ namespace Tests.UserTests
 							Topic = x,
 							MessagesIds = x.MessagesF3.Select(t => t.Id).ToList()
 						}).FirstOrDefault()!;
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(result, Is.Not.Null);
-						Assert.That(topic.Id, Is.EqualTo(result.Topic.Id));
-						Assert.That(topic.Text, Is.EqualTo(result.Topic.Text));
-						Assert.That(topic.Title, Is.EqualTo(result.Topic.Title));
-						Assert.That(new[] { 60 }, Is.EqualTo(result.MessagesIds));
-					}
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(result, Is.Not.Null);
+					Assert.That(topic.Id, Is.EqualTo(result.Topic.Id));
+					Assert.That(topic.Text, Is.EqualTo(result.Topic.Text));
+					Assert.That(topic.Title, Is.EqualTo(result.Topic.Title));
+					Assert.That(new[] { 60 }, Is.EqualTo(result.MessagesIds));
 				}
 			}
 		}

@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.Data
+namespace LinqToDB.Data
 {
 	/// <summary>
 	/// Bulk copy implementation type.
@@ -25,6 +25,6 @@
 		/// Data will be inserted using native bulk copy functionality if supported.
 		/// If method not supported, it will be downgraded to <see cref="RowByRow"/> method.
 		/// </summary>
-		ProviderSpecific
+		ProviderSpecific,
 	}
 }

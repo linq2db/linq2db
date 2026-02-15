@@ -5,7 +5,7 @@ namespace LinqToDB.Internal.Mapping
 {
 	public static class Nullability
 	{
-		private static Lazy<bool> _isSupported = new(() => 
+		private static readonly Lazy<bool> _isSupported = new(() => 
 		{
 			try
 			{

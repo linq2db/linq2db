@@ -7,6 +7,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -32,7 +33,7 @@ namespace LinqToDB.Internal.Expressions
 		{
 			"get_Item",
 			"TryReadValue",
-			"ReferenceEquals"
+			"ReferenceEquals",
 		};
 
 		private readonly SqlTextWriter                            _stringBuilder;
@@ -59,7 +60,7 @@ namespace LinqToDB.Internal.Expressions
 			{ ExpressionType.Modulo, " % " },
 			{ ExpressionType.And, " & " },
 			{ ExpressionType.Or, " | " },
-			{ ExpressionType.ExclusiveOr, " ^ " }
+			{ ExpressionType.ExclusiveOr, " ^ " },
 		};
 
 		/// <summary>
@@ -507,8 +508,8 @@ namespace LinqToDB.Internal.Expressions
 					return;
 				}
 
-				var stringValue = value == null ? "null" : FormattableString.Invariant($"{value}");
-				if (value != null && stringValue == value.GetType().ToString())
+				var stringValue = value == null ? "null" : string.Create(CultureInfo.InvariantCulture, $"{value}");
+				if (value != null && string.Equals(stringValue, value.GetType().ToString(), StringComparison.Ordinal))
 					stringValue = value.GetType().ShortDisplayName();
 
 				if (value is string)
@@ -524,7 +525,7 @@ namespace LinqToDB.Internal.Expressions
 		protected override Expression VisitGoto(GotoExpression gotoExpression)
 		{
 			Append("Goto(");
-			Append(FormattableString.Invariant($"{gotoExpression.Kind}").ToLowerInvariant());
+			Append(string.Create(CultureInfo.InvariantCulture, $"{gotoExpression.Kind}").ToLowerInvariant());
 			Append(" ");
 
 			if (gotoExpression.Kind == GotoExpressionKind.Break)
@@ -565,14 +566,11 @@ namespace LinqToDB.Internal.Expressions
 
 			foreach (var parameter in lambdaExpression.Parameters)
 			{
-				var parameterName = parameter.Name;
-
-				if (!_parametersInScope.ContainsKey(parameter))
-					_parametersInScope.Add(parameter, parameterName);
+				_parametersInScope.TryAdd(parameter, parameter.Name);
 
 				Visit(parameter);
 
-				if (parameter != lambdaExpression.Parameters.Last())
+				if (parameter != lambdaExpression.Parameters[^1])
 				{
 					_stringBuilder.Append(", ");
 				}
@@ -707,7 +705,7 @@ namespace LinqToDB.Internal.Expressions
 
 			_stringBuilder.Append("(");
 
-			var isSimpleMethodOrProperty = SimpleMethods.Contains(method.Name)
+			var isSimpleMethodOrProperty = SimpleMethods.Contains(method.Name, StringComparer.Ordinal)
 				|| methodArguments.Count < 2;
 
 			var appendAction = isSimpleMethodOrProperty ? (Func<string, ExpressionVisitor>)Append : AppendLine;
@@ -879,10 +877,10 @@ namespace LinqToDB.Internal.Expressions
 					}
 
 					Append("namelessParameter{");
-					Append(FormattableString.Invariant($"{_namelessParameters.IndexOf(parameterExpression)}"));
+					Append(string.Create(CultureInfo.InvariantCulture, $"{_namelessParameters.IndexOf(parameterExpression)}"));
 					Append("}");
 				}
-				else if (parameterName.Contains('.'))
+				else if (parameterName.Contains('.', StringComparison.Ordinal))
 				{
 					Append("[");
 					Append(parameterName);
@@ -919,7 +917,7 @@ namespace LinqToDB.Internal.Expressions
 					_encounteredParameters.Add(parameterExpression);
 				}
 
-				_stringBuilder.Append(FormattableString.Invariant($"{{{parameterIndex}}}"));
+				_stringBuilder.Append(string.Create(CultureInfo.InvariantCulture, $"{{{parameterIndex}}}"));
 			}
 
 			return parameterExpression;
@@ -1151,7 +1149,7 @@ namespace LinqToDB.Internal.Expressions
 		private static string PostProcess(string printedExpression)
 		{
 			var processedPrintedExpression = printedExpression
-				.Replace(Environment.NewLine + Environment.NewLine, Environment.NewLine);
+				.Replace(Environment.NewLine + Environment.NewLine, Environment.NewLine, StringComparison.Ordinal);
 
 			return processedPrintedExpression;
 		}

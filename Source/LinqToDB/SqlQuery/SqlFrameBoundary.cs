@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 
 using LinqToDB.Internal.SqlQuery;
@@ -12,7 +12,7 @@ namespace LinqToDB.SqlQuery
 		{
 			Unbounded,
 			CurrentRow,
-			Offset
+			Offset,
 		}
 
 		public SqlFrameBoundary(bool isPreceding, FrameBoundaryType boundaryType, ISqlExpression? offset)

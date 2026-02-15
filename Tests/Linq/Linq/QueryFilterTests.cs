@@ -60,9 +60,9 @@ namespace Tests.Linq
 			[Column] public int? MasterId { get; set; }
 		}
 
-		static MappingSchema _filterMappingSchema;
+		static MappingSchema _filterMappingSchema = GetFilterMappingSchema();
 
-		static QueryFilterTests()
+		static MappingSchema GetFilterMappingSchema()
 		{
 			var builder = new FluentMappingBuilder(new MappingSchema());
 
@@ -70,7 +70,7 @@ namespace Tests.Linq
 
 			builder.Build();
 
-			_filterMappingSchema = builder.MappingSchema;
+			return builder.MappingSchema;
 		}
 
 		static Tuple<MasterClass[], InfoClass[], DetailClass[]> GenerateTestData()
@@ -188,27 +188,27 @@ namespace Tests.Linq
 			using var db = new MyDataContext(context, _filterMappingSchema);
 			using var tb = db.CreateLocalTable(testData.Item1);
 
-			var currentMissCount = tb.GetCacheMissCount();
+				var currentMissCount = tb.GetCacheMissCount();
 
-			var query =
-				from m in db.GetTable<MasterClass>()
-				from d in db.GetTable<MasterClass>().Where(d => d.Id == m.Id) // for ensuring that we do not cache two dynamic filters comparators. See ParametersContext.RegisterDynamicExpressionAccessor
-				select m;
+				var query =
+					from m in db.GetTable<MasterClass>()
+					from d in db.GetTable<MasterClass>().Where(d => d.Id == m.Id) // for ensuring that we do not cache two dynamic filters comparators. See ParametersContext.RegisterDynamicExpressionAccessor
+					select m;
 
-			((DcParams)db.Params).IsSoftDeleteFilterEnabled = filtered;
+				((DcParams)db.Params).IsSoftDeleteFilterEnabled = filtered;
 
-			var result = query.ToList();
+				var result = query.ToList();
 
-			if (filtered)
-				result.Count.ShouldBeLessThan(testData.Item1.Length);
-			else
-				result.Count.ShouldBe(testData.Item1.Length);
+				if (filtered)
+					result.Count.ShouldBeLessThan(testData.Item1.Length);
+				else
+					result.Count.ShouldBe(testData.Item1.Length);
 
-			if (iteration > 1)
-			{
-				tb.GetCacheMissCount().ShouldBe(currentMissCount);
+				if (iteration > 1)
+				{
+					tb.GetCacheMissCount().ShouldBe(currentMissCount);
+				}
 			}
-		}
 
 		[Test]
 		public void AssociationToFilteredEntity([IncludeDataSources(false, ProviderName.SQLiteMS, TestProvName.AllClickHouse)] string context)
@@ -495,7 +495,7 @@ namespace Tests.Linq
 
 				result.Count.ShouldBe(10);
 				result.ShouldAllBe(item => item.DetailCount > 0);
-			}
-		}
+	}
+}
 	}
 }

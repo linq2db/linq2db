@@ -18,9 +18,9 @@ namespace LinqToDB.DataProvider.SapHana
 
 			var provider = SapHanaProvider.AutoDetect;
 
-			if (SapHanaProviderAdapter.UnmanagedAssemblyNames.Any(an => an == assemblyName))
+			if (SapHanaProviderAdapter.UnmanagedAssemblyNames.Any(an => string.Equals(an, assemblyName, System.StringComparison.Ordinal)))
 				provider = SapHanaProvider.Unmanaged;
-			else if (assemblyName == OdbcProviderAdapter.AssemblyName)
+			else if (string.Equals(assemblyName, OdbcProviderAdapter.AssemblyName, System.StringComparison.Ordinal))
 				provider = SapHanaProvider.ODBC;
 
 			return SapHanaTools.GetDataProvider(provider);

@@ -99,7 +99,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			if (nullableType == null || !typeof(Nullable<>).IsSameOrParentOf(nullableType))
 				return false;
 
-			if (methodCall.Method.Name != nameof(Nullable<>.GetValueOrDefault))
+			if (!string.Equals(methodCall.Method.Name, nameof(Nullable<>.GetValueOrDefault), StringComparison.Ordinal))
 				return false;
 
 			var argumentPlaceholder = translationContext.TranslateNoRequiredObjectExpression(methodCall.Object);

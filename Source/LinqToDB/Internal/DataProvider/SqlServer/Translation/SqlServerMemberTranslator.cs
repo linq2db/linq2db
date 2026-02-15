@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 					Sql.DateParts.Minute => "minute",
 					Sql.DateParts.Second => "second",
 					Sql.DateParts.Millisecond => "millisecond",
-					_ => null
+					_ => null,
 				};
 			}
 

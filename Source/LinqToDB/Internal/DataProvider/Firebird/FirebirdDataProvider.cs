@@ -68,10 +68,11 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		static DateTime GetDateTime(DateTime value)
 		{
-			if (value.Year == 1970 && value.Month == 1 && value.Day == 1)
-				return new DateTime(1, 1, 1, value.Hour, value.Minute, value.Second, value.Millisecond);
-
-			return value;
+			return value switch
+			{
+				{ Year: 1970, Month: 1, Day: 1 } => new DateTime(1, 1, 1, value.Hour, value.Minute, value.Second, value.Millisecond),
+				_ => value,
+			};
 		}
 
 		public FirebirdVersion Version { get; }
@@ -96,13 +97,12 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
-			if (Version == FirebirdVersion.v3)
-				return new Firebird3SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
-
-			if (Version >= FirebirdVersion.v4)
-				return new Firebird4SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
-
-			return new FirebirdSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
+			return Version switch
+			{
+				FirebirdVersion.v3    => new Firebird3SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				>= FirebirdVersion.v4 => new Firebird4SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				_                     => new FirebirdSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+			};
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;

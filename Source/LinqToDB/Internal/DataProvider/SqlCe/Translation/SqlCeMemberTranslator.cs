@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Linq.Expressions;
 
@@ -84,7 +84,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 					Sql.DateParts.Minute => "minute",
 					Sql.DateParts.Second => "second",
 					Sql.DateParts.Millisecond => "millisecond",
-					_ => null
+					_ => null,
 				};
 
 				if (partStr == null)
@@ -113,7 +113,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe.Translation
 					Sql.DateParts.Minute => "minute",
 					Sql.DateParts.Second => "second",
 					Sql.DateParts.Millisecond => "millisecond",
-					_ => null
+					_ => null,
 				};
 			}
 

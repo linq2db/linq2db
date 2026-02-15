@@ -412,7 +412,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 
 							SqlSearchCondition? filterCondition = null;
 
-							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
+							if (info is { FilterCondition.IsTrue: false })
 							{
 								filterCondition = info.FilterCondition;
 							}

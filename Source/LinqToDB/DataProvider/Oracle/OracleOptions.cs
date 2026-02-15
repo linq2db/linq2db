@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
@@ -17,7 +17,7 @@ namespace LinqToDB.DataProvider.Oracle
 	/// </param>
 	/// <param name="DontEscapeLowercaseIdentifiers">
 	/// Gets or sets flag to tell LinqToDB to quote identifiers, if they contain lowercase letters.
-	/// Default value: <c>false</c>.
+	/// Default value: <see langword="false"/>.
 	/// This flag is added for backward compatibility and not recommended for use with new applications.
 	/// </param>
 	public sealed record OracleOptions

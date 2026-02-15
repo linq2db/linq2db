@@ -50,102 +50,93 @@ namespace Tests.Exceptions
 		[Test]
 		public void InnerJoin([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from p1 in db.Person
-						join p2 in db.Person on new Person { FirstName = "", ID = p1.ID } equals new Person { ID = p2.ID }
+					join p2 in db.Person on new Person { FirstName = "", ID = p1.ID } equals new Person { ID = p2.ID }
 					where p1.ID == 1
 					select new Person { ID = p1.ID, FirstName = p2.FirstName };
 
-				var act = () => q.ToList();
-				act.ShouldThrow<LinqToDBException>();
-			}
+			var act = () => q.ToList();
+			act.ShouldThrow<LinqToDBException>();
 		}
 
 		[Test]
 		public void MultiJoin1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var expected = from p  in Parent
-							   join c1 in Child on p.ParentID equals c1.ParentID
-							   join c2 in Child on p.ParentID equals c2.ParentID
-							   select new Child()
-							   {
-							   	ChildID = c1.ChildID,
-							   	ParentID = c2.ParentID
-							   };
+			using var db = GetDataContext(context);
+			var expected = from p  in Parent
+						   join c1 in Child on p.ParentID equals c1.ParentID
+						   join c2 in Child on p.ParentID equals c2.ParentID
+						   select new Child()
+						   {
+							   ChildID = c1.ChildID,
+							   ParentID = c2.ParentID
+						   };
 
-				var result = from p  in db.GetTable<Parents>()
-							 join c1 in db.GetTable<Childs>() on p.ParentID equals c1.ParentID
-							 join c2 in db.GetTable<Childs>() on p.ParentID equals c2.ParentID
-							 select new Child()
-							 {
-							 	ChildID  = c1.ChildID,
-							 	ParentID = c2.ParentID
-							 };
+			var result = from p  in db.GetTable<Parents>()
+						 join c1 in db.GetTable<Childs>() on p.ParentID equals c1.ParentID
+						 join c2 in db.GetTable<Childs>() on p.ParentID equals c2.ParentID
+						 select new Child()
+						 {
+							 ChildID  = c1.ChildID,
+							 ParentID = c2.ParentID
+						 };
 
-				AreEqual(expected, result);
-			}
+			AreEqual(expected, result);
 		}
 
 		[Test]
 		public void MultiJoin2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var expected = from c in Child
-							   join p1 in Parent on c.ParentID equals p1.ParentID
-							   select c;
+			using var db = GetDataContext(context);
+			var expected = from c in Child
+						   join p1 in Parent on c.ParentID equals p1.ParentID
+						   select c;
 
-				var result = from c  in db.GetTable<Childs>()
-							 join p1 in db.GetTable<Parents>() on c.ParentID equals p1.ParentID
-							 join p2 in db.GetTable<Parents>() on c.ParentID equals p2.ParentID
-							 select
+			var result = from c  in db.GetTable<Childs>()
+						 join p1 in db.GetTable<Parents>() on c.ParentID equals p1.ParentID
+						 join p2 in db.GetTable<Parents>() on c.ParentID equals p2.ParentID
+						 select
 							 new Child()
 							 {
 								 ChildID  = c.ChildID,
 								 ParentID = c.ParentID
 							 };
 
-				AreEqual(expected, result);
-			}
+			AreEqual(expected, result);
 		}
 
 		[Test]
 		public void Issue498Test([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var expected1 = from x in Parent
-							    from y in x.Children
-							    select x.ParentID;
+			using var db = GetDataContext(context);
+			var expected1 = from x in Parent
+							from y in x.Children
+							select x.ParentID;
 
-				var result1 = from x in db.GetTable<Parents>()
-							  from y in x.Childs
-							  select x.ParentID;
+			var result1 = from x in db.GetTable<Parents>()
+						  from y in x.Childs
+						  select x.ParentID;
 
-				AreEqual(expected1, result1);
+			AreEqual(expected1, result1);
 
-				var expected2 = from  x in expected1
-							    group x by x into g
-							    select g.Key;
+			var expected2 = from  x in expected1
+							group x by x into g
+							select g.Key;
 
-				var result2 = from  x in result1
-							  group x by x into g
-							  select g.Key;
+			var result2 = from  x in result1
+						  group x by x into g
+						  select g.Key;
 
-				AreEqual(expected2, result2);
-			}
+			AreEqual(expected2, result2);
 		}
 
 		[Test]
 		public void Issue589([IncludeDataSources(ProviderName.SqlCe, TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var result =
+			using var db = GetDataContext(context);
+			var result =
 					from grandChild in db.GetTable<GrandChilds>()
 					join child      in db.GetTable<Childs>() on grandChild.ChildID equals child.ChildID
 					from pf in
@@ -164,7 +155,7 @@ namespace Tests.Exceptions
 						Tmp            = pf.GrandChildID
 					};
 
-				var expected =
+			var expected =
 					from grandChild in GrandChild
 					join child      in Child on grandChild.ChildID equals child.ChildID
 					from pf in
@@ -183,8 +174,7 @@ namespace Tests.Exceptions
 						Tmp            = pf.GrandChildID
 					};
 
-				AreEqual(expected, result);
-			}
+			AreEqual(expected, result);
 		}
 	}
 }

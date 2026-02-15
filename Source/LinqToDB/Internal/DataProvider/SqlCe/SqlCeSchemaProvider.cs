@@ -50,7 +50,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 			return
 			(
 				from t in tables.AsEnumerable()
-				where _tableTypes.Contains(t.Field<string>("TABLE_TYPE"))
+				where _tableTypes.Contains(t.Field<string>("TABLE_TYPE"), StringComparer.Ordinal)
 				let catalog = t.Field<string>("TABLE_CATALOG")
 				let schema  = t.Field<string>("TABLE_SCHEMA")
 				let name    = t.Field<string>("TABLE_NAME")
@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 					SchemaName      = schema,
 					TableName       = name,
 					IsDefaultSchema = string.IsNullOrEmpty(schema),
-					IsView          = t.Field<string>("TABLE_TYPE") == "VIEW"
+					IsView          = string.Equals(t.Field<string>("TABLE_TYPE"), "VIEW", StringComparison.Ordinal),
 				}
 			).ToList();
 		}
@@ -69,17 +69,19 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var data = dataConnection.Query<PrimaryKeyInfo>(
-				@"
-SELECT
-	COALESCE(TABLE_CATALOG, '') + '.' + COALESCE(TABLE_SCHEMA, '') + '.' + TABLE_NAME AS TableID,
-	INDEX_NAME                                            AS PrimaryKeyName,
-	COLUMN_NAME                                           AS ColumnName,
-	ORDINAL_POSITION                                      AS Ordinal
-FROM INFORMATION_SCHEMA.INDEXES
-WHERE PRIMARY_KEY = 1");
-
-			return data.ToList();
+			return dataConnection
+				.Query<PrimaryKeyInfo>(
+					"""
+					SELECT
+						COALESCE(TABLE_CATALOG, '') + '.' + COALESCE(TABLE_SCHEMA, '') + '.' + TABLE_NAME AS TableID,
+						INDEX_NAME                                            AS PrimaryKeyName,
+						COLUMN_NAME                                           AS ColumnName,
+						ORDINAL_POSITION                                      AS Ordinal
+					FROM INFORMATION_SCHEMA.INDEXES
+					WHERE PRIMARY_KEY = 1
+					"""
+				)
+				.ToList();
 		}
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
@@ -94,7 +96,7 @@ WHERE PRIMARY_KEY = 1");
 				{
 					TableID    = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
 					Name       = c.Field<string>("COLUMN_NAME")!,
-					IsNullable = c.Field<string>("IS_NULLABLE") == "YES",
+					IsNullable = string.Equals(c.Field<string>("IS_NULLABLE"), "YES", StringComparison.Ordinal),
 					Ordinal    = Converter.ChangeTypeTo<int> (c["ORDINAL_POSITION"]),
 					DataType   = c.Field<string>("DATA_TYPE"),
 					Length     = length > int.MaxValue ? null : (int?)length,
@@ -108,23 +110,25 @@ WHERE PRIMARY_KEY = 1");
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			var data = dataConnection.Query<ForeignKeyInfo>(
-				@"
-SELECT
-	COALESCE(rc.CONSTRAINT_CATALOG,        '') + '.' + COALESCE(rc.CONSTRAINT_SCHEMA,        '') + '.' + rc.CONSTRAINT_TABLE_NAME        ThisTableID,
-	COALESCE(rc.UNIQUE_CONSTRAINT_CATALOG, '') + '.' + COALESCE(rc.UNIQUE_CONSTRAINT_SCHEMA, '') + '.' + rc.UNIQUE_CONSTRAINT_TABLE_NAME OtherTableID,
-	rc.CONSTRAINT_NAME                                                                                                                   Name,
-	tc.COLUMN_NAME                                                                                                                       ThisColumn,
-	oc.COLUMN_NAME                                                                                                                       OtherColumn,
-	tc.ORDINAL_POSITION                                                                                                                  Ordinal
-FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
-	INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE tc ON tc.CONSTRAINT_NAME = rc.CONSTRAINT_NAME
-		AND tc.TABLE_NAME = rc.CONSTRAINT_TABLE_NAME
-	INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNIQUE_CONSTRAINT_NAME
-		AND oc.TABLE_NAME = rc.UNIQUE_CONSTRAINT_TABLE_NAME
-		AND tc.ORDINAL_POSITION = oc.ORDINAL_POSITION");
-
-			return data.ToList();
+			return dataConnection
+				.Query<ForeignKeyInfo>(
+					"""
+					SELECT
+						COALESCE(rc.CONSTRAINT_CATALOG,        '') + '.' + COALESCE(rc.CONSTRAINT_SCHEMA,        '') + '.' + rc.CONSTRAINT_TABLE_NAME        ThisTableID,
+						COALESCE(rc.UNIQUE_CONSTRAINT_CATALOG, '') + '.' + COALESCE(rc.UNIQUE_CONSTRAINT_SCHEMA, '') + '.' + rc.UNIQUE_CONSTRAINT_TABLE_NAME OtherTableID,
+						rc.CONSTRAINT_NAME                                                                                                                   Name,
+						tc.COLUMN_NAME                                                                                                                       ThisColumn,
+						oc.COLUMN_NAME                                                                                                                       OtherColumn,
+						tc.ORDINAL_POSITION                                                                                                                  Ordinal
+					FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
+						INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE tc ON tc.CONSTRAINT_NAME = rc.CONSTRAINT_NAME
+							AND tc.TABLE_NAME = rc.CONSTRAINT_TABLE_NAME
+						INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNIQUE_CONSTRAINT_NAME
+							AND oc.TABLE_NAME = rc.UNIQUE_CONSTRAINT_TABLE_NAME
+							AND tc.ORDINAL_POSITION = oc.ORDINAL_POSITION
+					"""
+				)
+				.ToList();
 		}
 
 		protected override string GetDatabaseName(DataConnection dbConnection)
@@ -134,7 +138,7 @@ FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
-			return (dataType?.ToLowerInvariant()) switch
+			return dataType?.ToLowerInvariant() switch
 			{
 				"tinyint" => typeof(byte),
 				_         => base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options),
@@ -171,30 +175,29 @@ FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
 
 		protected override string? GetProviderSpecificType(string? dataType)
 		{
-			switch (dataType)
+			return dataType switch
 			{
-				case "varbinary"        :
-				case "rowversion"       :
-				case "image"            :
-				case "binary"           : return nameof(SqlBinary);
-				case "tinyint"          : return nameof(SqlByte);
-				case "datetime"         : return nameof(SqlDateTime);
-				case "bit"              : return nameof(SqlBoolean);
-				case "smallint"         : return nameof(SqlInt16);
-				case "numeric"          :
-				case "decimal"          : return nameof(SqlDecimal);
-				case "int"              : return nameof(SqlInt32);
-				case "real"             : return nameof(SqlSingle);
-				case "float"            : return nameof(SqlDouble);
-				case "money"            : return nameof(SqlMoney);
-				case "bigint"           : return nameof(SqlInt64);
-				case "nvarchar"         :
-				case "nchar"            :
-				case "ntext"            : return nameof(SqlString);
-				case "uniqueidentifier" : return nameof(SqlGuid);
-			}
-
-			return base.GetProviderSpecificType(dataType);
+				"varbinary"        or
+				"rowversion"       or
+				"image"            or
+				"binary"           => nameof(SqlBinary),
+				"tinyint"          => nameof(SqlByte),
+				"datetime"         => nameof(SqlDateTime),
+				"bit"              => nameof(SqlBoolean),
+				"smallint"         => nameof(SqlInt16),
+				"numeric"          or
+				"decimal"          => nameof(SqlDecimal),
+				"int"              => nameof(SqlInt32),
+				"real"             => nameof(SqlSingle),
+				"float"            => nameof(SqlDouble),
+				"money"            => nameof(SqlMoney),
+				"bigint"           => nameof(SqlInt64),
+				"nvarchar"         or
+				"nchar"            or
+				"ntext"            => nameof(SqlString),
+				"uniqueidentifier" => nameof(SqlGuid),
+				_                  => base.GetProviderSpecificType(dataType),
+			};
 		}
 	}
 }

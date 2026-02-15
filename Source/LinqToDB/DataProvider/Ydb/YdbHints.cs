@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -89,13 +90,13 @@ namespace LinqToDB.DataProvider.Ydb
 				{
 					if (i > 0) stringBuilder.Append(' ');
 
-					var raw = (string)((SqlValue)sqlQueryExtension.Arguments[FormattableString.Invariant($"values.{i}")]).Value!;
+					var raw = (string)((SqlValue)sqlQueryExtension.Arguments[string.Create(CultureInfo.InvariantCulture, $"values.{i}")]).Value!;
 					// quote value if it contains whitespace or parentheses or quote
 					var needQuote = raw.Any(ch => char.IsWhiteSpace(ch) || ch is '(' or ')' or '\'');
 					if (needQuote)
 					{
 						stringBuilder.Append('\'')
-						  .Append(raw.Replace("'", "''"))
+						  .Append(raw.Replace("'", "''", StringComparison.Ordinal))
 						  .Append('\'');
 					}
 					else

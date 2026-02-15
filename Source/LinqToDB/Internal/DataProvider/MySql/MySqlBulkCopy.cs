@@ -98,7 +98,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					{
 						DataConnection      = dataConnection,
 						ProviderConnection  = connection,
-						ProviderTransaction = transaction
+						ProviderTransaction = transaction,
 					};
 				}
 			}
@@ -123,7 +123,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 					{
 						DataConnection = dataConnection,
 						ProviderConnection = connection,
-						ProviderTransaction = transaction
+						ProviderTransaction = transaction,
 					};
 				}
 			}
@@ -143,7 +143,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			var connection     = providerConnections.ProviderConnection;
 			var transaction    = providerConnections.ProviderTransaction;
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
-			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
+			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || (options.KeepIdentity == true && c.IsIdentity)).ToList();
 			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var rc             = new BulkCopyRowsCopied();
 
@@ -215,7 +215,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			var connection     = providerConnections.ProviderConnection;
 			var transaction    = providerConnections.ProviderTransaction;
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
-			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
+			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || (options.KeepIdentity == true && c.IsIdentity)).ToList();
 			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var rc             = new BulkCopyRowsCopied();
 
@@ -281,7 +281,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			var connection     = providerConnections.ProviderConnection;
 			var transaction    = providerConnections.ProviderTransaction;
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
-			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
+			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || (options.KeepIdentity == true && c.IsIdentity)).ToList();
 			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var rc             = new BulkCopyRowsCopied();
 

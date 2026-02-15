@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace LinqToDB.SchemaProvider
 {
@@ -58,7 +58,7 @@ namespace LinqToDB.SchemaProvider
 		/// </summary>
 		public List<ForeignKeySchema> ForeignKeys { get; set; } = null!;
 		/// <summary>
-		/// Gets table group name. Used by T4 templates to group tables to generate Schema Type if <c>GenerateSchemaAsType</c> is <c>true</c>.
+		/// Gets table group name. Used by T4 templates to group tables to generate Schema Type if <c>GenerateSchemaAsType</c> is <see langword="true"/>.
 		/// If NULL, SchemaName is used.
 		/// </summary>
 		public string? GroupName { get; set; }

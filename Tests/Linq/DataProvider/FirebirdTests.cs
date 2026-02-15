@@ -34,54 +34,50 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestParameters([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = GetDataContext(context))
+			using var conn = GetDataContext(context);
+			using (Assert.EnterMultipleScope())
 			{
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(conn.Execute<string>("SELECT Cast(@p as int) FROM \"Dual\"", new { p = 1 }), Is.EqualTo("1"));
-					Assert.That(conn.Execute<string>("SELECT Cast(@p as char(1)) FROM \"Dual\"", new { p = "1" }), Is.EqualTo("1"));
-					Assert.That(conn.Execute<int>("SELECT Cast(@p as int) FROM \"Dual\"", new { p = new DataParameter { Value = 1 } }), Is.EqualTo(1));
-					Assert.That(conn.Execute<string>("SELECT Cast(@p1 as char(1)) FROM \"Dual\"", new { p1 = new DataParameter { Value = "1" } }), Is.EqualTo("1"));
-					Assert.That(conn.Execute<int>("SELECT Cast(@p1 as int) + Cast(@p2 as int) FROM \"Dual\"", new { p1 = 2, p2 = 3 }), Is.EqualTo(5));
-					Assert.That(conn.Execute<int>("SELECT Cast(@p2 as int) + Cast(@p1 as int) FROM \"Dual\"", new { p2 = 2, p1 = 3 }), Is.EqualTo(5));
-				}
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as int) FROM \"Dual\"", new { p = 1 }), Is.EqualTo("1"));
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as char(1)) FROM \"Dual\"", new { p = "1" }), Is.EqualTo("1"));
+				Assert.That(conn.Execute<int>("SELECT Cast(@p as int) FROM \"Dual\"", new { p = new DataParameter { Value = 1 } }), Is.EqualTo(1));
+				Assert.That(conn.Execute<string>("SELECT Cast(@p1 as char(1)) FROM \"Dual\"", new { p1 = new DataParameter { Value = "1" } }), Is.EqualTo("1"));
+				Assert.That(conn.Execute<int>("SELECT Cast(@p1 as int) + Cast(@p2 as int) FROM \"Dual\"", new { p1 = 2, p2 = 3 }), Is.EqualTo(5));
+				Assert.That(conn.Execute<int>("SELECT Cast(@p2 as int) + Cast(@p1 as int) FROM \"Dual\"", new { p2 = 2, p1 = 3 }), Is.EqualTo(5));
 			}
 		}
 
 		[Test]
 		public void TestDataTypes([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using var conn = GetDataConnection(context);
+			using (Assert.EnterMultipleScope())
 			{
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(TestType<long?>(conn, "\"bigintDataType\"", DataType.Int64), Is.EqualTo(1000000L));
-					Assert.That(TestType<short?>(conn, "\"smallintDataType\"", DataType.Int16), Is.EqualTo(25555));
-					Assert.That(TestType<decimal?>(conn, "\"decimalDataType\"", DataType.Decimal), Is.EqualTo(2222222));
-					Assert.That(TestType<int?>(conn, "\"intDataType\"", DataType.Int32), Is.EqualTo(7777777));
-					Assert.That(TestType<float?>(conn, "\"floatDataType\"", DataType.Single), Is.EqualTo(20.31f));
-					Assert.That(TestType<double?>(conn, "\"realDataType\"", DataType.Double), Is.EqualTo(16d));
+				Assert.That(TestType<long?>(conn, "\"bigintDataType\"", DataType.Int64), Is.EqualTo(1000000L));
+				Assert.That(TestType<short?>(conn, "\"smallintDataType\"", DataType.Int16), Is.EqualTo(25555));
+				Assert.That(TestType<decimal?>(conn, "\"decimalDataType\"", DataType.Decimal), Is.EqualTo(2222222));
+				Assert.That(TestType<int?>(conn, "\"intDataType\"", DataType.Int32), Is.EqualTo(7777777));
+				Assert.That(TestType<float?>(conn, "\"floatDataType\"", DataType.Single), Is.EqualTo(20.31f));
+				Assert.That(TestType<double?>(conn, "\"realDataType\"", DataType.Double), Is.EqualTo(16d));
 
-					Assert.That(TestType<DateTime?>(conn, "\"timestampDataType\"", DataType.DateTime), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
+				Assert.That(TestType<DateTime?>(conn, "\"timestampDataType\"", DataType.DateTime), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
 
-					Assert.That(TestType<string>(conn, "\"charDataType\"", DataType.Char), Is.EqualTo("1"));
-					Assert.That(TestType<string>(conn, "\"varcharDataType\"", DataType.VarChar), Is.EqualTo("234"));
-					Assert.That(TestType<string>(conn, "\"textDataType\"", DataType.Text), Is.EqualTo("567"));
-					Assert.That(TestType<string>(conn, "\"ncharDataType\"", DataType.NChar), Is.EqualTo("23233"));
-					Assert.That(TestType<string>(conn, "\"nvarcharDataType\"", DataType.NVarChar), Is.EqualTo("3323"));
-					Assert.That(TestType<string>(conn, "\"textDataType\"", DataType.NText), Is.EqualTo("567"));
+				Assert.That(TestType<string>(conn, "\"charDataType\"", DataType.Char), Is.EqualTo("1"));
+				Assert.That(TestType<string>(conn, "\"varcharDataType\"", DataType.VarChar), Is.EqualTo("234"));
+				Assert.That(TestType<string>(conn, "\"textDataType\"", DataType.Text), Is.EqualTo("567"));
+				Assert.That(TestType<string>(conn, "\"ncharDataType\"", DataType.NChar), Is.EqualTo("23233"));
+				Assert.That(TestType<string>(conn, "\"nvarcharDataType\"", DataType.NVarChar), Is.EqualTo("3323"));
+				Assert.That(TestType<string>(conn, "\"textDataType\"", DataType.NText), Is.EqualTo("567"));
 
-					Assert.That(TestType<byte[]>(conn, "\"blobDataType\"", DataType.Binary), Is.EqualTo(new byte[] { 49, 50, 51, 52, 53 }));
-				}
+				Assert.That(TestType<byte[]>(conn, "\"blobDataType\"", DataType.Binary), Is.EqualTo(new byte[] { 49, 50, 51, 52, 53 }));
+			}
 
-				if (context.IsAnyOf(TestProvName.AllFirebird4Plus))
-				{
-					TestType<FbDecFloat?     >(conn, "\"decfloat16DataType\"" , DataType.DecFloat);
-					TestType<FbDecFloat?     >(conn, "\"decfloat34DataType\"" , DataType.DecFloat);
-					TestType<BigInteger?     >(conn, "\"int128DataType\""     , DataType.Int128);
-					TestType<FbZonedDateTime?>(conn, "\"timestampTZDataType\"", DataType.DateTimeOffset);
-					TestType<FbZonedTime?    >(conn, "\"timeTZDataType\""     , DataType.TimeTZ);
-				}
+			if (context.IsAnyOf(TestProvName.AllFirebird4Plus))
+			{
+				TestType<FbDecFloat?>(conn, "\"decfloat16DataType\"", DataType.DecFloat);
+				TestType<FbDecFloat?>(conn, "\"decfloat34DataType\"", DataType.DecFloat);
+				TestType<BigInteger?>(conn, "\"int128DataType\"", DataType.Int128);
+				TestType<FbZonedDateTime?>(conn, "\"timestampTZDataType\"", DataType.DateTimeOffset);
+				TestType<FbZonedTime?>(conn, "\"timeTZDataType\"", DataType.TimeTZ);
 			}
 		}
 
@@ -151,135 +147,127 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestNumerics([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = GetDataContext(context))
-			{
-				TestSimple<sbyte>  (conn, 1,    DataType.SByte);
-				TestSimple<short>  (conn, 1,    DataType.Int16);
-				TestSimple<int>    (conn, 1,    DataType.Int32);
-				TestSimple<long>   (conn, 1L,   DataType.Int64);
-				TestSimple<byte>   (conn, 1,    DataType.Byte);
-				TestSimple<ushort> (conn, 1,    DataType.UInt16);
-				TestSimple<uint>   (conn, 1u,   DataType.UInt32);
-				TestSimple<ulong>  (conn, 1ul,  DataType.UInt64);
-				TestSimple<float>  (conn, 1,    DataType.Single);
-				TestSimple<double> (conn, 1d,   DataType.Double);
-				TestSimple<decimal>(conn, 1m,   DataType.Decimal);
-				TestSimple<decimal>(conn, 1m,   DataType.VarNumeric);
-				TestSimple<decimal>(conn, 1m,   DataType.Money);
-				TestSimple<decimal>(conn, 1m,   DataType.SmallMoney);
+			using var conn = GetDataContext(context);
+			TestSimple<sbyte>(conn, 1, DataType.SByte);
+			TestSimple<short>(conn, 1, DataType.Int16);
+			TestSimple<int>(conn, 1, DataType.Int32);
+			TestSimple<long>(conn, 1L, DataType.Int64);
+			TestSimple<byte>(conn, 1, DataType.Byte);
+			TestSimple<ushort>(conn, 1, DataType.UInt16);
+			TestSimple<uint>(conn, 1u, DataType.UInt32);
+			TestSimple<ulong>(conn, 1ul, DataType.UInt64);
+			TestSimple<float>(conn, 1, DataType.Single);
+			TestSimple<double>(conn, 1d, DataType.Double);
+			TestSimple<decimal>(conn, 1m, DataType.Decimal);
+			TestSimple<decimal>(conn, 1m, DataType.VarNumeric);
+			TestSimple<decimal>(conn, 1m, DataType.Money);
+			TestSimple<decimal>(conn, 1m, DataType.SmallMoney);
 
-				TestNumeric(conn, sbyte.MinValue,   DataType.SByte);
-				TestNumeric(conn, sbyte.MaxValue,   DataType.SByte);
-				TestNumeric(conn, short.MinValue,   DataType.Int16);
-				TestNumeric(conn, short.MaxValue,   DataType.Int16);
-				TestNumeric(conn, int.MinValue,     DataType.Int32,      "smallint");
-				TestNumeric(conn, int.MaxValue,     DataType.Int32,      "smallint float real");
-				TestNumeric(conn, long.MinValue,    DataType.Int64,      "smallint int");
-				TestNumeric(conn, long.MaxValue,    DataType.Int64,      "smallint int float real");
+			TestNumeric(conn, sbyte.MinValue, DataType.SByte);
+			TestNumeric(conn, sbyte.MaxValue, DataType.SByte);
+			TestNumeric(conn, short.MinValue, DataType.Int16);
+			TestNumeric(conn, short.MaxValue, DataType.Int16);
+			TestNumeric(conn, int.MinValue, DataType.Int32, "smallint");
+			TestNumeric(conn, int.MaxValue, DataType.Int32, "smallint float real");
+			TestNumeric(conn, long.MinValue, DataType.Int64, "smallint int");
+			TestNumeric(conn, long.MaxValue, DataType.Int64, "smallint int float real");
 
-				TestNumeric(conn, byte.MaxValue,    DataType.Byte);
-				TestNumeric(conn, ushort.MaxValue,  DataType.UInt16,     "smallint");
-				TestNumeric(conn, uint.MaxValue,    DataType.UInt32,     "smallint int float real");
+			TestNumeric(conn, byte.MaxValue, DataType.Byte);
+			TestNumeric(conn, ushort.MaxValue, DataType.UInt16, "smallint");
+			TestNumeric(conn, uint.MaxValue, DataType.UInt32, "smallint int float real");
 
-				TestNumeric(conn, -3.40282306E+38f, DataType.Single,     "bigint smallint int decimal(18)");
-				TestNumeric(conn,  3.40282306E+38f, DataType.Single,     "bigint smallint int decimal(18)");
-				TestNumeric(conn, -3.40282306E+38d, DataType.Double,     "bigint smallint int decimal(18) float real");
-				TestNumeric(conn,  3.40282306E+38d, DataType.Double,     "bigint smallint int decimal(18) float real");
+			TestNumeric(conn, -3.40282306E+38f, DataType.Single, "bigint smallint int decimal(18)");
+			TestNumeric(conn, 3.40282306E+38f, DataType.Single, "bigint smallint int decimal(18)");
+			TestNumeric(conn, -3.40282306E+38d, DataType.Double, "bigint smallint int decimal(18) float real");
+			TestNumeric(conn, 3.40282306E+38d, DataType.Double, "bigint smallint int decimal(18) float real");
 
-				const decimal decmax = 7922816251426433m;
+			const decimal decmax = 7922816251426433m;
 
-				TestNumeric(conn, -decmax,          DataType.Decimal,    "bigint smallint int float real");
-				TestNumeric(conn, +decmax,          DataType.Decimal,    "bigint smallint int float real");
-				TestNumeric(conn, -decmax,          DataType.VarNumeric, "bigint smallint int float real");
-				TestNumeric(conn, +decmax,          DataType.VarNumeric, "bigint smallint int float real");
-				TestNumeric(conn, -9223372036854m,  DataType.Money,      "smallint int float real");
-				TestNumeric(conn, +9223372036854m,  DataType.Money,      "smallint int float real");
-				TestNumeric(conn, -214748m,         DataType.SmallMoney, "smallint");
-				TestNumeric(conn, +214748m,         DataType.SmallMoney, "smallint");
-			}
+			TestNumeric(conn, -decmax, DataType.Decimal, "bigint smallint int float real");
+			TestNumeric(conn, +decmax, DataType.Decimal, "bigint smallint int float real");
+			TestNumeric(conn, -decmax, DataType.VarNumeric, "bigint smallint int float real");
+			TestNumeric(conn, +decmax, DataType.VarNumeric, "bigint smallint int float real");
+			TestNumeric(conn, -9223372036854m, DataType.Money, "smallint int float real");
+			TestNumeric(conn, +9223372036854m, DataType.Money, "smallint int float real");
+			TestNumeric(conn, -214748m, DataType.SmallMoney, "smallint");
+			TestNumeric(conn, +214748m, DataType.SmallMoney, "smallint");
 		}
 
 		[Test]
 		public void TestDateTime([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = GetDataContext(context))
+			using var conn = GetDataContext(context);
+			var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
+			using (Assert.EnterMultipleScope())
 			{
-				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(conn.Execute<DateTime>("SELECT Cast('2012-12-12 12:12:12' as timestamp) FROM \"Dual\""), Is.EqualTo(dateTime));
-					Assert.That(conn.Execute<DateTime?>("SELECT Cast('2012-12-12 12:12:12' as timestamp) FROM \"Dual\""), Is.EqualTo(dateTime));
+				Assert.That(conn.Execute<DateTime>("SELECT Cast('2012-12-12 12:12:12' as timestamp) FROM \"Dual\""), Is.EqualTo(dateTime));
+				Assert.That(conn.Execute<DateTime?>("SELECT Cast('2012-12-12 12:12:12' as timestamp) FROM \"Dual\""), Is.EqualTo(dateTime));
 
-					Assert.That(conn.Execute<DateTime>("SELECT Cast(@p as timestamp) FROM \"Dual\"", DataParameter.DateTime("p", dateTime)), Is.EqualTo(dateTime));
-					Assert.That(conn.Execute<DateTime?>("SELECT Cast(@p as timestamp) FROM \"Dual\"", new DataParameter("p", dateTime)), Is.EqualTo(dateTime));
-					Assert.That(conn.Execute<DateTime?>("SELECT Cast(@p as timestamp) FROM \"Dual\"", new DataParameter("p", dateTime, DataType.DateTime)), Is.EqualTo(dateTime));
-				}
+				Assert.That(conn.Execute<DateTime>("SELECT Cast(@p as timestamp) FROM \"Dual\"", DataParameter.DateTime("p", dateTime)), Is.EqualTo(dateTime));
+				Assert.That(conn.Execute<DateTime?>("SELECT Cast(@p as timestamp) FROM \"Dual\"", new DataParameter("p", dateTime)), Is.EqualTo(dateTime));
+				Assert.That(conn.Execute<DateTime?>("SELECT Cast(@p as timestamp) FROM \"Dual\"", new DataParameter("p", dateTime, DataType.DateTime)), Is.EqualTo(dateTime));
 			}
 		}
 
 		[Test]
 		public void TestChar([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = GetDataContext(context))
+			using var conn = GetDataContext(context);
+			using (Assert.EnterMultipleScope())
 			{
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(conn.Execute<char>("SELECT Cast('1' as char) FROM \"Dual\""), Is.EqualTo('1'));
-					Assert.That(conn.Execute<char?>("SELECT Cast('1' as char) FROM \"Dual\""), Is.EqualTo('1'));
-					Assert.That(conn.Execute<char>("SELECT Cast('1' as char(1)) FROM \"Dual\""), Is.EqualTo('1'));
-					Assert.That(conn.Execute<char?>("SELECT Cast('1' as char(1)) FROM \"Dual\""), Is.EqualTo('1'));
-					Assert.That(conn.Execute<char>("SELECT Cast('1' as char(2)) FROM \"Dual\""), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char>("SELECT Cast('1' as char) FROM \"Dual\""), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT Cast('1' as char) FROM \"Dual\""), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char>("SELECT Cast('1' as char(1)) FROM \"Dual\""), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT Cast('1' as char(1)) FROM \"Dual\""), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char>("SELECT Cast('1' as char(2)) FROM \"Dual\""), Is.EqualTo('1'));
 
-					Assert.That(conn.Execute<char>("SELECT Cast('1' as varchar(1)) FROM \"Dual\""), Is.EqualTo('1'));
-					Assert.That(conn.Execute<char?>("SELECT Cast('1' as varchar(1)) FROM \"Dual\""), Is.EqualTo('1'));
-					Assert.That(conn.Execute<char>("SELECT Cast('1' as varchar(20)) FROM \"Dual\""), Is.EqualTo('1'));
-					Assert.That(conn.Execute<char?>("SELECT Cast('1' as varchar(20)) FROM \"Dual\""), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char>("SELECT Cast('1' as varchar(1)) FROM \"Dual\""), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT Cast('1' as varchar(1)) FROM \"Dual\""), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char>("SELECT Cast('1' as varchar(20)) FROM \"Dual\""), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT Cast('1' as varchar(20)) FROM \"Dual\""), Is.EqualTo('1'));
 
-					Assert.That(conn.Execute<char>("SELECT Cast(@p as char) FROM \"Dual\"", DataParameter.Char("p", '1')), Is.EqualTo('1'));
-					Assert.That(conn.Execute<char?>("SELECT Cast(@p as char) FROM \"Dual\"", DataParameter.Char("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char>("SELECT Cast(@p as char) FROM \"Dual\"", DataParameter.Char("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT Cast(@p as char) FROM \"Dual\"", DataParameter.Char("p", '1')), Is.EqualTo('1'));
 
-					Assert.That(conn.Execute<char>("SELECT Cast(@p as char(1)) FROM \"Dual\"", DataParameter.VarChar("p", '1')), Is.EqualTo('1'));
-					Assert.That(conn.Execute<char?>("SELECT Cast(@p as char(1)) FROM \"Dual\"", DataParameter.VarChar("p", '1')), Is.EqualTo('1'));
-					Assert.That(conn.Execute<char>("SELECT Cast(@p as char(1)) FROM \"Dual\"", DataParameter.NChar("p", '1')), Is.EqualTo('1'));
-					Assert.That(conn.Execute<char?>("SELECT Cast(@p as char(1)) FROM \"Dual\"", DataParameter.NChar("p", '1')), Is.EqualTo('1'));
-					Assert.That(conn.Execute<char>("SELECT Cast(@p as char(1)) FROM \"Dual\"", DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
-					Assert.That(conn.Execute<char?>("SELECT Cast(@p as char(1)) FROM \"Dual\"", DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
-					Assert.That(conn.Execute<char>("SELECT Cast(@p as char(1)) FROM \"Dual\"", DataParameter.Create("p", '1')), Is.EqualTo('1'));
-					Assert.That(conn.Execute<char?>("SELECT Cast(@p as char(1)) FROM \"Dual\"", DataParameter.Create("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char>("SELECT Cast(@p as char(1)) FROM \"Dual\"", DataParameter.VarChar("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT Cast(@p as char(1)) FROM \"Dual\"", DataParameter.VarChar("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char>("SELECT Cast(@p as char(1)) FROM \"Dual\"", DataParameter.NChar("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT Cast(@p as char(1)) FROM \"Dual\"", DataParameter.NChar("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char>("SELECT Cast(@p as char(1)) FROM \"Dual\"", DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT Cast(@p as char(1)) FROM \"Dual\"", DataParameter.NVarChar("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char>("SELECT Cast(@p as char(1)) FROM \"Dual\"", DataParameter.Create("p", '1')), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT Cast(@p as char(1)) FROM \"Dual\"", DataParameter.Create("p", '1')), Is.EqualTo('1'));
 
-					Assert.That(conn.Execute<char>("SELECT Cast(@p as char(1)) FROM \"Dual\"", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
-					Assert.That(conn.Execute<char?>("SELECT Cast(@p as char(1)) FROM \"Dual\"", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
-				}
+				Assert.That(conn.Execute<char>("SELECT Cast(@p as char(1)) FROM \"Dual\"", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
+				Assert.That(conn.Execute<char?>("SELECT Cast(@p as char(1)) FROM \"Dual\"", new DataParameter { Name = "p", Value = '1' }), Is.EqualTo('1'));
 			}
 		}
 
 		[Test]
 		public void TestString([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = GetDataContext(context))
+			using var conn = GetDataContext(context);
+			using (Assert.EnterMultipleScope())
 			{
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(5)) FROM \"Dual\""), Is.EqualTo("12345"));
-					Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20)) FROM \"Dual\""), Is.EqualTo("12345"));
-					Assert.That(conn.Execute<string>("SELECT Cast('12345 ' as char(20)) FROM \"Dual\""), Is.EqualTo("12345"));
-					Assert.That(conn.Execute<string>("SELECT Cast(NULL    as char(20)) FROM \"Dual\""), Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(5)) FROM \"Dual\""), Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20)) FROM \"Dual\""), Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345 ' as char(20)) FROM \"Dual\""), Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as char(20)) FROM \"Dual\""), Is.Null);
 
-					Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(5)) FROM \"Dual\""), Is.EqualTo("12345"));
-					Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(20)) FROM \"Dual\""), Is.EqualTo("12345"));
-					Assert.That(conn.Execute<string>("SELECT Cast(NULL    as varchar(20)) FROM \"Dual\""), Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(5)) FROM \"Dual\""), Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast('12345' as varchar(20)) FROM \"Dual\""), Is.EqualTo("12345"));
+				Assert.That(conn.Execute<string>("SELECT Cast(NULL    as varchar(20)) FROM \"Dual\""), Is.Null);
 
-					Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.Char("p", "123")), Is.EqualTo("123"));
-					Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.VarChar("p", "123")), Is.EqualTo("123"));
-					Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.Text("p", "123")), Is.EqualTo("123"));
-					Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.NChar("p", "123")), Is.EqualTo("123"));
-					Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.NVarChar("p", "123")), Is.EqualTo("123"));
-					Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.NText("p", "123")), Is.EqualTo("123"));
-					Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.Create("p", "123")), Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.Char("p", "123")), Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.VarChar("p", "123")), Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.Text("p", "123")), Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.NChar("p", "123")), Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.NVarChar("p", "123")), Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.NText("p", "123")), Is.EqualTo("123"));
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.Create("p", "123")), Is.EqualTo("123"));
 
-					Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.Create("p", (string?)null)), Is.Null);
-					Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
-				}
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", DataParameter.Create("p", (string?)null)), Is.Null);
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(3)) FROM \"Dual\"", new DataParameter { Name = "p", Value = "1" }), Is.EqualTo("1"));
 			}
 		}
 
@@ -289,96 +277,88 @@ namespace Tests.DataProvider
 			var arr1 = new byte[] { 50, 51         };
 			var arr2 = new byte[] { 49, 50, 51, 52 };
 
-			using (var conn = GetDataContext(context))
+			using var conn = GetDataContext(context);
+			using (Assert.EnterMultipleScope())
 			{
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(conn.Execute<byte[]>("SELECT Cast('23' as blob) FROM \"Dual\""), Is.EqualTo(arr1));
-					Assert.That(conn.Execute<Binary>("SELECT Cast('1234' as blob) FROM \"Dual\""), Is.EqualTo(new Binary(arr2)));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast('23' as blob) FROM \"Dual\""), Is.EqualTo(arr1));
+				Assert.That(conn.Execute<Binary>("SELECT Cast('1234' as blob) FROM \"Dual\""), Is.EqualTo(new Binary(arr2)));
 
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Binary("p", arr1)), Is.EqualTo(arr1));
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Blob("p", arr1)), Is.EqualTo(arr1));
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Create("p", arr1)), Is.EqualTo(arr1));
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Blob("p", null)), Is.Null);
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.VarBinary("p", null)), Is.Null);
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Binary("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Blob("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.VarBinary("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Image("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Image("p", arr2)), Is.EqualTo(arr2));
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Create("p", new Binary(arr1))), Is.EqualTo(arr1));
-					Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", new DataParameter("p", new Binary(arr1))), Is.EqualTo(arr1));
-				}
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Binary("p", arr1)), Is.EqualTo(arr1));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Blob("p", arr1)), Is.EqualTo(arr1));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Create("p", arr1)), Is.EqualTo(arr1));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Blob("p", null)), Is.Null);
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.VarBinary("p", null)), Is.Null);
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Binary("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Blob("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.VarBinary("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Image("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Image("p", arr2)), Is.EqualTo(arr2));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", DataParameter.Create("p", new Binary(arr1))), Is.EqualTo(arr1));
+				Assert.That(conn.Execute<byte[]>("SELECT Cast(@p as blob) FROM \"Dual\"", new DataParameter("p", new Binary(arr1))), Is.EqualTo(arr1));
 			}
 		}
 
 		[Test]
 		public void TestGuid([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = GetDataContext(context))
+			using var conn = GetDataContext(context);
+			using (Assert.EnterMultipleScope())
 			{
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(
-									conn.Execute<Guid>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as char(38)) FROM \"Dual\""),
-									Is.EqualTo(new Guid("6F9619FF-8B86-D011-B42D-00C04FC964FF")));
+				Assert.That(
+								conn.Execute<Guid>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as char(38)) FROM \"Dual\""),
+								Is.EqualTo(new Guid("6F9619FF-8B86-D011-B42D-00C04FC964FF")));
 
-					Assert.That(
-						conn.Execute<Guid?>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as char(38)) FROM \"Dual\""),
-						Is.EqualTo(new Guid("6F9619FF-8B86-D011-B42D-00C04FC964FF")));
-				}
+				Assert.That(
+					conn.Execute<Guid?>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as char(38)) FROM \"Dual\""),
+					Is.EqualTo(new Guid("6F9619FF-8B86-D011-B42D-00C04FC964FF")));
+			}
 
-				var guid = TestData.Guid1;
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(conn.Execute<Guid>("SELECT Cast(@p as char(38)) FROM \"Dual\"", DataParameter.Create("p", guid)), Is.EqualTo(guid));
-					Assert.That(conn.Execute<Guid>("SELECT Cast(@p as char(38)) FROM \"Dual\"", new DataParameter { Name = "p", Value = guid }), Is.EqualTo(guid));
-				}
+			var guid = TestData.Guid1;
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(conn.Execute<Guid>("SELECT Cast(@p as char(38)) FROM \"Dual\"", DataParameter.Create("p", guid)), Is.EqualTo(guid));
+				Assert.That(conn.Execute<Guid>("SELECT Cast(@p as char(38)) FROM \"Dual\"", new DataParameter { Name = "p", Value = guid }), Is.EqualTo(guid));
 			}
 		}
 
 		[Test]
 		public void TestGuid2([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = GetDataContext(context))
-			{
-				AreEqual(
-					from t in      Types2 select t.GuidValue,
-					from t in conn.Types2 select t.GuidValue);
+			using var conn = GetDataContext(context);
+			AreEqual(
+				from t in Types2 select t.GuidValue,
+				from t in conn.Types2 select t.GuidValue);
 
-				var dt = (from t in conn.Types2 select t).First();
+			var dt = (from t in conn.Types2 select t).First();
 
-				conn.Update(dt);
-				conn.Types2.Update(
-					t => t.ID == dt.ID,
-					t => new LinqDataTypes2 { GuidValue = dt.GuidValue });
-			}
+			conn.Update(dt);
+			conn.Types2.Update(
+				t => t.ID == dt.ID,
+				t => new LinqDataTypes2 { GuidValue = dt.GuidValue });
 		}
 
 		[Test]
 		public void TestXml([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = GetDataContext(context))
+			using var conn = GetDataContext(context);
+			using (Assert.EnterMultipleScope())
 			{
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(conn.Execute<string>("SELECT Cast('<xml/>' as varchar(100)) FROM \"Dual\""), Is.EqualTo("<xml/>"));
-					Assert.That(conn.Execute<XDocument>("SELECT Cast('<xml/>' as varchar(100)) FROM \"Dual\"").ToString(), Is.EqualTo("<xml />"));
-					Assert.That(conn.Execute<XmlDocument>("SELECT Cast('<xml/>' as varchar(100)) FROM \"Dual\"").InnerXml, Is.EqualTo("<xml />"));
-				}
+				Assert.That(conn.Execute<string>("SELECT Cast('<xml/>' as varchar(100)) FROM \"Dual\""), Is.EqualTo("<xml/>"));
+				Assert.That(conn.Execute<XDocument>("SELECT Cast('<xml/>' as varchar(100)) FROM \"Dual\"").ToString(), Is.EqualTo("<xml />"));
+				Assert.That(conn.Execute<XmlDocument>("SELECT Cast('<xml/>' as varchar(100)) FROM \"Dual\"").InnerXml, Is.EqualTo("<xml />"));
+			}
 
-				var xdoc = XDocument.Parse("<xml/>");
-				var xml  = Convert<string,XmlDocument>.Lambda("<xml/>");
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(100)) FROM \"Dual\"", DataParameter.Xml("p", "<xml/>")), Is.EqualTo("<xml/>"));
-					Assert.That(conn.Execute<XDocument>("SELECT Cast(@p as varchar(100)) FROM \"Dual\"", DataParameter.Xml("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
-					Assert.That(conn.Execute<XmlDocument>("SELECT Cast(@p as varchar(100)) FROM \"Dual\"", DataParameter.Xml("p", xml)).InnerXml, Is.EqualTo("<xml />"));
-					Assert.That(conn.Execute<XDocument>("SELECT Cast(@p as varchar(100)) FROM \"Dual\"", new DataParameter("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
-					Assert.That(conn.Execute<XDocument>("SELECT Cast(@p as varchar(100)) FROM \"Dual\"", new DataParameter("p", xml)).ToString(), Is.EqualTo("<xml />"));
-				}
+			var xdoc = XDocument.Parse("<xml/>");
+			var xml  = Convert<string,XmlDocument>.Lambda("<xml/>");
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as varchar(100)) FROM \"Dual\"", DataParameter.Xml("p", "<xml/>")), Is.EqualTo("<xml/>"));
+				Assert.That(conn.Execute<XDocument>("SELECT Cast(@p as varchar(100)) FROM \"Dual\"", DataParameter.Xml("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
+				Assert.That(conn.Execute<XmlDocument>("SELECT Cast(@p as varchar(100)) FROM \"Dual\"", DataParameter.Xml("p", xml)).InnerXml, Is.EqualTo("<xml />"));
+				Assert.That(conn.Execute<XDocument>("SELECT Cast(@p as varchar(100)) FROM \"Dual\"", new DataParameter("p", xdoc)).ToString(), Is.EqualTo("<xml />"));
+				Assert.That(conn.Execute<XDocument>("SELECT Cast(@p as varchar(100)) FROM \"Dual\"", new DataParameter("p", xml)).ToString(), Is.EqualTo("<xml />"));
 			}
 		}
 
@@ -391,67 +371,59 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum1([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = GetDataContext(context))
+			using var conn = GetDataContext(context);
+			using (Assert.EnterMultipleScope())
 			{
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(conn.Execute<TestEnum>("SELECT Cast('A' as char) FROM \"Dual\""), Is.EqualTo(TestEnum.AA));
-					Assert.That(conn.Execute<TestEnum?>("SELECT Cast('A' as char) FROM \"Dual\""), Is.EqualTo(TestEnum.AA));
-					Assert.That(conn.Execute<TestEnum>("SELECT Cast('B' as char) FROM \"Dual\""), Is.EqualTo(TestEnum.BB));
-					Assert.That(conn.Execute<TestEnum?>("SELECT Cast('B' as char) FROM \"Dual\""), Is.EqualTo(TestEnum.BB));
-				}
+				Assert.That(conn.Execute<TestEnum>("SELECT Cast('A' as char) FROM \"Dual\""), Is.EqualTo(TestEnum.AA));
+				Assert.That(conn.Execute<TestEnum?>("SELECT Cast('A' as char) FROM \"Dual\""), Is.EqualTo(TestEnum.AA));
+				Assert.That(conn.Execute<TestEnum>("SELECT Cast('B' as char) FROM \"Dual\""), Is.EqualTo(TestEnum.BB));
+				Assert.That(conn.Execute<TestEnum?>("SELECT Cast('B' as char) FROM \"Dual\""), Is.EqualTo(TestEnum.BB));
 			}
 		}
 
 		[Test]
 		public void TestEnum2([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = GetDataContext(context))
+			using var conn = GetDataContext(context);
+			using (Assert.EnterMultipleScope())
 			{
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM \"Dual\"", new { p = TestEnum.AA }), Is.EqualTo("A"));
-					Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM \"Dual\"", new { p = (TestEnum?)TestEnum.BB }), Is.EqualTo("B"));
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM \"Dual\"", new { p = TestEnum.AA }), Is.EqualTo("A"));
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM \"Dual\"", new { p = (TestEnum?)TestEnum.BB }), Is.EqualTo("B"));
 
-					Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM \"Dual\"", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
-					Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM \"Dual\"", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
-					Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM \"Dual\"", new { p = conn.MappingSchema.GetConverter<TestEnum?, string>()!(TestEnum.AA) }), Is.EqualTo("A"));
-				}
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM \"Dual\"", new { p = ConvertTo<string>.From((TestEnum?)TestEnum.AA) }), Is.EqualTo("A"));
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM \"Dual\"", new { p = ConvertTo<string>.From(TestEnum.AA) }), Is.EqualTo("A"));
+				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM \"Dual\"", new { p = conn.MappingSchema.GetConverter<TestEnum?, string>()!(TestEnum.AA) }), Is.EqualTo("A"));
 			}
 		}
 
 		[Test]
 		public void SequenceInsert([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.GetTable<FirebirdSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
-				db.Insert(new FirebirdSpecific.SequenceTest { Value = "SeqValue" });
+			using var db = GetDataContext(context);
+			db.GetTable<FirebirdSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
+			db.Insert(new FirebirdSpecific.SequenceTest { Value = "SeqValue" });
 
-				var id = db.GetTable<FirebirdSpecific.SequenceTest>().Single(_ => _.Value == "SeqValue").ID;
+			var id = db.GetTable<FirebirdSpecific.SequenceTest>().Single(_ => _.Value == "SeqValue").ID;
 
-				db.GetTable<FirebirdSpecific.SequenceTest>().Where(_ => _.ID == id).Delete();
+			db.GetTable<FirebirdSpecific.SequenceTest>().Where(_ => _.ID == id).Delete();
 
-				Assert.That(db.GetTable<FirebirdSpecific.SequenceTest>().Count(_ => _.Value == "SeqValue"), Is.Zero);
-			}
+			Assert.That(db.GetTable<FirebirdSpecific.SequenceTest>().Count(_ => _.Value == "SeqValue"), Is.Zero);
 		}
 
 		[Test]
 		public void SequenceInsertWithIdentity([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.GetTable<FirebirdSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
+			using var db = GetDataContext(context);
+			db.GetTable<FirebirdSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
 
-				var id1 = Convert.ToInt32(db.InsertWithIdentity(new FirebirdSpecific.SequenceTest { Value = "SeqValue" }));
-				var id2 = db.GetTable<FirebirdSpecific.SequenceTest>().Single(_ => _.Value == "SeqValue").ID;
+			var id1 = Convert.ToInt32(db.InsertWithIdentity(new FirebirdSpecific.SequenceTest { Value = "SeqValue" }));
+			var id2 = db.GetTable<FirebirdSpecific.SequenceTest>().Single(_ => _.Value == "SeqValue").ID;
 
-				Assert.That(id2, Is.EqualTo(id1));
+			Assert.That(id2, Is.EqualTo(id1));
 
-				db.GetTable<FirebirdSpecific.SequenceTest>().Where(_ => _.ID == id1).Delete();
+			db.GetTable<FirebirdSpecific.SequenceTest>().Where(_ => _.ID == id1).Delete();
 
-				Assert.That(db.GetTable<FirebirdSpecific.SequenceTest>().Count(_ => _.Value == "SeqValue"), Is.Zero);
-			}
+			Assert.That(db.GetTable<FirebirdSpecific.SequenceTest>().Count(_ => _.Value == "SeqValue"), Is.Zero);
 		}
 
 		[Table("LinqDataTypes")]
@@ -464,13 +436,11 @@ namespace Tests.DataProvider
 		[Test]
 		public void ForcedInlineParametersInSelectClauseTest([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				Assert.That(db.Select(() => Sql.AsSql(10)), Is.EqualTo(10)); // if 10 is not inlined, when FB raise "unknown data type error"
+			using var db = GetDataContext(context);
+			Assert.That(db.Select(() => Sql.AsSql(10)), Is.EqualTo(10)); // if 10 is not inlined, when FB raise "unknown data type error"
 
-				var blob = new byte[] {1, 2, 3};
-				db.GetTable<MyLinqDataType>().Any(x => x.BinaryValue == blob); // if blob is inlined - FB raise error(blob can not be sql literal)
-			}
+			var blob = new byte[] {1, 2, 3};
+			db.GetTable<MyLinqDataType>().Any(x => x.BinaryValue == blob); // if blob is inlined - FB raise error(blob can not be sql literal)
 		}
 
 		[Test]
@@ -478,28 +448,26 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = GetDataContext(context))
+				using var db = GetDataContext(context);
+				try
 				{
-					try
-					{
-						db.BulkCopy(
-							new BulkCopyOptions { BulkCopyType = bulkCopyType },
-							Enumerable.Range(0, 10).Select(n =>
-								new LinqDataTypes
-								{
-									ID            = 4000 + n,
-									MoneyValue    = 1000m + n,
-									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
-									BoolValue     = true,
-									GuidValue     = TestData.SequentialGuid(n),
-									SmallIntValue = (short)n
-								}
-							));
-					}
-					finally
-					{
-						db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
-					}
+					db.BulkCopy(
+						new BulkCopyOptions { BulkCopyType = bulkCopyType },
+						Enumerable.Range(0, 10).Select(n =>
+							new LinqDataTypes
+							{
+								ID = 4000 + n,
+								MoneyValue = 1000m + n,
+								DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+								BoolValue = true,
+								GuidValue = TestData.SequentialGuid(n),
+								SmallIntValue = (short)n
+							}
+						));
+				}
+				finally
+				{
+					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
 				}
 			}
 		}
@@ -509,28 +477,26 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = GetDataContext(context))
+				using var db = GetDataContext(context);
+				try
 				{
-					try
-					{
-						await db.BulkCopyAsync(
-							new BulkCopyOptions { BulkCopyType = bulkCopyType },
-							Enumerable.Range(0, 10).Select(n =>
-								new LinqDataTypes
-								{
-									ID            = 4000 + n,
-									MoneyValue    = 1000m + n,
-									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
-									BoolValue     = true,
-									GuidValue     = TestData.SequentialGuid(n),
-									SmallIntValue = (short)n
-								}
-							));
-					}
-					finally
-					{
-						await db.GetTable<LinqDataTypes>().DeleteAsync(p => p.ID >= 4000);
-					}
+					await db.BulkCopyAsync(
+						new BulkCopyOptions { BulkCopyType = bulkCopyType },
+						Enumerable.Range(0, 10).Select(n =>
+							new LinqDataTypes
+							{
+								ID = 4000 + n,
+								MoneyValue = 1000m + n,
+								DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+								BoolValue = true,
+								GuidValue = TestData.SequentialGuid(n),
+								SmallIntValue = (short)n
+							}
+						));
+				}
+				finally
+				{
+					await db.GetTable<LinqDataTypes>().DeleteAsync(p => p.ID >= 4000);
 				}
 			}
 		}
@@ -590,31 +556,29 @@ namespace Tests.DataProvider
 			[Values] bool withIdentity,
 			[Values] bool throwIfNotExists)
 		{
-			using (var db = GetDataContext(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = quoteMode })))
+			using var db = GetDataContext(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = quoteMode }));
+			if (withIdentity)
+				test<TestIdentityDropTable>();
+			else
+				test<TestDropTable>();
+
+			void test<TTable>()
+				where TTable : notnull
 			{
-				if (withIdentity)
-					test<TestIdentityDropTable>();
-				else
-					test<TestDropTable>();
+				// first drop deletes table if it remains from previous test run
+				// second drop deletes non-existing table
+				db.DropTable<TTable>(throwExceptionIfNotExists: false);
 
-				void test<TTable>()
-					where TTable : notnull
+				try
 				{
-					// first drop deletes table if it remains from previous test run
-					// second drop deletes non-existing table
-					db.DropTable<TTable>(throwExceptionIfNotExists: false);
-
-					try
-					{
-						db.DropTable<TTable>(throwExceptionIfNotExists: throwIfNotExists);
-					}
-					catch when(throwIfNotExists)
-					{
-					}
-
-					db.CreateTable<TTable>();
 					db.DropTable<TTable>(throwExceptionIfNotExists: throwIfNotExists);
 				}
+				catch when (throwIfNotExists)
+				{
+				}
+
+				db.CreateTable<TTable>();
+				db.DropTable<TTable>(throwExceptionIfNotExists: throwIfNotExists);
 			}
 		}
 
@@ -634,72 +598,68 @@ namespace Tests.DataProvider
 			[IncludeDataSources(TestProvName.AllFirebird)] string context,
 			[Values(FirebirdIdentifierQuoteMode.Auto, FirebirdIdentifierQuoteMode.Quote)] FirebirdIdentifierQuoteMode quoteMode)
 		{
-			using (var db = GetDataContext(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = quoteMode }).UseDisableQueryCache(true)))
+			using var db = GetDataContext(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = quoteMode }).UseDisableQueryCache(true));
+			try
 			{
-				try
-				{
-					db.GetTable<CamelCaseName>()
-						.Insert(() => new CamelCaseName()
-						{
-							Id = 1,
-							NAME1 = "name1",
-							Name2 = "name2",
-							NAME3 = "name3",
-							NAME4 = "name4",
-							NAME5 = "name5",
-						});
-
-					var result = db.GetTable<CamelCaseName>().ToList();
-					Assert.That(result, Has.Count.EqualTo(1));
-					using (Assert.EnterMultipleScope())
+				db.GetTable<CamelCaseName>()
+					.Insert(() => new CamelCaseName()
 					{
-						Assert.That(result[0].Id, Is.EqualTo(1));
-						Assert.That(result[0].NAME1, Is.EqualTo("name1"));
-						Assert.That(result[0].Name2, Is.EqualTo("name2"));
-						Assert.That(result[0].NAME3, Is.EqualTo("name3"));
-						Assert.That(result[0].NAME4, Is.EqualTo("name4"));
-						Assert.That(result[0].NAME5, Is.EqualTo("name5"));
-					}
-				}
-				finally
+						Id = 1,
+						NAME1 = "name1",
+						Name2 = "name2",
+						NAME3 = "name3",
+						NAME4 = "name4",
+						NAME5 = "name5",
+					});
+
+				var result = db.GetTable<CamelCaseName>().ToList();
+				Assert.That(result, Has.Count.EqualTo(1));
+				using (Assert.EnterMultipleScope())
 				{
-					db.GetTable<CamelCaseName>().Delete();
+					Assert.That(result[0].Id, Is.EqualTo(1));
+					Assert.That(result[0].NAME1, Is.EqualTo("name1"));
+					Assert.That(result[0].Name2, Is.EqualTo("name2"));
+					Assert.That(result[0].NAME3, Is.EqualTo("name3"));
+					Assert.That(result[0].NAME4, Is.EqualTo("name4"));
+					Assert.That(result[0].NAME5, Is.EqualTo("name5"));
 				}
+			}
+			finally
+			{
+				db.GetTable<CamelCaseName>().Delete();
 			}
 		}
 
 		[Test]
 		public void TestProcedureNonLatinParameters1([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			int? id = null;
+			try
 			{
-				int? id = null;
-				try
-				{
-					var id1 = db.PersonInsert("Имя", "Фамилия", "Отчество", 'M', out id).ToList();
-					Assert.That(id1, Has.Count.EqualTo(1));
-					Assert.That(id1[0].PERSONID, Is.Not.Null);
+				var id1 = db.PersonInsert("Имя", "Фамилия", "Отчество", 'M', out id).ToList();
+				Assert.That(id1, Has.Count.EqualTo(1));
+				Assert.That(id1[0].PERSONID, Is.Not.Null);
 
-					// TODO: see TestProcedureNonLatinParameters2
-					// output parameter value is not set
-					id = id1[0].PERSONID;
+				// TODO: see TestProcedureNonLatinParameters2
+				// output parameter value is not set
+				id = id1[0].PERSONID;
 
-					var record = db.Person.Single(p => p.ID == id);
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(record.FirstName, Is.EqualTo("Имя"));
-						Assert.That(record.LastName, Is.EqualTo("Фамилия"));
-						Assert.That(record.MiddleName, Is.EqualTo("Отчество"));
-						Assert.That(record.Gender, Is.EqualTo(Gender.Male));
-						Assert.That(id, Is.Not.Null);
-						Assert.That(id1[0].PERSONID, Is.EqualTo(id));
-					}
-				}
-				finally
+				var record = db.Person.Single(p => p.ID == id);
+				using (Assert.EnterMultipleScope())
 				{
-					if (id != null)
-						db.Person.Delete(p => p.ID == id);
+					Assert.That(record.FirstName, Is.EqualTo("Имя"));
+					Assert.That(record.LastName, Is.EqualTo("Фамилия"));
+					Assert.That(record.MiddleName, Is.EqualTo("Отчество"));
+					Assert.That(record.Gender, Is.EqualTo(Gender.Male));
+					Assert.That(id, Is.Not.Null);
+					Assert.That(id1[0].PERSONID, Is.EqualTo(id));
 				}
+			}
+			finally
+			{
+				if (id != null)
+					db.Person.Delete(p => p.ID == id);
 			}
 		}
 
@@ -707,31 +667,29 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestProcedureNonLatinParameters2([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			int? id = null;
+			try
 			{
-				int? id = null;
-				try
-				{
-					var id1 = db.PersonInsert("Имя", "Фамилия", "Отчество", 'M', out id).ToList();
-					Assert.That(id1, Has.Count.EqualTo(1));
-					Assert.That(id1[0].PERSONID, Is.Not.Null);
+				var id1 = db.PersonInsert("Имя", "Фамилия", "Отчество", 'M', out id).ToList();
+				Assert.That(id1, Has.Count.EqualTo(1));
+				Assert.That(id1[0].PERSONID, Is.Not.Null);
 
-					var record = db.Person.Single(p => p.ID == id);
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(record.FirstName, Is.EqualTo("Имя"));
-						Assert.That(record.LastName, Is.EqualTo("Фамилия"));
-						Assert.That(record.MiddleName, Is.EqualTo("Отчество"));
-						Assert.That(record.Gender, Is.EqualTo(Gender.Male));
-						Assert.That(id, Is.Not.Null);
-						Assert.That(id1[0].PERSONID, Is.EqualTo(id));
-					}
-				}
-				finally
+				var record = db.Person.Single(p => p.ID == id);
+				using (Assert.EnterMultipleScope())
 				{
-					if (id != null)
-						db.Person.Delete(p => p.ID == id);
+					Assert.That(record.FirstName, Is.EqualTo("Имя"));
+					Assert.That(record.LastName, Is.EqualTo("Фамилия"));
+					Assert.That(record.MiddleName, Is.EqualTo("Отчество"));
+					Assert.That(record.Gender, Is.EqualTo(Gender.Male));
+					Assert.That(id, Is.Not.Null);
+					Assert.That(id1[0].PERSONID, Is.EqualTo(id));
 				}
+			}
+			finally
+			{
+				if (id != null)
+					db.Person.Delete(p => p.ID == id);
 			}
 		}
 
@@ -772,22 +730,20 @@ namespace Tests.DataProvider
 			[IncludeDataSources(false, TestProvName.AllFirebird)] string context,
 			[Values] FirebirdIdentifierQuoteMode quoteMode)
 		{
-			using (var db      = GetDataConnection(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = quoteMode }).UseDisableQueryCache(true)))
-			using (var cards   = db.CreateLocalTable<Card>())
-			using (var clients = db.CreateLocalTable<Client>())
+			using var db = GetDataConnection(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = quoteMode }).UseDisableQueryCache(true));
+			using var cards = db.CreateLocalTable<Card>();
+			using var clients = db.CreateLocalTable<Client>();
+			cards.LoadWith(x => x.Owner).ToList();
+
+			var sql = db.LastQuery!;
+
+			if (quoteMode == FirebirdIdentifierQuoteMode.None)
 			{
-				cards.LoadWith(x => x.Owner).ToList();
-
-				var sql = db.LastQuery!;
-
-				if (quoteMode == FirebirdIdentifierQuoteMode.None)
-				{
-					sql.ShouldContain("Client a_Owner");
-				}
-				else
-				{
-					sql.ShouldContain("\"Client\" \"a_Owner\"");
-				}
+				sql.ShouldContain("Client a_Owner");
+			}
+			else
+			{
+				sql.ShouldContain("\"Client\" \"a_Owner\"");
 			}
 		}
 		#endregion
@@ -890,21 +846,19 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestFb4TypesCreateTable([IncludeDataSources(false, TestProvName.AllFirebird4Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
-			using (var t = db.CreateTempTable<TestFbTypesTable>())
-			{
-				var sql = db.LastQuery!;
+			using var db = new TestDataConnection(context);
+			using var t = db.CreateTempTable<TestFbTypesTable>();
+			var sql = db.LastQuery!;
 
-				// create table
-				Assert.That(sql, Does.Contain("\"Id\"         Int                      NOT NULL,"));
-				Assert.That(sql, Does.Contain("\"DecFloat16\" DECFLOAT(16),"));
-				Assert.That(sql, Does.Contain("\"DecFloat30\" DECFLOAT,"));
-				Assert.That(sql, Does.Contain("\"DecFloat34\" DECFLOAT,"));
-				Assert.That(sql, Does.Contain("\"DecFloat\"   DECFLOAT,"));
-				Assert.That(sql, Does.Contain("\"DateTimeTZ\" TIMESTAMP WITH TIME ZONE,"));
-				Assert.That(sql, Does.Contain("\"TimeTZ\"     TIME WITH TIME ZONE,"));
-				Assert.That(sql, Does.Contain("\"Int128\"     INT128,"));
-			}
+			// create table
+			Assert.That(sql, Does.Contain("\"Id\"         Int                      NOT NULL,"));
+			Assert.That(sql, Does.Contain("\"DecFloat16\" DECFLOAT(16),"));
+			Assert.That(sql, Does.Contain("\"DecFloat30\" DECFLOAT,"));
+			Assert.That(sql, Does.Contain("\"DecFloat34\" DECFLOAT,"));
+			Assert.That(sql, Does.Contain("\"DecFloat\"   DECFLOAT,"));
+			Assert.That(sql, Does.Contain("\"DateTimeTZ\" TIMESTAMP WITH TIME ZONE,"));
+			Assert.That(sql, Does.Contain("\"TimeTZ\"     TIME WITH TIME ZONE,"));
+			Assert.That(sql, Does.Contain("\"Int128\"     INT128,"));
 		}
 
 		[Test]
@@ -912,31 +866,29 @@ namespace Tests.DataProvider
 			[IncludeDataSources(false, TestProvName.AllFirebird4Plus)] string context,
 			[Values] bool inline)
 		{
-			using (var db = new TestDataConnection(context))
-			using (var t = db.CreateLocalTable(TestFbTypesTable.Data))
+			using var db = new TestDataConnection(context);
+			using var t = db.CreateLocalTable(TestFbTypesTable.Data);
+			db.InlineParameters = inline;
+
+			var sql = db.LastQuery!;
+			using (Assert.EnterMultipleScope())
 			{
-				db.InlineParameters = inline;
-
-				var sql = db.LastQuery!;
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(t.Where(_ => _.DecFloat16 == TestFbTypesTable.Data[0].DecFloat16).Count(), Is.EqualTo(1));
-					Assert.That(db.LastQuery!, Does.Contain("@"));
-					Assert.That(t.Where(_ => _.DecFloat30 == TestFbTypesTable.Data[0].DecFloat30).Count(), Is.EqualTo(1));
-					Assert.That(db.LastQuery!, Does.Contain("@"));
-					Assert.That(t.Where(_ => _.DecFloat34 == TestFbTypesTable.Data[0].DecFloat34).Count(), Is.EqualTo(1));
-					Assert.That(db.LastQuery!, Does.Contain("@"));
-					Assert.That(t.Where(_ => _.DecFloat == TestFbTypesTable.Data[0].DecFloat).Count(), Is.EqualTo(1));
-					Assert.That(db.LastQuery!, Does.Contain("@"));
-					Assert.That(t.Where(_ => _.DateTimeTZ == TestFbTypesTable.Data[0].DateTimeTZ).Count(), Is.EqualTo(1));
-					Assert.That(db.LastQuery!, Does.Contain("@"));
-					Assert.That(t.Where(_ => _.TimeTZ == TestFbTypesTable.Data[0].TimeTZ).Count(), Is.EqualTo(1));
-					Assert.That(db.LastQuery!, Does.Contain("@"));
-					Assert.That(t.Where(_ => _.Int128 == TestFbTypesTable.Data[0].Int128).Count(), Is.EqualTo(1));
-				}
-
-				Assert.That(db.LastQuery!.Contains("@"), Is.EqualTo(!inline));
+				Assert.That(t.Where(_ => _.DecFloat16 == TestFbTypesTable.Data[0].DecFloat16).Count(), Is.EqualTo(1));
+				Assert.That(db.LastQuery!, Does.Contain("@"));
+				Assert.That(t.Where(_ => _.DecFloat30 == TestFbTypesTable.Data[0].DecFloat30).Count(), Is.EqualTo(1));
+				Assert.That(db.LastQuery!, Does.Contain("@"));
+				Assert.That(t.Where(_ => _.DecFloat34 == TestFbTypesTable.Data[0].DecFloat34).Count(), Is.EqualTo(1));
+				Assert.That(db.LastQuery!, Does.Contain("@"));
+				Assert.That(t.Where(_ => _.DecFloat == TestFbTypesTable.Data[0].DecFloat).Count(), Is.EqualTo(1));
+				Assert.That(db.LastQuery!, Does.Contain("@"));
+				Assert.That(t.Where(_ => _.DateTimeTZ == TestFbTypesTable.Data[0].DateTimeTZ).Count(), Is.EqualTo(1));
+				Assert.That(db.LastQuery!, Does.Contain("@"));
+				Assert.That(t.Where(_ => _.TimeTZ == TestFbTypesTable.Data[0].TimeTZ).Count(), Is.EqualTo(1));
+				Assert.That(db.LastQuery!, Does.Contain("@"));
+				Assert.That(t.Where(_ => _.Int128 == TestFbTypesTable.Data[0].Int128).Count(), Is.EqualTo(1));
 			}
+
+			Assert.That(db.LastQuery!.Contains("@"), Is.EqualTo(!inline));
 		}
 
 		public class FB4LiteralTestCase
@@ -978,22 +930,20 @@ namespace Tests.DataProvider
 			[IncludeDataSources(false, TestProvName.AllFirebird4Plus)] string context,
 			[ValueSource(nameof(FB4LiteralTestCases))] FB4LiteralTestCase testCase)
 		{
-			using (var db = new TestDataConnection(context))
-			using (var t = db.CreateLocalTable<TestFbTypesTable>())
+			using var db = new TestDataConnection(context);
+			using var t = db.CreateLocalTable<TestFbTypesTable>();
+			t.Insert(() => new TestFbTypesTable()
 			{
-				t.Insert(() => new TestFbTypesTable()
-				{
-					Id         = 1,
-					Int128     = testCase.Int128,
-				});
+				Id = 1,
+				Int128 = testCase.Int128,
+			});
 
-				db.InlineParameters = true;
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(t.Where(_ => _.Int128 == testCase.Int128).Count(), Is.EqualTo(1));
+			db.InlineParameters = true;
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(t.Where(_ => _.Int128 == testCase.Int128).Count(), Is.EqualTo(1));
 
-					Assert.That(db.LastQuery!, Does.Contain(testCase.Literal));
-				}
+				Assert.That(db.LastQuery!, Does.Contain(testCase.Literal));
 			}
 		}
 
@@ -1045,34 +995,31 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestFb4TypesProcedure([IncludeDataSources(false, TestProvName.AllFirebird4Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using var db = new TestDataConnection(context);
+			var tstz       = new FbZonedDateTime(TestData.DateTime4Utc, "UTC");
+			var ttz        = new FbZonedTime(TestData.TimeOfDay4, "UTC");
+			var decfloat16 = new FbDecFloat(1234567890123456, 5);
+			var decfloat34 = new FbDecFloat(BigInteger.Parse("1234567890123456789012345678901235"), 15);
+			var int128     = BigInteger.Parse("-170141183460469231731687303715884105728");
+
+			var res = db.TestV4Types(tstz, ttz, decfloat16, decfloat34, int128).ToList();
+
+			Assert.That(res, Has.Count.EqualTo(1));
+			using (Assert.EnterMultipleScope())
 			{
-				var tstz       = new FbZonedDateTime(TestData.DateTime4Utc, "UTC");
-				var ttz        = new FbZonedTime(TestData.TimeOfDay4, "UTC");
-				var decfloat16 = new FbDecFloat(1234567890123456, 5);
-				var decfloat34 = new FbDecFloat(BigInteger.Parse("1234567890123456789012345678901235"), 15);
-				var int128     = BigInteger.Parse("-170141183460469231731687303715884105728");
-
-				var res = db.TestV4Types(tstz, ttz, decfloat16, decfloat34, int128).ToList();
-
-				Assert.That(res, Has.Count.EqualTo(1));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(res[0].COL_TSTZ, Is.EqualTo(tstz));
-					Assert.That(res[0].COL_TTZ, Is.EqualTo(ttz));
-					Assert.That(res[0].COL_DECFLOAT16, Is.EqualTo(decfloat16));
-					Assert.That(res[0].COL_DECFLOAT34, Is.EqualTo(decfloat34));
-					Assert.That(res[0].COL_INT_128, Is.EqualTo(int128));
-				}
+				Assert.That(res[0].COL_TSTZ, Is.EqualTo(tstz));
+				Assert.That(res[0].COL_TTZ, Is.EqualTo(ttz));
+				Assert.That(res[0].COL_DECFLOAT16, Is.EqualTo(decfloat16));
+				Assert.That(res[0].COL_DECFLOAT34, Is.EqualTo(decfloat34));
+				Assert.That(res[0].COL_INT_128, Is.EqualTo(int128));
 			}
 		}
 
 		[Test]
 		public void TestModule([IncludeDataSources(false, TestProvName.AllFirebird3Plus)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var parameters = new []
+			using var db = GetDataContext(context);
+			var parameters = new []
 				{
 					new DataParameter("I", 1, DataType.Int32),
 					new DataParameter("O", null, DataType.Int32)
@@ -1081,23 +1028,22 @@ namespace Tests.DataProvider
 					}
 				};
 
-				db.ExecuteProc("TEST_PROCEDURE", parameters);
-				Assert.That(parameters[1].Value, Is.EqualTo(4));
-				db.ExecuteProc("TEST_PACKAGE1.TEST_PROCEDURE", parameters);
-				Assert.That(parameters[1].Value, Is.EqualTo(2));
-				db.ExecuteProc("TEST_PACKAGE2.TEST_PROCEDURE", parameters);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(parameters[1].Value, Is.EqualTo(3));
+			db.ExecuteProc("TEST_PROCEDURE", parameters);
+			Assert.That(parameters[1].Value, Is.EqualTo(4));
+			db.ExecuteProc("TEST_PACKAGE1.TEST_PROCEDURE", parameters);
+			Assert.That(parameters[1].Value, Is.EqualTo(2));
+			db.ExecuteProc("TEST_PACKAGE2.TEST_PROCEDURE", parameters);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(parameters[1].Value, Is.EqualTo(3));
 
-					Assert.That(db.Person.Select(p => FirebirdModuleFunctions.TestFunction(1)).First(), Is.EqualTo(4));
-					Assert.That(db.Person.Select(p => FirebirdModuleFunctions.TestFunctionP1(1)).First(), Is.EqualTo(2));
-					Assert.That(db.Person.Select(p => FirebirdModuleFunctions.TestFunctionP2(1)).First(), Is.EqualTo(3));
+				Assert.That(db.Person.Select(p => FirebirdModuleFunctions.TestFunction(1)).First(), Is.EqualTo(4));
+				Assert.That(db.Person.Select(p => FirebirdModuleFunctions.TestFunctionP1(1)).First(), Is.EqualTo(2));
+				Assert.That(db.Person.Select(p => FirebirdModuleFunctions.TestFunctionP2(1)).First(), Is.EqualTo(3));
 
-					Assert.That(FirebirdModuleFunctions.TestTableFunction(db, 1).Select(r => r.O).First(), Is.EqualTo(4));
-					Assert.That(FirebirdModuleFunctions.TestTableFunctionP1(db, 1).Select(r => r.O).First(), Is.EqualTo(2));
-					Assert.That(FirebirdModuleFunctions.TestTableFunctionP2(db, 1).Select(r => r.O).First(), Is.EqualTo(3));
-				}
+				Assert.That(FirebirdModuleFunctions.TestTableFunction(db, 1).Select(r => r.O).First(), Is.EqualTo(4));
+				Assert.That(FirebirdModuleFunctions.TestTableFunctionP1(db, 1).Select(r => r.O).First(), Is.EqualTo(2));
+				Assert.That(FirebirdModuleFunctions.TestTableFunctionP2(db, 1).Select(r => r.O).First(), Is.EqualTo(3));
 			}
 		}
 

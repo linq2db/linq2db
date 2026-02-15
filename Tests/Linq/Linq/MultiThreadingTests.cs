@@ -73,23 +73,21 @@ namespace Tests.Linq
 			// transaction (or delay) required for Access and Firebird, otherwise it is possible for other threads
 			// to read incomplete results, because inserted data is not made available yet to other threads by
 			// database engine
-			using (var db = (DataConnection)GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData, true))
-			{
-				ConcurrentRunner(db, context, 10,
-					(threadDb, p) =>
-					{
-						var query = skipTrim
+			using var db = (DataConnection)GetDataContext(context);
+			using var table = db.CreateLocalTable(testData, true);
+			ConcurrentRunner(db, context, 10,
+				(threadDb, p) =>
+				{
+					var query = skipTrim
 							? threadDb.GetTable<MultiThreadedData>().Where(x => x.StrValue.EndsWith(p))
 							: threadDb.GetTable<MultiThreadedData>().Where(x => x.StrValue.Trim().EndsWith(p));
-						return query.Select(q => q.StrValue).ToArray();
-					}, (result, p) =>
-					{
-						var query = testData.Where(x => x.StrValue.EndsWith(p));
-						var expected = query.Select(q => q.StrValue).ToArray();
-						AreEqual(expected, result);
-					}, "1", "x1", "x11", "x33", "x2");
-			}
+					return query.Select(q => q.StrValue).ToArray();
+				}, (result, p) =>
+				{
+					var query = testData.Where(x => x.StrValue.EndsWith(p));
+					var expected = query.Select(q => q.StrValue).ToArray();
+					AreEqual(expected, result);
+				}, "1", "x1", "x11", "x33", "x2");
 		}
 
 		[Test]
@@ -103,21 +101,19 @@ namespace Tests.Linq
 			// transaction (or delay) required for Access and Firebird, otherwise it is possible for other threads
 			// to read incomplete results, because inserted data is not made available yet to other threads by
 			// database engine
-			using (var db    = (DataConnection)GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData, true))
-			{
-				ConcurrentRunner(db, context, 2,
-					(threadDb, p) =>
-					{
-						var query = threadDb.GetTable<MultiThreadedData>().Where(x => p % 2 == 0 && x.Id == p || x.Id == p % 3 + 1);
-						return query.Select(q => q.Id).ToArray();
-					}, (result, p) =>
-					{
-						var query = testData.Where(x => p % 2 == 0 && x.Id == p || x.Id == p % 3  + 1);
-						var expected = query.Select(q => q.Id).ToArray();
-						AreEqual(expected, result);
-					}, Enumerable.Range(1, 50).ToArray());
-			}
+			using var db = (DataConnection)GetDataContext(context);
+			using var table = db.CreateLocalTable(testData, true);
+			ConcurrentRunner(db, context, 2,
+				(threadDb, p) =>
+				{
+					var query = threadDb.GetTable<MultiThreadedData>().Where(x => (p % 2 == 0 && x.Id == p) || x.Id == p % 3 + 1);
+					return query.Select(q => q.Id).ToArray();
+				}, (result, p) =>
+				{
+					var query = testData.Where(x => (p % 2 == 0 && x.Id == p) || x.Id == p % 3  + 1);
+					var expected = query.Select(q => q.Id).ToArray();
+					AreEqual(expected, result);
+				}, Enumerable.Range(1, 50).ToArray());
 		}
 
 		[Test]
@@ -131,24 +127,22 @@ namespace Tests.Linq
 			// transaction (or delay) required for Access and Firebird, otherwise it is possible for other threads
 			// to read incomplete results, because inserted data is not made available yet to other threads by
 			// database engine
-			using (var db    = (DataConnection)GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData, true))
-			{
-				ConcurrentRunner(db, context, 1,
-					(threadDb, p) =>
-					{
-						var result = threadDb.GetTable<MultiThreadedData>()
+			using var db = (DataConnection)GetDataContext(context);
+			using var table = db.CreateLocalTable(testData, true);
+			ConcurrentRunner(db, context, 1,
+				(threadDb, p) =>
+				{
+					var result = threadDb.GetTable<MultiThreadedData>()
 							.Merge()
 							.Using(testData.Where(x => x.Id <= p))
 							.OnTargetKey()
 							.InsertWhenNotMatched()
 							.Merge();
-						return result;
-					}, (result, p) =>
-					{
+					return result;
+				}, (result, p) =>
+				{
 
-					}, Enumerable.Range(1, 100).ToArray());
-			}
+				}, Enumerable.Range(1, 100).ToArray());
 		}
 
 		[Test]
@@ -159,15 +153,14 @@ namespace Tests.Linq
 
 			var testData = MultiThreadedData.TestData();
 
-			using (var db    = (DataConnection)GetDataContext(context))
-			using (var table = db.CreateLocalTable(testData, true))
-			{
-				ConcurrentRunner(db, context, 1,
-					(threadDb, p) =>
-					{
-						var param1 = p;
-						var param2 = p;
-						var result = threadDb.GetTable<MultiThreadedData>()
+			using var db = (DataConnection)GetDataContext(context);
+			using var table = db.CreateLocalTable(testData, true);
+			ConcurrentRunner(db, context, 1,
+				(threadDb, p) =>
+				{
+					var param1 = p;
+					var param2 = p;
+					var result = threadDb.GetTable<MultiThreadedData>()
 							.Where(t => t.Id > param1)
 							.Select(t => new
 							{
@@ -187,12 +180,12 @@ namespace Tests.Linq
 									}).ToArray()
 							})
 							.ToList();
-						return result;
-					}, (result, p) =>
-					{
-						var param1 = p;
-						var param2 = p;
-						var expected = testData
+					return result;
+				}, (result, p) =>
+				{
+					var param1 = p;
+					var param2 = p;
+					var expected = testData
 							.Where(t => t.Id > param1)
 							.Select(t => new
 							{
@@ -213,12 +206,11 @@ namespace Tests.Linq
 							})
 							.ToList();
 
-						result.Count.ShouldBe(expected.Count);
+					result.Count.ShouldBe(expected.Count);
 
-						if (expected.Count > 0)
-							AreEqualWithComparer(result, expected);
-					}, Enumerable.Range(1, 100).ToArray());
-			}
+					if (expected.Count > 0)
+						AreEqualWithComparer(result, expected);
+				}, Enumerable.Range(1, 100).ToArray());
 		}
 
 		/*

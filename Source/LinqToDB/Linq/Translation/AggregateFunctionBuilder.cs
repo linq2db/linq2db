@@ -159,7 +159,7 @@ namespace LinqToDB.Linq.Translation
 
 							var binary = (BinaryExpression)expr;
 
-							if (binary.Left == raw.ValueParameter && binary.Right.IsNullValue() || binary.Right == raw.ValueParameter && binary.Left.IsNullValue())
+							if ((binary.Left == raw.ValueParameter && binary.Right.IsNullValue()) || (binary.Right == raw.ValueParameter && binary.Left.IsNullValue()))
 							{
 								if (alreadySpottedNullCheck || config.AllowNotNullCheckMode == true)
 								{
@@ -201,10 +201,7 @@ namespace LinqToDB.Linq.Translation
 					return BuildAggregationFunctionResult.Error(error);
 				}
 
-				if (filterSql == null)
-				{
-					filterSql = new SqlSearchCondition();
-				}
+				filterSql ??= new SqlSearchCondition();
 
 				if (filterExprSql is not ISqlPredicate predicate)
 				{
@@ -216,7 +213,7 @@ namespace LinqToDB.Linq.Translation
 
 			if (filterSql != null && valueSql != null && config.AllowNotNullCheckMode.HasValue && filterSql is { IsAnd: true })
 			{
-				var isNotNull = filterSql.Predicates.FirstOrDefault(p => p is SqlPredicate.IsNull { IsNot: true } isNull && isNull.Expr1.Equals(valueSql));
+				var isNotNull = filterSql.Predicates.Find(p => p is SqlPredicate.IsNull { IsNot: true } isNull && isNull.Expr1.Equals(valueSql));
 				if (isNotNull != null)
 				{
 					isNullFiltered = true;
@@ -273,28 +270,23 @@ namespace LinqToDB.Linq.Translation
 					fallbackConfig.ToAllowedOps(),
 					agg => Combine(ctx, agg, functionCall, fallbackConfig, sequenceExpressionIndex, true));
 
-				if (fallbackResult is SqlPlaceholderExpression placeholder)
+				return fallbackResult switch
 				{
-					return BuildAggregationFunctionResult.FromSqlExpression(placeholder.Sql);
-				}
+					SqlPlaceholderExpression placeholder =>
+						BuildAggregationFunctionResult.FromSqlExpression(placeholder.Sql),
 
-				if (fallbackResult is SqlValidateExpression sqlValidateExpression && sqlValidateExpression.InnerExpression is SqlPlaceholderExpression validatePlaceholder)
-				{
-					return BuildAggregationFunctionResult.FromSqlExpression(validatePlaceholder.Sql, sqlValidateExpression.Validator);
-				}
+					SqlValidateExpression { InnerExpression: SqlPlaceholderExpression validatePlaceholder } sqlValidateExpression =>
+						BuildAggregationFunctionResult.FromSqlExpression(validatePlaceholder.Sql, sqlValidateExpression.Validator),
 
-				if (fallbackResult is SqlErrorExpression errorExpression)
-				{
-					return BuildAggregationFunctionResult.Error(errorExpression);
-				}
-			
-				return BuildAggregationFunctionResult.FromFallback(fallbackResult);
+					SqlErrorExpression errorExpression =>
+						BuildAggregationFunctionResult.Error(errorExpression),
+
+					_ => BuildAggregationFunctionResult.FromFallback(fallbackResult),
+				};
 			}
 
 			if (composer.Result == null)
-			{
 				return BuildAggregationFunctionResult.Error(ctx.CreateErrorExpression(functionCall, "Aggregate builder produced no result", functionCall.Type));
-			}
 
 			return BuildAggregationFunctionResult.FromSqlExpression(composer.Result, composer.Validator);
 		}
@@ -351,7 +343,7 @@ namespace LinqToDB.Linq.Translation
 					HasValue              = HasValue,
 					FilterLambdaIndex     = FilterLambdaIndex,
 					SequenceIndex         = SequenceIndex,
-					FallbackExpression    = FallbackExpression
+					FallbackExpression    = FallbackExpression,
 				};
 			}
 		}

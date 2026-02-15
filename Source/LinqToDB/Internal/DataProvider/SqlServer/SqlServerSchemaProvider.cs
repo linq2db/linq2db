@@ -28,7 +28,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			var version = dataConnection.Execute<string>("select @@version");
 
-			IsAzure            = version.IndexOf("Azure", StringComparison.Ordinal) >= 0;
+			IsAzure            = version.Contains("Azure", StringComparison.Ordinal);
 			CompatibilityLevel = dataConnection.Execute<int>("SELECT compatibility_level FROM sys.databases WHERE name = db_name()");
 		}
 
@@ -41,58 +41,66 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 ";
 
 			return dataConnection.Query<TableInfo>(
-				IsAzure ? @"
-				SELECT
-					TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME as TableID,
-					TABLE_CATALOG                                                                  as CatalogName,
-					TABLE_SCHEMA                                                                   as SchemaName,
-					TABLE_NAME                                                                     as TableName,
-					CASE WHEN TABLE_TYPE = 'VIEW' THEN 1 ELSE 0 END                                as IsView,
-					''                                                                             as Description,
-					CASE WHEN TABLE_SCHEMA = 'dbo' THEN 1 ELSE 0 END                               as IsDefaultSchema
-				FROM
-					INFORMATION_SCHEMA.TABLES s
-					LEFT JOIN
-						sys.tables t
-					ON
-						OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = t.object_id
-				WHERE
-					" + temporalFilterStart + @"t.object_id IS NULL OR t.is_ms_shipped <> 1" + temporalFilterEnd
-				: @"
-				SELECT
-					TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME as TableID,
-					TABLE_CATALOG                                                                  as CatalogName,
-					TABLE_SCHEMA                                                                   as SchemaName,
-					TABLE_NAME                                                                     as TableName,
-					CASE WHEN TABLE_TYPE = 'VIEW' THEN 1 ELSE 0 END                                as IsView,
-					ISNULL(CONVERT(NVARCHAR(MAX), x.value), N'')                                   as Description,
-					CASE WHEN TABLE_SCHEMA = 'dbo' THEN 1 ELSE 0 END                               as IsDefaultSchema
-				FROM
-					INFORMATION_SCHEMA.TABLES s
-					LEFT JOIN
-						sys.tables t
-					ON
-						OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = t.object_id
-					LEFT JOIN
-						sys.extended_properties x
-					ON
-						OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
-						x.minor_id = 0 AND
-						x.name = 'MS_Description'
-				WHERE
-					" + temporalFilterStart + @"t.object_id IS NULL OR
-					t.is_ms_shipped <> 1 AND
-					(
+					IsAzure
+					? 
+						$$"""
+
 						SELECT
-							major_id
+							TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME as TableID,
+							TABLE_CATALOG                                                                  as CatalogName,
+							TABLE_SCHEMA                                                                   as SchemaName,
+							TABLE_NAME                                                                     as TableName,
+							CASE WHEN TABLE_TYPE = 'VIEW' THEN 1 ELSE 0 END                                as IsView,
+							''                                                                             as Description,
+							CASE WHEN TABLE_SCHEMA = 'dbo' THEN 1 ELSE 0 END                               as IsDefaultSchema
 						FROM
-							sys.extended_properties
+							INFORMATION_SCHEMA.TABLES s
+							LEFT JOIN
+								sys.tables t
+							ON
+								OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = t.object_id
 						WHERE
-							major_id = t.object_id AND
-							minor_id = 0           AND
-							class    = 1           AND
-							name     = N'microsoft_database_tools_support'
-					) IS NULL" + temporalFilterEnd)
+							{{temporalFilterStart}}t.object_id IS NULL OR t.is_ms_shipped <> 1{{temporalFilterEnd}}
+						"""
+					:
+						$$"""
+
+						SELECT
+							TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME as TableID,
+							TABLE_CATALOG                                                                  as CatalogName,
+							TABLE_SCHEMA                                                                   as SchemaName,
+							TABLE_NAME                                                                     as TableName,
+							CASE WHEN TABLE_TYPE = 'VIEW' THEN 1 ELSE 0 END                                as IsView,
+							ISNULL(CONVERT(NVARCHAR(MAX), x.value), N'')                                   as Description,
+							CASE WHEN TABLE_SCHEMA = 'dbo' THEN 1 ELSE 0 END                               as IsDefaultSchema
+						FROM
+							INFORMATION_SCHEMA.TABLES s
+							LEFT JOIN
+								sys.tables t
+							ON
+								OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = t.object_id
+							LEFT JOIN
+								sys.extended_properties x
+							ON
+								OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
+								x.minor_id = 0 AND
+								x.name = 'MS_Description'
+						WHERE
+							{{temporalFilterStart}}t.object_id IS NULL OR
+							t.is_ms_shipped <> 1 AND
+							(
+								SELECT
+									major_id
+								FROM
+									sys.extended_properties
+								WHERE
+									major_id = t.object_id AND
+									minor_id = 0           AND
+									class    = 1           AND
+									name     = N'microsoft_database_tools_support'
+									) IS NULL{{temporalFilterEnd}}
+						"""
+				)
 				.ToList();
 		}
 
@@ -100,22 +108,24 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			return dataConnection.Query<PrimaryKeyInfo>(
-				@"
-				SELECT
-					k.TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + k.TABLE_SCHEMA + '.' + k.TABLE_NAME as TableID,
-					k.CONSTRAINT_NAME                                                                    as PrimaryKeyName,
-					k.COLUMN_NAME                                                                        as ColumnName,
-					k.ORDINAL_POSITION                                                                   as Ordinal
-				FROM
-					INFORMATION_SCHEMA.KEY_COLUMN_USAGE k
-					JOIN
-						INFORMATION_SCHEMA.TABLE_CONSTRAINTS c
-					ON
-						k.CONSTRAINT_CATALOG = c.CONSTRAINT_CATALOG AND
-						k.CONSTRAINT_SCHEMA  = c.CONSTRAINT_SCHEMA AND
-						k.CONSTRAINT_NAME    = c.CONSTRAINT_NAME
-				WHERE
-					c.CONSTRAINT_TYPE='PRIMARY KEY'")
+					"""
+					SELECT
+						k.TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + k.TABLE_SCHEMA + '.' + k.TABLE_NAME as TableID,
+						k.CONSTRAINT_NAME                                                                    as PrimaryKeyName,
+						k.COLUMN_NAME                                                                        as ColumnName,
+						k.ORDINAL_POSITION                                                                   as Ordinal
+					FROM
+						INFORMATION_SCHEMA.KEY_COLUMN_USAGE k
+						JOIN
+							INFORMATION_SCHEMA.TABLE_CONSTRAINTS c
+						ON
+							k.CONSTRAINT_CATALOG = c.CONSTRAINT_CATALOG AND
+							k.CONSTRAINT_SCHEMA  = c.CONSTRAINT_SCHEMA AND
+							k.CONSTRAINT_NAME    = c.CONSTRAINT_NAME
+					WHERE
+							c.CONSTRAINT_TYPE='PRIMARY KEY'
+					"""
+				)
 				.ToList();
 		}
 
@@ -133,53 +143,59 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					LEFT JOIN sys.tables t ON OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = t.object_id";
 
 			return dataConnection.Query<ColumnInfo>(
-				IsAzure ? @"
-				SELECT
-					TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME                      as TableID,
-					COLUMN_NAME                                                                                         as Name,
-					CASE WHEN IS_NULLABLE = 'YES' THEN 1 ELSE 0 END                                                     as IsNullable,
-					ORDINAL_POSITION                                                                                    as Ordinal,
-					c.DATA_TYPE                                                                                         as DataType,
-					CHARACTER_MAXIMUM_LENGTH                                                                            as Length,
-					ISNULL(NUMERIC_PRECISION, DATETIME_PRECISION)                                                       as [Precision],
-					NUMERIC_SCALE                                                                                       as Scale,
-					''                                                                                                  as [Description],
-					COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') as IsIdentity,
-					CASE WHEN c.DATA_TYPE = 'timestamp'
-						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1" + temporalClause + @"
-						THEN 1 ELSE 0 END as SkipOnInsert,
-					CASE WHEN c.DATA_TYPE = 'timestamp'
-						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1" + temporalClause + @"
-						THEN 1 ELSE 0 END as SkipOnUpdate
-				FROM
-					INFORMATION_SCHEMA.COLUMNS c" + temporalJoin
-				: @"
-				SELECT
-					TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME                      as TableID,
-					COLUMN_NAME                                                                                         as Name,
-					CASE WHEN IS_NULLABLE = 'YES' THEN 1 ELSE 0 END                                                     as IsNullable,
-					ORDINAL_POSITION                                                                                    as Ordinal,
-					c.DATA_TYPE                                                                                         as DataType,
-					CHARACTER_MAXIMUM_LENGTH                                                                            as Length,
-					ISNULL(NUMERIC_PRECISION, DATETIME_PRECISION)                                                       as [Precision],
-					NUMERIC_SCALE                                                                                       as Scale,
-					ISNULL(CONVERT(NVARCHAR(MAX), x.value), N'')                                                        as [Description],
-					COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') as IsIdentity,
-					CASE WHEN c.DATA_TYPE = 'timestamp'
-						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1" + temporalClause + @"
-						THEN 1 ELSE 0 END as SkipOnInsert,
-					CASE WHEN c.DATA_TYPE = 'timestamp'
-						OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1" + temporalClause + @"
-						THEN 1 ELSE 0 END as SkipOnUpdate
-				FROM
-					INFORMATION_SCHEMA.COLUMNS c
-					LEFT JOIN
-						sys.extended_properties x
-					ON
-						--OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
-						OBJECT_ID('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
-						COLUMNPROPERTY(OBJECT_ID('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'ColumnID') = x.minor_id AND
-						x.name = 'MS_Description' AND x.class = 1" + temporalJoin)
+					IsAzure ? 
+						$$"""
+
+						SELECT
+							TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME                      as TableID,
+							COLUMN_NAME                                                                                         as Name,
+							CASE WHEN IS_NULLABLE = 'YES' THEN 1 ELSE 0 END                                                     as IsNullable,
+							ORDINAL_POSITION                                                                                    as Ordinal,
+							c.DATA_TYPE                                                                                         as DataType,
+							CHARACTER_MAXIMUM_LENGTH                                                                            as Length,
+							ISNULL(NUMERIC_PRECISION, DATETIME_PRECISION)                                                       as [Precision],
+							NUMERIC_SCALE                                                                                       as Scale,
+							''                                                                                                  as [Description],
+							COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') as IsIdentity,
+							CASE WHEN c.DATA_TYPE = 'timestamp'
+								OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1{{temporalClause}}
+								THEN 1 ELSE 0 END as SkipOnInsert,
+							CASE WHEN c.DATA_TYPE = 'timestamp'
+								OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1{{temporalClause}}
+								THEN 1 ELSE 0 END as SkipOnUpdate
+						FROM
+							INFORMATION_SCHEMA.COLUMNS c{{temporalJoin}}
+						"""
+					: $$"""
+
+						SELECT
+							TABLE_CATALOG COLLATE DATABASE_DEFAULT + '.' + TABLE_SCHEMA + '.' + TABLE_NAME                      as TableID,
+							COLUMN_NAME                                                                                         as Name,
+							CASE WHEN IS_NULLABLE = 'YES' THEN 1 ELSE 0 END                                                     as IsNullable,
+							ORDINAL_POSITION                                                                                    as Ordinal,
+							c.DATA_TYPE                                                                                         as DataType,
+							CHARACTER_MAXIMUM_LENGTH                                                                            as Length,
+							ISNULL(NUMERIC_PRECISION, DATETIME_PRECISION)                                                       as [Precision],
+							NUMERIC_SCALE                                                                                       as Scale,
+							ISNULL(CONVERT(NVARCHAR(MAX), x.value), N'')                                                        as [Description],
+							COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsIdentity') as IsIdentity,
+							CASE WHEN c.DATA_TYPE = 'timestamp'
+								OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1{{temporalClause}}
+								THEN 1 ELSE 0 END as SkipOnInsert,
+							CASE WHEN c.DATA_TYPE = 'timestamp'
+								OR COLUMNPROPERTY(object_id('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'IsComputed') = 1{{temporalClause}}
+								THEN 1 ELSE 0 END as SkipOnUpdate
+						FROM
+							INFORMATION_SCHEMA.COLUMNS c
+							LEFT JOIN
+								sys.extended_properties x
+							ON
+								--OBJECT_ID('[' + TABLE_CATALOG + '].[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
+								OBJECT_ID('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']') = x.major_id AND
+								COLUMNPROPERTY(OBJECT_ID('[' + TABLE_SCHEMA + '].[' + TABLE_NAME + ']'), COLUMN_NAME, 'ColumnID') = x.minor_id AND
+								x.name = 'MS_Description' AND x.class = 1{{temporalJoin}}
+						"""
+				)
 				.Select(c =>
 				{
 					var dti = GetDataType(c.DataType, null, options);
@@ -250,46 +266,52 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			return dataConnection.Query<ForeignKeyInfo>(@"
-				SELECT
-					fk.name                                                     as Name,
-					DB_NAME() + '.' + SCHEMA_NAME(po.schema_id) + '.' + po.name as ThisTableID,
-					pc.name                                                     as ThisColumn,
-					DB_NAME() + '.' + SCHEMA_NAME(fo.schema_id) + '.' + fo.name as OtherTableID,
-					fc.name                                                     as OtherColumn,
-					fkc.constraint_column_id                                    as Ordinal
-				FROM sys.foreign_keys fk
-					inner join sys.foreign_key_columns fkc ON fk.object_id = fkc.constraint_object_id
-					inner join sys.columns             pc  ON fkc.parent_column_id = pc.column_id and fkc.parent_object_id = pc.object_id
-					inner join sys.objects             po  ON fk.parent_object_id = po.object_id
-					inner join sys.columns             fc  ON fkc.referenced_column_id = fc.column_id and fkc.referenced_object_id = fc.object_id
-					inner join sys.objects             fo  ON fk.referenced_object_id = fo.object_id
-				ORDER BY
-					ThisTableID,
-					Ordinal")
+			return dataConnection.Query<ForeignKeyInfo>(
+					"""
+					SELECT
+						fk.name                                                     as Name,
+						DB_NAME() + '.' + SCHEMA_NAME(po.schema_id) + '.' + po.name as ThisTableID,
+						pc.name                                                     as ThisColumn,
+						DB_NAME() + '.' + SCHEMA_NAME(fo.schema_id) + '.' + fo.name as OtherTableID,
+						fc.name                                                     as OtherColumn,
+						fkc.constraint_column_id                                    as Ordinal
+					FROM sys.foreign_keys fk
+						inner join sys.foreign_key_columns fkc ON fk.object_id = fkc.constraint_object_id
+						inner join sys.columns             pc  ON fkc.parent_column_id = pc.column_id and fkc.parent_object_id = pc.object_id
+						inner join sys.objects             po  ON fk.parent_object_id = po.object_id
+						inner join sys.columns             fc  ON fkc.referenced_column_id = fc.column_id and fkc.referenced_object_id = fc.object_id
+						inner join sys.objects             fo  ON fk.referenced_object_id = fo.object_id
+					ORDER BY
+						ThisTableID,
+						Ordinal
+					"""
+				)
 				.ToList();
 		}
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			return dataConnection.Query<ProcedureInfo>(
-				@"SELECT
-					SPECIFIC_CATALOG COLLATE DATABASE_DEFAULT + '.' + SPECIFIC_SCHEMA + '.' + SPECIFIC_NAME as ProcedureID,
-					SPECIFIC_CATALOG                                                                        as CatalogName,
-					SPECIFIC_SCHEMA                                                                         as SchemaName,
-					SPECIFIC_NAME                                                                           as ProcedureName,
-					CASE WHEN ROUTINE_TYPE = 'FUNCTION'                         THEN 1 ELSE 0 END           as IsFunction,
-					CASE WHEN ROUTINE_TYPE = 'FUNCTION' AND DATA_TYPE = 'TABLE' THEN 1 ELSE 0 END           as IsTableFunction,
-					CASE WHEN EXISTS(SELECT * FROM sys.objects where name = SPECIFIC_NAME AND type='AF')
-					                                                            THEN 1 ELSE 0 END           as IsAggregateFunction,
-					CASE WHEN SPECIFIC_SCHEMA = 'dbo'                           THEN 1 ELSE 0 END           as IsDefaultSchema,
-					ISNULL(CONVERT(NVARCHAR(MAX), x.value), N'')                                            as Description
-				FROM
-					INFORMATION_SCHEMA.ROUTINES
-					LEFT JOIN sys.extended_properties x
-						ON OBJECT_ID('[' + SPECIFIC_SCHEMA + '].[' + SPECIFIC_NAME + ']') = x.major_id AND
-							x.name = 'MS_Description' AND x.class = 1
-				ORDER BY SPECIFIC_CATALOG, SPECIFIC_SCHEMA, SPECIFIC_NAME")
+					"""
+					SELECT
+						SPECIFIC_CATALOG COLLATE DATABASE_DEFAULT + '.' + SPECIFIC_SCHEMA + '.' + SPECIFIC_NAME as ProcedureID,
+						SPECIFIC_CATALOG                                                                        as CatalogName,
+						SPECIFIC_SCHEMA                                                                         as SchemaName,
+						SPECIFIC_NAME                                                                           as ProcedureName,
+						CASE WHEN ROUTINE_TYPE = 'FUNCTION'                         THEN 1 ELSE 0 END           as IsFunction,
+						CASE WHEN ROUTINE_TYPE = 'FUNCTION' AND DATA_TYPE = 'TABLE' THEN 1 ELSE 0 END           as IsTableFunction,
+						CASE WHEN EXISTS(SELECT * FROM sys.objects where name = SPECIFIC_NAME AND type='AF')
+																					THEN 1 ELSE 0 END           as IsAggregateFunction,
+						CASE WHEN SPECIFIC_SCHEMA = 'dbo'                           THEN 1 ELSE 0 END           as IsDefaultSchema,
+						ISNULL(CONVERT(NVARCHAR(MAX), x.value), N'')                                            as Description
+					FROM
+						INFORMATION_SCHEMA.ROUTINES
+						LEFT JOIN sys.extended_properties x
+							ON OBJECT_ID('[' + SPECIFIC_SCHEMA + '].[' + SPECIFIC_NAME + ']') = x.major_id AND
+								x.name = 'MS_Description' AND x.class = 1
+					ORDER BY SPECIFIC_CATALOG, SPECIFIC_SCHEMA, SPECIFIC_NAME
+					"""
+				)
 				.ToList();
 		}
 
@@ -299,77 +321,79 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			// SQL25 CTP2.1 returns vector parameter type as varbinary(len), e.g. for vector(3) : varbinary(20)
 			// and sp_describe_first_result_set returns ntext
 			return dataConnection.Query<ProcedureParameterInfo>(
-				@"SELECT
-					SPECIFIC_CATALOG COLLATE DATABASE_DEFAULT + '.' + SPECIFIC_SCHEMA + '.' + SPECIFIC_NAME as ProcedureID,
-					ORDINAL_POSITION                                                                        as Ordinal,
-					PARAMETER_MODE                                                                          as Mode,
-					PARAMETER_NAME                                                                          as ParameterName,
-					DATA_TYPE                                                                               as DataType,
-					CHARACTER_MAXIMUM_LENGTH                                                                as Length,
-					NUMERIC_PRECISION                                                                       as [Precision],
-					NUMERIC_SCALE                                                                           as Scale,
-					CASE WHEN PARAMETER_MODE = 'IN'  OR PARAMETER_MODE = 'INOUT' THEN 1 ELSE 0 END          as IsIn,
-					CASE WHEN PARAMETER_MODE = 'OUT' OR PARAMETER_MODE = 'INOUT' THEN 1 ELSE 0 END          as IsOut,
-					CASE WHEN IS_RESULT      = 'YES'                             THEN 1 ELSE 0 END          as IsResult,
-					USER_DEFINED_TYPE_CATALOG                                                               as UDTCatalog,
-					USER_DEFINED_TYPE_SCHEMA                                                                as UDTSchema,
-					USER_DEFINED_TYPE_NAME                                                                  as UDTName,
-					1                                                                                       as IsNullable,
-					ISNULL(CONVERT(NVARCHAR(MAX), x.value), N'')                                            as Description
-				FROM
-					INFORMATION_SCHEMA.PARAMETERS
-					LEFT JOIN sys.extended_properties x
-						ON OBJECT_ID('[' + SPECIFIC_SCHEMA + '].[' + SPECIFIC_NAME + ']') = x.major_id AND
-							ORDINAL_POSITION = x.minor_id AND
-							x.name = 'MS_Description' AND x.class = 2")
+					"""
+					SELECT
+						SPECIFIC_CATALOG COLLATE DATABASE_DEFAULT + '.' + SPECIFIC_SCHEMA + '.' + SPECIFIC_NAME as ProcedureID,
+						ORDINAL_POSITION                                                                        as Ordinal,
+						PARAMETER_MODE                                                                          as Mode,
+						PARAMETER_NAME                                                                          as ParameterName,
+						DATA_TYPE                                                                               as DataType,
+						CHARACTER_MAXIMUM_LENGTH                                                                as Length,
+						NUMERIC_PRECISION                                                                       as [Precision],
+						NUMERIC_SCALE                                                                           as Scale,
+						CASE WHEN PARAMETER_MODE = 'IN'  OR PARAMETER_MODE = 'INOUT' THEN 1 ELSE 0 END          as IsIn,
+						CASE WHEN PARAMETER_MODE = 'OUT' OR PARAMETER_MODE = 'INOUT' THEN 1 ELSE 0 END          as IsOut,
+						CASE WHEN IS_RESULT      = 'YES'                             THEN 1 ELSE 0 END          as IsResult,
+						USER_DEFINED_TYPE_CATALOG                                                               as UDTCatalog,
+						USER_DEFINED_TYPE_SCHEMA                                                                as UDTSchema,
+						USER_DEFINED_TYPE_NAME                                                                  as UDTName,
+						1                                                                                       as IsNullable,
+						ISNULL(CONVERT(NVARCHAR(MAX), x.value), N'')                                            as Description
+					FROM
+						INFORMATION_SCHEMA.PARAMETERS
+						LEFT JOIN sys.extended_properties x
+							ON OBJECT_ID('[' + SPECIFIC_SCHEMA + '].[' + SPECIFIC_NAME + ']') = x.major_id AND
+								ORDINAL_POSITION = x.minor_id AND
+								x.name = 'MS_Description' AND x.class = 2
+					"""
+				)
 				.ToList();
 		}
 
 		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
-			switch (dataType)
+			return dataType switch
 			{
-				case "json"             : return DataType.Json;
-				case "vector"           : return DataType.Vector32;
-				case "image"            : return DataType.Image;
-				case "text"             : return DataType.Text;
-				case "binary"           : return DataType.Binary;
-				case "tinyint"          : return DataType.Byte;
-				case "date"             : return DataType.Date;
-				case "time"             : return DataType.Time;
-				case "bit"              : return DataType.Boolean;
-				case "smallint"         : return DataType.Int16;
-				case "decimal"          : return DataType.Decimal;
-				case "int"              : return DataType.Int32;
-				case "smalldatetime"    : return DataType.SmallDateTime;
-				case "real"             : return DataType.Single;
-				case "money"            : return DataType.Money;
-				case "datetime"         : return DataType.DateTime;
-				case "float"            : return DataType.Double;
-				case "numeric"          : return DataType.Decimal;
-				case "smallmoney"       : return DataType.SmallMoney;
-				case "datetime2"        : return DataType.DateTime2;
-				case "bigint"           : return DataType.Int64;
-				case "varbinary"        : return DataType.VarBinary;
-				case "timestamp"        : return DataType.Timestamp;
-				case "sysname"          : return DataType.NVarChar;
-				case "nvarchar"         : return DataType.NVarChar;
-				case "varchar"          : return DataType.VarChar;
-				case "ntext"            : return DataType.NText;
-				case "uniqueidentifier" : return DataType.Guid;
-				case "datetimeoffset"   : return DataType.DateTimeOffset;
-				case "sql_variant"      : return DataType.Variant;
-				case "xml"              : return DataType.Xml;
-				case "char"             : return DataType.Char;
-				case "nchar"            : return DataType.NChar;
-				case "hierarchyid"      :
-				case "geography"        :
-				case "geometry"         : return DataType.Udt;
-				case "table type"       : return DataType.Structured;
+				"json"             => DataType.Json,
+				"vector"           => DataType.Vector32,
+				"image"            => DataType.Image,
+				"text"             => DataType.Text,
+				"binary"           => DataType.Binary,
+				"tinyint"          => DataType.Byte,
+				"date"             => DataType.Date,
+				"time"             => DataType.Time,
+				"bit"              => DataType.Boolean,
+				"smallint"         => DataType.Int16,
+				"decimal"          => DataType.Decimal,
+				"int"              => DataType.Int32,
+				"smalldatetime"    => DataType.SmallDateTime,
+				"real"             => DataType.Single,
+				"money"            => DataType.Money,
+				"datetime"         => DataType.DateTime,
+				"float"            => DataType.Double,
+				"numeric"          => DataType.Decimal,
+				"smallmoney"       => DataType.SmallMoney,
+				"datetime2"        => DataType.DateTime2,
+				"bigint"           => DataType.Int64,
+				"varbinary"        => DataType.VarBinary,
+				"timestamp"        => DataType.Timestamp,
+				"sysname"          => DataType.NVarChar,
+				"nvarchar"         => DataType.NVarChar,
+				"varchar"          => DataType.VarChar,
+				"ntext"            => DataType.NText,
+				"uniqueidentifier" => DataType.Guid,
+				"datetimeoffset"   => DataType.DateTimeOffset,
+				"sql_variant"      => DataType.Variant,
+				"xml"              => DataType.Xml,
+				"char"             => DataType.Char,
+				"nchar"            => DataType.NChar,
+				"hierarchyid"      or
+				"geography"        or
+				"geometry"         => DataType.Udt,
+				"table type"       => DataType.Structured,
+				_                  => DataType.Undefined,
+			};
 			}
-
-			return DataType.Undefined;
-		}
 
 		// TODO: we should support multiple namespaces, as e.g. sql server also could have
 		// spatial types (which is handled by T4 template for now)
@@ -377,60 +401,58 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		protected override string? GetProviderSpecificType(string? dataType)
 		{
-			switch (dataType)
+			return dataType switch
 			{
-				case "varbinary"        :
-				case "timestamp"        :
-				case "rowversion"       :
-				case "image"            :
-				case "binary"           : return nameof(SqlBinary);
-				case "tinyint"          : return nameof(SqlByte);
-				case "date"             :
-				case "smalldatetime"    :
-				case "datetime"         :
-				case "datetime2"        : return nameof(SqlDateTime);
-				case "bit"              : return nameof(SqlBoolean);
-				case "smallint"         : return nameof(SqlInt16);
-				case "numeric"          :
-				case "decimal"          : return nameof(SqlDecimal);
-				case "int"              : return nameof(SqlInt32);
-				case "real"             : return nameof(SqlSingle);
-				case "float"            : return nameof(SqlDouble);
-				case "smallmoney"       :
-				case "money"            : return nameof(SqlMoney);
-				case "bigint"           : return nameof(SqlInt64);
-				case "text"             :
-				case "nvarchar"         :
-				case "char"             :
-				case "nchar"            :
-				case "varchar"          :
-				case "ntext"            : return nameof(SqlString);
-				case "uniqueidentifier" : return nameof(SqlGuid);
-				case "xml"              : return nameof(SqlXml);
-				case "hierarchyid"      : return $"{SqlServerTypes.TypesNamespace}.{SqlServerTypes.SqlHierarchyIdType}";
-				case "geography"        : return $"{SqlServerTypes.TypesNamespace}.{SqlServerTypes.SqlGeographyType}";
-				case "geometry"         : return $"{SqlServerTypes.TypesNamespace}.{SqlServerTypes.SqlGeometryType}";
-				case "json"             : return $"{SqlServerProviderAdapter.TypesNamespace}.SqlJson";
-				case "vector"           : return $"{SqlServerProviderAdapter.TypesNamespace}.SqlVector<float>";
+				"varbinary"        or
+				"timestamp"        or
+				"rowversion"       or
+				"image"            or
+				"binary"           => nameof(SqlBinary),
+				"tinyint"          => nameof(SqlByte),
+				"date"             or
+				"smalldatetime"    or
+				"datetime"         or
+				"datetime2"        => nameof(SqlDateTime),
+				"bit"              => nameof(SqlBoolean),
+				"smallint"         => nameof(SqlInt16),
+				"numeric"          or
+				"decimal"          => nameof(SqlDecimal),
+				"int"              => nameof(SqlInt32),
+				"real"             => nameof(SqlSingle),
+				"float"            => nameof(SqlDouble),
+				"smallmoney"       or
+				"money"            => nameof(SqlMoney),
+				"bigint"           => nameof(SqlInt64),
+				"text"             or
+				"nvarchar"         or
+				"char"             or
+				"nchar"            or
+				"varchar"          or
+				"ntext"            => nameof(SqlString),
+				"uniqueidentifier" => nameof(SqlGuid),
+				"xml"              => nameof(SqlXml),
+				"hierarchyid"      => $"{SqlServerTypes.TypesNamespace}.{SqlServerTypes.SqlHierarchyIdType}",
+				"geography"        => $"{SqlServerTypes.TypesNamespace}.{SqlServerTypes.SqlGeographyType}",
+				"geometry"         => $"{SqlServerTypes.TypesNamespace}.{SqlServerTypes.SqlGeometryType}",
+				"json"             => $"{SqlServerProviderAdapter.TypesNamespace}.SqlJson",
+				"vector"           => $"{SqlServerProviderAdapter.TypesNamespace}.SqlVector<float>",
+				_                  => base.GetProviderSpecificType(dataType),
+			};
 			}
-
-			return base.GetProviderSpecificType(dataType);
-		}
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
-			switch (dataType)
+			return dataType switch
 			{
-				case "json"        : return (options.PreferProviderSpecificTypes ? Provider.Adapter.SqlJsonType   : null) ?? typeof(string);
-				case "vector"      : return (options.PreferProviderSpecificTypes ? Provider.Adapter.SqlVectorType : null) ?? typeof(float[]);
-				case "tinyint"     : return typeof(byte);
-				case "hierarchyid" :
-				case "geography"   :
-				case "geometry"    : return Provider.GetUdtTypeByName(dataType);
-				case "table type"  : return typeof(DataTable);
-			}
-
-			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
+				"json"        => (options.PreferProviderSpecificTypes ? Provider.Adapter.SqlJsonType   : null) ?? typeof(string),
+				"vector"      => (options.PreferProviderSpecificTypes ? Provider.Adapter.SqlVectorType : null) ?? typeof(float[]),
+				"tinyint"     => typeof(byte),
+				"hierarchyid" or
+				"geography"   or
+				"geometry"    => Provider.GetUdtTypeByName(dataType),
+				"table type"  => typeof(DataTable),
+				_             => base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options),
+			};
 		}
 
 		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, int? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName)
@@ -444,21 +466,23 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		protected override DataParameter BuildProcedureParameter(ParameterSchema p)
 		{
-			if (p.DataType == DataType.Structured)
-				return new DataParameter
+			return p.DataType switch
 				{
-					Name      = p.ParameterName,
-					DataType  = p.DataType,
+				DataType.Structured => new DataParameter
+				{
+					Name = p.ParameterName,
+					DataType = p.DataType,
 					Direction =
 						p.IsIn ?
 							p.IsOut ?
 								ParameterDirection.InputOutput :
 								ParameterDirection.Input :
 							ParameterDirection.Output,
-					DbType   = p.SchemaType
-				};
+					DbType = p.SchemaType,
+				},
 
-			return base.BuildProcedureParameter(p);
+				_ => base.BuildProcedureParameter(p),
+			};
 		}
 
 		protected override string BuildTableFunctionLoadTableSchemaCommand(ProcedureSchema procedure, string commandText)
@@ -468,7 +492,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			// TODO: refactor method to use query as parameter instead of manual escaping...
 			// https://github.com/linq2db/linq2db/issues/1921
 			if (CompatibilityLevel >= 140)
-				sql = $"EXEC('{sql.Replace("'", "''")}')";
+				sql = $"EXEC('{sql.Replace("'", "''", StringComparison.Ordinal)}')";
 
 			return sql;
 		}
@@ -503,27 +527,30 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					new DataColumn { ColumnName = "IsIdentity",       DataType = typeof(bool)   },
 				});
 
-				foreach (var item in dataConnection.QueryProc(new
-					{
-						name               = "",
-						is_nullable        = false,
-						system_type_name   = "",
-						max_length         = 0,
-						precision          = 0,
-						scale              = 0,
-						is_identity_column = false
-					},
-					"sp_describe_first_result_set",
-					new DataParameter("tsql", tsql),
-					new DataParameter("params", parms)
-					))
+				foreach (var item in dataConnection
+					.QueryProc(
+						new
+						{
+							name               = "",
+							is_nullable        = false,
+							system_type_name   = "",
+							max_length         = 0,
+							precision          = 0,
+							scale              = 0,
+							is_identity_column = false,
+						},
+						"sp_describe_first_result_set",
+						new DataParameter("tsql", tsql),
+						new DataParameter("params", parms)
+					)
+				)
 				{
 					var row = dt.NewRow();
 
 					row["DataTypeName"]     = item.system_type_name.Split('(')[0];
 					row["ColumnName"]       = item.name ?? "";
 					row["AllowDBNull"]      = item.is_nullable;
-					row["ColumnSize"]       = item.system_type_name.Contains("nchar") || item.system_type_name.Contains("nvarchar") ? item.max_length / 2 : item.max_length;
+					row["ColumnSize"]       = item.system_type_name.Contains("nchar", StringComparison.Ordinal) || item.system_type_name.Contains("nvarchar", StringComparison.Ordinal) ? item.max_length / 2 : item.max_length;
 					row["NumericPrecision"] = item.precision;
 					row["NumericScale"]     = item.scale;
 					row["IsIdentity"]       = item.is_identity_column;
@@ -548,7 +575,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			var list = base.GetDataTypes(dataConnection);
 
-			if (list.All(t => t.DataType != "json"))
+			if (list.TrueForAll(t => !string.Equals(t.DataType, "json", StringComparison.Ordinal)))
 			{
 				var type = Provider.Adapter.SqlJsonType ?? typeof(string);
 
@@ -557,11 +584,11 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					TypeName         = "json",
 					DataType         = type.FullName!,
 					ProviderSpecific = Provider.Adapter.SqlJsonType is not null,
-					ProviderDbType   = 35
+					ProviderDbType   = 35,
 				});
 			}
 
-			if (list.All(t => t.DataType != "vector"))
+			if (list.TrueForAll(t => !string.Equals(t.DataType, "vector", StringComparison.Ordinal)))
 			{
 				var type = Provider.Adapter.SqlVectorType ?? typeof(float[]);
 
@@ -572,7 +599,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					CreateFormat     = "vector({0})",
 					CreateParameters = "length",
 					ProviderSpecific = true,
-					ProviderDbType   = 36
+					ProviderDbType   = 36,
 				});
 			}
 

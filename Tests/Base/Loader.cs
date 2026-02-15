@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 
@@ -36,10 +37,14 @@ namespace SqlServerTypes
 			var ptr = LoadLibrary(path);
 			if (ptr == IntPtr.Zero)
 			{
-				throw new InvalidOperationException(string.Format(
-					"Error loading {0} (ErrorCode: {1})",
-					assemblyName,
-					Marshal.GetLastWin32Error()));
+				throw new InvalidOperationException(
+					string.Format(
+						CultureInfo.InvariantCulture,
+						"Error loading {0} (ErrorCode: {1})",
+						assemblyName,
+						Marshal.GetLastWin32Error()
+					)
+				);
 			}
 		}
 	}

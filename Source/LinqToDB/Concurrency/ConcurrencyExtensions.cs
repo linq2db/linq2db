@@ -60,7 +60,7 @@ namespace LinqToDB.Concurrency
 				.Select(c => new
 				{
 					Column = c,
-					Attr   = ed.MappingSchema.GetAttribute<OptimisticLockPropertyBaseAttribute>(objType, c.MemberInfo)
+					Attr   = ed.MappingSchema.GetAttribute<OptimisticLockPropertyBaseAttribute>(objType, c.MemberInfo),
 				})
 				.Where(_ => _.Attr != null)
 				.Select(_ => _.Column)
@@ -120,8 +120,8 @@ namespace LinqToDB.Concurrency
 		public static int UpdateOptimistic<T>(this IDataContext dc, T obj)
 			where T : class
 		{
-			if (dc  == null) throw new ArgumentNullException(nameof(dc));
-			if (obj == null) throw new ArgumentNullException(nameof(obj));
+			ArgumentNullException.ThrowIfNull(dc);
+			ArgumentNullException.ThrowIfNull(obj);
 
 			return MakeUpdateOptimistic(dc.GetTable<T>(), dc, obj).Update();
 		}
@@ -138,8 +138,8 @@ namespace LinqToDB.Concurrency
 		public static Task<int> UpdateOptimisticAsync<T>(this IDataContext dc, T obj, CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (dc  == null) throw new ArgumentNullException(nameof(dc));
-			if (obj == null) throw new ArgumentNullException(nameof(obj));
+			ArgumentNullException.ThrowIfNull(dc);
+			ArgumentNullException.ThrowIfNull(obj);
 
 			return MakeUpdateOptimistic(dc.GetTable<T>(), dc, obj).UpdateAsync(cancellationToken);
 		}
@@ -155,8 +155,8 @@ namespace LinqToDB.Concurrency
 		public static int UpdateOptimistic<T>(this IQueryable<T> source, T obj)
 			where T : class
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (obj    == null) throw new ArgumentNullException(nameof(obj));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(obj);
 
 			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
 
@@ -175,8 +175,8 @@ namespace LinqToDB.Concurrency
 		public static Task<int> UpdateOptimisticAsync<T>(this IQueryable<T> source, T obj, CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (obj    == null) throw new ArgumentNullException(nameof(obj));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(obj);
 
 			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
 
@@ -194,7 +194,7 @@ namespace LinqToDB.Concurrency
 		public static int DeleteOptimistic<T>(this IDataContext dc, T obj)
 			where T : class
 		{
-			if (dc  == null) throw new ArgumentNullException(nameof(dc));
+			ArgumentNullException.ThrowIfNull(dc);
 
 			return dc.GetTable<T>().WhereKeyOptimistic(obj).Delete();
 		}
@@ -211,7 +211,7 @@ namespace LinqToDB.Concurrency
 		public static Task<int> DeleteOptimisticAsync<T>(this IDataContext dc, T obj, CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (dc  == null) throw new ArgumentNullException(nameof(dc));
+			ArgumentNullException.ThrowIfNull(dc);
 
 			return dc.GetTable<T>().WhereKeyOptimistic(obj).DeleteAsync(cancellationToken);
 		}
@@ -256,8 +256,8 @@ namespace LinqToDB.Concurrency
 		public static IQueryable<T> WhereKeyOptimistic<T>(this IQueryable<T> source, T obj)
 			where T : class
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (obj    == null) throw new ArgumentNullException(nameof(obj));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(obj);
 
 			var dc      = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
 			var objType = typeof(T);

@@ -59,7 +59,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						SqlJoinType.Left  => JoinType.Left,
 						SqlJoinType.Right => JoinType.Right,
 						SqlJoinType.Full  => JoinType.Full,
-						_                 => throw new InvalidOperationException($"Unexpected join type: {(SqlJoinType)builder.EvaluateExpression(methodCall.Arguments[2])!}")
+						_                 => throw new InvalidOperationException($"Unexpected join type: {(SqlJoinType)builder.EvaluateExpression(methodCall.Arguments[2])!}"),
 					};
 					break;
 			}
@@ -97,7 +97,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var joinContext = new SelectContext(builder.GetTranslationModifier(), buildInfo.Parent, builder, null, selectorBody, outerContext.SelectQuery, buildInfo.IsSubQuery)
 #if DEBUG
 			{
-				Debug_MethodCall = methodCall
+				Debug_MethodCall = methodCall,
 			}
 #endif
 			;

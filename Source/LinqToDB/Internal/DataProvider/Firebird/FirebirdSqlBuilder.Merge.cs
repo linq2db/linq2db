@@ -22,7 +22,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		protected override string FakeTable => "rdb$database";
 
-		private readonly ISet<Tuple<SqlValuesTable, int>> _typedColumns = new HashSet<Tuple<SqlValuesTable, int>>();
+		private readonly HashSet<(SqlValuesTable, int)> _typedColumns = [];
 
 		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source, IReadOnlyList<List<ISqlExpression>> rows, int row, int column)
 		{
@@ -35,25 +35,20 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 			{
 				// without type Firebird with convert string values in column to CHAR(LENGTH_OF_BIGGEST_VALUE_IN_COLUMN) with
 				// padding shorter values with spaces
-				if (rows.Any(r => ConvertElement(r[column]) is SqlValue value && value.Value is string))
+				if (rows.Any(r => ConvertElement(r[column]) is SqlValue { Value: string }))
 				{
-					_typedColumns.Add(Tuple.Create(source, column));
-					return rows[0][column] is SqlValue val && val.Value != null;
+					_typedColumns.Add((source, column));
+					return rows[0][column] is SqlValue { Value: { } };
 				}
 
-				if (rows[0][column] is SqlValue
-					{
-						Value: uint or long or ulong or float or double or decimal or null
-					})
+				return rows[0][column] is SqlValue
 				{
-					return true;
-				}
-
-				return false;
+					Value: uint or long or ulong or float or double or decimal or null,
+				};
 			}
 
-			return _typedColumns.Contains(Tuple.Create(source, column))
-				&& ConvertElement(rows[row][column]) is SqlValue sqlValue && sqlValue.Value != null;
+			return _typedColumns.Contains((source, column))
+				&& ConvertElement(rows[row][column]) is SqlValue { Value: { } };
 		}
 
 		// available since FB5

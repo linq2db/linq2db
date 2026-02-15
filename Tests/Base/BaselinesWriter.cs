@@ -14,7 +14,7 @@ namespace Tests
 		{
 			Direct = 1,
 			Remote = 2,
-			Both = Direct | Remote
+			Both = Direct | Remote,
 		}
 
 		// used to detect baseline overwrites by another test(case)
@@ -47,18 +47,18 @@ namespace Tests
 			baseline = baseline
 				.Replace("\r\n", "\n")
 				.Replace(" (asynchronously)", string.Empty)
-				.Replace($"BeginTransaction\n", string.Empty)
-				.Replace($"BeginTransaction(Unspecified)\n", string.Empty)
-				.Replace($"BeginTransaction(Serializable)\n", string.Empty)
-				.Replace($"BeginTransaction(RepeatableRead)\n", string.Empty)
-				.Replace($"BeginTransaction(ReadCommitted)\n", string.Empty)
-				.Replace($"BeginTransactionAsync(Unspecified)\n", string.Empty)
-				.Replace($"BeginTransactionAsync(Serializable)\n", string.Empty)
-				.Replace($"BeginTransactionAsync(RepeatableRead)\n", string.Empty)
-				.Replace($"BeginTransactionAsync(ReadCommitted)\n", string.Empty)
-				.Replace($"BeforeExecute\n", string.Empty)
-				.Replace($"DisposeTransaction\n", string.Empty)
-				.Replace($"DisposeTransactionAsync\n", string.Empty)
+				.Replace("BeginTransaction\n", string.Empty)
+				.Replace("BeginTransaction(Unspecified)\n", string.Empty)
+				.Replace("BeginTransaction(Serializable)\n", string.Empty)
+				.Replace("BeginTransaction(RepeatableRead)\n", string.Empty)
+				.Replace("BeginTransaction(ReadCommitted)\n", string.Empty)
+				.Replace("BeginTransactionAsync(Unspecified)\n", string.Empty)
+				.Replace("BeginTransactionAsync(Serializable)\n", string.Empty)
+				.Replace("BeginTransactionAsync(RepeatableRead)\n", string.Empty)
+				.Replace("BeginTransactionAsync(ReadCommitted)\n", string.Empty)
+				.Replace("BeforeExecute\n", string.Empty)
+				.Replace("DisposeTransaction\n", string.Empty)
+				.Replace("DisposeTransactionAsync\n", string.Empty)
 				;
 
 			if (_baselines.TryGetValue(fullPath, out var type))

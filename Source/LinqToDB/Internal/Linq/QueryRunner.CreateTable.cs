@@ -11,7 +11,7 @@ namespace LinqToDB.Internal.Linq
 {
 	static partial class QueryRunner
 	{
-		static IQueryExpressions EmptyQueryExpressions  = new RuntimeExpressionsContainer(ExpressionInstances.UntypedNull);
+		static readonly IQueryExpressions EmptyQueryExpressions  = new RuntimeExpressionsContainer(ExpressionInstances.UntypedNull);
 
 		public static class CreateTable<T>
 			where T : notnull
@@ -43,7 +43,7 @@ namespace LinqToDB.Internal.Linq
 
 				var query = new Query<int>(dataContext)
 				{
-					Queries = { new QueryInfo { Statement = createTable, } }
+					Queries = { new QueryInfo { Statement = createTable, } },
 				};
 
 				SetNonQueryQuery(query);
@@ -89,7 +89,7 @@ namespace LinqToDB.Internal.Linq
 
 					var query = new Query<int>(dataContext)
 					{
-						Queries = { new QueryInfo { Statement = createTable, } }
+						Queries = { new QueryInfo { Statement = createTable, } },
 					};
 
 					SetNonQueryQuery(query);

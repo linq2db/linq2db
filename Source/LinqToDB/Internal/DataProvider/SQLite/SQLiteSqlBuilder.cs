@@ -31,9 +31,11 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			if (statement is SqlTruncateTableStatement trun)
-				return trun.ResetIdentity && trun.Table!.IdentityFields.Count > 0 ? 2 : 1;
-			return statement.NeedsIdentity() ? 2 : 1;
+			return statement switch
+			{
+				SqlTruncateTableStatement trun => trun.ResetIdentity && trun.Table!.IdentityFields.Count > 0 ? 2 : 1,
+				_ => statement.NeedsIdentity ? 2 : 1,
+			};
 		}
 
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)
@@ -86,14 +88,14 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 					if (value.Length > 0 && value[0] == '[')
 						return sb.Append(value);
 
-					if (value.IndexOf('.') > 0)
+					if (value.IndexOf('.', StringComparison.Ordinal) > 0)
 						value = string.Join("].[", value.Split('.'));
 
 					return sb.Append('[').Append(value).Append(']');
 
 				case ConvertType.SprocParameterToName:
 					return value.Length > 0 && value[0] == '@'
-						? sb.Append(value.Substring(1))
+						? sb.Append(value.AsSpan(1))
 						: sb.Append(value);
 			}
 
@@ -127,12 +129,19 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			{
 				AppendIndent()
 					.Append("CONSTRAINT ").Append(pkName).Append(" PRIMARY KEY (")
-					.Append(string.Join(InlineComma, fieldNames))
+					.AppendJoinStrings(InlineComma, fieldNames)
 					.Append(')');
 			}
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
+		public override StringBuilder BuildObjectName(
+			StringBuilder sb,
+			SqlObjectName name,
+			ConvertType objectType = ConvertType.NameToQueryTable,
+			bool escape = true,
+			TableOptions tableOptions = TableOptions.NotSet,
+			bool withoutSuffix = false
+		)
 		{
 			// either "temp", "main" or attached db name supported
 			if (tableOptions.IsTemporaryOptionSet())
@@ -158,29 +167,23 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			string command;
+			var command = table.TableOptions.TemporaryOptionValue switch
+			{
+				TableOptions.IsTemporary                                                                              or
+				TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData or
+																					TableOptions.IsLocalTemporaryData or
+										   TableOptions.IsLocalTemporaryStructure                                     or
+										   TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData =>
+					"CREATE TEMPORARY TABLE ",
 
-			if (table.TableOptions.IsTemporaryOptionSet())
-			{
-				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-				{
-					case TableOptions.IsTemporary                                                                              :
-					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-					case                                                                     TableOptions.IsLocalTemporaryData :
-					case                            TableOptions.IsLocalTemporaryStructure                                     :
-					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-						command = "CREATE TEMPORARY TABLE ";
-						break;
-					case var value :
-						throw new InvalidOperationException($"Incompatible table options '{value}'");
-				}
-			}
-			else
-			{
-				command = "CREATE TABLE ";
-			}
+				0 =>
+					"CREATE TABLE ",
+
+				var value =>
+					throw new InvalidOperationException($"Incompatible table options '{value}'"),
+			};
 
 			StringBuilder.Append(command);
 
@@ -258,13 +261,13 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		protected override void BuildUpdateQuery(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
 			BuildStep = Step.Tag;             BuildTag(statement);
-			BuildStep = Step.WithClause;      BuildWithClause(statement.GetWithClause());
+			BuildStep = Step.WithClause;      BuildWithClause(statement.WithClause);
 			BuildStep = Step.UpdateClause;    BuildUpdateClause(Statement, selectQuery, updateClause);
 			BuildStep = Step.FromClause;      BuildFromClause(Statement, selectQuery);
 			BuildStep = Step.WhereClause;     BuildUpdateWhereClause(selectQuery);
 			BuildStep = Step.GroupByClause;   BuildGroupByClause(selectQuery);
 			BuildStep = Step.HavingClause;    BuildHavingClause(selectQuery);
-			BuildStep = Step.Output;          BuildOutputSubclause(statement.GetOutputClause());
+			BuildStep = Step.Output;          BuildOutputSubclause(statement.OutputClause);
 			BuildStep = Step.OrderByClause;   BuildOrderByClause(selectQuery);
 			BuildStep = Step.OffsetLimit;     BuildOffsetLimit(selectQuery);
 			BuildStep = Step.QueryExtensions; BuildSubQueryExtensions(statement);

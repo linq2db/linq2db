@@ -29,54 +29,52 @@ namespace Tests.Data
 		[Test]
 		public void CommandInitializedOnDataConnectionTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using var db = GetDataConnection(context);
+			var triggered1 = false;
+			var triggered2 = false;
+			var interceptor1 = new TestCommandInterceptor();
+			var interceptor2 = new TestCommandInterceptor();
+			db.AddInterceptor(interceptor1);
+			db.OnNextCommandInitialized((args, command) =>
 			{
-				var triggered1 = false;
-				var triggered2 = false;
-				var interceptor1 = new TestCommandInterceptor();
-				var interceptor2 = new TestCommandInterceptor();
-				db.AddInterceptor(interceptor1);
-				db.OnNextCommandInitialized((args, command) =>
-				{
-					triggered1 = true;
-					return command;
-				});
-				db.OnNextCommandInitialized((args, command) =>
-				{
-					triggered2 = true;
-					return command;
-				});
-				db.AddInterceptor(interceptor2);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor1.CommandInitializedTriggered, Is.False);
-					Assert.That(interceptor2.CommandInitializedTriggered, Is.False);
-					Assert.That(triggered1, Is.False);
-					Assert.That(triggered2, Is.False);
-				}
+				triggered1 = true;
+				return command;
+			});
+			db.OnNextCommandInitialized((args, command) =>
+			{
+				triggered2 = true;
+				return command;
+			});
+			db.AddInterceptor(interceptor2);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor1.CommandInitializedTriggered, Is.False);
+				Assert.That(interceptor2.CommandInitializedTriggered, Is.False);
+				Assert.That(triggered1, Is.False);
+				Assert.That(triggered2, Is.False);
+			}
 
-				db.Child.ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
-					Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
-					Assert.That(triggered1, Is.True);
-					Assert.That(triggered2, Is.True);
-				}
+			db.Child.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+				Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+				Assert.That(triggered1, Is.True);
+				Assert.That(triggered2, Is.True);
+			}
 
-				triggered1 = false;
-				triggered2 = false;
-				interceptor1.CommandInitializedTriggered = false;
-				interceptor2.CommandInitializedTriggered = false;
+			triggered1 = false;
+			triggered2 = false;
+			interceptor1.CommandInitializedTriggered = false;
+			interceptor2.CommandInitializedTriggered = false;
 
-				db.Person.ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
-					Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
-					Assert.That(triggered1, Is.False);
-					Assert.That(triggered2, Is.False);
-				}
+			db.Person.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+				Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+				Assert.That(triggered1, Is.False);
+				Assert.That(triggered2, Is.False);
 			}
 		}
 
@@ -94,48 +92,46 @@ namespace Tests.Data
 				.UseInterceptor(interceptor1)
 				.UseInterceptor(interceptor2);
 
-			using (var db = new DataConnection(builder))
+			using var db = new DataConnection(builder);
+			db.OnNextCommandInitialized((args, command) =>
 			{
-				db.OnNextCommandInitialized((args, command) =>
-				{
-					triggered1 = true;
-					return command;
-				});
-				db.OnNextCommandInitialized((args, command) =>
-				{
-					triggered2 = true;
-					return command;
-				});
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor1.CommandInitializedTriggered, Is.False);
-					Assert.That(interceptor2.CommandInitializedTriggered, Is.False);
-					Assert.That(triggered1, Is.False);
-					Assert.That(triggered2, Is.False);
-				}
+				triggered1 = true;
+				return command;
+			});
+			db.OnNextCommandInitialized((args, command) =>
+			{
+				triggered2 = true;
+				return command;
+			});
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor1.CommandInitializedTriggered, Is.False);
+				Assert.That(interceptor2.CommandInitializedTriggered, Is.False);
+				Assert.That(triggered1, Is.False);
+				Assert.That(triggered2, Is.False);
+			}
 
-				db.GetTable<Child>().ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
-					Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
-					Assert.That(triggered1, Is.True);
-					Assert.That(triggered2, Is.True);
-				}
+			db.GetTable<Child>().ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+				Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+				Assert.That(triggered1, Is.True);
+				Assert.That(triggered2, Is.True);
+			}
 
-				triggered1 = false;
-				triggered2 = false;
-				interceptor1.CommandInitializedTriggered = false;
-				interceptor2.CommandInitializedTriggered = false;
+			triggered1 = false;
+			triggered2 = false;
+			interceptor1.CommandInitializedTriggered = false;
+			interceptor2.CommandInitializedTriggered = false;
 
-				db.GetTable<Person>().ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
-					Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
-					Assert.That(triggered1, Is.False);
-					Assert.That(triggered2, Is.False);
-				}
+			db.GetTable<Person>().ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+				Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+				Assert.That(triggered1, Is.False);
+				Assert.That(triggered2, Is.False);
 			}
 		}
 
@@ -152,106 +148,102 @@ namespace Tests.Data
 				.UseInterceptor(interceptor1)
 				.UseInterceptor(interceptor2);
 
-			using (var db = new DataContext(builder))
+			using var db = new DataContext(builder);
+			db.CloseAfterUse = closeAfterUse;
+
+			db.OnNextCommandInitialized((args, command) =>
 			{
-				db.CloseAfterUse = closeAfterUse;
+				triggered1 = true;
+				return command;
+			});
+			db.OnNextCommandInitialized((args, command) =>
+			{
+				triggered2 = true;
+				return command;
+			});
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor1.CommandInitializedTriggered, Is.False);
+				Assert.That(interceptor2.CommandInitializedTriggered, Is.False);
+				Assert.That(triggered1, Is.False);
+				Assert.That(triggered2, Is.False);
+			}
 
-				db.OnNextCommandInitialized((args, command) =>
-				{
-					triggered1 = true;
-					return command;
-				});
-				db.OnNextCommandInitialized((args, command) =>
-				{
-					triggered2 = true;
-					return command;
-				});
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor1.CommandInitializedTriggered, Is.False);
-					Assert.That(interceptor2.CommandInitializedTriggered, Is.False);
-					Assert.That(triggered1, Is.False);
-					Assert.That(triggered2, Is.False);
-				}
+			db.GetTable<Child>().ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+				Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+				Assert.That(triggered1, Is.True);
+				Assert.That(triggered2, Is.True);
+			}
 
-				db.GetTable<Child>().ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
-					Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
-					Assert.That(triggered1, Is.True);
-					Assert.That(triggered2, Is.True);
-				}
+			triggered1 = false;
+			triggered2 = false;
+			interceptor1.CommandInitializedTriggered = false;
+			interceptor2.CommandInitializedTriggered = false;
 
-				triggered1 = false;
-				triggered2 = false;
-				interceptor1.CommandInitializedTriggered = false;
-				interceptor2.CommandInitializedTriggered = false;
-
-				db.GetTable<Person>().ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
-					Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
-					Assert.That(triggered1, Is.False);
-					Assert.That(triggered2, Is.False);
-				}
+			db.GetTable<Person>().ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+				Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+				Assert.That(triggered1, Is.False);
+				Assert.That(triggered2, Is.False);
 			}
 		}
 
 		private void CommandInitializedOnDataContextTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
 		{
-			using (var db = new DataContext(context))
+			using var db = new DataContext(context);
+			// test that interceptors not lost after underlying data connection recreation
+			db.CloseAfterUse = closeAfterUse;
+
+			var triggered1 = false;
+			var triggered2 = false;
+			var interceptor1 = new TestCommandInterceptor();
+			var interceptor2 = new TestCommandInterceptor();
+			db.AddInterceptor(interceptor1);
+			db.OnNextCommandInitialized((args, command) =>
 			{
-				// test that interceptors not lost after underlying data connection recreation
-				db.CloseAfterUse = closeAfterUse;
+				triggered1 = true;
+				return command;
+			});
+			db.OnNextCommandInitialized((args, command) =>
+			{
+				triggered2 = true;
+				return command;
+			});
+			db.AddInterceptor(interceptor2);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor1.CommandInitializedTriggered, Is.False);
+				Assert.That(interceptor2.CommandInitializedTriggered, Is.False);
+				Assert.That(triggered1, Is.False);
+				Assert.That(triggered2, Is.False);
+			}
 
-				var triggered1 = false;
-				var triggered2 = false;
-				var interceptor1 = new TestCommandInterceptor();
-				var interceptor2 = new TestCommandInterceptor();
-				db.AddInterceptor(interceptor1);
-				db.OnNextCommandInitialized((args, command) =>
-				{
-					triggered1 = true;
-					return command;
-				});
-				db.OnNextCommandInitialized((args, command) =>
-				{
-					triggered2 = true;
-					return command;
-				});
-				db.AddInterceptor(interceptor2);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor1.CommandInitializedTriggered, Is.False);
-					Assert.That(interceptor2.CommandInitializedTriggered, Is.False);
-					Assert.That(triggered1, Is.False);
-					Assert.That(triggered2, Is.False);
-				}
+			db.GetTable<Child>().ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+				Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+				Assert.That(triggered1, Is.True);
+				Assert.That(triggered2, Is.True);
+			}
 
-				db.GetTable<Child>().ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
-					Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
-					Assert.That(triggered1, Is.True);
-					Assert.That(triggered2, Is.True);
-				}
+			triggered1 = false;
+			triggered2 = false;
+			interceptor1.CommandInitializedTriggered = false;
+			interceptor2.CommandInitializedTriggered = false;
 
-				triggered1 = false;
-				triggered2 = false;
-				interceptor1.CommandInitializedTriggered = false;
-				interceptor2.CommandInitializedTriggered = false;
-
-				db.GetTable<Person>().ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
-					Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
-					Assert.That(triggered1, Is.False);
-					Assert.That(triggered2, Is.False);
-				}
+			db.GetTable<Person>().ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor1.CommandInitializedTriggered, Is.True);
+				Assert.That(interceptor2.CommandInitializedTriggered, Is.True);
+				Assert.That(triggered1, Is.False);
+				Assert.That(triggered2, Is.False);
 			}
 		}
 
@@ -261,44 +253,22 @@ namespace Tests.Data
 		[Test]
 		public void DataConnection_ExecuteNonQuery([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var interceptor = new TestCommandInterceptor();
+			db.AddInterceptor(interceptor);
+			using (Assert.EnterMultipleScope())
 			{
-				var interceptor = new TestCommandInterceptor();
-				db.AddInterceptor(interceptor);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
-				}
-
-				using (db.CreateTempTable<InterceptorsTestsTable>())
-				{
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-						Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-						Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
-						Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-						Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
-						Assert.That(interceptor.ExecuteNonQueryTriggered, Is.True);
-						Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
-					}
-				}
+				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
 			}
-		}
 
-		[Test]
-		public async Task DataConnection_ExecuteNonQueryAsync([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
-		{
-			await using (var db = GetDataContext(context))
+			using (db.CreateTempTable<InterceptorsTestsTable>())
 			{
-				var interceptor = new TestCommandInterceptor();
-				db.AddInterceptor(interceptor);
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
@@ -306,54 +276,6 @@ namespace Tests.Data
 					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
 					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
 					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
-				}
-
-				await using(await db.CreateTempTableAsync<InterceptorsTestsTable>())
-				{
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-						Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-						Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
-						Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-						Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
-						Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-						Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.True);
-					}
-				}
-			}
-		}
-
-		[Test]
-		public void DataConnection_ExecuteScalar([IncludeDataSources(TestProvName.AllSQLite)] string context)
-		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateTempTable<InterceptorsTestsTable>())
-			{
-				var interceptor = new TestCommandInterceptor();
-				db.AddInterceptor(interceptor);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
-				}
-
-				table.InsertWithIdentity(() => new InterceptorsTestsTable() { ID = 1 });
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ExecuteScalarTriggered, Is.True);
-					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
-					// also true, as for sqlite we generate two queries
 					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.True);
 					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
 				}
@@ -361,13 +283,24 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public async Task DataConnection_ExecuteScalarAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public async Task DataConnection_ExecuteNonQueryAsync([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			await using (var db = GetDataContext(context))
-			await using (var table = await db.CreateTempTableAsync<InterceptorsTestsTable>())
+			await using var db = GetDataContext(context);
+			var interceptor = new TestCommandInterceptor();
+			db.AddInterceptor(interceptor);
+			using (Assert.EnterMultipleScope())
 			{
-				var interceptor = new TestCommandInterceptor();
-				db.AddInterceptor(interceptor);
+				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+			}
+
+			await using (await db.CreateTempTableAsync<InterceptorsTestsTable>())
+			{
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
@@ -376,95 +309,154 @@ namespace Tests.Data
 					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
 					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
 					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
-				}
-
-				await table.InsertWithIdentityAsync(() => new InterceptorsTestsTable() { ID = 1 });
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.True);
-					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-					// also true, as for sqlite we generate two queries
 					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.True);
 				}
 			}
 		}
 
 		[Test]
+		public void DataConnection_ExecuteScalar([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateTempTable<InterceptorsTestsTable>();
+			var interceptor = new TestCommandInterceptor();
+			db.AddInterceptor(interceptor);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+			}
+
+			table.InsertWithIdentity(() => new InterceptorsTestsTable() { ID = 1 });
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor.ExecuteScalarTriggered, Is.True);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+				// also true, as for sqlite we generate two queries
+				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.True);
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+			}
+		}
+
+		[Test]
+		public async Task DataConnection_ExecuteScalarAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			await using var db = GetDataContext(context);
+			await using var table = await db.CreateTempTableAsync<InterceptorsTestsTable>();
+			var interceptor = new TestCommandInterceptor();
+			db.AddInterceptor(interceptor);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+			}
+
+			await table.InsertWithIdentityAsync(() => new InterceptorsTestsTable() { ID = 1 });
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.True);
+				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+				// also true, as for sqlite we generate two queries
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.True);
+			}
+		}
+
+		[Test]
 		public void DataConnection_ExecuteReader([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var interceptor = new TestCommandInterceptor();
+			db.AddInterceptor(interceptor);
+			using (Assert.EnterMultipleScope())
 			{
-				var interceptor = new TestCommandInterceptor();
-				db.AddInterceptor(interceptor);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
-				}
+				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+			}
 
-				db.Child.ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderTriggered, Is.True);
-					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.True);
-					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
-				}
+			db.Child.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderTriggered, Is.True);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.True);
+				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
 			}
 		}
 
 		[Test]
 		public async Task DataConnection_ExecuteReaderAsync([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			await using (var db = GetDataContext(context))
+			await using var db = GetDataContext(context);
+			var interceptor = new TestCommandInterceptor();
+			db.AddInterceptor(interceptor);
+			using (Assert.EnterMultipleScope())
 			{
-				var interceptor = new TestCommandInterceptor();
-				db.AddInterceptor(interceptor);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
-				}
+				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+			}
 
-				await db.Child.ToListAsync();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.True);
-					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.True);
-					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
-				}
+			await db.Child.ToListAsync();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.True);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.True);
+				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
 			}
 		}
 
 		[Test]
 		public void DataContext_ExecuteNonQuery([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = new DataContext(context))
+			using var db = new DataContext(context);
+			var interceptor = new TestCommandInterceptor();
+			db.AddInterceptor(interceptor);
+			using (Assert.EnterMultipleScope())
 			{
-				var interceptor = new TestCommandInterceptor();
-				db.AddInterceptor(interceptor);
+				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+			}
+
+			using (db.CreateTempTable<InterceptorsTestsTable>())
+			{
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
@@ -472,22 +464,8 @@ namespace Tests.Data
 					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
 					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
 					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.True);
 					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
-				}
-
-				using (db.CreateTempTable<InterceptorsTestsTable>())
-				{
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-						Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-						Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
-						Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-						Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
-						Assert.That(interceptor.ExecuteNonQueryTriggered, Is.True);
-						Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
-					}
 				}
 			}
 		}
@@ -495,10 +473,22 @@ namespace Tests.Data
 		[Test]
 		public async Task DataContext_ExecuteNonQueryAsync([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			await using (var db = new DataContext(context))
+			await using var db = new DataContext(context);
+			var interceptor = new TestCommandInterceptor();
+			db.AddInterceptor(interceptor);
+			using (Assert.EnterMultipleScope())
 			{
-				var interceptor = new TestCommandInterceptor();
-				db.AddInterceptor(interceptor);
+				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+			}
+
+			await using (await db.CreateTempTableAsync<InterceptorsTestsTable>())
+			{
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
@@ -507,21 +497,7 @@ namespace Tests.Data
 					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
 					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
 					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
-				}
-
-				await using (await db.CreateTempTableAsync<InterceptorsTestsTable>())
-				{
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-						Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-						Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
-						Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-						Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
-						Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-						Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.True);
-					}
+					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.True);
 				}
 			}
 		}
@@ -530,34 +506,32 @@ namespace Tests.Data
 		public void DataContext_ExecuteScalar([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			// use non-temp table as sqlite temp tables are session-bound and context recreates session
-			using (var db = new DataContext(context))
-			using (var table = db.CreateTempTable<InterceptorsTestsTable>(tableOptions: TableOptions.None))
+			using var db = new DataContext(context);
+			using var table = db.CreateTempTable<InterceptorsTestsTable>(tableOptions: TableOptions.None);
+			var interceptor = new TestCommandInterceptor();
+			db.AddInterceptor(interceptor);
+			using (Assert.EnterMultipleScope())
 			{
-				var interceptor = new TestCommandInterceptor();
-				db.AddInterceptor(interceptor);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
-				}
+				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+			}
 
-				table.InsertWithIdentity(() => new InterceptorsTestsTable() { ID = 1 });
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ExecuteScalarTriggered, Is.True);
-					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
-					// also true, as for sqlite we generate two queries
-					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.True);
-					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
-				}
+			table.InsertWithIdentity(() => new InterceptorsTestsTable() { ID = 1 });
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor.ExecuteScalarTriggered, Is.True);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+				// also true, as for sqlite we generate two queries
+				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.True);
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
 			}
 		}
 
@@ -565,98 +539,92 @@ namespace Tests.Data
 		public async Task DataContext_ExecuteScalarAsync([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			// use non-temp table as sqlite temp tables are session-bound and context recreates session
-			await using (var db = new DataContext(context))
-			await using (var table = await db.CreateTempTableAsync<InterceptorsTestsTable>(tableOptions: TableOptions.None))
+			await using var db = new DataContext(context);
+			await using var table = await db.CreateTempTableAsync<InterceptorsTestsTable>(tableOptions: TableOptions.None);
+			var interceptor = new TestCommandInterceptor();
+			db.AddInterceptor(interceptor);
+			using (Assert.EnterMultipleScope())
 			{
-				var interceptor = new TestCommandInterceptor();
-				db.AddInterceptor(interceptor);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
-				}
+				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+			}
 
-				await table.InsertWithIdentityAsync(() => new InterceptorsTestsTable() { ID = 1 });
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.True);
-					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-					// also true, as for sqlite we generate two queries
-					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.True);
-				}
+			await table.InsertWithIdentityAsync(() => new InterceptorsTestsTable() { ID = 1 });
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.True);
+				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+				// also true, as for sqlite we generate two queries
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.True);
 			}
 		}
 
 		[Test]
 		public void DataContext_ExecuteReader([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = new DataContext(context))
+			using var db = new DataContext(context);
+			var interceptor = new TestCommandInterceptor();
+			db.AddInterceptor(interceptor);
+			using (Assert.EnterMultipleScope())
 			{
-				var interceptor = new TestCommandInterceptor();
-				db.AddInterceptor(interceptor);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
-				}
+				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+			}
 
-				db.GetTable<Child>().ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderTriggered, Is.True);
-					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.True);
-					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
-				}
+			db.GetTable<Child>().ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderTriggered, Is.True);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.True);
+				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
 			}
 		}
 
 		[Test]
 		public async Task DataContext_ExecuteReaderAsync([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			await using (var db = new DataContext(context))
+			await using var db = new DataContext(context);
+			var interceptor = new TestCommandInterceptor();
+			db.AddInterceptor(interceptor);
+			using (Assert.EnterMultipleScope())
 			{
-				var interceptor = new TestCommandInterceptor();
-				db.AddInterceptor(interceptor);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
-				}
+				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
+			}
 
-				await db.GetTable<Child>().ToListAsync();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
-					Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
-					Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.True);
-					Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.True);
-					Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
-					Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
-				}
+			await db.GetTable<Child>().ToListAsync();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor.ExecuteScalarTriggered, Is.False);
+				Assert.That(interceptor.ExecuteScalarAsyncTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderTriggered, Is.False);
+				Assert.That(interceptor.ExecuteReaderAsyncTriggered, Is.True);
+				Assert.That(interceptor.ExecuteAfterExecuteReaderTriggered, Is.True);
+				Assert.That(interceptor.ExecuteNonQueryTriggered, Is.False);
+				Assert.That(interceptor.ExecuteNonQueryAsyncTriggered, Is.False);
 			}
 		}
 
@@ -724,214 +692,206 @@ namespace Tests.Data
 		[Test]
 		public void ConnectionOpenOnDataConnectionTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var interceptor = new TestConnectionInterceptor();
+			db.AddInterceptor(interceptor);
+			using (Assert.EnterMultipleScope())
 			{
-				var interceptor = new TestConnectionInterceptor();
-				db.AddInterceptor(interceptor);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
-				}
+				Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+			}
 
-				db.Child.ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ConnectionOpenedTriggered, Is.True);
-					Assert.That(interceptor.ConnectionOpeningTriggered, Is.True);
-					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
-				}
+			db.Child.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor.ConnectionOpenedTriggered, Is.True);
+				Assert.That(interceptor.ConnectionOpeningTriggered, Is.True);
+				Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+			}
 
-				interceptor.ConnectionOpenedTriggered = false;
-				interceptor.ConnectionOpeningTriggered = false;
+			interceptor.ConnectionOpenedTriggered = false;
+			interceptor.ConnectionOpeningTriggered = false;
 
-				db.Child.ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
-				}
+			db.Child.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+			}
 
-				db.Close();
+			db.Close();
 
-				db.Child.ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ConnectionOpenedTriggered, Is.True);
-					Assert.That(interceptor.ConnectionOpeningTriggered, Is.True);
-					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
-				}
+			db.Child.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor.ConnectionOpenedTriggered, Is.True);
+				Assert.That(interceptor.ConnectionOpeningTriggered, Is.True);
+				Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
 			}
 		}
 
 		[Test]
 		public async Task ConnectionOpenAsyncOnDataConnectionTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var interceptor = new TestConnectionInterceptor();
+			db.AddInterceptor(interceptor);
+			using (Assert.EnterMultipleScope())
 			{
-				var interceptor = new TestConnectionInterceptor();
-				db.AddInterceptor(interceptor);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
-				}
+				Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+			}
 
-				await db.Child.ToListAsync();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.True);
-					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.True);
-				}
+			await db.Child.ToListAsync();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.True);
+				Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.True);
+			}
 
-				interceptor.ConnectionOpenedAsyncTriggered = false;
-				interceptor.ConnectionOpeningAsyncTriggered = false;
+			interceptor.ConnectionOpenedAsyncTriggered = false;
+			interceptor.ConnectionOpeningAsyncTriggered = false;
 
-				await db.Child.ToListAsync();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
-				}
+			await db.Child.ToListAsync();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+			}
 
-				db.Close();
+			db.Close();
 
-				await db.Child.ToListAsync();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.True);
-					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.True);
-				}
+			await db.Child.ToListAsync();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.True);
+				Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.True);
 			}
 		}
 
 		[Test]
 		public void ConnectionOpenOnDataContextTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
 		{
-			using (var db = new DataContext(context))
+			using var db = new DataContext(context);
+			// test that interceptors not lost after underlying data connection recreation
+			db.CloseAfterUse = closeAfterUse;
+
+			var interceptor = new TestConnectionInterceptor();
+			db.AddInterceptor(interceptor);
+			using (Assert.EnterMultipleScope())
 			{
-				// test that interceptors not lost after underlying data connection recreation
-				db.CloseAfterUse = closeAfterUse;
+				Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+			}
 
-				var interceptor = new TestConnectionInterceptor();
-				db.AddInterceptor(interceptor);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
-				}
+			db.GetTable<Child>().ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor.ConnectionOpenedTriggered, Is.True);
+				Assert.That(interceptor.ConnectionOpeningTriggered, Is.True);
+				Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+			}
 
-				db.GetTable<Child>().ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ConnectionOpenedTriggered, Is.True);
-					Assert.That(interceptor.ConnectionOpeningTriggered, Is.True);
-					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
-				}
+			interceptor.ConnectionOpenedTriggered = false;
+			interceptor.ConnectionOpeningTriggered = false;
 
-				interceptor.ConnectionOpenedTriggered = false;
-				interceptor.ConnectionOpeningTriggered = false;
+			db.GetTable<Child>().ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				// TODO: right now enumerable queries behave like CloseAfterUse=true for data context
+				//Assert.AreEqual(closeAfterUse, interceptor.ConnectionOpenedTriggered);
+				//Assert.AreEqual(closeAfterUse, interceptor.ConnectionOpeningTriggered);
+				Assert.That(interceptor.ConnectionOpenedTriggered, Is.True);
+				Assert.That(interceptor.ConnectionOpeningTriggered, Is.True);
+				Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+			}
 
-				db.GetTable<Child>().ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					// TODO: right now enumerable queries behave like CloseAfterUse=true for data context
-					//Assert.AreEqual(closeAfterUse, interceptor.ConnectionOpenedTriggered);
-					//Assert.AreEqual(closeAfterUse, interceptor.ConnectionOpeningTriggered);
-					Assert.That(interceptor.ConnectionOpenedTriggered, Is.True);
-					Assert.That(interceptor.ConnectionOpeningTriggered, Is.True);
-					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
-				}
+			interceptor.ConnectionOpenedTriggered = false;
+			interceptor.ConnectionOpeningTriggered = false;
 
-				interceptor.ConnectionOpenedTriggered = false;
-				interceptor.ConnectionOpeningTriggered = false;
+			((IDataContext)db).Close();
 
-				((IDataContext)db).Close();
-
-				db.GetTable<Child>().ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ConnectionOpenedTriggered, Is.True);
-					Assert.That(interceptor.ConnectionOpeningTriggered, Is.True);
-					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
-				}
+			db.GetTable<Child>().ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor.ConnectionOpenedTriggered, Is.True);
+				Assert.That(interceptor.ConnectionOpeningTriggered, Is.True);
+				Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
 			}
 		}
 
 		[Test]
 		public async Task ConnectionOpenAsyncOnDataContextTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool closeAfterUse)
 		{
-			using (var db = new DataContext(context))
+			using var db = new DataContext(context);
+			// test that interceptors not lost after underlying data connection recreation
+			db.CloseAfterUse = closeAfterUse;
+
+			var interceptor = new TestConnectionInterceptor();
+			db.AddInterceptor(interceptor);
+			using (Assert.EnterMultipleScope())
 			{
-				// test that interceptors not lost after underlying data connection recreation
-				db.CloseAfterUse = closeAfterUse;
+				Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
+			}
 
-				var interceptor = new TestConnectionInterceptor();
-				db.AddInterceptor(interceptor);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.False);
-				}
+			await db.GetTable<Child>().ToListAsync();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.True);
+				Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.True);
+			}
 
-				await db.GetTable<Child>().ToListAsync();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.True);
-					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.True);
-				}
+			interceptor.ConnectionOpenedAsyncTriggered = false;
+			interceptor.ConnectionOpeningAsyncTriggered = false;
 
-				interceptor.ConnectionOpenedAsyncTriggered = false;
-				interceptor.ConnectionOpeningAsyncTriggered = false;
+			await db.GetTable<Child>().ToListAsync();
+			using (Assert.EnterMultipleScope())
+			{
+				// TODO: right now enumerable queries behave like CloseAfterUse=true for data context
+				Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+				//Assert.AreEqual(closeAfterUse, interceptor.ConnectionOpenedAsyncTriggered);
+				//Assert.AreEqual(closeAfterUse, interceptor.ConnectionOpeningAsyncTriggered);
+				Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.True);
+				Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.True);
+			}
 
-				await db.GetTable<Child>().ToListAsync();
-				using (Assert.EnterMultipleScope())
-				{
-					// TODO: right now enumerable queries behave like CloseAfterUse=true for data context
-					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
-					//Assert.AreEqual(closeAfterUse, interceptor.ConnectionOpenedAsyncTriggered);
-					//Assert.AreEqual(closeAfterUse, interceptor.ConnectionOpeningAsyncTriggered);
-					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.True);
-					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.True);
-				}
+			interceptor.ConnectionOpenedAsyncTriggered = false;
+			interceptor.ConnectionOpeningAsyncTriggered = false;
 
-				interceptor.ConnectionOpenedAsyncTriggered = false;
-				interceptor.ConnectionOpeningAsyncTriggered = false;
+			await ((IDataContext)db).CloseAsync();
 
-				await ((IDataContext)db).CloseAsync();
-
-				await db.GetTable<Child>().ToListAsync();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
-					Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.True);
-					Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.True);
-				}
+			await db.GetTable<Child>().ToListAsync();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(interceptor.ConnectionOpenedTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpeningTriggered, Is.False);
+				Assert.That(interceptor.ConnectionOpenedAsyncTriggered, Is.True);
+				Assert.That(interceptor.ConnectionOpeningAsyncTriggered, Is.True);
 			}
 		}
 
@@ -946,35 +906,31 @@ namespace Tests.Data
 		[Test]
 		public void EntityCreated_DataConnection_Or_RemoteContext([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var count = db.Person.Count();
-				var interceptor1 = new TestEntityServiceInterceptor();
-				var interceptor2 = new TestEntityServiceInterceptor();
-				db.AddInterceptor(interceptor1);
+			using var db = GetDataContext(context);
+			var count = db.Person.Count();
+			var interceptor1 = new TestEntityServiceInterceptor();
+			var interceptor2 = new TestEntityServiceInterceptor();
+			db.AddInterceptor(interceptor1);
 
-				_ = db.Person.ToList();
+			_ = db.Person.ToList();
 
-				Assert.That(interceptor1.EntityCreatedContexts, Has.Count.EqualTo(count));
-				Assert.That(interceptor1.EntityCreatedContexts.All(ctx => ctx == db), Is.True);
-			}
+			Assert.That(interceptor1.EntityCreatedContexts, Has.Count.EqualTo(count));
+			Assert.That(interceptor1.EntityCreatedContexts.All(ctx => ctx == db), Is.True);
 		}
 
 		[Test]
 		public void EntityCreated_DataContext([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = new DataContext(context))
-			{
-				var count = db.GetTable<Person>().Count();
-				var interceptor1 = new TestEntityServiceInterceptor();
-				var interceptor2 = new TestEntityServiceInterceptor();
-				db.AddInterceptor(interceptor1);
+			using var db = new DataContext(context);
+			var count = db.GetTable<Person>().Count();
+			var interceptor1 = new TestEntityServiceInterceptor();
+			var interceptor2 = new TestEntityServiceInterceptor();
+			db.AddInterceptor(interceptor1);
 
-				db.GetTable<Person>().ToList();
+			db.GetTable<Person>().ToList();
 
-				Assert.That(interceptor1.EntityCreatedContexts, Has.Count.EqualTo(count));
-				Assert.That(interceptor1.EntityCreatedContexts.All(ctx => ctx == db), Is.True);
-			}
+			Assert.That(interceptor1.EntityCreatedContexts, Has.Count.EqualTo(count));
+			Assert.That(interceptor1.EntityCreatedContexts.All(ctx => ctx == db), Is.True);
 		}
 
 		#endregion
@@ -1463,38 +1419,32 @@ namespace Tests.Data
 		[Test]
 		public void NonQueryExceptionIntercepted([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.AddInterceptor(new TestExceptionInterceptor());
+			using var db = GetDataContext(context);
+			db.AddInterceptor(new TestExceptionInterceptor());
 
-				Assert.Throws<TestException>(() =>
-					db.GetTable<InterceptorsTestsTable>()
-						.Insert(() => new InterceptorsTestsTable()));
-			}
+			Assert.Throws<TestException>(() =>
+				db.GetTable<InterceptorsTestsTable>()
+					.Insert(() => new InterceptorsTestsTable()));
 		}
 
 		[Test]
 		public void ScalarExceptionIntercepted([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.AddInterceptor(new TestExceptionInterceptor());
+			using var db = GetDataContext(context);
+			db.AddInterceptor(new TestExceptionInterceptor());
 
-				Assert.Throws<TestException>(() =>
-					db.GetTable<InterceptorsTestsTable>().Count());
-			}
+			Assert.Throws<TestException>(() =>
+				db.GetTable<InterceptorsTestsTable>().Count());
 		}
 
 		[Test]
 		public void ReaderExceptionIntercepted([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.AddInterceptor(new TestExceptionInterceptor());
+			using var db = GetDataContext(context);
+			db.AddInterceptor(new TestExceptionInterceptor());
 
-				Assert.Throws<TestException>(() =>
-					db.GetTable<InterceptorsTestsTable>().ToList());
-			}
+			Assert.Throws<TestException>(() =>
+				db.GetTable<InterceptorsTestsTable>().ToList());
 		}
 		#endregion
 

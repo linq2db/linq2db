@@ -8,7 +8,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 {
 	sealed class ReduceIsNullExpressionVisitor : SqlQueryVisitor
 	{
-		public readonly static ObjectPool<ReduceIsNullExpressionVisitor> Pool = new(() => new(), v => v.Cleanup(), 100);
+		public static readonly ObjectPool<ReduceIsNullExpressionVisitor> Pool = new(() => new(), v => v.Cleanup(), 100);
 
 		readonly List<ISqlPredicate> _predicates         = [];
 		         NullabilityContext  _nullabilityContext = default!;
@@ -29,18 +29,18 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		[return: NotNullIfNotNull(nameof(element))]
 		public override IQueryElement? Visit(IQueryElement? element)
 		{
-			switch (element?.ElementType)
+			return element?.ElementType switch
 			{
-				case QueryElementType.SqlNullabilityExpression:
-				case QueryElementType.SqlBinaryExpression:
-				case QueryElementType.SqlCondition:
-				case QueryElementType.SqlCast:
-				case QueryElementType.SqlFunction:
-				case QueryElementType.SqlExpression:
-					return base.Visit(element);
-			}
+				QueryElementType.SqlNullabilityExpression or
+				QueryElementType.SqlBinaryExpression or 
+				QueryElementType.SqlCondition or 
+				QueryElementType.SqlCast or 
+				QueryElementType.SqlFunction or 
+				QueryElementType.SqlExpression =>
+					base.Visit(element),
 
-			return element;
+				_ => element,
+			};
 		}
 
 		public IQueryElement Reduce(NullabilityContext  nullabilityContext, SqlPredicate.IsNull predicate)

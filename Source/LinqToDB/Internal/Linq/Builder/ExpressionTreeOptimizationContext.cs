@@ -99,8 +99,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		static ObjectPool<IsServerSideOnlyCheckVisitor> _serverSideOnlyVisitorPool  = new(() => new IsServerSideOnlyCheckVisitor(), v => v.Cleanup(), 100);
-		static ObjectPool<CanBeEvaluatedOnClientCheckVisitor> _canBeEvaluatedOnClientCheckVisitorPool = new(() => new CanBeEvaluatedOnClientCheckVisitor(), v => v.Cleanup(), 100);
+		static readonly ObjectPool<IsServerSideOnlyCheckVisitor> _serverSideOnlyVisitorPool  = new(() => new IsServerSideOnlyCheckVisitor(), v => v.Cleanup(), 100);
+		static readonly ObjectPool<CanBeEvaluatedOnClientCheckVisitor> _canBeEvaluatedOnClientCheckVisitorPool = new(() => new CanBeEvaluatedOnClientCheckVisitor(), v => v.Cleanup(), 100);
 
 		Dictionary<Expression, bool>? _isServerSideOnlyCache;
 
@@ -202,7 +202,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (typeof(IQueryable<>).IsSameOrParentOf(node.Type))
 				{
 					if (node.Arguments.Any(static a => typeof(IDataContext).IsSameOrParentOf(a.Type)) ||
-						node.Object != null && typeof(IDataContext).IsSameOrParentOf(node.Object.Type))
+						(node.Object != null && typeof(IDataContext).IsSameOrParentOf(node.Object.Type)))
 					{
 						CanBeEvaluated = false;
 						return node;
@@ -227,8 +227,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			public override Expression VisitSqlQueryRootExpression(SqlQueryRootExpression node)
 			{
 				if (InMethod
-					&& ((IConfigurationID)node.MappingSchema).ConfigurationID ==
-					((IConfigurationID)_mappingSchema).ConfigurationID)
+					&& ((IConfigurationID)node.MappingSchema).ConfigurationID == ((IConfigurationID)_mappingSchema).ConfigurationID)
 				{
 					return node;
 				}
@@ -380,7 +379,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				    method.DeclaringType.IsDefined(typeof(IsReadOnlyAttribute), false))
 				{
 					// Instance methods in readonly structs are implicitly read-only
-					if (!method.IsStatic && method.Name != ".ctor")
+					if (!method.IsStatic && !string.Equals(method.Name, ".ctor", StringComparison.Ordinal))
 					{
 						return true;
 					}
@@ -416,7 +415,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							return true;
 						}
 
-						if (method.DeclaringType == typeof(object) && method.Name == nameof(ToString))
+						if (method.DeclaringType == typeof(object) && string.Equals(method.Name, nameof(ToString), StringComparison.Ordinal))
 						{
 							return true;
 						}

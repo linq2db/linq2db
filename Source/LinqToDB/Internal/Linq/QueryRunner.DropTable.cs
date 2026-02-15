@@ -1,4 +1,4 @@
-﻿using System.Threading;
+using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Internal.SqlProvider;
@@ -40,7 +40,7 @@ namespace LinqToDB.Internal.Linq
 
 				var query = new Query<int>(dataContext)
 				{
-					Queries = { new QueryInfo { Statement = dropTable } }
+					Queries = { new QueryInfo { Statement = dropTable } },
 				};
 
 				SetNonQueryQuery(query);
@@ -78,7 +78,7 @@ namespace LinqToDB.Internal.Linq
 
 					var query = new Query<int>(dataContext)
 					{
-						Queries = { new QueryInfo { Statement = dropTable, } }
+						Queries = { new QueryInfo { Statement = dropTable, } },
 					};
 
 					SetNonQueryQuery(query);

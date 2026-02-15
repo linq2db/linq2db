@@ -29,7 +29,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 		{
 			if (dataTypeInfo == null && dataType != null)
 			{
-				if (dataType.ToLowerInvariant() == "text")
+				if (string.Equals(dataType.ToLowerInvariant(), "text", StringComparison.Ordinal))
 					return length == 1 && !options.GenerateChar1AsString ? typeof(char) : typeof(string);
 			}
 

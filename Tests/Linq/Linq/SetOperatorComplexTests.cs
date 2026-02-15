@@ -317,23 +317,17 @@ namespace Tests.Linq
 
 		static IQueryable<T> Combine<T>(IQueryable<T> query1, IQueryable<T> query2, SetOperation operation)
 		{
-			switch (operation)
+			return operation switch
 			{
-				case SetOperation.Union:
-					return query1.Union(query2);
-				case SetOperation.UnionAll:
-					return query1.UnionAll(query2);
-				case SetOperation.Except:
-					return query1.Except(query2);
-				case SetOperation.ExceptAll:
-					return query1.ExceptAll(query2);
-				case SetOperation.Intersect:
-					return query1.Intersect(query2);
-				case SetOperation.IntersectAll:
-					return query1.IntersectAll(query2);
-				default:
-					throw new ArgumentOutOfRangeException(nameof(operation), operation, null);
-			}
+				SetOperation.Union        => query1.Union(query2),
+				SetOperation.UnionAll     => query1.UnionAll(query2),
+				SetOperation.Except       => query1.Except(query2),
+				SetOperation.ExceptAll    => query1.ExceptAll(query2),
+				SetOperation.Intersect    => query1.Intersect(query2),
+				SetOperation.IntersectAll => query1.IntersectAll(query2),
+
+				_ => throw new ArgumentOutOfRangeException(nameof(operation), operation, null),
+			};
 		}
 
 		[Test]
@@ -495,7 +489,7 @@ namespace Tests.Linq
 						return false;
 					}
 
-					if (x.Authors == null && y.Authors != null || x.Authors != null && y.Authors == null)
+					if ((x.Authors == null && y.Authors != null) || (x.Authors != null && y.Authors == null))
 					{
 						return false;
 					}

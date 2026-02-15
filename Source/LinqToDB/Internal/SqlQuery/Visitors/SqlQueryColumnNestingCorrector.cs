@@ -114,7 +114,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				if (Parent is { TableSource: SelectQuery { HasSetOperators: true } parentSelectQuery })
 				{
-					if (parentSelectQuery.SetOperators.Any(so => so.SelectQuery == selectQuery))
+					if (parentSelectQuery.SetOperators.Exists(so => so.SelectQuery == selectQuery))
 					{
 						var saveCount      = selectQuery.Select.Columns.Count;
 						var setColumnIndex = selectQuery.Select.Add(element);

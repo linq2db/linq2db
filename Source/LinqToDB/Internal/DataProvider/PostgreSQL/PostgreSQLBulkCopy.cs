@@ -91,7 +91,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			var sqlBuilder = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var ed         = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var tableName  = GetTableName(sqlBuilder, options.BulkCopyOptions, table);
-			var columns    = ed.Columns.Where(c => !c.SkipOnInsert || options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity).ToArray();
+			var columns    = ed.Columns.Where(c => !c.SkipOnInsert || (options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity)).ToArray();
 
 			var (npgsqlTypes, dbTypes, columnTypes) = BuildTypes(sqlBuilder, columns);
 
@@ -253,7 +253,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			var sqlBuilder = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var ed         = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var tableName  = GetTableName(sqlBuilder, options.BulkCopyOptions, table);
-			var columns    = ed.Columns.Where(c => !c.SkipOnInsert || options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity).ToArray();
+			var columns    = ed.Columns.Where(c => !c.SkipOnInsert || (options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity)).ToArray();
 
 			var fields      = string.Join(", ", columns.Select(column => sqlBuilder.ConvertInline(column.ColumnName, ConvertType.NameToQueryField)));
 			var copyCommand = $"COPY {tableName} ({fields}) FROM STDIN (FORMAT BINARY)";
@@ -373,7 +373,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			var sqlBuilder  = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var ed          = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var tableName   = GetTableName(sqlBuilder, options.BulkCopyOptions, table);
-			var columns     = ed.Columns.Where(c => !c.SkipOnInsert || options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity).ToArray();
+			var columns     = ed.Columns.Where(c => !c.SkipOnInsert || (options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity)).ToArray();
 			var fields      = string.Join(", ", columns.Select(column => sqlBuilder.ConvertInline(column.ColumnName, ConvertType.NameToQueryField)));
 			var copyCommand = $"COPY {tableName} ({fields}) FROM STDIN (FORMAT BINARY)";
 

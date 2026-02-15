@@ -176,15 +176,14 @@ namespace Tests.Linq
 		[Test]
 		public async Task SinglePredicateAsync([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
-			using (var lt = db.CreateLocalTable(GenerateData()))
-			{
-				new FluentMappingBuilder(db.MappingSchema)
-					.Entity<AsyncDataTable>()
-						.HasTableName(lt.TableName)
-					.Build();
+			using var db = GetDataContext(context, new MappingSchema());
+			using var lt = db.CreateLocalTable(GenerateData());
+			new FluentMappingBuilder(db.MappingSchema)
+				.Entity<AsyncDataTable>()
+					.HasTableName(lt.TableName)
+				.Build();
 
-				var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection>>(
+			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection>>(
 				(bd, id, token) =>
 					(
 						from c in bd.GetTable<AsyncDataTable>()
@@ -196,12 +195,11 @@ namespace Tests.Linq
 						}
 					).SingleAsync(c => c.Id == id, token));
 
-				var result = await query(db, 2, CancellationToken.None);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result.Id, Is.EqualTo(2));
-					Assert.That(result.Value, Is.EqualTo(2));
-				}
+			var result = await query(db, 2, CancellationToken.None);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.Id, Is.EqualTo(2));
+				Assert.That(result.Value, Is.EqualTo(2));
 			}
 		}
 
@@ -232,15 +230,14 @@ namespace Tests.Linq
 		[Test]
 		public async Task SingleOrDefaultPredicateAsync([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
-			using (var lt = db.CreateLocalTable(GenerateData()))
-			{
-				new FluentMappingBuilder(db.MappingSchema)
-					.Entity<AsyncDataTable>()
-						.HasTableName(lt.TableName)
-					.Build();
+			using var db = GetDataContext(context, new MappingSchema());
+			using var lt = db.CreateLocalTable(GenerateData());
+			new FluentMappingBuilder(db.MappingSchema)
+				.Entity<AsyncDataTable>()
+					.HasTableName(lt.TableName)
+				.Build();
 
-				var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection?>>(
+			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection?>>(
 					(bd, id, token) =>
 					(
 						from c in bd.GetTable<AsyncDataTable>()
@@ -252,12 +249,11 @@ namespace Tests.Linq
 						}
 					).SingleOrDefaultAsync(c => c.Id == id, token));
 
-				var result = (await query(db, 2, CancellationToken.None))!;
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result.Id, Is.EqualTo(2));
-					Assert.That(result.Value, Is.EqualTo(2));
-				}
+			var result = (await query(db, 2, CancellationToken.None))!;
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result.Id, Is.EqualTo(2));
+				Assert.That(result.Value, Is.EqualTo(2));
 			}
 		}
 
@@ -348,41 +344,37 @@ namespace Tests.Linq
 		[Test]
 		public async Task MinAsync([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
-			using (var lt = db.CreateLocalTable(GenerateData()))
-			{
-				new FluentMappingBuilder(db.MappingSchema)
-					.Entity<AsyncDataTable>()
-						.HasTableName(lt.TableName)
-					.Build();
+			using var db = GetDataContext(context, new MappingSchema());
+			using var lt = db.CreateLocalTable(GenerateData());
+			new FluentMappingBuilder(db.MappingSchema)
+				.Entity<AsyncDataTable>()
+					.HasTableName(lt.TableName)
+				.Build();
 
-				var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<int>>(
+			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<int>>(
 					(bd, id, token) =>
 						bd.GetTable<AsyncDataTable>().Where(c => c.Id > id).Select(c => c.Id).MinAsync(token));
 
-				var result = await query(db, 2, CancellationToken.None);
-				Assert.That(result, Is.EqualTo(3));
-			}
+			var result = await query(db, 2, CancellationToken.None);
+			Assert.That(result, Is.EqualTo(3));
 		}
 
 		[Test]
 		public async Task MinSelectorAsync([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, new MappingSchema()))
-			using (var lt = db.CreateLocalTable(GenerateData()))
-			{
-				new FluentMappingBuilder(db.MappingSchema)
-					.Entity<AsyncDataTable>()
-						.HasTableName(lt.TableName)
-					.Build();
+			using var db = GetDataContext(context, new MappingSchema());
+			using var lt = db.CreateLocalTable(GenerateData());
+			new FluentMappingBuilder(db.MappingSchema)
+				.Entity<AsyncDataTable>()
+					.HasTableName(lt.TableName)
+				.Build();
 
-				var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<int>>(
+			var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<int>>(
 					(bd, id, token) =>
 						bd.GetTable<AsyncDataTable>().Where(c => c.Id > id).MinAsync(c => c.Id, token));
 
-				var result = await query(db, 2, CancellationToken.None);
-				Assert.That(result, Is.EqualTo(3));
-			}
+			var result = await query(db, 2, CancellationToken.None);
+			Assert.That(result, Is.EqualTo(3));
 		}
 
 		[Test]

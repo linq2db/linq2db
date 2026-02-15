@@ -12,13 +12,12 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertUpdate([MergeDataContextSource(TestProvName.AllSapHana)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -26,19 +25,18 @@ namespace Tests.xUpdate
 					.UpdateWhenMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(4, rows, context);
+			AssertRowCount(4, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(6));
+			Assert.That(result, Has.Count.EqualTo(6));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialSourceData[0], result[2], null, 203);
-				AssertRow(InitialSourceData[1], result[3], null, null);
-				AssertRow(InitialSourceData[2], result[4], null, null);
-				AssertRow(InitialSourceData[3], result[5], null, 216);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialSourceData[0], result[2], null, 203);
+			AssertRow(InitialSourceData[1], result[3], null, null);
+			AssertRow(InitialSourceData[2], result[4], null, null);
+			AssertRow(InitialSourceData[3], result[5], null, 216);
 		}
 
 		[Test]
@@ -47,13 +45,12 @@ namespace Tests.xUpdate
 			TestProvName.AllSapHana, TestProvName.AllFirebird)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -61,19 +58,18 @@ namespace Tests.xUpdate
 					.DeleteWhenMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(rows, Is.EqualTo(4));
+			var result = table.OrderBy(_ => _.Id).ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows, Is.EqualTo(4));
 
-					Assert.That(result, Has.Count.EqualTo(4));
-				}
-
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialSourceData[2], result[2], null, null);
-				AssertRow(InitialSourceData[3], result[3], null, 216);
+				Assert.That(result, Has.Count.EqualTo(4));
 			}
+
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialSourceData[2], result[2], null, null);
+			AssertRow(InitialSourceData[3], result[3], null, 216);
 		}
 
 		[Test]
@@ -83,13 +79,12 @@ namespace Tests.xUpdate
 			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -97,18 +92,17 @@ namespace Tests.xUpdate
 					.DeleteWhenMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(rows, Is.EqualTo(2));
+			var result = table.OrderBy(_ => _.Id).ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows, Is.EqualTo(2));
 
-					Assert.That(result, Has.Count.EqualTo(3));
-				}
-
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialSourceData[0], result[2], null, 203);
+				Assert.That(result, Has.Count.EqualTo(3));
 			}
+
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialSourceData[0], result[2], null, 203);
 		}
 
 		[Test]
@@ -122,13 +116,12 @@ namespace Tests.xUpdate
 			ProviderName.Sybase)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db).ToList().Concat(new[] { new TestMapping1() { Id = 1, Field1 = 123 } }))
 					.OnTargetKey()
@@ -140,36 +133,34 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(3, rows, context);
+			AssertRowCount(3, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(3));
+			Assert.That(result, Has.Count.EqualTo(3));
 
-				AssertRow(InitialTargetData[1], result[0], null, null);
-				AssertRow(InitialTargetData[2], result[1], null, 203);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[2].Id, Is.EqualTo(4));
-					Assert.That(result[2].Field1, Is.EqualTo(222));
-					Assert.That(result[2].Field2, Is.EqualTo(6));
-					Assert.That(result[2].Field3, Is.Null);
-					Assert.That(result[2].Field4, Is.Null);
-					Assert.That(result[2].Field5, Is.Null);
-				}
+			AssertRow(InitialTargetData[1], result[0], null, null);
+			AssertRow(InitialTargetData[2], result[1], null, 203);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[2].Id, Is.EqualTo(4));
+				Assert.That(result[2].Field1, Is.EqualTo(222));
+				Assert.That(result[2].Field2, Is.EqualTo(6));
+				Assert.That(result[2].Field3, Is.Null);
+				Assert.That(result[2].Field4, Is.Null);
+				Assert.That(result[2].Field5, Is.Null);
 			}
 		}
 
 		[Test]
 		public void InsertUpdateBySourceWithConditionDeleteBySource([MergeNotMatchedBySourceDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -180,37 +171,35 @@ namespace Tests.xUpdate
 					.DeleteWhenNotMatchedBySource()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(rows, Is.EqualTo(4));
+			var result = table.OrderBy(_ => _.Id).ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows, Is.EqualTo(4));
 
-					Assert.That(result, Has.Count.EqualTo(5));
-					Assert.That(result[0].Id, Is.EqualTo(2));
-					Assert.That(result[0].Field1, Is.EqualTo(44));
-					Assert.That(result[0].Field2, Is.Null);
-					Assert.That(result[0].Field3, Is.Null);
-					Assert.That(result[0].Field4, Is.Null);
-					Assert.That(result[0].Field5, Is.Null);
-				}
-
-				AssertRow(InitialTargetData[2], result[1], null, 203);
-				AssertRow(InitialTargetData[3], result[2], null, null);
-				AssertRow(InitialSourceData[2], result[3], null, null);
-				AssertRow(InitialSourceData[3], result[4], null, 216);
+				Assert.That(result, Has.Count.EqualTo(5));
+				Assert.That(result[0].Id, Is.EqualTo(2));
+				Assert.That(result[0].Field1, Is.EqualTo(44));
+				Assert.That(result[0].Field2, Is.Null);
+				Assert.That(result[0].Field3, Is.Null);
+				Assert.That(result[0].Field4, Is.Null);
+				Assert.That(result[0].Field5, Is.Null);
 			}
+
+			AssertRow(InitialTargetData[2], result[1], null, 203);
+			AssertRow(InitialTargetData[3], result[2], null, null);
+			AssertRow(InitialSourceData[2], result[3], null, null);
+			AssertRow(InitialSourceData[3], result[4], null, 216);
 		}
 
 		[Test]
 		public void InsertDeleteUpdateBySource([MergeNotMatchedBySourceDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -219,30 +208,29 @@ namespace Tests.xUpdate
 					.UpdateWhenNotMatchedBySource(t => new TestMapping1() { Field1 = 44 })
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(rows, Is.EqualTo(6));
+			var result = table.OrderBy(_ => _.Id).ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows, Is.EqualTo(6));
 
-					Assert.That(result, Has.Count.EqualTo(4));
-					Assert.That(result[0].Id, Is.EqualTo(1));
-					Assert.That(result[0].Field1, Is.EqualTo(44));
-					Assert.That(result[0].Field2, Is.Null);
-					Assert.That(result[0].Field3, Is.Null);
-					Assert.That(result[0].Field4, Is.Null);
-					Assert.That(result[0].Field5, Is.Null);
+				Assert.That(result, Has.Count.EqualTo(4));
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[0].Field1, Is.EqualTo(44));
+				Assert.That(result[0].Field2, Is.Null);
+				Assert.That(result[0].Field3, Is.Null);
+				Assert.That(result[0].Field4, Is.Null);
+				Assert.That(result[0].Field5, Is.Null);
 
-					Assert.That(result[1].Id, Is.EqualTo(2));
-					Assert.That(result[1].Field1, Is.EqualTo(44));
-					Assert.That(result[1].Field2, Is.Null);
-					Assert.That(result[1].Field3, Is.Null);
-					Assert.That(result[1].Field4, Is.Null);
-					Assert.That(result[1].Field5, Is.Null);
-				}
-
-				AssertRow(InitialSourceData[2], result[2], null, null);
-				AssertRow(InitialSourceData[3], result[3], null, 216);
+				Assert.That(result[1].Id, Is.EqualTo(2));
+				Assert.That(result[1].Field1, Is.EqualTo(44));
+				Assert.That(result[1].Field2, Is.Null);
+				Assert.That(result[1].Field3, Is.Null);
+				Assert.That(result[1].Field4, Is.Null);
+				Assert.That(result[1].Field5, Is.Null);
 			}
+
+			AssertRow(InitialSourceData[2], result[2], null, null);
+			AssertRow(InitialSourceData[3], result[3], null, 216);
 		}
 
 		[Test]
@@ -255,13 +243,12 @@ namespace Tests.xUpdate
 			ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db).ToList().Concat(new[] { new TestMapping1() { Id = 1, Field1 = 123 } }).OrderBy(r => r.Id))
 					.OnTargetKey()
@@ -272,32 +259,30 @@ namespace Tests.xUpdate
 					.DeleteWhenMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(5, rows, context);
+			AssertRowCount(5, rows, context);
 
-				if (!context.IsAnyOf(ProviderName.Sybase))
-				{
-					Assert.That(result, Has.Count.EqualTo(4));
+			if (!context.IsAnyOf(ProviderName.Sybase))
+			{
+				Assert.That(result, Has.Count.EqualTo(4));
 
-					AssertRow(InitialTargetData[1], result[0], null, null);
-					AssertRow(InitialTargetData[2], result[1], null, 203);
-					AssertRow(InitialSourceData[2], result[2], null, null);
-					AssertRow(InitialSourceData[3], result[3], null, 216);
-				}
+				AssertRow(InitialTargetData[1], result[0], null, null);
+				AssertRow(InitialTargetData[2], result[1], null, 203);
+				AssertRow(InitialSourceData[2], result[2], null, null);
+				AssertRow(InitialSourceData[3], result[3], null, 216);
 			}
 		}
 
 		[Test]
 		public void UpdateInsert([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -305,19 +290,18 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(4, rows, context);
+			AssertRowCount(4, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(6));
+			Assert.That(result, Has.Count.EqualTo(6));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialSourceData[0], result[2], null, 203);
-				AssertRow(InitialSourceData[1], result[3], null, null);
-				AssertRow(InitialSourceData[2], result[4], null, null);
-				AssertRow(InitialSourceData[3], result[5], null, 216);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialSourceData[0], result[2], null, 203);
+			AssertRow(InitialSourceData[1], result[3], null, null);
+			AssertRow(InitialSourceData[2], result[4], null, null);
+			AssertRow(InitialSourceData[3], result[5], null, 216);
 		}
 
 		[Test]
@@ -330,13 +314,12 @@ namespace Tests.xUpdate
 			ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -344,17 +327,16 @@ namespace Tests.xUpdate
 					.UpdateWhenMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(4));
+			Assert.That(result, Has.Count.EqualTo(4));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialSourceData[0], result[2], null, 203);
-				AssertRow(InitialSourceData[1], result[3], null, null);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialSourceData[0], result[2], null, 203);
+			AssertRow(InitialSourceData[1], result[3], null, null);
 		}
 
 		[Test]
@@ -363,13 +345,12 @@ namespace Tests.xUpdate
 			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -377,19 +358,18 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(rows, Is.EqualTo(4));
+			var result = table.OrderBy(_ => _.Id).ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows, Is.EqualTo(4));
 
-					Assert.That(result, Has.Count.EqualTo(4));
-				}
-
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialSourceData[2], result[2], null, null);
-				AssertRow(InitialSourceData[3], result[3], null, 216);
+				Assert.That(result, Has.Count.EqualTo(4));
 			}
+
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialSourceData[2], result[2], null, null);
+			AssertRow(InitialSourceData[3], result[3], null, 216);
 		}
 
 		[Test]
@@ -399,13 +379,12 @@ namespace Tests.xUpdate
 			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -413,47 +392,44 @@ namespace Tests.xUpdate
 					.UpdateWhenMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(rows, Is.EqualTo(2));
+			var result = table.OrderBy(_ => _.Id).ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows, Is.EqualTo(2));
 
-					Assert.That(result, Has.Count.EqualTo(3));
-				}
-
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialSourceData[0], result[2], null, 203);
+				Assert.That(result, Has.Count.EqualTo(3));
 			}
+
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialSourceData[0], result[2], null, 203);
 		}
 
 		[Test]
 		public void UpdateWithDeleteWithDeleteCondition(
 			[IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
 					.UpdateWhenMatchedThenDelete((t, s) => s.Id == 4)
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(3));
+			Assert.That(result, Has.Count.EqualTo(3));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialSourceData[0], result[2], null, 203);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialSourceData[0], result[2], null, 203);
 		}
 
 		[Test]
@@ -463,13 +439,12 @@ namespace Tests.xUpdate
 			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -478,32 +453,30 @@ namespace Tests.xUpdate
 					.DeleteWhenMatchedAnd((t, s) => s.Id == 4)
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(rows, Is.EqualTo(4));
+			var result = table.OrderBy(_ => _.Id).ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows, Is.EqualTo(4));
 
-					Assert.That(result, Has.Count.EqualTo(5));
-				}
-
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialSourceData[0], result[2], null, 203);
-				AssertRow(InitialSourceData[2], result[3], null, null);
-				AssertRow(InitialSourceData[3], result[4], null, 216);
+				Assert.That(result, Has.Count.EqualTo(5));
 			}
+
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialSourceData[0], result[2], null, 203);
+			AssertRow(InitialSourceData[2], result[3], null, null);
+			AssertRow(InitialSourceData[3], result[4], null, 216);
 		}
 
 		[Test]
 		public void InsertUpdateWithDelete([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -511,18 +484,17 @@ namespace Tests.xUpdate
 					.UpdateWhenMatchedAndThenDelete((t, s) => t.Id == 3 || s.Id == 4, (t, s) => s.Id == 4)
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(4, rows, context);
+			AssertRowCount(4, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result, Has.Count.EqualTo(5));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialSourceData[0], result[2], null, 203);
-				AssertRow(InitialSourceData[2], result[3], null, null);
-				AssertRow(InitialSourceData[3], result[4], null, 216);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialSourceData[0], result[2], null, 203);
+			AssertRow(InitialSourceData[2], result[3], null, null);
+			AssertRow(InitialSourceData[3], result[4], null, 216);
 		}
 
 		[Test]
@@ -532,13 +504,12 @@ namespace Tests.xUpdate
 			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -547,20 +518,19 @@ namespace Tests.xUpdate
 					.UpdateWhenMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(rows, Is.EqualTo(4));
+			var result = table.OrderBy(_ => _.Id).ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows, Is.EqualTo(4));
 
-					Assert.That(result, Has.Count.EqualTo(5));
-				}
-
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialSourceData[0], result[2], null, 203);
-				AssertRow(InitialSourceData[2], result[3], null, null);
-				AssertRow(InitialSourceData[3], result[4], null, 216);
+				Assert.That(result, Has.Count.EqualTo(5));
 			}
+
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialSourceData[0], result[2], null, 203);
+			AssertRow(InitialSourceData[2], result[3], null, null);
+			AssertRow(InitialSourceData[3], result[4], null, 216);
 		}
 
 		[Test]
@@ -570,13 +540,12 @@ namespace Tests.xUpdate
 			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -585,20 +554,19 @@ namespace Tests.xUpdate
 					.DeleteWhenMatchedAnd((t, s) => s.Id == 4)
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(rows, Is.EqualTo(4));
+			var result = table.OrderBy(_ => _.Id).ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows, Is.EqualTo(4));
 
-					Assert.That(result, Has.Count.EqualTo(5));
-				}
-
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialSourceData[0], result[2], null, 203);
-				AssertRow(InitialSourceData[2], result[3], null, null);
-				AssertRow(InitialSourceData[3], result[4], null, 216);
+				Assert.That(result, Has.Count.EqualTo(5));
 			}
+
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialSourceData[0], result[2], null, 203);
+			AssertRow(InitialSourceData[2], result[3], null, null);
+			AssertRow(InitialSourceData[3], result[4], null, 216);
 		}
 
 		[Test]
@@ -608,13 +576,12 @@ namespace Tests.xUpdate
 			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -623,20 +590,19 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(rows, Is.EqualTo(4));
+			var result = table.OrderBy(_ => _.Id).ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows, Is.EqualTo(4));
 
-					Assert.That(result, Has.Count.EqualTo(5));
-				}
-
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialSourceData[0], result[2], null, 203);
-				AssertRow(InitialSourceData[2], result[3], null, null);
-				AssertRow(InitialSourceData[3], result[4], null, 216);
+				Assert.That(result, Has.Count.EqualTo(5));
 			}
+
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialSourceData[0], result[2], null, 203);
+			AssertRow(InitialSourceData[2], result[3], null, null);
+			AssertRow(InitialSourceData[3], result[4], null, 216);
 		}
 
 		[Test]
@@ -646,13 +612,12 @@ namespace Tests.xUpdate
 			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -661,20 +626,19 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(rows, Is.EqualTo(4));
+			var result = table.OrderBy(_ => _.Id).ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows, Is.EqualTo(4));
 
-					Assert.That(result, Has.Count.EqualTo(5));
-				}
-
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialSourceData[0], result[2], null, 203);
-				AssertRow(InitialSourceData[2], result[3], null, null);
-				AssertRow(InitialSourceData[3], result[4], null, 216);
+				Assert.That(result, Has.Count.EqualTo(5));
 			}
+
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialSourceData[0], result[2], null, 203);
+			AssertRow(InitialSourceData[2], result[3], null, null);
+			AssertRow(InitialSourceData[3], result[4], null, 216);
 		}
 
 		[Test]
@@ -684,13 +648,12 @@ namespace Tests.xUpdate
 			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -699,32 +662,30 @@ namespace Tests.xUpdate
 					.UpdateWhenMatchedAnd((t, s) => t.Id == 3)
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(rows, Is.EqualTo(4));
+			var result = table.OrderBy(_ => _.Id).ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows, Is.EqualTo(4));
 
-					Assert.That(result, Has.Count.EqualTo(5));
-				}
-
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialSourceData[0], result[2], null, 203);
-				AssertRow(InitialSourceData[2], result[3], null, null);
-				AssertRow(InitialSourceData[3], result[4], null, 216);
+				Assert.That(result, Has.Count.EqualTo(5));
 			}
+
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialSourceData[0], result[2], null, 203);
+			AssertRow(InitialSourceData[2], result[3], null, null);
+			AssertRow(InitialSourceData[3], result[4], null, 216);
 		}
 
 		[Test]
 		public void UpdateWithDeleteInsert([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -732,18 +693,17 @@ namespace Tests.xUpdate
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(4, rows, context);
+			AssertRowCount(4, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result, Has.Count.EqualTo(5));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialSourceData[0], result[2], null, 203);
-				AssertRow(InitialSourceData[2], result[3], null, null);
-				AssertRow(InitialSourceData[3], result[4], null, 216);
-			}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialSourceData[0], result[2], null, 203);
+			AssertRow(InitialSourceData[2], result[3], null, null);
+			AssertRow(InitialSourceData[3], result[4], null, 216);
 		}
 
 		[Table]
@@ -762,10 +722,9 @@ namespace Tests.xUpdate
 					new PKOnlyTable() { ID = 3 }
 				};
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(src.Skip(1).Take(1)))
-			{
-				var rows = table
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(src.Skip(1).Take(1));
+			var rows = table
 					.Merge()
 					.Using(src)
 					.OnTargetKey()
@@ -773,20 +732,19 @@ namespace Tests.xUpdate
 					.UpdateWhenMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.ID).ToList();
+			var result = table.OrderBy(_ => _.ID).ToList();
 
-				if (context.IsAnyOf(TestProvName.AllOracleNative))
-					Assert.That(rows, Is.EqualTo(-1));
-				else
-					Assert.That(rows, Is.EqualTo(2));
+			if (context.IsAnyOf(TestProvName.AllOracleNative))
+				Assert.That(rows, Is.EqualTo(-1));
+			else
+				Assert.That(rows, Is.EqualTo(2));
 
-				Assert.That(result, Has.Count.EqualTo(3));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[0].ID, Is.EqualTo(1));
-					Assert.That(result[1].ID, Is.EqualTo(2));
-					Assert.That(result[2].ID, Is.EqualTo(3));
-				}
+			Assert.That(result, Has.Count.EqualTo(3));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[0].ID, Is.EqualTo(1));
+				Assert.That(result[1].ID, Is.EqualTo(2));
+				Assert.That(result[2].ID, Is.EqualTo(3));
 			}
 		}
 	}

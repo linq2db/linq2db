@@ -51,7 +51,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		/// </summary>
 		public static void ResolveSqlTypes(string path)
 		{
-			if (path == null) throw new ArgumentNullException(nameof(path));
+			ArgumentNullException.ThrowIfNull(path);
 
 			_ = new AssemblyResolver(path, SqlServerTypes.AssemblyName);
 
@@ -80,23 +80,23 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			{
 				case ""                      :
 				case null                    :
-					if (options.ConfigurationString == "SqlServer")
+					if (string.Equals(options.ConfigurationString, "SqlServer", StringComparison.Ordinal))
 						goto case ProviderName.SqlServer;
 					break;
 					// SqlClient use dot prefix, as SqlClient itself used by some other providers
-				case var providerName when providerName.Contains("SqlServer") || providerName.Contains(".SqlClient"):
+				case var providerName when providerName.Contains("SqlServer", StringComparison.Ordinal) || providerName.Contains(".SqlClient", StringComparison.Ordinal):
 				case ProviderName.SqlServer:
 					var provider = DetectProvider(options, SqlServerProvider.AutoDetect);
 
-					if (options.ConfigurationString?.Contains("2005") == true || options.ProviderName?.Contains("2005") == true) return GetDataProvider(options, provider, SqlServerVersion.v2005);
-					if (options.ConfigurationString?.Contains("2008") == true || options.ProviderName?.Contains("2008") == true) return GetDataProvider(options, provider, SqlServerVersion.v2008);
-					if (options.ConfigurationString?.Contains("2012") == true || options.ProviderName?.Contains("2012") == true) return GetDataProvider(options, provider, SqlServerVersion.v2012);
-					if (options.ConfigurationString?.Contains("2014") == true || options.ProviderName?.Contains("2014") == true) return GetDataProvider(options, provider, SqlServerVersion.v2014);
-					if (options.ConfigurationString?.Contains("2016") == true || options.ProviderName?.Contains("2016") == true) return GetDataProvider(options, provider, SqlServerVersion.v2016);
-					if (options.ConfigurationString?.Contains("2017") == true || options.ProviderName?.Contains("2017") == true) return GetDataProvider(options, provider, SqlServerVersion.v2017);
-					if (options.ConfigurationString?.Contains("2019") == true || options.ProviderName?.Contains("2019") == true) return GetDataProvider(options, provider, SqlServerVersion.v2019);
-					if (options.ConfigurationString?.Contains("2022") == true || options.ProviderName?.Contains("2022") == true) return GetDataProvider(options, provider, SqlServerVersion.v2022);
-					if (options.ConfigurationString?.Contains("2025") == true || options.ProviderName?.Contains("2025") == true) return GetDataProvider(options, provider, SqlServerVersion.v2025);
+					if (options.ConfigurationString?.Contains("2005", StringComparison.Ordinal) == true || options.ProviderName?.Contains("2005", StringComparison.Ordinal) == true) return GetDataProvider(options, provider, SqlServerVersion.v2005);
+					if (options.ConfigurationString?.Contains("2008", StringComparison.Ordinal) == true || options.ProviderName?.Contains("2008", StringComparison.Ordinal) == true) return GetDataProvider(options, provider, SqlServerVersion.v2008);
+					if (options.ConfigurationString?.Contains("2012", StringComparison.Ordinal) == true || options.ProviderName?.Contains("2012", StringComparison.Ordinal) == true) return GetDataProvider(options, provider, SqlServerVersion.v2012);
+					if (options.ConfigurationString?.Contains("2014", StringComparison.Ordinal) == true || options.ProviderName?.Contains("2014", StringComparison.Ordinal) == true) return GetDataProvider(options, provider, SqlServerVersion.v2014);
+					if (options.ConfigurationString?.Contains("2016", StringComparison.Ordinal) == true || options.ProviderName?.Contains("2016", StringComparison.Ordinal) == true) return GetDataProvider(options, provider, SqlServerVersion.v2016);
+					if (options.ConfigurationString?.Contains("2017", StringComparison.Ordinal) == true || options.ProviderName?.Contains("2017", StringComparison.Ordinal) == true) return GetDataProvider(options, provider, SqlServerVersion.v2017);
+					if (options.ConfigurationString?.Contains("2019", StringComparison.Ordinal) == true || options.ProviderName?.Contains("2019", StringComparison.Ordinal) == true) return GetDataProvider(options, provider, SqlServerVersion.v2019);
+					if (options.ConfigurationString?.Contains("2022", StringComparison.Ordinal) == true || options.ProviderName?.Contains("2022", StringComparison.Ordinal) == true) return GetDataProvider(options, provider, SqlServerVersion.v2022);
+					if (options.ConfigurationString?.Contains("2025", StringComparison.Ordinal) == true || options.ProviderName?.Contains("2025", StringComparison.Ordinal) == true) return GetDataProvider(options, provider, SqlServerVersion.v2025);
 
 					if (AutoDetectProvider)
 					{
@@ -187,8 +187,8 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					14 => SqlServerVersion.v2017,
 					15 => SqlServerVersion.v2019,
 					16 => SqlServerVersion.v2022,
-					_  => SqlServerVersion.v2025
-				}
+					_  => SqlServerVersion.v2025,
+				},
 			};
 		}
 

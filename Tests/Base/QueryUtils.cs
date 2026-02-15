@@ -20,7 +20,7 @@ namespace Tests
 		/// </summary>
 		public static SqlInsertClause RequireInsertClause(this SqlStatement statement)
 		{
-			var result = statement.GetInsertClause();
+			var result = statement.InsertClause;
 			if (result == null)
 				throw new LinqToDBException($"Insert clause not found in {statement.GetType().Name}");
 			return result;
@@ -246,15 +246,15 @@ namespace Tests
 				}
 
 				var items = new List<IQueryElement>
-				{
-					selectQuery.GroupBy,
-					selectQuery.Having,
-					selectQuery.Where,
-					selectQuery.OrderBy
-				};
+			{
+				selectQuery.GroupBy,
+				selectQuery.Having,
+				selectQuery.Where,
+				selectQuery.OrderBy,
+			};
 
 				items.AddRange(selectQuery.Select.Columns);
-				if (selectQuery.HasWhere())
+				if (selectQuery.HasWhere)
 					items.Add(selectQuery.Where);
 
 				var ctx = new BuildParentHierarchyContext(this, selectQuery);

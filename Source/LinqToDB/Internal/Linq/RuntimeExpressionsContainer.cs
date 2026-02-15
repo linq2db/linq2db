@@ -18,7 +18,7 @@ namespace LinqToDB.Internal.Linq
 			if (_dynamicExpressions == null)
 				throw new InvalidOperationException("_dynamicExpressions is null");
 
-			var registered = _dynamicExpressions.FirstOrDefault(a => a.expressionId == expressionId);
+			var registered = _dynamicExpressions.Find(a => a.expressionId == expressionId);
 
 			if (registered.expression == null)
 				throw new InvalidOperationException($"Dynamic accessor with id {expressionId.ToString(CultureInfo.InvariantCulture)} not found");

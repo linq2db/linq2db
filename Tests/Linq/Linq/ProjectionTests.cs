@@ -79,9 +79,8 @@ namespace Tests.Linq
 		[Test]
 		public void GroupByWithCast([DataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query = db.Person
+			using var db = GetDataContext(context);
+			var query = db.Person
 					.GroupBy(_ => new
 					{
 						group = _.ID,
@@ -105,24 +104,22 @@ namespace Tests.Linq
 					.OrderByDescending(_ => _.x.value)
 					.Take(1000);
 
-				var result = query.ToList();
+			var result = query.ToList();
 
-				Assert.That(result, Has.Count.EqualTo(1));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[0].y, Is.EqualTo(1));
-					Assert.That(result[0].x.value, Is.Null);
-					Assert.That(result[0].x.id, Is.Null);
-				}
+			Assert.That(result, Has.Count.EqualTo(1));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[0].y, Is.EqualTo(1));
+				Assert.That(result[0].x.value, Is.Null);
+				Assert.That(result[0].x.id, Is.Null);
 			}
 		}
 
 		[Test]
 		public void GroupByWithTwoCasts([DataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query = db.Person
+			using var db = GetDataContext(context);
+			var query = db.Person
 					.GroupBy(_ => new
 					{
 						group = _.ID,
@@ -147,24 +144,22 @@ namespace Tests.Linq
 					.OrderByDescending(_ => _.x.value)
 					.Take(1000);
 
-				var result = query.ToList();
+			var result = query.ToList();
 
-				Assert.That(result, Has.Count.EqualTo(1));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[0].y, Is.EqualTo(1));
-					Assert.That(result[0].x.value, Is.Null);
-					Assert.That(result[0].x.id, Is.Null);
-				}
+			Assert.That(result, Has.Count.EqualTo(1));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[0].y, Is.EqualTo(1));
+				Assert.That(result[0].x.value, Is.Null);
+				Assert.That(result[0].x.id, Is.Null);
 			}
 		}
 
 		[Test]
 		public void GroupByWithToNullable([DataSources(TestProvName.AllMySql)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query = db.Person
+			using var db = GetDataContext(context);
+			var query = db.Person
 					.GroupBy(_ => new
 					{
 						group = _.ID,
@@ -187,15 +182,14 @@ namespace Tests.Linq
 					.OrderByDescending(_ => _.x.value)
 					.Take(1000);
 
-				var result = query.ToList();
+			var result = query.ToList();
 
-				Assert.That(result, Has.Count.EqualTo(1));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[0].y, Is.EqualTo(1));
-					Assert.That(result[0].x.value, Is.Null);
-					Assert.That(result[0].x.id, Is.Null);
-				}
+			Assert.That(result, Has.Count.EqualTo(1));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[0].y, Is.EqualTo(1));
+				Assert.That(result[0].x.value, Is.Null);
+				Assert.That(result[0].x.id, Is.Null);
 			}
 		}
 	}

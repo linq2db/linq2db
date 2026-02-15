@@ -49,7 +49,13 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 		public Expression? Translate(ITranslationContext translationContext, Expression memberExpression, TranslationFlags translationFlags)
 		{
-			if (memberExpression is (MethodCallExpression or MemberExpression or NewExpression or UnaryExpression { Method: not null } or BinaryExpression { Method: not null }))
+			if (memberExpression is (
+					MethodCallExpression
+					or MemberExpression
+					or NewExpression
+					or UnaryExpression  { Method: not null }
+					or BinaryExpression { Method: not null }
+				))
 			{
 				var memberInfoWithType = MemberHelper.GetMemberInfoWithType(memberExpression);
 				var translationFunc    = Registration.GetTranslation(memberInfoWithType);

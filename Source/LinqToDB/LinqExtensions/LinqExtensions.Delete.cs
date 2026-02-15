@@ -37,7 +37,7 @@ namespace LinqToDB
 		/// </remarks>
 		public static IEnumerable<TSource> DeleteWithOutput<TSource>(this IQueryable<TSource> source)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(source);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -68,7 +68,7 @@ namespace LinqToDB
 		public static IAsyncEnumerable<TSource> DeleteWithOutputAsync<TSource>(
 			this IQueryable<TSource> source)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(source);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -130,8 +130,8 @@ namespace LinqToDB
 			this IQueryable<TSource>           source,
 			Expression<Func<TSource, TOutput>> outputExpression)
 		{
-			if (source           == null) throw new ArgumentNullException(nameof(source));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -167,8 +167,8 @@ namespace LinqToDB
 			this IQueryable<TSource>           source,
 			Expression<Func<TSource, TOutput>> outputExpression)
 		{
-			if (source           == null) throw new ArgumentNullException(nameof(source));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -230,8 +230,8 @@ namespace LinqToDB
 			ITable<TOutput>          outputTable)
 			where TOutput : notnull
 		{
-			if (source      == null) throw new ArgumentNullException(nameof(source));
-			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(outputTable);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -265,8 +265,8 @@ namespace LinqToDB
 			CancellationToken        token = default)
 			where TOutput : notnull
 		{
-			if (source      == null) throw new ArgumentNullException(nameof(source));
-			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(outputTable);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -301,9 +301,9 @@ namespace LinqToDB
 			Expression<Func<TSource,TOutput>> outputExpression)
 			where TOutput : notnull
 		{
-			if (source           == null) throw new ArgumentNullException(nameof(source));
-			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(outputTable);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -341,9 +341,9 @@ namespace LinqToDB
 			CancellationToken                 token = default)
 			where TOutput : notnull
 		{
-			if (source           == null) throw new ArgumentNullException(nameof(source));
-			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(outputTable);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -369,7 +369,7 @@ namespace LinqToDB
 		/// <returns>Number of deleted records.</returns>
 		public static int Delete<T>(this IQueryable<T> source)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(source);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -390,7 +390,7 @@ namespace LinqToDB
 		/// <returns>Number of deleted records.</returns>
 		public static Task<int> DeleteAsync<T>(this IQueryable<T> source, CancellationToken token = default)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(source);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -413,8 +413,8 @@ namespace LinqToDB
 							this IQueryable<T> source,
 			[InstantHandle] Expression<Func<T, bool>> predicate)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(predicate);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -439,8 +439,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T, bool>> predicate,
 			CancellationToken token = default)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(predicate);
 
 			var currentSource = source.GetLinqToDBSource();
 

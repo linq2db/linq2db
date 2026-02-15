@@ -1,4 +1,4 @@
-﻿using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.DataProvider.Oracle
@@ -16,13 +16,13 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 				PseudoFunctions.TRY_CONVERT =>
 					new SqlExpression(func.Type, "CAST({0} AS {1} DEFAULT NULL ON CONVERSION ERROR)", Precedence.Primary, func.Parameters[2], func.Parameters[0])
 					{
-						CanBeNull = true
+						CanBeNull = true,
 					},
 
 				PseudoFunctions.TRY_CONVERT_OR_DEFAULT =>
 					new SqlExpression(func.Type, "CAST({0} AS {1} DEFAULT {2} ON CONVERSION ERROR)", Precedence.Primary, func.Parameters[2], func.Parameters[0], func.Parameters[3])
 					{
-						CanBeNull = func.Parameters[2].CanBeNullable(NullabilityContext) || func.Parameters[3].CanBeNullable(NullabilityContext)
+						CanBeNull = func.Parameters[2].CanBeNullable(NullabilityContext) || func.Parameters[3].CanBeNullable(NullabilityContext),
 					},
 
 				_ => base.ConvertSqlFunction(func),

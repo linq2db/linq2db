@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.Interceptors
 					exi.Interceptor = new AggregatedExceptionInterceptor        { Interceptors = { exi. Interceptor!, ex } };
 					break;
 				default:
-					throw new NotImplementedException($"AddInterceptor for '{typeof(T).Name}' is not implemented.");
+					throw new InvalidOperationException($"AddInterceptor for '{typeof(T).Name}' is not implemented.");
 			}
 		}
 

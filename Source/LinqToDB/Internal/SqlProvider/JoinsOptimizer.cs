@@ -207,7 +207,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		/// <summary>
 		/// Inspect join condition and return list of field pairs used in equals conditions between <paramref name="leftSource"/> (when specified) and <paramref name="rightJoin"/> tables.
-		/// If condition contains top-level OR operator, method returns <c>null</c>.
+		/// If condition contains top-level OR operator, method returns <see langword="null"/>.
 		/// </summary>
 		IReadOnlyList<EqualityFields>? SearchForJoinEqualityFields(SqlTableSource? leftSource, SqlJoinedTable rightJoin)
 		{
@@ -271,7 +271,7 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				SqlField  sqlField  => sqlField .Table? .SourceID,
 				SqlColumn sqlColumn => sqlColumn.Parent?.SourceID,
-				_ => null
+				_ => null,
 			} ?? -1;
 		}
 
@@ -320,7 +320,7 @@ namespace LinqToDB.Internal.SqlProvider
 				case QueryElementType.SqlExpression:
 				{
 					var sqlExpr = (SqlExpression)expr;
-					if (sqlExpr.Expr == "{0}" && sqlExpr.Parameters.Length == 1)
+					if (string.Equals(sqlExpr.Expr, "{0}", StringComparison.Ordinal) && sqlExpr.Parameters.Length == 1)
 						return GetUnderlyingFieldOrColumn(sqlExpr.Parameters[0]);
 					return null;
 				}

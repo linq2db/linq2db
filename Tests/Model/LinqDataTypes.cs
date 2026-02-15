@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.Linq;
+using System.Globalization;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -74,7 +75,7 @@ namespace Tests.Model
 
 		public override string ToString()
 		{
-			return string.Format("{{{0,2}, {1,7}, {2:O}, {3,5}, {4}, {5}, '{6}'}}", ID, MoneyValue, DateTimeValue, BoolValue, GuidValue, SmallIntValue, StringValue);
+			return string.Format(CultureInfo.InvariantCulture, "{{{0,2}, {1,7}, {2:O}, {3,5}, {4}, {5}, '{6}'}}", ID, MoneyValue, DateTimeValue, BoolValue, GuidValue, SmallIntValue, StringValue);
 		}
 	}
 
@@ -150,7 +151,7 @@ namespace Tests.Model
 
 		public override string ToString()
 		{
-			return string.Format("{{{0,2}, {1,7}, {2:O}, {3,5}, {4}, {5}, '{6}'}}", ID, MoneyValue, DateTimeValue, BoolValue, GuidValue, SmallIntValue, StringValue);
+			return string.Format(CultureInfo.InvariantCulture, "{{{0,2}, {1,7}, {2:O}, {3,5}, {4}, {5}, '{6}'}}", ID, MoneyValue, DateTimeValue, BoolValue, GuidValue, SmallIntValue, StringValue);
 		}
 
 		public LinqDataTypes2 Clone()

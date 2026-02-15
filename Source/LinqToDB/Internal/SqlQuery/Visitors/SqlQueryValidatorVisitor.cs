@@ -159,7 +159,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 				}
 
-				if (!_providerFlags.IsSubQueryOrderBySupported && !selectQuery.OrderBy.IsEmpty && !selectQuery.IsLimited() && IsDependsOnOuterSources())
+				if (!_providerFlags.IsSubQueryOrderBySupported && !selectQuery.OrderBy.IsEmpty && !selectQuery.IsLimited && IsDependsOnOuterSources())
 				{
 					if (_parentQuery?.From.Tables.Count > 0 || IsDependsOnOuterSources())
 					{
@@ -205,7 +205,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 			else
 			{
-				var isDerived = _parentQuery != null && _parentQuery.From.Tables.Any(t => t.Source == selectQuery);
+				var isDerived = _parentQuery != null && _parentQuery.From.Tables.Exists(t => t.Source == selectQuery);
 
 				if (isDerived)
 				{
@@ -235,10 +235,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (selectQuery.Select.HasModifier)
 				return false;
 
-			if (selectQuery.Select.Columns.Any(c => QueryHelper.IsAggregationFunction(c.Expression)))
+			if (selectQuery.Select.Columns.Exists(c => QueryHelper.IsAggregationFunction(c.Expression)))
 				return false;
 
-			if (selectQuery.Where.SearchCondition.Predicates.Any(p => p is SqlSearchCondition))
+			if (selectQuery.Where.SearchCondition.Predicates.Exists(p => p is SqlSearchCondition))
 				return false;
 
 			if (QueryHelper.IsDependsOnOuterSources(selectQuery, elementsToIgnore : new[] { selectQuery.Where }))
@@ -323,10 +323,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (!_providerFlags.IsApplyJoinSupported)
 			{
 				// No apply joins are allowed
-				if (element.JoinType == JoinType.CrossApply ||
-				    element.JoinType == JoinType.OuterApply ||
-				    element.JoinType == JoinType.FullApply  ||
-				    element.JoinType == JoinType.RightApply)
+				if (element.JoinType
+						is JoinType.CrossApply 
+						or JoinType.OuterApply
+						or JoinType.FullApply
+						or JoinType.RightApply)
 				{
 					if (_providerFlags.SupportedCorrelatedSubqueriesLevel == 0)
 					{
@@ -345,7 +346,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				if (!_providerFlags.IsSupportsJoinWithoutCondition && element.JoinType is JoinType.Left or JoinType.Inner)
 				{
-					if (element.Condition.IsTrue() || element.Condition.IsFalse())
+					if (element.Condition.IsTrue || element.Condition.IsFalse)
 					{
 						SetInvalid(ErrorHelper.Error_Join_Without_Condition);
 						return element;

@@ -54,7 +54,7 @@ namespace LinqToDB.CodeModel
 				languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2RowId"       , true),
 				languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2String"      , true),
 				languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2Time"        , true),
-				languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2TimeStamp"   , true)
+				languageProvider.TypeParser.Parse("IBM.Data.DB2Types.DB2TimeStamp"   , true),
 			};
 
 			// all handled types are structs, so we need to handle Nullable<T> comparisons too
