@@ -3215,6 +3215,48 @@ $function$
 				Assert.That(tb.Count(r => r.Jsonb == r.Json), Is.EqualTo(1));
 			}
 		}
+
+		sealed class Issue5325Table
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			public DateTime        Timestamp    { get; set; }
+			public DateTimeOffset  TimestampTZ  { get; set; }
+			public DateTime?       TimestampN   { get; set; }
+			public DateTimeOffset? TimestampTZN { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5325")]
+		public void Issue5325Test([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<Issue5325Table>();
+
+			_ = tb.Where(r => r.Timestamp == DateTime.UtcNow).ToList();
+			Assert.That(db.LastQuery, Does.Contain("timezone('UTC', now())"));
+
+			_ = tb.Where(r => r.TimestampN == DateTime.UtcNow).ToList();
+			Assert.That(db.LastQuery, Does.Contain("timezone('UTC', now())"));
+
+			_ = tb.Where(r => r.TimestampTZ == DateTime.UtcNow).ToList();
+			Assert.That(db.LastQuery, Does.Contain("timezone('UTC', now())"));
+
+			_ = tb.Where(r => r.TimestampTZN == DateTime.UtcNow).ToList();
+			Assert.That(db.LastQuery, Does.Contain("timezone('UTC', now())"));
+
+			_ = tb.Where(r => r.Timestamp == DateTimeOffset.UtcNow).ToList();
+			Assert.That(db.LastQuery, Does.Contain("timezone('UTC', now())"));
+
+			_ = tb.Where(r => r.TimestampN == DateTimeOffset.UtcNow).ToList();
+			Assert.That(db.LastQuery, Does.Contain("timezone('UTC', now())"));
+
+			_ = tb.Where(r => r.TimestampTZ == DateTimeOffset.UtcNow).ToList();
+			Assert.That(db.LastQuery, Does.Contain("timezone('UTC', now())"));
+
+			_ = tb.Where(r => r.TimestampTZN == DateTimeOffset.UtcNow).ToList();
+			Assert.That(db.LastQuery, Does.Contain("timezone('UTC', now())"));
+		}
 	}
 
 	#region Extensions
