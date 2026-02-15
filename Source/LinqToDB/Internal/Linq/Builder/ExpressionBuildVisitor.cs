@@ -2306,26 +2306,7 @@ namespace LinqToDB.Internal.Linq.Builder
 								return base.VisitUnary(node);
 							}
 
-							if (node.Type == typeof(bool) && node.Operand.Type == typeof(SqlBoolean))
-							{
-								throw new InvalidOperationException("CASE:13");
-								//return Visit(placeholder.WithType(node.Type));
-							}
-
-							if (node.Type == typeof(Enum) && node.Operand.Type.IsEnum)
-							{
-								throw new InvalidOperationException("CASE:14");
-								//return base.VisitUnary(node);
-							}
-
 							var t = node.Operand.Type;
-							var s = MappingSchema.GetDataType(t);
-
-							if (placeholder.Sql.SystemType != null && s.Type.SystemType == typeof(object))
-							{
-								throw new InvalidOperationException("CASE:15");
-								//t = placeholder.Sql.SystemType;
-							}
 
 							if (node.Type == t)
 							{
