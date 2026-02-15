@@ -2231,12 +2231,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				case ExpressionType.Convert:
 				case ExpressionType.ConvertChecked:
 				{
-					if (_buildPurpose is BuildPurpose.Root && node.Operand is ContextRefExpression contextRef)
-					{
-						throw new InvalidOperationException("CASE:01");
-						//return Visit(contextRef.WithType(node.Type));
-					}
-
 					if (_buildFlags.HasFlag(BuildFlags.ForMemberRoot) && node.Operand is ContextRefExpression contextRef2)
 					{
 						return Visit(contextRef2.WithType(node.Type));
@@ -2260,15 +2254,6 @@ namespace LinqToDB.Internal.Linq.Builder
 						}
 					}
 
-					if (_buildPurpose is BuildPurpose.Sql && operandExpr is SqlDefaultIfEmptyExpression defaultIfEmpty)
-					{
-						if (defaultIfEmpty.InnerExpression is SqlPlaceholderExpression)
-						{
-							throw new InvalidOperationException("CASE:05");
-							//operandExpr = defaultIfEmpty.InnerExpression;
-						}
-					}
-
 					if (SequenceHelper.IsSqlReady(operandExpr))
 					{
 						operandExpr = UpdateNesting(operandExpr);
@@ -2278,18 +2263,6 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (placeholders.Count == 1)
 						{
 							var placeholder = placeholders[0];
-
-							if (_buildPurpose is BuildPurpose.Expression && node.Type == typeof(object))
-							{
-								throw new InvalidOperationException("CASE:08");
-								//return base.VisitUnary(node);
-							}
-
-							if (_buildPurpose is BuildPurpose.Expression && node.Method != null)
-							{
-								throw new InvalidOperationException("CASE:09");
-								//return base.VisitUnary(node);
-							}
 
 							if (node.Method == null && node.IsLifted && placeholder.Sql.SystemType != typeof(object))
 							{
@@ -2306,19 +2279,17 @@ namespace LinqToDB.Internal.Linq.Builder
 								return base.VisitUnary(node);
 							}
 
-							var t = node.Operand.Type;
-
-							if (node.Type == t)
+							if (node.Type == node.Operand.Type)
 							{
 								return Visit(placeholder.WithType(node.Type));
 							}
 
-							if (t.IsEnum && Enum.GetUnderlyingType(t) == node.Type)
+							if (node.Operand.Type.IsEnum && Enum.GetUnderlyingType(node.Operand.Type) == node.Type)
 							{
 								return Visit(placeholder.WithType(node.Type));
 							}
 
-							if (node.Type.IsEnum && Enum.GetUnderlyingType(node.Type) == t)
+							if (node.Type.IsEnum && Enum.GetUnderlyingType(node.Type) == node.Operand.Type)
 							{
 								return Visit(placeholder.WithType(node.Type));
 							}
@@ -2326,12 +2297,6 @@ namespace LinqToDB.Internal.Linq.Builder
 							if (_buildPurpose is BuildPurpose.Sql && placeholder.Sql.SystemType == node.Type)
 							{
 								return Visit(CreatePlaceholder(placeholder.Sql, node));
-							}
-
-							if (_buildPurpose is not BuildPurpose.Sql && placeholder.Sql.SystemType == node.Type)
-							{
-								throw new InvalidOperationException("CASE:20");
-								//return Visit(placeholder);
 							}
 
 							var castTo = MappingSchema.GetDbDataType(node.Type);
@@ -2349,15 +2314,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						return Visit(translatedValue);
 					}
 
-					if (node.Type == typeof(object))
-					{
-						if (_buildPurpose is BuildPurpose.Sql && HandleValue(node.Operand, out translatedValue))
-						{
-							throw new InvalidOperationException("CASE:24");
-							//return Visit(translatedValue);
-						}
-					}
-					else if (HandleValue(node, out translatedValue))
+					if (node.Type != typeof(object) && HandleValue(node, out translatedValue))
 					{
 						return Visit(translatedValue);
 					}
