@@ -1277,6 +1277,34 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void UpdateIssue5340Regression([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllInformix, ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var _ = new RestoreBaseTables(db);
+
+			// Test APPLY inside UPDATE subqueries.
+			// This query is weird and doesn't make logical sense, but it demonstrates a compiler crash in 6.0.
+			var res = db.Parent
+				.Where(p => p.ParentID == 1)
+				.Set(
+					p => p.Value1,
+					p => (
+						from a in db.SelectQuery(() => 1)
+						from b in db.Child
+							.Where(c => p.ParentID == c.ParentID)
+							.OrderBy(c => c.ChildID - p.ParentID)
+							.Select(c => c.ChildID)
+							.Take(1)
+						select b
+					).Single())
+				.Update();
+
+			Assert.That(res, Is.EqualTo(1));
+			// Validate that the subquery contains a LATERAL JOIN or APPLY, because linq2db tries hard to avoid it and it is what causes the regression.
+			db.LastQuery!.ShouldMatch("APPLY|LATERAL");
+		}
+
+		[Test]
 		public void UpdateIssue319Regression(
 			[DataSources(
 				TestProvName.AllClickHouse,
