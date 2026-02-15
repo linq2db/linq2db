@@ -2231,9 +2231,9 @@ namespace LinqToDB.Internal.Linq.Builder
 				case ExpressionType.Convert:
 				case ExpressionType.ConvertChecked:
 				{
-					if (_buildFlags.HasFlag(BuildFlags.ForMemberRoot) && node.Operand is ContextRefExpression contextRef2)
+					if (_buildFlags.HasFlag(BuildFlags.ForMemberRoot) && node.Operand is ContextRefExpression contextRef)
 					{
-						return Visit(contextRef2.WithType(node.Type));
+						return Visit(contextRef.WithType(node.Type));
 					}
 
 					if (_buildPurpose is BuildPurpose.Expression && !_buildFlags.HasFlag(BuildFlags.ForSetProjection))
@@ -2243,19 +2243,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var operandExpr = Visit(node.Operand);
 
-					if (node.Type != typeof(object) && _buildPurpose is BuildPurpose.Sql)
-					{
-						if (operandExpr is SqlPlaceholderExpression { Sql: SqlParameter or SqlValue })
-						{
-							if (HandleValue(node, out var operandExpr1))
-							{
-								return Visit(operandExpr1);
-							}
-						}
-					}
-
 					if (SequenceHelper.IsSqlReady(operandExpr))
 					{
+						if (node.Type != typeof(object)
+							&& operandExpr is SqlPlaceholderExpression { Sql: SqlParameter or SqlValue }
+							&& HandleValue(node, out var nodeExpr))
+						{
+							return Visit(nodeExpr);
+						}
+
 						operandExpr = UpdateNesting(operandExpr);
 
 						var placeholders = CollectPlaceholdersStraight(operandExpr);
@@ -2264,39 +2260,24 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							var placeholder = placeholders[0];
 
-							if (node.Method == null && node.IsLifted && placeholder.Sql.SystemType != typeof(object))
+							if ((node.IsLifted && placeholder.Sql.SystemType != typeof(object))
+								|| node.Type == typeof(object)
+								|| node.Type == node.Operand.Type
+								|| placeholder.Sql.SystemType == node.Type
+								|| (node.Operand.Type.IsEnum && Enum.GetUnderlyingType(node.Operand.Type) == node.Type)
+								|| (node.Type.IsEnum && Enum.GetUnderlyingType(node.Type) == node.Operand.Type))
 							{
-								return Visit(placeholder.WithType(node.Type));
-							}
+								if (node.Method == null)
+								{
+									return Visit(placeholder.WithType(node.Type));
+								}
 
-							if (node.Method == null && node.Type == typeof(object))
-							{
-								return Visit(placeholder.WithType(node.Type));
+								return Visit(CreatePlaceholder(placeholder.Sql, node));
 							}
 
 							if (node.Method == null && operandExpr is not SqlPlaceholderExpression)
 							{
 								return base.VisitUnary(node);
-							}
-
-							if (node.Type == node.Operand.Type)
-							{
-								return Visit(placeholder.WithType(node.Type));
-							}
-
-							if (node.Operand.Type.IsEnum && Enum.GetUnderlyingType(node.Operand.Type) == node.Type)
-							{
-								return Visit(placeholder.WithType(node.Type));
-							}
-
-							if (node.Type.IsEnum && Enum.GetUnderlyingType(node.Type) == node.Operand.Type)
-							{
-								return Visit(placeholder.WithType(node.Type));
-							}
-
-							if (_buildPurpose is BuildPurpose.Sql && placeholder.Sql.SystemType == node.Type)
-							{
-								return Visit(CreatePlaceholder(placeholder.Sql, node));
 							}
 
 							var castTo = MappingSchema.GetDbDataType(node.Type);
@@ -2318,9 +2299,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						return Visit(translatedValue);
 					}
-
-					break;
 				}
+
+				break;
 			}
 
 			return base.VisitUnary(node);
