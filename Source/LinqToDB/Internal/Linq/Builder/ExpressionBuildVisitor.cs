@@ -2260,10 +2260,8 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							var placeholder = placeholders[0];
 
-							if ((node.IsLifted && placeholder.Sql.SystemType != typeof(object))
-								|| node.Type == typeof(object)
-								|| node.Type == node.Operand.Type
-								|| placeholder.Sql.SystemType == node.Type
+							if (node.Type == typeof(object)
+								|| node.Type.UnwrapNullableType() == node.Operand.Type.UnwrapNullableType()
 								|| (node.Operand.Type.IsEnum && Enum.GetUnderlyingType(node.Operand.Type) == node.Type)
 								|| (node.Type.IsEnum && Enum.GetUnderlyingType(node.Type) == node.Operand.Type))
 							{
