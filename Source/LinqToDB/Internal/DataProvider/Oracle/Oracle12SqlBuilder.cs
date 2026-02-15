@@ -37,7 +37,7 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 		{
 			condition = PrepareSearchCondition(selectQuery.Where.SearchCondition);
 
-			return condition.IsTrue;
+			return !condition.IsTrue;
 		}
 
 		protected override string? LimitFormat(SelectQuery selectQuery)
