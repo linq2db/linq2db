@@ -140,7 +140,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			if (_isCollecting)
 			{
-				if (_inExpression || selectQuery.Select.IsDistinct || selectQuery.HasSetOperators && HasNonUnionAllSetOperators(selectQuery))
+				if (_inExpression || selectQuery.Select.IsDistinct || selectQuery.HasSetOperators && HasNonUnionAllSetOperators(selectQuery) || selectQuery.From.Tables.Count == 0)
 				{
 					// Collect columns when query is used in expression context or has non-UNION-ALL set operators
 					foreach (var column in selectQuery.Select.Columns)
