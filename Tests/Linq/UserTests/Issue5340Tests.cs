@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -29,9 +30,10 @@ namespace Tests.UserTests
 			[Column]     public int Field4 { get; set; }
 		}
 
-		[ThrowsRequiredOuterJoins(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllMariaDB, TestProvName.AllFirebirdLess4, TestProvName.AllDB2, TestProvName.AllMySql57, TestProvName.AllOracle11)]
+		[ThrowsRequiredOuterJoins(TestProvName.AllSybase)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_Join_Without_Condition)]
 		[Test]
-		public void UpdateWithOuterApplyInSubquery([DataSources(TestProvName.AllClickHouse)] string context)
+		public void UpdateWithOuterApplyInSubquery([DataSources(TestProvName.AllClickHouse, TestProvName.AllSapHana, TestProvName.AllSqlCe)] string context)
 		{
 			var outerData = new[]
 			{
@@ -50,7 +52,7 @@ namespace Tests.UserTests
 			using (db.CreateLocalTable(outerData))
 			using (db.CreateLocalTable(innerData))
 			{
-				var query = db.GetTable<OuterTable>()
+				var affected = db.GetTable<OuterTable>()
 					.Set(
 						x => x.Field1,
 						x => (
@@ -64,6 +66,8 @@ namespace Tests.UserTests
 						).Single())
 					.Update();
 
+				affected.ShouldBe(2);
+
 				var result = db.GetTable<OuterTable>().OrderBy(x => x.Id).ToArray();
 
 				result[0].Field1.ShouldBe(1000);
@@ -71,9 +75,9 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ThrowsRequiredOuterJoins(TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllMariaDB, TestProvName.AllFirebirdLess4, TestProvName.AllDB2, TestProvName.AllMySql57, TestProvName.AllOracle11)]
+		[ThrowsRequiredOuterJoins(TestProvName.AllSybase)]
 		[Test]
-		public void UpdateWithSubquery([DataSources(TestProvName.AllClickHouse)] string context)
+		public void UpdateWithSubquery([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess, TestProvName.AllSapHana, TestProvName.AllSqlCe)] string context)
 		{
 			var outerData = new[]
 			{
@@ -93,7 +97,7 @@ namespace Tests.UserTests
 			using (db.CreateLocalTable(innerData))
 			{
 
-				var query = db.GetTable<OuterTable>()
+				var affected = db.GetTable<OuterTable>()
 					.Set(
 						x => x.Field1,
 						x => (
@@ -105,6 +109,8 @@ namespace Tests.UserTests
 							select b
 						).Single())
 					.Update();
+
+				affected.ShouldBe(2);
 
 				var result = db.GetTable<OuterTable>().OrderBy(x => x.Id).ToArray();
 
