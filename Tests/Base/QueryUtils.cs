@@ -246,15 +246,15 @@ namespace Tests
 				}
 
 				var items = new List<IQueryElement>
-			{
-				selectQuery.GroupBy,
-				selectQuery.Having,
-				selectQuery.Where,
-				selectQuery.OrderBy
-			};
+				{
+					selectQuery.GroupBy,
+					selectQuery.Having,
+					selectQuery.Where,
+					selectQuery.OrderBy
+				};
 
 				items.AddRange(selectQuery.Select.Columns);
-				if (!selectQuery.Where.IsEmpty)
+				if (selectQuery.HasWhere())
 					items.Add(selectQuery.Where);
 
 				var ctx = new BuildParentHierarchyContext(this, selectQuery);

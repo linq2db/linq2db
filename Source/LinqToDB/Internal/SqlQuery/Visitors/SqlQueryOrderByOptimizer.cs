@@ -203,7 +203,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return true;
 			}
 
-			if (selectQuery.IsLimited)
+			if (selectQuery.IsLimited())
 				return false;
 			return true;
 		}
