@@ -274,7 +274,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		#region Overrides
 
-		protected virtual void BuildSqlBuilder(SelectQuery selectQuery, int indent, bool skipAlias)
+		protected virtual void BuildSqlBuilder(SelectQuery selectQuery, int indent, ColumnAliasMode aliasMode)
 		{
 			SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
 
@@ -284,7 +284,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			sqlBuilder.BuildSql(0,
-				new SqlSelectStatement(selectQuery) { ParentStatement = Statement }, StringBuilder, OptimizationContext, indent, AliasMode & ~ColumnAliasMode.SkipAlias, NullabilityContext);
+				new SqlSelectStatement(selectQuery) { ParentStatement = Statement }, StringBuilder, OptimizationContext, indent, aliasMode, NullabilityContext);
 			MergeSqlBuilderData(sqlBuilder);
 		}
 
@@ -1773,7 +1773,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 				case QueryElementType.SqlQuery        :
 					StringBuilder.AppendLine(OpenParens);
-					BuildSqlBuilder((SelectQuery)table, Indent + 1, false);
+					BuildSqlBuilder((SelectQuery)table, Indent + 1, ColumnAliasMode.CompareFieldNames);
 					AppendIndent().Append(')');
 					break;
 
@@ -3083,7 +3083,11 @@ namespace LinqToDB.Internal.SqlProvider
 						else
 							StringBuilder.AppendLine();
 
-						BuildSqlBuilder((SelectQuery)expr, Indent + 1, BuildStep != Step.FromClause);
+						var aliasMode = ColumnAliasMode.CompareFieldNames;
+						if (BuildStep != Step.FromClause)
+							aliasMode |= ColumnAliasMode.SkipAlias;
+
+						BuildSqlBuilder((SelectQuery)expr, Indent + 1, aliasMode);
 
 						AppendIndent();
 
