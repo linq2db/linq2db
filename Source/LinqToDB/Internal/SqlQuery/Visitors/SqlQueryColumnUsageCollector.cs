@@ -49,7 +49,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
-			column.Expression.VisitParentFirst(this, (v, e) =>
+			column.Expression.VisitParentFirst(this, static (v, e) =>
 			{
 				if (e is SqlFromClause or SqlJoinedTable)
 					return false;
@@ -58,7 +58,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					foreach(var ec in selectClause.Columns)
 					{
-						_usedColumns.Add(ec);
+						v._usedColumns.Add(ec);
+					}
+
+					if (QueryHelper.IsAggregationQuery(selectClause.SelectQuery))
+					{
+						foreach (var ts in selectClause.SelectQuery.From.Tables)
+						{
+							v.Visit(ts.Source);
+						}
 					}
 
 					return false;

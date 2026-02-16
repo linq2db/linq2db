@@ -88,12 +88,18 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (RootContext == null)
 					throw new InvalidOperationException("Root context is not set for aggregation function.");
 
+				var ctxToUse = RootContext;
+				if (ctxToUse.BuildContext is GroupByBuilder.GroupByContext groupBy)
+				{
+					ctxToUse = SequenceHelper.CreateRef(groupBy.Element);
+				}
+
 				var paramToReplace = lambda.Parameters[parameterIndex];
 				var newBody = lambda.Body.Transform(e =>
 				{
 					if (e == paramToReplace)
 					{
-						var contextTyped = RootContext.WithType(e.Type);
+						var contextTyped = ctxToUse.WithType(e.Type);
 						return contextTyped;
 					}
 

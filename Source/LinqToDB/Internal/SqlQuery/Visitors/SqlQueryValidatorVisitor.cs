@@ -159,7 +159,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 				}
 
-				if (!_providerFlags.IsSubQueryOrderBySupported && !selectQuery.OrderBy.IsEmpty && !selectQuery.IsLimited && IsDependsOnOuterSources())
+				if (!_providerFlags.IsSubQueryOrderBySupported && !selectQuery.OrderBy.IsEmpty && !selectQuery.IsLimited() && IsDependsOnOuterSources())
 				{
 					if (_parentQuery?.From.Tables.Count > 0 || IsDependsOnOuterSources())
 					{

@@ -37,7 +37,7 @@ namespace Tests.UserTests
 
 				var selectQuery = query.GetSelectQuery();
 				Assert.That(selectQuery.OrderBy.Items, Has.Count.EqualTo(2));
-				Assert.That(selectQuery.OrderBy.Items[0].Expression.ElementType, Is.EqualTo(QueryElementType.SqlField));
+				Assert.That(selectQuery.OrderBy.Items[0].Expression.ElementType, Is.EqualTo(QueryElementType.Column));
 			}
 		}
 	}

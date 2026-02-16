@@ -229,5 +229,10 @@ namespace Tests
 
 			return res;
 		}
+
+		protected TestDataConnection GetDataConnection()
+		{
+			return new TestDataConnection();
+		}
 	}
 }
