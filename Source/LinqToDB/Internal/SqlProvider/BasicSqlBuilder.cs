@@ -737,7 +737,7 @@ namespace LinqToDB.Internal.SqlProvider
 				AppendIndent();
 				BuildColumnExpression(selectQuery, expr, col.Alias, ref addAlias);
 
-				if (AliasMode == ColumnAliasMode.None && addAlias && !string.IsNullOrEmpty(col.Alias))
+				if (!AliasMode.HasFlag(ColumnAliasMode.SkipAlias) && addAlias && !string.IsNullOrEmpty(col.Alias))
 				{
 					StringBuilder.Append(" as ");
 					Convert(StringBuilder, col.Alias!, ConvertType.NameToQueryFieldAlias);
