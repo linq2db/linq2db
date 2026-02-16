@@ -2262,6 +2262,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 							if (node.Type == typeof(object)
 								|| node.Type.UnwrapNullableType() == node.Operand.Type.UnwrapNullableType()
+								|| node.Type.UnwrapNullableType() == placeholder.Sql.SystemType?.UnwrapNullableType()
 								|| (node.Operand.Type.IsEnum && Enum.GetUnderlyingType(node.Operand.Type) == node.Type)
 								|| (node.Type.IsEnum && Enum.GetUnderlyingType(node.Type) == node.Operand.Type))
 							{
