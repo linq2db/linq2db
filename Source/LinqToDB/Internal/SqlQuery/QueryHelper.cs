@@ -546,7 +546,7 @@ namespace LinqToDB.Internal.SqlQuery
 		static bool IsTransitiveExpression(SqlExpression sqlExpression, bool checkNullability)
 		{
 			if (sqlExpression is { Parameters: [var p] }
-				&& sqlExpression.Expr.Trim() == "{0}" 
+				&& sqlExpression.Expr.Trim() == "{0}"
 				&& (!checkNullability || sqlExpression.CanBeNullable(NullabilityContext.NonQuery) == p.CanBeNullable(NullabilityContext.NonQuery)))
 			{
 				if (p is SqlExpression argExpression)

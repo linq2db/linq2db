@@ -1331,12 +1331,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var result = BuildSqlExpression(contextRef.BuildContext, contextRef);
 
-					if (result is SqlPlaceholderExpression)
+					if (result is SqlPlaceholderExpression placeholder)
 					{
 						if (result.Type != expression.Type)
 						{
-							result = Expression.Convert(result, expression.Type);
-							result = BuildSqlExpression(contextRef.BuildContext, result);
+							result = placeholder.WithType(expression.Type);
 						}
 
 						result = Builder.UpdateNesting(context, result);
