@@ -1014,5 +1014,57 @@ namespace Tests.Linq
 			Assert.That(data[0].Types, Is.Not.Null.And.Length.EqualTo(1));
 			Assert.That(data[0].Types[0], Is.EqualTo(Issue5310Table.PaymentType.One));
 		}
+
+		sealed class Issue5351YonConverterAttribute : ValueConverterAttribute
+		{
+			public Issue5351YonConverterAttribute(string yes, string? no)
+			{
+				ValueConverter = new ValueConverter<bool, string?>(
+					b => b ? yes : no,
+					s => s == yes,
+					handlesNulls: no == null
+				);
+			}
+		}
+
+		[Table(Name = "Issue5351Table")]
+		public class Issue5351TableRaw
+		{
+			[PrimaryKey] public int Id { get; set; }
+			
+			[Column(DataType = DataType.Char, Length = 1, CanBeNull = true)]
+			public string? Test { get; set; }
+
+			public static readonly Issue5351TableRaw[] TestData = new Issue5351TableRaw[]
+			{
+				new () { Id = 1, Test = "X",  },
+				new () { Id = 2, Test = "X", },
+				new () { Id = 3, Test = null,  },
+				new () { Id = 4, Test = null, },
+			};
+		}
+
+		[Table]
+		public class Issue5351Table
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DataType = DataType.Char, Length = 1, CanBeNull = true), Issue5351YonConverter(yes: "X", no: null)]
+			public bool Test { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5351")]
+		public void Issue5351Test([DataSources] string context, [Values] bool inline)
+		{
+			using var db        = GetDataContext(context);
+			db.InlineParameters = inline;
+
+			using var rawTable = db.CreateLocalTable(Issue5351TableRaw.TestData);
+			var       table    = db.GetTable<Issue5351Table>();
+
+			var query = db.GetTable<Issue5351Table>().Where(x => !x.Test);
+			var result = query.ToArray();
+		}
+
 	}
 }
