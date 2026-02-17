@@ -1062,9 +1062,18 @@ namespace Tests.Linq
 			using var rawTable = db.CreateLocalTable(Issue5351TableRaw.TestData);
 			var       table    = db.GetTable<Issue5351Table>();
 
-			var query = db.GetTable<Issue5351Table>().Where(x => !x.Test);
-			var result = query.ToArray();
-		}
+			string key = "Valid";
 
+			var updated = db.GetTable<Issue5351Table>().Update(
+			  x => x.Id == 1, 
+			  x => new() { Test = key == "Invalid" }
+		    );
+
+			var query = db.GetTable<Issue5351Table>().Where(x => !x.Test);
+			var data = query.ToArray();
+
+			Assert.That(updated, Is.EqualTo(1));
+			Assert.That(data, Has.Length.EqualTo(3));
+		}
 	}
 }
