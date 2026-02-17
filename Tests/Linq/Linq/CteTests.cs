@@ -2766,7 +2766,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByOverRecursiveCteField([RecursiveCteContextSource] string context)
+		public void GroupByOverRecursiveCteField([RecursiveCteContextSource(TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
 
@@ -2814,7 +2814,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupByOverRecursiveCteField2([RecursiveCteContextSource] string context)
+		public void GroupByOverRecursiveCteField2([RecursiveCteContextSource(TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
 			using var t1 = db.CreateLocalTable<CteGroupByTable1>();
