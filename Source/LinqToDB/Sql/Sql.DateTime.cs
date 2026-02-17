@@ -199,7 +199,7 @@ namespace LinqToDB
 					_                     => builder.Mapping.GetDbDataType(typeof(long))
 				};
 
-				builder.ResultExpression = new SqlFunction(type, builder.Expression, partSql, startdate, endDate);
+				builder.ResultExpression = new SqlFunction(type, "DATEDIFF", partSql, startdate, endDate);
 			}
 		}
 
@@ -238,7 +238,7 @@ namespace LinqToDB
 
 				var partSql   = new SqlFragment(DatePartToStr(part));
 
-				builder.ResultExpression = new SqlFunction(builder.Mapping.GetDbDataType(typeof(long)), builder.Expression, partSql, startdate, endDate);
+				builder.ResultExpression = new SqlFunction(builder.Mapping.GetDbDataType(typeof(long)), "DATEDIFF", partSql, startdate, endDate);
 			}
 		}
 
