@@ -3525,5 +3525,85 @@ namespace Tests.Linq
 			if (db is DataConnection { DataProvider: FirebirdDataProvider })
 				FirebirdTools.ClearAllPools();
 		}
+
+		public static class Issue5328Types
+		{
+			public sealed class Table1
+			{
+				[PrimaryKey]
+				public int Id { get; set; }
+
+				public static readonly Table1[] Data =
+				[
+					new () { Id = 1 },
+					new () { Id = 2 },
+				];
+			}
+
+			public sealed class Table2
+			{
+				[PrimaryKey]
+				public int Id { get; set; }
+
+				public int? LinkedId { get; set; }
+				public int? CntrctNumber { get; set; }
+				public int? Amount { get; set; }
+
+				public static readonly Table2[] Data =
+				[
+					new () { Id = 1, LinkedId = 1, CntrctNumber = 1, Amount = 1 }
+				];
+			}
+
+			public sealed class Table3
+			{
+				[PrimaryKey]
+				public int Id { get; set; }
+
+				public int? LinkedId { get; set; }
+				public int? CntrctNumber { get; set; }
+				public string? Type { get; set; }
+				public int? Amount { get; set; }
+
+				public static readonly Table3[] Data =
+				[
+					new () { Id = 1, LinkedId = 1, CntrctNumber = 1, Type = "Type1", Amount = 1 },
+					new () { Id = 2, LinkedId = 1, CntrctNumber = 2, Type = "Type2", Amount = 2 },
+				];
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5328")]
+		public void Issue5328Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable(Issue5328Types.Table1.Data);
+			using var t2 = db.CreateLocalTable(Issue5328Types.Table2.Data);
+			using var t3 = db.CreateLocalTable(Issue5328Types.Table3.Data);
+
+			var query = from Table1 in t1
+						 from supplementTotal in (from Table2 in t2.LeftJoin(t2 => t2.LinkedId == Table1.Id)
+												  group Table2 by Table2.CntrctNumber into Table2Group
+												  select new
+												  {
+													  supplementAmount = Table2Group.Sum(can => can.Amount)
+												  }).DefaultIfEmpty()
+						 from transactionsTotals in (from Table3 in t3.LeftJoin(t3 => t3.LinkedId == Table1.Id)
+													 group Table3 by Table3.CntrctNumber into Table3Group
+													 select new
+													 {
+														 amount1 = Table3Group.Where(dt => dt.Type == "Type1").Sum(d => d.Amount),
+														 amount2 = Table3Group.Where(dt => dt.Type == "Type2").Sum(d => d.Amount)
+													 }).DefaultIfEmpty()
+						 select new
+						 {
+							 Table1 = Table1,
+							 AddedAmounts = transactionsTotals.amount1 - supplementTotal.supplementAmount,
+							 Amount1 = transactionsTotals.amount1,
+							 Amount2 = transactionsTotals.amount2,
+						 };
+
+			AssertQuery(query);
+		}
 	}
 }

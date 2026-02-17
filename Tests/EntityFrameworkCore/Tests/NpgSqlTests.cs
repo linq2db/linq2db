@@ -10,8 +10,6 @@ using NodaTime;
 
 using NUnit.Framework;
 
-using Shouldly;
-
 using Tests;
 
 namespace LinqToDB.EntityFrameworkCore.Tests
@@ -118,6 +116,5 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			db.TimeStamps.Where(e => e.TimestampTZ2 == dto).ToLinqToDB().ToArray();
 			db.TimeStamps.Where(e => e.TimestampTZ3 == ins).ToLinqToDB().ToArray();
 		}
-
 	}
 }
