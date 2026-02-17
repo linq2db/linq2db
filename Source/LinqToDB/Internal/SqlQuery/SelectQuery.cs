@@ -339,7 +339,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public SelectQuery CloneQuery()
 		{
-			return this.Clone(e => ReferenceEquals(e, this) && e is not SqlCteTable);
+			return this.Clone(e => e is not SqlCteTable);
 		}
 	}
 }
