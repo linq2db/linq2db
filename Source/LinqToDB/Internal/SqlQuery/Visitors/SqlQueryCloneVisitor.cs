@@ -22,13 +22,26 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		protected override bool ShouldReplace(IQueryElement element)
 		{
-			return base.ShouldReplace(element) || (_cloneFunc == null || _cloneFunc(element));
+			if (element.ElementType == QueryElementType.SqlParameter)
+			{
+				return false;
+			}
+
+			if (_cloneFunc != null)
+			{
+				return _cloneFunc(element);
+			}
+
+			return true;
 		}
 
 		protected internal override IQueryElement VisitSqlCteTable(SqlCteTable element)
 		{
 			if (element.Cte == null || GetReplacement(element.Cte, out var _))
 				return base.VisitSqlCteTable(element);
+
+			if (!ShouldReplace(element))
+				return element;
 
 			// CTE clause is shared between all CTE tables, so we need to clone it before cloning table itself.
 
