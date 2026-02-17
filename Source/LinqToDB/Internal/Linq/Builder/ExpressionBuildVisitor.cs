@@ -831,13 +831,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (_buildPurpose is BuildPurpose.AggregationRoot or BuildPurpose.AssociationRoot)
 					return node;
 
-				if (node.Type == typeof(bool))
-				{
-					var translatedPredicate = ConvertPredicateMethod(node);
-					if (!IsSame(translatedPredicate, node))
-						return Visit(translatedPredicate);
-				}
-
 				if (HandleSubquery(node, out var translated))
 					return Visit(translated);
 			}
