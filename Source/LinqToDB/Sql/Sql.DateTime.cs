@@ -368,14 +368,14 @@ namespace LinqToDB
 				// DATE_PART: double precision
 				var (expStr, dbType, precedence) = part switch
 				{
-					DateParts.Year        => ("DATE_PART('year', {1}::date) - DATE_PART('year', {0}::date)"                                                                          , builder.Mapping.GetDbDataType(typeof(double)) , Precedence.Subtraction),
-					DateParts.Month       => ("(DATE_PART('year', {1}::date) - DATE_PART('year', {0}::date)) * 12 + (DATE_PART('month', {1}'::date) - DATE_PART('month', {0}::date))", builder.Mapping.GetDbDataType(typeof(double)) , Precedence.Additive),
-					DateParts.Week        => ("TRUNC(DATE_PART('day', {1}::timestamp - {0}::timestamp) / 7)"                                                                         , builder.Mapping.GetDbDataType(typeof(int))    , Precedence.Primary),
-					DateParts.Day         => ("EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 86400"                                                                        , builder.Mapping.GetDbDataType(typeof(decimal)), Precedence.Multiplicative),
-					DateParts.Hour        => ("EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 3600"                                                                         , builder.Mapping.GetDbDataType(typeof(decimal)), Precedence.Multiplicative),
-					DateParts.Minute      => ("EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 60"                                                                           , builder.Mapping.GetDbDataType(typeof(decimal)), Precedence.Multiplicative),
-					DateParts.Second      => ("EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp))"                                                                                , builder.Mapping.GetDbDataType(typeof(decimal)), Precedence.Primary),
-					DateParts.Millisecond => ("ROUND(EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) * 1000)"                                                                  , builder.Mapping.GetDbDataType(typeof(int))    , Precedence.Multiplicative),
+					DateParts.Year        => ("DATE_PART('year', {1}::date) - DATE_PART('year', {0}::date)"                                                                         , builder.Mapping.GetDbDataType(typeof(double)) , Precedence.Subtraction),
+					DateParts.Month       => ("(DATE_PART('year', {1}::date) - DATE_PART('year', {0}::date)) * 12 + (DATE_PART('month', {1}::date) - DATE_PART('month', {0}::date))", builder.Mapping.GetDbDataType(typeof(double)) , Precedence.Additive),
+					DateParts.Week        => ("TRUNC(DATE_PART('day', {1}::timestamp - {0}::timestamp) / 7)"                                                                        , builder.Mapping.GetDbDataType(typeof(int))    , Precedence.Primary),
+					DateParts.Day         => ("EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 86400"                                                                       , builder.Mapping.GetDbDataType(typeof(decimal)), Precedence.Multiplicative),
+					DateParts.Hour        => ("EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 3600"                                                                        , builder.Mapping.GetDbDataType(typeof(decimal)), Precedence.Multiplicative),
+					DateParts.Minute      => ("EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) / 60"                                                                          , builder.Mapping.GetDbDataType(typeof(decimal)), Precedence.Multiplicative),
+					DateParts.Second      => ("EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp))"                                                                               , builder.Mapping.GetDbDataType(typeof(decimal)), Precedence.Primary),
+					DateParts.Millisecond => ("ROUND(EXTRACT(EPOCH FROM ({1}::timestamp - {0}::timestamp)) * 1000)"                                                                 , builder.Mapping.GetDbDataType(typeof(int))    , Precedence.Multiplicative),
 					_                     => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
 
