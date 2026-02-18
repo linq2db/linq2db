@@ -120,7 +120,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			var cteContexts = _cteContexts?
 				.ToDictionary(
 					p => cloningContext.CorrectExpression(p.Key),
-					p => cloningContext.CloneContext(p.Value)
+					p => cloningContext.CloneContext(p.Value),
+					ExpressionEqualityComparer.Instance
 				);
 
 			var newVisitor = new ExpressionBuildVisitor(Builder);
