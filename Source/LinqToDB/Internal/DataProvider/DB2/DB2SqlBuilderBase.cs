@@ -82,7 +82,15 @@ namespace LinqToDB.Internal.DataProvider.DB2
 			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, ColumnAliasMode aliasMode, NullabilityContext? nullabilityContext)
+		protected override void BuildSql(
+			int commandNumber,
+			SqlStatement statement,
+			StringBuilder sb,
+			OptimizationContext optimizationContext,
+			int indent,
+			ColumnAliasMode aliasMode,
+			NullabilityContext? nullabilityContext
+		)
 		{
 			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
 
