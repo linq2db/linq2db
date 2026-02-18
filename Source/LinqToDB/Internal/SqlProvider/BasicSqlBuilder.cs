@@ -150,7 +150,7 @@ namespace LinqToDB.Internal.SqlProvider
 		{
 			None              = 0,
 			SkipAlias         = 1 << 0,
-			CompareFieldNames = 1 << 1
+			CompareFieldNames = 1 << 1,
 		}
 
 		#region Helpers
