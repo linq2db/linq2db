@@ -60,7 +60,15 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			StringBuilder.Append("TRUNCATE TABLE ");
 		}
 
-		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, ColumnAliasMode aliasMode, NullabilityContext? nullabilityContext)
+		protected override void BuildSql(
+			int commandNumber,
+			SqlStatement statement,
+			StringBuilder sb,
+			OptimizationContext optimizationContext,
+			int indent,
+			ColumnAliasMode aliasMode,
+			NullabilityContext? nullabilityContext
+		)
 		{
 			base.BuildSql(commandNumber, statement, sb, optimizationContext, indent, aliasMode, nullabilityContext);
 
