@@ -47,7 +47,7 @@ namespace Tests.UserTests
 				var par1  = Expression.Property(castExp, pkName);
 				var par2  = Expression.Constant(type.GetProperty(pkName)?.GetValue(obj));
 				var inner = Expression.Equal(par1, par2);
-				e = e == null ? inner : Expression.And(e, inner);
+				e = e == null ? inner : Expression.AndAlso(e, inner);
 			}
 
 			var query = Expression.Lambda<Func<BasicDto, bool>>(e!, parExp);
