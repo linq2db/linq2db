@@ -5585,6 +5585,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			placeholder = ExpressionBuilder.CreatePlaceholder(parentQuery, column, sqlPlaceholder.Path, sqlPlaceholder.ConvertType, alias, idx, trackingPath: sqlPlaceholder.TrackingPath);
 
+#if DEBUG
+			placeholder.AppendHistory(sqlPlaceholder);
+#endif
+
 			if (!asNew)
 				_columnCache.Add(key, placeholder);
 

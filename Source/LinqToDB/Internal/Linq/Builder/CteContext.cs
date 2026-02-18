@@ -38,9 +38,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			CteExpression = default!;
 		}
 
-		Dictionary<Expression, SqlPlaceholderExpression>                               _knownMap     = new (ExpressionEqualityComparer.Instance);
+		Dictionary<Expression, SqlPlaceholderExpression>                               _knownMap     = new(ExpressionEqualityComparer.Instance);
 		Dictionary<Expression, (SqlField field, SqlPlaceholderExpression placeholder)> _fieldsMap    = new(ExpressionEqualityComparer.Instance);
-		Dictionary<Expression, SqlPlaceholderExpression>                               _recursiveMap = new (ExpressionEqualityComparer.Instance);
+		Dictionary<Expression, SqlPlaceholderExpression>                               _recursiveMap = new(ExpressionEqualityComparer.Instance);
+		Dictionary<Expression, SqlPlaceholderExpression>                               _traverseMap  = new(ExpressionEqualityComparer.Instance);
 
 		bool _isRecursiveCall;
 
@@ -137,18 +138,28 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public SqlPlaceholderExpression RegisterField(Expression? path, SqlPlaceholderExpression placeholder)
 		{
-			if (_fieldsMap.TryGetValue(placeholder.Path, out var pair))
+			if (path != null)
 			{
-				return pair.placeholder;
-			}
+				if (_fieldsMap.TryGetValue(path, out var pair))
+				{
+					return pair.placeholder;
+				}
 
-			if (_knownMap.TryGetValue(placeholder.Path, out var knownPlaceholder))
-			{
-				return knownPlaceholder;
+				if (_knownMap.TryGetValue(path, out var knownPlaceholder))
+				{
+					return knownPlaceholder;
+				}
 			}
 
 			if (SubQueryContext != null)
 				placeholder = Builder.UpdateNesting(SubQueryContext, placeholder);
+
+			var traversed = Builder.BuildTraverseExpression(placeholder.Path);
+
+			if (_traverseMap.TryGetValue(traversed, out var foundPlaceholder))
+			{
+				return foundPlaceholder;
+			}
 
 			if (placeholder.Sql is not SqlColumn column)
 				throw new InvalidOperationException("Invalid SQL.");
@@ -174,7 +185,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (field == null)
 			{
-				if (_recursiveMap.TryGetValue(placeholder.Path, out var recursivePlaceholder))
+				if (_recursiveMap.TryGetValue(path ?? placeholder.Path, out var recursivePlaceholder))
 				{
 					recursiveField = (SqlField)recursivePlaceholder.Sql;
 				}
@@ -218,8 +229,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var newPlaceholder = ExpressionBuilder.CreatePlaceholder(SelectQuery, field, newPlaceholderPath, index: placeholder.Index);
 
-			_fieldsMap[placeholder.Path] = (field, newPlaceholder);
+			_fieldsMap[traversed]         = (field, newPlaceholder);
 			_knownMap[newPlaceholderPath] = newPlaceholder;
+
+			_traverseMap[traversed] = newPlaceholder;
 
 			return newPlaceholder;
 		}
@@ -240,14 +253,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override Expression HandleTranslated(Expression? path, SqlPlaceholderExpression placeholder)
 			{
-				var withNesting = placeholder;
-
-				if (path != null)
-					withNesting = withNesting.WithPath(path).WithTrackingPath(path);
-				else
-					withNesting = withNesting.WithPath(withNesting.TrackingPath ?? withNesting.Path);
-
-				var field = OwnerContext.RegisterField(path, withNesting);
+				var field = OwnerContext.RegisterField(path, placeholder);
 				field = field.WithType(placeholder.Type);
 
 				return field;
