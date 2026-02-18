@@ -168,7 +168,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var index = CteInnerQueryContext == null ? -1 : CteInnerQueryContext.SelectQuery.Select.Columns.IndexOf(column);
 
-			if (index >= 0 && index < CteClause.Fields.Count && CteClause.Fields.Count != index)
+			if (index >= 0 && index < CteClause.Fields.Count)
 			{
 				field = CteClause.Fields[index];
 
