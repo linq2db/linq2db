@@ -196,7 +196,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var nullabilityContext = NullabilityContext.GetContext(CteInnerQueryContext?.SelectQuery);
 				var isNullable         = placeholder.Sql.CanBeNullable(nullabilityContext);
 
-				var alias    = TableLikeHelpers.GenerateColumnAlias(placeholder.TrackingPath!) ?? TableLikeHelpers.GenerateColumnAlias(placeholder.Sql);
+				var alias    = TableLikeHelpers.GenerateColumnAlias(path ?? placeholder.Path!) ?? TableLikeHelpers.GenerateColumnAlias(placeholder.Sql);
 				var dataType = QueryHelper.GetDbDataType(placeholder.Sql, MappingSchema);
 
 				if (recursiveField != null)
