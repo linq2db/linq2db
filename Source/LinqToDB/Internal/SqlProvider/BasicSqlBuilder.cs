@@ -201,7 +201,15 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 		}
 
-		protected virtual void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, ColumnAliasMode aliasMode, NullabilityContext? nullabilityContext)
+		protected virtual void BuildSql(
+			int commandNumber,
+			SqlStatement statement,
+			StringBuilder sb,
+			OptimizationContext optimizationContext,
+			int indent,
+			ColumnAliasMode aliasMode,
+			NullabilityContext? nullabilityContext
+		)
 		{
 			Statement           = statement;
 			StringBuilder       = sb;
