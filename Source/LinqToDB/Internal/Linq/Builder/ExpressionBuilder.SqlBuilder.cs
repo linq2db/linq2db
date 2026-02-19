@@ -171,7 +171,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				// We are trying to simulate what will be with query after optimizer's work
 				//
 				var cloningContext = new CloningContext();
-				cloningContext.CloneElements(context.Builder.GetCteClauses());
 
 				var clonedParentContext = cloningContext.CloneContext(parent);
 				var clonedContext       = cloningContext.CloneContext(context);
@@ -1091,31 +1090,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#region CTE
 
-		Dictionary<Expression, CteContext>? _cteContexts;
-
 		public void RegisterCteContext(CteContext cteContext, Expression cteExpression)
 		{
-			_cteContexts ??= new(ExpressionEqualityComparer.Instance);
-
-			_cteContexts.Add(cteExpression, cteContext);
+			_buildVisitor.RegisterCteContext(cteContext, cteExpression);
 		}
 
 		public CteContext? FindRegisteredCteContext(Expression cteExpression)
 		{
-			if (_cteContexts == null)
-				return null;
-
-			_cteContexts.TryGetValue(cteExpression, out var cteContext);
-
-			return cteContext;
-		}
-
-		public IEnumerable<CteClause>? GetCteClauses()
-		{
-			if (_cteContexts == null)
-				return null;
-
-			return _cteContexts.Values.Select(ctx => ctx.CteClause);
+			return _buildVisitor.FindRegisteredCteContext(cteExpression);
 		}
 
 		#endregion
