@@ -1029,7 +1029,8 @@ namespace LinqToDB.Internal.SqlProvider
 				{
 					SqlTable table when table       == ut => false,
 					SqlField field when field.Table == ut => false,
-					_ => true,
+					SqlCteTable                           => false,
+					_                                     => true,
 				};
 			});
 

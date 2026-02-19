@@ -2304,7 +2304,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					for (var index = 0; index < tableSource.Joins.Count; index++)
 					{
 						var join = tableSource.Joins[index];
-						if (join.JoinType == JoinType.Inner && join.Table.Source is SelectQuery joinQuery)
+						if (join.JoinType == JoinType.Inner && join.Table.Joins.Count == 0 && join.Table.Source is SelectQuery joinQuery)
 						{
 							if (joinQuery.From.Tables.Count == 0)
 							{
