@@ -796,6 +796,8 @@ namespace LinqToDB
 		/// </summary>
 		public IDataContext DataContext => _table.DataContext;
 
+		public QueryDebugView DebugView => _table.DebugView;
+
 		IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options) => _table.GetSqlQueries(options);
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]

@@ -387,6 +387,13 @@ namespace LinqToDB.EntityFrameworkCore
 					continue;
 				}
 
+				var nullableUnderlyingType = Nullable.GetUnderlyingType(modelType);
+				if (nullableUnderlyingType?.IsEnum == true)
+				{
+					MapEnumType(nullableUnderlyingType);
+					continue;
+				}
+
 				// skipping arrays
 				if (modelType.IsArray)
 					continue;

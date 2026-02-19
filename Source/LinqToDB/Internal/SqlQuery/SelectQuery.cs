@@ -76,11 +76,12 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public List<object>     Properties => field ??= new ();
 
-		public bool             IsSimple         => IsSimpleOrSet && !HasSetOperators;
-		public bool             IsSimpleOrSet    => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty && From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0;
-		public bool             IsSimpleButWhere => !HasSetOperators && !Select.HasModifier && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty && From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0;
-		public bool             IsLimited        => Select.SkipValue != null || Select.TakeValue != null;
 		public bool             IsParameterDependent { get; set; }
+
+		public bool IsLimitedToOneRecord()
+		{
+			return Select.TakeValue is SqlValue { Value: 1 };
+		}
 
 		/// <summary>
 		/// Gets or sets flag when sub-query can be removed during optimization.
@@ -338,7 +339,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public SelectQuery CloneQuery()
 		{
-			return this.Clone(e => ReferenceEquals(e, this));
+			return this.Clone(e => e is not SqlCteTable);
 		}
 	}
 }

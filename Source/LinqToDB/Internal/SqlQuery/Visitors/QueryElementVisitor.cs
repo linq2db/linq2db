@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -69,6 +70,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		/// <summary>
 		/// Visitor dispatch method.
 		/// </summary>
+		[DebuggerStepThrough]
 		[return: NotNullIfNotNull(nameof(element))]
 		public virtual IQueryElement? Visit(IQueryElement? element)
 		{
@@ -2084,7 +2086,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							NotifyReplaced(newColumn, oldColumn);
 						}
 
-						return NotifyReplaced(new SqlSelectClause(element.IsDistinct, take, element.TakeHints, skip, newColumns), element);
+						return NotifyReplaced(new SqlSelectClause(element.IsDistinct, take, element.TakeHints, skip, newColumns) { OptimizeDistinct = element.OptimizeDistinct }, element);
 					}
 
 					break;

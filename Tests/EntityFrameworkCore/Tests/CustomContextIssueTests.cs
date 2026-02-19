@@ -355,7 +355,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			optionsBuilder = optionsBuilder.UseNpgsql(
 				connectionString,
-				o => o.MapEnum<Issue4940DBStatus>());
+				o => o.MapEnum<Issue4940DBStatus>().MapEnum<Issue4940DBNullableStatus>());
 
 			using var ctx = new Issue4940Context(optionsBuilder.Options);
 			using var db  = ctx.CreateLinqToDBConnection();
@@ -368,7 +368,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			var notMappedEntitiesForTempTable = new List<Issue4940RecordNotMapped>
 			{
-				new(1, "TempTable", Issue4940DBStatus.Open, Issue4940DBStatus.Open),
+				new(1, "TempTable", Issue4940DBStatus.Open, Issue4940DBNullableStatus.Open),
 				new(2, "TempTable", Issue4940DBStatus.Closed, null)
 			};
 			using var tempTable = db.CreateTempTable(notMappedEntitiesForTempTable);//check valid sql for temp table and insert without parameters
@@ -378,14 +378,14 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			
 			var notMappedEntitiesForBulkCopy = new List<Issue4940RecordNotMapped>
 			{
-				new(4, "BulkCopy", Issue4940DBStatus.Closed, Issue4940DBStatus.Closed),
+				new(4, "BulkCopy", Issue4940DBStatus.Closed, Issue4940DBNullableStatus.Closed),
 				new(5, "BulkCopy", Issue4940DBStatus.Open, null)
 			};
 			tempTable.BulkCopy(new BulkCopyOptions {BulkCopyType = BulkCopyType.ProviderSpecific}, notMappedEntitiesForBulkCopy); //check bulk copy
 
 			var notMappedEntitiesForMerge = new List<Issue4940RecordNotMapped>
 			{
-				new(6, "Merge", Issue4940DBStatus.Open, Issue4940DBStatus.Closed),
+				new(6, "Merge", Issue4940DBStatus.Open, Issue4940DBNullableStatus.Closed),
 				new(7, "Merge", Issue4940DBStatus.Open, null)
 			};
 			tempTable
@@ -424,7 +424,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			optionsBuilder = optionsBuilder.UseNpgsql(
 				connectionString,
-				o => o.MapEnum<Issue4940DBStatus>());
+				o => o.MapEnum<Issue4940DBStatus>().MapEnum<Issue4940DBNullableStatus>());
 
 			using var ctx = new Issue4940Context(optionsBuilder.Options);
 			using var db  = ctx.CreateLinqToDBConnection();
@@ -437,28 +437,28 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			var entitiesForTempTable = new List<Issue4940RecordDb>
 			{
-				new(1, "TempTable", Issue4940DBStatus.Open, Issue4940DBStatus.Closed),
+				new(1, "TempTable", Issue4940DBStatus.Open, Issue4940DBNullableStatus.Closed),
 				new(2, "TempTable", Issue4940DBStatus.Closed, null)
 			};
 			using var tempTable = db.CreateTempTable(entitiesForTempTable, tableName: "issue_4940_temp_table");
 			
 			var entitiesForInsert = new List<Issue4940RecordDb>
 			{
-				new(1, "Insert", Issue4940DBStatus.Open, Issue4940DBStatus.Closed),
+				new(1, "Insert", Issue4940DBStatus.Open, Issue4940DBNullableStatus.Closed),
 				new(2, "Insert", Issue4940DBStatus.Closed, null)
 			};
 			entitiesForInsert.ForEach(x => db.Insert(x));
 			
 			var entitiesForBulkCopy = new List<Issue4940RecordDb>
 			{
-				new(3, "BulkCopy", Issue4940DBStatus.Closed, Issue4940DBStatus.Closed),
+				new(3, "BulkCopy", Issue4940DBStatus.Closed, Issue4940DBNullableStatus.Closed),
 				new(4, "BulkCopy", Issue4940DBStatus.Closed, null)
 			};
 			db.GetTable<Issue4940RecordDb>().BulkCopy(new BulkCopyOptions {BulkCopyType = BulkCopyType.ProviderSpecific}, entitiesForBulkCopy);
 
 			var entitiesForMerge = new List<Issue4940RecordDb>
 			{
-				new(5, "Merge", Issue4940DBStatus.Open, Issue4940DBStatus.Open),
+				new(5, "Merge", Issue4940DBStatus.Open, Issue4940DBNullableStatus.Open),
 				new(6, "Merge", Issue4940DBStatus.Open, null)
 			};
 			db.GetTable<Issue4940RecordDb>()
@@ -500,10 +500,10 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		public record Issue4940RecordDb(
-			int                Id,
-			string             Source,
-			Issue4940DBStatus  Status,
-			Issue4940DBStatus? NullableStatus);
+			int                        Id,
+			string                     Source,
+			Issue4940DBStatus          Status,
+			Issue4940DBNullableStatus? NullableStatus);
 
 		[LinqToDB.Mapping.Table("Issue4940DBRecords", IsColumnAttributeRequired = false)]
 		public record Issue4940RecordDbRaw(
@@ -513,12 +513,18 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			object? NullableStatus);
 
 		public record Issue4940RecordNotMapped(
-			int                Id,
-			string             Source,
-			Issue4940DBStatus  Status,
-			Issue4940DBStatus? NullableStatus);
+			int                        Id,
+			string                     Source,
+			Issue4940DBStatus          Status,
+			Issue4940DBNullableStatus? NullableStatus);
 
 		public enum Issue4940DBStatus
+		{
+			Open,
+			Closed
+		}
+		
+		public enum Issue4940DBNullableStatus
 		{
 			Open,
 			Closed

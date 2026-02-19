@@ -69,6 +69,22 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			return true;
 		}
 
+		public static SqlPlaceholderExpression? TranslateNoRequiredObjectExpression(this ITranslationContext translationContext, Expression? objExpression)
+		{
+			if (objExpression == null)
+				return null;
+
+			if (translationContext.CanBeEvaluatedOnClient(objExpression))
+				return null;
+
+			var obj = translationContext.Translate(objExpression);
+
+			if (obj is not SqlPlaceholderExpression objPlaceholder)
+				return null;
+
+			return objPlaceholder;
+		}
+
 		public static IDisposable? UsingTypeFromExpression(this ITranslationContext translationContext, ISqlExpression? fromExpression)
 		{
 			if (fromExpression is null)

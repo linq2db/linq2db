@@ -377,7 +377,7 @@ namespace LinqToDB.Internal.SqlProvider
 				BuildTableName(merge.Target, true, false);
 
 			StringBuilder
-				.AppendLine("\tWHERE 1 = 0")
+				.AppendLine(" WHERE 1 = 0")
 				.AppendLine(")");
 		}
 
@@ -469,7 +469,7 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				if (merge.Source.SourceQuery != null)
 				{
-					if (!merge.Source.SourceQuery.IsSimple || merge.Source.SourceQuery.Select.Columns.Count != merge.Source.SourceFields.Count)
+					if (!merge.Source.SourceQuery.IsSimple() || merge.Source.SourceQuery.Select.Columns.Count != merge.Source.SourceFields.Count)
 						buildAsEnumerable = false;
 					else
 					{

@@ -649,7 +649,7 @@ END;",
 		{
 			var nullability = NullabilityContext.NonQuery;
 			BuildMultiInsertClause(statement);
-			BuildSqlBuilder((SelectQuery)statement.Source.Source, Indent, skipAlias : false);
+			BuildSqlBuilder((SelectQuery)statement.Source.Source, Indent, ColumnAliasMode.CompareFieldNames);
 		}
 
 		protected void BuildMultiInsertClause(SqlMultiInsertStatement statement)

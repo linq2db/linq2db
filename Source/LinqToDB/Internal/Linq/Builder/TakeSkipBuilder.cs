@@ -46,7 +46,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (!builder.TryConvertToSql(sequence, arg, out expr!))
 						return BuildSequenceResult.Error(arg);
 
-					if (expr.ElementType == QueryElementType.SqlValue && builder.CanBeEvaluatedOnClient(methodCall.Arguments[1]))
+					if (!buildInfo.IsSubQuery && expr.ElementType == QueryElementType.SqlValue && builder.CanBeEvaluatedOnClient(methodCall.Arguments[1]))
 					{
 						var param = builder.ParametersContext.BuildParameter(sequence, methodCall.Arguments[1], null)!;
 

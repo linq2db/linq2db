@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -60,20 +61,36 @@ namespace LinqToDB
 			return newTable;
 		}
 
-		abstract class LoadWithQueryableBase<TEntity>(IQueryable<TEntity> query) : IExpressionQuery
+		abstract class LoadWithQueryableBase<TEntity>(IExpressionQuery<TEntity> query) : IExpressionQuery
 		{
-			public IQueryable<TEntity> Query { get; } = query;
+			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+			public IExpressionQuery<TEntity> Query { get; } = query;
 
-			Expression              IExpressionQuery.Expression                                   => Query.Expression;
-			IDataContext            IExpressionQuery.DataContext                                  => ((IExpressionQuery)Query.GetLinqToDBSource()).DataContext;
+			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+			Expression IExpressionQuery.Expression                                   => Query.Expression;
+
+			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+			IDataContext IExpressionQuery.DataContext                                  => ((IExpressionQuery)Query.GetLinqToDBSource()).DataContext;
+
+			public abstract QueryDebugView DebugView { get; }
+
 			IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options) => ((IExpressionQuery)Query.GetLinqToDBSource()).GetSqlQueries(options);
 		}
 
-		sealed class LoadWithQueryable<TEntity, TProperty>(IQueryable<TEntity> query) : LoadWithQueryableBase<TEntity>(query), ILoadWithQueryable<TEntity, TProperty>, IAsyncEnumerable<TEntity>
+		sealed class LoadWithQueryable<TEntity, TProperty>(IExpressionQuery<TEntity> query) : LoadWithQueryableBase<TEntity>(query), ILoadWithQueryable<TEntity, TProperty>, IAsyncEnumerable<TEntity>
 		{
-			Type           IQueryable.ElementType => Query.ElementType;
-			Expression     IQueryable.Expression  => Query.Expression;
-			IQueryProvider IQueryable.Provider    => Query.Provider;
+			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+			Type IQueryable.ElementType => Query.ElementType;
+
+			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+			IQueryProvider IQueryable.Provider => Query.Provider;
+
+			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+			public IQueryProvider Provider => Query.Provider;
+
+			public Expression Expression => Query.Expression;
+
+			public override QueryDebugView DebugView => Query.DebugView;
 
 			IAsyncEnumerator<TEntity> IAsyncEnumerable<TEntity>.GetAsyncEnumerator(CancellationToken cancellationToken) =>
 				((IAsyncEnumerable<TEntity>)Query).GetAsyncEnumerator(cancellationToken);
@@ -160,7 +177,7 @@ namespace LinqToDB
 				Expression.Quote(selector));
 
 			var result = currentSource.Provider.CreateQuery<TEntity>(expr);
-			return new LoadWithQueryable<TEntity,TProperty>(result);
+			return new LoadWithQueryable<TEntity,TProperty>((IExpressionQuery<TEntity>)result);
 		}
 
 		/// <summary>
@@ -250,7 +267,7 @@ namespace LinqToDB
 				new[] { currentSource.Expression, Expression.Quote(selector), Expression.Quote(loadFunc) });
 
 			var result = currentSource.Provider.CreateQuery<TEntity>(expr);
-			return new LoadWithQueryable<TEntity, TProperty>(result);
+			return new LoadWithQueryable<TEntity, TProperty>((IExpressionQuery<TEntity>)result);
 		}
 
 		/// <summary>
@@ -342,7 +359,7 @@ namespace LinqToDB
 				Expression.Quote(loadFunc));
 
 			var result = currentSource.Provider.CreateQuery<TEntity>(expr);
-			return new LoadWithQueryable<TEntity,TProperty>(result);
+			return new LoadWithQueryable<TEntity,TProperty>((IExpressionQuery<TEntity>)result);
 		}
 
 		/// <summary>
@@ -401,7 +418,7 @@ namespace LinqToDB
 				Expression.Quote(selector));
 
 			var result = currentSource.Provider.CreateQuery<TEntity>(expr);
-			return new LoadWithQueryable<TEntity,TProperty>(result);
+			return new LoadWithQueryable<TEntity,TProperty>((IExpressionQuery<TEntity>)result);
 		}
 
 		/// <summary>
@@ -459,7 +476,7 @@ namespace LinqToDB
 				new[] { currentSource.Expression, Expression.Quote(selector) });
 
 			var result = currentSource.Provider.CreateQuery<TEntity>(expr);
-			return new LoadWithQueryable<TEntity,TProperty>(result);
+			return new LoadWithQueryable<TEntity,TProperty>((IExpressionQuery<TEntity>)result);
 		}
 
 		/// <summary>
@@ -528,7 +545,7 @@ namespace LinqToDB
 				new[] { currentSource.Expression, Expression.Quote(selector), Expression.Quote(loadFunc) });
 
 			var result = currentSource.Provider.CreateQuery<TEntity>(expr);
-			return new LoadWithQueryable<TEntity,TProperty>(result);
+			return new LoadWithQueryable<TEntity,TProperty>((IExpressionQuery<TEntity>)result);
 		}
 
 		/// <summary>
@@ -599,7 +616,7 @@ namespace LinqToDB
 				Expression.Quote(loadFunc));
 
 			var result = currentSource.Provider.CreateQuery<TEntity>(expr);
-			return new LoadWithQueryable<TEntity,TProperty>(result);
+			return new LoadWithQueryable<TEntity,TProperty>((IExpressionQuery<TEntity>)result);
 		}
 
 		/// <summary>
@@ -670,7 +687,7 @@ namespace LinqToDB
 				Expression.Quote(loadFunc));
 
 			var result = currentSource.Provider.CreateQuery<TEntity>(expr);
-			return new LoadWithQueryable<TEntity,TProperty>(result);
+			return new LoadWithQueryable<TEntity,TProperty>((IExpressionQuery<TEntity>)result);
 		}
 
 		/// <summary>
@@ -741,7 +758,7 @@ namespace LinqToDB
 				Expression.Quote(loadFunc));
 
 			var result = currentSource.Provider.CreateQuery<TEntity>(expr);
-			return new LoadWithQueryable<TEntity, TProperty>(result);
+			return new LoadWithQueryable<TEntity, TProperty>((IExpressionQuery<TEntity>)result);
 		}
 		}
 	}
