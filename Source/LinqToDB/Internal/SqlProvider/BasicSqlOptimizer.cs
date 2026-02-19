@@ -994,7 +994,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 					if (join.Table.Source == table)
 					{
-						if (ts.Joins.Skip(j + 1).Any(sj => QueryHelper.IsDependsOnSource(sj, table)))
+						if (ts.Joins.Skip(j + 1).Any(sj => QueryHelper.IsDependsOnSource(sj, join.Table)))
 							return false;
 
 						source = join.Table;

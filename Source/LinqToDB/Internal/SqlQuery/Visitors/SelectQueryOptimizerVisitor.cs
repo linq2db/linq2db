@@ -2373,7 +2373,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						sources ??= QueryHelper.EnumerateAccessibleSources(join.Table).ToList();
 						move = !QueryHelper.IsDependsOnSources(predicate, sources);
 
-						if (!move && !QueryHelper.IsDependsOnSources(predicate, [left]))
+						if (!move && !QueryHelper.IsDependsOnSource(predicate, left))
 						{
 							if (nestedWhereCond == null)
 							{
@@ -2794,7 +2794,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						continue;
 					}
 
-					if (!QueryHelper.IsDependsOnSource(selectQuery, join.Table.Source, [join]) && IsRemovableJoin(join))
+					if (!QueryHelper.IsDependsOnSource(selectQuery, join.Table, [join]) && IsRemovableJoin(join))
 					{
 						table.Joins.RemoveAt(index);
 					}
@@ -2825,7 +2825,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					{
 						if (_providerFlags.IsCrossJoinSupported
 							&& (table.Joins.Count > (_providerFlags.IsCrossJoinSyntaxRequired ? 0 : 1)
-								|| !QueryHelper.IsDependsOnSource(selectQuery.Where, join.Table.Source)))
+								|| !QueryHelper.IsDependsOnSource(selectQuery.Where, join.Table)))
 						{
 							join.JoinType = JoinType.Cross;
 							if (join.Table.Joins.Count > 0)

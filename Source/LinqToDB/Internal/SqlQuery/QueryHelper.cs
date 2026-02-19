@@ -38,7 +38,11 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static bool IsDependsOnSource(IQueryElement testedRoot, ISqlTableSource onSource, IReadOnlyCollection<IQueryElement>? elementsToIgnore = null)
 		{
-			return IsDependsOnSources(testedRoot, new [] { onSource }, elementsToIgnore);
+			var sources = onSource is SqlTableSource source
+				? EnumerateAccessibleSources(source).ToArray()
+				: [onSource];
+
+			return IsDependsOnSources(testedRoot, sources, elementsToIgnore);
 		}
 
 		public static bool IsDependsOnSources(IQueryElement testedRoot, IReadOnlyCollection<ISqlTableSource> onSources, IReadOnlyCollection<IQueryElement>? elementsToIgnore = null)
