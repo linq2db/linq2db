@@ -35,6 +35,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		public override void Cleanup()
 		{
 			_parentQuery         = null;
+			_fakeJoin            = null;
 			_providerFlags       = default!;
 			_isValid             = true;
 			_columnSubqueryLevel = default;
