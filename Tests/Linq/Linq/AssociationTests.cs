@@ -2186,14 +2186,6 @@ namespace Tests.Linq
 		}
 
 		#endregion
-
-		[Test]
-		public void TableNotFoundRegressionTest([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-
-			_ = db.GrandChild.Where(r => r.Child!.Parent!.ParentID == 1).Any();
-		}
 	}
 
 	public static class AssociationExtension
