@@ -2825,7 +2825,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					{
 						if (_providerFlags.IsCrossJoinSupported
 							&& (table.Joins.Count > (_providerFlags.IsCrossJoinSyntaxRequired ? 0 : 1)
-								|| !QueryHelper.IsDependsOnSource(selectQuery.Where, join.Table)))
+								|| !QueryHelper.IsDependsOnSource(selectQuery.Where, join.Table.Source)))
 						{
 							join.JoinType = JoinType.Cross;
 							if (join.Table.Joins.Count > 0)
