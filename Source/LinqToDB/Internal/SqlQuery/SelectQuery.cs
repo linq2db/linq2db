@@ -217,18 +217,18 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override QueryElementType ElementType => QueryElementType.SqlQuery;
 
-		public override bool CanBeNullable(NullabilityContext nullability)
+	public override bool CanBeNullable(NullabilityContext nullability)
+	{
+		if (!this.IsLimited() && !this.HasSetOperators && !this.HasGroupBy() && !this.HasHaving() && this.IsSingleColumn()
+		    && QueryHelper.IsAggregationQuery(this))
 		{
-			foreach(var column in Select.Columns)
-				if (column.CanBeNullable(nullability))
-					return true;
-
-			var allAggregation = Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression));
-			if (allAggregation)
-				return false;
-
-			return true;
+			// For scalar aggregation queries (no GROUP BY), delegate nullability to the aggregation function
+			// e.g., COUNT(*) is never nullable, but SUM/AVG/MAX can be nullable
+			return Select.Columns[0].CanBeNullable(nullability);
 		}
+
+		return true;
+	}
 
 		public override int Precedence => LinqToDB.SqlQuery.Precedence.Unknown;
 
