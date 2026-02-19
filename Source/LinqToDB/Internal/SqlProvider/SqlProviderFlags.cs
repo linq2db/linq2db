@@ -561,7 +561,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <summary>
 		/// Indicates that provider supports simple COALESCE translation without complex translation.
 		/// </summary>
-		[DataMember(Order = 63), DefaultValue(true)]
+		[DataMember(Order = 65), DefaultValue(true)]
 		public bool IsSimpleCoalesceSupported { get; set; } = true;
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)

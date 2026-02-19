@@ -1548,6 +1548,91 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return true;
 		}
 
+		bool IsValidForOrderBy(SelectQuery parentQuery, SelectQuery subQuery, bool forMovingToColumn)
+		{
+			if (parentQuery.OrderBy.IsEmpty)
+			{
+				return true;
+			}
+
+			if (!_providerFlags.IsOrderBySubQuerySupported)
+			{
+				if (parentQuery.OrderBy.Any(e =>
+				    {
+					    if (e is SqlColumn column && column.Parent == subQuery)
+					    {
+						    if (forMovingToColumn)
+							    return true;
+						    return column.Expression.Any(ce => ce is SelectQuery);
+					    }
+
+					    return false;
+				    }))
+				{
+					return false;
+				}
+			}
+
+			if (!_providerFlags.IsOrderByAggregateFunctionSupported)
+			{
+
+				if (parentQuery.OrderBy.Any(e =>
+				    {
+					    if (e is SqlColumn column && column.Parent == subQuery)
+					    {
+						    return column.Expression.Any(QueryHelper.IsAggregationFunction);
+					    }
+
+					    return false;
+				    }))
+				{
+					return false;
+				}
+			}
+
+			if (!_providerFlags.IsOrderByAggregateSubquerySupported)
+			{
+				if (parentQuery.OrderBy.Any(e =>
+				    {
+					    if (e is SqlColumn column && column.Parent == subQuery)
+					    {
+						    if (forMovingToColumn)
+						    {
+							    return IsAggregationQuery(subQuery);
+						    }
+						    else
+						    {
+							    return column.Expression.Any(ce =>
+							    {
+								    if (ce is SelectQuery sq)
+								    {
+									    return IsAggregationQuery(sq);
+								    }
+
+								    return false;
+							    });
+						    }
+					    }
+
+					    return false;
+				    }))
+				{
+					return false;
+				}
+			}
+
+			return true;
+
+			static bool IsAggregationQuery(SelectQuery query)
+			{
+				if (!query.GroupBy.IsEmpty)
+					return true;
+				if (query.Select.Columns.Any(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
+					return true;
+				return false;
+			}
+		}
+
 		bool IsMovingUpValid(SelectQuery parentQuery, SqlTableSource tableSource, SelectQuery subQuery, out HashSet<ISqlPredicate>? havingDetected)
 		{
 			havingDetected = null;
@@ -1580,22 +1665,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					return false;
 			}
 
-			if (parentQuery.HasOrderBy() && !_providerFlags.IsOrderByAggregateFunctionSupported)
+			if (!IsValidForOrderBy(parentQuery, subQuery, false))
 			{
-				if (parentQuery.OrderBy.Items.Select(o => o.Expression).Any(e =>
-				    {
-					    if (QueryHelper.UnwrapNullablity(e) is SqlColumn column)
-					    {
-							if (column.Parent == subQuery)
-								return QueryHelper.ContainsAggregationFunction(column.Expression);
-					    }
-
-					    return false;
-				    }))
-				{
-					// not allowed to move to parent if it has aggregates
-					return false;
-				}
+				return false;
 			}
 
 			if (parentQuery.HasGroupBy())
@@ -3002,7 +3074,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		void MoveToSubQuery(SelectQuery query)
 		{
 			var subQuery = MoveTablesToSubQuery(query);
-			subQuery.DoNotRemove = true;
 		}
 
 		SelectQuery MoveTablesToSubQuery(SelectQuery query)
