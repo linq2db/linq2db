@@ -192,6 +192,10 @@ namespace Tests
 		public const string AllAccessJet   = $"{ProviderName.AccessJetOdbc},{ProviderName.AccessJetOleDb}";
 		#endregion
 
+		#region SQLCe
+		public const string AllSqlCe = $"{ProviderName.SqlCe}";
+		#endregion
+
 		#region Oracle
 		public const string Oracle11DevartDirect   = "Oracle.11.Devart.Direct";
 		public const string Oracle11DevartOCI      = "Oracle.11.Devart.OCI";
