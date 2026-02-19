@@ -1002,7 +1002,7 @@ namespace LinqToDB.Internal.SqlProvider
 						ts.Joins.RemoveAt(j);
 						query.Where.ConcatSearchCondition(join.Condition);
 
-						for (var sj = 0; j < join.Table.Joins.Count; j++)
+						for (var sj = 0; sj < join.Table.Joins.Count; sj++)
 						{
 							ts.Joins.Insert(j + sj, join.Table.Joins[sj]);
 						}
