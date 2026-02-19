@@ -1398,7 +1398,12 @@ namespace LinqToDB.Internal.SqlProvider
 
 				if (item.Column is SqlRowExpression && item.Expression is SelectQuery subQuery)
 				{
-					if (subQuery.Select.Columns is [var column])
+					if (subQuery.HasNoTables())
+					{
+						var rowValues = subQuery.Select.Columns.Select(c => c.Expression).ToArray();
+						item.Expression = new SqlRowExpression(rowValues);
+					}
+					else if (subQuery.Select.Columns is [var column])
 					{
 						if (column.Expression is SelectQuery { From.Tables: [] } columnQuery)
 						{
