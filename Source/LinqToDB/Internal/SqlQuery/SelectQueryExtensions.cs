@@ -106,8 +106,20 @@ namespace LinqToDB.Internal.SqlQuery
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsSimpleOrSet(this SelectQuery selectQuery)
 		{
-			return !selectQuery.Select.HasModifier && !selectQuery.HasWhere()   && !selectQuery.HasGroupBy() 
+			return !selectQuery.Select.HasModifier && !selectQuery.HasWhere()   && !selectQuery.HasGroupBy()
 			       && !selectQuery.HasHaving()     && !selectQuery.HasOrderBy() && selectQuery.From.Tables is [{ Joins.Count: 0 }];
+		}
+
+		/// <summary>
+		/// Determines whether the specified query selects exactly one column.
+		/// </summary>
+		/// <param name="selectQuery">The query to evaluate. Cannot be null.</param>
+		/// <returns>true if the query selects exactly one column; otherwise, false.</returns>
+		[DebuggerStepThrough]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsSingleColumn(this SelectQuery selectQuery)
+		{
+			return selectQuery.Select.Columns.Count == 1;
 		}
 	}
 }
