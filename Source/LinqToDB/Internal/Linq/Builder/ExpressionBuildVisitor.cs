@@ -3972,9 +3972,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (BuildContext == null)
 				throw new InvalidOperationException();
 
-			ISqlExpression? l = null;
-			ISqlExpression? r = null;
-
 			var nullability = NullabilityContext.GetContext(BuildContext.SelectQuery);
 
 			using var saveFlags      = UsingBuildFlags((_buildFlags | BuildFlags.ForKeys) & ~BuildFlags.ForMemberRoot);
@@ -4018,15 +4015,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (rightExpr is SqlErrorExpression rightError)
 				return rightError.WithType(typeof(bool));
 
-			if (leftExpr is SqlPlaceholderExpression placeholderLeft)
-			{
-				l = placeholderLeft.Sql;
-			}
-
-			if (rightExpr is SqlPlaceholderExpression placeholderRight)
-			{
-				r = placeholderRight.Sql;
-			}
+			var leftPlaceholder = leftExpr as SqlPlaceholderExpression;
+			var rightPlaceholder = rightExpr as SqlPlaceholderExpression;
 
 			switch (nodeType)
 			{
@@ -4035,7 +4025,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var isNot = nodeType == ExpressionType.NotEqual;
 
-					if (l != null && r != null)
+					if (leftPlaceholder != null && rightPlaceholder != null)
 						break;
 
 					leftExpr  = Builder.ParseGenericConstructor(leftExpr.UnwrapAdjustType(),  ProjectFlags.SQL | ProjectFlags.Keys, CurrentDescriptor);
@@ -4089,7 +4079,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						return GenerateNullComparison(leftExpr, isNot);
 					}
 
-					if (l == null || r == null)
+					if (leftPlaceholder == null || rightPlaceholder == null)
 					{
 						var pathComparison = GeneratePathComparison(left, SequenceHelper.UnwrapDefaultIfEmpty(leftExpr), right, SequenceHelper.UnwrapDefaultIfEmpty(rightExpr));
 
@@ -4117,19 +4107,22 @@ namespace LinqToDB.Internal.Linq.Builder
 					return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, p), GetOriginalExpression());
 			}
 
-			if (l is null)
+			if (leftPlaceholder is null)
 			{
-				if (Visit(left) is not SqlPlaceholderExpression leftPlaceholder)
+				leftPlaceholder = Visit(left) as SqlPlaceholderExpression;
+				if (leftPlaceholder is null)
 					return GetOriginalExpression();
-				l = leftPlaceholder.Sql;
 			}
 
-			if (r is null)
+			if (rightPlaceholder is null)
 			{
-				if (Visit(right) is not SqlPlaceholderExpression rightPlaceholder)
+				rightPlaceholder = Visit(right) as SqlPlaceholderExpression;
+				if (rightPlaceholder is null)
 					return GetOriginalExpression();
-				r = rightPlaceholder.Sql;
 			}
+
+			var l = leftPlaceholder.Sql;
+			var r = rightPlaceholder.Sql;
 
 			var lOriginal = l;
 			var rOriginal = r;
@@ -5104,7 +5097,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			using var snapshot = _gettingSubquery == 0 && Builder.ValidateSubqueries ? CreateSnapshot() : null;
 
 			++_gettingSubquery;
-			var buildResult = Builder.TryBuildSequence(info);
+			// reset flags to avoid affecting subquery building with flags that are only relevant for current level
+			using var saveFlags   = UsingBuildFlags(BuildFlags.None | BuildFlags.ResetPrevious);
+
+			var       buildResult = Builder.TryBuildSequence(info);
 			--_gettingSubquery;
 
 			if (expr is ContextRefExpression contextRef && ReferenceEquals(contextRef.BuildContext, buildResult.BuildContext))

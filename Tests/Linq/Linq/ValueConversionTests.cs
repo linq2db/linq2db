@@ -1064,16 +1064,24 @@ namespace Tests.Linq
 
 			string key = "Valid";
 
-			var updated = db.GetTable<Issue5351Table>().Update(
+			var updatedFalse = db.GetTable<Issue5351Table>().Update(
 			  x => x.Id == 1, 
 			  x => new() { Test = key == "Invalid" }
 		    );
 
-			var query = db.GetTable<Issue5351Table>().Where(x => !x.Test);
-			var data = query.ToArray();
+			var updatedFalseRecord = db.GetTable<Issue5351Table>().Where(x => x.Id == 1).Single();
 
-			Assert.That(updated, Is.EqualTo(1));
-			Assert.That(data, Has.Length.EqualTo(3));
+			updatedFalseRecord.Test.ShouldBeFalse();
+
+			var updatedTrue = db.GetTable<Issue5351Table>().Update(
+				x => x.Id == 2,
+				x => new() { Test = key == "Valid" }
+			);
+
+			var updatedTrueRecord = db.GetTable<Issue5351Table>().Where(x => x.Id == 2).Single();
+			updatedTrueRecord.Test.ShouldBeTrue();
+
+			var trueRecords = db.GetTable<Issue5351Table>().Where(x => x.Test == (key == "Valid")).ToArray();
 		}
 	}
 }
