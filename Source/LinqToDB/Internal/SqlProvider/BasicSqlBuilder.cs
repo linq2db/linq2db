@@ -3900,23 +3900,20 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <param name="canBeNull">Type could store <c>NULL</c> values (could be used for column table type generation or for databases with explicit typee nullability like ClickHouse).</param>
 		protected virtual void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			StringBuilder.Append(
-				type.DataType switch
-				{
-					DataType.Double  => "Float",
-					DataType.Single  => "Real",
-					DataType.SByte   => "TinyInt",
-					DataType.UInt16  => "Int",
-					DataType.UInt32  => "BigInt",
-					DataType.UInt64  => "Decimal",
-					DataType.Byte    => "TinyInt",
-					DataType.Int16   => "SmallInt",
-					DataType.Int32   => "Int",
-					DataType.Int64   => "BigInt",
-					DataType.Boolean => "Bit",
-					_ => "",
-				}
-			);
+			switch (type.DataType)
+			{
+				case DataType.Double : StringBuilder.Append("Float");    return;
+				case DataType.Single : StringBuilder.Append("Real");     return;
+				case DataType.SByte  : StringBuilder.Append("TinyInt");  return;
+				case DataType.UInt16 : StringBuilder.Append("Int");      return;
+				case DataType.UInt32 : StringBuilder.Append("BigInt");   return;
+				case DataType.UInt64 : StringBuilder.Append("Decimal");  return;
+				case DataType.Byte   : StringBuilder.Append("TinyInt");  return;
+				case DataType.Int16  : StringBuilder.Append("SmallInt"); return;
+				case DataType.Int32  : StringBuilder.Append("Int");      return;
+				case DataType.Int64  : StringBuilder.Append("BigInt");   return;
+				case DataType.Boolean: StringBuilder.Append("Bit");      return;
+			}
 
 			StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.DataType}");
 
@@ -4557,13 +4554,13 @@ namespace LinqToDB.Internal.SqlProvider
 			if ((TableIDs?.TryGetValue(id.ID, out var path)) != true)
 				throw new InvalidOperationException($"Table ID '{id.ID}' is not defined.");
 
-				return id.Type switch
-				{
-					Sql.SqlIDType.TableAlias => path!.TableAlias,
-					Sql.SqlIDType.TableName  => path!.TableName,
-					Sql.SqlIDType.TableSpec  => path!.TableSpec,
+			return id.Type switch
+			{
+				Sql.SqlIDType.TableAlias => path!.TableAlias,
+				Sql.SqlIDType.TableName => path!.TableName,
+				Sql.SqlIDType.TableSpec => path!.TableSpec,
 				_ => throw new InvalidOperationException($"Unknown SqlID Type '{id.Type}'."),
-				};
+			};
 		}
 
 		int  _testReplaceNumber;
