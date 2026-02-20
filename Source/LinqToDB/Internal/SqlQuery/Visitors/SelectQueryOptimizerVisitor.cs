@@ -3080,6 +3080,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			bool? isSingleRecord = null;
 
+			if (join.Cardinality.HasFlag(SourceCardinality.One))
+				isSingleRecord = true;
+
 			if (join.JoinType is JoinType.CrossApply or JoinType.Inner)
 			{
 				if (!join.IsSubqueryExpression)
