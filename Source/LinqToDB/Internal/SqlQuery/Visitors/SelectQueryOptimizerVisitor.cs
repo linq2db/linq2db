@@ -2236,39 +2236,42 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			for (var i = 0; i < selectQuery.From.Tables.Count; i++)
 			{
 				var tableSource = selectQuery.From.Tables[i];
-				if (tableSource.Joins.Count == 0 && tableSource.Source is SelectQuery { From.Tables.Count: 0, HasSetOperators: false } subQuery)
+				if (tableSource.Source is SelectQuery { HasSetOperators: false, DoNotRemove: false } subQuery && subQuery.HasNoTables())
 				{
-					if (selectQuery.From.Tables.Count == 1)
+					if (tableSource.Joins.Count == 0)
 					{
-						if (selectQuery.HasGroupBy()
-						    || selectQuery.HasHaving()
-						    || selectQuery.HasOrderBy())
+						if (selectQuery.From.Tables.Count == 1)
 						{
-							continue;
+							if (selectQuery.HasGroupBy()
+							    || selectQuery.HasHaving()
+							    || selectQuery.HasOrderBy())
+							{
+								continue;
+							}
 						}
+
+						if (subQuery.HasWhere())
+						{
+							if (!QueryHelper.IsAggregationQuery(selectQuery))
+								continue;
+						}
+
+						replaced = true;
+
+						foreach (var c in subQuery.Select.Columns)
+						{
+							NotifyReplaced(c.Expression, c);
+						}
+
+						if (subQuery.HasWhere())
+						{
+							selectQuery.Where.SearchCondition = QueryHelper.MergeConditions(selectQuery.Where.SearchCondition, subQuery.Where.SearchCondition);
+						}
+
+						selectQuery.From.Tables.RemoveAt(i);
+
+						--i; // repeat again
 					}
-
-					if (subQuery.HasWhere())
-					{
-						if (!QueryHelper.IsAggregationQuery(selectQuery))
-							continue;
-					}
-
-					replaced = true;
-
-					foreach (var c in subQuery.Select.Columns)
-					{
-						NotifyReplaced(c.Expression, c);
-					}
-
-					if (subQuery.HasWhere())
-					{
-						selectQuery.Where.SearchCondition = QueryHelper.MergeConditions(selectQuery.Where.SearchCondition, subQuery.Where.SearchCondition);
-					}
-
-					selectQuery.From.Tables.RemoveAt(i);
-
-					--i; // repeat again
 				}
 			}
 
@@ -3064,6 +3067,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return false;
 			}
 
+			if (join.Table.HasJoins())
+			{
+				return false;
+			}
+
 			var joinQuery       = join.Table.Source as SelectQuery;
 			if (joinQuery == null || joinQuery.Select.Columns.Count == 0)
 			{
@@ -3109,9 +3117,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (_updateTable != null && joinQuery.HasElement(_updateTable))
 				return false;
 
-			var isNoTableQuery = joinQuery.From.Tables.Count == 0;
-
-			if (!isNoTableQuery)
+			if (!joinQuery.HasNoTables())
 			{
 				if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery: parentQuery, fakeJoin: null, columnSubqueryLevel: 0, _providerFlags, out _))
 					return false;
