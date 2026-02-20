@@ -167,7 +167,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			var groupContextRef = new ContextRefExpression(groupBy.GetInterfaceGroupingType(), groupBy);
 			var keyExpr         = Expression.PropertyOrField(groupContextRef, nameof(IGrouping<,>.Key));
 
-			var groupingKeys = builder.BuildSqlExpression(groupBy, keyExpr, BuildPurpose.Sql, BuildFlags.ForKeys);
+			// Don't use BuildFlags.ForKeys for GROUP BY - we need all entity fields, not just PK
+			// Using ForKeys would filter entities to only their primary key columns, making non-PK
+			// fields inaccessible in the result (Issue #5362)
+			var groupingKeys = builder.BuildSqlExpression(groupBy, keyExpr, BuildPurpose.Sql, BuildFlags.None);
+
 
 			if (groupingKeys is SqlErrorExpression)
 			{
@@ -225,7 +229,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					hasSets = true;
 					var setExpr = builder.BuildSqlExpression(onSequence, groupingSet,
-						buildPurpose: BuildPurpose.Sql, buildFlags: BuildFlags.ForKeys);
+						buildPurpose: BuildPurpose.Sql, buildFlags: BuildFlags.None);
 
 					if (!SequenceHelper.IsSqlReady(setExpr))
 					{
@@ -365,7 +369,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (!ExpressionEqualityComparer.Instance.Equals(result, path) && (flags.IsSql() || flags.IsExpression() || flags.IsExtractProjection() || flags.IsExpand()))
 				{
-					result = Builder.BuildSqlExpression(this, result, BuildPurpose.Sql, BuildFlags.ForKeys);
+					result = Builder.BuildSqlExpression(this, result, BuildPurpose.Sql, BuildFlags.None);
 
 					if (result is SqlErrorExpression)
 						return SqlErrorExpression.EnsureError(result, path.Type);
@@ -545,7 +549,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						var keyRef  = new ContextRefExpression(currentMemberExpr.Type, _key);
 						var keyPath = me.Replace(currentMemberExpr, keyRef);
 
-						var result = Builder.BuildExpression(_key, keyPath, BuildFlags.ForKeys);
+						var result = Builder.BuildExpression(_key, keyPath, BuildFlags.None);
 
 						if (ExpressionEqualityComparer.Instance.Equals(result, keyPath) && flags.IsSqlOrExpression())
 							return SqlErrorExpression.EnsureError(path);
