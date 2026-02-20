@@ -102,14 +102,14 @@ namespace LinqToDB.Internal.SqlQuery
 			internal set => _uniqueKeys = value;
 		}
 
-		public  bool                   HasUniqueKeys => _uniqueKeys?.Count > 0;
+		public bool HasUniqueKeys => _uniqueKeys?.Count > 0;
 
 		#endregion
 
 		#region Union
 
 		private List<SqlSetOperator>? _setOperators;
-		public  List<SqlSetOperator>  SetOperators
+		public List<SqlSetOperator> SetOperators
 		{
 			get => _setOperators ??= [];
 			internal set => _setOperators = value;
@@ -218,20 +218,20 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override bool CanBeNullable(NullabilityContext nullability)
 		{
-			foreach(var column in Select.Columns)
-				if (column.CanBeNullable(nullability))
-					return true;
-
-			var allAggregation = Select.Columns.TrueForAll(c => QueryHelper.IsAggregationFunction(c.Expression));
-			if (allAggregation)
-				return false;
+			if (this is { IsLimited: false, HasSetOperators: false, HasGroupBy: false, HasHaving: false, IsSingleColumn: true }
+				&& QueryHelper.IsAggregationQuery(this))
+			{
+				// For scalar aggregation queries (no GROUP BY), delegate nullability to the aggregation function
+				// e.g., COUNT(*) is never nullable, but SUM/AVG/MAX can be nullable
+				return Select.Columns[0].CanBeNullable(nullability);
+			}
 
 			return true;
 		}
 
 		public override int Precedence => LinqToDB.SqlQuery.Precedence.Unknown;
 
-		public override bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			return ReferenceEquals(this, other);
 		}
@@ -346,7 +346,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public SelectQuery CloneQuery()
 		{
-			return this.Clone(e => ReferenceEquals(e, this));
+			return this.Clone(e => e is not SqlCteTable);
 		}
 	}
 }

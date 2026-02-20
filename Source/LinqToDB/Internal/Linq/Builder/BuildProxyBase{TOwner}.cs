@@ -39,7 +39,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		public override MappingSchema MappingSchema => OwnerContext.MappingSchema;
 		public override Expression    MakeExpression(Expression path,  ProjectFlags flags)
 		{
-			if (flags.IsRoot() || flags.IsAssociationRoot())
+			if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsExpand())
 				return path;
 
 			Expression currentExpression;

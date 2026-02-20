@@ -229,7 +229,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			Expression[]           previousKeys)
 		{
 			var cloningContext = new CloningContext();
-			cloningContext.CloneElements(buildContext.Builder.GetCteClauses());
 
 			var itemType = eagerLoad.Type.GetItemType();
 

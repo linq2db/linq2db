@@ -447,7 +447,12 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 
 					using var savedDescriptor = builder.UsingColumnDescriptor(columnDescriptor);
-					var sqlExpr = builder.BuildSqlExpression(valuesContext, valueExpression, BuildPurpose.Sql, envelope.ForceParameter ? BuildFlags.ForceParameter : BuildFlags.None);
+
+					var buildFlags = BuildFlags.ForceOuter;
+					if (envelope.ForceParameter)
+						buildFlags |= BuildFlags.ForceParameter;
+
+					var sqlExpr = builder.BuildSqlExpression(valuesContext, valueExpression, BuildPurpose.Sql, buildFlags);
 
 					if (sqlExpr is not SqlPlaceholderExpression placeholder)
 					{

@@ -29,8 +29,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var outerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], buildInfo.SelectQuery));
-			var innerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+			var outerContextResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], buildInfo.SelectQuery));
+			if (outerContextResult.BuildContext == null)
+				return outerContextResult;
+
+			var innerContextResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+			if (innerContextResult.BuildContext == null)
+				return innerContextResult;
+
+			var outerContext = outerContextResult.BuildContext;
+			var innerContext = innerContextResult.BuildContext;
 
 			outerContext = new SubQueryContext(outerContext);
 			innerContext = new SubQueryContext(innerContext);

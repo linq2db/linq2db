@@ -9,22 +9,19 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
-	internal sealed class CteTableContext: BuildContextBase, ITableContext
+	internal sealed class CteTableContext : BuildContextBase, ITableContext
 	{
-		public override  MappingSchema MappingSchema => CteContext.MappingSchema;
+		public override MappingSchema MappingSchema => CteContext.MappingSchema;
 
-		public CteContext  CteContext { get; set; }
+		public CteContext CteContext { get; set; }
 
 		public SqlCteTable CteTable
 		{
-			get
+			get => field ??= CteContext switch
 			{
-				return field ??= CteContext switch
-				{
-					{ CteClause: var clause } => new SqlCteTable(clause, ObjectType),
-					_ => throw new InvalidOperationException("CteContext not initialized"),
-				};
-			}
+				{ CteClause: var clause } => new SqlCteTable(clause, ObjectType),
+				_ => throw new InvalidOperationException("CteContext not initialized"),
+			};
 			set;
 		}
 
@@ -78,7 +75,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsTable() || flags.IsAggregationRoot() || flags.IsSubquery() || flags.IsTraverse())
+			if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsTable() || flags.IsAggregationRoot() || flags.IsSubquery() || flags.IsTraverse() || flags.IsExpand())
 				return path;
 
 			if (flags.IsExtractProjection())
@@ -189,12 +186,22 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override IBuildContext Clone(CloningContext context)
 		{
-			var newContext = new CteTableContext(TranslationModifier, Builder, Parent, ObjectType, context.CloneElement(SelectQuery))
+			var newContext = new CteTableContext(TranslationModifier, Builder, Parent, ObjectType, SelectQuery)
 			{
 				LoadWithRoot = LoadWithRoot,
+				CteTable = context.CloneElement(CteTable),
 			};
+
 			context.RegisterCloned(this, newContext);
-			newContext.CteContext = context.CloneContext(CteContext);
+
+			foreach (var fm in _fieldsMap)
+			{
+				newContext._fieldsMap.Add(fm.Key, context.CloneExpression(fm.Value));
+			}
+
+			newContext.CteContext  = context.CloneContext(CteContext);
+			newContext.SelectQuery = context.CloneElement(SelectQuery);
+
 			return newContext;
 		}
 

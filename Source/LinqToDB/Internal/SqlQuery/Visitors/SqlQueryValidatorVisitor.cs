@@ -10,10 +10,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 {
 	public class SqlQueryValidatorVisitor : QueryElementVisitor
 	{
-		SelectQuery?     _parentQuery;
-		SqlJoinedTable?  _fakeJoin;
-		SqlProviderFlags _providerFlags = default!;
-		int?             _columnSubqueryLevel;
+		SelectQuery?           _parentQuery;
+		SqlJoinedTable?        _fakeJoin;
+		SqlProviderFlags       _providerFlags = default!;
+		int?                   _columnSubqueryLevel;
+		Stack<ISqlExpression>? _ignoredExpressions;
 
 		bool    _isValid;
 		string? _errorMessage;
@@ -39,6 +40,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_isValid             = true;
 			_columnSubqueryLevel = default;
 			_errorMessage        = default!;
+			_ignoredExpressions  = null;
 
 			base.Cleanup();
 		}
@@ -411,6 +413,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
+			if (_ignoredExpressions != null && _ignoredExpressions.Contains(expression))
+				return expression;
+
 			var saveLevel = _columnSubqueryLevel;
 
 			_columnSubqueryLevel = 0;
@@ -420,6 +425,48 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_columnSubqueryLevel = saveLevel;
 
 			return expression;
+		}
+
+		protected internal override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
+		{
+			_ignoredExpressions ??= new Stack<ISqlExpression>();
+
+			foreach (var item in element.Update.Items)
+			{
+				if (item.Expression != null)
+					_ignoredExpressions.Push(item.Expression);
+			}
+
+			var result = base.VisitSqlUpdateStatement(element);
+
+			foreach (var item in element.Update.Items)
+			{
+				if (item.Expression != null)
+					_ignoredExpressions.Pop();
+			}
+
+			return result;
+		}
+
+		protected internal override IQueryElement VisitSqlInsertOrUpdateStatement(SqlInsertOrUpdateStatement element)
+		{
+			_ignoredExpressions ??= new Stack<ISqlExpression>();
+
+			foreach (var item in element.Update.Items)
+			{
+				if (item.Expression != null)
+					_ignoredExpressions.Push(item.Expression);
+			}
+
+			var result = base.VisitSqlInsertOrUpdateStatement(element);
+
+			foreach (var item in element.Update.Items)
+			{
+				if (item.Expression != null)
+					_ignoredExpressions.Pop();
+			}
+
+			return result;
 		}
 	}
 }

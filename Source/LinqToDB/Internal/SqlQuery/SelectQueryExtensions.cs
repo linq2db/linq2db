@@ -78,6 +78,13 @@ namespace LinqToDB.Internal.SqlQuery
 					HasOrderBy: false,
 					From.Tables: [{ Joins.Count: 0 }],
 				};
+
+			/// <summary>
+			/// Determines whether the specified query selects exactly one column.
+			/// </summary>
+			/// <returns>true if the query selects exactly one column; otherwise, false.</returns>
+			public bool IsSingleColumn =>
+				selectQuery.Select.Columns.Count == 1;
 		}
 	}
 }

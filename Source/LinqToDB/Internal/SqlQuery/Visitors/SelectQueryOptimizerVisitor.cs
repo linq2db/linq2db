@@ -1934,14 +1934,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					{
 						if (parentQuery.Select.Columns.Count != subQuery.Select.Columns.Count)
 						{
-						return false;
-					}
+							return false;
+						}
 
 						if (!subQuery.Select.Columns.TrueForAll(sc => parentQuery.Select.Columns.Exists(pc => ReferenceEquals(QueryHelper.UnwrapNullablity(pc.Expression), sc))))
-					{
-						return false;
+						{
+							return false;
+						}
 					}
-				}
 				}
 				else
 				{
@@ -2320,21 +2320,27 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					for (var index = 0; index < tableSource.Joins.Count; index++)
 					{
-						var join = tableSource.Joins[index];
-						if (join.JoinType == JoinType.Inner && join.Table.Source is SelectQuery joinQuery)
-						{
-							if (joinQuery.From.Tables.Count == 0)
+						if (
+							tableSource.Joins[index] is
 							{
-								replaced = true;
-
-								foreach (var c in joinQuery.Select.Columns)
+								JoinType: JoinType.Inner,
+								Table:
 								{
-									NotifyReplaced(c.Expression, c);
-								}
+									Joins.Count: 0,
+									Source: SelectQuery { From.Tables.Count: 0 } joinQuery,
+								},
+							} join
+						)
+						{
+							replaced = true;
 
-								tableSource.Joins.RemoveAt(index);
-								--index;
+							foreach (var c in joinQuery.Select.Columns)
+							{
+								NotifyReplaced(c.Expression, c);
 							}
+
+							tableSource.Joins.RemoveAt(index);
+							--index;
 						}
 					}
 				}
