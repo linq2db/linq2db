@@ -3,14 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 using Shouldly;
-
-using Tests.Model;
 
 namespace Tests.UserTests
 {
@@ -42,9 +39,9 @@ namespace Tests.UserTests
 			[Column] public AisleStatus GroupStatus { get; set; }
 			[Column] public OptimizationLevel OptimizationMaxLevel { get; set; }
 
-			[Column] public string? AdditionaField1 { get; set; }
-			[Column] public string? AdditionaField2 { get; set; }
-			[Column] public string? AdditionaField3 { get; set; }
+			[Column] public string? AdditionalField1 { get; set; }
+			[Column] public string? AdditionalField2 { get; set; }
+			[Column] public string? AdditionalField3 { get; set; }
 		}
 
 		[Table]
@@ -125,12 +122,12 @@ namespace Tests.UserTests
 		{
 			using var db = GetDataContext(context);
 
-			var aisleId = Guid.NewGuid();
-			var rpId = Guid.NewGuid();
-			var ssId = Guid.NewGuid();
-			var chId = Guid.NewGuid();
+			var aisleId = TestData.Guid1;
+			var rpId = TestData.Guid2;
+			var ssId = TestData.Guid3;
+			var chId = TestData.Guid4;
 
-			using var aisle = db.CreateLocalTable<AisleDTO>([new AisleDTO() { Id = aisleId, AdditionaField1 = "test", OptimizationMaxLevel = OptimizationLevel.On }]);
+			using var aisle = db.CreateLocalTable<AisleDTO>([new AisleDTO() { Id = aisleId, AdditionalField1 = "test", OptimizationMaxLevel = OptimizationLevel.On }]);
 			using var refTable = db.CreateLocalTable<RefResPointAisleDTO>([new RefResPointAisleDTO() { AisleId = aisleId, ResourcePointId = rpId }]);
 			using var rps = db.CreateLocalTable<WmsResourcePointDTO>([new WmsResourcePointDTO() { Id = rpId, IsSrm = true }]);
 			using var shelfs = db.CreateLocalTable<StorageShelfDTO>([new StorageShelfDTO() { Id = ssId, AisleID = aisleId }]);
@@ -158,7 +155,8 @@ namespace Tests.UserTests
 					 select c).Count())
 				).ToDictionary(srm => srm.Aisle!.Id);
 
-			dict!.First().Value!.Aisle!.AdditionaField1.ShouldBe("test");
+			dict!.First().Value!.Aisle!.AdditionalField1.ShouldBe("test");
+			dict!.First().Value!.Aisle!.AdditionalField1.ShouldBe("test");
 		}
 	}
 }

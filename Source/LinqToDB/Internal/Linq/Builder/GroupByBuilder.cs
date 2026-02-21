@@ -549,7 +549,11 @@ namespace LinqToDB.Internal.Linq.Builder
 						var keyRef  = new ContextRefExpression(currentMemberExpr.Type, _key);
 						var keyPath = me.Replace(currentMemberExpr, keyRef);
 
-						var result = Builder.BuildExpression(_key, keyPath, BuildFlags.None);
+						// For GROUP BY keys, don't use ForKeys for entity members to avoid PK-only filtering (Issue #5362)
+						// But use ForKeys for IGrouping traversal (nested groupings)
+						var isGroupingKey = typeof(IGrouping<,>).IsSameOrParentOf(currentMemberExpr.Type);
+						var buildFlags = isGroupingKey ? BuildFlags.ForKeys : BuildFlags.None;
+						var result = Builder.BuildExpression(_key, keyPath, buildFlags);
 
 						if (ExpressionEqualityComparer.Instance.Equals(result, keyPath) && flags.IsSqlOrExpression())
 							return SqlErrorExpression.EnsureError(path);
