@@ -163,6 +163,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.SkipAlias</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>F:LinqToDB.Internal.SqlQuery.CteClause.CteIDCounter</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
@@ -304,6 +311,20 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.Extensions.ReflectionExtensions.IsSqlPropertyMethodEx(System.Reflection.MemberInfo)</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSql(System.Int32,LinqToDB.Internal.SqlQuery.SqlStatement,System.Text.StringBuilder,LinqToDB.Internal.SqlProvider.OptimizationContext,System.Int32,System.Boolean,LinqToDB.Internal.SqlQuery.NullabilityContext)</Target>
+    <Left>lib/net10.0/linq2db.dll</Left>
+    <Right>lib/net10.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSqlBuilder(LinqToDB.Internal.SqlQuery.SelectQuery,System.Int32,System.Boolean)</Target>
     <Left>lib/net10.0/linq2db.dll</Left>
     <Right>lib/net10.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -450,6 +471,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.SkipAlias</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>F:LinqToDB.Internal.SqlQuery.CteClause.CteIDCounter</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
@@ -591,6 +619,20 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.Extensions.ReflectionExtensions.IsSqlPropertyMethodEx(System.Reflection.MemberInfo)</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSql(System.Int32,LinqToDB.Internal.SqlQuery.SqlStatement,System.Text.StringBuilder,LinqToDB.Internal.SqlProvider.OptimizationContext,System.Int32,System.Boolean,LinqToDB.Internal.SqlQuery.NullabilityContext)</Target>
+    <Left>lib/net462/linq2db.dll</Left>
+    <Right>lib/net462/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSqlBuilder(LinqToDB.Internal.SqlQuery.SelectQuery,System.Int32,System.Boolean)</Target>
     <Left>lib/net462/linq2db.dll</Left>
     <Right>lib/net462/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -737,6 +779,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.SkipAlias</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>F:LinqToDB.Internal.SqlQuery.CteClause.CteIDCounter</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
@@ -878,6 +927,20 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.Extensions.ReflectionExtensions.IsSqlPropertyMethodEx(System.Reflection.MemberInfo)</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSql(System.Int32,LinqToDB.Internal.SqlQuery.SqlStatement,System.Text.StringBuilder,LinqToDB.Internal.SqlProvider.OptimizationContext,System.Int32,System.Boolean,LinqToDB.Internal.SqlQuery.NullabilityContext)</Target>
+    <Left>lib/net8.0/linq2db.dll</Left>
+    <Right>lib/net8.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSqlBuilder(LinqToDB.Internal.SqlQuery.SelectQuery,System.Int32,System.Boolean)</Target>
     <Left>lib/net8.0/linq2db.dll</Left>
     <Right>lib/net8.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -1024,6 +1087,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.SkipAlias</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>F:LinqToDB.Internal.SqlQuery.CteClause.CteIDCounter</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
@@ -1165,6 +1235,20 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.Extensions.ReflectionExtensions.IsSqlPropertyMethodEx(System.Reflection.MemberInfo)</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSql(System.Int32,LinqToDB.Internal.SqlQuery.SqlStatement,System.Text.StringBuilder,LinqToDB.Internal.SqlProvider.OptimizationContext,System.Int32,System.Boolean,LinqToDB.Internal.SqlQuery.NullabilityContext)</Target>
+    <Left>lib/net9.0/linq2db.dll</Left>
+    <Right>lib/net9.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSqlBuilder(LinqToDB.Internal.SqlQuery.SelectQuery,System.Int32,System.Boolean)</Target>
     <Left>lib/net9.0/linq2db.dll</Left>
     <Right>lib/net9.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -1323,6 +1407,13 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
+    <Target>F:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.SkipAlias</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
     <Target>F:LinqToDB.Internal.SqlQuery.CteClause.CteIDCounter</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
@@ -1464,6 +1555,20 @@
   <Suppression>
     <DiagnosticId>CP0002</DiagnosticId>
     <Target>M:LinqToDB.Internal.Extensions.ReflectionExtensions.IsSqlPropertyMethodEx(System.Reflection.MemberInfo)</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSql(System.Int32,LinqToDB.Internal.SqlQuery.SqlStatement,System.Text.StringBuilder,LinqToDB.Internal.SqlProvider.OptimizationContext,System.Int32,System.Boolean,LinqToDB.Internal.SqlQuery.NullabilityContext)</Target>
+    <Left>lib/netstandard2.0/linq2db.dll</Left>
+    <Right>lib/netstandard2.0/linq2db.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0002</DiagnosticId>
+    <Target>M:LinqToDB.Internal.SqlProvider.BasicSqlBuilder.BuildSqlBuilder(LinqToDB.Internal.SqlQuery.SelectQuery,System.Int32,System.Boolean)</Target>
     <Left>lib/netstandard2.0/linq2db.dll</Left>
     <Right>lib/netstandard2.0/linq2db.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>

@@ -991,7 +991,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 					if (join.Table.Source == table)
 					{
-						if (ts.Joins.Skip(j + 1).Any(sj => QueryHelper.IsDependsOnSource(sj, table)))
+						if (ts.Joins.Skip(j + 1).Any(sj => QueryHelper.IsDependsOnSource(sj, join.Table)))
 							return false;
 
 						source = join.Table;
@@ -999,7 +999,7 @@ namespace LinqToDB.Internal.SqlProvider
 						ts.Joins.RemoveAt(j);
 						query.Where.ConcatSearchCondition(join.Condition);
 
-						for (var sj = 0; j < join.Table.Joins.Count; j++)
+						for (var sj = 0; sj < join.Table.Joins.Count; sj++)
 						{
 							ts.Joins.Insert(j + sj, join.Table.Joins[sj]);
 						}

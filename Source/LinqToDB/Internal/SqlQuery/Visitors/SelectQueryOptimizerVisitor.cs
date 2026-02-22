@@ -2396,7 +2396,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						sources ??= QueryHelper.EnumerateAccessibleSources(join.Table).ToList();
 						move = !QueryHelper.IsDependsOnSources(predicate, sources);
 
-						if (!move && !QueryHelper.IsDependsOnSources(predicate, [left]))
+						if (!move && !QueryHelper.IsDependsOnSource(predicate, left))
 						{
 							if (nestedWhereCond == null)
 							{
@@ -2826,7 +2826,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						continue;
 					}
 
-					if (!QueryHelper.IsDependsOnSource(selectQuery, join.Table.Source, [join]) && IsRemovableJoin(join))
+					if (!QueryHelper.IsDependsOnSource(selectQuery, join.Table, [join]) && IsRemovableJoin(join))
 					{
 						table.Joins.RemoveAt(index);
 					}

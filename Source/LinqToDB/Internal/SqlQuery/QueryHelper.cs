@@ -32,7 +32,11 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static bool IsDependsOnSource(IQueryElement testedRoot, ISqlTableSource onSource, IReadOnlyCollection<IQueryElement>? elementsToIgnore = null)
 		{
-			return IsDependsOnSources(testedRoot, new[] { onSource }, elementsToIgnore);
+			var sources = onSource is SqlTableSource source
+				? EnumerateAccessibleSources(source).ToArray()
+				: [onSource];
+
+			return IsDependsOnSources(testedRoot, sources, elementsToIgnore);
 		}
 
 		public static bool IsDependsOnSources(IQueryElement testedRoot, IReadOnlyCollection<ISqlTableSource> onSources, IReadOnlyCollection<IQueryElement>? elementsToIgnore = null)
@@ -132,7 +136,7 @@ namespace LinqToDB.Internal.SqlQuery
 				[{ Joins.Count: 0, Source: var s }] when s == table => true,
 				_ => false,
 			};
-		}
+			}
 
 		sealed class IsDependsOnElementContext
 		{
@@ -264,7 +268,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 					return 
 						GetColumnDescriptor(condition.TrueValue) ??
-						GetColumnDescriptor(condition.FalseValue);
+					       GetColumnDescriptor(condition.FalseValue);
 				}
 
 				case QueryElementType.SqlCase:
@@ -1464,7 +1468,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 				_ => sqlExpression,
 			};
-		}
+			}
 
 		/// <summary>
 		/// Disables null checks for equality operations.
