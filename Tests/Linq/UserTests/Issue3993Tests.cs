@@ -34,6 +34,32 @@ namespace Tests.UserTests.Test3993
 			public virtual string? Status { get; set; }
 		}
 
+		public enum AisleStatus
+		{
+			Available,
+			OutOfOrder,
+		}
+
+		public enum StorageShelfStatus
+		{
+			Available,
+		}
+
+		public class AisleDTO
+		{
+			public Guid Id { get; set; }
+			public AisleStatus Status { get; set; }
+			public string? Name { get; set; }
+		}
+
+		public class StorageShelfDTO
+		{
+			public Guid Id { get; set; }
+			public StorageShelfStatus Status { get; set; }
+			public Guid AisleID { get; set; }
+			public int HeightClass { get; set; }
+		}
+
 		[Test]
 		public void TestIssue3993_Test1([IncludeDataSources(TestProvName.AllSqlServer2019, TestProvName.AllSqlServer2016Plus, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql, TestProvName.AllFirebird3Plus, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllSapHana)] string configuration)
 		{
@@ -445,6 +471,33 @@ namespace Tests.UserTests.Test3993
 						TimeSpanNull = new TimeSpan(2000, 4, 3)
 					},
 				});
+		}
+
+		[Test]
+		public void BrokenWithConvertChangesInQueryHelper([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
+		{
+			var ms = new FluentMappingBuilder()
+				.Entity<AisleDTO>()
+					.HasTableName("WMS_Aisle")
+					.HasPrimaryKey(x => new { x.Id })
+					.Property(x => x.Id).HasColumnName("ID")
+					.Property(x => x.Name).HasColumnName("Name").IsNullable()
+				.Entity<StorageShelfDTO>()
+					.HasTableName("WMS_StorageShelf")
+					.HasPrimaryKey(x => new { x.Id })
+					.Property(x => x.Id).HasColumnName("ID")
+					.Property(x => x.Status).HasColumnName("Status").HasDataType(DataType.Int32)
+				.Build() .MappingSchema;
+
+			using var db = GetDataContext(context, ms);
+
+			using var aisle = db.CreateLocalTable<AisleDTO>([new AisleDTO { Id = TestData.Guid1, Name = "Aisle1" }]);
+			using var refTable = db.CreateLocalTable<StorageShelfDTO>([new StorageShelfDTO { Id = TestData.Guid2, AisleID = TestData.Guid1, HeightClass = 1 }]);
+
+			var used = (from ss in db.GetTable<StorageShelfDTO>().Where(x => x.Status != StorageShelfStatus.Available)
+						join a in db.GetTable<AisleDTO>() on ss.AisleID equals a.Id
+						group ss by new {a.Name, ss.HeightClass} into ssPerAisle
+						select new {ssPerAisle.Key.Name, hname = "Used_" + ssPerAisle.Key.HeightClass.ToString(), Count = ssPerAisle.Count()}).ToList();
 		}
 	}
 }
