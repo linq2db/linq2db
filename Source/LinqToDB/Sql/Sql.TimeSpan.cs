@@ -281,7 +281,7 @@ namespace LinqToDB
 				var date   = builder.GetExpression("date");
 				var timeSpan = builder.GetExpression("timeSpan", true);
 
-				var tp = timeSpan!.GetExpressionType();
+				var tp = timeSpan!.GetExpressionType(includeCast: true);
 				var dt = tp.DataType;
 
 				if (dt == DataType.Int64)
