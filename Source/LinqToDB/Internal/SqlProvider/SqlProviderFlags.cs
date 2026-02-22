@@ -550,6 +550,9 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 63), DefaultValue(true)]
 		public bool IsSimpleCoalesceSupported { get; set; } = true;
 
+		[DataMember(Order = 64), DefaultValue(true)]
+		public bool IsSubqueryExpressionInsidePredicateSupported { get; set; } = true;
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null;
@@ -636,6 +639,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsCrossJoinSyntaxRequired                            .GetHashCode()
 				^ IsTakeWithInAllAnySomeSubquerySupported              .GetHashCode()
 				^ IsSimpleCoalesceSupported                            .GetHashCode()
+				^ IsSubqueryExpressionInsidePredicateSupported         .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -703,6 +707,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsComplexJoinConditionSupported                       == other.IsComplexJoinConditionSupported
 				&& IsCrossJoinSyntaxRequired                             == other.IsCrossJoinSyntaxRequired
 				&& IsSimpleCoalesceSupported                             == other.IsSimpleCoalesceSupported
+				&& IsSubqueryExpressionInsidePredicateSupported          == other.IsSubqueryExpressionInsidePredicateSupported
 				&& IsTakeWithInAllAnySomeSubquerySupported               == other.IsTakeWithInAllAnySomeSubquerySupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}

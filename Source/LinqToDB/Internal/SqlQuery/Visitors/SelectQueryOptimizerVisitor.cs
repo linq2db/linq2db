@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
@@ -1106,9 +1107,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (isApplySupported && isAgg)
 					return optimized;
 
-				if (doNotEmulate)
-					return optimized;
-
 				var skipValue = sql.Select.SkipValue;
 				var takeValue = sql.Select.TakeValue;
 
@@ -1377,7 +1375,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, castExpression.Expression, ignoreWhere, inGrouping);
 			}
 
-			var allowed = _movingComplexityVisitor.IsAllowedToMove(_providerFlags, column, parent : parentQuery,
+			var allowed = _movingComplexityVisitor.IsAllowedToMove(_providerFlags, column, testMode: MovingComplexityVisitor.TestMode.CountUsage, parent : parentQuery,
 				// Elements which should be ignored while searching for usage
 				column.Parent,
 				_applySelect == parentQuery ? parentQuery.Where : null,
@@ -2948,7 +2946,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			var counter = 1;
 
-			if (!_movingComplexityVisitor.IsAllowedToMove(_providerFlags, column, root, [column.Parent]))
+			if (!_movingComplexityVisitor.IsAllowedToMove(_providerFlags, column, MovingComplexityVisitor.TestMode.CountUsage, root, [column.Parent]))
 			{
 				counter = 2;
 			}
@@ -3115,6 +3113,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (!(isSingleRecord == true || IsLimitedToOneRecord(parentQuery, joinQuery, evaluationContext)))
 				return false;
+
+			if (join.JoinType is JoinType.Left or JoinType.OuterApply)
+			{
+				foreach(var column in joinQuery.Select.Columns)
+				{
+					if (!_movingComplexityVisitor.IsAllowedToMove(_providerFlags, column, MovingComplexityVisitor.TestMode.TestingSubqueryExpression, parentQuery, [joinQuery]))
+						return false;
+				}
+			}
 
 			// do not move to subquery expression if update table in the query.
 			if (_updateTable != null && joinQuery.HasElement(_updateTable))
@@ -3310,6 +3317,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			int              _foundCount;
 			int              _multiplier;
 			bool             _notAllowedScope;
+			TestMode             _testMode;
+			bool             _isSubqueryInsideCondition;
+
+			[Flags]
+			public enum TestMode
+			{
+				None                      = 0,
+				CountUsage                = 1 << 0,
+				TestingSubqueryExpression = 1 << 2,
+			}
 
 			public bool DoNotAllow { get; private set; }
 
@@ -3324,19 +3341,21 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				DoNotAllow         = default;
 				_sqlProviderFlags  = default!;
 				_multiplier        = 1;
+				_testMode          = TestMode.None;
 
 				_foundCount = 0;
 
 				base.Cleanup();
 			}
 
-			public bool IsAllowedToMove(SqlProviderFlags sqlProviderFlags, ISqlExpression testExpression, IQueryElement parent, params IQueryElement?[] ignore)
+			public bool IsAllowedToMove(SqlProviderFlags sqlProviderFlags, ISqlExpression testExpression, TestMode testMode, IQueryElement parent, params IQueryElement?[] ignore)
 			{
 				Cleanup();
 
 				_sqlProviderFlags  = sqlProviderFlags;
 				_ignore            = ignore;
 				_expressionToCheck = testExpression;
+				_testMode          = testMode;
 
 				Visit(parent);
 
@@ -3362,10 +3381,22 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						return element;
 					}
 
+					if (!_sqlProviderFlags.IsSubqueryExpressionInsidePredicateSupported && _isSubqueryInsideCondition)
+					{
+						if (_testMode.HasFlag(TestMode.TestingSubqueryExpression) || _expressionToCheck is SqlColumn { Expression: SelectQuery })
+						{
+							DoNotAllow = true;
+							return element;
+						}
+					}
+
 					_foundCount += _multiplier;
 
-					if (_foundCount > 1)
+					if (_testMode.HasFlag(TestMode.CountUsage) && _foundCount > 1)
+					{
 						DoNotAllow = true;
+						return element;
+					}
 
 					return element;
 				}
@@ -3396,12 +3427,40 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (!_sqlProviderFlags.IsSimpleCoalesceSupported)
 					++_multiplier;
 
+				var saveIsSubqueryInsideCondition = _isSubqueryInsideCondition;
+
+				_isSubqueryInsideCondition = true;
+
 				base.VisitSqlCoalesceExpression(element);
+
+				_isSubqueryInsideCondition = saveIsSubqueryInsideCondition;
 
 				if (!_sqlProviderFlags.IsSimpleCoalesceSupported)
 					--_multiplier;
 
 				return element;
+			}
+
+			protected internal override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
+			{
+				var saveIsSubqueryInsideCondition = _isSubqueryInsideCondition;
+				_isSubqueryInsideCondition = true;
+
+				base.VisitIsNullPredicate(predicate);
+
+				_isSubqueryInsideCondition = saveIsSubqueryInsideCondition;
+				return predicate;
+			}
+
+			protected internal override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
+			{
+				var saveIsSubqueryInsideCondition = _isSubqueryInsideCondition;
+				_isSubqueryInsideCondition = true;
+
+				base.VisitExprExprPredicate(predicate); 
+
+				_isSubqueryInsideCondition = saveIsSubqueryInsideCondition;
+				return predicate;
 			}
 
 			readonly struct DoNotAllowScopeStruct : IDisposable

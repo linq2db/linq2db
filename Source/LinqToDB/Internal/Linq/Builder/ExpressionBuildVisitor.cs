@@ -5129,7 +5129,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			++_gettingSubquery;
 			// reset flags to avoid affecting subquery building with flags that are only relevant for current level
-			using var saveFlags   = UsingBuildFlags(BuildFlags.None | BuildFlags.ResetPrevious);
+			using var saveFlags   = UsingBuildFlags(BuildFlags.None);
 
 			var       buildResult = Builder.TryBuildSequence(info);
 			--_gettingSubquery;
