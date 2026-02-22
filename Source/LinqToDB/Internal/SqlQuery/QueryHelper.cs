@@ -209,7 +209,7 @@ namespace LinqToDB.Internal.SqlQuery
 		/// </summary>
 		/// <param name="expr">Tested SQL Expression.</param>
 		/// <returns>Associated column descriptor or <see langword="null"/>.</returns>
-		public static ColumnDescriptor? GetColumnDescriptor(ISqlExpression? expr)
+		public static ColumnDescriptor? GetColumnDescriptor(ISqlExpression? expr, bool includeCast = false)
 		{
 			switch (expr?.ElementType)
 			{
@@ -244,6 +244,9 @@ namespace LinqToDB.Internal.SqlQuery
 
 				case QueryElementType.SqlCast:
 				{
+					if (!includeCast)
+						return null;
+
 					return GetColumnDescriptor(((SqlCastExpression)expr).Expression);
 				}
 
@@ -435,7 +438,7 @@ namespace LinqToDB.Internal.SqlQuery
 			return commonType ?? SqlDataType.MakeUndefined(typeof(object)).Type;
 		}
 
-		public static DbDataType GetExpressionType(this ISqlExpression expr)
+		public static DbDataType GetExpressionType(this ISqlExpression expr, bool includeCast = false)
 		{
 			switch (expr.ElementType)
 			{
@@ -443,7 +446,7 @@ namespace LinqToDB.Internal.SqlQuery
 				case QueryElementType.SqlValue: return ((SqlValue)expr).ValueType;
 			}
 
-			var descriptor = GetColumnDescriptor(expr);
+			var descriptor = GetColumnDescriptor(expr, includeCast);
 			if (descriptor != null)
 				return descriptor.GetDbDataType(true);
 
