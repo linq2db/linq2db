@@ -1400,8 +1400,11 @@ namespace LinqToDB.Internal.SqlProvider
 				{
 					if (subQuery.HasNoTables())
 					{
-						var rowValues = subQuery.Select.Columns.Select(c => c.Expression).ToArray();
-						item.Expression = new SqlRowExpression(rowValues);
+						if (SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.UpdateLiteral))
+						{
+							var rowValues = subQuery.Select.Columns.Select(c => c.Expression).ToArray();
+							item.Expression = new SqlRowExpression(rowValues);
+						}
 					}
 					else if (subQuery.Select.Columns is [var column])
 					{

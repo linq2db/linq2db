@@ -3455,7 +3455,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			protected internal override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 			{
 				var saveIsSubqueryInsideCondition = _isSubqueryInsideCondition;
-				_isSubqueryInsideCondition = true;
+				_isSubqueryInsideCondition = predicate.Expr1.IsNullValue() || predicate.Expr2.IsNullValue();
 
 				base.VisitExprExprPredicate(predicate); 
 
