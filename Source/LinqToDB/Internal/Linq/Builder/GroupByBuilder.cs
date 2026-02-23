@@ -153,7 +153,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var key                 = new KeyContext(groupingSubquery, keySelector, keySequence, buildInfo.IsSubQuery);
 			var keyRef              = new ContextRefExpression(key.Body.Type, key);
-			var currentPlaceholders = new List<SqlPlaceholderExpression>();
+			var currentPlaceholders = new Dictionary<Expression, SqlPlaceholderExpression>(ExpressionEqualityComparer.Instance);
 
 			var element = new ElementContext(buildInfo.Parent, elementSelector, dataSubquery, buildInfo.IsSubQuery);
 			var groupBy = new GroupByContext(groupingSubquery, sequenceExpr, groupingType, key, keyRef, currentPlaceholders, element,
@@ -205,15 +205,15 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <param name="groupingKind"></param>
 		/// <param name="errorExpression"></param>
 		static bool AppendGrouping(
-			IBuildContext                        sequence, 
-			List<SqlPlaceholderExpression>       currentPlaceholders,
-			ExpressionBuilder                    builder,  
-			IBuildContext                        onSequence, 
-			Expression path,
-			Expression                           groupingExpr, 
-			GroupingType                         groupingKind, 
-			out                      Expression  translated, 
-			[NotNullWhen(false)] out Expression? errorExpression)
+			IBuildContext                                    sequence,
+			Dictionary<Expression, SqlPlaceholderExpression> currentPlaceholders,
+			ExpressionBuilder                                builder,  
+			IBuildContext                                    onSequence, 
+			Expression                                       path,
+			Expression                                       groupingExpr, 
+			GroupingType                                     groupingKind, 
+			out                      Expression              translated, 
+			[NotNullWhen(false)] out Expression?             errorExpression)
 		{
 			errorExpression = null;
 			translated      = groupingExpr;
@@ -258,9 +258,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			return true;
 		}
 
-		static Expression AppendGroupBy(ExpressionBuilder builder, Expression path, List<SqlPlaceholderExpression> currentPlaceholders, SelectQuery query, Expression groupByExpression)
+		static Expression AppendGroupBy(ExpressionBuilder builder, Expression path, Dictionary<Expression, SqlPlaceholderExpression> currentPlaceholders, SelectQuery query, Expression groupByExpression)
 		{
-			var placeholders = ExpressionBuildVisitor.CollectPlaceholdersStraightWithPath(groupByExpression, path, out var transformed);
+			var placeholders = ExpressionBuildVisitor.CollectPlaceholders(groupByExpression);
 
 			// it is a case whe we do not group elements
 			if (path is ContextRefExpression && placeholders.Count == 1 && QueryHelper.IsConstantFast(placeholders[0].Sql))
@@ -271,18 +271,20 @@ namespace LinqToDB.Internal.Linq.Builder
 				return newPlaceholder;
 			}
 
+			var transformed = groupByExpression;
+
 			foreach (var p in placeholders)
 			{
-				var found = currentPlaceholders.Find(cp => ExpressionEqualityComparer.Instance.Equals(cp.Path, p.Path));
-				if (found == null)
+				var traversed = builder.BuildTraverseExpression(p.Path);
+				if (!currentPlaceholders.TryGetValue(traversed, out var placeholder))
 				{
-					found = builder.UpdateNesting(query, p);
-					currentPlaceholders.Add(found);
+					placeholder = builder.UpdateNesting(query, p);
+					currentPlaceholders.Add(traversed, placeholder);
 
-					query.GroupBy.Items.Add(found.Sql);
+					query.GroupBy.Items.Add(placeholder.Sql);
 				}
 
-				transformed = transformed.Replace(p, found);
+				transformed = transformed.Replace(p, placeholder);
 			}
 
 			return transformed;
@@ -402,30 +404,30 @@ namespace LinqToDB.Internal.Linq.Builder
 		internal sealed class GroupByContext : SubQueryContext
 		{
 			public GroupByContext(
-				IBuildContext                  sequence,
-				Expression                     sequenceExpr,
-				Type                           groupingType,
-				KeyContext                     key,
-				ContextRefExpression           keyRef,
-				List<SqlPlaceholderExpression> currentPlaceholders,
-				ElementContext                 element,
-				bool                           isGroupingGuardDisabled,
-				bool                           addToSql)
+				IBuildContext                                    sequence,
+				Expression                                       sequenceExpr,
+				Type                                             groupingType,
+				KeyContext                                       key,
+				ContextRefExpression                             keyRef,
+				Dictionary<Expression, SqlPlaceholderExpression> currentPlaceholders,
+				ElementContext                                   element,
+				bool                                             isGroupingGuardDisabled,
+				bool                                             addToSql)
 				: this(sequence, new SelectQuery(), sequenceExpr, groupingType, key, keyRef, currentPlaceholders, element, isGroupingGuardDisabled, addToSql)
 			{
 			}
 
 			public GroupByContext(
-				IBuildContext                  sequence,
-				SelectQuery                    selectQuery,
-				Expression                     sequenceExpr,
-				Type                           groupingType,
-				KeyContext                     key,
-				ContextRefExpression           keyRef,
-				List<SqlPlaceholderExpression> currentPlaceholders,
-				ElementContext                 element,
-				bool                           isGroupingGuardDisabled,
-				bool                           addToSql)
+				IBuildContext                                    sequence,
+				SelectQuery                                      selectQuery,
+				Expression                                       sequenceExpr,
+				Type                                             groupingType,
+				KeyContext                                       key,
+				ContextRefExpression                             keyRef,
+				Dictionary<Expression, SqlPlaceholderExpression> currentPlaceholders,
+				ElementContext                                   element,
+				bool                                             isGroupingGuardDisabled,
+				bool                                             addToSql)
 				: base(sequence, selectQuery, addToSql)
 			{
 				_sequenceExpr       = sequenceExpr;
@@ -441,12 +443,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				key.Parent         = this;
 			}
 
-			readonly Expression                     _sequenceExpr;
-			readonly KeyContext                     _key;
-			readonly ContextRefExpression           _keyRef;
-			public   List<SqlPlaceholderExpression> CurrentPlaceholders { get; }
-			readonly Type                           _groupingType;
-			public   bool                           IsGroupingGuardDisabled { get; }
+			public Dictionary<Expression, SqlPlaceholderExpression> CurrentPlaceholders { get; }
+
+			readonly Expression           _sequenceExpr;
+			readonly KeyContext           _key;
+			readonly ContextRefExpression _keyRef;
+			readonly Type                 _groupingType;
+			public   bool                 IsGroupingGuardDisabled { get; }
 
 			public ElementContext Element { get; }
 
@@ -595,10 +598,18 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				var clone = new GroupByContext(context.CloneContext(SubQuery), context.CloneElement(SelectQuery), context.CloneExpression(_sequenceExpr), _groupingType,
-					context.CloneContext(_key), context.CloneExpression(_keyRef),
-					CurrentPlaceholders.Select(p => context.CloneExpression(p)).ToList(), context.CloneContext(Element),
-					IsGroupingGuardDisabled, false);
+				var clone = new GroupByContext(
+					context.CloneContext(SubQuery),
+					context.CloneElement(SelectQuery),
+					context.CloneExpression(_sequenceExpr),
+					_groupingType,
+					context.CloneContext(_key),
+					context.CloneExpression(_keyRef),
+					CurrentPlaceholders.ToDictionary(pair => context.CloneExpression(pair.Key), pair => context.CloneExpression(pair.Value), ExpressionEqualityComparer.Instance),
+					context.CloneContext(Element),
+					IsGroupingGuardDisabled,
+					false
+				);
 
 				return clone;
 			}
