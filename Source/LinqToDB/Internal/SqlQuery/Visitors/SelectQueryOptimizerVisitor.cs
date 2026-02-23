@@ -3114,15 +3114,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (!(isSingleRecord == true || IsLimitedToOneRecord(parentQuery, joinQuery, evaluationContext)))
 				return false;
 
-			if (join.JoinType is JoinType.Left or JoinType.OuterApply)
-			{
-				foreach(var column in joinQuery.Select.Columns)
-				{
-					if (!_movingComplexityVisitor.IsAllowedToMove(_providerFlags, column, MovingComplexityVisitor.TestMode.TestingSubqueryExpression, parentQuery, [joinQuery]))
-						return false;
-				}
-			}
-
 			// do not move to subquery expression if update table in the query.
 			if (_updateTable != null && joinQuery.HasElement(_updateTable))
 				return false;
@@ -3133,12 +3124,33 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					return false;
 			}
 
+			if (join.JoinType is JoinType.OuterApply)
+			{
+				foreach (var column in joinQuery.Select.Columns)
+				{
+					if (!_movingComplexityVisitor.IsAllowedToMove(_providerFlags, column, MovingComplexityVisitor.TestMode.TestingSubqueryExpression, parentQuery, [joinQuery]))
+					{
+						if (!deduplicate)
+							return false;
+
+						if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery : parentQuery, fakeJoin : null, columnSubqueryLevel : 0, _providerFlags, out _))
+							return false;
+
+						MoveDuplicateUsageToSubQuery(parentQuery, ref doNotRemoveQueries);
+						isModified = true;
+
+						break;
+					}
+				}
+			}
+
 			if (joinQuery.Select.Columns.Count > 1 && joinQuery.Select.IsDistinct)
 			{
 				if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery: parentQuery, fakeJoin: null, columnSubqueryLevel: 1, _providerFlags, out _))
 					return false;
 
 				MoveToSubQuery(joinQuery);
+				isModified = true;
 			}
 
 			foreach (var testedColumn in joinQuery.Select.Columns)
