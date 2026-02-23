@@ -1118,7 +1118,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				ISqlExpression?       rnExpression = null;
 				List<ISqlExpression>? partitionBy  = null;
 
-				if (skipValue != null || takeValue != null)
+				if (skipValue != null || takeValue != null || sql.Select.IsDistinct)
 				{
 					if (!_providerFlags.IsWindowFunctionsSupported)
 						return optimized;
