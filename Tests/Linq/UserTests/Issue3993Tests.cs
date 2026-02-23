@@ -185,7 +185,7 @@ namespace Tests.UserTests.Test3993
 				};
 
 				var res4 = qry4.Where(x => x.NotificationDateTime4 < TestData.DateTimeUtc).ToList();
-				Assert.That(res3, Has.Count.EqualTo(1));
+				Assert.That(res4, Has.Count.EqualTo(1));
 
 				var qry5 =
 				from t in db.GetTable<Test>()

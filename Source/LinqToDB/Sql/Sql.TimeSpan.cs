@@ -87,7 +87,7 @@ namespace LinqToDB
 				var partStr  = TimeSpanPartToStr(part);
 				var timeSpan = builder.GetExpression("timeSpan");
 
-				var tp = timeSpan!.GetExpressionType();
+				var tp = timeSpan!.GetExpressionType(includeCast: true);
 				var dt = tp.DataType;
 					
 				if (dt == DataType.Int64)

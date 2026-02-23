@@ -72,9 +72,10 @@ namespace LinqToDB
 #if NET7_0_OR_GREATER
 				DateParts.Microsecond   => date.Value.AddMicroseconds(number.Value),
 #else
-				DateParts.Microsecond   => date.Value.AddTicks((long)number.Value * 10000),
+				DateParts.Microsecond   => date.Value.AddTicks((long)number.Value * 10),
 #endif
 				DateParts.Nanosecond    => date.Value.AddTicks((long)number.Value / 100),
+				DateParts.Tick          => date.Value.AddTicks((long)number.Value),
 				_                       => throw new InvalidOperationException(),
 			};
 		}
