@@ -3,14 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 using Shouldly;
-
-using Tests.Model;
 
 namespace Tests.UserTests
 {
@@ -125,17 +122,16 @@ namespace Tests.UserTests
 		{
 			using var db = GetDataContext(context);
 
-			var aisleId = Guid.NewGuid();
-			var rpId = Guid.NewGuid();
-			var ssId = Guid.NewGuid();
-			var chId = Guid.NewGuid();
+			var aisleId = TestData.Guid1;
+			var rpId    = TestData.Guid2;
+			var ssId    = TestData.Guid3;
+			var chId    = TestData.Guid4;
 
 			using var aisle = db.CreateLocalTable<AisleDTO>([new AisleDTO() { Id = aisleId, AdditionaField1 = "test", OptimizationMaxLevel = OptimizationLevel.On }]);
 			using var refTable = db.CreateLocalTable<RefResPointAisleDTO>([new RefResPointAisleDTO() { AisleId = aisleId, ResourcePointId = rpId }]);
 			using var rps = db.CreateLocalTable<WmsResourcePointDTO>([new WmsResourcePointDTO() { Id = rpId, IsSrm = true }]);
 			using var shelfs = db.CreateLocalTable<StorageShelfDTO>([new StorageShelfDTO() { Id = ssId, AisleID = aisleId }]);
 			using var channels = db.CreateLocalTable<ChannelDTO>([new ChannelDTO() { Id = chId, AisleID = aisleId }]);
-			using var disp = db.UseLinqOptions(o => o.WithConcatenateOrderBy(true));
 
 			var dict = (
 				from a in db.GetTable<AisleDTO>()

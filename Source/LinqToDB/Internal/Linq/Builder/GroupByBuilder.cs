@@ -367,7 +367,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (!ExpressionEqualityComparer.Instance.Equals(result, path) && (flags.IsSql() || flags.IsExpression() || flags.IsExtractProjection() || flags.IsExpand()))
 				{
-					result = Builder.BuildSqlExpression(this, result, BuildPurpose.Sql, BuildFlags.ForKeys);
+					result = Builder.BuildSqlExpression(this, result, BuildPurpose.Sql, !flags.IsExpression() ? BuildFlags.ForKeys : BuildFlags.None);
 
 					if (result is SqlErrorExpression)
 						return SqlErrorExpression.EnsureError(result, path.Type);
