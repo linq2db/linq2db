@@ -1156,7 +1156,7 @@ namespace LinqToDB.Linq
 		#endregion
 
 		/// <summary>
-		/// Enables TimespanMapping to an Interval Type (instead of the Time Type in the datbases)
+		/// Enables TimespanMapping to an Interval Type (instead of the Time Type in the databases)
 		/// If you do so, you need to also add a mapping according the interval type of your database
 		/// in your mapping schema, with
 		/// mappingSchema.AddScalarType(typeof(TimeSpan), DataType.Int64);

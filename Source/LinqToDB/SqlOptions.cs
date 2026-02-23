@@ -73,6 +73,7 @@ namespace LinqToDB
 					_configurationID = idBuilder
 						.Add(EnableConstantExpressionInOrderBy)
 						.Add(GenerateFinalAliases)
+						.Add(DisableBuiltInTimeSpanConversion)
 						.CreateID();
 				}
 

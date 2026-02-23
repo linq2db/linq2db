@@ -228,7 +228,7 @@ namespace LinqToDB.Internal.SqlQuery
 					if (!includeCast)
 						return null;
 
-					return GetColumnDescriptor(((SqlCastExpression)expr).Expression);
+					return GetColumnDescriptor(((SqlCastExpression)expr).Expression, includeCast);
 				}
 				case QueryElementType.SqlExpression:
 				{
@@ -249,7 +249,9 @@ namespace LinqToDB.Internal.SqlQuery
 					var binary = (SqlBinaryExpression)expr;
 					var found = GetColumnDescriptor(binary.Expr1) ?? GetColumnDescriptor(binary.Expr2);
 					if (binary.SystemType == typeof(TimeSpan)) //TODO: special case when TimeSpan is Mapped to Int, then the check below returns false.
+					{
 						return found;
+					}
 					if (found?.GetDbDataType(true).SystemType != binary.SystemType)
 						return null;
 					return found;
