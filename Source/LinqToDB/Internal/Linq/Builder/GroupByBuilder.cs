@@ -197,22 +197,25 @@ namespace LinqToDB.Internal.Linq.Builder
 		/// <summary>
 		/// Appends GroupBy items to <paramref name="sequence"/> SelectQuery.
 		/// </summary>
+		/// <param name="builder"></param>
+		/// <param name="keyContext"></param>
 		/// <param name="sequence">Context which contains groping query.</param>
 		/// <param name="currentPlaceholders"></param>
-		/// <param name="builder"></param>
 		/// <param name="onSequence">Context from which level we want to get groping SQL.</param>
+		/// <param name="path"></param>
 		/// <param name="groupingExpr">Actual expression which should be translated to grouping keys.</param>
 		/// <param name="groupingKind"></param>
+		/// <param name="translated"></param>
 		/// <param name="errorExpression"></param>
-		static bool AppendGrouping(
+		static bool AppendGrouping(ExpressionBuilder         builder,
+			KeyContext                                       keyContext,
 			IBuildContext                                    sequence,
 			Dictionary<Expression, SqlPlaceholderExpression> currentPlaceholders,
-			ExpressionBuilder                                builder,  
-			IBuildContext                                    onSequence, 
+			IBuildContext                                    onSequence,
 			Expression                                       path,
-			Expression                                       groupingExpr, 
-			GroupingType                                     groupingKind, 
-			out                      Expression              translated, 
+			Expression                                       groupingExpr,
+			GroupingType                                     groupingKind,
+			out                      Expression              translated,
 			[NotNullWhen(false)] out Expression?             errorExpression)
 		{
 			errorExpression = null;
@@ -252,23 +255,30 @@ namespace LinqToDB.Internal.Linq.Builder
 					return false;
 				}
 
-				translated = AppendGroupBy(builder, path, currentPlaceholders, sequence.SelectQuery, groupingExpr);
+				translated = AppendGroupBy(builder, keyContext, path, currentPlaceholders, sequence.SelectQuery, groupingExpr);
 			}
 
 			return true;
 		}
 
-		static Expression AppendGroupBy(ExpressionBuilder builder, Expression path, Dictionary<Expression, SqlPlaceholderExpression> currentPlaceholders, SelectQuery query, Expression groupByExpression)
+		static Expression AppendGroupBy(ExpressionBuilder builder, IBuildContext keyContext, Expression path, Dictionary<Expression, SqlPlaceholderExpression> currentPlaceholders, SelectQuery query, Expression groupByExpression)
 		{
 			var placeholders = ExpressionBuildVisitor.CollectPlaceholders(groupByExpression);
 
-			// it is a case whe we do not group elements
-			if (path is ContextRefExpression && placeholders.Count == 1 && QueryHelper.IsConstantFast(placeholders[0].Sql))
+			if (placeholders.Count == 1 && SequenceHelper.IsSameContext(path, keyContext))
 			{
-				var newPlaceholder = builder.UpdateNesting(query, placeholders[0])
-					.WithSelectQuery(query);
+				var alreadyTranslated = placeholders[0];
+				if (QueryHelper.IsConstantFast(alreadyTranslated.Sql))
+				{
+					// it is a case whe we do not group elements
+					var newPlaceholder = builder.UpdateNesting(query, alreadyTranslated)
+						.WithSelectQuery(query);
 
-				return newPlaceholder;
+					return newPlaceholder;
+				}
+
+				placeholders.Clear();
+				placeholders.Add(alreadyTranslated.WithPath(path));
 			}
 
 			var transformed = groupByExpression;
@@ -375,8 +385,8 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (GroupByContext.SubQuery.SelectQuery.GroupBy.IsEmpty || GroupByContext.SubQuery.SelectQuery.GroupBy.GroupingType != GroupingType.GroupBySets)
 					{
 						// appending missing keys
-						if (!AppendGrouping(GroupByContext.SubQuery, GroupByContext.CurrentPlaceholders, Builder, GroupByContext.SubQuery, path, result,
-							    GroupByContext.SubQuery.SelectQuery.GroupBy.GroupingType, out var translated, out var error))
+						if (!AppendGrouping(Builder,     this, GroupByContext.SubQuery, GroupByContext.CurrentPlaceholders,
+							    GroupByContext.SubQuery, path, result,                  GroupByContext.SubQuery.SelectQuery.GroupBy.GroupingType, out var translated, out var error))
 						{
 							return path;
 						}
