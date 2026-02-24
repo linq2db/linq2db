@@ -7,6 +7,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -81,6 +83,23 @@ namespace Tests.Linq
 
 				var result = query.ToArray();
 			}
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_Take_in_Subquery)]
+		public void SubQueryAggregate([DataSources(TestProvName.AllAccess)]
+			string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.SelectQuery(() => new
+			{
+				Parents  = db.Parent.Count(),
+				Children = db.Child.Count()
+			}).Single();
+
+			result.Parents.ShouldBe(Parent.Count());
+			result.Children.ShouldBe(Child.Count());
 		}
 
 		[Test]
