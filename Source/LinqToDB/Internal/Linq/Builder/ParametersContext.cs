@@ -126,6 +126,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			parameterName ??= "p";
 
+			if (expr is ConstantExpression constExpr && constExpr.Value is DataParameter dataParameter)
+			{
+				parameterName = dataParameter.Name!;
+			}
+
 			var mappingSchema = context?.MappingSchema ?? MappingSchema;
 			var entry         = PrepareParameterCacheEntry(mappingSchema, expr, parameterName, columnDescriptor, doNotCheckCompatibility, buildParameterType);
 
@@ -185,7 +190,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			var valueType        = elementType ?? paramExpression.Type;
 			var paramType        = elementType ?? paramExpression.UnwrapConvertToNotObject().Type;
 
-			var paramDataType = columnDescriptor?.GetDbDataType(true) ?? mappingSchema.GetDbDataType(paramType);
+			var paramDataType = columnDescriptor?.GetDbDataType(true)
+									?? (typeof(DataParameter).IsSameOrParentOf(paramType) && paramExpression is ConstantExpression constExpr
+										? (constExpr.Value as DataParameter)!.DbDataType
+										: mappingSchema.GetDbDataType(paramType));
+
 			if (paramDataType.EqualsDbOnly(SqlDataType.MakeUndefined(paramType).Type))
 				paramDataType = mappingSchema.GetUnderlyingDataType(paramType, out _).Type;
 
