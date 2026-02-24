@@ -118,7 +118,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestQueryWithGroupBy([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void GroupingKeyShouldFullyMaterialize([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -127,7 +127,7 @@ namespace Tests.UserTests
 			var ssId    = TestData.Guid3;
 			var chId    = TestData.Guid4;
 
-			using var aisle = db.CreateLocalTable<AisleDTO>([new AisleDTO() { Id = aisleId, AdditionaField1 = "test", OptimizationMaxLevel = OptimizationLevel.On }]);
+			using var aisle = db.CreateLocalTable<AisleDTO>([new AisleDTO() { Id = aisleId, AdditionalField1 = "test", OptimizationMaxLevel = OptimizationLevel.On }]);
 			using var refTable = db.CreateLocalTable<RefResPointAisleDTO>([new RefResPointAisleDTO() { AisleId = aisleId, ResourcePointId = rpId }]);
 			using var rps = db.CreateLocalTable<WmsResourcePointDTO>([new WmsResourcePointDTO() { Id = rpId, IsSrm = true }]);
 			using var shelfs = db.CreateLocalTable<StorageShelfDTO>([new StorageShelfDTO() { Id = ssId, AisleID = aisleId }]);
@@ -138,23 +138,24 @@ namespace Tests.UserTests
 				join refrpa in db.GetTable<RefResPointAisleDTO>() on a.Id equals refrpa.AisleId
 				join rp in db.GetTable<WmsResourcePointDTO>() on refrpa.ResourcePointId equals rp.Id
 				join ss in db.GetTable<StorageShelfDTO>() on a.Id equals ss.AisleID
-				where a.Status != AisleStatus.OutOfOrder &&
-					  a.GroupStatus != AisleStatus.OutOfOrder &&
-					  a.OptimizationMaxLevel > OptimizationLevel.Off &&
-					  rp.IsSrm &&
-					  !rp.OutOfOrder
-				group new { a, rp, ss } by new { a, rp } into g
+				where a.Status               != AisleStatus.OutOfOrder &&
+				      a.GroupStatus          != AisleStatus.OutOfOrder &&
+				      a.OptimizationMaxLevel > OptimizationLevel.Off   &&
+				      rp.IsSrm                                         &&
+				      !rp.OutOfOrder
+				group new { a, rp, ss } by new { a, rp }
+				into g
 				select new SRMInfeedPoint(
 					g.Key.a,
 					g.Key.rp,
 					g.Max(x => x.ss.DepthCoordinate),
 					(from c in db.GetTable<ChannelDTO>()
-					 where c.Status == ChannelStatus.Available &&
-						   c.AisleID == g.Key.a.Id
-					 select c).Count())
-				).ToDictionary(srm => srm.Aisle!.Id);
+						where c.Status  == ChannelStatus.Available &&
+						      c.AisleID == g.Key.a.Id
+						select c).Count())
+			).ToDictionary(srm => srm.Aisle!.Id);
 
-			dict!.First().Value!.Aisle!.AdditionaField1.ShouldBe("test");
+			dict!.First().Value!.Aisle!.AdditionalField1.ShouldBe("test");
 		}
 	}
 }
