@@ -39,9 +39,9 @@ namespace Tests.UserTests
 			[Column] public AisleStatus GroupStatus { get; set; }
 			[Column] public OptimizationLevel OptimizationMaxLevel { get; set; }
 
-			[Column] public string? AdditionaField1 { get; set; }
-			[Column] public string? AdditionaField2 { get; set; }
-			[Column] public string? AdditionaField3 { get; set; }
+			[Column] public string? AdditionalField1 { get; set; }
+			[Column] public string? AdditionalField2 { get; set; }
+			[Column] public string? AdditionalField3 { get; set; }
 		}
 
 		[Table]
