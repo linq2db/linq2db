@@ -553,6 +553,12 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 64), DefaultValue(true)]
 		public bool IsSubqueryExpressionInsidePredicateSupported { get; set; } = true;
 
+		/// <summary>
+		/// Provider supports JOIN to subquery which contains reference to parent table in join condition.
+		/// </summary>
+		[DataMember(Order = 66), DefaultValue(true)]
+		public bool IsSubqueryJoinOnOuterReferenceSupported { get; set; } = true;
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null;
@@ -640,6 +646,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsTakeWithInAllAnySomeSubquerySupported              .GetHashCode()
 				^ IsSimpleCoalesceSupported                            .GetHashCode()
 				^ IsSubqueryExpressionInsidePredicateSupported         .GetHashCode()
+				^ IsSubqueryJoinOnOuterReferenceSupported                      .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -708,6 +715,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsCrossJoinSyntaxRequired                             == other.IsCrossJoinSyntaxRequired
 				&& IsSimpleCoalesceSupported                             == other.IsSimpleCoalesceSupported
 				&& IsSubqueryExpressionInsidePredicateSupported          == other.IsSubqueryExpressionInsidePredicateSupported
+				&& IsSubqueryJoinOnOuterReferenceSupported                       == other.IsSubqueryJoinOnOuterReferenceSupported
 				&& IsTakeWithInAllAnySomeSubquerySupported               == other.IsTakeWithInAllAnySomeSubquerySupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}

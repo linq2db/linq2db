@@ -144,6 +144,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 				}
 
+				if (!_providerFlags.IsSubqueryJoinOnOuterReferenceSupported)
+				{
+					if (QueryHelper.IsJoinsDependsOnOuterSources(selectQuery))
+					{
+						errorMessage = ErrorHelper.Error_JoinOnOuterReferenceNotSupported;
+						return false;
+					}
+				}
+
 				if (!_providerFlags.IsSubQueryTakeSupported && selectQuery.Select.TakeValue != null && IsDependsOnOuterSources())
 				{
 					if (_parentQuery?.From.Tables.Count > 0 || IsDependsOnOuterSources())
