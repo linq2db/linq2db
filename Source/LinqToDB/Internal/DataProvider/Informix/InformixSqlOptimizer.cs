@@ -161,9 +161,10 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 			statement = (TElement)visitor.WrapParameters(
 				statement,
-				WrapParametersVisitor.WrapFlags.InSelect |
-				WrapParametersVisitor.WrapFlags.InBinary |
-				WrapParametersVisitor.WrapFlags.InFunctionParameters);
+				WrapParametersVisitor.WrapFlags.InSelect             |
+				WrapParametersVisitor.WrapFlags.InBinary             |
+				WrapParametersVisitor.WrapFlags.InFunctionParameters |
+				WrapParametersVisitor.WrapFlags.CastBoolean);
 
 			return statement;
 		}
