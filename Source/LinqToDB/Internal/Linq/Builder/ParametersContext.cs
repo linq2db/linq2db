@@ -306,6 +306,14 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				dbDataTypeExpression = Expression.Property(providerValueGetter, Methods.LinqToDB.DataParameter.DbDataType);
 
+				var parameterExpr = providerValueGetter.Replace(objParam, paramExpression);
+				if (OptimizationContext.CanBeEvaluatedOnClient(parameterExpr))
+				{
+					var nameExpr = Expression.Property(parameterExpr, Methods.LinqToDB.DataParameter.Name);
+					if (nameExpr.EvaluateExpression() is string currentName)
+						parameterName = currentName;
+				}
+
 				if (columnDescriptor != null)
 				{
 					var dbDataType = columnDescriptor.GetDbDataType(false);
