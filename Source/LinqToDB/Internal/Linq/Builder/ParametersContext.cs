@@ -288,6 +288,9 @@ namespace LinqToDB.Internal.Linq.Builder
 									return null;
 							}
 
+							if (columnDescriptor != null)
+								providerValueGetter = columnDescriptor.ApplyConversions(providerValueGetter, paramDataType, true);
+
 							providerValueGetter = convertExpr != null
 								? InternalExtensions.ApplyLambdaToExpression(convertExpr, providerValueGetter)
 								: ColumnDescriptor.ApplyConversions(MappingSchema, providerValueGetter, paramDataType, null, true);
