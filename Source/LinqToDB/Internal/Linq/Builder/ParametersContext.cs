@@ -300,19 +300,21 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
+			if (typeof(DataParameter).IsSameOrParentOf(paramExpression.Type))
+			{
+				if (OptimizationContext.CanBeEvaluatedOnClient(paramExpression))
+				{
+					var nameExpr = Expression.Property(paramExpression, Methods.LinqToDB.DataParameter.Name);
+					if (nameExpr.EvaluateExpression() is string currentName)
+						parameterName = currentName;
+				}
+			}
+
 			Expression? dbDataTypeExpression = null;
 
 			if (typeof(DataParameter).IsSameOrParentOf(providerValueGetter.Type))
 			{
 				dbDataTypeExpression = Expression.Property(providerValueGetter, Methods.LinqToDB.DataParameter.DbDataType);
-
-				var parameterExpr = providerValueGetter.Replace(objParam, paramExpression);
-				if (OptimizationContext.CanBeEvaluatedOnClient(parameterExpr))
-				{
-					var nameExpr = Expression.Property(parameterExpr, Methods.LinqToDB.DataParameter.Name);
-					if (nameExpr.EvaluateExpression() is string currentName)
-						parameterName = currentName;
-				}
 
 				if (columnDescriptor != null)
 				{
