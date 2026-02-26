@@ -1919,6 +1919,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					{
 						return false;
 					}
+
+					if (parentQuery.HasOrderBy() && !parentQuery.OrderBy.Items.All(oi => oi.Expression is SqlColumn && subQuery.Select.Columns.Contains(oi.Expression)))
+					{
+						return false;
+					}
 				}
 				else
 				{
