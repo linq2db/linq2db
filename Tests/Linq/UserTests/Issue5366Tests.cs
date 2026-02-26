@@ -22,7 +22,7 @@ using DataType = LinqToDB.DataType;
 namespace Tests.UserTests.Test5366
 {
 	[TestFixture]
-	public class Test5366Tests : TestBase
+	public class Issue5366Tests : TestBase
 	{
 		public enum InventoryResourceStatus
 		{
