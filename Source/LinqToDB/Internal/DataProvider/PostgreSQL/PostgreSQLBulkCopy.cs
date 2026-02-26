@@ -103,6 +103,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 			var writer      = _provider.Adapter.BeginBinaryImport(connection, copyCommand);
 
+			if (writer.SupportsTimeout && (options.BulkCopyOptions.BulkCopyTimeout.HasValue || LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout))
+				writer.Timeout = TimeSpan.FromSeconds(options.BulkCopyOptions.BulkCopyTimeout ?? dataConnection.CommandTimeout);
+
 			return ProviderSpecificCopySyncImpl(table.DataContext, dataConnection, options.BulkCopyOptions, source, connection, tableName, columns, columnTypes, npgsqlTypes, dbTypes, copyCommand, batchSize, writer);
 		}
 
@@ -267,6 +270,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(false)
 				: _provider.Adapter.BeginBinaryImport(connection, copyCommand);
 
+			if (writer.SupportsTimeout && (options.BulkCopyOptions.BulkCopyTimeout.HasValue || LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout))
+				writer.Timeout = TimeSpan.FromSeconds(options.BulkCopyOptions.BulkCopyTimeout ?? dataConnection.CommandTimeout);
+
 			if (!writer.SupportsAsync)
 			{
 				// seems to be missing one of the required async methods; fallback to sync importer
@@ -385,6 +391,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			var writer = _provider.Adapter.BeginBinaryImportAsync != null
 				? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(false)
 				: _provider.Adapter.BeginBinaryImport(connection, copyCommand);
+
+			if (writer.SupportsTimeout && (options.BulkCopyOptions.BulkCopyTimeout.HasValue || LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout))
+				writer.Timeout = TimeSpan.FromSeconds(options.BulkCopyOptions.BulkCopyTimeout ?? dataConnection.CommandTimeout);
 
 			if (!writer.SupportsAsync)
 			{
