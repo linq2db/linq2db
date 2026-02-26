@@ -103,8 +103,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 			var writer      = _provider.Adapter.BeginBinaryImport(connection, copyCommand);
 
-			if (writer.SupportsTimeout && (options.BulkCopyOptions.BulkCopyTimeout.HasValue || LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout))
-				writer.Timeout = TimeSpan.FromSeconds(options.BulkCopyOptions.BulkCopyTimeout ?? dataConnection.CommandTimeout);
+			ConfigureWriter(writer, dataConnection, options.BulkCopyOptions);
 
 			return ProviderSpecificCopySyncImpl(table.DataContext, dataConnection, options.BulkCopyOptions, source, connection, tableName, columns, columnTypes, npgsqlTypes, dbTypes, copyCommand, batchSize, writer);
 		}
@@ -270,8 +269,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(false)
 				: _provider.Adapter.BeginBinaryImport(connection, copyCommand);
 
-			if (writer.SupportsTimeout && (options.BulkCopyOptions.BulkCopyTimeout.HasValue || LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout))
-				writer.Timeout = TimeSpan.FromSeconds(options.BulkCopyOptions.BulkCopyTimeout ?? dataConnection.CommandTimeout);
+			ConfigureWriter(writer, dataConnection, options.BulkCopyOptions);
 
 			if (!writer.SupportsAsync)
 			{
@@ -392,8 +390,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(false)
 				: _provider.Adapter.BeginBinaryImport(connection, copyCommand);
 
-			if (writer.SupportsTimeout && (options.BulkCopyOptions.BulkCopyTimeout.HasValue || LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout))
-				writer.Timeout = TimeSpan.FromSeconds(options.BulkCopyOptions.BulkCopyTimeout ?? dataConnection.CommandTimeout);
+			ConfigureWriter(writer, dataConnection, options.BulkCopyOptions);
 
 			if (!writer.SupportsAsync)
 			{
@@ -486,6 +483,12 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			await CloseConnectionIfNecessaryAsync(table.DataContext).ConfigureAwait(false);
 
 			return rowsCopied;
+		}
+
+		private static void ConfigureWriter(NpgsqlProviderAdapter.NpgsqlBinaryImporter writer, DataConnection dataConnection, BulkCopyOptions options)
+		{
+			if (writer.SupportsTimeout && (options.BulkCopyTimeout.HasValue || LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout))
+				writer.Timeout = TimeSpan.FromSeconds(options.BulkCopyTimeout ?? dataConnection.CommandTimeout);
 		}
 	}
 }
