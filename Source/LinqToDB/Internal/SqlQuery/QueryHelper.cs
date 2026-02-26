@@ -38,7 +38,11 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static bool IsDependsOnSource(IQueryElement testedRoot, ISqlTableSource onSource, IReadOnlyCollection<IQueryElement>? elementsToIgnore = null)
 		{
-			return IsDependsOnSources(testedRoot, new [] { onSource }, elementsToIgnore);
+			var sources = onSource is SqlTableSource source
+				? EnumerateAccessibleSources(source).ToArray()
+				: [onSource];
+
+			return IsDependsOnSources(testedRoot, sources, elementsToIgnore);
 		}
 
 		public static bool IsDependsOnSources(IQueryElement testedRoot, IReadOnlyCollection<ISqlTableSource> onSources, IReadOnlyCollection<IQueryElement>? elementsToIgnore = null)
@@ -124,6 +128,25 @@ namespace LinqToDB.Internal.SqlQuery
 
 			var result = excepted.Any();
 			return result;
+		}
+
+		public static bool IsJoinsDependsOnOuterSources(SelectQuery selectQuery)
+		{
+			var accessibleTableSources = EnumerateAccessibleTableSources(selectQuery).ToList();
+			var knownSources       = new HashSet<ISqlTableSource>(accessibleTableSources.Select(x => x.Source));
+
+			foreach (var source in accessibleTableSources)
+			{
+				foreach (var joined in source.Joins)
+				{
+					if (IsDependsOnOuterSources(joined.Condition, currentSources: knownSources))
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
 		}
 
 		public static bool HasTableInQuery(SelectQuery query, SqlTable table)
