@@ -1040,9 +1040,10 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5364")]
-		public void TestImplicitConnectionManagement([EFDataSources] string provider)
+		public void TestImplicitConnectionManagement([EFDataSources] string provider, [Values] bool fromTransaction)
 		{
 			using var ctx = CreateContext(provider);
+			using var tr = fromTransaction ? ctx.Database.BeginTransaction() : null;
 
 			for (var i = 0; i < 200; i++)
 				_ = ctx.Masters.ToLinqToDB().Count();
