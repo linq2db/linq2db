@@ -11,7 +11,7 @@ namespace LinqToDB.Internal.Mapping
 	/// </summary>
 	public abstract class LockedMappingSchema : MappingSchema
 	{
-		protected LockedMappingSchema(string configuration, params MappingSchema[] schemas)
+		protected LockedMappingSchema(string? configuration, params MappingSchema[] schemas)
 			: base(configuration, schemas)
 		{
 		}

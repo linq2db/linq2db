@@ -25,6 +25,7 @@ using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.EntityFrameworkCore.Internal;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 using LinqToDB.SqlQuery;
@@ -341,13 +342,17 @@ namespace LinqToDB.EntityFrameworkCore
 			IValueConverterSelector? convertorSelector,
 			DataOptions dataOptions)
 		{
-			var schema = new MappingSchema();
+			var schema = new EFCoreMappingSchema();
 			if (metadataReader != null)
 				schema.AddMetadataReader(metadataReader);
 
 			DefineConvertors(schema, model, mappingSource, convertorSelector, dataOptions);
 
 			return schema;
+		}
+
+		private sealed class EFCoreMappingSchema() : LockedMappingSchema(null)
+		{
 		}
 
 		/// <summary>

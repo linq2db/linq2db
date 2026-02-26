@@ -1038,6 +1038,15 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			using var db = ctx.CreateLinqToDBConnection();
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5364")]
+		public void TestImplicitConnectionManagement([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			for (var i = 0; i < 200; i++)
+				_ = ctx.Masters.ToLinqToDB().Count();
+		}
 	}
 
 	#region Test Extensions
