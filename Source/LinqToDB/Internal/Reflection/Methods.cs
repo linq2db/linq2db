@@ -395,6 +395,7 @@ namespace LinqToDB.Internal.Reflection
 			{
 				public static readonly PropertyInfo DbDataType = MemberHelper.PropertyOf<Data.DataParameter>(dp => dp.DbDataType);
 				public static readonly PropertyInfo Value      = MemberHelper.PropertyOf<Data.DataParameter>(dp => dp.Value);
+				public static readonly PropertyInfo Name       = MemberHelper.PropertyOf<Data.DataParameter>(dp => dp.Name);
 
 				internal static readonly MethodInfo ClearValue = MemberHelper.MethodOf<Data.DataParameter>(dp => dp.ClearValue(false));
 				internal static readonly MethodInfo SetType    = MemberHelper.MethodOf<Data.DataParameter>(dp => dp.SetType(default));
