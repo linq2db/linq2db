@@ -30,10 +30,8 @@ namespace Tests.UserTests
 			[Column]     public int Field4 { get; set; }
 		}
 
-		[ThrowsRequiredOuterJoins(TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3)]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_Join_Without_Condition)]
 		[Test]
-		public void UpdateWithOuterApplyInSubquery([DataSources(TestProvName.AllClickHouse, TestProvName.AllSapHana, TestProvName.AllSqlCe)] string context)
+		public void UpdateWithOuterApplyInSubquery([IncludeDataSources(TestProvName.AllOracle23, TestProvName.AllPostgreSQL)] string context)
 		{
 			var outerData = new[]
 			{
