@@ -106,8 +106,69 @@ namespace LinqToDB.Internal.SqlQuery
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsSimpleOrSet(this SelectQuery selectQuery)
 		{
-			return !selectQuery.Select.HasModifier && !selectQuery.HasWhere()   && !selectQuery.HasGroupBy() 
+			return !selectQuery.Select.HasModifier && !selectQuery.HasWhere()   && !selectQuery.HasGroupBy()
 			       && !selectQuery.HasHaving()     && !selectQuery.HasOrderBy() && selectQuery.From.Tables is [{ Joins.Count: 0 }];
 		}
+
+		/// <summary>
+		/// Determines whether the specified query selects exactly one column.
+		/// </summary>
+		/// <param name="selectQuery">The query to evaluate. Cannot be null.</param>
+		/// <returns>true if the query selects exactly one column; otherwise, false.</returns>
+		[DebuggerStepThrough]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsSingleColumn(this SelectQuery selectQuery)
+		{
+			return selectQuery.Select.Columns.Count == 1;
+		}
+
+		/// <summary>
+		/// Determines whether the specified query does not reference any tables in its FROM clause.
+		/// </summary>
+		/// <param name="selectQuery">The query to evaluate for the presence of tables. Cannot be null.</param>
+		/// <returns>true if the query's FROM clause contains no tables; otherwise, false.</returns>
+		[DebuggerStepThrough]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool HasNoTables(this SelectQuery selectQuery)
+		{
+			return selectQuery.From.Tables.Count == 0;
+		}
+
+		/// <summary>
+		/// Determines whether the specified table source includes any join clauses.
+		/// </summary>
+		/// <param name="tableSource">The table source to check for the presence of joins. Cannot be null.</param>
+		/// <returns>true if the table source contains one or more joins; otherwise, false.</returns>
+		[DebuggerStepThrough]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool HasJoins(this SqlTableSource tableSource)
+		{
+			return tableSource.Joins.Count > 0;
+		}
+
+		/// <summary>
+		/// Determines whether the specified joined table includes any join clauses.
+		/// </summary>
+		/// <param name="joinedTable">The joined table to inspect for join clauses. Cannot be null.</param>
+		/// <returns>true if the joined table contains one or more join clauses; otherwise, false.</returns>
+		[DebuggerStepThrough]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool HasJoins(this SqlJoinedTable joinedTable)
+		{
+			return joinedTable.Table.HasJoins();
+		}
+
+		/// <summary>
+		/// Determines whether the specified select query contains no columns in its SELECT clause.
+		/// </summary>
+		/// <param name="selectQuery">The select query to evaluate. Cannot be null.</param>
+		/// <returns>true if the select query has no columns defined in its SELECT clause; otherwise, false.</returns>
+		[DebuggerStepThrough]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool HasNoColumns(this SelectQuery selectQuery)
+		{
+			return selectQuery.Select.Columns.Count == 0;
+		}
+
 	}
 }

@@ -994,7 +994,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 					if (join.Table.Source == table)
 					{
-						if (ts.Joins.Skip(j + 1).Any(sj => QueryHelper.IsDependsOnSource(sj, table)))
+						if (ts.Joins.Skip(j + 1).Any(sj => QueryHelper.IsDependsOnSource(sj, join.Table)))
 							return false;
 
 						source = join.Table;
@@ -1002,7 +1002,7 @@ namespace LinqToDB.Internal.SqlProvider
 						ts.Joins.RemoveAt(j);
 						query.Where.ConcatSearchCondition(join.Condition);
 
-						for (var sj = 0; j < join.Table.Joins.Count; j++)
+						for (var sj = 0; sj < join.Table.Joins.Count; sj++)
 						{
 							ts.Joins.Insert(j + sj, join.Table.Joins[sj]);
 						}
@@ -1029,7 +1029,8 @@ namespace LinqToDB.Internal.SqlProvider
 				{
 					SqlTable table when table       == ut => false,
 					SqlField field when field.Table == ut => false,
-					_ => true,
+					SqlCteTable                           => false,
+					_                                     => true,
 				};
 			});
 
@@ -1397,7 +1398,15 @@ namespace LinqToDB.Internal.SqlProvider
 
 				if (item.Column is SqlRowExpression && item.Expression is SelectQuery subQuery)
 				{
-					if (subQuery.Select.Columns is [var column])
+					if (subQuery.HasNoTables())
+					{
+						if (SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.UpdateLiteral))
+						{
+							var rowValues = subQuery.Select.Columns.Select(c => c.Expression).ToArray();
+							item.Expression = new SqlRowExpression(rowValues);
+						}
+					}
+					else if (subQuery.Select.Columns is [var column])
 					{
 						if (column.Expression is SelectQuery { From.Tables: [] } columnQuery)
 						{

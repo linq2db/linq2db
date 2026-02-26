@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
@@ -1106,9 +1107,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (isApplySupported && isAgg)
 					return optimized;
 
-				if (doNotEmulate)
-					return optimized;
-
 				var skipValue = sql.Select.SkipValue;
 				var takeValue = sql.Select.TakeValue;
 
@@ -1377,7 +1375,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, castExpression.Expression, ignoreWhere, inGrouping);
 			}
 
-			var allowed = _movingComplexityVisitor.IsAllowedToMove(_providerFlags, column, parent : parentQuery,
+			var allowed = _movingComplexityVisitor.IsAllowedToMove(_providerFlags, column, testMode: MovingComplexityVisitor.TestMode.CountUsage, parent : parentQuery,
 				// Elements which should be ignored while searching for usage
 				column.Parent,
 				_applySelect == parentQuery ? parentQuery.Where : null,
@@ -2236,39 +2234,42 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			for (var i = 0; i < selectQuery.From.Tables.Count; i++)
 			{
 				var tableSource = selectQuery.From.Tables[i];
-				if (tableSource.Joins.Count == 0 && tableSource.Source is SelectQuery { From.Tables.Count: 0, HasSetOperators: false } subQuery)
+				if (tableSource.Source is SelectQuery { HasSetOperators: false, DoNotRemove: false } subQuery && subQuery.HasNoTables())
 				{
-					if (selectQuery.From.Tables.Count == 1)
+					if (tableSource.Joins.Count == 0)
 					{
-						if (selectQuery.HasGroupBy()
-						    || selectQuery.HasHaving()
-						    || selectQuery.HasOrderBy())
+						if (selectQuery.From.Tables.Count == 1)
 						{
-							continue;
+							if (selectQuery.HasGroupBy()
+							    || selectQuery.HasHaving()
+							    || selectQuery.HasOrderBy())
+							{
+								continue;
+							}
 						}
+
+						if (subQuery.HasWhere())
+						{
+							if (!QueryHelper.IsAggregationQuery(selectQuery))
+								continue;
+						}
+
+						replaced = true;
+
+						foreach (var c in subQuery.Select.Columns)
+						{
+							NotifyReplaced(c.Expression, c);
+						}
+
+						if (subQuery.HasWhere())
+						{
+							selectQuery.Where.SearchCondition = QueryHelper.MergeConditions(selectQuery.Where.SearchCondition, subQuery.Where.SearchCondition);
+						}
+
+						selectQuery.From.Tables.RemoveAt(i);
+
+						--i; // repeat again
 					}
-
-					if (subQuery.HasWhere())
-					{
-						if (!QueryHelper.IsAggregationQuery(selectQuery))
-							continue;
-					}
-
-					replaced = true;
-
-					foreach (var c in subQuery.Select.Columns)
-					{
-						NotifyReplaced(c.Expression, c);
-					}
-
-					if (subQuery.HasWhere())
-					{
-						selectQuery.Where.SearchCondition = QueryHelper.MergeConditions(selectQuery.Where.SearchCondition, subQuery.Where.SearchCondition);
-					}
-
-					selectQuery.From.Tables.RemoveAt(i);
-
-					--i; // repeat again
 				}
 			}
 
@@ -2304,7 +2305,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					for (var index = 0; index < tableSource.Joins.Count; index++)
 					{
 						var join = tableSource.Joins[index];
-						if (join.JoinType == JoinType.Inner && join.Table.Source is SelectQuery joinQuery)
+						if (join.JoinType == JoinType.Inner && join.Table.Joins.Count == 0 && join.Table.Source is SelectQuery joinQuery)
 						{
 							if (joinQuery.From.Tables.Count == 0)
 							{
@@ -2373,7 +2374,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						sources ??= QueryHelper.EnumerateAccessibleSources(join.Table).ToList();
 						move = !QueryHelper.IsDependsOnSources(predicate, sources);
 
-						if (!move && !QueryHelper.IsDependsOnSources(predicate, [left]))
+						if (!move && !QueryHelper.IsDependsOnSource(predicate, left))
 						{
 							if (nestedWhereCond == null)
 							{
@@ -2794,7 +2795,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						continue;
 					}
 
-					if (!QueryHelper.IsDependsOnSource(selectQuery, join.Table.Source, [join]) && IsRemovableJoin(join))
+					if (!QueryHelper.IsDependsOnSource(selectQuery, join.Table, [join]) && IsRemovableJoin(join))
 					{
 						table.Joins.RemoveAt(index);
 					}
@@ -2945,7 +2946,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			var counter = 1;
 
-			if (!_movingComplexityVisitor.IsAllowedToMove(_providerFlags, column, root, [column.Parent]))
+			if (!_movingComplexityVisitor.IsAllowedToMove(_providerFlags, column, MovingComplexityVisitor.TestMode.CountUsage, root, [column.Parent]))
 			{
 				counter = 2;
 			}
@@ -3064,6 +3065,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return false;
 			}
 
+			if (join.Table.HasJoins())
+			{
+				return false;
+			}
+
 			var joinQuery       = join.Table.Source as SelectQuery;
 			if (joinQuery == null || joinQuery.Select.Columns.Count == 0)
 			{
@@ -3071,6 +3077,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 
 			bool? isSingleRecord = null;
+
+			if (join.Cardinality.HasFlag(SourceCardinality.One))
+				isSingleRecord = true;
 
 			if (join.JoinType is JoinType.CrossApply or JoinType.Inner)
 			{
@@ -3109,12 +3118,30 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (_updateTable != null && joinQuery.HasElement(_updateTable))
 				return false;
 
-			var isNoTableQuery = joinQuery.From.Tables.Count == 0;
-
-			if (!isNoTableQuery)
+			if (!joinQuery.HasNoTables())
 			{
 				if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery: parentQuery, fakeJoin: null, columnSubqueryLevel: 0, _providerFlags, out _))
 					return false;
+			}
+
+			if (join.JoinType is JoinType.OuterApply)
+			{
+				foreach (var column in joinQuery.Select.Columns)
+				{
+					if (!_movingComplexityVisitor.IsAllowedToMove(_providerFlags, column, MovingComplexityVisitor.TestMode.TestingSubqueryExpression, parentQuery, [joinQuery]))
+					{
+						if (!deduplicate)
+							return false;
+
+						if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery : parentQuery, fakeJoin : null, columnSubqueryLevel : 0, _providerFlags, out _))
+							return false;
+
+						MoveDuplicateUsageToSubQuery(parentQuery, ref doNotRemoveQueries);
+						isModified = true;
+
+						break;
+					}
+				}
 			}
 
 			if (joinQuery.Select.Columns.Count > 1 && joinQuery.Select.IsDistinct)
@@ -3123,6 +3150,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					return false;
 
 				MoveToSubQuery(joinQuery);
+				isModified = true;
 			}
 
 			foreach (var testedColumn in joinQuery.Select.Columns)
@@ -3301,6 +3329,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			int              _foundCount;
 			int              _multiplier;
 			bool             _notAllowedScope;
+			TestMode             _testMode;
+			bool             _isSubqueryInsideCondition;
+
+			[Flags]
+			public enum TestMode
+			{
+				None                      = 0,
+				CountUsage                = 1 << 0,
+				TestingSubqueryExpression = 1 << 2,
+			}
 
 			public bool DoNotAllow { get; private set; }
 
@@ -3315,19 +3353,21 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				DoNotAllow         = default;
 				_sqlProviderFlags  = default!;
 				_multiplier        = 1;
+				_testMode          = TestMode.None;
 
 				_foundCount = 0;
 
 				base.Cleanup();
 			}
 
-			public bool IsAllowedToMove(SqlProviderFlags sqlProviderFlags, ISqlExpression testExpression, IQueryElement parent, params IQueryElement?[] ignore)
+			public bool IsAllowedToMove(SqlProviderFlags sqlProviderFlags, ISqlExpression testExpression, TestMode testMode, IQueryElement parent, params IQueryElement?[] ignore)
 			{
 				Cleanup();
 
 				_sqlProviderFlags  = sqlProviderFlags;
 				_ignore            = ignore;
 				_expressionToCheck = testExpression;
+				_testMode          = testMode;
 
 				Visit(parent);
 
@@ -3353,10 +3393,22 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						return element;
 					}
 
+					if (!_sqlProviderFlags.IsSubqueryExpressionInsidePredicateSupported && _isSubqueryInsideCondition)
+					{
+						if (_testMode.HasFlag(TestMode.TestingSubqueryExpression) || _expressionToCheck is SqlColumn { Expression: SelectQuery })
+						{
+							DoNotAllow = true;
+							return element;
+						}
+					}
+
 					_foundCount += _multiplier;
 
-					if (_foundCount > 1)
+					if (_testMode.HasFlag(TestMode.CountUsage) && _foundCount > 1)
+					{
 						DoNotAllow = true;
+						return element;
+					}
 
 					return element;
 				}
@@ -3387,12 +3439,40 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (!_sqlProviderFlags.IsSimpleCoalesceSupported)
 					++_multiplier;
 
+				var saveIsSubqueryInsideCondition = _isSubqueryInsideCondition;
+
+				_isSubqueryInsideCondition = true;
+
 				base.VisitSqlCoalesceExpression(element);
+
+				_isSubqueryInsideCondition = saveIsSubqueryInsideCondition;
 
 				if (!_sqlProviderFlags.IsSimpleCoalesceSupported)
 					--_multiplier;
 
 				return element;
+			}
+
+			protected internal override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
+			{
+				var saveIsSubqueryInsideCondition = _isSubqueryInsideCondition;
+				_isSubqueryInsideCondition = true;
+
+				base.VisitIsNullPredicate(predicate);
+
+				_isSubqueryInsideCondition = saveIsSubqueryInsideCondition;
+				return predicate;
+			}
+
+			protected internal override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
+			{
+				var saveIsSubqueryInsideCondition = _isSubqueryInsideCondition;
+				_isSubqueryInsideCondition = predicate.Expr1.IsNullValue() || predicate.Expr2.IsNullValue();
+
+				base.VisitExprExprPredicate(predicate); 
+
+				_isSubqueryInsideCondition = saveIsSubqueryInsideCondition;
+				return predicate;
 			}
 
 			readonly struct DoNotAllowScopeStruct : IDisposable

@@ -1309,7 +1309,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 			var testExpr = inPredicate.Expr1;
 
-			var intTestSubQuery = inPredicate.SubQuery.Clone();
+			var intTestSubQuery = inPredicate.SubQuery.CloneQuery();
 			intTestSubQuery = WrapIfNeeded(intTestSubQuery);
 			var inSubqueryExpr = intTestSubQuery.Select.Columns[0].Expression;
 
