@@ -19,7 +19,7 @@ using Tests.Model;
 
 using DataType = LinqToDB.DataType;
 
-namespace Tests.UserTests.Test5366
+namespace Tests.UserTests
 {
 	[TestFixture]
 	public class Issue5366Tests : TestBase
