@@ -288,6 +288,9 @@ namespace LinqToDB.Internal.Linq.Builder
 									return null;
 							}
 
+							if (columnDescriptor != null)
+								providerValueGetter = columnDescriptor.ApplyConversions(providerValueGetter, paramDataType, true);
+
 							providerValueGetter = convertExpr != null
 								? InternalExtensions.ApplyLambdaToExpression(convertExpr, providerValueGetter)
 								: ColumnDescriptor.ApplyConversions(MappingSchema, providerValueGetter, paramDataType, null, true);
@@ -297,6 +300,16 @@ namespace LinqToDB.Internal.Linq.Builder
 							providerValueGetter = ColumnDescriptor.ApplyConversions(MappingSchema, providerValueGetter, paramDataType, null, true);
 						}
 					}
+				}
+			}
+
+			if (typeof(DataParameter).IsSameOrParentOf(paramExpression.Type))
+			{
+				if (OptimizationContext.CanBeEvaluatedOnClient(paramExpression))
+				{
+					var nameExpr = Expression.Property(paramExpression, Methods.LinqToDB.DataParameter.Name);
+					if (nameExpr.EvaluateExpression() is string { Length: > 0 } currentName)
+						parameterName = currentName;
 				}
 			}
 
