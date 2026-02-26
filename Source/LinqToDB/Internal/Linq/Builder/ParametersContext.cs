@@ -303,6 +303,16 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
+			if (typeof(DataParameter).IsSameOrParentOf(paramExpression.Type))
+			{
+				if (OptimizationContext.CanBeEvaluatedOnClient(paramExpression))
+				{
+					var nameExpr = Expression.Property(paramExpression, Methods.LinqToDB.DataParameter.Name);
+					if (nameExpr.EvaluateExpression() is string { Length: > 0 } currentName)
+						parameterName = currentName;
+				}
+			}
+
 			Expression? dbDataTypeExpression = null;
 
 			if (typeof(DataParameter).IsSameOrParentOf(providerValueGetter.Type))
