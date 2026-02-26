@@ -146,6 +146,19 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void DistinctOrderByExpression([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.Select(ch => ch.MiddleName)
+				.Distinct()
+				.OrderBy(ch => ch ?? "-1");
+
+			AssertQuery(query);
+		}
+
+		[Test]
 		public void DistinctJoin([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
