@@ -1902,6 +1902,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
+			if (subQuery.IsDistinct())
+			{
+				if (parentQuery.HasOrderBy() && !parentQuery.OrderBy.Items.All(oi => oi.Expression is SqlColumn col && subQuery.Select.Columns.Contains(col)))
+				{
+					return false;
+				}
+			}
+
 			if (subQuery.IsDistinct() != parentQuery.IsDistinct())
 			{
 				if (subQuery.IsDistinct())
@@ -1916,11 +1924,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 
 					if (parentQuery.Select.Columns.Count > 0 && parentQuery.Select.Columns.Count != subQuery.Select.Columns.Count)
-					{
-						return false;
-					}
-
-					if (parentQuery.HasOrderBy() && !parentQuery.OrderBy.Items.All(oi => oi.Expression is SqlColumn && subQuery.Select.Columns.Contains(oi.Expression)))
 					{
 						return false;
 					}
