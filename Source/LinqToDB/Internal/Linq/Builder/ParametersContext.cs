@@ -305,7 +305,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (OptimizationContext.CanBeEvaluatedOnClient(paramExpression))
 				{
 					var nameExpr = Expression.Property(paramExpression, Methods.LinqToDB.DataParameter.Name);
-					if (nameExpr.EvaluateExpression() is string currentName)
+					if (nameExpr.EvaluateExpression() is string { Length: > 0 } currentName)
 						parameterName = currentName;
 				}
 			}
