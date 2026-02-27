@@ -709,7 +709,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			[SuppressMessage("Design", "CA1044:Properties should not be write only", Justification = "We need fake setter for mapping API")]
 			public TimeSpan Timeout
 			{
-				private get => throw new InvalidOperationException($"Getter doesn't exist on actual property");
+				private get => throw new InvalidOperationException("Getter doesn't exist on actual property");
 				set => ((Action<NpgsqlBinaryImporter, TimeSpan>)CompiledWrappers[12])(this, value);
 			}
 

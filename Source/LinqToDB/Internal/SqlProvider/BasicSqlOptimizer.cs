@@ -1385,9 +1385,9 @@ namespace LinqToDB.Internal.SqlProvider
 					return e;
 				});
 
-				if (item.Column is SqlRowExpression && item.Expression is SelectQuery subQuery)
+				if (item is { Column: SqlRowExpression, Expression: SelectQuery subQuery })
 				{
-					if (subQuery.HasNoTables())
+					if (subQuery.HasNoTables)
 					{
 						if (SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.UpdateLiteral))
 						{

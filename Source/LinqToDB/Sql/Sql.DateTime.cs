@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 
 using LinqToDB.Internal.SqlQuery;
@@ -174,7 +174,7 @@ namespace LinqToDB
 					DateParts.Minute      => "minute",
 					DateParts.Second      => "second",
 					DateParts.Millisecond => "millisecond",
-					_                     => throw new InvalidOperationException($"Unexpected datepart: {part}")
+					_                     => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
 			}
 
@@ -196,7 +196,7 @@ namespace LinqToDB
 				{
 					// FB 4.0.1+
 					DateParts.Millisecond => builder.Mapping.GetDbDataType(typeof(decimal)).WithPrecisionScale(18, 1),
-					_                     => builder.Mapping.GetDbDataType(typeof(long))
+					_                     => builder.Mapping.GetDbDataType(typeof(long)),
 				};
 
 				builder.ResultExpression = new SqlFunction(type, "DATEDIFF", partSql, startdate, endDate);
@@ -220,7 +220,7 @@ namespace LinqToDB
 					DateParts.Minute      => "minute",
 					DateParts.Second      => "second",
 					DateParts.Millisecond => "millisecond",
-					_                     => throw new InvalidOperationException($"Unexpected datepart: {part}")
+					_                     => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
 			}
 
@@ -249,7 +249,6 @@ namespace LinqToDB
 				var part       = builder.GetValue<DateParts>(0);
 				var startdate  = builder.GetExpression(1);
 				var endDate    = builder.GetExpression(2);
-				var divider    = 1;
 
 				if (startdate is null || endDate is null)
 				{
@@ -257,19 +256,15 @@ namespace LinqToDB
 					return;
 				}
 
-				string funcName;
-				DbDataType dbType;
-
-				switch (part)
+				var (funcName, divider, dbType) = part switch
 				{
-					case DateParts.Day        : funcName = "Days_Between"                    ; dbType = builder.Mapping.GetDbDataType(typeof(int)) ; break;
-					case DateParts.Hour       : funcName = "Seconds_Between"; divider = 3600 ; dbType = builder.Mapping.GetDbDataType(typeof(long)); break;
-					case DateParts.Minute     : funcName = "Seconds_Between"; divider = 60   ; dbType = builder.Mapping.GetDbDataType(typeof(long)); break;
-					case DateParts.Second     : funcName = "Seconds_Between"                 ; dbType = builder.Mapping.GetDbDataType(typeof(long)); break;
-					case DateParts.Millisecond: funcName = "Nano100_Between"; divider = 10000; dbType = builder.Mapping.GetDbDataType(typeof(long)); break;
-					default:
-						throw new InvalidOperationException($"Unexpected datepart: {part}");
-				}
+					DateParts.Day         => ("Days_Between",        1, builder.Mapping.GetDbDataType(typeof(int))),
+					DateParts.Hour        => ("Seconds_Between",  3600, builder.Mapping.GetDbDataType(typeof(long))),
+					DateParts.Minute      => ("Seconds_Between",    60, builder.Mapping.GetDbDataType(typeof(long))),
+					DateParts.Second      => ("Seconds_Between",     1, builder.Mapping.GetDbDataType(typeof(long))),
+					DateParts.Millisecond => ("Nano100_Between", 10000, builder.Mapping.GetDbDataType(typeof(long))),
+					_ => throw new InvalidOperationException($"Unexpected datepart: {part}"),
+				};
 
 				ISqlExpression func = new SqlFunction(dbType, funcName, startdate, endDate);
 				if (divider != 1)

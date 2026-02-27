@@ -2259,10 +2259,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			for (var i = 0; i < selectQuery.From.Tables.Count; i++)
 			{
 				var tableSource = selectQuery.From.Tables[i];
-				if (tableSource.Source is SelectQuery { HasSetOperators: false, DoNotRemove: false } subQuery && subQuery.HasNoTables())
+				if (tableSource is { HasJoins: false, Source: SelectQuery { HasSetOperators: false, DoNotRemove: false, HasNoTables: true } subQuery })
 				{
-					if (tableSource.Joins.Count == 0)
-					{
 					if (selectQuery.From.Tables.Count == 1)
 					{
 						if (selectQuery.HasGroupBy
@@ -2295,7 +2293,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					--i; // repeat again
 				}
-			}
 			}
 
 			return replaced;
@@ -3108,13 +3105,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return false;
 			}
 
-			if (join.Table.HasJoins())
+			if (join.Table.HasJoins)
 			{
 				return false;
 			}
 
-			var joinQuery       = join.Table.Source as SelectQuery;
-			if (joinQuery == null || joinQuery.Select.Columns.Count == 0)
+			if (join.Table.Source is not SelectQuery { HasNoColumns: false } joinQuery)
 			{
 				return false;
 			}
@@ -3136,7 +3132,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			var evaluationContext = new EvaluationContext();
 
-			if (joinQuery.Select.Columns.Count > 1)
+			if (!joinQuery.IsSingleColumn)
 			{
 				if (!processMultiColumn)
 					return false;
@@ -3161,7 +3157,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (_updateTable != null && joinQuery.HasElement(_updateTable))
 				return false;
 
-			if (!joinQuery.HasNoTables())
+			if (!joinQuery.HasNoTables)
 			{
 				if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery: parentQuery, fakeJoin: null, columnSubqueryLevel: 0, _providerFlags, out _))
 					return false;
