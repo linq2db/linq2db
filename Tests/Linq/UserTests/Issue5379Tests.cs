@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
-
-using Shouldly;
 
 namespace Tests.UserTests
 {
@@ -28,14 +25,14 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void QueryWithUnionAllDoesNotWork([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void QueryWithUnionAllDoesNotWork([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
 
 			using var aisle = db.CreateLocalTable<InventoryResourceDTO>([new InventoryResourceDTO() { Id = TestData.Guid1, ResourceID = TestData.Guid2 }]);
 			using var refTable = db.CreateLocalTable<WmsLoadCarrierDTO>([new WmsLoadCarrierDTO() { Id =  TestData.Guid2 }]);
 
-			var inventoryQry = (IQueryable<InventoryResourceDTO>) db.GetTable<InventoryResourceDTO>();
+			var inventoryQry = db.GetTable<InventoryResourceDTO>().AsQueryable();
 			var lcQry = db.GetTable<WmsLoadCarrierDTO>();
 
 			var qryAssignment =
