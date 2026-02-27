@@ -1648,6 +1648,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
+			if (QueryHelper.IsAggregationQuery(subQuery))
+			{
+				if (!parentQuery.IsSimple())
+					return false;
+			}
+
 			// Check columns
 			//
 
