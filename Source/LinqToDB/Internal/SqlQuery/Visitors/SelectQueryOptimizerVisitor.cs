@@ -1900,6 +1900,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
+			if (subQuery.IsDistinct())
+			{
+				if (parentQuery.HasOrderBy() && !parentQuery.OrderBy.Items.All(oi => oi.Expression is SqlColumn col && subQuery.Select.Columns.Contains(col)))
+				{
+					return false;
+				}
+			}
+
 			if (subQuery.IsDistinct() != parentQuery.IsDistinct())
 			{
 				if (subQuery.IsDistinct())
