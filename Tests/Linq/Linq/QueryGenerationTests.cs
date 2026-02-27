@@ -3,6 +3,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -607,6 +608,23 @@ namespace Tests.Linq
 				Assert.That(command.Sql, Does.Contain("MERGE"));
 				Assert.That(command.Parameters, Has.Count.Zero);
 			}
+		}
+
+		[Test]
+		public void ToSqlQuery_ProviderSpecific([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<TableWithIdentity>();
+
+			var query = (from u in db.Person
+				select u).AsSqlServer().OptionMaxDop(1);
+
+			Assert.DoesNotThrow(() =>
+			{
+				var command = query.ToSqlQuery();
+
+				TestContext.Out.WriteLine(command.Sql);
+			});
 		}
 	}
 }

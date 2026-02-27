@@ -1,13 +1,7 @@
-﻿using System.Linq;
-
-using LinqToDB.DataProvider.PostgreSQL;
+﻿using LinqToDB.DataProvider.PostgreSQL;
+using LinqToDB.Internal.Linq;
 
 namespace LinqToDB.Internal.DataProvider.PostgreSQL
 {
-	sealed class PostgreSQLSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IPostgreSQLSpecificQueryable<TSource>
-	{
-		public PostgreSQLSpecificQueryable(IQueryable<TSource> queryable) : base(queryable)
-		{
-		}
-	}
+	sealed class PostgreSQLSpecificQueryable<TSource>(IExpressionQuery<TSource> query) : DatabaseSpecificQueryable<TSource>(query), IPostgreSQLSpecificQueryable<TSource>;
 }
