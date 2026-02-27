@@ -614,7 +614,6 @@ namespace Tests.Linq
 		public void ToSqlQuery_ProviderSpecific([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<TableWithIdentity>();
 
 			var query = (from u in db.Person
 				select u).AsSqlServer().OptionMaxDop(1);
