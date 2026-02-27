@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-using LinqToDB.DataProvider.ClickHouse;
+﻿using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.Internal.Linq;
 
 namespace LinqToDB.Internal.DataProvider.ClickHouse

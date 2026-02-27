@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-using LinqToDB.DataProvider.Ydb;
+﻿using LinqToDB.DataProvider.Ydb;
 using LinqToDB.Internal.Linq;
 
 namespace LinqToDB.Internal.DataProvider.Ydb
