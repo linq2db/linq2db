@@ -141,7 +141,8 @@ namespace LinqToDB.Data
 
 					sb.AppendLine();
 
-					sqlProvider.PrintParameters(DataConnection, sb, Command.Parameters.Cast<DbParameter>());
+					if (Command.Parameters.Count > 0)
+						sqlProvider.PrintParameters(DataConnection, sb, Command.Parameters.Cast<DbParameter>());
 
 					sb.AppendLine(Command.CommandText);
 
