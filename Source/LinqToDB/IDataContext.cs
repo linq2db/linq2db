@@ -16,8 +16,26 @@ using LinqToDB.Mapping;
 namespace LinqToDB
 {
 	/// <summary>
-	/// Database connection abstraction interface.
+	/// Query translation and execution context abstraction.
 	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// <see cref="IDataContext"/> defines the minimal contract required to translate LINQ
+	/// <c>Expression Tree</c> queries into an internal SQL AST and execute them against a data source.
+	/// </para>
+	///
+	/// <para>
+	/// The execution target may be a direct database provider (local execution)
+	/// or a remote execution endpoint. In remote mode, the translated SQL AST
+	/// (and parameters) is transferred for SQL text generation and execution on the remote side.
+	/// </para>
+	///
+	/// <para>
+	/// This interface represents a translation/execution boundary
+	/// (Expression Tree → SQL AST → SQL text → execution → materialization)
+	/// and does not define state tracking or deferred persistence semantics.
+	/// </para>
+	/// </remarks>
 	[PublicAPI]
 	public interface IDataContext : IConfigurationID, IDisposable, IAsyncDisposable
 	{

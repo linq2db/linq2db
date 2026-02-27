@@ -83,36 +83,33 @@ namespace LinqToDB
 		/// <list type="number">
 		///   <item>
 		///     <description>
-		///       A LINQ query is constructed over <see cref="ITable{T}"/> or
-		///       other LinqToDB queryable sources.
+		///       A LINQ query is constructed over <see cref="ITable{T}"/> or other queryable sources.
 		///     </description>
 		///   </item>
 		///   <item>
 		///     <description>
-		///       The LINQ Expression Tree is captured and analyzed.
+		///       The LINQ <c>Expression Tree</c> is captured and analyzed.
 		///     </description>
 		///   </item>
 		///   <item>
 		///     <description>
-		///       Sub-expressions that can be fully evaluated on the client
-		///       without referencing query data may be computed before SQL translation.
+		///       Sub-expressions that can be evaluated on the client without referencing query data
+		///       may be computed and supplied as SQL parameters.
 		///     </description>
 		///   </item>
 		///   <item>
 		///     <description>
-		///       The remaining expression tree is translated into a SQL representation.
+		///       The remaining expression is translated into an internal SQL Abstract Syntax Tree (SQL AST).
 		///     </description>
 		///   </item>
 		///   <item>
 		///     <description>
-		///       Provider-specific rules adjust SQL generation according to dialect
-		///       and database capabilities.
+		///       Provider-specific rules transform the SQL AST according to dialect and capabilities.
 		///     </description>
 		///   </item>
 		///   <item>
 		///     <description>
-		///       SQL text and parameters are generated and executed via
-		///       <see cref="DataConnection"/>.
+		///       Final SQL text and parameters are generated from the SQL AST and executed.
 		///     </description>
 		///   </item>
 		///   <item>
@@ -173,6 +170,15 @@ namespace LinqToDB
 		/// where t.Field1 == RunClientMethod(t.Field2)
 		/// </code>
 		/// </example>
+		///
+		/// <para><b>Remote execution:</b></para>
+		///
+		/// <para>
+		/// LinqToDB supports remote query execution (e.g., WCF, gRPC, SignalR, HTTP).
+		/// In remote mode, the query is translated locally into SQL AST first,
+		/// then the SQL AST (and parameters) is transferred to the remote side
+		/// where provider-specific SQL text generation and execution occur.
+		/// </para>
 		/// </remarks>
 		public static class TranslationModel
 		{
@@ -331,7 +337,7 @@ namespace LinqToDB
 		///     <description>
 		///       Mapping can be defined via attributes or via <see cref="MappingSchema"/>.
 		///     </description>
-		///   </item>
+		///   </item>в 
 		///   <item>
 		///     <description>
 		///       Mapping can also be configured dynamically using Fluent Mapping

@@ -24,10 +24,55 @@ using LinqToDB.Metrics;
 namespace LinqToDB.Data
 {
 	/// <summary>
-	/// Implements persistent database connection abstraction over different database engines.
-	/// Could be initialized using connection string name or connection string,
-	/// or attached to existing connection or transaction.
+	/// Primary <see cref="IDataContext"/> implementation for direct database access.
 	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// <see cref="DataConnection"/> represents a configured execution context:
+	/// provider + mapping + options + database connection.
+	/// </para>
+	///
+	/// <para><b>Connection lifetime:</b></para>
+	/// <para>
+	/// The underlying connection is opened on first command execution
+	/// and remains open until this instance is disposed.
+	/// The typical usage pattern is short-lived contexts:
+	/// create → execute queries/commands → dispose (usually via <c>using</c>).
+	/// </para>
+	///
+	/// <para><b>Execution model:</b></para>
+	/// <para>
+	/// LINQ queries are translated from <c>Expression Tree</c>
+	/// into an internal SQL AST, then into provider-specific SQL text,
+	/// and executed when enumerated or explicitly materialized.
+	/// </para>
+	///
+	/// <para><b>Performance guidance:</b></para>
+	/// <para>
+	/// Construct <see cref="DataOptions"/> once and reuse it to create context instances.
+	/// Reusing stable options enables internal caching and reduces initialization overhead.
+	/// </para>
+	///
+	/// <para>
+	/// A common practice is to define a typed context by deriving from
+	/// <see cref="DataConnection"/> and exposing <see cref="ITable{T}"/>
+	/// properties for mapped entities.
+	/// </para>
+	/// <example>
+	/// <code>
+	/// class MyDataConnection : DataConnection
+	/// {
+	///     private static readonly DataOptions _options =
+	///         new DataOptions()
+	///             .UseSqlServer("connection string");
+	///
+	///     public MyDataConnection() : base(_options) {}
+	///
+	///     public ITable&lt;MyEntity&gt; MyEntities => GetTable&lt;MyEntity&gt;();
+	/// }
+	/// </code>
+	/// </example>
+	/// </remarks>
 	[PublicAPI]
 	public partial class DataConnection : IDataContext, IInfrastructure<IServiceProvider>
 	{

@@ -22,8 +22,35 @@ using LinqToDB.Metrics;
 namespace LinqToDB
 {
 	/// <summary>
-	/// Implements abstraction over non-persistent database connection that could be released after query or transaction execution.
+	/// <see cref="IDataContext"/> implementation with non-persistent (per-operation)
+	/// connection management.
 	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// <see cref="DataContext"/> represents a configured execution context:
+	/// provider + mapping + options + database connection.
+	/// </para>
+	///
+	/// <para><b>Connection lifetime:</b></para>
+	/// <para>
+	/// Unlike <see cref="DataConnection"/>, the underlying connection may be opened and closed
+	/// per query or command execution. Connection retention is controlled by the
+	/// <c>KeepConnectionAlive</c> setting.
+	/// </para>
+	///
+	/// <para><b>Execution model:</b></para>
+	/// <para>
+	/// LINQ queries are translated from <c>Expression Tree</c>
+	/// into an internal SQL AST, then into provider-specific SQL text,
+	/// and executed when enumerated or explicitly materialized.
+	/// </para>
+	///
+	/// <para>
+	/// This type exists primarily for scenarios that require per-operation
+	/// connection behavior or prefer a context shape familiar from earlier LINQ-to-database APIs.
+	/// It does not introduce ORM-style state tracking or unit-of-work semantics.
+	/// </para>
+	/// </remarks>
 	[PublicAPI]
 	public partial class DataContext : IDataContext, IInfrastructure<IServiceProvider>
 	{
