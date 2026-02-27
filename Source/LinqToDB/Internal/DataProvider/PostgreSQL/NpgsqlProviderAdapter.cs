@@ -659,7 +659,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		public sealed class NpgsqlBinaryImporter : TypeWrapper
 		{
 			[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
-			private static object[] Wrappers {get;}
+			private static object[] Wrappers { get; }
 				= new object[]
 			{
 				// depending on npgsql version, [0] or [1] will fail to compile and CompiledWrappers will contain null
@@ -692,10 +692,19 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 				// [11]: WriteAsync
 				new Tuple<LambdaExpression, bool>
 				((Expression<Func<NpgsqlBinaryImporter, object?, string      , CancellationToken, Task>>)((this_, value, dataTypeName, token) => this_.WriteAsync(value, dataTypeName, token)), true),
+				// [12]: set Timeout
+				new Tuple<LambdaExpression, bool>(PropertySetter((NpgsqlBinaryImporter this_) => this_.Timeout), true),
 			};
 
 			public NpgsqlBinaryImporter(object instance, Delegate[] wrappers) : base(instance, wrappers)
 			{
+			}
+
+			[SuppressMessage("Design", "CA1044:Properties should not be write only", Justification = "We need fake setter for mapping API")]
+			public TimeSpan Timeout
+			{
+				private get => throw new InvalidOperationException($"Getter doesn't exist on actual property");
+				set => ((Action<NpgsqlBinaryImporter, TimeSpan>)CompiledWrappers[12])(this, value);
 			}
 
 			/// <summary>
@@ -731,6 +740,8 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			public bool HasComplete5 => CompiledWrappers[2] != null;
 
 			public bool SupportsAsync => CompiledWrappers[5] != null && CompiledWrappers[6] != null && CompiledWrappers[7] != null && CompiledWrappers[8] != null;
+
+			public bool SupportsTimeout => CompiledWrappers[12] != null;
 		}
 
 		#endregion
