@@ -234,7 +234,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_Take_in_Subquery)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void SubQueryTest([DataSources(TestProvName.AllAccess)]
 			string context)
 		{
@@ -248,7 +248,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_Take_in_Subquery)]
 		public void SubQueryAggregate([DataSources(TestProvName.AllAccess)]
 			string context)
 		{
