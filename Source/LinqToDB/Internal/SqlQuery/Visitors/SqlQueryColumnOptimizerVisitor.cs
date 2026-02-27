@@ -185,7 +185,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				MarkColumnUsed(element);
 				return base.VisitSqlColumnReference(element);
 			}
-
+			
 			// In Phase 2, don't visit column expressions - usage already collected
 			return element;
 		}
@@ -205,7 +205,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 
 					usedFields.Add(element.PhysicalName);
-
+					
 					// Find and mark the corresponding column
 					for (var i = 0; i < cte.Cte!.Fields.Count; i++)
 					{

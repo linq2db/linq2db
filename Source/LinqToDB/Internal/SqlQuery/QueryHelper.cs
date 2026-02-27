@@ -124,6 +124,25 @@ namespace LinqToDB.Internal.SqlQuery
 			return result;
 		}
 
+		public static bool IsJoinsDependsOnOuterSources(SelectQuery selectQuery)
+		{
+			var accessibleTableSources = EnumerateAccessibleTableSources(selectQuery).ToList();
+			var knownSources       = new HashSet<ISqlTableSource>(accessibleTableSources.Select(x => x.Source));
+
+			foreach (var source in accessibleTableSources)
+			{
+				foreach (var joined in source.Joins)
+				{
+					if (IsDependsOnOuterSources(joined.Condition, currentSources: knownSources))
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
 		public static bool HasTableInQuery(SelectQuery query, SqlTable table)
 		{
 			return EnumerateAccessibleTables(query).Any(t => t == table);

@@ -25,6 +25,7 @@ namespace LinqToDB.Internal.DataProvider
 			InMerge              = 1 << 6,
 			InBinary             = 1 << 7,
 			InFunctionParameters = 1 << 8,
+			CastBoolean 		 = 1 << 9,
 		}
 	
 		public WrapParametersVisitor(VisitMode visitMode) : base(visitMode, null)
@@ -157,6 +158,11 @@ namespace LinqToDB.Internal.DataProvider
 				{
 					sqlParameter.NeedsCast = true;
 				}
+			}
+
+			if (sqlParameter.Type.SystemType == typeof(bool) && _wrapFlags.HasFlag(WrapFlags.CastBoolean))
+			{
+				sqlParameter.NeedsCast = true;
 			}
 
 			return base.VisitSqlParameter(sqlParameter);

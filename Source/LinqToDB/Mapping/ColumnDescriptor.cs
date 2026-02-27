@@ -668,7 +668,7 @@ namespace LinqToDB.Mapping
 
 				if (assignable || fromType.IsAssignableFrom(getterExpr.Type.UnwrapNullableType()))
 				{
-					if (!valueConverter.HandlesNulls)
+					if (!valueConverter.HandlesNulls && getterExpr.Type.IsNullableOrReferenceType())
 					{
 						toProvider = mappingSchema.AddNullCheck(toProvider);
 					}
@@ -694,6 +694,9 @@ namespace LinqToDB.Mapping
 					}
 					else
 					{
+						if (getterExpr.Type != fromType && getterExpr.Type == fromType.UnwrapNullableType())
+							getterExpr = Expression.Convert(getterExpr, fromType);
+
 						getterExpr = InternalExtensions.ApplyLambdaToExpression(toProvider, getterExpr);
 					}
 				}
