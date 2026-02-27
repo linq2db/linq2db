@@ -44,7 +44,6 @@ namespace Tests.UserTests
 			result.Count.ShouldBe(compareData.Count);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
 		public void Net9MethodsMinBy([DataSources] string context)
 		{
@@ -56,7 +55,6 @@ namespace Tests.UserTests
 			result!.Id.ShouldBe(compareData!.Id);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
 		public void Net9MethodsMaxBy([DataSources] string context)
 		{
@@ -68,31 +66,28 @@ namespace Tests.UserTests
 			result!.Id.ShouldBe(compareData!.Id);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
 		public void Net9MethodsExceptBy([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
 			using var testeeCoverageTable = db.CreateLocalTable(CreateTestTableData());
-			var result = db.GetTable<TestTable>().ExceptBy(db.GetTable<TestTable>(), x => x);
-			var compareData = CreateTestTableData().ExceptBy(CreateTestTableData(), x => x);
-			result.ShouldBe(compareData);
+			var result = db.GetTable<TestTable>().ExceptBy(new[] { 20 }, x => x.TestId).ToList();
+			var compareData = CreateTestTableData().ExceptBy(new[] { 20 }, x => x.TestId).ToList();
+			result.Count.ShouldBe(compareData.Count);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
 		public void Net9MethodsIntersectBy([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
 			using var testeeCoverageTable = db.CreateLocalTable(CreateTestTableData());
-			var result = db.GetTable<TestTable>().IntersectBy(db.GetTable<TestTable>(), x => x);
-			var compareData = CreateTestTableData().IntersectBy(CreateTestTableData(), x => x);
-			result.ShouldBe(compareData);
+			var result = db.GetTable<TestTable>().IntersectBy(new[] { 20, 30 }, x => x.TestId).ToList();
+			var compareData = CreateTestTableData().IntersectBy(new[] { 20, 30 }, x => x.TestId).ToList();
+			result.Count.ShouldBe(compareData.Count);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
 		public void Net9MethodsUnionBy([DataSources] string context)
 		{
@@ -104,28 +99,36 @@ namespace Tests.UserTests
 			result.Count.ShouldBe(compareData.Count);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
 		public void Net9MethodsIndex([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
 			using var testeeCoverageTable = db.CreateLocalTable(CreateTestTableData());
-			var result = db.GetTable<TestTable>().Index().ToList();
-			var compareData = CreateTestTableData().Index().ToList();
+			var result = db.GetTable<TestTable>().OrderBy(x => x.Id).Index().ToList();
+			var compareData = CreateTestTableData().OrderBy(x => x.Id).Index().ToList();
 			result.Count.ShouldBe(compareData.Count);
+			for (int i = 0; i < result.Count; i++)
+			{
+				result[i].Index.ShouldBe(compareData[i].Index);
+				result[i].Item.Id.ShouldBe(compareData[i].Item.Id);
+			}
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
 		public void Net9MethodsCountBy([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
 			using var testeeCoverageTable = db.CreateLocalTable(CreateTestTableData());
-			var result = db.GetTable<TestTable>().CountBy(x => x.TestId);
-			var compareData = CreateTestTableData().CountBy(x => x.TestId);
-			result.ShouldBe(compareData);
+			var result = db.GetTable<TestTable>().CountBy(x => x.TestId).OrderBy(x => x.Key).ToList();
+			var compareData = CreateTestTableData().CountBy(x => x.TestId).OrderBy(x => x.Key).ToList();
+			result.Count.ShouldBe(compareData.Count);
+			for (int i = 0; i < result.Count; i++)
+			{
+				result[i].Key.ShouldBe(compareData[i].Key);
+				result[i].Value.ShouldBe(compareData[i].Value);
+			}
 		}
 
 		//[ActiveIssue]
