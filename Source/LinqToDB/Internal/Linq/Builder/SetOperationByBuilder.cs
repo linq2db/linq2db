@@ -37,20 +37,19 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (methodName == "ExceptBy")
 			{
 				// source.ExceptBy(second, keySelector)
-				// → source.Where(x => !second.Select(keySelector).Distinct().Contains(keySelector(x)))
+				// → source.Where(x => !second.Distinct().Contains(keySelector(x)))
 				transformedExpression = BuildExceptBy(sourceExpression, secondExpression, keySelector, sourceType, keyType);
 			}
 			else if (methodName == "IntersectBy")
 			{
 				// source.IntersectBy(second, keySelector)
-				// → source.Where(x => second.Select(keySelector).Distinct().Contains(keySelector(x)))
+				// → source.Where(x => second.Distinct().Contains(keySelector(x)))
 				transformedExpression = BuildIntersectBy(sourceExpression, secondExpression, keySelector, sourceType, keyType);
 			}
 			else // UnionBy
 			{
 				// source.UnionBy(second, keySelector)
-				// → source.Union(second).DistinctBy(keySelector) + OrderBy wrapper
-				// Note: DistinctBy requires OrderBy, so we'll just use Concat + Distinct on keys + Where
+				// → source.Concat(second).GroupBy(keySelector).Select(g => g.First())
 				transformedExpression = BuildUnionBy(sourceExpression, secondExpression, keySelector, sourceType, keyType);
 			}
 
@@ -59,12 +58,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static Expression BuildExceptBy(Expression source, Expression second, LambdaExpression keySelector, Type sourceType, Type keyType)
 		{
-			// second.Select(keySelector).Distinct()
-			var selectMethod = Methods.Queryable.Select.MakeGenericMethod(keyType, keyType);
-			var distinctMethod = Methods.Queryable.Distinct.MakeGenericMethod(keyType);
+			// second is IEnumerable<TKey>, convert to IQueryable and apply Distinct
+			var asQueryableMethod = Methods.Queryable.AsQueryable.MakeGenericMethod(keyType);
+			var secondQueryable = Expression.Call(null, asQueryableMethod, second);
 
-			var secondKeys = Expression.Call(null, selectMethod, second, Expression.Quote(keySelector));
-			var distinctKeys = Expression.Call(null, distinctMethod, secondKeys);
+			var distinctMethod = Methods.Queryable.Distinct.MakeGenericMethod(keyType);
+			var distinctKeys = Expression.Call(null, distinctMethod, secondQueryable);
 
 			// Create parameter for Where clause: x => !distinctKeys.Contains(keySelector(x))
 			var parameter = Expression.Parameter(sourceType, "x");
@@ -82,12 +81,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static Expression BuildIntersectBy(Expression source, Expression second, LambdaExpression keySelector, Type sourceType, Type keyType)
 		{
-			// second.Select(keySelector).Distinct()
-			var selectMethod = Methods.Queryable.Select.MakeGenericMethod(keyType, keyType);
-			var distinctMethod = Methods.Queryable.Distinct.MakeGenericMethod(keyType);
+			// second is IEnumerable<TKey>, convert to IQueryable and apply Distinct
+			var asQueryableMethod = Methods.Queryable.AsQueryable.MakeGenericMethod(keyType);
+			var secondQueryable = Expression.Call(null, asQueryableMethod, second);
 
-			var secondKeys = Expression.Call(null, selectMethod, second, Expression.Quote(keySelector));
-			var distinctKeys = Expression.Call(null, distinctMethod, secondKeys);
+			var distinctMethod = Methods.Queryable.Distinct.MakeGenericMethod(keyType);
+			var distinctKeys = Expression.Call(null, distinctMethod, secondQueryable);
 
 			// Create parameter for Where clause: x => distinctKeys.Contains(keySelector(x))
 			var parameter = Expression.Parameter(sourceType, "x");
@@ -113,9 +112,11 @@ namespace LinqToDB.Internal.Linq.Builder
 			// GroupBy(keySelector)
 			var groupByMethod = Methods.Queryable.GroupBy.MakeGenericMethod(sourceType, keyType);
 			var grouped = Expression.Call(groupByMethod, concatenated, Expression.Quote(keySelector));
+
+			// Select(g => g.First())
 			var groupingType = typeof(IGrouping<,>).MakeGenericType(keyType, sourceType);
 			var groupParam = Expression.Parameter(groupingType, "g");
-			var firstMethod = Methods.Queryable.First.MakeGenericMethod(sourceType);
+			var firstMethod = Methods.Enumerable.First.MakeGenericMethod(sourceType);
 			var firstCall = Expression.Call(firstMethod, groupParam);
 			var selectLambda = Expression.Lambda(firstCall, groupParam);
 
