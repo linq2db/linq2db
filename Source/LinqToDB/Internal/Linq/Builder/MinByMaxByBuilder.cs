@@ -26,8 +26,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			var keySelector = methodCall.Arguments[1].UnwrapLambda();
 			var isMinBy = methodCall.Method.Name == nameof(Queryable.MinBy);
 
-			// Transform MinBy(selector) -> OrderBy(selector).First()
-			// Transform MaxBy(selector) -> OrderByDescending(selector).First()
+			// Transform MinBy(selector) -> OrderBy(selector).FirstOrDefault()
+			// Transform MaxBy(selector) -> OrderByDescending(selector).FirstOrDefault()
 
 			var elementType = methodCall.Method.GetGenericArguments()[0];
 			var keySelectorType = keySelector.ReturnType;
@@ -42,12 +42,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				sourceExpression,
 				methodCall.Arguments[1]);
 
-			// Create First() call  
-			var firstMethod = Methods.Queryable.First.MakeGenericMethod(elementType);
-			var firstExpression = Expression.Call(firstMethod, orderedExpression);
+			// Create FirstOrDefault() call  
+			var firstOrDefaultMethod = Methods.Queryable.FirstOrDefault.MakeGenericMethod(elementType);
+			var firstOrDefaultExpression = Expression.Call(firstOrDefaultMethod, orderedExpression);
 
 			// Build the transformed expression
-			var result = builder.TryBuildSequence(new BuildInfo(buildInfo, firstExpression));
+			var result = builder.TryBuildSequence(new BuildInfo(buildInfo, firstOrDefaultExpression));
 			return result;
 		}
 	}

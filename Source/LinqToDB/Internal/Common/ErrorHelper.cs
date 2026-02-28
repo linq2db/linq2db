@@ -25,6 +25,7 @@
 		public const string Error_RowNumber                        = "Provider does not support ROW_NUMBER function.";
 		public const string Error_OrderByRequiredForIndexing       = "For retrieving index of row, specify OrderBy part.";
 		public const string Error_DistinctByRequiresOrderBy        = "DistinctBy requires at least one ordering key.";
+		public const string Error_IndexRequiresOrderBy             = "Index requires at least one ordering key.";
 
 		public const string Error_WindowFunctionsInSearchCondition = "Window functions cannot be used in search condition.";
 
