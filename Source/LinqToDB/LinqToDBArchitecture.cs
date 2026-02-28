@@ -337,7 +337,7 @@ namespace LinqToDB
 		///     <description>
 		///       Mapping can be defined via attributes or via <see cref="MappingSchema"/>.
 		///     </description>
-		///   </item>в 
+		///   </item>
 		///   <item>
 		///     <description>
 		///       Mapping can also be configured dynamically using Fluent Mapping
