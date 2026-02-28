@@ -22,8 +22,34 @@ using static LinqToDB.MultiInsertExtensions;
 namespace LinqToDB
 {
 	/// <summary>
-	/// Contains extension methods for LINQ queries.
+	/// LINQ extension methods that define LinqToDB query translation, SQL semantics,
+	/// and command execution APIs.
 	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// <see cref="LinqExtensions"/> contains the primary extension surface used with LinqToDB queryables
+	/// (e.g., <see cref="ITable{T}"/>, <see cref="IQueryable{T}"/>).
+	/// </para>
+	/// <para><b>Two categories of APIs:</b></para>
+	/// <list type="bullet">
+	///   <item>
+	///     <description>
+	///       <b>Query translation directives</b>: influence the SQL semantics of a query
+	///       (Expression Tree → SQL AST → provider-specific SQL text)
+	///       without executing it immediately.
+	///     </description>
+	///   </item>
+	///   <item>
+	///     <description>
+	///       <b>Command APIs (DML)</b>: translate to SQL statements (INSERT/UPDATE/DELETE/MERGE)
+	///       and execute according to the LINQ execution model.
+	///     </description>
+	///   </item>
+	/// </list>
+	/// <para>
+	/// Availability and exact SQL semantics are defined by the configured provider.
+	/// </para>
+	/// </remarks>
 	[PublicAPI]
 	public static partial class LinqExtensions
 	{
