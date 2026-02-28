@@ -3,10 +3,8 @@
 using System;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 using LinqToDB.Expressions;
-using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Reflection;
 
@@ -20,6 +18,7 @@ namespace LinqToDB.Internal.Linq.Builder
 #pragma warning disable CS8618
 			public T Data { get; set; }
 			public long RowNumber { get; set; }
+			public int SourceIndex { get; set; }
 #pragma warning restore CS8618
 		}
 
@@ -30,6 +29,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
+			if (!builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
+			{
+				return BuildSequenceResult.NotSupported();
+			}
+
 			var sourceType = methodCall.Method.GetGenericArguments()[0];
 			var keyType    = methodCall.Method.GetGenericArguments()[1];
 
@@ -74,9 +78,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (partitionPart.Length == 0)
 				partitionPart = [Expression.Constant(1)];
 
-			var orderByPart = partitionPart
-				.Select(p => (p, false))
-				.ToArray();
+			var orderByPart = BuildOrderByPart(source, parameter);
+			if (orderByPart.Length == 0)
+				orderByPart = partitionPart.Select(p => (p, false)).ToArray();
 
 			var rnCall = WindowFunctionHelpers.BuildRowNumber(partitionPart, orderByPart);
 
@@ -137,9 +141,9 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (partitionPart.Length == 0)
 				partitionPart = [Expression.Constant(1)];
 
-			var orderByPart = partitionPart
-				.Select(p => (p, false))
-				.ToArray();
+			var orderByPart = BuildOrderByPart(source, parameter);
+			if (orderByPart.Length == 0)
+				orderByPart = partitionPart.Select(p => (p, false)).ToArray();
 
 			var rnCall = WindowFunctionHelpers.BuildRowNumber(partitionPart, orderByPart);
 
@@ -178,36 +182,70 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static Expression BuildUnionBy(Expression source, Expression second, LambdaExpression keySelector, Type sourceType)
 		{
-			var secondAsQueryable = Expression.Call(
-				Methods.Queryable.AsQueryable.MakeGenericMethod(sourceType),
-				second);
+			var secondAsQueryable = Expression.Call(Methods.Queryable.AsQueryable.MakeGenericMethod(sourceType), second);
 
-			var concatMethod = Methods.Queryable.Concat.MakeGenericMethod(sourceType);
-			var concatenated = Expression.Call(concatMethod, source, secondAsQueryable);
+			var itemType = typeof(UnionByTuple<>).MakeGenericType(sourceType);
 
-			var itemType   = typeof(UnionByTuple<>).MakeGenericType(sourceType);
 			var sourceItem = Expression.Parameter(sourceType, "x");
-			var keyBody    = keySelector.GetBody(sourceItem);
+			var sourceSelectBody = Expression.MemberInit(
+				Expression.New(itemType),
+				Expression.Bind(itemType.GetProperty(nameof(UnionByTuple<>.Data))!, sourceItem),
+				Expression.Bind(itemType.GetProperty(nameof(UnionByTuple<>.SourceIndex))!, Expression.Constant(0)));
+
+			var sourceProjected = Expression.Call(
+				null,
+				Methods.Queryable.Select.MakeGenericMethod(sourceType, itemType),
+				source,
+				Expression.Quote(Expression.Lambda(sourceSelectBody, sourceItem)));
+
+			var secondItem = Expression.Parameter(sourceType, "x");
+			var secondSelectBody = Expression.MemberInit(
+				Expression.New(itemType),
+				Expression.Bind(itemType.GetProperty(nameof(UnionByTuple<>.Data))!, secondItem),
+				Expression.Bind(itemType.GetProperty(nameof(UnionByTuple<>.SourceIndex))!, Expression.Constant(1)));
+
+			var secondProjected = Expression.Call(
+				null,
+				Methods.Queryable.Select.MakeGenericMethod(sourceType, itemType),
+				secondAsQueryable,
+				Expression.Quote(Expression.Lambda(secondSelectBody, secondItem)));
+
+			var concatMethod = Methods.Queryable.Concat.MakeGenericMethod(itemType);
+			var concatenated = Expression.Call(concatMethod, sourceProjected, secondProjected);
+
+			var rowItem = Expression.Parameter(itemType, "x");
+			var dataBody = Expression.PropertyOrField(rowItem, nameof(UnionByTuple<>.Data));
+			var keyBody = keySelector.GetBody(dataBody);
 
 			var partitionPart = ExpressionHelpers.CollectMembers(keyBody).ToArray();
 			if (partitionPart.Length == 0)
 				partitionPart = [Expression.Constant(1)];
 
-			var orderByPart = partitionPart
-				.Select(p => (p, false))
-				.ToArray();
+			var sourceOrderBy = BuildOrderByPart(source, dataBody);
+			var orderByList = new System.Collections.Generic.List<(Expression expr, bool isDescending)>
+			{
+				(Expression.PropertyOrField(rowItem, nameof(UnionByTuple<>.SourceIndex)), false)
+			};
+
+			if (sourceOrderBy.Length == 0)
+				orderByList.AddRange(partitionPart.Select(p => (p, false)));
+			else
+				orderByList.AddRange(sourceOrderBy);
+
+			var orderByPart = orderByList.ToArray();
 
 			var rnCall = WindowFunctionHelpers.BuildRowNumber(partitionPart, orderByPart);
 
 			var selectBody = Expression.MemberInit(
 				Expression.New(itemType),
-				Expression.Bind(itemType.GetProperty(nameof(UnionByTuple<>.Data))!, sourceItem),
+				Expression.Bind(itemType.GetProperty(nameof(UnionByTuple<>.Data))!, dataBody),
+				Expression.Bind(itemType.GetProperty(nameof(UnionByTuple<>.SourceIndex))!, Expression.PropertyOrField(rowItem, nameof(UnionByTuple<>.SourceIndex))),
 				Expression.Bind(itemType.GetProperty(nameof(UnionByTuple<>.RowNumber))!, rnCall));
 
-			var selectLambda = Expression.Lambda(selectBody, sourceItem);
+			var selectLambda = Expression.Lambda(selectBody, rowItem);
 			var selectCall   = Expression.Call(
 				null,
-				Methods.Queryable.Select.MakeGenericMethod(sourceType, itemType),
+				Methods.Queryable.Select.MakeGenericMethod(itemType, itemType),
 				concatenated,
 				Expression.Quote(selectLambda));
 
@@ -230,6 +268,17 @@ namespace LinqToDB.Internal.Linq.Builder
 				Methods.Queryable.Select.MakeGenericMethod(itemType, sourceType),
 				whereCall,
 				Expression.Quote(Expression.Lambda(resultBody, resultParam)));
+		}
+
+		static (Expression expr, bool isDescending)[] BuildOrderByPart(Expression source, Expression parameter)
+		{
+			var orderByPart = WindowFunctionHelpers.ExtractOrderByPart(source, out _);
+			if (orderByPart.Length == 0)
+				return [];
+
+			return orderByPart
+				.Select(o => (o.lambda.GetBody(parameter), o.isDescending))
+				.ToArray();
 		}
 	}
 }

@@ -32,7 +32,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Net9MethodsDistinctBy([DataSources] string context)
+		public void Net9MethodsDistinctBy([IncludeDataSources(TestProvName.WithWindowFunctions)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -43,7 +43,7 @@ namespace Tests.UserTests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
-		public void Net9MethodsMinBy([DataSources] string context)
+		public void Net9MethodsMinBy([IncludeDataSources(TestProvName.WithWindowFunctions)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -54,7 +54,7 @@ namespace Tests.UserTests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
-		public void Net9MethodsMaxBy([DataSources] string context)
+		public void Net9MethodsMaxBy([IncludeDataSources(TestProvName.WithWindowFunctions)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -65,7 +65,7 @@ namespace Tests.UserTests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
-		public void Net9MethodsExceptBy([DataSources] string context)
+		public void Net9MethodsExceptBy([IncludeDataSources(TestProvName.WithWindowFunctions)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -76,7 +76,7 @@ namespace Tests.UserTests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
-		public void Net9MethodsIntersectBy([DataSources] string context)
+		public void Net9MethodsIntersectBy([IncludeDataSources(TestProvName.WithWindowFunctions)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -87,7 +87,7 @@ namespace Tests.UserTests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
-		public void Net9MethodsUnionBy([DataSources] string context)
+		public void Net9MethodsUnionBy([IncludeDataSources(TestProvName.WithWindowFunctions)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -98,7 +98,7 @@ namespace Tests.UserTests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
-		public void Net9MethodsIndex([DataSources] string context)
+		public void Net9MethodsIndex([IncludeDataSources(TestProvName.WithWindowFunctions)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -114,7 +114,7 @@ namespace Tests.UserTests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
-		public void Net9MethodsCountBy([DataSources] string context)
+		public void Net9MethodsCountBy([IncludeDataSources(TestProvName.WithWindowFunctions)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -131,7 +131,7 @@ namespace Tests.UserTests
 
 		//[ActiveIssue]
 		//[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
-		//public void Net9MethodsAggregateBy([DataSources] string context)
+		//public void Net9MethodsAggregateBy([IncludeDataSources(TestProvName.WithWindowFunctions)] string context)
 		//{
 		//	using var db = GetDataContext(context);
 

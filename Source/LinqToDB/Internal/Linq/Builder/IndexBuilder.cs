@@ -19,6 +19,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
+			if (!builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
+			{
+				return BuildSequenceResult.NotSupported();
+			}
+
 			var sequenceExpression = methodCall.Arguments[0];
 			var elementType = methodCall.Method.GetGenericArguments()[0];
 
@@ -88,7 +93,18 @@ namespace LinqToDB.Internal.Linq.Builder
 			var selectMethod = Methods.Queryable.Select.MakeGenericMethod(elementType, resultType);
 			var selectExpression = Expression.Call(selectMethod, contextRef, Expression.Quote(selectLambda));
 
-			return builder.TryBuildSequence(new BuildInfo(buildInfo, selectExpression));
+			// Ensure stable enumeration order by ordering by the computed index (Item1 of the tuple)
+			var tupleParam = Expression.Parameter(resultType, "t");
+			var indexSelector = Expression.Lambda(
+				Expression.PropertyOrField(tupleParam, "Item1"),
+				tupleParam);
+			var orderedExpression = Expression.Call(
+				typeof(Queryable),
+				nameof(Queryable.OrderBy),
+				new[] { resultType, typeof(int) },
+				selectExpression,
+				Expression.Quote(indexSelector));
+			return builder.TryBuildSequence(new BuildInfo(buildInfo, orderedExpression));
 		}
 	}
 }
