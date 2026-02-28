@@ -36,6 +36,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		public override void Cleanup()
 		{
 			_parentQuery         = null;
+			_fakeJoin            = null;
 			_providerFlags       = default!;
 			_isValid             = true;
 			_columnSubqueryLevel = default;
@@ -140,6 +141,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 								return false;
 							}
 						}
+					}
+				}
+
+				if (!_providerFlags.IsSubqueryJoinOnOuterReferenceSupported)
+				{
+					if (QueryHelper.IsJoinsDependsOnOuterSources(selectQuery))
+					{
+						errorMessage = ErrorHelper.Error_JoinOnOuterReferenceNotSupported;
+						return false;
 					}
 				}
 

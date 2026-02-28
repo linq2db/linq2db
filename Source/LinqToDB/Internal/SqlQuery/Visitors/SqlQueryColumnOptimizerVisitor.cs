@@ -163,9 +163,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (_isCollecting)
 			{
 				// mark at least one column as used
-				if (selectQuery.Select.Columns.Count > 0 
-				    && !selectQuery.Select.Columns.Any(IsColumnUsed) 
-				    && (selectQuery.HasSetOperators || QueryHelper.IsAggregationQuery(selectQuery)))	
+				if (selectQuery.Select.Columns.Count > 0
+				    && !selectQuery.Select.Columns.Any(IsColumnUsed)
+				    && (selectQuery.HasSetOperators || QueryHelper.IsAggregationQuery(selectQuery)))
 				{
 					MarkColumnUsed(selectQuery.Select.Columns[0]);
 				}
