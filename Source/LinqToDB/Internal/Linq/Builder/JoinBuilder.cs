@@ -15,7 +15,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsMethodCall(nameof(Enumerable.RightJoin))]
 #endif
 #if NET11_0_OR_GREATER
-	[BuildsMethodCall(nameof(Enumerable.FullOuterJoin))]
+	[BuildsMethodCall(nameof(Enumerable.FullJoin))]
 #endif
 	sealed class JoinBuilder : MethodCallBuilder
 	{
@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				nameof(Enumerable.LeftJoin)      => JoinType.Left,
 				nameof(Enumerable.RightJoin)     => JoinType.Right,
 #if NET11_0_OR_GREATER
-				nameof(Enumerable.FullOuterJoin) => JoinType.Full,
+				nameof(Enumerable.FullJoin)      => JoinType.Full,
 #endif
 				_                                => JoinType.Inner,
 			};
