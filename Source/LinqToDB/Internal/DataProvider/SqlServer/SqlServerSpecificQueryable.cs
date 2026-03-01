@@ -1,13 +1,7 @@
-﻿using System.Linq;
-
-using LinqToDB.DataProvider.SqlServer;
+﻿using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Internal.Linq;
 
 namespace LinqToDB.Internal.DataProvider.SqlServer
 {
-	sealed class SqlServerSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, ISqlServerSpecificQueryable<TSource>
-	{
-		public SqlServerSpecificQueryable(IQueryable<TSource> queryable) : base(queryable)
-		{
-		}
-	}
+	sealed class SqlServerSpecificQueryable<TSource>(IExpressionQuery<TSource> query) : DatabaseSpecificQueryable<TSource>(query), ISqlServerSpecificQueryable<TSource>;
 }

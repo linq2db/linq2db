@@ -1362,12 +1362,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var result = BuildSqlExpression(contextRef.BuildContext, contextRef);
 
-					if (result is SqlPlaceholderExpression)
+					if (result is SqlPlaceholderExpression placeholder)
 					{
 						if (result.Type != expression.Type)
 						{
-							result = Expression.Convert(result, expression.Type);
-							result = BuildSqlExpression(contextRef.BuildContext, result);
+							result = placeholder.WithType(expression.Type);
 						}
 
 						result = Builder.UpdateNesting(context, result);
@@ -2262,13 +2261,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				case ExpressionType.Convert:
 				case ExpressionType.ConvertChecked:
 				{
-					if (node.Type != typeof(object) &&
-						(HandleSqlRelated(node, out var translated) || HandleValue(node, out translated)))
-					{
-						return Visit(translated);
-					}
-
-					if ((_buildPurpose is BuildPurpose.Root || _buildFlags.HasFlag(BuildFlags.ForMemberRoot)) && node.Operand is ContextRefExpression contextRef)
+					if (_buildFlags.HasFlag(BuildFlags.ForMemberRoot) && node.Operand is ContextRefExpression contextRef)
 					{
 						return Visit(contextRef.WithType(node.Type));
 					}
@@ -2280,82 +2273,64 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var operandExpr = Visit(node.Operand);
 
-					if (_buildPurpose is BuildPurpose.Sql && operandExpr is SqlDefaultIfEmptyExpression defaultIfEmpty)
-					{
-						if (defaultIfEmpty.InnerExpression is SqlPlaceholderExpression)
-							operandExpr = defaultIfEmpty.InnerExpression;
-					}
-
 					if (SequenceHelper.IsSqlReady(operandExpr))
 					{
+						if (node.Type != typeof(object)
+							&& operandExpr is SqlPlaceholderExpression { Sql: SqlParameter or SqlValue }
+							&& HandleValue(node, out var nodeExpr))
+						{
+							return Visit(nodeExpr);
+						}
+
 						operandExpr = UpdateNesting(operandExpr);
+
 						var placeholders = CollectPlaceholdersStraight(operandExpr);
 
 						if (placeholders.Count == 1)
 						{
 							var placeholder = placeholders[0];
 
-							if (_buildPurpose is BuildPurpose.Expression
-								&& (node.Type == typeof(object) || node.Method != null))
-								return base.VisitUnary(node);
+							if (node.Type == typeof(object)
+								|| node.Type.UnwrapNullableType() == node.Operand.Type.UnwrapNullableType()
+								|| node.Type.UnwrapNullableType() == placeholder.Sql.SystemType?.UnwrapNullableType()
+								|| (node.Operand.Type.IsEnum && Enum.GetUnderlyingType(node.Operand.Type) == node.Type)
+								|| (node.Type.IsEnum && Enum.GetUnderlyingType(node.Type) == node.Operand.Type))
+							{
+								if (node.Method == null)
+								{
+									return Visit(placeholder.WithType(node.Type));
+								}
 
-							if (node.Method == null && (node.IsLifted || node.Type == typeof(object)))
-								return Visit(placeholder.WithType(node.Type));
+								return Visit(CreatePlaceholder(placeholder.Sql, node));
+							}
 
 							if (node.Method == null && operandExpr is not SqlPlaceholderExpression)
-								return base.VisitUnary(node);
-
-							if (node.Type == typeof(bool) && node.Operand.Type == typeof(SqlBoolean))
-								return Visit(placeholder.WithType(node.Type));
-
-							if (node.Type == typeof(Enum) && node.Operand.Type.IsEnum)
-								return base.VisitUnary(node);
-
-							var t = node.Operand.Type;
-							var s = MappingSchema.GetDataType(t);
-
-							if (placeholder.Sql.SystemType != null && s.Type.SystemType == typeof(object))
 							{
-								t = placeholder.Sql.SystemType;
-								s = MappingSchema.GetDataType(t);
+								return base.VisitUnary(node);
 							}
-
-							if (node.Type == t ||
-								t.IsEnum && Enum.GetUnderlyingType(t) == node.Type ||
-								node.Type.IsEnum && Enum.GetUnderlyingType(node.Type) == t)
-							{
-								return Visit(placeholder.WithType(node.Type));
-							}
-
-							if (placeholder.Sql.SystemType == node.Type)
-								return Visit(placeholder);
 
 							var castTo = MappingSchema.GetDbDataType(node.Type);
 
-							ISqlExpression sql;
-							if (castTo.EqualsDbOnly(SqlDataType.MakeUndefined(node.Type).Type))
+							if (!castTo.EqualsDbOnly(SqlDataType.MakeUndefined(node.Type).Type))
 							{
-								if (node.Method != null)
-									return base.VisitUnary(node);
-
-								sql = placeholder.Sql;
+								var sql = PseudoFunctions.MakeCast(placeholder.Sql, castTo);
+								return Visit(CreatePlaceholder(sql, node));
 							}
-							else
-							{
-								sql = PseudoFunctions.MakeCast(placeholder.Sql, castTo, s);
-							}
-
-							return Visit(CreatePlaceholder(sql, node));
 						}
 					}
 
-					if (HandleValue(node, out var translatedValue))
+					if (HandleSqlRelated(node, out var translatedValue))
 					{
 						return Visit(translatedValue);
 					}
 
-					break;
+					if (node.Type != typeof(object) && HandleValue(node, out translatedValue))
+					{
+						return Visit(translatedValue);
+					}
 				}
+
+				break;
 			}
 
 			return base.VisitUnary(node);
