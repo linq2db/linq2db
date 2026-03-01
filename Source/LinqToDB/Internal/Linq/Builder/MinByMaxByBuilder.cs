@@ -25,6 +25,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var sourceExpression = methodCall.Arguments[0];
 			var keySelector = methodCall.Arguments[1].UnwrapLambda();
 			var isMinBy = methodCall.Method.Name == nameof(Queryable.MinBy);
+			var sourceOrderBy = WindowFunctionHelpers.ExtractOrderByPart(sourceExpression, out var nonOrderedSource);
 
 			// Transform MinBy(selector) -> OrderBy(selector).FirstOrDefault()
 			// Transform MaxBy(selector) -> OrderByDescending(selector).FirstOrDefault()
@@ -37,10 +38,20 @@ namespace LinqToDB.Internal.Linq.Builder
 				? Methods.Queryable.OrderBy.MakeGenericMethod(elementType, keySelectorType)
 				: Methods.Queryable.OrderByDescending.MakeGenericMethod(elementType, keySelectorType);
 
-			var orderedExpression = Expression.Call(
-				orderByMethod,
-				sourceExpression,
+			Expression orderedExpression = Expression.Call(
+			orderByMethod,
+				nonOrderedSource,
 				methodCall.Arguments[1]);
+
+			foreach (var (orderByLambda, isDescending) in sourceOrderBy)
+			{
+				orderedExpression = Expression.Call(
+					typeof(Queryable),
+					isDescending ? nameof(Queryable.ThenByDescending) : nameof(Queryable.ThenBy),
+					[elementType, orderByLambda.ReturnType],
+					orderedExpression,
+					Expression.Quote(orderByLambda));
+			}
 
 			// Create FirstOrDefault() call  
 			var firstOrDefaultMethod = Methods.Queryable.FirstOrDefault.MakeGenericMethod(elementType);

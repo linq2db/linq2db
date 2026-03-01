@@ -32,10 +32,7 @@ namespace Tests.UserTests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllSqlCe)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllFirebirdLess3)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.MySql57Connector)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllSybase)]
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void Net9MethodsDistinctBy([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -47,10 +44,7 @@ namespace Tests.UserTests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllSqlCe)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllFirebirdLess3)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.MySql57Connector)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllSybase)]
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void Net9MethodsMinBy([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -62,25 +56,19 @@ namespace Tests.UserTests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllSqlCe)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllFirebirdLess3)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.MySql57Connector)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllSybase)]
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void Net9MethodsMaxBy([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
 			using var _ = db.CreateLocalTable(CreateTestTableData());
-			var result = db.GetTable<TestTable>().MaxBy(x => x.Id);
-			var compareData = CreateTestTableData().MaxBy(x => x.Id);
+			var result = db.GetTable<TestTable>().OrderBy(x => x.TestId).MaxBy(x => x.Id);
+			var compareData = CreateTestTableData().OrderBy(x => x.TestId).MaxBy(x => x.Id);
 			result!.Id.ShouldBe(compareData!.Id);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllSqlCe)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllFirebirdLess3)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.MySql57Connector)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllSybase)]
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void Net9MethodsExceptBy([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -92,10 +80,7 @@ namespace Tests.UserTests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllSqlCe)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllFirebirdLess3)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.MySql57Connector)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllSybase)]
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void Net9MethodsIntersectBy([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -107,10 +92,7 @@ namespace Tests.UserTests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllSqlCe)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllFirebirdLess3)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.MySql57Connector)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllSybase)]
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void Net9MethodsUnionBy([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -122,10 +104,7 @@ namespace Tests.UserTests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllSqlCe)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllFirebirdLess3)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.MySql57Connector)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllSybase)]
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void Net9MethodsIndex([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -142,10 +121,7 @@ namespace Tests.UserTests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllSqlCe)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllFirebirdLess3)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.MySql57Connector)]
-		[ThrowsForProvider("LinqToDB.LinqToDBException", TestProvName.AllSybase)]
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void Net9MethodsCountBy([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
