@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new SqlServerSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AsSqlServer, source),

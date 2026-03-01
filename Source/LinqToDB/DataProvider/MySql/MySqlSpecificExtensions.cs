@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new MySqlSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AsMySql, source),
