@@ -5,6 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Reflection;
 
@@ -31,7 +32,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			if (!builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
 			{
-				return BuildSequenceResult.NotSupported();
+				return BuildSequenceResult.Error(methodCall, ErrorHelper.Error_RowNumber);
 			}
 
 			var sourceType = methodCall.Method.GetGenericArguments()[0];

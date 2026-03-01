@@ -21,7 +21,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			if (!builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
 			{
-				return BuildSequenceResult.NotSupported();
+				return BuildSequenceResult.Error(methodCall, ErrorHelper.Error_RowNumber);
 			}
 
 			var sequenceExpression = methodCall.Arguments[0];
