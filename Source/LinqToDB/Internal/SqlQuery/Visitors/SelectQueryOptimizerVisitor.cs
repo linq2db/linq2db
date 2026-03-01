@@ -1648,9 +1648,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
-			if (QueryHelper.IsAggregationQuery(subQuery))
+			if (!subQuery.HasGroupBy() && QueryHelper.IsAggregationQuery(subQuery))
 			{
-				if (!parentQuery.IsSimple())
+				if (!parentQuery.IsSimpleOrSet())
 					return false;
 			}
 
