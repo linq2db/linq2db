@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider.Ydb
         		{
         			var current = source.ProcessIQueryable();
         
-        			return new YdbSpecificQueryable<TSource>(current.Provider.CreateQuery<TSource>(
+        			return new YdbSpecificQueryable<TSource>((IExpressionQuery<TSource>)current.Provider.CreateQuery<TSource>(
         				Expression.Call(
         					null,
         					MethodHelper.GetMethodInfo(QueryHint, source, hint, values),
@@ -63,7 +63,7 @@ namespace LinqToDB.DataProvider.Ydb
 		{
 			var current = source.ProcessIQueryable();
 
-			return new YdbSpecificQueryable<TSource>(current.Provider.CreateQuery<TSource>(
+			return new YdbSpecificQueryable<TSource>((IExpressionQuery<TSource>)current.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(QueryHint, source, hint, values),

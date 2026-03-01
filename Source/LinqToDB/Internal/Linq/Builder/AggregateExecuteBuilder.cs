@@ -209,7 +209,19 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					_joinedTable = join.JoinedTable;
 
-					parentQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+					SqlTableSource tableSource;
+
+					if (parentQuery.From.Tables.Count == 0)
+					{
+						tableSource = new SqlTableSource(new SelectQuery(), null);
+						parentQuery.From.Tables.Add(tableSource);
+					}
+					else
+					{
+						tableSource = parentQuery.From.Tables[0];
+					}
+
+					tableSource.Joins.Add(join.JoinedTable);
 
 					Placeholder = Builder.UpdateNesting(parentQuery, Placeholder);
 				}
