@@ -34,6 +34,18 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.0+ (doesn't support multi-table statements; database limitation)</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Deferred
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Pipeline=ExpressionTree,SqlAST,SqlText
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static IEnumerable<TSource> DeleteWithOutput<TSource>(this IQueryable<TSource> source)
 		{
@@ -224,6 +236,18 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Pipeline=ExpressionTree,SqlAST,SqlText
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static int DeleteWithOutputInto<TSource,TOutput>(
 			this IQueryable<TSource> source,
@@ -367,6 +391,19 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class for delete operation target table.</typeparam>
 		/// <param name="source">Query that returns records to delete.</param>
 		/// <returns>Number of deleted records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Pipeline=ExpressionTree,SqlAST,SqlText
+		/// Provider=ProviderDefined
+		/// </para>
+		/// </remarks>
 		public static int Delete<T>(this IQueryable<T> source)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -388,6 +425,7 @@ namespace LinqToDB
 		/// <param name="source">Query that returns records to delete.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of deleted records.</returns>
+		/// <remarks>See <see cref="Delete{T}(IQueryable{T})"/> for SQL semantics and provider contract.</remarks>
 		public static Task<int> DeleteAsync<T>(this IQueryable<T> source, CancellationToken token = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -409,6 +447,7 @@ namespace LinqToDB
 		/// <param name="source">Query that returns records to delete.</param>
 		/// <param name="predicate">Filter expression, to specify what records from source should be deleted.</param>
 		/// <returns>Number of deleted records.</returns>
+		/// <remarks>See <see cref="Delete{T}(IQueryable{T})"/> for SQL semantics and provider contract.</remarks>
 		public static int Delete<T>(
 							this IQueryable<T> source,
 			[InstantHandle] Expression<Func<T, bool>> predicate)
@@ -434,6 +473,7 @@ namespace LinqToDB
 		/// <param name="predicate">Filter expression, to specify what records from source should be deleted.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of deleted records.</returns>
+		/// <remarks>See <see cref="Delete{T}(IQueryable{T})"/> for SQL semantics and provider contract.</remarks>
 		public static Task<int> DeleteAsync<T>(
 					   this IQueryable<T> source,
 			[InstantHandle] Expression<Func<T, bool>> predicate,

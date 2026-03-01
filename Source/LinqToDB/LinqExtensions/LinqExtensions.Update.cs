@@ -1640,6 +1640,19 @@ namespace LinqToDB
 		/// <param name="source">Source data query.</param>
 		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
 		/// <returns>Number of updated records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Pipeline=ExpressionTree,SqlAST,SqlText
+		/// Provider=ProviderDefined
+		/// </para>
+		/// </remarks>
 		public static int Update<T>(this IQueryable<T> source, [InstantHandle] Expression<Func<T, T>> setter)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));

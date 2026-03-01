@@ -37,6 +37,18 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Pipeline=ExpressionTree,SqlAST,SqlText
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static TTarget InsertWithOutput<TTarget>(
 			                this ITable<TTarget>      target,
@@ -269,6 +281,18 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Pipeline=ExpressionTree,SqlAST,SqlText
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static int InsertWithOutputInto<TTarget>(
 			                this ITable<TTarget>      target,
@@ -1145,6 +1169,19 @@ namespace LinqToDB
 		/// <param name="target">Target table.</param>
 		/// <param name="setter">Insert expression. Expression supports only target table record new expression with field initializers.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Pipeline=ExpressionTree,SqlAST,SqlText
+		/// Provider=ProviderDefined
+		/// </para>
+		/// </remarks>
 		public static int Insert<T>(
 							this ITable<T> target,
 			[InstantHandle] Expression<Func<T>> setter)
@@ -1197,6 +1234,20 @@ namespace LinqToDB
 		/// <param name="target">Target table.</param>
 		/// <param name="setter">Insert expression. Expression supports only target table record new expression with field initializers.</param>
 		/// <returns>Inserted record's identity value.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// Identity availability and exact behavior are provider-defined.
+		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Pipeline=ExpressionTree,SqlAST,SqlText
+		/// Provider=ProviderDefined
+		/// </para>
+		/// </remarks>
 		public static object InsertWithIdentity<T>(
 							this ITable<T> target,
 			[InstantHandle] Expression<Func<T>> setter)

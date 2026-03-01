@@ -84,6 +84,13 @@ namespace LinqToDB
 	/// availability, supported syntax, and exact SQL semantics are defined by the configured provider.
 	/// When an API is not supported, behavior is provider-defined.
 	/// </para>
+	///
+	/// <para>
+	/// <b>AI:</b>
+	/// Groups=QueryDirectives,NavigationLoading,DML,Merge,Hints,Helpers
+	/// Pipeline=ExpressionTree -> SqlAST -> SqlText
+	/// Provider=ProviderDefined
+	/// </para>
 	/// </remarks>
 	[PublicAPI]
 	public static partial class LinqExtensions

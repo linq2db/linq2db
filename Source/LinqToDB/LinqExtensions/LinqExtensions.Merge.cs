@@ -39,6 +39,19 @@ namespace LinqToDB
 		/// <typeparam name="TTarget">Target record type.</typeparam>
 		/// <param name="target">Target table.</param>
 		/// <returns>Returns merge command builder, that contains only target.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=Merge
+		/// Execution=Deferred
+		/// Composability=Composable
+		/// Affects=SqlSemantics
+		/// Pipeline=ExpressionTree,SqlAST,SqlText
+		/// Provider=ProviderDefined
+		/// </para>
+		/// </remarks>
 		[Pure, LinqTunnel]
 		public static IMergeableUsing<TTarget> Merge<TTarget>(
 			 this IQueryable<TTarget> target)
@@ -900,6 +913,19 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source record type.</typeparam>
 		/// <param name="merge">Merge command definition.</param>
 		/// <returns>Returns number of target table records, affected by merge command.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// Availability and exact SQL semantics are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=Merge
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Pipeline=ExpressionTree,SqlAST,SqlText
+		/// Provider=ProviderDefined
+		/// </para>
+		/// </remarks>
 		public static int Merge<TTarget, TSource>(
 			 this IMergeable<TTarget, TSource> merge)
 		{
@@ -934,6 +960,17 @@ namespace LinqToDB
 		/// <item>Firebird 3+ (doesn't support "action" parameter and prior to version 5 doesn't support more than one record; database limitation)</item>
 		/// <item>PostgreSQL 17+ (doesn't support old data; database limitation)</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=Merge
+		/// Execution=Deferred
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Pipeline=ExpressionTree,SqlAST,SqlText
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static IEnumerable<TOutput> MergeWithOutput<TTarget,TSource,TOutput>(
 			this IMergeable<TTarget, TSource>                     merge,
@@ -1085,6 +1122,17 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2008+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=Merge
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Pipeline=ExpressionTree,SqlAST,SqlText
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static int MergeWithOutputInto<TTarget,TSource,TOutput>(
 			this IMergeable<TTarget,TSource>                 merge,

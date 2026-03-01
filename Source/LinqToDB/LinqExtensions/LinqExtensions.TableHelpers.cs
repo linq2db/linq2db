@@ -12,12 +12,16 @@ namespace LinqToDB
 	public static partial class LinqExtensions
 	{
 		/// <summary>
-		/// Assigns table id.
+		/// Assigns a table ID for query translation.
 		/// </summary>
 		/// <typeparam name="T">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
 		/// <param name="id">Table ID.</param>
-		/// <returns>Table-like query source with new name.</returns>
+		/// <returns>Table-like query source with assigned table ID.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> TableID<T>(this ITable<T> table, [SqlQueryDependent] string? id)
