@@ -282,7 +282,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var outputTable = methodCall.GetArgumentByName("outputTable")!;
 				var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
 
-				var destinationContext = SequenceHelper.GetTableContext(destination);
+				var destinationContext = SequenceHelper.GetTableOrCteContext(destination);
 				if (destinationContext == null)
 					throw new InvalidOperationException();
 

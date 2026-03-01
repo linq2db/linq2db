@@ -7,60 +7,44 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Internal.Async;
+using LinqToDB.Internal.Linq;
 
 namespace LinqToDB.Internal.DataProvider
 {
-	public abstract class DatabaseSpecificQueryable<TSource> : IQueryable<TSource>, IQueryProviderAsync
+	public abstract class DatabaseSpecificQueryable<TSource>(IExpressionQuery<TSource> query) : IExpressionQuery<TSource>
 	{
-		protected DatabaseSpecificQueryable(IQueryable<TSource> queryable)
-		{
-			_queryable = queryable;
-		}
+		public IEnumerator<TSource> GetEnumerator() 
+			=> query.GetEnumerator();
 
-		readonly IQueryable<TSource> _queryable;
+		IEnumerator IEnumerable.GetEnumerator() 
+			=> ((IEnumerable)query).GetEnumerator();
 
-		public IEnumerator<TSource> GetEnumerator()
-		{
-			return _queryable.GetEnumerator();
-		}
+		public Expression     Expression  => query.Expression;
+		public IDataContext   DataContext => query.DataContext;
+		public QueryDebugView DebugView   => query.DebugView;
 
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return ((IEnumerable)_queryable).GetEnumerator();
-		}
+		public IReadOnlyList<QuerySql> GetSqlQueries(SqlGenerationOptions? options) 
+			=> query.GetSqlQueries(options);
 
-		public Expression     Expression  => _queryable.Expression;
-		public Type           ElementType => _queryable.ElementType;
-		public IQueryProvider Provider    => _queryable.Provider;
+		public Type                    ElementType => query.ElementType;
+		public IQueryProvider          Provider    => query.Provider;
 
-		Task<IAsyncEnumerable<TResult>> IQueryProviderAsync.ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken cancellationToken)
-		{
-			return ((IQueryProviderAsync)_queryable).ExecuteAsyncEnumerable<TResult>(expression, cancellationToken);
-		}
+		Task<IAsyncEnumerable<TResult>> IQueryProviderAsync.ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken cancellationToken) 
+			=> query.ExecuteAsyncEnumerable<TResult>(expression, cancellationToken);
 
-		Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
-		{
-			return ((IQueryProviderAsync)_queryable).ExecuteAsync<TResult>(expression, cancellationToken);
-		}
+		Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken) 
+			=> query.ExecuteAsync<TResult>(expression, cancellationToken);
 
-		IQueryable IQueryProvider.CreateQuery(Expression expression)
-		{
-			return Provider.CreateQuery(expression);
-		}
+		IQueryable IQueryProvider.CreateQuery(Expression expression) 
+			=> Provider.CreateQuery(expression);
 
-		IQueryable<TElement> IQueryProvider.CreateQuery<TElement>(Expression expression)
-		{
-			return Provider.CreateQuery<TElement>(expression);
-		}
+		IQueryable<TElement> IQueryProvider.CreateQuery<TElement>(Expression expression) 
+			=> Provider.CreateQuery<TElement>(expression);
 
-		object? IQueryProvider.Execute(Expression expression)
-		{
-			return Provider.Execute(expression);
-		}
+		object? IQueryProvider.Execute(Expression expression) 
+			=> Provider.Execute(expression);
 
-		TResult IQueryProvider.Execute<TResult>(Expression expression)
-		{
-			return Provider.Execute<TResult>(expression);
-		}
+		TResult IQueryProvider.Execute<TResult>(Expression expression) 
+			=> Provider.Execute<TResult>(expression);
 	}
 }

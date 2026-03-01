@@ -20,8 +20,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			Registration.RegisterMethod((int? year, int? month, int? day) => Sql.MakeDateTime(year, month, day), TranslateMakeDateTime);
 			Registration.RegisterMethod((int year, int month, int day, int hour, int minute, int second) => Sql.MakeDateTime(year, month, day, hour, minute, second), TranslateMakeDateTime);
-
-
 		}
 
 		void RegisterDateTime()

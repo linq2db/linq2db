@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new SqlCeSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new SqlCeSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AsSqlCe, source),

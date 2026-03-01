@@ -7,6 +7,8 @@ using LinqToDB.Internal.Common;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -232,8 +234,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [ProviderName.SqlCe], ErrorMessage = ErrorHelper.Error_Subquery_in_Column)]
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase, TestProvName.AllInformix], ErrorMessage = ErrorHelper.Error_Take_in_Subquery)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void SubQueryTest([DataSources(TestProvName.AllAccess)]
 			string context)
 		{
@@ -244,6 +245,22 @@ namespace Tests.Linq
 					f1 = db.Parent.Select(p => p.Value1).FirstOrDefault()
 				});
 			}
+		}
+
+		[Test]
+		public void SubQueryAggregate([DataSources(TestProvName.AllAccess)]
+			string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Select(() => new
+			{
+				Parents  = db.Parent.Count(),
+				Children = db.Child.Count()
+			});
+
+			result.Parents.ShouldBe(Parent.Count());
+			result.Children.ShouldBe(Child.Count());
 		}
 
 		[Test]
