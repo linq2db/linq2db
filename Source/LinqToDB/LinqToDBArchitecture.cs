@@ -180,6 +180,7 @@ namespace LinqToDB
 		/// where provider-specific SQL text generation and execution occur.
 		/// </para>
 		/// </remarks>
+		[EditorBrowsable(EditorBrowsableState.Never)]
 		public static class TranslationModel
 		{
 		}
@@ -258,6 +259,7 @@ namespace LinqToDB
 		/// (e.g., per provider/environment) and create <see cref="DataConnection"/> instances from them.
 		/// </para>
 		/// </remarks>
+		[EditorBrowsable(EditorBrowsableState.Never)]
 		public static class ConfigurationModel
 		{
 		}
@@ -318,6 +320,7 @@ namespace LinqToDB
 		/// Provider-aware behavior is explicit and configuration-driven; translation uses the configured provider.
 		/// </para>
 		/// </remarks>
+		[EditorBrowsable(EditorBrowsableState.Never)]
 		public static class ProviderModel
 		{
 		}
@@ -395,6 +398,7 @@ namespace LinqToDB
 		/// Explicit query composition defines the resulting SQL.
 		/// </para>
 		/// </remarks>
+		[EditorBrowsable(EditorBrowsableState.Never)]
 		public static class MappingModel
 		{
 		}
@@ -450,6 +454,7 @@ namespace LinqToDB
 		/// not how .NET code is executed at runtime.
 		/// </para>
 		/// </remarks>
+		[EditorBrowsable(EditorBrowsableState.Never)]
 		public static class ExtensionModel
 		{
 		}
@@ -497,6 +502,7 @@ namespace LinqToDB
 		/// translation engine.
 		/// </para>
 		/// </remarks>
+		[EditorBrowsable(EditorBrowsableState.Never)]
 		public static class Interceptors
 		{
 		}
@@ -547,6 +553,7 @@ namespace LinqToDB
 		/// invokes modification operations when changes are required.
 		/// </para>
 		/// </remarks>
+		[EditorBrowsable(EditorBrowsableState.Never)]
 		public static class DataModificationAPI
 		{
 		}
@@ -601,6 +608,7 @@ namespace LinqToDB
 		/// All advanced constructs are explicit and translation-driven.
 		/// </para>
 		/// </remarks>
+		[EditorBrowsable(EditorBrowsableState.Never)]
 		public static class AdvancedSqlFeatures
 		{
 		}
@@ -660,6 +668,7 @@ namespace LinqToDB
 		/// LinqToDB is a translation engine, not an object state management framework.
 		/// </para>
 		/// </remarks>
+		[EditorBrowsable(EditorBrowsableState.Never)]
 		public static class AntiPatterns
 		{
 		}

@@ -160,10 +160,6 @@ namespace LinqToDB
 		/// <summary>
 		/// Convenience flag: any temporary-related option is set.
 		/// </summary>
-		IsTemporaryOptionSet =
-		IsTemporary |
-		IsLocalTemporaryStructure | IsGlobalTemporaryStructure |
-		IsLocalTemporaryData | IsGlobalTemporaryData |
-			IsTransactionTemporaryData,
+		IsTemporaryOptionSet = IsTemporary | IsLocalTemporaryStructure | IsGlobalTemporaryStructure | IsLocalTemporaryData | IsGlobalTemporaryData | IsTransactionTemporaryData,
 	}
 }

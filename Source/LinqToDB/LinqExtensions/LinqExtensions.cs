@@ -22,32 +22,67 @@ using static LinqToDB.MultiInsertExtensions;
 namespace LinqToDB
 {
 	/// <summary>
-	/// LINQ extension methods that define LinqToDB query translation, SQL semantics,
-	/// and command execution APIs.
+	/// LINQ extension methods that define LinqToDB query translation directives,
+	/// SQL semantics, and command execution APIs.
 	/// </summary>
 	/// <remarks>
 	/// <para>
-	/// <see cref="LinqExtensions"/> contains the primary extension surface used with LinqToDB queryables
-	/// (e.g., <see cref="ITable{T}"/>, <see cref="IQueryable{T}"/>).
+	/// <see cref="LinqExtensions"/> is the primary extension surface for LinqToDB queryables
+	/// (for example, <see cref="ITable{T}"/> and <see cref="IQueryable{T}"/>).
 	/// </para>
-	/// <para><b>Two categories of APIs:</b></para>
+	///
+	/// <para>
+	/// <b>Translation pipeline:</b>
+	/// Expression Tree → SQL AST → provider-specific SQL text.
+	/// </para>
+	///
+	/// <para><b>API groups:</b></para>
 	/// <list type="bullet">
 	///   <item>
 	///     <description>
-	///       <b>Query translation directives</b>: influence the SQL semantics of a query
-	///       (Expression Tree → SQL AST → provider-specific SQL text)
-	///       without executing it immediately.
+	///       <b>Query translation directives</b>:
+	///       methods that annotate a query or its nodes to influence SQL semantics
+	///       without forcing immediate execution.
+	///       These directives are represented in the SQL AST and emitted into SQL text
+	///       according to provider rules.
 	///     </description>
 	///   </item>
 	///   <item>
 	///     <description>
-	///       <b>Command APIs (DML)</b>: translate to SQL statements (INSERT/UPDATE/DELETE/MERGE)
-	///       and execute according to the LINQ execution model.
+	///       <b>Navigation loading directives (LoadWith)</b>:
+	///       methods that control association loading and join graph construction
+	///       (for example, eager loading via navigation paths).
+	///       These directives affect SQL semantics but do not trigger execution.
+	///     </description>
+	///   </item>
+	///   <item>
+	///     <description>
+	///       <b>Data modification APIs (DML)</b>:
+	///       methods that translate to INSERT, UPDATE, or DELETE statements
+	///       and execute using the LINQ execution model (immediate execution).
+	///     </description>
+	///   </item>
+	///   <item>
+	///     <description>
+	///       <b>Merge APIs</b>:
+	///       methods that define conditional data modification semantics
+	///       (INSERT/UPDATE/DELETE branches) represented as a single SQL MERGE statement
+	///       when supported by the provider.
+	///     </description>
+	///   </item>
+	///   <item>
+	///     <description>
+	///       <b>Table and query helpers</b>:
+	///       methods that build or adapt <see cref="ITable{T}"/> / <see cref="IQueryable{T}"/>
+	///       instances, or provide utility operations used by the translation and DML APIs.
 	///     </description>
 	///   </item>
 	/// </list>
+	///
 	/// <para>
-	/// Availability and exact SQL semantics are defined by the configured provider.
+	/// <b>Provider contract:</b>
+	/// availability, supported syntax, and exact SQL semantics are defined by the configured provider.
+	/// When an API is not supported, behavior is provider-defined.
 	/// </para>
 	/// </remarks>
 	[PublicAPI]
