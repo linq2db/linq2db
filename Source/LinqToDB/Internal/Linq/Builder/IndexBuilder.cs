@@ -32,17 +32,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (orderByPart.Length == 0)
 				return BuildSequenceResult.Error(sequenceExpression, ErrorHelper.Error_IndexRequiresOrderBy);
 
-			var startOffset = 0;
-			if (methodCall.Arguments.Count == 2)
-			{
-				// Index(startIndex) overload
-				var startValue = builder.EvaluateExpression(methodCall.Arguments[1]);
-				if (startValue is int intValue)
-					startOffset = intValue;
-				else
-					return BuildSequenceResult.Error(methodCall.Arguments[1], "Index start parameter must be a constant integer");
-			}
-
 			// Build sequence from non-ordered part first
 			var sequenceBuildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, nonOrderedPart));
 			if (sequenceBuildResult.BuildContext == null)
@@ -63,22 +52,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			var itemParam = Expression.Parameter(elementType, "item");
 
 			// ROW_NUMBER() is 1-based, Index() is 0-based by default
-			// rowNumber - 1 + startOffset
 			var convertToInt = Expression.Convert(rowNumberCall, typeof(int));
 
-			Expression adjustedIndex;
-			if (startOffset == 1)
-			{
-				adjustedIndex = convertToInt;
-			}
-			else
-			{
-				// (rowNumber - 1) + startOffset
-				var minusOne = Expression.Subtract(convertToInt, Expression.Constant(1));
-				adjustedIndex = startOffset == 0
-					? (Expression)minusOne
-					: Expression.Add(minusOne, Expression.Constant(startOffset));
-			}
+			// (rowNumber - 1)
+			Expression adjustedIndex = Expression.Subtract(convertToInt, Expression.Constant(1));
 
 			// Build: new ValueTuple<int, T>(index, item)
 			var tupleConstructor = resultType.GetConstructor(new[] { typeof(int), elementType })!;

@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -14,6 +15,16 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsMethodCall(nameof(Queryable.ExceptBy), nameof(Queryable.UnionBy), nameof(Queryable.IntersectBy))]
 	sealed class SetOperationByBuilder : MethodCallBuilder
 	{
+		static Expression EnsureQueryable(Expression sequence, Type elementType)
+		{
+			if (typeof(IQueryable<>).IsSameOrParentOf(sequence.Type))
+				return sequence;
+
+			return Expression.Call(
+				Methods.Queryable.AsQueryable.MakeGenericMethod(elementType),
+				sequence);
+		}
+
 		private class UnionByTuple<T>
 		{
 #pragma warning disable CS8618
@@ -56,11 +67,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static Expression BuildExceptBy(Expression source, Expression second, LambdaExpression keySelector, Type sourceType, Type keyType)
 		{
-			var asQueryableMethod = Methods.Queryable.AsQueryable.MakeGenericMethod(keyType);
-			var secondAsQueryable = Expression.Call(null, asQueryableMethod, second);
+			source = EnsureQueryable(source, sourceType);
+			second = EnsureQueryable(second, keyType);
 
 			var distinctMethod = Methods.Queryable.Distinct.MakeGenericMethod(keyType);
-			var distinctKeys   = Expression.Call(null, distinctMethod, secondAsQueryable);
+			var distinctKeys   = Expression.Call(null, distinctMethod, second);
 
 			var parameter       = Expression.Parameter(sourceType, "x");
 			var keySelectorBody = keySelector.GetBody(parameter);
@@ -120,11 +131,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static Expression BuildIntersectBy(Expression source, Expression second, LambdaExpression keySelector, Type sourceType, Type keyType)
 		{
-			var asQueryableMethod = Methods.Queryable.AsQueryable.MakeGenericMethod(keyType);
-			var secondAsQueryable = Expression.Call(null, asQueryableMethod, second);
+			source = EnsureQueryable(source, sourceType);
+			second = EnsureQueryable(second, keyType);
 
 			var distinctMethod = Methods.Queryable.Distinct.MakeGenericMethod(keyType);
-			var distinctKeys   = Expression.Call(null, distinctMethod, secondAsQueryable);
+			var distinctKeys   = Expression.Call(null, distinctMethod, second);
 
 			var parameter       = Expression.Parameter(sourceType, "x");
 			var keySelectorBody = keySelector.GetBody(parameter);
@@ -183,7 +194,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static Expression BuildUnionBy(Expression source, Expression second, LambdaExpression keySelector, Type sourceType)
 		{
-			var secondAsQueryable = Expression.Call(Methods.Queryable.AsQueryable.MakeGenericMethod(sourceType), second);
+			source = EnsureQueryable(source, sourceType);
+			second = EnsureQueryable(second, sourceType);
 
 			var itemType = typeof(UnionByTuple<>).MakeGenericType(sourceType);
 
@@ -208,7 +220,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var secondProjected = Expression.Call(
 				null,
 				Methods.Queryable.Select.MakeGenericMethod(sourceType, itemType),
-				secondAsQueryable,
+				second,
 				Expression.Quote(Expression.Lambda(secondSelectBody, secondItem)));
 
 			var concatMethod = Methods.Queryable.Concat.MakeGenericMethod(itemType);

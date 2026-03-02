@@ -54,7 +54,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query =
-			from p in db.Parent
+			from p in db.Parent.LoadWith(x => x.Children)
 			from c in p.Children.ExceptBy(new[] { 2 }, x => x.ChildID)
 			orderby c.ChildID
 			select new { p.ParentID, c.ChildID };
@@ -69,7 +69,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query =
-			from p in db.Parent
+			from p in db.Parent.LoadWith(x => x.Children)
 			from c in p.Children.Where(x => x.ChildID > 0).ExceptBy(new[] { 2 }, x => x.ChildID)
 			select new { p.ParentID, c.ChildID };
 

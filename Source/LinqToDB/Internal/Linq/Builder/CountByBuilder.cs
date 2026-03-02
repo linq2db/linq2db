@@ -40,6 +40,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			var sourceExpression = methodCall.Arguments[0];
 			var keySelector = methodCall.Arguments[1].UnwrapLambda();
 
+			if (methodCall.Arguments.Count >= 3)
+			{
+				var comparer = builder.EvaluateExpression(methodCall.Arguments[2]);
+				if (comparer != null)
+					return BuildSequenceResult.NotSupported();
+			}
+
 			if (!typeof(IQueryable<>).IsSameOrParentOf(sourceExpression.Type))
 			{
 				sourceExpression = Expression.Call(
