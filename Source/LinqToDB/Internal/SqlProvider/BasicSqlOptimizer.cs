@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.SqlProvider
 				statement = new JoinsOptimizer().Optimize(statement, evaluationContext);
 
 				// Do it again after JOIN Optimization
-			FinalizeCte(statement);
+				FinalizeCte(statement);
 			}
 
 			statement = FinalizeInsert(statement);

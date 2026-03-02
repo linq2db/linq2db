@@ -91,7 +91,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new PostgreSQLSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new PostgreSQLSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(SubQueryTableHint, source, hint, tableIDs),
@@ -125,7 +125,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new PostgreSQLSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new PostgreSQLSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(SubQueryTableHint, source, hint, hint2, tableIDs),

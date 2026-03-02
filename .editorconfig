@@ -544,6 +544,7 @@ dotnet_diagnostic.MA0098.severity = none # MA0098: Use indexer instead of LINQ m
 dotnet_diagnostic.MA0107.severity = none # MA0107: Do not use object.ToString
 dotnet_diagnostic.MA0111.severity = none # MA0111: Use string.Create instead of FormattableString
 dotnet_diagnostic.MA0132.severity = none # MA0132: Do not convert implicitly to DateTimeOffset
+dotnet_diagnostic.MA0133.severity = none # MA0133: Use DateTimeOffset instead of relying on the implicit conversion
 dotnet_diagnostic.MA0150.severity = none # MA0150: Do not call the default object.ToString explicitly
 dotnet_diagnostic.MA0169.severity = none # MA0169: Use Equals method instead of operator
 dotnet_diagnostic.MA0176.severity = none # MA0176: Optimize guid creation

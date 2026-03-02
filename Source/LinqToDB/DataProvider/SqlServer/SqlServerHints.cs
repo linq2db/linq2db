@@ -256,7 +256,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new SqlServerSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(OptionOptimizeFor, source, values),
@@ -278,7 +278,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new SqlServerSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(OptionUseHint, source, values),
@@ -329,7 +329,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new SqlServerSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(OptionTableHint, source, tableID, values),
@@ -487,7 +487,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new SqlServerSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(TablesInScopeHint, source, hint),
@@ -514,7 +514,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new SqlServerSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(TablesInScopeHint, source, hint, hintParameter),
@@ -540,7 +540,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new SqlServerSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(TablesInScopeHint, source, hint, hintParameters),
@@ -572,7 +572,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new SqlServerSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(TablesInScopeHint2012Plus, source, hint),
@@ -601,7 +601,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new SqlServerSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(TablesInScopeHint2014Plus, source, hint),
@@ -650,7 +650,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new SqlServerSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(JoinHint, source, hint),
@@ -676,7 +676,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new SqlServerSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(QueryHint, source, hint),
@@ -703,7 +703,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new SqlServerSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(QueryHint, source, hint, hintParameter),
@@ -732,7 +732,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new SqlServerSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(QueryHint, source, hint, hintParameters),
@@ -758,7 +758,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new SqlServerSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(QueryHint2019Plus, source, hint),
@@ -787,7 +787,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new SqlServerSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(QueryHint2008Plus, source, hint),
@@ -815,7 +815,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new SqlServerSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(QueryHint2012Plus, source, hint),
@@ -841,7 +841,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new SqlServerSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(QueryHint2016Plus, source, hint),

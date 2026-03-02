@@ -42,7 +42,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var deleteStatement = new SqlDeleteStatement(sequence.SelectQuery);
 
-			var tableContext = SequenceHelper.GetTableContext(sequence);
+			var tableContext = SequenceHelper.GetTableOrCteContext(sequence);
 			if (tableContext == null)
 				throw new InvalidOperationException("Cannot find target table for DELETE statement");
 
@@ -81,7 +81,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var outputTable = methodCall.GetArgumentByName("outputTable")!;
 
 					var destinationSequence = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
-					var destinationContext = SequenceHelper.GetTableContext(destinationSequence);
+					var destinationContext = SequenceHelper.GetTableOrCteContext(destinationSequence);
 					if (destinationContext == null)
 						throw new InvalidOperationException();
 

@@ -1454,18 +1454,20 @@ namespace Tests.xUpdate
 			string context)
 		{
 			using var db = GetDataContext(context);
+
 			try
 			{
 				db.Person.Delete(p => p.FirstName.StartsWith("Insert14"));
+
 				using (Assert.EnterMultipleScope())
 				{
 					Assert.That(db.Person
-										.Insert(() => new Person
-										{
-											FirstName = "Insert14" + db.Person.Where(p => p.ID == 1).Select(p => p.FirstName).SingleOrDefault(),
-											LastName = "Shepard",
-											Gender = Gender.Male
-										}), Is.EqualTo(1));
+						.Insert(() => new Person
+						{
+							FirstName = "Insert14" + db.Person.Where(p => p.ID == 1).Select(p => p.FirstName).SingleOrDefault(),
+							LastName  = "Shepard",
+							Gender    = Gender.Male,
+						}), Is.EqualTo(1));
 
 					Assert.That(db.Person.Count(p => p.FirstName.StartsWith("Insert14")), Is.EqualTo(1));
 				}
