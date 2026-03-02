@@ -4071,5 +4071,27 @@ namespace Tests.Linq
 			AssertQuery(query);
 			Assert.That(query.GetSelectQuery().Select.OrderBy.IsEmpty, Is.Not.True);
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5390")]
+		public void Issue5390Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue5390Table>();
+
+			var query = tb.GroupBy(o => new { o.CreatedOnUtc.Date })
+				.Select(g => new
+				{
+					Date = g.Key.Date,
+					Count = g.Count()
+				});
+
+			AssertQuery(query);
+		}
+
+		public class Issue5390Table
+		{
+			[Column(Precision = 6)]
+			public DateTime CreatedOnUtc { get; set; }
+		}
 	}
 }
