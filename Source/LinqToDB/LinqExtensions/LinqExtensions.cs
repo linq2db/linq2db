@@ -81,9 +81,7 @@ namespace LinqToDB
 	/// </para>
 	///
 	/// <para>
-	/// <b>AI:</b>
-	/// Groups=QueryDirectives,NavigationLoading,DML,Merge,Hints,Helpers
-	/// Provider=ProviderDefined
+	/// AI-Tags: Groups=QueryDirectives,NavigationLoading,DML,Merge,Helpers; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 	/// </para>
 	/// </remarks>
 	[PublicAPI]

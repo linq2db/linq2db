@@ -52,13 +52,7 @@ namespace LinqToDB
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// Hint syntax and interpretation are provider-defined.
 		/// <para>
-		/// <b>AI:</b>
-		/// Group=Hints
-		/// Execution=Deferred
-		/// Composability=Composable
-		/// Affects=SqlSemantics
-		/// Pipeline=ExpressionTree,SqlAST,SqlText
-		/// Provider=ProviderDefined
+		/// AI-Tags: Group=Hints; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		[LinqTunnel, Pure, IsQueryable]
@@ -156,13 +150,7 @@ namespace LinqToDB
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// Hint syntax and interpretation are provider-defined.
 		/// <para>
-		/// <b>AI:</b>
-		/// Group=Hints
-		/// Execution=Deferred
-		/// Composability=Composable
-		/// Affects=SqlSemantics
-		/// Pipeline=ExpressionTree,SqlAST,SqlText
-		/// Provider=ProviderDefined
+		/// AI-Tags: Group=Hints; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		[LinqTunnel, Pure, IsQueryable]
@@ -259,13 +247,7 @@ namespace LinqToDB
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// Hint syntax and interpretation are provider-defined.
 		/// <para>
-		/// <b>AI:</b>
-		/// Group=Hints
-		/// Execution=Deferred
-		/// Composability=Composable
-		/// Affects=SqlSemantics
-		/// Pipeline=ExpressionTree,SqlAST,SqlText
-		/// Provider=ProviderDefined
+		/// AI-Tags: Group=Hints; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		[LinqTunnel, Pure, IsQueryable]
@@ -363,13 +345,7 @@ namespace LinqToDB
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// Hint syntax and interpretation are provider-defined.
 		/// <para>
-		/// <b>AI:</b>
-		/// Group=Hints
-		/// Execution=Deferred
-		/// Composability=Composable
-		/// Affects=SqlSemantics
-		/// Pipeline=ExpressionTree,SqlAST,SqlText
-		/// Provider=ProviderDefined
+		/// AI-Tags: Group=Hints; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		[LinqTunnel, Pure, IsQueryable]
@@ -403,13 +379,7 @@ namespace LinqToDB
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// Hint syntax and interpretation are provider-defined.
 		/// <para>
-		/// <b>AI:</b>
-		/// Group=Hints
-		/// Execution=Deferred
-		/// Composability=Composable
-		/// Affects=SqlSemantics
-		/// Pipeline=ExpressionTree,SqlAST,SqlText
-		/// Provider=ProviderDefined
+		/// AI-Tags: Group=Hints; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		[LinqTunnel, Pure, IsQueryable]
@@ -503,13 +473,7 @@ namespace LinqToDB
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// Hint syntax and interpretation are provider-defined.
 		/// <para>
-		/// <b>AI:</b>
-		/// Group=Hints
-		/// Execution=Deferred
-		/// Composability=Composable
-		/// Affects=SqlSemantics
-		/// Pipeline=ExpressionTree,SqlAST,SqlText
-		/// Provider=ProviderDefined
+		/// AI-Tags: Group=Hints; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		[LinqTunnel, Pure, IsQueryable]

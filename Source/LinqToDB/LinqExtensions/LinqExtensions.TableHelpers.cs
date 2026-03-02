@@ -22,13 +22,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The identifier affects SQL semantics and is emitted into SQL text according to provider rules.
 		/// <para>
-		/// <b>AI:</b>
-		/// Group=TableConfiguration
-		/// Execution=Deferred
-		/// Composability=Composable
-		/// Affects=SqlSemantics
-		/// Pipeline=ExpressionTree,SqlAST,SqlText
-		/// Provider=ProviderDefined
+		/// AI-Tags: Group=TableConfiguration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		[LinqTunnel]
@@ -53,13 +47,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The name affects SQL semantics and is emitted into SQL text according to provider rules.
 		/// <para>
-		/// <b>AI:</b>
-		/// Group=TableConfiguration
-		/// Execution=Deferred
-		/// Composability=Composable
-		/// Affects=SqlSemantics
-		/// Pipeline=ExpressionTree,SqlAST,SqlText
-		/// Provider=ProviderDefined
+		/// AI-Tags: Group=TableConfiguration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		[LinqTunnel]
@@ -95,13 +83,7 @@ namespace LinqToDB
 		/// The name affects SQL semantics and is emitted into SQL text according to provider rules.
 		/// </para>
 		/// <para>
-		/// <b>AI:</b>
-		/// Group=TableConfiguration
-		/// Execution=Deferred
-		/// Composability=Composable
-		/// Affects=SqlSemantics
-		/// Pipeline=ExpressionTree,SqlAST,SqlText
-		/// Provider=ProviderDefined
+		/// AI-Tags: Group=TableConfiguration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		[LinqTunnel]
@@ -130,13 +112,7 @@ namespace LinqToDB
 		/// The name affects SQL semantics and is emitted into SQL text according to provider rules.
 		/// </para>
 		/// <para>
-		/// <b>AI:</b>
-		/// Group=TableConfiguration
-		/// Execution=Deferred
-		/// Composability=Composable
-		/// Affects=SqlSemantics
-		/// Pipeline=ExpressionTree,SqlAST,SqlText
-		/// Provider=ProviderDefined
+		/// AI-Tags: Group=TableConfiguration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		[LinqTunnel]
@@ -165,13 +141,7 @@ namespace LinqToDB
 		/// The name affects SQL semantics and is emitted into SQL text according to provider rules.
 		/// </para>
 		/// <para>
-		/// <b>AI:</b>
-		/// Group=TableConfiguration
-		/// Execution=Deferred
-		/// Composability=Composable
-		/// Affects=SqlSemantics
-		/// Pipeline=ExpressionTree,SqlAST,SqlText
-		/// Provider=ProviderDefined
+		/// AI-Tags: Group=TableConfiguration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		[LinqTunnel]
@@ -204,13 +174,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The template affects SQL semantics and is emitted into SQL text according to provider rules.
 		/// <para>
-		/// <b>AI:</b>
-		/// Group=TableConfiguration
-		/// Execution=Deferred
-		/// Composability=Composable
-		/// Affects=SqlSemantics
-		/// Pipeline=ExpressionTree,SqlAST,SqlText
-		/// Provider=ProviderDefined
+		/// AI-Tags: Group=TableConfiguration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		[LinqTunnel]

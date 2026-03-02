@@ -46,12 +46,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The navigation loading directive affects SQL semantics and is emitted according to provider rules.
 		/// <para>
-		/// <b>AI:</b>
-		/// Group=NavigationLoading
-		/// Execution=Deferred
-		/// Composability=Composable
-		/// Affects=JoinGraph
-		/// Provider=ProviderDefined
+		/// AI-Tags: Group=NavigationLoading; Execution=Deferred; Composability=Composable; Affects=JoinGraph; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		[LinqTunnel]
@@ -174,12 +169,7 @@ namespace LinqToDB
 		/// Execution is deferred and the method is composable.
 		/// The navigation loading directive affects SQL semantics and is emitted according to provider rules.
 		/// <para>
-		/// <b>AI:</b>
-		/// Group=NavigationLoading
-		/// Execution=Deferred
-		/// Composability=Composable
-		/// Affects=JoinGraph
-		/// Provider=ProviderDefined
+		/// AI-Tags: Group=NavigationLoading; Execution=Deferred; Composability=Composable; Affects=JoinGraph; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		[LinqTunnel]

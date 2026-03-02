@@ -38,12 +38,7 @@ namespace LinqToDB
 		/// Output availability and exact behavior are provider-defined.
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// <para>
-		/// <b>AI:</b>
-		/// Group=DML
-		/// Execution=Deferred
-		/// Composability=Terminal
-		/// Affects=DmlStatement
-		/// Provider=ProviderDefined
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static IEnumerable<TSource> DeleteWithOutput<TSource>(this IQueryable<TSource> source)
@@ -239,12 +234,7 @@ namespace LinqToDB
 		/// Output availability and exact behavior are provider-defined.
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// <para>
-		/// <b>AI:</b>
-		/// Group=DML
-		/// Execution=Immediate
-		/// Composability=Terminal
-		/// Affects=DmlStatement
-		/// Provider=ProviderDefined
+		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static int DeleteWithOutputInto<TSource,TOutput>(
@@ -393,12 +383,7 @@ namespace LinqToDB
 		/// Execution is immediate and the method is terminal.
 		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// <para>
-		/// <b>AI:</b>
-		/// Group=DML
-		/// Execution=Immediate
-		/// Composability=Terminal
-		/// Affects=DmlStatement
-		/// Provider=ProviderDefined
+		/// AI-Tags: Group=DML; Execution=Immediate; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static int Delete<T>(this IQueryable<T> source)
