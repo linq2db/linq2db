@@ -31,11 +31,6 @@ namespace LinqToDB
 	/// (for example, <see cref="ITable{T}"/> and <see cref="IQueryable{T}"/>).
 	/// </para>
 	///
-	/// <para>
-	/// <b>Translation pipeline:</b>
-	/// Expression Tree → SQL AST → provider-specific SQL text.
-	/// </para>
-	///
 	/// <para><b>API groups:</b></para>
 	/// <list type="bullet">
 	///   <item>
@@ -88,7 +83,6 @@ namespace LinqToDB
 	/// <para>
 	/// <b>AI:</b>
 	/// Groups=QueryDirectives,NavigationLoading,DML,Merge,Hints,Helpers
-	/// Pipeline=ExpressionTree -> SqlAST -> SqlText
 	/// Provider=ProviderDefined
 	/// </para>
 	/// </remarks>

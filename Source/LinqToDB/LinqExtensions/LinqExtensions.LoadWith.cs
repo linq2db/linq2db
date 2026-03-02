@@ -12,7 +12,7 @@ using LinqToDB.Internal.Linq;
 
 namespace LinqToDB
 {
-	public partial class LinqExtensions
+	public static partial class LinqExtensions
 	{
 		/// <summary>
 		/// Specifies associations, that should be loaded for each loaded record from current table.
@@ -44,14 +44,13 @@ namespace LinqToDB
 		/// <returns>Table-like query source.</returns>
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
-		/// The navigation loading directive is represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// The navigation loading directive affects SQL semantics and is emitted according to provider rules.
 		/// <para>
 		/// <b>AI:</b>
 		/// Group=NavigationLoading
 		/// Execution=Deferred
 		/// Composability=Composable
 		/// Affects=JoinGraph
-		/// Pipeline=ExpressionTree,SqlAST,SqlText
 		/// Provider=ProviderDefined
 		/// </para>
 		/// </remarks>
@@ -173,14 +172,13 @@ namespace LinqToDB
 		/// <returns>Returns new query with related data included.</returns>
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
-		/// The navigation loading directive is represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// The navigation loading directive affects SQL semantics and is emitted according to provider rules.
 		/// <para>
 		/// <b>AI:</b>
 		/// Group=NavigationLoading
 		/// Execution=Deferred
 		/// Composability=Composable
 		/// Affects=JoinGraph
-		/// Pipeline=ExpressionTree,SqlAST,SqlText
 		/// Provider=ProviderDefined
 		/// </para>
 		/// </remarks>
@@ -794,5 +792,5 @@ namespace LinqToDB
 			var result = currentSource.Provider.CreateQuery<TEntity>(expr);
 			return new LoadWithQueryable<TEntity, TProperty>((IExpressionQuery<TEntity>)result);
 		}
-		}
 	}
+}

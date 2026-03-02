@@ -39,14 +39,12 @@ namespace LinqToDB
 		/// </list>
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
-		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// <para>
 		/// <b>AI:</b>
 		/// Group=DML
 		/// Execution=Immediate
 		/// Composability=Terminal
 		/// Affects=DmlStatement
-		/// Pipeline=ExpressionTree,SqlAST,SqlText
 		/// Provider=ProviderDefined
 		/// </para>
 		/// </remarks>
@@ -86,6 +84,16 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static ValueTask<TTarget> InsertWithOutputAsync<TTarget>(
 			                this ITable<TTarget>      target,
@@ -123,6 +131,16 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static TTarget InsertWithOutput<TTarget>(
 			                this ITable<TTarget> target,
@@ -160,6 +178,16 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static ValueTask<TTarget> InsertWithOutputAsync<TTarget>(
 			           this ITable<TTarget>   target,
@@ -200,6 +228,16 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static TOutput InsertWithOutput<TTarget,TOutput>(
 			                this ITable<TTarget>              target,
@@ -243,6 +281,16 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static ValueTask<TOutput> InsertWithOutputAsync<TTarget,TOutput>(
 			                this ITable<TTarget>              target,
@@ -283,14 +331,12 @@ namespace LinqToDB
 		/// </list>
 		/// Execution is immediate and the method is terminal.
 		/// Output availability and exact behavior are provider-defined.
-		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// <para>
 		/// <b>AI:</b>
 		/// Group=DML
 		/// Execution=Immediate
 		/// Composability=Terminal
 		/// Affects=DmlStatement
-		/// Pipeline=ExpressionTree,SqlAST,SqlText
 		/// Provider=ProviderDefined
 		/// </para>
 		/// </remarks>
@@ -330,6 +376,16 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static Task<int> InsertWithOutputIntoAsync<TTarget>(
 			                this ITable<TTarget>      target,
@@ -370,6 +426,16 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static int InsertWithOutputInto<TTarget,TOutput>(
 			                this ITable<TTarget>              target,
@@ -414,6 +480,16 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static Task<int> InsertWithOutputIntoAsync<TTarget,TOutput>(
 			                this ITable<TTarget>              target,
@@ -463,6 +539,16 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Deferred
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static IEnumerable<TTarget> InsertWithOutput<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
@@ -505,6 +591,16 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Deferred
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static IAsyncEnumerable<TTarget> InsertWithOutputAsync<TSource, TTarget>(
 			                this IQueryable<TSource>           source,
@@ -548,6 +644,16 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -583,6 +689,16 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Deferred
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		[Pure]
 		public static IEnumerable<TOutput> InsertWithOutput<TSource,TTarget,TOutput>(
@@ -632,6 +748,16 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
+		/// Execution is deferred until enumeration and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Deferred
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static IAsyncEnumerable<TOutput> InsertWithOutputAsync<TSource, TTarget, TOutput>(
 							this IQueryable<TSource> source,
@@ -681,6 +807,16 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		// TODO: Remove in v7
 		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -711,6 +847,16 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static int InsertWithOutputInto<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
@@ -754,6 +900,16 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static Task<int> InsertWithOutputIntoAsync<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
@@ -800,6 +956,16 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static int InsertWithOutputInto<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>          source,
@@ -850,6 +1016,16 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static Task<int> InsertWithOutputIntoAsync<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>          source,
@@ -897,6 +1073,16 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static TTarget InsertWithOutput<TSource,TTarget>(this ISelectInsertable<TSource,TTarget> source)
 		{
@@ -929,6 +1115,16 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static ValueTask<TTarget> InsertWithOutputAsync<TSource,TTarget>(
 			this ISelectInsertable<TSource,TTarget> source,
@@ -959,6 +1155,16 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static int InsertWithOutputInto<TSource,TTarget>(
 			this ISelectInsertable<TSource,TTarget> source,
@@ -993,6 +1199,16 @@ namespace LinqToDB
 		/// <list type="bullet">
 		/// <item>SQL Server 2005+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static Task<int> InsertWithOutputIntoAsync<TSource,TTarget>(
 			this ISelectInsertable<TSource,TTarget> source,
@@ -1033,6 +1249,16 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static T InsertWithOutput<T>(this IValueInsertable<T> source)
 		{
@@ -1065,6 +1291,16 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static ValueTask<T> InsertWithOutputAsync<T>(this IValueInsertable<T> source, CancellationToken token = default)
 		{
@@ -1099,6 +1335,16 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static TOutput InsertWithOutput<T, TOutput>(this IValueInsertable<T> source, Expression<Func<T, TOutput>> outputExpression)
 		{
@@ -1136,6 +1382,16 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+</item>
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
+		/// Execution is immediate and the method is terminal.
+		/// Output availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
 		/// </remarks>
 		public static ValueTask<TOutput> InsertWithOutputAsync<T, TOutput>(
 			this IValueInsertable<T> source,
@@ -1171,14 +1427,12 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
-		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// <para>
 		/// <b>AI:</b>
 		/// Group=DML
 		/// Execution=Immediate
 		/// Composability=Terminal
 		/// Affects=DmlStatement
-		/// Pipeline=ExpressionTree,SqlAST,SqlText
 		/// Provider=ProviderDefined
 		/// </para>
 		/// </remarks>
@@ -1208,6 +1462,7 @@ namespace LinqToDB
 		/// <param name="setter">Insert expression. Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>See <see cref="Insert{T}(ITable{T},Expression{Func{T}})"/> for SQL semantics and provider contract.</remarks>
 		public static Task<int> InsertAsync<T>(
 							this ITable<T> target,
 			[InstantHandle] Expression<Func<T>> setter,
@@ -1237,14 +1492,12 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is immediate and the method is terminal.
 		/// Identity availability and exact behavior are provider-defined.
-		/// SQL semantics are represented in the SQL AST and emitted into SQL text according to provider rules.
 		/// <para>
 		/// <b>AI:</b>
 		/// Group=DML
 		/// Execution=Immediate
 		/// Composability=Terminal
 		/// Affects=DmlStatement
-		/// Pipeline=ExpressionTree,SqlAST,SqlText
 		/// Provider=ProviderDefined
 		/// </para>
 		/// </remarks>
@@ -1414,6 +1667,18 @@ namespace LinqToDB
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="target">Target table.</param>
 		/// <returns>Insertable source query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// The method defines a DML query that will be executed by a terminal operation.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Deferred
+		/// Composability=Composable
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static IValueInsertable<T> Into<T>(this IDataContext dataContext, ITable<T> target)
@@ -1438,6 +1703,18 @@ namespace LinqToDB
 		/// <typeparam name="T">Target table mapping class.</typeparam>
 		/// <param name="source">Target table.</param>
 		/// <returns>Insertable source query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// The method defines a DML query that will be executed by a terminal operation.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Deferred
+		/// Composability=Composable
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
+		/// </remarks>
 		public static IValueInsertable<T> AsValueInsertable<T>(this ITable<T> source)
 			where T : notnull
 		{
@@ -1463,6 +1740,18 @@ namespace LinqToDB
 		/// <param name="field">Setter field selector expression.</param>
 		/// <param name="value">Setter field value expression.</param>
 		/// <returns>Insert query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// The method defines/extends a DML query that will be executed by a terminal operation.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Deferred
+		/// Composability=Composable
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static IValueInsertable<T> Value<T, TV>(
@@ -1495,6 +1784,18 @@ namespace LinqToDB
 		/// <param name="field">Setter field selector expression.</param>
 		/// <param name="value">Setter field value.</param>
 		/// <returns>Insert query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// The method defines/extends a DML query that will be executed by a terminal operation.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Deferred
+		/// Composability=Composable
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static IValueInsertable<T> Value<T, TV>(
@@ -1526,6 +1827,18 @@ namespace LinqToDB
 		/// <param name="field">Setter field selector expression.</param>
 		/// <param name="value">Setter field value expression.</param>
 		/// <returns>Insert query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// The method defines/extends a DML query that will be executed by a terminal operation.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Deferred
+		/// Composability=Composable
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static IValueInsertable<T> Value<T, TV>(
@@ -1557,6 +1870,18 @@ namespace LinqToDB
 		/// <param name="field">Setter field selector expression.</param>
 		/// <param name="value">Setter field value.</param>
 		/// <returns>Insert query.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// The method defines/extends a DML query that will be executed by a terminal operation.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Deferred
+		/// Composability=Composable
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static IValueInsertable<T> Value<T, TV>(
@@ -1584,6 +1909,17 @@ namespace LinqToDB
 		/// <typeparam name="T">Target table record type.</typeparam>
 		/// <param name="source">Insert query.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
+		/// </remarks>
 		public static int Insert<T>(this IValueInsertable<T> source)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -1606,6 +1942,7 @@ namespace LinqToDB
 		/// <param name="source">Insert query.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
+		/// <remarks>See <see cref="Insert{T}(IValueInsertable{T})"/> for SQL semantics and provider contract.</remarks>
 		public static Task<int> InsertAsync<T>(this IValueInsertable<T> source, CancellationToken token = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -1627,6 +1964,18 @@ namespace LinqToDB
 		/// <typeparam name="T">Target table record type.</typeparam>
 		/// <param name="source">Insert query.</param>
 		/// <returns>Inserted record's identity value.</returns>
+		/// <remarks>
+		/// Execution is immediate and the method is terminal.
+		/// Identity availability and exact behavior are provider-defined.
+		/// <para>
+		/// <b>AI:</b>
+		/// Group=DML
+		/// Execution=Immediate
+		/// Composability=Terminal
+		/// Affects=DmlStatement
+		/// Provider=ProviderDefined
+		/// </para>
+		/// </remarks>
 		[Pure]
 		public static object InsertWithIdentity<T>(this IValueInsertable<T> source)
 		{
@@ -2228,7 +2577,7 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <typeparam name="TTarget">Target table record type.</typeparam>
 		/// <param name="source">Insert query.</param>
-		/// <returns>Number of affected records.</returns>
+		/// <returns>Inserted record's identity value.</returns>
 		public static object InsertWithIdentity<TSource, TTarget>(this ISelectInsertable<TSource, TTarget> source)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -2250,7 +2599,7 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <typeparam name="TTarget">Target table record type.</typeparam>
 		/// <param name="source">Insert query.</param>
-		/// <returns>Number of affected records.</returns>
+		/// <returns>Inserted record's identity value.</returns>
 		public static int? InsertWithInt32Identity<TSource, TTarget>(this ISelectInsertable<TSource, TTarget> source)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -2265,7 +2614,7 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <typeparam name="TTarget">Target table record type.</typeparam>
 		/// <param name="source">Insert query.</param>
-		/// <returns>Number of affected records.</returns>
+		/// <returns>Inserted record's identity value.</returns>
 		public static long? InsertWithInt64Identity<TSource, TTarget>(this ISelectInsertable<TSource, TTarget> source)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -2280,7 +2629,7 @@ namespace LinqToDB
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <typeparam name="TTarget">Target table record type.</typeparam>
 		/// <param name="source">Insert query.</param>
-		/// <returns>Number of affected records.</returns>
+		/// <returns>Inserted record's identity value.</returns>
 		public static decimal? InsertWithDecimalIdentity<TSource, TTarget>(this ISelectInsertable<TSource, TTarget> source)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -2296,7 +2645,7 @@ namespace LinqToDB
 		/// <typeparam name="TTarget">Target table record type.</typeparam>
 		/// <param name="source">Insert query.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Number of affected records.</returns>
+		/// <returns>Inserted record's identity value.</returns>
 		public static Task<object> InsertWithIdentityAsync<TSource, TTarget>(
 			 this ISelectInsertable<TSource, TTarget> source, CancellationToken token = default)
 		{
@@ -2320,7 +2669,7 @@ namespace LinqToDB
 		/// <typeparam name="TTarget">Target table record type.</typeparam>
 		/// <param name="source">Insert query.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Number of affected records.</returns>
+		/// <returns>Inserted record's identity value.</returns>
 		public static async Task<int?> InsertWithInt32IdentityAsync<TSource, TTarget>(
 			 this ISelectInsertable<TSource, TTarget> source, CancellationToken token = default)
 		{
@@ -2337,7 +2686,7 @@ namespace LinqToDB
 		/// <typeparam name="TTarget">Target table record type.</typeparam>
 		/// <param name="source">Insert query.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Number of affected records.</returns>
+		/// <returns>Inserted record's identity value.</returns>
 		public static async Task<long?> InsertWithInt64IdentityAsync<TSource, TTarget>(
 			 this ISelectInsertable<TSource, TTarget> source, CancellationToken token = default)
 		{
@@ -2354,7 +2703,7 @@ namespace LinqToDB
 		/// <typeparam name="TTarget">Target table record type.</typeparam>
 		/// <param name="source">Insert query.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Number of affected records.</returns>
+		/// <returns>Inserted record's identity value.</returns>
 		public static async Task<decimal?> InsertWithDecimalIdentityAsync<TSource, TTarget>(
 			 this ISelectInsertable<TSource, TTarget> source, CancellationToken token = default)
 		{
