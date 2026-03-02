@@ -422,4 +422,28 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 			public Guid Value { get; set; }
 		}
 	}
+
+	public interface IIssue5267MultiTenant
+	{
+		public Guid? TenantId { get; set; }
+	}
+
+	public interface IIssue5267SoftDelete
+	{
+		bool IsDeleted { get; set; }
+	}
+
+	public sealed class Issue5267Role : IIssue5267SoftDelete, IIssue5267MultiTenant
+	{
+		public int Id { get; set; }
+		public int DepartmentId { get; set; }
+		public bool IsDeleted { get; set; }
+		public Guid? TenantId { get; set; }
+	}
+
+	public sealed class Issue5267Department
+	{
+		public int Id { get; set; }
+		public int? ParentGuid { get; set; }
+	}
 }
