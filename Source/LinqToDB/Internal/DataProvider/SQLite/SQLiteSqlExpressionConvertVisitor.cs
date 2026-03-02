@@ -183,8 +183,8 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			}
 			else if (underlying == typeof(Guid))
 			{
-				// as sqlite doesn't have types - type cast expressions could result in
-				// wrong affinity infered
+				// as SQLite doesn't have types - type cast expressions could result in
+				// wrong affinity inferred
 				// https://www.sqlite.org/datatype3.html
 				return (ISqlExpression)Visit(cast.Expression);
 			}
