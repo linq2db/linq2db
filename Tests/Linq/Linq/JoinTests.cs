@@ -2500,6 +2500,7 @@ namespace Tests.Linq
 				var q =
 					from ft in tagTable.RightJoin(factTable, (t, f) => t.FactId == f.Id, (t, f) => new { fact = f, leftTag = t })
 					where ft.fact.Id > 3
+					orderby ft.fact.Id
 					select ft;
 
 				var results = q.ToArray();
