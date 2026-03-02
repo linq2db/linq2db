@@ -46,6 +46,62 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		[Test]
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		public void IntersectByWithNavigation([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+			from p in db.Parent.LoadWith(p => p.Children)
+			from c in p.Children.IntersectBy(new[] { 1, 2, 3 }, x => x.ChildID)
+			orderby c.ChildID
+			select new { p.ParentID, c.ChildID };
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		public void IntersectByWithWhere([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+			from p in db.Parent.LoadWith(p => p.Children)
+			from c in p.Children.Where(x => x.ChildID > 0).IntersectBy(new[] { 1, 3 }, x => x.ChildID)
+			select new { p.ParentID, c.ChildID };
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		public void IntersectByWithOrdering([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var _ = db.CreateLocalTable(CreateTestTableData());
+			var query = db.GetTable<TestTable>()
+			.IntersectBy(new[] { 20, 30 }, x => x.TestId)
+			.OrderByDescending(x => x.Id);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		public void IntersectByFromAnotherQuery([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var _ = db.CreateLocalTable(CreateTestTableData());
+			var exclude = db.GetTable<TestTable>().Where(x => x.Id <= 2).Select(x => x.TestId);
+			var query = db.GetTable<TestTable>().IntersectBy(exclude, x => x.TestId).OrderBy(x => x.TestId);
+
+			AssertQuery(query);
+		}
 	}
 }
 

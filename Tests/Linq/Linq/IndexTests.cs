@@ -48,6 +48,79 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		[Test]
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		public void IndexWithOffset([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _ = db.CreateLocalTable(CreateTestTableData());
+
+			var query = db.GetTable<TestTable>()
+			.OrderBy(x => x.Id)
+			.Index();
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		public void IndexWithWhere([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _ = db.CreateLocalTable(CreateTestTableData());
+
+			var query = db.GetTable<TestTable>()
+			.Where(x => x.TestId != 20)
+			.OrderBy(x => x.Id)
+			.Index();
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		public void IndexWithNavigation([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+			from p in db.Parent.LoadWith(p => p.Children)
+			from c in p.Children.OrderBy(x => x.ChildID).Index()
+			select new { p.ParentID, Index = c.Index, c.Item.ChildID };
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		public void IndexWithNavigationOffset([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+			from p in db.Parent.LoadWith(p => p.Children)
+			from c in p.Children.OrderBy(x => x.ChildID).Index()
+			where c.Index < 15
+			select new { p.ParentID, Index = c.Index, c.Item.ChildID };
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		public void IndexWithJoin([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+			from p in db.Parent
+			from IndexedParent in db.Parent.OrderBy(x => x.ParentID).Index()
+			where IndexedParent.Index < 5
+			select new { p.ParentID, IndexedParent.Index, IndexedParent.Item.Value1 };
+
+			AssertQuery(query);
+		}
 	}
 }
 

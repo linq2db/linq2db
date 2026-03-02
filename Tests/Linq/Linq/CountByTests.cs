@@ -73,7 +73,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query =
-			from p in db.Parent
+			from p in db.Parent.LoadWith(p => p.Children)
 			from c in p.Children.CountBy(x => x.ParentID)
 			orderby c.Key
 			select new { p, c.Value };
@@ -88,7 +88,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query =
-			from p in db.Parent
+			from p in db.Parent.LoadWith(p => p.Children)
 			from c in p.Children.CountBy(x => x.ParentID)
 			where c.Value > 0
 			select new { p.ParentID, ChildCount = c.Value };
@@ -103,7 +103,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query =
-			from p in db.Parent
+			from p in db.Parent.LoadWith(p => p.Children)
 			from c in p.Children.Where(x => x.ChildID > 0).CountBy(x => x.ParentID)
 			select new { p.ParentID, c.Key, c.Value };
 
@@ -117,7 +117,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query =
-			from p in db.Parent
+			from p in db.Parent.LoadWith(p => p.Children)
 			from c in p.Children.CountBy(x => x.ChildID)
 			orderby c.Key, c.Value
 			select new { ParentID = p.ParentID, ChildCount = c.Value };
@@ -132,7 +132,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query =
-			from p in db.Parent
+			from p in db.Parent.LoadWith(p => p.Children)
 			from c in p.Children.CountBy(x => x.ChildID)
 			join p2 in db.Parent on p.ParentID equals p2.ParentID
 			select new { p2.ParentID, ChildIDCount = c.Value };
