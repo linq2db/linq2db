@@ -269,20 +269,5 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			BuildStep = Step.OffsetLimit;     BuildOffsetLimit(selectQuery);
 			BuildStep = Step.QueryExtensions; BuildSubQueryExtensions(statement);
 		}
-
-		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
-		{
-			if (dataType.SystemType.UnwrapNullableType() == typeof(Guid))
-			{
-				// as sqlite doesn't have types - type cast expressions could result in
-				// wrong affinity infered
-				// https://www.sqlite.org/datatype3.html
-				BuildExpression(value);
-				return;
-			}
-
-			base.BuildTypedExpression(dataType, value);
-		}
-
 	}
 }

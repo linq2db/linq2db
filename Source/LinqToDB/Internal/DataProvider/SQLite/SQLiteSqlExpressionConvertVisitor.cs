@@ -169,7 +169,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 			if (underlying == typeof(DateTime) || underlying == typeof(DateTimeOffset)
 #if SUPPORTS_DATEONLY
-			                                   || underlying == typeof(DateOnly)
+											   || underlying == typeof(DateOnly)
 #endif
 			   )
 			{
@@ -180,6 +180,13 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 					if (!ReferenceEquals(cast.Expression, newExpr))
 						return (ISqlExpression)Visit(newExpr);
 				}
+			}
+			else if (underlying == typeof(Guid))
+			{
+				// as sqlite doesn't have types - type cast expressions could result in
+				// wrong affinity infered
+				// https://www.sqlite.org/datatype3.html
+				return (ISqlExpression)Visit(cast.Expression);
 			}
 
 			return base.ConvertConversion(cast);
