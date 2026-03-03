@@ -39,6 +39,9 @@ namespace LinqToDB
 		/// <remarks>
 		/// Use to obtain a query root for a mapped table or view. Execution is deferred until enumeration
 		/// or explicit materialization.
+		/// <para>
+		/// AI-Tags: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </para>
 		/// </remarks>
 		[LinqTunnel]
 		[Pure]
@@ -63,6 +66,9 @@ namespace LinqToDB
 		/// <remarks>
 		/// Use to create a query root for a table-valued function or a custom table expression.
 		/// Execution is deferred until enumeration or explicit materialization.
+		/// <para>
+		/// AI-Tags: Group=Helpers; Execution=Deferred; Composability=Composable; Affects=QueryRoot; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </para>
 		/// </remarks>
 		[LinqTunnel]
 		[Pure]

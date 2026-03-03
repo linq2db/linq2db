@@ -51,6 +51,11 @@ In other words **LINQ to DB is type-safe SQL**.
 
 See [Github.io documentation](https://linq2db.github.io/index.html) for more details.
 
+## AI/LLM-oriented documentation
+
+- Architecture overview for agents: [`LinqToDBArchitecture.cs`](LinqToDBArchitecture.cs)
+- `AI-Tags` metadata format and vocabulary: [`docs/ai-tags.md`](docs/ai-tags.md)
+
 <!-- You can visit our [blog](http://blog.linq2db.com/) -->
 
 Code examples and demos can be found [here](https://github.com/linq2db/examples) or in [tests](https://github.com/linq2db/linq2db/tree/master/Tests/Linq).
