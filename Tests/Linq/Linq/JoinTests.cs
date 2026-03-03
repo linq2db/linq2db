@@ -2360,6 +2360,7 @@ namespace Tests.Linq
 					from leftTag in tagTable
 					from fact in factTable.Join(SqlJoinType.Right, fact => leftTag.FactId == fact.Id)
 					where fact.Id > 3
+					orderby fact.Id
 					select new { fact, leftTag };
 
 			var results = t.ToArray();
