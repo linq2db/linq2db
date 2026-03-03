@@ -2490,7 +2490,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(TestProvName.AllClickHouse, Details = "Wrong result set is returned.")]
+		[ActiveIssue(Details = "Wrong result set is returned.", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void RightJoinWithRecordSelection3([DataSources(TestProvName.AllSQLite)] string context)
 		{
