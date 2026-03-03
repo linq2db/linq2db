@@ -25,15 +25,25 @@ namespace LinqToDB
 	/// </para>
 	///
 	/// <para>
+	/// Use when you need a minimal abstraction for translating and executing LINQ queries
+	/// across local or remote providers.
+	/// </para>
+	///
+	/// <para>
 	/// The execution target may be a direct database provider (local execution)
 	/// or a remote execution endpoint. In remote mode, the translated SQL AST
 	/// (and parameters) is transferred for SQL text generation and execution on the remote side.
 	/// </para>
 	///
 	/// <para>
+	/// Implementations may own connection-related resources; callers must dispose the context
+	/// to release them.
+	/// </para>
+	///
+	/// <para>
 	/// This interface represents a translation/execution boundary
 	/// (Expression Tree → SQL AST → SQL text → execution → materialization)
-	/// and does not define state tracking or deferred persistence semantics.
+	/// and does not define implicit change tracking or unit-of-work semantics.
 	/// </para>
 	/// </remarks>
 	[PublicAPI]
@@ -153,6 +163,9 @@ namespace LinqToDB
 		/// </para>
 		/// </summary>
 		/// <remarks>
+		/// Options are immutable for the lifetime of the context; this method provides a temporary override
+		/// and restores previous options when the returned <see cref="IDisposable"/> is disposed.
+		/// Use with a <c>using</c> scope, for example <c>using (ctx.UseOptions(o =&gt; o...))</c>.
 		/// For <see cref="ConnectionOptions"/> we update only mapping schema and connection interceptor. Connection string, configuration, data provider, etc. are not updatable.
 		/// </remarks>
 		/// <param name="optionsSetter">

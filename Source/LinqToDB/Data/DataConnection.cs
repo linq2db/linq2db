@@ -32,6 +32,11 @@ namespace LinqToDB.Data
 	/// provider + mapping + options + database connection.
 	/// </para>
 	///
+	/// <para>
+	/// Use when you want a single connection open for the lifetime of the context
+	/// and direct access to database features.
+	/// </para>
+	///
 	/// <para><b>Connection lifetime:</b></para>
 	/// <para>
 	/// The underlying connection is opened on first command execution
@@ -40,11 +45,20 @@ namespace LinqToDB.Data
 	/// create → execute queries/commands → dispose (usually via <c>using</c>).
 	/// </para>
 	///
+	/// <para>
+	/// Dispose the instance to close the connection and release resources.
+	/// </para>
+	///
 	/// <para><b>Execution model:</b></para>
 	/// <para>
 	/// LINQ queries are translated from <c>Expression Tree</c>
 	/// into an internal SQL AST, then into provider-specific SQL text,
 	/// and executed when enumerated or explicitly materialized.
+	/// </para>
+	///
+	/// <para>
+	/// This type does not introduce implicit change tracking or unit-of-work semantics;
+	/// data modification occurs only via explicit DML APIs.
 	/// </para>
 	///
 	/// <para><b>Performance guidance:</b></para>

@@ -23,6 +23,16 @@ namespace LinqToDB
 	/// </para>
 	///
 	/// <para>
+	/// Use to define reusable configuration presets for creating
+	/// <see cref="DataConnection"/> or <see cref="DataContext"/> instances.
+	/// </para>
+	///
+	/// <para>
+	/// Configure options using extension methods that return a new <see cref="DataOptions"/> instance;
+	/// treat instances as immutable values. Options do not open connections or execute commands.
+	/// </para>
+	///
+	/// <para>
 	/// Options participate in the full processing pipeline:
 	/// <c>Expression Tree</c> → SQL AST → SQL text → execution → materialization.
 	/// Individual option groups may influence different stages of this pipeline.

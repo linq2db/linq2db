@@ -31,6 +31,11 @@ namespace LinqToDB
 	/// provider + mapping + options + database connection.
 	/// </para>
 	///
+	/// <para>
+	/// Use when you want per-operation connection management or a context shape
+	/// familiar from earlier LINQ-to-database APIs.
+	/// </para>
+	///
 	/// <para><b>Connection lifetime:</b></para>
 	/// <para>
 	/// Unlike <see cref="DataConnection"/>, the underlying connection may be opened and closed
@@ -46,9 +51,12 @@ namespace LinqToDB
 	/// </para>
 	///
 	/// <para>
-	/// This type exists primarily for scenarios that require per-operation
-	/// connection behavior or prefer a context shape familiar from earlier LINQ-to-database APIs.
-	/// It does not introduce ORM-style state tracking or unit-of-work semantics.
+	/// This type does not introduce implicit change tracking or unit-of-work semantics;
+	/// data modification occurs only via explicit DML APIs.
+	/// </para>
+	///
+	/// <para>
+	/// Dispose the context to release provider resources and connections.
 	/// </para>
 	/// </remarks>
 	[PublicAPI]
