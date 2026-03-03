@@ -12,6 +12,7 @@
 	
 	<ItemGroup Label="Nuget">
 		<None Include="readme.md" Pack="true" PackagePath="readme.md" />
+		<None Include="../../docs/ai-tags.md" Pack="true" PackagePath="docs/ai-tags.md" />
 	</ItemGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Testing' OR '$(Configuration)'=='Azure'">
