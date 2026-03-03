@@ -2336,6 +2336,7 @@ namespace Tests.Linq
 					from leftTag in tagTable
 					from fact in factTable.RightJoin(fact => leftTag.FactId == fact.Id)
 					where fact.Id > 3
+					orderby fact.Id
 					select new { fact, leftTag };
 
 			var results = t.ToArray();
@@ -2384,6 +2385,7 @@ namespace Tests.Linq
 			var q =
 					from ft in tagTable.RightJoin(factTable, (t, f) => t.FactId == f.Id, (t, f) => new { fact = f, leftTag = t })
 					where ft.fact.Id > 3
+					orderby ft.Id
 					select ft;
 
 			var results = q.ToArray();
@@ -2407,6 +2409,7 @@ namespace Tests.Linq
 			var q =
 					from ft in tagTable.Join(factTable, SqlJoinType.Right, (t, f) => t.FactId == f.Id, (t, f) => new { fact = f, leftTag = t })
 					where ft.fact.Id > 3
+					orderby ft.Id
 					select ft;
 
 			var results = q.ToArray();
