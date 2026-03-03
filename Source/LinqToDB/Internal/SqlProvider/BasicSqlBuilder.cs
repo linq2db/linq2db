@@ -3882,6 +3882,7 @@ namespace LinqToDB.Internal.SqlProvider
 				case DataType.Int32  : StringBuilder.Append("Int");      return;
 				case DataType.Int64  : StringBuilder.Append("BigInt");   return;
 				case DataType.Boolean: StringBuilder.Append("Bit");      return;
+				case DataType.Date   : StringBuilder.Append("Date");     return;
 			}
 
 			StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.DataType}");
@@ -3890,7 +3891,12 @@ namespace LinqToDB.Internal.SqlProvider
 				StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Length})");
 
 			if (type.Precision > 0)
-				StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Precision}{InlineComma}{type.Scale})");
+			{
+				if (type.Scale != null)
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Precision}{InlineComma}{type.Scale})");
+				else
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Precision})");
+			}
 		}
 
 		protected static DbDataType CorrectDecimalFacets(DbDataType dataType, decimal decValue, bool updateNullsOnly = false)
