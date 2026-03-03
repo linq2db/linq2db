@@ -112,7 +112,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
-		public void CountByWithNavigationSelectKey([DataSources] string context)
+		public void CountByWithNavigationSelectKey([IncludeDataSources(TestProvName.WithApplyJoin)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -127,7 +127,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
-		public void CountByNestedWithJoin([DataSources] string context)
+		public void CountByNestedWithJoin([IncludeDataSources(TestProvName.WithApplyJoin)] string context)
 		{
 			using var db = GetDataContext(context);
 

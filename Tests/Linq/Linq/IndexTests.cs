@@ -80,7 +80,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
-		public void IndexWithNavigation([DataSources] string context)
+		public void IndexWithNavigation([IncludeDataSources(TestProvName.WithApplyJoin)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -94,7 +94,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
-		public void IndexWithNavigationOffset([DataSources] string context)
+		public void IndexWithNavigationOffset([IncludeDataSources(TestProvName.WithApplyJoin)] string context)
 		{
 			using var db = GetDataContext(context);
 
