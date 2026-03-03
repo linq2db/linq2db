@@ -13,16 +13,22 @@ namespace LinqToDB
 	/// in LINQ query construction. It does not execute queries by itself.
 	/// </para>
 	/// <para>
-	/// <see cref="ITable{T}"/> is a query root. Query execution occurs only when the composed query
-	/// is enumerated or explicitly materialized via an <see cref="IDataContext"/>.
+	/// Use when you need a query root for a mapped table, view, or table-valued function.
+	/// </para>
+	/// <para>
+	/// <see cref="ITable{T}"/> is a query root. Query execution is deferred until enumeration
+	/// or explicit materialization via an <see cref="IDataContext"/>.
 	/// </para>
 	/// <para>
 	/// Queries composed over <see cref="ITable{T}"/> are translated by the configured
-	/// <see cref="IDataContext"/> (Expression Tree → internal SQL AST → provider-specific SQL text).
+	/// <see cref="IDataContext"/>.
 	/// </para>
 	/// <para>
 	/// The underlying table source may be a physical table, a view, or a table-valued function.
 	/// This distinction is expressed by mapping/provider configuration and affects translation.
+	/// </para>
+	/// <para>
+	/// <see cref="ITable{T}"/> does not provide implicit change tracking or unit-of-work semantics.
 	/// </para>
 	/// </remarks>
 	[PublicAPI]

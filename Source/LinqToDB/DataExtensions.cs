@@ -36,6 +36,10 @@ namespace LinqToDB
 		/// <typeparam name="T">Mapping class type.</typeparam>
 		/// <param name="dataContext">Data connection context.</param>
 		/// <returns>Queryable source.</returns>
+		/// <remarks>
+		/// Use to obtain a query root for a mapped table or view. Execution is deferred until enumeration
+		/// or explicit materialization.
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> GetTable<T>(this IDataContext dataContext)
@@ -56,6 +60,10 @@ namespace LinqToDB
 		/// <param name="methodInfo">Method, decorated with expression attribute, based on <see cref="Sql.TableFunctionAttribute"/>.</param>
 		/// <param name="parameters">Parameters for <paramref name="methodInfo"/> method.</param>
 		/// <returns>Queryable source.</returns>
+		/// <remarks>
+		/// Use to create a query root for a table-valued function or a custom table expression.
+		/// Execution is deferred until enumeration or explicit materialization.
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> GetTable<T>(
@@ -1457,7 +1465,7 @@ namespace LinqToDB
 			{
 				if (p == null)
 					return Expression.Constant(null, typeof(object));
-				
+
 				var argumentType    = p.GetType();
 				var valueExpression = SequenceHelper.WrapAsParameter(Expression.Constant(p, argumentType));
 				if (valueExpression.Type != typeof(object))
