@@ -1367,12 +1367,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var result = BuildSqlExpression(contextRef.BuildContext, contextRef);
 
-					if (result is SqlPlaceholderExpression)
+					if (result is SqlPlaceholderExpression placeholder)
 					{
 						if (result.Type != expression.Type)
 						{
-							result = Expression.Convert(result, expression.Type);
-							result = BuildSqlExpression(contextRef.BuildContext, result);
+							result = placeholder.WithType(expression.Type);
 						}
 
 						result = Builder.UpdateNesting(context, result);
@@ -2267,13 +2266,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				case ExpressionType.Convert:
 				case ExpressionType.ConvertChecked:
 				{
-					if (node.Type != typeof(object) &&
-						(HandleSqlRelated(node, out var translated) || HandleValue(node, out translated)))
-					{
-						return Visit(translated);
-					}
-
-					if ((_buildPurpose is BuildPurpose.Root || _buildFlags.HasFlag(BuildFlags.ForMemberRoot)) && node.Operand is ContextRefExpression contextRef)
+					if (_buildFlags.HasFlag(BuildFlags.ForMemberRoot) && node.Operand is ContextRefExpression contextRef)
 					{
 						return Visit(contextRef.WithType(node.Type));
 					}
@@ -2285,82 +2278,64 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var operandExpr = Visit(node.Operand);
 
-					if (_buildPurpose is BuildPurpose.Sql && operandExpr is SqlDefaultIfEmptyExpression defaultIfEmpty)
-					{
-						if (defaultIfEmpty.InnerExpression is SqlPlaceholderExpression)
-							operandExpr = defaultIfEmpty.InnerExpression;
-					}
-
 					if (SequenceHelper.IsSqlReady(operandExpr))
 					{
+						if (node.Type != typeof(object)
+							&& operandExpr is SqlPlaceholderExpression { Sql: SqlParameter or SqlValue }
+							&& HandleValue(node, out var nodeExpr))
+						{
+							return Visit(nodeExpr);
+						}
+
 						operandExpr = UpdateNesting(operandExpr);
+
 						var placeholders = CollectPlaceholdersStraight(operandExpr);
 
 						if (placeholders.Count == 1)
 						{
 							var placeholder = placeholders[0];
 
-							if (_buildPurpose is BuildPurpose.Expression
-								&& (node.Type == typeof(object) || node.Method != null))
-								return base.VisitUnary(node);
+							if (node.Type == typeof(object)
+								|| node.Type.UnwrapNullableType() == node.Operand.Type.UnwrapNullableType()
+								|| node.Type.UnwrapNullableType() == placeholder.Sql.SystemType?.UnwrapNullableType()
+								|| (node.Operand.Type.IsEnum && Enum.GetUnderlyingType(node.Operand.Type) == node.Type)
+								|| (node.Type.IsEnum && Enum.GetUnderlyingType(node.Type) == node.Operand.Type))
+							{
+								if (node.Method == null)
+								{
+									return Visit(placeholder.WithType(node.Type));
+								}
 
-							if (node.Method == null && (node.IsLifted || node.Type == typeof(object)))
-								return Visit(placeholder.WithType(node.Type));
+								return Visit(CreatePlaceholder(placeholder.Sql, node));
+							}
 
 							if (node.Method == null && operandExpr is not SqlPlaceholderExpression)
-								return base.VisitUnary(node);
-
-							if (node.Type == typeof(bool) && node.Operand.Type == typeof(SqlBoolean))
-								return Visit(placeholder.WithType(node.Type));
-
-							if (node.Type == typeof(Enum) && node.Operand.Type.IsEnum)
-								return base.VisitUnary(node);
-
-							var t = node.Operand.Type;
-							var s = MappingSchema.GetDataType(t);
-
-							if (placeholder.Sql.SystemType != null && s.Type.SystemType == typeof(object))
 							{
-								t = placeholder.Sql.SystemType;
-								s = MappingSchema.GetDataType(t);
+								return base.VisitUnary(node);
 							}
-
-							if (node.Type == t ||
-								t.IsEnum && Enum.GetUnderlyingType(t) == node.Type ||
-								node.Type.IsEnum && Enum.GetUnderlyingType(node.Type) == t)
-							{
-								return Visit(placeholder.WithType(node.Type));
-							}
-
-							if (placeholder.Sql.SystemType == node.Type)
-								return Visit(placeholder);
 
 							var castTo = MappingSchema.GetDbDataType(node.Type);
 
-							ISqlExpression sql;
-							if (castTo.EqualsDbOnly(SqlDataType.MakeUndefined(node.Type).Type))
+							if (!castTo.EqualsDbOnly(SqlDataType.MakeUndefined(node.Type).Type))
 							{
-								if (node.Method != null)
-									return base.VisitUnary(node);
-
-								sql = placeholder.Sql;
+								var sql = PseudoFunctions.MakeCast(placeholder.Sql, castTo);
+								return Visit(CreatePlaceholder(sql, node));
 							}
-							else
-							{
-								sql = PseudoFunctions.MakeCast(placeholder.Sql, castTo, s);
-							}
-
-							return Visit(CreatePlaceholder(sql, node));
 						}
 					}
 
-					if (HandleValue(node, out var translatedValue))
+					if (HandleSqlRelated(node, out var translatedValue))
 					{
 						return Visit(translatedValue);
 					}
 
-					break;
+					if (node.Type != typeof(object) && HandleValue(node, out translatedValue))
+					{
+						return Visit(translatedValue);
+					}
 				}
+
+				break;
 			}
 
 			return base.VisitUnary(node);
@@ -4017,9 +3992,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (BuildContext == null)
 				throw new InvalidOperationException();
 
-			ISqlExpression? l = null;
-			ISqlExpression? r = null;
-
 			var nullability = NullabilityContext.GetContext(BuildContext.SelectQuery);
 
 			using var saveFlags      = UsingBuildFlags((_buildFlags | BuildFlags.ForKeys) & ~BuildFlags.ForMemberRoot);
@@ -4063,15 +4035,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (rightExpr is SqlErrorExpression rightError)
 				return rightError.WithType(typeof(bool));
 
-			if (leftExpr is SqlPlaceholderExpression placeholderLeft)
-			{
-				l = placeholderLeft.Sql;
-			}
-
-			if (rightExpr is SqlPlaceholderExpression placeholderRight)
-			{
-				r = placeholderRight.Sql;
-			}
+			var leftPlaceholder = leftExpr as SqlPlaceholderExpression;
+			var rightPlaceholder = rightExpr as SqlPlaceholderExpression;
 
 			switch (nodeType)
 			{
@@ -4080,7 +4045,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var isNot = nodeType == ExpressionType.NotEqual;
 
-					if (l != null && r != null)
+					if (leftPlaceholder != null && rightPlaceholder != null)
 						break;
 
 					leftExpr  = Builder.ParseGenericConstructor(leftExpr.UnwrapAdjustType(),  ProjectFlags.SQL | ProjectFlags.Keys, CurrentDescriptor);
@@ -4134,7 +4099,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						return GenerateNullComparison(leftExpr, isNot);
 					}
 
-					if (l == null || r == null)
+					if (leftPlaceholder == null || rightPlaceholder == null)
 					{
 						var pathComparison = GeneratePathComparison(left, SequenceHelper.UnwrapDefaultIfEmpty(leftExpr), right, SequenceHelper.UnwrapDefaultIfEmpty(rightExpr));
 
@@ -4162,19 +4127,22 @@ namespace LinqToDB.Internal.Linq.Builder
 					return CreatePlaceholder(new SqlSearchCondition(false, canBeUnknown: null, p), GetOriginalExpression());
 			}
 
-			if (l is null)
+			if (leftPlaceholder is null)
 			{
-				if (Visit(left) is not SqlPlaceholderExpression leftPlaceholder)
+				leftPlaceholder = Visit(left) as SqlPlaceholderExpression;
+				if (leftPlaceholder is null)
 					return GetOriginalExpression();
-				l = leftPlaceholder.Sql;
 			}
 
-			if (r is null)
+			if (rightPlaceholder is null)
 			{
-				if (Visit(right) is not SqlPlaceholderExpression rightPlaceholder)
+				rightPlaceholder = Visit(right) as SqlPlaceholderExpression;
+				if (rightPlaceholder is null)
 					return GetOriginalExpression();
-				r = rightPlaceholder.Sql;
 			}
+
+			var l = leftPlaceholder.Sql;
+			var r = rightPlaceholder.Sql;
 
 			var lOriginal = l;
 			var rOriginal = r;
@@ -4356,71 +4324,6 @@ namespace LinqToDB.Internal.Linq.Builder
 						Collect(argument);
 					}
 				}
-			}
-		}
-
-		public static List<SqlPlaceholderExpression> CollectPlaceholdersStraightWithPath(Expression expression, Expression path, out Expression correctedExpression)
-		{
-			var replacement = new Dictionary<Expression, SqlPlaceholderExpression>();
-
-			Collect(expression, path);
-
-			correctedExpression = expression.Transform(replacement, (r, e) =>
-			{
-				if (r.TryGetValue(e, out var newExpr))
-					return newExpr;
-				return e;
-			});
-
-			return replacement.Values.ToList();
-
-			void Collect(Expression expr, Expression localPath)
-			{
-				if (expr is SqlPlaceholderExpression placeholder)
-				{
-					if (!replacement.ContainsKey(placeholder))
-					{
-						replacement.Add(placeholder, placeholder.WithPath(localPath));
-					}
-				}
-				else if (expr is SqlGenericConstructorExpression generic)
-				{
-					foreach (var assignment in generic.Assignments)
-					{
-						var currentPath = Expression.MakeMemberAccess(localPath, assignment.MemberInfo);
-						Collect(assignment.Expression, currentPath);
-					}
-
-					foreach (var parameter in generic.Parameters)
-					{
-						var currentPath = new SqlGenericParamAccessExpression(generic, parameter.ParameterInfo);
-						Collect(parameter.Expression, currentPath);
-					}
-				}
-				else if (expr is MemberInitExpression memberInit)
-				{
-					foreach (var binding in memberInit.Bindings)
-					{
-						if (binding is MemberAssignment assignment)
-						{
-							var currentPath = Expression.MakeMemberAccess(localPath, binding.Member);
-							Collect(assignment.Expression, currentPath);
-						}
-					}
-				}
-				else if (expr is NewExpression newExpr)
-				{
-					if (newExpr.Members != null)
-					{
-						for (var i = 0; i < newExpr.Arguments.Count; i++)
-						{
-							var currentPath = Expression.MakeMemberAccess(localPath, newExpr.Members[i]);
-							Collect(newExpr.Arguments[i], currentPath);
-						}
-					}
-				}
-				else if (expr is SqlDefaultIfEmptyExpression defaultIfEmpty)
-					Collect(defaultIfEmpty.InnerExpression, localPath);
 			}
 		}
 
@@ -5149,7 +5052,10 @@ namespace LinqToDB.Internal.Linq.Builder
 			using var snapshot = _gettingSubquery == 0 && Builder.ValidateSubqueries ? CreateSnapshot() : null;
 
 			++_gettingSubquery;
-			var buildResult = Builder.TryBuildSequence(info);
+			// reset flags to avoid affecting subquery building with flags that are only relevant for current level
+			using var saveFlags   = UsingBuildFlags(BuildFlags.None);
+
+			var       buildResult = Builder.TryBuildSequence(info);
 			--_gettingSubquery;
 
 			if (expr is ContextRefExpression contextRef && ReferenceEquals(contextRef.BuildContext, buildResult.BuildContext))

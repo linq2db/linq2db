@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB;
+using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
@@ -279,7 +280,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var outputTable = methodCall.GetArgumentByName("outputTable")!;
 				var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
 
-				var destinationContext = SequenceHelper.GetTableContext(destination);
+				var destinationContext = SequenceHelper.GetTableOrCteContext(destination);
 				if (destinationContext == null)
 					throw new InvalidOperationException();
 
@@ -444,30 +445,81 @@ namespace LinqToDB.Internal.Linq.Builder
 						valueExpression = Expression.Convert(valueExpression, fieldExpression.Type);
 					}
 
-					using var savedDescriptor = builder.UsingColumnDescriptor(columnDescriptor);
+					var sql = ApplyConversions(column, valueExpression, envelope.ForceParameter);
 
-					var buildFlags = BuildFlags.ForceOuter;
-					if (envelope.ForceParameter)
-						buildFlags |= BuildFlags.ForceParameter;
-
-					var sqlExpr = builder.BuildSqlExpression(valuesContext, valueExpression, BuildPurpose.Sql, buildFlags);
-
-					if (sqlExpr is not SqlPlaceholderExpression placeholder)
-					{
-						if (sqlExpr is SqlErrorExpression errorExpr)
-							throw errorExpr.CreateException();
-
-						throw SqlErrorExpression.CreateException(sqlExpr, null);
-					}
-
-					var sql = createColumns
-						? valuesContext.SelectQuery.Select.AddNewColumn(placeholder.Sql)
-						: placeholder.Sql;
+					sql = createColumns
+						? valuesContext.SelectQuery.Select.AddNewColumn(sql)
+						: sql;
 
 					setExpression.Expression = sql;
 				}
 
 				items.Add(setExpression);
+			}
+
+			// local functions
+
+			ISqlExpression ApplyConversions(ISqlExpression field, Expression value, bool forceParameter)
+			{
+				if (field is SqlRowExpression row)
+				{
+					for (int i = 0; i < row.Values.Length; i++)
+					{
+						var rowField = row.Values[i];
+						var rowDescriptor = QueryHelper.GetColumnDescriptor(rowField);
+						if (rowDescriptor?.ValueConverter != null)
+						{
+							throw new LinqToDBException($"Value converters are not supported for row expressions. Column '{rowField}' has a value converter defined.");
+						}
+					}
+				}
+
+				var descriptor = QueryHelper.GetColumnDescriptor(field);
+
+				using var savedDescriptor = builder.UsingColumnDescriptor(descriptor);
+
+				var buildFlags = BuildFlags.ForceOuter;
+				if (forceParameter)
+					buildFlags |= BuildFlags.ForceParameter;
+
+				var sqlExpr = builder.BuildSqlExpression(valuesContext, value, BuildPurpose.Sql, buildFlags);
+
+				var valueConverter = columnDescriptor?.ValueConverter;
+				if (valueConverter != null)
+				{
+					if (sqlExpr is SqlPlaceholderExpression placeholderUpdate)
+					{
+						if (NeedsConversion(placeholderUpdate.Sql))
+						{
+							if (valueConverter.ToProviderExpression.Parameters.Count != 1)
+								throw new InvalidOperationException("ToProviderExpression should have exactly one parameter.");
+
+							sqlExpr = valueConverter.ToProviderExpression.GetBody(value);
+							sqlExpr = builder.BuildSqlExpression(valuesContext, sqlExpr, BuildPurpose.Sql, buildFlags);
+						}
+					}
+				}
+
+				if (sqlExpr is not SqlPlaceholderExpression placeholder)
+				{
+					if (sqlExpr is SqlErrorExpression errorExpr)
+						throw errorExpr.CreateException();
+
+					throw SqlErrorExpression.CreateException(sqlExpr, null);
+				}
+
+				return placeholder.Sql;
+			}
+
+			static bool NeedsConversion(ISqlExpression sqlExpression)
+			{
+				if (sqlExpression is SqlParameter or SqlValue or SqlColumn or SqlField)
+					return false;
+
+				if (sqlExpression is SqlAnchor anchor)
+					return NeedsConversion(anchor.SqlExpression);
+
+				return true;
 			}
 		}
 
@@ -506,40 +558,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					ParseSet(builder, buildContext, currentPath, f.Expression, v.Expression, envelopes, false);
 				}
 			}
-			else
+			else 
 			{
-				var hasConversion = false;
-				var targetColumn  = builder.BuildSqlExpression(buildContext, fieldExpression);
-
-				ColumnDescriptor? columnDescriptor = null;
-				if (targetColumn is SqlPlaceholderExpression placeholder)
-				{
-					columnDescriptor = QueryHelper.GetColumnDescriptor(placeholder.Sql);
-
-					hasConversion = columnDescriptor?.ValueConverter != null;
-				}
-
-				using var saveDescriptor = builder.UsingColumnDescriptor(columnDescriptor);
-
-				if (hasConversion)
-				{
-					envelopes.Add(new SetExpressionEnvelope(correctedField.UnwrapConvert(), valueExpression, true));
-				}
-				else
-				{
-					var correctedValue = builder.BuildSqlExpression(buildContext, valueExpression);
-
-					if (correctedValue is SqlGenericConstructorExpression valueGeneric)
-					{
-						foreach (var assignment in valueGeneric.Assignments)
-						{
-							var currentPath = Expression.MakeMemberAccess(targetPath, assignment.MemberInfo);
-							ParseSet(builder, buildContext, currentPath, currentPath, assignment.Expression, envelopes, false);
-						}
-					}
-					else
-						envelopes.Add(new SetExpressionEnvelope(correctedField.UnwrapConvert(), valueExpression, forceParameters));
-				}
+				envelopes.Add(new SetExpressionEnvelope(correctedField.UnwrapConvert(), valueExpression, forceParameters));
 			}
 		}
 
