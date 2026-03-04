@@ -38,22 +38,28 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
 		public void MinBy([DataSources] string context)
 		{
-			using var db = GetDataContext(context);
+			var testData = CreateTestTableData();
 
-			using var _ = db.CreateLocalTable(CreateTestTableData());
-			var result = db.GetTable<TestTable>().MinBy(x => x.Id);
-			var compareData = CreateTestTableData().MinBy(x => x.Id);
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			var result      = table.MinBy(x => x.Id);
+			var compareData = testData.MinBy(x => x.Id);
+
 			result!.Id.ShouldBe(compareData!.Id);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
 		public void MaxBy([DataSources] string context)
 		{
-			using var db = GetDataContext(context);
+			var testData = CreateTestTableData();
 
-			using var _ = db.CreateLocalTable(CreateTestTableData());
-			var result = db.GetTable<TestTable>().OrderBy(x => x.TestId).MaxBy(x => x.Id);
-			var compareData = CreateTestTableData().OrderBy(x => x.TestId).MaxBy(x => x.Id);
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			var result = table.OrderBy(x => x.TestId).MaxBy(x => x.Id);
+			var compareData = testData.OrderBy(x => x.TestId).MaxBy(x => x.Id);
+
 			result!.Id.ShouldBe(compareData!.Id);
 		}
 	}
