@@ -71,7 +71,7 @@ namespace LinqToDB.Internal.Linq
 				InlineParameters        == dataContext.InlineParameters                                                 &&
 				ContextType             == dataContext.GetType()                                                        &&
 				IsEntityServiceProvided == dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} } &&
-				CompareInfo.MainExpression.EqualsTo(expressions.MainExpression, dataContext);
+				CompareInfo.MainExpression.EqualsTo(expressions.MainExpression);
 
 			if (!result)
 				return false;
@@ -86,7 +86,7 @@ namespace LinqToDB.Internal.Linq
 				foreach (var da in CompareInfo.DynamicAccessors)
 				{
 					var current = da.AccessorFunc(dataContext, da.MappingSchema);
-					result = da.Used.EqualsTo(current, dataContext);
+					result = da.Used.EqualsTo(current);
 					if (!result)
 						return false;
 

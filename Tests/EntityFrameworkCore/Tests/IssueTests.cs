@@ -1038,6 +1038,31 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			using var db = ctx.CreateLinqToDBConnection();
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5364")]
+		public async ValueTask TestImplicitConnectionManagement_OneToMany([EFDataSources] string provider, [Values] bool fromTransaction)
+		{
+			using var ctx = CreateContext(provider);
+			using var tr = fromTransaction ? ctx.Database.BeginTransaction() : null;
+
+			for (var i = 0; i < 300; i++)
+			{
+				await ctx.Database.CloseConnectionAsync();
+				_ = await ctx.Masters.ToListAsyncLinqToDB();
+				await ctx.Database.OpenConnectionAsync();
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5364")]
+		public async ValueTask TestImplicitConnectionManagement_ManyToOne([EFDataSources] string provider, [Values] bool fromTransaction)
+		{
+			for (var i = 0; i < 300; i++)
+			{
+				using var ctx = CreateContext(provider);
+				using var tr = fromTransaction ? ctx.Database.BeginTransaction() : null;
+				_ = await ctx.Masters.ToListAsyncLinqToDB();
+			}
+		}
 	}
 
 	#region Test Extensions

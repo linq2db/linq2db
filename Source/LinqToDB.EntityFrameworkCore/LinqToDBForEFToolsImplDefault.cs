@@ -25,6 +25,7 @@ using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.EntityFrameworkCore.Internal;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Extensions;
+using LinqToDB.Internal.Mapping;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 using LinqToDB.SqlQuery;
@@ -341,13 +342,17 @@ namespace LinqToDB.EntityFrameworkCore
 			IValueConverterSelector? convertorSelector,
 			DataOptions dataOptions)
 		{
-			var schema = new MappingSchema();
+			var schema = new EFCoreMappingSchema();
 			if (metadataReader != null)
 				schema.AddMetadataReader(metadataReader);
 
 			DefineConvertors(schema, model, mappingSource, convertorSelector, dataOptions);
 
 			return schema;
+		}
+
+		private sealed class EFCoreMappingSchema() : LockedMappingSchema(null)
+		{
 		}
 
 		/// <summary>
@@ -594,8 +599,8 @@ namespace LinqToDB.EntityFrameworkCore
 		/// <returns>Transformed expression.</returns>
 		public virtual Expression TransformExpression(Expression expression, IDataContext? dc, DbContext? ctx, IModel? model, bool isQueryExpression)
 		{
-			var visitor       = new TransformExpressionVisitor();
-			var newExpression = visitor.Transform(dc, model, expression);
+			using var visitor = TransformExpressionVisitor.Pool.Allocate();
+			var newExpression = visitor.Value.Transform(dc, model, expression);
 
 			if (ReferenceEquals(newExpression, expression))
 				return expression;
@@ -606,7 +611,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 				bool tracking;
 
-				if (visitor.Tracking == null)
+				if (visitor.Value.Tracking == null)
 				{
 					if (ctx == null)
 					{
@@ -625,7 +630,7 @@ namespace LinqToDB.EntityFrameworkCore
 					}
 				}
 				else
-					tracking = visitor.Tracking.Value;
+					tracking = visitor.Value.Tracking.Value;
 
 				dataConnection.Tracking = tracking;
 			}
