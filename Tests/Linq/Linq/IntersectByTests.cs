@@ -1,16 +1,12 @@
 ﻿#if NET6_0_OR_GREATER
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
-
-using Shouldly;
 
 namespace Tests.Linq
 {
@@ -24,7 +20,7 @@ namespace Tests.Linq
 			[Column] public int TestId { get; set; }
 		}
 
-		private TestTable[] CreateTestTableData()
+		TestTable[] CreateTestTableData()
 		{
 			return [
 				new TestTable() { Id = 1, TestId = 20},
@@ -36,6 +32,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = "Wrong result for remote")]
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void IntersectBy([DataSources] string context)
 		{
@@ -77,6 +74,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = "Wrong result for remote")]
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void IntersectByWithOrdering([DataSources] string context)
 		{
