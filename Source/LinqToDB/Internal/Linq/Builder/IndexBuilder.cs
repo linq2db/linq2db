@@ -9,7 +9,6 @@ using System.Reflection;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Reflection;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
@@ -17,7 +16,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class IndexBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsSameGenericMethod(Methods.Enumerable.Index, Methods.Queryable.Index);
+			=> call.IsQueryable();
 
 		static readonly MethodInfo _buildIndexMethodInfo = MemberHelper.MethodOfGeneric(() => BuildIndex<int>(null!));
 
