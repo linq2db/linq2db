@@ -35,9 +35,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsSameGenericMethod(Methods.Enumerable.ExceptBy, Methods.Queryable.ExceptBy)
-			|| call.IsSameGenericMethod(Methods.Enumerable.UnionBy, Methods.Queryable.UnionBy)
-			|| call.IsSameGenericMethod(Methods.Enumerable.IntersectBy, Methods.Queryable.IntersectBy);
+			=> call.IsQueryable();
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -55,9 +53,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			Expression transformedExpression;
 
-			if (methodCall.Method.Name == "ExceptBy")
+			if (methodCall.Method.Name == nameof(Queryable.ExceptBy))
 				transformedExpression = BuildExceptBy(sourceExpression, secondExpression, keySelector, sourceType, keyType);
-			else if (methodCall.Method.Name == "IntersectBy")
+			else if (methodCall.Method.Name == nameof(Queryable.IntersectBy))
 				transformedExpression = BuildIntersectBy(sourceExpression, secondExpression, keySelector, sourceType, keyType);
 			else
 				transformedExpression = BuildUnionBy(sourceExpression, secondExpression, keySelector, sourceType);
@@ -73,7 +71,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var distinctMethod = Methods.Queryable.Distinct.MakeGenericMethod(keyType);
 			var distinctKeys   = Expression.Call(null, distinctMethod, second);
 
-			var parameter       = Expression.Parameter(sourceType, "x");
+			var parameter       = Expression.Parameter(sourceType, "e");
 			var keySelectorBody = keySelector.GetBody(parameter);
 
 			var containsMethod = Methods.Queryable.Contains.MakeGenericMethod(keyType);
@@ -108,7 +106,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				filtered,
 				Expression.Quote(selectLambda));
 
-			var tupleParam = Expression.Parameter(itemType, "x");
+			var tupleParam = Expression.Parameter(itemType, "e");
 			var rnFilter   = Expression.Equal(
 				Expression.PropertyOrField(tupleParam, nameof(UnionByTuple<>.RowNumber)),
 				Expression.Constant(1L));
@@ -119,7 +117,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				selectCall,
 				Expression.Quote(Expression.Lambda(rnFilter, tupleParam)));
 
-			var resultParam = Expression.Parameter(itemType, "x");
+			var resultParam = Expression.Parameter(itemType, "e");
 			var resultBody  = Expression.PropertyOrField(resultParam, nameof(UnionByTuple<>.Data));
 
 			return Expression.Call(
@@ -137,7 +135,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var distinctMethod = Methods.Queryable.Distinct.MakeGenericMethod(keyType);
 			var distinctKeys   = Expression.Call(null, distinctMethod, second);
 
-			var parameter       = Expression.Parameter(sourceType, "x");
+			var parameter       = Expression.Parameter(sourceType, "e");
 			var keySelectorBody = keySelector.GetBody(parameter);
 
 			var containsMethod = Methods.Queryable.Contains.MakeGenericMethod(keyType);
@@ -151,7 +149,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var partitionPart = ExpressionHelpers.CollectMembers(keySelectorBody).ToArray();
 			if (partitionPart.Length == 0)
-				partitionPart = [Expression.Constant(1)];
+				partitionPart = [ExpressionInstances.Constant1];
 
 			var orderByPart = BuildOrderByPart(source, parameter);
 			if (orderByPart.Length == 0)
@@ -171,7 +169,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				filtered,
 				Expression.Quote(selectLambda));
 
-			var tupleParam = Expression.Parameter(itemType, "x");
+			var tupleParam = Expression.Parameter(itemType, "e");
 			var rnFilter   = Expression.Equal(
 				Expression.PropertyOrField(tupleParam, nameof(UnionByTuple<>.RowNumber)),
 				Expression.Constant(1L));
@@ -182,7 +180,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				selectCall,
 				Expression.Quote(Expression.Lambda(rnFilter, tupleParam)));
 
-			var resultParam = Expression.Parameter(itemType, "x");
+			var resultParam = Expression.Parameter(itemType, "e");
 			var resultBody  = Expression.PropertyOrField(resultParam, nameof(UnionByTuple<>.Data));
 
 			return Expression.Call(
@@ -199,7 +197,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var itemType = typeof(UnionByTuple<>).MakeGenericType(sourceType);
 
-			var sourceItem = Expression.Parameter(sourceType, "x");
+			var sourceItem = Expression.Parameter(sourceType, "e");
 			var sourceSelectBody = Expression.MemberInit(
 				Expression.New(itemType),
 				Expression.Bind(itemType.GetProperty(nameof(UnionByTuple<>.Data))!, sourceItem),
@@ -211,10 +209,10 @@ namespace LinqToDB.Internal.Linq.Builder
 				source,
 				Expression.Quote(Expression.Lambda(sourceSelectBody, sourceItem)));
 
-			var secondItem = Expression.Parameter(sourceType, "x");
+			var secondItem = Expression.Parameter(sourceType, "e");
 			var secondSelectBody = Expression.MemberInit(
 				Expression.New(itemType),
-				Expression.Bind(itemType.GetProperty(nameof(UnionByTuple<>.Data))!, secondItem),
+				Expression.Bind(itemType.GetProperty(nameof(UnionByTuple<>.Data))!,        secondItem),
 				Expression.Bind(itemType.GetProperty(nameof(UnionByTuple<>.SourceIndex))!, Expression.Constant(1)));
 
 			var secondProjected = Expression.Call(
@@ -226,13 +224,13 @@ namespace LinqToDB.Internal.Linq.Builder
 			var concatMethod = Methods.Queryable.Concat.MakeGenericMethod(itemType);
 			var concatenated = Expression.Call(concatMethod, sourceProjected, secondProjected);
 
-			var rowItem = Expression.Parameter(itemType, "x");
+			var rowItem  = Expression.Parameter(itemType, "e");
 			var dataBody = Expression.PropertyOrField(rowItem, nameof(UnionByTuple<>.Data));
-			var keyBody = keySelector.GetBody(dataBody);
+			var keyBody  = keySelector.GetBody(dataBody);
 
 			var partitionPart = ExpressionHelpers.CollectMembers(keyBody).ToArray();
 			if (partitionPart.Length == 0)
-				partitionPart = [Expression.Constant(1)];
+				partitionPart = [ExpressionInstances.Constant1];
 
 			var sourceOrderBy = BuildOrderByPart(source, dataBody);
 			var orderByList = new System.Collections.Generic.List<(Expression expr, bool isDescending)>
@@ -262,7 +260,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				concatenated,
 				Expression.Quote(selectLambda));
 
-			var tupleParam = Expression.Parameter(itemType, "x");
+			var tupleParam = Expression.Parameter(itemType, "e");
 			var whereBody  = Expression.Equal(
 				Expression.PropertyOrField(tupleParam, nameof(UnionByTuple<>.RowNumber)),
 				Expression.Constant(1L));
@@ -273,7 +271,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				selectCall,
 				Expression.Quote(Expression.Lambda(whereBody, tupleParam)));
 
-			var resultParam = Expression.Parameter(itemType, "x");
+			var resultParam = Expression.Parameter(itemType, "e");
 			var resultBody  = Expression.PropertyOrField(resultParam, nameof(UnionByTuple<>.Data));
 
 			return Expression.Call(
