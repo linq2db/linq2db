@@ -127,6 +127,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 		{
 			switch (type.DataType)
 			{
+				case DataType.DateTime  : StringBuilder.Append("DATETIME");                                break;
 				case DataType.DateTime2 : StringBuilder.Append("timestamp");                               break;
 				default                 : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
 			}

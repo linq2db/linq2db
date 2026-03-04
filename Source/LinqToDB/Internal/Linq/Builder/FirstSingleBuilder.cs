@@ -249,34 +249,36 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			bool _isJoinCreated;
-			bool _asSubquery;
 
 			public void CreateJoin()
 			{
-				if (_isJoinCreated  || _asSubquery)
+				if (_isJoinCreated)
 					return;
 
 				if (Parent == null)
 					return;
 
-				// process as subquery
+				SqlTableSource tableSource;
+
 				if (Parent.SelectQuery.From.Tables.Count == 0)
 				{
-					_asSubquery = true;
-					return;
+					tableSource = new SqlTableSource(new SelectQuery(), null);
+					Parent.SelectQuery.From.Tables.Add(tableSource);
 				}
-
-				if (!_isJoinCreated)
+				else
 				{
-					_isJoinCreated = true;
-
-					var join = CanBeWeak ? SelectQuery.OuterApply() : SelectQuery.CrossApply();
-					join.JoinedTable.IsWeak               = Cardinality.HasFlag(SourceCardinality.Zero);
-					join.JoinedTable.Cardinality          = Cardinality;
-					join.JoinedTable.IsSubqueryExpression = IsSubqueryExpression;
-
-					Parent!.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+					tableSource = Parent.SelectQuery.From.Tables[0];
 				}
+
+				var join = CanBeWeak ? SelectQuery.OuterApply() : SelectQuery.CrossApply();
+				join.JoinedTable.IsWeak               = Cardinality.HasFlag(SourceCardinality.Zero);
+				join.JoinedTable.Cardinality          = Cardinality;
+				join.JoinedTable.IsSubqueryExpression = IsSubqueryExpression;
+
+				tableSource.Joins.Add(join.JoinedTable);
+
+				_isJoinCreated = true;
+
 			}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
@@ -292,34 +294,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				var projected = base.MakeExpression(path, flags);
-
-				if (flags.IsTable())
-					return projected;
-
-				if (_asSubquery)
-				{
-					if (Parent == null)
-						return path;
-
-					projected = Builder.BuildSqlExpression(this, projected);
-
-					if (projected is SqlPlaceholderExpression placeholder)
-					{
-						var column = Builder.ToColumns(this, placeholder);
-						if (column is SqlPlaceholderExpression)
-						{
-							projected = ExpressionBuilder.CreatePlaceholder(Parent, SelectQuery, path);
-						}
-						else
-						{
-							projected = path;
-						}
-					}
-					else
-					{
-						projected = path;
-					}
-				}
 
 				return projected;
 			}

@@ -269,6 +269,5 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			BuildStep = Step.OffsetLimit;     BuildOffsetLimit(selectQuery);
 			BuildStep = Step.QueryExtensions; BuildSubQueryExtensions(statement);
 		}
-
 	}
 }
