@@ -422,4 +422,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 			public Guid Value { get; set; }
 		}
 	}
+
+	#region Issue 5388
+
+	public class Issue5388Task
+	{
+		public int  Id         { get; set; }
+		public bool IsArchived { get; set; }
+	}
+	#endregion
 }
