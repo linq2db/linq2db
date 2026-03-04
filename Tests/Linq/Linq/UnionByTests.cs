@@ -1,16 +1,11 @@
 ﻿#if NET6_0_OR_GREATER
 
-using System;
-using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
-
-using Shouldly;
 
 namespace Tests.Linq
 {
@@ -18,31 +13,91 @@ namespace Tests.Linq
 	public class UnionByTests : TestBase
 	{
 		[Table]
-		public class TestTable
+		public class UnionByTable
 		{
-			[Column] public int Id { get; set; }
-			[Column] public int TestId { get; set; }
+			[Column] public int    Id     { get; set; }
+			[Column] public int    Key    { get; set; }
+			[Column] public string Value  { get; set; } = null!;
 		}
 
-		private TestTable[] CreateTestTableData()
-		{
-			return [
-				new TestTable() { Id = 1, TestId = 20},
-				new TestTable() { Id = 2, TestId = 20 },
-				new TestTable() { Id = 3, TestId = 30 },
-				new TestTable() { Id = 4, TestId = 30 },
-				new TestTable() { Id = 5, TestId = 40 }
-				];
-		}
-
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
+		[Test]
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
-		public void UnionBy([DataSources] string context)
+		public void UnionByBasic([DataSources] string context)
 		{
-			using var db = GetDataContext(context);
+			var left = new[]
+			{
+				new UnionByTable { Id = 1, Key = 10, Value = "a" },
+				new UnionByTable { Id = 2, Key = 20, Value = "b" },
+				new UnionByTable { Id = 3, Key = 30, Value = "c" },
+			};
 
-			using var _ = db.CreateLocalTable(CreateTestTableData());
-			var query = db.GetTable<TestTable>().UnionBy(db.GetTable<TestTable>(), x => x.TestId);
+			var right = new[]
+			{
+				new UnionByTable { Id = 4, Key = 20, Value = "d" },
+				new UnionByTable { Id = 5, Key = 30, Value = "e" },
+				new UnionByTable { Id = 6, Key = 40, Value = "f" },
+			};
+
+			using var db         = GetDataContext(context);
+			using var leftTable  = db.CreateLocalTable("UnionByLeft",  left);
+			using var rightTable = db.CreateLocalTable("UnionByRight", right);
+
+			var query = leftTable
+				.UnionBy(rightTable, x => x.Key)
+				.OrderBy(x => x.Key);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		public void UnionByWithFilter([DataSources] string context)
+		{
+			var left = new[]
+			{
+				new UnionByTable { Id = 1, Key = 10, Value = "a" },
+				new UnionByTable { Id = 2, Key = 20, Value = "b" },
+				new UnionByTable { Id = 3, Key = 30, Value = "c" },
+			};
+
+			var right = new[]
+			{
+				new UnionByTable { Id = 4, Key = 20, Value = "d" },
+				new UnionByTable { Id = 5, Key = 30, Value = "e" },
+				new UnionByTable { Id = 6, Key = 40, Value = "f" },
+			};
+
+			using var db         = GetDataContext(context);
+			using var leftTable  = db.CreateLocalTable("UnionByLeft",  left);
+			using var rightTable = db.CreateLocalTable("UnionByRight", right);
+
+			var query = leftTable
+				.UnionBy(rightTable.Where(x => x.Key >= 30), x => x.Key)
+				.OrderBy(x => x.Key);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = "Wrong remote service result")]
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		public void UnionBySameTable([DataSources] string context)
+		{
+			var data = new[]
+			{
+				new UnionByTable { Id = 1, Key = 10, Value = "a" },
+				new UnionByTable { Id = 2, Key = 10, Value = "b" },
+				new UnionByTable { Id = 3, Key = 20, Value = "c" },
+				new UnionByTable { Id = 4, Key = 20, Value = "d" },
+				new UnionByTable { Id = 5, Key = 30, Value = "e" },
+			};
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query = table
+				.UnionBy(table, x => x.Key)
+				.OrderBy(x => x.Id);
 
 			AssertQuery(query);
 		}
@@ -50,3 +105,4 @@ namespace Tests.Linq
 }
 
 #endif
+
