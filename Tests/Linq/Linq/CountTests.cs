@@ -670,5 +670,21 @@ namespace Tests.Linq
 			Assert.That(
 				db.GetTable<Child2>().Select(ch => ch.Parent!.ParentID).Count(p => p == 1), Is.EqualTo(db.GetTable<Child2>().Select(ch => ch.Parent!.ParentID).ToList().Count(p => p == 1)));
 		}
+
+		[Test]
+		public void AsQueryableCountOnAssociation([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from c in db.Child.LoadWith(c => c.Parent!.Children)
+				select new
+				{
+					c.ChildID,
+					Count = c.Parent!.Children.AsQueryable().Count()
+				};
+
+			AssertQuery(query);
+		}
 	}
 }
