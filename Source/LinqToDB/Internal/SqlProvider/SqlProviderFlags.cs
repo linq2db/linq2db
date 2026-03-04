@@ -564,13 +564,16 @@ namespace LinqToDB.Internal.SqlProvider
 		[DataMember(Order = 65), DefaultValue(true)]
 		public bool IsSimpleCoalesceSupported { get; set; } = true;
 
-		[DataMember(Order = 64), DefaultValue(true)]
+		/// <summary>
+		/// Indicates that provider supports subquery in predicate, like (SELECT column FROM ...) IS NULL, COALESCE((SELECT column FROM ...), 0).
+		/// </summary>
+		[DataMember(Order = 66), DefaultValue(true)]
 		public bool IsSubqueryExpressionInsidePredicateSupported { get; set; } = true;
 
 		/// <summary>
 		/// Provider supports JOIN to subquery which contains reference to parent table in join condition.
 		/// </summary>
-		[DataMember(Order = 66), DefaultValue(true)]
+		[DataMember(Order = 67), DefaultValue(true)]
 		public bool IsSubqueryJoinOnOuterReferenceSupported { get; set; } = true;
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
