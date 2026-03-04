@@ -10,7 +10,7 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	[TestFixture]
-	public class UnionByTests : TestBase
+	public class UnionByMethodTests : TestBase
 	{
 		[Table]
 		public class UnionByTable

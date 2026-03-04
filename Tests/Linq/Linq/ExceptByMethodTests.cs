@@ -11,7 +11,7 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	[TestFixture]
-	public class IntersectByTests : TestBase
+	public class ExceptByMethodTests : TestBase
 	{
 		[Table]
 		public class TestTable
@@ -20,7 +20,7 @@ namespace Tests.Linq
 			[Column] public int TestId { get; set; }
 		}
 
-		TestTable[] CreateTestTableData()
+		private TestTable[] CreateTestTableData()
 		{
 			return [
 				new TestTable() { Id = 1, TestId = 20},
@@ -34,41 +34,56 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4412")]
 		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = "Wrong result for remote")]
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
-		public void IntersectBy([DataSources] string context)
+		public void ExceptBy([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(CreateTestTableData());
 
-			using var _ = db.CreateLocalTable(CreateTestTableData());
-			var query = db.GetTable<TestTable>().IntersectBy(new[] { 20, 30 }, x => x.TestId);
+			var query = table
+				.ExceptBy(new[] { 20 }, x => x.TestId);
 
 			AssertQuery(query);
 		}
 
 		[Test]
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
-		public void IntersectByWithNavigation([IncludeDataSources(TestProvName.WithApplyJoin)] string context)
+		public void ExceptByWithNavigation([IncludeDataSources(TestProvName.WithApplyJoin)] string context)
 		{
 			using var db = GetDataContext(context);
 
 			var query =
-			from p in db.Parent.LoadWith(p => p.Children)
-			from c in p.Children.IntersectBy(new[] { 1, 2, 3 }, x => x.ChildID)
-			orderby c.ChildID
-			select new { p.ParentID, c.ChildID };
+				from p in db.Parent.LoadWith(x => x.Children)
+				from c in p.Children.ExceptBy(new[] { 2 }, x => x.ChildID)
+				orderby c.ChildID
+				select new { p.ParentID, c.ChildID };
 
 			AssertQuery(query);
 		}
 
 		[Test]
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
-		public void IntersectByWithWhere([IncludeDataSources(TestProvName.WithApplyJoin)] string context)
+		public void ExceptByWithWhere([IncludeDataSources(TestProvName.WithApplyJoin)] string context)
 		{
 			using var db = GetDataContext(context);
 
 			var query =
-			from p in db.Parent.LoadWith(p => p.Children)
-			from c in p.Children.Where(x => x.ChildID > 0).IntersectBy(new[] { 1, 3 }, x => x.ChildID)
-			select new { p.ParentID, c.ChildID };
+				from p in db.Parent.LoadWith(x => x.Children)
+				from c in p.Children.Where(x => x.ChildID > 0).ExceptBy(new[] { 2 }, x => x.ChildID)
+				select new { p.ParentID, c.ChildID };
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
+		public void ExceptByMultipleValues([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(CreateTestTableData());
+
+			var query = table
+				.ExceptBy(new[] { 20, 30 }, x => x.TestId)
+				.OrderBy(x => x.TestId);
 
 			AssertQuery(query);
 		}
@@ -76,27 +91,15 @@ namespace Tests.Linq
 		[Test]
 		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = "Wrong result for remote")]
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
-		public void IntersectByWithOrdering([DataSources] string context)
+		public void ExceptByOrderedResult([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(CreateTestTableData());
 
-			using var _ = db.CreateLocalTable(CreateTestTableData());
-			var query = db.GetTable<TestTable>()
-			.IntersectBy(new[] { 20, 30 }, x => x.TestId)
-			.OrderByDescending(x => x.Id);
-
-			AssertQuery(query);
-		}
-
-		[Test]
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
-		public void IntersectByFromAnotherQuery([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-
-			using var _ = db.CreateLocalTable(CreateTestTableData());
-			var exclude = db.GetTable<TestTable>().Where(x => x.Id <= 2).Select(x => x.TestId);
-			var query = db.GetTable<TestTable>().IntersectBy(exclude, x => x.TestId).OrderBy(x => x.TestId);
+			var query = table
+				.ExceptBy(new[] { 20 }, x => x.TestId)
+				.OrderByDescending(x => x.TestId)
+				.ThenBy(x => x.Id);
 
 			AssertQuery(query);
 		}

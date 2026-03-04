@@ -15,7 +15,7 @@ using Shouldly;
 namespace Tests.Linq
 {
 	[TestFixture]
-	public class IndexTests : TestBase
+	public class IndexMethodTests : TestBase
 	{
 		[Table]
 		public class TestTable
@@ -57,8 +57,8 @@ namespace Tests.Linq
 			using var _ = db.CreateLocalTable(CreateTestTableData());
 
 			var query = db.GetTable<TestTable>()
-			.OrderBy(x => x.Id)
-			.Index();
+				.OrderBy(x => x.Id)
+				.Index();
 
 			AssertQuery(query);
 		}
@@ -71,9 +71,9 @@ namespace Tests.Linq
 			using var _ = db.CreateLocalTable(CreateTestTableData());
 
 			var query = db.GetTable<TestTable>()
-			.Where(x => x.TestId != 20)
-			.OrderBy(x => x.Id)
-			.Index();
+				.Where(x => x.TestId != 20)
+				.OrderBy(x => x.Id)
+				.Index();
 
 			AssertQuery(query);
 		}
@@ -85,9 +85,9 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query =
-			from p in db.Parent.LoadWith(p => p.Children)
-			from c in p.Children.OrderBy(x => x.ChildID).Index()
-			select new { p.ParentID, Index = c.Index, c.Item.ChildID };
+				from p in db.Parent.LoadWith(p => p.Children)
+				from c in p.Children.OrderBy(x => x.ChildID).Index()
+				select new { p.ParentID, Index = c.Index, c.Item.ChildID };
 
 			AssertQuery(query);
 		}
@@ -99,10 +99,10 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query =
-			from p in db.Parent.LoadWith(p => p.Children)
-			from c in p.Children.OrderBy(x => x.ChildID).Index()
-			where c.Index < 15
-			select new { p.ParentID, Index = c.Index, c.Item.ChildID };
+				from p in db.Parent.LoadWith(p => p.Children)
+				from c in p.Children.OrderBy(x => x.ChildID).Index()
+				where c.Index < 15
+				select new { p.ParentID, Index = c.Index, c.Item.ChildID };
 
 			AssertQuery(query);
 		}
@@ -114,10 +114,10 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query =
-			from p in db.Parent
-			from IndexedParent in db.Parent.OrderBy(x => x.ParentID).Index()
-			where IndexedParent.Index < 5
-			select new { p.ParentID, IndexedParent.Index, IndexedParent.Item.Value1 };
+				from p in db.Parent
+				from IndexedParent in db.Parent.OrderBy(x => x.ParentID).Index()
+				where IndexedParent.Index < 5
+				select new { p.ParentID, IndexedParent.Index, IndexedParent.Item.Value1 };
 
 			AssertQuery(query);
 		}
