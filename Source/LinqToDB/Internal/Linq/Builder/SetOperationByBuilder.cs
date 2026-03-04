@@ -15,16 +15,6 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsMethodCall(nameof(Queryable.ExceptBy), nameof(Queryable.UnionBy), nameof(Queryable.IntersectBy))]
 	sealed class SetOperationByBuilder : MethodCallBuilder
 	{
-		static Expression EnsureQueryable(Expression sequence, Type elementType)
-		{
-			if (typeof(IQueryable<>).IsSameOrParentOf(sequence.Type))
-				return sequence;
-
-			return Expression.Call(
-				Methods.Queryable.AsQueryable.MakeGenericMethod(elementType),
-				sequence);
-		}
-
 		private class UnionByTuple<T>
 		{
 #pragma warning disable CS8618
@@ -65,8 +55,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static Expression BuildExceptBy(Expression source, Expression second, LambdaExpression keySelector, Type sourceType, Type keyType)
 		{
-			source = EnsureQueryable(source, sourceType);
-			second = EnsureQueryable(second, keyType);
+			source = BuildExpressionUtils.EnsureQueryable(source, sourceType);
+			second = BuildExpressionUtils.EnsureQueryable(second, keyType);
 
 			var distinctMethod = Methods.Queryable.Distinct.MakeGenericMethod(keyType);
 			var distinctKeys   = Expression.Call(null, distinctMethod, second);
@@ -129,8 +119,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static Expression BuildIntersectBy(Expression source, Expression second, LambdaExpression keySelector, Type sourceType, Type keyType)
 		{
-			source = EnsureQueryable(source, sourceType);
-			second = EnsureQueryable(second, keyType);
+			source = BuildExpressionUtils.EnsureQueryable(source, sourceType);
+			second = BuildExpressionUtils.EnsureQueryable(second, keyType);
 
 			var distinctMethod = Methods.Queryable.Distinct.MakeGenericMethod(keyType);
 			var distinctKeys   = Expression.Call(null, distinctMethod, second);
@@ -192,8 +182,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static Expression BuildUnionBy(Expression source, Expression second, LambdaExpression keySelector, Type sourceType)
 		{
-			source = EnsureQueryable(source, sourceType);
-			second = EnsureQueryable(second, sourceType);
+			source = BuildExpressionUtils.EnsureQueryable(source, sourceType);
+			second = BuildExpressionUtils.EnsureQueryable(second, sourceType);
 
 			var itemType = typeof(UnionByTuple<>).MakeGenericType(sourceType);
 

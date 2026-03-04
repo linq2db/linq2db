@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Reflection;
 
@@ -37,6 +38,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			var orderByMethod = isMinBy
 				? Methods.Queryable.OrderBy.MakeGenericMethod(elementType, keySelectorType)
 				: Methods.Queryable.OrderByDescending.MakeGenericMethod(elementType, keySelectorType);
+
+			nonOrderedSource = BuildExpressionUtils.EnsureQueryable(nonOrderedSource, elementType);
 
 			Expression orderedExpression = Expression.Call(
 			orderByMethod,
