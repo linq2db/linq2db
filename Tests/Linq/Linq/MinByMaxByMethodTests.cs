@@ -15,7 +15,7 @@ using Shouldly;
 namespace Tests.Linq
 {
 	[TestFixture]
-	public class MinByMaxByTests : TestBase
+	public class MinByMaxByMethodTests : TestBase
 	{
 		[Table]
 		public class TestTable

@@ -13,7 +13,7 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	[TestFixture]
-	public class CountByTests : TestBase
+	public class CountByMethodTests : TestBase
 	{
 		[Table]
 		public class TestTable
