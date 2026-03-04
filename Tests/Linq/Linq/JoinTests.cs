@@ -3354,7 +3354,7 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllFirebirdLess4, TestProvName.AllInformix, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllFirebirdLess4, TestProvName.AllInformix, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3311")]
 		public void Issue3311Test3([DataSources] string context)
