@@ -20,9 +20,9 @@
 		<Net10LatestForNuget>10.0.0</Net10LatestForNuget>
 		
 		<!--latest version for .NET LATEST packages (not referenced from nuspec)-->
-		<Net8Latest>8.0.22</Net8Latest>
-		<Net9Latest>9.0.11</Net9Latest>
-		<Net10Latest>10.0.1</Net10Latest>
+		<Net8Latest>8.0.24</Net8Latest>
+		<Net9Latest>9.0.13</Net9Latest>
+		<Net10Latest>10.0.3</Net10Latest>
 		
 		<!--EF 3.1 versions for netfx support-->
 		<EF3LatestNuget>3.1.0</EF3LatestNuget>
@@ -41,6 +41,7 @@
 		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                      Version="5.0.0-1.25277.114"            />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="5.0.0-1.25277.114"            />
 		<PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers"             Version="5.0.0-1.25277.114"            />
+		<PackageVersion Include="Microsoft.SourceLink.GitHub"                           Version="10.0.103"                     />
 		<PackageVersion Include="Lindhart.Analyser.MissingAwaitWarning"                 Version="3.1.0-beta"                   />
 	</ItemGroup>
 
