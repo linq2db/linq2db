@@ -123,6 +123,13 @@ namespace LinqToDB.Data
 	/// Implemented only by ClickHouse.Driver provider. When set, provider-specific bulk copy will use session-less connection even if called over connection with session.
 	/// Note that session-less connections cannot be used with session-bound functionality like temporary tables.
 	/// </param>
+	/// <param name="OnConflictDoNothing">
+	/// When set to <c>true</c>, ignores conflicts during bulk copy operation.
+	/// Supported with <see cref="BulkCopyType.MultipleRows"/> bulk copy mode for following databases:
+	/// <list type="bullet">
+	/// <item>PostgreSQL</item>
+	/// </list>
+	/// </param>
 	/// <summary>
 	/// Defines behavior of <see cref="DataContextExtensions.BulkCopy{T}(IDataContext, BulkCopyOptions, IEnumerable{T})"/> method.
 	/// </summary>
@@ -147,7 +154,8 @@ namespace LinqToDB.Data
 		bool                        UseParameters          = default,
 		int?                        MaxParametersForBatch  = default,
 		int?                        MaxDegreeOfParallelism = default,
-		bool                        WithoutSession         = default
+		bool                        WithoutSession         = default,
+		bool?                       OnConflictDoNothing    = default
 		// If you add another parameter here, don't forget to update
 		// BulkCopyOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -179,6 +187,7 @@ namespace LinqToDB.Data
 			MaxParametersForBatch  = original.MaxParametersForBatch;
 			MaxDegreeOfParallelism = original.MaxDegreeOfParallelism;
 			WithoutSession         = original.WithoutSession;
+			OnConflictDoNothing    = original.OnConflictDoNothing;
 		}
 
 		int? _configurationID;
@@ -210,6 +219,7 @@ namespace LinqToDB.Data
 						.Add(MaxParametersForBatch)
 						.Add(MaxDegreeOfParallelism)
 						.Add(WithoutSession)
+						.Add(OnConflictDoNothing)
 						.CreateID();
 				}
 

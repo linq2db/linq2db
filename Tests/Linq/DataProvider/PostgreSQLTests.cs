@@ -1295,6 +1295,89 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Table]
+		sealed class OnConflictDoNothingTable
+		{
+			[Column, PrimaryKey] public int    ID    { get; set; }
+			[Column]             public string Value { get; set; } = null!;
+		}
+
+		[Test]
+		public void BulkCopyOnConflictDoNothing(
+			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
+			[Values(BulkCopyType.MultipleRows, BulkCopyType.RowByRow)] BulkCopyType bulkCopyType)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<OnConflictDoNothingTable>();
+
+			// insert initial rows
+			table.BulkCopy(
+				new BulkCopyOptions { BulkCopyType = bulkCopyType },
+				new[]
+				{
+					new OnConflictDoNothingTable { ID = 1, Value = "original1" },
+					new OnConflictDoNothingTable { ID = 2, Value = "original2" },
+				});
+
+			// second insert: rows 1 and 2 conflict, row 3 is new
+			table.BulkCopy(
+				new BulkCopyOptions { BulkCopyType = bulkCopyType, OnConflictDoNothing = true },
+				new[]
+				{
+					new OnConflictDoNothingTable { ID = 1, Value = "conflict1" },
+					new OnConflictDoNothingTable { ID = 2, Value = "conflict2" },
+					new OnConflictDoNothingTable { ID = 3, Value = "new3"      },
+				});
+
+			var rows = table.OrderBy(r => r.ID).ToArray();
+
+			Assert.That(rows, Has.Length.EqualTo(3));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows[0].Value, Is.EqualTo("original1"));
+				Assert.That(rows[1].Value, Is.EqualTo("original2"));
+				Assert.That(rows[2].Value, Is.EqualTo("new3"));
+			}
+		}
+
+		[Test]
+		public async Task BulkCopyOnConflictDoNothingAsync(
+			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
+			[Values(BulkCopyType.MultipleRows, BulkCopyType.RowByRow)] BulkCopyType bulkCopyType)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<OnConflictDoNothingTable>();
+
+			// insert initial rows
+			await table.BulkCopyAsync(
+				new BulkCopyOptions { BulkCopyType = bulkCopyType },
+				new[]
+				{
+					new OnConflictDoNothingTable { ID = 1, Value = "original1" },
+					new OnConflictDoNothingTable { ID = 2, Value = "original2" },
+				});
+
+			// second insert: rows 1 and 2 conflict, row 3 is new
+			await table.BulkCopyAsync(
+				new BulkCopyOptions { BulkCopyType = bulkCopyType, OnConflictDoNothing = true },
+				new[]
+				{
+					new OnConflictDoNothingTable { ID = 1, Value = "conflict1" },
+					new OnConflictDoNothingTable { ID = 2, Value = "conflict2" },
+					new OnConflictDoNothingTable { ID = 3, Value = "new3"      },
+				});
+
+			var rows = await table.OrderBy(r => r.ID).ToArrayAsync();
+
+			Assert.That(rows, Has.Length.EqualTo(3));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(rows[0].Value, Is.EqualTo("original1"));
+				Assert.That(rows[1].Value, Is.EqualTo("original2"));
+				Assert.That(rows[2].Value, Is.EqualTo("new3"));
+			}
+		}
+
 		[Test]
 		public void TestVoidFunction([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{

@@ -28,6 +28,12 @@ namespace LinqToDB.Internal.DataProvider
 
 		protected virtual bool CastLiteral(ColumnDescriptor column) => false;
 
+		/// <summary>
+		/// Returns an optional SQL suffix appended after the INSERT ... VALUES statement in MultipleRows bulk copy mode.
+		/// Override in provider-specific bulk copy classes to append clauses such as <c>ON CONFLICT DO NOTHING</c>.
+		/// </summary>
+		protected virtual string? GetMultipleRowsSuffix(BulkCopyOptions options) => null;
+
 		public virtual BulkCopyRowsCopied BulkCopy<T>(BulkCopyType bulkCopyType, ITable<T> table, DataOptions options, IEnumerable<T> source)
 			where T : notnull
 		{
@@ -647,6 +653,9 @@ namespace LinqToDB.Internal.DataProvider
 		private void MultipleRowsCopy1Finish(MultipleRowsHelper helper)
 		{
 			helper.StringBuilder.Length--;
+			var suffix = GetMultipleRowsSuffix(helper.Options.BulkCopyOptions);
+			if (suffix != null)
+				helper.StringBuilder.Append(suffix);
 		}
 
 		protected BulkCopyRowsCopied MultipleRowsCopy2<T>(ITable<T> table, DataOptions options, IEnumerable<T> source, string from)
@@ -737,6 +746,9 @@ namespace LinqToDB.Internal.DataProvider
 		private void MultipleRowsCopy2Finish(MultipleRowsHelper helper)
 		{
 			helper.StringBuilder.Length -= " UNION ALL".Length;
+			var suffix = GetMultipleRowsSuffix(helper.Options.BulkCopyOptions);
+			if (suffix != null)
+				helper.StringBuilder.Append(suffix);
 		}
 
 		protected BulkCopyRowsCopied MultipleRowsCopy3(MultipleRowsHelper helper, IEnumerable source, string from)
@@ -793,6 +805,9 @@ namespace LinqToDB.Internal.DataProvider
 			helper.StringBuilder
 				.AppendLine()
 				.Append(')');
+			var suffix = GetMultipleRowsSuffix(helper.Options.BulkCopyOptions);
+			if (suffix != null)
+				helper.StringBuilder.Append(suffix);
 		}
 
 		#endregion
