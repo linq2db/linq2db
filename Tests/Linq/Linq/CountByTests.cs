@@ -22,7 +22,7 @@ namespace Tests.Linq
 			[Column] public int TestId { get; set; }
 		}
 
-		private TestTable[] CreateTestTableData()
+		TestTable[] CreateTestTableData()
 		{
 			return [
 				new TestTable() { Id = 1, TestId = 20},
@@ -34,7 +34,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsCannotBeConverted([TestProvName.AllAccess])]
 		public void CountByFinal([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -48,7 +47,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsCannotBeConverted([TestProvName.AllAccess])]
 		public void CountBySubquery([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -67,7 +65,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsCannotBeConverted([TestProvName.AllAccess])]
 		public void CountByWithNavigation([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -82,7 +79,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsCannotBeConverted([TestProvName.AllAccess])]
 		public void CountByWithNavigationAndWhere([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -97,7 +93,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsCannotBeConverted([TestProvName.AllAccess])]
 		public void CountByWithMultipleGrouping([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -111,7 +106,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void CountByWithNavigationSelectKey([IncludeDataSources(TestProvName.WithApplyJoin)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -126,7 +120,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllFirebirdLess3])]
 		public void CountByNestedWithJoin([IncludeDataSources(TestProvName.WithApplyJoin)] string context)
 		{
 			using var db = GetDataContext(context);

@@ -20,15 +20,13 @@ namespace LinqToDB.Internal.Linq.Builder
 		public static bool CanBuildMethod(MethodCallExpression call)
 			=> call.IsQueryable();
 
-		static MethodInfo _transformToGroupByMethodInfo =
+		static readonly MethodInfo _transformToGroupByMethodInfo =
 			typeof(CountByBuilder).GetMethod(nameof(TransformToGroupBy), BindingFlags.NonPublic | BindingFlags.Static) ?? throw new InvalidOperationException($"Method {nameof(TransformToGroupBy)} not found.");
 
 		static Expression TransformToGroupBy<TSource, TKey>(Expression query, Expression<Func<TSource, TKey>> keySelector)
 		{
-			Expression<Func<IQueryable<TSource>, Expression<Func<TSource, TKey>>, IQueryable<KeyValuePair<TKey, int>>>> groupByTemplate = 
-				(q, ks) => q.GroupBy(ks).Select(g => new KeyValuePair<TKey, int>(g.Key, g.Count()));
-
-			var groupByExpression = groupByTemplate.GetBody(query, keySelector);
+			var groupByExpression = ExpressionHelpers.MakeCall((IQueryable<TSource> q, Expression<Func<TSource, TKey>> ks) 
+				=> q.GroupBy(ks).Select(g => new KeyValuePair<TKey, int>(g.Key, g.Count())), query, Expression.Quote(keySelector));
 			return groupByExpression;
 		}
 
@@ -56,7 +54,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var transformMethod = _transformToGroupByMethodInfo.MakeGenericMethod(keySelector.Parameters[0].Type, keySelector.ReturnType);
 
-			var transformedExpression = (Expression)transformMethod.InvokeExt(null, new object[] { sourceExpression, keySelector })!;
+			var transformedExpression = (Expression)transformMethod.InvokeExt(null, [sourceExpression, keySelector])!;
 
 			var result = builder.TryBuildSequence(new BuildInfo(buildInfo, transformedExpression));
 
