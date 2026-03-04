@@ -170,5 +170,11 @@ namespace LinqToDB.Internal.SqlQuery
 			return selectQuery.Select.Columns.Count == 0;
 		}
 
+		[DebuggerStepThrough]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsSingleTableQueryWithoutJoins(this SelectQuery selectQuery)
+		{
+			return selectQuery.From.Tables.Count == 1 && !selectQuery.From.Tables[0].HasJoins();
+		}
 	}
 }
