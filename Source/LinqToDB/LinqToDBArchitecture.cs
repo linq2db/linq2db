@@ -41,6 +41,19 @@ namespace LinqToDB
 	///   </item>
 	/// </list>
 	///
+	/// <para><b>Translation Pipeline</b></para>
+	/// <para>
+	/// Query processing follows a deterministic translation pipeline:
+	/// </para>
+	/// <para>
+	/// Expression Tree → SQL AST → SQL text → Execution.
+	/// Each stage is deterministic under the same configuration.
+	/// </para>
+	/// <para>
+	/// SQL generation is provider-defined.
+	/// Different database providers may emit different SQL text while preserving equivalent SQL semantics.
+	/// </para>
+	///
 	/// <para><b>What LinqToDB does not provide implicitly:</b></para>
 	///
 	/// <list type="bullet">
@@ -63,6 +76,19 @@ namespace LinqToDB
 	/// mapped explicitly, or executed after materialization.
 	/// </para>
 	///
+	/// <para><b>Machine-Readable Documentation</b></para>
+	/// <para>
+	/// Some XML documentation comments include compact machine-readable metadata in the form:
+	/// </para>
+	/// <para>
+	/// AI-Tags: Key=Value; ...
+	/// </para>
+	/// <para>
+	/// These tags describe execution semantics, composability, logical API grouping,
+	/// and provider-related behavior.
+	/// They are intended for tooling and AI agents and do not affect runtime behavior.
+	/// </para>
+	///
 	/// <para>
 	/// Primary entry points: <see cref="DataConnection"/>,
 	/// <see cref="DataOptions"/>,
@@ -70,6 +96,22 @@ namespace LinqToDB
 	/// <see cref="MappingSchema"/>,
 	/// <see cref="Sql"/>.
 	/// </para>
+	///
+	/// <para><b>Related documentation</b></para>
+	/// <para>
+	/// The following files are included in the NuGet package:
+	/// </para>
+	/// <list type="bullet">
+	///   <item>
+	///     <description>llm.txt — high-level entry point for AI systems.</description>
+	///   </item>
+	///   <item>
+	///     <description>docs/architecture.md — architectural model and translation pipeline.</description>
+	///   </item>
+	///   <item>
+	///     <description>docs/ai-tags.md — specification of AI-Tags format and semantics.</description>
+	///   </item>
+	/// </list>
 	/// </remarks>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	public static class LinqToDBArchitecture
