@@ -78,16 +78,27 @@ namespace Tests.Linq
 			using var customers = db.CreateLocalTable(Customers);
 			using var orders    = db.CreateLocalTable(Orders);
 
-			var query = customers
+			var actual = customers
 				.Where(c => c.Id > 0)
 				.Take(10)
 				.LeftJoin(
 					orders,
 					c => c.Id,
 					o => o.CustomerId,
-					(c, o) => new { CustomerId = (int?)c!.Id, OrderId = (int?)o!.Id });
+					(c, o) => new { CustomerId = (int?)c!.Id, OrderId = (int?)o!.Id })
+				.ToList();
 
-			AssertQuery(query);
+			var expected = customers.ToList()
+				.Where(c => c.Id > 0)
+				.Take(10)
+				.LeftJoin(
+					orders,
+					c => c.Id,
+					o => o.CustomerId,
+					(c, o) => new { CustomerId = (int?)c!.Id, OrderId = o?.Id })
+				.ToList();
+
+			AreEqual(expected, actual);
 		}
 
 		[Test]
@@ -97,18 +108,17 @@ namespace Tests.Linq
 			using var customers = db.CreateLocalTable(Customers);
 			using var orders    = db.CreateLocalTable(Orders);
 
-			var query = customers
+			var actual = customers
 				.LeftJoin(orders, c => c.Id, o => o.CustomerId, (c, o) => new { c, o })
 				.Select(x => new { CustomerName = x.c.Name, OrderId = (int?)x.o!.Id })
 				.ToList();
 
-
 			var expected = customers.ToList()
 				.LeftJoin(orders, c => c.Id, o => o.CustomerId, (c, o) => new { c, o })
-				.Select(x => new { CustomerName = x.c.Name, OrderId = (int?)x.o?.Id })
+				.Select(x => new { CustomerName = x.c.Name, OrderId = x.o?.Id })
 				.ToList();
 
-			AreEqual(expected, query);
+			AreEqual(expected, actual);
 		}
 	}
 }
