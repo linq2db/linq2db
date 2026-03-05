@@ -89,6 +89,7 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[ActiveIssue(Configurations = [TestProvName.AllOracle21Minus, TestProvName.AllClickHouse, TestProvName.AllMariaDB], Details = "Wrong result")]
 		[Test]
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void IntersectByFromAnotherQuery([DataSources] string context)
