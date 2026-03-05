@@ -1,4 +1,7 @@
-﻿using LinqToDB.Reflection;
+﻿using System.Threading;
+using System.Threading.Tasks;
+
+using LinqToDB.Reflection;
 
 using NUnit.Framework;
 
@@ -156,11 +159,28 @@ namespace Tests.Reflection
 		{
 			var typeAccessor = TypeAccessor.GetAccessor<TypeAccessorMutations1>();
 
-			foreach (var member in typeAccessor.Members)
+			var tasks = new Task[10];
+
+			using var wait = new ManualResetEvent(false);
+
+			for (var i = 0; i < tasks.Length; i++)
 			{
-				// emulate ColumnAttribute.Storage late init
-				_ = typeAccessor["_field"];
+				tasks[i] = Task.Run(() =>
+				{
+					foreach (var member in typeAccessor.Members)
+					{
+						wait.WaitOne();
+
+						// emulate ColumnAttribute.Storage late init
+						_ = typeAccessor["_field"];
+					}
+				});
 			}
+
+			wait.Set();
+			Task.WaitAll(tasks);
+
+			Assert.That(typeAccessor.Members, Has.Count.EqualTo(3));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/5361")]
@@ -168,11 +188,28 @@ namespace Tests.Reflection
 		{
 			var typeAccessor = TypeAccessor.GetAccessor<TypeAccessorMutations2>();
 
-			foreach (var member in typeAccessor.Members)
+			var tasks = new Task[10];
+
+			using var wait = new ManualResetEvent(false);
+
+			for (var i = 0; i < tasks.Length; i++)
 			{
-				// internal members not loaded by default
-				_ = typeAccessor[nameof(TypeAccessorMutations2.Field2)];
+				tasks[i] = Task.Run(() =>
+				{
+					foreach (var member in typeAccessor.Members)
+					{
+						wait.WaitOne();
+
+						// internal members not loaded by default
+						_ = typeAccessor[nameof(TypeAccessorMutations2.Field2)];
+					}
+				});
 			}
+
+			wait.Set();
+			Task.WaitAll(tasks);
+
+			Assert.That(typeAccessor.Members, Has.Count.EqualTo(3));
 		}
 
 		sealed class TypeAccessorMutations1
