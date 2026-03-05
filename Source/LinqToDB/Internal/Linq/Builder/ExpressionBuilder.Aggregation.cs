@@ -88,12 +88,18 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (RootContext == null)
 					throw new InvalidOperationException("Root context is not set for aggregation function.");
 
+				var ctxToUse = RootContext;
+				if (ctxToUse.BuildContext is GroupByBuilder.GroupByContext groupBy)
+				{
+					ctxToUse = SequenceHelper.CreateRef(groupBy.Element);
+				}
+
 				var paramToReplace = lambda.Parameters[parameterIndex];
 				var newBody = lambda.Body.Transform(e =>
 				{
 					if (e == paramToReplace)
 					{
-						var contextTyped = RootContext.WithType(e.Type);
+						var contextTyped = ctxToUse.WithType(e.Type);
 						return contextTyped;
 					}
 
@@ -445,6 +451,10 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (methodCall.IsQueryable(nameof(Queryable.AsQueryable)) || methodCall.IsQueryable(nameof(Enumerable.AsEnumerable)))
 					{
 						current = methodCall.Arguments[0];
+
+						chain ??= new List<MethodCallExpression>();
+						chain.Add(methodCall);
+
 						continue;
 					}
 
@@ -603,6 +613,10 @@ namespace LinqToDB.Internal.Linq.Builder
 								Sql.NullsPosition.None
 							));
 						}
+					}
+					else if (method.IsQueryable(nameof(Queryable.AsQueryable)) || method.IsQueryable(nameof(Enumerable.AsEnumerable)))
+					{
+						buildRoot = method.Arguments[0];
 					}
 					else
 					{

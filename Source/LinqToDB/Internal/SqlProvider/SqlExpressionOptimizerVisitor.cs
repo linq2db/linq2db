@@ -24,6 +24,7 @@ namespace LinqToDB.Internal.SqlProvider
 		bool                        _isInsidePredicate;
 		bool                        _reducePredicates;
 		ISqlExpression?             _columnExpression;
+		bool                        _doNotOptimizeNulls;
 
 		protected DataOptions       DataOptions       { get; private set; } = default!;
 		protected EvaluationContext EvaluationContext { get; private set; } = default!;
@@ -349,7 +350,25 @@ namespace LinqToDB.Internal.SqlProvider
 			var saveAllowToOptimize = _allowOptimizeList;
 			_allowOptimizeList = element.Predicates;
 
+			var saveDoNotOptimizeNulls = _doNotOptimizeNulls;
+			_doNotOptimizeNulls = true;
+
 			var newElement = base.VisitSqlSearchCondition(element);
+
+			_doNotOptimizeNulls = saveDoNotOptimizeNulls;
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			newElement = OptimizeSimilarFlat(element);
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			if (!_doNotOptimizeNulls && !_nullabilityContext.IsEmpty)
+			{
+				// run again to optimize possible new IS [NOT] NULL predicates with nullability context updated with previous optimizations
+				newElement = base.VisitSqlSearchCondition(element);
+			}
 
 			_allowOptimizeList = saveAllowToOptimize;
 
@@ -536,7 +555,6 @@ namespace LinqToDB.Internal.SqlProvider
 					return newElement;
 				}
 			}
-
 			// propagade IS [NOT] NULL checks to nullability context to get rid of unnecessary nested null checks
 			if (element.Predicates.Count > 1)
 			{
@@ -665,16 +683,6 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 			}
 
-			// Optimizations: PREDICATE vs PREDICATE:
-			// 1. A IS NOT NULL AND A = B => A = B, when B is not nullable
-			// 2. A OR B OR A => A OR B
-			// 3. A AND B AND A => A AND B
-			// 4. A AND !A => false
-			// 4. A OR !A => true
-			newElement = OptimizeSimilarFlat(element);
-			if (!ReferenceEquals(newElement, element))
-				return Visit(newElement);
-
 			/* TODO: it is buggy.
 
 			// Optimizations: PREDICATE vs (GROUP)
@@ -691,6 +699,12 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
+		// Optimizations: PREDICATE vs PREDICATE:
+		// 1. A IS NOT NULL AND A = B => A = B, when B is not nullable
+		// 2. A OR B OR A => A OR B
+		// 3. A AND B AND A => A AND B
+		// 4. A AND !A => false
+		// 4. A OR !A => true
 		IQueryElement OptimizeSimilarFlat(SqlSearchCondition element)
 		{
 			if (element.Predicates.Count <= 1)
@@ -1405,7 +1419,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (_nullabilityContext.IsEmpty)
 				return predicate;
 
-			if (!predicate.Expr1.CanBeNullableOrUnknown(_nullabilityContext, false))
+			if (!_doNotOptimizeNulls && !predicate.Expr1.CanBeNullableOrUnknown(_nullabilityContext, false))
 			{
 				//TODO: Exception for Row, find time to analyze why it's needed
 				if (predicate.Expr1.ElementType != QueryElementType.SqlRow)

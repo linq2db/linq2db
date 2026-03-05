@@ -38,7 +38,11 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static bool IsDependsOnSource(IQueryElement testedRoot, ISqlTableSource onSource, IReadOnlyCollection<IQueryElement>? elementsToIgnore = null)
 		{
-			return IsDependsOnSources(testedRoot, new [] { onSource }, elementsToIgnore);
+			var sources = onSource is SqlTableSource source
+				? EnumerateAccessibleSources(source).ToArray()
+				: [onSource];
+
+			return IsDependsOnSources(testedRoot, sources, elementsToIgnore);
 		}
 
 		public static bool IsDependsOnSources(IQueryElement testedRoot, IReadOnlyCollection<ISqlTableSource> onSources, IReadOnlyCollection<IQueryElement>? elementsToIgnore = null)
@@ -124,6 +128,25 @@ namespace LinqToDB.Internal.SqlQuery
 
 			var result = excepted.Any();
 			return result;
+		}
+
+		public static bool IsJoinsDependsOnOuterSources(SelectQuery selectQuery)
+		{
+			var accessibleTableSources = EnumerateAccessibleTableSources(selectQuery).ToList();
+			var knownSources       = new HashSet<ISqlTableSource>(accessibleTableSources.Select(x => x.Source));
+
+			foreach (var source in accessibleTableSources)
+			{
+				foreach (var joined in source.Joins)
+				{
+					if (IsDependsOnOuterSources(joined.Condition, currentSources: knownSources))
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
 		}
 
 		public static bool HasTableInQuery(SelectQuery query, SqlTable table)
@@ -572,7 +595,7 @@ namespace LinqToDB.Internal.SqlQuery
 		static bool IsTransitiveExpression(SqlExpression sqlExpression, bool checkNullability)
 		{
 			if (sqlExpression is { Parameters: [var p] }
-				&& sqlExpression.Expr.Trim() == "{0}" 
+				&& sqlExpression.Expr.Trim() == "{0}"
 				&& (!checkNullability || sqlExpression.CanBeNullable(NullabilityContext.NonQuery) == p.CanBeNullable(NullabilityContext.NonQuery)))
 			{
 				if (p is SqlExpression argExpression)
@@ -1383,9 +1406,9 @@ namespace LinqToDB.Internal.SqlQuery
 		/// Collects unique keys from different sources.
 		/// </summary>
 		/// <param name="tableSource"></param>
-		/// <param name="includeDistinct">Flag to include Distinct as unique key.</param>
+		/// <param name="includeDistinctAndGrouping"></param>
 		/// <param name="knownKeys">List with found keys.</param>
-		public static void CollectUniqueKeys(ISqlTableSource tableSource, bool includeDistinct, List<IList<ISqlExpression>> knownKeys)
+		public static void CollectUniqueKeys(ISqlTableSource tableSource, bool includeDistinctAndGrouping, List<IList<ISqlExpression>> knownKeys)
 		{
 			switch (tableSource)
 			{
@@ -1402,10 +1425,10 @@ namespace LinqToDB.Internal.SqlQuery
 					if (selectQuery.HasUniqueKeys)
 						knownKeys.AddRange(selectQuery.UniqueKeys);
 
-					if (includeDistinct && selectQuery.Select.IsDistinct)
+					if (includeDistinctAndGrouping && selectQuery.Select.IsDistinct)
 						knownKeys.Add(selectQuery.Select.Columns.Select(c => c.Expression).ToList());
 
-					if (!selectQuery.Select.GroupBy.IsEmpty)
+					if (includeDistinctAndGrouping && !selectQuery.Select.GroupBy.IsEmpty)
 					{
 						knownKeys.Add(selectQuery.Select.GroupBy.Items);
 					}
@@ -1490,7 +1513,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 				default:
 					return sqlExpression;
-			};
+			}
 		}
 
 		/// <summary>

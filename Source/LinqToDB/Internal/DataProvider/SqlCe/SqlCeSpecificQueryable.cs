@@ -1,13 +1,7 @@
-﻿using System.Linq;
-
-using LinqToDB.DataProvider.SqlCe;
+﻿using LinqToDB.DataProvider.SqlCe;
+using LinqToDB.Internal.Linq;
 
 namespace LinqToDB.Internal.DataProvider.SqlCe
 {
-	sealed class SqlCeSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, ISqlCeSpecificQueryable<TSource>
-	{
-		public SqlCeSpecificQueryable(IQueryable<TSource> queryable) : base(queryable)
-		{
-		}
-	}
+	sealed class SqlCeSpecificQueryable<TSource>(IExpressionQuery<TSource> query) : DatabaseSpecificQueryable<TSource>(query), ISqlCeSpecificQueryable<TSource>;
 }

@@ -86,7 +86,7 @@ namespace LinqToDB
 
 		[CLSCompliant(false)]
 		[Extension(                 "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
-		[Extension(PN.SqlServer,    "DateDiff_Big",  BuilderType = typeof(DateDiffBuilder))]
+          [Extension(PN.SqlServer,    "DateDiff_Big",  BuilderType = typeof(DateDiffBuilder))]
 		[Extension(PN.SqlCe,        "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
 		[Extension(PN.SqlServer2005,"DateDiff",      BuilderType = typeof(DateDiffBuilder))]
 		[Extension(PN.SqlServer2008,"DateDiff",      BuilderType = typeof(DateDiffBuilder))]
@@ -95,12 +95,14 @@ namespace LinqToDB
 		[Extension(PN.MySql,        "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
 		[Extension(PN.DB2,          "",              BuilderType = typeof(DateDiffBuilderDB2))]
 		[Extension(PN.SapHana,      "",              BuilderType = typeof(DateDiffBuilderSapHana))]
+		[Extension(PN.Firebird25,   "",              BuilderType = typeof(DateDiffBuilderFirebird3Minus))]
+		[Extension(PN.Firebird3,    "",              BuilderType = typeof(DateDiffBuilderFirebird3Minus))]
+		[Extension(PN.Firebird,     "",              BuilderType = typeof(DateDiffBuilderFirebird))]
 		[Extension(PN.SQLite,       "",              BuilderType = typeof(DateDiffBuilderSQLite))]
 		[Extension(PN.PostgreSQL,   "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
 		[Extension(PN.Access,       "",              BuilderType = typeof(DateDiffBuilderAccess))]
 		[Extension(PN.ClickHouse,   "",              BuilderType = typeof(DateDiffBuilderClickHouse))]
 		[Extension(PN.Ydb,          "",              BuilderType = typeof(DateDiffBuilderYdb))]
-	
 		public static int? DateDiff(DateParts part, DateTimeOffset? startDate, DateTimeOffset? endDate)
 		{
 			if (startDate == null || endDate == null)

@@ -1604,6 +1604,7 @@ namespace LinqToDB
 		/// <item>Informix</item>
 		/// <item>MySql/MariaDB using MySqlConnector provider</item>
 		/// <item>Oracle</item>
+		/// <item>PostgreSQL</item>
 		/// <item>SAP HANA</item>
 		/// <item>SQL Server</item>
 		/// <item>SAP/Sybase ASE</item>
@@ -1813,6 +1814,7 @@ namespace LinqToDB
 		/// <item>Informix</item>
 		/// <item>MySql/MariaDB using MySqlConnector provider</item>
 		/// <item>Oracle</item>
+		/// <item>PostgreSQL</item>
 		/// <item>SAP HANA</item>
 		/// <item>SQL Server</item>
 		/// <item>SAP/Sybase ASE</item>

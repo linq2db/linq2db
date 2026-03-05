@@ -138,7 +138,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				else
 				{
 					var cloningContext      = new CloningContext();
-					cloningContext.CloneElements(builder.GetCteClauses());
 					var targetContext       = source.TargetContextRef.BuildContext;
 					var clonedTargetContext = cloningContext.CloneContext(targetContext);
 					var clonedContextRef    = source.TargetContextRef.WithContext(clonedTargetContext);
@@ -172,7 +171,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			else
 			{
 				var cloningContext      = new CloningContext();
-				cloningContext.CloneElements(builder.GetCteClauses());
 				var targetContext       = source.TargetContextRef.BuildContext;
 				var clonedTargetContext = cloningContext.CloneContext(targetContext);
 				var clonedContextRef    = source.TargetContextRef.WithContext(clonedTargetContext);

@@ -203,7 +203,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (queryInfo.Statement.SelectQuery != null)
 					{
-						if (!SqlProviderHelper.IsValidQuery(queryInfo.Statement.SelectQuery, parentQuery: null, fakeJoin: null, columnSubqueryLevel: null, DataContext.SqlProviderFlags, out var errorMessage))
+						if (!SqlProviderHelper.IsValidQuery(queryInfo.Statement, parentQuery: null, fakeJoin: null, columnSubqueryLevel: null, DataContext.SqlProviderFlags, out var errorMessage))
 						{
 							query.ErrorExpression = new SqlErrorExpression(Expression, errorMessage, Expression.Type);
 							return false;

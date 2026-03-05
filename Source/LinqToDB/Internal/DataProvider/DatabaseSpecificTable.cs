@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -30,12 +31,17 @@ namespace LinqToDB.Internal.DataProvider
 			return ((IEnumerable)_table).GetEnumerator();
 		}
 
-		public Expression Expression => _table.Expression;
+		public Expression     Expression => _table.Expression;
+		public QueryDebugView DebugView  => _table.DebugView;
 
 		IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options) => _table.GetSqlQueries(options);
 
 		public IDataContext   DataContext => _table.DataContext;
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		public Type           ElementType => _table.ElementType;
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		public IQueryProvider Provider    => _table.Provider;
 
 		public IQueryable CreateQuery(Expression expression)

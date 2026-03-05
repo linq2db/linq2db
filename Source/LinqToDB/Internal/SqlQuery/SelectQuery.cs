@@ -76,11 +76,12 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public List<object>     Properties => field ??= new ();
 
-		public bool             IsSimple         => IsSimpleOrSet && !HasSetOperators;
-		public bool             IsSimpleOrSet    => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty && From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0;
-		public bool             IsSimpleButWhere => !HasSetOperators && !Select.HasModifier && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty && From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0;
-		public bool             IsLimited        => Select.SkipValue != null || Select.TakeValue != null;
 		public bool             IsParameterDependent { get; set; }
+
+		public bool IsLimitedToOneRecord()
+		{
+			return Select.TakeValue is SqlValue { Value: 1 };
+		}
 
 		/// <summary>
 		/// Gets or sets flag when sub-query can be removed during optimization.
@@ -216,18 +217,18 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override QueryElementType ElementType => QueryElementType.SqlQuery;
 
-		public override bool CanBeNullable(NullabilityContext nullability)
+	public override bool CanBeNullable(NullabilityContext nullability)
+	{
+		if (!this.IsLimited() && !this.HasSetOperators && !this.HasGroupBy() && !this.HasHaving() && this.IsSingleColumn()
+		    && QueryHelper.IsAggregationQuery(this))
 		{
-			foreach(var column in Select.Columns)
-				if (column.CanBeNullable(nullability))
-					return true;
-
-			var allAggregation = Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression));
-			if (allAggregation)
-				return false;
-
-			return true;
+			// For scalar aggregation queries (no GROUP BY), delegate nullability to the aggregation function
+			// e.g., COUNT(*) is never nullable, but SUM/AVG/MAX can be nullable
+			return Select.Columns[0].CanBeNullable(nullability);
 		}
+
+		return true;
+	}
 
 		public override int Precedence => LinqToDB.SqlQuery.Precedence.Unknown;
 
@@ -338,7 +339,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public SelectQuery CloneQuery()
 		{
-			return this.Clone(e => ReferenceEquals(e, this));
+			return this.Clone(e => e is not SqlCteTable);
 		}
 	}
 }

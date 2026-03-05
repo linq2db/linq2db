@@ -64,7 +64,7 @@ namespace LinqToDB.Internal.Expressions
 #if DEBUG
 		public List<SqlPlaceholderExpression>? History { get; private set; }
 
-		void AppendHistory(SqlPlaceholderExpression ancestor)
+		public void AppendHistory(SqlPlaceholderExpression ancestor)
 		{
 			History ??= new List<SqlPlaceholderExpression>();
 			if (ancestor.History != null)

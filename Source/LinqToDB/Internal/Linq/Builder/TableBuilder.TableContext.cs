@@ -198,13 +198,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsAggregationRoot() || flags.IsTraverse() || flags.IsExtractProjection() || flags.IsSubquery())
 					return path;
 
+				// Expand is initiated by Eager Loading but there is need to expand in case when we need comparison
+				if (flags.IsExpand() && !flags.IsKeys())
+					return path;
+
 				if (SequenceHelper.IsSameContext(path, this))
 				{
 					if (flags.IsTable())
-						return path;
-
-					// Expand is initiated by Eager Loading but there is need to expand in case when we need comparison
-					if (flags.IsExpand() && !flags.IsKeys())
 						return path;
 
 					if (flags.IsSubquery() && !(path.Type.IsSameOrParentOf(ElementType) || ElementType.IsSameOrParentOf(path.Type)))

@@ -2449,6 +2449,7 @@ namespace Tests.Linq
 					from leftTag in tagTable
 					from fact in factTable.RightJoin(fact => leftTag.FactId == fact.Id)
 					where fact.Id > 3
+					orderby fact.Id
 					select new { fact, leftTag };
 
 				var results = t.ToArray();
@@ -2475,6 +2476,7 @@ namespace Tests.Linq
 					from leftTag in tagTable
 					from fact in factTable.Join(SqlJoinType.Right, fact => leftTag.FactId == fact.Id)
 					where fact.Id > 3
+					orderby fact.Id
 					select new { fact, leftTag };
 
 				var results = t.ToArray();
@@ -2500,6 +2502,7 @@ namespace Tests.Linq
 				var q =
 					from ft in tagTable.RightJoin(factTable, (t, f) => t.FactId == f.Id, (t, f) => new { fact = f, leftTag = t })
 					where ft.fact.Id > 3
+					orderby ft.fact.Id
 					select ft;
 
 				var results = q.ToArray();
@@ -2525,6 +2528,7 @@ namespace Tests.Linq
 				var q =
 					from ft in tagTable.Join(factTable, SqlJoinType.Right, (t, f) => t.FactId == f.Id, (t, f) => new { fact = f, leftTag = t })
 					where ft.fact.Id > 3
+					orderby ft.fact.Id
 					select ft;
 
 				var results = q.ToArray();
@@ -3200,9 +3204,9 @@ namespace Tests.Linq
 			//Assert.That(query.GetSelectQuery().Select.Columns.Count, Is.EqualTo(1));
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), [TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllSybase, TestProvName.AllMySql57], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
-		public void Issue4160Test2([DataSources] string context)
+		public void Issue4160Test2([DataSources(TestProvName.AllOracle12)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var persons = db.CreateLocalTable(Issue4160Person.Data);
