@@ -151,5 +151,43 @@ namespace Tests.Reflection
 			}
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5361")]
+		public void TypeAccessor_ThreadSafety_AddStorageField()
+		{
+			var typeAccessor = TypeAccessor.GetAccessor<TypeAccessorMutations1>();
+
+			foreach (var member in typeAccessor.Members)
+			{
+				// emulate ColumnAttribute.Storage late init
+				_ = typeAccessor["_field"];
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5361")]
+		public void TypeAccessor_ThreadSafety_AddInternalMember()
+		{
+			var typeAccessor = TypeAccessor.GetAccessor<TypeAccessorMutations2>();
+
+			foreach (var member in typeAccessor.Members)
+			{
+				// internal members not loaded by default
+				_ = typeAccessor[nameof(TypeAccessorMutations2.Field2)];
+			}
+		}
+
+		sealed class TypeAccessorMutations1
+		{
+			private int _field { get; set; }
+
+			public int Field1 { get; set; }
+			public int Field2 { get; set; }
+		}
+
+		sealed class TypeAccessorMutations2
+		{
+			public int Field1 { get; set; }
+			internal int Field2 { get; set; }
+			public int Field3 { get; set; }
+		}
 	}
 }
