@@ -72,7 +72,7 @@ namespace LinqToDB.Reflection
 
 		#region Items
 
-		public List<MemberAccessor>    Members       { get; } = new();
+		public List<MemberAccessor>    Members       { get; private set; } = new();
 
 		readonly ConcurrentDictionary<string,MemberAccessor> _membersByName = new();
 
@@ -80,7 +80,10 @@ namespace LinqToDB.Reflection
 			_membersByName.GetOrAdd(memberName, name =>
 			{
 				var ma = new MemberAccessor(this, name, null);
-				Members.Add(ma);
+				// workaround for
+				// https://github.com/linq2db/linq2db/issues/5361
+				// replace public instance
+				Members = [.. Members, ma];
 				return ma;
 			});
 
