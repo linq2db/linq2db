@@ -127,7 +127,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			parameterName ??= "p";
 
 			var mappingSchema = context?.MappingSchema ?? MappingSchema;
-			var entry         = PrepareParameterCacheEntry(mappingSchema, expr, parameterName, columnDescriptor, doNotCheckCompatibility, buildParameterType);
+			var entry       = PrepareParameterCacheEntry(mappingSchema, expr, parameterName, columnDescriptor, doNotCheckCompatibility, buildParameterType);
 
 			if (entry is null)
 				return null;
@@ -145,7 +145,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			else
 			{
 				if (context?.Builder != null && mappingSchema.IsScalarType(expr.Type))
-					CacheManager.RegisterParameterEntry(expr, entry, context.Builder.EvaluateExpression, out finalParameterId);
+				{
+					try
+					{
+						CacheManager.RegisterParameterEntry(expr, entry, context.Builder.EvaluateExpression, out finalParameterId);
+					}
+					catch
+					{
+						return null;
+					}
+				}
 				else
 					CacheManager.RegisterParameterEntry(expr, entry, null, out finalParameterId);
 			}
@@ -199,6 +208,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (paramType.IsNullableType && !paramDataType.SystemType.IsNullableType)
 						paramDataType = paramDataType.WithSystemType(paramDataType.SystemType.MakeNullable());
+					else if (!paramType.IsNullableOrReferenceType() && paramDataType.SystemType.IsNullableType)
+						paramDataType = paramDataType.WithSystemType(paramDataType.SystemType.UnwrapNullableType());
 
 					var updateType = true;
 
@@ -247,11 +258,6 @@ namespace LinqToDB.Internal.Linq.Builder
 								var convertLambda   = MappingSchema.GenerateSafeConvert(providerValueGetter.Type, toType);
 								providerValueGetter = InternalExtensions.ApplyLambdaToExpression(convertLambda, providerValueGetter);
 							}
-
-							if (providerValueGetter.Type != memberType && memberType.IsNullableOrReferenceType() && providerValueGetter.Type.UnwrapNullableType() == memberType.UnwrapNullableType())
-							{
-								providerValueGetter = Expression.Convert(providerValueGetter, memberType);
-							}
 						}
 					}
 					else if (valueType != providerValueGetter.Type)
@@ -288,6 +294,9 @@ namespace LinqToDB.Internal.Linq.Builder
 									return null;
 							}
 
+							if (columnDescriptor != null)
+								providerValueGetter = columnDescriptor.ApplyConversions(providerValueGetter, paramDataType, true);
+
 							providerValueGetter = convertExpr != null
 								? InternalExtensions.ApplyLambdaToExpression(convertExpr, providerValueGetter)
 								: ColumnDescriptor.ApplyConversions(MappingSchema, providerValueGetter, paramDataType, null, true);
@@ -297,6 +306,16 @@ namespace LinqToDB.Internal.Linq.Builder
 							providerValueGetter = ColumnDescriptor.ApplyConversions(MappingSchema, providerValueGetter, paramDataType, null, true);
 						}
 					}
+				}
+			}
+
+			if (typeof(DataParameter).IsSameOrParentOf(paramExpression.Type))
+			{
+				if (OptimizationContext.CanBeEvaluatedOnClient(paramExpression))
+				{
+					var nameExpr = Expression.Property(paramExpression, Methods.LinqToDB.DataParameter.Name);
+					if (nameExpr.EvaluateExpression() is string { Length: > 0 } currentName)
+						parameterName = currentName;
 				}
 			}
 
@@ -422,7 +441,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (notNullable != testedType)
 				return HasDbMapping(mappingSchema, notNullable, out convertExpr);
 
-			// TODO: Workaround, wee need good TypeMapping approach
+			// TODO: Workaround, we need good TypeMapping approach
 			if (mappingSchema.IsCollectionType(testedType))
 			{
 				convertExpr = null;

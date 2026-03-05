@@ -3682,10 +3682,7 @@ namespace Tests.Linq
 
 			query.ToList();
 
-			if (context.IsAnyOf(TestProvName.AllAccess))
-				db.LastQuery!.ShouldContain("SELECT", Exactly.Twice());
-			else
-				db.LastQuery!.ShouldContain("SELECT", Exactly.Once());
+			db.LastQuery!.ShouldContain("SELECT", Exactly.Twice());
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3250")]
@@ -3771,6 +3768,59 @@ namespace Tests.Linq
 					label = "label"
 				})
 				.LongCount();
+		}
+
+		[Test]
+		public void GroupingByCondition([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var children = 
+				from c in db.Child
+				let isValueAvailable = c.ChildID % 2 == 0
+				select new
+				{
+					KeyValue = isValueAvailable ? new { Value = (int?)c.ParentID } :new { Value = (int?)null },
+					Data     = c.ChildID % 3
+				};
+
+			var query =
+				from c in children
+				where c.KeyValue.Value != null
+				group c by c.KeyValue into g
+				select new
+				{
+					Key = g.Key,
+					Count = g.Count()
+				};
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void GroupingByConditionAndProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var children = 
+				from c in db.Child
+				let isValueAvailable = c.ChildID % 2 == 0
+				select new
+				{
+					KeyValue = isValueAvailable ? new { Value = (int?)c.ParentID } :new { Value = (int?)null },
+					Data     = c.ChildID % 3
+				};
+
+			var query =
+				from c in children
+				group c by c.KeyValue.Value into g
+				select new
+				{
+					Key = g.Key,
+					Count = g.Count()
+				};
+
+			AssertQuery(query);
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]

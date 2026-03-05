@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			var currentSource = source.ProcessIQueryable();
 
-			return new ClickHouseSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+			return new ClickHouseSpecificQueryable<TSource>((IExpressionQuery<TSource>)currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(AsClickHouse, source),

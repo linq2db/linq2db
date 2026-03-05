@@ -400,7 +400,7 @@ namespace LinqToDB.EntityFrameworkCore
 					(result ??= new()).Add(ca);
 
 					// ValueConverterAttribute
-					var converter = prop.GetValueConverter();
+					var converter = prop.GetValueConverter() ?? prop.GetTypeMapping()?.Converter;
 					if (converter != null)
 					{
 						var valueConverterAttribute = new ValueConverterAttribute()
