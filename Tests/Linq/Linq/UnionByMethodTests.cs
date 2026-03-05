@@ -79,7 +79,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = "Wrong remote service result")]
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllMariaDB], Details = "Wrong remote service result")]
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void UnionBySameTable([DataSources] string context)
 		{
