@@ -3667,10 +3667,7 @@ namespace Tests.Linq
 
 			query.ToList();
 
-			if (context.IsAnyOf(TestProvName.AllAccess))
-				db.LastQuery!.ShouldContain("SELECT", Exactly.Twice());
-			else
-				db.LastQuery!.ShouldContain("SELECT", Exactly.Once());
+			db.LastQuery!.ShouldContain("SELECT", Exactly.Twice());
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3250")]
