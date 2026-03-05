@@ -303,7 +303,7 @@ namespace LinqToDB.Mapping
 
 			if (attr.MemberName.IndexOf('.') < 0)
 			{
-				var ex = TypeAccessor[attr.MemberName];
+				var ex = TypeAccessor.GetOrCreateMemberAccessor(attr.MemberName);
 				var cd = new ColumnDescriptor(MappingSchema, this, attr, ex, hasInheritanceMapping);
 
 				if (_columnNames.Remove(attr.MemberName))

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq.Expressions;
 
@@ -76,8 +77,9 @@ namespace LinqToDB.Reflection
 
 		readonly ConcurrentDictionary<string,MemberAccessor> _membersByName = new();
 
-		public MemberAccessor this[string memberName] =>
-			_membersByName.GetOrAdd(memberName, name =>
+		public MemberAccessor GetOrCreateMemberAccessor(string memberName)
+		{
+			return _membersByName.GetOrAdd(memberName, name =>
 			{
 				var ma = new MemberAccessor(this, name, null);
 				// workaround for
@@ -86,6 +88,10 @@ namespace LinqToDB.Reflection
 				Members = [.. Members, ma];
 				return ma;
 			});
+		}
+
+		[Obsolete($"Use {nameof(GetOrCreateMemberAccessor)} method instead"), EditorBrowsable(EditorBrowsableState.Never)]
+		public MemberAccessor this[string memberName] => GetOrCreateMemberAccessor(memberName);
 
 		public MemberAccessor? GetMemberByName(string memberName)
 		{

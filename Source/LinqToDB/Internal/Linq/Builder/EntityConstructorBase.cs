@@ -441,7 +441,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 					else
 					{
-						var memberAccessor = typeAccessor[assignment.MemberInfo.Name];
+						var memberAccessor = typeAccessor.GetOrCreateMemberAccessor(assignment.MemberInfo.Name);
 
 						var memberInfo = assignment.MemberInfo;
 						var descriptor = GetFieldOrPropAssociationDescriptor(memberInfo, ed);
