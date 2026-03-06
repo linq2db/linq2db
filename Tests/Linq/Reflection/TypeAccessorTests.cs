@@ -1,4 +1,7 @@
-﻿using LinqToDB.Reflection;
+﻿using System.Threading;
+using System.Threading.Tasks;
+
+using LinqToDB.Reflection;
 
 using NUnit.Framework;
 
@@ -53,7 +56,7 @@ namespace Tests.Reflection
 
 			var obj = ta.CreateInstance();
 
-			ta["Prop1"].SetValue(obj, 10);
+			ta.GetOrCreateMemberAccessor("Prop1").SetValue(obj, 10);
 		}
 
 		[Test]
@@ -63,7 +66,7 @@ namespace Tests.Reflection
 
 			var obj = ta.Create();
 
-			ta["Prop2"].SetValue(obj, 10);
+			ta.GetOrCreateMemberAccessor("Prop2").SetValue(obj, 10);
 
 			Assert.That(obj.Prop2, Is.EqualTo(10));
 		}
@@ -79,7 +82,7 @@ namespace Tests.Reflection
 				Class4 = new TestClass4 { Field1 = 50 }
 			}}};
 
-			var value = ta["Class2.Class3.Class4.Field1"].GetValue(obj);
+			var value = ta.GetOrCreateMemberAccessor("Class2.Class3.Class4.Field1").GetValue(obj);
 
 			Assert.That(value, Is.EqualTo(50));
 		}
@@ -96,7 +99,7 @@ namespace Tests.Reflection
 				Class4  = new TestClass4  { Field1 = 50 }
 			}}}};
 
-			var value = ta["Class2.Struct1.Class3.Class4.Field1"].GetValue(obj);
+			var value = ta.GetOrCreateMemberAccessor("Class2.Struct1.Class3.Class4.Field1").GetValue(obj);
 
 			Assert.That(value, Is.EqualTo(50));
 		}
@@ -107,7 +110,7 @@ namespace Tests.Reflection
 			var ta  = TypeAccessor.GetAccessor<TestClass1>();
 			var obj = new TestClass1();
 
-			ta["Class2.Class3.Class4.Field1"].SetValue(obj, 42);
+			ta.GetOrCreateMemberAccessor("Class2.Class3.Class4.Field1").SetValue(obj, 42);
 
 			Assert.That(obj.Class2!.Class3!.Class4!.Field1, Is.EqualTo(42));
 		}
@@ -118,7 +121,7 @@ namespace Tests.Reflection
 			var ta  = TypeAccessor.GetAccessor<TestClass1>();
 			var obj = new TestClass1();
 
-			ta["Class2.Struct1.Class3.Class4.Field1"].SetValue(obj, 42);
+			ta.GetOrCreateMemberAccessor("Class2.Struct1.Class3.Class4.Field1").SetValue(obj, 42);
 
 			Assert.That(obj.Class2!.Struct1.Class3.Class4!.Field1, Is.EqualTo(42));
 		}
@@ -129,7 +132,7 @@ namespace Tests.Reflection
 #pragma warning disable CA2263 // Prefer generic overload when type is known
 			var ta = TypeAccessor.GetAccessor(typeof(TestClass1));
 #pragma warning restore CA2263 // Prefer generic overload when type is known
-			var ma = ta["Prop1"];
+			var ma = ta.GetOrCreateMemberAccessor("Prop1");
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ma.HasGetter, Is.True);
@@ -143,7 +146,7 @@ namespace Tests.Reflection
 #pragma warning disable CA2263 // Prefer generic overload when type is known
 			var ta = TypeAccessor.GetAccessor(typeof(TestClass1));
 #pragma warning restore CA2263 // Prefer generic overload when type is known
-			var ma = ta["Prop3"];
+			var ma = ta.GetOrCreateMemberAccessor("Prop3");
 			using (Assert.EnterMultipleScope())
 			{
 				Assert.That(ma.HasGetter, Is.False);
@@ -151,5 +154,77 @@ namespace Tests.Reflection
 			}
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5361")]
+		public void TypeAccessor_ThreadSafety_AddStorageField()
+		{
+			var typeAccessor = TypeAccessor.GetAccessor<TypeAccessorMutations1>();
+
+			var tasks = new Task[10];
+
+			using var wait = new ManualResetEvent(false);
+
+			for (var i = 0; i < tasks.Length; i++)
+			{
+				tasks[i] = Task.Run(() =>
+				{
+					foreach (var member in typeAccessor.Members)
+					{
+						wait.WaitOne();
+
+						// emulate ColumnAttribute.Storage late init
+						_ = typeAccessor.GetOrCreateMemberAccessor("_field");
+					}
+				});
+			}
+
+			wait.Set();
+			Task.WaitAll(tasks);
+
+			Assert.That(typeAccessor.Members, Has.Count.EqualTo(3));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5361")]
+		public void TypeAccessor_ThreadSafety_AddInternalMember()
+		{
+			var typeAccessor = TypeAccessor.GetAccessor<TypeAccessorMutations2>();
+
+			var tasks = new Task[10];
+
+			using var wait = new ManualResetEvent(false);
+
+			for (var i = 0; i < tasks.Length; i++)
+			{
+				tasks[i] = Task.Run(() =>
+				{
+					foreach (var member in typeAccessor.Members)
+					{
+						wait.WaitOne();
+
+						// internal members not loaded by default
+						_ = typeAccessor.GetOrCreateMemberAccessor(nameof(TypeAccessorMutations2.Field2));
+					}
+				});
+			}
+
+			wait.Set();
+			Task.WaitAll(tasks);
+
+			Assert.That(typeAccessor.Members, Has.Count.EqualTo(3));
+		}
+
+		sealed class TypeAccessorMutations1
+		{
+			private int _field { get; set; }
+
+			public int Field1 { get; set; }
+			public int Field2 { get; set; }
+		}
+
+		sealed class TypeAccessorMutations2
+		{
+			public int Field1 { get; set; }
+			internal int Field2 { get; set; }
+			public int Field3 { get; set; }
+		}
 	}
 }
