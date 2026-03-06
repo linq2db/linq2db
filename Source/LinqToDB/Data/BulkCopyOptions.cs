@@ -124,11 +124,13 @@ namespace LinqToDB.Data
 	/// Implemented only by ClickHouse.Driver provider. When set, provider-specific bulk copy will use session-less connection even if called over connection with session.
 	/// Note that session-less connections cannot be used with session-bound functionality like temporary tables.
 	/// </param>
-	/// <param name="OnConflictDoNothing">
+	/// <param name="IgnoreConflicts">
 	/// When set to <c>true</c>, ignores conflicts during bulk copy operation.
-	/// Supported with <see cref="BulkCopyType.MultipleRows"/> bulk copy mode for following databases:
+	/// Supported for following databases:
 	/// <list type="bullet">
-	/// <item>PostgreSQL</item>
+	/// <item>MySql/MariaDB (it will automatically fall back to <see cref="BulkCopyType.MultipleRows"/>)</item>
+	/// <item>PostgreSQL (it will automatically fall back to <see cref="BulkCopyType.MultipleRows"/>)</item>
+	/// <item>SQLite</item>
 	/// </list>
 	/// </param>
 	/// <summary>
@@ -156,7 +158,7 @@ namespace LinqToDB.Data
 		int?                        MaxParametersForBatch  = default,
 		int?                        MaxDegreeOfParallelism = default,
 		bool                        WithoutSession         = default,
-		bool?                       OnConflictDoNothing    = default
+		bool?                       IgnoreConflicts        = default
 		// If you add another parameter here, don't forget to update
 		// BulkCopyOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -237,7 +239,7 @@ namespace LinqToDB.Data
 			MaxParametersForBatch  = original.MaxParametersForBatch;
 			MaxDegreeOfParallelism = original.MaxDegreeOfParallelism;
 			WithoutSession         = original.WithoutSession;
-			OnConflictDoNothing    = original.OnConflictDoNothing;
+			IgnoreConflicts        = original.IgnoreConflicts;
 		}
 
 		int? _configurationID;
@@ -269,7 +271,7 @@ namespace LinqToDB.Data
 						.Add(MaxParametersForBatch)
 						.Add(MaxDegreeOfParallelism)
 						.Add(WithoutSession)
-						.Add(OnConflictDoNothing)
+						.Add(IgnoreConflicts)
 						.CreateID();
 				}
 

@@ -1296,37 +1296,37 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		sealed class OnConflictDoNothingTable
+		sealed class BulkCopyIgnoreConflictsTable
 		{
 			[Column, PrimaryKey] public int    ID    { get; set; }
 			[Column]             public string Value { get; set; } = null!;
 		}
 
 		[Test]
-		public void BulkCopyOnConflictDoNothing(
+		public void BulkCopyIgnoreConflicts(
 			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
-			[Values(BulkCopyType.MultipleRows, BulkCopyType.RowByRow)] BulkCopyType bulkCopyType)
+			[Values(BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType bulkCopyType)
 		{
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable<OnConflictDoNothingTable>();
+			using var table = db.CreateLocalTable<BulkCopyIgnoreConflictsTable>();
 
 			// insert initial rows
 			table.BulkCopy(
 				new BulkCopyOptions { BulkCopyType = bulkCopyType },
 				new[]
 				{
-					new OnConflictDoNothingTable { ID = 1, Value = "original1" },
-					new OnConflictDoNothingTable { ID = 2, Value = "original2" },
+					new BulkCopyIgnoreConflictsTable { ID = 1, Value = "original1" },
+					new BulkCopyIgnoreConflictsTable { ID = 2, Value = "original2" },
 				});
 
 			// second insert: rows 1 and 2 conflict, row 3 is new
 			table.BulkCopy(
-				new BulkCopyOptions { BulkCopyType = bulkCopyType, OnConflictDoNothing = true },
+				new BulkCopyOptions { BulkCopyType = bulkCopyType, IgnoreConflicts = true },
 				new[]
 				{
-					new OnConflictDoNothingTable { ID = 1, Value = "conflict1" },
-					new OnConflictDoNothingTable { ID = 2, Value = "conflict2" },
-					new OnConflictDoNothingTable { ID = 3, Value = "new3"      },
+					new BulkCopyIgnoreConflictsTable { ID = 1, Value = "conflict1" },
+					new BulkCopyIgnoreConflictsTable { ID = 2, Value = "conflict2" },
+					new BulkCopyIgnoreConflictsTable { ID = 3, Value = "new3"      },
 				});
 
 			var rows = table.OrderBy(r => r.ID).ToArray();
@@ -1341,30 +1341,30 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public async Task BulkCopyOnConflictDoNothingAsync(
+		public async Task BulkCopyIgnoreConflictsAsync(
 			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
-			[Values(BulkCopyType.MultipleRows, BulkCopyType.RowByRow)] BulkCopyType bulkCopyType)
+			[Values(BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType bulkCopyType)
 		{
 			using var db    = GetDataContext(context);
-			using var table = db.CreateLocalTable<OnConflictDoNothingTable>();
+			using var table = db.CreateLocalTable<BulkCopyIgnoreConflictsTable>();
 
 			// insert initial rows
 			await table.BulkCopyAsync(
 				new BulkCopyOptions { BulkCopyType = bulkCopyType },
 				new[]
 				{
-					new OnConflictDoNothingTable { ID = 1, Value = "original1" },
-					new OnConflictDoNothingTable { ID = 2, Value = "original2" },
+					new BulkCopyIgnoreConflictsTable { ID = 1, Value = "original1" },
+					new BulkCopyIgnoreConflictsTable { ID = 2, Value = "original2" },
 				});
 
 			// second insert: rows 1 and 2 conflict, row 3 is new
 			await table.BulkCopyAsync(
-				new BulkCopyOptions { BulkCopyType = bulkCopyType, OnConflictDoNothing = true },
+				new BulkCopyOptions { BulkCopyType = bulkCopyType, IgnoreConflicts = true },
 				new[]
 				{
-					new OnConflictDoNothingTable { ID = 1, Value = "conflict1" },
-					new OnConflictDoNothingTable { ID = 2, Value = "conflict2" },
-					new OnConflictDoNothingTable { ID = 3, Value = "new3"      },
+					new BulkCopyIgnoreConflictsTable { ID = 1, Value = "conflict1" },
+					new BulkCopyIgnoreConflictsTable { ID = 2, Value = "conflict2" },
+					new BulkCopyIgnoreConflictsTable { ID = 3, Value = "new3"      },
 				});
 
 			var rows = await table.OrderBy(r => r.ID).ToArrayAsync();

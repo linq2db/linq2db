@@ -34,6 +34,12 @@ namespace LinqToDB.Internal.DataProvider
 		/// </summary>
 		protected virtual string? GetMultipleRowsSuffix(BulkCopyOptions options) => null;
 
+		/// <summary>
+		/// Returns the <c>INSERT INTO {tableName}</c> fragment used at the start of bulk INSERT statements in MultipleRows bulk copy mode.
+		/// Override in provider-specific bulk copy classes to inject directives between <c>INSERT</c> and <c>INTO</c>, such as <c>OR IGNORE</c>.
+		/// </summary>
+		protected virtual string GetInsertInto(MultipleRowsHelper helper) => $"INSERT INTO {helper.TableName}";
+
 		public virtual BulkCopyRowsCopied BulkCopy<T>(BulkCopyType bulkCopyType, ITable<T> table, DataOptions options, IEnumerable<T> source)
 			where T : notnull
 		{
@@ -614,7 +620,7 @@ namespace LinqToDB.Internal.DataProvider
 		private void MultipleRowsCopy1Prep(MultipleRowsHelper helper)
 		{
 			helper.StringBuilder
-				.AppendLine(CultureInfo.InvariantCulture, $"INSERT INTO {helper.TableName}")
+				.AppendLine(GetInsertInto(helper))
 				.Append('(');
 
 			foreach (var column in helper.Columns)
@@ -710,7 +716,7 @@ namespace LinqToDB.Internal.DataProvider
 		private void MultipleRowsCopy2Prep(MultipleRowsHelper helper)
 		{
 			helper.StringBuilder
-				.AppendLine(CultureInfo.InvariantCulture, $"INSERT INTO {helper.TableName}")
+				.AppendLine(GetInsertInto(helper))
 				.Append('(');
 
 			foreach (var column in helper.Columns)
@@ -764,7 +770,7 @@ namespace LinqToDB.Internal.DataProvider
 		private void MultipleRowsCopy3Prep(MultipleRowsHelper helper)
 		{
 			helper.StringBuilder
-				.AppendLine(CultureInfo.InvariantCulture, $"INSERT INTO {helper.TableName}")
+				.AppendLine(GetInsertInto(helper))
 				.Append('(');
 
 			foreach (var column in helper.Columns)
