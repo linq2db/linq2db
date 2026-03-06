@@ -55,6 +55,7 @@ namespace LinqToDB.Internal.Common
 
 			try
 			{
+#pragma warning disable LindhartAnalyserMissingAwaitWarningVariable // Possible unwanted Task returned from method.
 				var task = Task.Factory.StartNew(
 					static x =>
 					{
@@ -65,6 +66,7 @@ namespace LinqToDB.Internal.Common
 					CancellationToken.None,
 					TaskCreationOptions.DenyChildAttach,
 					TaskScheduler.Default); // ThreadPool
+#pragma warning restore LindhartAnalyserMissingAwaitWarningVariable // Possible unwanted Task returned from method.
 
 				// Avoid Task.Wait/Result (AggregateException and potential inlining quirks).
 				((IAsyncResult)task).AsyncWaitHandle.WaitOne();
