@@ -306,6 +306,36 @@ namespace Tests.Linq
 				.Select(p => Sql.AsSql(p.Children.MaxBy(c => c.Value, comparer)))
 				.FirstOrDefault();
 		}
+
+		[Test]
+		public void MaxByEmptySequenceShouldThrow([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var testData = CreateTestTableData();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			// Query returns empty sequence, MaxBy on value type should throw
+			Assert.Throws<InvalidOperationException>(() =>
+			{
+				_ = table.Where(x => x.Id < 0).Select(x => x.Id).MaxBy(x => x);
+			});
+		}
+
+		[Test]
+		public void MinByEmptySequenceShouldThrow([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var testData = CreateTestTableData();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			// Query returns empty sequence, MinBy on value type should throw
+			Assert.Throws<InvalidOperationException>(() =>
+			{
+				_ = table.Where(x => x.Id < 0).Select(x => x.Id).MinBy(x => x);
+			});
+		}
 	}
 }
 

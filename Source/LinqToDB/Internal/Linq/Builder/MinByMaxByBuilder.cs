@@ -20,6 +20,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			MethodCallExpression methodCall,
 			BuildInfo buildInfo)
 		{
+
 			var sourceExpression = methodCall.Arguments[0];
 			var keySelector = methodCall.Arguments[1].UnwrapLambda();
 			var isMinBy = methodCall.Method.Name == nameof(Queryable.MinBy);
@@ -53,12 +54,15 @@ namespace LinqToDB.Internal.Linq.Builder
 					Expression.Quote(orderByLambda));
 			}
 
-			// Create FirstOrDefault() call  
-			var firstOrDefaultMethod = Methods.Queryable.FirstOrDefault.MakeGenericMethod(elementType);
-			var firstOrDefaultExpression = Expression.Call(firstOrDefaultMethod, orderedExpression);
+			// Create FirstOrDefault() or First() call
+			var firstCall = elementType.IsValueType && !buildInfo.IsSubQuery
+				? Methods.Queryable.First.MakeGenericMethod(elementType)
+				: Methods.Queryable.FirstOrDefault.MakeGenericMethod(elementType);
+
+			var firstExpression = Expression.Call(firstCall, orderedExpression);
 
 			// Build the transformed expression
-			var result = builder.TryBuildSequence(new BuildInfo(buildInfo, firstOrDefaultExpression));
+			var result = builder.TryBuildSequence(new BuildInfo(buildInfo, firstExpression));
 			return result;
 		}
 	}
