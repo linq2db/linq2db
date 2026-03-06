@@ -215,16 +215,18 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					(ClickHouseProvider.ClickHouseDriver, DataType.Date or  DataType.Date32, DateOnly val)      => val.ToDateTime(default),
 #endif
 					(ClickHouseProvider.ClickHouseDriver, DataType.Date or DataType.Date32, DateTimeOffset val) => val.Date,
-					(ClickHouseProvider.ClickHouseDriver, DataType.Char or DataType.NChar, Guid val)            => val.ToString("D"),
+					(ClickHouseProvider.ClickHouseDriver, DataType.Char or DataType.NChar
+															or DataType.VarChar or DataType.NVarChar, Guid val) => val.ToString("D"),
 					(ClickHouseProvider.ClickHouseDriver, DataType.IPv4, uint val)                              => new IPAddress(new byte[] { (byte)((val >> 24) & 0xFF), (byte)((val >> 16) & 0xFF), (byte)((val >> 8) & 0xFF), (byte)(val & 0xFF) }).ToString(),
 					// https://github.com/DarkWanderer/ClickHouse.Client/issues/145
 					(ClickHouseProvider.ClickHouseDriver, DataType.IPv6, IPAddress val)                         => val.AddressFamily == AddressFamily.InterNetworkV6 ? val : val.MapToIPv6(),
 					// https://github.com/DarkWanderer/ClickHouse.Client/issues/145
 					(ClickHouseProvider.ClickHouseDriver, DataType.IPv6, string val)                            => IPAddress.Parse(val).MapToIPv6(),
 					(ClickHouseProvider.ClickHouseDriver, DataType.IPv6, byte[] val)                            => new IPAddress(val).MapToIPv6(),
-					// TODO: remove after fix as it corrupts data
+#if NETFRAMEWORK
 					// https://github.com/ClickHouse/clickhouse-cs/issues/109
 					(ClickHouseProvider.ClickHouseDriver, DataType.VarBinary, byte[] val) => Encoding.UTF8.GetString(val),
+#endif
 
 					(ClickHouseProvider.ClickHouseDriver, DataType.NChar or DataType.Char, string val) => FixSize(Encoding.UTF8.GetBytes(val), dataType.Length ?? ClickHouseMappingSchema.DEFAULT_FIXED_STRING_LENGTH),
 					(ClickHouseProvider.ClickHouseDriver, DataType.Binary, byte[] val)                 => FixSize(val, dataType.Length ?? ClickHouseMappingSchema.DEFAULT_FIXED_STRING_LENGTH),
@@ -246,7 +248,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			return arr;
 		}
 
-		#endregion
+#endregion
 
 		#region BulkCopy
 

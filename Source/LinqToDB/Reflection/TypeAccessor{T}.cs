@@ -7,6 +7,8 @@ using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Reflection
 {
+	// TODO: v7: move to internal namespace (including related types) and refactor
+	// https://github.com/linq2db/linq2db/issues/5361
 	public class TypeAccessor<T> : TypeAccessor
 	{
 		static TypeAccessor()
@@ -21,7 +23,7 @@ namespace LinqToDB.Reflection
 			}
 			else
 			{
-				// load properties takin into account explicit interface implementations
+				// load properties taking into account explicit interface implementations
 				var interfacePropertiesList = new List<PropertyInfo?>();
 				var interfaceProperties     = new Dictionary<(Type? declaringType, string name, Type type), int>();
 
@@ -109,7 +111,7 @@ namespace LinqToDB.Reflection
 			{
 				var removed = true;
 				foreach (var accessor in ifaceAccessors)
-					removed = unmappedAccessors.Remove(accessor) && removed;
+					removed &= unmappedAccessors.Remove(accessor);
 
 				return removed;
 			}

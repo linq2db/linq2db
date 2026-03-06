@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Numerics;
@@ -9,6 +8,7 @@ using System.Numerics;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Internal.SchemaProvider;
+using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.Internal.DataProvider.ClickHouse
@@ -18,101 +18,70 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 	// 3. Loading of schema for non-current database: not implemented for now
 	public class ClickHouseSchemaProvider : SchemaProviderBase
 	{
+		protected override string GetServerVersion(DataConnection dbConnection)
+		{
+			return dbConnection.Execute<string>("SELECT version()");
+		}
+
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			return dataConnection.Query(
-				rd =>
-				{
-					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					var table       = rd.GetString(0);
-					var name        = rd.GetString(1);
-					var type        = rd.GetString(2);
-					var ordinal     = Convert.ToUInt64(rd.GetValue(3), CultureInfo.InvariantCulture);
-					var description = rd.GetString(4);
-					var length      = rd.IsDBNull(5) ? null : (ulong?)Convert.ToUInt64(rd.GetValue(5), CultureInfo.InvariantCulture);
-					var precision   = rd.IsDBNull(6) ? null : (ulong?)Convert.ToUInt64(rd.GetValue(6), CultureInfo.InvariantCulture);
-					var scale       = rd.IsDBNull(7) ? null : (ulong?)Convert.ToUInt64(rd.GetValue(7), CultureInfo.InvariantCulture);
-					var readOnly    = rd.GetBoolean(8);
-
-					(type, var isNullable, _) = PreParseTypeName(type);
-
-					return new ColumnInfo()
-					{
-						TableID      = table,
-						Name         = name,
-						IsNullable   = isNullable,
-						Ordinal      = checked((int)ordinal),
-						DataType     = type,
-						ColumnType   = type,
-						// this is probably only possible failue point with checked casts
-						// but I don't think anyone will hit it as such huge FixedString columns are impractical
-						Length       = checked((int?)length),
-						Precision    = checked((int?)precision),
-						Scale        = checked((int?)scale),
-						Description  = string.IsNullOrWhiteSpace(description) ? null : description,
-						SkipOnUpdate = readOnly
-					};
-				},
-				@"
-SELECT
-	table,
-	name,
-	type,
-	position,
-	comment,
-	multiIf(type LIKE '%FixedString%', character_octet_length, NULL),
-	multiIf(type LIKE '%DateTime64%', datetime_precision, numeric_precision_radix = 10, numeric_precision, NULL),
-	multiIf(numeric_precision_radix = 10, numeric_scale, NULL),
-	is_in_primary_key
-FROM system.columns
-WHERE database = database() and default_kind <> 'ALIAS'")
-				.ToList();
+			var query = from r in dataConnection.GetTable<Column>()
+						where r.Database == Functions.CurrentDatabaseName && r.Kind != ColumnKind.Alias
+						let typeInfo = PreParseTypeName(r.Type)
+						select new ColumnInfo()
+						{
+							TableID      = r.Table,
+							Name         = r.Name,
+							IsNullable   = typeInfo.isNullable,
+							// TODO: v7 : extend types where we need downcast
+							Ordinal      = (int)r.Position,
+							DataType     = typeInfo.type,
+							ColumnType   = typeInfo.type,
+							Length       = r.Type.Contains("FixedString") ? (int?)r.CharacterOctetLength : null,
+							Precision    = r.Type.Contains("DateTime64")
+								? (int?)r.DateTimePrecision
+								: r.NumericPrecisionRadix == 10
+									? (int?)r.NumericPrecision
+									: null,
+							Scale        = r.NumericPrecisionRadix == 10 ? (int?)r.NumericScale : null,
+							Description  = string.IsNullOrWhiteSpace(r.Comment) ? null : r.Comment,
+							SkipOnUpdate = r.IsInPrimaryKey
+						};
+			return query.ToList();
 		}
 
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables, GetSchemaOptions options) => [];
 
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			return dataConnection.Query(
-				rd =>
+			return dataConnection.GetTable<Table>()
+				.Where(r => !r.IsTemporary && r.Database == Functions.CurrentDatabaseName && r.PrimaryKey != string.Empty)
+				.Select(r => new
 				{
-					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					var name      = rd.GetString(0);
-					var keyFields = rd.GetString(1);
-					var fields    = keyFields.Split(',');
-
-					return fields.Select((f, i) => new PrimaryKeyInfo()
-					{
-						TableID    = name,
-						ColumnName = f.Trim(),
-						Ordinal    = i
-					});
-				},
-				"select name, primary_key from system.tables where is_temporary = 0 and database = database() and primary_key <> ''")
-				.SelectMany(_ => _).ToList();
+					r.Name,
+					PrimaryKeyFields = r.PrimaryKey.Split(',')
+				})
+				.AsEnumerable()
+				.SelectMany(r => r.PrimaryKeyFields.Select((f, i) => new PrimaryKeyInfo()
+				{
+					TableID    = r.Name,
+					ColumnName = f.Trim(),
+					Ordinal    = i
+				})).ToList();
 		}
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			return dataConnection.Query(
-				rd =>
+			return dataConnection.GetTable<Table>()
+				.Where(r => !r.IsTemporary && r.Database == Functions.CurrentDatabaseName)
+				.Select(r => new TableInfo()
 				{
-					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					var name        = rd.GetString(0);
-					var description = rd.GetString(1);
-					var isView      = rd.GetBoolean(2);
-
-					return new TableInfo()
-					{
-						TableID         = name,
-						TableName       = name,
-						Description     = string.IsNullOrWhiteSpace(description) ? null : description,
-						IsDefaultSchema = true,
-						IsView          = isView
-					};
-				},
-				"select name, comment, engine LIKE '%View' from system.tables where is_temporary = 0 and database = database()")
-				.ToList();
+					TableID         = r.Name,
+					TableName       = r.Name,
+					Description     = string.IsNullOrWhiteSpace(r.Comment) ? null : r.Comment,
+					IsDefaultSchema = true,
+					IsView          = r.Engine.EndsWith("View")
+				}).ToList();
 		}
 
 		protected override string GetDatabaseName(DataConnection dbConnection)
@@ -226,6 +195,57 @@ WHERE database = database() and default_kind <> 'ALIAS'")
 			{ "Float32"   , (DataType.Single    , typeof(float         )) },
 			{ "Float64"   , (DataType.Double    , typeof(double        )) },
 		};
+		#endregion
+
+		#region Mappings
+		// https://clickhouse.com/docs/operations/system-tables/tables
+		[Table("tables", Database = "system")]
+		sealed class Table
+		{
+			[Column("name", CanBeNull = false)       ] public string Name        { get; set; } = default!;
+			[Column("comment", CanBeNull = false)    ] public string Comment     { get; set; } = default!;
+			[Column("engine", CanBeNull = false)     ] public string Engine      { get; set; } = default!;
+			[Column("database", CanBeNull = false)   ] public string Database    { get; set; } = default!;
+			[Column("primary_key", CanBeNull = false)] public string PrimaryKey  { get; set; } = default!;
+			[Column("is_temporary")                  ] public bool   IsTemporary { get; set; }
+		}
+
+		// https://clickhouse.com/docs/operations/system-tables/columns
+		[Table("columns", Database = "system")]
+		sealed class Column
+		{
+			[Column("database", CanBeNull = false)               ] public string     Database              { get; set; } = default!;
+			[Column("table", CanBeNull = false)                  ] public string     Table                 { get; set; } = default!;
+			[Column("name", CanBeNull = false)                   ] public string     Name                  { get; set; } = default!;
+			[Column("default_kind", CanBeNull = false)           ] public ColumnKind Kind                  { get; set; }
+			[Column("type", CanBeNull = false)                   ] public string     Type                  { get; set; } = default!;
+			[Column("comment", CanBeNull = false)                ] public string     Comment               { get; set; } = default!;
+			[Column("position")                                  ] public ulong      Position              { get; set; }
+			[Column("character_octet_length")                    ] public ulong?     CharacterOctetLength  { get; set; }
+			[Column("datetime_precision")                        ] public ulong?     DateTimePrecision     { get; set; }
+			[Column("numeric_precision_radix")                   ] public ulong?     NumericPrecisionRadix { get; set; }
+			[Column("numeric_precision")                         ] public ulong?     NumericPrecision      { get; set; }
+			[Column("numeric_scale")                             ] public ulong?     NumericScale          { get; set; }
+			[Column("is_in_primary_key")                         ] public bool       IsInPrimaryKey        { get; set; }
+		}
+
+		enum ColumnKind
+		{
+			[MapValue("", IsDefault = true)]
+			Empty = 0,
+			[MapValue("DEFAULT")]
+			Default,
+			[MapValue("MATERIALIZED")]
+			Materialized,
+			[MapValue("ALIAS")]
+			Alias
+		}
+
+		static class Functions
+		{
+			[Sql.Function("database", ServerSideOnly = true, CanBeNull = false)]
+			public static string CurrentDatabaseName => throw new ServerSideOnlyException($"{nameof(Functions)}.{nameof(CurrentDatabaseName)}");
+		}
 		#endregion
 	}
 }

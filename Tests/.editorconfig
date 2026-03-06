@@ -30,3 +30,11 @@ dotnet_diagnostic.MA0169.severity = none
 
 [*.vb]
 dotnet_diagnostic.CA2224.severity = none # CA2224: Override Equals on overloading operator equals // https://github.com/dotnet/roslyn-analyzers/issues/6778
+
+[{Linq,EntityFrameworkCore}/**.cs]
+# TODO: too many/don't care
+dotnet_diagnostic.AsyncFixer01.severity = none # AsyncFixer01: Unnecessary async/await usage
+dotnet_diagnostic.AsyncFixer02.severity = none # AsyncFixer02: Blocking calls inside async methods
+dotnet_diagnostic.AsyncFixer04.severity = none # AsyncFixer04: Unawaited async call in using block
+dotnet_diagnostic.AsyncFixer06.severity = none # AsyncFixer06: Task<T> to Task implicit conversion
+dotnet_diagnostic.LindhartAnalyserMissingAwaitWarningVariable.severity = none # LindhartAnalyserMissingAwaitWarningVariable: Task that was inserted into a variable. This variable might not be awaited
