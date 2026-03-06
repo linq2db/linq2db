@@ -87,8 +87,9 @@
 
 	<ItemGroup Label="Database Providers">
 		<PackageVersion Include="AdoNetCore.AseClient"                                  Version="0.19.2"                       />
-		<PackageVersion Include="ClickHouse.Driver"                                     Version="0.9.0"                        />
 		<PackageVersion Include="Devart.Data.Oracle"                                    Version="11.0.0"                       />
+		<PackageVersion Include="ClickHouse.Driver"                                     Version="0.9.0"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
+		<PackageVersion Include="ClickHouse.Driver"                                     Version="1.0.1"                        Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))"  />
 		<PackageVersion Include="dotMorten.Microsoft.SqlServer.TNET.Testypes"                   Version="1.5.0"                />
 		<!--<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="2.5.0"                 />-->
 		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"                       Version="10.3.4"                       />

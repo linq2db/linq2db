@@ -459,7 +459,11 @@ namespace Tests.xUpdate
 						expected = new byte[] { 0 };
 				}
 
-				if (provider.IsAnyOf(ProviderName.ClickHouseMySql, ProviderName.ClickHouseDriver))
+				if (provider.IsAnyOf(ProviderName.ClickHouseMySql
+#if NETFRAMEWORK
+					, ProviderName.ClickHouseDriver
+#endif
+					))
 				{
 					// https://github.com/ClickHouse/clickhouse-cs/issues/109
 					// https://github.com/ClickHouse/ClickHouse/issues/38790
