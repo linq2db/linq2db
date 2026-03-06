@@ -19,8 +19,9 @@ namespace Tests.Linq
 		[Table]
 		public class TestTable
 		{
-			[Column] public int Id { get; set; }
-			[Column] public int TestId { get; set; }
+			[Column] public int  Id { get; set; }
+			[Column] public int  TestId { get; set; }
+			[Column] public int? NTestId { get; set; }
 		}
 
 		[Table]
@@ -45,11 +46,11 @@ namespace Tests.Linq
 		private TestTable[] CreateTestTableData()
 		{
 			return [
-				new TestTable() { Id = 1, TestId = 20},
+				new TestTable() { Id = 1, TestId = 20, NTestId = 10 },
 				new TestTable() { Id = 2, TestId = 20 },
-				new TestTable() { Id = 3, TestId = 30 },
+				new TestTable() { Id = 3, TestId = 30, NTestId = 20 },
 				new TestTable() { Id = 4, TestId = 30 },
-				new TestTable() { Id = 5, TestId = 40 }
+				new TestTable() { Id = 5, TestId = 40, NTestId = 30 },
 				];
 		}
 
@@ -335,6 +336,32 @@ namespace Tests.Linq
 			{
 				_ = table.Where(x => x.Id < 0).Select(x => x.Id).MinBy(x => x);
 			});
+		}
+
+		[Test]
+		public void MinByEmptyNullableSequenceShouldPass([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var testData = CreateTestTableData();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			var res = table.Where(x => x.Id < 0).Select(x => x.NTestId).MinBy(x => x);
+
+			Assert.That(res, Is.Null);
+		}
+
+		[Test]
+		public void MaxByEmptyNullableSequenceShouldPass([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var testData = CreateTestTableData();
+
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(testData);
+
+			var res = table.Where(x => x.Id < 0).Select(x => x.NTestId).MaxBy(x => x);
+
+			Assert.That(res, Is.Null);
 		}
 	}
 }
