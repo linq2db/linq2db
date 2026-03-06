@@ -132,6 +132,7 @@ namespace LinqToDB.Data
 	/// <item>PostgreSQL (it will automatically fall back to <see cref="BulkCopyType.MultipleRows"/>)</item>
 	/// <item>SQLite</item>
 	/// </list>
+	/// Not compatible with <see cref="BulkCopyType.RowByRow"/> mode.
 	/// </param>
 	/// <summary>
 	/// Defines behavior of <see cref="DataContextExtensions.BulkCopy{T}(IDataContext, BulkCopyOptions, IEnumerable{T})"/> method.
