@@ -102,7 +102,7 @@ namespace Tests.UserTests
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable<TestDtoWithPks>();
 
-			var dto = new TestDtoWithPks() { Id = Guid.NewGuid(), Number = 5, Test = "aaa" };
+			var dto = new TestDtoWithPks() { Id = TestData.Guid1, Number = 5, Test = "aaa" };
 			db.Insert(dto);
 
 			var existingDto = GetExistingDto(dto, table, db.MappingSchema);
@@ -116,7 +116,7 @@ namespace Tests.UserTests
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable<TestDtoWithPks>();
 
-			var dto = new TestDtoWithPks() { Id = Guid.NewGuid(), Number = 5, Test = "aaa" };
+			var dto = new TestDtoWithPks() { Id = TestData.Guid1, Number = 5, Test = "aaa" };
 			var id  = dto.Id;
 			var nr  = dto.Number;
 			db.Insert(dto);
@@ -131,7 +131,7 @@ namespace Tests.UserTests
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable<TestDtoWithPks>();
 
-			var dto = new TestDtoWithPks() { Id = Guid.NewGuid(), Number = 5, Test = "aaa" };
+			var dto = new TestDtoWithPks() { Id = TestData.Guid1, Number = 5, Test = "aaa" };
 			db.Insert(dto);
 
 			var existingDto = GetExistingDto(table, dto);
@@ -144,7 +144,7 @@ namespace Tests.UserTests
 			await using var db    = GetDataContext(context);
 			await using var table = db.CreateLocalTable<TestDtoWithPks>();
 
-			var dto = new TestDtoWithPks() { Id = Guid.NewGuid(), Number = 5, Test = "aaa" };
+			var dto = new TestDtoWithPks() { Id = TestData.Guid1, Number = 5, Test = "aaa" };
 			db.Insert(dto);
 
 			var existingDto = await GetExistingDtoAsync(table, dto, CancellationToken.None);

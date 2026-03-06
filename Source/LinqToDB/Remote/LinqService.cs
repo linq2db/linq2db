@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -79,6 +80,7 @@ namespace LinqToDB.Remote
 
 		#region ILinqService Members
 
+		[SuppressMessage("AsyncUsage", "AsyncFixer04:Fire-and-forget async call inside an using block", Justification = "False positive")]
 		public virtual Task<LinqServiceInfo> GetInfoAsync(string? configuration, CancellationToken cancellationToken)
 		{
 			using var ctx = CreateDataContext(configuration);
