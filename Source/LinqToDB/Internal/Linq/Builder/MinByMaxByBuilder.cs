@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -55,7 +56,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			// Create FirstOrDefault() or First() call
-			var firstCall = elementType.IsValueType && !buildInfo.IsSubQuery
+			var firstCall = !elementType.IsNullableOrReferenceType() && !buildInfo.IsSubQuery
 				? Methods.Queryable.First.MakeGenericMethod(elementType)
 				: Methods.Queryable.FirstOrDefault.MakeGenericMethod(elementType);
 
