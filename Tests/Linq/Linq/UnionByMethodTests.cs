@@ -1,5 +1,6 @@
 ﻿#if NET6_0_OR_GREATER
 
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -101,8 +102,37 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		[Test]
+		[ThrowsCannotBeConverted]
+		public void UnionByWithComparerShouldFail([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var left = new[]
+			{
+				new UnionByTable { Id = 1, Key = 10, Value = "a" },
+				new UnionByTable { Id = 2, Key = 20, Value = "b" },
+			};
+
+			var right = new[]
+			{
+				new UnionByTable { Id = 3, Key = 20, Value = "c" },
+				new UnionByTable { Id = 4, Key = 30, Value = "d" },
+			};
+
+			using var db         = GetDataContext(context);
+			using var leftTable  = db.CreateLocalTable("UnionByLeft",  left);
+			using var rightTable = db.CreateLocalTable("UnionByRight", right);
+
+			var comparer = EqualityComparer<int>.Default;
+
+			_= leftTable
+				.UnionBy(rightTable, x => x.Key, comparer)
+				.OrderBy(x => x.Key)
+				.ToList();
+		}
 	}
 }
 
 #endif
+
 

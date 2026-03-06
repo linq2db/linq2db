@@ -6,7 +6,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
@@ -40,6 +39,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (methodCall.Arguments.Count >= 3)
 			{
+				var comparerArg = methodCall.Arguments[2];
+				if (!builder.CanBeEvaluatedOnClient(comparerArg))
+					return BuildSequenceResult.NotSupported();
+
 				var comparer = builder.EvaluateExpression(methodCall.Arguments[2]);
 				if (comparer != null)
 					return BuildSequenceResult.NotSupported();

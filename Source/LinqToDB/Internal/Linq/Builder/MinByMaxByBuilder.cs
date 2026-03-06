@@ -2,7 +2,6 @@
 
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
@@ -13,10 +12,8 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsMethodCall(nameof(Queryable.MinBy), nameof(Queryable.MaxBy))]
 	sealed class MinByMaxByBuilder : MethodCallBuilder
 	{
-		static readonly MethodInfo[] _supportedMethods = { Methods.Queryable.MinBy, Methods.Queryable.MaxBy };
-
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsSameGenericMethod(_supportedMethods);
+			=> call.IsQueryable() && call.Arguments.Count == 2;
 
 		protected override BuildSequenceResult BuildMethodCall(
 			ExpressionBuilder builder,

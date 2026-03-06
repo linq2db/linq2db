@@ -7,7 +7,6 @@ using System.Linq.Expressions;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
 
 namespace LinqToDB.Internal.Linq.Builder
@@ -15,7 +14,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsMethodCall(nameof(Queryable.ExceptBy), nameof(Queryable.UnionBy), nameof(Queryable.IntersectBy))]
 	sealed class SetOperationByBuilder : MethodCallBuilder
 	{
-		private class UnionByTuple<T>
+		sealed class UnionByTuple<T>
 		{
 #pragma warning disable CS8618
 			public T Data { get; set; }
@@ -24,8 +23,8 @@ namespace LinqToDB.Internal.Linq.Builder
 #pragma warning restore CS8618
 		}
 
-		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable();
+		public static bool CanBuildMethod(MethodCallExpression call) 
+			=> call.IsQueryable() && call.Arguments.Count == 3;
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{

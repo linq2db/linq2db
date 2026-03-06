@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -70,10 +69,10 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query =
-			from p in db.Parent.LoadWith(p => p.Children)
-			from c in p.Children.CountBy(x => x.ParentID)
-			orderby c.Key
-			select new { p, c.Value };
+				from p in db.Parent.LoadWith(p => p.Children)
+				from c in p.Children.CountBy(x => x.ParentID)
+				orderby c.Key
+				select new { p, c.Value };
 
 			AssertQuery(query);
 		}
@@ -84,10 +83,10 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query =
-			from p in db.Parent.LoadWith(p => p.Children)
-			from c in p.Children.CountBy(x => x.ParentID)
-			where c.Value > 0
-			select new { p.ParentID, ChildCount = c.Value };
+				from p in db.Parent.LoadWith(p => p.Children)
+				from c in p.Children.CountBy(x => x.ParentID)
+				where c.Value > 0
+				select new { p.ParentID, ChildCount = c.Value };
 
 			AssertQuery(query);
 		}
@@ -98,9 +97,9 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query =
-			from p in db.Parent.LoadWith(p => p.Children)
-			from c in p.Children.Where(x => x.ChildID > 0).CountBy(x => x.ParentID)
-			select new { p.ParentID, c.Key, c.Value };
+				from p in db.Parent.LoadWith(p => p.Children)
+				from c in p.Children.Where(x => x.ChildID > 0).CountBy(x => x.ParentID)
+				select new { p.ParentID, c.Key, c.Value };
 
 			AssertQuery(query);
 		}
@@ -111,10 +110,10 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query =
-			from p in db.Parent.LoadWith(p => p.Children)
-			from c in p.Children.CountBy(x => x.ChildID)
-			orderby c.Key, c.Value
-			select new { ParentID = p.ParentID, ChildCount = c.Value };
+				from p in db.Parent.LoadWith(p => p.Children)
+				from c in p.Children.CountBy(x => x.ChildID)
+				orderby c.Key, c.Value
+				select new { ParentID = p.ParentID, ChildCount = c.Value };
 
 			AssertQuery(query);
 		}
@@ -125,12 +124,44 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query =
-			from p in db.Parent.LoadWith(p => p.Children)
-			from c in p.Children.CountBy(x => x.ChildID)
-			join p2 in db.Parent on p.ParentID equals p2.ParentID
-			select new { p2.ParentID, ChildIDCount = c.Value };
+				from p in db.Parent.LoadWith(p => p.Children)
+				from c in p.Children.CountBy(x => x.ChildID)
+				join p2 in db.Parent on p.ParentID equals p2.ParentID
+				select new { p2.ParentID, ChildIDCount = c.Value };
 
 			AssertQuery(query);
+		}
+
+		[ThrowsCannotBeConverted]
+		[Test]
+		public void CountByWithComparerShouldFail([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(CreateTestTableData());
+
+			var comparer = EqualityComparer<int>.Default;
+
+			_ = table
+				.CountBy(x => x.TestId, comparer)
+				.OrderBy(x => x.Key)
+				.ToList();
+		}
+
+		[ThrowsCannotBeConverted]
+		[Test]
+		public void CountByWithComparerAssociationShouldFail([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var comparer = EqualityComparer<int>.Default;
+
+			var query =
+				from p in db.Parent.LoadWith(p => p.Children)
+				from c in p.Children.CountBy(x => x.ParentID, comparer)
+				orderby c.Key
+				select new { p, c.Value };
+
+			_ = query.ToList();
 		}
 	}
 }

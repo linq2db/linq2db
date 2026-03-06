@@ -1,6 +1,7 @@
 ﻿#if NET6_0_OR_GREATER
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -106,6 +107,20 @@ namespace Tests.Linq
 				.OrderBy(x => x.TestId);
 
 			AssertQuery(query);
+		}
+
+		[Test]
+		[ThrowsCannotBeConverted]
+		public void IntersectByWithComparerShouldFail([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(CreateTestTableData());
+
+			var comparer = EqualityComparer<int>.Default;
+
+			_ = table
+				.IntersectBy(new[] { 20, 30 }, x => x.TestId, comparer)
+				.ToList();
 		}
 	}
 }

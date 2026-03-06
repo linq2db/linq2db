@@ -6,14 +6,13 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
-using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
 	[TestFixture]
-	public class DistinctByTests : TestBase
+	public class DistinctByMethodTests : TestBase
 	{
 		public class TestData
 		{
@@ -46,30 +45,43 @@ namespace Tests.Linq
 		[Test]
 		public void DistinctBy([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(TestData.Seed()))
-			{
-				var query = table
-					.OrderBy(t => t.Name)
-					.ThenByDescending(t => t.Date)
-					.DistinctBy(x => new { x.Id, x.Name });
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData.Seed());
 
-				AssertQuery(query);
-			}
+			var query = table
+				.OrderBy(t => t.Name)
+				.ThenByDescending(t => t.Date)
+				.DistinctBy(x => new { x.Id, x.Name });
+
+			AssertQuery(query);
 		}
 
 		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_DistinctByRequiresOrderBy)]
 		[Test]
 		public void DistinctByNoOrder([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(TestData.Seed()))
-			{
-				var query = table
-					.DistinctBy(x => new { x.Id, x.Name });
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData.Seed());
 
-				AssertQuery(query);
-			}
+			var query = table
+				.DistinctBy(x => new { x.Id, x.Name });
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ThrowsCannotBeConverted]
+		public void DistinctByWithComparerShouldFail([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData.Seed());
+
+			var comparer = EqualityComparer<int>.Default;
+
+			_ = table
+				.OrderBy(t => t.Name)
+				.DistinctBy(x => x.Id, comparer)
+				.ToList();
 		}
 
 	}
