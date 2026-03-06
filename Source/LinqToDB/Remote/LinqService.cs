@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -27,17 +28,16 @@ namespace LinqToDB.Remote
 	public class LinqService : ILinqService
 	{
 		private MappingSchema? _serializationMappingSchema;
-		private MappingSchema? _mappingSchema;
 
 		public bool    AllowUpdates    { get; set; }
 		public string? RemoteClientTag { get; set; }
 
 		public MappingSchema? MappingSchema
 		{
-			get => _mappingSchema;
+			get;
 			set
 			{
-				_mappingSchema = value;
+				field = value;
 				_serializationMappingSchema = value != null
 					? MappingSchema.CombineSchemas(Internal.Remote.SerializationMappingSchema.Instance, value)
 					: Internal.Remote.SerializationMappingSchema.Instance;
@@ -45,8 +45,8 @@ namespace LinqToDB.Remote
 		}
 
 		internal MappingSchema SerializationMappingSchema => _serializationMappingSchema ??=
-			_mappingSchema != null
-				? MappingSchema.CombineSchemas(Internal.Remote.SerializationMappingSchema.Instance, _mappingSchema)
+			MappingSchema != null
+				? MappingSchema.CombineSchemas(Internal.Remote.SerializationMappingSchema.Instance, MappingSchema)
 				: Internal.Remote.SerializationMappingSchema.Instance;
 
 		public static Func<string, Type?> TypeResolver = _ => null;
@@ -57,7 +57,7 @@ namespace LinqToDB.Remote
 
 		public LinqService(MappingSchema? mappingSchema)
 		{
-			_mappingSchema = mappingSchema;
+			MappingSchema = mappingSchema;
 		}
 
 		public virtual DataConnection CreateDataContext(string? configuration)
@@ -80,6 +80,7 @@ namespace LinqToDB.Remote
 
 		#region ILinqService Members
 
+		[SuppressMessage("AsyncUsage", "AsyncFixer04:Fire-and-forget async call inside an using block", Justification = "False positive")]
 		public virtual Task<LinqServiceInfo> GetInfoAsync(string? configuration, CancellationToken cancellationToken = default)
 		{
 			using var ctx = CreateDataContext(configuration);

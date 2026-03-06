@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -97,8 +98,6 @@ namespace LinqToDB.Internal.SchemaProvider
 			IncludedCatalogs      = GetHashSet(options.IncludedCatalogs, options.StringComparer);
 			ExcludedCatalogs      = GetHashSet(options.ExcludedCatalogs, options.StringComparer);
 			GenerateChar1AsString = options.GenerateChar1AsString;
-
-			var dbConnection = dataConnection.OpenDbConnection();
 
 			InitProvider(dataConnection, options);
 
@@ -357,7 +356,7 @@ namespace LinqToDB.Internal.SchemaProvider
 			{
 				DataSource                    = GetDataSourceName(dataConnection),
 				Database                      = GetDatabaseName  (dataConnection),
-				ServerVersion                 = dbConnection.ServerVersion,
+				ServerVersion                 = GetServerVersion (dataConnection),
 				Tables                        = tables,
 				Procedures                    = procedures,
 				ProviderSpecificTypeNamespace = GetProviderSpecificTypeNamespace(),
@@ -546,6 +545,7 @@ namespace LinqToDB.Internal.SchemaProvider
 			).ToList();
 		}
 
+		protected virtual string GetServerVersion (DataConnection dbConnection) => dbConnection.OpenDbConnection().ServerVersion;
 		protected virtual string GetDataSourceName(DataConnection dbConnection) => dbConnection.OpenDbConnection().DataSource;
 		protected virtual string GetDatabaseName  (DataConnection dbConnection) => dbConnection.OpenDbConnection().Database;
 

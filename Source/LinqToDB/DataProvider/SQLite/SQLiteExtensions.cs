@@ -1,3 +1,4 @@
+// TODO: V7: update applicable methods to return affected rows count instead of void/Task
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;

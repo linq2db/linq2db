@@ -459,6 +459,14 @@ dotnet_diagnostic.IDE1006.severity = none # IDE1006: Naming rule violation
 # LindhartAnalyserMissingAwaitWarningVariable: Possible unwanted Task returned from method.
 dotnet_diagnostic.LindhartAnalyserMissingAwaitWarningVariable.severity = error
 ################################################################################################
+# AsyncFixer: https://github.com/semihokur/AsyncFixer
+################################################################################################
+dotnet_diagnostic.AsyncFixer01.severity = none # Unnecessary async/await usage
+dotnet_diagnostic.AsyncFixer02.severity = error # Blocking calls inside async methods
+dotnet_diagnostic.AsyncFixer03.severity = error # Async void methods and delegates
+dotnet_diagnostic.AsyncFixer04.severity = error # Unawaited async call in using block
+dotnet_diagnostic.AsyncFixer05.severity = error # Nested Task from TaskFactory.StartNew
+dotnet_diagnostic.AsyncFixer06.severity = error # Task<T> to Task implicit conversion
 
 # ReSharper properties
 resharper_csharp_allow_far_alignment = true
@@ -551,5 +559,9 @@ dotnet_diagnostic.MA0176.severity = none # MA0176: Optimize guid creation
 
 dotnet_diagnostic.SYSLIB1045.severity = none # SYSLIB1045: Convert to 'GeneratedRegexAttribute'.
 
-[Tests/**.vb]
-dotnet_diagnostic.CA2224.severity = none # CA2224: Override Equals on overloading operator equals // https://github.com/dotnet/roslyn-analyzers/issues/6778
+# TODO: too many/don't care
+dotnet_diagnostic.AsyncFixer01.severity = none # AsyncFixer01: Unnecessary async/await usage
+dotnet_diagnostic.AsyncFixer02.severity = none # AsyncFixer02: Blocking calls inside async methods
+dotnet_diagnostic.AsyncFixer04.severity = none # AsyncFixer04: Unawaited async call in using block
+dotnet_diagnostic.AsyncFixer06.severity = none # AsyncFixer06: Task<T> to Task implicit conversion
+dotnet_diagnostic.LindhartAnalyserMissingAwaitWarningVariable.severity = none # LindhartAnalyserMissingAwaitWarningVariable: Task that was inserted into a variable. This variable might not be awaited

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq.Expressions;
+using System.Threading;
 
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
@@ -72,21 +74,36 @@ namespace LinqToDB.Reflection
 
 		#region Items
 
-		public List<MemberAccessor>    Members       { get; } = new();
+		public List<MemberAccessor>    Members       { get; private set; } = new();
 
-		readonly ConcurrentDictionary<string,MemberAccessor> _membersByName = new(StringComparer.Ordinal);
+		readonly Lock _newMemberLock = new();
+		readonly ConcurrentDictionary<string, MemberAccessor> _membersByName = new(StringComparer.Ordinal);
 
-		public MemberAccessor this[string memberName] =>
-			_membersByName.GetOrAdd(
-				memberName,
-				static (name, @this) =>
-				{
-					var ma = new MemberAccessor(@this, name, ed: null);
-					@this.Members.Add(ma);
-					return ma;
-				},
-				this
-			);
+		public MemberAccessor GetOrCreateMemberAccessor(string memberName)
+		{
+			if (_membersByName.TryGetValue(memberName, out var memberAccessor))
+				return memberAccessor;
+
+			lock (_newMemberLock)
+			{
+				if (_membersByName.TryGetValue(memberName, out memberAccessor))
+					return memberAccessor;
+
+				memberAccessor = new MemberAccessor(this, memberName, null);
+				// workaround for
+				// https://github.com/linq2db/linq2db/issues/5361
+				// replace public instance
+				Members = [.. Members, memberAccessor];
+
+				if (!_membersByName.TryAdd(memberName, memberAccessor))
+					throw new InvalidOperationException($"Failed to insert MemberAccessor for '{memberName}' member");
+			}
+
+			return memberAccessor;
+		}
+
+		[Obsolete($"Use {nameof(GetOrCreateMemberAccessor)} method instead"), EditorBrowsable(EditorBrowsableState.Never)]
+		public MemberAccessor this[string memberName] => GetOrCreateMemberAccessor(memberName);
 
 		public MemberAccessor? GetMemberByName(string memberName)
 		{

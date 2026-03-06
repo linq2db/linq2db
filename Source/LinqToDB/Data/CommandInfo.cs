@@ -1012,7 +1012,9 @@ namespace LinqToDB.Data
 					}
 
 					var genericMethod = valueMethodInfo.MakeGenericMethod(elementType);
+#pragma warning disable LindhartAnalyserMissingAwaitWarningVariable // Possible unwanted Task returned from method.
 					var task          = genericMethod.InvokeExt<Task>(this, new object[] { rd, cancellationToken });
+#pragma warning restore LindhartAnalyserMissingAwaitWarningVariable // Possible unwanted Task returned from method.
 
 					await task.ConfigureAwait(false);
 

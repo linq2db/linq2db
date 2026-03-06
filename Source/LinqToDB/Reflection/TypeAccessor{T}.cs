@@ -7,6 +7,8 @@ using LinqToDB.Internal.Extensions;
 
 namespace LinqToDB.Reflection
 {
+	// TODO: v7: move to internal namespace (including related types) and refactor
+	// https://github.com/linq2db/linq2db/issues/5361
 	public sealed class TypeAccessor<T> : TypeAccessor
 	{
 		static readonly IReadOnlyList<MemberInfo> _members = GetTypeMembers();
@@ -95,10 +97,8 @@ namespace LinqToDB.Reflection
 			}
 
 			foreach (var pi in interfacePropertiesList)
-			{
 				if (pi != null && uniqueNames.Add(pi.Name))
 					members.Add(pi);
-			}
 
 			return members;
 
@@ -106,7 +106,7 @@ namespace LinqToDB.Reflection
 			{
 				var removed = true;
 				foreach (var accessor in ifaceAccessors)
-					removed = unmappedAccessors.Remove(accessor) && removed;
+					removed &= unmappedAccessors.Remove(accessor);
 
 				return removed;
 			}

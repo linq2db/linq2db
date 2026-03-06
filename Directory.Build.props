@@ -179,6 +179,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="AsyncFixer" PrivateAssets="All" />
+		<PackageReference Include="Lindhart.Analyser.MissingAwaitWarning" PrivateAssets="All" />
 		<PackageReference Include="Meziantou.Analyzer" PrivateAssets="All" />
 		<PackageReference Include="Meziantou.Polyfill" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" PrivateAssets="All" />

@@ -263,6 +263,9 @@ namespace LinqToDB.Reflection
 			}
 		}
 
+#pragma warning disable CS3016 // Arrays as attribute arguments is not CLS-compliant
+		[MemberNotNull(nameof(_getter), nameof(_setter))]
+#pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
 		void SetExpressions()
 		{
 			// lazy init as those delegates used in rare cases and compilation is expensive
@@ -302,23 +305,20 @@ namespace LinqToDB.Reflection
 		#region Public Properties
 
 		public MemberInfo              MemberInfo       { get; private set; }
-		public TypeAccessor            TypeAccessor     { get; private set; }
+		public TypeAccessor            TypeAccessor     { get; }
 		public bool                    HasGetter        { get; private set; }
 		public bool                    HasSetter        { get; private set; }
 		public Type                    Type             { get; private set; }
 		public bool                    IsComplex        { get; private set; }
 
-		public string Name
-		{
-			get { return MemberInfo.Name; }
-		}
+		public string Name => MemberInfo.Name;
 
 		#endregion
 
 		#region Set/Get Value
 
-		private Lazy<Func<object, object?>>?   _getter;
-		private Lazy<Action<object, object?>>? _setter;
+		private Lazy<Func<object, object?>>   _getter;
+		private Lazy<Action<object, object?>> _setter;
 
 		private Expression            _getterExpression;
 		private ParameterExpression[] _getterArguments;
@@ -344,12 +344,12 @@ namespace LinqToDB.Reflection
 
 		public virtual object? GetValue(object o)
 		{
-			return _getter!.Value(o);
+			return _getter.Value(o);
 		}
 
 		public virtual void SetValue(object o, object? value)
 		{
-			_setter!.Value(o, value);
+			_setter.Value(o, value);
 		}
 
 		#endregion

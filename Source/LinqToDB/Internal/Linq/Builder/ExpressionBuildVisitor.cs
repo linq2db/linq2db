@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -2288,12 +2287,23 @@ namespace LinqToDB.Internal.Linq.Builder
 								return base.VisitUnary(node);
 							}
 
-							var castTo = MappingSchema.GetDbDataType(node.Type);
-
-							if (!castTo.EqualsDbOnly(SqlDataType.MakeUndefined(node.Type).Type))
+							if (TryCastTo(placeholder, node.Type, node.Type, out var casted))
 							{
-								var sql = PseudoFunctions.MakeCast(placeholder.Sql, castTo);
-								return Visit(CreatePlaceholder(sql, node));
+								return Visit(casted);
+							}
+
+							var unwrapped = node.Type.UnwrappedNullableType;
+							if (unwrapped.IsEnum)
+							{
+								var enumMappingType = Converter.GetDefaultMappingFromEnumType(MappingSchema, unwrapped);
+
+								if (enumMappingType != null)
+								{
+									if (TryCastTo(placeholder, enumMappingType, node.Type, out casted))
+									{
+										return Visit(casted);
+									}
+								}
 							}
 							}
 					}
@@ -2313,6 +2323,22 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 			return base.VisitUnary(node);
+
+			// Local functions
+
+			bool TryCastTo(SqlPlaceholderExpression placeholder, Type toType, Type resultType, [NotNullWhen(true)] out Expression? casted)
+			{
+				var castTo = MappingSchema.GetDbDataType(toType);
+				if (!castTo.EqualsDbOnly(SqlDataType.MakeUndefined(toType).Type))
+				{
+					var sql = PseudoFunctions.MakeCast(placeholder.Sql, castTo);
+					casted = CreatePlaceholder(sql, node).WithType(resultType);
+					return true;
+				}
+
+				casted = null;
+				return false;
+			}
 		}
 
 		protected override Expression VisitDefault(DefaultExpression node)
