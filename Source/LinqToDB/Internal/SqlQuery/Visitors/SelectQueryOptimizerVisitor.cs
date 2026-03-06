@@ -1648,6 +1648,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
+			if (!subQuery.HasGroupBy() && QueryHelper.IsAggregationQuery(subQuery))
+			{
+				if (parentQuery.HasWhere() || parentQuery.HasGroupBy() || parentQuery.HasHaving() || !parentQuery.IsSingleTableQueryWithoutJoins())
+					return false;
+			}
+
 			// Check columns
 			//
 
