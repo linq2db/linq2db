@@ -6,14 +6,13 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Internal.Common;
-using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
 	[TestFixture]
-	public class DistinctByTests : TestBase
+	public class DistinctByMethodTests : TestBase
 	{
 		public class TestData
 		{
@@ -70,6 +69,20 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[Test]
+		[ThrowsCannotBeConverted]
+		public void DistinctByWithComparerShouldFail([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(TestData.Seed());
+
+			var comparer = EqualityComparer<int>.Default;
+
+			_ = table
+				.OrderBy(t => t.Name)
+				.DistinctBy(x => x.Id, comparer)
+				.ToList();
+		}
 	}
 }
 

@@ -24,6 +24,16 @@ namespace LinqToDB.Internal.Common
 			return expression;
 		}
 
+		public static Expression EnsureQueryable(Expression sequence, Type elementType)
+		{
+			if (typeof(IQueryable<>).IsSameOrParentOf(sequence.Type))
+				return sequence;
+
+			return Expression.Call(
+				Methods.Queryable.AsQueryable.MakeGenericMethod(elementType),
+				sequence);
+		}
+
 		public static Expression EnsureEnumerableType(Expression expression)
 		{
 			var elementType = TypeHelper.GetEnumerableElementType(expression.Type);
