@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace LinqToDB.Internal.Extensions
 {
@@ -8,17 +8,9 @@ namespace LinqToDB.Internal.Extensions
 			Nullable.GetUnderlyingType(type) ?? type;
 
 		public static Type MakeNullable(this Type type) =>
-			type.IsNullableOrReferenceType()
+			type.IsNullableOrReferenceType
 				? type
 				: typeof(Nullable<>).MakeGenericType(type);
-
-		/// <summary>
-		/// Returns <see langword="true"/> if type is reference type or <see cref="Nullable{T}"/>.
-		/// </summary>
-		/// <param name="type">Type to test.</param>
-		/// <returns><see langword="true"/> if type is reference type or <see cref="Nullable{T}"/>.</returns>
-		internal static bool IsNullableOrReferenceType(this Type type) =>
-			!type.IsValueType || type.IsNullableType;
 
 		/// <summary>
 		/// Wraps type into <see cref="Nullable{T}"/> class.
@@ -36,6 +28,13 @@ namespace LinqToDB.Internal.Extensions
 
 		extension(Type type)
 		{
+			/// <summary>
+			/// Returns <see langword="true"/> if type is reference type or <see cref="Nullable{T}"/>.
+			/// </summary>
+			/// <returns><see langword="true"/> if type is reference type or <see cref="Nullable{T}"/>.</returns>
+			internal bool IsNullableOrReferenceType =>
+				!type.IsValueType || type.IsNullableType;
+
 			/// <summary>
 			///		Returns the underlying type argument of the specified potentially nullable type,
 			///		or the type itself if it is not nullable.

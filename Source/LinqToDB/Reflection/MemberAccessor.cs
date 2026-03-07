@@ -51,7 +51,7 @@ namespace LinqToDB.Reflection
 				MemberInfo = lastInfo.member;
 				Type       = lastInfo.type;
 
-				var checkNull = infos.Take(infos.Length - 1).Any(info => info.type.IsNullableOrReferenceType());
+				var checkNull = infos.Take(infos.Length - 1).Any(info => info.type.IsNullableOrReferenceType);
 
 				// Build getter.
 				//
@@ -67,7 +67,7 @@ namespace LinqToDB.Reflection
 						if (i == infos.Length - 1)
 							return Expression.Assign(ret, next);
 
-						if (next.Type.IsNullableOrReferenceType())
+						if (next.Type.IsNullableOrReferenceType)
 						{
 							var local = Expression.Variable(next.Type);
 
@@ -123,7 +123,7 @@ namespace LinqToDB.Reflection
 							}
 							else
 							{
-								if (next.Type.IsNullableOrReferenceType())
+								if (next.Type.IsNullableOrReferenceType)
 								{
 									var local = Expression.Variable(next.Type);
 

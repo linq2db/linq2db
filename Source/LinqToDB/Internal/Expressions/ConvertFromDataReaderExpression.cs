@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Data.Common;
 using System.Linq.Expressions;
@@ -353,7 +353,7 @@ namespace LinqToDB.Internal.Expressions
 
 		public ConvertFromDataReaderExpression MakeNullable()
 		{
-			if (!Type.IsNullableOrReferenceType())
+			if (!Type.IsNullableOrReferenceType)
 			{
 				var type = Type.AsNullable();
 				return new ConvertFromDataReaderExpression(type, _idx, Converter, DataContextParam, _dataReaderParam, true);

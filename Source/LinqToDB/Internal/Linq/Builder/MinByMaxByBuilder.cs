@@ -56,7 +56,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			// Create FirstOrDefault() or First() call
-			var firstCall = !elementType.IsNullableOrReferenceType() && !buildInfo.IsSubQuery
+			var firstCall = !elementType.IsNullableOrReferenceType && !buildInfo.IsSubQuery
 				? Methods.Queryable.First.MakeGenericMethod(elementType)
 				: Methods.Queryable.FirstOrDefault.MakeGenericMethod(elementType);
 

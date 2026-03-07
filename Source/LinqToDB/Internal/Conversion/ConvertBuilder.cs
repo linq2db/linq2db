@@ -693,7 +693,7 @@ namespace LinqToDB.Internal.Conversion
 					?? mappingSchema.GetDefaultFromEnumType(typeof(Enum))
 					?? Enum.GetUnderlyingType(type);
 
-			if ((enumType.IsNullableType || hasNullValue) && !defaultType.IsNullableOrReferenceType())
+			if ((enumType.IsNullableType || hasNullValue) && !defaultType.IsNullableOrReferenceType)
 				defaultType = defaultType.AsNullable();
 
 			return defaultType;

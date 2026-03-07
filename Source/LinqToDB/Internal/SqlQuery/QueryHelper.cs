@@ -1519,7 +1519,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		internal static bool TypeCanBeNull(Type type)
 		{
-			return type.IsNullableOrReferenceType() || type is INullable;
+			return type.IsNullableOrReferenceType || type is INullable;
 		}
 
 		public static bool CalcCanBeNull(Type? type, bool? canBeNull, ParametersNullabilityType isNullable, IEnumerable<bool> nullInfo)

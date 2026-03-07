@@ -60,7 +60,7 @@ namespace LinqToDB.Mapping
 				value = mapValues.FirstOrDefault(f => f.MapValues.Any(a => a.Value == null))?.OrigValue;
 			}
 
-			if (value == null && !type.IsNullableOrReferenceType())
+			if (value == null && !type.IsNullableOrReferenceType)
 				value = ReflectionExtensions.GetDefaultValue(type);
 
 			_values[type] = value;

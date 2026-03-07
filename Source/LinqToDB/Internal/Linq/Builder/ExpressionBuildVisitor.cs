@@ -1840,7 +1840,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				return null;
 			}
 
-			if (!notNullPath.Type.IsNullableOrReferenceType())
+			if (!notNullPath.Type.IsNullableOrReferenceType)
 			{
 				notNullPath = Expression.Convert(notNullPath, typeof(Nullable<>).MakeGenericType(notNullPath.Type));
 			}

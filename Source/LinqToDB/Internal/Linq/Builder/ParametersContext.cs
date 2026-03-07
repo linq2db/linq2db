@@ -208,7 +208,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (paramType.IsNullableType && !paramDataType.SystemType.IsNullableType)
 						paramDataType = paramDataType.WithSystemType(paramDataType.SystemType.MakeNullable());
-					else if (!paramType.IsNullableOrReferenceType() && paramDataType.SystemType.IsNullableType)
+					else if (!paramType.IsNullableOrReferenceType && paramDataType.SystemType.IsNullableType)
 						paramDataType = paramDataType.WithSystemType(paramDataType.SystemType.UnwrapNullableType());
 
 					var updateType = true;
@@ -251,7 +251,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 							if (providerValueGetter.Type.IsNullableType && providerValueGetter.Type.UnwrapNullableType() != memberType)
 							{
-								var toType = !memberType.IsNullableOrReferenceType()
+								var toType = !memberType.IsNullableOrReferenceType
 									? memberType.MakeNullable()
 									: memberType;
 

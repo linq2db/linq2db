@@ -708,7 +708,7 @@ namespace LinqToDB.Internal.Extensions
 #if NET8_0_OR_GREATER
 		public static object? GetDefaultValue(this Type type)
 		{
-			if (type.IsNullableOrReferenceType())
+			if (type.IsNullableOrReferenceType)
 				return null;
 
 			return RuntimeHelpers.GetUninitializedObject(type);
@@ -729,7 +729,7 @@ namespace LinqToDB.Internal.Extensions
 
 		public static object? GetDefaultValue(this Type type)
 		{
-			if (type.IsNullableOrReferenceType())
+			if (type.IsNullableOrReferenceType)
 				return null;
 
 			var dtype  = typeof(GetDefaultValueHelper<>).MakeGenericType(type);

@@ -219,7 +219,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		protected virtual Expression MakeIsNullExpression(Expression objExpression, MemberInfo memberInfo, ColumnDescriptor column)
 		{
 			var memberExpr = GetMemberExpression((SqlGenericConstructorExpression)objExpression, memberInfo);
-			if (!memberExpr.Type.IsNullableOrReferenceType())
+			if (!memberExpr.Type.IsNullableOrReferenceType)
 			{
 				memberExpr = Expression.Convert(memberExpr, memberExpr.Type.AsNullable());
 			}

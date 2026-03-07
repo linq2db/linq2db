@@ -840,7 +840,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 								{
 									var dbType = QueryHelper.GetDbDataType(column.Expression, _mappingSchema);
 									var type   = dbType.SystemType;
-									if (!type.IsNullableOrReferenceType())
+									if (!type.IsNullableOrReferenceType)
 										type = type.AsNullable();
 									nullValue = new SqlValue(dbType.WithSystemType(type), null);
 								}

@@ -847,7 +847,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			bool IsAcceptableType(Type type)
 			{
 				if (!forSearch)
-					return type.IsNullableOrReferenceType();
+					return type.IsNullableOrReferenceType;
 
 				if (MappingSchema.IsCollectionType(type))
 					return true;

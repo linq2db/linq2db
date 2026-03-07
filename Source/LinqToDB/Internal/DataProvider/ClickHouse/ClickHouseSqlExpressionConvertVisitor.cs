@@ -332,7 +332,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 					if (toTypeExpr is SqlDataType sqlDataType)
 					{
 						toType = sqlDataType.Type;
-						if (toType.DataType == DataType.Undefined && toType.SystemType.IsNullableOrReferenceType())
+						if (toType.DataType == DataType.Undefined && toType.SystemType.IsNullableOrReferenceType)
 						{
 							sqlDataType = MappingSchema.GetDataType(toType.SystemType.UnwrapNullableType());
 							toType      = sqlDataType.Type;

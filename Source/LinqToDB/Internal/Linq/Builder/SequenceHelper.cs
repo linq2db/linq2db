@@ -927,7 +927,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public static Expression MakeNotNullCondition(Expression expr)
 		{
-			if (!expr.Type.IsNullableOrReferenceType())
+			if (!expr.Type.IsNullableOrReferenceType)
 			{
 				expr = expr is SqlPlaceholderExpression placeholder
 					? placeholder.MakeNullable()

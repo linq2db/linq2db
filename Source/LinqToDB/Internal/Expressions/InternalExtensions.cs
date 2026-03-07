@@ -376,8 +376,9 @@ namespace LinqToDB.Internal.Expressions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsNullValue(this Expression expr)
 		{
-			return (expr is ConstantExpression { Value: null })
-				|| (expr is DefaultExpression or DefaultValueExpression && expr.Type.IsNullableOrReferenceType());
+			return expr is 
+				ConstantExpression { Value: null }
+				or ((DefaultExpression or DefaultValueExpression) and { Type.IsNullableOrReferenceType: true });
 		}
 
 		public static Expression? GetArgumentByName(this MethodCallExpression methodCall, string parameterName)

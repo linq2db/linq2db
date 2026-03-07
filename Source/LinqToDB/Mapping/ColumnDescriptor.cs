@@ -668,7 +668,7 @@ namespace LinqToDB.Mapping
 
 				if (assignable || fromType.IsAssignableFrom(getterExpr.Type.UnwrapNullableType()))
 				{
-					if (!valueConverter.HandlesNulls && getterExpr.Type.IsNullableOrReferenceType())
+					if (!valueConverter.HandlesNulls && getterExpr.Type.IsNullableOrReferenceType)
 					{
 						toProvider = mappingSchema.AddNullCheck(toProvider);
 					}

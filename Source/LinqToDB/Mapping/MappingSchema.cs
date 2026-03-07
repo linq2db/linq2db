@@ -327,7 +327,7 @@ namespace LinqToDB.Mapping
 				}
 			}
 
-			return type.IsNullableOrReferenceType();
+			return type.IsNullableOrReferenceType;
 		}
 
 		/// <summary>
@@ -859,7 +859,7 @@ namespace LinqToDB.Mapping
 		void SetNullableConversion(DbDataType from, DbDataType to, LambdaExpression conversion, ConversionType conversionType)
 		{
 			if (to.SystemType != typeof(DataParameter)
-				|| from.SystemType.IsNullableOrReferenceType())
+				|| from.SystemType.IsNullableOrReferenceType)
 				return;
 
 			// generate T? -> DataParameter conversion from T -> DataParameter conversion

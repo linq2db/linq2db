@@ -175,12 +175,12 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			// in LINQ Min, Max, Avg aggregates throw exception on empty set(so Sum and Count are exceptions which return 0)
 
-			if (expression.Type.IsNullableOrReferenceType())
+			if (expression.Type.IsNullableOrReferenceType)
 				return expression;
 			
 			var checkExpression = expression;
 
-			if (expression.Type.IsValueType && !expression.Type.IsNullableOrReferenceType())
+			if (expression.Type.IsValueType)
 			{
 				checkExpression = Expression.Convert(expression, expression.Type.AsNullable());
 			}
@@ -308,7 +308,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							_                          => "MAX",
 						};
 
-						if (!info.IsGroupBy && argumentValue.SystemType?.IsNullableOrReferenceType() == false && functionName is "AVG" or "MIN" or "MAX")
+						if (!info.IsGroupBy && argumentValue.SystemType?.IsNullableOrReferenceType == false && functionName is "AVG" or "MIN" or "MAX")
 						{
 							composer.SetValidation(p => GenerateNullCheckIfNeeded(p, methodName));
 						}

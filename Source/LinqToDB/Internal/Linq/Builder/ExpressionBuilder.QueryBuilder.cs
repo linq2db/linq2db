@@ -552,7 +552,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var canBeNull = nullability.CanBeNull(placeholder.Sql) || placeholder.Type.IsNullableType;
 
-					if (canBeNull && valueType != placeholder.Type && !valueType.IsNullableOrReferenceType())
+					if (canBeNull && valueType != placeholder.Type && !valueType.IsNullableOrReferenceType)
 					{
 						valueType = valueType.AsNullable();
 					}
