@@ -8,7 +8,6 @@ using System.Reflection;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Reflection;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
@@ -16,7 +15,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class DistinctByBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsSameGenericMethod(Methods.Enumerable.DistinctBy, Methods.Queryable.DistinctBy);
+			=> call.IsQueryable() && call.Arguments.Count == 2;
 
 		static readonly MethodInfo _buildDistinctByViaRowNumberMethodInfo = MemberHelper.MethodOfGeneric(() => BuildDistinctByViaRowNumber<int>(null!, null!, null!, null!));
 
