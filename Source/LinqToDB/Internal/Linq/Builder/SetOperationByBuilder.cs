@@ -40,14 +40,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			var secondExpression = methodCall.Arguments[1];
 			var keySelector      = methodCall.Arguments[2].UnwrapLambda();
 
-			Expression transformedExpression;
-
-			if (methodCall.Method.Name == nameof(Queryable.ExceptBy))
-				transformedExpression = BuildExceptBy(sourceExpression, secondExpression, keySelector, sourceType, keyType);
-			else if (methodCall.Method.Name == nameof(Queryable.IntersectBy))
-				transformedExpression = BuildIntersectBy(sourceExpression, secondExpression, keySelector, sourceType, keyType);
-			else
-				transformedExpression = BuildUnionBy(sourceExpression, secondExpression, keySelector, sourceType);
+			var transformedExpression = methodCall.Method.Name switch
+			{
+				nameof(Queryable.ExceptBy)    => BuildExceptBy   (sourceExpression, secondExpression, keySelector, sourceType, keyType),
+				nameof(Queryable.IntersectBy) => BuildIntersectBy(sourceExpression, secondExpression, keySelector, sourceType, keyType),
+				_                             => BuildUnionBy    (sourceExpression, secondExpression, keySelector, sourceType),
+			};
 
 			return builder.TryBuildSequence(new BuildInfo(buildInfo, transformedExpression));
 		}
@@ -224,7 +222,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var sourceOrderBy = BuildOrderByPart(source, dataBody);
 			var orderByList = new System.Collections.Generic.List<(Expression expr, bool isDescending)>
 			{
-				(Expression.PropertyOrField(rowItem, nameof(UnionByTuple<>.SourceIndex)), false)
+				(Expression.PropertyOrField(rowItem, nameof(UnionByTuple<>.SourceIndex)), false),
 			};
 
 			if (sourceOrderBy.Length == 0)
