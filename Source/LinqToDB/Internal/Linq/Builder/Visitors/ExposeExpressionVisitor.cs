@@ -303,6 +303,32 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 			return result;
 		}
 
+		Expression? ConvertUnary(UnaryExpression node)
+		{
+			var l = LinqToDB.Linq.Expressions.ConvertUnary(MappingSchema, node);
+			if (l != null)
+			{
+				var body = l.Body.Unwrap();
+				var expr = body.Transform((l, node), static (context, wpi) =>
+				{
+					if (wpi.NodeType == ExpressionType.Parameter)
+					{
+						if (context.l.Parameters[0] == wpi)
+							return context.node.Operand;
+					}
+
+					return wpi;
+				});
+
+				if (expr.Type != node.Type)
+					expr = new ChangeTypeExpression(expr, node.Type);
+
+				return expr;
+			}
+
+			return null;
+		}
+
 		Expression? ConvertBinary(BinaryExpression node)
 		{
 			var l = LinqToDB.Linq.Expressions.ConvertBinary(MappingSchema, node);
@@ -775,6 +801,15 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 					}
 				
 					break;
+				}
+			}
+
+			if (_includeConvert)
+			{
+				var converted = ConvertUnary(node);
+				if (converted != null)
+				{
+					return Visit(converted);
 				}
 			}
 
