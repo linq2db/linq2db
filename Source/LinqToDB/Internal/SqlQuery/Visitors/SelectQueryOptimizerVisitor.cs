@@ -1094,7 +1094,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				var sql   = (SelectQuery)joinSource.Source;
 
-				var isAgg = sql.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowExpression(c.Expression));
+				var isAgg    = sql.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowExpression(c.Expression));
+				var hasRealAgg = sql.Select.Columns.Any(static c => QueryHelper.ContainsAggregationFunction(c.Expression));
 
 				var isApplySupported = _providerFlags.IsApplyJoinSupported;
 
@@ -1209,7 +1210,22 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				// we cannot optimize apply because reference to parent sources are used inside the query
 				if (QueryHelper.IsDependsOnOuterSources(sql, whereToIgnore))
+				{
+					// Try to decorrelate inner join conditions that reference outer sources.
+					// For providers that don't support APPLY, we can extract correlated equality predicates
+					// from inner join conditions and move them to the outer join's ON clause.
+					// We allow window functions (isAgg) — their PARTITION BY will be extended with correlated columns.
+					if (!_providerFlags.IsApplyJoinSupported && !doNotEmulate && rnExpression == null && !sql.HasGroupBy() && !sql.Select.IsDistinct)
+					{
+						if (TryDecorrelateApplyJoinConditions(joinTable, sql, accessible))
+						{
+							optimized = true;
+							return optimized;
+						}
+					}
+
 					return optimized;
+				}
 
 				var searchCondition = new List<ISqlPredicate>();
 
@@ -1243,15 +1259,37 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 									return optimized;
 								}
 
-								// check that used key in grouping
+								// If the correlated inner column is not yet in GROUP BY, add it.
+								// This is safe because the original APPLY WHERE filters to a single
+								// outer value, so adding the correlated column to GROUP BY does not
+								// change the grouping semantics within each outer row's scope.
 								if (!sql.GroupBy.Items.Any(gi => QueryHelper.SameWithoutNullablity(gi, expExpr.Expr1) || QueryHelper.SameWithoutNullablity(gi, expExpr.Expr2)))
 								{
-									return optimized;
+									var expr1 = SequenceHelper.UnwrapNullability(expExpr.Expr1);
+									var expr2 = SequenceHelper.UnwrapNullability(expExpr.Expr2);
+
+									var dep1 = QueryHelper.IsDependsOnOuterSources(expr1, currentSources: accessible);
+									var dep2 = QueryHelper.IsDependsOnOuterSources(expr2, currentSources: accessible);
+
+									// Add the inner (non-outer) expression to GROUP BY
+									if (dep1 && !dep2)
+										sql.GroupBy.Expr(expr2);
+									else if (!dep1 && dep2)
+										sql.GroupBy.Expr(expr1);
+									else
+										return optimized;
 								}
 							}
 							else if (isAgg)
 							{
-								return optimized;
+								// Real aggregates (SUM, COUNT, ...) cannot be decorrelated this way
+								if (hasRealAgg)
+									return optimized;
+
+								// Window-only: we can decorrelate by extending PARTITION BY later.
+								// We only allow equality predicates for this.
+								if (predicate is not SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal })
+									return optimized;
 							}
 
 							if (sql.Select.IsDistinct)
@@ -1323,6 +1361,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 				}
 
+				// For window-only queries (isAgg && !hasRealAgg), extend window PARTITION BY
+				// with correlated inner columns so decorrelation preserves correct semantics.
+				if (isAgg && !hasRealAgg && searchCondition.Count > 0)
+				{
+					ExtendWindowPartitionByFromPredicates(sql, searchCondition, accessible);
+				}
+
 				var toCheck = QueryHelper.EnumerateAccessibleSources(sql).ToList();
 
 				for (int i = 0; i < searchCondition.Count; i++)
@@ -1343,6 +1388,347 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 
 			return optimized;
+		}
+
+		/// <summary>
+		/// Attempt to decorrelate an APPLY join by extracting correlated equality predicates
+		/// from inner join conditions and WHERE clause, then converting to a standard join.
+		/// This handles the case where IsDependsOnOuterSources fails because inner JOIN ON
+		/// conditions reference outer sources (e.g. LEFT JOIN x ON x.ID = outer.ID).
+		/// </summary>
+		bool TryDecorrelateApplyJoinConditions(SqlJoinedTable joinTable, SelectQuery sql, List<ISqlTableSource> accessible)
+		{
+			// Collect all correlated predicates from inner join conditions and WHERE
+			var extractedPredicates = new List<ISqlPredicate>();
+
+			// Scan inner join conditions for correlated predicates
+			foreach (var tableSource in sql.From.Tables)
+			{
+				foreach (var innerJoin in tableSource.Joins)
+				{
+					if (!ExtractCorrelatedPredicates(innerJoin.Condition, accessible, extractedPredicates))
+						return false;
+				}
+			}
+
+			// Also extract correlated predicates from WHERE clause
+			if (!ExtractCorrelatedPredicates(sql.Where.SearchCondition, accessible, extractedPredicates))
+				return false;
+
+			if (extractedPredicates.Count == 0)
+			{
+				// No correlated predicates found at the outer level.
+				// Try to decorrelate through a nested FROM subquery.
+				return TryDecorrelateNestedApplyJoin(joinTable, sql, accessible);
+			}
+
+			// After extraction, verify that no outer references remain
+			var checkIgnore = new List<IQueryElement> { sql.Where, sql.Select };
+			foreach (var tableSource in sql.From.Tables)
+			{
+				foreach (var innerJoin in tableSource.Joins)
+					checkIgnore.Add(innerJoin.Condition);
+			}
+
+			if (QueryHelper.IsDependsOnOuterSources(sql, checkIgnore))
+				return false;
+
+			// For queries with window functions, extend PARTITION BY with inner correlated columns
+			// so that decorrelation preserves correct window semantics.
+			ExtendWindowPartitionByFromPredicates(sql, extractedPredicates, accessible);
+
+			// Correct references for extracted predicates so they go through the subquery columns
+			var toCheck = QueryHelper.EnumerateAccessibleSources(sql).ToList();
+
+			for (int i = 0; i < extractedPredicates.Count; i++)
+			{
+				var predicate    = extractedPredicates[i];
+				var newPredicate = _movingOuterPredicateVisitor.CorrectReferences(sql, toCheck, predicate);
+				extractedPredicates[i] = newPredicate;
+			}
+
+			// Convert apply join to standard join
+			var newJoinType = ConvertApplyJoinType(joinTable.JoinType);
+
+			joinTable.JoinType = newJoinType;
+			joinTable.Condition.Predicates.AddRange(extractedPredicates);
+
+			return true;
+		}
+
+		/// <summary>
+		/// Decorrelate an APPLY join where the correlation is inside a nested FROM subquery.
+		/// Pattern: outer query wraps a single FROM subquery that contains correlated predicates.
+		/// Example: ExceptBy/IntersectBy navigation generates:
+		///   CROSS APPLY (SELECT data FROM (SELECT *, ROW_NUMBER() OVER(...) FROM Child WHERE correlated AND ...) WHERE rn = 1)
+		/// We extract the correlated predicate from the inner subquery's WHERE, add the correlated inner
+		/// columns to the inner SELECT and to any window function PARTITION BY, then build the outer JOIN condition.
+		/// </summary>
+		bool TryDecorrelateNestedApplyJoin(SqlJoinedTable joinTable, SelectQuery outerSql, List<ISqlTableSource> accessible)
+		{
+			// Must have exactly one FROM table source with no joins at the outer level
+			if (outerSql.From.Tables.Count != 1)
+				return false;
+
+			var outerTableSource = outerSql.From.Tables[0];
+			if (outerTableSource.Joins.Count != 0)
+				return false;
+
+			// The single FROM source must be a subquery
+			if (outerTableSource.Source is not SelectQuery innerSql)
+				return false;
+
+			// The inner subquery should not have set operators
+			if (innerSql.HasSetOperators)
+				return false;
+
+			// Extract correlated predicates from the inner subquery's WHERE and JOIN conditions
+			var innerAccessible = QueryHelper.EnumerateAccessibleSources(innerSql).ToList();
+			// For checking correlation, we need to consider all sources accessible in the inner query
+			// The "accessible" list contains outer sources. We need to detect predicates that reference outer sources.
+			var innerExtracted = new List<ISqlPredicate>();
+
+			foreach (var tableSource in innerSql.From.Tables)
+			{
+				foreach (var innerJoin in tableSource.Joins)
+				{
+					if (!ExtractCorrelatedPredicates(innerJoin.Condition, accessible, innerExtracted))
+						return false;
+				}
+			}
+
+			if (!ExtractCorrelatedPredicates(innerSql.Where.SearchCondition, accessible, innerExtracted))
+				return false;
+
+			if (innerExtracted.Count == 0)
+				return false;
+
+			// After extraction, verify that no outer references remain anywhere in the inner subquery
+			var innerCheckIgnore = new List<IQueryElement> { innerSql.Where, innerSql.Select };
+			foreach (var tableSource in innerSql.From.Tables)
+			{
+				foreach (var innerJoin in tableSource.Joins)
+					innerCheckIgnore.Add(innerJoin.Condition);
+			}
+
+			if (QueryHelper.IsDependsOnOuterSources(innerSql, innerCheckIgnore))
+				return false;
+
+			// Also verify the outer query (excluding inner) has no remaining outer references
+			// The outer query's WHERE (e.g. rn = 1) should not reference outer sources
+			if (QueryHelper.IsDependsOnOuterSources(outerSql.Where, currentSources: accessible))
+				return false;
+
+			// Collect the inner expressions that are NOT from outer sources (these need to be projected through)
+			// For each extracted predicate like "outer.ParentID = inner.ParentID",
+			// we need to add inner.ParentID to the inner SELECT columns, and to window PARTITION BY
+			var innerExpressions = new List<ISqlExpression>();
+
+			foreach (var predicate in innerExtracted)
+			{
+				if (predicate is SqlPredicate.ExprExpr exprExpr)
+				{
+					var expr1 = SequenceHelper.UnwrapNullability(exprExpr.Expr1);
+					var expr2 = SequenceHelper.UnwrapNullability(exprExpr.Expr2);
+
+					var dep1 = QueryHelper.IsDependsOnOuterSources(expr1, currentSources: accessible);
+					var dep2 = QueryHelper.IsDependsOnOuterSources(expr2, currentSources: accessible);
+
+					// The inner (non-outer) expression needs to be projected through
+					if (dep1 && !dep2)
+						innerExpressions.Add(expr2);
+					else if (!dep1 && dep2)
+						innerExpressions.Add(expr1);
+					else
+						return false;
+				}
+				else
+				{
+					return false;
+				}
+			}
+
+			// Add inner correlated expressions to any window functions' PARTITION BY in the inner SELECT
+			foreach (var column in innerSql.Select.Columns)
+			{
+				if (column.Expression is SqlExtendedFunction windowFunc && windowFunc.PartitionBy != null)
+				{
+					foreach (var innerExpr in innerExpressions)
+					{
+						if (!windowFunc.PartitionBy.Contains(innerExpr))
+						{
+							windowFunc.PartitionBy.Add(innerExpr);
+						}
+					}
+				}
+			}
+
+			// Now correct references for the extracted predicates: inner expressions need to go through
+			// innerSql columns → outerSql columns
+			var innerSources = QueryHelper.EnumerateAccessibleSources(innerSql).ToList();
+
+			// Build the join predicates with corrected references through both query levels
+			var outerPredicates = new List<ISqlPredicate>();
+
+			foreach (var predicate in innerExtracted)
+			{
+				// First, correct inner-source references to go through innerSql's SELECT columns
+				var correctedForInner = _movingOuterPredicateVisitor.CorrectReferences(innerSql, innerSources, predicate);
+				// Then, correct those to go through outerSql's SELECT columns
+				var outerSources = QueryHelper.EnumerateAccessibleSources(outerSql).ToList();
+				var correctedForOuter = _movingOuterPredicateVisitor.CorrectReferences(outerSql, outerSources, correctedForInner);
+				outerPredicates.Add(correctedForOuter);
+			}
+
+			// Convert apply join to standard join
+			var newJoinType = ConvertApplyJoinType(joinTable.JoinType);
+
+			joinTable.JoinType = newJoinType;
+			joinTable.Condition.Predicates.AddRange(outerPredicates);
+
+			return true;
+		}
+
+		/// <summary>
+		/// Extract correlated equality predicates from a search condition.
+		/// Removes extracted predicates from the source condition.
+		/// Returns false if non-extractable correlated predicates are found.
+		/// </summary>
+		bool ExtractCorrelatedPredicates(SqlSearchCondition condition, List<ISqlTableSource> accessible, List<ISqlPredicate> extracted)
+		{
+			if (condition.IsOr)
+			{
+				// Cannot extract individual predicates from OR conditions
+				if (QueryHelper.IsDependsOnOuterSources(condition, currentSources: accessible))
+					return false;
+				return true;
+			}
+
+			for (var i = condition.Predicates.Count - 1; i >= 0; i--)
+			{
+				var predicate = condition.Predicates[i];
+
+				if (!QueryHelper.IsDependsOnOuterSources(predicate, currentSources: accessible))
+					continue;
+
+				// Only extract simple equality predicates
+				if (predicate is SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr)
+				{
+					var expr1 = SequenceHelper.UnwrapNullability(exprExpr.Expr1);
+					var expr2 = SequenceHelper.UnwrapNullability(exprExpr.Expr2);
+
+					var dep1 = QueryHelper.IsDependsOnOuterSources(expr1, currentSources: accessible);
+					var dep2 = QueryHelper.IsDependsOnOuterSources(expr2, currentSources: accessible);
+
+					// One side must be outer, the other inner
+					if (dep1 != dep2)
+					{
+						extracted.Add(predicate);
+						condition.Predicates.RemoveAt(i);
+						continue;
+					}
+				}
+
+				// Non-extractable correlated predicate found
+				return false;
+			}
+
+			return true;
+		}
+
+		/// <summary>
+		/// For window functions in the given query's SELECT, extend PARTITION BY with the inner (non-outer)
+		/// expressions from extracted correlated predicates. This preserves correct window semantics
+		/// when decorrelating an APPLY join (the window was implicitly partitioned by the outer correlation).
+		/// </summary>
+		static void ExtendWindowPartitionByFromPredicates(SelectQuery sql, List<ISqlPredicate> extractedPredicates, List<ISqlTableSource> accessible)
+		{
+			// Collect inner expressions from the extracted predicates
+			var innerExpressions = new List<ISqlExpression>();
+
+			foreach (var predicate in extractedPredicates)
+			{
+				if (predicate is SqlPredicate.ExprExpr exprExpr)
+				{
+					var expr1 = SequenceHelper.UnwrapNullability(exprExpr.Expr1);
+					var expr2 = SequenceHelper.UnwrapNullability(exprExpr.Expr2);
+
+					var dep1 = QueryHelper.IsDependsOnOuterSources(expr1, currentSources: accessible);
+					var dep2 = QueryHelper.IsDependsOnOuterSources(expr2, currentSources: accessible);
+
+					if (dep1 && !dep2)
+						innerExpressions.Add(expr2);
+					else if (!dep1 && dep2)
+						innerExpressions.Add(expr1);
+				}
+			}
+
+			if (innerExpressions.Count == 0)
+				return;
+
+			// Find and extend window functions in SELECT columns (may be nested in binary expressions)
+			foreach (var column in sql.Select.Columns)
+			{
+				SqlExtendedFunction? windowFunc = null;
+				var isBinaryLeft  = false;
+				var isBinaryRight = false;
+				SqlBinaryExpression? binaryExpr = null;
+
+				if (column.Expression is SqlExtendedFunction directFunc)
+				{
+					windowFunc = directFunc;
+				}
+				else if (column.Expression is SqlBinaryExpression binary)
+				{
+					binaryExpr = binary;
+					if (binary.Expr1 is SqlExtendedFunction leftFunc)
+					{
+						windowFunc = leftFunc;
+						isBinaryLeft = true;
+					}
+					else if (binary.Expr2 is SqlExtendedFunction rightFunc)
+					{
+						windowFunc = rightFunc;
+						isBinaryRight = true;
+					}
+				}
+
+				if (windowFunc != null && (windowFunc.PartitionBy != null || windowFunc.OrderBy != null))
+				{
+					var newPartition = windowFunc.PartitionBy != null
+						? new List<ISqlExpression>(windowFunc.PartitionBy)
+						: new List<ISqlExpression>();
+
+					var changed = false;
+					foreach (var innerExpr in innerExpressions)
+					{
+						if (!newPartition.Contains(innerExpr))
+						{
+							newPartition.Add(innerExpr);
+							changed = true;
+						}
+					}
+
+					if (changed)
+					{
+						var newWindowFunc = windowFunc.WithPartitionBy(newPartition);
+
+						if (binaryExpr != null)
+						{
+							column.Expression = new SqlBinaryExpression(
+								binaryExpr.SystemType,
+								isBinaryLeft ? newWindowFunc : binaryExpr.Expr1,
+								binaryExpr.Operation,
+								isBinaryRight ? newWindowFunc : binaryExpr.Expr2,
+								binaryExpr.Precedence);
+						}
+						else
+						{
+							column.Expression = newWindowFunc;
+						}
+					}
+				}
+			}
 		}
 
 		bool IsColumnExpressionAllowedToMoveUp(SelectQuery parentQuery, NullabilityContext nullability, SqlColumn column, ISqlExpression columnExpression, bool ignoreWhere, bool inGrouping)
