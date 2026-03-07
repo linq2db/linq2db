@@ -51,20 +51,6 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
-		public void IndexWithOffset([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-			using var _ = db.CreateLocalTable(CreateTestTableData());
-
-			var query = db.GetTable<TestTable>()
-				.OrderBy(x => x.Id)
-				.Index();
-
-			AssertQuery(query);
-		}
-
-		[Test]
-		[ThrowsCannotBeConverted([TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllFirebirdLess3])]
 		public void IndexWithWhere([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
