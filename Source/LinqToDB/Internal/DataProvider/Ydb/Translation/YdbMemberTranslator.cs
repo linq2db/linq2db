@@ -432,7 +432,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb.Translation
 				};
 
 				if (fn == null)
-					throw new NotImplementedException($"TranslateDateTimeDatePart for datepart (${datepart}) not implemented");
+					return null;
 
 				var baseExpr = f.Function(intType, fn, dateTimeExpression);
 
