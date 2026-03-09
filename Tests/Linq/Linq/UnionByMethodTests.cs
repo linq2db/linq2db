@@ -134,5 +134,3 @@ namespace Tests.Linq
 }
 
 #endif
-
-
