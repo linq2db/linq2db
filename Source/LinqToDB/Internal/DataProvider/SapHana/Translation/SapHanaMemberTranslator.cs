@@ -349,7 +349,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 								suffix = factory.Fragment(sb.Value.ToString(), args);
 							}
 
-							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
+							if (info is { FilterCondition.IsTrue: false })
 							{
 								if (!info.IsGroupBy)
 								{

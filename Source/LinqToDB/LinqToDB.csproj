@@ -118,16 +118,6 @@
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>AsyncExtensions.generated.cs</LastGenOutput>
 		</None>
-
-		<None Update="Internal\Common\MutableTuple.tt">
-			<Generator>TextTemplatingFileGenerator</Generator>
-			<LastGenOutput>MutableTuple.generated.cs</LastGenOutput>
-		</None>
-		<Compile Update="Internal\Common\MutableTuple.generated.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>MutableTuple.tt</DependentUpon>
-		</Compile>
 		<Compile Update="DataProvider\Ydb\YdbHints.generated.cs">
 		  <AutoGen>True</AutoGen>
 		  <DesignTime>True</DesignTime>

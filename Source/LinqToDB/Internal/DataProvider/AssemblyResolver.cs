@@ -46,7 +46,7 @@ namespace LinqToDB.Internal.DataProvider
 
 		public Assembly? Resolver(object? sender, ResolveEventArgs args)
 		{
-			if (args.Name == _resolveName)
+			if (string.Equals(args.Name, _resolveName, StringComparison.Ordinal))
 				return _assembly ??= Assembly.LoadFile(File.Exists(_path!) ? _path! : Path.Combine(_path!, args.Name, ".dll"));
 			return null;
 		}

@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.DataProvider.Firebird
+namespace LinqToDB.DataProvider.Firebird
 {
 	/// <summary>
 	/// Possible modes for Firebird identifier quotes. This enumeration covers only identifier quotation logic
@@ -31,6 +31,6 @@
 		/// Note that if you need to preserve casing of identifiers, you should use <see cref="Quote"/> mode.
 		/// Quoted identifiers not supported by SQL Dialect &lt; 1.
 		/// </summary>
-		Auto
+		Auto,
 	}
 }

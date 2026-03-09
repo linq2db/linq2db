@@ -15,7 +15,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		#region LIKE
 
-		private static string[] SybaseCharactersToEscape = {"_", "%", "[", "]", "^"};
+		private static readonly string[] SybaseCharactersToEscape = {"_", "%", "[", "]", "^"};
 
 		public override string[] LikeCharactersToEscape => SybaseCharactersToEscape;
 
@@ -38,48 +38,53 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func)
+			return func switch
 			{
-				case { Name: PseudoFunctions.REPLACE }:
-					return func.WithName("Str_Replace");
+				{ Name: PseudoFunctions.REPLACE } => func.WithName("Str_Replace"),
+				{ Name: PseudoFunctions.LENGTH } => func.WithName("CHAR_LENGTH"),
 
-				case { Name: PseudoFunctions.LENGTH }:
-					return func.WithName("CHAR_LENGTH");
-
-				case {
+				{
 					Name: "CharIndex",
 					Parameters: [var p0, var p1, var p2],
 					Type: var type,
-				}:
-					return Add<int>(
-						new SqlFunction(type, "CharIndex",
+				} => Add<int>(
+						new SqlFunction(
+							type,
+							"CharIndex",
 							p0,
-							new SqlFunction(MappingSchema.GetDbDataType(typeof(string)), "Substring",
+							new SqlFunction(
+								MappingSchema.GetDbDataType(typeof(string)),
+								"Substring",
 								p1,
 								p2,
-								new SqlFunction(MappingSchema.GetDbDataType(typeof(int)), "Len", p1))),
-						Sub(p2, 1));
+								new SqlFunction(MappingSchema.GetDbDataType(typeof(int)),
+								"Len",
+								p1)
+							)
+						),
+						Sub(p2, 1)
+					),
 
-				case {
+				{
 					Name: "Stuff",
 					Parameters:
 					[
 						var p0, var p1, _,
 						SqlValue { Value: string @string, ValueType: var valueType }
 					],
-					Type: var type
-				} when string.IsNullOrEmpty(@string):
-					return new SqlFunction(
+					Type: var type,
+				} when string.IsNullOrEmpty(@string) =>
+					new SqlFunction(
 						type,
 						"Stuff",
 						ParametersNullabilityType.SameAsFirstParameter,
 						p0,
 						p1,
 						p1,
-						new SqlValue(valueType, null));
+						new SqlValue(valueType, null)
+					),
 
-				default:
-					return base.ConvertSqlFunction(func);
+				_ => base.ConvertSqlFunction(func),
 			};
 		}
 
@@ -87,7 +92,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 		{
 			if (expr is SqlValue
 				{
-					Value: uint or long or ulong or float or double or decimal
+					Value: uint or long or ulong or float or double or decimal,
 				} value)
 			{
 				expr = new SqlCastExpression(expr, value.ValueType, null, isMandatory: true);

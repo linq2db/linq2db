@@ -11,7 +11,7 @@
 
 		/// <summary>
 		/// Indicates that database requires that invoked scalar function should specify schema name.
-		/// Default value: <c>false</c>.
+		/// Default value: <see langword="false"/>.
 		/// </summary>
 		public virtual bool ScalarFunctionSchemaRequired { get; }
 	}

@@ -29,7 +29,7 @@ namespace LinqToDB
 		[PublicAPI]
 		[Serializable]
 		[AttributeUsage(AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
-		public class ExpressionAttribute : MappingAttribute
+		public partial class ExpressionAttribute : MappingAttribute
 		{
 			/// <summary>
 			/// Creates an Expression that will be used in SQL,
@@ -106,18 +106,18 @@ namespace LinqToDB
 			/// </summary>
 			public int            Precedence       { get; set; }
 			/// <summary>
-			/// If <c>true</c> The expression will only be evaluated on the
+			/// If <see langword="true"/> The expression will only be evaluated on the
 			/// database server. If it cannot, an exception will
 			/// be thrown.
 			/// </summary>
 			public bool           ServerSideOnly   { get; set; }
 			/// <summary>
-			/// If <c>true</c> a greater effort will be made to execute
+			/// If <see langword="true"/> a greater effort will be made to execute
 			/// the expression on the DB server instead of in .NET.
 			/// </summary>
 			public bool           PreferServerSide { get; set; }
 			/// <summary>
-			/// If <c>true</c> inline all parameters passed into the expression.
+			/// If <see langword="true"/> inline all parameters passed into the expression.
 			/// </summary>
 			public bool           InlineParameters { get; set; }
 			/// <summary>
@@ -125,23 +125,23 @@ namespace LinqToDB
 			/// </summary>
 			public bool           ExpectExpression { get; set; }
 			/// <summary>
-			/// If <c>true</c> the expression is treated as a Predicate
+			/// If <see langword="true"/> the expression is treated as a Predicate
 			/// And when used in a Where clause will not have
 			/// an added comparison to 'true' in the database.
 			/// </summary>
 			public bool           IsPredicate      { get; set; }
 			/// <summary>
-			/// If <c>true</c>, this expression represents an aggregate result
+			/// If <see langword="true"/>, this expression represents an aggregate result
 			/// Examples would be SUM(),COUNT().
 			/// </summary>
 			public bool           IsAggregate      { get; set; }
 			/// <summary>
-			/// If <c>true</c>, this expression represents a Window Function
+			/// If <see langword="true"/>, this expression represents a Window Function
 			/// Examples would be SUM() OVER(), COUNT() OVER().
 			/// </summary>
 			public bool           IsWindowFunction { get; set; }
 			/// <summary>
-			/// If <c>true</c>, it notifies SQL Optimizer that expression returns same result if the same values/parameters are used. It gives optimizer additional information how to simplify query.
+			/// If <see langword="true"/>, it notifies SQL Optimizer that expression returns same result if the same values/parameters are used. It gives optimizer additional information how to simplify query.
 			/// For example ORDER BY PureFunction("Str") can be removed because PureFunction function uses constant value.
 			/// <example>
 			/// For example Random function is NOT Pure function because it returns different result all time.
@@ -154,18 +154,18 @@ namespace LinqToDB
 			/// Used to determine whether the return type should be treated as
 			/// something that can be null If CanBeNull is not explicitly set.
 			/// <para>Default is <see cref="IsNullableType.Undefined"/>,
-			/// which will be treated as <c>true</c></para>
+			/// which will be treated as <see langword="true"/></para>
 			/// </summary>
 			public IsNullableType IsNullable       { get; set; }
 
 			/// <summary>
-			/// if <c>true</c>, do not generate generic parameters.
+			/// if <see langword="true"/>, do not generate generic parameters.
 			/// </summary>
 			public bool IgnoreGenericParameters { get; set; }
 
 			protected bool? СonfiguredCanBeNull { get; private set; }
 			/// <summary>
-			/// If <c>true</c>, result can be null.
+			/// If <see langword="true"/>, result can be null.
 			/// If value is not set explicitly, nullability calculated based on return type and <see cref="IsNullable"/> value.
 			/// </summary>
 			public    bool   CanBeNull
@@ -174,13 +174,19 @@ namespace LinqToDB
 				set => СonfiguredCanBeNull = value;
 			}
 
-			const  string MatchParamPattern = @"{([0-9a-z_A-Z?]*)(,\s'(.*)')?}";
-			static Regex  _matchParamRegEx  = new (MatchParamPattern, RegexOptions.Compiled);
+			private const string MatchParamPattern = /* lang=regex */ @"{(?<name>[0-9a-z_A-Z?]*)(,\s'(?<delimiter>.*)')?}";
+#if SUPPORTS_REGEX_GENERATORS
+			[GeneratedRegex(MatchParamPattern, RegexOptions.ExplicitCapture)]
+			private static partial Regex MatchParamRegex();
+#else
+			private static readonly Regex _matchParamRegEx = new(MatchParamPattern, RegexOptions.Compiled | RegexOptions.ExplicitCapture);
+			private static Regex MatchParamRegex() => _matchParamRegEx;
+#endif
 
 			public static string ResolveExpressionValues<TContext>(TContext context, string expression, Func<TContext, string, string?, string?> valueProvider, out Expression? error)
 			{
-				if (expression    == null) throw new ArgumentNullException(nameof(expression));
-				if (valueProvider == null) throw new ArgumentNullException(nameof(valueProvider));
+				ArgumentNullException.ThrowIfNull(expression);
+				ArgumentNullException.ThrowIfNull(valueProvider);
 
 				int  prevMatch         = -1;
 				int  prevNotEmptyMatch = -1;
@@ -188,21 +194,21 @@ namespace LinqToDB
 
 				Expression? errorExpr = null;
 
-				var str = _matchParamRegEx.Replace(expression, match =>
+				var str = MatchParamRegex().Replace(expression, match =>
 				{
-					var paramName     = match.Groups[1].Value;
-					var canBeOptional = paramName.EndsWith("?");
+					var paramName     = match.Groups["name"].Value;
+					var canBeOptional = paramName.EndsWith('?');
 					if (canBeOptional)
 						paramName = paramName.TrimEnd('?');
 
-					if (paramName == "_")
+					if (string.Equals(paramName, "_", StringComparison.Ordinal))
 					{
 						spaceNeeded = true;
 						prevMatch   = match.Index + match.Length;
 						return string.Empty;
 					}
 
-					var delimiter  = match.Groups[3].Success ? match.Groups[3].Value : null;
+					var delimiter  = match.Groups["delimiter"].Success ? match.Groups["delimiter"].Value : null;
 					var calculated = valueProvider(context, paramName, delimiter);
 
 					if (string.IsNullOrEmpty(calculated) && !canBeOptional)
@@ -217,7 +223,7 @@ namespace LinqToDB
 						if (!string.IsNullOrEmpty(calculated))
 						{
 							var e = expression;
-							if (prevMatch == match.Index && prevNotEmptyMatch == match.Index - 3 || (prevNotEmptyMatch >= 0 && e[prevNotEmptyMatch] != ' '))
+							if ((prevMatch == match.Index && prevNotEmptyMatch == match.Index - 3) || (prevNotEmptyMatch >= 0 && e[prevNotEmptyMatch] != ' '))
 								res = " " + calculated;
 						}
 
@@ -393,13 +399,13 @@ namespace LinqToDB
 						if (ctx.StaticValue.argIndices != null)
 						{
 							if (idxInMethod < 0 || idxInMethod >= ctx.StaticValue.argIndices.Length)
-								throw new LinqToDBException(FormattableString.Invariant($"Expression '{ctx.StaticValue.expressionStr}' has wrong ArgIndices mapping. Index '{idxInMethod}' do not fit in range."));
+								throw new LinqToDBException(string.Create(CultureInfo.InvariantCulture, $"Expression '{ctx.StaticValue.expressionStr}' has wrong ArgIndices mapping. Index '{idxInMethod}' do not fit in range."));
 
 							idxInMethod = ctx.StaticValue.argIndices[idxInMethod];
 						}
 
 						if (idxInMethod < 0)
-							throw new LinqToDBException(FormattableString.Invariant($"Expression '{ctx.StaticValue.expressionStr}' has wrong param index mapping. Index '{idxInMethod}' do not fit in range."));
+							throw new LinqToDBException(string.Create(CultureInfo.InvariantCulture, $"Expression '{ctx.StaticValue.expressionStr}' has wrong param index mapping. Index '{idxInMethod}' do not fit in range."));
 
 						while (idxInExpr >= ctx.StaticValue.parms.Count)
 						{
@@ -414,7 +420,7 @@ namespace LinqToDB
 								var typeIndex = idxInExpr - ctx.StaticValue.knownExpressions.Count;
 								if (ctx.StaticValue.genericTypes == null || typeIndex >= ctx.StaticValue.genericTypes.Count || typeIndex < 0)
 								{
-									throw new LinqToDBException(FormattableString.Invariant($"Expression '{ctx.StaticValue.expressionStr}' has wrong param index mapping. Index '{idxInExpr}' do not fit in parameters range."));
+									throw new LinqToDBException(string.Create(CultureInfo.InvariantCulture, $"Expression '{ctx.StaticValue.expressionStr}' has wrong param index mapping. Index '{idxInExpr}' do not fit in parameters range."));
 								}
 
 								paramExpr = ctx.StaticValue.genericTypes[typeIndex];
@@ -468,7 +474,7 @@ namespace LinqToDB
 									var typeIndex = argIdx - knownExpressions.Count;
 									if (genericTypes == null || typeIndex >= genericTypes.Count || typeIndex < 0)
 									{
-										throw new LinqToDBException(FormattableString.Invariant($"Function '{expressionStr}' has wrong param index mapping. Index '{argIdx}' do not fit in parameters range."));
+										throw new LinqToDBException(string.Create(CultureInfo.InvariantCulture, $"Function '{expressionStr}' has wrong param index mapping. Index '{argIdx}' do not fit in parameters range."));
 									}
 
 									paramExpr = genericTypes[typeIndex];
@@ -578,7 +584,7 @@ namespace LinqToDB
 
 			public override string GetObjectID()
 			{
-				return FormattableString.Invariant($".{Configuration}.{Expression}.{IdentifierBuilder.GetObjectID(ArgIndices)}.{Precedence}.{(ServerSideOnly ? 1 : 0)}.{(PreferServerSide ? 1 : 0)}.{(InlineParameters ? 1 : 0)}.{(ExpectExpression ? 1 : 0)}.{(IsPredicate ? 1 : 0)}.{(IsAggregate ? 1 : 0)}.{(IsWindowFunction ? 1 : 0)}.{(IsPure ? 1 : 0)}.{(int)IsNullable}.{(IgnoreGenericParameters ? 1 : 0)}.{(СonfiguredCanBeNull switch { null => -1, true => 1, _ => 0 })}.");
+				return string.Create(CultureInfo.InvariantCulture, $".{Configuration}.{Expression}.{IdentifierBuilder.GetObjectID(ArgIndices)}.{Precedence}.{(ServerSideOnly ? 1 : 0)}.{(PreferServerSide ? 1 : 0)}.{(InlineParameters ? 1 : 0)}.{(ExpectExpression ? 1 : 0)}.{(IsPredicate ? 1 : 0)}.{(IsAggregate ? 1 : 0)}.{(IsWindowFunction ? 1 : 0)}.{(IsPure ? 1 : 0)}.{(int)IsNullable}.{(IgnoreGenericParameters ? 1 : 0)}.{(СonfiguredCanBeNull switch { null => -1, true => 1, _ => 0 })}.");
 			}
 		}
 	}

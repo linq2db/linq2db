@@ -73,29 +73,23 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			string command;
+			var command = table.TableOptions.TemporaryOptionValue switch
+			{
+				TableOptions.IsTemporary                                                                              or
+				TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData or
+				                                                                    TableOptions.IsLocalTemporaryData or
+				                           TableOptions.IsLocalTemporaryStructure                                     or
+				                           TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData =>
+					"CREATE TEMPORARY TABLE ",
 
-			if (table.TableOptions.IsTemporaryOptionSet())
-			{
-				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-				{
-					case TableOptions.IsTemporary:
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryData:
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure:
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData:
-					case TableOptions.IsLocalTemporaryData:
-					case TableOptions.IsLocalTemporaryStructure:
-					case TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData:
-						command = "CREATE TEMPORARY TABLE ";
-						break;
-					case var value:
-						throw new LinqToDBException($"Incompatible table options '{value}'");
-				}
-			}
-			else
-			{
-				command = "CREATE TABLE ";
-			}
+				0 =>
+					"CREATE TABLE ",
+
+				var value =>
+					throw new LinqToDBException($"Incompatible table options '{value}'"),
+			};
 
 			StringBuilder.Append(command);
 		}
@@ -112,7 +106,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					DataType.Int16 => "SMALLSERIAL",
 					DataType.Int32 => "SERIAL",
 					DataType.Int64 => "BIGSERIAL",
-					_ => throw new InvalidOperationException($"Unsupported identity field type {field.Type.DataType}")
+					_ => throw new InvalidOperationException($"Unsupported identity field type {field.Type.DataType}"),
 				});
 
 				return;
@@ -227,7 +221,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					sb.Append('$');
 
 					if (quote)
-						return sb.Append('`').Append(value.Replace("`", "\\`")).Append('`');
+						return sb.Append('`').Append(value.Replace("`", "\\`", StringComparison.Ordinal)).Append('`');
 
 					return sb.Append(value);
 				}
@@ -243,7 +237,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 						|| IsReserved(value);
 
 					if (quote)
-						return sb.Append('`').Append(value.Replace("`", "\\`")).Append('`');
+						return sb.Append('`').Append(value.Replace("`", "\\`", StringComparison.Ordinal)).Append('`');
 
 					return sb.Append(value);
 				}
@@ -319,7 +313,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
 		{
-			if (!statement.IsUpdate())
+			if (!statement.IsUpdate)
 				base.BuildFromClause(statement, selectQuery);
 		}
 
@@ -432,7 +426,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				var within = 1;
 				for (var j = i; j < Math.Min(i + max, items.Count); j++, within++)
 				{
-					var p = new SqlParameter(dbDataType, FormattableString.Invariant($"Ids{bucketIndex}_{within}"), items[j]);
+					var p = new SqlParameter(dbDataType, string.Create(CultureInfo.InvariantCulture, $"Ids{bucketIndex}_{within}"), items[j]);
 					BuildParameter(p);
 					StringBuilder.Append(InlineComma);
 				}
@@ -449,13 +443,20 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 			if (bucketIndex > 1 || hasNull)
 			{
-				StringBuilder.Insert(startLen, "(").Append(')');
+				StringBuilder.Insert(startLen, '(').Append(')');
 			}
 		}
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge) => throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
+		public override StringBuilder BuildObjectName(
+			StringBuilder sb,
+			SqlObjectName name,
+			ConvertType objectType = ConvertType.NameToQueryTable,
+			bool escape = true,
+			TableOptions tableOptions = TableOptions.NotSet,
+			bool withoutSuffix = false
+		)
 		{
 			string fqn;
 
@@ -505,7 +506,8 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 
 			var orderBy = ConvertElement(selectQuery.OrderBy);
 
-			IReadOnlyList<SqlOrderByItem> nonConstant = orderBy.Items.All(i => !QueryHelper.IsConstantFast(i.Expression))
+			var nonConstant =
+				orderBy.Items.TrueForAll(i => !QueryHelper.IsConstantFast(i.Expression))
 				? orderBy.Items
 				: orderBy.Items.Where(i => !QueryHelper.IsConstantFast(i.Expression))
 					.ToList();

@@ -24,10 +24,11 @@ namespace LinqToDB.DataProvider.SapHana
 		// b) we don't have dataprovider here ether
 		private static string? ValueToString(object value)
 		{
-			if (value is string stringValue)
-				return stringValue;
-
-			return string.Format(CultureInfo.InvariantCulture, "{0}", value);
+			return value switch
+			{
+				string stringValue => stringValue,
+				_ => string.Create(CultureInfo.InvariantCulture, $"{value}"),
+			};
 		}
 
 		public override void SetTable<TContext>(DataOptions options, TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Sql.ExpressionAttribute.ConvertFunc<TContext> converter)
@@ -51,7 +52,7 @@ namespace LinqToDB.DataProvider.SapHana
 			arg[0] = new SqlFragment(
 				string.Join(", ",
 					Enumerable.Range(0, sqlValues.Count)
-						.Select(static x => FormattableString.Invariant($"{{{x}}}"))),
+						.Select(static x => string.Create(CultureInfo.InvariantCulture, $"{{{x}}}"))),
 				sqlValues.ToArray());
 
 			table.SqlTableType   = SqlTableType.Expression;

@@ -94,7 +94,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			if (dateTime == DateTime.MaxValue)
 				return DateTimeOffset.MaxValue;
 
-			return dateTime;
+			return (DateTimeOffset)dateTime;
 		}
 
 		protected override IMemberTranslator CreateMemberTranslator()
@@ -218,7 +218,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			if (typeName == null)
 				return null;
 
-			if (typeName.StartsWith("character("))
+			if (typeName.StartsWith("character(", StringComparison.Ordinal))
 				return "character";
 
 			return typeName;
@@ -233,7 +233,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		/// This map shouldn't be used directly, you should resolve PostgreSQL types using
 		/// <see cref="GetNativeType(string, bool)"/> method, which takes into account different type aliases.
 		/// </summary>
-		private readonly IDictionary<string, NpgsqlProviderAdapter.NpgsqlDbType> _npgsqlTypeMap = new Dictionary<string, NpgsqlProviderAdapter.NpgsqlDbType>();
+		private readonly IDictionary<string, NpgsqlProviderAdapter.NpgsqlDbType> _npgsqlTypeMap = new Dictionary<string, NpgsqlProviderAdapter.NpgsqlDbType>(StringComparer.Ordinal);
 
 		private static string GetProviderName(PostgreSQLVersion version)
 		{
@@ -452,7 +452,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			var idx = dbType.IndexOf("array", StringComparison.Ordinal);
 
 			if (idx == -1)
-				idx = dbType.IndexOf('[');
+				idx = dbType.IndexOf('[', StringComparison.Ordinal);
 
 			if (idx != -1)
 			{
@@ -548,40 +548,40 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 					break;
 			}
 
-			if (dbType.StartsWith("float(") && dbType.EndsWith(")"))
+			if (dbType.StartsWith("float(", StringComparison.Ordinal) && dbType.EndsWith(')'))
 			{
-				if (int.TryParse(dbType.Substring("float(".Length, dbType.Length - "float(".Length - 1), NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var precision))
+				if (int.TryParse(dbType.AsSpan("float(".Length, dbType.Length - "float(".Length - 1), NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var precision))
 				{
-					if (precision >= 1 && precision <= 24)
+					if (precision is >= 1 and <= 24)
 						dbType = "real";
-					else if (precision >= 25 && precision <= 53)
+					else if (precision is >= 25 and <= 53)
 						dbType = "real";
 					// else bad type
 				}
 			}
 
-			if (dbType.StartsWith("numeric(") || dbType.StartsWith("decimal"))
+			if (dbType.StartsWith("numeric(", StringComparison.Ordinal) || dbType.StartsWith("decimal", StringComparison.Ordinal))
 				dbType = "numeric";
 
-			if (dbType.StartsWith("varchar(") || dbType.StartsWith("character varying("))
+			if (dbType.StartsWith("varchar(", StringComparison.Ordinal) || dbType.StartsWith("character varying(", StringComparison.Ordinal))
 				dbType = "character varying";
 
-			if (dbType.StartsWith("char(") || dbType.StartsWith("character("))
+			if (dbType.StartsWith("char(", StringComparison.Ordinal) || dbType.StartsWith("character(", StringComparison.Ordinal))
 				dbType = "character";
 
-			if (dbType.StartsWith("interval"))
+			if (dbType.StartsWith("interval", StringComparison.Ordinal))
 				dbType = "interval";
 
-			if (dbType.StartsWith("timestamp"))
-				dbType = dbType.Contains("with time zone") ? "timestamp with time zone" : "timestamp";
+			if (dbType.StartsWith("timestamp", StringComparison.Ordinal))
+				dbType = dbType.Contains("with time zone", StringComparison.Ordinal) ? "timestamp with time zone" : "timestamp";
 
-			if (dbType.StartsWith("time(") || dbType.StartsWith("time "))
-				dbType = dbType.Contains("with time zone") ? "time with time zone" : "time";
+			if (dbType.StartsWith("time(", StringComparison.Ordinal) || dbType.StartsWith("time ", StringComparison.Ordinal))
+				dbType = dbType.Contains("with time zone", StringComparison.Ordinal) ? "time with time zone" : "time";
 
-			if (dbType.StartsWith("bit("))
+			if (dbType.StartsWith("bit(", StringComparison.Ordinal))
 				dbType = "bit";
 
-			if (dbType.StartsWith("bit varying("))
+			if (dbType.StartsWith("bit varying(", StringComparison.Ordinal))
 				dbType = "bit varying";
 
 			if (_npgsqlTypeMap.TryGetValue(dbType, out var result))

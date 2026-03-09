@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -28,7 +28,7 @@ namespace Tests.DataProvider
 
 		/// <summary>
 		/// Returns default switch for disable parameters testing for database provider.
-		/// Used by TestType method when testParameters parameter is not set (or <c>null</c>).
+		/// Used by TestType method when testParameters parameter is not set (or <see langword="null"/>).
 		/// </summary>
 		protected virtual bool TestParameters => true;
 
@@ -65,9 +65,9 @@ namespace Tests.DataProvider
 		/// <param name="value">Value to test for non-nullable column.</param>
 		/// <param name="nullableValue">Value to test for nullable column.</param>
 		/// <param name="testParameters">Enable/disable parameters testing (default: <see cref="TestParameters"/>).</param>
-		/// <param name="skipNullable">Enable/disable nullable column testing (default: <c>false</c>).</param>
-		/// <param name="filterByValue">Enable/disable selection filter by non-nullable column (default: <c>true</c>).</param>
-		/// <param name="filterByNullableValue">Enable/disable selection filter by nullable column (default: <c>true</c>).</param>
+		/// <param name="skipNullable">Enable/disable nullable column testing (default: <see langword="false"/>).</param>
+		/// <param name="filterByValue">Enable/disable selection filter by non-nullable column (default: <see langword="true"/>).</param>
+		/// <param name="filterByNullableValue">Enable/disable selection filter by nullable column (default: <see langword="true"/>).</param>
 		/// <param name="getExpectedValue">Optional expected non-nullable value provider to use when value doesn't roundtrip.</param>
 		/// <param name="getExpectedNullableValue">Optional expected nullable value provider to use when value doesn't roundtrip.</param>
 		/// <param name="isExpectedValue">Optional custom check that non-nullable value returned by server is correct.Takes priority over <paramref name="getExpectedValue"/>.</param>
@@ -256,9 +256,9 @@ namespace Tests.DataProvider
 		/// <param name="table">Test table.</param>
 		/// <param name="value">Value to test for non-nullable column.</param>
 		/// <param name="nullableValue">Value to test for nullable column.</param>
-		/// <param name="skipNullable">Enable/disable nullable column testing (default: <c>false</c>).</param>
-		/// <param name="filterByValue">Enable/disable selection filter by non-nullable column (default: <c>true</c>).</param>
-		/// <param name="filterByNullableValue">Enable/disable selection filter by nullable column (default: <c>true</c>).</param>
+		/// <param name="skipNullable">Enable/disable nullable column testing (default: <see langword="false"/>).</param>
+		/// <param name="filterByValue">Enable/disable selection filter by non-nullable column (default: <see langword="true"/>).</param>
+		/// <param name="filterByNullableValue">Enable/disable selection filter by nullable column (default: <see langword="true"/>).</param>
 		/// <param name="getExpectedValue">Optional expected non-nullable value provider to use when value doesn't roundtrip.</param>
 		/// <param name="getExpectedNullableValue">Optional expected nullable value provider to use when value doesn't roundtrip.</param>
 		private void AssertData<TType, TNullableType>(

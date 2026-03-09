@@ -10,7 +10,7 @@ namespace LinqToDB.Internal.Common
 	public static class ActivatorExt
 	{
 		/// <summary>
-		/// Creates instance of <paramref name="type"/> type. Ensures that instance is not <c>null</c>.
+		/// Creates instance of <paramref name="type"/> type. Ensures that instance is not <see langword="null"/>.
 		/// </summary>
 		public static object CreateInstance(Type type) => CreateInstance(type, false);
 
@@ -69,10 +69,11 @@ namespace LinqToDB.Internal.Common
 				var instance = Activator.CreateInstance(type, nonPublic);
 #pragma warning restore RS0030 // Do not use banned APIs
 
-				if (instance is T target)
-					return target;
-
-				throw new LinqToDBException($"Type '{type.FullName}' must be assignable to '{typeof(T).FullName}'.");
+				return instance switch
+				{
+					T target => target,
+					_ => throw new LinqToDBException($"Type '{type.FullName}' must be assignable to '{typeof(T).FullName}'."),
+				};
 			}
 			catch (TargetInvocationException tex) when (tex.InnerException != null)
 			{
@@ -108,13 +109,12 @@ namespace LinqToDB.Internal.Common
 			try
 			{
 #pragma warning disable RS0030 // Do not use banned APIs
-				var instance = Activator.CreateInstance(type, args);
+				return Activator.CreateInstance(type, args) switch
 #pragma warning restore RS0030 // Do not use banned APIs
-
-				if (instance is T target)
-					return target;
-
-				throw new LinqToDBException($"Type '{type.FullName}' must be assignable to '{typeof(T).FullName}'.");
+				{
+					T target => target,
+					_ => throw new LinqToDBException($"Type '{type.FullName}' must be assignable to '{typeof(T).FullName}'."),
+				};
 			}
 			catch (TargetInvocationException tex) when (tex.InnerException != null)
 			{
@@ -150,13 +150,12 @@ namespace LinqToDB.Internal.Common
 			try
 			{
 #pragma warning disable RS0030 // Do not use banned APIs
-				var instance = ctor.Invoke(parameters);
+				return ctor.Invoke(parameters) switch
 #pragma warning restore RS0030 // Do not use banned APIs
-
-				if (instance is T target)
-					return target;
-
-				throw new LinqToDBException($"Type '{ctor.DeclaringType!.FullName}' must be assignable to '{typeof(T).FullName}'.");
+				{
+					T target => target,
+					_ => throw new LinqToDBException($"Type '{ctor.DeclaringType!.FullName}' must be assignable to '{typeof(T).FullName}'."),
+				};
 			}
 			catch (TargetInvocationException tex) when (tex.InnerException != null)
 			{
@@ -193,13 +192,13 @@ namespace LinqToDB.Internal.Common
 			try
 			{
 #pragma warning disable RS0030 // Do not use banned APIs
-				var result = method.DynamicInvoke(args);
+				return method.DynamicInvoke(args) switch
 #pragma warning restore RS0030 // Do not use banned APIs
-
-				if (result is T target) return target;
-				if (result is null) return (T)result!;
-
-				throw new LinqToDBException($"Returned value expected to be assignable to '{typeof(T).FullName}' but had '{result?.GetType().FullName}' type.");
+				{
+					T target => target,
+					{ } o => throw new LinqToDBException($"Returned value expected to be assignable to '{typeof(T).FullName}' but had '{o.GetType().FullName}' type."),
+					null => default!,
+				};
 			}
 			catch (TargetInvocationException tex) when (tex.InnerException != null)
 			{
@@ -236,13 +235,13 @@ namespace LinqToDB.Internal.Common
 			try
 			{
 #pragma warning disable RS0030 // Do not use banned APIs
-				var result = method.Invoke(obj, parameters);
+				return method.Invoke(obj, parameters) switch
 #pragma warning restore RS0030 // Do not use banned APIs
-
-				if (result is T target) return target;
-				if (result is null) return (T)result!;
-
-				throw new LinqToDBException($"Returned value expected to be assignable to '{typeof(T).FullName}' but had '{result.GetType().FullName}' type.");
+				{
+					T target => target,
+					{ } o => throw new LinqToDBException($"Returned value expected to be assignable to '{typeof(T).FullName}' but had '{o.GetType().FullName}' type."),
+					null => default!,
+				};
 			}
 			catch (TargetInvocationException tex) when (tex.InnerException != null)
 			{

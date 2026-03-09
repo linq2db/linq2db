@@ -32,7 +32,7 @@ namespace LinqToDB.Naming
 				Pluralization.Plural                => ToPlural,
 				Pluralization.PluralIfLongerThanOne => ToPluralLongerThanOne,
 				Pluralization.Singular              => ToSingular,
-				_                                   => throw new NotImplementedException($"Name conversion mode not supported: {conversion}")
+				_                                   => throw new NotImplementedException($"Name conversion mode not supported: {conversion}"),
 			};
 		}
 

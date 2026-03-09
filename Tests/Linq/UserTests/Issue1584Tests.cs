@@ -99,14 +99,11 @@ namespace Tests.UserTests
 			[ExpressionMethod(nameof(GetModeExpression))]
 			public TransportType? GetMode()
 			{
-				switch (TI_RateCategory)
+				return TI_RateCategory switch
 				{
-					case RateCategoryDestination:
-					case RateCategoryOrigin:
-						return TI_ModeTT;
-					default:
-						return TI_RateCategoryTT;
-				}
+					RateCategoryDestination or RateCategoryOrigin => TI_ModeTT,
+					_                                             => TI_RateCategoryTT,
+				};
 			}
 
 			private static Expression<Func<RateEntry, TransportType?>> GetModeExpression()

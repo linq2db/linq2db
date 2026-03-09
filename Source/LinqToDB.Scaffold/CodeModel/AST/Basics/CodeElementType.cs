@@ -164,7 +164,7 @@
 		/// </summary>
 		Lambda,
 		/// <summary>
-		/// Constant value/literal (including <c>null</c>).
+		/// Constant value/literal (including <see langword="null"/>).
 		/// </summary>
 		Constant,
 		/// <summary>
@@ -220,7 +220,7 @@
 		/// </summary>
 		Cast,
 		/// <summary>
-		/// <c>as</c> operator expression.
+		/// <see langword="as"/> operator expression.
 		/// </summary>
 		AsOperator,
 		/// <summary>

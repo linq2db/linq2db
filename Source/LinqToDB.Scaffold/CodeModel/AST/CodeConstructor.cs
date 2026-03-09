@@ -35,11 +35,11 @@ namespace LinqToDB.CodeModel
 		/// </summary>
 		public CodeClass                      Class         { get; }
 		/// <summary>
-		/// Indicator wether constructor calls <c>this()</c> or <c>base</c> constructor.
+		/// Indicator wether constructor calls <c>this()</c> or <see langword="base"/> constructor.
 		/// </summary>
 		public bool                           ThisCall      { get; internal set; }
 		/// <summary>
-		/// Parameters for <c>this()</c> or <c>base</c> constructor call.
+		/// Parameters for <c>this()</c> or <see langword="base"/> constructor call.
 		/// </summary>
 		public IReadOnlyList<ICodeExpression> BaseArguments => _baseParameters;
 

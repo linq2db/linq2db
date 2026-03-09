@@ -45,29 +45,29 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
-			switch (element.Operation)
+			return element.Operation switch
 			{
-				case "%": return new SqlFunction(element.Type, "Mod", element.Expr1, element.Expr2);
-				case "&": return new SqlFunction(element.Type, "BitAnd", element.Expr1, element.Expr2);
-				case "|": return new SqlFunction(element.Type, "BitOr", element.Expr1, element.Expr2);
-				case "^": return new SqlFunction(element.Type, "BitXor", element.Expr1, element.Expr2);
-				case "+" when element.SystemType == typeof(string): return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
-			}
-
-			return base.ConvertSqlBinaryExpression(element);
+				"%"                                           => new SqlFunction(element.Type, "Mod", element.Expr1, element.Expr2),
+				"&"                                           => new SqlFunction(element.Type, "BitAnd", element.Expr1, element.Expr2),
+				"|"                                           => new SqlFunction(element.Type, "BitOr", element.Expr1, element.Expr2),
+				"^"                                           => new SqlFunction(element.Type, "BitXor", element.Expr1, element.Expr2),
+				"+" when element.SystemType == typeof(string) => new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
+				_                                             => base.ConvertSqlBinaryExpression(element),
+			};
 		}
 
-		protected override SqlCoalesceExpression? WrapBooleanCoalesceItems(SqlCoalesceExpression element, IQueryElement newElement, bool forceConvert)
+		protected override SqlCoalesceExpression? WrapBooleanCoalesceItems(SqlCoalesceExpression element, IQueryElement newElement, bool forceConvert = false)
 		{
 			return base.WrapBooleanCoalesceItems(element, newElement, forceConvert: true);
 		}
 
 		public override ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
 		{
-			if (element.SystemType == null)
-				return element;
-
-			return ConvertCoalesceToBinaryFunc(element, "Nvl", supportsParameters : false);
+			return element.SystemType switch
+			{
+				null => element,
+				_ => ConvertCoalesceToBinaryFunc(element, "Nvl", supportsParameters: false),
+			};
 		}
 
 		//TODO: Move everything to SQLBuilder

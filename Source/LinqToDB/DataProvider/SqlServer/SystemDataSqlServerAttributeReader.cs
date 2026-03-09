@@ -27,9 +27,9 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 		/// <summary>
 		/// Provider instance, which use mapping attributes from System.Data.SqlClient assembly.
-		/// Could be null of assembly not found.
+		/// Could be null if assembly not found.
 		/// </summary>
-		public static IMetadataReader? SystemDataSqlClientProvider =
+		public static readonly IMetadataReader? SystemDataSqlClientProvider =
 #if NETFRAMEWORK
 			new SystemDataSqlServerAttributeReader(typeof(SqlMethodAttribute), typeof(SqlUserDefinedTypeAttribute))
 #else
@@ -41,9 +41,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		/// <summary>
 		/// Provider instance, which use mapping attributes from Microsoft.Data.SqlClient assembly (v1-4).
-		/// Could be null of assembly not found.
+		/// Could be null if assembly not found.
 		/// </summary>
-		public static IMetadataReader? MicrosoftDataSqlClientProvider = TryCreate(
+		public static readonly IMetadataReader? MicrosoftDataSqlClientProvider = TryCreate(
 			"Microsoft.Data.SqlClient.Server.SqlMethodAttribute, Microsoft.Data.SqlClient",
 			"Microsoft.Data.SqlClient.Server.SqlUserDefinedTypeAttribute, Microsoft.Data.SqlClient");
 
@@ -88,17 +88,11 @@ namespace LinqToDB.DataProvider.SqlServer
 			// see https://github.com/linq2db/linq2db/issues/3630
 			try
 			{
-				var methodAttr = Type.GetType(sqlMethodAttributeType, false);
-
-				if (methodAttr == null)
-					return null;
-
-				var typeAttr   = Type.GetType(sqlUserDefinedTypeAttributeType, false);
-
-				if (typeAttr == null)
-					return null;
-
-				return new SystemDataSqlServerAttributeReader(methodAttr, typeAttr);
+				return (Type.GetType(sqlMethodAttributeType, false), Type.GetType(sqlUserDefinedTypeAttributeType, false)) switch
+				{
+					({ } methodAttr, { } typeAttr) => new SystemDataSqlServerAttributeReader(methodAttr, typeAttr),
+					_ => null,
+				};
 			}
 			catch
 			{
@@ -119,13 +113,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			// (which probably will never happen anyways)
 
 			MappingAttribute[]? result = null;
-			if (memberInfo.IsMethodEx() || memberInfo.IsPropertyEx())
+			if (memberInfo.IsMethod || memberInfo.IsProperty)
 			{
 				result = _cache.GetOrAdd(
 					(memberInfo, attributeType: _sqlMethodAttribute),
 					static (key, nameGetter) =>
 					{
-						if (key.memberInfo.IsMethodEx())
+						if (key.memberInfo.IsMethod)
 						{
 							var attr = FindAttribute(key.memberInfo, key.attributeType);
 
@@ -138,7 +132,7 @@ namespace LinqToDB.DataProvider.SqlServer
 								if (mi.IsStatic)
 								{
 									var name = key.memberInfo.DeclaringType!.Name.ToLowerInvariant();
-									name = name.StartsWith("sql") ? name.Substring(3) : name;
+									name = name.StartsWith("sql", StringComparison.Ordinal) ? name.Substring(3) : name;
 
 									ex = string.Format(
 										CultureInfo.InvariantCulture,

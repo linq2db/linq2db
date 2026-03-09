@@ -7,24 +7,11 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	public class Net10JoinTests : TestBase
+	[TestFixture]
+	public class RightJoinMethodTests : TestBase
 	{
-
 		[Test]
-		public void LeftJoinWithFilter([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var query =
-				db.Parent
-					.Where(p => p.ParentID >= 4)
-					.LeftJoin(db.Child, p => p.ParentID, c => c.ParentID, (p, c) => new { p, c });
-
-			AssertQuery(query);
-		}
-
-		[Test]
-		public void RightJoinSimple([DataSources()] string context)
+		public void RightJoinSimple([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -35,7 +22,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RightJoinWithFilter([DataSources()] string context)
+		public void RightJoinWithFilter([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -58,24 +45,6 @@ namespace Tests.Linq
 					p1 => new { p1.ParentID, p1.Value1 },
 					p2 => new { p2.ParentID, p2.Value1 },
 					(p1, p2) => p2);
-
-			AssertQuery(query);
-		}
-
-		[Test]
-		public void LeftJoinWithSubquery([DataSources(TestProvName.AllSybase)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var query =
-				db.Parent
-					.Where(p => p.ParentID > 0)
-					.Take(10)
-					.LeftJoin(
-						db.Child,
-						p => p.ParentID,
-						c => c.ParentID,
-						(p, c) => new { ParentID = (int?)p!.ParentID, ChildID = (int?)c!.ChildID ?? 0 });
 
 			AssertQuery(query);
 		}
@@ -112,7 +81,6 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
-
 	}
 }
 #endif

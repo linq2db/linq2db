@@ -32,11 +32,9 @@ namespace Tests.Linq
 			if (TestConfiguration.DisableRemoteContext)
 				Assert.Inconclusive("Remote context disabled");
 
-			using (var db = GetDataContext(context + LinqServiceSuffix))
-			{
-				var list = await db.Parent.ToArrayAsync();
-				Assert.That(list, Is.Not.Empty);
-			}
+			using var db = GetDataContext(context + LinqServiceSuffix);
+			var list = await db.Parent.ToArrayAsync();
+			Assert.That(list, Is.Not.Empty);
 		}
 
 		[Test]
@@ -45,11 +43,9 @@ namespace Tests.Linq
 			if (TestConfiguration.DisableRemoteContext)
 				Assert.Inconclusive("Remote context disabled");
 
-			using (var db = GetDataContext(context + LinqServiceSuffix))
-			{
-				var list = db.Parent.ToArrayAsync().Result;
-				Assert.That(list, Is.Not.Empty);
-			}
+			using var db = GetDataContext(context + LinqServiceSuffix);
+			var list = db.Parent.ToArrayAsync().Result;
+			Assert.That(list, Is.Not.Empty);
 		}
 
 		[Test]
@@ -63,14 +59,12 @@ namespace Tests.Linq
 			if (TestConfiguration.DisableRemoteContext)
 				Assert.Inconclusive("Remote context disabled");
 
-			using (var db = GetDataContext(context + LinqServiceSuffix))
-			{
-				var list = new List<Parent>();
+			using var db = GetDataContext(context + LinqServiceSuffix);
+			var list = new List<Parent>();
 
-				await db.Parent.ForEachAsync(list.Add);
+			await db.Parent.ForEachAsync(list.Add);
 
-				Assert.That(list, Is.Not.Empty);
-			}
+			Assert.That(list, Is.Not.Empty);
 		}
 
 		[Test]
@@ -81,39 +75,35 @@ namespace Tests.Linq
 
 		async Task TestExecute1Impl(string context)
 		{
-			using (var conn = GetDataContext(context))
-			{
-				conn.InlineParameters = true;
+			using var conn = GetDataContext(context);
+			conn.InlineParameters = true;
 
-				var sql = conn.Person
+			var sql = conn.Person
 					.Where(p => p.ID == 1)
 					.Select(p => p.FirstName)
 					.Take(1)
 					.ToSqlQuery().Sql;
 
-				var res = await conn.SetCommand(sql).ExecuteAsync<string>();
+			var res = await conn.SetCommand(sql).ExecuteAsync<string>();
 
-				Assert.That(res, Is.EqualTo("John"));
-			}
+			Assert.That(res, Is.EqualTo("John"));
 		}
 
 		[Test]
 		public void TestExecute2([DataSources(false)] string context)
 		{
-			using (var conn = GetDataContext(context))
-			{
-				conn.InlineParameters = true;
+			using var conn = GetDataContext(context);
+			conn.InlineParameters = true;
 
-				var sql = conn.Person
+			var sql = conn.Person
 					.Where(p => p.ID == 1)
 					.Select(p => p.FirstName)
 					.Take(1)
 					.ToSqlQuery().Sql;
 
-				var res = conn.SetCommand(sql).ExecuteAsync<string>().Result;
+			var res = conn.SetCommand(sql).ExecuteAsync<string>().Result;
 
-				Assert.That(res, Is.EqualTo("John"));
-			}
+			Assert.That(res, Is.EqualTo("John"));
 		}
 
 		[Test]
@@ -124,23 +114,19 @@ namespace Tests.Linq
 
 		async Task TestQueryToArrayImpl(string context)
 		{
-			using (var conn = GetDataContext(context))
-			{
-				conn.InlineParameters = true;
+			using var conn = GetDataContext(context);
+			conn.InlineParameters = true;
 
-				var sql = conn.Person
+			var sql = conn.Person
 					.Where(p => p.ID == 1)
 					.Select(p => p.FirstName)
 					.Take(1)
 					.ToSqlQuery().Sql;
 
-				await using (var rd = await conn.SetCommand(sql).ExecuteReaderAsync())
-				{
-					var list = await rd.QueryToArrayAsync<string>();
+			await using var rd = await conn.SetCommand(sql).ExecuteReaderAsync();
+			var list = await rd.QueryToArrayAsync<string>();
 
-					Assert.That(list[0], Is.EqualTo("John"));
-				}
-			}
+			Assert.That(list[0], Is.EqualTo("John"));
 		}
 
 		[Test]
@@ -151,71 +137,61 @@ namespace Tests.Linq
 
 		async Task TestQueryToAsyncEnumerableImpl(string context)
 		{
-			using (var conn = GetDataContext(context))
-			{
-				conn.InlineParameters = true;
+			using var conn = GetDataContext(context);
+			conn.InlineParameters = true;
 
-				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToSqlQuery().Sql;
+			var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToSqlQuery().Sql;
 
-				var list = await AsyncEnumerableToListAsync(
+			var list = await AsyncEnumerableToListAsync(
 					conn.SetCommand(sql)
 						.QueryToAsyncEnumerable<string>());
 
-				Assert.That(list[0], Is.EqualTo("John"));
-			}
+			Assert.That(list[0], Is.EqualTo("John"));
 		}
 
 		[Test]
 		public async Task FirstAsyncTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var person = await db.Person.FirstAsync(p => p.ID == 1);
+			using var db = GetDataContext(context);
+			var person = await db.Person.FirstAsync(p => p.ID == 1);
 
-				Assert.That(person.ID, Is.EqualTo(1));
-			}
+			Assert.That(person.ID, Is.EqualTo(1));
 		}
 
 		[YdbCteAsSource]
 		[Test]
 		public async Task ContainsAsyncTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var p = new Person { ID = 1 };
+			using var db = GetDataContext(context);
+			var p = new Person { ID = 1 };
 
-				var r = await db.Person.ContainsAsync(p);
+			var r = await db.Person.ContainsAsync(p);
 
-				Assert.That(r, Is.True);
-			}
+			Assert.That(r, Is.True);
 		}
 
 		[Test]
 		public async Task TestFirstOrDefault([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var param = 4;
-				var resultQuery =
+			using var db = GetDataContext(context);
+			var param = 4;
+			var resultQuery =
 						from o in db.Parent
 						where Sql.Ext.In(o.ParentID, 1, 2, 3, (int?)null) || o.ParentID == param
 						select o;
 
-				var _ = await resultQuery.FirstOrDefaultAsync();
-			}
+			var _ = await resultQuery.FirstOrDefaultAsync();
 		}
 
 		[Test]
 		public async Task TakeSkipTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var resultQuery = db.Parent.OrderBy(p => p.ParentID).Skip(1).Take(2);
+			using var db = GetDataContext(context);
+			var resultQuery = db.Parent.OrderBy(p => p.ParentID).Skip(1).Take(2);
 
-				AreEqual(
-					resultQuery.ToArray(),
-					await resultQuery.ToArrayAsync());
-			}
+			AreEqual(
+				resultQuery.ToArray(),
+				await resultQuery.ToArrayAsync());
 		}
 
 		[Test]

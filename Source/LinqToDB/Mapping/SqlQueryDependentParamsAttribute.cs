@@ -15,10 +15,11 @@ namespace LinqToDB.Mapping
 	{
 		public override bool ExpressionsEqual<TContext>(TContext context, Expression expr1, Expression expr2, Func<TContext, Expression, Expression, bool> comparer)
 		{
-			if (expr1 is ConstantExpression c1 && expr2 is ConstantExpression c2)
-				return comparer(context, c1, c2);
-
-			return base.ExpressionsEqual(context, expr1, expr2, comparer);
+			return (expr1, expr2) switch
+			{
+				(ConstantExpression c1, ConstantExpression c2) => comparer(context, c1, c2),
+				_ => base.ExpressionsEqual(context, expr1, expr2, comparer),
+			};
 		}
 
 		public override IEnumerable<Expression> SplitExpression(Expression expression)

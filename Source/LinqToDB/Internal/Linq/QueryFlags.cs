@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace LinqToDB.Internal.Linq
 {
@@ -14,6 +14,6 @@ namespace LinqToDB.Internal.Linq
 		/// <summary>
 		/// Indicates that query contains expression, which have been expanded
 		/// </summary>
-		ExpandedQuery = 0x04
+		ExpandedQuery = 0x04,
 	}
 }

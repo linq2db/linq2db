@@ -26,160 +26,158 @@ namespace Tests.Linq
 		[Test]
 		public void Test1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from ch in    Child where ch.ParentID == 1 select new { ch, ch.Parent },
-					from ch in db.Child where ch.ParentID == 1 select new { ch, ch.Parent });
+			using var db = GetDataContext(context);
+			AreEqual(
+				from ch in Child where ch.ParentID == 1 select new { ch, ch.Parent },
+				from ch in db.Child where ch.ParentID == 1 select new { ch, ch.Parent });
 		}
 
 		[Test]
 		public void Test2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p  in Parent
-					from ch in p.Children
-					where ch.ParentID < 4 || ch.ParentID >= 4
-					select new { p.ParentID, ch.ChildID }
-					,
-					from p  in db.Parent
-					from ch in p.Children
-					where ch.ParentID < 4 || ch.ParentID >= 4
-					select new { p.ParentID, ch.ChildID });
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Parent
+				from ch in p.Children
+				where ch.ParentID < 4 || ch.ParentID >= 4
+				select new { p.ParentID, ch.ChildID }
+				,
+				from p in db.Parent
+				from ch in p.Children
+				where ch.ParentID < 4 || ch.ParentID >= 4
+				select new { p.ParentID, ch.ChildID });
 		}
 
 		[Test]
 		public void Test3([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p  in Parent
-					from ch in p.Children
-					where p.ParentID < 4 || p.ParentID >= 4
-					select new { p.ParentID }
-					,
-					from p  in db.Parent
-					from ch in p.Children
-					where p.ParentID < 4 || p.ParentID >= 4
-					select new { p.ParentID });
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Parent
+				from ch in p.Children
+				where p.ParentID < 4 || p.ParentID >= 4
+				select new { p.ParentID }
+				,
+				from p in db.Parent
+				from ch in p.Children
+				where p.ParentID < 4 || p.ParentID >= 4
+				select new { p.ParentID });
 		}
 
 		[Test]
 		public void Test4([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p  in Parent
-					from ch in p.Children
-					where p.ParentID < 4 || p.ParentID >= 4
-					select new { p.ParentID, ch.ChildID }
-					,
-					from p  in db.Parent
-					from ch in p.Children
-					where p.ParentID < 4 || p.ParentID >= 4
-					select new { p.ParentID, ch.ChildID });
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Parent
+				from ch in p.Children
+				where p.ParentID < 4 || p.ParentID >= 4
+				select new { p.ParentID, ch.ChildID }
+				,
+				from p in db.Parent
+				from ch in p.Children
+				where p.ParentID < 4 || p.ParentID >= 4
+				select new { p.ParentID, ch.ChildID });
 		}
 
 		[Test]
 		public void Test5([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p  in Parent
-					from ch in p.Children2
-					where ch.ParentID < 4 || ch.ParentID >= 4
-					select new { p.ParentID, ch.ChildID }
-					,
-					from p  in db.Parent
-					from ch in p.Children2
-					where ch.ParentID < 4 || ch.ParentID >= 4
-					select new { p.ParentID, ch.ChildID });
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Parent
+				from ch in p.Children2
+				where ch.ParentID < 4 || ch.ParentID >= 4
+				select new { p.ParentID, ch.ChildID }
+				,
+				from p in db.Parent
+				from ch in p.Children2
+				where ch.ParentID < 4 || ch.ParentID >= 4
+				select new { p.ParentID, ch.ChildID });
 		}
 
 		[Test]
 		public void SelectMany1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					   Parent.SelectMany(p => p.Children.Select(ch => p)),
-					db.Parent.SelectMany(p => p.Children.Select(ch => p)));
+			using var db = GetDataContext(context);
+			AreEqual(
+				   Parent.SelectMany(p => p.Children.Select(ch => p)),
+				db.Parent.SelectMany(p => p.Children.Select(ch => p)));
 		}
 
 		[Test]
 		public void SelectMany2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					   Parent.SelectMany(p =>    Child.Select(ch => p)),
-					db.Parent.SelectMany(p => db.Child.Select(ch => p)));
-			}
+			using var db = GetDataContext(context);
+			AreEqual(
+				   Parent.SelectMany(p => Child.Select(ch => p)),
+				db.Parent.SelectMany(p => db.Child.Select(ch => p)));
 		}
 
 		[Test]
 		public void SelectMany3([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					Child
-						.GroupBy(ch => ch.Parent)
-						.Where(g => g.Count() > 2)
-						.SelectMany(g => g.Select(ch => ch.Parent)),
-					db.Child
-						.GroupBy(ch => ch.Parent)
-						.Where(g => g.Count() > 2)
-						.SelectMany(g => g.Select(ch => ch.Parent)));
+			using var db = GetDataContext(context);
+			AreEqual(
+				Child
+					.GroupBy(ch => ch.Parent)
+					.Where(g => g.Count() > 2)
+					.SelectMany(g => g.Select(ch => ch.Parent)),
+				db.Child
+					.GroupBy(ch => ch.Parent)
+					.Where(g => g.Count() > 2)
+					.SelectMany(g => g.Select(ch => ch.Parent)));
 		}
 
 		[Test]
 		public void SelectMany4([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					Child
-						.GroupBy(ch => ch.Parent)
-						.Where(g => g.Count() > 2)
-						.SelectMany(g => g.Select(ch => ch.Parent!.ParentID)),
-					db.Child
-						.GroupBy(ch => ch.Parent)
-						.Where(g => g.Count() > 2)
-						.SelectMany(g => g.Select(ch => ch.Parent!.ParentID)));
+			using var db = GetDataContext(context);
+			AreEqual(
+				Child
+					.GroupBy(ch => ch.Parent)
+					.Where(g => g.Count() > 2)
+					.SelectMany(g => g.Select(ch => ch.Parent!.ParentID)),
+				db.Child
+					.GroupBy(ch => ch.Parent)
+					.Where(g => g.Count() > 2)
+					.SelectMany(g => g.Select(ch => ch.Parent!.ParentID)));
 		}
 
 		[Test]
 		public void SelectMany5([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					   Parent.SelectMany(p => p.Children.Select(ch => p.ParentID)),
-					db.Parent.SelectMany(p => p.Children.Select(ch => p.ParentID)));
+			using var db = GetDataContext(context);
+			AreEqual(
+				   Parent.SelectMany(p => p.Children.Select(ch => p.ParentID)),
+				db.Parent.SelectMany(p => p.Children.Select(ch => p.ParentID)));
 		}
 
 		[Test]
 		public void LeftJoin1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Parent from c in p.Children.DefaultIfEmpty() where p.ParentID >= 4 select new { p, c },
-					from p in db.Parent from c in p.Children.DefaultIfEmpty() where p.ParentID >= 4 select new { p, c });
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Parent from c in p.Children.DefaultIfEmpty() where p.ParentID >= 4 select new { p, c },
+				from p in db.Parent from c in p.Children.DefaultIfEmpty() where p.ParentID >= 4 select new { p, c });
 		}
 
 		[Test]
 		public void LeftJoin2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Parent from c in p.Children.DefaultIfEmpty() where p.ParentID >= 4 select new { c, p },
-					from p in db.Parent from c in p.Children.DefaultIfEmpty() where p.ParentID >= 4 select new { c, p });
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Parent from c in p.Children.DefaultIfEmpty() where p.ParentID >= 4 select new { c, p },
+				from p in db.Parent from c in p.Children.DefaultIfEmpty() where p.ParentID >= 4 select new { c, p });
 		}
 
 		[Test]
 		public void GroupBy1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from ch in    Child group ch by ch.Parent into g select g.Key,
-					from ch in db.Child group ch by ch.Parent into g select g.Key);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from ch in Child group ch by ch.Parent into g select g.Key,
+				from ch in db.Child group ch by ch.Parent into g select g.Key);
 		}
 
 		[Test]
@@ -204,96 +202,88 @@ namespace Tests.Linq
 		[Test]
 		public void GroupBy3([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Parent group p by p.Types!.DateTimeValue.Year into g select g.Key,
-					from p in db.Parent group p by p.Types!.DateTimeValue.Year into g select g.Key);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Parent group p by p.Types!.DateTimeValue.Year into g select g.Key,
+				from p in db.Parent group p by p.Types!.DateTimeValue.Year into g select g.Key);
 		}
 
 		[Test]
 		public void GroupBy4([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Types group p by p.DateTimeValue.Year into g select g.Key,
-					from p in db.Types group p by p.DateTimeValue.Year into g select g.Key);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Types group p by p.DateTimeValue.Year into g select g.Key,
+				from p in db.Types group p by p.DateTimeValue.Year into g select g.Key);
 		}
 
 		[Test]
 		public void EqualsNull1([NorthwindDataContext] string context)
 		{
-			using (var db = new NorthwindDB(context))
-			{
-				var dd = GetNorthwindAsList(context);
-				AreEqual(
-					from employee in dd.Employee where employee.ReportsToEmployee != null select employee.EmployeeID,
-					from employee in db.Employee where employee.ReportsToEmployee != null select employee.EmployeeID);
-			}
+			using var db = new NorthwindDB(context);
+			var dd = GetNorthwindAsList(context);
+			AreEqual(
+				from employee in dd.Employee where employee.ReportsToEmployee != null select employee.EmployeeID,
+				from employee in db.Employee where employee.ReportsToEmployee != null select employee.EmployeeID);
 		}
 
 		[Test]
 		public void EqualsNull2([NorthwindDataContext] string context)
 		{
-			using (var db = new NorthwindDB(context))
-			{
-				var dd = GetNorthwindAsList(context);
-				AreEqual(
-					from employee in dd.Employee where employee.ReportsToEmployee != null select employee,
-					from employee in db.Employee where employee.ReportsToEmployee != null select employee);
-			}
+			using var db = new NorthwindDB(context);
+			var dd = GetNorthwindAsList(context);
+			AreEqual(
+				from employee in dd.Employee where employee.ReportsToEmployee != null select employee,
+				from employee in db.Employee where employee.ReportsToEmployee != null select employee);
 		}
 
 		[Test]
 		public void EqualsNull3([NorthwindDataContext] string context)
 		{
-			using (var db = new NorthwindDB(context))
-			{
-				var dd = GetNorthwindAsList(context);
-				AreEqual(
-					from employee in dd.Employee where employee.ReportsToEmployee != null select new { employee.ReportsToEmployee, employee },
-					from employee in db.Employee where employee.ReportsToEmployee != null select new { employee.ReportsToEmployee, employee });
-			}
+			using var db = new NorthwindDB(context);
+			var dd = GetNorthwindAsList(context);
+			AreEqual(
+				from employee in dd.Employee where employee.ReportsToEmployee != null select new { employee.ReportsToEmployee, employee },
+				from employee in db.Employee where employee.ReportsToEmployee != null select new { employee.ReportsToEmployee, employee });
 		}
 
 		[Test]
 		public void StackOverflow1([NorthwindDataContext] string context)
 		{
-			using (var db = new NorthwindDB(context))
-			{
-				var dd = GetNorthwindAsList(context);
-				Assert.That(
-					(from employee in db.Employee where employee.Employees.Count > 0 select employee).FirstOrDefault(), Is.EqualTo((from employee in dd.Employee where employee.Employees.Count > 0 select employee).FirstOrDefault()));
-			}
+			using var db = new NorthwindDB(context);
+			var dd = GetNorthwindAsList(context);
+			Assert.That(
+				(from employee in db.Employee where employee.Employees.Count > 0 select employee).FirstOrDefault(), Is.EqualTo((from employee in dd.Employee where employee.Employees.Count > 0 select employee).FirstOrDefault()));
 		}
 
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void StackOverflow2([DataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Parent5 where p.Children.Count != 0 select p,
-					from p in db.Parent5 where p.Children.Count != 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Parent5 where p.Children.Count != 0 select p,
+				from p in db.Parent5 where p.Children.Count != 0 select p);
 		}
 
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void StackOverflow3([DataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Parent5 where p.Children.Count() != 0 select p,
-					from p in db.Parent5 where p.Children.Count() != 0 select p);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Parent5 where p.Children.Count() != 0 select p,
+				from p in db.Parent5 where p.Children.Count() != 0 select p);
 		}
 
 		[Test]
 		[ThrowsRequiresCorrelatedSubquery]
 		public void StackOverflow4([DataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Parent5 select new { p.Children.Count },
-					from p in db.Parent5 select new { p.Children.Count });
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Parent5 select new { p.Children.Count },
+				from p in db.Parent5 select new { p.Children.Count });
 		}
 
 		[Test]
@@ -309,23 +299,23 @@ namespace Tests.Linq
 		[Test]
 		public void Projection1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from c in
-						from c in Child
-						where c.Parent!.ParentID == 2
-						select c
-					join g in GrandChild on c.ParentID equals g.ParentID
-					where g.ChildID == 22
-					select new { c.Parent, c }
-					,
-					from c in
-						from c in db.Child
-						where c.Parent!.ParentID == 2
-						select c
-					join g in db.GrandChild on c.ParentID equals g.ParentID
-					where g.ChildID == 22
-					select new { c.Parent, c });
+			using var db = GetDataContext(context);
+			AreEqual(
+				from c in
+					from c in Child
+					where c.Parent!.ParentID == 2
+					select c
+				join g in GrandChild on c.ParentID equals g.ParentID
+				where g.ChildID == 22
+				select new { c.Parent, c }
+				,
+				from c in
+					from c in db.Child
+					where c.Parent!.ParentID == 2
+					select c
+				join g in db.GrandChild on c.ParentID equals g.ParentID
+				where g.ChildID == 22
+				select new { c.Parent, c });
 		}
 
 		[Table("Parent")]
@@ -375,20 +365,18 @@ namespace Tests.Linq
 		{
 			var ids = new[] { 1, 5 };
 
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from t in db.GetTable<Top>()
 					where ids.Contains(t.ParentID)
 					orderby t.ParentID
 					select t.Middle == null ? null : t.Middle.Bottom;
 
-				var list = q.ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(list[0], Is.Not.Null);
-					Assert.That(list[1], Is.Null);
-				}
+			var list = q.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(list[0], Is.Not.Null);
+				Assert.That(list[1], Is.Null);
 			}
 		}
 
@@ -397,20 +385,18 @@ namespace Tests.Linq
 		{
 			var ids = new[] { 1, 5 };
 
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from t in db.GetTable<Top>()
 					where ids.Contains(t.ParentID)
 					orderby t.ParentID
 					select t.Middle!.Bottom;
 
-				var list = q.ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(list[0], Is.Not.Null);
-					Assert.That(list[1], Is.Null);
-				}
+			var list = q.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(list[0], Is.Not.Null);
+				Assert.That(list[1], Is.Null);
 			}
 		}
 
@@ -419,20 +405,18 @@ namespace Tests.Linq
 		{
 			var ids = new[] { 1, 5 };
 
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from t in db.GetTable<Top>()
 					where ids.Contains(t.ParentID)
 					orderby t.ParentID
 					select t.Middle!.Bottom1;
 
-				var list = q.ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(list[0], Is.Not.Null);
-					Assert.That(list[1], Is.Null);
-				}
+			var list = q.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(list[0], Is.Not.Null);
+				Assert.That(list[1], Is.Null);
 			}
 		}
 
@@ -466,67 +450,62 @@ namespace Tests.Linq
 		[Test]
 		public void AssociationInHierarchy([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var _ = db.GetTable<ChildBaseForHierarchy>()
+			using var db = GetDataContext(context);
+			var _ = db.GetTable<ChildBaseForHierarchy>()
 					.OfType<ChildForHierarchy>()
 					.Select(ch => new ChildForHierarchy { Parent = ch.Parent })
 					.ToList();
-			}
 		}
 
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void LetTest1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in Parent
-					let chs = p.Children
-					select new { p.ParentID, Count = chs.Count() },
-					from p in db.Parent
-					let chs = p.Children
-					select new { p.ParentID, Count = chs.Count() });
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Parent
+				let chs = p.Children
+				select new { p.ParentID, Count = chs.Count() },
+				from p in db.Parent
+				let chs = p.Children
+				select new { p.ParentID, Count = chs.Count() });
 		}
 
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void LetTest2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var exptected = from p in Parent
-					select new { p } into pp
-					let chs = pp.p.Children
-					select new { pp.p.ParentID, Count = chs.Count() };
+			using var db = GetDataContext(context);
+			var exptected = from p in Parent
+							select new { p } into pp
+							let chs = pp.p.Children
+							select new { pp.p.ParentID, Count = chs.Count() };
 
-				var actual = db.Parent.Select(p => new { Peojection = p })
+			var actual = db.Parent.Select(p => new { Peojection = p })
 					.Select(pp => new { pp, chs = pp.Peojection.Children })
 					.Select(@t => new { @t.pp.Peojection.ParentID, Count = @t.chs.Count() });
 
-				var actualResult = actual.ToArray();
+			var actualResult = actual.ToArray();
 
-				AreEqual(
-					exptected,
-					actual);
-			}
+			AreEqual(
+				exptected,
+				actual);
 		}
 
 		[Test]
 		public void NullAssociation([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p1 in    Parent select p1.ParentTest,
-					from p1 in db.Parent select p1.ParentTest);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p1 in Parent select p1.ParentTest,
+				from p1 in db.Parent select p1.ParentTest);
 		}
 
 		[Test]
 		public void MultipleUse([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL93Plus, TestProvName.AllOracle12Plus, TestProvName.AllMySql8Plus, TestProvName.AllSapHana)] string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				var q = db.Child
+			using var db = GetDataConnection(context);
+			var q = db.Child
 					.Select(g => new
 					{
 						g.ChildID,
@@ -552,20 +531,18 @@ namespace Tests.Linq
 						v1 = s.Parent.Value1
 					});
 
-				var _ = q.ToList();
+			var _ = q.ToList();
 
-				var idx = db.LastQuery!.IndexOf("OUTER APPLY");
+			var idx = db.LastQuery!.IndexOf("OUTER APPLY");
 
-				Assert.That(db.LastQuery.IndexOf("OUTER APPLY", idx + 1), Is.EqualTo(-1));
-			}
+			Assert.That(db.LastQuery.IndexOf("OUTER APPLY", idx + 1), Is.EqualTo(-1));
 		}
 
 		[Test]
 		public void Issue148Test([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from n in db.Parent
 					select new
 					{
@@ -575,11 +552,10 @@ namespace Tests.Linq
 						Children3 = n.Children.Where(t => 1 == 1).ToList().ToList(),
 					};
 
-				var list = q.ToList();
+			var list = q.ToList();
 
-				Assert.That(list,       Is.Not.Empty);
-				Assert.That(list[0].Children1, Is.Not.Null);
-			}
+			Assert.That(list, Is.Not.Empty);
+			Assert.That(list[0].Children1, Is.Not.Null);
 		}
 
 		[Table("Parent")]
@@ -610,25 +586,22 @@ namespace Tests.Linq
 		[Test]
 		public void Issue170Test([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var value = db.GetTable<Parent170>()
+			using var db = GetDataContext(context);
+			var value = db.GetTable<Parent170>()
 #pragma warning disable CS0472 // comparison of int with null
 					.Where(x => x.Value1 == null)
 #pragma warning restore CS0472
 					.Select(x => (int?)x.Parent!.Value1)
 					.First();
 
-				Assert.That(value, Is.Null);
-			}
+			Assert.That(value, Is.Null);
 		}
 
 		[Test]
 		public void Issue170SelectManyTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var actual = db.GetTable<Parent170>()
+			using var db = GetDataContext(context);
+			var actual = db.GetTable<Parent170>()
 					.SelectMany(x => x.Children)
 #pragma warning disable CS0472 // comparison of int with null
 					.Where(x => x.Parent!.Value1 == null)
@@ -636,8 +609,7 @@ namespace Tests.Linq
 					.Select(x => (int?)x.Parent!.Value1)
 					.First();
 
-				Assert.That(actual, Is.Null);
-			}
+			Assert.That(actual, Is.Null);
 		}
 
 		[Table("Child")]
@@ -660,12 +632,10 @@ namespace Tests.Linq
 		[Test]
 		public void StorageText([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var value = db.GetTable<StorageTestClass>().LoadWith(x => x.Parent).First();
+			using var db = GetDataContext(context);
+			var value = db.GetTable<StorageTestClass>().LoadWith(x => x.Parent).First();
 
-				Assert.That(value.Parent, Is.Not.Null);
-			}
+			Assert.That(value.Parent, Is.Not.Null);
 		}
 
 		sealed class ParentContainer
@@ -706,12 +676,10 @@ namespace Tests.Linq
 		[Test]
 		public void AssociationSetterExpressionTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var value = db.GetTable<AssociationSetterExpressionTestClass>().LoadWith(x => x.Parent).First();
+			using var db = GetDataContext(context);
+			var value = db.GetTable<AssociationSetterExpressionTestClass>().LoadWith(x => x.Parent).First();
 
-				Assert.That(value.Parent, Is.Not.Null);
-			}
+			Assert.That(value.Parent, Is.Not.Null);
 		}
 
 		// at the moment it must be generic because linq2db will infer entity type from generic arguments
@@ -759,19 +727,17 @@ namespace Tests.Linq
 		[Test]
 		public void Issue3975Test([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				// we want to make sure the conversion is not possible because we want to bypass
-				// that conversion if the setter value parameter type (IEnumerable<Child> in this case)
-				// does not match the member type (ChildrenContainer<Child> in this case)
-				Assert.Throws<LinqToDB.Common.LinqToDBConvertException>(() =>
-					db.MappingSchema.ChangeType(new List<Child>(0), typeof(ChildrenContainer<Child>)),
-					"List<Child> should not be convertible to ChildrenContainer<Child>");
+			using var db = GetDataContext(context);
+			// we want to make sure the conversion is not possible because we want to bypass
+			// that conversion if the setter value parameter type (IEnumerable<Child> in this case)
+			// does not match the member type (ChildrenContainer<Child> in this case)
+			Assert.Throws<LinqToDB.Common.LinqToDBConvertException>(() =>
+				db.MappingSchema.ChangeType(new List<Child>(0), typeof(ChildrenContainer<Child>)),
+				"List<Child> should not be convertible to ChildrenContainer<Child>");
 
-				var value = db.GetTable<Issue3975TestClass>().LoadWith(x => x.Children).First();
+			var value = db.GetTable<Issue3975TestClass>().LoadWith(x => x.Children).First();
 
-				Assert.That(value.Children.Value, Is.Not.Null);
-			}
+			Assert.That(value.Children.Value, Is.Not.Null);
 		}
 
 		[Test]
@@ -779,20 +745,18 @@ namespace Tests.Linq
 		{
 			var ids = new[] { 1, 5 };
 
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			var q =
 					from t in db.GetTable<Top>()
 					where ids.Contains(t.ParentID)
 					orderby t.ParentID
 					select t.MiddleGeneric == null ? null : t.MiddleGeneric.Bottom;
 
-				var list = q.ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(list[0], Is.Not.Null);
-					Assert.That(list[1], Is.Null);
-				}
+			var list = q.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(list[0], Is.Not.Null);
+				Assert.That(list[1], Is.Null);
 			}
 		}
 
@@ -808,20 +772,18 @@ namespace Tests.Linq
 				.Association( t => t.MiddleRuntime, (t, m) => t.ParentID == m!.ParentID && m.ChildID > 1 )
 				.Build();
 
-			using (var db = GetDataContext(context, ms))
-			{
-				var q =
+			using var db = GetDataContext(context, ms);
+			var q =
 					from t in db.GetTable<Top>()
 					where ids.Contains(t.ParentID)
 					orderby t.ParentID
 					select t.MiddleRuntime == null ? null : t.MiddleRuntime.Bottom;
 
-				var list = q.ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(list[0], Is.Not.Null);
-					Assert.That(list[1], Is.Null);
-				}
+			var list = q.ToList();
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(list[0], Is.Not.Null);
+				Assert.That(list[1], Is.Null);
 			}
 		}
 
@@ -837,200 +799,168 @@ namespace Tests.Linq
 				.Association( t => t.MiddlesRuntime, (t, m) => t.ParentID == m.ParentID && m.ChildID > 1 )
 				.Build();
 
-			using (var db = GetDataContext(context, ms))
-			{
-				var q =
+			using var db = GetDataContext(context, ms);
+			var q =
 					from t in db.GetTable<Top>()
 					from m in t.MiddlesRuntime
 					where ids.Contains(t.ParentID)
 					orderby t.ParentID
 					select new {t, m};
 
-				var list = q.ToList();
+			var list = q.ToList();
 
-				Assert.That(list, Has.Count.EqualTo(1));
-			}
+			Assert.That(list, Has.Count.EqualTo(1));
 		}
 
 		[Test]
 		public void TestGenericAssociation2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var exptected = (from t in Parent
-					from g in t.GrandChildren.Where(m => m.ChildID > 22)
-					orderby g.ParentID
-					select t).ToArray();
+			using var db = GetDataContext(context);
+			var exptected = (from t in Parent
+							 from g in t.GrandChildren.Where(m => m.ChildID > 22)
+							 orderby g.ParentID
+							 select t).ToArray();
 
-				var actual = (from t in db.Parent
-					from g in t.GrandChildrenX
-					orderby g.ParentID
-					select t).ToArray();
+			var actual = (from t in db.Parent
+						  from g in t.GrandChildrenX
+						  orderby g.ParentID
+						  select t).ToArray();
 
-				AreEqual(exptected, actual);
-			}
+			AreEqual(exptected, actual);
 		}
 
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
 		public void TestGenericAssociation3([DataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					from t in Parent
-					where t.GrandChildren.Count(m => m.ChildID > 22) > 1
-					orderby t.ParentID
-					select t
-					,
-					from t in db.Parent
-					where t.GrandChildrenX.Count > 1
-					orderby t.ParentID
-					select t);
-			}
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Parent
+				where t.GrandChildren.Count(m => m.ChildID > 22) > 1
+				orderby t.ParentID
+				select t
+				,
+				from t in db.Parent
+				where t.GrandChildrenX.Count > 1
+				orderby t.ParentID
+				select t);
 		}
 
 		[Test]
 		public void TestGenericAssociation4([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					from t in Parent
-					from g in t.Children.Where(m => Math.Abs(m.ChildID) > 3)
-					orderby g.ParentID
-					select t
-					,
-					from t in db.Parent
-					from g in t.ChildrenX
-					orderby g.ParentID
-					select t);
-			}
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Parent
+				from g in t.Children.Where(m => Math.Abs(m.ChildID) > 3)
+				orderby g.ParentID
+				select t
+				,
+				from t in db.Parent
+				from g in t.ChildrenX
+				orderby g.ParentID
+				select t);
 		}
 
 		[Test]
 		public void ExtensionTest1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-				   Parent.SelectMany(_ => _.Children),
-				db.Parent.SelectMany(_ => _.Children()));
-
-			}
+			using var db = GetDataContext(context);
+			AreEqual(
+			   Parent.SelectMany(_ => _.Children),
+			db.Parent.SelectMany(_ => _.Children()));
 		}
 
 		[Test]
 		public void ExtensionTest11([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-				   Parent.SelectMany(_ => _.Children),
-				db.Parent.SelectMany(_ => AssociationExtension.Children(_)));
-			}
+			using var db = GetDataContext(context);
+			AreEqual(
+			   Parent.SelectMany(_ => _.Children),
+			db.Parent.SelectMany(_ => AssociationExtension.Children(_)));
 		}
 
 		[Test]
 		public void ExtensionTest2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-				   Child.Select(_ => _.Parent),
-				db.Child.Select(_ => _.Parent()));
-			}
+			using var db = GetDataContext(context);
+			AreEqual(
+			   Child.Select(_ => _.Parent),
+			db.Child.Select(_ => _.Parent()));
 		}
 
 		[Test]
 		public void ExtensionTest21([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-				   Child.Select(_ => _.Parent),
-				db.Child.Select(_ => AssociationExtension.Parent(_)));
-
-			}
+			using var db = GetDataContext(context);
+			AreEqual(
+			   Child.Select(_ => _.Parent),
+			db.Child.Select(_ => AssociationExtension.Parent(_)));
 		}
 
 		[Test]
 		public void ExtensionTest3([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-				   Child.Select(_ => new { p = _.Parent!  }).Select(_ => _.p.ParentID),
-				db.Child.Select(_ => new { p = _.Parent() }).Select(_ => _.p.ParentID));
-
-			}
+			using var db = GetDataContext(context);
+			AreEqual(
+			   Child.Select(_ => new { p = _.Parent! }).Select(_ => _.p.ParentID),
+			db.Child.Select(_ => new { p = _.Parent() }).Select(_ => _.p.ParentID));
 		}
 
 		[Test]
 		public void ExtensionTest4([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-				   Child.Select(_ => new { c = _,  p = _.Parent   }).Select(_ => _.c.Parent),
-				db.Child.Select(_ => new { c = _,  p = _.Parent() }).Select(_ => _.c.Parent()));
-
-			}
+			using var db = GetDataContext(context);
+			AreEqual(
+			   Child.Select(_ => new { c = _, p = _.Parent }).Select(_ => _.c.Parent),
+			db.Child.Select(_ => new { c = _, p = _.Parent() }).Select(_ => _.c.Parent()));
 		}
 
 		[Test]
 		public void QueryableExtensionTest1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-				   Parent.SelectMany(_ => _.Children),
-				db.Parent.SelectMany(_ => _.QueryableChildren(db)));
-			}
+			using var db = GetDataContext(context);
+			AreEqual(
+			   Parent.SelectMany(_ => _.Children),
+			db.Parent.SelectMany(_ => _.QueryableChildren(db)));
 		}
 
 		[Test]
 		public void QuerableExtensionTest11([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-				   Parent.SelectMany(_ => _.Children),
-				db.Parent.SelectMany(_ => AssociationExtension.QueryableChildren(_, db)));
-			}
+			using var db = GetDataContext(context);
+			AreEqual(
+			   Parent.SelectMany(_ => _.Children),
+			db.Parent.SelectMany(_ => AssociationExtension.QueryableChildren(_, db)));
 		}
 
 		[Test]
 		public void QueryableExtensionTest2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-				   Child.Select    (_ => _.Parent),
-				db.Child.SelectMany(_ => _.QueryableParent(db)));
-			}
+			using var db = GetDataContext(context);
+			AreEqual(
+			   Child.Select(_ => _.Parent),
+			db.Child.SelectMany(_ => _.QueryableParent(db)));
 		}
 
 		[Test]
 		public void QueryableExtensionTest21([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-				   Child.Select    (_ => _.Parent),
-				db.Child.SelectMany(_ => AssociationExtension.QueryableParent(_, db)));
-			}
+			using var db = GetDataContext(context);
+			AreEqual(
+			   Child.Select(_ => _.Parent),
+			db.Child.SelectMany(_ => AssociationExtension.QueryableParent(_, db)));
 		}
 
 		[Test]
 		public void DistinctSelect([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					GrandChild.Where(gc => gc.Child!.Parent!.ParentID > 0).Select(gc => gc.Child).Distinct()
-						.Select(c => c!.ChildID),
-					db.GrandChild.Where(gc => gc.Child!.Parent!.ParentID > 0).Select(gc => gc.Child).Distinct()
-						.Select(c => c!.ChildID));
+			using var db = GetDataContext(context);
+			AreEqual(
+				GrandChild.Where(gc => gc.Child!.Parent!.ParentID > 0).Select(gc => gc.Child).Distinct()
+					.Select(c => c!.ChildID),
+				db.GrandChild.Where(gc => gc.Child!.Parent!.ParentID > 0).Select(gc => gc.Child).Distinct()
+					.Select(c => c!.ChildID));
 		}
 
 		[Test]
@@ -1157,14 +1087,13 @@ namespace Tests.Linq
 		[Test]
 		public void ComplexQueryWithManyToMany([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				int? id = 3;
-				int? id1 = 3;
+			using var db = GetDataContext(context);
+			int? id = 3;
+			int? id1 = 3;
 
-				// yes, this query doesn't make sense - it just tests
-				// that SelectContext.ConvertToIndexInternal handles ConvertFlags.Key in IsScalar branch
-				var result = db
+			// yes, this query doesn't make sense - it just tests
+			// that SelectContext.ConvertToIndexInternal handles ConvertFlags.Key in IsScalar branch
+			var result = db
 				.GetTable<ComplexChild>()
 				.Where(с => AssociationExtension.ContainsNullable(
 					db
@@ -1180,8 +1109,7 @@ namespace Tests.Linq
 				.Select(с => (int?)с.ChildID)
 				.FirstOrDefault();
 
-				Assert.That(result, Is.EqualTo(11));
-			}
+			Assert.That(result, Is.EqualTo(11));
 		}
 
 		[Table("Parent")]
@@ -1500,20 +1428,18 @@ namespace Tests.Linq
 		[Test]
 		public void Issue3260Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (var t1 = db.CreateLocalTable<LeaveRequest>())
-			using (var t2 = db.CreateLocalTable<LeaveRequestDateEntry>())
-			{
-				db.GetTable<LeaveRequest>()
-					.Select(x => new TestDto()
-					{
-						Result = x
-							.LeaveRequestDateEntries
-							.Select(e => e.StartHour)
-							.DefaultIfEmpty(0)
-							.Sum()
-					}).ToList();
-			}
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<LeaveRequest>();
+			using var t2 = db.CreateLocalTable<LeaveRequestDateEntry>();
+			db.GetTable<LeaveRequest>()
+				.Select(x => new TestDto()
+				{
+					Result = x
+						.LeaveRequestDateEntries
+						.Select(e => e.StartHour)
+						.DefaultIfEmpty(0)
+						.Sum()
+				}).ToList();
 		}
 
 		#endregion

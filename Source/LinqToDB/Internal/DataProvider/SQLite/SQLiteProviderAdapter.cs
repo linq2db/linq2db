@@ -76,7 +76,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 			var version = assembly.GetName().Version;
 
 			var typeMapper = new TypeMapper();
-			if (clientNamespace == MicrosoftDataSQLiteClientNamespace)
+			if (string.Equals(clientNamespace, MicrosoftDataSQLiteClientNamespace, StringComparison.Ordinal))
 			{
 				typeMapper.RegisterTypeWrapper<SqliteConnection>(connectionType);
 			}
@@ -89,7 +89,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 
 			Action? clearAllPools = null;
 
-			if (clientNamespace == MicrosoftDataSQLiteClientNamespace)
+			if (string.Equals(clientNamespace, MicrosoftDataSQLiteClientNamespace, StringComparison.Ordinal))
 			{
 				if (version >= ClearPoolsMinVersionMDS)
 				{
@@ -101,10 +101,10 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 				clearAllPools = typeMapper.BuildAction(typeMapper.MapActionLambda(() => SQLiteConnection.ClearAllPools()));
 			}
 
-			var supportsDateOnly   = clientNamespace == MicrosoftDataSQLiteClientNamespace && assembly.GetName().Version >= MinDateOnlyAssemblyVersionMDS;
+			var supportsDateOnly   = string.Equals(clientNamespace, MicrosoftDataSQLiteClientNamespace, StringComparison.Ordinal) && assembly.GetName().Version >= MinDateOnlyAssemblyVersionMDS;
 
 			Func<string, DbConnection> connectionFactory;
-			if (clientNamespace == MicrosoftDataSQLiteClientNamespace)
+			if (string.Equals(clientNamespace, MicrosoftDataSQLiteClientNamespace, StringComparison.Ordinal))
 			{
 				connectionFactory = typeMapper.BuildTypedFactory<string, SqliteConnection, DbConnection>(connectionString => new SqliteConnection(connectionString));
 			}
@@ -130,49 +130,51 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		
 		public static SQLiteProviderAdapter GetInstance(SQLiteProvider provider)
 		{
-			if (provider == SQLiteProvider.System)
+			return provider switch
+			{
+				SQLiteProvider.System    => GetSystemInstance(),
+				SQLiteProvider.Microsoft => GetMicrosoftInstance(),
+				_ => throw new InvalidOperationException($"Unsupported provider type: {provider}"),
+			};
+
+			static SQLiteProviderAdapter GetSystemInstance()
 			{
 				if (_systemDataSQLite == null)
 				{
 					lock (_systemSyncRoot)
-#pragma warning disable CA1508 // Avoid dead conditional code
 						_systemDataSQLite ??= CreateAdapter(SystemDataSQLiteAssemblyName, SystemDataSQLiteClientNamespace, "SQLite");
-#pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
 				return _systemDataSQLite;
 			}
-			else if (provider == SQLiteProvider.Microsoft)
+
+			static SQLiteProviderAdapter GetMicrosoftInstance()
 			{
 				if (_microsoftDataSQLite == null)
 				{
 					lock (_msSyncRoot)
-#pragma warning disable CA1508 // Avoid dead conditional code
 						_microsoftDataSQLite ??= CreateAdapter(MicrosoftDataSQLiteAssemblyName, MicrosoftDataSQLiteClientNamespace, "Sqlite");
-#pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
 				return _microsoftDataSQLite;
 			}
-
-			throw new InvalidOperationException($"Unsupported provider type: {provider}");
 		}
 
 		#region wrappers
 		[Wrapper]
 		private sealed class SqliteConnection
 		{
-			public SqliteConnection(string connectionString) => throw new NotImplementedException();
+			public SqliteConnection(string connectionString) => throw new NotSupportedException();
 
-			public static void ClearAllPools() => throw new NotImplementedException();
+			public static void ClearAllPools() => throw new NotSupportedException();
 		}
 
 		[Wrapper]
 		private sealed class SQLiteConnection
 		{
-			public SQLiteConnection(string connectionString) => throw new NotImplementedException();
+			public SQLiteConnection(string connectionString) => throw new NotSupportedException();
 
-			public static void ClearAllPools() => throw new NotImplementedException();
+			public static void ClearAllPools() => throw new NotSupportedException();
 		}
 
 		#endregion

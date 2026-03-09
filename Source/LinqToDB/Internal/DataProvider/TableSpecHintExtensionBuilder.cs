@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Text;
 
@@ -53,7 +53,7 @@ namespace LinqToDB.Internal.DataProvider
 
 					for (var i = 0; i < count; i++)
 					{
-						var value = ((SqlValue)args[FormattableString.Invariant($"hintParameters.{i}")]).Value;
+						var value = ((SqlValue)args[string.Create(CultureInfo.InvariantCulture, $"hintParameters.{i}")]).Value;
 
 						if (i > 0)
 							stringBuilder.Append(delimiter1);

@@ -36,7 +36,7 @@ namespace LinqToDB.CodeModel
 
 		// C# keywords and contextual words
 		// https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/
-		private static readonly HashSet<string> KeyWords = new ()
+		private static readonly HashSet<string> KeyWords = new (StringComparer.Ordinal)
 		{
 			"abstract", "as"      , "base"     , "bool"     , "break"    , "byte"    , "case"   , "catch"     , "char"     , "checked",
 			"class"   , "const"   , "continue" , "decimal"  , "default"  , "delegate", "do"     , "double"    , "else"     , "enum",
@@ -51,7 +51,7 @@ namespace LinqToDB.CodeModel
 			"add"     , "and"     , "alias"    , "ascending", "async"    , "await"   , "by"     , "descending", "dynamic"  , "equals",
 			"from"    , "get"     , "global"   , "group"    , "init"     , "into"    , "join"   , "let"       , "managed"  , "nameof",
 			"nint"    , "not"     , "notnull"  , "nuint"    , "on"       , "or"      , "orderby", "partial"   , "record"   , "remove",
-			"select"  , "set"     , "unmanaged", "value"    , "var"      , "when"    , "where"  , "with"      , "yield"
+			"select"  , "set"     , "unmanaged", "value"    , "var"      , "when"    , "where"  , "with"      , "yield",
 		};
 
 		// generate NRT annotations
@@ -306,7 +306,7 @@ namespace LinqToDB.CodeModel
 			if (comment.Inline)
 			{
 				// TODO: implement (not implemented as it is not used right now)
-				throw new NotImplementedException($"Inline comment generation missing for C# code generator");
+				throw new NotImplementedException("Inline comment generation missing for C# code generator");
 			}
 			else
 			{
@@ -753,7 +753,7 @@ namespace LinqToDB.CodeModel
 		{
 			if (group.TableLayout)
 				// TODO: not implemented as not used yet
-				throw new NotImplementedException($"Table layout not implemented for fields in C# code generator");
+				throw new NotImplementedException("Table layout not implemented for fields in C# code generator");
 			else
 				WriteNewLineDelimitedList(group.Members);
 		}
@@ -819,7 +819,7 @@ namespace LinqToDB.CodeModel
 
 			if (expression.Values.Count == 0)
 				// TODO: not used right now. Should generate Array.Empty when implemented
-				throw new NotImplementedException($"Generation of new array without items not supported by C# code generator");
+				throw new NotImplementedException("Generation of new array without items not supported by C# code generator");
 			{
 				Write("[]");
 
@@ -896,8 +896,8 @@ namespace LinqToDB.CodeModel
 		/// <param name="customAttributes">Attributes to generate.</param>
 		/// <param name="inline">
 		/// <list type="bullet">
-		/// <item><c>true</c>: all attributes generates inside same [] brackets in single line</item>
-		/// <item><c>false</c>: each attribute generated inside own [] brackets on separate line</item>
+		/// <item><see langword="true" />: all attributes generates inside same [] brackets in single line</item>
+		/// <item><see langword="false"/>: each attribute generated inside own [] brackets on separate line</item>
 		/// </list>
 		/// </param>
 		private void WriteCustomAttributes(IReadOnlyList<CodeAttribute> customAttributes, bool inline)
@@ -988,7 +988,7 @@ namespace LinqToDB.CodeModel
 		/// Render closing curly bracket for block statement.
 		/// </summary>
 		/// <param name="inline">Indicates wether block is inline or multiline block.</param>
-		/// <param name="newLine">Indicates that block should be followed by new line sequence. Used only when <paramref name="inline"/> is <c>false</c>.</param>
+		/// <param name="newLine">Indicates that block should be followed by new line sequence. Used only when <paramref name="inline"/> is <see langword="false"/>.</param>
 		private void CloseBlock(bool inline, bool newLine)
 		{
 			if (inline)
@@ -1014,7 +1014,7 @@ namespace LinqToDB.CodeModel
 			if (attribute.Type.Type.Name == null)
 				throw new InvalidOperationException($"Invalid custom attribute type {attribute.Type.Type} ({attribute.Type.Type.Kind})");
 
-			if (attribute.Type.Type.Name.Name.EndsWith("Attribute"))
+			if (attribute.Type.Type.Name.Name.EndsWith("Attribute", StringComparison.Ordinal))
 				newTypeName = new CodeIdentifier(attribute.Type.Type.Name.Name.Substring(0, attribute.Type.Type.Name.Name.Length - 9), true);
 
 			RenderType(attribute.Type.Type, newTypeName, true);
@@ -1055,7 +1055,7 @@ namespace LinqToDB.CodeModel
 		}
 
 		/// <summary>
-		/// Generates value literal including <c>null</c> literals, type hints when it is needed for proper
+		/// Generates value literal including <see langword="null"/> literals, type hints when it is needed for proper
 		/// value typing and enum literals.
 		/// Supports only types, currently used by codegeneration.
 		/// </summary>
@@ -1159,7 +1159,7 @@ namespace LinqToDB.CodeModel
 			if (statements == null || statements.Items.Count == 0)
 			{
 				if (!allowEmpty)
-					throw new InvalidOperationException($"Emty code block encountered in unsuppored context");
+					throw new InvalidOperationException("Empty code block encountered in unsuppored context");
 
 				// generate empty block {} according to formatting parameters
 				if (preferInline)

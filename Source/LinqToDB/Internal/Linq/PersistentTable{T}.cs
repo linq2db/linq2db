@@ -65,12 +65,12 @@ namespace LinqToDB.Internal.Linq
 
 		public Task<IAsyncEnumerable<TResult>> ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken cancellationToken)
 		{
-			throw new NotImplementedException();
+			throw new NotSupportedException();
 		}
 
 		public Task<TResult> ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
 		{
-			throw new NotImplementedException();
+			throw new NotSupportedException();
 		}
 
 		Expression IExpressionQuery.Expression => Expression;

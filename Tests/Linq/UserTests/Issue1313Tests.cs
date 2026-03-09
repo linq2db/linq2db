@@ -107,41 +107,37 @@ namespace Tests.UserTests
 		[Test]
 		public void TestQuery([DataSources(false)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				using (var table = db.CreateLocalTable<ValueItem>())
-				{
-					table.Insert(() => new ValueItem { Value = 123 });
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<ValueItem>();
+			table.Insert(() => new ValueItem { Value = 123 });
 
-					IQueryable<I1313_Derived>? query = null;
-					Assert.DoesNotThrow(() =>
-						query =
-							from row in table
-							select new I1313_Derived
-							{
-								MarkerProperty = false,
-								ChangeToProp = row.Value,
-								ChangeFieldType = 2,
-								ChangeToField = 3,
-								ChangePropType = 4,
-							}
-					);
+			IQueryable<I1313_Derived>? query = null;
+			Assert.DoesNotThrow(() =>
+				query =
+					from row in table
+					select new I1313_Derived
+					{
+						MarkerProperty = false,
+						ChangeToProp = row.Value,
+						ChangeFieldType = 2,
+						ChangeToField = 3,
+						ChangePropType = 4,
+					}
+			);
 
-					// Ensure the expected records are returned
-					var records = query!.ToArray();
-					Assert.That(records, Is.Not.Null);
-					Assert.That(records, Has.Length.EqualTo(1));
+			// Ensure the expected records are returned
+			var records = query!.ToArray();
+			Assert.That(records, Is.Not.Null);
+			Assert.That(records, Has.Length.EqualTo(1));
 
-					// Check the returned values are as expected
-					var record = records.First();
-					Assert.That(record.ChangeToProp == 123 && record.ChangeFieldType == 2 && record.ChangeToField == 3 && record.ChangePropType == 4, Is.True, "Unexpected values in record.");
+			// Check the returned values are as expected
+			var record = records.First();
+			Assert.That(record.ChangeToProp == 123 && record.ChangeFieldType == 2 && record.ChangeToField == 3 && record.ChangePropType == 4, Is.True, "Unexpected values in record.");
 
-					// Check the replaced base class fields have not been set
-					I1313_Base base_record = record;
-					Assert.That(base_record, Is.SameAs(record));
-					Assert.That(base_record.ChangeToProp == 0 && base_record.ChangeFieldType == 0 && base_record.ChangeToField == 0 && base_record.ChangePropType == 0, Is.True, "Data leakage to base class members.");
-				}
-			}
+			// Check the replaced base class fields have not been set
+			I1313_Base base_record = record;
+			Assert.That(base_record, Is.SameAs(record));
+			Assert.That(base_record.ChangeToProp == 0 && base_record.ChangeFieldType == 0 && base_record.ChangeToField == 0 && base_record.ChangePropType == 0, Is.True, "Data leakage to base class members.");
 		}
 	}
 }
