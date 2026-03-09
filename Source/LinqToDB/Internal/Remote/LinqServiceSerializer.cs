@@ -85,7 +85,7 @@ namespace LinqToDB.Internal.Remote
 				if (withType)
 					Append(type);
 
-				if (value.IsNullValue())
+				if (value.IsNullValue)
 					Append((string?)null);
 				else if (!type.IsArray)
 				{

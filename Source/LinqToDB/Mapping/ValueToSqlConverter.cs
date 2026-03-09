@@ -170,7 +170,7 @@ namespace LinqToDB.Mapping
 
 		public bool TryConvert(StringBuilder stringBuilder, MappingSchema mappingSchema, DbDataType? dataType, DataOptions options, object? value)
 		{
-			if (value.IsNullValue())
+			if (value.IsNullValue)
 			{
 				stringBuilder.Append("NULL");
 				return true;
@@ -186,7 +186,7 @@ namespace LinqToDB.Mapping
 
 		bool TryConvertImpl(StringBuilder? stringBuilder, DbDataType dataType, DataOptions options, object? value, bool tryBase)
 		{
-			if (value.IsNullValue())
+			if (value.IsNullValue)
 			{
 				stringBuilder?.Append("NULL");
 				return true;

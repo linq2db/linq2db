@@ -66,212 +66,221 @@ namespace LinqToDB.Internal.Expressions
 		#endregion
 
 		#region Helpers
-
-		public static LambdaExpression UnwrapLambda(this Expression ex)
-			=> (LambdaExpression)ex.Unwrap();
-
-		[return: NotNullIfNotNull(nameof(ex))]
-		public static Expression? Unwrap(this Expression? ex)
+		extension(Expression? ex)
 		{
-			if (ex == null)
-				return null;
+			[return: NotNullIfNotNull(nameof(ex))]
+			public LambdaExpression? UnwrapLambda()
+				=> (LambdaExpression?)ex.Unwrap();
 
-			switch (ex.NodeType)
+			[return: NotNullIfNotNull(nameof(ex))]
+			public Expression? Unwrap()
 			{
-				case ExpressionType.Quote          :
-				case ExpressionType.ConvertChecked :
-				case ExpressionType.Convert        :
-					return ((UnaryExpression)ex).Operand.Unwrap();
-				case ExpressionType.Extension
-					when ex is SqlAdjustTypeExpression adjustType:
+				if (ex == null)
+					return null;
+
+				switch (ex.NodeType)
 				{
-					return adjustType.Expression.Unwrap();
-				}
-			}
-
-			return ex;
-		}
-
-		[return: NotNullIfNotNull(nameof(ex))]
-		public static Expression? UnwrapUnary(this Expression? ex)
-		{
-			if (ex == null)
-				return null;
-
-			while (ex.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.TypeAs)
-				ex = ((UnaryExpression)ex).Operand;
-
-			return ex;
-		}
-
-		[return: NotNullIfNotNull(nameof(ex))]
-		public static Expression? UnwrapConvert(this Expression? ex)
-		{
-			if (ex == null)
-				return null;
-
-			switch (ex.NodeType)
-			{
-				case ExpressionType.ConvertChecked:
-				case ExpressionType.Convert       :
-				{
-					var unaryExpression = (UnaryExpression)ex;
-					if (unaryExpression.Method == null)
-						return unaryExpression.Operand.UnwrapConvert();
-					break;
-				}
-				case ExpressionType.Extension
-					when ex is SqlAdjustTypeExpression adjustType:
-				{
-					return adjustType.Expression.UnwrapConvert();
-				}
-			}
-
-			return ex;
-		}
-
-		[return: NotNullIfNotNull(nameof(ex))]
-		public static Expression? UnwrapAdjustType(this Expression? ex)
-		{
-			if (ex == null)
-				return null;
-
-			switch (ex.NodeType)
-			{
-				case ExpressionType.Extension
-					when ex is SqlAdjustTypeExpression adjustType:
-				{
-					return adjustType.Expression.UnwrapAdjustType();
-				}
-			}
-
-			return ex;
-		}
-
-		[return: NotNullIfNotNull(nameof(ex))]
-		public static Expression? UnwrapConvertToSelf(this Expression? ex)
-		{
-			if (ex == null)
-				return null;
-
-			switch (ex.NodeType)
-			{
-				case ExpressionType.ConvertChecked:
-				case ExpressionType.Convert:
-				{
-					var unaryExpression = (UnaryExpression)ex;
-					if (unaryExpression.Method == null
-						&& unaryExpression.Type.IsSameOrParentOf(unaryExpression.Operand.Type))
+					case ExpressionType.Quote:
+					case ExpressionType.ConvertChecked:
+					case ExpressionType.Convert:
+						return ((UnaryExpression)ex).Operand.Unwrap();
+					case ExpressionType.Extension
+						when ex is SqlAdjustTypeExpression adjustType:
 					{
-						return unaryExpression.Operand.UnwrapConvertToSelf();
+						return adjustType.Expression.Unwrap();
 					}
-
-					break;
 				}
+
+				return ex;
 			}
 
-			return ex;
-		}
-
-		[return: NotNullIfNotNull(nameof(ex))]
-		public static Expression? UnwrapConvertToObject(this Expression? ex)
-		{
-			if (ex == null)
-				return null;
-
-			switch (ex.NodeType)
+			[return: NotNullIfNotNull(nameof(ex))]
+			public Expression? UnwrapUnary()
 			{
-				case ExpressionType.ConvertChecked:
-				case ExpressionType.Convert:
-				{
-					var unaryExpression = (UnaryExpression)ex;
-					if (unaryExpression.Type == typeof(object))
-						return unaryExpression.Operand.UnwrapConvertToObject();
-					break;
-				}
+				if (ex == null)
+					return null;
+
+				while (ex.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.TypeAs)
+					ex = ((UnaryExpression)ex).Operand;
+
+				return ex;
 			}
 
-			return ex;
-		}
-
-		[return: NotNullIfNotNull(nameof(ex))]
-		public static Expression? UnwrapConvertToNotObject(this Expression? ex)
-		{
-			if (ex == null)
-				return null;
-
-			switch (ex.NodeType)
+			[return: NotNullIfNotNull(nameof(ex))]
+			public Expression? UnwrapConvert()
 			{
-				case ExpressionType.ConvertChecked:
-				case ExpressionType.Convert:
+				if (ex == null)
+					return null;
+
+				switch (ex.NodeType)
 				{
-					var unaryExpression = (UnaryExpression)ex;
-					if (unaryExpression.Operand.Type != typeof(object) && unaryExpression.Method == null)
-						return unaryExpression.Operand.UnwrapConvertToNotObject();
-					break;
-				}
-			}
-
-			return ex;
-		}
-
-		public static Expression SkipMethodChain(this Expression expr, MappingSchema mappingSchema, out bool isQueryable)
-		{
-			return Sql.ExtensionAttribute.ExcludeExtensionChain(mappingSchema, expr, out isQueryable);
-		}
-
-		public static Dictionary<Expression,Expression> GetExpressionAccessors(this Expression expression, Expression path)
-		{
-			var accessors = new Dictionary<Expression,Expression>();
-
-			expression.Path(path, accessors, static (accessors, e, p) =>
-			{
-				switch (e.NodeType)
-				{
-					case ExpressionType.Call           :
-					case ExpressionType.MemberAccess   :
-					case ExpressionType.New            :
-						accessors.TryAdd(e, p);
+					case ExpressionType.ConvertChecked:
+					case ExpressionType.Convert:
+					{
+						var unaryExpression = (UnaryExpression)ex;
+						if (unaryExpression.Method == null)
+							return unaryExpression.Operand.UnwrapConvert();
 						break;
+					}
+					case ExpressionType.Extension
+						when ex is SqlAdjustTypeExpression adjustType:
+					{
+						return adjustType.Expression.UnwrapConvert();
+					}
+				}
 
-					case ExpressionType.Constant       :
-						accessors.TryAdd(e, Expression.Property(p, ReflectionHelper.Constant.Value));
-						break;
+				return ex;
+			}
 
-					case ExpressionType.ConvertChecked :
-					case ExpressionType.Convert        :
-						var ue = (UnaryExpression)e;
+			[return: NotNullIfNotNull(nameof(ex))]
+			public Expression? UnwrapAdjustType()
+			{
+				if (ex == null)
+					return null;
 
-						switch (ue.Operand.NodeType)
+				switch (ex.NodeType)
+				{
+					case ExpressionType.Extension
+						when ex is SqlAdjustTypeExpression adjustType:
+					{
+						return adjustType.Expression.UnwrapAdjustType();
+					}
+				}
+
+				return ex;
+			}
+
+			[return: NotNullIfNotNull(nameof(ex))]
+			public Expression? UnwrapConvertToSelf()
+			{
+				if (ex == null)
+					return null;
+
+				switch (ex.NodeType)
+				{
+					case ExpressionType.ConvertChecked:
+					case ExpressionType.Convert:
+					{
+						var unaryExpression = (UnaryExpression)ex;
+						if (unaryExpression.Method == null
+							&& unaryExpression.Type.IsSameOrParentOf(unaryExpression.Operand.Type))
 						{
-							case ExpressionType.Call        :
-							case ExpressionType.MemberAccess:
-							case ExpressionType.New         :
-							case ExpressionType.Constant    :
-								accessors.TryAdd(e, p);
-								break;
+							return unaryExpression.Operand.UnwrapConvertToSelf();
 						}
 
 						break;
+					}
 				}
-			});
 
-			return accessors;
+				return ex;
+			}
+
+			[return: NotNullIfNotNull(nameof(ex))]
+			public Expression? UnwrapConvertToObject()
+			{
+				if (ex == null)
+					return null;
+
+				switch (ex.NodeType)
+				{
+					case ExpressionType.ConvertChecked:
+					case ExpressionType.Convert:
+					{
+						var unaryExpression = (UnaryExpression)ex;
+						if (unaryExpression.Type == typeof(object))
+							return unaryExpression.Operand.UnwrapConvertToObject();
+						break;
+					}
+				}
+
+				return ex;
+			}
+
+			[return: NotNullIfNotNull(nameof(ex))]
+			public Expression? UnwrapConvertToNotObject()
+			{
+				if (ex == null)
+					return null;
+
+				switch (ex.NodeType)
+				{
+					case ExpressionType.ConvertChecked:
+					case ExpressionType.Convert:
+					{
+						var unaryExpression = (UnaryExpression)ex;
+						if (unaryExpression.Operand.Type != typeof(object) && unaryExpression.Method == null)
+							return unaryExpression.Operand.UnwrapConvertToNotObject();
+						break;
+					}
+				}
+
+				return ex;
+			}
 		}
 
-#pragma warning disable RS0060 // API with optional parameter(s) should have the most parameters amongst its public overloads
-		public static bool IsQueryable(this MethodCallExpression method, bool enumerable = true)
-#pragma warning restore RS0060 // API with optional parameter(s) should have the most parameters amongst its public overloads
+		extension (Expression expression)
+		{
+			public Expression SkipMethodChain(MappingSchema mappingSchema, out bool isQueryable)
+			{
+				return Sql.ExtensionAttribute.ExcludeExtensionChain(mappingSchema, expression, out isQueryable);
+			}
+
+			public Dictionary<Expression, Expression> GetExpressionAccessors(Expression path)
+			{
+				var accessors = new Dictionary<Expression,Expression>();
+
+				expression.Path(path, accessors, static (accessors, e, p) =>
+				{
+					switch (e.NodeType)
+					{
+						case ExpressionType.Call:
+						case ExpressionType.MemberAccess:
+						case ExpressionType.New:
+							accessors.TryAdd(e, p);
+							break;
+
+						case ExpressionType.Constant:
+							accessors.TryAdd(e, Expression.Property(p, ReflectionHelper.Constant.Value));
+							break;
+
+						case ExpressionType.ConvertChecked:
+						case ExpressionType.Convert:
+							var ue = (UnaryExpression)e;
+
+							switch (ue.Operand.NodeType)
+							{
+								case ExpressionType.Call:
+								case ExpressionType.MemberAccess:
+								case ExpressionType.New:
+								case ExpressionType.Constant:
+									accessors.TryAdd(e, p);
+									break;
+							}
+
+							break;
+					}
+				});
+
+				return accessors;
+			}
+
+			public bool IsNullValue =>
+				expression is
+					ConstantExpression { Value: null }
+					or ((DefaultExpression or DefaultValueExpression) and { Type.IsNullableOrReferenceType: true });
+		}
+
+		public static bool IsQueryable(this MethodCallExpression method)
 		{
 			var type = method.Method.DeclaringType;
 
 			return
-				type == typeof(Queryable)                  ||
-				(enumerable && type == typeof(Enumerable)) ||
-				type == typeof(LinqExtensions)             ||
-				type == typeof(LinqInternalExtensions)     ||
-				type == typeof(DataExtensions)             ||
-				type == typeof(TableExtensions)            ||
+				type == typeof(Queryable) ||
+				type == typeof(Enumerable) ||
+				type == typeof(LinqExtensions) ||
+				type == typeof(LinqInternalExtensions) ||
+				type == typeof(DataExtensions) ||
+				type == typeof(TableExtensions) ||
 				MemberCache.GetMemberInfo(method.Method).IsQueryable;
 		}
 
@@ -293,16 +302,6 @@ namespace LinqToDB.Internal.Expressions
 		public static bool IsQueryable(this MethodCallExpression method, string[] names)
 		{
 			if (method.IsQueryable())
-				foreach (var name in names)
-					if (string.Equals(method.Method.Name, name, StringComparison.Ordinal))
-						return true;
-
-			return false;
-		}
-
-		public static bool IsAsyncExtension(this MethodCallExpression method, string[] names)
-		{
-			if (method.IsAsyncExtension())
 				foreach (var name in names)
 					if (string.Equals(method.Method.Name, name, StringComparison.Ordinal))
 						return true;
@@ -373,14 +372,6 @@ namespace LinqToDB.Internal.Expressions
 			return method.IsQueryable(CteMethodNames);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsNullValue(this Expression expr)
-		{
-			return expr is 
-				ConstantExpression { Value: null }
-				or ((DefaultExpression or DefaultValueExpression) and { Type.IsNullableOrReferenceType: true });
-		}
-
 		public static Expression? GetArgumentByName(this MethodCallExpression methodCall, string parameterName)
 		{
 			var arguments = methodCall.Arguments;
@@ -429,7 +420,7 @@ namespace LinqToDB.Internal.Expressions
 
 			using var visitor = ExpressionOptimizerVisitor.Pool.Allocate();
 			visitor.Value.Initialize(canBeEvaluatedOnClient);
-			
+
 			var optimized = visitor.Value.Visit(expression);
 			return optimized;
 		}
@@ -459,9 +450,9 @@ namespace LinqToDB.Internal.Expressions
 			{
 				base.Cleanup();
 				_canBeEvaluatedOnClient = default!;
-				_depth                  = 0;
-				_visitedExpressions     = default!;
-				_allowEvaluation        = false;
+				_depth = 0;
+				_visitedExpressions = default!;
+				_allowEvaluation = false;
 			}
 
 			bool IsEvaluable(Expression expr)
@@ -513,7 +504,7 @@ namespace LinqToDB.Internal.Expressions
 				_allowEvaluation = false;
 				var newNode = base.VisitMethodCall(node);
 				_allowEvaluation = saveAllowEvaluation;
-				
+
 				return newNode;
 			}
 
@@ -542,8 +533,8 @@ namespace LinqToDB.Internal.Expressions
 				return newExpr.NodeType switch
 				{
 					ExpressionType.AndAlso => OptimizeAndAlso((BinaryExpression)newExpr),
-					ExpressionType.OrElse  => OptimizeOrElse((BinaryExpression)newExpr),
-					_                      => newExpr,
+					ExpressionType.OrElse => OptimizeOrElse((BinaryExpression)newExpr),
+					_ => newExpr,
 				};
 			}
 
@@ -553,7 +544,7 @@ namespace LinqToDB.Internal.Expressions
 				var newExpr = node.Update(operand);
 
 				// Remove double convert: Convert(Convert(x, T1), T2) => Convert(x, T2)
-				if (newExpr.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked 
+				if (newExpr.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked
 					&& operand.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
 				{
 					var innerOperand = ((UnaryExpression)operand).Operand;

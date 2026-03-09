@@ -587,12 +587,12 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (e.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
 				{
 					var binary = (BinaryExpression)e;
-					if (binary.Left.IsNullValue() && binary.Right is SqlPlaceholderExpression placeholderRight)
+					if (binary is { Left.IsNullValue: true, Right: SqlPlaceholderExpression placeholderRight })
 					{
 						return new TransformInfo(new SqlReaderIsNullExpression(placeholderRight, e.NodeType == ExpressionType.NotEqual), false, true);
 					}
 
-					if (binary.Right.IsNullValue() && binary.Left is SqlPlaceholderExpression placeholderLeft)
+					if (binary is { Right.IsNullValue: true, Left: SqlPlaceholderExpression placeholderLeft })
 					{
 						return new TransformInfo(new SqlReaderIsNullExpression(placeholderLeft, e.NodeType == ExpressionType.NotEqual), false, true);
 					}

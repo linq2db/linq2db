@@ -607,11 +607,14 @@ namespace LinqToDB.Internal.SqlQuery
 		{
 			return expr switch
 			{
-				{ ElementType: QueryElementType.SqlValue or QueryElementType.SqlParameter } => true,
+				{ ElementType: QueryElementType.SqlValue or QueryElementType.SqlParameter } =>
+					true,
 
-				SqlBinaryExpression { ElementType: QueryElementType.SqlBinaryExpression } be => IsConstantFast(be.Expr1) && IsConstantFast(be.Expr2),
+				SqlBinaryExpression { ElementType: QueryElementType.SqlBinaryExpression } be =>
+					IsConstantFast(be.Expr1) && IsConstantFast(be.Expr2),
 
-				SqlNullabilityExpression { ElementType: QueryElementType.SqlNullabilityExpression, SqlExpression: { } expression } => IsConstantFast(expression),
+				SqlNullabilityExpression { ElementType: QueryElementType.SqlNullabilityExpression, SqlExpression: { } expression } =>
+					IsConstantFast(expression),
 
 				_ => false,
 			};
@@ -664,33 +667,38 @@ namespace LinqToDB.Internal.SqlQuery
 			return false;
 		}
 
-		public static bool IsNullValue(this ISqlExpression expr)
+		extension(ISqlExpression expr)
 		{
-			if (expr is SqlValue { Value: null })
-				return true;
-			if (expr is SqlColumn { Parent: not null } column)
-			{
-				if (!IsNullValue(column.Expression))
-					return false;
-
-				if (column.Parent.HasSetOperators)
+			public bool IsNullValue =>
+				expr switch
 				{
-					var idx = column.Parent.Select.Columns.IndexOf(column);
-					if (idx < 0)
-						return false;
+					SqlValue { Value: null } => true,
 
-					foreach (var setOperator in column.Parent.SetOperators)
-					{
-						var selectClause = setOperator.SelectQuery.Select;
-						if (idx >= selectClause.Columns.Count || !IsNullValue(selectClause.Columns[idx].Expression))
-							return false;
-					}
-				}
+					SqlColumn { Parent: { }, Expression.IsNullValue: false } => false,
 
-				return true;
+					SqlColumn { Parent: { HasSetOperators: true } parent } column =>
+						parent.IsColumnNullValue(column),
+
+					SqlColumn { Parent: { } } => true,
+
+					_ => false,
+				};
+		}
+
+		private static bool IsColumnNullValue(this SelectQuery query, SqlColumn column)
+		{
+			var idx = query.Select.Columns.IndexOf(column);
+			if (idx < 0)
+				return false;
+
+			foreach (var setOperator in query.SetOperators)
+			{
+				var selectClause = setOperator.SelectQuery.Select;
+				if (idx >= selectClause.Columns.Count || !selectClause.Columns[idx].Expression.IsNullValue)
+					return false;
 			}
 
-			return false;
+			return true;
 		}
 
 		public static void ConcatSearchCondition(this SqlWhereClause where, SqlSearchCondition search)

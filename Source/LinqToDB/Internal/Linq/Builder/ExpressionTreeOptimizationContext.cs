@@ -32,8 +32,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		sealed class IsServerSideOnlyCheckVisitor : ExpressionVisitorBase
 		{
-			bool                                                 _isServerSideOnly;
-			MappingSchema                                        _mappingSchema  = default!;
+			bool          _isServerSideOnly;
+			MappingSchema _mappingSchema  = default!;
 
 			public bool IsServerSideOnly(Expression expression, MappingSchema mappingSchema)
 			{

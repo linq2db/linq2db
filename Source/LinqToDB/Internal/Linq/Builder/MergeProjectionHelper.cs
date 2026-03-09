@@ -28,13 +28,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static bool IsNullValueOrSqlNull(Expression expression)
 		{
-			if (expression.IsNullValue())
-				return true;
-
-			if (expression is SqlPlaceholderExpression placeholder)
-				return QueryHelper.IsNullValue(placeholder.Sql);
-
-			return false;
+			return expression is
+				{ IsNullValue: true }
+				or SqlPlaceholderExpression { Sql.IsNullValue: true };
 		}
 
 		public bool BuildProjectionExpression(

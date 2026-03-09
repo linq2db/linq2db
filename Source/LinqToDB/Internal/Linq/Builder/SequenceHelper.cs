@@ -565,7 +565,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				case SqlPlaceholderExpression placeholder:
 				{
-					if (QueryHelper.IsNullValue(placeholder.Sql))
+					if (placeholder.Sql.IsNullValue)
 						return Expression.Default(placeholder.Type);
 
 					if (placeholder.Type == toPath.Type)

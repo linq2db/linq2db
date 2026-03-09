@@ -171,7 +171,7 @@ namespace LinqToDB.Remote
 		{
 			string? result = null;
 
-			if (!scalar.IsNullValue())
+			if (!scalar.IsNullValue)
 			{
 				var lsr = new LinqServiceResult
 				{

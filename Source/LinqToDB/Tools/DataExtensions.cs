@@ -165,7 +165,7 @@ namespace LinqToDB.Tools
 			var sql      = sqlBuilder.GetMaxValueSql(entityDescriptor, column);
 			var maxValue = context.Execute<object?>(sql);
 
-			if (maxValue.IsNullValue())
+			if (maxValue.IsNullValue)
 				maxValue = 0;
 
 			var type = Type.GetTypeCode(maxValue.GetType());
@@ -196,7 +196,7 @@ namespace LinqToDB.Tools
 			var sql      = sqlBuilder.GetMaxValueSql(entityDescriptor, column);
 			var maxValue = await context.ExecuteAsync<object?>(sql, cancellationToken).ConfigureAwait(false);
 
-			if (maxValue.IsNullValue())
+			if (maxValue.IsNullValue)
 				maxValue = 0;
 
 			var type = Type.GetTypeCode(maxValue.GetType());

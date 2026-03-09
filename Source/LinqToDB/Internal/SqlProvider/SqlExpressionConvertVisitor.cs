@@ -139,7 +139,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (SupportsNullIf)
 			{
 				if (element.Condition is SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } exprExpr
-					&& element.TrueValue.IsNullValue())
+					&& element.TrueValue.IsNullValue)
 				{
 					if (element.FalseValue.Equals(exprExpr.Expr1, SqlQuery.SqlExtensions.DefaultComparer))
 						return NotifyReplaced(new SqlFunction(QueryHelper.GetDbDataType(element.FalseValue, MappingSchema), "NULLIF", false, true, exprExpr.Expr1, exprExpr.Expr2), element);

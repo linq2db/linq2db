@@ -1993,7 +1993,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		bool HandleDefaultIfEmptyInBinary(Expression left, Expression right, [NotNullWhen(true)] out Expression? newCondition)
 		{
-			if (left is SqlDefaultIfEmptyExpression { InnerExpression: SqlGenericConstructorExpression } defaultIfEmpty && right.IsNullValue())
+			if (left is SqlDefaultIfEmptyExpression { InnerExpression: SqlGenericConstructorExpression } defaultIfEmpty && right.IsNullValue)
 			{
 				var notNullExpressions = defaultIfEmpty.NotNullExpressions;
 
@@ -2010,12 +2010,10 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			static bool? IsNull(Expression sqlExpr)
 			{
-				if (sqlExpr.IsNullValue())
-					return true;
-
 				return sqlExpr switch
 				{
-					SqlPlaceholderExpression placeholder => QueryHelper.IsNullValue(placeholder.Sql),
+					{ IsNullValue: true } => true,
+					SqlPlaceholderExpression placeholder => placeholder.Sql.IsNullValue,
 					_ => null,
 				};
 			}
@@ -2797,7 +2795,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					// Small tuning of final Expression generation
 					//
-					if (node.Left.IsNullValue() || node.Right.IsNullValue())
+					if (node.Left.IsNullValue || node.Right.IsNullValue)
 						shouldSkipSqlConversion = true;
 					else if (SequenceHelper.IsSpecialProperty(node.Left, out _, out _) || SequenceHelper.IsSpecialProperty(node.Right, out _, out _))
 						shouldSkipSqlConversion = true;
@@ -3324,13 +3322,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static bool? IsNull(Expression sqlExpr)
 		{
-			if (sqlExpr.IsNullValue())
-				return true;
-
 			return sqlExpr switch
 			{
+				{ IsNullValue: true } => true,
 				SqlGenericConstructorExpression or MemberInitExpression or NewExpression => false,
-				SqlPlaceholderExpression placeholder => QueryHelper.IsNullValue(placeholder.Sql),
+				SqlPlaceholderExpression placeholder => placeholder.Sql.IsNullValue,
 				_ => null,
 			};
 		}
@@ -3588,12 +3584,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static bool IsNullExpression(Expression expression)
 		{
-			if (expression.IsNullValue())
-				return true;
-
 			return expression switch
 			{
-				SqlPlaceholderExpression placeholder => placeholder.Sql.IsNullValue(),
+				{ IsNullValue: true } => true,
+				SqlPlaceholderExpression placeholder => placeholder.Sql.IsNullValue,
 				_ => false,
 			};
 		}

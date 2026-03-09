@@ -446,7 +446,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				// static IValueInsertable<T> Into<T>(this IDataContext dataContext, Table<T> target)
 				//
-				if (source.IsNullValue() || typeof(IDataContext).IsSameOrParentOf(source.Type))
+				if (source.IsNullValue || typeof(IDataContext).IsSameOrParentOf(source.Type))
 				{
 					createColumns = false;
 					var buildResult = TryBuildSequenceWithFilter(builder, new BuildInfo((IBuildContext?)null, into, new SelectQuery()), true);

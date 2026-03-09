@@ -353,7 +353,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						if (!column1.Expression.CanBeNullable(nullability1))
 						{
-							if (QueryHelper.IsNullValue(column2.Expression))
+							if (column2.Expression.IsNullValue)
 							{
 								return MakeNullCondition(new SqlPathExpression(map.Key, placeholder1.Type), isNotNull: isLeft);
 							}
@@ -361,7 +361,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						}
 						else if (!column2.Expression.CanBeNullable(nullability2))
 						{
-							if (QueryHelper.IsNullValue(column1.Expression))
+							if (column1.Expression.IsNullValue)
 								return MakeNullCondition(new SqlPathExpression(map.Key, placeholder2.Type), isNotNull: !isLeft);
 						}
 					}

@@ -84,8 +84,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		protected internal override IQueryElement VisitSqlConditionExpression(SqlConditionExpression element)
 		{
-			var trueIsNull  = element.TrueValue.IsNullValue();
-			var falseIsNull = element.FalseValue.IsNullValue();
+			var trueIsNull  = element.TrueValue.IsNullValue;
+			var falseIsNull = element.FalseValue.IsNullValue;
 
 			if (trueIsNull && falseIsNull)
 			{

@@ -12,7 +12,7 @@ namespace LinqToDB.Internal.SqlQuery
 	{
 		public SqlValue(Type systemType, object? value)
 		{
-			ValueType = new DbDataType(!value.IsNullValue() ? systemType.UnwrapNullableType() : systemType);
+			ValueType = new DbDataType(!value.IsNullValue ? systemType.UnwrapNullableType() : systemType);
 			Value     = value;
 		}
 

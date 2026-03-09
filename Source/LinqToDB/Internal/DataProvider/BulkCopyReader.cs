@@ -107,7 +107,7 @@ namespace LinqToDB.Internal.DataProvider
 		{
 			public override DbType             DbType                  { get; set; }
 			public override ParameterDirection Direction               { get; set; }
-			public override bool               IsNullable              { get => Value.IsNullValue(); set { } }
+			public override bool               IsNullable              { get => Value.IsNullValue; set { } }
 			[AllowNull]
 			public override string             ParameterName           { get; set; }
 			public override int                Size                    { get; set; }

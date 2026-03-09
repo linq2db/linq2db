@@ -200,9 +200,10 @@ namespace LinqToDB.Internal.Common
 			}
 		}
 
-		public static bool IsNullValue([NotNullWhen(false)] this object? value)
+		extension([NotNullWhen(false)] object? value)
 		{
-			return value is null or DBNull or INullable { IsNull: true };
+			public bool IsNullValue =>
+				value is null or DBNull or INullable { IsNull: true };
 		}
 	}
 }

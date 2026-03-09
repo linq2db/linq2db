@@ -119,10 +119,12 @@ namespace LinqToDB.Common
 		/// <returns>Converted value.</returns>
 		public static object? ChangeType(object? value, Type toConvertType, MappingSchema? mappingSchema = null, ConversionType conversionType = ConversionType.Common)
 		{
-			if (value.IsNullValue())
+			if (value.IsNullValue)
+			{
 				return mappingSchema == null ?
 					DefaultValue.GetValue(toConvertType) :
 					mappingSchema.GetDefaultValue(toConvertType);
+			}
 
 			var from = value.GetType();
 			if (from == toConvertType)
@@ -179,10 +181,12 @@ namespace LinqToDB.Common
 		/// <returns>Converted value.</returns>
 		public static T ChangeTypeTo<T>(object? value, MappingSchema? mappingSchema = null, ConversionType conversionType = ConversionType.Common)
 		{
-			if (value.IsNullValue())
+			if (value.IsNullValue)
+			{
 				return mappingSchema == null ?
 					DefaultValue<T>.Value :
 					(T)mappingSchema.GetDefaultValue(typeof(T))!;
+			}
 
 			if (value.GetType() == typeof(T))
 				return (T)value;

@@ -828,7 +828,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			// TODO: is it correct to return true for DefaultValueExpression for non-reference type or when default value
 			// set to non-null value?
-			return expr.UnwrapConvert().IsNullValue();
+			return expr.UnwrapConvert().IsNullValue;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1332,7 +1332,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							return newPath;
 						}
 
-						if (body.IsNullValue())
+						if (body.IsNullValue)
 						{
 							return new DefaultValueExpression(MappingSchema, member.GetMemberType(), true);
 						}
@@ -1642,9 +1642,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (trueExpr.Type != falseExpr.Type)
 					{
-						if (trueExpr.IsNullValue())
+						if (trueExpr.IsNullValue)
 							trueExpr = new DefaultValueExpression(MappingSchema, falseExpr.Type, true);
-						else if (falseExpr.IsNullValue())
+						else if (falseExpr.IsNullValue)
 							falseExpr = new DefaultValueExpression(MappingSchema, trueExpr.Type, true);
 					}
 
@@ -1664,12 +1664,12 @@ namespace LinqToDB.Internal.Linq.Builder
 						break;
 					}
 
-					if (expr1.IsNullValue())
+					if (expr1.IsNullValue)
 					{
 						return expr2;
 					}
 
-					if (expr2.IsNullValue())
+					if (expr2.IsNullValue)
 					{
 						return expr1;
 					}
