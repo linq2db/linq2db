@@ -91,7 +91,7 @@ namespace LinqToDB.Internal.Linq
 				}
 				// SqlNullValueException: MySqlData
 				// OracleNullValueException: managed and native oracle providers
-				catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
+				catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException", StringComparison.Ordinal))
 				{
 					// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
 					if (mapperInfo.IsFaulted)
@@ -123,7 +123,7 @@ namespace LinqToDB.Internal.Linq
 				{
 					MapperExpression = expr,
 					Mapper           = expression.CompileExpression(),
-					IsFaulted        = true
+					IsFaulted        = true,
 				};
 
 				_mappers[dataReaderType] = mapperInfo;
@@ -217,7 +217,7 @@ namespace LinqToDB.Internal.Linq
 
 				protected override Expression VisitParameter(ParameterExpression node)
 				{
-					if (_oldVariable == null && node.Name == "ldr")
+					if (_oldVariable == null && string.Equals(node.Name, "ldr", StringComparison.Ordinal))
 					{
 						_oldVariable = node;
 						_newVariable = Expression.Variable(_dataReader.GetType(), "ldr");
@@ -526,7 +526,7 @@ namespace LinqToDB.Internal.Linq
 							res = mapperInfo.Mapper(runner, origDataReader);
 							runner.RowsCount++;
 						}
-						catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
+						catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException", StringComparison.Ordinal))
 						{
 							// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
 							if (mapperInfo.IsFaulted)
@@ -555,10 +555,11 @@ namespace LinqToDB.Internal.Linq
 			{
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteQueryAsync))
 				{
-#pragma warning disable CA2007
-					await using var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _parameters, _preambles);
-					await using var dr     = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-#pragma warning restore CA2007
+					var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _parameters, _preambles);
+					await using var _2 = runner.ConfigureAwait(false);
+
+					var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+					await using var _3 = dr.ConfigureAwait(false);
 
 					var dataReader = dr.DataReader!;
 
@@ -591,7 +592,7 @@ namespace LinqToDB.Internal.Linq
 								res = mapperInfo.Mapper(runner, origDataReader);
 								runner.RowsCount++;
 							}
-							catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
+							catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException", StringComparison.Ordinal))
 							{
 								// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
 								if (mapperInfo.IsFaulted)
@@ -762,7 +763,9 @@ namespace LinqToDB.Internal.Linq
 				return ret;
 			}
 
+#pragma warning disable MA0098 // Use indexer instead of LINQ methods
 			return Array.Empty<T>().First();
+#pragma warning restore MA0098 // Use indexer instead of LINQ methods
 		}
 
 		static async Task<T> ExecuteElementAsync<T>(
@@ -777,36 +780,36 @@ namespace LinqToDB.Internal.Linq
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteElementAsync))
 			{
 				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, ps, preambles);
-				await using (runner.ConfigureAwait(false))
+				await using var _1 = runner.ConfigureAwait(false);
+
+				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+				await using var _2 = dr.ConfigureAwait(false);
+
+				if (await dr.ReadAsync(cancellationToken).ConfigureAwait(false))
 				{
-					var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-					await using (dr.ConfigureAwait(false))
+					DbDataReader dataReader;
+
+					if (dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
 					{
-						if (await dr.ReadAsync(cancellationToken).ConfigureAwait(false))
-						{
-							DbDataReader dataReader;
-
-							if (dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
-							{
-								using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
-									dataReader = interceptor.UnwrapDataReader(dataContext, dr.DataReader);
-							}
-							else
-							{
-								dataReader = dr.DataReader;
-							}
-
-							var mapperInfo = mapper.GetMapperInfo(dataContext, runner, dataReader);
-							var item       = mapper.Map(dataContext, runner, dataReader, ref mapperInfo);
-
-							var ret = dataContext.MappingSchema.ChangeTypeTo<T>(item);
-							runner.RowsCount++;
-							return ret;
-						}
-
-						return Array.Empty<T>().First();
+						using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+							dataReader = interceptor.UnwrapDataReader(dataContext, dr.DataReader);
 					}
+					else
+					{
+						dataReader = dr.DataReader;
+					}
+
+					var mapperInfo = mapper.GetMapperInfo(dataContext, runner, dataReader);
+					var item       = mapper.Map(dataContext, runner, dataReader, ref mapperInfo);
+
+					var ret = dataContext.MappingSchema.ChangeTypeTo<T>(item);
+					runner.RowsCount++;
+					return ret;
 				}
+
+#pragma warning disable MA0098 // Use indexer instead of LINQ methods
+				return Array.Empty<T>().First();
+#pragma warning restore MA0098 // Use indexer instead of LINQ methods
 			}
 		}
 

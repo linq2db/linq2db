@@ -17,30 +17,28 @@ namespace Tests.UserTests
 			[Values] bool includeY,
 			[Values] bool includeZ)
 		{
-			using (var db = GetDataContext(context))
-			{
-				// Arrange
-				var childrenIn = (int[]?)null;
-				var grandChildIn = GrandChild.Select(x => x.ParentID).Distinct().ToArray();
+			using var db = GetDataContext(context);
+			// Arrange
+			var childrenIn = (int[]?)null;
+			var grandChildIn = GrandChild.Select(x => x.ParentID).Distinct().ToArray();
 
-				// Act
-				var query = from p in db.Parent
-					where
+			// Act
+			var query = from p in db.Parent
+						where
 						(childrenIn == null || childrenIn.Contains(p.ParentID)) && (grandChildIn == null || grandChildIn.Contains(p.ParentID)) &&
 						((includeX && p.Value1 == 1) || (includeY && p.Value1 == 2) || (includeZ && p.ParentID % 2 == 0))
-					select p;
+						select p;
 
-				var expected = (from p in Parent
-					where
+			var expected = (from p in Parent
+							where
 						(childrenIn == null || childrenIn.Contains(p.ParentID)) && (grandChildIn == null || grandChildIn.Contains(p.ParentID)) &&
 						((includeX && p.Value1 == 1) || (includeY && p.Value1 == 2) || (includeZ && p.ParentID % 2 == 0))
-					select p).ToArray();
+							select p).ToArray();
 
-				if (expected.Length == 0)
-					Assert.That(query.Count(), Is.EqualTo(expected.Length));
-				else
-					AreEqual(expected, query);
-			}
+			if (expected.Length == 0)
+				Assert.That(query.Count(), Is.EqualTo(expected.Length));
+			else
+				AreEqual(expected, query);
 		}
 	}
 }

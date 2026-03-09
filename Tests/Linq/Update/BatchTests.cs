@@ -14,9 +14,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void Transaction([DataSources(false)] string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				var list = new[]
+			using var db = GetDataConnection(context);
+			var list = new[]
 				{
 					new Parent { ParentID = 1111, Value1 = 1111 },
 					new Parent { ParentID = 2111, Value1 = 2111 },
@@ -24,24 +23,22 @@ namespace Tests.xUpdate
 					new Parent { ParentID = 4111, Value1 = 4111 },
 				};
 
-				foreach (var parent in list)
-					db.Parent.Delete(p => p.ParentID == parent.ParentID);
+			foreach (var parent in list)
+				db.Parent.Delete(p => p.ParentID == parent.ParentID);
 
-				db.BeginTransaction();
-				db.BulkCopy(GetDefaultBulkCopyOptions(context), list);
-				db.CommitTransaction();
+			db.BeginTransaction();
+			db.BulkCopy(GetDefaultBulkCopyOptions(context), list);
+			db.CommitTransaction();
 
-				foreach (var parent in list)
-					db.Parent.Delete(p => p.ParentID == parent.ParentID);
-			}
+			foreach (var parent in list)
+				db.Parent.Delete(p => p.ParentID == parent.ParentID);
 		}
 
 		[Test]
 		public void NoTransaction([DataSources(false)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var list = new[]
+			using var db = GetDataContext(context);
+			var list = new[]
 				{
 					new Parent { ParentID = 1111, Value1 = 1111 },
 					new Parent { ParentID = 2111, Value1 = 2111 },
@@ -49,14 +46,13 @@ namespace Tests.xUpdate
 					new Parent { ParentID = 4111, Value1 = 4111 },
 				};
 
-				foreach (var parent in list)
-					db.Parent.Delete(p => p.ParentID == parent.ParentID);
+			foreach (var parent in list)
+				db.Parent.Delete(p => p.ParentID == parent.ParentID);
 
-				db.BulkCopy(GetDefaultBulkCopyOptions(context), list);
+			db.BulkCopy(GetDefaultBulkCopyOptions(context), list);
 
-				foreach (var parent in list)
-					db.Parent.Delete(p => p.ParentID == parent.ParentID);
-			}
+			foreach (var parent in list)
+				db.Parent.Delete(p => p.ParentID == parent.ParentID);
 		}
 	}
 }

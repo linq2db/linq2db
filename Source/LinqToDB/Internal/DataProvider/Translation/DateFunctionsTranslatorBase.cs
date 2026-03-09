@@ -14,6 +14,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 		{
 			RegisterDateTime();
 			RegisterDateTimeOffset();
+
 #if SUPPORTS_DATEONLY
 			RegisterDateOnly();
 #endif

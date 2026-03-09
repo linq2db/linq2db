@@ -19,42 +19,37 @@ namespace Tests.UserTests
 		[Test]
 		public void NegativeWhereTest([SupportsAnalyticFunctionsContext] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var result = db.Child
+			using var db = GetDataContext(context);
+			var result = db.Child
 					.GroupBy(_ => _.ParentID)
 					.Select(_ => new { CountPercents = CountPercents(), Sum = _.Sum(r => r.ParentID) })
 					.Where(_ => _.Sum != 36)
 					.ToList();
 
-				Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result, Has.Count.EqualTo(5));
 
-				Assert.That(result.Sum(_ => _.CountPercents), Is.EqualTo(100d).Within(0.001));
-			}
+			Assert.That(result.Sum(_ => _.CountPercents), Is.EqualTo(100d).Within(0.001));
 		}
 
 		[Test] // LinqService fails with decimals
 		public void PositiveHavingTest([SupportsAnalyticFunctionsContext(false)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var result = db.Child
+			using var db = GetDataContext(context);
+			var result = db.Child
 					.GroupBy(_ => _.ParentID)
 					.Select(_ => new { CountPercents = CountPercents(), Sum = _.Sum(r => r.ParentID) })
 					.Having(_ => _.Sum != 36)
 					.ToList();
 
-				Assert.That(result, Has.Count.EqualTo(5));
-				Assert.That(result.Sum(_ => _.CountPercents), Is.EqualTo(100d).Within(0.001));
-			}
+			Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result.Sum(_ => _.CountPercents), Is.EqualTo(100d).Within(0.001));
 		}
 
 		[Test, ActiveIssue("Wrong Having detection")]
 		public void PositiveWindowFunctionsWhereTest([SupportsAnalyticFunctionsContext] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var result = db.Child
+			using var db = GetDataContext(context);
+			var result = db.Child
 					.GroupBy(_ => _.ParentID)
 					.Select(_ => new
 					{
@@ -64,17 +59,15 @@ namespace Tests.UserTests
 					.Where(_ => _.Sum != 36)
 					.ToList();
 
-				Assert.That(result, Has.Count.EqualTo(5));
-				Assert.That(result.Sum(_ => _.CountPercents), Is.EqualTo(100d).Within(0.001));
-			}
+			Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result.Sum(_ => _.CountPercents), Is.EqualTo(100d).Within(0.001));
 		}
 
 		[Test]
 		public void PositiveWindowFunctionsHavingTest([SupportsAnalyticFunctionsContext] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var result = db.Child
+			using var db = GetDataContext(context);
+			var result = db.Child
 					.GroupBy(c => c.ParentID)
 					.Select(g => new
 					{
@@ -84,9 +77,8 @@ namespace Tests.UserTests
 					.Having(x => x.Sum != 36)
 					.ToList();
 
-				Assert.That(result, Has.Count.EqualTo(5));
-				Assert.That(result.Sum(_ => _.CountPercents), Is.EqualTo(100d).Within(0.001));
-			}
+			Assert.That(result, Has.Count.EqualTo(5));
+			Assert.That(result.Sum(_ => _.CountPercents), Is.EqualTo(100d).Within(0.001));
 		}
 	}
 }

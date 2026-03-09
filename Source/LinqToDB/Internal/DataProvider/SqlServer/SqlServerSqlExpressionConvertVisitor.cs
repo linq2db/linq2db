@@ -154,7 +154,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		{
 			if (expr is SqlValue
 				{
-					Value: uint or long or ulong or float or double or decimal
+					Value: uint or long or ulong or float or double or decimal,
 				} value)
 			{
 				expr = new SqlCastExpression(expr, value.ValueType, null, isMandatory: true);

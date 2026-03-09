@@ -14,7 +14,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class MinByMaxByBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable() && call.Arguments.Count == 2;
+			=> call is { IsQueryable: true, Arguments.Count: 2 };
 
 		protected override BuildSequenceResult BuildMethodCall(
 			ExpressionBuilder builder,
@@ -24,7 +24,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var sourceExpression = methodCall.Arguments[0];
 			var keySelector = methodCall.Arguments[1].UnwrapLambda();
-			var isMinBy = methodCall.Method.Name == nameof(Queryable.MinBy);
+			var isMinBy = methodCall.Method.Name is nameof(Queryable.MinBy);
 			var sourceOrderBy = WindowFunctionHelpers.ExtractOrderByPart(sourceExpression, out var nonOrderedSource);
 
 			// Transform MinBy(selector) -> OrderBy(selector).FirstOrDefault()
@@ -41,7 +41,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			nonOrderedSource = BuildExpressionUtils.EnsureQueryable(nonOrderedSource, elementType);
 
 			Expression orderedExpression = Expression.Call(
-			orderByMethod,
+				orderByMethod,
 				nonOrderedSource,
 				methodCall.Arguments[1]);
 
@@ -56,7 +56,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 
 			// Create FirstOrDefault() or First() call
-			var firstCall = !elementType.IsNullableOrReferenceType() && !buildInfo.IsSubQuery
+			var firstCall = !elementType.IsNullableOrReferenceType && !buildInfo.IsSubQuery
 				? Methods.Queryable.First.MakeGenericMethod(elementType)
 				: Methods.Queryable.FirstOrDefault.MakeGenericMethod(elementType);
 

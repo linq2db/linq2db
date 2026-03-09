@@ -108,25 +108,29 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
-			switch (element.Operation)
+			return element.Operation switch
 			{
-				case "%": return new SqlFunction(element.Type, "MOD", element.Expr1, element.Expr2);
-				case "&": return new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2);
-				case "|": // (a + b) - BITAND(a, b)
-					return Sub(
+				"%" => new SqlFunction(element.Type, "MOD", element.Expr1, element.Expr2),
+				"&" => new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2),
+
+				// (a + b) - BITAND(a, b)
+				"|" => Sub(
 						Add(element.Expr1, element.Expr2, element.SystemType),
 						new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2),
-						element.SystemType);
+					element.SystemType
+				),
 
-				case "^": // (a + b) - BITAND(a, b) * 2
-					return Sub(
+				// (a + b) - BITAND(a, b) * 2
+				"^" => Sub(
 						Add(element.Expr1, element.Expr2, element.SystemType),
 						Mul(new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2), 2),
-						element.SystemType);
-				case "+" when element.SystemType == typeof(string): return new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence);
-			}
+					element.SystemType
+				),
 
-			return base.ConvertSqlBinaryExpression(element);
+				"+" when element.SystemType == typeof(string) => new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
+
+				_ => base.ConvertSqlBinaryExpression(element),
+			};
 		}
 
 		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
@@ -139,32 +143,29 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 		public override ISqlExpression ConvertSqlExpression(SqlExpression element)
 		{
-			if (element.Expr.StartsWith("To_Number(To_Char(") && element.Expr.EndsWith(", 'FF'))"))
-				return Div(new SqlExpression(element.Type, element.Expr.Replace("To_Number(To_Char(", "to_Number(To_Char("), element.Parameters), 1000);
+			if (element.Expr.StartsWith("To_Number(To_Char(", StringComparison.Ordinal) && element.Expr.EndsWith(", 'FF'))", StringComparison.Ordinal))
+				return Div(new SqlExpression(element.Type, element.Expr.Replace("To_Number(To_Char(", "to_Number(To_Char(", StringComparison.Ordinal), element.Parameters), 1000);
 
 			return base.ConvertSqlExpression(element);
 		}
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			switch (func)
+			return func switch
 			{
-				case {
+				{
 					Name: "CharIndex",
 					Parameters: [var p0, var p1],
 					Type: var type,
-				}:
-					return new SqlFunction(type, "InStr", p1, p0);
+				} => new SqlFunction(type, "InStr", p1, p0),
 
-				case {
+				{
 					Name: "CharIndex",
 					Parameters: [var p0, var p1, var p2],
 					Type: var type,
-				}:
-					return new SqlFunction(type, "InStr", p1, p0, p2);
+				} => new SqlFunction(type, "InStr", p1, p0, p2),
 
-				default:
-					return base.ConvertSqlFunction(func);
+				_ => base.ConvertSqlFunction(func),
 			};
 		}
 

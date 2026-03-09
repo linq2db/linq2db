@@ -160,7 +160,7 @@ namespace Tests
 					TestProvName.AllSybase,
 					TestProvName.AllSqlServer)                        => db.GetTable<LinqDataTypes>().Select(_ => DbName()).First(),
 				string when context.IsAnyOf(TestProvName.AllInformix) => db.GetTable<LinqDataTypes>().Select(_ => DbInfo("dbname")).First(),
-				_                                                     => NO_DATABASE_NAME
+				_                                                     => NO_DATABASE_NAME,
 			};
 		}
 
@@ -320,7 +320,7 @@ namespace Tests
 				string when providerName.IsAnyOf(TestProvName.AllFirebird)     => "UNICODE_FSS",
 				string when providerName.IsAnyOf(TestProvName.AllMySql)        => "utf8_bin",
 				string when providerName.IsAnyOf(TestProvName.AllSqlServer)    => "Albanian_CI_AS",
-				_                                                              => "what-ever"
+				_                                                              => "what-ever",
 			};
 		}
 
@@ -378,7 +378,7 @@ namespace Tests
 			if (!Directory.Exists(dir))
 				Directory.CreateDirectory(dir);
 
-			return Path.Combine(dir, FormattableString.Invariant($"ExpressionTest.0.cs"));
+			return Path.Combine(dir, "ExpressionTest.0.cs");
 		}
 	}
 }

@@ -139,9 +139,9 @@ namespace LinqToDB.Internal.Linq.Builder
 							return HasTargetRoot(method.Object);
 						}
 
-						if (method.IsQueryable() && method.Arguments.Count > 0)
+						if (method is { IsQueryable: true, Arguments: [var a0, ..] })
 						{
-							if (HasTargetRoot(method.Arguments[0]))
+							if (HasTargetRoot(a0))
 							{
 								return true;
 							}
@@ -209,7 +209,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				SourcePropAccess.EnsureType(ConnectionLambda.Parameters[1].Type));
 		}
 
-		Dictionary<Expression, SqlPlaceholderExpression> _knownMap = new (ExpressionEqualityComparer.Instance);
+		readonly Dictionary<Expression, SqlPlaceholderExpression> _knownMap = new (ExpressionEqualityComparer.Instance);
 
 		public bool IsTargetAssociation(Expression pathExpression)
 		{
@@ -332,12 +332,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override IBuildContext Clone(CloningContext context)
 		{
-			throw new NotImplementedException();
+			throw new NotSupportedException();
 		}
 
 		public override void SetRunQuery<T>(Query<T> query, Expression expr)
 		{
-			throw new NotImplementedException();
+			throw new NotSupportedException();
 		}
 
 		public override SqlStatement GetResultStatement()
@@ -373,17 +373,17 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
-				throw new NotImplementedException();
+				throw new NotSupportedException();
 			}
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				throw new NotImplementedException();
+				throw new NotSupportedException();
 			}
 
 			public override SqlStatement GetResultStatement()
 			{
-				throw new NotImplementedException();
+				throw new NotSupportedException();
 			}
 
 			public override MappingSchema MappingSchema => TargetContextRef.BuildContext.MappingSchema;
@@ -443,7 +443,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				var targetTable = MergeBuilder.GetTargetTable(targetContext);
 				if (targetTable == null)
-					throw new NotImplementedException("Currently, only CTEs are supported as the target of a merge. You can fix by calling .AsCte() before calling .Merge()");
+					throw new NotSupportedException("Currently, only CTEs are supported as the target of a merge. You can fix by calling .AsCte() before calling .Merge()");
 
 				var clonedTargetTable = MergeBuilder.GetTargetTable(clonedTargetContext);
 

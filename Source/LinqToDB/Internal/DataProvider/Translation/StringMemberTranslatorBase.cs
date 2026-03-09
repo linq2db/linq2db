@@ -31,8 +31,10 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			Registration.RegisterMethod(() => "".PadLeft(0), TranslateStringPadLeft);
 			Registration.RegisterMethod(() => "".PadLeft(0, ' '), TranslateStringPadLeft);
 
+#pragma warning disable MA0089 // Optimize string method usage
 			Registration.RegisterMethod(() => string.Join(",", Enumerable.Empty<string>()), TranslateStringJoin);
 			Registration.RegisterMethod(() => string.Join(",", Array.Empty<string>()),      TranslateStringJoin);
+#pragma warning restore MA0089 // Optimize string method usage
 
 			Registration.RegisterMethod(() => Sql.ConcatStrings(",", Enumerable.Empty<string>()), TranslateConcatStrings);
 			Registration.RegisterMethod(() => Sql.ConcatStrings(",", Array.Empty<string>()),      TranslateConcatStrings);

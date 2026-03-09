@@ -153,7 +153,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryField     :
-					if (value == PseudoFunctions.MERGE_ACTION)
+					if (string.Equals(value, PseudoFunctions.MERGE_ACTION, StringComparison.Ordinal))
 						return sb.Append("merge_action()");
 					goto case ConvertType.NameToQueryFieldAlias;
 				case ConvertType.NameToQueryFieldAlias:
@@ -173,7 +173,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 							// force quote enabled
 							ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote
 							// only for Auto mode - contains upper-case letter
-							|| ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && value.Any(char.IsUpper)
+							|| (ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && value.Any(char.IsUpper))
 							// is a keyword
 							|| IsReserved(value)
 							// starts from non-letter/underscore
@@ -184,7 +184,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 						if (quote)
 							// don't forget to duplicate quotes
-							return sb.Append('"').Append(value.Replace("\"", "\"\"")).Append('"');
+							return sb.Append('"').Append(value.Replace("\"", "\"\"", StringComparison.Ordinal)).Append('"');
 					}
 
 					break;
@@ -196,7 +196,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 				case ConvertType.SprocParameterToName:
 					return (value.Length > 0 && value[0] == ':')
-						? sb.Append(value.Substring(1))
+						? sb.Append(value.AsSpan(1))
 						: sb.Append(value);
 			}
 
@@ -268,7 +268,14 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			return base.BuildJoinType(join, condition);
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
+		public override StringBuilder BuildObjectName(
+			StringBuilder sb,
+			SqlObjectName name,
+			ConvertType objectType = ConvertType.NameToQueryTable,
+			bool escape = true,
+			TableOptions tableOptions = TableOptions.NotSet,
+			bool withoutSuffix = false
+		)
 		{
 			var schemaName = tableOptions.HasIsTemporary() ? null : name.Schema;
 
@@ -297,10 +304,11 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 					try
 					{
 						// fast Enum detection path
-						if (param.DbType == DbType.Object && param.Value?.GetType().IsEnum == true)
-							return "Enum";
-
-						return provider.Adapter.GetDbType(param).ToString();
+						return param.DbType switch
+						{
+							DbType.Object when param.Value?.GetType().IsEnum == true => "Enum",
+							_ => provider.Adapter.GetDbType(param).ToString(),
+						};
 					}
 					catch (NotSupportedException)
 					{
@@ -341,31 +349,25 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			string command;
+			var command = table.TableOptions.TemporaryOptionValue switch
+			{
+				TableOptions.IsTemporary                                                                                    or
+				TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData       or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                           or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData       or
+																					TableOptions.IsLocalTemporaryData       or
+																					TableOptions.IsTransactionTemporaryData or
+										   TableOptions.IsLocalTemporaryStructure                                           or
+										   TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData       or
+										   TableOptions.IsLocalTemporaryStructure | TableOptions.IsTransactionTemporaryData =>
+					"CREATE TEMPORARY TABLE ",
 
-			if (table.TableOptions.IsTemporaryOptionSet())
-			{
-				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-				{
-					case TableOptions.IsTemporary                                                                                    :
-					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData       :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                           :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
-					case                                                                     TableOptions.IsLocalTemporaryData       :
-					case                                                                     TableOptions.IsTransactionTemporaryData :
-					case                            TableOptions.IsLocalTemporaryStructure                                           :
-					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
-					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsTransactionTemporaryData :
-						command = "CREATE TEMPORARY TABLE ";
-						break;
-					case var value :
-						throw new InvalidOperationException($"Incompatible table options '{value}'");
-				}
-			}
-			else
-			{
-				command = "CREATE TABLE ";
-			}
+				0 =>
+					"CREATE TABLE ",
+
+				var value =>
+					throw new InvalidOperationException($"Incompatible table options '{value}'"),
+			};
 
 			StringBuilder.Append(command);
 
@@ -389,7 +391,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		public override string GetReserveSequenceValuesSql(int count, string sequenceName)
 		{
-			return FormattableString.Invariant($"SELECT nextval('{ConvertInline(sequenceName, ConvertType.SequenceName)}') FROM generate_series(1, {count})");
+			return string.Create(CultureInfo.InvariantCulture, $"SELECT nextval('{ConvertInline(sequenceName, ConvertType.SequenceName)}') FROM generate_series(1, {count})");
 		}
 
 		protected override void BuildSubQueryExtensions(SqlStatement statement)

@@ -21,7 +21,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
 		{
-			if (call.Method.DeclaringType == typeof(LinqExtensions) || !call.IsQueryable())
+			if (call.Method.DeclaringType == typeof(LinqExtensions) || !call.IsQueryable)
 				return false;
 
 			if (call.Arguments.Count != 5)
@@ -147,7 +147,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return BuildSequenceResult.FromContext(new SelectContext(outerContext.TranslationModifier, buildInfo.Parent, builder, null, body, outerContext.SelectQuery, buildInfo.IsSubQuery)
 #if DEBUG
 			{
-				Debug_MethodCall = methodCall
+				Debug_MethodCall = methodCall,
 			}
 #endif
 				);

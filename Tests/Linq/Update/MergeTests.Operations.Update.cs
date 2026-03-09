@@ -11,67 +11,64 @@ namespace Tests.xUpdate
 		[Test]
 		public void SameSourceUpdate([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.On((t, s) => s.Id == 3)
 					.UpdateWhenMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(4, rows, context);
+			AssertRowCount(4, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(4));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[0].Id, Is.EqualTo(1));
-					Assert.That(result[0].Field1, Is.Null);
-					Assert.That(result[0].Field2, Is.EqualTo(3));
-					Assert.That(result[0].Field3, Is.Null);
-					Assert.That(result[0].Field4, Is.Null);
-					Assert.That(result[0].Field5, Is.Null);
+			Assert.That(result, Has.Count.EqualTo(4));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[0].Field1, Is.Null);
+				Assert.That(result[0].Field2, Is.EqualTo(3));
+				Assert.That(result[0].Field3, Is.Null);
+				Assert.That(result[0].Field4, Is.Null);
+				Assert.That(result[0].Field5, Is.Null);
 
-					Assert.That(result[1].Id, Is.EqualTo(2));
-					Assert.That(result[1].Field1, Is.Null);
-					Assert.That(result[1].Field2, Is.EqualTo(3));
-					Assert.That(result[1].Field3, Is.Null);
-					Assert.That(result[1].Field4, Is.Null);
-					Assert.That(result[1].Field5, Is.Null);
+				Assert.That(result[1].Id, Is.EqualTo(2));
+				Assert.That(result[1].Field1, Is.Null);
+				Assert.That(result[1].Field2, Is.EqualTo(3));
+				Assert.That(result[1].Field3, Is.Null);
+				Assert.That(result[1].Field4, Is.Null);
+				Assert.That(result[1].Field5, Is.Null);
 
-					Assert.That(result[2].Id, Is.EqualTo(3));
-					Assert.That(result[2].Field1, Is.Null);
-					Assert.That(result[2].Field2, Is.EqualTo(3));
-					Assert.That(result[2].Field3, Is.Null);
-					Assert.That(result[2].Field4, Is.EqualTo(203));
-					Assert.That(result[2].Field5, Is.Null);
+				Assert.That(result[2].Id, Is.EqualTo(3));
+				Assert.That(result[2].Field1, Is.Null);
+				Assert.That(result[2].Field2, Is.EqualTo(3));
+				Assert.That(result[2].Field3, Is.Null);
+				Assert.That(result[2].Field4, Is.EqualTo(203));
+				Assert.That(result[2].Field5, Is.Null);
 
-					Assert.That(result[3].Id, Is.EqualTo(4));
-					Assert.That(result[3].Field1, Is.Null);
-					Assert.That(result[3].Field2, Is.EqualTo(3));
-					Assert.That(result[3].Field3, Is.Null);
-					Assert.That(result[3].Field4, Is.Null);
-					Assert.That(result[3].Field5, Is.Null);
-				}
+				Assert.That(result[3].Id, Is.EqualTo(4));
+				Assert.That(result[3].Field1, Is.Null);
+				Assert.That(result[3].Field2, Is.EqualTo(3));
+				Assert.That(result[3].Field3, Is.Null);
+				Assert.That(result[3].Field4, Is.Null);
+				Assert.That(result[3].Field5, Is.Null);
 			}
 		}
 
 		[Test]
 		public void UpdatePartialSourceProjection_KnownFieldsInDefaultSetter([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db).Select(s => new TestMapping1()
 					{
@@ -85,41 +82,40 @@ namespace Tests.xUpdate
 					.UpdateWhenMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(4, rows, context);
+			AssertRowCount(4, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(4));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[0].Id, Is.EqualTo(1));
-					Assert.That(result[0].Field1, Is.Null);
-					Assert.That(result[0].Field2, Is.EqualTo(3));
-					Assert.That(result[0].Field3, Is.Null);
-					Assert.That(result[0].Field4, Is.Null);
-					Assert.That(result[0].Field5, Is.Null);
+			Assert.That(result, Has.Count.EqualTo(4));
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[0].Field1, Is.Null);
+				Assert.That(result[0].Field2, Is.EqualTo(3));
+				Assert.That(result[0].Field3, Is.Null);
+				Assert.That(result[0].Field4, Is.Null);
+				Assert.That(result[0].Field5, Is.Null);
 
-					Assert.That(result[1].Id, Is.EqualTo(2));
-					Assert.That(result[1].Field1, Is.Null);
-					Assert.That(result[1].Field2, Is.EqualTo(3));
-					Assert.That(result[1].Field3, Is.Null);
-					Assert.That(result[1].Field4, Is.Null);
-					Assert.That(result[1].Field5, Is.Null);
+				Assert.That(result[1].Id, Is.EqualTo(2));
+				Assert.That(result[1].Field1, Is.Null);
+				Assert.That(result[1].Field2, Is.EqualTo(3));
+				Assert.That(result[1].Field3, Is.Null);
+				Assert.That(result[1].Field4, Is.Null);
+				Assert.That(result[1].Field5, Is.Null);
 
-					Assert.That(result[2].Id, Is.EqualTo(3));
-					Assert.That(result[2].Field1, Is.Null);
-					Assert.That(result[2].Field2, Is.EqualTo(3));
-					Assert.That(result[2].Field3, Is.Null);
-					Assert.That(result[2].Field4, Is.EqualTo(203));
-					Assert.That(result[2].Field5, Is.Null);
+				Assert.That(result[2].Id, Is.EqualTo(3));
+				Assert.That(result[2].Field1, Is.Null);
+				Assert.That(result[2].Field2, Is.EqualTo(3));
+				Assert.That(result[2].Field3, Is.Null);
+				Assert.That(result[2].Field4, Is.EqualTo(203));
+				Assert.That(result[2].Field5, Is.Null);
 
-					Assert.That(result[3].Id, Is.EqualTo(4));
-					Assert.That(result[3].Field1, Is.Null);
-					Assert.That(result[3].Field2, Is.EqualTo(3));
-					Assert.That(result[3].Field3, Is.Null);
-					Assert.That(result[3].Field4, Is.Null);
-					Assert.That(result[3].Field5, Is.Null);
-				}
+				Assert.That(result[3].Id, Is.EqualTo(4));
+				Assert.That(result[3].Field1, Is.Null);
+				Assert.That(result[3].Field2, Is.EqualTo(3));
+				Assert.That(result[3].Field3, Is.Null);
+				Assert.That(result[3].Field4, Is.Null);
+				Assert.That(result[3].Field5, Is.Null);
 			}
 		}
 
@@ -128,37 +124,35 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
 					.UpdateWhenMatchedAnd((t, s) => s.Id == 4)
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(4));
+			Assert.That(result, Has.Count.EqualTo(4));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[3].Id, Is.EqualTo(4));
-					Assert.That(result[3].Field1, Is.EqualTo(5));
-					Assert.That(result[3].Field2, Is.EqualTo(7));
-					Assert.That(result[3].Field3, Is.Null);
-					Assert.That(result[3].Field4, Is.Null);
-					Assert.That(result[3].Field5, Is.Null);
-				}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[3].Id, Is.EqualTo(4));
+				Assert.That(result[3].Field1, Is.EqualTo(5));
+				Assert.That(result[3].Field2, Is.EqualTo(7));
+				Assert.That(result[3].Field3, Is.Null);
+				Assert.That(result[3].Field4, Is.Null);
+				Assert.That(result[3].Field5, Is.Null);
 			}
 		}
 
@@ -169,13 +163,12 @@ namespace Tests.xUpdate
 			TestProvName.AllOracle, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -190,43 +183,41 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(4));
+			Assert.That(result, Has.Count.EqualTo(4));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[2].Id, Is.EqualTo(6));
-					Assert.That(result[2].Field1, Is.Null);
-					Assert.That(result[2].Field2, Is.EqualTo(6));
-					Assert.That(result[2].Field3, Is.Null);
-					Assert.That(result[2].Field4, Is.Null);
-					Assert.That(result[2].Field5, Is.Null);
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[2].Id, Is.EqualTo(6));
+				Assert.That(result[2].Field1, Is.Null);
+				Assert.That(result[2].Field2, Is.EqualTo(6));
+				Assert.That(result[2].Field3, Is.Null);
+				Assert.That(result[2].Field4, Is.Null);
+				Assert.That(result[2].Field5, Is.Null);
 
-					Assert.That(result[3].Id, Is.EqualTo(8));
-					Assert.That(result[3].Field1, Is.EqualTo(10));
-					Assert.That(result[3].Field2, Is.EqualTo(13));
-					Assert.That(result[3].Field3, Is.Null);
-					Assert.That(result[3].Field4, Is.Null);
-					Assert.That(result[3].Field5, Is.Null);
-				}
+				Assert.That(result[3].Id, Is.EqualTo(8));
+				Assert.That(result[3].Field1, Is.EqualTo(10));
+				Assert.That(result[3].Field2, Is.EqualTo(13));
+				Assert.That(result[3].Field3, Is.Null);
+				Assert.That(result[3].Field4, Is.Null);
+				Assert.That(result[3].Field5, Is.Null);
 			}
 		}
 
 		[Test]
 		public void SameSourceUpdateWithUpdateOracle([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -240,46 +231,44 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(4));
+			Assert.That(result, Has.Count.EqualTo(4));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[2].Id, Is.EqualTo(3));
-					Assert.That(result[2].Field1, Is.Null);
-					Assert.That(result[2].Field2, Is.EqualTo(6));
-					Assert.That(result[2].Field3, Is.Null);
-					Assert.That(result[2].Field4, Is.Null);
-					Assert.That(result[2].Field5, Is.Null);
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[2].Id, Is.EqualTo(3));
+				Assert.That(result[2].Field1, Is.Null);
+				Assert.That(result[2].Field2, Is.EqualTo(6));
+				Assert.That(result[2].Field3, Is.Null);
+				Assert.That(result[2].Field4, Is.Null);
+				Assert.That(result[2].Field5, Is.Null);
 
-					Assert.That(result[3].Id, Is.EqualTo(4));
-					Assert.That(result[3].Field1, Is.EqualTo(10));
-					Assert.That(result[3].Field2, Is.EqualTo(13));
-					Assert.That(result[3].Field3, Is.Null);
-					Assert.That(result[3].Field4, Is.Null);
-					Assert.That(result[3].Field5, Is.Null);
-				}
+				Assert.That(result[3].Id, Is.EqualTo(4));
+				Assert.That(result[3].Field1, Is.EqualTo(10));
+				Assert.That(result[3].Field2, Is.EqualTo(13));
+				Assert.That(result[3].Field3, Is.Null);
+				Assert.That(result[3].Field4, Is.Null);
+				Assert.That(result[3].Field5, Is.Null);
 			}
 		}
 
 		[Test]
 		public void SameSourceUpdateWithComplexUpdateSet([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var name = "test";
-				var idx  = 6;
+			var name = "test";
+			var idx  = 6;
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -293,43 +282,41 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(4));
+			Assert.That(result, Has.Count.EqualTo(4));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[2].Id, Is.EqualTo(3));
-					Assert.That(result[2].Field1, Is.Null);
-					Assert.That(result[2].Field2, Is.EqualTo(10));
-					Assert.That(result[2].Field3, Is.Null);
-					Assert.That(result[2].Field4, Is.Null);
-					Assert.That(result[2].Field5, Is.Null);
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[2].Id, Is.EqualTo(3));
+				Assert.That(result[2].Field1, Is.Null);
+				Assert.That(result[2].Field2, Is.EqualTo(10));
+				Assert.That(result[2].Field3, Is.Null);
+				Assert.That(result[2].Field4, Is.Null);
+				Assert.That(result[2].Field5, Is.Null);
 
-					Assert.That(result[3].Id, Is.EqualTo(4));
-					Assert.That(result[3].Field1, Is.EqualTo(10));
-					Assert.That(result[3].Field2, Is.EqualTo(10));
-					Assert.That(result[3].Field3, Is.Null);
-					Assert.That(result[3].Field4, Is.Null);
-					Assert.That(result[3].Field5, Is.Null);
-				}
+				Assert.That(result[3].Id, Is.EqualTo(4));
+				Assert.That(result[3].Field1, Is.EqualTo(10));
+				Assert.That(result[3].Field2, Is.EqualTo(10));
+				Assert.That(result[3].Field3, Is.Null);
+				Assert.That(result[3].Field4, Is.Null);
+				Assert.That(result[3].Field5, Is.Null);
 			}
 		}
 
 		[Test]
 		public void UpdatePartialSourceProjection_KnownFieldInSetter([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db).Select(s => new TestMapping1() { Id = s.Id, Field1 = s.Field1 }))
 					.OnTargetKey()
@@ -339,30 +326,29 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(4));
+			Assert.That(result, Has.Count.EqualTo(4));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[2].Id, Is.EqualTo(3));
-					Assert.That(result[2].Field1, Is.Null);
-					Assert.That(result[2].Field2, Is.EqualTo(3));
-					Assert.That(result[2].Field3, Is.Null);
-					Assert.That(result[2].Field4, Is.EqualTo(203));
-					Assert.That(result[2].Field5, Is.Null);
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[2].Id, Is.EqualTo(3));
+				Assert.That(result[2].Field1, Is.Null);
+				Assert.That(result[2].Field2, Is.EqualTo(3));
+				Assert.That(result[2].Field3, Is.Null);
+				Assert.That(result[2].Field4, Is.EqualTo(203));
+				Assert.That(result[2].Field5, Is.Null);
 
-					Assert.That(result[3].Id, Is.EqualTo(4));
-					Assert.That(result[3].Field1, Is.EqualTo(10));
-					Assert.That(result[3].Field2, Is.EqualTo(6));
-					Assert.That(result[3].Field3, Is.Null);
-					Assert.That(result[3].Field4, Is.Null);
-					Assert.That(result[3].Field5, Is.Null);
-				}
+				Assert.That(result[3].Id, Is.EqualTo(4));
+				Assert.That(result[3].Field1, Is.EqualTo(10));
+				Assert.That(result[3].Field2, Is.EqualTo(6));
+				Assert.That(result[3].Field3, Is.Null);
+				Assert.That(result[3].Field4, Is.Null);
+				Assert.That(result[3].Field5, Is.Null);
 			}
 		}
 
@@ -371,13 +357,12 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource1(db))
 					.OnTargetKey()
@@ -393,26 +378,25 @@ namespace Tests.xUpdate
 						})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(4));
+			Assert.That(result, Has.Count.EqualTo(4));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[2].Id, Is.EqualTo(3));
-					Assert.That(result[2].Field1, Is.Null);
-					Assert.That(result[2].Field2, Is.Null);
-					Assert.That(result[2].Field3, Is.Null);
-					Assert.That(result[2].Field4, Is.EqualTo(206));
-					Assert.That(result[2].Field5, Is.Null);
-				}
-
-				AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[2].Id, Is.EqualTo(3));
+				Assert.That(result[2].Field1, Is.Null);
+				Assert.That(result[2].Field2, Is.Null);
+				Assert.That(result[2].Field3, Is.Null);
+				Assert.That(result[2].Field4, Is.EqualTo(206));
+				Assert.That(result[2].Field5, Is.Null);
 			}
+
+			AssertRow(InitialTargetData[3], result[3], null, null);
 		}
 
 		[Test]
@@ -420,13 +404,12 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var exception = Assert.Catch(
+			var exception = Assert.Catch(
 					() => table
 					.Merge()
 					.Using(GetSource1(db).Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
@@ -439,21 +422,19 @@ namespace Tests.xUpdate
 						})
 					.Merge())!;
 
-				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
-				Assert.That(exception.Message,  Does.EndWith(".Field2' could not be converted to SQL."));
-			}
+			Assert.That(exception, Is.InstanceOf<LinqToDBException>());
+			Assert.That(exception.Message, Does.EndWith(".Field2' could not be converted to SQL."));
 		}
 
 		[Test]
 		public void OtherSourceUpdate([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource2(db))
 					.On((t, s) => t.Id == s.OtherId)
@@ -467,30 +448,29 @@ namespace Tests.xUpdate
 					})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(2, rows, context);
+			AssertRowCount(2, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(4));
+			Assert.That(result, Has.Count.EqualTo(4));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[2].Id, Is.EqualTo(3));
-					Assert.That(result[2].Field1, Is.Null);
-					Assert.That(result[2].Field2, Is.EqualTo(3));
-					Assert.That(result[2].Field3, Is.Null);
-					Assert.That(result[2].Field4, Is.Null);
-					Assert.That(result[2].Field5, Is.Null);
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[2].Id, Is.EqualTo(3));
+				Assert.That(result[2].Field1, Is.Null);
+				Assert.That(result[2].Field2, Is.EqualTo(3));
+				Assert.That(result[2].Field3, Is.Null);
+				Assert.That(result[2].Field4, Is.Null);
+				Assert.That(result[2].Field5, Is.Null);
 
-					Assert.That(result[3].Id, Is.EqualTo(4));
-					Assert.That(result[3].Field1, Is.EqualTo(5));
-					Assert.That(result[3].Field2, Is.EqualTo(7));
-					Assert.That(result[3].Field3, Is.Null);
-					Assert.That(result[3].Field4, Is.EqualTo(214));
-					Assert.That(result[3].Field5, Is.Null);
-				}
+				Assert.That(result[3].Id, Is.EqualTo(4));
+				Assert.That(result[3].Field1, Is.EqualTo(5));
+				Assert.That(result[3].Field2, Is.EqualTo(7));
+				Assert.That(result[3].Field3, Is.Null);
+				Assert.That(result[3].Field4, Is.EqualTo(214));
+				Assert.That(result[3].Field5, Is.Null);
 			}
 		}
 
@@ -499,13 +479,12 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource2(db))
 					.On((t, s) => t.Id == s.OtherId)
@@ -521,24 +500,23 @@ namespace Tests.xUpdate
 						})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(4));
+			Assert.That(result, Has.Count.EqualTo(4));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[3].Id, Is.EqualTo(4));
-					Assert.That(result[3].Field1, Is.EqualTo(5));
-					Assert.That(result[3].Field2, Is.EqualTo(7));
-					Assert.That(result[3].Field3, Is.Null);
-					Assert.That(result[3].Field4, Is.EqualTo(214));
-					Assert.That(result[3].Field5, Is.Null);
-				}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[3].Id, Is.EqualTo(4));
+				Assert.That(result[3].Field1, Is.EqualTo(5));
+				Assert.That(result[3].Field2, Is.EqualTo(7));
+				Assert.That(result[3].Field3, Is.Null);
+				Assert.That(result[3].Field4, Is.EqualTo(214));
+				Assert.That(result[3].Field5, Is.Null);
 			}
 		}
 
@@ -547,13 +525,12 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource2(db)
 						.Select(s => new TestMapping2()
@@ -571,24 +548,23 @@ namespace Tests.xUpdate
 						})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(4));
+			Assert.That(result, Has.Count.EqualTo(4));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[3].Id, Is.EqualTo(4));
-					Assert.That(result[3].Field1, Is.EqualTo(5));
-					Assert.That(result[3].Field2, Is.EqualTo(6));
-					Assert.That(result[3].Field3, Is.Null);
-					Assert.That(result[3].Field4, Is.Null);
-					Assert.That(result[3].Field5, Is.Null);
-				}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[3].Id, Is.EqualTo(4));
+				Assert.That(result[3].Field1, Is.EqualTo(5));
+				Assert.That(result[3].Field2, Is.EqualTo(6));
+				Assert.That(result[3].Field3, Is.Null);
+				Assert.That(result[3].Field4, Is.Null);
+				Assert.That(result[3].Field5, Is.Null);
 			}
 		}
 
@@ -597,13 +573,12 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource2(db).Select(_ => new
 					{
@@ -627,24 +602,23 @@ namespace Tests.xUpdate
 						})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(4));
+			Assert.That(result, Has.Count.EqualTo(4));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[3].Id, Is.EqualTo(4));
-					Assert.That(result[3].Field1, Is.EqualTo(5));
-					Assert.That(result[3].Field2, Is.EqualTo(7));
-					Assert.That(result[3].Field3, Is.Null);
-					Assert.That(result[3].Field4, Is.EqualTo(214));
-					Assert.That(result[3].Field5, Is.Null);
-				}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[3].Id, Is.EqualTo(4));
+				Assert.That(result[3].Field1, Is.EqualTo(5));
+				Assert.That(result[3].Field2, Is.EqualTo(7));
+				Assert.That(result[3].Field3, Is.Null);
+				Assert.That(result[3].Field4, Is.EqualTo(214));
+				Assert.That(result[3].Field5, Is.Null);
 			}
 		}
 
@@ -653,13 +627,12 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource2(db).ToList().OrderBy(_ => _.OtherId).Select(_ => new
 					{
@@ -683,25 +656,24 @@ namespace Tests.xUpdate
 						})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(4));
+			Assert.That(result, Has.Count.EqualTo(4));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				if (!context.IsAnyOf(ProviderName.Sybase))
-					AssertRow(InitialTargetData[2], result[2], null, 203);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[3].Id, Is.EqualTo(4));
-					Assert.That(result[3].Field1, Is.EqualTo(5));
-					Assert.That(result[3].Field2, Is.EqualTo(7));
-					Assert.That(result[3].Field3, Is.Null);
-					Assert.That(result[3].Field4, Is.EqualTo(214));
-					Assert.That(result[3].Field5, Is.Null);
-				}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			if (!context.IsAnyOf(ProviderName.Sybase))
+				AssertRow(InitialTargetData[2], result[2], null, 203);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[3].Id, Is.EqualTo(4));
+				Assert.That(result[3].Field1, Is.EqualTo(5));
+				Assert.That(result[3].Field2, Is.EqualTo(7));
+				Assert.That(result[3].Field3, Is.Null);
+				Assert.That(result[3].Field4, Is.EqualTo(214));
+				Assert.That(result[3].Field5, Is.Null);
 			}
 		}
 
@@ -710,13 +682,12 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource2(db).Select(_ => new
 					{
@@ -740,24 +711,23 @@ namespace Tests.xUpdate
 						})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(4));
+			Assert.That(result, Has.Count.EqualTo(4));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[3].Id, Is.EqualTo(4));
-					Assert.That(result[3].Field1, Is.EqualTo(5));
-					Assert.That(result[3].Field2, Is.EqualTo(7));
-					Assert.That(result[3].Field3, Is.Null);
-					Assert.That(result[3].Field4, Is.EqualTo(214));
-					Assert.That(result[3].Field5, Is.Null);
-				}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[3].Id, Is.EqualTo(4));
+				Assert.That(result[3].Field1, Is.EqualTo(5));
+				Assert.That(result[3].Field2, Is.EqualTo(7));
+				Assert.That(result[3].Field3, Is.Null);
+				Assert.That(result[3].Field4, Is.EqualTo(214));
+				Assert.That(result[3].Field5, Is.Null);
 			}
 		}
 
@@ -766,13 +736,12 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix, TestProvName.AllSapHana, ProviderName.Firebird25, ProviderName.Sybase)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var rows = table
+			var rows = table
 					.Merge()
 					.Using(GetSource2(db).ToList().OrderBy(_ => _.OtherId).Select(_ => new
 					{
@@ -797,37 +766,35 @@ namespace Tests.xUpdate
 						})
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+			var result = table.OrderBy(_ => _.Id).ToList();
 
-				AssertRowCount(1, rows, context);
+			AssertRowCount(1, rows, context);
 
-				Assert.That(result, Has.Count.EqualTo(4));
+			Assert.That(result, Has.Count.EqualTo(4));
 
-				AssertRow(InitialTargetData[0], result[0], null, null);
-				AssertRow(InitialTargetData[1], result[1], null, null);
-				AssertRow(InitialTargetData[2], result[2], null, 203);
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result[3].Id, Is.EqualTo(4));
-					Assert.That(result[3].Field1, Is.EqualTo(5));
-					Assert.That(result[3].Field2, Is.EqualTo(7));
-					Assert.That(result[3].Field3, Is.Null);
-					Assert.That(result[3].Field4, Is.EqualTo(214));
-					Assert.That(result[3].Field5, Is.Null);
-				}
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(result[3].Id, Is.EqualTo(4));
+				Assert.That(result[3].Field1, Is.EqualTo(5));
+				Assert.That(result[3].Field2, Is.EqualTo(7));
+				Assert.That(result[3].Field3, Is.Null);
+				Assert.That(result[3].Field4, Is.EqualTo(214));
+				Assert.That(result[3].Field5, Is.Null);
 			}
 		}
 
 		[Test]
 		public void UpdateFromPartialSourceProjection_UnknownFieldInDefaultSetter([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var exception = Assert.Catch(
+			var exception = Assert.Catch(
 					() => table
 						.Merge()
 						.Using(table.Select(_ => new TestMapping1() { Id = _.Id, Field1 = _.Field1 }))
@@ -835,21 +802,19 @@ namespace Tests.xUpdate
 						.UpdateWhenMatched()
 						.Merge())!;
 
-				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
-				Assert.That(exception.Message,  Does.EndWith("'source.Field2' could not be converted to SQL."));
-			}
+			Assert.That(exception, Is.InstanceOf<LinqToDBException>());
+			Assert.That(exception.Message, Does.EndWith("'source.Field2' could not be converted to SQL."));
 		}
 
 		[Test]
 		public void UpdateFromPartialSourceProjection_UnknownFieldInSetter([MergeDataContextSource] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				PrepareData(db);
+			using var db = GetDataContext(context);
+			PrepareData(db);
 
-				var table = GetTarget(db);
+			var table = GetTarget(db);
 
-				var exception = Assert.Catch(
+			var exception = Assert.Catch(
 					() => table
 						.Merge()
 						.Using(table.Select(_ => new TestMapping1() { Id = _.Id }))
@@ -861,9 +826,8 @@ namespace Tests.xUpdate
 						})
 						.Merge())!;
 
-				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
-				Assert.That(exception.Message,  Does.EndWith("s.Field2' could not be converted to SQL."));
-			}
+			Assert.That(exception, Is.InstanceOf<LinqToDBException>());
+			Assert.That(exception.Message, Does.EndWith("s.Field2' could not be converted to SQL."));
 		}
 	}
 }

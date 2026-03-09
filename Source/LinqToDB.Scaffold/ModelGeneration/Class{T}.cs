@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace LinqToDB.Tools.ModelGeneration
@@ -82,9 +83,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 					if (m.Attributes.Count > 0)
 					{
-						var q =
-							from a in m.Attributes
-							group a by a.Conditional ?? "";
+						var q = m.Attributes.GroupBy(a => a.Conditional ?? "", StringComparer.Ordinal);
 
 						foreach (var g in q)
 						{

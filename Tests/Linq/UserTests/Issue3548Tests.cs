@@ -106,15 +106,13 @@ namespace Tests.UserTests
 			}
 			finally
 			{
-				using (var db = GetDataContext(context))
+				using var db = GetDataContext(context);
+				try
 				{
-					try
-					{
-						db.Execute("DROP TYPE IF EXISTS user_type_enum;");
-					}
-					catch 
-					{
-					}
+					db.Execute("DROP TYPE IF EXISTS user_type_enum;");
+				}
+				catch
+				{
 				}
 			}
 		}

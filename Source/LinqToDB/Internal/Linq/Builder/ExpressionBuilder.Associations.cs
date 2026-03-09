@@ -27,7 +27,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						Type.IsInterface: true,
 						BuildContext.ElementType: var elementType,
 					} contextRef,
-					Member: var member
+					Member: var member,
 				}
 				&& elementType != contextRef.Type)
 			{
@@ -126,7 +126,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			else
 				return null;
 
-			if (expression.NodeType == ExpressionType.MemberAccess || expression.NodeType == ExpressionType.Call)
+			if (expression.NodeType is ExpressionType.MemberAccess or ExpressionType.Call)
 				memberInfo = new AccessorMember(expression);
 
 			if (memberInfo == null)
@@ -156,7 +156,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var newInfo = entityDescriptor.ObjectType.GetImplementation(memberInfo);
 					if (newInfo != null)
 					{
-						attribute  = MappingSchema.GetAttribute<AssociationAttribute>(newInfo.DeclaringType!, newInfo);
+						attribute = MappingSchema.GetAttribute<AssociationAttribute>(newInfo.DeclaringType!, newInfo);
 						memberInfo = newInfo;
 					}
 				}
@@ -180,16 +180,22 @@ namespace LinqToDB.Internal.Linq.Builder
 						attribute.AliasName
 					);
 			}
-			else if (memberInfo.MemberType == MemberTypes.Property || memberInfo.MemberType == MemberTypes.Field)
+			else if (memberInfo.MemberType is MemberTypes.Property or MemberTypes.Field)
 			{
 				foreach (var ed in entityDescriptor.Associations)
+				{
 					if (ed.MemberInfo.EqualsTo(memberInfo))
 						return ed;
+				}
 
 				foreach (var m in entityDescriptor.InheritanceMapping)
+				{
 					foreach (var ed in MappingSchema.GetEntityDescriptor(m.Type).Associations)
+					{
 						if (ed.MemberInfo.EqualsTo(memberInfo))
 							return ed;
+					}
+				}
 			}
 
 			return descriptor;

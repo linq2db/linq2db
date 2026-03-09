@@ -35,22 +35,6 @@ namespace Tests.Linq
 			public T       Data        = default!;
 		}
 
-		static Expression? Unwrap(this Expression? ex)
-		{
-			if (ex == null)
-				return null;
-
-			switch (ex.NodeType)
-			{
-				case ExpressionType.Quote          :
-				case ExpressionType.ConvertChecked :
-				case ExpressionType.Convert        :
-					return ((UnaryExpression)ex).Operand.Unwrap();
-			}
-
-			return ex;
-		}
-
 		static MethodInfo? FindMethodInfoInType(Type type, string methodName, int paramCount)
 		{
 			var method = type.GetRuntimeMethods()
@@ -140,7 +124,7 @@ namespace Tests.Linq
 				var currentType = rowNumberBody.Type;
 				var methodInfo = FindMethodInfo(currentType, methodName, 1).GetGenericMethodDefinition();
 
-				var arg = ((LambdaExpression)Unwrap(order.Item1)!).GetBody(entityParam);
+				var arg = ((LambdaExpression)order.Item1.Unwrap()).GetBody(entityParam);
 
 				rowNumberBody = Expression.Call(rowNumberBody, methodInfo.MakeGenericMethod(arg.Type), arg);
 			}
@@ -255,32 +239,30 @@ namespace Tests.Linq
 				BookingID = i
 			}).ToArray();
 
-			using (var db = (DataConnection)GetDataContext(context))
-			using (var table = db.CreateLocalTable(sampleData))
+			using var db = (DataConnection)GetDataContext(context);
+			using var table = db.CreateLocalTable(sampleData);
+			var dataQuery = table.Where(t => t.ServiceDate > TestData.DateTime.AddDays(-2));
+
+			var query = dataQuery.OrderByDescending(t => t.ServiceDate).ThenByDescending(tt => tt.BookingID);
+
+			var expected = query.ToList();
+			var actual = new List<Booking>();
+
+			var pageResult = Paginator.GetPageViaCursor(query, b => b.BookingID, (int?)null, take, true);
+
+			Assert.That(pageResult.TotalCount, Is.EqualTo(expected.Count));
+
+			while (pageResult.Items.Count > 0)
 			{
-				var dataQuery = table.Where(t => t.ServiceDate > TestData.DateTime.AddDays(-2));
+				actual.AddRange(pageResult.Items);
+				var cursorValue = pageResult.Items.Last().BookingID;
 
-				var query = dataQuery.OrderByDescending(t => t.ServiceDate).ThenByDescending(tt => tt.BookingID);
+				pageResult = Paginator.GetPageViaCursor(query, b => b.BookingID, (int?)cursorValue, take, false);
 
-				var expected = query.ToList();
-				var actual = new List<Booking>();
-
-				var pageResult = Paginator.GetPageViaCursor(query, b => b.BookingID, (int?)null, take, true);
-
-				Assert.That(pageResult.TotalCount, Is.EqualTo(expected.Count));
-
-				while (pageResult.Items.Count > 0)
-				{
-					actual.AddRange(pageResult.Items);
-					var cursorValue = pageResult.Items.Last().BookingID;
-
-					pageResult = Paginator.GetPageViaCursor(query, b => b.BookingID, (int?)cursorValue, take, false);
-
-					Assert.That(db.LastQuery, Does.Not.Contain("CTE_2"));
-				}
-
-				AreEqualWithComparer(expected, actual);
+				Assert.That(db.LastQuery, Does.Not.Contain("CTE_2"));
 			}
+
+			AreEqualWithComparer(expected, actual);
 		}
 	}
 }

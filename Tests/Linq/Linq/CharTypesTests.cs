@@ -88,63 +88,61 @@ namespace Tests.Linq
 		[Test]
 		public void StringTrimming([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var lastId = db.GetTable<StringTestTable>().Select(_ => _.Id).Max();
+			var nextId = lastId + 1;
+
+			try
 			{
-				var lastId = db.GetTable<StringTestTable>().Select(_ => _.Id).Max();
-				var nextId = lastId + 1;
+				var testData = GetStringData(context);
 
-				try
+				foreach (var record in testData)
 				{
-					var testData = GetStringData(context);
+					var query = db.GetTable<StringTestTable>().Value(_ => _.NString, record.NString);
 
-					foreach (var record in testData)
+					if (!SkipChar(context))
+						query = query.Value(_ => _.String, record.String);
+
+					if (context.IsAnyOf(TestProvName.AllFirebird))
+						query = db.GetTable<StringTestTable>().Value(_ => _.String, record.String);
+
+					if (context.IsAnyOf(TestProvName.AllClickHouse))
+						query = query.Value(_ => _.Id, nextId++);
+
+					query.Insert();
+				}
+
+				var records = db.GetTable<StringTestTable>().Where(_ => _.Id > lastId).OrderBy(_ => _.Id).ToArray();
+
+				Assert.That(records, Has.Length.EqualTo(testData.Length));
+
+				for (var i = 0; i < records.Length; i++)
+				{
+					if (!SkipChar(context))
 					{
-						var query = db.GetTable<StringTestTable>().Value(_ => _.NString, record.NString);
-
-						if (!SkipChar(context))
-							query = query.Value(_ => _.String, record.String);
-
-						if (context.IsAnyOf(TestProvName.AllFirebird))
-							query = db.GetTable<StringTestTable>().Value(_ => _.String, record.String);
-
-						if (context.IsAnyOf(TestProvName.AllClickHouse))
-							query = query.Value(_ => _.Id, nextId++);
-
-						query.Insert();
+						if (context.IsAnyOf(TestProvName.AllSybase, TestProvName.AllOracleDevartOCI))
+							Assert.That(records[i].String, Is.EqualTo(testData[i].String?.TrimEnd(' ')?.TrimEnd('\0')));
+						else if (context.IsAnyOf(TestProvName.AllClickHouse))
+							Assert.That(records[i].String, Is.EqualTo(testData[i].String?.TrimEnd('\0')));
+						else
+							Assert.That(records[i].String, Is.EqualTo(testData[i].String?.TrimEnd(' ')));
 					}
 
-					var records = db.GetTable<StringTestTable>().Where(_ => _.Id > lastId).OrderBy(_ => _.Id).ToArray();
-
-					Assert.That(records, Has.Length.EqualTo(testData.Length));
-
-					for (var i = 0; i < records.Length; i++)
+					if (!context.IsAnyOf(TestProvName.AllFirebird))
 					{
-						if (!SkipChar(context))
-						{
-							if (context.IsAnyOf(TestProvName.AllSybase, TestProvName.AllOracleDevartOCI))
-								Assert.That(records[i].String, Is.EqualTo(testData[i].String?.TrimEnd(' ')?.TrimEnd('\0')));
-							else if (context.IsAnyOf(TestProvName.AllClickHouse))
-								Assert.That(records[i].String, Is.EqualTo(testData[i].String?.TrimEnd('\0')));
-							else
-								Assert.That(records[i].String, Is.EqualTo(testData[i].String?.TrimEnd(' ')));
-						}
-
-						if (!context.IsAnyOf(TestProvName.AllFirebird))
-						{
-							if (context.IsAnyOf(TestProvName.AllSybase, TestProvName.AllOracleDevartOCI))
-								Assert.That(records[i].NString, Is.EqualTo(testData[i].NString?.TrimEnd(' ')?.TrimEnd('\0')));
-							else if (context.IsAnyOf(TestProvName.AllClickHouse))
-								Assert.That(records[i].NString, Is.EqualTo(testData[i].NString?.TrimEnd('\0')));
-							else
-								Assert.That(records[i].NString, Is.EqualTo(testData[i].NString?.TrimEnd(' ')));
-						}
+						if (context.IsAnyOf(TestProvName.AllSybase, TestProvName.AllOracleDevartOCI))
+							Assert.That(records[i].NString, Is.EqualTo(testData[i].NString?.TrimEnd(' ')?.TrimEnd('\0')));
+						else if (context.IsAnyOf(TestProvName.AllClickHouse))
+							Assert.That(records[i].NString, Is.EqualTo(testData[i].NString?.TrimEnd('\0')));
+						else
+							Assert.That(records[i].NString, Is.EqualTo(testData[i].NString?.TrimEnd(' ')));
 					}
+				}
 
-				}
-				finally
-				{
-					db.GetTable<StringTestTable>().Where(_ => _.Id > lastId).Delete();
-				}
+			}
+			finally
+			{
+				db.GetTable<StringTestTable>().Where(_ => _.Id > lastId).Delete();
 			}
 		}
 
@@ -219,76 +217,74 @@ namespace Tests.Linq
 		[Test]
 		public void CharTrimming([DataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var lastId = db.GetTable<CharTestTable>().Select(_ => _.Id).Max();
+			var nextId = lastId + 1;
+			try
 			{
-				var lastId = db.GetTable<CharTestTable>().Select(_ => _.Id).Max();
-				var nextId = lastId + 1;
-				try
+				var testData = GetCharData(context);
+
+				foreach (var record in testData)
 				{
-					var testData = GetCharData(context);
+					var query = db.GetTable<CharTestTable>().Value(_ => _.NChar, record.NChar);
+					if (!SkipChar(context))
+						query = query.Value(_ => _.Char, record.Char);
 
-					foreach (var record in testData)
+					if (context.IsAnyOf(TestProvName.AllFirebird))
+						query = db.GetTable<CharTestTable>().Value(_ => _.Char, record.Char);
+
+					if (context.IsAnyOf(TestProvName.AllClickHouse))
+						query = query.Value(_ => _.Id, nextId++);
+
+					query.Insert();
+				}
+
+				var records = db.GetTable<CharTestTable>().Where(_ => _.Id > lastId).OrderBy(_ => _.Id).ToArray();
+
+				Assert.That(records, Has.Length.EqualTo(testData.Length));
+
+				for (var i = 0; i < records.Length; i++)
+				{
+					if (context.IsAnyOf(TestProvName.AllSapHana))
 					{
-						var query = db.GetTable<CharTestTable>().Value(_ => _.NChar, record.NChar);
-						if (!SkipChar(context))
-							query = query.Value(_ => _.Char, record.Char);
+						// SAP or provider trims space and we return default value, which is \0 for char
+						// or we insert it incorrectly?
+						if (testData[i].Char == ' ')
+							Assert.That(records[i].Char, Is.EqualTo('\0'));
+						else
+							Assert.That(records[i].Char, Is.EqualTo(testData[i].Char));
 
-						if (context.IsAnyOf(TestProvName.AllFirebird))
-							query = db.GetTable<CharTestTable>().Value(_ => _.Char, record.Char);
+						if (testData[i].NChar == ' ')
+							Assert.That(records[i].NChar, Is.EqualTo('\0'));
+						else
+							Assert.That(records[i].NChar, Is.EqualTo(testData[i].NChar));
 
-						if (context.IsAnyOf(TestProvName.AllClickHouse))
-							query = query.Value(_ => _.Id, nextId++);
-
-						query.Insert();
+						continue;
 					}
 
-					var records = db.GetTable<CharTestTable>().Where(_ => _.Id > lastId).OrderBy(_ => _.Id).ToArray();
-
-					Assert.That(records, Has.Length.EqualTo(testData.Length));
-
-					for (var i = 0; i < records.Length; i++)
+					if (!SkipChar(context))
 					{
-						if (context.IsAnyOf(TestProvName.AllSapHana))
-						{
-							// SAP or provider trims space and we return default value, which is \0 for char
-							// or we insert it incorrectly?
-							if (testData[i].Char == ' ')
-								Assert.That(records[i].Char, Is.EqualTo('\0'));
-							else
-								Assert.That(records[i].Char, Is.EqualTo(testData[i].Char));
+						if (context.IsAnyOf(TestProvName.AllSybase))
+							Assert.That(records[i].Char, Is.EqualTo(testData[i].Char == '\0' ? ' ' : testData[i].Char));
+						else
+							Assert.That(records[i].Char, Is.EqualTo(testData[i].Char));
+					}
 
-							if (testData[i].NChar == ' ')
-								Assert.That(records[i].NChar, Is.EqualTo('\0'));
-							else
-								Assert.That(records[i].NChar, Is.EqualTo(testData[i].NChar));
-
-							continue;
-						}
-
-						if (!SkipChar(context))
-						{
-							if (context.IsAnyOf(TestProvName.AllSybase))
-								Assert.That(records[i].Char, Is.EqualTo(testData[i].Char == '\0' ? ' ' : testData[i].Char));
-							else
-								Assert.That(records[i].Char, Is.EqualTo(testData[i].Char));
-						}
-
-						if (context.IsAnyOf(TestProvName.AllMySql))
-							// for some reason mysql doesn't insert space
-							Assert.That(records[i].NChar, Is.EqualTo(testData[i].NChar == ' ' ? '\0' : testData[i].NChar));
-						else if (!context.IsAnyOf(TestProvName.AllFirebird))
-						{
-							if (context.IsAnyOf(TestProvName.AllSybase))
-								Assert.That(records[i].NChar, Is.EqualTo(testData[i].NChar == '\0' ? ' ' : testData[i].NChar));
-							else
-								Assert.That(records[i].NChar, Is.EqualTo(testData[i].NChar));
-						}
+					if (context.IsAnyOf(TestProvName.AllMySql))
+						// for some reason mysql doesn't insert space
+						Assert.That(records[i].NChar, Is.EqualTo(testData[i].NChar == ' ' ? '\0' : testData[i].NChar));
+					else if (!context.IsAnyOf(TestProvName.AllFirebird))
+					{
+						if (context.IsAnyOf(TestProvName.AllSybase))
+							Assert.That(records[i].NChar, Is.EqualTo(testData[i].NChar == '\0' ? ' ' : testData[i].NChar));
+						else
+							Assert.That(records[i].NChar, Is.EqualTo(testData[i].NChar));
 					}
 				}
-				finally
-				{
-					db.GetTable<CharTestTable>().Where(_ => _.Id > lastId).Delete();
-				}
+			}
+			finally
+			{
+				db.GetTable<CharTestTable>().Where(_ => _.Id > lastId).Delete();
 			}
 		}
 

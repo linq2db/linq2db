@@ -28,13 +28,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		static bool IsNullValueOrSqlNull(Expression expression)
 		{
-			if (expression.IsNullValue())
-				return true;
-
-			if (expression is SqlPlaceholderExpression placeholder)
-				return QueryHelper.IsNullValue(placeholder.Sql);
-
-			return false;
+			return expression is
+				{ IsNullValue: true }
+				or SqlPlaceholderExpression { Sql.IsNullValue: true };
 		}
 
 		public bool BuildProjectionExpression(
@@ -338,7 +334,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				if (_insideLambda)
 				{
-					var (placeholder, path) = FoundPlaceholders.FirstOrDefault(p => ExpressionEqualityComparer.Instance.Equals(p.placeholder.Path, node.Path));
+					var (placeholder, path) = FoundPlaceholders.Find(p => ExpressionEqualityComparer.Instance.Equals(p.placeholder.Path, node.Path));
 					if (placeholder != null)
 						return new SqlPathExpression(path, node.Type);
 				}

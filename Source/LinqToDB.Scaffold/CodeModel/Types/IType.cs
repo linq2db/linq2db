@@ -60,7 +60,7 @@ namespace LinqToDB.CodeModel
 		IReadOnlyList<IType>?          TypeArguments       { get; }
 
 		/// <summary>
-		/// Returns <c>true</c> if type defined in external code and <c>false</c>, when type defined in current AST (as class).
+		/// Returns <see langword="true" /> if type defined in external code and <see langword="false"/>, when type defined in current AST (as class).
 		/// </summary>
 		bool                           External            { get; }
 

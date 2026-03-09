@@ -7,7 +7,7 @@ using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Internal.Expressions
 {
-	public sealed class SqlPlaceholderExpression : Expression
+	public sealed class SqlPlaceholderExpression : Expression, IEquatable<SqlPlaceholderExpression>
 	{
 #if DEBUG
 		static int _placeholderCounter;
@@ -76,7 +76,7 @@ namespace LinqToDB.Internal.Expressions
 
 		public SqlPlaceholderExpression MakeNullable()
 		{
-			if (!Type.IsNullableOrReferenceType())
+			if (!Type.IsNullableOrReferenceType)
 			{
 				var type           = Type.AsNullable();
 				var newPlaceholder = new SqlPlaceholderExpression(SelectQuery, Sql, Path, type, Alias, Index, TrackingPath);
@@ -201,12 +201,14 @@ namespace LinqToDB.Internal.Expressions
 			return result;
 		}
 
-		public bool Equals(SqlPlaceholderExpression other)
+		public bool Equals(SqlPlaceholderExpression? other)
 		{
-			return Equals(SelectQuery, other.SelectQuery)                       &&
-			       ExpressionEqualityComparer.Instance.Equals(Path, other.Path) &&
-			       Index       == other.Index                                   &&
-			       ConvertType == other.ConvertType;
+			return 
+				other != null                                                &&
+				Equals(SelectQuery, other.SelectQuery)                       &&
+			    ExpressionEqualityComparer.Instance.Equals(Path, other.Path) &&
+			    Index       == other.Index                                   &&
+			    ConvertType == other.ConvertType;
 		}
 
 		public override bool Equals(object? obj)

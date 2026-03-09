@@ -21963,12 +21963,12 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("is_forced_plan"),                     NotNull    ] public bool            IsForcedPlan                   { get; set; } // bit
 			/// <summary>
 			/// <para><strong>is_natively_compiled</strong> NOT NULL <strong>bit</strong></para>
-			/// Plan includes natively compiled memory optimized procedures. (0 = <c>FALSE</c>, 1 = <c>TRUE</c>).<br/><br/><strong>Note:</strong> Azure Synapse Analytics always returns <c>0</c>.
+			/// Plan includes natively compiled memory optimized procedures. (0 = <c>FALSE</c>, 1 = <see langword="true" />).<br/><br/><strong>Note:</strong> Azure Synapse Analytics always returns <c>0</c>.
 			/// </summary>
 			[Column("is_natively_compiled"),               NotNull    ] public bool            IsNativelyCompiled             { get; set; } // bit
 			/// <summary>
 			/// <para><strong>force_failure_count</strong> NOT NULL <strong>bigint</strong></para>
-			/// Number of times that forcing this plan has failed. It can be incremented only when the query is recompiled (*not on every execution*). Resets to <c>0</c> every time <c>is_plan_forced</c> is changed from <c>FALSE</c> to <c>TRUE</c>.<br/><br/><strong>Note:</strong> Azure Synapse Analytics always returns <c>0</c>.
+			/// Number of times that forcing this plan has failed. It can be incremented only when the query is recompiled (*not on every execution*). Resets to <c>0</c> every time <c>is_plan_forced</c> is changed from <c>FALSE</c> to <see langword="true" />.<br/><br/><strong>Note:</strong> Azure Synapse Analytics always returns <c>0</c>.
 			/// </summary>
 			[Column("force_failure_count"),                NotNull    ] public long            ForceFailureCount              { get; set; } // bigint
 			/// <summary>

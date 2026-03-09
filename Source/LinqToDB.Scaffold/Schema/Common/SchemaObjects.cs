@@ -41,6 +41,6 @@ namespace LinqToDB.Schema
 		/// <summary>
 		/// Foreign key.
 		/// </summary>
-		ForeignKey        = 64
+		ForeignKey        = 64,
 	}
 }

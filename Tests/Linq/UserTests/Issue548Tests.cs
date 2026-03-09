@@ -34,24 +34,22 @@ namespace Tests.UserTests
 
 			const int taskCount = 10;
 
-			using (var semaphore = new Semaphore(0, taskCount))
-			{
-				var tasks = new Task[10];
+			using var semaphore = new Semaphore(0, taskCount);
+			var tasks = new Task[10];
 
-				for (var i = 0; i < taskCount; i++)
-					if (i % 2 == 0)
-						tasks[i] = new Task(() => Test1Internal1(ms, semaphore));
-					else
-						tasks[i] = new Task(() => Test1Internal2(ms, semaphore));
+			for (var i = 0; i < taskCount; i++)
+				if (i % 2 == 0)
+					tasks[i] = new Task(() => Test1Internal1(ms, semaphore));
+				else
+					tasks[i] = new Task(() => Test1Internal2(ms, semaphore));
 
-				for (var i = 0; i < taskCount; i++)
-					tasks[i].Start();
-				 
-				Thread.Sleep(100);
-				semaphore.Release(taskCount);
+			for (var i = 0; i < taskCount; i++)
+				tasks[i].Start();
 
-				Task.WaitAll(tasks);
-			}
+			Thread.Sleep(100);
+			semaphore.Release(taskCount);
+
+			Task.WaitAll(tasks);
 		}
 
 		[Repeat(100)]
@@ -67,31 +65,29 @@ namespace Tests.UserTests
 
 			const int taskCount = 2;
 
-			using (var semaphore1 = new Semaphore(0, taskCount))
-			using (var semaphore2 = new Semaphore(0, taskCount))
+			using var semaphore1 = new Semaphore(0, taskCount);
+			using var semaphore2 = new Semaphore(0, taskCount);
+			var tasks = new Task[taskCount];
+			var events = new EventWaitHandle[taskCount];
+
+			for (var i = 0; i < taskCount; i++)
 			{
-				var tasks = new Task[taskCount];
-				var events = new EventWaitHandle[taskCount];
-
-				for (var i = 0; i < taskCount; i++)
-				{
-					var evt = events[i] = new AutoResetEvent(false);
-					if (i % 2 == 0)
-						tasks[i] = new Task(() => Test2Internal1(ms, semaphore1, semaphore2, evt));
-					else
-						tasks[i] = new Task(() => Test2Internal2(ms, semaphore1, semaphore2, evt));
-				}
-
-				for (var i = 0; i < taskCount; i++)
-					tasks[i].Start();
-
-				WaitHandle.WaitAll(events);
-				semaphore1.Release(taskCount);
-				WaitHandle.WaitAll(events);
-				semaphore2.Release(taskCount);
-
-				Task.WaitAll(tasks);
+				var evt = events[i] = new AutoResetEvent(false);
+				if (i % 2 == 0)
+					tasks[i] = new Task(() => Test2Internal1(ms, semaphore1, semaphore2, evt));
+				else
+					tasks[i] = new Task(() => Test2Internal2(ms, semaphore1, semaphore2, evt));
 			}
+
+			for (var i = 0; i < taskCount; i++)
+				tasks[i].Start();
+
+			WaitHandle.WaitAll(events);
+			semaphore1.Release(taskCount);
+			WaitHandle.WaitAll(events);
+			semaphore2.Release(taskCount);
+
+			Task.WaitAll(tasks);
 		}
 
 		/// <summary>

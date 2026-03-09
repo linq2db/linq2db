@@ -162,47 +162,46 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 		public static ClickHouseProviderAdapter GetInstance(ClickHouseProvider provider)
 		{
-			if (provider == ClickHouseProvider.Octonica)
+			return provider switch
+			{
+				ClickHouseProvider.Octonica         => GetOctonicaAdapter(),
+				ClickHouseProvider.MySqlConnector   => GetMySqlConnectorAdapter(),
+				ClickHouseProvider.ClickHouseDriver => GetClickhouseDriverAdapter(),
+				_ => throw new InvalidOperationException($"Unsupported provider type: {provider}"),
+			};
+
+			static ClickHouseProviderAdapter GetOctonicaAdapter()
 			{
 				if (_octonicaAdapter == null)
 				{
 					lock (_octonicaSyncRoot)
-						// https://github.com/dotnet/roslyn-analyzers/issues/1649
-#pragma warning disable CA1508 // Avoid dead conditional code
 						_octonicaAdapter ??= CreateOctonicaAdapter();
-#pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
 				return _octonicaAdapter;
 			}
-			else if (provider == ClickHouseProvider.MySqlConnector)
+
+			static ClickHouseProviderAdapter GetMySqlConnectorAdapter()
 			{
 				if (_mysqlAdapter == null)
 				{
 					lock (_mysqlSyncRoot)
-						// https://github.com/dotnet/roslyn-analyzers/issues/1649
-#pragma warning disable CA1508 // Avoid dead conditional code
 						_mysqlAdapter ??= new ClickHouseProviderAdapter(MySqlProviderAdapter.GetInstance(MySqlProvider.MySqlConnector));
-#pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
 				return _mysqlAdapter;
 			}
-			else if (provider == ClickHouseProvider.ClickHouseDriver)
+
+			static ClickHouseProviderAdapter GetClickhouseDriverAdapter()
 			{
 				if (_driverAdapter == null)
 				{
 					lock (_driverSyncRoot)
-						// https://github.com/dotnet/roslyn-analyzers/issues/1649
-#pragma warning disable CA1508 // Avoid dead conditional code
 						_driverAdapter ??= CreateDriverAdapter();
-#pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
 				return _driverAdapter;
 			}
-
-			throw new InvalidOperationException($"Unsupported provider type: {provider}");
 		}
 
 		private static ClickHouseProviderAdapter CreateDriverAdapter()
@@ -216,12 +215,12 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			var parameterType               = assembly.GetType($"{DriverClientNamespace}.Parameters.ClickHouseDbParameter" , true)!;
 			var dataReaderType              = assembly.GetType($"{DriverClientNamespace}.Readers.ClickHouseDataReader"     , true)!;
 			var connectionStringBuilderType = assembly.GetType($"{DriverClientNamespace}.ClickHouseConnectionStringBuilder", true)!;
-			var bulkCopyType                = assembly.GetType($"ClickHouse.Driver.Copy.ClickHouseBulkCopy"                , true)!;
+			var bulkCopyType                = assembly.GetType("ClickHouse.Driver.Copy.ClickHouseBulkCopy"                 , true)!;
 			var decimalType                 = assembly.GetType($"{DriverProviderTypesNamespace}.ClickHouseDecimal"         , true)!;
 
 			// v1.0.0
-			var clientType                  = assembly.GetType($"ClickHouse.Driver.ClickHouseClient"                       , false);
-			var insertOptionsType           = assembly.GetType($"ClickHouse.Driver.InsertOptions"                          , false);
+			var clientType                  = assembly.GetType("ClickHouse.Driver.ClickHouseClient"                        , false);
+			var insertOptionsType           = assembly.GetType("ClickHouse.Driver.InsertOptions"                           , false);
 
 			var typeMapper = new TypeMapper();
 			typeMapper.RegisterTypeWrapper<DriverWrappers.ClickHouseConnection>(connectionType);
@@ -357,7 +356,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			[Wrapper]
 			internal sealed class ClickHouseConnection
 			{
-				public ClickHouseConnection(string connectionString) => throw new NotImplementedException();
+				public ClickHouseConnection(string connectionString) => throw new NotSupportedException();
 			}
 
 			[Wrapper]
@@ -379,7 +378,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				{
 				}
 
-				public ClickHouseConnectionStringBuilder(string connectionString) => throw new NotImplementedException();
+				public ClickHouseConnectionStringBuilder(string connectionString) => throw new NotSupportedException();
 
 				public bool UseSession
 				{
@@ -393,7 +392,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			[Wrapper]
 			internal sealed class ClickHouseDecimal
 			{
-				public string ToString(IFormatProvider provider) => throw new NotImplementedException();
+				public string ToString(IFormatProvider provider) => throw new NotSupportedException();
 			}
 
 			[Wrapper]
@@ -431,7 +430,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				{
 				}
 
-				public ClickHouseBulkCopy(ClickHouseConnection connection) => throw new NotImplementedException();
+				public ClickHouseBulkCopy(ClickHouseConnection connection) => throw new NotSupportedException();
 
 				void IDisposable.Dispose() => ((Action<ClickHouseBulkCopy>)CompiledWrappers[0])(this);
 
@@ -466,7 +465,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				public Task InitAsync() => ((Func<ClickHouseBulkCopy, Task>)CompiledWrappers[9])(this);
 				public IReadOnlyCollection<string> ColumnNames
 				{
-					get => throw new InvalidOperationException($"get_ColumnNames is not mapped");
+					get => throw new InvalidOperationException("get_ColumnNames is not mapped");
 					set => ((Action<ClickHouseBulkCopy, IReadOnlyCollection<string>>)CompiledWrappers[10])(this, value);
 				}
 			}
@@ -572,10 +571,10 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			[Wrapper]
 			internal sealed class ClickHouseConnection
 			{
-				public ClickHouseConnection(string connectionString) => throw new NotImplementedException();
+				public ClickHouseConnection(string connectionString) => throw new NotSupportedException();
 
-				public ClickHouseColumnWriter       CreateColumnWriter     (string insertFormatCommand                                     ) => throw new NotImplementedException();
-				public Task<ClickHouseColumnWriter> CreateColumnWriterAsync(string insertFormatCommand, CancellationToken cancellationToken) => throw new NotImplementedException();
+				public ClickHouseColumnWriter       CreateColumnWriter     (string insertFormatCommand                                     ) => throw new NotSupportedException();
+				public Task<ClickHouseColumnWriter> CreateColumnWriterAsync(string insertFormatCommand, CancellationToken cancellationToken) => throw new NotSupportedException();
 			}
 
 			[Wrapper]
@@ -585,7 +584,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				{
 				}
 
-				public ClickHouseColumnSettings(Type columnType) => throw new NotImplementedException();
+				public ClickHouseColumnSettings(Type columnType) => throw new NotSupportedException();
 			}
 
 			[Wrapper]

@@ -15,7 +15,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class DistinctByBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable() && call.Arguments.Count == 2;
+			=> call is { IsQueryable: true, Arguments.Count: 2 };
 
 		static readonly MethodInfo _buildDistinctByViaRowNumberMethodInfo = MemberHelper.MethodOfGeneric(() => BuildDistinctByViaRowNumber<int>(null!, null!, null!, null!));
 

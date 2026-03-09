@@ -139,7 +139,7 @@ namespace LinqToDB.CodeModel
 		/// <param name="items">Code elements to convert to code.</param>
 		/// <param name="delimiter">Sequence of characters used as delimiter between code elements.</param>
 		/// <param name="newLine">Specify wether method should generate new line sequence after each delimiter.
-		/// Also when <c>true</c>, adds new line sequence after last element (without delimiter).</param>
+		/// Also when <see langword="true" />, adds new line sequence after last element (without delimiter).</param>
 		protected void WriteDelimitedList<T>(IEnumerable<T> items, string delimiter, bool newLine)
 			where T: ICodeElement
 		{
@@ -171,7 +171,7 @@ namespace LinqToDB.CodeModel
 		/// <param name="writer">Custom element code generation action.</param>
 		/// <param name="delimiter">Sequence of characters used as delimiter between code elements.</param>
 		/// <param name="newLine">Specify wether method should generate new line sequence after each delimiter.
-		/// Also when <c>true</c>, adds new line sequence after last element (without delimiter).</param>
+		/// Also when <see langword="true" />, adds new line sequence after last element (without delimiter).</param>
 		protected void WriteDelimitedList<T>(IEnumerable<T> items, Action<T> writer, string delimiter, bool newLine)
 		{
 			var first = true;

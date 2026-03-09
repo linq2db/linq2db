@@ -31,10 +31,10 @@ namespace LinqToDB.Schema
 		/// Returns schema information for all stored procedures.
 		/// </summary>
 		/// <param name="withSchema">Try to load result records schema.</param>
-		/// <param name="safeSchemaOnly">When <paramref name="withSchema"/> is <c>true</c>, specify record schema load method:
+		/// <param name="safeSchemaOnly">When <paramref name="withSchema"/> is <see langword="true" />, specify record schema load method:
 		/// <list type="bullet">
-		/// <item><c>true</c>: read record metadata (not supported by most of databases)</item>
-		/// <item><c>false</c>: execute procedure in schema-only mode. Could lead to unwanted side-effects if procedure contains non-transactional functionality</item>
+		/// <item><see langword="true" />: read record metadata (not supported by most of databases)</item>
+		/// <item><see langword="false"/>: execute procedure in schema-only mode. Could lead to unwanted side-effects if procedure contains non-transactional functionality</item>
 		/// </list>
 		/// </param>
 		/// <returns>Stored procedures schema collection.</returns>
@@ -44,8 +44,8 @@ namespace LinqToDB.Schema
 		/// Returns schema information for all table functions.
 		/// </summary>
 		/// <list type="bullet">
-		/// <item><c>true</c>: read record metadata (not supported by most of databases)</item>
-		/// <item><c>false</c>: execute function in schema-only mode. Could lead to unwanted side-effects if function contains non-transactional functionality</item>
+		/// <item><see langword="true" />: read record metadata (not supported by most of databases)</item>
+		/// <item><see langword="false"/>: execute function in schema-only mode. Could lead to unwanted side-effects if function contains non-transactional functionality</item>
 		/// </list>
 		/// <returns>Table functions schema collection.</returns>
 		IEnumerable<TableFunction> GetTableFunctions();
