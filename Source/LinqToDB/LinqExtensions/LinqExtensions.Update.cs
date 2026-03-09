@@ -45,7 +45,7 @@ namespace LinqToDB
 		/// Execution is deferred until enumeration and the method is terminal.
 		/// Output availability and exact semantics are provider-defined.
 		/// <para>
-		/// AI-Tags: Group=Update; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// AI-Tags: Group=DML; Execution=Deferred; Composability=Terminal; Affects=DmlStatement; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
 		/// </remarks>
 		public static IEnumerable<UpdateOutput<TTarget>> UpdateWithOutput<TSource,TTarget>(
