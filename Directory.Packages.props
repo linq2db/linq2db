@@ -31,7 +31,7 @@
 		<EF3NpgsqlVersion>4.1.14</EF3NpgsqlVersion>
 		
 		<!--used by VersionOverride in project files-->
-		<OracleManagedLinqPadVersion>23.26.0</OracleManagedLinqPadVersion>
+		<OracleManagedLinqPadVersion>23.26.100</OracleManagedLinqPadVersion>
 	</PropertyGroup>
 	
 	<ItemGroup Label="Build: Analyzers and Tools">
@@ -39,7 +39,7 @@
 		<PackageVersion Include="DotNet.ReproducibleBuilds"                             Version="2.0.2"                        />
 		<PackageVersion Include="Lindhart.Analyser.MissingAwaitWarning"                 Version="4.0.0-beta"                   />
 		<PackageVersion Include="Meziantou.Analyzer"                                    Version="3.0.21"                       />
-		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.101"                      />
+		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.103"                      />
 		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                      Version="5.3.0-2.final"                />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="3.12.0-beta1.25218.8"         />
 		<PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers"             Version="5.0.0-1.25277.114"            />
@@ -57,7 +57,7 @@
 	</ItemGroup>
 
 	<ItemGroup Label="Released Dependencies">
-		<PackageVersion Include="Humanizer.Core"                                        Version="3.0.8"                        />
+		<PackageVersion Include="Humanizer.Core"                                        Version="3.0.10"                       />
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="5.0.0"                        />
 		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="$(Net10Latest)"               />
 		<PackageVersion Include="Mono.TextTemplating"                                   Version="3.0.0"                        />
@@ -88,7 +88,7 @@
 
 	<ItemGroup Label="Database Providers">
 		<PackageVersion Include="AdoNetCore.AseClient"                                  Version="0.19.2"                       />
-		<PackageVersion Include="Devart.Data.Oracle"                                    Version="11.1.33"                      />
+		<PackageVersion Include="Devart.Data.Oracle"                                    Version="11.1.35"                      />
 		<PackageVersion Include="ClickHouse.Driver"                                     Version="0.9.0"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
 		<PackageVersion Include="ClickHouse.Driver"                                     Version="1.0.1"                        Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))"  />
 		<PackageVersion Include="dotMorten.Microsoft.SqlServer.TNET.Testypes"                   Version="1.5.0"                />
@@ -140,9 +140,9 @@
 	<ItemGroup Label="Testing">
 		<PackageVersion Include="Shouldly"                                              Version="4.3.0"                        />
 		<PackageVersion Include="Microsoft.NET.Test.Sdk"                                Version="18.3.0"                       />
-		<PackageVersion Include="NUnit"                                                 Version="4.4.0"                        />
-		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.11.2"                       />
-		<PackageVersion Include="NUnit3TestAdapter"                                     Version="5.2.0"                        />
+		<PackageVersion Include="NUnit"                                                 Version="4.5.1"                        />
+		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.12.0"                       />
+		<PackageVersion Include="NUnit3TestAdapter"                                     Version="6.1.0"                        />
 
 		<PackageVersion Include="Microsoft.AspNet.OData"                                Version="7.7.9"                        />
 		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="8.3.1"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
@@ -183,8 +183,8 @@
 		<PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory"                Version="$(Net10Latest)"               Condition="'$(TargetFramework)'=='net10.0'" />
 
 		<PackageVersion Include="System.Text.Json"                                      Version="8.0.5"                        Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" />
-		<PackageVersion Include="Microsoft.AspNetCore"                                  Version="2.3.0"                        Condition="'$(TargetFramework)'=='net462'" />
-		<PackageVersion Include="Microsoft.AspNetCore.SignalR"                          Version="1.2.0"                        Condition="'$(TargetFramework)'=='net462'" />
+		<PackageVersion Include="Microsoft.AspNetCore"                                  Version="2.3.9"                        Condition="'$(TargetFramework)'=='net462'" />
+		<PackageVersion Include="Microsoft.AspNetCore.SignalR"                          Version="1.2.9"                        Condition="'$(TargetFramework)'=='net462'" />
 	</ItemGroup>
 
 	<ItemGroup Label="Benchmarks">
@@ -219,7 +219,7 @@
 			https://github.com/advisories/GHSA-xhfc-gr8f-ffwc" />
 
 		<PackageVersion Include="Newtonsoft.Json"                                       Version="13.0.1"                       />
-		<PackageVersion Include="Microsoft.AspNetCore.Server.Kestrel.Core"              Version="2.3.6"                        Condition="'$(TargetFramework)'=='net462'" />
+		<PackageVersion Include="Microsoft.AspNetCore.Server.Kestrel.Core"              Version="2.3.9"                        Condition="'$(TargetFramework)'=='net462'" />
 	</ItemGroup>
 
 </Project>
