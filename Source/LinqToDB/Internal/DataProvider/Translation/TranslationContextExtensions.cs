@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -184,9 +184,6 @@ namespace LinqToDB.Internal.DataProvider.Translation
 			}
 		}
 
-		static readonly string[] _orderByNames = [nameof(Queryable.OrderBy), nameof(Queryable.OrderByDescending), nameof(Queryable.ThenBy), nameof(Queryable.ThenByDescending)];
-		static readonly string[] _allowedNames = [nameof(Queryable.Select), nameof(Queryable.Where), nameof(Queryable.Distinct), nameof(Queryable.OrderBy), .._orderByNames];
-
 		public static bool GetAggregationInfo(
 			this ITranslationContext                 translationContext,
 			Expression                               expression,
@@ -224,15 +221,15 @@ namespace LinqToDB.Internal.DataProvider.Translation
 					continue;
 				}
 
-				if (current is MethodCallExpression methodCall)
+				if (current is MethodCallExpression { IsQueryable: true } methodCall)
 				{
-					if (methodCall.IsQueryable(nameof(Queryable.AsQueryable)))
+					if (methodCall.Method.Name is nameof(Queryable.AsQueryable))
 					{
 						current = methodCall.Arguments[0];
 						continue;
 					}
 
-					if (methodCall.IsQueryable(_allowedNames))
+					if (methodCall.IsAllowedAggregationMethodName)
 					{
 						chain ??= new List<MethodCallExpression>();
 						chain.Add(methodCall);
@@ -258,60 +255,80 @@ namespace LinqToDB.Internal.DataProvider.Translation
 				for (int i = chain.Count - 1; i >= 0; i--)
 				{
 					var method = chain[i];
-					if (method.IsQueryable(nameof(Queryable.Distinct)))
-					{
-						// Distinct should be the first method in the chain
-						if (i != 0)
-						{
-							return false;
-						}
 
-						if (!allowedOperations.HasFlag(AllowedAggregationOperators.Distinct))
-							return false;
-
-						isDistinct = true;
-					}
-					else if (method.IsQueryable(nameof(Queryable.Select)))
-					{
-						// do not support complex projections
-						if (method.Arguments.Count != 2)
-						{
-							return false;
-						}
-
-						var body = SequenceHelper.PrepareBody(method.Arguments[1].UnwrapLambda(), currentRef.BuildContext);
-
-						var selectContext = new SelectContext(contextRef.BuildContext, body, contextRef.BuildContext, false);
-						currentRef = new ContextRefExpression(selectContext.ElementType, selectContext);
-					}
-					else if (method.IsQueryable(nameof(Queryable.Where)))
-					{
-						if (!allowedOperations.HasFlag(AllowedAggregationOperators.Filter))
-							return false;
-
-						var filter = SequenceHelper.PrepareBody(method.Arguments[1].UnwrapLambda(), currentRef.BuildContext);
-						if (filterExpression == null)
-							filterExpression = filter;
-						else
-							filterExpression = Expression.AndAlso(filterExpression, filter);
-					}
-					else if (method.IsQueryable(_orderByNames))
-					{
-						if (!allowedOperations.HasFlag(AllowedAggregationOperators.OrderBy))
-							return false;
-
-						var orderByExpression = SequenceHelper.PrepareBody(method.Arguments[1].UnwrapLambda(), currentRef.BuildContext);
-						orderBy ??= new List<OrderByInformation>();
-
-						orderBy.Add(new OrderByInformation(
-							orderByExpression.UnwrapConvert(),
-							method.Method.Name is nameof(Queryable.OrderByDescending) or nameof(Queryable.ThenByDescending),
-							Sql.NullsPosition.None
-						));
-					}
-					else
-					{
+					if (!method.IsQueryable)
 						return false;
+
+					switch (method.Method.Name)
+					{
+						case nameof(Queryable.Distinct):
+						{
+							// Distinct should be the first method in the chain
+							if (i != 0)
+							{
+								return false;
+							}
+
+							if (!allowedOperations.HasFlag(AllowedAggregationOperators.Distinct))
+								return false;
+
+							isDistinct = true;
+
+							break;
+						}
+
+						case nameof(Queryable.Select):
+						{
+							// do not support complex projections
+							if (method.Arguments.Count != 2)
+							{
+								return false;
+							}
+
+							var body = SequenceHelper.PrepareBody(method.Arguments[1].UnwrapLambda(), currentRef.BuildContext);
+
+							var selectContext = new SelectContext(contextRef.BuildContext, body, contextRef.BuildContext, false);
+							currentRef = new ContextRefExpression(selectContext.ElementType, selectContext);
+
+							break;
+						}
+
+						case nameof(Queryable.Where):
+						{
+							if (!allowedOperations.HasFlag(AllowedAggregationOperators.Filter))
+								return false;
+
+							var filter = SequenceHelper.PrepareBody(method.Arguments[1].UnwrapLambda(), currentRef.BuildContext);
+							if (filterExpression == null)
+								filterExpression = filter;
+							else
+								filterExpression = Expression.AndAlso(filterExpression, filter);
+
+							break;
+						}
+
+						case nameof(Queryable.OrderBy):
+						case nameof(Queryable.OrderByDescending):
+						case nameof(Queryable.ThenBy):
+						case nameof(Queryable.ThenByDescending):
+						{
+							if (!allowedOperations.HasFlag(AllowedAggregationOperators.OrderBy))
+								return false;
+
+							var orderByExpression = SequenceHelper.PrepareBody(method.Arguments[1].UnwrapLambda(), currentRef.BuildContext);
+							orderBy ??= new List<OrderByInformation>();
+
+							orderBy.Add(new OrderByInformation(
+								orderByExpression.UnwrapConvert(),
+								method.Method.Name is nameof(Queryable.OrderByDescending) or nameof(Queryable.ThenByDescending),
+								Sql.NullsPosition.None
+							));
+
+							break;
+						}
+
+						default:
+							return false;
 					}
 				}
 			}

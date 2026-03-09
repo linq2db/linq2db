@@ -14,7 +14,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
 		{
-			if (!call.IsQueryable())
+			if (!call.IsQueryable)
 				return false;
 
 			var body = call.Arguments[1].UnwrapLambda().Body.Unwrap();

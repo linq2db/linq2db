@@ -16,7 +16,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class LoadWithBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable();
+			=> call.IsQueryable;
 
 		static void CheckFilterFunc(Type expectedType, Type filterType, MappingSchema mappingSchema)
 		{
@@ -63,7 +63,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				var selector = methodCall.Arguments[1].UnwrapLambda();
 
 				// reset LoadWith sequence
-				if (methodCall.IsQueryable("LoadWith"))
+				if (methodCall is { IsQueryable: true, Method.Name: "LoadWith" })
 				{
 					while (sequence is LoadWithContext lw)
 						sequence = lw.Context;
@@ -144,7 +144,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			while (currentExpression.NodeType == ExpressionType.Call)
 			{
 				var mc = (MethodCallExpression)currentExpression;
-				if (mc.IsQueryable())
+				if (mc.IsQueryable)
 					currentExpression = mc.Arguments[0];
 				else
 					break;

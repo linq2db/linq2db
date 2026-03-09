@@ -332,7 +332,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			_exprBuilder.Append('.').Append(MangleName(mi.DeclaringType!, mi.Name, "M"));
 
-			if ((!node.IsQueryable() || node.Method.DeclaringType == typeof(DataExtensions))
+			if ((!node.IsQueryable || node.Method.DeclaringType == typeof(DataExtensions))
 				&& mi.IsGenericMethod && mi.GetGenericArguments().Select(GetTypeName).All(t => t != null))
 			{
 				_exprBuilder

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -11,7 +11,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class ElementAtBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable();
+			=> call.IsQueryable;
 
 		public enum MethodKind
 		{

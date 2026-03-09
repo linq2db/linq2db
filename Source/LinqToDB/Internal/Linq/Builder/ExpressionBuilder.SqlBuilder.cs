@@ -1832,7 +1832,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					if (mc.IsSameGenericMethod(Methods.LinqToDB.SqlExt.Alias))
 						return ParseGenericConstructor(mc.Arguments[0], flags, columnDescriptor);
 
-					if (mc.IsQueryable())
+					if (mc.IsQueryable)
 						return mc;
 
 					if (!mc.Method.IsStatic)

@@ -16,7 +16,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class IndexBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable();
+			=> call.IsQueryable;
 
 		static readonly MethodInfo _buildIndexMethodInfo = MemberHelper.MethodOfGeneric(() => BuildIndex<int>(null!));
 

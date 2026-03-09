@@ -270,84 +270,106 @@ namespace LinqToDB.Internal.Expressions
 					or ((DefaultExpression or DefaultValueExpression) and { Type.IsNullableOrReferenceType: true });
 		}
 
-		public static bool IsQueryable(this MethodCallExpression method)
+		extension(MethodCallExpression method)
 		{
-			var type = method.Method.DeclaringType;
-
-			return
-				type == typeof(Queryable) ||
-				type == typeof(Enumerable) ||
-				type == typeof(LinqExtensions) ||
-				type == typeof(LinqInternalExtensions) ||
-				type == typeof(DataExtensions) ||
-				type == typeof(TableExtensions) ||
-				MemberCache.GetMemberInfo(method.Method).IsQueryable;
-		}
-
-		public static bool IsAsyncExtension(this MethodCallExpression method)
-		{
-			return method.Method.DeclaringType == typeof(AsyncExtensions);
-		}
-
-		public static bool IsExtensionMethod(this MethodCallExpression methodCall, MappingSchema mapping)
-		{
-			return mapping.HasAttribute<Sql.ExtensionAttribute>(methodCall.Method.ReflectedType!, methodCall.Method);
-		}
-
-		public static bool IsQueryable(this MethodCallExpression method, string name)
-		{
-			return string.Equals(method.Method.Name, name, StringComparison.Ordinal) && method.IsQueryable();
-		}
-
-		public static bool IsQueryable(this MethodCallExpression method, string[] names)
-		{
-			if (method.IsQueryable())
-				foreach (var name in names)
-					if (string.Equals(method.Method.Name, name, StringComparison.Ordinal))
-						return true;
-
-			return false;
-		}
-
-		public static bool IsSameGenericMethod(this MethodCallExpression method, MethodInfo genericMethodInfo)
-		{
-			if (!string.Equals(method.Method.Name, genericMethodInfo.Name, StringComparison.Ordinal))
-				return false;
-
-			if (!method.Method.IsGenericMethod)
-				return method.Method == genericMethodInfo;
-
-			return method.Method.GetGenericMethodDefinitionCached() == genericMethodInfo;
-		}
-
-		public static bool IsSameGenericMethod(this MethodCallExpression method, MethodInfo genericMethodInfo1, MethodInfo genericMethodInfo2)
-		{
-			return method.IsSameGenericMethod(genericMethodInfo1) || method.IsSameGenericMethod(genericMethodInfo2);
-		}
-
-		public static bool IsSameGenericMethod(this MethodCallExpression method, MethodInfo[] genericMethodInfo)
-		{
-			if (!method.Method.IsGenericMethod)
-				return false;
-
-			var         mi = method.Method;
-			MethodInfo? gd = null;
-
-			foreach (var current in genericMethodInfo)
+			public bool IsQueryable
 			{
-				if (string.Equals(current.Name, mi.Name, StringComparison.Ordinal))
+				get
 				{
-					if (gd == null)
-					{
-						gd = mi.GetGenericMethodDefinitionCached();
-					}
+					var type = method.Method.DeclaringType;
 
-					if (gd.Equals(current))
-						return true;
+					return
+						type == typeof(Queryable) ||
+						type == typeof(Enumerable) ||
+						type == typeof(LinqExtensions) ||
+						type == typeof(LinqInternalExtensions) ||
+						type == typeof(DataExtensions) ||
+						type == typeof(TableExtensions) ||
+						MemberCache.GetMemberInfo(method.Method).IsQueryable;
 				}
 			}
 
-			return false;
+			public bool IsOrderByMethodName =>
+				method.Method.Name is
+					nameof(Queryable.OrderBy)
+					or nameof(Queryable.OrderByDescending)
+					or nameof(Queryable.ThenBy)
+					or nameof(Queryable.ThenByDescending);
+
+			public bool IsAllowedAggregationMethodName =>
+				method is { IsOrderByMethodName: true } or
+				{
+					Method.Name:
+						nameof(Queryable.Select)
+						or nameof(Queryable.Where)
+						or nameof(Queryable.Distinct),
+				};
+
+			public bool IsAsyncExtension =>
+				method.Method.DeclaringType == typeof(AsyncExtensions);
+
+			public bool IsExtensionMethod(MappingSchema mapping)
+			{
+				return mapping.HasAttribute<Sql.ExtensionAttribute>(method.Method.ReflectedType!, method.Method);
+			}
+
+			public bool IsSameGenericMethod(MethodInfo genericMethodInfo)
+			{
+				if (!string.Equals(method.Method.Name, genericMethodInfo.Name, StringComparison.Ordinal))
+					return false;
+
+				if (!method.Method.IsGenericMethod)
+					return method.Method == genericMethodInfo;
+
+				return method.Method.GetGenericMethodDefinitionCached() == genericMethodInfo;
+			}
+
+			public bool IsSameGenericMethod(MethodInfo genericMethodInfo1, MethodInfo genericMethodInfo2)
+			{
+				return method.IsSameGenericMethod(genericMethodInfo1) || method.IsSameGenericMethod(genericMethodInfo2);
+			}
+
+			public bool IsSameGenericMethod(MethodInfo[] genericMethodInfo)
+			{
+				if (!method.Method.IsGenericMethod)
+					return false;
+
+				var         mi = method.Method;
+				MethodInfo? gd = null;
+
+				foreach (var current in genericMethodInfo)
+				{
+					if (string.Equals(current.Name, mi.Name, StringComparison.Ordinal))
+					{
+						if (gd == null)
+						{
+							gd = mi.GetGenericMethodDefinitionCached();
+						}
+
+						if (gd.Equals(current))
+							return true;
+					}
+				}
+
+				return false;
+			}
+
+			public bool IsAssociation(MappingSchema mappingSchema)
+			{
+				return IsAssociation(method.Method, mappingSchema);
+			}
+
+			public Expression? GetArgumentByName(string parameterName)
+			{
+				var arguments = method.Arguments;
+				var parameters = method.Method.GetParameters();
+
+				for (var i = 0; i < parameters.Length; i++)
+					if (string.Equals(parameters[i].Name, parameterName, StringComparison.Ordinal))
+						return arguments[i];
+
+				return default;
+			}
 		}
 
 		public static bool IsAssociation(MemberInfo member, MappingSchema mappingSchema)
@@ -358,30 +380,6 @@ namespace LinqToDB.Internal.Expressions
 		public static bool IsAssociation(this MemberExpression memberExpression, MappingSchema mappingSchema)
 		{
 			return IsAssociation(memberExpression.Member, mappingSchema);
-		}
-
-		public static bool IsAssociation(this MethodCallExpression method, MappingSchema mappingSchema)
-		{
-			return IsAssociation(method.Method, mappingSchema);
-		}
-
-		private static readonly string[] CteMethodNames = { "AsCte", "GetCte" };
-
-		public static bool IsCte(this MethodCallExpression method)
-		{
-			return method.IsQueryable(CteMethodNames);
-		}
-
-		public static Expression? GetArgumentByName(this MethodCallExpression methodCall, string parameterName)
-		{
-			var arguments = methodCall.Arguments;
-			var parameters = methodCall.Method.GetParameters();
-
-			for (var i = 0; i < parameters.Length; i++)
-				if (string.Equals(parameters[i].Name, parameterName, StringComparison.Ordinal))
-					return arguments[i];
-
-			return default;
 		}
 
 		public static Expression ApplyLambdaToExpression(LambdaExpression convertLambda, Expression expression)

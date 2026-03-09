@@ -17,7 +17,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class CountByBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable();
+			=> call.IsQueryable;
 
 		static readonly MethodInfo _transformToGroupByMethodInfo =
 			typeof(CountByBuilder).GetMethod(nameof(TransformToGroupBy), BindingFlags.NonPublic | BindingFlags.Static) ?? throw new InvalidOperationException($"Method {nameof(TransformToGroupBy)} not found.");

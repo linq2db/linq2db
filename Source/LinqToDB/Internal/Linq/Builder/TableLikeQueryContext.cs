@@ -139,9 +139,9 @@ namespace LinqToDB.Internal.Linq.Builder
 							return HasTargetRoot(method.Object);
 						}
 
-						if (method.IsQueryable() && method.Arguments.Count > 0)
+						if (method is { IsQueryable: true, Arguments: [var a0, ..] })
 						{
-							if (HasTargetRoot(method.Arguments[0]))
+							if (HasTargetRoot(a0))
 							{
 								return true;
 							}

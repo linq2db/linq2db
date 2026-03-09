@@ -552,7 +552,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				MemberExpression { Expression: { } expr } =>
 					GetCacheRootContext(expr),
 
-				MethodCallExpression methodCallExpression when methodCallExpression.IsQueryable() =>
+				MethodCallExpression { IsQueryable: true } methodCallExpression =>
 					GetCacheRootContext(methodCallExpression.Arguments[0]),
 
 				_ => expression as ContextRefExpression,
@@ -566,7 +566,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				MemberExpression { Expression: { } expr } =>
 					GetCacheRootContext(expr),
 
-				MethodCallExpression methodCallExpression when methodCallExpression.IsQueryable() =>
+				MethodCallExpression { IsQueryable: true } methodCallExpression =>
 					GetCacheRootContext(methodCallExpression.Arguments[0]),
 
 				_ => expression as ContextRefExpression,
@@ -4939,10 +4939,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public Expression CorrectRoot(Expression expr)
 		{
-			if (expr is MethodCallExpression mc && mc.IsQueryable())
+			if (expr is MethodCallExpression{ IsQueryable: true, Arguments: [var a0, ..] } mc)
 			{
-				var firstArg = CorrectRoot(mc.Arguments[0]);
-				if (!ReferenceEquals(firstArg, mc.Arguments[0]))
+				var firstArg = CorrectRoot(a0);
+				if (!ReferenceEquals(firstArg, a0))
 				{
 					var args = mc.Arguments.ToArray();
 					args[0] = firstArg;
@@ -5017,14 +5017,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			return buildResult.BuildContext;
 		}
 
-		static string [] _singleElementMethods =
-		{
-			nameof(Enumerable.FirstOrDefault),
-			nameof(Enumerable.First),
-			nameof(Enumerable.Single),
-			nameof(Enumerable.SingleOrDefault),
-		};
-
 		public Expression PrepareSubqueryExpression(Expression expr)
 		{
 			var newExpr = expr;
@@ -5032,29 +5024,35 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (expr.NodeType == ExpressionType.Call)
 			{
 				var mc = (MethodCallExpression)expr;
-				if (mc.IsQueryable(_singleElementMethods))
-				{
-					if (mc.Arguments is [var a0, var a1])
+				if (mc is
 					{
-						Expression whereMethod;
+						IsQueryable: true,
+						Method.Name:
+							nameof(Enumerable.FirstOrDefault)
+							or nameof(Enumerable.First)
+							or nameof(Enumerable.Single)
+							or nameof(Enumerable.SingleOrDefault),
+						Arguments: [var a0, var a1],
+					})
+				{
+					Expression whereMethod;
 
-						var typeArguments = mc.Method.GetGenericArguments();
-						if (mc.Method.DeclaringType == typeof(Queryable))
-						{
-							var methodInfo = Methods.Queryable.Where.MakeGenericMethod(typeArguments);
-							whereMethod = Expression.Call(methodInfo, a0, a1);
-							var limitCall = Expression.Call(typeof(Queryable), mc.Method.Name, typeArguments, whereMethod);
+					var typeArguments = mc.Method.GetGenericArguments();
+					if (mc.Method.DeclaringType == typeof(Queryable))
+					{
+						var methodInfo = Methods.Queryable.Where.MakeGenericMethod(typeArguments);
+						whereMethod = Expression.Call(methodInfo, a0, a1);
+						var limitCall = Expression.Call(typeof(Queryable), mc.Method.Name, typeArguments, whereMethod);
 
-							newExpr = limitCall;
-						}
-						else
-						{
-							var methodInfo = Methods.Enumerable.Where.MakeGenericMethod(typeArguments);
-							whereMethod = Expression.Call(methodInfo, a0, a1);
-							var limitCall = Expression.Call(typeof(Enumerable), mc.Method.Name, typeArguments, whereMethod);
+						newExpr = limitCall;
+					}
+					else
+					{
+						var methodInfo = Methods.Enumerable.Where.MakeGenericMethod(typeArguments);
+						whereMethod = Expression.Call(methodInfo, a0, a1);
+						var limitCall = Expression.Call(typeof(Enumerable), mc.Method.Name, typeArguments, whereMethod);
 
-							newExpr = limitCall;
-						}
+						newExpr = limitCall;
 					}
 				}
 			}

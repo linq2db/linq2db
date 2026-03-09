@@ -15,7 +15,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	internal sealed class SetOperationBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.Arguments.Count == 2 && call.IsQueryable();
+			=> call is { IsQueryable: true, Arguments.Count: 2 };
 
 		#region Builder
 

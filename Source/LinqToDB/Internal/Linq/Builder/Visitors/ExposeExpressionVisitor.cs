@@ -382,7 +382,7 @@ namespace LinqToDB.Internal.Linq.Builder.Visitors
 						return false;
 					}
 
-					if (mc.IsQueryable())
+					if (mc.IsQueryable)
 					{
 						if (mc.Arguments[0] is MemberExpression or ConstantExpression)
 						{

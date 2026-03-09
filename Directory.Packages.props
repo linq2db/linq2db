@@ -38,7 +38,7 @@
 		<PackageVersion Include="AsyncFixer"                                            Version="2.1.0"                        />
 		<PackageVersion Include="DotNet.ReproducibleBuilds"                             Version="1.2.39"                       />
 		<PackageVersion Include="Lindhart.Analyser.MissingAwaitWarning"                 Version="4.0.0-beta"                   />
-		<PackageVersion Include="Meziantou.Analyzer"                                    Version="3.0.20"                       />
+		<PackageVersion Include="Meziantou.Analyzer"                                    Version="3.0.21"                       />
 		<PackageVersion Include="Meziantou.Polyfill"                                    Version="1.0.101"                      />
 		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                      Version="5.0.0-1.25277.114"            />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="5.0.0-1.25277.114"            />

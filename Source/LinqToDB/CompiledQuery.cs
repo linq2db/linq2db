@@ -113,7 +113,7 @@ namespace LinqToDB
 
 							return helper.CallTable(context.query, expr, context.ps, context.preambles, MethodType.ElementAsync);
 						}
-						else if (expr.IsQueryable())
+						else if (expr.IsQueryable)
 						{
 							var type   = typeof(IQueryable).IsSameOrParentOf(expr.Type) ?
 									typeof(IQueryable<>) :

@@ -25,7 +25,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		#region Update
 
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable();
+			=> call.IsQueryable;
 
 		static void ExtractSequence(BuildInfo buildInfo, ref IBuildContext sequence, out UpdateContext updateContext)
 		{
@@ -840,7 +840,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		internal sealed class Set : MethodCallBuilder
 		{
 			public static bool CanBuildMethod(MethodCallExpression call)
-				=> call.IsQueryable();
+				=> call.IsQueryable;
 
 			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder,
 				MethodCallExpression                                                 methodCall, BuildInfo buildInfo)

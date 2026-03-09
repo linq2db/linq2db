@@ -20,7 +20,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class AggregationBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable();
+			=> call.IsQueryable;
 
 		public static Expression BuildAggregateExecuteExpression(MethodCallExpression methodCall)
 		{

@@ -15,7 +15,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (call.Method.DeclaringType != typeof(LinqExtensions))
 				return false;
 
-			if (!call.IsQueryable())
+			if (!call.IsQueryable)
 				return false;
 
 			return call.Arguments.Count == (call.Method.Name switch

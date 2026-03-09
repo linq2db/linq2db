@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -25,10 +25,10 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class FirstSingleBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable() && call.Arguments.Count <= 2;
+			=> call is { IsQueryable: true, Arguments.Count: <= 2 };
 
 		public static bool CanBuildAsyncMethod(MethodCallExpression call)
-			=> call.IsAsyncExtension() && call.Arguments.Count <= 3;
+			=> call is { IsAsyncExtension: true, Arguments.Count: <= 3 };
 
 		public enum MethodKind
 		{
@@ -63,7 +63,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var argument = methodCall.Arguments[0];
 			var argumentCount = methodCall.Arguments.Count;
 
-			if (methodCall.IsAsyncExtension())
+			if (methodCall.IsAsyncExtension)
 				--argumentCount;
 
 			var cardinality = buildInfo.SourceCardinality;

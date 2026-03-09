@@ -21,7 +21,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
 		{
-			if (call.Method.DeclaringType == typeof(LinqExtensions) || !call.IsQueryable())
+			if (call.Method.DeclaringType == typeof(LinqExtensions) || !call.IsQueryable)
 				return false;
 
 			if (call.Arguments.Count != 5)

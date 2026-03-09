@@ -12,9 +12,9 @@ namespace LinqToDB.Internal.Linq.Builder
 	internal sealed class AllAnyBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable();
+			=> call.IsQueryable;
 		public static bool CanBuildAsyncMethod(MethodCallExpression call)
-			=> call.IsAsyncExtension();
+			=> call.IsAsyncExtension;
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{

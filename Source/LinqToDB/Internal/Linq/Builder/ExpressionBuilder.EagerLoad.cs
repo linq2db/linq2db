@@ -154,25 +154,25 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			List<(LambdaExpression, bool)>? result = null;
 
-			while (current is MethodCallExpression mc && mc.IsQueryable())
+			while (current is MethodCallExpression { IsQueryable: true } mc)
 			{
-				if (mc.IsQueryable(nameof(Enumerable.ThenBy)))
+				if (mc.Method.Name is nameof(Enumerable.ThenBy))
 				{
 					result ??= new ();
 					result.Add((mc.Arguments[1].UnwrapLambda(), false));
 				}
-				else if (mc.IsQueryable(nameof(Enumerable.ThenByDescending)))
+				else if (mc.Method.Name is nameof(Enumerable.ThenByDescending))
 				{
 					result ??= new ();
 					result.Add((mc.Arguments[1].UnwrapLambda(), true));
 				}
-				else if (mc.IsQueryable(nameof(Enumerable.OrderBy)))
+				else if (mc.Method.Name is nameof(Enumerable.OrderBy))
 				{
 					result ??= new ();
 					result.Add((mc.Arguments[1].UnwrapLambda(), false));
 					break;
 				}
-				else if (mc.IsQueryable(nameof(Enumerable.OrderByDescending)))
+				else if (mc.Method.Name is nameof(Enumerable.OrderByDescending))
 				{
 					result ??= new ();
 					result.Add((mc.Arguments[1].UnwrapLambda(), true));
@@ -189,21 +189,21 @@ namespace LinqToDB.Internal.Linq.Builder
 			return result;
 		}
 
-		static readonly string[] _passThroughMethodsForUnwrappingDefaultIfEmpty = { nameof(Enumerable.Where), nameof(Enumerable.Select) };
-
 		static Expression UnwrapDefaultIfEmpty(Expression expression)
 		{
 			do
 			{
-				if (expression is MethodCallExpression mc)
+				if (expression is MethodCallExpression { IsQueryable: true } mc)
 				{
-					if (mc.IsQueryable(nameof(Enumerable.DefaultIfEmpty)))
+					if (mc.Method.Name is nameof(Enumerable.DefaultIfEmpty))
+					{
 						expression = mc.Arguments[0];
-					else if (mc.IsQueryable(_passThroughMethodsForUnwrappingDefaultIfEmpty))
+					}
+					else if (mc.Method.Name is nameof(Enumerable.Where) or nameof(Enumerable.Select))
 					{
 						return mc.Update(mc.Object, mc.Arguments.Select(UnwrapDefaultIfEmpty));
 					}
-					else if (mc.IsQueryable(nameof(Enumerable.SelectMany)))
+					else if (mc.Method.Name is nameof(Enumerable.SelectMany))
 					{
 						return mc.Update(mc.Object, mc.Arguments.Select(UnwrapDefaultIfEmpty));
 					}

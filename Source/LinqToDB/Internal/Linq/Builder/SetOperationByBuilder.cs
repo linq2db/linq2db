@@ -23,8 +23,8 @@ namespace LinqToDB.Internal.Linq.Builder
 #pragma warning restore CS8618
 		}
 
-		public static bool CanBuildMethod(MethodCallExpression call) 
-			=> call.IsQueryable() && call.Arguments.Count == 3;
+		public static bool CanBuildMethod(MethodCallExpression call)
+			=> call is { IsQueryable: true, Arguments.Count: 3 };
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{

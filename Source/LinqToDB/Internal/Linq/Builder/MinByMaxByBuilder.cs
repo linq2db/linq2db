@@ -14,7 +14,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class MinByMaxByBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable() && call.Arguments.Count == 2;
+			=> call is { IsQueryable: true, Arguments.Count: 2 };
 
 		protected override BuildSequenceResult BuildMethodCall(
 			ExpressionBuilder builder,

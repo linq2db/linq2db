@@ -17,18 +17,16 @@ namespace LinqToDB.Internal.Linq.Builder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call, ExpressionBuilder builder)
 		{
-			return call.IsQueryable()
-				&& call.Arguments.Count == 2
+			return call is { IsQueryable: true, Arguments: [var a0, _] }
 				// Contains over constant works through ConvertPredicate
-				&& !builder.CanBeEvaluatedOnClient(call.Arguments[0]);
+				&& !builder.CanBeEvaluatedOnClient(a0);
 		}
 
 		public static bool CanBuildAsyncMethod(MethodCallExpression call, ExpressionBuilder builder)
 		{
-			return call.IsAsyncExtension()
-				&& call.Arguments.Count == 3
+			return call is { IsAsyncExtension: true, Arguments: [var a0, _, _] }
 				// Contains over constant works through ConvertPredicate
-				&& !builder.CanBeEvaluatedOnClient(call.Arguments[0]);
+				&& !builder.CanBeEvaluatedOnClient(a0);
 		}
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
