@@ -251,7 +251,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 							if (providerValueGetter.Type.IsNullableType && providerValueGetter.Type.UnwrapNullableType() != memberType)
 							{
-								var toType = memberType.IsValueType && !memberType.IsNullableType
+								var toType = !memberType.IsNullableOrReferenceType()
 									? memberType.MakeNullable()
 									: memberType;
 

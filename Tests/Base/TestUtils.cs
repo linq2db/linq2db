@@ -201,17 +201,17 @@ namespace Tests
 				base.Dispose();
 			}
 
-			public override ValueTask DisposeAsync()
+			public override async ValueTask DisposeAsync()
 			{
 				if (DataContext is DataConnection dc && dc.DataProvider.Name.Contains(ProviderName.Firebird))
 				{
 					FirebirdTools.ClearAllPools();
 				}
 
-				DataContext.CloseAsync();
+				await DataContext.CloseAsync();
 				FirebirdTools.ClearAllPools();
 
-				return base.DisposeAsync();
+				await base.DisposeAsync();
 			}
 		}
 

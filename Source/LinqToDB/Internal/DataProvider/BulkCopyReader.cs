@@ -158,6 +158,16 @@ namespace LinqToDB.Internal.DataProvider
 			return count;
 		}
 
+		public IEnumerable<object?[]> GetAllData()
+		{
+			while (Read())
+			{
+				var row = new object?[_columns.Count];
+				GetValues(row);
+				yield return row;
+			}
+		}
+
 		public int GetAsParameters(Func<DbParameter> parameterFactory, object?[] values)
 		{
 			var count = _columns.Count;
