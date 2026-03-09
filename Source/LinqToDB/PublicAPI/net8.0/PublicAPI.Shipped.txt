@@ -65,3 +65,9 @@ static readonly LinqToDB.Internal.Reflection.Methods.Enumerable.MinBy -> System.
 static readonly LinqToDB.Internal.Reflection.Methods.Queryable.DistinctBy -> System.Reflection.MethodInfo!
 static readonly LinqToDB.Internal.Reflection.Methods.Queryable.MaxBy -> System.Reflection.MethodInfo!
 static readonly LinqToDB.Internal.Reflection.Methods.Queryable.MinBy -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Internal.Reflection.Methods.Enumerable.ExceptBy -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Internal.Reflection.Methods.Enumerable.IntersectBy -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Internal.Reflection.Methods.Enumerable.UnionBy -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Internal.Reflection.Methods.Queryable.ExceptBy -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Internal.Reflection.Methods.Queryable.IntersectBy -> System.Reflection.MethodInfo!
+static readonly LinqToDB.Internal.Reflection.Methods.Queryable.UnionBy -> System.Reflection.MethodInfo!

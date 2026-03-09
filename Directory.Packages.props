@@ -189,11 +189,11 @@
 
 	<ItemGroup Label="Benchmarks">
 		<PackageVersion Include="BenchmarkDotNet"                                       Version="0.15.8"                       />
-		<PackageVersion Include="JetBrains.Profiler.Api"                                Version="1.4.10"                       />
+		<PackageVersion Include="JetBrains.Profiler.Api"                                Version="1.4.11"                       />
 	</ItemGroup>
 
 	<ItemGroup Label="Examples">
-		<PackageVersion Include="linq2db.t4models"                                      Version="6.0.0-rc.3"                   />
+		<PackageVersion Include="linq2db.t4models"                                      Version="6.1.0"                        />
 		<PackageVersion Include="Microsoft.Extensions.ObjectPool"                       Version="$(Net10Latest)"               />
 		<PackageVersion Include="OpenTelemetry"                                         Version="1.15.0"                       />
 		<PackageVersion Include="OpenTelemetry.Exporter.Console"                        Version="1.15.0"                       />
