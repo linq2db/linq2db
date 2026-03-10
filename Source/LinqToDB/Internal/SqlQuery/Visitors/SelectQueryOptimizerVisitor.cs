@@ -86,11 +86,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			//
 			if (CorrectColumnsNesting())
 			{
+				_isColumnsOptimized = !removeWeakJoins;
+
 				do
 				{
 					ProcessElement(_root);
 
-					if (!_isColumnsOptimized && removeWeakJoins)
+					if (!_isColumnsOptimized)
 					{
 						_root = _columnOptimizerVisitor.OptimizeColumns(_root);
 						_isColumnsOptimized = true;

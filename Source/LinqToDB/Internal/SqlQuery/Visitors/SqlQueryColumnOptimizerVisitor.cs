@@ -28,6 +28,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		SqlPredicate.Exists? _currentExistsPredicate;
 		SqlTableLikeSource?  _currentSqlTableLikeSource;
 
+		public bool IsOptimized { get; private set; }
+
 		public override void Cleanup()
 		{
 			base.Cleanup();
@@ -40,6 +42,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_currentSqlTableLikeSource = null;
 			_inExpression              = true;
 			_isCollecting              = false;
+			IsOptimized                = false;
 		}
 
 		/// <summary>
@@ -305,6 +308,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			// Remove columns not in the keep list
 			if (indicesToKeep.Count < selectQuery.Select.Columns.Count)
 			{
+				IsOptimized = true;
+
 				// Build new column list
 				var newColumns = new List<SqlColumn>();
 				foreach (var index in indicesToKeep)
@@ -330,6 +335,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			// Ensure non-empty SELECT
 			if (selectQuery.Select.Columns.Count == 0 && AllowEmptyColumns(selectQuery))
 			{
+				IsOptimized = true;
+
 				if (selectQuery.GroupBy is { IsEmpty: false, GroupingType: GroupingType.Default })
 				{
 					var nonGroupingSet = selectQuery.GroupBy.Items.Find(it => it is not SqlGroupingSet);
@@ -475,6 +482,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 			
 			// Replace fields
+			if (fieldsToKeep.Count != cte.Fields.Count)
+				IsOptimized = true;
+
 			cte.Fields.Clear();
 			foreach (var field in fieldsToKeep)
 			{
@@ -557,6 +567,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				var field = enumSource.Fields[i];
 				if (tableSource.SourceFields.TrueForAll(sf => sf.BasedOn != field))
 				{
+					IsOptimized = true;
 					enumSource.RemoveField(i);
 				}
 			}
