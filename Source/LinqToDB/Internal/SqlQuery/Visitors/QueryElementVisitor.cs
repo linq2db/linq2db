@@ -2117,30 +2117,30 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			return selectQuery;
 
-			IQueryElement? TransformSelectQuery(SelectQuery selectQuery)
+			IQueryElement? TransformSelectQuery(SelectQuery query)
 			{
-				var fc = (SqlFromClause)   Visit(selectQuery.From   );
-				var sc = (SqlSelectClause) Visit(selectQuery.Select );
-				var wc = (SqlWhereClause)  Visit(selectQuery.Where  );
-				var gc = (SqlGroupByClause)Visit(selectQuery.GroupBy);
-				var hc = (SqlHavingClause) Visit(selectQuery.Having );
-				var oc = (SqlOrderByClause)Visit(selectQuery.OrderBy);
+				var fc = (SqlFromClause)   Visit(query.From   );
+				var sc = (SqlSelectClause) Visit(query.Select );
+				var wc = (SqlWhereClause)  Visit(query.Where  );
+				var gc = (SqlGroupByClause)Visit(query.GroupBy);
+				var hc = (SqlHavingClause) Visit(query.Having );
+				var oc = (SqlOrderByClause)Visit(query.OrderBy);
 
-				var so = selectQuery.HasSetOperators ? VisitElements    (selectQuery.SetOperators, VisitMode.Transform) : null;
-				var uk = selectQuery.HasUniqueKeys   ? VisitListOfArrays(selectQuery.UniqueKeys  , VisitMode.Transform) : null;
+				var so = query.HasSetOperators ? VisitElements    (query.SetOperators, VisitMode.Transform) : null;
+				var uk = query.HasUniqueKeys   ? VisitListOfArrays(query.UniqueKeys  , VisitMode.Transform) : null;
 
-				var ex = VisitElements(selectQuery.SqlQueryExtensions, VisitMode.Transform);
+				var ex = VisitElements(query.SqlQueryExtensions, VisitMode.Transform);
 
-				if (ShouldReplace(selectQuery)
-					|| !ReferenceEquals(fc, selectQuery.From)
-					|| !ReferenceEquals(sc, selectQuery.Select)
-					|| !ReferenceEquals(wc, selectQuery.Where)
-					|| !ReferenceEquals(gc, selectQuery.GroupBy)
-					|| !ReferenceEquals(hc, selectQuery.Having)
-					|| !ReferenceEquals(oc, selectQuery.OrderBy)
-					|| (selectQuery.HasSetOperators && so != selectQuery.SetOperators)
-					|| (selectQuery.HasUniqueKeys && uk != selectQuery.UniqueKeys)
-					|| selectQuery.SqlQueryExtensions != ex)
+				if (ShouldReplace(query)
+					|| !ReferenceEquals(fc, query.From)
+					|| !ReferenceEquals(sc, query.Select)
+					|| !ReferenceEquals(wc, query.Where)
+					|| !ReferenceEquals(gc, query.GroupBy)
+					|| !ReferenceEquals(hc, query.Having)
+					|| !ReferenceEquals(oc, query.OrderBy)
+					|| (query.HasSetOperators && so != query.SetOperators)
+					|| (query.HasUniqueKeys && uk != query.UniqueKeys)
+					|| query.SqlQueryExtensions != ex)
 				{
 					// we force clone strong components (clauses) of select query, that were not cloned above
 					// as they cannot belong to more than one query due to Parent reference to SelectQuery instance
@@ -2148,28 +2148,28 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					//
 					var nq = new SelectQuery();
 
-					if (ReferenceEquals(fc, selectQuery.From))
+					if (ReferenceEquals(fc, query.From))
 					{
 						fc = new SqlFromClause(nq);
-						fc.Tables.AddRange(selectQuery.From.Tables);
+						fc.Tables.AddRange(query.From.Tables);
 
-						NotifyReplaced(fc, selectQuery.From);
+						NotifyReplaced(fc, query.From);
 					}
 
-					if (ReferenceEquals(sc, selectQuery.Select))
+					if (ReferenceEquals(sc, query.Select))
 					{
-						sc = new SqlSelectClause(selectQuery.Select.IsDistinct, selectQuery.Select.TakeValue,
-							selectQuery.Select.TakeHints, selectQuery.Select.SkipValue,
-							selectQuery.Select.Columns.Select(c => new SqlColumn(nq, c.Expression, c.RawAlias)));
+						sc = new SqlSelectClause(query.Select.IsDistinct, query.Select.TakeValue,
+							query.Select.TakeHints, query.Select.SkipValue,
+							query.Select.Columns.Select(c => new SqlColumn(nq, c.Expression, c.RawAlias)));
 
-						for (int i = 0; i < selectQuery.Select.Columns.Count; i++)
+						for (int i = 0; i < query.Select.Columns.Count; i++)
 						{
-							var oldColumn = selectQuery.Select.Columns[i];
+							var oldColumn = query.Select.Columns[i];
 							var newColumn = sc.Columns[i];
 							NotifyReplaced(newColumn, oldColumn);
 						}
 
-						NotifyReplaced(sc, selectQuery.Select);
+						NotifyReplaced(sc, query.Select);
 					}
 					else
 					{
@@ -2178,85 +2178,85 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							c.Parent = nq;
 					}
 
-					if (ReferenceEquals(wc, selectQuery.Where))
+					if (ReferenceEquals(wc, query.Where))
 					{
 						wc = new SqlWhereClause(nq);
-						wc.SearchCondition = selectQuery.Where.SearchCondition;
+						wc.SearchCondition = query.Where.SearchCondition;
 
-						NotifyReplaced(wc, selectQuery.Where);
+						NotifyReplaced(wc, query.Where);
 					}
 
-					if (ReferenceEquals(gc, selectQuery.GroupBy))
+					if (ReferenceEquals(gc, query.GroupBy))
 					{
 						gc = new SqlGroupByClause(nq)
 						{
-							GroupingType = selectQuery.GroupBy.GroupingType,
+							GroupingType = query.GroupBy.GroupingType,
 						};
-						gc.Items.AddRange(selectQuery.GroupBy.Items);
+						gc.Items.AddRange(query.GroupBy.Items);
 
-						NotifyReplaced(gc, selectQuery.GroupBy);
+						NotifyReplaced(gc, query.GroupBy);
 					}
 
-					if (ReferenceEquals(hc, selectQuery.Having))
+					if (ReferenceEquals(hc, query.Having))
 					{
 						hc = new SqlHavingClause(nq);
-						hc.SearchCondition = selectQuery.Having.SearchCondition;
+						hc.SearchCondition = query.Having.SearchCondition;
 
-						NotifyReplaced(hc, selectQuery.Having);
+						NotifyReplaced(hc, query.Having);
 					}
 
-					if (ReferenceEquals(oc, selectQuery.OrderBy))
+					if (ReferenceEquals(oc, query.OrderBy))
 					{
 						oc = new SqlOrderByClause(nq);
-						oc.Items.AddRange(selectQuery.OrderBy.Items);
+						oc.Items.AddRange(query.OrderBy.Items);
 
-						NotifyReplaced(oc, selectQuery.OrderBy);
+						NotifyReplaced(oc, query.OrderBy);
 					}
 
-					if (selectQuery.HasSetOperators)
+					if (query.HasSetOperators)
 					{
-						if (so == selectQuery.SetOperators)
+						if (so == query.SetOperators)
 							so = so.ToList();
 					}
 
-					if (selectQuery.HasUniqueKeys)
+					if (query.HasUniqueKeys)
 					{
-						if (uk == selectQuery.UniqueKeys)
+						if (uk == query.UniqueKeys)
 							uk = uk.ToList();
 					}
 
-					if (selectQuery.SqlQueryExtensions == ex)
+					if (query.SqlQueryExtensions == ex)
 						ex = ex?.ToList();
 
 					nq.Init(sc, fc, wc, gc, hc, oc, so, uk,
-						selectQuery.IsParameterDependent,
-						selectQuery.QueryName,
-						selectQuery.DoNotSetAliases);
+						query.IsParameterDependent,
+						query.QueryName,
+						query.DoNotSetAliases);
 
 					nq.SqlQueryExtensions = ex;
 
-					return NotifyReplaced(nq, selectQuery);
+					return NotifyReplaced(nq, query);
 				}
 
 				return null;
 			}
 
-			void VisitSelectQuery(SelectQuery selectQuery, VisitMode mode)
+			void VisitSelectQuery(SelectQuery query, VisitMode mode)
 			{
-				Visit(selectQuery.From);
-				Visit(selectQuery.Select);
-				Visit(selectQuery.Where);
-				Visit(selectQuery.GroupBy);
-				Visit(selectQuery.Having);
-				Visit(selectQuery.OrderBy);
+				Visit(query.From);
+				Visit(query.Select);
+				Visit(query.Where);
+				Visit(query.GroupBy);
+				Visit(query.Having);
+				Visit(query.OrderBy);
 
-				if (selectQuery.HasSetOperators)
-					VisitElements(selectQuery.SetOperators, mode);
+				if (query.HasSetOperators)
+					VisitElements(query.SetOperators, mode);
 
-				if (selectQuery.HasUniqueKeys)
-					VisitListOfArrays(selectQuery.UniqueKeys, mode);
+				if (query.HasUniqueKeys)
+					VisitListOfArrays(query.UniqueKeys, mode);
 
-				VisitElements(selectQuery.SqlQueryExtensions, mode);
+				VisitElements(query.SqlQueryExtensions, mode);
 			}
 		}
 
