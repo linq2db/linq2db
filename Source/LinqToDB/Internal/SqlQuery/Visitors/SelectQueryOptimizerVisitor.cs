@@ -86,8 +86,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			//
 			if (CorrectColumnsNesting())
 			{
+				var isColumnsOptimized = false;
 				do
 				{
+					if (!isColumnsOptimized)
+					{
+						_root = _columnOptimizerVisitor.OptimizeColumns(_root);
+						isColumnsOptimized = true;
+					}
+
 					ProcessElement(_root);
 
 					_orderByOptimizer.OptimizeOrderBy(_root, _providerFlags, _columnNestingCorrector);
