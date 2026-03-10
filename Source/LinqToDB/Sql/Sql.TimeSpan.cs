@@ -62,7 +62,7 @@ namespace LinqToDB
 					TimeSpanParts.TotalMinutes		=> "/ 600000000",
 					TimeSpanParts.TotalHours		=> "/ 36000000000",
 					TimeSpanParts.TotalDays         => "/ 864000000000",
-					_ => throw new InvalidOperationException($"Unexpected timespanpart: {part}")
+					_ => throw new InvalidOperationException($"Unexpected timespanpart: {part}"),
 				};
 			}
 		}
@@ -113,7 +113,7 @@ namespace LinqToDB
 					TimeSpanParts.TotalMinutes		=> " / 60",
 					TimeSpanParts.TotalHours		=> " / 3600",
 					TimeSpanParts.TotalDays         => " / 86400",
-					_ => throw new InvalidOperationException($"Unexpected timespanpart: {part}")
+					_ => throw new InvalidOperationException($"Unexpected timespanpart: {part}"),
 				};
 			}
 		}

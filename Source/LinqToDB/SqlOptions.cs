@@ -1,4 +1,4 @@
-using LinqToDB.Data;
+﻿using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Options;
 
@@ -40,8 +40,8 @@ namespace LinqToDB
 	/// </example>
 	/// </param>
 	/// <param name="DisableBuiltInTimeSpanConversion">
-	/// If <c>true</c>, it disables built-in TimeSpan member access conversions in ExposeExpressionVisitor to allow external conversion via ExtensionAttribute.
-	/// Default value: <c>false</c>.
+	/// If <see langword="true"/>, it disables built-in TimeSpan member access conversions in ExposeExpressionVisitor to allow external conversion via ExtensionAttribute.
+	/// Default value: <see langword="false"/>.
 	/// </param>
 	public sealed record SqlOptions
 	(

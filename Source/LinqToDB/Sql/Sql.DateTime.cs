@@ -289,8 +289,8 @@ namespace LinqToDB
 					DateParts.Second      => ("Seconds_Between",     1, builder.Mapping.GetDbDataType(typeof(long))),
 					DateParts.Millisecond => ("Nano100_Between", 10000, builder.Mapping.GetDbDataType(typeof(long))),
 					DateParts.Microsecond => ("Nano100_Between",    10, builder.Mapping.GetDbDataType(typeof(long))),
-					DateParts.Tick        => ("Nano100_Between",      , builder.Mapping.GetDbDataType(typeof(long))),
-					DateParts.Nanosecond  => ("Nano100_Between",      , builder.Mapping.GetDbDataType(typeof(long))),
+					DateParts.Tick        => ("Nano100_Between",     1, builder.Mapping.GetDbDataType(typeof(long))),
+					DateParts.Nanosecond  => ("Nano100_Between",     1, builder.Mapping.GetDbDataType(typeof(long))),
 					_ => throw new InvalidOperationException($"Unexpected datepart: {part}"),
 				};
 

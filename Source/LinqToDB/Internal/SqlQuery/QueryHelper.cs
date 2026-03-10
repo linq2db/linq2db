@@ -269,6 +269,7 @@ namespace LinqToDB.Internal.SqlQuery
 					{
 						return found;
 					}
+
 					if (found?.GetDbDataType(true).SystemType != binary.SystemType)
 						return null;
 					return found;
