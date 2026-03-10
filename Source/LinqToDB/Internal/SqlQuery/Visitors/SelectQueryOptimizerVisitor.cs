@@ -3301,14 +3301,31 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						}
 					}
 				}
-
-				if (usageCount == 1 && !IsInSelectPart(parentQuery, testedColumn))
+				else
 				{
-					var moveToSubquery = IsInOrderByPart(parentQuery, testedColumn) && !_providerFlags.IsSubQueryOrderBySupported;
-					if (moveToSubquery)
+					if (!IsInSelectPart(parentQuery, testedColumn))
 					{
-						MoveToSubQuery(parentQuery);
-						isModified = true;
+						var moveToSubquery = IsInOrderByPart(parentQuery, testedColumn) && !_providerFlags.IsSubQueryOrderBySupported;
+						if (moveToSubquery)
+						{
+							MoveToSubQuery(parentQuery);
+							isModified = true;
+						}
+					}
+					else
+					{
+						// Handling Update case, when column used several times in Update statement. Check StringJoinAssociationSubqueryUpdate1 test for details.
+						if (_providerFlags.IsApplyJoinSupported && _updateQuery != null)
+						{
+							if (_updateQuery.Find(testedColumn, (tc, e) => e is SqlColumn col && col.Expression.Any(ce => ReferenceEquals(ce, tc))) is SqlColumn found)
+							{
+								var updateUsage = CountUsage(_updateQuery, found);
+								if (updateUsage > 1)
+									return false;
+							}
+
+							return false;
+						}
 					}
 				}
 
@@ -3330,6 +3347,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						return false;
 					}
 				}
+
 			}
 
 			// moving whole join to subquery
