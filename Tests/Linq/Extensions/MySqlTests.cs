@@ -409,8 +409,6 @@ namespace Tests.Extensions
 			.AsMySql()
 			.ForUpdateHint()
 			.NoBlockNestedLoopHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
-			;
-
 			_ = q.ToList();
 
 			Assert.That(LastQuery, Should.Contain(

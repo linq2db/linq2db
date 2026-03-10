@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Linq;
 
@@ -24,29 +24,29 @@ namespace LinqToDB.Internal.SqlQuery
 				SqlNullabilityExpression => sqlExpression,
 				SqlSearchCondition       => sqlExpression,
 				SqlRowExpression row     => new SqlRowExpression(row.Values.Select(v => ApplyNullability(v, nullability)).ToArray()),
-				_ => new SqlNullabilityExpression(sqlExpression, nullability.CanBeNull(sqlExpression))
+				_ => new SqlNullabilityExpression(sqlExpression, nullability.CanBeNull(sqlExpression)),
 			};
 		}
 
 		public static ISqlExpression ApplyNullability(ISqlExpression sqlExpression, bool canBeNull)
 		{
-			switch (sqlExpression)
+			return sqlExpression switch
 			{
-				case SqlSearchCondition:
-					return sqlExpression;
-				case SqlRowExpression row:
-					return new SqlRowExpression(row.Values.Select(v => ApplyNullability(v, canBeNull)).ToArray());
+				SqlSearchCondition =>
+					sqlExpression,
 
-				case SqlNullabilityExpression nullabilityExpression
-						when nullabilityExpression.CanBeNull == canBeNull:
-					return nullabilityExpression;
-				case SqlNullabilityExpression nullabilityExpression:
-					return new SqlNullabilityExpression(nullabilityExpression.SqlExpression, canBeNull);
+				SqlRowExpression row =>
+					new SqlRowExpression(row.Values.Select(v => ApplyNullability(v, canBeNull)).ToArray()),
+
+				SqlNullabilityExpression nullabilityExpression when nullabilityExpression.CanBeNull == canBeNull =>
+					nullabilityExpression,
+
+				SqlNullabilityExpression nullabilityExpression =>
+					new SqlNullabilityExpression(nullabilityExpression.SqlExpression, canBeNull),
 					
-				default:
-					return new SqlNullabilityExpression(sqlExpression, canBeNull);
+				_ => new SqlNullabilityExpression(sqlExpression, canBeNull),
+			};
 			}
-		}
 
 		public void Modify(ISqlExpression sqlExpression)
 		{

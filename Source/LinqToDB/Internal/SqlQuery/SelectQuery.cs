@@ -103,14 +103,14 @@ namespace LinqToDB.Internal.SqlQuery
 			internal set => _uniqueKeys = value;
 		}
 
-		public  bool                   HasUniqueKeys => _uniqueKeys?.Count > 0;
+		public bool HasUniqueKeys => _uniqueKeys?.Count > 0;
 
 		#endregion
 
 		#region Union
 
 		private List<SqlSetOperator>? _setOperators;
-		public  List<SqlSetOperator>  SetOperators
+		public List<SqlSetOperator> SetOperators
 		{
 			get => _setOperators ??= [];
 			internal set => _setOperators = value;
@@ -151,7 +151,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		internal static SqlTableSource? CheckTableSource(SqlTableSource ts, ISqlTableSource table, string? alias)
 		{
-			if (ts.Source == table && (alias == null || ts.Alias == alias))
+			if (ts.Source == table && (alias == null || string.Equals(ts.Alias, alias, StringComparison.Ordinal)))
 				return ts;
 
 			var jt = ts[table, alias];
@@ -183,7 +183,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		#region ISqlTableSource Members
 
-		public static int SourceIDCounter;
+		internal static int SourceIDCounter;
 
 		public int           SourceID { get; }
 		public SqlTableType  SqlTableType => SqlTableType.Table;
@@ -217,36 +217,44 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override QueryElementType ElementType => QueryElementType.SqlQuery;
 
-	public override bool CanBeNullable(NullabilityContext nullability)
-	{
-		if (!this.IsLimited() && !this.HasSetOperators && !this.HasGroupBy() && !this.HasHaving() && this.IsSingleColumn()
-		    && QueryHelper.IsAggregationQuery(this))
+		public override bool CanBeNullable(NullabilityContext nullability)
 		{
-			if (Select.Columns[0].Expression is SqlExtendedFunction { CanBeNullInAggregationQuery: false })
-				return false;
-		}
+			if (this is { IsLimited: false, HasSetOperators: false, HasGroupBy: false, HasHaving: false, IsSingleColumn: true }
+				&& QueryHelper.IsAggregationQuery(this))
+			{
+                if (Select.Columns[0].Expression is SqlExtendedFunction { CanBeNullInAggregationQuery: false })
+                    return false;
+			}
 
-		return true;
-	}
+            return true;
+		}
 
 		public override int Precedence => LinqToDB.SqlQuery.Precedence.Unknown;
 
-		public override bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			return ReferenceEquals(this, other);
 		}
 
-		public override Type? SystemType
-		{
-			get
+		public override Type? SystemType =>
+			this switch
 			{
-				if (Select.Columns.Count == 1)
-					return Select.Columns[0].SystemType;
+				{ Select.Columns: [{ SystemType: var type }] } => type,
+				{ From.Tables: [{ Joins.Count: 0, SystemType: var type }] } => type,
+				_ => null,
+			};
 
-				if (From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0)
-					return From.Tables[0].SystemType;
-
-				return null;
+		public override string ToString()
+		{
+			try
+			{
+				var writer = new QueryElementTextWriter(NullabilityContext.GetContext(this));
+				ToString(writer);
+				return writer.ToString();
+			}
+			catch
+			{
+				return $"FAIL ToString('{typeof(SelectQuery).FullName}').";
 			}
 		}
 

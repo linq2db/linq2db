@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -156,7 +156,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 					DataType.DecFloat or DataType.Decimal or DataType.VarBinary or DataType.Binary or DataType.Blob => 's',
 					DataType.Json => 'j',
 					DataType.Yson => 'y',
-					_ => 'u'
+					_ => 'u',
 				};
 
 				stringBuilder.Append(suffix);
@@ -180,7 +180,7 @@ namespace LinqToDB.Internal.DataProvider.Ydb
 				{
 					DataType.Json => 'j',
 					DataType.Yson => 'y',
-					_ => 's'
+					_ => 's',
 				};
 
 				stringBuilder.Append(suffix);

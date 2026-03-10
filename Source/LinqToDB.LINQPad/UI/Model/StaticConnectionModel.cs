@@ -24,7 +24,7 @@ internal sealed class StaticConnectionModel(ConnectionSettings settings, bool en
 			else
 				value = value!.Trim();
 
-			if (Settings.StaticContext.ContextAssemblyPath != value)
+			if (!string.Equals(Settings.StaticContext.ContextAssemblyPath, value, StringComparison.Ordinal))
 			{
 				Settings.StaticContext.ContextAssemblyPath = value;
 				OnPropertyChanged(_contextAssemblyPathChangedEventArgs);
@@ -77,7 +77,7 @@ internal sealed class StaticConnectionModel(ConnectionSettings settings, bool en
 
 			if (value != null && value.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
 			{
-				if (Settings.StaticContext.LocalConfigurationPath != value)
+				if (!string.Equals(Settings.StaticContext.LocalConfigurationPath, value, StringComparison.Ordinal))
 				{
 					Settings.StaticContext.LocalConfigurationPath = value;
 					OnPropertyChanged(_configurationPathChangedEventArgs);
@@ -85,7 +85,7 @@ internal sealed class StaticConnectionModel(ConnectionSettings settings, bool en
 			}
 			else
 #endif
-			if (Settings.StaticContext.ConfigurationPath != value)
+			if (!string.Equals(Settings.StaticContext.ConfigurationPath, value, StringComparison.Ordinal))
 			{
 				Settings.StaticContext.ConfigurationPath = value;
 				OnPropertyChanged(_configurationPathChangedEventArgs);

@@ -166,28 +166,26 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestDataGenerationTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			PrepareData(db);
+
+			var result1 = GetTarget(db). OrderBy(_ => _.Id).ToList();
+			var result2 = GetSource1(db).OrderBy(_ => _.Id).ToList();
+			using (Assert.EnterMultipleScope())
 			{
-				PrepareData(db);
-
-				var result1 = GetTarget(db). OrderBy(_ => _.Id).ToList();
-				var result2 = GetSource1(db).OrderBy(_ => _.Id).ToList();
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(result1, Has.Count.EqualTo(4));
-					Assert.That(result2, Has.Count.EqualTo(4));
-				}
-
-				AssertRow(InitialTargetData[0], result1[0], null, null);
-				AssertRow(InitialTargetData[1], result1[1], null, null);
-				AssertRow(InitialTargetData[2], result1[2], null, 203);
-				AssertRow(InitialTargetData[3], result1[3], null, null);
-
-				AssertRow(InitialSourceData[0], result2[0], null, null);
-				AssertRow(InitialSourceData[1], result2[1], null, 214);
-				AssertRow(InitialSourceData[2], result2[2], null, null);
-				AssertRow(InitialSourceData[3], result2[3], null, 216);
+				Assert.That(result1, Has.Count.EqualTo(4));
+				Assert.That(result2, Has.Count.EqualTo(4));
 			}
+
+			AssertRow(InitialTargetData[0], result1[0], null, null);
+			AssertRow(InitialTargetData[1], result1[1], null, null);
+			AssertRow(InitialTargetData[2], result1[2], null, 203);
+			AssertRow(InitialTargetData[3], result1[3], null, null);
+
+			AssertRow(InitialSourceData[0], result2[0], null, null);
+			AssertRow(InitialSourceData[1], result2[1], null, 214);
+			AssertRow(InitialSourceData[2], result2[2], null, null);
+			AssertRow(InitialSourceData[3], result2[3], null, 216);
 		}
 
 		private void AssertRowCount(int expected, int actual, string context)

@@ -11,34 +11,26 @@ namespace LinqToDB.Internal.Extensions
 		public static TExpression GetExpressionFromExpressionMember<TExpression>(this Type type, string memberName)
 			where TExpression : Expression
 		{
-			var members = type.GetStaticMembersEx(memberName);
-
-			if (members.Length == 0)
-				throw new LinqToDBException($"Static member '{memberName}' for type '{type.Name}' not found");
-
-			if (members.Length > 1)
-				throw new LinqToDBException($"Ambiguous members '{memberName}' for type '{type.Name}' has been found");
-
-			switch (members[0])
+			return type.GetStaticMembersEx(memberName) switch
 			{
-				case PropertyInfo propInfo:
-					{
-						if (propInfo.GetValue(null, null) is TExpression expression)
-							return expression;
+				[] => throw new LinqToDBException($"Static member '{memberName}' for type '{type.Name}' not found"),
 
-						throw new LinqToDBException($"Property '{memberName}' for type '{type.Name}' should return expression");
-					}
-				case MethodInfo method:
-					{
-						if (method.GetParameters().Length > 0)
-							throw new LinqToDBException($"Method '{memberName}' for type '{type.Name}' should have no parameters");
+				[PropertyInfo propInfo] => propInfo.GetValue(null, null) switch
+				{
+					TExpression expression => expression,
+					_ => throw new LinqToDBException($"Property '{memberName}' for type '{type.Name}' should return expression"),
+				},
 
-						return method.InvokeExt<TExpression>(null, []);
-					}
-				default:
-					throw new LinqToDBException(
-						$"Member '{memberName}' for type '{type.Name}' should be static property or method");
-			}
+				[MethodInfo method] => method.GetParameters() switch
+				{
+					[] => method.InvokeExt<TExpression>(null, []),
+					_ => throw new LinqToDBException($"Method '{memberName}' for type '{type.Name}' should have no parameters"),
+				},
+
+				[_] => throw new LinqToDBException($"Member '{memberName}' for type '{type.Name}' should be static property or method"),
+
+				_ => throw new LinqToDBException($"Ambiguous members '{memberName}' for type '{type.Name}' has been found"),
+			};
 		}
 	}
 }

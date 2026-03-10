@@ -11,10 +11,8 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsMethodCall(nameof(LinqExtensions.AggregateExecute))]
 	sealed class AggregateExecuteBuilder : MethodCallBuilder
 	{
-#pragma warning disable IDE0060
 		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder _)
-			=> call.IsQueryable();
-#pragma warning restore IDE0060
+			=> call.IsQueryable;
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -104,7 +102,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				Placeholder          = translatedPlaceholder,
 				Validator            = validatorFunc,
-				OuterJoinParentQuery = isSimple ? null : buildInfo.Parent?.SelectQuery
+				OuterJoinParentQuery = isSimple ? null : buildInfo.Parent?.SelectQuery,
 			};
 
 			return BuildSequenceResult.FromContext(context);

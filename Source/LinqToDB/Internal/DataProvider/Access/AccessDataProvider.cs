@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -288,7 +288,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					(AccessVersion.Ace, AccessProvider.OleDb) => AceOleDbMappingSchema,
 					(AccessVersion.Jet, AccessProvider.ODBC)  => JetOdbcDbMappingSchema,
 					(AccessVersion.Ace, AccessProvider.ODBC)  => AceOdbcDbMappingSchema,
-					_                                         => throw new InvalidOperationException()
+					_                                         => throw new InvalidOperationException(),
 				};
 			}
 		}

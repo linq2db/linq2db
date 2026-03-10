@@ -29,7 +29,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				Expression setterExpression;
 
-				if (!setter.IsNullValue())
+				if (!setter.IsNullValue)
 				{
 					var setterLambda = setter.UnwrapLambda();
 
@@ -54,7 +54,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					setterExpressions);
 				UpdateBuilder.InitializeSetExpressions(builder, mergeContext.TargetContext, mergeContext.SourceContext, setterExpressions, operation.Items, createColumns : false);
 
-				if (!predicate.IsNullValue())
+				if (!predicate.IsNullValue)
 				{
 					var condition = predicate.UnwrapLambda();
 

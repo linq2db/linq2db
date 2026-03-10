@@ -235,7 +235,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					(SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2022MappingSchemaMicrosoft(),
 					(SqlServerVersion.v2025, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2025MappingSchemaMicrosoft(),
 
-					_ => throw new InvalidOperationException($"Unexpected dialect/provider: {version}, {provider}")
+					_ => throw new InvalidOperationException($"Unexpected dialect/provider: {version}, {provider}"),
 				};
 			}
 		}
@@ -251,19 +251,14 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 		protected override IMemberTranslator CreateMemberTranslator()
 		{
-			if (Version >= SqlServerVersion.v2022)
-				return new SqlServer2022MemberTranslator();
-
-			if (Version >= SqlServerVersion.v2017)
-				return new SqlServer2017MemberTranslator();
-
-			if (Version >= SqlServerVersion.v2012)
-				return new SqlServer2012MemberTranslator();
-
-			if (Version == SqlServerVersion.v2005)
-				return new SqlServer2005MemberTranslator();
-
-			return new SqlServerMemberTranslator();
+			return Version switch
+			{
+				>= SqlServerVersion.v2022 => new SqlServer2022MemberTranslator(),
+				>= SqlServerVersion.v2017 => new SqlServer2017MemberTranslator(),
+				>= SqlServerVersion.v2012 => new SqlServer2012MemberTranslator(),
+				SqlServerVersion.v2005 => new SqlServer2005MemberTranslator(),
+				_ => new SqlServerMemberTranslator(),
+			};
 		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
@@ -292,7 +287,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 			return new SqlServerSchemaProvider(this);
 		}
 
-		static readonly ConcurrentDictionary<string,bool> _marsFlags = new ();
+		static readonly ConcurrentDictionary<string,bool> _marsFlags = new (StringComparer.Ordinal);
 
 		// TODO: Remove in v7
 		[Obsolete("This API scheduled for removal in v7"), EditorBrowsable(EditorBrowsableState.Never)]
@@ -380,7 +375,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 
 				case DataType.Udt:
 					if (param != null
-						&& !value.IsNullValue()
+						&& !value.IsNullValue
 						&& _udtTypeNames.TryGetValue(value.GetType(), out var typeName))
 					{
 						Adapter.SetUdtTypeName(param, typeName);
@@ -470,7 +465,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 				}
 
 				case DataType.Undefined:
-					if (!value.IsNullValue()
+					if (!value.IsNullValue
 						&& (value is DataTable
 						|| value is DbDataReader
 							|| value is IEnumerable<DbDataRecord>
@@ -539,7 +534,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 							Adapter.SetTypeName(param, dataType.DbType!);
 
 						// TVP doesn't support DBNull
-						if (parameter.Value.IsNullValue())
+						if (parameter.Value.IsNullValue)
 							parameter.Value = null;
 
 						break;
@@ -547,7 +542,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					case SqlDbType.VarChar:
 					{
 						var strValue = value as string;
-						if ((strValue != null && strValue.Length > 8000) || (!value.IsNullValue() && strValue == null))
+						if ((strValue != null && strValue.Length > 8000) || (!value.IsNullValue && strValue == null))
 							parameter.Size = -1;
 						else if (dataType.Length != null && dataType.Length <= 8000 && (strValue == null || strValue.Length <= dataType.Length))
 							parameter.Size = dataType.Length.Value;
@@ -559,7 +554,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					case SqlDbType.NVarChar:
 					{
 						var strValue = value as string;
-						if ((strValue != null && strValue.Length > 4000) || (!value.IsNullValue() && strValue == null))
+						if ((strValue != null && strValue.Length > 4000) || (!value.IsNullValue && strValue == null))
 							parameter.Size = -1;
 						else if (dataType.Length != null && dataType.Length <= 4000 && (strValue == null || strValue.Length <= dataType.Length))
 							parameter.Size = dataType.Length.Value;
@@ -571,7 +566,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 					case SqlDbType.VarBinary:
 					{
 						var binaryValue = value as byte[];
-						if ((binaryValue != null && binaryValue.Length > 8000) || (!value.IsNullValue() && binaryValue == null))
+						if ((binaryValue != null && binaryValue.Length > 8000) || (!value.IsNullValue && binaryValue == null))
 							parameter.Size = -1;
 						else if (dataType.Length != null && dataType.Length <= 8000 && (binaryValue == null || binaryValue.Length <= dataType.Length))
 							parameter.Size = dataType.Length.Value;
@@ -652,7 +647,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer
 		#region UDT support
 
 		private readonly ConcurrentDictionary<Type, string> _udtTypeNames = new ();
-		private readonly ConcurrentDictionary<string, Type> _udtTypes     = new ();
+		private readonly ConcurrentDictionary<string, Type> _udtTypes     = new (StringComparer.Ordinal);
 
 		public void AddUdtType(Type type, string udtName)
 		{

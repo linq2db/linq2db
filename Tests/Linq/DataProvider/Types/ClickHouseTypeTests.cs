@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Net;
 using System.Numerics;
@@ -533,7 +533,7 @@ namespace Tests.DataProvider
 
 					var maxString = new string('9', p);
 					if (s > 0)
-						maxString = maxString.Substring(0, p - s) + '.' + maxString.Substring(p - s);
+						maxString = $"{maxString.Substring(0, p - s)}.{maxString.Substring(p - s)}";
 					if (maxString[0] == '.')
 						maxString = $"0{maxString}";
 					var minString = $"-{maxString}";

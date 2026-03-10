@@ -45,7 +45,7 @@ namespace Tests.Linq
 		[Test]
 		public void DistinctBy([DataSources] string context)
 		{
-			using var db    = GetDataContext(context);
+			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(TestData.Seed());
 
 			var query = table
@@ -60,7 +60,7 @@ namespace Tests.Linq
 		[Test]
 		public void DistinctByNoOrder([DataSources] string context)
 		{
-			using var db    = GetDataContext(context);
+			using var db = GetDataContext(context);
 			using var table = db.CreateLocalTable(TestData.Seed());
 
 			var query = table
@@ -83,7 +83,6 @@ namespace Tests.Linq
 				.DistinctBy(x => x.Id, comparer)
 				.ToList();
 		}
-
 	}
 }
 

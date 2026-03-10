@@ -1,4 +1,4 @@
-﻿namespace LinqToDB
+namespace LinqToDB
 {
 	/// <summary>
 	/// Defines join type. Used with join LINQ helpers.
@@ -20,6 +20,6 @@
 		/// <summary>
 		/// Full outer join.
 		/// </summary>
-		Full
+		Full,
 	}
 }

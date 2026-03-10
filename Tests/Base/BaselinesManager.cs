@@ -8,7 +8,7 @@ namespace Tests
 		{
 			var ctx = CustomTestContext.Get();
 
-			if (ctx.Get<bool>(CustomTestContext.BASELINE_DISABLED) != true)
+			if (!ctx.Get<bool>(CustomTestContext.BASELINE_DISABLED))
 			{
 				var baseline = ctx.Get<StringBuilder>(CustomTestContext.BASELINE);
 				if (baseline == null)

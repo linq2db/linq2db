@@ -34,7 +34,7 @@ namespace LinqToDB.Metadata
 		public MetadataReader(params IMetadataReader[] readers)
 		{
 			_readers  = readers ?? throw new ArgumentNullException(nameof(readers));
-			_objectId = $"[{string.Join(",", _readers.Select(r => r.GetObjectID()))}]";
+			_objectId = $"[{string.JoinStrings(',', _readers.Select(r => r.GetObjectID()))}]";
 
 			_cache = new(
 				(type, source) =>

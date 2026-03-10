@@ -17,8 +17,8 @@ Public Module VisualBasicCommon
 
 	Public Function SearchCondition2(ByVal db As NorthwindDB) As IEnumerable(Of String)
 		Return _
-			From cust In db.Customer _
-			Where cust.Orders.Count > 0 And cust.CompanyName.StartsWith("H") _
+			From cust In db.Customer
+			Where cust.Orders.Count > 0 And cust.CompanyName.StartsWith("H"c)
 			Select cust.CustomerID
 	End Function
 

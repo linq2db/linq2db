@@ -101,7 +101,7 @@ namespace LinqToDB.DataModel
 						new IType[]
 						{
 							context.AST.ArrayType(WellKnownTypes.System.ObjectNullable, false),
-							tupleClassBuilder.Type.Type
+							tupleClassBuilder.Type.Type,
 						},
 						false,
 						conversionLambda.Method));

@@ -131,7 +131,7 @@ namespace LinqToDB
 			{
 				var left  = builder.GetExpression(0)!;
 				var right = builder.GetExpression(1)!;
-				var isNot = builder.Expression == "NOT";
+				var isNot = string.Equals(builder.Expression, "NOT", StringComparison.Ordinal);
 
 				var nullability = NullabilityContext.GetContext(builder.Query);
 
@@ -194,7 +194,7 @@ namespace LinqToDB
 #pragma warning restore CS3016 // Arrays as attribute arguments is not CLS-compliant
 		static TR ConvertRemover<T, TR>(T input)
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(ConvertRemover));
 		}
 
 		sealed class NoConvertBuilder : IExtensionCallBuilder
@@ -227,9 +227,11 @@ namespace LinqToDB
 				var sqlExpr = builder.ConvertExpressionToSql(newExpr)!;
 				sqlExpr = sqlExpr.Convert(static (v, e) =>
 				{
-					if (e is SqlFunction func && func.Name == PseudoFunctions.REMOVE_CONVERT)
-						return func.Parameters[0];
-					return e;
+					return e switch
+					{
+						SqlFunction { Name: PseudoFunctions.REMOVE_CONVERT } func => func.Parameters[0],
+						_ => e,
+					};
 				});
 
 				builder.ResultExpression = sqlExpr;
@@ -300,7 +302,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Performs value conversion to specified type. If conversion failed, returns <c>null</c>.
+		/// Performs value conversion to specified type. If conversion failed, returns <see langword="null"/>.
 		/// Supported databases:
 		/// <list type="bullet">
 		/// <item>SQL Server 2012 or newer</item>
@@ -311,14 +313,14 @@ namespace LinqToDB
 		/// <typeparam name="TTo">Target value type.</typeparam>
 		/// <param name="value">Value to convert.</param>
 		/// <param name="_">Unused. Added to support method overloads.</param>
-		/// <returns>Value, converted to target type or <c>null</c> if conversion failed.</returns>
+		/// <returns>Value, converted to target type or <see langword="null"/> if conversion failed.</returns>
 		[CLSCompliant(false)]
 		[Function(PseudoFunctions.TRY_CONVERT, 3, 2, 0, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.Nullable)]
 		public static TTo? TryConvert<TFrom, TTo>(TFrom value, TTo? _) where TTo : struct
 			=> throw new ServerSideOnlyException(nameof(TryConvert));
 
 		/// <summary>
-		/// Performs value conversion to specified type. If conversion failed, returns <c>null</c>.
+		/// Performs value conversion to specified type. If conversion failed, returns <see langword="null"/>.
 		/// Supported databases:
 		/// <list type="bullet">
 		/// <item>SQL Server 2012 or newer</item>
@@ -329,7 +331,7 @@ namespace LinqToDB
 		/// <typeparam name="TTo">Target value type.</typeparam>
 		/// <param name="value">Value to convert.</param>
 		/// <param name="_">Unused. Added to support method overloads.</param>
-		/// <returns>Value, converted to target type or <c>null</c> if conversion failed.</returns>
+		/// <returns>Value, converted to target type or <see langword="null"/> if conversion failed.</returns>
 		[CLSCompliant(false)]
 		[Function(PseudoFunctions.TRY_CONVERT, 3, 2, 0, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.Nullable)]
 		public static TTo? TryConvert<TFrom, TTo>(TFrom value, TTo? _) where TTo : class
@@ -482,7 +484,7 @@ namespace LinqToDB
 		{
 			if (value == null || str == null) return null;
 
-			return str.IndexOf(value.Value) + 1;
+			return str.IndexOf(value.Value, StringComparison.Ordinal) + 1;
 		}
 
 		[Function(                                                          IsNullable = IsNullableType.IfAnyParameterNullable)]
@@ -607,7 +609,7 @@ namespace LinqToDB
 		[Expression(PN.Ydb, "Unicode::Substring({0}, 0, {1} - 1) || {3} || Unicode::Substring({0}, {1} + {2} - 1)", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Concatenate)]
 		public static string Stuff(IEnumerable<string> characterExpression, int? start, int? length, string replaceWithExpression)
 		{
-			throw new NotImplementedException();
+			throw new ServerSideOnlyException(nameof(Stuff));
 		}
 
 		[Function(                                                        IsNullable = IsNullableType.IfAnyParameterNullable)]
@@ -650,7 +652,7 @@ namespace LinqToDB
 			if (str.Length == 0)                                     return str;
 			if (oldValue.Length == 0)                                return str; // Replace raises exception here.
 
-			return str.Replace(oldValue, newValue);
+			return str.Replace(oldValue, newValue, StringComparison.Ordinal);
 		}
 
 		public static string? Replace(string? str, char? oldValue, char? newValue)
@@ -1041,7 +1043,7 @@ namespace LinqToDB
 		[Expression(PN.SqlServer2008, "REPLICATE('0', CASE WHEN LEN(CAST({0} as NVARCHAR)) > {1} THEN 0 ELSE ({1} - LEN(CAST({0} as NVARCHAR))) END) + CAST({0} as NVARCHAR)", IsNullable = IsNullableType.SameAsFirstParameter)]
 		public static string? ZeroPad(int? val, int length)
 		{
-			return val?.ToString(FormattableString.Invariant($"d{length}"), NumberFormatInfo.InvariantInfo);
+			return val?.ToString(string.Create(CultureInfo.InvariantCulture, $"d{length}"), NumberFormatInfo.InvariantInfo);
 		}
 
 		sealed class ConcatAttribute : ExpressionAttribute
