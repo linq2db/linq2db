@@ -18,7 +18,7 @@ using System.Data.SqlTypes;
 namespace Cli.All.SqlServer2025
 {
 	/// <summary>
-	/// This is Parent table
+	/// This &lt;тест&gt; is Parent table
 	/// </summary>
 	[Table("Parent")]
 	public class Parent : IEquatable<Parent>

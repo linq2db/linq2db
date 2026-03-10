@@ -17,7 +17,7 @@ namespace Cli.Default.SqlServer
 	{
 		[Column("ParentID"                                                                                  )] public int? ParentId { get; set; } // int
 		/// <summary>
-		/// This ChildID column
+		/// This &lt;тест&gt; ChildID column
 		/// </summary>
 		[Column("ChildID"                                                                                   )] public int? ChildId  { get; set; } // int
 		[Column("_ID"     , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  Id       { get; set; } // int

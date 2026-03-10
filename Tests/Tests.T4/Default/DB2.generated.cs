@@ -36,10 +36,10 @@ namespace Default.DB2
 		public ITable<KeepIdentityTest>  KeepIdentityTests   { get { return this.GetTable<KeepIdentityTest>(); } }
 		public ITable<LinqDataType>      LinqDataTypes       { get { return this.GetTable<LinqDataType>(); } }
 		public ITable<MASTERTABLE>       Mastertables        { get { return this.GetTable<MASTERTABLE>(); } }
+		public ITable<PERSONVIEW>        Personviews         { get { return this.GetTable<PERSONVIEW>(); } }
 		public ITable<Parent>            Parents             { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>           Patients            { get { return this.GetTable<Patient>(); } }
 		public ITable<Person>            People              { get { return this.GetTable<Person>(); } }
-		public ITable<PERSONVIEW>        Personviews         { get { return this.GetTable<PERSONVIEW>(); } }
 		public ITable<SLAVETABLE>        Slavetables         { get { return this.GetTable<SLAVETABLE>(); } }
 		public ITable<TestIdentity>      TestIdentities      { get { return this.GetTable<TestIdentity>(); } }
 		public ITable<TestMerge1>        TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
@@ -254,6 +254,16 @@ namespace Default.DB2
 		#endregion
 	}
 
+	[Table(Schema="DB2INST1", Name="PERSONVIEW", IsView=true)]
+	public partial class PERSONVIEW
+	{
+		[Column, NotNull    ] public int     PersonID   { get; set; } // INTEGER
+		[Column, NotNull    ] public string  FirstName  { get; set; } = null!; // VARCHAR(50)
+		[Column, NotNull    ] public string  LastName   { get; set; } = null!; // VARCHAR(50)
+		[Column,    Nullable] public string? MiddleName { get; set; } // VARCHAR(50)
+		[Column, NotNull    ] public char    Gender     { get; set; } // CHARACTER(1)
+	}
+
 	[Table(Schema="DB2INST1", Name="Parent")]
 	public partial class Parent
 	{
@@ -302,16 +312,6 @@ namespace Default.DB2
 		public Patient? Patient { get; set; }
 
 		#endregion
-	}
-
-	[Table(Schema="DB2INST1", Name="PERSONVIEW", IsView=true)]
-	public partial class PERSONVIEW
-	{
-		[Column, NotNull    ] public int     PersonID   { get; set; } // INTEGER
-		[Column, NotNull    ] public string  FirstName  { get; set; } = null!; // VARCHAR(50)
-		[Column, NotNull    ] public string  LastName   { get; set; } = null!; // VARCHAR(50)
-		[Column,    Nullable] public string? MiddleName { get; set; } // VARCHAR(50)
-		[Column, NotNull    ] public char    Gender     { get; set; } // CHARACTER(1)
 	}
 
 	[Table(Schema="DB2INST1", Name="SLAVETABLE")]
