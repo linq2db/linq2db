@@ -436,6 +436,9 @@ namespace LinqToDB.Internal.DataProvider
 				case DataType.VarNumeric     : dbType = DbType.VarNumeric;            break;
 				case DataType.SmallDecFloat  : dbType = DbType.Decimal;               break;
 				case DataType.DecFloat       : dbType = DbType.Decimal;               break;
+				case DataType.Half           : dbType = DbType.Single;               break;
+				case DataType.Int128         : dbType = DbType.Decimal;               break;
+				case DataType.UInt128        : dbType = DbType.Decimal;               break;
 				default                      : return;
 			}
 

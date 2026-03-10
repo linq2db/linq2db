@@ -1109,6 +1109,25 @@ namespace LinqToDB.Mapping
 			SetConvertExpression((DateTimeOffset? v) =>                 v!.Value.ToString(info.DateTimeFormat));
 			SetConvertExpression((string  s) =>                   DateTimeOffset.Parse(s, info.DateTimeFormat));
 			SetConvertExpression((string  s) =>  (DateTimeOffset?)DateTimeOffset.Parse(s, info.DateTimeFormat));
+
+#if NET5_0_OR_GREATER
+			SetConvertExpression((Half      v) =>           v.       ToString(info.NumberFormat));
+			SetConvertExpression((Half?     v) =>           v!.Value.ToString(info.NumberFormat));
+			SetConvertExpression((string    s) =>               Half.Parse(s, info.NumberFormat));
+			SetConvertExpression((string    s) =>        (Half?)Half.Parse(s, info.NumberFormat));
+#endif
+
+#if SUPPORTS_DATEONLY
+			SetConvertExpression((Int128   v) =>            v.       ToString(info.NumberFormat));
+			SetConvertExpression((Int128?  v) =>            v!.Value.ToString(info.NumberFormat));
+			SetConvertExpression((string   s) =>              Int128.Parse(s, info.NumberFormat));
+			SetConvertExpression((string   s) =>     (Int128?)Int128.Parse(s, info.NumberFormat));
+
+			SetConvertExpression((UInt128   v) =>           v.       ToString(info.NumberFormat));
+			SetConvertExpression((UInt128?  v) =>           v!.Value.ToString(info.NumberFormat));
+			SetConvertExpression((string    s) =>            UInt128.Parse(s, info.NumberFormat));
+			SetConvertExpression((string    s) =>  (UInt128?)UInt128.Parse(s, info.NumberFormat));
+#endif
 		}
 
 		#endregion
@@ -1488,6 +1507,9 @@ namespace LinqToDB.Mapping
 				SetConverter<DateOnly, string>(static v => v.ToString("yyyy-MM-dd", DateTimeFormatInfo.InvariantInfo));
 #endif
 
+#if NET5_0_OR_GREATER
+				AddScalarType(typeof(Half),            DataType.Half);
+#endif
 				ValueToSqlConverter.SetDefaults();
 			}
 
