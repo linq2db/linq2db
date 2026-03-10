@@ -35,6 +35,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		CteClause?       _currentCteClause;
 		SelectQuery?     _updateQuery;
 		ISqlTableSource? _updateTable;
+		bool             _isColumnsOptimized;
 
 		readonly SqlQueryColumnNestingCorrector _columnNestingCorrector      = new();
 		readonly SqlQueryOrderByOptimizer       _orderByOptimizer            = new();
@@ -64,19 +65,20 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 #endif
 
-			_providerFlags     = providerFlags;
-			_removeWeakJoins   = removeWeakJoins;
-			_dataOptions       = dataOptions;
-			_mappingSchema     = mappingSchema;
-			_evaluationContext = evaluationContext;
-			_root              = root;
-			_rootElement       = rootElement;
-			_dependencies      = dependencies;
-			_parentSelect      = default!;
-			_applySelect       = default!;
-			_inSubquery        = default!;
-			_updateQuery       = default!;
-			_updateTable       = default!;
+			_providerFlags      = providerFlags;
+			_removeWeakJoins    = removeWeakJoins;
+			_dataOptions        = dataOptions;
+			_mappingSchema      = mappingSchema;
+			_evaluationContext  = evaluationContext;
+			_root               = root;
+			_rootElement        = rootElement;
+			_dependencies       = dependencies;
+			_parentSelect       = default!;
+			_applySelect        = default!;
+			_inSubquery         = default!;
+			_updateQuery        = default!;
+			_updateTable        = default!;
+			_isColumnsOptimized = false;
 
 			// OUTER APPLY Queries usually may have wrong nesting in WHERE clause.
 			// Making it consistent in LINQ Translator is bad for performance and it is hard to implement task.
@@ -84,16 +86,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			//
 			if (CorrectColumnsNesting())
 			{
-				var isColumnsOptimized = false;
 				do
 				{
-					if (!isColumnsOptimized)
+					ProcessElement(_root);
+
+					if (!_isColumnsOptimized && removeWeakJoins)
 					{
 						_root = _columnOptimizerVisitor.OptimizeColumns(_root);
-						isColumnsOptimized = true;
+						_isColumnsOptimized = true;
+						continue;
 					}
-
-					ProcessElement(_root);
 
 					_orderByOptimizer.OptimizeOrderBy(_root, _providerFlags, _columnNestingCorrector);
 					if (!_orderByOptimizer.IsOptimized)
@@ -129,20 +131,21 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 			base.Cleanup();
 
-			_providerFlags     = default!;
-			_dataOptions       = default!;
-			_mappingSchema     = default!;
-			_evaluationContext = default!;
-			_root              = default!;
-			_rootElement       = default!;
-			_dependencies      = default!;
-			_parentSelect      = default!;
-			_applySelect       = default!;
-			_version           = default;
-			_isInRecursiveCte  = false;
-			_currentCteClause  = null;
-			_updateQuery       = default;
-			_updateTable       = default;
+			_providerFlags      = default!;
+			_dataOptions        = default!;
+			_mappingSchema      = default!;
+			_evaluationContext  = default!;
+			_root               = default!;
+			_rootElement        = default!;
+			_dependencies       = default!;
+			_parentSelect       = default!;
+			_applySelect        = default!;
+			_version            = default;
+			_isInRecursiveCte   = false;
+			_currentCteClause   = null;
+			_updateQuery        = default;
+			_updateTable        = default;
+			_isColumnsOptimized = false;
 
 			_columnNestingCorrector.Cleanup();
 			_orderByOptimizer.Cleanup();
@@ -2857,7 +2860,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 					isModified = isModified || modified;
 
-					if (join.JoinType is JoinType.CrossApply or JoinType.OuterApply or JoinType.FullApply or JoinType.RightApply)
+					if (_isColumnsOptimized && join.JoinType is JoinType.CrossApply or JoinType.OuterApply or JoinType.FullApply or JoinType.RightApply)
 					{
 						if (OptimizeApplyJoin(join, doNotEmulate: false))
 						{
@@ -2868,7 +2871,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					if (!_providerFlags.IsApplyJoinSupported && join.JoinType is JoinType.OuterApply || !_providerFlags.IsSupportsJoinWithoutCondition && join.Condition.IsTrue)
 					{
 						// last chance to remove apply join before finalizing query.
-						if (MoveSingleOuterJoinToSubQuery(selectQuery, join, ref doNotRemoveQueries, processMultiColumn: true, deduplicate: true, out modified))
+						if (MoveSingleOuterJoinToSubQuery(selectQuery, join, ref doNotRemoveQueries, processMultiColumn: _isColumnsOptimized, deduplicate: true, out modified))
 						{
 							table.Joins.RemoveAt(index);
 							OptimizeInnerQueries(selectQuery, doNotRemoveQueries);
