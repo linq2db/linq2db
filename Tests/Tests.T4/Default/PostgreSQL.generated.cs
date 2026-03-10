@@ -63,9 +63,9 @@ namespace Default.PostgreSQL
 		public ITable<TestMerge1>                     TestMerge1                { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>                     TestMerge2                { get { return this.GetTable<TestMerge2>(); } }
 		public ITable<TestMergeIdentity>              TestMergeIdentities       { get { return this.GetTable<TestMergeIdentity>(); } }
+		public ITable<test_schema_TestSchemaIdentity> TestSchemaIdentities      { get { return this.GetTable<test_schema_TestSchemaIdentity>(); } }
 		public ITable<test_schema_Testsamename>       Testsamenames             { get { return this.GetTable<test_schema_Testsamename>(); } }
 		public ITable<Testsamename>                   Testsamenames0            { get { return this.GetTable<Testsamename>(); } }
-		public ITable<test_schema_TestSchemaIdentity> TestSchemaIdentities      { get { return this.GetTable<test_schema_TestSchemaIdentity>(); } }
 		public ITable<test_schema_Testserialidentity> Testserialidentities      { get { return this.GetTable<test_schema_Testserialidentity>(); } }
 
 		#endregion
@@ -589,6 +589,12 @@ namespace Default.PostgreSQL
 		[Column,     Nullable] public int? Field { get; set; } // integer
 	}
 
+	[Table(Schema="test_schema", Name="TestSchemaIdentity")]
+	public partial class test_schema_TestSchemaIdentity
+	{
+		[PrimaryKey, Identity] public int ID { get; set; } // integer
+	}
+
 	[Table(Schema="test_schema", Name="testsamename")]
 	public partial class test_schema_Testsamename
 	{
@@ -599,12 +605,6 @@ namespace Default.PostgreSQL
 	public partial class Testsamename
 	{
 		[Column("id"), PrimaryKey, Identity] public int Id { get; set; } // integer
-	}
-
-	[Table(Schema="test_schema", Name="TestSchemaIdentity")]
-	public partial class test_schema_TestSchemaIdentity
-	{
-		[PrimaryKey, Identity] public int ID { get; set; } // integer
 	}
 
 	[Table(Schema="test_schema", Name="testserialidentity")]
@@ -857,6 +857,12 @@ namespace Default.PostgreSQL
 				t.Id == Id);
 		}
 
+		public static test_schema_TestSchemaIdentity? Find(this ITable<test_schema_TestSchemaIdentity> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
 		public static test_schema_Testsamename? Find(this ITable<test_schema_Testsamename> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
@@ -867,12 +873,6 @@ namespace Default.PostgreSQL
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
-		}
-
-		public static test_schema_TestSchemaIdentity? Find(this ITable<test_schema_TestSchemaIdentity> table, int ID)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID == ID);
 		}
 
 		public static test_schema_Testserialidentity? Find(this ITable<test_schema_Testserialidentity> table, int ID)

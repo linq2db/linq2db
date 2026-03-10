@@ -28,14 +28,15 @@
 		<None Include="*.txt" Pack="true" PackagePath="contentFiles\any\any\LinqToDB.Templates\" />
 		<None Include="*.txt" Pack="true" PackagePath="content\LinqToDB.Templates\" />
 
-		<None Include="$(ToolsPath)/linq2db.dll"								   Pack="true" PackagePath="tools"                     Visible="false" />
-		<None Include="$(ToolsPath)/linq2db.Tools.dll"							   Pack="true" PackagePath="tools"                     Visible="false" />
-		<None Include="$(ToolsPath)/linq2db.Scaffold.dll"						   Pack="true" PackagePath="tools"                     Visible="false" />
-		<None Include="$(ToolsPath)/Humanizer.dll"								   Pack="true" PackagePath="tools"                     Visible="false" />
-		<None Include="$(ToolsPath)/System.Data.SQLite.dll"                        Pack="true" PackagePath="tools"                     Visible="false" />
-		<None Include="$(ToolsPath)/sds\runtimes\win-x64\native\e_sqlite3.dll"     Pack="true" PackagePath="runtimes\win-x64\native"   Visible="false" />
-		<None Include="$(ToolsPath)/sds\runtimes\win-x86\native\e_sqlite3.dll"     Pack="true" PackagePath="runtimes\win-x86\native"   Visible="false" />
-		<None Include="$(ToolsPath)/sds\runtimes\win-arm64\native\e_sqlite3.dll"   Pack="true" PackagePath="runtimes\win-arm64\native" Visible="false" />
+		<None Include="$(ToolsPath)/linq2db.dll"								   Pack="true" PackagePath="tools"                           Visible="false" />
+		<None Include="$(ToolsPath)/linq2db.Tools.dll"							   Pack="true" PackagePath="tools"                           Visible="false" />
+		<None Include="$(ToolsPath)/linq2db.Scaffold.dll"						   Pack="true" PackagePath="tools"                           Visible="false" />
+		<None Include="$(ToolsPath)/Humanizer.dll"								   Pack="true" PackagePath="tools"                           Visible="false" />
+		<None Include="$(ToolsPath)/Microsoft.Bcl.AsyncInterfaces.dll"			   Pack="true" PackagePath="tools"                           Visible="false" />
+		<None Include="$(ToolsPath)/System.Data.SQLite.dll"                        Pack="true" PackagePath="tools"                           Visible="false" />
+		<None Include="$(ToolsPath)/sds/runtimes/win-x64/native/e_sqlite3.dll"     Pack="true" PackagePath="tools\runtimes\win-x64\native"   Visible="false" />
+		<None Include="$(ToolsPath)/sds/runtimes/win-x86/native/e_sqlite3.dll"     Pack="true" PackagePath="tools\runtimes\win-x86\native"   Visible="false" />
+		<None Include="$(ToolsPath)/sds/runtimes/win-arm64/native/e_sqlite3.dll"   Pack="true" PackagePath="tools\runtimes\win-arm64\native" Visible="false" />
 	</ItemGroup>
 
 	<ItemGroup>

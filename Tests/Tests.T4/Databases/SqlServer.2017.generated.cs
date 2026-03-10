@@ -42,10 +42,10 @@ namespace Sql2017
 		public ITable<Order>                      Orders                       { get { return this.GetTable<Order>(); } }
 		public ITable<OrderDetail>                OrderDetails                 { get { return this.GetTable<OrderDetail>(); } }
 		public ITable<OrderDetailsExtended>       OrderDetailsExtendeds        { get { return this.GetTable<OrderDetailsExtended>(); } }
-		public ITable<OrdersQry>                  OrdersQries                  { get { return this.GetTable<OrdersQry>(); } }
 		public ITable<OrderSubtotal>              OrderSubtotals               { get { return this.GetTable<OrderSubtotal>(); } }
-		public ITable<ProductsAboveAveragePrice>  ProductsAboveAveragePrices   { get { return this.GetTable<ProductsAboveAveragePrice>(); } }
+		public ITable<OrdersQry>                  OrdersQries                  { get { return this.GetTable<OrdersQry>(); } }
 		public ITable<ProductSalesFor1997>        ProductSalesFor1997          { get { return this.GetTable<ProductSalesFor1997>(); } }
+		public ITable<ProductsAboveAveragePrice>  ProductsAboveAveragePrices   { get { return this.GetTable<ProductsAboveAveragePrice>(); } }
 		public ITable<ProductsByCategory>         ProductsByCategories         { get { return this.GetTable<ProductsByCategory>(); } }
 		public ITable<QuarterlyOrder>             QuarterlyOrders              { get { return this.GetTable<QuarterlyOrder>(); } }
 		public ITable<Region>                     Regions                      { get { return this.GetTable<Region>(); } }
@@ -401,6 +401,13 @@ namespace Sql2017
 		[Column(DbType="money",        DataType=LinqToDB.DataType.Money),                  Nullable] public decimal? ExtendedPrice { get; set; } // money
 	}
 
+	[Table("Order Subtotals", IsView=true)]
+	public partial class OrderSubtotal
+	{
+		[Column(DbType="int",   DataType=LinqToDB.DataType.Int32), NotNull    ] public int      OrderID  { get; set; } // int
+		[Column(DbType="money", DataType=LinqToDB.DataType.Money),    Nullable] public decimal? Subtotal { get; set; } // money
+	}
+
 	[Table("Orders Qry", IsView=true)]
 	public partial class OrdersQry
 	{
@@ -426,11 +433,12 @@ namespace Sql2017
 		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15),    Nullable] public string?   Country        { get; set; } // nvarchar(15)
 	}
 
-	[Table("Order Subtotals", IsView=true)]
-	public partial class OrderSubtotal
+	[Table("Product Sales for 1997", IsView=true)]
+	public partial class ProductSalesFor1997
 	{
-		[Column(DbType="int",   DataType=LinqToDB.DataType.Int32), NotNull    ] public int      OrderID  { get; set; } // int
-		[Column(DbType="money", DataType=LinqToDB.DataType.Money),    Nullable] public decimal? Subtotal { get; set; } // money
+		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15), NotNull    ] public string   CategoryName { get; set; } = null!; // nvarchar(15)
+		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40), NotNull    ] public string   ProductName  { get; set; } = null!; // nvarchar(40)
+		[Column(DbType="money",        DataType=LinqToDB.DataType.Money),                  Nullable] public decimal? ProductSales { get; set; } // money
 	}
 
 	[Table("Products Above Average Price", IsView=true)]
@@ -438,14 +446,6 @@ namespace Sql2017
 	{
 		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40), NotNull    ] public string   ProductName { get; set; } = null!; // nvarchar(40)
 		[Column(DbType="money",        DataType=LinqToDB.DataType.Money),                  Nullable] public decimal? UnitPrice   { get; set; } // money
-	}
-
-	[Table("Product Sales for 1997", IsView=true)]
-	public partial class ProductSalesFor1997
-	{
-		[Column(DbType="nvarchar(15)", DataType=LinqToDB.DataType.NVarChar, Length=15), NotNull    ] public string   CategoryName { get; set; } = null!; // nvarchar(15)
-		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40), NotNull    ] public string   ProductName  { get; set; } = null!; // nvarchar(40)
-		[Column(DbType="money",        DataType=LinqToDB.DataType.Money),                  Nullable] public decimal? ProductSales { get; set; } // money
 	}
 
 	[Table("Products by Category", IsView=true)]
@@ -1145,7 +1145,7 @@ namespace Sql2017
 		public ITable<Member>                  Members                  { get { return this.GetTable<Member>(); } }
 		public ITable<NameTest>                NameTests                { get { return this.GetTable<NameTest>(); } }
 		/// <summary>
-		/// This is Parent table
+		/// This &lt;тест&gt; is Parent table
 		/// </summary>
 		public ITable<Parent>                  Parents                  { get { return this.GetTable<Parent>(); } }
 		public ITable<ParentChildView>         ParentChildViews         { get { return this.GetTable<ParentChildView>(); } }
@@ -1202,10 +1202,10 @@ namespace Sql2017
 		#region GetParentByID
 
 		/// <summary>
-		/// This is &lt;test&gt; table function!
+		/// This is &lt;тест&gt; table function!
 		/// </summary>
 		/// <param name="id">
-		/// This is &lt;test&gt; table function parameter!
+		/// This is &lt;тест&gt; table function parameter!
 		/// </param>
 		[Sql.TableFunction(Name="GetParentByID")]
 		public ITable<Parent> GetParentByID(int? @id)
@@ -1300,7 +1300,7 @@ namespace Sql2017
 	{
 		[Column(       DbType="int", DataType=LinqToDB.DataType.Int32), Nullable            ] public int? ParentID { get; set; } // int
 		/// <summary>
-		/// This ChildID column
+		/// This &lt;тест&gt; ChildID column
 		/// </summary>
 		[Column(       DbType="int", DataType=LinqToDB.DataType.Int32), Nullable            ] public int? ChildID  { get; set; } // int
 		[Column("_ID", DbType="int", DataType=LinqToDB.DataType.Int32), PrimaryKey, Identity] public int  Id       { get; set; } // int
@@ -1422,7 +1422,7 @@ namespace Sql2017
 	public partial class Issue1144
 	{
 		/// <summary>
-		/// Column description
+		/// Column &lt;тест&gt; description
 		/// </summary>
 		[Column("id", DbType="int", DataType=LinqToDB.DataType.Int32), PrimaryKey, NotNull] public int Id { get; set; } // int
 	}
@@ -1468,7 +1468,7 @@ namespace Sql2017
 	}
 
 	/// <summary>
-	/// This is Parent table
+	/// This &lt;тест&gt; is Parent table
 	/// </summary>
 	[Table("Parent")]
 	public partial class Parent
@@ -1724,10 +1724,10 @@ namespace Sql2017
 		#region ExecuteProcStringParameters
 
 		/// <summary>
-		/// This is &lt;test&gt; procedure!
+		/// This is &lt;тест&gt; procedure!
 		/// </summary>
 		/// <param name="input">
-		/// This is &lt;test&gt; procedure parameter!
+		/// This is &lt;тест&gt; procedure parameter!
 		/// </param>
 		public static List<ExecuteProcStringParametersResult> ExecuteProcStringParameters(this TestDataDB dataConnection, int? @input, ref int? @output)
 		{
@@ -2227,10 +2227,10 @@ namespace Sql2017
 		#region ScalarFunction
 
 		/// <summary>
-		/// This is &lt;test&gt; scalar function!
+		/// This is &lt;тест&gt; scalar function!
 		/// </summary>
 		/// <param name="value">
-		/// This is &lt;test&gt; scalar function parameter!
+		/// This is &lt;тест&gt; scalar function parameter!
 		/// </param>
 		[Sql.Function(Name="[ScalarFunction]", ServerSideOnly=true)]
 		public static int? ScalarFunction(int? @value)

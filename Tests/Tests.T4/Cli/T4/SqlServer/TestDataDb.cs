@@ -70,7 +70,7 @@ namespace Cli.T4.SqlServer
 		public ITable<Member>                   Members                  => this.GetTable<Member>();
 		public ITable<NameTest>                 NameTests                => this.GetTable<NameTest>();
 		/// <summary>
-		/// This is Parent table
+		/// This &lt;тест&gt; is Parent table
 		/// </summary>
 		public ITable<Parent>                   Parents                  => this.GetTable<Parent>();
 		public ITable<Patient>                  Patients                 => this.GetTable<Patient>();
@@ -99,10 +99,10 @@ namespace Cli.T4.SqlServer
 
 		#region GetParentById
 		/// <summary>
-		/// This is &lt;test&gt; table function!
+		/// This is &lt;тест&gt; table function!
 		/// </summary>
 		/// <param name="id">
-		/// This is &lt;test&gt; table function parameter!
+		/// This is &lt;тест&gt; table function parameter!
 		/// </param>
 		[Sql.TableFunction("GetParentByID", Schema = "dbo")]
 		public ITable<Parent> GetParentById(int? id)
@@ -363,10 +363,10 @@ namespace Cli.T4.SqlServer
 
 		#region ExecuteProcStringParameters
 		/// <summary>
-		/// This is &lt;test&gt; procedure!
+		/// This is &lt;тест&gt; procedure!
 		/// </summary>
 		/// <param name="input">
-		/// This is &lt;test&gt; procedure parameter!
+		/// This is &lt;тест&gt; procedure parameter!
 		/// </param>
 		public static IEnumerable<ExecuteProcStringParametersResult> ExecuteProcStringParameters(this TestDataDB dataConnection, int? input, ref int? output)
 		{
@@ -838,10 +838,10 @@ namespace Cli.T4.SqlServer
 		#region Scalar Functions
 		#region ScalarFunction
 		/// <summary>
-		/// This is &lt;test&gt; scalar function!
+		/// This is &lt;тест&gt; scalar function!
 		/// </summary>
 		/// <param name="value">
-		/// This is &lt;test&gt; scalar function parameter!
+		/// This is &lt;тест&gt; scalar function parameter!
 		/// </param>
 		[Sql.Function("[dbo].[ScalarFunction]", ServerSideOnly = true)]
 		public static int? ScalarFunction(int? @value)
@@ -947,7 +947,7 @@ namespace Cli.T4.SqlServer
 	{
 		[Column("ParentID"                                                                                  )] public int? ParentID { get; set; } // int
 		/// <summary>
-		/// This ChildID column
+		/// This &lt;тест&gt; ChildID column
 		/// </summary>
 		[Column("ChildID"                                                                                   )] public int? ChildID  { get; set; } // int
 		[Column("_ID"     , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int  ID       { get; set; } // int
@@ -1073,7 +1073,7 @@ namespace Cli.T4.SqlServer
 	public partial class Issue1144
 	{
 		/// <summary>
-		/// Column description
+		/// Column &lt;тест&gt; description
 		/// </summary>
 		[Column("id", IsPrimaryKey = true)] public int Id { get; set; } // int
 	}
@@ -1117,7 +1117,7 @@ namespace Cli.T4.SqlServer
 	}
 
 	/// <summary>
-	/// This is Parent table
+	/// This &lt;тест&gt; is Parent table
 	/// </summary>
 	[Table("Parent", Schema = "dbo")]
 	public partial class Parent
