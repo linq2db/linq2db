@@ -30,7 +30,7 @@ namespace LinqToDB
 		public static ITable<T> TableID<T>(this ITable<T> table, [SqlQueryDependent] string? id)
 			where T : notnull
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			ArgumentNullException.ThrowIfNull(table);
 
 			var result = ((ITableMutable<T>)table).ChangeTableID(id);
 			return result;
@@ -55,8 +55,8 @@ namespace LinqToDB
 		public static ITable<T> TableName<T>(this ITable<T> table, [SqlQueryDependent] string name)
 			where T : notnull
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
-			if (name == null) throw new ArgumentNullException(nameof(name));
+			ArgumentNullException.ThrowIfNull(table);
+			ArgumentNullException.ThrowIfNull(name);
 
 			var result = ((ITableMutable<T>)table).ChangeTableName(name);
 			return result;
@@ -91,7 +91,7 @@ namespace LinqToDB
 		public static ITable<T> DatabaseName<T>(this ITable<T> table, [SqlQueryDependent] string? name)
 			where T : notnull
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			ArgumentNullException.ThrowIfNull(table);
 
 			var result = ((ITableMutable<T>)table).ChangeDatabaseName(name);
 			return result;
@@ -120,7 +120,7 @@ namespace LinqToDB
 		public static ITable<T> ServerName<T>(this ITable<T> table, [SqlQueryDependent] string? name)
 			where T : notnull
 		{
-			if (table == null) throw new ArgumentNullException(nameof(table));
+			ArgumentNullException.ThrowIfNull(table);
 
 			var result = ((ITableMutable<T>)table).ChangeServerName(name);
 			return result;
@@ -182,7 +182,7 @@ namespace LinqToDB
 		public static ITable<T> WithTableExpression<T>(this ITable<T> table, [SqlQueryDependent] string expression)
 			where T : notnull
 		{
-			if (expression == null) throw new ArgumentNullException(nameof(expression));
+			ArgumentNullException.ThrowIfNull(expression);
 
 			var newTable = new Table<T>(table.DataContext,
 				Expression.Call(

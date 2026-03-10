@@ -100,30 +100,33 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		{
 			var dataConnection = table.GetDataConnection();
 
-			if (((DB2DataProvider)dataConnection.DataProvider).Version == DB2Version.zOS)
-				return MultipleRowsCopy2(table, options, source, " FROM SYSIBM.SYSDUMMY1");
-
-			return MultipleRowsCopy1(table, options, source);
+			return ((DB2DataProvider)dataConnection.DataProvider).Version switch
+			{
+				DB2Version.zOS => MultipleRowsCopy2(table, options, source, " FROM SYSIBM.SYSDUMMY1"),
+				_ => MultipleRowsCopy1(table, options, source),
+			};
 		}
 
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var dataConnection = table.GetDataConnection();
 
-			if (((DB2DataProvider)dataConnection.DataProvider).Version == DB2Version.zOS)
-				return MultipleRowsCopy2Async(table, options, source, " FROM SYSIBM.SYSDUMMY1", cancellationToken);
-
-			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
+			return ((DB2DataProvider)dataConnection.DataProvider).Version switch
+			{
+				DB2Version.zOS => MultipleRowsCopy2Async(table, options, source, " FROM SYSIBM.SYSDUMMY1", cancellationToken),
+				_ => MultipleRowsCopy1Async(table, options, source, cancellationToken),
+			};
 		}
 
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var dataConnection = table.GetDataConnection();
 
-			if (((DB2DataProvider)dataConnection.DataProvider).Version == DB2Version.zOS)
-				return MultipleRowsCopy2Async(table, options, source, " FROM SYSIBM.SYSDUMMY1", cancellationToken);
-
-			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
+			return ((DB2DataProvider)dataConnection.DataProvider).Version switch
+			{
+				DB2Version.zOS => MultipleRowsCopy2Async(table, options, source, " FROM SYSIBM.SYSDUMMY1", cancellationToken),
+				_ => MultipleRowsCopy1Async(table, options, source, cancellationToken),
+			};
 		}
 	}
 }

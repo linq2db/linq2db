@@ -18,7 +18,7 @@ namespace LinqToDB.Internal.DataProvider.SqlCe
 
 		#region LIKE
 
-		private static string[] LikeSqlCeCharactersToEscape = { "_", "%" };
+		private static readonly string[] LikeSqlCeCharactersToEscape = { "_", "%" };
 
 		public override string[] LikeCharactersToEscape => LikeSqlCeCharactersToEscape;
 

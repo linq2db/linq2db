@@ -8,11 +8,11 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class WhereBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable();
+			=> call.IsQueryable;
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var isHaving  = methodCall.Method.Name == "Having";
+			var isHaving  = string.Equals(methodCall.Method.Name, "Having", System.StringComparison.Ordinal);
 			var sequenceResult  = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
 			if (sequenceResult.BuildContext == null)

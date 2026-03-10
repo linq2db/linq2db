@@ -32,36 +32,34 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using (db.CreateLocalTable<BackgroundTask>())
 			{
-				using (db.CreateLocalTable<BackgroundTask>())
+				var personId = 1;
+
+				db.Insert(new BackgroundTask
 				{
-					var personId = 1;
+					PersonID = 1,
+					DurationID = 2,
+					ID = 3,
+					DurationInterval = 4
+				});
 
-					db.Insert(new BackgroundTask
-					{
-						PersonID = 1,
-						DurationID = 2,
-						ID = 3,
-						DurationInterval = 4
-					});
+				IQueryable<IBackgroundTask> tasks = db.GetTable<BackgroundTask>();
 
-					IQueryable<IBackgroundTask> tasks = db.GetTable<BackgroundTask>();
+				var query = from task in tasks
+							where task.PersonID == personId
+							select task;
 
-					var query = from task in tasks
-						where task.PersonID == personId
-						select task;
+				var items = query.ToList();
 
-					var items = query.ToList();
-
-					Assert.That(items, Has.Count.EqualTo(1));
-					using (Assert.EnterMultipleScope())
-					{
-						Assert.That(items[0].PersonID, Is.EqualTo(1));
-						Assert.That(items[0].DurationID, Is.EqualTo(2));
-						Assert.That(items[0].ID, Is.EqualTo(3));
-						Assert.That(items[0].DurationInterval, Is.EqualTo(4));
-					}
+				Assert.That(items, Has.Count.EqualTo(1));
+				using (Assert.EnterMultipleScope())
+				{
+					Assert.That(items[0].PersonID, Is.EqualTo(1));
+					Assert.That(items[0].DurationID, Is.EqualTo(2));
+					Assert.That(items[0].ID, Is.EqualTo(3));
+					Assert.That(items[0].DurationInterval, Is.EqualTo(4));
 				}
 			}
 		}

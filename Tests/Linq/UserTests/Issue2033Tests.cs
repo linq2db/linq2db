@@ -697,8 +697,8 @@ namespace Tests.UserTests
 						{ customFields.Handle, customFields.Attribute, customFields.Value }
 					join router in wipDB.Router
 						on sfcRouter.RouterBo equals router.Handle
-					where sfcRouter.Completed == "false" && sfcRouter.InUse == "true" ||
-						  sfcRouter.Completed == "true" && router.RouterType == "U"
+					where (sfcRouter.Completed == "false" && sfcRouter.InUse == "true") ||
+						  (sfcRouter.Completed == "true" && router.RouterType == "U")
 					select new FilterByTestOperationOutput
 					{
 						Parent = inputItem,

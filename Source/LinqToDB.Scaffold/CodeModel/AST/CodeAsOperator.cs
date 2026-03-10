@@ -3,7 +3,7 @@
 namespace LinqToDB.CodeModel
 {
 	/// <summary>
-	/// Type convert expression using <c>as</c> operator.
+	/// Type convert expression using <see langword="as"/> operator.
 	/// </summary>
 	public sealed class CodeAsOperator : ICodeExpression
 	{

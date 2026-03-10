@@ -51,7 +51,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			var newElement     = new SqlCteTable(element, newTableFields, newCteClause);
 
 			NotifyReplaced(newCteClause, element.Cte);
-			NotifyReplaced(newElement,     element);
+			NotifyReplaced(newElement,   element);
 
 			var body = Visit(element.Cte.Body);
 

@@ -54,9 +54,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
 			where TTarget: class
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (target == null) throw new ArgumentNullException(nameof(target));
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(setter);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -102,9 +102,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter)
 			where TTarget : class
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (target == null) throw new ArgumentNullException(nameof(target));
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(setter);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -178,10 +178,10 @@ namespace LinqToDB
 			                Expression<Func<TSource,TTarget,TTarget,TOutput>> outputExpression)
 			where TTarget : class
 		{
-			if (source ==           null) throw new ArgumentNullException(nameof(source));
-			if (target ==           null) throw new ArgumentNullException(nameof(target));
-			if (setter ==           null) throw new ArgumentNullException(nameof(setter));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(setter);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -237,10 +237,10 @@ namespace LinqToDB
 							Expression<Func<TSource, TTarget, TTarget, TOutput>> outputExpression)
 			where TTarget : class
 		{
-			if (source           == null) throw new ArgumentNullException(nameof(source));
-			if (target           == null) throw new ArgumentNullException(nameof(target));
-			if (setter           == null) throw new ArgumentNullException(nameof(setter));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(setter);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -308,10 +308,10 @@ namespace LinqToDB
 			                ITable<TTarget>                   outputTable)
 			where TTarget : class
 		{
-			if (source ==      null) throw new ArgumentNullException(nameof(source));
-			if (target ==      null) throw new ArgumentNullException(nameof(target));
-			if (setter ==      null) throw new ArgumentNullException(nameof(setter));
-			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(setter);
+			ArgumentNullException.ThrowIfNull(outputTable);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -361,10 +361,10 @@ namespace LinqToDB
 			                CancellationToken                 token = default)
 			where TTarget : class
 		{
-			if (source ==      null) throw new ArgumentNullException(nameof(source));
-			if (target ==      null) throw new ArgumentNullException(nameof(target));
-			if (setter ==      null) throw new ArgumentNullException(nameof(setter));
-			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(setter);
+			ArgumentNullException.ThrowIfNull(outputTable);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -420,11 +420,11 @@ namespace LinqToDB
 			where TTarget : class
 			where TOutput : class
 		{
-			if (source ==           null) throw new ArgumentNullException(nameof(source));
-			if (target ==           null) throw new ArgumentNullException(nameof(target));
-			if (setter ==           null) throw new ArgumentNullException(nameof(setter));
-			if (outputTable ==      null) throw new ArgumentNullException(nameof(outputTable));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(setter);
+			ArgumentNullException.ThrowIfNull(outputTable);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -483,11 +483,11 @@ namespace LinqToDB
 			where TTarget : class
 			where TOutput : class
 		{
-			if (source ==           null) throw new ArgumentNullException(nameof(source));
-			if (target ==           null) throw new ArgumentNullException(nameof(target));
-			if (setter ==           null) throw new ArgumentNullException(nameof(setter));
-			if (outputTable ==      null) throw new ArgumentNullException(nameof(outputTable));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(setter);
+			ArgumentNullException.ThrowIfNull(outputTable);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -541,9 +541,9 @@ namespace LinqToDB
 			                Expression<Func<TSource,TTarget>> target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (target == null) throw new ArgumentNullException(nameof(target));
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(setter);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -591,9 +591,9 @@ namespace LinqToDB
 							Expression<Func<TSource, TTarget>> target,
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (target == null) throw new ArgumentNullException(nameof(target));
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(setter);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -668,10 +668,10 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource,TTarget>>                 setter,
 							Expression<Func<TSource,TTarget,TTarget,TOutput>> outputExpression)
 		{
-			if (source ==           null) throw new ArgumentNullException(nameof(source));
-			if (target ==           null) throw new ArgumentNullException(nameof(target));
-			if (setter ==           null) throw new ArgumentNullException(nameof(setter));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(setter);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -729,10 +729,10 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
 							Expression<Func<TSource, TTarget, TTarget, TOutput>> outputExpression)
 		{
-			if (source           == null) throw new ArgumentNullException(nameof(source));
-			if (target           == null) throw new ArgumentNullException(nameof(target));
-			if (setter           == null) throw new ArgumentNullException(nameof(setter));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(setter);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -802,10 +802,10 @@ namespace LinqToDB
 							ITable<TTarget>					  outputTable)
 			where TTarget : class
 		{
-			if (source ==      null) throw new ArgumentNullException(nameof(source));
-			if (target ==      null) throw new ArgumentNullException(nameof(target));
-			if (setter ==      null) throw new ArgumentNullException(nameof(setter));
-			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(setter);
+			ArgumentNullException.ThrowIfNull(outputTable);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -858,10 +858,10 @@ namespace LinqToDB
 							CancellationToken                 token = default)
 			where TTarget : class
 		{
-			if (source ==      null) throw new ArgumentNullException(nameof(source));
-			if (target ==      null) throw new ArgumentNullException(nameof(target));
-			if (setter ==      null) throw new ArgumentNullException(nameof(setter));
-			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(setter);
+			ArgumentNullException.ThrowIfNull(outputTable);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -919,11 +919,11 @@ namespace LinqToDB
 							Expression<Func<TSource,TTarget,TTarget,TOutput>> outputExpression)
 			where TOutput : class
 		{
-			if (source ==           null) throw new ArgumentNullException(nameof(source));
-			if (target ==           null) throw new ArgumentNullException(nameof(target));
-			if (setter ==           null) throw new ArgumentNullException(nameof(setter));
-			if (outputTable ==      null) throw new ArgumentNullException(nameof(outputTable));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(setter);
+			ArgumentNullException.ThrowIfNull(outputTable);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -984,11 +984,11 @@ namespace LinqToDB
 							CancellationToken                                 token = default)
 			where TOutput : class
 		{
-			if (source ==           null) throw new ArgumentNullException(nameof(source));
-			if (target ==           null) throw new ArgumentNullException(nameof(target));
-			if (setter ==           null) throw new ArgumentNullException(nameof(setter));
-			if (outputTable ==      null) throw new ArgumentNullException(nameof(outputTable));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(setter);
+			ArgumentNullException.ThrowIfNull(outputTable);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -1036,8 +1036,8 @@ namespace LinqToDB
 			           this IQueryable<T>         source,
 			[InstantHandle] Expression<Func<T,T>> setter)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(setter);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -1077,8 +1077,8 @@ namespace LinqToDB
 					   this IQueryable<T> source,
 			[InstantHandle] Expression<Func<T, T>> setter)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(setter);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -1144,9 +1144,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T,T>>         setter,
 			                Expression<Func<T,T,TOutput>> outputExpression)
 		{
-			if (source ==           null) throw new ArgumentNullException(nameof(source));
-			if (setter ==           null) throw new ArgumentNullException(nameof(setter));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(setter);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -1197,9 +1197,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T, T>> setter,
 							Expression<Func<T, T, TOutput>> outputExpression)
 		{
-			if (source           == null) throw new ArgumentNullException(nameof(source));
-			if (setter           == null) throw new ArgumentNullException(nameof(setter));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(setter);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -1259,9 +1259,9 @@ namespace LinqToDB
 			                ITable<T>             outputTable)
 			where T : class
 		{
-			if (source      == null) throw new ArgumentNullException(nameof(source));
-			if (setter      == null) throw new ArgumentNullException(nameof(setter));
-			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(setter);
+			ArgumentNullException.ThrowIfNull(outputTable);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -1306,9 +1306,9 @@ namespace LinqToDB
 			                CancellationToken     token = default)
 			where T : class
 		{
-			if (source      == null) throw new ArgumentNullException(nameof(source));
-			if (setter      == null) throw new ArgumentNullException(nameof(setter));
-			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(setter);
+			ArgumentNullException.ThrowIfNull(outputTable);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -1359,10 +1359,10 @@ namespace LinqToDB
 			                Expression<Func<T,T,TOutput>> outputExpression)
 			where TOutput : class
 		{
-			if (source           == null) throw new ArgumentNullException(nameof(source));
-			if (setter           == null) throw new ArgumentNullException(nameof(setter));
-			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(setter);
+			ArgumentNullException.ThrowIfNull(outputTable);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -1416,10 +1416,10 @@ namespace LinqToDB
 			                CancellationToken             token = default)
 			where TOutput : class
 		{
-			if (source           == null) throw new ArgumentNullException(nameof(source));
-			if (setter           == null) throw new ArgumentNullException(nameof(setter));
-			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(setter);
+			ArgumentNullException.ThrowIfNull(outputTable);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -1460,7 +1460,7 @@ namespace LinqToDB
 		[LinqTunnel, Pure]
 		public static IEnumerable<UpdateOutput<T>> UpdateWithOutput<T>(this IUpdatable<T> source)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(source);
 
 			var query = ((Updatable<T>)source).Query;
 			var currentSource = query.GetLinqToDBSource();
@@ -1495,7 +1495,7 @@ namespace LinqToDB
 		public static IAsyncEnumerable<UpdateOutput<T>> UpdateWithOutputAsync<T>(
 					   this IUpdatable<T> source)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(source);
 
 			var query = ((Updatable<T>)source).Query;
 			var currentSource = query.GetLinqToDBSource();
@@ -1554,8 +1554,8 @@ namespace LinqToDB
 			this IUpdatable<T>            source,
 			Expression<Func<T,T,TOutput>> outputExpression)
 		{
-			if (source           == null) throw new ArgumentNullException(nameof(source));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var query         = ((Updatable<T>)source).Query;
 			var currentSource = query.GetLinqToDBSource();
@@ -1600,8 +1600,8 @@ namespace LinqToDB
 					   this IUpdatable<T> source,
 							Expression<Func<T, T, TOutput>> outputExpression)
 		{
-			if (source           == null) throw new ArgumentNullException(nameof(source));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var query = ((Updatable<T>)source).Query;
 			var currentSource = query.GetLinqToDBSource();
@@ -1654,8 +1654,8 @@ namespace LinqToDB
 			                ITable<T>             outputTable)
 			where T : class
 		{
-			if (source      == null) throw new ArgumentNullException(nameof(source));
-			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(outputTable);
 
 			var query = ((Updatable<T>)source).Query;
 			var currentSource = query.GetLinqToDBSource();
@@ -1694,8 +1694,8 @@ namespace LinqToDB
 			                CancellationToken     token = default)
 			where T : class
 		{
-			if (source      == null) throw new ArgumentNullException(nameof(source));
-			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(outputTable);
 
 			var query = ((Updatable<T>)source).Query;
 			var currentSource = query.GetLinqToDBSource();
@@ -1740,9 +1740,9 @@ namespace LinqToDB
 			                Expression<Func<T,T,TOutput>> outputExpression)
 			where TOutput : class
 		{
-			if (source           == null) throw new ArgumentNullException(nameof(source));
-			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(outputTable);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var query = ((Updatable<T>)source).Query;
 			var currentSource = query.GetLinqToDBSource();
@@ -1790,9 +1790,9 @@ namespace LinqToDB
 			                CancellationToken             token = default)
 			where TOutput : class
 		{
-			if (source           == null) throw new ArgumentNullException(nameof(source));
-			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
-			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(outputTable);
+			ArgumentNullException.ThrowIfNull(outputExpression);
 
 			var query = ((Updatable<T>)source).Query;
 			var currentSource = query.GetLinqToDBSource();
@@ -1826,9 +1826,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter)
 			where TTarget : notnull
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (target == null) throw new ArgumentNullException(nameof(target));
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(setter);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -1856,9 +1856,9 @@ namespace LinqToDB
 			CancellationToken token = default)
 			where TTarget : notnull
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (target == null) throw new ArgumentNullException(nameof(target));
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(setter);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -1886,8 +1886,8 @@ namespace LinqToDB
 		/// </remarks>
 		public static int Update<T>(this IQueryable<T> source, [InstantHandle] Expression<Func<T, T>> setter)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(setter);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -1912,8 +1912,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T, T>> setter,
 			CancellationToken token = default)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(setter);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -1938,9 +1938,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T, bool>> predicate,
 			[InstantHandle] Expression<Func<T, T>> setter)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(predicate);
+			ArgumentNullException.ThrowIfNull(setter);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -1967,9 +1967,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T, T>> setter,
 			CancellationToken token = default)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(predicate);
+			ArgumentNullException.ThrowIfNull(setter);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -1989,7 +1989,7 @@ namespace LinqToDB
 		/// <returns>Number of updated records.</returns>
 		public static int Update<T>(this IUpdatable<T> source)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(source);
 
 			var query = ((Updatable<T>)source).Query;
 
@@ -2012,7 +2012,7 @@ namespace LinqToDB
 		/// <returns>Number of updated records.</returns>
 		public static Task<int> UpdateAsync<T>(this IUpdatable<T> source, CancellationToken token = default)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(source);
 
 			var q = ((Updatable<T>)source).Query;
 
@@ -2041,9 +2041,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource, TTarget>> target,
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (target == null) throw new ArgumentNullException(nameof(target));
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(setter);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -2072,9 +2072,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
 			CancellationToken token = default)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (target == null) throw new ArgumentNullException(nameof(target));
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(target);
+			ArgumentNullException.ThrowIfNull(setter);
 
 			var currentSource = source.GetLinqToDBSource();
 
@@ -2114,7 +2114,7 @@ namespace LinqToDB
 		[Pure]
 		public static IUpdatable<T> AsUpdatable<T>(this IQueryable<T> source)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			ArgumentNullException.ThrowIfNull(source);
 
 			var currentSource = source.ProcessIQueryable();
 
@@ -2150,9 +2150,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T, TV>> extract,
 			[InstantHandle] Expression<Func<T, TV>> update)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (extract == null) throw new ArgumentNullException(nameof(extract));
-			if (update == null) throw new ArgumentNullException(nameof(update));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(extract);
+			ArgumentNullException.ThrowIfNull(update);
 
 			var currentSource = source.ProcessIQueryable();
 
@@ -2188,9 +2188,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T, TV>> extract,
 			[InstantHandle] Expression<Func<T, TV>> update)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (extract == null) throw new ArgumentNullException(nameof(extract));
-			if (update == null) throw new ArgumentNullException(nameof(update));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(extract);
+			ArgumentNullException.ThrowIfNull(update);
 
 			var query = ((Updatable<T>)source).Query;
 
@@ -2226,9 +2226,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T, TV>> extract,
 			[InstantHandle] Expression<Func<TV>> update)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (extract == null) throw new ArgumentNullException(nameof(extract));
-			if (update == null) throw new ArgumentNullException(nameof(update));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(extract);
+			ArgumentNullException.ThrowIfNull(update);
 
 			var query = source.Provider.CreateQuery<T>(
 				Expression.Call(
@@ -2262,9 +2262,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T, TV>> extract,
 			[InstantHandle] Expression<Func<TV>> update)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (extract == null) throw new ArgumentNullException(nameof(extract));
-			if (update == null) throw new ArgumentNullException(nameof(update));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(extract);
+			ArgumentNullException.ThrowIfNull(update);
 
 			var query = ((Updatable<T>)source).Query;
 
@@ -2300,8 +2300,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T, TV>> extract,
 			[SkipIfConstant] TV value)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (extract == null) throw new ArgumentNullException(nameof(extract));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(extract);
 
 			var currentSource = source.ProcessIQueryable();
 
@@ -2338,8 +2338,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T, TV>> extract,
 			[SkipIfConstant] TV value)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (extract == null) throw new ArgumentNullException(nameof(extract));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(extract);
 
 			var query = ((Updatable<T>)source).Query;
 
@@ -2377,8 +2377,8 @@ namespace LinqToDB
 							this IQueryable<T> source,
 			[InstantHandle] Expression<Func<T, string>> setExpression)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (setExpression == null) throw new ArgumentNullException(nameof(setExpression));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(setExpression);
 
 			var currentSource = source.ProcessIQueryable();
 
@@ -2417,8 +2417,8 @@ namespace LinqToDB
 							this IUpdatable<T> source,
 			[InstantHandle] Expression<Func<T, string>> setExpression)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (setExpression == null) throw new ArgumentNullException(nameof(setExpression));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(setExpression);
 
 			var query = ((Updatable<T>)source).Query;
 

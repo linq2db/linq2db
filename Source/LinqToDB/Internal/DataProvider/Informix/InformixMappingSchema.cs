@@ -126,18 +126,8 @@ namespace LinqToDB.Internal.DataProvider.Informix
 
 		internal static readonly InformixMappingSchema Instance = new ();
 
-		public sealed class IfxMappingSchema : LockedMappingSchema
-		{
-			public IfxMappingSchema() : base(ProviderName.Informix, InformixProviderAdapter.GetInstance(InformixProvider.Informix).MappingSchema, Instance)
-			{
-			}
-		}
+		public sealed class IfxMappingSchema() : LockedMappingSchema(ProviderName.Informix, InformixProviderAdapter.GetInstance(InformixProvider.Informix).MappingSchema, Instance);
 
-		public sealed class DB2MappingSchema : LockedMappingSchema
-		{
-			public DB2MappingSchema() : base(ProviderName.InformixDB2, InformixProviderAdapter.GetInstance(InformixProvider.DB2).MappingSchema, Instance)
-			{
-			}
-		}
+		public sealed class DB2MappingSchema() : LockedMappingSchema(ProviderName.InformixDB2, InformixProviderAdapter.GetInstance(InformixProvider.DB2).MappingSchema, Instance);
 	}
 }

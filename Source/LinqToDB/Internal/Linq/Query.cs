@@ -34,7 +34,7 @@ namespace LinqToDB.Internal.Linq
 
 		internal abstract void Init(IBuildContext parseContext);
 
-		internal Query(IDataContext dataContext)
+		protected internal Query(IDataContext dataContext)
 		{
 			ConfigurationID         = dataContext.ConfigurationID;
 			ContextType             = dataContext.GetType();
@@ -109,7 +109,7 @@ namespace LinqToDB.Internal.Linq
 				{
 					var value1 = main(matchedQueryExpressions, dataContext, null);
 					var value2 = other(matchedQueryExpressions, dataContext, null);
-					result = value1 == null && value2 == null || value1 != null && value1.Equals(value2);
+					result = (value1 == null && value2 == null) || (value1 != null && value1.Equals(value2));
 
 					if (!result)
 						return false;

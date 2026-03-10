@@ -16,18 +16,16 @@ namespace Tests.UserTests
 		[Test]
 		public void Simple([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using (Assert.EnterMultipleScope())
 			{
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(InheritanceParent[0].GetType(), Is.EqualTo(typeof(InheritanceParentBase)));
-					Assert.That(InheritanceParent[1].GetType(), Is.EqualTo(typeof(InheritanceParent1)));
-					Assert.That(InheritanceParent[2].GetType(), Is.EqualTo(typeof(InheritanceParent2)));
-				}
-
-				AreEqual(InheritanceParent, db.InheritanceParent);
-				AreEqual(InheritanceChild,  db.InheritanceChild);
+				Assert.That(InheritanceParent[0].GetType(), Is.EqualTo(typeof(InheritanceParentBase)));
+				Assert.That(InheritanceParent[1].GetType(), Is.EqualTo(typeof(InheritanceParent1)));
+				Assert.That(InheritanceParent[2].GetType(), Is.EqualTo(typeof(InheritanceParent2)));
 			}
+
+			AreEqual(InheritanceParent, db.InheritanceParent);
+			AreEqual(InheritanceChild, db.InheritanceChild);
 		}
 
 		// Informix disabled due to issue, described here (but it reproduced with client 4.1):
@@ -56,14 +54,12 @@ namespace Tests.UserTests
 		{
 			try
 			{
-				using (var db = GetDataContext(context))
-				{
-					semaphore.WaitOne();
+				using var db = GetDataContext(context);
+				semaphore.WaitOne();
 
-					AreEqual(
-						   InheritanceChild.Select(_ => _.Parent).Distinct(),
-						db.InheritanceChild.Select(_ => _.Parent).Distinct());
-				}
+				AreEqual(
+					   InheritanceChild.Select(_ => _.Parent).Distinct(),
+					db.InheritanceChild.Select(_ => _.Parent).Distinct());
 			}
 			finally
 			{

@@ -1,4 +1,4 @@
-﻿namespace LinqToDB
+namespace LinqToDB
 {
 	public partial class Sql
 	{
@@ -6,7 +6,7 @@
 		{
 			TableAlias,
 			TableName,
-			TableSpec
+			TableSpec,
 		}
 	}
 }

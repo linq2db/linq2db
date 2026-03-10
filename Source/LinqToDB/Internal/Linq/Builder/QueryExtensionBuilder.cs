@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -25,7 +26,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				new(".MethodName", methodCall, methodParams[0])
 				{
 					SqlExpression = new SqlValue(methodCall.Method.Name),
-				}
+				},
 			};
 
 			var startIndex = methodCall.Object == null ? 1 : 0;
@@ -51,7 +52,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						var ex = ae.Expressions[j];
 
-						list.Add(new(FormattableString.Invariant($"{name}.{j}"), ex, p, j));
+						list.Add(new(string.Create(CultureInfo.InvariantCulture, $"{name}.{j}"), ex, p, j));
 					}
 				}
 				else
@@ -82,7 +83,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						var converted = data.Expression.Unwrap() switch
 						{
 							LambdaExpression lex => builder.BuildSqlExpression(sequence, SequenceHelper.PrepareBody(lex, sequence)),
-							var ex => builder.BuildSqlExpression(sequence, ex)
+							var ex => builder.BuildSqlExpression(sequence, ex),
 						};
 
 						if (converted is SqlPlaceholderExpression placeholder)
@@ -149,12 +150,12 @@ namespace LinqToDB.Internal.Linq.Builder
 						else
 						{
 							var queryToUpdate = sequence.SelectQuery;
-							if (sequence is AsSubqueryContext subquery && subquery.SelectQuery.IsSimple())
+							if (sequence is AsSubqueryContext { SelectQuery.IsSimple: true } subquery)
 							{
 								queryToUpdate = subquery.SubQuery.SelectQuery;
 							}
 
-							if (!queryToUpdate.IsSimple())
+							if (!queryToUpdate.IsSimple)
 							{
 								sequence      = new SubQueryContext(sequence);
 								queryToUpdate = sequence.SelectQuery;
@@ -198,9 +199,9 @@ namespace LinqToDB.Internal.Linq.Builder
 					Extensions.Select(e => new SqlQueryExtension()
 					{
 						Configuration = e.Configuration,
-						Arguments     = e.Arguments.ToDictionary(a => a.Key, a => context.CloneElement(a.Value)),
+						Arguments     = e.Arguments.ToDictionary(a => a.Key, a => context.CloneElement(a.Value), StringComparer.Ordinal),
 						BuilderType   = e.BuilderType,
-						Scope         = e.Scope
+						Scope         = e.Scope,
 					}).ToList());
 			}
 		}

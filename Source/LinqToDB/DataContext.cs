@@ -78,13 +78,18 @@ namespace LinqToDB
 		/// Creates data context using specific database configuration.
 		/// </summary>
 		/// <param name="configurationString">Connection configuration name.
-		/// In case of <c>null</c> value, context will use default configuration.
+		/// In case of <see langword="null"/> value, context will use default configuration.
 		/// <see cref="DataConnection.DefaultConfiguration"/> for more details.
 		/// </param>
 		public DataContext(string? configurationString)
 			: this(configurationString == null
 				? DataConnection.DefaultDataOptions
-				: DataConnection.ConnectionOptionsByConfigurationString.GetOrAdd(configurationString, _ => new(new(ConfigurationString : configurationString))))
+				: DataConnection.ConnectionOptionsByConfigurationString
+					.GetOrAdd(
+						configurationString,
+						cs => new(new(ConfigurationString: cs))
+					)
+			)
 		{
 		}
 
@@ -227,7 +232,7 @@ namespace LinqToDB
 		private bool _keepConnectionAlive;
 		/// <summary>
 		/// Gets flag indicating wether context should dispose underlying connection after use or not.
-		/// Default value: <c>false</c>.
+		/// Default value: <see langword="false"/>.
 		/// </summary>
 		public  bool  KeepConnectionAlive
 		{
@@ -246,7 +251,7 @@ namespace LinqToDB
 
 			_keepConnectionAlive = keepAlive;
 
-			if (keepAlive == false)
+			if (!keepAlive)
 				ReleaseQuery();
 		}
 
@@ -259,7 +264,7 @@ namespace LinqToDB
 
 			_keepConnectionAlive = keepAlive;
 
-			if (keepAlive == false)
+			if (!keepAlive)
 				return ReleaseQueryAsync();
 
 			return default;
@@ -462,7 +467,7 @@ namespace LinqToDB
 		/// <summary>
 		/// For active underlying connection, updates information about last executed query <see cref="LastQuery"/> and
 		/// releases connection, if it is not locked (<see cref="_lockDbManagerCounter"/>)
-		/// and <see cref="KeepConnectionAlive"/> is <c>false</c>.
+		/// and <see cref="KeepConnectionAlive"/> is <see langword="false"/>.
 		/// </summary>
 		internal void ReleaseQuery()
 		{
@@ -474,7 +479,7 @@ namespace LinqToDB
 				LastQuery = _dataConnection.LastQuery;
 #pragma warning restore CS0618 // Type or member is obsolete
 
-				if (_lockDbManagerCounter == 0 && KeepConnectionAlive == false)
+				if (_lockDbManagerCounter == 0 && !KeepConnectionAlive)
 				{
 					if (_dataConnection.QueryHints.    Count > 0) QueryHints    .AddRange(_dataConnection.QueryHints);
 					if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_dataConnection.NextQueryHints);
@@ -489,7 +494,7 @@ namespace LinqToDB
 		/// <summary>
 		/// For active underlying connection, updates information about last executed query <see cref="LastQuery"/> and
 		/// releases connection, if it is not locked (<see cref="_lockDbManagerCounter"/>)
-		/// and <see cref="KeepConnectionAlive"/> is <c>false</c>.
+		/// and <see cref="KeepConnectionAlive"/> is <see langword="false"/>.
 		/// </summary>
 		internal async ValueTask ReleaseQueryAsync()
 		{
@@ -501,7 +506,7 @@ namespace LinqToDB
 				LastQuery = _dataConnection.LastQuery;
 #pragma warning restore CS0618 // Type or member is obsolete
 
-				if (_lockDbManagerCounter == 0 && KeepConnectionAlive == false)
+				if (_lockDbManagerCounter == 0 && !KeepConnectionAlive)
 				{
 					if (_dataConnection.QueryHints.    Count > 0) QueryHints    .AddRange(_dataConnection.QueryHints);
 					if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_dataConnection.NextQueryHints);
@@ -831,9 +836,9 @@ namespace LinqToDB
 				// For ConnectionOptions we reapply only mapping schema and connection interceptor.
 				// Connection string, configuration, data provider, etc. are not reapplyable.
 				//
-				if (options.ConfigurationString       != previousOptions?.ConfigurationString)       throw new LinqToDBException($"Option '{nameof(ConnectionOptions.ConfigurationString)} cannot be changed for context dynamically.");
-				if (options.ConnectionString          != previousOptions?.ConnectionString)          throw new LinqToDBException($"Option '{nameof(ConnectionOptions.ConnectionString)} cannot be changed for context dynamically.");
-				if (options.ProviderName              != previousOptions?.ProviderName)              throw new LinqToDBException($"Option '{nameof(ConnectionOptions.ProviderName)} cannot be changed for context dynamically.");
+				if (!string.Equals(options.ConfigurationString, previousOptions?.ConfigurationString, StringComparison.Ordinal))       throw new LinqToDBException($"Option '{nameof(ConnectionOptions.ConfigurationString)} cannot be changed for context dynamically.");
+				if (!string.Equals(options.ConnectionString, previousOptions?.ConnectionString, StringComparison.Ordinal))          throw new LinqToDBException($"Option '{nameof(ConnectionOptions.ConnectionString)} cannot be changed for context dynamically.");
+				if (!string.Equals(options.ProviderName, previousOptions?.ProviderName, StringComparison.Ordinal))              throw new LinqToDBException($"Option '{nameof(ConnectionOptions.ProviderName)} cannot be changed for context dynamically.");
 				if (options.DbConnection              != previousOptions?.DbConnection)              throw new LinqToDBException($"Option '{nameof(ConnectionOptions.DbConnection)} cannot be changed for context dynamically.");
 				if (options.DbTransaction             != previousOptions?.DbTransaction)             throw new LinqToDBException($"Option '{nameof(ConnectionOptions.DbTransaction)} cannot be changed for context dynamically.");
 				if (options.DisposeConnection         != previousOptions?.DisposeConnection)         throw new LinqToDBException($"Option '{nameof(ConnectionOptions.DisposeConnection)} cannot be changed for context dynamically.");

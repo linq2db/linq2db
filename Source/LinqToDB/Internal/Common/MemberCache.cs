@@ -26,14 +26,15 @@ namespace LinqToDB.Internal.Common
 
 		public static Info GetMemberInfo(MemberInfo member)
 		{
-			if (member is MethodInfo { IsGenericMethod: true } mi)
+			return member switch
 			{
-				return _cache.GetOrAdd(
+				MethodInfo { IsGenericMethod: true } mi => _cache.GetOrAdd(
 					mi.GetGenericMethodDefinitionCached(),
-					static m => m.HasAttribute<IsQueryableAttribute>() ? _isQueryableInfo : _defaultInfo);
-			}
+					static m => m.HasAttribute<IsQueryableAttribute>() ? _isQueryableInfo : _defaultInfo
+				),
 
-			return _defaultInfo;
+				_ => _defaultInfo,
+			};
 		}
 
 		public sealed class Info

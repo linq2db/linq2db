@@ -67,14 +67,14 @@ namespace LinqToDB.CodeModel
 		/// </summary>
 		/// <param name="character">Character to validate.</param>
 		/// <param name="category">Character unicode category.</param>
-		/// <returns><c>true</c> if character is valid at starting position in identifier.</returns>
+		/// <returns><see langword="true" /> if character is valid at starting position in identifier.</returns>
 		bool IsValidIdentifierFirstChar   (string character, UnicodeCategory category);
 		/// <summary>
 		/// Verify that provided character could be used in indentifier name at non-first position for current language.
 		/// </summary>
 		/// <param name="character">Character to validate.</param>
 		/// <param name="category">Character unicode category.</param>
-		/// <returns><c>true</c> if character is valid at non-starting position in identifier.</returns>
+		/// <returns><see langword="true" /> if character is valid at non-starting position in identifier.</returns>
 		bool IsValidIdentifierNonFirstChar(string character, UnicodeCategory category);
 
 		/// <summary>

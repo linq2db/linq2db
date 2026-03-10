@@ -1,10 +1,10 @@
-﻿namespace LinqToDB.Internal.SqlQuery
+namespace LinqToDB.Internal.SqlQuery
 {
 	public enum GroupingType
 	{
 		Default,
 		GroupBySets,
 		Rollup,
-		Cube
+		Cube,
 	}
 }

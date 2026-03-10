@@ -14,7 +14,7 @@ namespace LinqToDB.Interceptors
 
 		/// <summary>
 		/// Gets data connection associated with event.
-		/// Could be <c>null</c> when used for connections, created not from <see cref="DataConnection"/>.
+		/// Could be <see langword="null"/> when used for connections, created not from <see cref="DataConnection"/>.
 		/// E.g. in provider detection logic or for some databases in bulk copy code.
 		/// </summary>
 		public DataConnection? DataConnection { get; }

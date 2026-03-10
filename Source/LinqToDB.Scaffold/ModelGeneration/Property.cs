@@ -104,11 +104,11 @@ namespace LinqToDB.Tools.ModelGeneration
 				{
 					var t = getBody[0];
 
-					if (!t.StartsWith("return"))
+					if (!t.StartsWith("return", StringComparison.Ordinal))
 					{
 						t = "return " + t;
 
-						if (!t.EndsWith(";"))
+						if (!t.EndsWith(';'))
 							t += ";";
 
 						GetBodyBuilders.Clear();
