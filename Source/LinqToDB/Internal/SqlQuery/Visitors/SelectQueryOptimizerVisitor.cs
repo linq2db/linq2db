@@ -12,8 +12,6 @@ using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
-using static LinqToDB.Internal.Reflection.Methods.LinqToDB;
-
 namespace LinqToDB.Internal.SqlQuery.Visitors
 {
 	public sealed class SelectQueryOptimizerVisitor : SqlQueryVisitor
@@ -2427,10 +2425,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 								tableSource.Joins.RemoveAt(index);
 								--index;
-							}
 						}
 					}
 				}
+			}
 
 			return replaced;
 		}
@@ -2920,8 +2918,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 		}
 
-			void CorrectEmptyInnerJoinsRecursive(SelectQuery selectQuery)
-		{
+		void CorrectEmptyInnerJoinsRecursive(SelectQuery selectQuery)
+		{ 
 			selectQuery.Visit(e =>
 			{
 				if (e is SelectQuery sq)

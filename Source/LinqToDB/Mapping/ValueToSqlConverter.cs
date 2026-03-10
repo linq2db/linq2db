@@ -321,10 +321,10 @@ namespace LinqToDB.Mapping
 							idBuilder.Add(kvp.Key).Add(kvp.Value);
 
 					_configurationID = idBuilder.CreateID();
-	}
+				}
 
 				return _configurationID.Value;
-}
+			}
 		}
 
 		public bool Equals(ValueToSqlConverter? other)
