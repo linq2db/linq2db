@@ -2080,6 +2080,14 @@ namespace LinqToDB
 		{
 			return options with { GenerateFinalAliases = generateFinalAliases };
 		}
+		/// <summary>
+		/// If <see langword="true"/>, it disables built-in TimeSpan member access conversions in ExposeExpressionVisitor to allow external conversion via ExtensionAttribute.
+		/// Default value: <see langword="false"/>.
+		/// </summary>
+		public static SqlOptions WithDisableBuiltInTimeSpanConversion(this SqlOptions options, bool disableBuiltInTimeSpanConversion)
+		{
+			return options with { DisableBuiltInTimeSpanConversion = disableBuiltInTimeSpanConversion };
+		}
 
 		#endregion
 
