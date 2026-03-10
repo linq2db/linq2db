@@ -155,18 +155,18 @@ namespace LinqToDB.Linq
 			Type operandType,
 			LambdaExpression expression)
 		{
-			if (providerName == null) throw new ArgumentNullException(nameof(providerName));
-			if (operandType == null) throw new ArgumentNullException(nameof(operandType));
-			if (expression == null) throw new ArgumentNullException(nameof(expression));
+			ArgumentNullException.ThrowIfNull(providerName);
+			ArgumentNullException.ThrowIfNull(operandType);
+			ArgumentNullException.ThrowIfNull(expression);
 
 			if (!_unaries.Value.TryGetValue(providerName, out var dic))
-				_unaries.Value.Add(providerName, dic = new Dictionary<Tuple<ExpressionType, Type>, IExpressionInfo>());
+				_unaries.Value.Add(providerName, dic = []);
 
 			var expr = new LazyExpressionInfo();
 
 			expr.SetExpression(expression);
 
-			dic[Tuple.Create(nodeType, operandType)] = expr;
+			dic[(nodeType, operandType)] = expr;
 
 			_checkUserNamespace = false;
 		}
@@ -490,10 +490,10 @@ namespace LinqToDB.Linq
 				return null;
 
 			IExpressionInfo? expr;
-			Dictionary<Tuple<ExpressionType,Type>,IExpressionInfo>? dic;
+			Dictionary<(ExpressionType,Type),IExpressionInfo>? dic;
 
 			var unaries = _unaries.Value;
-			var key      = Tuple.Create(unaryExpression.NodeType, unaryExpression.Operand.Type);
+			var key     = (unaryExpression.NodeType, unaryExpression.Operand.Type);
 
 			foreach (var configuration in mappingSchema.ConfigurationList)
 			{

@@ -57,7 +57,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 #else
 			var parts = raw;
 #endif
-			var idx = parts.IndexOf(' ');
+			var idx = parts.IndexOf(' ', StringComparison.InvariantCulture);
 			if (idx > 0)
 			{
 				days = int.Parse(parts[0..idx], NumberStyles.None, CultureInfo.InvariantCulture);

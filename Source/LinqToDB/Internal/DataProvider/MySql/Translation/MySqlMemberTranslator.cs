@@ -133,23 +133,19 @@ namespace LinqToDB.Internal.DataProvider.MySql.Translation
 				var dateType      = factory.GetDbDataType(dateTimeExpression);
 				var intDbType     = factory.GetDbDataType(typeof(int));
 				var intervalType  = intDbType.WithDataType(DataType.Interval);
-
-				string expStr;
-				switch (datepart)
+				var expStr = datepart switch
 				{
-					case Sql.DateParts.Year:        expStr = "Interval {0} Year"; break;
-					case Sql.DateParts.Quarter:     expStr = "Interval {0} Quarter"; break;
-					case Sql.DateParts.Month:       expStr = "Interval {0} Month"; break;
-					case Sql.DateParts.Day:         expStr = "Interval {0} Day"; break;
-					case Sql.DateParts.Week:        expStr = "Interval {0} Week"; break;
-					case Sql.DateParts.Hour:        expStr = "Interval {0} Hour"; break;
-					case Sql.DateParts.Minute:      expStr = "Interval {0} Minute"; break;
-					case Sql.DateParts.Second:      expStr = "Interval {0} Second"; break;
-					case Sql.DateParts.Millisecond: expStr = "Interval {0} Millisecond"; break;
-					default:
-						throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented");
-				}
-
+					Sql.DateParts.Year        => "Interval {0} Year",
+					Sql.DateParts.Quarter     => "Interval {0} Quarter",
+					Sql.DateParts.Month       => "Interval {0} Month",
+					Sql.DateParts.Day         => "Interval {0} Day",
+					Sql.DateParts.Week        => "Interval {0} Week",
+					Sql.DateParts.Hour        => "Interval {0} Hour",
+					Sql.DateParts.Minute      => "Interval {0} Minute",
+					Sql.DateParts.Second      => "Interval {0} Second",
+					Sql.DateParts.Millisecond => "Interval {0} Millisecond",
+					_ => throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented"),
+				};
 				var resultExpression = factory.Function(dateType, "Date_Add", dateTimeExpression, factory.Expression(intervalType, expStr, increment));
 
 				return resultExpression;

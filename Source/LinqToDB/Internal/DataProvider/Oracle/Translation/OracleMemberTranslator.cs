@@ -124,23 +124,19 @@ namespace LinqToDB.Internal.DataProvider.Oracle.Translation
 				var factory      = translationContext.ExpressionFactory;
 				var dateType     = factory.GetDbDataType(dateTimeExpression);
 				var intervalType = factory.GetDbDataType(increment).WithDataType(DataType.Interval);
-
-				string expStr;
-				switch (datepart)
+				var expStr = datepart switch
 				{
-					case Sql.DateParts.Year:        expStr = "INTERVAL '1' YEAR"; break;
-					case Sql.DateParts.Quarter:     expStr = "INTERVAL '3' MONTH"; break;
-					case Sql.DateParts.Month:       expStr = "INTERVAL '1' MONTH"; break;
-					case Sql.DateParts.Day:         expStr = "INTERVAL '1' DAY"; break;
-					case Sql.DateParts.Week:        expStr = "INTERVAL '7' DAY"; break;
-					case Sql.DateParts.Hour:        expStr = "INTERVAL '1' HOUR"; break;
-					case Sql.DateParts.Minute:      expStr = "INTERVAL '1' MINUTE"; break;
-					case Sql.DateParts.Second:      expStr = "INTERVAL '1' SECOND"; break;
-					case Sql.DateParts.Millisecond: expStr = "INTERVAL '0.001' SECOND"; break;
-					default:
-						throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented");
-				}
-
+					Sql.DateParts.Year        => "INTERVAL '1' YEAR",
+					Sql.DateParts.Quarter     => "INTERVAL '3' MONTH",
+					Sql.DateParts.Month       => "INTERVAL '1' MONTH",
+					Sql.DateParts.Day         => "INTERVAL '1' DAY",
+					Sql.DateParts.Week        => "INTERVAL '7' DAY",
+					Sql.DateParts.Hour        => "INTERVAL '1' HOUR",
+					Sql.DateParts.Minute      => "INTERVAL '1' MINUTE",
+					Sql.DateParts.Second      => "INTERVAL '1' SECOND",
+					Sql.DateParts.Millisecond => "INTERVAL '0.001' SECOND",
+					_ => throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented"),
+				};
 				var intervalExpression = factory.Multiply(intervalType, increment, factory.NotNullExpression(intervalType, expStr));
 				var resultExpression   = factory.Add(dateType, dateTimeExpression, intervalExpression);
 
