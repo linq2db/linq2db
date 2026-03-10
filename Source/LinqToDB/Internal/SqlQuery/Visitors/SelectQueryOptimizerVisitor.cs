@@ -2150,9 +2150,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (subQuery.HasSetOperators)
 				return false;
 
-			if (subQuery.HasGroupBy())
-				return false;
-
 			// Rare case when LEFT join is empty. We move search condition up. See TestDefaultExpression_22 test.
 			if (joinTable.JoinType == JoinType.Left && subQuery.Where.SearchCondition.IsFalse())
 			{
@@ -2221,7 +2218,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				foreach (var c in subQuery.Select.Columns)
 				{
 					var columnExpression = QueryHelper.UnwrapCast(c.Expression);
-					if (columnExpression is not (SqlField or SqlColumn))
+					if (columnExpression is not (SqlField or SqlColumn or SqlRowExpression))
 					{
 						nullabilityContext ??= NullabilityContext.GetContext(subQuery);
 						if (!c.Expression.CanBeNullable(nullabilityContext))
@@ -3414,7 +3411,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			int              _foundCount;
 			int              _multiplier;
 			bool             _notAllowedScope;
-			TestMode             _testMode;
+			TestMode         _testMode;
 			bool             _isSubqueryInsideCondition;
 
 			[Flags]
@@ -3508,6 +3505,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					// do not count complexity for positioned order item
 					if (ReferenceEquals(element.Expression, _expressionToCheck))
 						return element;
+				}
+
+				if (!_sqlProviderFlags.IsOrderByAggregateSubquerySupported)
+				{
+					using (DoNotAllowScope(true))
+					{
+						return base.VisitSqlOrderByItem(element);
+					}
 				}
 
 				return base.VisitSqlOrderByItem(element);

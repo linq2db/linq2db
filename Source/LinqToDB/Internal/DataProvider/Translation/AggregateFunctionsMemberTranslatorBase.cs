@@ -147,6 +147,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 							var fn = factory.Function(resultType, "COUNT",
 								[new SqlFunctionArgument(argumentValue, modifier : aggregateModifier)],
 								[true, true],
+								canBeNullInAggregationQuery: false,
 								isAggregate : true,
 								filter: filterCondition,
 								canBeAffectedByOrderBy : false

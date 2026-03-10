@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 
 using LinqToDB.Internal.SqlQuery.Visitors;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -222,9 +222,8 @@ namespace LinqToDB.Internal.SqlQuery
 		if (!this.IsLimited() && !this.HasSetOperators && !this.HasGroupBy() && !this.HasHaving() && this.IsSingleColumn()
 		    && QueryHelper.IsAggregationQuery(this))
 		{
-			// For scalar aggregation queries (no GROUP BY), delegate nullability to the aggregation function
-			// e.g., COUNT(*) is never nullable, but SUM/AVG/MAX can be nullable
-			return Select.Columns[0].CanBeNullable(nullability);
+			if (Select.Columns[0].Expression is SqlExtendedFunction { CanBeNullInAggregationQuery: false })
+				return false;
 		}
 
 		return true;
