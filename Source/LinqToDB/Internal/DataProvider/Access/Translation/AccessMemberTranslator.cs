@@ -99,7 +99,7 @@ namespace LinqToDB.Internal.DataProvider.Access.Translation
 				var value = factory.Value(partStr);
 
 				if (datepart == Sql.DateParts.Millisecond)
-					value = factory.Div(value, 1000);
+					increment = factory.Div(increment, 1000);
 
 				var resultExpression = factory.Function(factory.GetDbDataType(dateTimeExpression), "DateAdd", value, increment, dateTimeExpression);
 				return resultExpression;
