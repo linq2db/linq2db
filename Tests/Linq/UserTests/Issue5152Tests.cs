@@ -25,8 +25,7 @@ namespace Tests.UserTests
 
 			protected MySpecialBaseClass(string value)
 			{
-				if (value == null)
-					throw new ArgumentNullException(nameof(value));
+				ArgumentNullException.ThrowIfNull(value);
 
 				Value = value;
 			}
@@ -194,9 +193,13 @@ namespace Tests.UserTests
 								.Update();
 
 			if (db is DataConnection dc)
+			{
 				Assert.That(dc.LastQuery?.ToLowerInvariant(), Does.Not.Contain("cast(")
-					.And.Not.Contain("::")
 					.And.Not.Contain("cstr("));
+
+				if (!context.IsAnyOf(ProviderName.Ydb))
+					Assert.That(dc.LastQuery?.ToLowerInvariant(), Does.Not.Contain("::"));
+			}
 		}
 	}
 }

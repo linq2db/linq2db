@@ -16,25 +16,29 @@ namespace LinqToDB.Internal.Linq.Builder
 		#region InsertOrUpdateBuilder
 
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable();
+			=> call.IsQueryable;
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var tableArg = methodCall.Arguments[0];
+			var tableType = methodCall.Method.GetGenericArguments()[0];
+			var tableArg  = methodCall.Arguments[0];
+
+			builder.PushDisabledQueryFilters([tableType]);
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, tableArg));
+			builder.PopDisabledFilter();
 
 			var insertOrUpdateStatement = new SqlInsertOrUpdateStatement(sequence.SelectQuery);
 
 			var insertExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
 			List<UpdateBuilder.SetExpressionEnvelope>? updateExpressions = null;
 
-			var contextRef       = new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], sequence);
+			var contextRef       = new ContextRefExpression(tableType, sequence);
 			var insertSetterExpr = SequenceHelper.PrepareBody(methodCall.Arguments[1].UnwrapLambda(), sequence);
 
 			UpdateBuilder.ParseSetter(builder, contextRef, contextRef, insertSetterExpr, insertExpressions);
 
 			var updateExpr = methodCall.Arguments[2].Unwrap();
-			if (!updateExpr.IsNullValue())
+			if (!updateExpr.IsNullValue)
 			{
 				updateExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
 				var updateSetterExpr = SequenceHelper.PrepareBody(updateExpr.UnwrapLambda(), sequence);

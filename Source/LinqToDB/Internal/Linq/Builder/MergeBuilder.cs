@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -23,7 +23,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			MergeWithOutput,
 			MergeWithOutputSource,
 			MergeWithOutputInto,
-			MergeWithOutputIntoSource
+			MergeWithOutputIntoSource,
 		};
 
 		public static bool CanBuildMethod(MethodCallExpression call)
@@ -35,7 +35,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			MergeWithOutput,
 			MergeWithOutputSource,
 			MergeWithOutputInto,
-			MergeWithOutputIntoSource
+			MergeWithOutputIntoSource,
 		}
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -138,7 +138,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				else
 				{
 					var cloningContext      = new CloningContext();
-					cloningContext.CloneElements(builder.GetCteClauses());
 					var targetContext       = source.TargetContextRef.BuildContext;
 					var clonedTargetContext = cloningContext.CloneContext(targetContext);
 					var clonedContextRef    = source.TargetContextRef.WithContext(clonedTargetContext);
@@ -172,7 +171,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			else
 			{
 				var cloningContext      = new CloningContext();
-				cloningContext.CloneElements(builder.GetCteClauses());
 				var targetContext       = source.TargetContextRef.BuildContext;
 				var clonedTargetContext = cloningContext.CloneContext(targetContext);
 				var clonedContextRef    = source.TargetContextRef.WithContext(clonedTargetContext);

@@ -14,6 +14,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
@@ -131,13 +132,11 @@ namespace LinqToDB.Linq
 
 		static BinaryExpression GetBinaryNode(Expression expr)
 		{
-			while (expr.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked or ExpressionType.TypeAs)
-				expr = ((UnaryExpression)expr).Operand;
-
-			if (expr is BinaryExpression binary)
-				return binary;
-
-			throw new ArgumentException($"Expression '{expr}' is not BinaryExpression node.");
+			return expr.UnwrapUnary() switch
+			{
+				BinaryExpression binary => binary,
+				_ => throw new ArgumentException($"Expression '{expr}' is not BinaryExpression node."),
+			};
 		}
 
 		/// <summary>
@@ -156,19 +155,19 @@ namespace LinqToDB.Linq
 			Type             rightType,
 			LambdaExpression expression)
 		{
-			if (providerName == null) throw new ArgumentNullException(nameof(providerName));
-			if (leftType     == null) throw new ArgumentNullException(nameof(leftType));
-			if (rightType    == null) throw new ArgumentNullException(nameof(rightType));
-			if (expression   == null) throw new ArgumentNullException(nameof(expression));
+			ArgumentNullException.ThrowIfNull(providerName);
+			ArgumentNullException.ThrowIfNull(leftType);
+			ArgumentNullException.ThrowIfNull(rightType);
+			ArgumentNullException.ThrowIfNull(expression);
 
 			if (!_binaries.Value.TryGetValue(providerName, out var dic))
-				_binaries.Value.Add(providerName, dic = new Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>());
+				_binaries.Value.Add(providerName, dic = []);
 
 			var expr = new LazyExpressionInfo();
 
 			expr.SetExpression(expression);
 
-			dic[Tuple.Create(nodeType, leftType, rightType)] = expr;
+			dic[(nodeType, leftType, rightType)] = expr;
 
 			_checkUserNamespace = false;
 		}
@@ -336,7 +335,7 @@ namespace LinqToDB.Linq
 
 			if (!Members[""].TryGetValue(memberKey, out expr))
 			{
-				if (mi is MethodInfo && mi.Name == "CompareString" && mi.DeclaringType!.FullName!.StartsWith("Microsoft.VisualBasic.CompilerServices."))
+				if (mi is MethodInfo && string.Equals(mi.Name, "CompareString", StringComparison.Ordinal) && mi.DeclaringType!.FullName!.StartsWith("Microsoft.VisualBasic.CompilerServices.", StringComparison.Ordinal))
 				{
 					lock (_memberSync)
 					{
@@ -344,9 +343,9 @@ namespace LinqToDB.Linq
 						{
 							expr = new LazyExpressionInfo();
 
-#pragma warning disable CA1304, MA0011 // use CultureInfo
+#pragma warning disable CA1304, CA1311, MA0011 // use CultureInfo
 							((LazyExpressionInfo)expr).SetExpression(L<string,string,bool,int>((s1,s2,b) => b ? string.CompareOrdinal(s1.ToUpper(), s2.ToUpper()) : string.CompareOrdinal(s1, s2)));
-#pragma warning restore CA1304, MA0011 // use CultureInfo
+#pragma warning restore CA1304, CA1311, MA0011 // use CultureInfo
 
 							Members[""].Add(memberKey, expr);
 						}
@@ -357,7 +356,7 @@ namespace LinqToDB.Linq
 			if (expr == null)
 			{
 				if (mi is MethodInfo method &&
-				    (method.IsVirtual || method.DeclaringType != null && method.ReflectedType != null && method.DeclaringType.IsAssignableFrom(method.ReflectedType)))
+				    (method.IsVirtual || (method.DeclaringType != null && method.ReflectedType != null && method.DeclaringType.IsAssignableFrom(method.ReflectedType))))
 				{
 					// walking up through hierarchy to find registered converter
 					//
@@ -399,10 +398,10 @@ namespace LinqToDB.Linq
 				return null;
 
 			IExpressionInfo? expr;
-			Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>? dic;
+			Dictionary<(ExpressionType,Type,Type),IExpressionInfo>? dic;
 
 			var binaries = _binaries.Value;
-			var key      = Tuple.Create(binaryExpression.NodeType, binaryExpression.Left.Type, binaryExpression.Right.Type);
+			var key      = (binaryExpression.NodeType, binaryExpression.Left.Type, binaryExpression.Right.Type);
 
 			foreach (var configuration in mappingSchema.ConfigurationList)
 			{
@@ -433,18 +432,12 @@ namespace LinqToDB.Linq
 			if (typeNamespace == null)
 				return true;
 
-			var dotIndex = typeNamespace.IndexOf('.');
+			var dotIndex = typeNamespace.IndexOf('.', StringComparison.Ordinal);
 			var root     = dotIndex != -1 ? typeNamespace.Substring(0, dotIndex) : typeNamespace;
 
 			// Startup optimization.
 			//
-			switch (root)
-			{
-				case "LinqToDB" :
-				case "System"   :
-				case "Microsoft": return false;
-				default         : return true;
-			}
+			return root is not ("LinqToDB" or "System" or "Microsoft");
 		}
 
 		public static MemberHelper.MemberInfoWithType M<T>(Expression<Func<T,object?>> func)
@@ -503,8 +496,7 @@ namespace LinqToDB.Linq
 
 		private static readonly Lock _memberSync = new();
 
-		static readonly Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>> _binaries =
-			new Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>>(() => new Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>());
+		static readonly Lazy<Dictionary<string,Dictionary<(ExpressionType,Type,Type),IExpressionInfo>>> _binaries = new(() => new(StringComparer.Ordinal));
 
 		#region Common
 
@@ -548,10 +540,10 @@ namespace LinqToDB.Linq
 #endif
 			{ M(() => "".TrimEnd    ((char[])null!)), N(() => L<string,char[],string?>     ((obj,ch) => TrimRight(obj, ch))) },
 			{ M(() => "".TrimStart  ((char[])null!)), N(() => L<string,char[],string?>     ((obj,ch) => TrimLeft (obj, ch))) },
-#pragma warning disable CA1304, MA0011 // use CultureInfo
+#pragma warning disable CA1304, CA1311, MA0011 // use CultureInfo
 			{ M(() => "".ToLower    ()        ), N(() => L<string?,string?>                (obj => Sql.Lower(obj))) },
 			{ M(() => "".ToUpper    ()        ), N(() => L<string?,string?>                (obj => Sql.Upper(obj))) },
-#pragma warning restore CA1304, MA0011 // use CultureInfo
+#pragma warning restore CA1304, CA1311, MA0011 // use CultureInfo
 			{ M(() => "".CompareTo  ("")      ), N(() => L<string,string,int>              ((obj,p0) => ConvertToCaseCompareTo(obj, p0)!.Value)) },
 #pragma warning disable MA0107 // object.ToString is bad, m'kay?
 			{ M(() => "".CompareTo  (1)       ), N(() => L<string,object,int>              ((obj,p0) => ConvertToCaseCompareTo(obj, p0.ToString())!.Value)) },
@@ -570,14 +562,14 @@ namespace LinqToDB.Linq
 			{ M(() => string.IsNullOrWhiteSpace("")),                                         N(() => L<string,bool>                                   (p0                 => Sql.IsNullOrWhiteSpace(p0))) },
 			{ M(() => string.CompareOrdinal("","")),                                          N(() => L<string,string,int>                             ((s1,s2)            => s1.CompareTo(s2))) },
 			{ M(() => string.CompareOrdinal("",0,"",0,0)),                                    N(() => L<string,int,string,int,int,int>                 ((s1,i1,s2,i2,l)    => s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
+#pragma warning disable CA1304, CA1309, CA1310, CA1311, CA1862, MA0011 // use CultureInfo
 			{ M(() => string.Compare       ("","")),                                          N(() => L<string,string,int>                             ((s1,s2)            => s1.CompareTo(s2))) },
 			{ M(() => string.Compare       ("",0,"",0,0)),                                    N(() => L<string,int,string,int,int,int>                 ((s1,i1,s2,i2,l)    => s1.Substring(i1,l).CompareTo(s2.Substring(i2,l)))) },
-#pragma warning disable CA1304, MA0011 // use CultureInfo
 			{ M(() => string.Compare       ("","",true)),                                     N(() => L<string,string,bool,int>                        ((s1,s2,b)          => b ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2))) },
 			{ M(() => string.Compare       ("",0,"",0,0,true)),                               N(() => L<string,int,string,int,int,bool,int>            ((s1,i1,s2,i2,l,b)  => b ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
 			{ M(() => string.Compare       ("",0,"",0,0,StringComparison.OrdinalIgnoreCase)), N(() => L<string,int,string,int,int,StringComparison,int>((s1,i1,s2,i2,l,sc) => sc == StringComparison.CurrentCultureIgnoreCase || sc==StringComparison.OrdinalIgnoreCase ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
 			{ M(() => string.Compare       ("","",StringComparison.OrdinalIgnoreCase)),       N(() => L<string,string,StringComparison,int>            ((s1,s2,sc)         => sc == StringComparison.CurrentCultureIgnoreCase || sc==StringComparison.OrdinalIgnoreCase ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2))) },
-#pragma warning restore CA1304, MA0011 // use CultureInfo
+#pragma warning restore CA1304, CA1309, CA1310, CA1311, CA1862, MA0011 // use CultureInfo
 
 			{ M(() => AltStuff("",0,0,"")), N(() => L<string,int?,int?,string,string>((p0,p1,p2,p3) => Sql.Left(p0, p1 - 1) + p3 + Sql.Right(p0, p0.Length - (p1 + p2 - 1)))) },
 
@@ -638,353 +630,6 @@ namespace LinqToDB.Linq
 
 			#endregion
 
-			#region Convert
-
-			#region ToByte
-
-			{ M(() => Convert.ToByte((bool)   true)), N(() => L<bool,    byte>(p0 => Sql.ConvertTo<byte>.From(p0))) },
-			{ M(() => Convert.ToByte((byte)    0)  ), N(() => L<byte,    byte>(p0 => Sql.ConvertTo<byte>.From(p0))) },
-			{ M(() => Convert.ToByte((char)   '0') ), N(() => L<char,    byte>(p0 => Sql.ConvertTo<byte>.From(p0))) },
-			{ M(() => Convert.ToByte(DateTime.Now) ), N(() => L<DateTime,byte>(p0 => Sql.ConvertTo<byte>.From(p0))) },
-			{ M(() => Convert.ToByte((decimal) 0)  ), N(() => L<decimal, byte>(p0 => Sql.ConvertTo<byte>.From(Sql.RoundToEven(p0)))) },
-			{ M(() => Convert.ToByte((double)  0)  ), N(() => L<double,  byte>(p0 => Sql.ConvertTo<byte>.From(Sql.RoundToEven(p0)))) },
-			{ M(() => Convert.ToByte((short)   0)  ), N(() => L<short,   byte>(p0 => Sql.ConvertTo<byte>.From(p0))) },
-			{ M(() => Convert.ToByte((int)     0)  ), N(() => L<int,     byte>(p0 => Sql.ConvertTo<byte>.From(p0))) },
-			{ M(() => Convert.ToByte((long)    0)  ), N(() => L<long,    byte>(p0 => Sql.ConvertTo<byte>.From(p0))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToByte((object)  0)  ), N(() => L<object,  byte>(p0 => Sql.ConvertTo<byte>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToByte((sbyte)   0)  ), N(() => L<sbyte,   byte>(p0 => Sql.ConvertTo<byte>.From(p0))) },
-			{ M(() => Convert.ToByte((float)   0)  ), N(() => L<float,   byte>(p0 => Sql.ConvertTo<byte>.From(Sql.RoundToEven(p0)))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToByte((string) "0") ), N(() => L<string,  byte>(p0 => Sql.ConvertTo<byte>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToByte((ushort)  0)  ), N(() => L<ushort,  byte>(p0 => Sql.ConvertTo<byte>.From(p0))) },
-			{ M(() => Convert.ToByte((uint)    0)  ), N(() => L<uint,    byte>(p0 => Sql.ConvertTo<byte>.From(p0))) },
-			{ M(() => Convert.ToByte((ulong)   0)  ), N(() => L<ulong,   byte>(p0 => Sql.ConvertTo<byte>.From(p0))) },
-
-#endregion
-
-			#region ToChar
-
-			{ M(() => Convert.ToChar((bool)   true)), N(() => L<bool,    char>(p0 => Sql.ConvertTo<char>.From(p0))) },
-			{ M(() => Convert.ToChar((byte)    0)  ), N(() => L<byte,    char>(p0 => Sql.ConvertTo<char>.From(p0))) },
-			{ M(() => Convert.ToChar((char)   '0') ), N(() => L<char,    char>(p0 => p0                          )) },
-			{ M(() => Convert.ToChar(DateTime.Now) ), N(() => L<DateTime,char>(p0 => Sql.ConvertTo<char>.From(p0))) },
-			{ M(() => Convert.ToChar((decimal) 0)  ), N(() => L<decimal, char>(p0 => Sql.ConvertTo<char>.From(Sql.RoundToEven(p0)))) },
-			{ M(() => Convert.ToChar((double)  0)  ), N(() => L<double,  char>(p0 => Sql.ConvertTo<char>.From(Sql.RoundToEven(p0)))) },
-			{ M(() => Convert.ToChar((short)   0)  ), N(() => L<short,   char>(p0 => Sql.ConvertTo<char>.From(p0))) },
-			{ M(() => Convert.ToChar((int)     0)  ), N(() => L<int,     char>(p0 => Sql.ConvertTo<char>.From(p0))) },
-			{ M(() => Convert.ToChar((long)    0)  ), N(() => L<long,    char>(p0 => Sql.ConvertTo<char>.From(p0))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToChar((object)  0)  ), N(() => L<object,  char>(p0 => Sql.ConvertTo<char>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToChar((sbyte)   0)  ), N(() => L<sbyte,   char>(p0 => Sql.ConvertTo<char>.From(p0))) },
-			{ M(() => Convert.ToChar((float)   0)  ), N(() => L<float,   char>(p0 => Sql.ConvertTo<char>.From(Sql.RoundToEven(p0)))) },
-			{ M(() => Convert.ToChar((string) "0") ), N(() => L<string,  char>(p0 => Sql.ConvertTo<char>.From(p0))) },
-			{ M(() => Convert.ToChar((ushort)  0)  ), N(() => L<ushort,  char>(p0 => Sql.ConvertTo<char>.From(p0))) },
-			{ M(() => Convert.ToChar((uint)    0)  ), N(() => L<uint,    char>(p0 => Sql.ConvertTo<char>.From(p0))) },
-			{ M(() => Convert.ToChar((ulong)   0)  ), N(() => L<ulong,   char>(p0 => Sql.ConvertTo<char>.From(p0))) },
-
-			#endregion
-
-			#region ToDateTime
-
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToDateTime((object)  0)  ), N(() => L<object,  DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
-			{ M(() => Convert.ToDateTime((string) "0") ), N(() => L<string,  DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToDateTime((bool)   true)), N(() => L<bool,    DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
-			{ M(() => Convert.ToDateTime((byte)    0)  ), N(() => L<byte,    DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
-			{ M(() => Convert.ToDateTime((char)   '0') ), N(() => L<char,    DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
-			{ M(() => Convert.ToDateTime(DateTime.Now) ), N(() => L<DateTime,DateTime>(p0 => p0                              )) },
-			{ M(() => Convert.ToDateTime((decimal) 0)  ), N(() => L<decimal, DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
-			{ M(() => Convert.ToDateTime((double)  0)  ), N(() => L<double,  DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
-			{ M(() => Convert.ToDateTime((short)   0)  ), N(() => L<short,   DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
-			{ M(() => Convert.ToDateTime((int)     0)  ), N(() => L<int,   DateTime>(p0   => Sql.ConvertTo<DateTime>.From(p0))) },
-			{ M(() => Convert.ToDateTime((long)    0)  ), N(() => L<long,   DateTime>(p0  => Sql.ConvertTo<DateTime>.From(p0))) },
-			{ M(() => Convert.ToDateTime((sbyte)   0)  ), N(() => L<sbyte,   DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
-			{ M(() => Convert.ToDateTime((float)   0)  ), N(() => L<float,   DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
-			{ M(() => Convert.ToDateTime((ushort)  0)  ), N(() => L<ushort,  DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0))) },
-			{ M(() => Convert.ToDateTime((uint)    0)  ), N(() => L<uint,  DateTime>(p0   => Sql.ConvertTo<DateTime>.From(p0))) },
-			{ M(() => Convert.ToDateTime((ulong)   0)  ), N(() => L<ulong,  DateTime>(p0  => Sql.ConvertTo<DateTime>.From(p0))) },
-
-			#endregion
-
-			#region ToDecimal
-
-			{ M(() => Convert.ToDecimal((bool)   true)), N(() => L<bool,    decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
-			{ M(() => Convert.ToDecimal((byte)    0)  ), N(() => L<byte,    decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
-			{ M(() => Convert.ToDecimal((char)   '0') ), N(() => L<char,    decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
-			{ M(() => Convert.ToDecimal(DateTime.Now) ), N(() => L<DateTime,decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
-			{ M(() => Convert.ToDecimal((decimal) 0)  ), N(() => L<decimal, decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
-			{ M(() => Convert.ToDecimal((double)  0)  ), N(() => L<double,  decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
-			{ M(() => Convert.ToDecimal((short)   0)  ), N(() => L<short,   decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
-			{ M(() => Convert.ToDecimal((int)     0)  ), N(() => L<int,     decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
-			{ M(() => Convert.ToDecimal((long)    0)  ), N(() => L<long,    decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToDecimal((object)  0)  ), N(() => L<object,  decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToDecimal((sbyte)   0)  ), N(() => L<sbyte,   decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
-			{ M(() => Convert.ToDecimal((float)   0)  ), N(() => L<float,   decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToDecimal((string) "0") ), N(() => L<string,  decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToDecimal((ushort)  0)  ), N(() => L<ushort,  decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
-			{ M(() => Convert.ToDecimal((uint)    0)  ), N(() => L<uint,    decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
-			{ M(() => Convert.ToDecimal((ulong)   0)  ), N(() => L<ulong,   decimal>(p0 => Sql.ConvertTo<decimal>.From(p0))) },
-
-#endregion
-
-			#region ToDouble
-
-			{ M(() => Convert.ToDouble((bool)   true)), N(() => L<bool,    double>(p0 => Sql.ConvertTo<double>.From(p0))) },
-			{ M(() => Convert.ToDouble((byte)    0)  ), N(() => L<byte,    double>(p0 => Sql.ConvertTo<double>.From(p0))) },
-			{ M(() => Convert.ToDouble((char)   '0') ), N(() => L<char,    double>(p0 => Sql.ConvertTo<double>.From(p0))) },
-			{ M(() => Convert.ToDouble(DateTime.Now) ), N(() => L<DateTime,double>(p0 => Sql.ConvertTo<double>.From(p0))) },
-			{ M(() => Convert.ToDouble((decimal) 0)  ), N(() => L<decimal, double>(p0 => Sql.ConvertTo<double>.From(p0))) },
-			{ M(() => Convert.ToDouble((double)  0)  ), N(() => L<double,  double>(p0 => Sql.ConvertTo<double>.From(p0))) },
-			{ M(() => Convert.ToDouble((short)   0)  ), N(() => L<short,   double>(p0 => Sql.ConvertTo<double>.From(p0))) },
-			{ M(() => Convert.ToDouble((int)     0)  ), N(() => L<int,     double>(p0 => Sql.ConvertTo<double>.From(p0))) },
-			{ M(() => Convert.ToDouble((long)    0)  ), N(() => L<long,    double>(p0 => Sql.ConvertTo<double>.From(p0))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToDouble((object)  0)  ), N(() => L<object,  double>(p0 => Sql.ConvertTo<double>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToDouble((sbyte)   0)  ), N(() => L<sbyte,   double>(p0 => Sql.ConvertTo<double>.From(p0))) },
-			{ M(() => Convert.ToDouble((float)   0)  ), N(() => L<float,   double>(p0 => Sql.ConvertTo<double>.From(p0))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToDouble((string) "0") ), N(() => L<string,  double>(p0 => Sql.ConvertTo<double>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToDouble((ushort)  0)  ), N(() => L<ushort,  double>(p0 => Sql.ConvertTo<double>.From(p0))) },
-			{ M(() => Convert.ToDouble((uint)    0)  ), N(() => L<uint,    double>(p0 => Sql.ConvertTo<double>.From(p0))) },
-			{ M(() => Convert.ToDouble((ulong)   0)  ), N(() => L<ulong,   double>(p0 => Sql.ConvertTo<double>.From(p0))) },
-
-			#endregion
-
-			#region ToInt64
-
-			{ M(() => Convert.ToInt64((bool)   true)), N(() => L<bool,    long>(p0 => Sql.ConvertTo<long>.From(p0))) },
-			{ M(() => Convert.ToInt64((byte)    0)  ), N(() => L<byte,    long>(p0 => Sql.ConvertTo<long>.From(p0))) },
-			{ M(() => Convert.ToInt64((char)   '0') ), N(() => L<char,    long>(p0 => Sql.ConvertTo<long>.From(p0))) },
-			{ M(() => Convert.ToInt64(DateTime.Now) ), N(() => L<DateTime,long>(p0 => Sql.ConvertTo<long>.From(p0))) },
-			{ M(() => Convert.ToInt64((decimal) 0)  ), N(() => L<decimal, long>(p0 => Sql.ConvertTo<long>.From(Sql.RoundToEven(p0)))) },
-			{ M(() => Convert.ToInt64((double)  0)  ), N(() => L<double,  long>(p0 => Sql.ConvertTo<long>.From(Sql.RoundToEven(p0)))) },
-			{ M(() => Convert.ToInt64((short)   0)  ), N(() => L<short,   long>(p0 => Sql.ConvertTo<long>.From(p0))) },
-			{ M(() => Convert.ToInt64((int)     0)  ), N(() => L<int,     long>(p0 => Sql.ConvertTo<long>.From(p0))) },
-			{ M(() => Convert.ToInt64((long)    0)  ), N(() => L<long,    long>(p0 => Sql.ConvertTo<long>.From(p0))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToInt64((object)  0)  ), N(() => L<object,  long>(p0 => Sql.ConvertTo<long>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToInt64((sbyte)   0)  ), N(() => L<sbyte,   long>(p0 => Sql.ConvertTo<long>.From(p0))) },
-			{ M(() => Convert.ToInt64((float)   0)  ), N(() => L<float,   long>(p0 => Sql.ConvertTo<long>.From(Sql.RoundToEven(p0)))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToInt64((string) "0") ), N(() => L<string,  long>(p0 => Sql.ConvertTo<long>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToInt64((ushort)  0)  ), N(() => L<ushort,  long>(p0 => Sql.ConvertTo<long>.From(p0))) },
-			{ M(() => Convert.ToInt64((uint)    0)  ), N(() => L<uint,    long>(p0 => Sql.ConvertTo<long>.From(p0))) },
-			{ M(() => Convert.ToInt64((ulong)   0)  ), N(() => L<ulong,   long>(p0 => Sql.ConvertTo<long>.From(p0))) },
-
-			#endregion
-
-			#region ToInt32
-
-			{ M(() => Convert.ToInt32((bool)   true)), N(() => L<bool,    int>(p0 => Sql.ConvertTo<int>.From(p0))) },
-			{ M(() => Convert.ToInt32((byte)    0)  ), N(() => L<byte,    int>(p0 => Sql.ConvertTo<int>.From(p0))) },
-			{ M(() => Convert.ToInt32((char)   '0') ), N(() => L<char,    int>(p0 => Sql.ConvertTo<int>.From(p0))) },
-			{ M(() => Convert.ToInt32(DateTime.Now) ), N(() => L<DateTime,int>(p0 => Sql.ConvertTo<int>.From(p0))) },
-			{ M(() => Convert.ToInt32((decimal) 0)  ), N(() => L<decimal, int>(p0 => Sql.ConvertTo<int>.From(Sql.RoundToEven(p0)))) },
-			{ M(() => Convert.ToInt32((double)  0)  ), N(() => L<double,  int>(p0 => Sql.ConvertTo<int>.From(Sql.RoundToEven(p0)))) },
-			{ M(() => Convert.ToInt32((short)   0)  ), N(() => L<short,   int>(p0 => Sql.ConvertTo<int>.From(p0))) },
-			{ M(() => Convert.ToInt32((int)     0)  ), N(() => L<int,     int>(p0 => Sql.ConvertTo<int>.From(p0))) },
-			{ M(() => Convert.ToInt32((long)    0)  ), N(() => L<long,    int>(p0 => Sql.ConvertTo<int>.From(p0))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToInt32((object)  0)  ), N(() => L<object,  int>(p0 => Sql.ConvertTo<int>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToInt32((sbyte)   0)  ), N(() => L<sbyte,   int>(p0 => Sql.ConvertTo<int>.From(p0))) },
-			{ M(() => Convert.ToInt32((float)   0)  ), N(() => L<float,   int>(p0 => Sql.ConvertTo<int>.From(Sql.RoundToEven(p0)))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToInt32((string) "0") ), N(() => L<string,  int>(p0 => Sql.ConvertTo<int>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToInt32((ushort)  0)  ), N(() => L<ushort,  int>(p0 => Sql.ConvertTo<int>.From(p0))) },
-			{ M(() => Convert.ToInt32((uint)    0)  ), N(() => L<uint,    int>(p0 => Sql.ConvertTo<int>.From(p0))) },
-			{ M(() => Convert.ToInt32((ulong)   0)  ), N(() => L<ulong,   int>(p0 => Sql.ConvertTo<int>.From(p0))) },
-
-			#endregion
-
-			#region ToInt16
-
-			{ M(() => Convert.ToInt16((bool)   true)), N(() => L<bool,    short>(p0 => Sql.ConvertTo<short>.From(p0))) },
-			{ M(() => Convert.ToInt16((byte)    0)  ), N(() => L<byte,    short>(p0 => Sql.ConvertTo<short>.From(p0))) },
-			{ M(() => Convert.ToInt16((char)   '0') ), N(() => L<char,    short>(p0 => Sql.ConvertTo<short>.From(p0))) },
-			{ M(() => Convert.ToInt16(DateTime.Now) ), N(() => L<DateTime,short>(p0 => Sql.ConvertTo<short>.From(p0))) },
-			{ M(() => Convert.ToInt16((decimal) 0)  ), N(() => L<decimal, short>(p0 => Sql.ConvertTo<short>.From(Sql.RoundToEven(p0)))) },
-			{ M(() => Convert.ToInt16((double)  0)  ), N(() => L<double,  short>(p0 => Sql.ConvertTo<short>.From(Sql.RoundToEven(p0)))) },
-			{ M(() => Convert.ToInt16((short)   0)  ), N(() => L<short,   short>(p0 => Sql.ConvertTo<short>.From(p0))) },
-			{ M(() => Convert.ToInt16((int)     0)  ), N(() => L<int,     short>(p0 => Sql.ConvertTo<short>.From(p0))) },
-			{ M(() => Convert.ToInt16((long)    0)  ), N(() => L<long,    short>(p0 => Sql.ConvertTo<short>.From(p0))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToInt16((object)  0)  ), N(() => L<object,  short>(p0 => Sql.ConvertTo<short>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToInt16((sbyte)   0)  ), N(() => L<sbyte,   short>(p0 => Sql.ConvertTo<short>.From(p0))) },
-			{ M(() => Convert.ToInt16((float)   0)  ), N(() => L<float,   short>(p0 => Sql.ConvertTo<short>.From(Sql.RoundToEven(p0)))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToInt16((string) "0") ), N(() => L<string,  short>(p0 => Sql.ConvertTo<short>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToInt16((ushort)  0)  ), N(() => L<ushort,  short>(p0 => Sql.ConvertTo<short>.From(p0))) },
-			{ M(() => Convert.ToInt16((uint)    0)  ), N(() => L<uint,    short>(p0 => Sql.ConvertTo<short>.From(p0))) },
-			{ M(() => Convert.ToInt16((ulong)   0)  ), N(() => L<ulong,   short>(p0 => Sql.ConvertTo<short>.From(p0))) },
-
-			#endregion
-
-			#region ToSByte
-
-			{ M(() => Convert.ToSByte((bool)   true)), N(() => L<bool,    sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
-			{ M(() => Convert.ToSByte((byte)    0)  ), N(() => L<byte,    sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
-			{ M(() => Convert.ToSByte((char)   '0') ), N(() => L<char,    sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
-			{ M(() => Convert.ToSByte(DateTime.Now) ), N(() => L<DateTime,sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
-			{ M(() => Convert.ToSByte((decimal) 0)  ), N(() => L<decimal, sbyte>(p0 => Sql.ConvertTo<sbyte>.From(Sql.RoundToEven(p0)))) },
-			{ M(() => Convert.ToSByte((double)  0)  ), N(() => L<double,  sbyte>(p0 => Sql.ConvertTo<sbyte>.From(Sql.RoundToEven(p0)))) },
-			{ M(() => Convert.ToSByte((short)   0)  ), N(() => L<short,   sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
-			{ M(() => Convert.ToSByte((int)     0)  ), N(() => L<int,     sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
-			{ M(() => Convert.ToSByte((long)    0)  ), N(() => L<long,    sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToSByte((object)  0)  ), N(() => L<object,  sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToSByte((sbyte)   0)  ), N(() => L<sbyte,   sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
-			{ M(() => Convert.ToSByte((float)   0)  ), N(() => L<float,   sbyte>(p0 => Sql.ConvertTo<sbyte>.From(Sql.RoundToEven(p0)))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToSByte((string) "0") ), N(() => L<string,  sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToSByte((ushort)  0)  ), N(() => L<ushort,  sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
-			{ M(() => Convert.ToSByte((uint)    0)  ), N(() => L<uint,    sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
-			{ M(() => Convert.ToSByte((ulong)   0)  ), N(() => L<ulong,   sbyte>(p0 => Sql.ConvertTo<sbyte>.From(p0))) },
-
-			#endregion
-
-			#region ToSingle
-
-			{ M(() => Convert.ToSingle((bool)   true)), N(() => L<bool,    float>(p0 => Sql.ConvertTo<float>.From(p0))) },
-			{ M(() => Convert.ToSingle((byte)    0)  ), N(() => L<byte,    float>(p0 => Sql.ConvertTo<float>.From(p0))) },
-			{ M(() => Convert.ToSingle((char)   '0') ), N(() => L<char,    float>(p0 => Sql.ConvertTo<float>.From(p0))) },
-			{ M(() => Convert.ToSingle(DateTime.Now) ), N(() => L<DateTime,float>(p0 => Sql.ConvertTo<float>.From(p0))) },
-			{ M(() => Convert.ToSingle((decimal) 0)  ), N(() => L<decimal, float>(p0 => Sql.ConvertTo<float>.From(p0))) },
-			{ M(() => Convert.ToSingle((double)  0)  ), N(() => L<double,  float>(p0 => Sql.ConvertTo<float>.From(p0))) },
-			{ M(() => Convert.ToSingle((short)   0)  ), N(() => L<short,   float>(p0 => Sql.ConvertTo<float>.From(p0))) },
-			{ M(() => Convert.ToSingle((int)     0)  ), N(() => L<int,     float>(p0 => Sql.ConvertTo<float>.From(p0))) },
-			{ M(() => Convert.ToSingle((long)    0)  ), N(() => L<long,    float>(p0 => Sql.ConvertTo<float>.From(p0))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToSingle((object)  0)  ), N(() => L<object,  float>(p0 => Sql.ConvertTo<float>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToSingle((sbyte)   0)  ), N(() => L<sbyte,   float>(p0 => Sql.ConvertTo<float>.From(p0))) },
-			{ M(() => Convert.ToSingle((float)   0)  ), N(() => L<float,   float>(p0 => Sql.ConvertTo<float>.From(p0))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToSingle((string) "0") ), N(() => L<string,  float>(p0 => Sql.ConvertTo<float>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToSingle((ushort)  0)  ), N(() => L<ushort,  float>(p0 => Sql.ConvertTo<float>.From(p0))) },
-			{ M(() => Convert.ToSingle((uint)    0)  ), N(() => L<uint,    float>(p0 => Sql.ConvertTo<float>.From(p0))) },
-			{ M(() => Convert.ToSingle((ulong)   0)  ), N(() => L<ulong,   float>(p0 => Sql.ConvertTo<float>.From(p0))) },
-
-			#endregion
-
-			#region ToString
-
-			{ M(() => Convert.ToString((bool)   true)), N(() => L<bool,    string>(p0 => Sql.ConvertTo<string>.From(p0))) },
-#pragma warning disable RS0030, CA1305 // Do not used banned APIs
-			{ M(() => Convert.ToString((byte)    0)  ), N(() => L<byte,    string>(p0 => Sql.ConvertTo<string>.From(p0))) },
-			{ M(() => Convert.ToString((char)   '0') ), N(() => L<char,    string>(p0 => Sql.ConvertTo<string>.From(p0))) },
-			{ M(() => Convert.ToString(DateTime.Now) ), N(() => L<DateTime,string>(p0 => Sql.ConvertTo<string>.From(p0))) },
-			{ M(() => Convert.ToString((decimal) 0)  ), N(() => L<decimal, string>(p0 => Sql.ConvertTo<string>.From(p0))) },
-			{ M(() => Convert.ToString((double)  0)  ), N(() => L<double,  string>(p0 => Sql.ConvertTo<string>.From(p0))) },
-			{ M(() => Convert.ToString((short)   0)  ), N(() => L<short,   string>(p0 => Sql.ConvertTo<string>.From(p0))) },
-			{ M(() => Convert.ToString((int)     0)  ), N(() => L<int,     string>(p0 => Sql.ConvertTo<string>.From(p0))) },
-			{ M(() => Convert.ToString((long)    0)  ), N(() => L<long,    string>(p0 => Sql.ConvertTo<string>.From(p0))) },
-			{ M(() => Convert.ToString((object)  0)  ), N(() => L<object,  string>(p0 => Sql.ConvertTo<string>.From(p0))) },
-			{ M(() => Convert.ToString((sbyte)   0)  ), N(() => L<sbyte,   string>(p0 => Sql.ConvertTo<string>.From(p0))) },
-			{ M(() => Convert.ToString((float)   0)  ), N(() => L<float,   string>(p0 => Sql.ConvertTo<string>.From(p0))) },
-			{ M(() => Convert.ToString((string) "0") ), N(() => L<string,  string>(p0 => p0                            )) },
-			{ M(() => Convert.ToString((ushort)  0)  ), N(() => L<ushort,  string>(p0 => Sql.ConvertTo<string>.From(p0))) },
-			{ M(() => Convert.ToString((uint)    0)  ), N(() => L<uint,    string>(p0 => Sql.ConvertTo<string>.From(p0))) },
-			{ M(() => Convert.ToString((ulong)   0)  ), N(() => L<ulong,   string>(p0 => Sql.ConvertTo<string>.From(p0))) },
-#pragma warning restore RS0030, CA1305 // Do not used banned APIs
-			#endregion
-
-			#region ToUInt16
-
-			{ M(() => Convert.ToUInt16((bool)   true)), N(() => L<bool,    ushort>(p0 => Sql.ConvertTo<ushort>.From(p0))) },
-			{ M(() => Convert.ToUInt16((byte)    0)  ), N(() => L<byte,    ushort>(p0 => Sql.ConvertTo<ushort>.From(p0))) },
-			{ M(() => Convert.ToUInt16((char)   '0') ), N(() => L<char,    ushort>(p0 => Sql.ConvertTo<ushort>.From(p0))) },
-			{ M(() => Convert.ToUInt16(DateTime.Now) ), N(() => L<DateTime,ushort>(p0 => Sql.ConvertTo<ushort>.From(p0))) },
-			{ M(() => Convert.ToUInt16((decimal) 0)  ), N(() => L<decimal, ushort>(p0 => Sql.ConvertTo<ushort>.From(Sql.RoundToEven(p0)))) },
-			{ M(() => Convert.ToUInt16((double)  0)  ), N(() => L<double,  ushort>(p0 => Sql.ConvertTo<ushort>.From(Sql.RoundToEven(p0)))) },
-			{ M(() => Convert.ToUInt16((short)   0)  ), N(() => L<short,   ushort>(p0 => Sql.ConvertTo<ushort>.From(p0))) },
-			{ M(() => Convert.ToUInt16((int)     0)  ), N(() => L<int,     ushort>(p0 => Sql.ConvertTo<ushort>.From(p0))) },
-			{ M(() => Convert.ToUInt16((long)    0)  ), N(() => L<long,    ushort>(p0 => Sql.ConvertTo<ushort>.From(p0))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToUInt16((object)  0)  ), N(() => L<object,  ushort>(p0 => Sql.ConvertTo<ushort>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToUInt16((sbyte)   0)  ), N(() => L<sbyte,   ushort>(p0 => Sql.ConvertTo<ushort>.From(p0))) },
-			{ M(() => Convert.ToUInt16((float)   0)  ), N(() => L<float,   ushort>(p0 => Sql.ConvertTo<ushort>.From(Sql.RoundToEven(p0)))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToUInt16((string) "0") ), N(() => L<string,  ushort>(p0 => Sql.ConvertTo<ushort>.From(p0)) ) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToUInt16((ushort)  0)  ), N(() => L<ushort,  ushort>(p0 => Sql.ConvertTo<ushort>.From(p0)) ) },
-			{ M(() => Convert.ToUInt16((uint)    0)  ), N(() => L<uint,    ushort>(p0 => Sql.ConvertTo<ushort>.From(p0)) ) },
-			{ M(() => Convert.ToUInt16((ulong)   0)  ), N(() => L<ulong,   ushort>(p0 => Sql.ConvertTo<ushort>.From(p0)) ) },
-
-			#endregion
-
-			#region ToUInt32
-
-			{ M(() => Convert.ToUInt32((bool)   true)), N(() => L<bool,    uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
-			{ M(() => Convert.ToUInt32((byte)    0)  ), N(() => L<byte,    uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
-			{ M(() => Convert.ToUInt32((char)   '0') ), N(() => L<char,    uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
-			{ M(() => Convert.ToUInt32(DateTime.Now) ), N(() => L<DateTime,uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
-			{ M(() => Convert.ToUInt32((decimal) 0)  ), N(() => L<decimal, uint>(p0 => Sql.ConvertTo<uint>.From(Sql.RoundToEven(p0)))) },
-			{ M(() => Convert.ToUInt32((double)  0)  ), N(() => L<double,  uint>(p0 => Sql.ConvertTo<uint>.From(Sql.RoundToEven(p0)))) },
-			{ M(() => Convert.ToUInt32((short)   0)  ), N(() => L<short,   uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
-			{ M(() => Convert.ToUInt32((int)     0)  ), N(() => L<int,     uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
-			{ M(() => Convert.ToUInt32((long)    0)  ), N(() => L<long,    uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToUInt32((object)  0)  ), N(() => L<object,  uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToUInt32((sbyte)   0)  ), N(() => L<sbyte,   uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
-			{ M(() => Convert.ToUInt32((float)   0)  ), N(() => L<float,   uint>(p0 => Sql.ConvertTo<uint>.From(Sql.RoundToEven(p0)))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToUInt32((string) "0") ), N(() => L<string,  uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToUInt32((ushort)  0)  ), N(() => L<ushort,  uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
-			{ M(() => Convert.ToUInt32((uint)    0)  ), N(() => L<uint,    uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
-			{ M(() => Convert.ToUInt32((ulong)   0)  ), N(() => L<ulong,   uint>(p0 => Sql.ConvertTo<uint>.From(p0))) },
-
-			#endregion
-
-			#region ToUInt64
-
-			{ M(() => Convert.ToUInt64((bool)   true)), N(() => L<bool,    ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
-			{ M(() => Convert.ToUInt64((byte)    0)  ), N(() => L<byte,    ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
-			{ M(() => Convert.ToUInt64((char)   '0') ), N(() => L<char,    ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
-			{ M(() => Convert.ToUInt64(DateTime.Now) ), N(() => L<DateTime,ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
-			{ M(() => Convert.ToUInt64((decimal) 0)  ), N(() => L<decimal, ulong>(p0 => Sql.ConvertTo<ulong>.From(Sql.RoundToEven(p0)))) },
-			{ M(() => Convert.ToUInt64((double)  0)  ), N(() => L<double,  ulong>(p0 => Sql.ConvertTo<ulong>.From(Sql.RoundToEven(p0)))) },
-			{ M(() => Convert.ToUInt64((short)   0)  ), N(() => L<short,   ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
-			{ M(() => Convert.ToUInt64((int)     0)  ), N(() => L<int,     ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
-			{ M(() => Convert.ToUInt64((long)    0)  ), N(() => L<long,    ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToUInt64((object)  0)  ), N(() => L<object,  ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToUInt64((sbyte)   0)  ), N(() => L<sbyte,   ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
-			{ M(() => Convert.ToUInt64((float)   0)  ), N(() => L<float,   ulong>(p0 => Sql.ConvertTo<ulong>.From(Sql.RoundToEven(p0)))) },
-#pragma warning disable RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToUInt64((string) "0") ), N(() => L<string,  ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
-#pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
-			{ M(() => Convert.ToUInt64((ushort)  0)  ), N(() => L<ushort,  ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
-			{ M(() => Convert.ToUInt64((uint)    0)  ), N(() => L<uint,    ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
-			{ M(() => Convert.ToUInt64((ulong)   0)  ), N(() => L<ulong,   ulong>(p0 => Sql.ConvertTo<ulong>.From(p0))) },
-
-			#endregion
-
-			#endregion
-
 			#region Math
 
 			{ M(() => Math.Acos   (0)   ),       N(() => L<double,double>       (p     => Sql.Acos   (p)!   .Value )) },
@@ -1024,6 +669,7 @@ namespace LinqToDB.Linq
 			#endregion
 
 			#region SqlTypes
+#pragma warning disable MA0073 // Avoid comparison with bool constant
 
 			{ M(() => new SqlBoolean().Value),   N(() => L<SqlBoolean,bool>(obj => (bool)obj))          },
 			{ M(() => new SqlBoolean().IsFalse), N(() => L<SqlBoolean,bool>(obj => (bool)obj == false)) },
@@ -1031,6 +677,7 @@ namespace LinqToDB.Linq
 			{ M(() => SqlBoolean.True),          N(() => L                 (()               => true))  },
 			{ M(() => SqlBoolean.False),         N(() => L                 (()               => false)) },
 
+#pragma warning restore MA0073 // Avoid comparison with bool constant
 			#endregion
 		};
 #pragma warning restore CS0618 // Type or member is obsolete
@@ -1040,7 +687,7 @@ namespace LinqToDB.Linq
 #pragma warning disable CS0618 // Type or member is obsolete
 		static Dictionary<string,Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo>> LoadMembers()
 		{
-			var members = new Dictionary<string,Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo>>
+			var members = new Dictionary<string, Dictionary<MemberHelper.MemberInfoWithType, IExpressionInfo>>(StringComparer.Ordinal)
 			{
 				{ "", _commonMembers },
 
@@ -1282,18 +929,18 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.Round      (0.0)  ), N(() => L<double?, double?>   (d => d - Sql.Floor(d) == 0.5  && Sql.Floor(d) % 2 == 0? Sql.Ceiling(d) : AccessRound(d, 0))) },
 					{ M(() => Sql.Round      (0m, 0)), N(() => L<decimal?,int?,decimal?>((v,p)=> (decimal?)(
 						p == 1 ? Sql.Round(v * 10) / 10 :
-						p == 2 ? Sql.Round(v * 10) / 10 :
-						p == 3 ? Sql.Round(v * 10) / 10 :
-						p == 4 ? Sql.Round(v * 10) / 10 :
-						p == 5 ? Sql.Round(v * 10) / 10 :
-								 Sql.Round(v * 10) / 10))) },
+						p == 2 ? Sql.Round(v * 100) / 100 :
+						p == 3 ? Sql.Round(v * 1_000) / 1_000 :
+						p == 4 ? Sql.Round(v * 10_000) / 10_000 :
+						p == 5 ? Sql.Round(v * 100_000) / 100_000 :
+								 Sql.Round(v * 1_000_000) / 1_000_000))) },
 					{ M(() => Sql.Round      (0.0,0)), N(() => L<double?,int?,double?>((v,p) => (double?)(
 						p == 1 ? Sql.Round(v * 10) / 10 :
-						p == 2 ? Sql.Round(v * 10) / 10 :
-						p == 3 ? Sql.Round(v * 10) / 10 :
-						p == 4 ? Sql.Round(v * 10) / 10 :
-						p == 5 ? Sql.Round(v * 10) / 10 :
-								 Sql.Round(v * 10) / 10))) },
+						p == 2 ? Sql.Round(v * 100) / 100 :
+						p == 3 ? Sql.Round(v * 1_000) / 1_000 :
+						p == 4 ? Sql.Round(v * 10_000) / 10_000 :
+						p == 5 ? Sql.Round(v * 100_000) / 100_000 :
+								 Sql.Round(v * 1_000_000) / 1_000_000))) },
 					{ M(() => Sql.RoundToEven(0m)   ), N(() => L<decimal?,decimal?>     ( v   => AccessRound(v, 0))) },
 					{ M(() => Sql.RoundToEven(0.0)  ), N(() => L<double?, double?>      ( v   => AccessRound(v, 0))) },
 					{ M(() => Sql.RoundToEven(0m, 0)), N(() => L<decimal?,int?,decimal?>((v,p)=> AccessRound(v, p))) },
@@ -1411,6 +1058,7 @@ namespace LinqToDB.Linq
 
 		#region Sql specific
 
+		// TODO: move to translators and implement YDB using Re2::Replace regexp function
 		// TODO: Made private or remove in v7
 		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		// Missing support for trimChars: Access, SqlCe, SybaseASE
@@ -1436,6 +1084,7 @@ namespace LinqToDB.Linq
 			return str?.TrimEnd(trimChars);
 		}
 
+		// TODO: move to translators and implement YDB using Re2::Replace regexp function
 		// TODO: Made private or remove in v7
 		[Obsolete("This API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		// Missing support for trimChars: Access, SqlCe, SybaseASE
@@ -1581,7 +1230,7 @@ namespace LinqToDB.Linq
 		[Sql.Extension(builderType: typeof(ConvertToCaseCompareToBuilder))]
 		public static int? ConvertToCaseCompareTo(string? str, string? value)
 		{
-			return str == null || value == null ? (int?)null : str.CompareTo(value);
+			return str == null || value == null ? (int?)null : StringComparer.Ordinal.Compare(str, value);
 		}
 
 		// Access, DB2, Firebird, Informix, MySql, Oracle, PostgreSQL, SQLite

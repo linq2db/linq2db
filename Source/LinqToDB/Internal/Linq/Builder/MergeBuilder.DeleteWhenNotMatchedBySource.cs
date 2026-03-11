@@ -24,7 +24,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				statement.Operations.Add(operation);
 
 				var predicate = methodCall.Arguments[1];
-				if (!predicate.IsNullValue())
+				if (!predicate.IsNullValue)
 				{
 					var condition          = predicate.UnwrapLambda();
 					var conditionCorrected = mergeContext.SourceContext.PrepareSelfTargetLambda(condition);

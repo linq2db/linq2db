@@ -16,7 +16,6 @@ namespace LinqToDB.Internal.Expressions
 
 		public Expression[] Path { get; set; }
 
-		public override bool           CanReduce => false;
 		public override ExpressionType NodeType  => ExpressionType.Extension;
 		public override Type           Type      { get; }
 
@@ -28,9 +27,7 @@ namespace LinqToDB.Internal.Expressions
 		protected override Expression Accept(ExpressionVisitor visitor)
 		{
 			if (visitor is ExpressionVisitorBase baseVisitor)
-			{
 				return baseVisitor.VisitSqlPathExpression(this);
-			}
 
 			return base.Accept(visitor);
 		}

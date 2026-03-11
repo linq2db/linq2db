@@ -8,7 +8,6 @@ using System.Runtime.CompilerServices;
 using LinqToDB.Expressions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
@@ -157,8 +156,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public override void Cleanup()
 			{
-				base.Cleanup();
-
 				_visited   = default!;
 				_generator = default!;
 				_context   = default!;
@@ -166,6 +163,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				_duplicates             = default;
 				_constructed            = default;
 				_constructedAssignments = default;
+
+				base.Cleanup();
 			}
 		}
 
@@ -434,16 +433,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#region PreferServerSide
 
-		FindVisitor<ExpressionBuilder>? _enforceServerSideVisitorTrue;
-		FindVisitor<ExpressionBuilder>? _enforceServerSideVisitorFalse;
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		FindVisitor<ExpressionBuilder> GetVisitor(bool enforceServerSide)
+		bool PreferServerSide(bool enforceServerSide, Expression expr)
 		{
-			if (enforceServerSide)
-				return _enforceServerSideVisitorTrue ??= FindVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.PreferServerSide(e, true));
-			else
-				return _enforceServerSideVisitorFalse ??= FindVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.PreferServerSide(e, false));
+			return expr.Find((builder: this, enforceServerSide), static (ctx, e) => ctx.builder.PreferServerSide(e, ctx.enforceServerSide)) != null;
 		}
 
 		internal bool PreferServerSide(Expression expr, bool enforceServerSide)
@@ -465,7 +458,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (l.Parameters.Count == 1 && pi.Expression != null)
 							info = info.Replace(l.Parameters[0], pi.Expression);
 
-						return GetVisitor(enforceServerSide).Find(info) != null;
+						return PreferServerSide(enforceServerSide, info);
 					}
 
 					var attr = pi.Member.GetExpressionAttribute(MappingSchema);
@@ -478,7 +471,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var l  = LinqToDB.Linq.Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
 
 					if (l != null)
-						return GetVisitor(enforceServerSide).Find(l.Body.Unwrap()) != null;
+						return PreferServerSide(enforceServerSide, l.Body.Unwrap());
 
 					var attr = pi.Method.GetExpressionAttribute(MappingSchema);
 					return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeEvaluatedOnClient(expr);
@@ -529,12 +522,15 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var simplified = expression.Transform(e =>
 			{
-				if (e.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked && e.Type != typeof(object) && e.Type != typeof(Enum))
-				{
-					if (((UnaryExpression)e).Operand is SqlPlaceholderExpression convertPlaceholder)
+				if (e is UnaryExpression
 					{
-						return convertPlaceholder.WithType(e.Type);
-					}
+						NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked,
+						Method: null,
+						Operand: SqlPlaceholderExpression convertPlaceholder,
+					} ue
+					&& ue.Type != typeof(object) && ue.Type != typeof(Enum))
+				{
+					return convertPlaceholder.WithType(e.Type);
 				}
 
 				return e;
@@ -550,13 +546,13 @@ namespace LinqToDB.Internal.Linq.Builder
 						throw new InvalidOperationException();
 
 					var columnDescriptor = QueryHelper.GetColumnDescriptor(placeholder.Sql);
+					var sqlType          = QueryHelper.GetDbDataType(placeholder.Sql, MappingSchema);
 
-					var valueType = columnDescriptor?.GetDbDataType(true).SystemType
-					                ?? placeholder.Type;
+					var valueType = sqlType.SystemType;
 
 					var canBeNull = nullability.CanBeNull(placeholder.Sql) || placeholder.Type.IsNullableType;
 
-					if (canBeNull && valueType != placeholder.Type && !valueType.IsNullableOrReferenceType())
+					if (canBeNull && valueType != placeholder.Type && !valueType.IsNullableOrReferenceType)
 					{
 						valueType = valueType.AsNullable();
 					}
@@ -588,15 +584,15 @@ namespace LinqToDB.Internal.Linq.Builder
 					return new TransformInfo(readerExpression);
 				}
 
-				if (e.NodeType == ExpressionType.Equal || e.NodeType == ExpressionType.NotEqual)
+				if (e.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
 				{
 					var binary = (BinaryExpression)e;
-					if (binary.Left.IsNullValue() && binary.Right is SqlPlaceholderExpression placeholderRight)
+					if (binary is { Left.IsNullValue: true, Right: SqlPlaceholderExpression placeholderRight })
 					{
 						return new TransformInfo(new SqlReaderIsNullExpression(placeholderRight, e.NodeType == ExpressionType.NotEqual), false, true);
 					}
 
-					if (binary.Right.IsNullValue() && binary.Left is SqlPlaceholderExpression placeholderLeft)
+					if (binary is { Right.IsNullValue: true, Left: SqlPlaceholderExpression placeholderLeft })
 					{
 						return new TransformInfo(new SqlReaderIsNullExpression(placeholderLeft, e.NodeType == ExpressionType.NotEqual), false, true);
 					}

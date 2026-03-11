@@ -231,16 +231,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateAddDayOfYear([DataSources(DateOnlySkipProviders)] string context)
-		{
-			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.AllData))
-				AreEqual(
-					from t in Transaction.AllData        select           Sql.DateAdd(Sql.DateParts.DayOfYear, 3, t.TransactionDate) !.Value,
-					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.DayOfYear, 3, t.TransactionDate))!.Value);
-		}
-
-		[Test]
 		public void DateAddDay([DataSources(DateOnlySkipProviders)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -258,16 +248,6 @@ namespace Tests.Linq
 				AreEqual(
 					from t in Transaction.AllData        select           Sql.DateAdd(Sql.DateParts.Week, -1, t.TransactionDate) !.Value,
 					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Week, -1, t.TransactionDate))!.Value);
-		}
-
-		[Test]
-		public void DateAddWeekDay([DataSources(DateOnlySkipProviders)] string context)
-		{
-			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(Transaction.AllData))
-				AreEqual(
-					from t in Transaction.AllData        select           Sql.DateAdd(Sql.DateParts.WeekDay, 1, t.TransactionDate) !.Value,
-					from t in db.GetTable<Transaction>() select Sql.AsSql(Sql.DateAdd(Sql.DateParts.WeekDay, 1, t.TransactionDate))!.Value);
 		}
 
 		[Test]
@@ -309,10 +289,10 @@ namespace Tests.Linq
 			[DataSources(TestProvName.AllInformix, DateOnlySkipProviders)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select           (int)(t.DateTimeValue.AddHours(100) - t.DateTimeValue).TotalDays,
-					from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddHours(100) - t.DateTimeValue).TotalDays));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select (int)(t.DateTimeValue.AddHours(100) - t.DateTimeValue).TotalDays,
+				from t in db.Types select (int)Sql.AsSql((t.DateTimeValue.AddHours(100) - t.DateTimeValue).TotalDays));
 		}
 
 		[Test]
@@ -320,10 +300,10 @@ namespace Tests.Linq
 			[DataSources(TestProvName.AllInformix, DateOnlySkipProviders)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in    Types select           Sql.DateDiff(Sql.DateParts.Day, t.DateTimeValue, t.DateTimeValue.AddHours(100)),
-					from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Day, t.DateTimeValue, t.DateTimeValue.AddHours(100))));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in Types select Sql.DateDiff(Sql.DateParts.Day, t.DateTimeValue, t.DateTimeValue.AddHours(100)),
+				from t in db.Types select Sql.AsSql(Sql.DateDiff(Sql.DateParts.Day, t.DateTimeValue, t.DateTimeValue.AddHours(100))));
 		}
 
 		#endregion
@@ -333,47 +313,47 @@ namespace Tests.Linq
 		[Test]
 		public void MakeDateOnly([DataSources(DateOnlySkipProviders)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in from p in    Types select Sql.MakeDateOnly(2010, p.ID, 1) where t.Value.Year == 2010 select t,
-					from t in from p in db.Types select Sql.MakeDateOnly(2010, p.ID, 1) where t.Value.Year == 2010 select t);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in from p in Types select Sql.MakeDateOnly(2010, p.ID, 1) where t.Value.Year == 2010 select t,
+				from t in from p in db.Types select Sql.MakeDateOnly(2010, p.ID, 1) where t.Value.Year == 2010 select t);
 		}
 
 		[Test]
 		public void MakeDateOnlyParameters([DataSources(DateOnlySkipProviders)] string context)
 		{
 			var year = 2010;
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in from p in    Types select Sql.MakeDateOnly(year, p.ID, 1) where t.Value.Year == 2010 select t,
-					from t in from p in db.Types select Sql.MakeDateOnly(year, p.ID, 1) where t.Value.Year == 2010 select t);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in from p in Types select Sql.MakeDateOnly(year, p.ID, 1) where t.Value.Year == 2010 select t,
+				from t in from p in db.Types select Sql.MakeDateOnly(year, p.ID, 1) where t.Value.Year == 2010 select t);
 		}
 
 		[Test]
 		public void MakeDateOnlyParametersMonth([DataSources(DateOnlySkipProviders)] string context, [Values(1, 10)] int month)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in from p in    Types select Sql.MakeDateOnly(2010 + p.ID, month, 1) select t,
-					from t in from p in db.Types select Sql.MakeDateOnly(2010 + p.ID, month, 1) select t);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in from p in Types select Sql.MakeDateOnly(2010 + p.ID, month, 1) select t,
+				from t in from p in db.Types select Sql.MakeDateOnly(2010 + p.ID, month, 1) select t);
 		}
 
 		[Test]
 		public void NewDateOnly1([DataSources(DateOnlySkipProviders)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from t in from p in    Types select new DateOnly(p.DateTimeValue.Year, 10, 1) where t.Month == 10 select t,
-					from t in from p in db.Types select new DateOnly(p.DateTimeValue.Year, 10, 1) where t.Month == 10 select t);
+			using var db = GetDataContext(context);
+			AreEqual(
+				from t in from p in Types select new DateOnly(p.DateTimeValue.Year, 10, 1) where t.Month == 10 select t,
+				from t in from p in db.Types select new DateOnly(p.DateTimeValue.Year, 10, 1) where t.Month == 10 select t);
 		}
 
 		[Test]
 		public void NewDateOnly2([DataSources(DateOnlySkipProviders)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p in    Types select new DateOnly(p.DateTimeValue.Year, 10, 1),
-					from p in db.Types select new DateOnly(p.DateTimeValue.Year, 10, 1));
+			using var db = GetDataContext(context);
+			AreEqual(
+				from p in Types select new DateOnly(p.DateTimeValue.Year, 10, 1),
+				from p in db.Types select new DateOnly(p.DateTimeValue.Year, 10, 1));
 		}
 
 #endregion

@@ -1,4 +1,8 @@
-﻿namespace LinqToDB.Internal.SqlQuery
+﻿using System.Diagnostics;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
+
+namespace LinqToDB.Internal.SqlQuery
 {
 	public sealed class SqlDropTableStatement : SqlStatement
 	{
@@ -34,5 +38,8 @@
 			noAlias = false;
 			return null;
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlDropTableStatement(this);
 	}
 }

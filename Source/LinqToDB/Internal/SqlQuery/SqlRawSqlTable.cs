@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.SqlQuery
@@ -73,6 +75,9 @@ namespace LinqToDB.Internal.SqlQuery
 		#region IQueryElement Members
 
 		public string SqlText => this.ToDebugString();
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlRawSqlTable(this);
 
 		#endregion
 	}

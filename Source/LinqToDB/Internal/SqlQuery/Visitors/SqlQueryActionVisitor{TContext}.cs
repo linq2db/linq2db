@@ -26,11 +26,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return Visit(root);
 		}
 
-		public void Cleanup()
+		public override void Cleanup()
 		{
 			_visitAction = null!;
 			_visited     = null;
 			_context     = default!;
+
+			base.Cleanup();
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]

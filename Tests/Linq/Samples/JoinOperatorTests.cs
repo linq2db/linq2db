@@ -12,24 +12,21 @@ namespace Tests.Samples
 		[Test]
 		public void InnerJoinOnSingleColumn([NorthwindDataContext] string context)
 		{
-			using (var db = new NorthwindDB(context))
-			{
-				var query =
+			using var db = new NorthwindDB(context);
+			var query =
 					from c in db.Category
 					join p in db.Product on c.CategoryID equals p.CategoryID
 					where !p.Discontinued
 					select c;
 
-				query.ToArray();
-			}
+			query.ToArray();
 		}
 
 		[Test]
 		public void InnerJoinOnMultipleColumns([NorthwindDataContext] string context)
 		{
-			using (var db = new NorthwindDB(context))
-			{
-				var query =
+			using var db = new NorthwindDB(context);
+			var query =
 					from p in db.Product
 					from o in db.Order
 					join d in db.OrderDetail
@@ -41,9 +38,8 @@ namespace Tests.Samples
 						o.OrderID,
 					};
 
-				var data = query.ToArray();
-				Assert.That(data, Is.Not.Empty);
-			}
+			var data = query.ToArray();
+			Assert.That(data, Is.Not.Empty);
 		}
 	}
 }

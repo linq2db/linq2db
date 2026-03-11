@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -74,11 +75,12 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public List<object>     Properties => field ??= new ();
 
-		public bool             IsSimple         => IsSimpleOrSet && !HasSetOperators;
-		public bool             IsSimpleOrSet    => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty && From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0;
-		public bool             IsSimpleButWhere => !HasSetOperators && !Select.HasModifier && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty && From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0;
-		public bool             IsLimited        => Select.SkipValue != null || Select.TakeValue != null;
 		public bool             IsParameterDependent { get; set; }
+
+		public bool IsLimitedToOneRecord()
+		{
+			return Select.TakeValue is SqlValue { Value: 1 };
+		}
 
 		/// <summary>
 		/// Gets or sets flag when sub-query can be removed during optimization.
@@ -100,14 +102,14 @@ namespace LinqToDB.Internal.SqlQuery
 			internal set => _uniqueKeys = value;
 		}
 
-		public  bool                   HasUniqueKeys => _uniqueKeys?.Count > 0;
+		public bool HasUniqueKeys => _uniqueKeys?.Count > 0;
 
 		#endregion
 
 		#region Union
 
 		private List<SqlSetOperator>? _setOperators;
-		public  List<SqlSetOperator>  SetOperators
+		public List<SqlSetOperator> SetOperators
 		{
 			get => _setOperators ??= [];
 			internal set => _setOperators = value;
@@ -148,7 +150,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		internal static SqlTableSource? CheckTableSource(SqlTableSource ts, ISqlTableSource table, string? alias)
 		{
-			if (ts.Source == table && (alias == null || ts.Alias == alias))
+			if (ts.Source == table && (alias == null || string.Equals(ts.Alias, alias, StringComparison.Ordinal)))
 				return ts;
 
 			var jt = ts[table, alias];
@@ -180,7 +182,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		#region ISqlTableSource Members
 
-		public static int SourceIDCounter;
+		internal static int SourceIDCounter;
 
 		public int           SourceID { get; }
 		public SqlTableType  SqlTableType => SqlTableType.Table;
@@ -216,35 +218,43 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public override bool CanBeNullable(NullabilityContext nullability)
 		{
-			foreach(var column in Select.Columns)
-				if (column.CanBeNullable(nullability))
-					return true;
-
-			var allAggregation = Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression));
-			if (allAggregation)
-				return false;
+			if (this is { IsLimited: false, HasSetOperators: false, HasGroupBy: false, HasHaving: false, IsSingleColumn: true }
+				&& QueryHelper.IsAggregationQuery(this))
+			{
+				// For scalar aggregation queries (no GROUP BY), delegate nullability to the aggregation function
+				// e.g., COUNT(*) is never nullable, but SUM/AVG/MAX can be nullable
+				return Select.Columns[0].CanBeNullable(nullability);
+			}
 
 			return true;
 		}
 
 		public override int Precedence => LinqToDB.SqlQuery.Precedence.Unknown;
 
-		public override bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			return ReferenceEquals(this, other);
 		}
 
-		public override Type? SystemType
-		{
-			get
+		public override Type? SystemType =>
+			this switch
 			{
-				if (Select.Columns.Count == 1)
-					return Select.Columns[0].SystemType;
+				{ Select.Columns: [{ SystemType: var type }] } => type,
+				{ From.Tables: [{ Joins.Count: 0, SystemType: var type }] } => type,
+				_ => null,
+			};
 
-				if (From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0)
-					return From.Tables[0].SystemType;
-
-				return null;
+		public override string ToString()
+		{
+			try
+			{
+				var writer = new QueryElementTextWriter(NullabilityContext.GetContext(this));
+				ToString(writer);
+				return writer.ToString();
+			}
+			catch
+			{
+				return $"FAIL ToString('{typeof(SelectQuery).FullName}').";
 			}
 		}
 
@@ -313,6 +323,9 @@ namespace LinqToDB.Internal.SqlQuery
 			return hash.ToHashCode();
 		}
 
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlQuery(this);
+
 		#endregion
 
 		#region Debug
@@ -333,7 +346,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public SelectQuery CloneQuery()
 		{
-			return this.Clone(e => ReferenceEquals(e, this));
+			return this.Clone(e => e is not SqlCteTable);
 		}
 	}
 }

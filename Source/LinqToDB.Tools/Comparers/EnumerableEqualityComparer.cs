@@ -6,7 +6,7 @@ namespace LinqToDB.Tools.Comparers
 {
 	sealed class EnumerableEqualityComparer : EqualityComparer<IEnumerable>
 	{
-		public new static EnumerableEqualityComparer Default { get; } = new EnumerableEqualityComparer();
+		public static new EnumerableEqualityComparer Default { get; } = new EnumerableEqualityComparer();
 
 		public override int GetHashCode(IEnumerable? obj)
 		{

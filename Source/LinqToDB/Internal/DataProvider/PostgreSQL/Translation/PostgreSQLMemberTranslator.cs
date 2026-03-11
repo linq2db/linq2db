@@ -190,8 +190,6 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 					case Sql.DateParts.Minute:      intervalExpr = ToInterval(increment, "1 Minute"); break;
 					case Sql.DateParts.Second:      intervalExpr = ToInterval(increment, "1 Second"); break;
 					case Sql.DateParts.Millisecond: intervalExpr = ToInterval(increment, "1 Millisecond"); break;
-					case Sql.DateParts.DayOfYear:
-					case Sql.DateParts.WeekDay:
 					case Sql.DateParts.Day: intervalExpr = ToInterval(increment, "1 Day"); break;
 					default:
 						return null;
@@ -242,7 +240,10 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 			protected override ISqlExpression? TranslateSqlCurrentTimestampUtc(ITranslationContext translationContext, DbDataType dbDataType, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
-				return factory.Function(dbDataType, "timezone", factory.Value("UTC"), factory.Function(dbDataType, "now"));
+
+				// timezone('UTC', now()) returns timestamp without tz
+				// https://www.postgresql.org/docs/current/functions-datetime.html
+				return factory.Function(dbDataType.WithDataType(DataType.DateTime2), "timezone", factory.Value("UTC"), factory.Function(dbDataType.WithDataType(DataType.DateTimeOffset), "now"));
 			}
 		}
 
@@ -414,7 +415,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL.Translation
 
 							SqlSearchCondition? filterCondition = null;
 
-							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
+							if (info is { FilterCondition.IsTrue: false })
 							{
 								filterCondition = info.FilterCondition;
 							}

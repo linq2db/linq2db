@@ -10,7 +10,6 @@ using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.Expressions;
-using LinqToDB.Internal.Expressions.ExpressionVisitors;
 using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.Linq.Builder.Visitors;
 using LinqToDB.Internal.Reflection;
@@ -33,8 +32,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		sealed class IsServerSideOnlyCheckVisitor : ExpressionVisitorBase
 		{
-			bool                                                 _isServerSideOnly;
-			MappingSchema                                        _mappingSchema  = default!;
+			bool          _isServerSideOnly;
+			MappingSchema _mappingSchema  = default!;
 
 			public bool IsServerSideOnly(Expression expression, MappingSchema mappingSchema)
 			{
@@ -66,8 +65,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			protected override Expression VisitMember(MemberExpression node)
 			{
-				var attr = node.Member.GetExpressionAttribute(_mappingSchema);
-				if (attr != null && attr.ServerSideOnly)
+				if (node.Member.IsServerSideOnly(_mappingSchema))
 				{
 					_isServerSideOnly = true;
 					return node;
@@ -78,8 +76,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			protected override Expression VisitMethodCall(MethodCallExpression node)
 			{
-				var attr = node.Method.GetExpressionAttribute(_mappingSchema);
-				if (attr?.ServerSideOnly == true)
+				if (node.Method.IsServerSideOnly(_mappingSchema))
 				{
 					_isServerSideOnly = true;
 					return node;
@@ -102,8 +99,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
-		static ObjectPool<IsServerSideOnlyCheckVisitor> _serverSideOnlyVisitorPool  = new(() => new IsServerSideOnlyCheckVisitor(), v => v.Cleanup(), 100);
-		static ObjectPool<CanBeEvaluatedOnClientCheckVisitor> _canBeEvaluatedOnClientCheckVisitorPool = new(() => new CanBeEvaluatedOnClientCheckVisitor(), v => v.Cleanup(), 100);
+		static readonly ObjectPool<IsServerSideOnlyCheckVisitor> _serverSideOnlyVisitorPool  = new(() => new IsServerSideOnlyCheckVisitor(), v => v.Cleanup(), 100);
+		static readonly ObjectPool<CanBeEvaluatedOnClientCheckVisitor> _canBeEvaluatedOnClientCheckVisitorPool = new(() => new CanBeEvaluatedOnClientCheckVisitor(), v => v.Cleanup(), 100);
 
 		Dictionary<Expression, bool>? _isServerSideOnlyCache;
 
@@ -205,7 +202,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (typeof(IQueryable<>).IsSameOrParentOf(node.Type))
 				{
 					if (node.Arguments.Any(static a => typeof(IDataContext).IsSameOrParentOf(a.Type)) ||
-						node.Object != null && typeof(IDataContext).IsSameOrParentOf(node.Object.Type))
+						(node.Object != null && typeof(IDataContext).IsSameOrParentOf(node.Object.Type)))
 					{
 						CanBeEvaluated = false;
 						return node;
@@ -230,12 +227,17 @@ namespace LinqToDB.Internal.Linq.Builder
 			public override Expression VisitSqlQueryRootExpression(SqlQueryRootExpression node)
 			{
 				if (InMethod
-					&& ((IConfigurationID)node.MappingSchema).ConfigurationID ==
-					((IConfigurationID)_mappingSchema).ConfigurationID)
+					&& ((IConfigurationID)node.MappingSchema).ConfigurationID == ((IConfigurationID)_mappingSchema).ConfigurationID)
 				{
 					return node;
 				}
 
+				CanBeEvaluated = false;
+				return node;
+			}
+
+			internal override Expression VisitSqlPathExpression(SqlPathExpression node)
+			{
 				CanBeEvaluated = false;
 				return node;
 			}
@@ -280,6 +282,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				_mappingSchema = default!;
 				IsImmutable    = true;
+
+				base.Cleanup();
 			}
 
 			[return : NotNullIfNotNull(nameof(node))]
@@ -375,7 +379,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				    method.DeclaringType.IsDefined(typeof(IsReadOnlyAttribute), false))
 				{
 					// Instance methods in readonly structs are implicitly read-only
-					if (!method.IsStatic && method.Name != ".ctor")
+					if (!method.IsStatic && !string.Equals(method.Name, ".ctor", StringComparison.Ordinal))
 					{
 						return true;
 					}
@@ -397,8 +401,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						if (method.DeclaringType != null)
 						{
-							var attributes = _mappingSchema.GetAttributes<Sql.ExpressionAttribute>(method.DeclaringType, method);
-							if (attributes.Length > 0 && !attributes.Any(a => a.PreferServerSide || a.ServerSideOnly || !a.IsPure))
+							if (method.GetExpressionAttribute(_mappingSchema) is { PreferServerSide: false, IsPure: true }
+								&& !method.IsServerSideOnly(_mappingSchema))
 							{
 								return true;
 							}
@@ -411,7 +415,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							return true;
 						}
 
-						if (method.DeclaringType == typeof(object) && method.Name == nameof(ToString))
+						if (method.DeclaringType == typeof(object) && string.Equals(method.Name, nameof(ToString), StringComparison.Ordinal))
 						{
 							return true;
 						}
@@ -506,16 +510,10 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#region PreferServerSide
 
-		private FindVisitor<ExpressionTreeOptimizationContext>? _enforceServerSideVisitorTrue;
-		private FindVisitor<ExpressionTreeOptimizationContext>? _enforceServerSideVisitorFalse;
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private FindVisitor<ExpressionTreeOptimizationContext> GetVisitor(bool enforceServerSide)
+		private bool PreferServerSide(bool enforceServerSide, Expression expr)
 		{
-			if (enforceServerSide)
-				return _enforceServerSideVisitorTrue ??= FindVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.PreferServerSide(e, true));
-			else
-				return _enforceServerSideVisitorFalse ??= FindVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.PreferServerSide(e, false));
+			return expr.Find((context: this, enforceServerSide), static (ctx, e) => ctx.context.PreferServerSide(e, ctx.enforceServerSide)) != null;
 		}
 
 		public bool PreferServerSide(Expression expr, bool enforceServerSide)
@@ -534,7 +532,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (l.Parameters.Count == 1 && pi.Expression != null)
 							info = info.Replace(l.Parameters[0], pi.Expression);
 
-						return GetVisitor(enforceServerSide).Find(info) != null;
+						return PreferServerSide(enforceServerSide, info);
 					}
 
 					var attr = pi.Member.GetExpressionAttribute(MappingSchema);
@@ -547,7 +545,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					var l  = LinqToDB.Linq.Expressions.ConvertMember(MappingSchema, pi.Object?.Type, pi.Method);
 
 					if (l != null)
-						return GetVisitor(enforceServerSide).Find(l.Body.Unwrap()) != null;
+						return PreferServerSide(enforceServerSide, l.Body.Unwrap());
 
 					var attr = pi.Method.GetExpressionAttribute(MappingSchema);
 					return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeEvaluatedOnClient(expr);

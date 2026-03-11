@@ -306,15 +306,11 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			Expression currentPath = memberExpression != null ? memberExpression : pathExpression!;
 
-			var fieldName = GenerateFieldName(currentPath);
-			if (fieldName == null)
-			{
-				fieldName = "field1";
-			}
+			var fieldName = GenerateFieldName(currentPath) ?? "field1";
 
 			Utils.MakeUniqueNames([fieldName], _fieldsMap.Select(x => ((SqlField)x.placeholder.Sql).Name), x => x, (e, v, s) => fieldName = v);
 
-			var dbDataType = currentDescriptor?.GetDbDataType(true) ?? QueryHelper.GetDbDataType(firstTranslated.Sql, MappingSchema);
+			var dbDataType = currentDescriptor?.GetDbDataType(true) ?? QueryHelper.GetCommonDbDataType(translations.OfType<SqlPlaceholderExpression>().Select(t => t.Sql), MappingSchema);
 
 			var field = new SqlField(dbDataType, fieldName, true);
 			var fieldPlaceholder = ExpressionBuilder.CreatePlaceholder(this, field, currentPath);

@@ -16,7 +16,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class DeleteBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable();
+			=> call.IsQueryable;
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -42,7 +42,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			var deleteStatement = new SqlDeleteStatement(sequence.SelectQuery);
 
-			var tableContext = SequenceHelper.GetTableContext(sequence);
+			var tableContext = SequenceHelper.GetTableOrCteContext(sequence);
 			if (tableContext == null)
 				throw new InvalidOperationException("Cannot find target table for DELETE statement");
 
@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				outputExpression =
 					(LambdaExpression?)methodCall.GetArgumentByName("outputExpression")?.Unwrap()
-					?? BuildDefaultOutputExpression(methodCall.Method.GetGenericArguments().Last());
+					?? BuildDefaultOutputExpression(methodCall.Method.GetGenericArguments()[^1]);
 
 				deleteStatement.Output = new SqlOutputClause();
 
@@ -70,16 +70,18 @@ namespace LinqToDB.Internal.Linq.Builder
 				// create separate query for output
 				var outputSelectQuery = new SelectQuery();
 
-				deletedContext = new AnchorContext(null,
+				deletedContext = new AnchorContext(
+					parent: null,
 					new TableBuilder.TableContext(sequence.TranslationModifier, builder, sequence.MappingSchema, outputSelectQuery, deletedTable, false),
-					SqlAnchor.AnchorKindEnum.Deleted);
+					SqlAnchor.AnchorKindEnum.Deleted
+				);
 
 				if (deleteType == DeleteContext.DeleteTypeEnum.DeleteOutputInto)
 				{
 					var outputTable = methodCall.GetArgumentByName("outputTable")!;
 
 					var destinationSequence = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
-					var destinationContext = SequenceHelper.GetTableContext(destinationSequence);
+					var destinationContext = SequenceHelper.GetTableOrCteContext(destinationSequence);
 					if (destinationContext == null)
 						throw new InvalidOperationException();
 

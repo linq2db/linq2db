@@ -166,7 +166,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				else
 					stringBuilder
 						.Append('\'')
-						.Append(value.Replace("'", "''"))
+						.Append(value.Replace("'", "''", StringComparison.Ordinal))
 						.Append('\'');
 			}
 		}
@@ -182,7 +182,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 
 		static bool NeedsEncoding(char c)
 		{
-			return c == '\x00' || c >= '\x80';
+			return c is '\x00' or >= '\x80';
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, DataOptions options, char value)
@@ -233,9 +233,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 				// setup bool to "1"/"0" conversions
 				var booleanType = new SqlDataType(DataType.Char, typeof(bool), length: 1, null, null, dbType: "CHAR(1)");
 				SetDataType(typeof(bool), booleanType);
-				// TODO: we should add support for single converter to parameter for structs
-				SetConvertExpression<bool , DataParameter>(value => new DataParameter(null, value ? '1' : '0', booleanType.Type));
-				SetConvertExpression<bool?, DataParameter>(value => new DataParameter(null, value == null ? null : value.Value ? '1' : '0', booleanType.Type.WithSystemType(typeof(bool?))), addNullCheck: false);
+				SetConvertExpression<bool, DataParameter>(value => new DataParameter(null, value ? '1' : '0', booleanType.Type));
 				SetValueToSqlConverter(typeof(bool), (sb, dt, _, v) => ConvertBooleanToSql(sb, (bool)v));
 			}
 
@@ -247,25 +245,14 @@ namespace LinqToDB.Internal.DataProvider.Firebird
 					.Append('\'');
 			}
 		}
+		
+		public sealed class Firebird25MappingSchema() : Firebird25MappingSchemaBase(FirebirdProviderAdapter.Instance.MappingSchema, Instance);
 
-		public sealed class Firebird25MappingSchema : Firebird25MappingSchemaBase
-		{
-			public Firebird25MappingSchema() : base(FirebirdProviderAdapter.Instance.MappingSchema, Instance)
-			{
-			}
-		}
+		public sealed class Firebird3MappingSchema() : LockedMappingSchema(ProviderName.Firebird3, FirebirdProviderAdapter.Instance.MappingSchema, Instance);
 
-		public sealed class Firebird3MappingSchema() : LockedMappingSchema(ProviderName.Firebird3, FirebirdProviderAdapter.Instance.MappingSchema, Instance)
-		{
-		}
+		public sealed class Firebird4MappingSchema() : LockedMappingSchema(ProviderName.Firebird4, FirebirdProviderAdapter.Instance.MappingSchema, Instance);
 
-		public sealed class Firebird4MappingSchema() : LockedMappingSchema(ProviderName.Firebird4, FirebirdProviderAdapter.Instance.MappingSchema, Instance)
-		{
-		}
-
-		public sealed class Firebird5MappingSchema() : LockedMappingSchema(ProviderName.Firebird5, FirebirdProviderAdapter.Instance.MappingSchema, Instance)
-		{
-		}
+		public sealed class Firebird5MappingSchema() : LockedMappingSchema(ProviderName.Firebird5, FirebirdProviderAdapter.Instance.MappingSchema, Instance);
 
 		sealed class FirebirdRemoteMappingSchema(string configuration) : LockedMappingSchema(configuration, Instance);
 

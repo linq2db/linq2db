@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -8,7 +11,7 @@ namespace LinqToDB.Internal.SqlQuery
 	{
 		#region Join
 
-		public class Join
+		public sealed class Join
 		{
 			internal Join(JoinType joinType, ISqlTableSource table, string? alias, bool isWeak, IReadOnlyCollection<Join>? joins)
 			{
@@ -29,7 +32,7 @@ namespace LinqToDB.Internal.SqlQuery
 		}
 
 		internal SqlFromClause(IEnumerable<SqlTableSource> tables)
-			: base(null)
+			: base(selectQuery: null)
 		{
 			Tables.AddRange(tables);
 		}
@@ -54,7 +57,7 @@ namespace LinqToDB.Internal.SqlQuery
 		{
 			foreach (var ts in Tables)
 				if (ts.Source == table)
-					if (alias == null || ts.Alias == alias)
+					if (alias == null || string.Equals(ts.Alias, alias, StringComparison.Ordinal))
 						return ts;
 					else
 						throw new ArgumentException($"Invalid alias: '{ts.Alias}' != '{alias}'");
@@ -195,6 +198,9 @@ namespace LinqToDB.Internal.SqlQuery
 
 			return hash.ToHashCode();
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlFromClause(this);
 
 		#endregion
 

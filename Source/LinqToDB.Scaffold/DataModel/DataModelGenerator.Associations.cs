@@ -125,7 +125,7 @@ namespace LinqToDB.DataModel
 				|| association.ToColumns == null
 				|| association.FromColumns.Length != association.ToColumns.Length
 				|| association.FromColumns.Length == 0)
-				throw new InvalidOperationException($"Invalid association configuration: association columns missing or mismatch on both sides of assocation.");
+				throw new InvalidOperationException("Invalid association configuration: association columns missing or mismatch on both sides of assocation.");
 
 			var thisColumns  =  backReference ? association.ToColumns : association.FromColumns;
 			var otherColumns = !backReference ? association.ToColumns : association.FromColumns;

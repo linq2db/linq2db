@@ -2,7 +2,7 @@
   "solution": {
     "path": "linq2db.slnx",
     "projects": [
-      "Source\\LinqToDB.Tools\\LinqToDB.Tools.csproj",
+      "Source\\CodeGenerators\\CodeGenerators.csproj",
       "Source\\LinqToDB\\LinqToDB.csproj",
       "Tests\\Tests.Benchmarks\\linq2db.Benchmarks.csproj"
     ]

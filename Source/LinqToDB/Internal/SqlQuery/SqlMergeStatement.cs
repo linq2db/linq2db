@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -40,7 +43,7 @@ namespace LinqToDB.Internal.SqlQuery
 		public List<SqlMergeOperationClause> Operations { get; private  set; } = new();
 		public SqlOutputClause?              Output     { get; set; }
 
-		public bool                          HasIdentityInsert => Operations.Any(o => o.OperationType == MergeOperationType.Insert && o.Items.Any(item => item.Column is SqlField { IsIdentity: true }));
+		public bool                          HasIdentityInsert => Operations.Exists(o => o.OperationType == MergeOperationType.Insert && o.Items.Exists(item => item.Column is SqlField { IsIdentity: true }));
 		public override QueryType            QueryType         => QueryType.Merge;
 		public override QueryElementType     ElementType       => QueryElementType.MergeStatement;
 
@@ -94,6 +97,9 @@ namespace LinqToDB.Internal.SqlQuery
 
 			return hash.ToHashCode();
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlMergeStatement(this);
 
 		public override bool IsParameterDependent
 		{

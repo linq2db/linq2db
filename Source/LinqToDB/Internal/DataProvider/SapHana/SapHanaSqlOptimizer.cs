@@ -45,7 +45,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			{
 			}
 
-			protected override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
+			protected internal override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
 			{
 				var saveIsLateralJoin = _isLateralJoin;
 				_isLateralJoin = _isLateralJoin || element.JoinType == JoinType.CrossApply || element.JoinType == JoinType.OuterApply;
@@ -57,7 +57,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				return element;
 			}
 
-			protected override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
+			protected internal override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
 			{
 				if (_isLateralJoin)
 				{

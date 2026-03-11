@@ -28,7 +28,7 @@ namespace LinqToDB.DataModel
 
 		private readonly Dictionary<ColumnModel, CodeProperty>                          _columnProperties = new ();
 		private readonly Dictionary<AdditionalSchemaModel, IDataModelGenerationContext> _schemaContexts   = new ();
-		private readonly Dictionary<string, FileData>                                   _files            = new ();
+		private readonly Dictionary<string, FileData>                                   _files            = new (StringComparer.Ordinal);
 		private readonly Dictionary<EntityModel, ClassBuilder>                          _entityBuilders   = new ();
 
 		private RegionGroup?                            _tableFunctions;
@@ -125,7 +125,7 @@ namespace LinqToDB.DataModel
 		FileData IDataModelGenerationContext.AddFile(string fileName)
 		{
 			var file = _languageProvider.ASTBuilder.File(fileName);
-			var fileData = new FileData(file, new());
+			var fileData = new FileData(file, new(StringComparer.Ordinal));
 			_files.Add(fileName, fileData);
 			return fileData;
 		}

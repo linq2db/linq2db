@@ -92,7 +92,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 
 			ISqlExpression StrFTime(ISqlExpressionFactory factory, DbDataType resultDbType, string format, ISqlExpression date)
 			{
-				return factory!.Function(resultDbType, StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(format), date);
+				return factory.Function(resultDbType, StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(format), date);
 			}
 
 			ISqlExpression StrFTimeInt(ISqlExpressionFactory factory, DbDataType intDbType, DbDataType stringDbType, string format, ISqlExpression date)
@@ -100,8 +100,13 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 				return factory.Cast(StrFTime(factory, stringDbType, format, date), intDbType);
 			}
 
-			protected override ISqlExpression? TranslateDateTimeDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment,
-				Sql.DateParts                                                       datepart)
+			protected override ISqlExpression? TranslateDateTimeDateAdd(
+				ITranslationContext translationContext,
+				TranslationFlags translationFlag,
+				ISqlExpression dateTimeExpression,
+				ISqlExpression increment,
+				Sql.DateParts datepart
+			)
 			{
 				var factory      = translationContext.ExpressionFactory;
 				var stringDbType = factory.GetDbDataType(typeof(string));
@@ -117,12 +122,10 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 				ISqlExpression dateExpr;
 				switch (datepart)
 				{
-					case Sql.DateParts.Year:    dateExpr = factory.Concat(stringDbType, CastToString(increment), " Year"); break;
-					case Sql.DateParts.Quarter: dateExpr = factory.Concat(stringDbType, CastToString(factory.Multiply(increment, 3)), " Month"); break;
-					case Sql.DateParts.Month:   dateExpr = factory.Concat(stringDbType, CastToString(increment), " Month"); break;
-					case Sql.DateParts.DayOfYear:
-					case Sql.DateParts.WeekDay:
-					case Sql.DateParts.Day: dateExpr = factory.Concat(stringDbType, CastToString(increment), factory.Value(stringDbType, " Day")); break;
+					case Sql.DateParts.Year:        dateExpr = factory.Concat(stringDbType, CastToString(increment), " Year"); break;
+					case Sql.DateParts.Quarter:     dateExpr = factory.Concat(stringDbType, CastToString(factory.Multiply(increment, 3)), " Month"); break;
+					case Sql.DateParts.Month:       dateExpr = factory.Concat(stringDbType, CastToString(increment), " Month"); break;
+					case Sql.DateParts.Day:         dateExpr = factory.Concat(stringDbType, CastToString(increment), factory.Value(stringDbType, " Day")); break;
 					case Sql.DateParts.Week:        dateExpr = factory.Concat(CastToString(factory.Multiply(increment, 7)), " Day"); break;
 					case Sql.DateParts.Hour:        dateExpr = factory.Concat(CastToString(increment), " Hour"); break;
 					case Sql.DateParts.Minute:      dateExpr = factory.Concat(CastToString(increment), " Minute"); break;
@@ -271,7 +274,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 							if (!info.IsNullFiltered && nullValuesAsEmptyString)
 								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
 
-							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
+							if (info is { FilterCondition.IsTrue: false })
 							{
 								value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
 							}

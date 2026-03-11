@@ -1,4 +1,4 @@
-﻿using LinqToDB.Data;
+using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.Options;
@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.Sybase
 {
 	/// <param name="BulkCopyType">
 	/// Using <see cref="BulkCopyType.ProviderSpecific"/> mode with bit and identity fields could lead to following errors:
-	/// - bit: <c>false</c> inserted into bit field for first record even if <c>true</c> provided;
+	/// - bit: <see langword="false"/> inserted into bit field for first record even if <see langword="true"/> provided;
 	/// - identity: bulk copy operation fail with exception: "Bulk insert failed. Null value is not allowed in not null column.".
 	/// Those are provider bugs and could be fixed in latest versions.
 	/// </param>

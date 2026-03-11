@@ -47,10 +47,8 @@ namespace LinqToDB
 				DateParts.Year          => date.Value.AddYears((int)number),
 				DateParts.Quarter       => date.Value.AddMonths((int)number * 3),
 				DateParts.Month         => date.Value.AddMonths((int)number),
-				DateParts.DayOfYear     => date.Value.AddDays(number.Value),
 				DateParts.Day           => date.Value.AddDays(number.Value),
 				DateParts.Week          => date.Value.AddDays(number.Value * 7),
-				DateParts.WeekDay       => date.Value.AddDays(number.Value),
 				DateParts.Hour          => date.Value.AddHours(number.Value),
 				DateParts.Minute        => date.Value.AddMinutes(number.Value),
 				DateParts.Second        => date.Value.AddSeconds(number.Value),
@@ -68,6 +66,9 @@ namespace LinqToDB
 		[Extension(PN.MySql,      "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
 		[Extension(PN.DB2,        "",              BuilderType = typeof(DateDiffBuilderDB2))]
 		[Extension(PN.SapHana,    "",              BuilderType = typeof(DateDiffBuilderSapHana))]
+		[Extension(PN.Firebird25, "",              BuilderType = typeof(DateDiffBuilderFirebird3Minus))]
+		[Extension(PN.Firebird3,  "",              BuilderType = typeof(DateDiffBuilderFirebird3Minus))]
+		[Extension(PN.Firebird,   "",              BuilderType = typeof(DateDiffBuilderFirebird))]
 		[Extension(PN.SQLite,     "",              BuilderType = typeof(DateDiffBuilderSQLite))]
 		[Extension(PN.PostgreSQL, "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
 		[Extension(PN.Access,     "",              BuilderType = typeof(DateDiffBuilderAccess))]

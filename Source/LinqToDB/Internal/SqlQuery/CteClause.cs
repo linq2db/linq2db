@@ -4,12 +4,14 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 
+using LinqToDB.Internal.SqlQuery.Visitors;
+
 namespace LinqToDB.Internal.SqlQuery
 {
 	[DebuggerDisplay("CTE({CteID}, {Name})")]
 	public sealed class CteClause : QueryElement
 	{
-		public static int CteIDCounter;
+		internal static int CteIDCounter;
 
 		public List<SqlField> Fields { get; internal set; }
 
@@ -94,5 +96,8 @@ namespace LinqToDB.Internal.SqlQuery
 
 			return hash.ToHashCode();
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitCteClause(this);
 	}
 }

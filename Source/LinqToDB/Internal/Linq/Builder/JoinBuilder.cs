@@ -14,11 +14,14 @@ namespace LinqToDB.Internal.Linq.Builder
 	[BuildsMethodCall(nameof(Enumerable.LeftJoin))]
 	[BuildsMethodCall(nameof(Enumerable.RightJoin))]
 #endif
+#if NET11_0_OR_GREATER
+	[BuildsMethodCall(nameof(Enumerable.FullJoin))]
+#endif
 	sealed class JoinBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
 		{
-			if (call.Method.DeclaringType == typeof(LinqExtensions) || !call.IsQueryable())
+			if (call.Method.DeclaringType == typeof(LinqExtensions) || !call.IsQueryable)
 				return false;
 
 			if (call.Arguments.Count != 5)
@@ -29,8 +32,16 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var outerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], buildInfo.SelectQuery));
-			var innerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+			var outerContextResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], buildInfo.SelectQuery));
+			if (outerContextResult.BuildContext == null)
+				return outerContextResult;
+
+			var innerContextResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+			if (innerContextResult.BuildContext == null)
+				return innerContextResult;
+
+			var outerContext = outerContextResult.BuildContext;
+			var innerContext = innerContextResult.BuildContext;
 
 			outerContext = new SubQueryContext(outerContext);
 			innerContext = new SubQueryContext(innerContext);
@@ -47,9 +58,12 @@ namespace LinqToDB.Internal.Linq.Builder
 #if NET10_0_OR_GREATER
 			var joinType = methodCall.Method.Name switch
 			{
-				nameof(Enumerable.LeftJoin)  => JoinType.Left,
-				nameof(Enumerable.RightJoin) => JoinType.Right,
-				_                            => JoinType.Inner,
+				nameof(Enumerable.LeftJoin)      => JoinType.Left,
+				nameof(Enumerable.RightJoin)     => JoinType.Right,
+#if NET11_0_OR_GREATER
+				nameof(Enumerable.FullJoin)      => JoinType.Full,
+#endif
+				_                                => JoinType.Inner,
 			};
 
 			if (joinType is JoinType.Right)
@@ -133,7 +147,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			return BuildSequenceResult.FromContext(new SelectContext(outerContext.TranslationModifier, buildInfo.Parent, builder, null, body, outerContext.SelectQuery, buildInfo.IsSubQuery)
 #if DEBUG
 			{
-				Debug_MethodCall = methodCall
+				Debug_MethodCall = methodCall,
 			}
 #endif
 				);

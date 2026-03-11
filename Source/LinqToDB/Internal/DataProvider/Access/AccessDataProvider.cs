@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
@@ -54,6 +54,9 @@ namespace LinqToDB.Internal.DataProvider.Access
 			SqlProviderFlags.IsMultiTablesSupportsJoins                            = false;
 			SqlProviderFlags.IsAccessBuggyLeftJoinConstantNullability              = true;
 			SqlProviderFlags.SupportsPredicatesComparison                          = true;
+			SqlProviderFlags.IsSimpleCoalesceSupported                             = false;
+			SqlProviderFlags.IsSubqueryExpressionInsidePredicateSupported          = false;
+			SqlProviderFlags.IsSubqueryJoinOnOuterReferenceSupported               = false;
 
 			if (provider == AccessProvider.OleDb)
 			{
@@ -284,7 +287,7 @@ namespace LinqToDB.Internal.DataProvider.Access
 					(AccessVersion.Ace, AccessProvider.OleDb) => AceOleDbMappingSchema,
 					(AccessVersion.Jet, AccessProvider.ODBC)  => JetOdbcDbMappingSchema,
 					(AccessVersion.Ace, AccessProvider.ODBC)  => AceOdbcDbMappingSchema,
-					_                                         => throw new InvalidOperationException()
+					_                                         => throw new InvalidOperationException(),
 				};
 			}
 		}

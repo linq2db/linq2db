@@ -79,7 +79,7 @@ namespace LinqToDB.Internal.Options
 		/// Search for options set by set type <typeparamref name="TSet"/>.
 		/// </summary>
 		/// <typeparam name="TSet">Options set type.</typeparam>
-		/// <returns>Options set or <c>null</c> if set with type <typeparamref name="TSet"/> not found in options.</returns>
+		/// <returns>Options set or <see langword="null"/> if set with type <typeparamref name="TSet"/> not found in options.</returns>
 		[Pure]
 		public virtual TSet? Find<TSet>()
 			where TSet : class, IOptionSet

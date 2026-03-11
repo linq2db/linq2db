@@ -72,7 +72,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (!_buildVisitor.BuildSearchCondition(buildSequence, expr, sc, out var errorExpr))
 			{
-				error = null != errorExpr.Find(1, (_, e) => e is SqlPlaceholderExpression) ? SqlErrorExpression.EnsureError(expr) : errorExpr;
+				error = null != errorExpr.Find(e => e is SqlPlaceholderExpression) ? SqlErrorExpression.EnsureError(expr) : errorExpr;
 
 				return null;
 			}
@@ -151,7 +151,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		}
 
 		/// <summary>
-		/// Checks that provider can handle limitation inside subquery. This function is tightly coupled with <see cref="SelectQueryOptimizerVisitor.OptimizeApply"/>
+		/// Checks that provider can handle limitation inside subquery. This function is tightly coupled with <see cref="SelectQueryOptimizerVisitor.OptimizeApplyJoin"/>
 		/// </summary>
 		/// <param name="context"></param>
 		/// <returns></returns>
@@ -171,7 +171,6 @@ namespace LinqToDB.Internal.Linq.Builder
 				// We are trying to simulate what will be with query after optimizer's work
 				//
 				var cloningContext = new CloningContext();
-				cloningContext.CloneElements(context.Builder.GetCteClauses());
 
 				var clonedParentContext = cloningContext.CloneContext(parent);
 				var clonedContext       = cloningContext.CloneContext(context);
@@ -247,7 +246,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (expression.NodeType is ExpressionType.Call
 									or ExpressionType.MemberAccess
 									or ExpressionType.New
-				|| expression is BinaryExpression)
+				|| expression is BinaryExpression or UnaryExpression)
 			{
 				var result = ConvertExpression(expression);
 
@@ -368,8 +367,6 @@ namespace LinqToDB.Internal.Linq.Builder
 		public bool CanBeEvaluatedOnClient(Expression expr)
 		{
 			var result = _optimizationContext.CanBeEvaluatedOnClient(expr);
-			if (result && HasTranslation(expr))
-				result = false;
 			return result;
 		}
 
@@ -694,7 +691,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				idx++;
 			}
 
-			if (values.Count(v => v.Value != null) > 1)
+			if (values.Where(v => v.Value != null).Skip(1).Any())
 			{
 				// for multiple values generate IN predicate
 				cond.Predicates.Add(
@@ -831,19 +828,13 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			// TODO: is it correct to return true for DefaultValueExpression for non-reference type or when default value
 			// set to non-null value?
-			return expr.UnwrapConvert().IsNullValue();
+			return expr.UnwrapConvert().IsNullValue;
 		}
 
-		TransformVisitor<ExpressionBuilder>? _removeNullPropagationTransformer;
-		TransformVisitor<ExpressionBuilder>? _removeNullPropagationTransformerForSearch;
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		TransformVisitor<ExpressionBuilder> GetRemoveNullPropagationTransformer(bool forSearch)
+		Expression RemoveNullPropagationTransformation(Expression expression, bool forSearch)
 		{
-			if (forSearch)
-				return _removeNullPropagationTransformerForSearch ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.RemoveNullPropagation(e, forSearch: true));
-			else
-				return _removeNullPropagationTransformer ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.RemoveNullPropagation(e, forSearch: false));
+			return expression.Transform((builder: this, forSearch), static (ctx, e) => ctx.builder.RemoveNullPropagation(e, forSearch: ctx.forSearch));
 		}
 
 		public Expression RemoveNullPropagation(Expression expr)
@@ -856,7 +847,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			bool IsAcceptableType(Type type)
 			{
 				if (!forSearch)
-					return type.IsNullableOrReferenceType();
+					return type.IsNullableOrReferenceType;
 
 				if (MappingSchema.IsCollectionType(type))
 					return true;
@@ -885,13 +876,17 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							if (nullRight && nullLeft)
 							{
-								return GetRemoveNullPropagationTransformer(forSearch).Transform(conditional.IfFalse);
+								return RemoveNullPropagationTransformation(conditional.IfFalse, forSearch);
 							}
-							else if (IsNullConstant(conditional.IfFalse)
-								&& ((nullRight && IsAcceptableType(binary.Left.Type) ||
-									(nullLeft  && IsAcceptableType(binary.Right.Type)))))
+							else if (
+								IsNullConstant(conditional.IfFalse)
+								&& (
+									(nullRight && IsAcceptableType(binary.Left.Type)) 
+									|| (nullLeft && IsAcceptableType(binary.Right.Type))
+								)
+							)
 							{
-								return GetRemoveNullPropagationTransformer(forSearch).Transform(conditional.IfTrue);
+								return RemoveNullPropagationTransformation(conditional.IfTrue, forSearch);
 							}
 						}
 					}
@@ -904,13 +899,13 @@ namespace LinqToDB.Internal.Linq.Builder
 						{
 							if (nullRight && nullLeft)
 							{
-								return GetRemoveNullPropagationTransformer(forSearch).Transform(conditional.IfTrue);
+								return RemoveNullPropagationTransformation(conditional.IfTrue, forSearch);
 							}
 							else if (IsNullConstant(conditional.IfTrue)
-									 && ((nullRight && IsAcceptableType(binary.Left.Type) ||
+									 && (((nullRight && IsAcceptableType(binary.Left.Type)) ||
 										  (nullLeft && IsAcceptableType(binary.Right.Type)))))
 							{
-								return GetRemoveNullPropagationTransformer(forSearch).Transform(conditional.IfFalse);
+								return RemoveNullPropagationTransformation(conditional.IfFalse, forSearch);
 							}
 						}
 					}
@@ -935,7 +930,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					MemberAccessor? foundMember = null;
 					foreach (var tm in typeMembers)
 					{
-						if (tm.Name == param.Name)
+						if (string.Equals(tm.Name, param.Name, StringComparison.Ordinal))
 						{
 							foundMember = tm;
 							break;
@@ -966,7 +961,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 			}
 
-			expression = GetRemoveNullPropagationTransformer(false).Transform(expression);
+			expression = RemoveNullPropagationTransformation(expression, false);
 
 			switch (expression.NodeType)
 			{
@@ -1053,7 +1048,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 						var dic  = typeMembers
 							.Select(static (m,i) => new { m, i })
-							.ToDictionary(static _ => _.m.MemberInfo.Name, static _ => _.i);
+							.ToDictionary(static _ => _.m.MemberInfo.Name, static _ => _.i, StringComparer.Ordinal);
 
 						var assignments = new List<(MemberAssignment ma, int order)>();
 						foreach (var ma in expr.Bindings.Cast<MemberAssignment>())
@@ -1099,31 +1094,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		#region CTE
 
-		Dictionary<Expression, CteContext>? _cteContexts;
-
 		public void RegisterCteContext(CteContext cteContext, Expression cteExpression)
 		{
-			_cteContexts ??= new(ExpressionEqualityComparer.Instance);
-
-			_cteContexts.Add(cteExpression, cteContext);
+			_buildVisitor.RegisterCteContext(cteContext, cteExpression);
 		}
 
 		public CteContext? FindRegisteredCteContext(Expression cteExpression)
 		{
-			if (_cteContexts == null)
-				return null;
-
-			_cteContexts.TryGetValue(cteExpression, out var cteContext);
-
-			return cteContext;
-		}
-
-		public IEnumerable<CteClause>? GetCteClauses()
-		{
-			if (_cteContexts == null)
-				return null;
-
-			return _cteContexts.Values.Select(ctx => ctx.CteClause);
+			return _buildVisitor.FindRegisteredCteContext(cteExpression);
 		}
 
 		#endregion
@@ -1259,36 +1237,40 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				next = nextPath[nextIndex];
 
-				if (next is MemberExpression me)
+				switch (next)
 				{
-					member = me.Member;
-				}
-				else if (next is SqlGenericParamAccessExpression paramAccess)
-				{
-					if (body.NodeType == ExpressionType.New)
+					case MemberExpression me:
+						member = me.Member;
+						break;
+
+					case SqlGenericParamAccessExpression paramAccess:
 					{
-						var newExpr = (NewExpression)body;
-						if (newExpr.Constructor == paramAccess.ParameterInfo.Member && paramAccess.ParamIndex < newExpr.Arguments.Count)
+						if (body.NodeType == ExpressionType.New)
 						{
-							return Project(context, null, nextPath, nextIndex - 1, flags,
-								newExpr.Arguments[paramAccess.ParamIndex], strict);
+							var newExpr = (NewExpression)body;
+							if (newExpr.Constructor == paramAccess.ParameterInfo.Member && paramAccess.ParamIndex < newExpr.Arguments.Count)
+							{
+								return Project(context, null, nextPath, nextIndex - 1, flags,
+									newExpr.Arguments[paramAccess.ParamIndex], strict);
+							}
 						}
-					}
-					else if (body.NodeType == ExpressionType.Call)
-					{
-						var methodCall = (MethodCallExpression)body;
-						if (methodCall.Method == paramAccess.ParameterInfo.Member && paramAccess.ParamIndex < methodCall.Arguments.Count)
+						else if (body.NodeType == ExpressionType.Call)
 						{
-							return Project(context, null, nextPath, nextIndex - 1, flags,
-								methodCall.Arguments[paramAccess.ParamIndex], strict);
+							var methodCall = (MethodCallExpression)body;
+							if (methodCall.Method == paramAccess.ParameterInfo.Member && paramAccess.ParamIndex < methodCall.Arguments.Count)
+							{
+								return Project(context, null, nextPath, nextIndex - 1, flags,
+									methodCall.Arguments[paramAccess.ParamIndex], strict);
+							}
 						}
+
+						break;
+
+						// nothing to do right now
 					}
 
-					// nothing to do right now
-				}
-				else
-				{
-					throw new NotImplementedException();
+					default:
+						throw new NotSupportedException($"Invalid Projection `{next.GetType().FullName}`");
 				}
 			}
 
@@ -1350,7 +1332,7 @@ namespace LinqToDB.Internal.Linq.Builder
 							return newPath;
 						}
 
-						if (body.IsNullValue())
+						if (body.IsNullValue)
 						{
 							return new DefaultValueExpression(MappingSchema, member.GetMemberType(), true);
 						}
@@ -1392,7 +1374,7 @@ namespace LinqToDB.Internal.Linq.Builder
 								for (int i = 0; i < genericConstructor.Assignments.Count; i++)
 								{
 									var assignment = genericConstructor.Assignments[i];
-									if (assignment.MemberInfo.ReflectedType != member.ReflectedType && assignment.MemberInfo.Name == member.Name)
+									if (assignment.MemberInfo.ReflectedType != member.ReflectedType && string.Equals(assignment.MemberInfo.Name, member.Name, StringComparison.Ordinal))
 									{
 										var mi = assignment.MemberInfo.ReflectedType!.GetMemberEx(member);
 										if (mi != null && IsEqualMembers(assignment.MemberInfo, mi))
@@ -1587,6 +1569,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 									break;
 								}
+
 								case MemberBindingType.MemberBinding:
 								{
 									var memberMemberBinding = (MemberMemberBinding)binding;
@@ -1600,10 +1583,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 									break;
 								}
+
 								case MemberBindingType.ListBinding:
-									throw new NotImplementedException();
+									throw new NotSupportedException($"Unsupported MemberBindingType `{binding.BindingType}`");
+
 								default:
-									throw new NotImplementedException();
+									throw new InvalidOperationException($"Unsupported MemberBindingType `{binding.BindingType}`");
 							}
 						}
 
@@ -1657,9 +1642,9 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (trueExpr.Type != falseExpr.Type)
 					{
-						if (trueExpr.IsNullValue())
+						if (trueExpr.IsNullValue)
 							trueExpr = new DefaultValueExpression(MappingSchema, falseExpr.Type, true);
-						else if (falseExpr.IsNullValue())
+						else if (falseExpr.IsNullValue)
 							falseExpr = new DefaultValueExpression(MappingSchema, trueExpr.Type, true);
 					}
 
@@ -1679,12 +1664,12 @@ namespace LinqToDB.Internal.Linq.Builder
 						break;
 					}
 
-					if (expr1.IsNullValue())
+					if (expr1.IsNullValue)
 					{
 						return expr2;
 					}
 
-					if (expr2.IsNullValue())
+					if (expr2.IsNullValue)
 					{
 						return expr1;
 					}
@@ -1726,7 +1711,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (mc.Method.IsStatic)
 					{
-						if (mc.Method.Name == nameof(Sql.Alias) && mc.Method.DeclaringType == typeof(Sql))
+						if (mc.Method.Name is nameof(Sql.Alias) && mc.Method.DeclaringType == typeof(Sql))
 						{
 							return Project(context, path, nextPath, nextIndex, flags, mc.Arguments[0], strict);
 						}
@@ -1805,7 +1790,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (member1.DeclaringType == null || member2.DeclaringType == null)
 				return false;
 
-			if (member1.Name != member2.Name)
+			if (!string.Equals(member1.Name, member2.Name, StringComparison.Ordinal))
 				return false;
 
 			return member1.EqualsTo(member2);
@@ -1842,18 +1827,18 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				case ExpressionType.Call:
 				{
-					//TODO: Do we still need Alias?
+					// TODO: Do we still need Alias?
 					var mc = (MethodCallExpression)createExpression;
 					if (mc.IsSameGenericMethod(Methods.LinqToDB.SqlExt.Alias))
 						return ParseGenericConstructor(mc.Arguments[0], flags, columnDescriptor);
 
-					if (mc.IsQueryable())
+					if (mc.IsQueryable)
 						return mc;
 
 					if (!mc.Method.IsStatic)
 						break;
 
-					if (mc.Method.IsSqlPropertyMethodEx() || mc.IsSqlRow() || mc.Method.DeclaringType == typeof(string))
+					if (mc.Method.IsSqlPropertyMethod || mc.IsSqlRow || mc.Method.DeclaringType == typeof(string))
 						break;
 
 					return new SqlGenericConstructorExpression(mc);

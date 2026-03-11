@@ -58,8 +58,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		[Sql.Extension("ARRAY_AGG({expr}{_}{order_by_clause?})", IsAggregate = true, ChainPrecedence = 10)]
 		public static Sql.IAggregateFunctionNotOrdered<TEntity, TV[]> ArrayAggregate<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
 		{
-			if (source  == null) throw new ArgumentNullException(nameof(source));
-			if (expr    == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var currentSource = source.ProcessIQueryable();
 
@@ -75,8 +75,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		[Sql.Extension("ARRAY_AGG({modifier?}{_}{expr}{_}{order_by_clause?})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 10)]
 		public static Sql.IAggregateFunctionNotOrdered<TEntity, TV[]> ArrayAggregate<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
 		{
-			if (source  == null) throw new ArgumentNullException(nameof(source));
-			if (expr    == null) throw new ArgumentNullException(nameof(expr));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(expr);
 
 			var currentSource = source.ProcessIQueryable();
 
@@ -97,8 +97,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		[ExpressionMethod(nameof(UnnestImpl))]
 		public static IQueryable<T> Unnest<T>(this IDataContext dc, T[] array)
-			//TODO: can be executable when we finish queryable arrays
-			=> throw new ServerSideOnlyException(nameof(Unnest));
+			=> dc.FromSqlScalar<T>($"UNNEST({array})");
 
 		static Expression<Func<IDataContext, T[], IQueryable<T>>> UnnestImpl<T>()
 		{

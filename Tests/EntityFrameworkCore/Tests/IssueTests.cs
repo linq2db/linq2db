@@ -15,6 +15,8 @@ using Microsoft.EntityFrameworkCore;
 
 using NUnit.Framework;
 
+using Shouldly;
+
 using Tests;
 
 namespace LinqToDB.EntityFrameworkCore.Tests
@@ -851,9 +853,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.Merge();
 		}
 
-#if NET8_0_OR_GREATER
-		[ActiveIssue]
-#endif
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4668")]
 		public void Issue4668Test([EFDataSources] string provider)
 		{
@@ -1040,6 +1039,27 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			ctx.Database.BeginTransaction();
 
 			using var db = ctx.CreateLinqToDBConnection();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5388")]
+		public void ConstantAndValueConversion([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			ctx.AddRange([
+				new Issue5388Task() { IsArchived = false },
+				new Issue5388Task() { IsArchived = true }
+			]);
+
+			ctx.SaveChanges();
+
+			using var db = ctx.CreateLinqToDBContext();
+
+			var result = db.GetTable<Issue5388Task>()
+				.Where(t => t.IsArchived == false)
+				.ToList();
+
+			result.Count.ShouldBe(1);
 		}
 	}
 

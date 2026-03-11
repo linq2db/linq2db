@@ -28,7 +28,7 @@ namespace Tests
 
 #if SUPPORTS_DATEONLY
 		public static readonly DateOnly DateOnly                      = new (2020, 2, 29);
-			public static readonly DateOnly DateOnlyAmbiguous             = new (2020, 8, 9);
+		public static readonly DateOnly DateOnlyAmbiguous             = new (2020, 8, 9);
 #endif
 		public static readonly TimeSpan Interval                      = new TimeSpan(-5, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1234));
 		public static readonly TimeSpan TimeOfDay                     = new TimeSpan(0, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1234));

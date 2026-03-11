@@ -63,7 +63,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			private bool Equals(ProviderKey other)
 			{
-				return string.Equals(ProviderName, other.ProviderName) && string.Equals(ConnectionString, other.ConnectionString);
+				return string.Equals(ProviderName, other.ProviderName, StringComparison.Ordinal) && string.Equals(ConnectionString, other.ConnectionString, StringComparison.Ordinal);
 			}
 
 			public override bool Equals(object? obj)
@@ -87,7 +87,7 @@ namespace LinqToDB.EntityFrameworkCore
 		private readonly MemoryCache _schemaCache = new(
 			new MemoryCacheOptions()
 			{
-				ExpirationScanFrequency = TimeSpan.FromHours(1.0)
+				ExpirationScanFrequency = TimeSpan.FromHours(1.0),
 			});
 
 		/// <summary>
@@ -387,6 +387,13 @@ namespace LinqToDB.EntityFrameworkCore
 					continue;
 				}
 
+				var nullableUnderlyingType = Nullable.GetUnderlyingType(modelType);
+				if (nullableUnderlyingType?.IsEnum == true)
+				{
+					MapEnumType(nullableUnderlyingType);
+					continue;
+				}
+
 				// skipping arrays
 				if (modelType.IsArray)
 					continue;
@@ -399,10 +406,9 @@ namespace LinqToDB.EntityFrameworkCore
 			void MapEnumType(Type type)
 			{
 				var mapping = mappingSource?.FindMapping(type);
-				if (mapping?.GetType().Name == "NpgsqlEnumTypeMapping")
+				if (mapping is { } && string.Equals(mapping.GetType().Name, "NpgsqlEnumTypeMapping", StringComparison.Ordinal))
 				{
-					var labels = mapping.GetType().GetProperty("Labels")?.GetValue(mapping) as IReadOnlyDictionary<object, string>;
-					if (labels != null)
+					if (mapping.GetType().GetProperty("Labels")?.GetValue(mapping) is IReadOnlyDictionary<object, string> labels)
 					{
 						var typedLabels = labels.ToDictionary(kv => kv.Key, kv => $"'{kv.Value}'::{mapping.StoreType}");
 
@@ -415,7 +421,7 @@ namespace LinqToDB.EntityFrameworkCore
 			void MapEFCoreType(Type modelType)
 			{
 				var currentType = mappingSchema.GetDataType(modelType);
-				if (!currentType.Equals(SqlDataType.Undefined))
+				if (!currentType.Type.EqualsDbOnly(SqlDataType.MakeUndefined(modelType).Type))
 					return;
 
 				var infos = convertorSelector.Select(modelType).ToArray();
@@ -462,8 +468,8 @@ namespace LinqToDB.EntityFrameworkCore
 			);
 
 		private static Expression WithConvertToObject(Expression valueExpression) 
-			=> valueExpression.Type != typeof(object) 
-				? Expression.Convert(valueExpression, typeof(object)) 
+			=> valueExpression.Type != typeof(object)
+				? Expression.Convert(valueExpression, typeof(object))
 				: valueExpression;
 
 		/// <summary>
@@ -560,10 +566,10 @@ namespace LinqToDB.EntityFrameworkCore
 					{
 						var member = (MemberExpression) expr;
 
-						if (member.Member.IsFieldEx())
+						if (member.Member.IsField)
 							return ((FieldInfo)member.Member).GetValue(EvaluateExpression(member.Expression));
 
-						if (member.Member.IsPropertyEx())
+						if (member.Member.IsProperty)
 							return ((PropertyInfo)member.Member).GetValue(EvaluateExpression(member.Expression), null);
 
 						break;
@@ -667,7 +673,7 @@ namespace LinqToDB.EntityFrameworkCore
 			return new EFConnectionInfo
 			{
 				ConnectionString = relational?.ConnectionString,
-				Connection = relational?.Connection
+				Connection = relational?.Connection,
 			};
 		}
 

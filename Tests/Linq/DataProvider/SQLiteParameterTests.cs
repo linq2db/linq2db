@@ -72,10 +72,9 @@ namespace Tests.DataProvider
 		{
 			var data = ClassRealTypes.Seed();
 
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(data))
-			{
-				var actual = (
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+			var actual = (
 					from t1 in table
 					where t1.DoubleValue == double.MaxValue && t1.FloatValue == float.MaxValue
 					select t1
@@ -85,7 +84,7 @@ namespace Tests.DataProvider
 					select t1
 				).ToArray();
 
-				var expected = (
+			var expected = (
 					from t1 in data
 					where t1.DoubleValue == double.MaxValue && t1.FloatValue == float.MaxValue
 					select t1
@@ -95,8 +94,7 @@ namespace Tests.DataProvider
 					select t1
 				);
 
-				AreEqualWithComparer(expected, actual);
-			}
+			AreEqualWithComparer(expected, actual);
 		}
 
 	}

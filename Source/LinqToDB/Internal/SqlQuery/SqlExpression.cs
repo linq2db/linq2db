@@ -1,5 +1,8 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -80,17 +83,18 @@ namespace LinqToDB.Internal.SqlQuery
 			if (Parameters.Length == 0)
 				return writer.Append(Expr);
 
-			if (Expr.Contains("{"))
-				writer.AppendFormat(Expr, arguments.ToArray());
-			else
-				writer.Append(Expr)
-					.Append('{')
-					.Append(string.Join(", ", arguments.Select(s => string.Format(CultureInfo.InvariantCulture, "{0}", s))))
-					.Append('}');
+			if (Expr.Contains('{', System.StringComparison.Ordinal))
+				return writer.AppendFormat(Expr, arguments.ToArray());
 
-			return writer;
+			return writer
+				.Append(Expr)
+				.Append('{')
+				.Append(string.Join(", ", arguments.Select(s => string.Format(CultureInfo.InvariantCulture, "{0}", s))))
+				.Append('}');
 		}
 
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlExpression(this);
 		#endregion
 	}
 }

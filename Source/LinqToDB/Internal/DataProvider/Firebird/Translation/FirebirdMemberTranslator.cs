@@ -144,13 +144,10 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 						datepart = Sql.DateParts.Month;
 						number   = factory.Multiply(number, 3);
 						break;
-					}				
+					}
 					case Sql.DateParts.DayOfYear:
 					case Sql.DateParts.WeekDay:
-					{
-						datepart = Sql.DateParts.Day;
-						break;
-					}	
+						return null;
 					case Sql.DateParts.Week:
 					{
 						datepart = Sql.DateParts.Day;
@@ -278,7 +275,7 @@ namespace LinqToDB.Internal.DataProvider.Firebird.Translation
 							if (!info.IsNullFiltered && nullValuesAsEmptyString)
 								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
 
-							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
+							if (info is { FilterCondition.IsTrue: false })
 							{
 								if (!info.IsGroupBy)
 								{

@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -72,7 +75,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 			return
 				other is SqlBinaryExpression expr  &&
-				Operation  == expr.Operation       &&
+string.Equals(Operation, expr.Operation, StringComparison.Ordinal) &&
 				SystemType == expr.SystemType      &&
 				Expr1.Equals(expr.Expr1, comparer) &&
 				Expr2.Equals(expr.Expr2, comparer) &&
@@ -105,6 +108,9 @@ namespace LinqToDB.Internal.SqlQuery
 				Expr2.GetElementHashCode()
 			);
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlBinaryExpression(this);
 
 		#endregion
 

@@ -91,7 +91,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			var sqlBuilder = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var ed         = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var tableName  = GetTableName(sqlBuilder, options.BulkCopyOptions, table);
-			var columns    = ed.Columns.Where(c => !c.SkipOnInsert || options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity).ToArray();
+			var columns    = ed.Columns.Where(c => !c.SkipOnInsert || (options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity)).ToArray();
 
 			var (npgsqlTypes, dbTypes, columnTypes) = BuildTypes(sqlBuilder, columns);
 
@@ -102,6 +102,8 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			var batchSize   = Math.Max(10, options.BulkCopyOptions.MaxBatchSize ?? 10000);
 
 			var writer      = _provider.Adapter.BeginBinaryImport(connection, copyCommand);
+
+			ConfigureWriter(writer, dataConnection, options.BulkCopyOptions);
 
 			return ProviderSpecificCopySyncImpl(table.DataContext, dataConnection, options.BulkCopyOptions, source, connection, tableName, columns, columnTypes, npgsqlTypes, dbTypes, copyCommand, batchSize, writer);
 		}
@@ -253,7 +255,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			var sqlBuilder = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var ed         = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var tableName  = GetTableName(sqlBuilder, options.BulkCopyOptions, table);
-			var columns    = ed.Columns.Where(c => !c.SkipOnInsert || options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity).ToArray();
+			var columns    = ed.Columns.Where(c => !c.SkipOnInsert || (options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity)).ToArray();
 
 			var fields      = string.Join(", ", columns.Select(column => sqlBuilder.ConvertInline(column.ColumnName, ConvertType.NameToQueryField)));
 			var copyCommand = $"COPY {tableName} ({fields}) FROM STDIN (FORMAT BINARY)";
@@ -266,6 +268,8 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			var writer = _provider.Adapter.BeginBinaryImportAsync != null
 				? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(false)
 				: _provider.Adapter.BeginBinaryImport(connection, copyCommand);
+
+			ConfigureWriter(writer, dataConnection, options.BulkCopyOptions);
 
 			if (!writer.SupportsAsync)
 			{
@@ -373,7 +377,7 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			var sqlBuilder  = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var ed          = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var tableName   = GetTableName(sqlBuilder, options.BulkCopyOptions, table);
-			var columns     = ed.Columns.Where(c => !c.SkipOnInsert || options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity).ToArray();
+			var columns     = ed.Columns.Where(c => !c.SkipOnInsert || (options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity)).ToArray();
 			var fields      = string.Join(", ", columns.Select(column => sqlBuilder.ConvertInline(column.ColumnName, ConvertType.NameToQueryField)));
 			var copyCommand = $"COPY {tableName} ({fields}) FROM STDIN (FORMAT BINARY)";
 
@@ -385,6 +389,8 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			var writer = _provider.Adapter.BeginBinaryImportAsync != null
 				? await _provider.Adapter.BeginBinaryImportAsync(connection, copyCommand, cancellationToken).ConfigureAwait(false)
 				: _provider.Adapter.BeginBinaryImport(connection, copyCommand);
+
+			ConfigureWriter(writer, dataConnection, options.BulkCopyOptions);
 
 			if (!writer.SupportsAsync)
 			{
@@ -477,6 +483,12 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			await CloseConnectionIfNecessaryAsync(table.DataContext).ConfigureAwait(false);
 
 			return rowsCopied;
+		}
+
+		private static void ConfigureWriter(NpgsqlProviderAdapter.NpgsqlBinaryImporter writer, DataConnection dataConnection, BulkCopyOptions options)
+		{
+			if (writer.SupportsTimeout && (options.BulkCopyTimeout.HasValue || LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout))
+				writer.Timeout = TimeSpan.FromSeconds(options.BulkCopyTimeout ?? dataConnection.CommandTimeout);
 		}
 	}
 }

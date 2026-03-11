@@ -22,10 +22,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return _found;
 		}
 
-		public void Cleanup()
+		public override void Cleanup()
 		{
 			_found    = null;
 			_findFunc = null!;
+
+			base.Cleanup();
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]

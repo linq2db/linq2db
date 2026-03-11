@@ -18,6 +18,7 @@ namespace LinqToDB.Tools.ModelGeneration
 		public bool    IsStatic   { get; set; }
 		public bool    HasGetter  { get; set; } = true;
 		public bool    HasSetter  { get; set; } = true;
+		public bool    IsNullable { get; set; }
 
 		public List<Func<IEnumerable<string>>> GetBodyBuilders { get; set; } = [];
 		public List<Func<IEnumerable<string>>> SetBodyBuilders { get; set; } = [];
@@ -103,11 +104,11 @@ namespace LinqToDB.Tools.ModelGeneration
 				{
 					var t = getBody[0];
 
-					if (!t.StartsWith("return"))
+					if (!t.StartsWith("return", StringComparison.Ordinal))
 					{
 						t = "return " + t;
 
-						if (!t.EndsWith(";"))
+						if (!t.EndsWith(';'))
 							t += ";";
 
 						GetBodyBuilders.Clear();

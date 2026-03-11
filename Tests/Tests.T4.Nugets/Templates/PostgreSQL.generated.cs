@@ -853,8 +853,8 @@ namespace PostgreSQL
 	{
 		public partial class DataContext
 		{
-			public ITable<Testsamename>       Testsamenames        { get { return _dataContext.GetTable<Testsamename>(); } }
 			public ITable<TestSchemaIdentity> TestSchemaIdentities { get { return _dataContext.GetTable<TestSchemaIdentity>(); } }
+			public ITable<Testsamename>       Testsamenames        { get { return _dataContext.GetTable<Testsamename>(); } }
 			public ITable<Testserialidentity> Testserialidentities { get { return _dataContext.GetTable<Testserialidentity>(); } }
 
 			private readonly IDataContext _dataContext;
@@ -865,16 +865,16 @@ namespace PostgreSQL
 			}
 		}
 
-		[Table(Schema="test_schema", Name="testsamename")]
-		public partial class Testsamename
-		{
-			[Column("id"), PrimaryKey, Identity] public int Id { get; set; } // integer
-		}
-
 		[Table(Schema="test_schema", Name="TestSchemaIdentity")]
 		public partial class TestSchemaIdentity
 		{
 			[PrimaryKey, Identity] public int ID { get; set; } // integer
+		}
+
+		[Table(Schema="test_schema", Name="testsamename")]
+		public partial class Testsamename
+		{
+			[Column("id"), PrimaryKey, Identity] public int Id { get; set; } // integer
 		}
 
 		[Table(Schema="test_schema", Name="testserialidentity")]
@@ -885,16 +885,16 @@ namespace PostgreSQL
 
 		#region Table Extensions
 
-		public static Testsamename Find(this ITable<Testsamename> table, int Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
-		}
-
 		public static TestSchemaIdentity Find(this ITable<TestSchemaIdentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
+		}
+
+		public static Testsamename Find(this ITable<Testsamename> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
 		}
 
 		public static Testserialidentity Find(this ITable<Testserialidentity> table, int ID)

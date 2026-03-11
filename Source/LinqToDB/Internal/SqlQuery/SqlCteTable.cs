@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.SqlQuery
@@ -53,7 +55,7 @@ namespace LinqToDB.Internal.SqlQuery
 				{
 					var field = Cte.Fields[idx];
 
-					var foundField = Fields.FirstOrDefault(f => f.Name == field.Name);
+					var foundField = Fields.Find(f => string.Equals(f.Name, field.Name, StringComparison.Ordinal));
 					if (foundField == null)
 						hasInvalid = true;
 					return (foundField as ISqlExpression)!;
@@ -103,6 +105,9 @@ namespace LinqToDB.Internal.SqlQuery
 		#region IQueryElement Members
 
 		public string SqlText => this.ToDebugString();
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlCteTable(this);
 
 		#endregion
 	}

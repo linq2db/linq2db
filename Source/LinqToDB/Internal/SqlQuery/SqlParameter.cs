@@ -1,6 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -31,7 +34,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public object? Value     { get; }
 		/// <summary>
-		/// Enable parameter wrapping with type-cast. Ignored when <see cref="IsQueryParameter"/> is <c>false</c>.
+		/// Enable parameter wrapping with type-cast. Ignored when <see cref="IsQueryParameter"/> is <see langword="false"/>.
 		/// </summary>
 		public bool    NeedsCast { get; set; }
 
@@ -123,7 +126,7 @@ namespace LinqToDB.Internal.SqlQuery
 			if (NeedsCast)
 				writer.Append("$Cast$(");
 
-			if (Name?.StartsWith("@") == false)
+			if (Name?.StartsWith('@') == false)
 				writer.Append('@');
 
 			writer
@@ -159,6 +162,8 @@ namespace LinqToDB.Internal.SqlQuery
 			return hash.ToHashCode();
 		}
 
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlParameter(this);
 		#endregion
 	}
 }

@@ -92,26 +92,24 @@ namespace LinqToDB.Tools.ModelGeneration
 						select new
 						{
 							m,
-							attrs =
-							(
-								from a in m.Attributes
-								group a by a.Name into gr
-								select gr.Select((a,i) => new { a, name = a.Name + "." + i.ToString(CultureInfo.InvariantCulture) }).ToList() into s
-								from a in s
-								select ToNullable(a)
-							).ToList()
+							attrs = m.Attributes
+								.GroupBy(a => a.Name, StringComparer.Ordinal)
+								.SelectMany(gr => gr.Select((a,i) => new { a, name = a.Name + "." + i.ToString(CultureInfo.InvariantCulture) }))
+								.Select(a => ToNullable(a))
+								.ToList(),
 						}
 					).ToList();
 
 					T? ToNullable<T>(T obj) where T : class => (T?)obj;
 
-					var attrWeight =
-					(
-						from m in members
-						from a in m.attrs
-						group a by a.name into gr
-						select new { gr.Key, Count = gr.Count() }
-					).ToDictionary(a => a.Key, a => a.Count);
+					var attrWeight = members
+						.SelectMany(m => m.attrs)
+						.GroupBy(
+							a => a.name,
+							(k, gr) => new { Key = k, Count = gr.Count() },
+							StringComparer.Ordinal
+						)
+						.ToDictionary(a => a.Key, a => a.Count, StringComparer.Ordinal);
 
 					var q =
 						from m in members
@@ -134,7 +132,7 @@ namespace LinqToDB.Tools.ModelGeneration
 							{
 								var nm = list[i];
 
-								if (!attrs.Contains(nm))
+								if (!attrs.Contains(nm, StringComparer.Ordinal))
 								{
 									for (var j = i + 1; j < list.Count; j++)
 									{
@@ -148,7 +146,7 @@ namespace LinqToDB.Tools.ModelGeneration
 									}
 								}
 
-								if (!attrs.Contains(nm))
+								if (!attrs.Contains(nm, StringComparer.Ordinal))
 									attrs.Add(nm);
 							}
 						}
@@ -307,9 +305,7 @@ namespace LinqToDB.Tools.ModelGeneration
 
 						if (m.Attributes.Count > 0)
 						{
-							var q =
-								from a in m.Attributes
-								group a by a.Conditional ?? "";
+							var q = m.Attributes.GroupBy(a => a.Conditional ?? "", StringComparer.Ordinal);
 
 							foreach (var g in q)
 							{

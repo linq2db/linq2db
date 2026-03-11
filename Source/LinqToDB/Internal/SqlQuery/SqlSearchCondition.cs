@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
@@ -104,6 +105,9 @@ namespace LinqToDB.Internal.SqlQuery
 			return hash.ToHashCode();
 		}
 
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlSearchCondition(this);
+
 		#endregion
 
 		#region IPredicate Members
@@ -132,7 +136,7 @@ namespace LinqToDB.Internal.SqlQuery
 			if (Predicates.Count > 1 && IsAnd)
 				return false;
 
-			return Predicates.All(p =>
+			return Predicates.TrueForAll(p =>
 			{
 				if (p is not SqlSearchCondition)
 					return false;
@@ -149,36 +153,16 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public ISqlPredicate Invert(NullabilityContext nullability)
 		{
-			if (Predicates.Count == 0)
+			return Predicates switch
 			{
-				return new SqlSearchCondition(!IsOr);
-			}
+				[] => new SqlSearchCondition(!IsOr),
 
-			var newPredicates = Predicates.Select(p => new SqlPredicate.Not(p));
-
-			return new SqlSearchCondition(!IsOr, CanReturnUnknown, newPredicates);
-		}
-
-		public bool IsTrue()
-		{
-			if (Predicates.Count == 0)
-				return true;
-
-			if (Predicates is [{ ElementType: QueryElementType.TruePredicate }])
-				return true;
-
-			return false;
-		}
-
-		public bool IsFalse()
-		{
-			if (Predicates.Count == 0)
-				return false;
-
-			if (Predicates is [{ ElementType: QueryElementType.FalsePredicate }])
-				return true;
-
-			return false;
+				_ => new SqlSearchCondition(
+					!IsOr,
+					CanReturnUnknown,
+					Predicates.Select(p => new SqlPredicate.Not(p))
+				),
+			};
 		}
 
 		#endregion
@@ -200,7 +184,7 @@ namespace LinqToDB.Internal.SqlQuery
 				nullability = new NullabilityContext(nullability, visitor.Value.NotNullOverrides);
 		}
 
-			return Predicates.Any(predicate => predicate.CanBeUnknown(nullability, withoutUnknownErased));
+			return Predicates.Exists(predicate => predicate.CanBeUnknown(nullability, withoutUnknownErased));
 		}
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
@@ -262,7 +246,7 @@ namespace LinqToDB.Internal.SqlQuery
 				return base.Visit(element);
 			}
 
-			protected override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
+			protected internal override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
 			{
 				if (predicate.IsNot != _isOr)
 					(NotNullOverrides ??= new(ISqlExpressionEqualityComparer.Instance)).TryAdd(predicate.Expr1, false);
@@ -270,7 +254,7 @@ namespace LinqToDB.Internal.SqlQuery
 				return predicate;
 			}
 
-			protected override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
+			protected internal override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
 			{
 				if (element.IsOr != _isOr)
 					return element;

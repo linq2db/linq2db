@@ -25,10 +25,10 @@ namespace LinqToDB.Internal.SqlProvider
 
 		readonly Func<IQueryParametersNormalizer>           _parametersNormalizerFactory;
 
-		public SqlQueryVisitor.IVisitorTransformationInfo TransformationInfo => 
+		public SqlQueryVisitor.IVisitorTransformationInfo TransformationInfo =>
 			field ??= new SqlQueryVisitor.VisitorTransformationInfo();
 
-		public SqlQueryVisitor.IVisitorTransformationInfo TransformationInfoConvert => 
+		public SqlQueryVisitor.IVisitorTransformationInfo TransformationInfoConvert =>
 			field ??= new SqlQueryVisitor.VisitorTransformationInfo();
 
 		public OptimizationContext(
@@ -76,13 +76,13 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 				var newName = (_parametersNormalizer ??= _parametersNormalizerFactory()).Normalize(parameter.Name);
 
-				if (IsParameterOrderDependent || newName != parameter.Name)
+				if (IsParameterOrderDependent || !string.Equals(newName, parameter.Name, StringComparison.Ordinal))
 				{
 					returnValue = new SqlParameter(parameter.Type, newName, parameter.Value)
 					{
 						AccessorId     = parameter.AccessorId,
 						ValueConverter = parameter.ValueConverter,
-						NeedsCast      = parameter.NeedsCast
+						NeedsCast      = parameter.NeedsCast,
 					};
 				}
 

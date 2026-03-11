@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 
 using LinqToDB.Internal.Common;
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -37,5 +38,6 @@ namespace LinqToDB.Internal.SqlQuery
 		public abstract QueryElementType       ElementType { get; }
 		public abstract QueryElementTextWriter ToString(QueryElementTextWriter writer);
 		public abstract int                    GetElementHashCode();
+		public abstract IQueryElement          Accept(QueryElementVisitor visitor);
 	}
 }

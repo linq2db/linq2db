@@ -60,9 +60,9 @@ namespace Tests.Linq
 			[Column] public int? MasterId { get; set; }
 		}
 
-		static MappingSchema _filterMappingSchema;
+		static MappingSchema _filterMappingSchema = GetFilterMappingSchema();
 
-		static QueryFilterTests()
+		static MappingSchema GetFilterMappingSchema()
 		{
 			var builder = new FluentMappingBuilder(new MappingSchema());
 
@@ -70,7 +70,7 @@ namespace Tests.Linq
 
 			builder.Build();
 
-			_filterMappingSchema = builder.MappingSchema;
+			return builder.MappingSchema;
 		}
 
 		static Tuple<MasterClass[], InfoClass[], DetailClass[]> GenerateTestData()
@@ -140,7 +140,7 @@ namespace Tests.Linq
 
 			var ms = builder.MappingSchema;
 
-			using (var db = new MyDataContext(context, ms))
+			using var db = new MyDataContext(context, ms);
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
 			using (db.CreateLocalTable(testData.Item3))
@@ -185,9 +185,9 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			using (var db = new MyDataContext(context, _filterMappingSchema))
-			using (var tb = db.CreateLocalTable(testData.Item1))
-			{
+			using var db = new MyDataContext(context, _filterMappingSchema);
+			using var tb = db.CreateLocalTable(testData.Item1);
+
 				var currentMissCount = tb.GetCacheMissCount();
 
 				var query =
@@ -209,7 +209,6 @@ namespace Tests.Linq
 					tb.GetCacheMissCount().ShouldBe(currentMissCount);
 				}
 			}
-		}
 
 		[Test]
 		public void AssociationToFilteredEntity([IncludeDataSources(false, ProviderName.SQLiteMS, TestProvName.AllClickHouse)] string context)
@@ -225,7 +224,7 @@ namespace Tests.Linq
 
 			var ms = builder.MappingSchema;
 
-			using (var db = new MyDataContext(context, ms))
+			using var db = new MyDataContext(context, ms);
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
 			using (db.CreateLocalTable(testData.Item3))
@@ -253,7 +252,7 @@ namespace Tests.Linq
 
 			var ms = builder.MappingSchema;
 
-			using (var db = new MyDataContext(context, ms))
+			using var db = new MyDataContext(context, ms);
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
 			using (db.CreateLocalTable(testData.Item3))
@@ -295,7 +294,7 @@ namespace Tests.Linq
 
 			var ms = builder.MappingSchema;
 
-			using (var db = new MyDataContext(context, ms))
+			using var db = new MyDataContext(context, ms);
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
 			using (db.CreateLocalTable(testData.Item3))
@@ -323,7 +322,7 @@ namespace Tests.Linq
 
 			var ms = builder.MappingSchema;
 
-			using (var db = new MyDataContext(context, ms))
+			using var db = new MyDataContext(context, ms);
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
 			using (db.CreateLocalTable(testData.Item3))
@@ -409,5 +408,94 @@ namespace Tests.Linq
 				Assert.That(arr1, Has.Length.EqualTo(arr2.Length + 1));
 			}
 		}
+
+		[Table]
+		public partial class Issue5289Table
+		{
+			[PrimaryKey] public int  Id        { get; set; }
+			[Column    ] public int? PictureId { get; set; }
+			[Column    ] public bool  Deleted  { get; init; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5289")]
+		public void InsertOrUpdate([InsertOrUpdateDataSources] string context)
+		{
+			var builder = new FluentMappingBuilder();
+			builder.Entity<Issue5289Table>().HasQueryFilter((r, db) => !r.Deleted);
+			builder.Build();
+
+			using var db = GetDataContext(context, builder.MappingSchema);
+			using var tb = db.CreateLocalTable<Issue5289Table>();
+
+			tb.InsertOrUpdate(
+				() => new Issue5289Table()
+				{
+					Id = 1,
+					PictureId = 2,
+					Deleted = false
+				},
+				r => new Issue5289Table()
+				{
+					PictureId = 3,
+				});
+
+			var record = tb.SingleOrDefault(r => r.Id == 1);
+
+			Assert.That(record, Is.Not.Null);
+			Assert.That(record.PictureId, Is.EqualTo(2));
+
+			tb.InsertOrUpdate(
+				() => new Issue5289Table()
+				{
+					Id = 1,
+					PictureId = 2,
+					Deleted = false
+				},
+				r => new Issue5289Table()
+				{
+					PictureId = 3
+				});
+
+			record = tb.SingleOrDefault(r => r.Id == 1);
+
+			Assert.That(record, Is.Not.Null);
+			Assert.That(record.PictureId, Is.EqualTo(3));
+		}
+
+		[Test]
+		public void NestedIgnoreFiltersAccumulation([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			var testData = GenerateTestData();
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>(FilterDeletedCondition);
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(FilterDeletedCondition);
+			builder.Entity<InfoClass>().HasQueryFilter<MyDataContext>(FilterDeletedCondition);
+
+			builder.Build();
+
+			var ms = builder.MappingSchema;
+
+			using var db = new MyDataContext(context, ms);
+			using (db.CreateLocalTable(testData.Item1))
+			using (db.CreateLocalTable(testData.Item2))
+			using (db.CreateLocalTable(testData.Item3))
+			{
+				db.IsSoftDeleteFilterEnabled = true;
+
+				var query =
+					from m in db.GetTable<MasterClass>()
+					select new { m, DetailCount = m.Details!.Count() };
+
+				query = query.IgnoreFilters(typeof(MasterClass));
+				query = query.IgnoreFilters(typeof(DetailClass));
+
+				var result = query.ToList();
+
+				result.Count.ShouldBe(10);
+				result.ShouldAllBe(item => item.DetailCount > 0);
+	}
+}
 	}
 }

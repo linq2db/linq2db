@@ -10,10 +10,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 {
 	public class SqlQueryValidatorVisitor : QueryElementVisitor
 	{
-		SelectQuery?     _parentQuery;
-		SqlJoinedTable?  _fakeJoin;
-		SqlProviderFlags _providerFlags = default!;
-		int?             _columnSubqueryLevel;
+		SelectQuery?           _parentQuery;
+		SqlJoinedTable?        _fakeJoin;
+		SqlProviderFlags       _providerFlags = default!;
+		int?                   _columnSubqueryLevel;
+		Stack<ISqlExpression>? _ignoredExpressions;
 
 		bool    _isValid;
 		string? _errorMessage;
@@ -32,13 +33,17 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		{
 		}
 
-		public void Cleanup()
+		public override void Cleanup()
 		{
 			_parentQuery         = null;
+			_fakeJoin            = null;
 			_providerFlags       = default!;
 			_isValid             = true;
 			_columnSubqueryLevel = default;
 			_errorMessage        = default!;
+			_ignoredExpressions  = null;
+
+			base.Cleanup();
 		}
 
 		public void SetInvalid(string errorMessage)
@@ -139,6 +144,15 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					}
 				}
 
+				if (!_providerFlags.IsSubqueryJoinOnOuterReferenceSupported)
+				{
+					if (QueryHelper.IsJoinsDependsOnOuterSources(selectQuery))
+					{
+						errorMessage = ErrorHelper.Error_JoinOnOuterReferenceNotSupported;
+						return false;
+					}
+				}
+
 				if (!_providerFlags.IsSubQueryTakeSupported && selectQuery.Select.TakeValue != null && IsDependsOnOuterSources())
 				{
 					if (_parentQuery?.From.Tables.Count > 0 || IsDependsOnOuterSources())
@@ -203,7 +217,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 			else
 			{
-				var isDerived = _parentQuery != null && _parentQuery.From.Tables.Any(t => t.Source == selectQuery);
+				var isDerived = _parentQuery != null && _parentQuery.From.Tables.Exists(t => t.Source == selectQuery);
 
 				if (isDerived)
 				{
@@ -233,10 +247,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (selectQuery.Select.HasModifier)
 				return false;
 
-			if (selectQuery.Select.Columns.Any(c => QueryHelper.IsAggregationFunction(c.Expression)))
+			if (selectQuery.Select.Columns.Exists(c => QueryHelper.IsAggregationFunction(c.Expression)))
 				return false;
 
-			if (selectQuery.Where.SearchCondition.Predicates.Any(p => p is SqlSearchCondition))
+			if (selectQuery.Where.SearchCondition.Predicates.Exists(p => p is SqlSearchCondition))
 				return false;
 
 			if (QueryHelper.IsDependsOnOuterSources(selectQuery, elementsToIgnore : new[] { selectQuery.Where }))
@@ -264,7 +278,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			public bool ContainsNotNullExpr {get; private set; }
 
-			protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
+			protected internal override IQueryElement VisitSqlTableSource(SqlTableSource element)
 			{
 				_currentSources.Push(element.Source);
 
@@ -283,7 +297,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				return base.Visit(element);
 			}
 
-			protected override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
+			protected internal override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
 			{
 				if (predicate.IsNot)
 				{
@@ -297,7 +311,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 		}
 
-		protected override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
+		protected internal override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
 		{
 			var saveColumnSubqueryLevel = _columnSubqueryLevel;
 			_columnSubqueryLevel = null;
@@ -316,15 +330,16 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return base.Visit(element);
 		}
 
-		protected override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
+		protected internal override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
 		{
 			if (!_providerFlags.IsApplyJoinSupported)
 			{
 				// No apply joins are allowed
-				if (element.JoinType == JoinType.CrossApply ||
-				    element.JoinType == JoinType.OuterApply ||
-				    element.JoinType == JoinType.FullApply  ||
-				    element.JoinType == JoinType.RightApply)
+				if (element.JoinType
+						is JoinType.CrossApply 
+						or JoinType.OuterApply
+						or JoinType.FullApply
+						or JoinType.RightApply)
 				{
 					if (_providerFlags.SupportedCorrelatedSubqueriesLevel == 0)
 					{
@@ -343,7 +358,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				if (!_providerFlags.IsSupportsJoinWithoutCondition && element.JoinType is JoinType.Left or JoinType.Inner)
 				{
-					if (element.Condition.IsTrue() || element.Condition.IsFalse())
+					if (element.Condition.IsTrue || element.Condition.IsFalse)
 					{
 						SetInvalid(ErrorHelper.Error_Join_Without_Condition);
 						return element;
@@ -362,14 +377,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return result;
 		}
 
-		protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
+		protected internal override IQueryElement VisitSqlTableSource(SqlTableSource element)
 		{
 			base.VisitSqlTableSource(element);
 
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+		protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
 			if (IsSubquery(selectQuery))
 			{
@@ -391,7 +406,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return selectQuery;
 		}
 
-		protected override IQueryElement VisitSqlFromClause(SqlFromClause element)
+		protected internal override IQueryElement VisitSqlFromClause(SqlFromClause element)
 		{
 			var appendLevel = _providerFlags.CalculateSupportedCorrelatedLevelWithAggregateQueries || !QueryHelper.IsAggregationQuery(element.SelectQuery);
 		
@@ -408,6 +423,9 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
+			if (_ignoredExpressions != null && _ignoredExpressions.Contains(expression))
+				return expression;
+
 			var saveLevel = _columnSubqueryLevel;
 
 			_columnSubqueryLevel = 0;
@@ -417,6 +435,48 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			_columnSubqueryLevel = saveLevel;
 
 			return expression;
+		}
+
+		protected internal override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
+		{
+			_ignoredExpressions ??= new Stack<ISqlExpression>();
+
+			foreach (var item in element.Update.Items)
+			{
+				if (item.Expression != null)
+					_ignoredExpressions.Push(item.Expression);
+			}
+
+			var result = base.VisitSqlUpdateStatement(element);
+
+			foreach (var item in element.Update.Items)
+			{
+				if (item.Expression != null)
+					_ignoredExpressions.Pop();
+			}
+
+			return result;
+		}
+
+		protected internal override IQueryElement VisitSqlInsertOrUpdateStatement(SqlInsertOrUpdateStatement element)
+		{
+			_ignoredExpressions ??= new Stack<ISqlExpression>();
+
+			foreach (var item in element.Update.Items)
+			{
+				if (item.Expression != null)
+					_ignoredExpressions.Push(item.Expression);
+			}
+
+			var result = base.VisitSqlInsertOrUpdateStatement(element);
+
+			foreach (var item in element.Update.Items)
+			{
+				if (item.Expression != null)
+					_ignoredExpressions.Pop();
+			}
+
+			return result;
 		}
 	}
 }

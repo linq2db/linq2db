@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -48,13 +51,16 @@ namespace LinqToDB.Internal.SqlQuery
 			if (ReferenceEquals(other, this))
 				return true;
 
-			if (!(other is SqlConditionExpression otherCondition))
+			if (other is not SqlConditionExpression otherCondition)
 				return false;
 
 			return Condition.Equals(otherCondition.Condition, comparer) &&
 			       TrueValue.Equals(otherCondition.TrueValue, comparer) &&
 			       FalseValue.Equals(otherCondition.FalseValue, comparer);
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlConditionExpression(this);
 
 		public override bool CanBeNullable(NullabilityContext nullability)
 		{

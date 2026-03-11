@@ -31,12 +31,12 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		public override int CommandCount(SqlStatement statement)
 		{
-			return statement.NeedsIdentity() ? 2 : 1;
+			return statement.NeedsIdentity ? 2 : 1;
 		}
 
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
-			var insertClause = Statement.GetInsertClause();
+			var insertClause = Statement.InsertClause;
 			if (insertClause != null)
 			{
 				var identityField = insertClause.Into!.GetIdentityField();
@@ -127,7 +127,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				case DataType.NVarChar:
 				case DataType.VarChar:
 				case DataType.VarBinary:
-					if (type.Length == null || type.Length > 5000 || type.Length < 1)
+					if (type.Length is null or > 5000 or < 1)
 					{
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.DataType}(5000)");
 
@@ -164,23 +164,20 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				case ConvertType.NameToQueryField     :
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
-					{
-						if (value.Length > 0 && value[0] == '"')
-							return sb.Append(value);
-						return sb.Append('"').Append(value).Append('"');
-					}
-
-				case ConvertType.NameToServer    :
-				case ConvertType.NameToDatabase  :
-				case ConvertType.NameToSchema    :
-				case ConvertType.NameToPackage   :
-				case ConvertType.NameToQueryTable:
+				case ConvertType.NameToServer         :
+				case ConvertType.NameToDatabase       :
+				case ConvertType.NameToSchema         :
+				case ConvertType.NameToPackage        :
+				case ConvertType.NameToQueryTable     :
 				case ConvertType.NameToCteName        :
-				case ConvertType.NameToProcedure :
-					if (value.Length > 0 && value[0] == '\"')
-						return sb.Append(value);
-
-					return sb.Append('"').Append(value).Append('"');
+				case ConvertType.NameToProcedure      :
+				{
+					return value switch
+					{
+						['"', ..] => sb.Append(value),
+						_ => sb.Append('"').Append(value).Append('"'),
+					};
+				}
 			}
 
 			return sb.Append(value);
@@ -195,7 +192,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		{
 			AppendIndent();
 			StringBuilder.Append("PRIMARY KEY (");
-			StringBuilder.Append(string.Join(InlineComma, fieldNames));
+			StringBuilder.AppendJoinStrings(InlineComma, fieldNames);
 			StringBuilder.Append(')');
 		}
 
@@ -222,7 +219,14 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 			return base.BuildJoinType(join, condition);
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
+		public override StringBuilder BuildObjectName(
+			StringBuilder sb,
+			SqlObjectName name,
+			ConvertType objectType = ConvertType.NameToQueryTable,
+			bool escape = true,
+			TableOptions tableOptions = TableOptions.NotSet,
+			bool withoutSuffix = false
+		)
 		{
 			// <table_name> ::= [[<linked_server_name>.]<schema_name>.][library_name:]<identifier>
 			if (name.Server != null && name.Schema == null)
@@ -251,33 +255,27 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			string command;
+			var command = table.TableOptions.TemporaryOptionValue switch
+			{
+				TableOptions.IsTemporary                                                                              or
+				TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     or
+				TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData or
+																					TableOptions.IsLocalTemporaryData or
+										   TableOptions.IsLocalTemporaryStructure                                     or
+										   TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData =>
+					"CREATE LOCAL TEMPORARY TABLE ",
 
-			if (table.TableOptions.IsTemporaryOptionSet())
-			{
-				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-				{
-					case TableOptions.IsTemporary                                                                              :
-					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
-					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-					case                                                                     TableOptions.IsLocalTemporaryData :
-					case                            TableOptions.IsLocalTemporaryStructure                                     :
-					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-						command = "CREATE LOCAL TEMPORARY TABLE ";
-						break;
-					case TableOptions.IsGlobalTemporaryStructure                                                               :
-					case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData                           :
-						command = "CREATE GLOBAL TEMPORARY TABLE ";
-						break;
-					case var value :
-						throw new InvalidOperationException($"Incompatible table options '{value}'");
-				}
-			}
-			else
-			{
-				command = "CREATE TABLE ";
-			}
+				TableOptions.IsGlobalTemporaryStructure                                                               or
+				TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData                           =>
+					"CREATE GLOBAL TEMPORARY TABLE ",
+
+				0 =>
+					"CREATE TABLE ",
+
+				var value =>
+					throw new InvalidOperationException($"Incompatible table options '{value}'"),
+			};
 
 			StringBuilder.Append(command);
 		}
@@ -291,10 +289,11 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
 				{
-					if (provider.Provider == SapHanaProvider.ODBC)
-						return provider.Adapter.GetOdbcDbType!(param).ToString();
-					else
-						return provider.Adapter.GetDbType!(param).ToString();
+					return provider.Provider switch
+					{
+						SapHanaProvider.ODBC => provider.Adapter.GetOdbcDbType!(param).ToString(),
+						_ => provider.Adapter.GetDbType!(param).ToString(),
+					};
 				}
 			}
 
@@ -303,18 +302,11 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 
 		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source, IReadOnlyList<List<ISqlExpression>> rows, int row, int column)
 		{
-			if (row == 0)
-			{
-				if (rows[0][column] is SqlValue
-					{
-						Value: uint or long or ulong or float or double or decimal
-					})
+			return row == 0
+				&& rows[0][column] is SqlValue
 				{
-					return true;
-				}
-			}
-
-			return false;
+					Value: uint or long or ulong or float or double or decimal,
+				};
 		}
 	}
 }

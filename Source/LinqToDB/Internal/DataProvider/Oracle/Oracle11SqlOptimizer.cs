@@ -1,4 +1,7 @@
-﻿using LinqToDB.Internal.SqlProvider;
+﻿using System.Collections.Generic;
+using System.Linq;
+
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -162,6 +165,42 @@ namespace LinqToDB.Internal.DataProvider.Oracle
 
 				},
 				allowMutation: true);
+		}
+
+		protected override SqlStatement FixSetOperationValues(MappingSchema mappingSchema, SqlStatement statement)
+		{
+			statement = base.FixSetOperationValues(mappingSchema, statement);
+
+			statement.VisitParentFirst(mappingSchema, static (mappingSchema, e) =>
+			{
+				if (e is SelectQuery { HasSetOperators: true } query)
+				{
+					IEnumerable<SelectQuery> queries = [query, .. query.SetOperators.Select(o => o.SelectQuery)];
+
+					for (var i = 0; i < query.Select.Columns.Count; i++)
+					{
+						if (OracleSqlExpressionConvertVisitor.NeedsCharTypeCorrection(mappingSchema, queries.Select(q => q.Select.Columns[i].Expression)))
+						{
+							foreach (var qry in queries)
+							{
+								var type = QueryHelper.GetDbDataType(qry.Select.Columns[i].Expression, mappingSchema);
+								if (type.DataType is DataType.Char or DataType.VarChar)
+								{
+									qry.Select.Columns[i].Expression = new SqlCastExpression(
+										qry.Select.Columns[i].Expression,
+										type.WithDataType(type.DataType is DataType.Char ? DataType.NChar : DataType.NVarChar),
+										null,
+										isMandatory: true);
+								}
+							}
+						}
+					}
+				}
+
+				return true;
+			});
+
+			return statement;
 		}
 	}
 }

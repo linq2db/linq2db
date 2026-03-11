@@ -16,6 +16,6 @@
 		/// <summary>
 		/// Context contains static instance of mapping schema with mappings, configured using fluent mapper.
 		/// </summary>
-		FluentMapping
+		FluentMapping,
 	}
 }

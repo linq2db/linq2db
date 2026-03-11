@@ -198,14 +198,14 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		{
 			One   = 1,
 			Two   = 2,
-			Three = 3
+			Three = 3,
 		}
 
 		public enum TestEnum2
 		{
 			One   = 1,
 			Two   = 2,
-			Three = 3
+			Three = 3,
 		}
 
 		[Flags]
@@ -213,7 +213,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 		{
 			One  = 1,
 			Two  = 2,
-			Four = 4
+			Four = 4,
 		}
 	}
 
@@ -263,7 +263,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			private static string[] Events { get; }
 				= new []
 			{
-				nameof(TestEvent)
+				nameof(TestEvent),
 			};
 
 			public TestEventClass(object instance) : base(instance, null)
@@ -388,7 +388,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			One   = 3,
 			Two   = 2,
 			Three = 1,
-			Four  = 4
+			Four  = 4,
 		}
 
 		[Wrapper]
@@ -397,7 +397,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			One   = 1,
 			Two   = 2,
 			Three = 3,
-			Four  = 4
+			Four  = 4,
 		}
 
 		[Wrapper]
@@ -407,7 +407,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			One   = 1,
 			Two   = 2,
 			Four  = 4,
-			Eight = 8
+			Eight = 8,
 		}
 	}
 }

@@ -25,6 +25,7 @@ using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Internal.Logging;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 using LinqToDB.Metrics;
 
 namespace LinqToDB.Internal.Linq
@@ -90,7 +91,7 @@ namespace LinqToDB.Internal.Linq
 				}
 				// SqlNullValueException: MySqlData
 				// OracleNullValueException: managed and native oracle providers
-				catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
+				catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException", StringComparison.Ordinal))
 				{
 					// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
 					if (mapperInfo.IsFaulted)
@@ -122,7 +123,7 @@ namespace LinqToDB.Internal.Linq
 				{
 					MapperExpression = expr,
 					Mapper           = expression.CompileExpression(),
-					IsFaulted        = true
+					IsFaulted        = true,
 				};
 
 				_mappers[dataReaderType] = mapperInfo;
@@ -150,6 +151,101 @@ namespace LinqToDB.Internal.Linq
 				return mapperInfo;
 			}
 
+			static readonly ObjectPool<MapperExpressionTransformer> _mapperExpressionTransformerPool = new(() => new MapperExpressionTransformer(), v => v.Cleanup(), 100);
+
+			sealed class MapperExpressionTransformer : ExpressionVisitorBase
+			{
+				private bool                 _slowMode;
+				private LambdaExpression     _originalMapper = default!;
+				private IDataContext         _context        = default!;
+				private DbDataReader         _dataReader     = default!;
+				private Type                 _dataReaderType = default!;
+				private ParameterExpression? _oldVariable;
+				private ParameterExpression? _newVariable;
+
+				public override void Cleanup()
+				{
+					_slowMode       = false;
+					_originalMapper = default!;
+					_context        = default!;
+					_dataReader     = default!;
+					_dataReaderType = default!;
+					_oldVariable    = null;
+					_newVariable    = null;
+
+					base.Cleanup();
+				}
+
+				public Expression Transform(
+					IDataContext     context,
+					DbDataReader     dataReader,
+					Type             dataReaderType,
+					bool             slowMode,
+					LambdaExpression mapper)
+				{
+					_slowMode       = slowMode;
+					_originalMapper = mapper;
+					_context        = context;
+					_dataReader     = dataReader;
+					_dataReaderType = dataReaderType;
+
+					return Visit(mapper);
+				}
+
+				public override Expression VisitSqlQueryRootExpression(SqlQueryRootExpression node)
+				{
+					if (((IConfigurationID)node.MappingSchema).ConfigurationID == ((IConfigurationID)_context.MappingSchema).ConfigurationID)
+					{
+						var contextExpr = (Expression)Expression.PropertyOrField(_originalMapper.Parameters[0], nameof(IQueryRunner.DataContext));
+
+						if (contextExpr.Type != node.Type)
+							contextExpr = Expression.Convert(contextExpr, node.Type);
+
+						return contextExpr;
+					}
+
+					return node;
+				}
+
+				internal override Expression VisitConvertFromDataReaderExpression(ConvertFromDataReaderExpression node)
+				{
+					if (_slowMode)
+						return Visit(new ConvertFromDataReaderExpression(node.Type, node.Index, node.Converter, node.DataContextParam, _newVariable!, _context).Reduce());
+					else
+						return Visit(node.Reduce(_context, _dataReader, _newVariable!));
+				}
+
+				protected override Expression VisitParameter(ParameterExpression node)
+				{
+					if (_oldVariable == null && string.Equals(node.Name, "ldr", StringComparison.Ordinal))
+					{
+						_oldVariable = node;
+						_newVariable = Expression.Variable(_dataReader.GetType(), "ldr");
+					}
+
+					if (node == _oldVariable)
+						return _newVariable!;
+
+					return node;
+				}
+
+				protected override Expression VisitBinary(BinaryExpression node)
+				{
+					var left = Visit(node.Left);
+					Expression? right = null;
+
+					if (node.NodeType == ExpressionType.Assign && node.Left == _oldVariable)
+					{
+						right = Expression.Convert(_originalMapper.Parameters[1], _dataReaderType);
+					}
+
+					return node.Update(
+						left,
+						VisitAndConvert(node.Conversion, nameof(VisitBinary)),
+						right ?? Visit(node.Right));
+				}
+			}
+
 			// transform extracted to separate method to avoid closures allocation on mapper cache hit
 			private Expression<Func<IQueryRunner, DbDataReader, T>> TransformMapperExpression(
 				IDataContext context,
@@ -157,97 +253,13 @@ namespace LinqToDB.Internal.Linq
 				Type         dataReaderType,
 				bool         slowMode)
 			{
-				var ctx = new TransformMapperExpressionContext(_expression, context, dataReader, dataReaderType);
-
-				Expression expression;
-
-				expression = _expression.Transform(
-					ctx,
-					static (context, e) =>
-					{
-						if (e is SqlQueryRootExpression root)
-						{
-							if (((IConfigurationID)root.MappingSchema).ConfigurationID ==
-								((IConfigurationID)context.Context.MappingSchema).ConfigurationID)
-							{
-								var lambda      = (LambdaExpression)context.Expression;
-								var contextExpr = (Expression)Expression.PropertyOrField(lambda.Parameters[0], nameof(IQueryRunner.DataContext));
-
-								if (contextExpr.Type != e.Type)
-									contextExpr = Expression.Convert(contextExpr, e.Type);
-								return contextExpr;
-							}
-						}
-
-						return e;
-					});
-
-				if (slowMode)
-				{
-					expression = expression.Transform(
-						ctx,
-						static (context, e) =>
-						{
-							if (e is ConvertFromDataReaderExpression ex)
-								return new ConvertFromDataReaderExpression(ex.Type, ex.Index, ex.Converter, ex.DataContextParam, context.NewVariable!, context.Context).Reduce();
-
-							return ReplaceVariable(context, e);
-						});
-				}
-				else
-				{
-					expression = expression.Transform(
-						ctx,
-						static (context, e) =>
-						{
-							if (e is ConvertFromDataReaderExpression ex)
-								return ex.Reduce(context.Context, context.DataReader, context.NewVariable!).Transform(context, ReplaceVariable);
-
-							return ReplaceVariable(context, e);
-						});
-				}
+				using var transformer = _mapperExpressionTransformerPool.Allocate();
+				var expression = transformer.Value.Transform(context, dataReader, dataReaderType, slowMode, _expression);
 
 				if (LinqToDB.Common.Configuration.OptimizeForSequentialAccess)
 					expression = SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(expression, dataReader.FieldCount, reduce: false);
 
 				return (Expression<Func<IQueryRunner, DbDataReader, T>>)expression;
-			}
-
-			static Expression ReplaceVariable(TransformMapperExpressionContext context, Expression e)
-			{
-				if (e is ParameterExpression { Name: "ldr" } vex)
-				{
-					context.OldVariable = vex;
-					return context.NewVariable ??= Expression.Variable(context.DataReader.GetType(), "ldr");
-				}
-
-				if (e is BinaryExpression { NodeType: ExpressionType.Assign } bex && bex.Left == context.OldVariable)
-				{
-					var dataReaderExpression = Expression.Convert(context.Expression.Parameters[1], context.DataReaderType);
-
-					return Expression.Assign(context.NewVariable!, dataReaderExpression);
-				}
-
-				return e;
-			}
-
-			sealed class TransformMapperExpressionContext
-			{
-				public TransformMapperExpressionContext(Expression<Func<IQueryRunner, DbDataReader, T>> expression, IDataContext context, DbDataReader dataReader, Type dataReaderType)
-				{
-					Expression     = expression;
-					Context        = context;
-					DataReader     = dataReader;
-					DataReaderType = dataReaderType;
-				}
-
-				public Expression<Func<IQueryRunner,DbDataReader,T>> Expression;
-				public readonly IDataContext                         Context;
-				public readonly DbDataReader                         DataReader;
-				public readonly Type                                 DataReaderType;
-
-				public ParameterExpression? OldVariable;
-				public ParameterExpression? NewVariable;
 			}
 		}
 
@@ -514,7 +526,7 @@ namespace LinqToDB.Internal.Linq
 							res = mapperInfo.Mapper(runner, origDataReader);
 							runner.RowsCount++;
 						}
-						catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
+						catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException", StringComparison.Ordinal))
 						{
 							// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
 							if (mapperInfo.IsFaulted)
@@ -543,10 +555,11 @@ namespace LinqToDB.Internal.Linq
 			{
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteQueryAsync))
 				{
-#pragma warning disable CA2007
-					await using var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _parameters, _preambles);
-					await using var dr     = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-#pragma warning restore CA2007
+					var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expressions, _parameters, _preambles);
+					await using var _2 = runner.ConfigureAwait(false);
+
+					var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+					await using var _3 = dr.ConfigureAwait(false);
 
 					var dataReader = dr.DataReader!;
 
@@ -579,7 +592,7 @@ namespace LinqToDB.Internal.Linq
 								res = mapperInfo.Mapper(runner, origDataReader);
 								runner.RowsCount++;
 							}
-							catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException"))
+							catch (Exception ex) when (ex is FormatException or InvalidCastException or LinqToDBConvertException || ex.GetType().Name.Contains("NullValueException", StringComparison.Ordinal))
 							{
 								// TODO: debug cases when our tests go into slow-mode (e.g. sqlite.ms)
 								if (mapperInfo.IsFaulted)
@@ -750,7 +763,9 @@ namespace LinqToDB.Internal.Linq
 				return ret;
 			}
 
+#pragma warning disable MA0098 // Use indexer instead of LINQ methods
 			return Array.Empty<T>().First();
+#pragma warning restore MA0098 // Use indexer instead of LINQ methods
 		}
 
 		static async Task<T> ExecuteElementAsync<T>(
@@ -765,36 +780,36 @@ namespace LinqToDB.Internal.Linq
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteElementAsync))
 			{
 				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, ps, preambles);
-				await using (runner.ConfigureAwait(false))
+				await using var _1 = runner.ConfigureAwait(false);
+
+				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+				await using var _2 = dr.ConfigureAwait(false);
+
+				if (await dr.ReadAsync(cancellationToken).ConfigureAwait(false))
 				{
-					var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
-					await using (dr.ConfigureAwait(false))
+					DbDataReader dataReader;
+
+					if (dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
 					{
-						if (await dr.ReadAsync(cancellationToken).ConfigureAwait(false))
-						{
-							DbDataReader dataReader;
-
-							if (dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
-							{
-								using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
-									dataReader = interceptor.UnwrapDataReader(dataContext, dr.DataReader);
-							}
-							else
-							{
-								dataReader = dr.DataReader;
-							}
-
-							var mapperInfo = mapper.GetMapperInfo(dataContext, runner, dataReader);
-							var item       = mapper.Map(dataContext, runner, dataReader, ref mapperInfo);
-
-							var ret = dataContext.MappingSchema.ChangeTypeTo<T>(item);
-							runner.RowsCount++;
-							return ret;
-						}
-
-						return Array.Empty<T>().First();
+						using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+							dataReader = interceptor.UnwrapDataReader(dataContext, dr.DataReader);
 					}
+					else
+					{
+						dataReader = dr.DataReader;
+					}
+
+					var mapperInfo = mapper.GetMapperInfo(dataContext, runner, dataReader);
+					var item       = mapper.Map(dataContext, runner, dataReader, ref mapperInfo);
+
+					var ret = dataContext.MappingSchema.ChangeTypeTo<T>(item);
+					runner.RowsCount++;
+					return ret;
 				}
+
+#pragma warning disable MA0098 // Use indexer instead of LINQ methods
+				return Array.Empty<T>().First();
+#pragma warning restore MA0098 // Use indexer instead of LINQ methods
 			}
 		}
 

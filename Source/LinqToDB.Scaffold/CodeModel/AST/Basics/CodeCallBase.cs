@@ -36,7 +36,7 @@ namespace LinqToDB.CodeModel
 		public bool                                 CanSkipTypeArguments { get; }
 		/// <summary>
 		/// Indicates that method is an extension method.
-		/// Note that for <c>this</c> parameter passed in parameters and <see cref="Callee"/> property contains type
+		/// Note that for <see langword="this"/> parameter passed in parameters and <see cref="Callee"/> property contains type
 		/// where extension method declared.
 		/// </summary>
 		public bool                                 Extension            { get; }

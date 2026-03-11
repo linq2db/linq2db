@@ -11,6 +11,7 @@ using LinqToDB.Internal.Infrastructure;
 using LinqToDB.Internal.Reflection;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Internal.Linq.Builder
 {
@@ -38,7 +39,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			ExpressionBuilder.QueryExpressionContainerParam,
 			ExpressionConstants.DataContextParam,
-			ExpressionBuilder.ParametersParam
+			ExpressionBuilder.ParametersParam,
 		};
 
 		public readonly List<ParameterAccessor>           CurrentSqlParameters = new();
@@ -69,7 +70,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			Default,
 			Bool,
-			InPredicate
+			InPredicate,
 		}
 
 		public Expression SimplifyConversion(Expression expression)
@@ -117,7 +118,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			if (parameterName == null && columnDescriptor != null)
 			{
-				if (columnDescriptor.MemberName.Contains("."))
+				if (columnDescriptor.MemberName.Contains('.', StringComparison.Ordinal))
 					parameterName = columnDescriptor.ColumnName;
 				else
 					parameterName = columnDescriptor.MemberName;
@@ -126,7 +127,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			parameterName ??= "p";
 
 			var mappingSchema = context?.MappingSchema ?? MappingSchema;
-			var entry         = PrepareParameterCacheEntry(mappingSchema, expr, parameterName, columnDescriptor, doNotCheckCompatibility, buildParameterType);
+			var entry       = PrepareParameterCacheEntry(mappingSchema, expr, parameterName, columnDescriptor, doNotCheckCompatibility, buildParameterType);
 
 			if (entry is null)
 				return null;
@@ -144,7 +145,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			else
 			{
 				if (context?.Builder != null && mappingSchema.IsScalarType(expr.Type))
-					CacheManager.RegisterParameterEntry(expr, entry, context.Builder.EvaluateExpression, out finalParameterId);
+				{
+					try
+					{
+						CacheManager.RegisterParameterEntry(expr, entry, context.Builder.EvaluateExpression, out finalParameterId);
+					}
+					catch
+					{
+						return null;
+					}
+				}
 				else
 					CacheManager.RegisterParameterEntry(expr, entry, null, out finalParameterId);
 			}
@@ -157,7 +167,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			sqlParameter = new SqlParameter(entry.DbDataType, entry.ParameterName, null)
 			{
 				AccessorId       = finalParameterId,
-				IsQueryParameter = !(context != null ? context.Builder.GetTranslationModifier().InlineParameters : DataContext.InlineParameters)
+				IsQueryParameter = !(context != null ? context.Builder.GetTranslationModifier().InlineParameters : DataContext.InlineParameters),
 			};
 
 			_parametersById[finalParameterId] = sqlParameter;
@@ -185,6 +195,8 @@ namespace LinqToDB.Internal.Linq.Builder
 			var paramType        = elementType ?? paramExpression.UnwrapConvertToNotObject().Type;
 
 			var paramDataType = columnDescriptor?.GetDbDataType(true) ?? mappingSchema.GetDbDataType(paramType);
+			if (paramDataType.EqualsDbOnly(SqlDataType.MakeUndefined(paramType).Type))
+				paramDataType = mappingSchema.GetUnderlyingDataType(paramType, out _).Type;
 
 			var        objParam                   = ItemParameter;
 			Expression defaultProviderValueGetter = Expression.Convert(objParam, valueType);
@@ -196,6 +208,8 @@ namespace LinqToDB.Internal.Linq.Builder
 				{
 					if (paramType.IsNullableType && !paramDataType.SystemType.IsNullableType)
 						paramDataType = paramDataType.WithSystemType(paramDataType.SystemType.MakeNullable());
+					else if (!paramType.IsNullableOrReferenceType && paramDataType.SystemType.IsNullableType)
+						paramDataType = paramDataType.WithSystemType(paramDataType.SystemType.UnwrapNullableType());
 
 					var updateType = true;
 
@@ -237,17 +251,12 @@ namespace LinqToDB.Internal.Linq.Builder
 
 							if (providerValueGetter.Type.IsNullableType && providerValueGetter.Type.UnwrapNullableType() != memberType)
 							{
-								var toType = memberType.IsValueType && !memberType.IsNullableType
+								var toType = !memberType.IsNullableOrReferenceType
 									? memberType.MakeNullable()
 									: memberType;
 
 								var convertLambda   = MappingSchema.GenerateSafeConvert(providerValueGetter.Type, toType);
 								providerValueGetter = InternalExtensions.ApplyLambdaToExpression(convertLambda, providerValueGetter);
-							}
-
-							if (providerValueGetter.Type != memberType && memberType.IsNullableOrReferenceType() && providerValueGetter.Type.UnwrapNullableType() == memberType.UnwrapNullableType())
-							{
-								providerValueGetter = Expression.Convert(providerValueGetter, memberType);
 							}
 						}
 					}
@@ -257,7 +266,11 @@ namespace LinqToDB.Internal.Linq.Builder
 					}
 
 					if (updateType && paramDataType.SystemType.UnwrapNullableType() != paramType.UnwrapNullableType() && paramType != typeof(object))
-						paramDataType = mappingSchema.GetDbDataType(paramType);
+					{
+						var newType = mappingSchema.GetDbDataType(paramType);
+						if (!newType.EqualsDbOnly(SqlDataType.MakeUndefined(paramType).Type))
+							paramDataType = newType;
+					}
 
 					providerValueGetter = columnDescriptor.ApplyConversions(providerValueGetter, paramDataType, true);
 				}
@@ -281,6 +294,9 @@ namespace LinqToDB.Internal.Linq.Builder
 									return null;
 							}
 
+							if (columnDescriptor != null)
+								providerValueGetter = columnDescriptor.ApplyConversions(providerValueGetter, paramDataType, true);
+
 							providerValueGetter = convertExpr != null
 								? InternalExtensions.ApplyLambdaToExpression(convertExpr, providerValueGetter)
 								: ColumnDescriptor.ApplyConversions(MappingSchema, providerValueGetter, paramDataType, null, true);
@@ -290,6 +306,16 @@ namespace LinqToDB.Internal.Linq.Builder
 							providerValueGetter = ColumnDescriptor.ApplyConversions(MappingSchema, providerValueGetter, paramDataType, null, true);
 						}
 					}
+				}
+			}
+
+			if (typeof(DataParameter).IsSameOrParentOf(paramExpression.Type))
+			{
+				if (OptimizationContext.CanBeEvaluatedOnClient(paramExpression))
+				{
+					var nameExpr = Expression.Property(paramExpression, Methods.LinqToDB.DataParameter.Name);
+					if (nameExpr.EvaluateExpression() is string { Length: > 0 } currentName)
+						parameterName = currentName;
 				}
 			}
 
@@ -415,7 +441,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (notNullable != testedType)
 				return HasDbMapping(mappingSchema, notNullable, out convertExpr);
 
-			// TODO: Workaround, wee need good TypeMapping approach
+			// TODO: Workaround, we need good TypeMapping approach
 			if (mappingSchema.IsCollectionType(testedType))
 			{
 				convertExpr = null;
@@ -484,7 +510,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					new SqlParameter(dbDataType, name, null)
 					{
 						AccessorId = accessorId,
-						IsQueryParameter = !dataContext.InlineParameters
+						IsQueryParameter = !dataContext.InlineParameters,
 					}
 				)
 #if DEBUG

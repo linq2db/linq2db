@@ -198,13 +198,13 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsAggregationRoot() || flags.IsTraverse() || flags.IsExtractProjection() || flags.IsSubquery())
 					return path;
 
+				// Expand is initiated by Eager Loading but there is need to expand in case when we need comparison
+				if (flags.IsExpand() && !flags.IsKeys())
+					return path;
+
 				if (SequenceHelper.IsSameContext(path, this))
 				{
 					if (flags.IsTable())
-						return path;
-
-					// Expand is initiated by Eager Loading but there is need to expand in case when we need comparison
-					if (flags.IsExpand() && !flags.IsKeys())
 						return path;
 
 					if (flags.IsSubquery() && !(path.Type.IsSameOrParentOf(ElementType) || ElementType.IsSameOrParentOf(path.Type)))
@@ -213,12 +213,6 @@ namespace LinqToDB.Internal.Linq.Builder
 						if (expr == null)
 							return path;
 						return expr;
-					}
-
-					// Eager load case
-					if (path.Type.IsEnumerableType(ElementType))
-					{
-						return path;
 					}
 
 					if (MappingSchema.IsScalarType(ElementType))
@@ -238,6 +232,12 @@ namespace LinqToDB.Internal.Linq.Builder
 							fullEntity = Expression.Convert(fullEntity, path.Type);
 
 						return fullEntity;
+					}
+
+					// Eager load case
+					if (path.Type.IsEnumerableType(ElementType))
+					{
+						return path;
 					}
 
 					return path;
@@ -294,7 +294,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				return new TableContext(TranslationModifier, Builder, MappingSchema, context.CloneElement(SelectQuery), context.CloneElement(SqlTable), IsOptional)
 				{
-					LoadWithRoot = LoadWithRoot
+					LoadWithRoot = LoadWithRoot,
 				};
 			}
 
@@ -322,7 +322,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (SqlTable.Alias != null)
 					return;
 
-				if (!alias.Contains('<'))
+				if (!alias.Contains('<', StringComparison.Ordinal))
 					SqlTable.Alias = alias;
 			}
 
@@ -403,7 +403,7 @@ namespace LinqToDB.Internal.Linq.Builder
 									foreach (var field in SqlTable.Fields)
 									{
 										var name = levelMember.Member.Name;
-										if (field.Name.IndexOf('.') >= 0)
+										if (field.Name.Contains('.', StringComparison.Ordinal))
 										{
 											if (pathName == null)
 											{
@@ -420,10 +420,10 @@ namespace LinqToDB.Internal.Linq.Builder
 												pathName = !string.IsNullOrEmpty(suffix) ? name + "." + suffix : name;
 											}
 
-											if (field.Name == pathName)
+											if (string.Equals(field.Name, pathName, StringComparison.Ordinal))
 												return field;
 										}
-										else if (field.Name == name)
+										else if (string.Equals(field.Name, name, StringComparison.Ordinal))
 											return field;
 									}
 								}
@@ -437,7 +437,7 @@ namespace LinqToDB.Internal.Linq.Builder
 								if (field.ColumnDescriptor.MemberInfo.EqualsTo(memberExpression.Member, SqlTable.ObjectType))
 								{
 									if (field.ColumnDescriptor.MemberAccessor.IsComplex
-										&& !field.ColumnDescriptor.MemberAccessor.MemberInfo.IsDynamicColumnPropertyEx())
+										&& !field.ColumnDescriptor.MemberAccessor.MemberInfo.IsDynamicColumnProperty)
 									{
 										var name = memberExpression.Member.Name;
 										var me   = memberExpression;
@@ -463,7 +463,7 @@ namespace LinqToDB.Internal.Linq.Builder
 									}
 								}
 
-								if (InheritanceMapping.Count > 0 && field.Name == memberExpression.Member.Name)
+								if (InheritanceMapping.Count > 0 && string.Equals(field.Name, memberExpression.Member.Name, StringComparison.Ordinal))
 								{
 									foreach (var mapping in InheritanceMapping)
 									{
@@ -477,7 +477,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 							}
 
-							if (memberExpression.Member.IsDynamicColumnPropertyEx())
+							if (memberExpression.Member.IsDynamicColumnProperty)
 							{
 								var fieldName = memberExpression.Member.Name;
 

@@ -46,7 +46,7 @@ namespace LinqToDB.CodeModel
 		/// <param name="name">String with namespace or type name.
 		/// Type name shouldn't contain anything except namespace and namespace (no array brackets, generic argument list).
 		/// Name components should be separated by dot (.).</param>
-		/// <param name="generated">When <c>true</c>, <paramref name="name"/> contains generated namespace/type name and could be modified on name conflict.</param>
+		/// <param name="generated">When <see langword="true" />, <paramref name="name"/> contains generated namespace/type name and could be modified on name conflict.</param>
 		/// <returns>Namespace/type name elements.</returns>
 		CodeIdentifier[] ParseNamespaceOrRegularTypeName(string name, bool generated);
 	}

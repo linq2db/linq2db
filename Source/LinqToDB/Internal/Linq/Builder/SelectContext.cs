@@ -23,7 +23,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		public MethodCallExpression? Debug_MethodCall;
 #endif
 
-		MappingSchema _mappingSchema;
+		private readonly MappingSchema _mappingSchema;
 
 		public          Expression     Body          { [DebuggerStepThrough] get; set; }
 		public          bool           IsSubQuery    { get; }
@@ -117,7 +117,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						return result;
 					}
 
-					if (flags.IsTable() || flags.IsAssociationRoot())
+					if (flags.IsTable())
 					{
 						if (InnerContext != null)
 							return new ContextRefExpression(InnerContext.ElementType, InnerContext);
@@ -216,7 +216,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public override void SetAlias(string? alias)
 		{
-			if (!string.IsNullOrEmpty(alias) && !alias!.Contains("<") && SelectQuery.Select.From.Tables.Count == 1)
+			if (!string.IsNullOrEmpty(alias) && !alias!.Contains('<', System.StringComparison.Ordinal) && SelectQuery.Select.From.Tables.Count == 1)
 			{
 				var table = SelectQuery.Select.From.Tables[0];
 				if (table.RawAlias == null)

@@ -32,9 +32,14 @@ namespace LinqToDB.Internal.Reflection
 
 		public static class System
 		{
-			public static readonly MethodInfo Guid_NewGuid     = MemberHelper.MethodOf(     () => Guid.NewGuid());
-			public static readonly MethodInfo Guid_ToString    = MemberHelper.MethodOf<Guid>(g => g.ToString());
-			public static readonly MethodInfo Guid_ToByteArray = MemberHelper.MethodOf<Guid>(g => g.ToByteArray());
+#pragma warning disable MA0107
+			public static readonly MethodInfo Object_ToString      = MemberHelper.MethodOf<object>(o => o.ToString());
+#pragma warning restore MA0107
+			public static readonly MethodInfo Guid_NewGuid         = MemberHelper.MethodOf(     () => Guid.NewGuid());
+			public static readonly MethodInfo Guid_ToString        = MemberHelper.MethodOf<Guid>(g => g.ToString());
+			public static readonly MethodInfo Guid_ToByteArray     = MemberHelper.MethodOf<Guid>(g => g.ToByteArray());
+			public static readonly MethodInfo String_ObjectsConcat = MemberHelper.MethodOf(() => string.Concat((object?)null, (object?)null));
+
 		}
 
 		public static class Enumerable
@@ -71,12 +76,29 @@ namespace LinqToDB.Internal.Reflection
 			public static readonly MethodInfo Join      = MemberHelper.MethodOfGeneric<IEnumerable<LW1>, IEnumerable<LW2>>((m, d) => m.Join(d, _ => _.Value1, _ => _.Value2, (m, d) => d));
 			public static readonly MethodInfo GroupJoin = MemberHelper.MethodOfGeneric<IEnumerable<LW1>, IEnumerable<LW2>>((m, d) => m.GroupJoin(d, _ => _.Value1, _ => _.Value2, (m, d) => d));
 
+			public static readonly MethodInfo Count       = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.Count());
 			public static readonly MethodInfo Distinct    = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.Distinct());
+			public static readonly MethodInfo Union       = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.Union(Array.Empty<int>()));
+			public static readonly MethodInfo Except      = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.Except(Array.Empty<int>()));
+			public static readonly MethodInfo Intersect   = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.Intersect(Array.Empty<int>()));
 
 #if NET8_0_OR_GREATER
-			public static readonly MethodInfo DistinctBy = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.DistinctBy(x => 1));
-			public static readonly MethodInfo MinBy      = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.MinBy(x => 1));
-			public static readonly MethodInfo MaxBy      = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.MaxBy(x => 1));
+			public static readonly MethodInfo DistinctBy  = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.DistinctBy(x => 1));
+			public static readonly MethodInfo MinBy       = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.MinBy(x => 1));
+			public static readonly MethodInfo MaxBy       = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.MaxBy(x => 1));
+			public static readonly MethodInfo UnionBy     = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.UnionBy(Array.Empty<int>(), x => 1));
+			public static readonly MethodInfo ExceptBy    = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.ExceptBy(Array.Empty<int>(), x => 1));
+			public static readonly MethodInfo IntersectBy = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.IntersectBy(Array.Empty<int>(), x => 1));
+#endif
+
+#if NET9_0_OR_GREATER
+			public static readonly MethodInfo Index   = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.Index());
+			public static readonly MethodInfo CountBy = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.CountBy(x => 1));
+#endif
+
+#if NET10_0_OR_GREATER
+			public static readonly MethodInfo LeftJoin    = MemberHelper.MethodOfGeneric<IEnumerable<LW1>, IEnumerable<LW2>>((m, d) => m.LeftJoin(d, _ => _.Value1, _ => _.Value2, (m, d) => d));
+			public static readonly MethodInfo RightJoin   = MemberHelper.MethodOfGeneric<IEnumerable<LW1>, IEnumerable<LW2>>((m, d) => m.RightJoin(d, _ => _.Value1, _ => _.Value2, (m, d) => d));
 #endif
 		}
 
@@ -117,13 +139,32 @@ namespace LinqToDB.Internal.Reflection
 			public static readonly MethodInfo GroupJoin = MemberHelper.MethodOfGeneric<IQueryable<LW1>, IQueryable<LW2>>((m, d) => m.GroupJoin(d, _ => _.Value1, _ => _.Value2, (m, d) => d));
 
 			public static readonly MethodInfo Distinct    = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.Distinct());
+			public static readonly MethodInfo Union       = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.Union(Array.Empty<int>().AsQueryable()));
+			public static readonly MethodInfo Concat      = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.Concat(Array.Empty<int>().AsQueryable()));
+			public static readonly MethodInfo Except      = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.Except(Array.Empty<int>().AsQueryable()));
+			public static readonly MethodInfo Intersect   = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.Intersect(Array.Empty<int>().AsQueryable()));
 
-			public static readonly MethodInfo OrderBy = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.OrderBy(x => 1));
+			public static readonly MethodInfo OrderBy            = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.OrderBy(x => 1));
+			public static readonly MethodInfo OrderByDescending  = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.OrderByDescending(x => 1));
+			public static readonly MethodInfo GroupBy            = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.GroupBy(x => 1));
 
 #if NET8_0_OR_GREATER
-			public static readonly MethodInfo DistinctBy = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.DistinctBy(x => 1));
-			public static readonly MethodInfo MinBy      = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.MinBy(x => 1));
-			public static readonly MethodInfo MaxBy      = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.MaxBy(x => 1));
+			public static readonly MethodInfo DistinctBy  = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.DistinctBy(x => 1));
+			public static readonly MethodInfo MinBy       = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.MinBy(x => 1));
+			public static readonly MethodInfo MaxBy       = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.MaxBy(x => 1));
+			public static readonly MethodInfo UnionBy     = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.UnionBy(Array.Empty<int>(), x => 1));
+			public static readonly MethodInfo ExceptBy    = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.ExceptBy(Array.Empty<int>(), x => 1));
+			public static readonly MethodInfo IntersectBy = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.IntersectBy(Array.Empty<int>(), x => 1));
+#endif
+
+#if NET9_0_OR_GREATER
+			public static readonly MethodInfo Index   = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.Index());
+			public static readonly MethodInfo CountBy = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.CountBy(x => 1));
+#endif
+
+#if NET10_0_OR_GREATER
+			public static readonly MethodInfo LeftJoin    = MemberHelper.MethodOfGeneric<IQueryable<LW1>, IQueryable<LW2>>((m, d) => m.LeftJoin(d, _ => _.Value1, _ => _.Value2, (m, d) => d));
+			public static readonly MethodInfo RightJoin   = MemberHelper.MethodOfGeneric<IQueryable<LW1>, IQueryable<LW2>>((m, d) => m.RightJoin(d, _ => _.Value1, _ => _.Value2, (m, d) => d));
 #endif
 		}
 
@@ -390,6 +431,10 @@ namespace LinqToDB.Internal.Reflection
 			{
 				public static readonly PropertyInfo DbDataType = MemberHelper.PropertyOf<Data.DataParameter>(dp => dp.DbDataType);
 				public static readonly PropertyInfo Value      = MemberHelper.PropertyOf<Data.DataParameter>(dp => dp.Value);
+				public static readonly PropertyInfo Name       = MemberHelper.PropertyOf<Data.DataParameter>(dp => dp.Name);
+
+				internal static readonly MethodInfo ClearValue = MemberHelper.MethodOf<Data.DataParameter>(dp => dp.ClearValue(false));
+				internal static readonly MethodInfo SetType    = MemberHelper.MethodOf<Data.DataParameter>(dp => dp.SetType(default));
 			}
 
 			internal static class Exceptions

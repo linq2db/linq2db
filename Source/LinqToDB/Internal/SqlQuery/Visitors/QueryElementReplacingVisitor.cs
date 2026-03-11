@@ -24,10 +24,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return Visit(element);
 		}
 
-		public void Cleanup()
+		public override void Cleanup()
 		{
 			_replacements = default!;
 			_toIgnore     = default!;
+
+			base.Cleanup();
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]

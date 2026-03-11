@@ -145,9 +145,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 						function = "Add_Months";
 						break;
 					}
-					case Sql.DateParts.DayOfYear:
 					case Sql.DateParts.Day:
-					case Sql.DateParts.WeekDay:
 					{
 						function = "Add_Days";
 						break;
@@ -351,7 +349,7 @@ namespace LinqToDB.Internal.DataProvider.SapHana.Translation
 								suffix = factory.Fragment(sb.Value.ToString(), args);
 							}
 
-							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
+							if (info is { FilterCondition.IsTrue: false })
 							{
 								if (!info.IsGroupBy)
 								{

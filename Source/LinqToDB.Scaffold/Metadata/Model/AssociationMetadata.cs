@@ -9,8 +9,8 @@ namespace LinqToDB.Metadata
 	public sealed class AssociationMetadata
 	{
 		/// <summary>
-		/// Specify type of join operation to generate. When <c>true</c>, linq2db will generate outer join orapply operation.
-		/// When <c>false</c> - inner join/apply will be generated.
+		/// Specify type of join operation to generate. When <see langword="true" />, linq2db will generate outer join orapply operation.
+		/// When <see langword="false"/> - inner join/apply will be generated.
 		/// </summary>
 		public bool             CanBeNull             { get; set; }
 		/// <summary>

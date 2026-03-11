@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Globalization;
 using System.Text;
 
+using NUnit.Framework;
 using NUnit.Framework.Constraints;
 
 namespace Tests
@@ -12,10 +14,20 @@ namespace Tests
 			return new SubstringsConstraint(expected);
 		}
 
-		class SubstringsConstraint : StringConstraint
+		public static ShouldNegation Not { get; } = new ();
+
+		public sealed class ShouldNegation
 		{
-			string[]          _substrings;
-			int               _matched;
+			public Constraint Contain(params string[] expected)
+			{
+				return new NotConstraint(new SubstringsConstraint(expected));
+			}
+		}
+
+		sealed class SubstringsConstraint : StringConstraint
+		{
+			string[] _substrings;
+			int      _matched = -1;
 
 			/// <summary>
 			/// Initializes a new instance of the <see cref="SubstringConstraint"/> class.
@@ -45,7 +57,7 @@ namespace Tests
 
 					for (var i = 0; i < _substrings.Length; i++)
 					{
-						sb.AppendLine().Append($"\"{_substrings[i]}\"");
+						sb.AppendLine().Append(CultureInfo.InvariantCulture, $"\"{_substrings[i]}\"");
 
 						if (i == _matched)
 							sb.Append("    <-- not found");
@@ -76,6 +88,7 @@ namespace Tests
 					if (idx < 0)
 						return false;
 
+					idx++;
 					_matched++;
 				}
 

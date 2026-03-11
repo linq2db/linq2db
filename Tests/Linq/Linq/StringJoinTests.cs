@@ -21,6 +21,7 @@ namespace Tests.Linq
 		[Table]
 		sealed class SampleClass
 		{
+			[PrimaryKey]                                                          public int     PK               { get; set; }
 			[Column]                                                              public int     Id               { get; set; }
 			[Column(Length = 50, CanBeNull = true)]                               public string? NullableValue    { get; set; }
 			[Column(Length = 50, CanBeNull = false)]                              public string  NotNullableValue { get; set; } = string.Empty;
@@ -31,10 +32,10 @@ namespace Tests.Linq
 			{
 				var data = new[]
 				{
-					new SampleClass { Id = 1, NullableValue = "A", NotNullableValue = "B", VarcharValue = "C", NVarcharValue = "D" },
-					new SampleClass { Id = 2, NullableValue = "E", NotNullableValue = "F", VarcharValue = "G", NVarcharValue = "H" },
-					new SampleClass { Id = 3, NullableValue = "I", NotNullableValue = "J", VarcharValue = "K", NVarcharValue = "L" },
-					new SampleClass { Id = 4, NullableValue = null, NotNullableValue = "M", VarcharValue = null, NVarcharValue = null },
+					new SampleClass { PK = 1, Id = 1, NullableValue = "A", NotNullableValue = "B", VarcharValue = "C", NVarcharValue = "D" },
+					new SampleClass { PK = 2, Id = 2, NullableValue = "E", NotNullableValue = "F", VarcharValue = "G", NVarcharValue = "H" },
+					new SampleClass { PK = 3, Id = 3, NullableValue = "I", NotNullableValue = "J", VarcharValue = "K", NVarcharValue = "L" },
+					new SampleClass { PK = 4, Id = 4, NullableValue = null, NotNullableValue = "M", VarcharValue = null, NVarcharValue = null },
 				};
 				return data;
 			}
@@ -43,10 +44,10 @@ namespace Tests.Linq
 			{
 				var data = new[]
 				{
-					new SampleClass { Id = 1, NullableValue = "A", NotNullableValue  = "B", VarcharValue = "C", NVarcharValue  = "D" },
-					new SampleClass { Id = 1, NullableValue = "E", NotNullableValue  = "F", VarcharValue = "G", NVarcharValue  = "H" },
-					new SampleClass { Id = 2, NullableValue = "I", NotNullableValue  = "J", VarcharValue = "K", NVarcharValue  = "L" },
-					new SampleClass { Id = 2, NullableValue = null, NotNullableValue = "M", VarcharValue = null, NVarcharValue = null },
+					new SampleClass { PK = 1, Id = 1, NullableValue = "A", NotNullableValue  = "B", VarcharValue = "C", NVarcharValue  = "D" },
+					new SampleClass { PK = 2, Id = 1, NullableValue = "E", NotNullableValue  = "F", VarcharValue = "G", NVarcharValue  = "H" },
+					new SampleClass { PK = 3, Id = 2, NullableValue = "I", NotNullableValue  = "J", VarcharValue = "K", NVarcharValue  = "L" },
+					new SampleClass { PK = 4, Id = 2, NullableValue = null, NotNullableValue = "M", VarcharValue = null, NVarcharValue = null },
 				};
 				return data;
 			}
@@ -157,7 +158,7 @@ namespace Tests.Linq
 
 		[ThrowsRequiresCorrelatedSubquery]
 		[Test]
-		public void JoinWithGroupingOrdered([DataSources(TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
+		public void JoinWithGroupingOrdered([DataSources(ProviderName.Ydb, TestProvName.AllSqlServer2016Plus, TestProvName.AllOracle)] string context)
 		{
 			var       data  = SampleClass.GenerateDataNotUniqueId();
 			using var db    = GetDataContext(context);
@@ -438,7 +439,7 @@ namespace Tests.Linq
 
 		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)]
 		[Test]
-		public void StringJoinAssociationSubqueryUpdate1([DataSources(TestProvName.AllClickHouse, TestProvName.AllMySql57)] string context)
+		public void StringJoinAssociationSubqueryUpdate1([DataSources(ProviderName.Ydb, TestProvName.AllClickHouse, TestProvName.AllMySql57)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);
@@ -463,7 +464,7 @@ namespace Tests.Linq
 
 		[ThrowsCannotBeConverted(TestProvName.AllAccess, TestProvName.AllSqlServer2016Minus, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllSybase)]
 		[Test]
-		public void StringJoinAssociationSubqueryUpdate2([DataSources(TestProvName.AllClickHouse, TestProvName.AllMySql57)] string context)
+		public void StringJoinAssociationSubqueryUpdate2([DataSources(ProviderName.Ydb, TestProvName.AllClickHouse, TestProvName.AllMySql57)] string context)
 		{
 			var       data  = SampleClass.GenerateDataUniqueId();
 			using var db    = GetDataContext(context);

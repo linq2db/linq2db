@@ -13,7 +13,7 @@ namespace LinqToDB.Internal.Linq.Builder
 	sealed class DefaultIfEmptyBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call)
-			=> call.IsQueryable();
+			=> call.IsQueryable;
 
 		static ReadOnlyCollection<Expression>? PrepareNoNullConditions(ExpressionBuilder builder, IBuildContext notNullHandlerSequence, IBuildContext sequence, IBuildContext nullabilitySequence)
 		{
@@ -61,7 +61,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			var defaultValue = methodCall.Arguments.Count == 1 ? null : methodCall.Arguments[1].Unwrap();
 
 			// Generating LEFT JOIN from one record resultset
-			if (buildInfo.SourceCardinality == SourceCardinality.Unknown || defaultValue != null && buildInfo.SourceCardinality.HasFlag(SourceCardinality.Zero))
+			if (buildInfo.SourceCardinality == SourceCardinality.Unknown || (defaultValue != null && buildInfo.SourceCardinality.HasFlag(SourceCardinality.Zero)))
 			{
 				var sequenceResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()));
 				if (sequenceResult.BuildContext == null)
@@ -158,9 +158,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public ReadOnlyCollection<Expression> GetNotNullConditions()
 			{
-				if (_notNullConditions == null)
-					_notNullConditions = PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence) ?? throw new InvalidOperationException();
-				return _notNullConditions;
+				return _notNullConditions ??= PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence) ?? throw new InvalidOperationException();
 			}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
@@ -191,22 +189,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 				if (!IsNullValidationDisabled && DefaultValue != null)
 				{
-					var notNullConditions = GetNotNullConditions();
-
-					var sequenceRef = new ContextRefExpression(ElementType, Sequence);
-
-					var testCondition = notNullConditions.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
-
-					var defaultValue = DefaultValue;
-					if (defaultValue.Type != sequenceRef.Type)
-					{
-						defaultValue = Expression.Convert(defaultValue, sequenceRef.Type);
-					}
-
-					var body = Expression.Condition(testCondition, sequenceRef, defaultValue);
-
-					var projectedDefault = Builder.Project(Sequence, newPath, null, -1, flags, body, true);
-					return projectedDefault;
+					return ProjectWithDefaultValue(flags, newPath);
 				}
 
 				var expr = Builder.BuildExpression(this, newPath);
@@ -235,10 +218,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						return placeholder;
 					}
 
-					if (_notNullConditions == null)
-					{
-						_notNullConditions = PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence);
-					}
+					_notNullConditions ??= PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence);
 
 					if (_notNullConditions != null)
 					{
@@ -248,14 +228,34 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 
 				return expr;
+
+				Expression ProjectWithDefaultValue(ProjectFlags flags, Expression newPath)
+				{
+					var notNullConditions = GetNotNullConditions();
+
+					var sequenceRef = new ContextRefExpression(ElementType, Sequence);
+
+					var testCondition = notNullConditions.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
+
+					var defaultValue = DefaultValue;
+					if (defaultValue.Type != sequenceRef.Type)
+					{
+						defaultValue = Expression.Convert(defaultValue, sequenceRef.Type);
+					}
+
+					var body = Expression.Condition(testCondition, sequenceRef, defaultValue);
+
+					var projectedDefault = Builder.Project(Sequence, newPath, null, -1, flags, body, true);
+					return projectedDefault;
+				}
 			}
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new DefaultIfEmptyContext(null, 
-					context.CloneContext(Sequence), 
-					context.CloneContext(_nullabilitySequence), 
-					context.CloneExpression(DefaultValue), 
+				return new DefaultIfEmptyContext(null,
+					context.CloneContext(Sequence),
+					context.CloneContext(_nullabilitySequence),
+					context.CloneExpression(DefaultValue),
 					IsNullValidationDisabled);
 			}
 

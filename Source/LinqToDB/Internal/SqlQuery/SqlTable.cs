@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 
 using LinqToDB.Data;
+using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -56,7 +58,7 @@ namespace LinqToDB.Internal.SqlQuery
 		public SqlTable(EntityDescriptor entityDescriptor, string? physicalName = null)
 			: this(entityDescriptor.ObjectType, (int?)null, new(string.Empty))
 		{
-			TableName    = physicalName != null && entityDescriptor.Name.Name != physicalName ? entityDescriptor.Name with { Name = physicalName } : entityDescriptor.Name;
+			TableName    = physicalName != null && !string.Equals(entityDescriptor.Name.Name, physicalName, StringComparison.Ordinal) ? entityDescriptor.Name with { Name = physicalName } : entityDescriptor.Name;
 			TableOptions = entityDescriptor.TableOptions;
 
 			if (!entityDescriptor.MappingSchema.IsScalarType(ObjectType))
@@ -201,14 +203,17 @@ namespace LinqToDB.Internal.SqlQuery
 
 			return ObjectType == otherTable.ObjectType &&
 			       TableName  == otherTable.TableName  &&
-			       Alias      == otherTable.Alias;
+string.Equals(Alias, otherTable.Alias, StringComparison.Ordinal);
 		}
 
 		public override bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
 
 		public override int Precedence => LinqToDB.SqlQuery.Precedence.Primary;
 		public override Type SystemType => ObjectType;
-		
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlTable(this);
+
 		#endregion
 
 		#region Public Members
@@ -249,7 +254,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		// list user to preserve order of fields in queries
 		internal readonly List<SqlField>              _orderedFields = new();
-		readonly          Dictionary<string,SqlField> _fieldsLookup  = new();
+		readonly          Dictionary<string,SqlField> _fieldsLookup  = new(StringComparer.Ordinal);
 
 		public           List<SqlField> Fields => _orderedFields;
 		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
@@ -292,7 +297,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 			ResetKeys();
 
-			if (field.Name == "*")
+			if (string.Equals(field.Name, "*", StringComparison.Ordinal))
 				_all = field;
 			else
 			{

@@ -1,10 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
 
 	<PropertyGroup>
 		<RootNamespace>LinqToDB.LINQPad</RootNamespace>
 		<AssemblyName>linq2db.LINQPad</AssemblyName>
 
-		<TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+		<GenerateDocumentationFile>false</GenerateDocumentationFile>
+		<TargetFrameworks>net472;net8.0-windows7.0</TargetFrameworks>
 		<UseWPF>true</UseWPF>
 
 		<!--don't forget to (un)comment reference in nuspec file!-->
@@ -13,6 +14,9 @@
 		<!--disable DB2 provider arch warnings-->
 		<MSBuildWarningsAsMessages>MSB3270</MSBuildWarningsAsMessages>
 		<SignAssembly>False</SignAssembly>
+		
+		<!-- Packing is done via sister `LinqToDB.LINQPad.Pack` csproj -->
+		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -45,7 +49,7 @@
 
 		<PackageReference Include="Oracle.ManagedDataAccess" VersionOverride="$(OracleManagedLinqPadVersion)" />
 
-		<!--PackageReference + Reference beelongs to same nuget-->
+		<!--PackageReference + Reference belongs to same nuget-->
 		<PackageReference Include="IBM.Data.DB.Provider" GeneratePathProperty="true" />
 		<Reference Include="IBM.Data.DB2" Condition=" $(PlatformTarget) != 'x86' ">
 			<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x64\IBM.Data.DB2.dll</HintPath>
@@ -103,11 +107,11 @@
 	</ItemGroup>
 
 	<Target Name="PostBuild1" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' != 'net472'">
-		<Exec Command="&quot;$(ProjectDir)..\..\NuGet\LINQPad\Pack.cmd&quot; &quot;$(TargetDir)&quot; lpx6" />
+		<Exec Command="&quot;$(ProjectDir)\NuGet\Pack.cmd&quot; &quot;$(TargetDir)&quot; lpx6" />
 	</Target>
 
 	<Target Name="PostBuild2" AfterTargets="PostBuildEvent" Condition="'$(TargetFramework)' == 'net472'">
-	<!--we are trying to deceive DB2 provider here, see UnsafeNativeMethods.DB2Interop.Init() method logic-->
+		<!--we are trying to deceive DB2 provider here, see UnsafeNativeMethods.DB2Interop.Init() method logic-->
 		<Delete Files="$(TargetDir)\IBM.Data.DB2.dll" />
 		<MakeDir Directories="$(TargetDir)\IBM.Data.DB2.DLL_provider" />
 		<Copy SourceFiles="$(PkgIBM_Data_DB_Provider)\build\net451\x64\IBM.Data.DB2.dll" DestinationFiles="$(TargetDir)\IBM.Data.DB2.DLL_provider\x64\IBM.Data.DB2.dll" />
@@ -117,7 +121,7 @@
 		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-x64\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\runtimes\win-x64\native\e_sqlite3.dll" />
 		<Copy SourceFiles="$(PkgSourceGear_sqlite3)\runtimes\win-arm64\native\e_sqlite3.dll" DestinationFiles="$(TargetDir)\runtimes\win-arm64\native\e_sqlite3.dll" />
 
-		<Exec Command="&quot;$(ProjectDir)..\..\NuGet\LINQPad\Pack.cmd&quot; &quot;$(TargetDir)&quot; lpx" />
+		<Exec Command="&quot;$(ProjectDir)\NuGet\Pack.cmd&quot; &quot;$(TargetDir)&quot; lpx" />
 	</Target>
 
 	<ItemGroup>

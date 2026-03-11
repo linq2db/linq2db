@@ -35,31 +35,39 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return predicate;
 		}
 
-		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
+		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
 		{
-			switch (element.Operation)
-			{
-				case "%": return new SqlFunction(element.Type, "Mod", element.Expr1, element.Expr2);
-				case "&": return new SqlFunction(element.Type, "BitAnd", element.Expr1, element.Expr2);
-				case "|": return new SqlFunction(element.Type, "BitOr", element.Expr1, element.Expr2);
-				case "^": return new SqlFunction(element.Type, "BitXor", element.Expr1, element.Expr2);
-				case "+": return element.SystemType == typeof(string) ? new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence) : element;
-			}
+			if (element.Operation is SqlUnaryOperation.BitwiseNegation)
+				return new SqlFunction(element.Type, "BITNOT", element.Expr);
 
-			return base.ConvertSqlBinaryExpression(element);
+			return base.ConvertSqlUnaryExpression(element);
 		}
 
-		protected override SqlCoalesceExpression? WrapBooleanCoalesceItems(SqlCoalesceExpression element, IQueryElement newElement, bool forceConvert)
+		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
+		{
+			return element.Operation switch
+			{
+				"%"                                           => new SqlFunction(element.Type, "Mod", element.Expr1, element.Expr2),
+				"&"                                           => new SqlFunction(element.Type, "BitAnd", element.Expr1, element.Expr2),
+				"|"                                           => new SqlFunction(element.Type, "BitOr", element.Expr1, element.Expr2),
+				"^"                                           => new SqlFunction(element.Type, "BitXor", element.Expr1, element.Expr2),
+				"+" when element.SystemType == typeof(string) => new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
+				_                                             => base.ConvertSqlBinaryExpression(element),
+			};
+		}
+
+		protected override SqlCoalesceExpression? WrapBooleanCoalesceItems(SqlCoalesceExpression element, IQueryElement newElement, bool forceConvert = false)
 		{
 			return base.WrapBooleanCoalesceItems(element, newElement, forceConvert: true);
 		}
 
 		public override ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
 		{
-			if (element.SystemType == null)
-				return element;
-
-			return ConvertCoalesceToBinaryFunc(element, "Nvl", supportsParameters : false);
+			return element.SystemType switch
+			{
+				null => element,
+				_ => ConvertCoalesceToBinaryFunc(element, "Nvl", supportsParameters: false),
+			};
 		}
 
 		//TODO: Move everything to SQLBuilder
@@ -189,7 +197,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return element;
 		}
 
-		protected override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
+		protected internal override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
 		{
 			var element = base.VisitInListPredicate(predicate);
 
@@ -206,7 +214,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return element;
 		}
 
-		protected override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		protected internal override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
 		{
 			var element = base.VisitInSubQueryPredicate(predicate);
 
@@ -246,7 +254,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return InformixSqlOptimizer.WrapParameters(base.ConvertIsDistinctPredicateAsIntersect(predicate));
 		}
 
-		protected override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
+		protected internal override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
 		{
 			var newElement = (SqlSetExpression)base.VisitSqlSetExpression(element);
 
@@ -270,7 +278,7 @@ namespace LinqToDB.Internal.DataProvider.Informix
 			return newElement;
 		}
 
-		protected override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
+		protected internal override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
 		{
 			var newElement = base.VisitExprPredicate(predicate);
 

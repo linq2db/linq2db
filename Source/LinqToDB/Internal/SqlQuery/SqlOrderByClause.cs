@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -32,7 +35,7 @@ namespace LinqToDB.Internal.SqlQuery
 		void Add(ISqlExpression expr, bool isDescending, bool isPositioned)
 		{
 			foreach (var item in Items)
-				if (item.Expression.Equals(expr, (x, y) => !(x is SqlColumn col) || !col.Parent!.HasSetOperators || x == y))
+				if (item.Expression.Equals(expr, (x, y) => x is not SqlColumn col || !col.Parent!.HasSetOperators || x == y))
 					return;
 
 			Items.Add(new SqlOrderByItem(expr, isDescending, isPositioned));
@@ -77,6 +80,9 @@ namespace LinqToDB.Internal.SqlQuery
 
 			return hash.ToHashCode();
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlOrderByClause(this);
 
 		#endregion
 

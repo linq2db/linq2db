@@ -23,8 +23,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of Database name in mappings (for tables, views, procedures and functions).
 		/// <list type="bullet">
-		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>false</c></item>
+		/// <item>Default: <see langword="false"/></item>
+		/// <item>In T4 compability mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool IncludeDatabaseName { get; set; }
@@ -32,8 +32,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of Schema name for default schemas in mappings (for tables, views, procedures and functions).
 		/// <list type="bullet">
-		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>true</c></item>
+		/// <item>Default: <see langword="false"/></item>
+		/// <item>In T4 compability mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateDefaultSchema { get; set; }
@@ -54,8 +54,8 @@ namespace LinqToDB.Scaffold
 		/// If type is nested, it should use + for type separator, e.g. <c>"My.NameSpace.SomeClass+BaseEntity"</c>
 		/// Current limitaion - type cannot be generic.
 		/// <list type="bullet">
-		/// <item>Default: <c>null</c></item>
-		/// <item>In T4 compability mode: <c>null</c></item>
+		/// <item>Default: <see langword="null"/></item>
+		/// <item>In T4 compability mode: <see langword="null"/></item>
 		/// </list>
 		/// </summary>
 		public string? BaseEntityClass { get; set; }
@@ -63,8 +63,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables partial class modifier applied to entity mapping classes.
 		/// <list type="bullet">
-		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>true</c></item>
+		/// <item>Default: <see langword="false"/></item>
+		/// <item>In T4 compability mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool EntityClassIsPartial { get; set; }
@@ -117,8 +117,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of <see cref="DataType"/> enum value for entity column mapping.
 		/// <list type="bullet">
-		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>false</c></item>
+		/// <item>Default: <see langword="false"/></item>
+		/// <item>In T4 compability mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateDataType { get; set; }
@@ -126,8 +126,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of database type name for entity column mapping.
 		/// <list type="bullet">
-		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>false</c></item>
+		/// <item>Default: <see langword="false"/></item>
+		/// <item>In T4 compability mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateDbType { get; set; }
@@ -135,8 +135,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of database type length for entity column mapping.
 		/// <list type="bullet">
-		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>false</c></item>
+		/// <item>Default: <see langword="false"/></item>
+		/// <item>In T4 compability mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateLength { get; set; }
@@ -144,8 +144,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of database type precision for entity column mapping.
 		/// <list type="bullet">
-		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>false</c></item>
+		/// <item>Default: <see langword="false"/></item>
+		/// <item>In T4 compability mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GeneratePrecision { get; set; }
@@ -153,8 +153,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of database type scale for entity column mapping.
 		/// <list type="bullet">
-		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>false</c></item>
+		/// <item>Default: <see langword="false"/></item>
+		/// <item>In T4 compability mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateScale { get; set; }
@@ -175,8 +175,8 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of comment with database information on data context class.
 		/// Includes database name, data source and server version values if available from schema provider for current database.
 		/// <list type="bullet">
-		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>false</c></item>
+		/// <item>Default: <see langword="false"/></item>
+		/// <item>In T4 compability mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool IncludeDatabaseInfo { get; set; }
@@ -184,8 +184,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of default data context constructor.
 		/// <list type="bullet">
-		/// <item>Default: <c>true</c></item>
-		/// <item>In T4 compability mode: <c>true</c></item>
+		/// <item>Default: <see langword="true" /></item>
+		/// <item>In T4 compability mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool HasDefaultConstructor { get; set; } = true;
@@ -193,8 +193,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of data context constructor with <c>(<see cref="string"/> configurationName)</c> parameter.
 		/// <list type="bullet">
-		/// <item>Default: <c>true</c></item>
-		/// <item>In T4 compability mode: <c>true</c></item>
+		/// <item>Default: <see langword="true" /></item>
+		/// <item>In T4 compability mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool HasConfigurationConstructor { get; set; } = true;
@@ -202,8 +202,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of data context constructor with non-generic <c>(<see cref="DataOptions"/> options)</c> parameter.
 		/// <list type="bullet">
-		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>true</c></item>
+		/// <item>Default: <see langword="false"/></item>
+		/// <item>In T4 compability mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool HasUntypedOptionsConstructor { get; set; }
@@ -212,8 +212,8 @@ namespace LinqToDB.Scaffold
 		/// Enables generation of data context constructor with generic <c>(<see cref="DataOptions{T}"/> options)</c> parameter,
 		/// where <c>T</c> is generated data context class.
 		/// <list type="bullet">
-		/// <item>Default: <c>true</c></item>
-		/// <item>In T4 compability mode: <c>true</c></item>
+		/// <item>Default: <see langword="true" /></item>
+		/// <item>In T4 compability mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool HasTypedOptionsConstructor { get; set; } = true;
@@ -260,8 +260,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of InitDataContext partial method on data context class.
 		/// <list type="bullet">
-		/// <item>Default: <c>true</c></item>
-		/// <item>In T4 compability mode: <c>true</c></item>
+		/// <item>Default: <see langword="true" /></item>
+		/// <item>In T4 compability mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateInitDataContextMethod { get; set; } = true;
@@ -269,8 +269,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of StaticInitDataContext partial method on data context class. Method will be called from static constructor as a last init step and will force generation of static constructor.
 		/// <list type="bullet">
-		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>false</c></item>
+		/// <item>Default: <see langword="false"/></item>
+		/// <item>In T4 compability mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateStaticInitDataContextMethod { get; set; }
@@ -307,8 +307,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of associations for foreign keys as entity properties.
 		/// <list type="bullet">
-		/// <item>Default: <c>true</c></item>
-		/// <item>In T4 compability mode: <c>true</c></item>
+		/// <item>Default: <see langword="true" /></item>
+		/// <item>In T4 compability mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateAssociations { get; set; } = true;
@@ -316,8 +316,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of associations for foreign keys as extension methods (with entity as extended type).
 		/// <list type="bullet">
-		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>false</c></item>
+		/// <item>Default: <see langword="false"/></item>
+		/// <item>In T4 compability mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateAssociationExtensions { get; set; }
@@ -326,8 +326,8 @@ namespace LinqToDB.Scaffold
 		/// Enables use of array as collection type for association properties/methods.
 		/// Otherwise see <see cref="AssociationCollectionType"/> setting.
 		/// <list type="bullet">
-		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>false</c></item>
+		/// <item>Default: <see langword="false"/></item>
+		/// <item>In T4 compability mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool AssociationCollectionAsArray { get; set; }
@@ -337,7 +337,7 @@ namespace LinqToDB.Scaffold
 		/// Type must be open generic type with one type argument, e.g. <see cref="IEnumerable{T}"/>, <see cref="List{T}"/> or <see cref="ICollection{T}"/>.
 		/// E.g. <code>"System.Collections.Generic.List&lt;&gt;"</code>
 		/// If not configured, <see cref="IEnumerable{T}"/> type will be used.
-		/// Option ignored if <see cref="AssociationCollectionType"/> set to <c>true</c>.
+		/// Option ignored if <see cref="AssociationCollectionType"/> set to <see langword="true" />.
 		/// <list type="bullet">
 		/// <item>Default: not set</item>
 		/// <item>In T4 compability mode: not set</item>
@@ -350,8 +350,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables reuse of generated entity mapping class and stored procedure or table function return record type, when record mappings match known entity mappings (record has same set of columns by name and type including nullability as entity).
 		/// <list type="bullet">
-		/// <item>Default: <c>true</c></item>
-		/// <item>In T4 compability mode: <c>true</c></item>
+		/// <item>Default: <see langword="true" /></item>
+		/// <item>In T4 compability mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool MapProcedureResultToEntity { get; set; } = true;
@@ -426,11 +426,11 @@ namespace LinqToDB.Scaffold
 		public NormalizationOptions ProcedureResultColumnPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
 
 		/// <summary>
-		/// When <c>true</c>, table function mapping use <see cref="ITable{T}"/> as return type.
+		/// When <see langword="true" />, table function mapping use <see cref="ITable{T}"/> as return type.
 		/// Otherwise <see cref="IQueryable{T}"/> type used.
 		/// <list type="bullet">
-		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>true</c></item>
+		/// <item>Default: <see langword="false"/></item>
+		/// <item>In T4 compability mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool TableFunctionReturnsTable { get; set; }
@@ -438,8 +438,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of error if stored procedure or table function schema load failed.
 		/// <list type="bullet">
-		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>false</c></item>
+		/// <item>Default: <see langword="false"/></item>
+		/// <item>In T4 compability mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateProceduresSchemaError { get; set; }
@@ -450,18 +450,18 @@ namespace LinqToDB.Scaffold
 		/// This option doesn't affect table functions with schema errors - for functions  we skip them on error always, because
 		/// table function must have return result set.
 		/// <list type="bullet">
-		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>true</c></item>
+		/// <item>Default: <see langword="false"/></item>
+		/// <item>In T4 compability mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool SkipProceduresWithSchemaErrors { get; set; }
 
 		/// <summary>
-		/// When <c>true</c>, stored procedure mapping use <see cref="List{T}"/> as return type.
+		/// When <see langword="true" />, stored procedure mapping use <see cref="List{T}"/> as return type.
 		/// Otherwise <see cref="IEnumerable{T}"/> type used.
 		/// <list type="bullet">
-		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>false</c></item>
+		/// <item>Default: <see langword="false"/></item>
+		/// <item>In T4 compability mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateProcedureResultAsList { get; set; }
@@ -469,8 +469,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of database type name in stored procedure parameter mapping.
 		/// <list type="bullet">
-		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>false</c></item>
+		/// <item>Default: <see langword="false"/></item>
+		/// <item>In T4 compability mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateProcedureParameterDbType { get; set; }
@@ -478,8 +478,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of sync version of stored procedure mapping.
 		/// <list type="bullet">
-		/// <item>Default: <c>true</c></item>
-		/// <item>In T4 compability mode: <c>true</c></item>
+		/// <item>Default: <see langword="true" /></item>
+		/// <item>In T4 compability mode: <see langword="true" /></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateProcedureSync { get; set; } = true;
@@ -487,8 +487,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of async version of stored procedure mapping.
 		/// <list type="bullet">
-		/// <item>Default: <c>true</c></item>
-		/// <item>In T4 compability mode: <c>false</c></item>
+		/// <item>Default: <see langword="true" /></item>
+		/// <item>In T4 compability mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateProcedureAsync { get; set; } = true;
@@ -516,8 +516,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of context for entities and procedures/functions from non-default schemas in separate context-like class.
 		/// <list type="bullet">
-		/// <item>Default: <c>true</c></item>
-		/// <item>In T4 compability mode: <c>false</c></item>
+		/// <item>Default: <see langword="true" /></item>
+		/// <item>In T4 compability mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateSchemaAsType { get; set; } = true;
@@ -525,8 +525,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Enables generation of <see cref="IEquatable{T}"/> interface implementation on entity classes with primary key.
 		/// <list type="bullet">
-		/// <item>Default: <c>false</c></item>
-		/// <item>In T4 compability mode: <c>false</c></item>
+		/// <item>Default: <see langword="false"/></item>
+		/// <item>In T4 compability mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool GenerateIEquatable { get; set; }
@@ -538,7 +538,7 @@ namespace LinqToDB.Scaffold
 		/// <item>In T4 compability mode: empty</item>
 		/// </list>
 		/// </summary>
-		public IDictionary<string, string> SchemaMap { get; } = new Dictionary<string, string>();
+		public IDictionary<string, string> SchemaMap { get; } = new Dictionary<string, string>(StringComparer.Ordinal);
 		#endregion
 
 		#region Find Extensions
@@ -554,8 +554,8 @@ namespace LinqToDB.Scaffold
 		/// <summary>
 		/// Specifies order of primary key column parameters in Find method for entity with composite primary key.
 		/// <list type="bullet">
-		/// <item>Default: <c>true</c></item>
-		/// <item>In T4 compability mode: <c>false</c></item>
+		/// <item>Default: <see langword="true" /></item>
+		/// <item>In T4 compability mode: <see langword="false"/></item>
 		/// </list>
 		/// </summary>
 		public bool OrderFindParametersByColumnOrdinal { get; set; } = true;

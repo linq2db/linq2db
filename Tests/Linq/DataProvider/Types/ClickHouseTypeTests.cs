@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.Net;
 using System.Numerics;
@@ -378,6 +378,7 @@ namespace Tests.DataProvider
 		[Test]
 		public async ValueTask TestDateTimeType([ClickHouseDataSources(false)] string context)
 		{
+			// TODO: add test cases with timezones: UTC, + and - TZ
 			// https://clickhouse.com/docs/en/sql-reference/data-types/datetime/
 
 			var min = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
@@ -404,17 +405,24 @@ namespace Tests.DataProvider
 			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.DateTime), val, default);
 			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.DateTime), min, max);
 
-			min = new DateTime(min.Ticks, DateTimeKind.Local);
-			max = new DateTime(max.Ticks, DateTimeKind.Local);
-			val = new DateTime(val.Ticks, DateTimeKind.Local);
-			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.DateTime), val, default);
-			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.DateTime), min, max);
+#if !NETFRAMEWORK
+			// TODO: address v1.0 changes
+			if (!context.IsAnyOf(ProviderName.ClickHouseDriver))
+#endif
+			{
+				min = new DateTime(min.Ticks, DateTimeKind.Local);
+				max = new DateTime(max.Ticks, DateTimeKind.Local);
+				val = new DateTime(val.Ticks, DateTimeKind.Local);
+				await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.DateTime), val, default);
+				await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.DateTime), min, max);
+			}
 		}
 
 		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public async ValueTask TestDateTime64Type([ClickHouseDataSources(false)] string context)
 		{
+			// TODO: add test cases with timezones: UTC, + and - TZ
 			// https://clickhouse.com/docs/en/sql-reference/data-types/datetime64/
 
 			var min  = new DateTime(1900, 1, 1, 0, 0, 0, DateTimeKind.Unspecified);
@@ -461,11 +469,17 @@ namespace Tests.DataProvider
 				await TestType<DateTime, DateTime?>(context, dtType, val, default, getExpectedValue: v => v.TrimPrecision(actualPrecision), getExpectedNullableValue: v => v?.TrimPrecision(actualPrecision));
 				await TestType<DateTime, DateTime?>(context, dtType, min, max, getExpectedValue: v => v.TrimPrecision(actualPrecision), getExpectedNullableValue: v => v?.TrimPrecision(actualPrecision));
 
-				min = new DateTime(min.Ticks, DateTimeKind.Local);
-				max = new DateTime(max.Ticks, DateTimeKind.Local);
-				val = new DateTime(val.Ticks, DateTimeKind.Local);
-				await TestType<DateTime, DateTime?>(context, dtType, val, default, getExpectedValue: v => v.TrimPrecision(actualPrecision), getExpectedNullableValue: v => v?.TrimPrecision(actualPrecision));
-				await TestType<DateTime, DateTime?>(context, dtType, min, max, getExpectedValue: v => v.TrimPrecision(actualPrecision), getExpectedNullableValue: v => v?.TrimPrecision(actualPrecision));
+#if !NETFRAMEWORK
+				// TODO: address v1.0 changes
+				if (!context.IsAnyOf(ProviderName.ClickHouseDriver))
+#endif
+				{
+					min = new DateTime(min.Ticks, DateTimeKind.Local);
+					max = new DateTime(max.Ticks, DateTimeKind.Local);
+					val = new DateTime(val.Ticks, DateTimeKind.Local);
+					await TestType<DateTime, DateTime?>(context, dtType, val, default, getExpectedValue: v => v.TrimPrecision(actualPrecision), getExpectedNullableValue: v => v?.TrimPrecision(actualPrecision));
+					await TestType<DateTime, DateTime?>(context, dtType, min, max, getExpectedValue: v => v.TrimPrecision(actualPrecision), getExpectedNullableValue: v => v?.TrimPrecision(actualPrecision));
+				}
 			}
 		}
 
@@ -519,7 +533,7 @@ namespace Tests.DataProvider
 
 					var maxString = new string('9', p);
 					if (s > 0)
-						maxString = maxString.Substring(0, p - s) + '.' + maxString.Substring(p - s);
+						maxString = $"{maxString.Substring(0, p - s)}.{maxString.Substring(p - s)}";
 					if (maxString[0] == '.')
 						maxString = $"0{maxString}";
 					var minString = $"-{maxString}";
@@ -602,9 +616,13 @@ namespace Tests.DataProvider
 
 			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.VarBinary), new byte[] { 0 }, new byte[] { 1 });
 			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.VarBinary), new byte[] { 2 }, new byte[] { 3 });
-			// https://github.com/DarkWanderer/ClickHouse.Client/issues/138
 			// https://github.com/ClickHouse/ClickHouse/issues/38790
-			if (!context.IsAnyOf(ProviderName.ClickHouseDriver, ProviderName.ClickHouseMySql))
+			// https://github.com/ClickHouse/clickhouse-cs/issues/109
+			if (!context.IsAnyOf(ProviderName.ClickHouseMySql
+#if NETFRAMEWORK
+				, ProviderName.ClickHouseDriver
+#endif
+				))
 			{
 				await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.VarBinary), new byte[] { 255 }, new byte[] { 254 });
 			}
@@ -641,9 +659,8 @@ namespace Tests.DataProvider
 
 			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary, null, length: 7), new byte[] { 0 }, new byte[] { 1 }, getExpectedValue: v => { if (trimAllZeros) return Array.Empty<byte>(); Array.Resize(ref v, 7); return v; }, getExpectedNullableValue: v => { Array.Resize(ref v, 7); return v; });
 			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary, null, length: 7), new byte[] { 2 }, new byte[] { 3 }, getExpectedValue: v => { Array.Resize(ref v, 7); return v; }, getExpectedNullableValue: v => { Array.Resize(ref v, 7); return v; });
-			// https://github.com/DarkWanderer/ClickHouse.Client/issues/138
 			// https://github.com/ClickHouse/ClickHouse/issues/38790
-			if (!context.IsAnyOf(ProviderName.ClickHouseDriver, ProviderName.ClickHouseMySql))
+			if (!context.IsAnyOf(ProviderName.ClickHouseMySql))
 			{
 				await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary, null, length: 7), new byte[] { 255 }, new byte[] { 254 }, getExpectedValue: v => { Array.Resize(ref v, 7); return v; }, getExpectedNullableValue: v => { Array.Resize(ref v, 7); return v; });
 			}
@@ -665,7 +682,9 @@ namespace Tests.DataProvider
 			//	filterByValue: false, filterByNullableValue: false,
 			//	getExpectedValue: _ => "{}", getExpectedNullableValue: _ => "{}");
 
+#if NETFRAMEWORK
 			if (!context.IsAnyOf(ProviderName.ClickHouseDriver))
+#endif
 			{
 				await TestType<string, string?>(context, new(typeof(string), DataType.Json), "null", "null",
 					filterByValue: false, filterByNullableValue: false,

@@ -8,7 +8,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 {
 	sealed class ReduceIsNullExpressionVisitor : SqlQueryVisitor
 	{
-		public readonly static ObjectPool<ReduceIsNullExpressionVisitor> Pool = new(() => new(), v => v.Cleanup(), 100);
+		public static readonly ObjectPool<ReduceIsNullExpressionVisitor> Pool = new(() => new(), v => v.Cleanup(), 100);
 
 		readonly List<ISqlPredicate> _predicates         = [];
 		         NullabilityContext  _nullabilityContext = default!;
@@ -29,18 +29,18 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		[return: NotNullIfNotNull(nameof(element))]
 		public override IQueryElement? Visit(IQueryElement? element)
 		{
-			switch (element?.ElementType)
+			return element?.ElementType switch
 			{
-				case QueryElementType.SqlNullabilityExpression:
-				case QueryElementType.SqlBinaryExpression:
-				case QueryElementType.SqlCondition:
-				case QueryElementType.SqlCast:
-				case QueryElementType.SqlFunction:
-				case QueryElementType.SqlExpression:
-					return base.Visit(element);
-			}
+				QueryElementType.SqlNullabilityExpression or
+				QueryElementType.SqlBinaryExpression or 
+				QueryElementType.SqlCondition or 
+				QueryElementType.SqlCast or 
+				QueryElementType.SqlFunction or 
+				QueryElementType.SqlExpression =>
+					base.Visit(element),
 
-			return element;
+				_ => element,
+			};
 		}
 
 		public IQueryElement Reduce(NullabilityContext  nullabilityContext, SqlPredicate.IsNull predicate)
@@ -82,10 +82,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 		}
 
-		protected override IQueryElement VisitSqlConditionExpression(SqlConditionExpression element)
+		protected internal override IQueryElement VisitSqlConditionExpression(SqlConditionExpression element)
 		{
-			var trueIsNull  = element.TrueValue.IsNullValue();
-			var falseIsNull = element.FalseValue.IsNullValue();
+			var trueIsNull  = element.TrueValue.IsNullValue;
+			var falseIsNull = element.FalseValue.IsNullValue;
 
 			if (trueIsNull && falseIsNull)
 			{
@@ -109,7 +109,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlFunction(SqlFunction element)
+		protected internal override IQueryElement VisitSqlFunction(SqlFunction element)
 		{
 			if (element is { IsAggregate: false, IsPure: true })
 			{
@@ -119,7 +119,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlExpression(SqlExpression element)
+		protected internal override IQueryElement VisitSqlExpression(SqlExpression element)
 		{
 			if (element is { IsAggregate: false, IsPure: true })
 			{
@@ -171,7 +171,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 		}
 
-		protected override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
+		protected internal override IQueryElement VisitSqlUnaryExpression(SqlUnaryExpression element)
+		{
+			ReduceOrAdd(element.Expr);
+			return element;
+		}
+
+		protected internal override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			if (element.Operation is "+" or "-" or "*" or "/" or "%" or "&" or "||")
 			{
@@ -182,14 +188,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
+		protected internal override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
 		{
 			ReduceOrAdd(element.Expression);
 
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlNullabilityExpression(SqlNullabilityExpression element)
+		protected internal override IQueryElement VisitSqlNullabilityExpression(SqlNullabilityExpression element)
 		{
 			// abort
 			if (element.CanBeNullable(_nullabilityContext) != element.SqlExpression.CanBeNullable(_nullabilityContext))

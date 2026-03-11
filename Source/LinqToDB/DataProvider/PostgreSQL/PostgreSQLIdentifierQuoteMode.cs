@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.DataProvider.PostgreSQL
+namespace LinqToDB.DataProvider.PostgreSQL
 {
 	/// <summary>
 	/// Identifier quotation logic for SQL generation.
@@ -30,6 +30,6 @@
 		/// <item>identifier constains upper-case letter(s)</item>
 		/// </list>
 		/// </summary>
-		Auto
+		Auto,
 	}
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -36,7 +36,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			AsCteMethod,
 			GetCteMethod,
 			FromSqlMethod,
-			FromSqlScalarMethod
+			FromSqlScalarMethod,
 		}
 
 		static BuildContextType FindBuildContext(ExpressionBuilder builder, BuildInfo buildInfo, out IBuildContext? parentContext)
@@ -230,7 +230,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				}
 				case BuildContextType.AsCteMethod            : return BuildCteContext     (builder, buildInfo);
 				case BuildContextType.GetCteMethod           : return BuildRecursiveCteContextTable (builder, buildInfo);
-				case BuildContextType.FromSqlMethod          : return BuildRawSqlTable(builder, buildInfo, false);
+				case BuildContextType.FromSqlMethod          : return BuildRawSqlTable(builder, buildInfo, null);
 				case BuildContextType.FromSqlScalarMethod    : return BuildRawSqlTable(builder, buildInfo, true);
 			}
 

@@ -25,10 +25,12 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			return Visit(root);
 		}
 
-		public void Cleanup()
+		public override void Cleanup()
 		{
 			_action  = null!;
 			_context = default!;
+
+			base.Cleanup();
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
@@ -37,17 +39,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (element == null)
 				return null;
 
-			if (_visited != null && _visited.Contains(element))
-			{
+			if (_visited?.Add(element) == false || !_action(_context, element))
 				return element;
-			}
-
-			_visited?.Add(element);
-
-			if (!_action(_context, element))
-			{
-				return element;
-			}
 
 			return base.Visit(element);
 		}

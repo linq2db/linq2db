@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -65,6 +68,9 @@ namespace LinqToDB.Internal.SqlQuery
 				return Predicate.Equals(notPredicate.Predicate, comparer);
 			}
 
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitNotPredicate(this);
+
 			public void Modify(ISqlPredicate predicate)
 			{
 				Predicate = predicate;
@@ -90,6 +96,9 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 				return HashCode.Combine(ElementType);
 			}
+
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitTruePredicate(this);
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
@@ -121,6 +130,9 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 				return HashCode.Combine(ElementType);
 			}
+
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitFalsePredicate(this);
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
@@ -176,6 +188,9 @@ namespace LinqToDB.Internal.SqlQuery
 					Expr1.GetElementHashCode()
 				);
 			}
+
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitExprPredicate(this);
 
 			protected override void WritePredicate(QueryElementTextWriter writer)
 			{
@@ -233,17 +248,30 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 				if (!withoutUnknownErased)
 				{
-					return UnknownAsValue == null && (Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased));
+					return UnknownAsValue == null
+						&& (
+							(!NotNullableExpr1 && Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased))
+							|| (!NotNullableExpr2 && Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased))
+						);
 				}
 
-				if (Operator == Operator.Equal)
-					return Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased);
+				return Operator switch
+				{
+					Operator.Equal =>
+						(!NotNullableExpr1 && Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased))
+						|| (!NotNullableExpr2 && Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased)),
 
-				if (Operator == Operator.NotEqual)
-					return Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) && Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased);
+					Operator.NotEqual =>
+						!NotNullableExpr1 && Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) && !NotNullableExpr2 && Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased),
 
-				// comparison
-				return UnknownAsValue != true && (Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased) || Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased));
+					// comparison
+					_ =>
+						UnknownAsValue != true
+						&& (
+							(!NotNullableExpr1 && Expr1.CanBeNullableOrUnknown(nullability, withoutUnknownErased))
+							|| (!NotNullableExpr2 && Expr2.CanBeNullableOrUnknown(nullability, withoutUnknownErased))
+						),
+				};
 			}
 
 			/// <summary>
@@ -278,6 +306,9 @@ namespace LinqToDB.Internal.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.ExprExprPredicate;
 
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitExprExprPredicate(this);
+
 			protected override void WritePredicate(QueryElementTextWriter writer)
 			{
 				//writer.DebugAppendUniqueId(this);
@@ -301,35 +332,35 @@ namespace LinqToDB.Internal.SqlQuery
 
 			static Operator InvertOperator(Operator op)
 			{
-				switch (op)
+				return op switch
 				{
-					case Operator.Equal          : return Operator.NotEqual;
-					case Operator.NotEqual       : return Operator.Equal;
-					case Operator.Greater        : return Operator.LessOrEqual;
-					case Operator.NotLess        :
-					case Operator.GreaterOrEqual : return Operator.Less;
-					case Operator.Less           : return Operator.GreaterOrEqual;
-					case Operator.NotGreater     :
-					case Operator.LessOrEqual    : return Operator.Greater;
-					default: throw new InvalidOperationException();
-				}
+					Operator.Equal          => Operator.NotEqual,
+					Operator.NotEqual       => Operator.Equal,
+					Operator.Greater        => Operator.LessOrEqual,
+					Operator.NotLess        or
+					Operator.GreaterOrEqual => Operator.Less,
+					Operator.Less           => Operator.GreaterOrEqual,
+					Operator.NotGreater     or
+					Operator.LessOrEqual => Operator.Greater,
+					_                       => throw new InvalidOperationException(),
+				};
 			}
 
 			public static Operator SwapOperator(Operator op)
 			{
-				switch (op)
+				return op switch
 				{
-					case Operator.Equal:          return Operator.Equal;
-					case Operator.NotEqual:       return Operator.NotEqual;
-					case Operator.Greater:        return Operator.Less;
-					case Operator.NotLess:        return Operator.NotGreater;
-					case Operator.GreaterOrEqual: return Operator.LessOrEqual;
-					case Operator.Less:           return Operator.Greater;
-					case Operator.NotGreater:     return Operator.NotLess;
-					case Operator.LessOrEqual:    return Operator.GreaterOrEqual;
-					case Operator.Overlaps:       return Operator.Overlaps;
-					default:                      throw new InvalidOperationException();
-				}
+					Operator.Equal          => Operator.Equal,
+					Operator.NotEqual       => Operator.NotEqual,
+					Operator.Greater        => Operator.Less,
+					Operator.NotLess        => Operator.NotGreater,
+					Operator.GreaterOrEqual => Operator.LessOrEqual,
+					Operator.Less           => Operator.Greater,
+					Operator.NotGreater     => Operator.NotLess,
+					Operator.LessOrEqual    => Operator.GreaterOrEqual,
+					Operator.Overlaps       => Operator.Overlaps,
+					_                       => throw new InvalidOperationException(),
+				};
 			}
 
 			public override bool CanInvert(NullabilityContext nullability) => !NotNullableExpr1 && !NotNullableExpr2;
@@ -363,16 +394,16 @@ namespace LinqToDB.Internal.SqlQuery
 
 				// CompareNulls.LikeSqlExceptParameters and CompareNulls.LikeClr
 				// always sniffs parameters to == and != (for backward compatibility).
-				if (Operator == Operator.Equal || Operator == Operator.NotEqual)
+				if (Operator is Operator.Equal or Operator.NotEqual)
 				{
 					if (this.TryEvaluateExpression(context, out var value))
 					{
-						if (value is null)
+						return value switch
 						{
-							return new Expr(new SqlValue(typeof(bool?), null));
-						}
-
-						return value is true ? True : False;
+							null => new Expr(new SqlValue(typeof(bool?), null)),
+							true => True,
+							_ => False,
+						};
 					}
 					else if (Expr1.TryEvaluateExpression(context, out value) && value == null)
 					{
@@ -546,12 +577,14 @@ namespace LinqToDB.Internal.SqlQuery
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
 				return other is Like expr
-					&& FunctionName == expr.FunctionName
-					&& Expr2.Equals(expr.Expr2, comparer)
+					&& string.Equals(FunctionName, expr.FunctionName, StringComparison.Ordinal) && Expr2.Equals(expr.Expr2, comparer)
 					&& (   (Escape != null && expr.Escape != null && Escape.Equals(expr.Escape, comparer))
 						|| (Escape == null && expr.Escape == null))
 					&& base.Equals(other, comparer);
 			}
+
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitLikePredicate(this);
 
 			public override ISqlPredicate Invert(NullabilityContext nullability)
 			{
@@ -592,7 +625,7 @@ namespace LinqToDB.Internal.SqlQuery
 			{
 				StartsWith,
 				EndsWith,
-				Contains
+				Contains,
 			}
 
 			public SearchString(ISqlExpression exp1, bool isNot, ISqlExpression exp2, SearchKind searchKind, ISqlExpression caseSensitive)
@@ -627,6 +660,9 @@ namespace LinqToDB.Internal.SqlQuery
 					&& CaseSensitive.Equals(expr.CaseSensitive, comparer)
 					&& base.Equals(other, comparer);
 			}
+
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSearchStringPredicate(this);
 
 			public override ISqlPredicate Invert(NullabilityContext nullability)
 			{
@@ -700,6 +736,9 @@ namespace LinqToDB.Internal.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitIsDistinctPredicate(this);
+
 			public override ISqlPredicate Invert(NullabilityContext nullability) => new IsDistinct(Expr1, !IsNot, Expr2);
 
 			public override bool CanBeUnknown(NullabilityContext nullability, bool withoutUnknownErased) => false;
@@ -751,6 +790,9 @@ namespace LinqToDB.Internal.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitBetweenPredicate(this);
+
 			public override ISqlPredicate Invert(NullabilityContext nullability)
 			{
 				return new Between(Expr1, !IsNot, Expr2, Expr3);
@@ -782,9 +824,9 @@ namespace LinqToDB.Internal.SqlQuery
 			public ISqlExpression FalseValue  { get; set; }
 			/// <summary>
 			/// <list type="bullet">
-			/// <item><c>null</c> : evaluate predicate as is and preserve UNKNOWN (null) values if they produced</item>
-			/// <item><c>false</c> : UNKNOWN values should be converted to FALSE</item>
-			/// <item><c>true</c> : UNKNOWN values should be converted to TRUE</item>
+			/// <item><see langword="null"/> : evaluate predicate as is and preserve UNKNOWN (null) values if they produced</item>
+			/// <item><see langword="false"/> : UNKNOWN values should be converted to FALSE</item>
+			/// <item><see langword="true"/> : UNKNOWN values should be converted to TRUE</item>
 			/// </list>
 			/// </summary>
 			public bool?          WithNull    { get; }
@@ -817,6 +859,9 @@ namespace LinqToDB.Internal.SqlQuery
 					&& FalseValue.Equals(expr.FalseValue, comparer)
 					&& base.Equals(other, comparer);
 			}
+
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitIsTruePredicate(this);
 
 			protected override void WritePredicate(QueryElementTextWriter writer)
 			{
@@ -882,6 +927,9 @@ namespace LinqToDB.Internal.SqlQuery
 				);
 			}
 
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitIsNullPredicate(this);
+
 			public override bool CanBeUnknown(NullabilityContext nullability, bool withoutUnknownErased) => false;
 
 			protected override void WritePredicate(QueryElementTextWriter writer)
@@ -934,6 +982,9 @@ namespace LinqToDB.Internal.SqlQuery
 					&& SubQuery.Equals(expr.SubQuery, comparer)
 					&& base.Equals(other, comparer);
 			}
+
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitInSubQueryPredicate(this);
 
 			public override bool CanInvert(NullabilityContext nullability)
 			{
@@ -1041,12 +1092,15 @@ namespace LinqToDB.Internal.SqlQuery
 				return true;
 			}
 
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitInListPredicate(this);
+
 			public override bool CanBeUnknown(NullabilityContext nullability, bool withoutUnknownErased)
 			{
 				if (base.CanBeUnknown(nullability, withoutUnknownErased))
 					return true;
 
-				return Values.Any(e => e.CanBeNullable(nullability));
+				return Values.Exists(e => e.CanBeNullable(nullability));
 			}
 
 			public override ISqlPredicate Invert(NullabilityContext nullability)
@@ -1120,6 +1174,9 @@ namespace LinqToDB.Internal.SqlQuery
 					SubQuery.GetElementHashCode()
 				);
 			}
+
+			[DebuggerStepThrough]
+			public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitExistsPredicate(this);
 
 			protected override void WritePredicate(QueryElementTextWriter writer)
 			{

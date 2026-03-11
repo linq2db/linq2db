@@ -74,16 +74,13 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 			// npgsql doesn't support unsigned types except byte (and sbyte)
 			SetConvertExpression<ushort , DataParameter>(value => new DataParameter(null, (int  )value, DataType.Int32));
-			SetConvertExpression<ushort?, DataParameter>(value => new DataParameter(null, (int? )value, DataType.Int32), addNullCheck: false);
 			SetConvertExpression<uint   , DataParameter>(value => new DataParameter(null, (long )value, DataType.Int64));
-			SetConvertExpression<uint?  , DataParameter>(value => new DataParameter(null, (long?)value, DataType.Int64), addNullCheck: false);
 
 			var ulongType = new SqlDataType(DataType.Decimal, typeof(ulong), 20, 0);
 			// set type for proper SQL type generation
 			AddScalarType(typeof(ulong ), ulongType);
 
 			SetConvertExpression<ulong , DataParameter>(value => new DataParameter(null, (decimal)value , DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/);
-			SetConvertExpression<ulong?, DataParameter>(value => new DataParameter(null, (decimal?)value, DataType.Decimal) /*{ Precision = 20, Scale = 0 }*/, addNullCheck: false);
 		}
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
@@ -151,45 +148,16 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 
 		internal static MappingSchema Instance { get; } = new PostgreSQLMappingSchema();
 
-		public sealed class PostgreSQL92MappingSchema : LockedMappingSchema
-		{
-			public PostgreSQL92MappingSchema() : base(ProviderName.PostgreSQL92, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
-			{
+		public sealed class PostgreSQL92MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL92, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
+
+		public sealed class PostgreSQL93MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL93, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
+
+		public sealed class PostgreSQL95MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL95, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
+
+		public sealed class PostgreSQL13MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL13, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
+
+		public sealed class PostgreSQL15MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL15, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
+
+		public sealed class PostgreSQL18MappingSchema() : LockedMappingSchema(ProviderName.PostgreSQL18, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance);
 			}
 		}
-
-		public sealed class PostgreSQL93MappingSchema : LockedMappingSchema
-		{
-			public PostgreSQL93MappingSchema() : base(ProviderName.PostgreSQL93, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
-			{
-			}
-		}
-
-		public sealed class PostgreSQL95MappingSchema : LockedMappingSchema
-		{
-			public PostgreSQL95MappingSchema() : base(ProviderName.PostgreSQL95, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
-			{
-			}
-		}
-
-		public sealed class PostgreSQL13MappingSchema() : LockedMappingSchema(
-			ProviderName.PostgreSQL13,
-			NpgsqlProviderAdapter.GetInstance().MappingSchema,
-			Instance
-		);
-
-		public sealed class PostgreSQL15MappingSchema : LockedMappingSchema
-		{
-			public PostgreSQL15MappingSchema() : base(ProviderName.PostgreSQL15, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
-			{
-			}
-		}
-
-		public sealed class PostgreSQL18MappingSchema : LockedMappingSchema
-		{
-			public PostgreSQL18MappingSchema() : base(ProviderName.PostgreSQL18, NpgsqlProviderAdapter.GetInstance().MappingSchema, Instance)
-			{
-			}
-		}
-	}
-}

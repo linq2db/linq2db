@@ -57,17 +57,18 @@ namespace LinqToDB.Internal.DataProvider
 						ts =>
 						{
 							var a = GetCurrentAlias(ts);
-							return string.IsNullOrEmpty(a) ? "t1" : a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
+							return string.IsNullOrEmpty(a) ? "t1" : a + (a!.EndsWith('_') ? string.Empty : "_") + "1";
 						},
 						StringComparer.OrdinalIgnoreCase);
 				}
 
 				string GetCurrentAlias(SqlTableSource tableSource)
 				{
-					if (tableSource.Alias is ("$F" or "$")) 
-						return tableSource.Alias;
-
-					return TruncateAlias(tableSource.Alias ?? string.Empty);
+					return tableSource.Alias switch
+					{
+						"$F" or "$" => tableSource.Alias,
+						_ => TruncateAlias(tableSource.Alias ?? string.Empty),
+					};
 				}
 
 				return _newAliases;
@@ -116,7 +117,7 @@ namespace LinqToDB.Internal.DataProvider
 			bool IsValidAlias(string identifier)
 			{
 				var corrected = _identifierService.CorrectAlias(identifier);
-				if (corrected != identifier)
+				if (!string.Equals(corrected, identifier, StringComparison.Ordinal))
 					return true;
 
 				if (ReservedWords.IsReserved(identifier))
@@ -128,7 +129,7 @@ namespace LinqToDB.Internal.DataProvider
 				return true;
 			}
 
-			protected override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
+			protected internal override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
 			{
 				base.VisitSqlTableLikeSource(element);
 
@@ -143,7 +144,7 @@ namespace LinqToDB.Internal.DataProvider
 						var a = TruncateAlias(f.PhysicalName);
 						return string.IsNullOrEmpty(a)
 							? "c1"
-							: a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
+							: a + (a!.EndsWith('_') ? string.Empty : "_") + "1";
 					},
 					StringComparer.OrdinalIgnoreCase);
 
@@ -161,7 +162,7 @@ namespace LinqToDB.Internal.DataProvider
 				return element;
 			}
 
-			protected override IQueryElement VisitCteClause(CteClause element)
+			protected internal override IQueryElement VisitCteClause(CteClause element)
 			{
 				Utils.MakeUniqueNames(
 					element.Fields,
@@ -178,7 +179,7 @@ namespace LinqToDB.Internal.DataProvider
 						var a = TruncateAlias(f.PhysicalName);
 						return string.IsNullOrEmpty(a)
 							? "f1"
-							: a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
+							: a + (a!.EndsWith('_') ? string.Empty : "_") + "1";
 					},
 					StringComparer.OrdinalIgnoreCase);
 
@@ -210,7 +211,7 @@ namespace LinqToDB.Internal.DataProvider
 				return element;
 			}
 
-			protected override IQueryElement VisitSqlCteTable(SqlCteTable element)
+			protected internal override IQueryElement VisitSqlCteTable(SqlCteTable element)
 			{
 				base.VisitSqlCteTable(element);
 
@@ -219,16 +220,9 @@ namespace LinqToDB.Internal.DataProvider
 					for (int i = 0; i < element.Fields.Count; i++)
 					{
 						var field    = element.Fields[i];
-						var cteField = element.Cte.Fields.FirstOrDefault(f => f.Name == field.PhysicalName);
-						if (cteField != null)
-						{
-							if (field.PhysicalName != cteField.PhysicalName)
-								field.PhysicalName = cteField.PhysicalName;
-						}
-						else
-						{
-
-						}
+						var cteField = element.Cte.Fields.Find(f => string.Equals(f.Name, field.PhysicalName, StringComparison.Ordinal));
+						if (cteField != null && !string.Equals(field.PhysicalName, cteField.PhysicalName, StringComparison.Ordinal))
+							field.PhysicalName = cteField.PhysicalName;
 					}
 				}
 
@@ -237,7 +231,7 @@ namespace LinqToDB.Internal.DataProvider
 				return element;
 			}
 
-			protected override IQueryElement VisitSqlTable(SqlTable element)
+			protected internal override IQueryElement VisitSqlTable(SqlTable element)
 			{
 				base.VisitSqlTable(element);
 
@@ -246,14 +240,14 @@ namespace LinqToDB.Internal.DataProvider
 				return element;
 			}
 
-			protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+			protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 			{
 				base.VisitSqlQuery(selectQuery);
 
-				if (selectQuery.DoNotSetAliases == false && selectQuery.Select.Columns.Count > 0)
+				if (selectQuery is { DoNotSetAliases: false, Select.Columns.Count: > 0 })
 				{
 					Utils.MakeUniqueNames(
-						selectQuery.Select.Columns.Where(c => c.Alias != "*"),
+						selectQuery.Select.Columns.Where(c => !string.Equals(c.Alias, "*", StringComparison.Ordinal)),
 						null,
 						(n, a) => IsValidAlias(n),
 						c => TruncateAlias(c.Alias ?? string.Empty),
@@ -267,7 +261,7 @@ namespace LinqToDB.Internal.DataProvider
 							var a = TruncateAlias(c.Alias ?? string.Empty);
 							return string.IsNullOrEmpty(a)
 								? "c1"
-								: a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
+								: a + (a!.EndsWith('_') ? string.Empty : "_") + "1";
 						},
 						StringComparer.OrdinalIgnoreCase);
 
@@ -291,7 +285,7 @@ namespace LinqToDB.Internal.DataProvider
 				return selectQuery;
 			}
 
-			protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
+			protected internal override IQueryElement VisitSqlTableSource(SqlTableSource element)
 			{
 				base.VisitSqlTableSource(element);
 

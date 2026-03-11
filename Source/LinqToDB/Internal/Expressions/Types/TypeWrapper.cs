@@ -24,7 +24,7 @@ namespace LinqToDB.Internal.Expressions.Types
 		/// private static IEumerable&lt;T&gt; Wrappers { get; }
 		/// </code>
 		/// where T could be <see cref="LambdaExpression"/> or <see>Tuple&lt;LambdaExpression, bool&gt;</see>.
-		/// Boolean flag means that mapping expression compilation allowed to fail if it is set to <c>true</c>.
+		/// Boolean flag means that mapping expression compilation allowed to fail if it is set to <see langword="true"/>.
 		/// This could be used to map optional API, that present only in specific versions of provider.
 		/// If wrapper doesn't need any wrapper delegates, this property could be ommited.
 		/// </summary>
@@ -56,7 +56,7 @@ namespace LinqToDB.Internal.Expressions.Types
 		protected static Expression<Action<TI, TP>> PropertySetter<TI, TP>(Expression<Func<TI, TP>> getter)
 		{
 			if (getter.Body is not MemberExpression { Member: PropertyInfo pi })
-				throw new LinqToDBException($"Expected property accessor expression");
+				throw new LinqToDBException("Expected property accessor expression");
 
 			var pThis  = Expression.Parameter(typeof(TI));
 			var pValue = Expression.Parameter(typeof(TP));

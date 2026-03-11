@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -82,6 +85,9 @@ namespace LinqToDB.Internal.SqlQuery
 			return hash.ToHashCode();
 		}
 
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlTableLikeSource(this);
+
 		public override SqlTableType SqlTableType => SqlTableType.MergeSource;
 
 		public override SqlField All => field ??= SqlField.All(this);
@@ -90,12 +96,12 @@ namespace LinqToDB.Internal.SqlQuery
 
 		#region SqlExpressionBase overrides
 
-		public override IList<ISqlExpression> GetKeys(bool allIfEmpty) => throw new NotImplementedException();
-		public override bool CanBeNullable(NullabilityContext nullability) => throw new NotImplementedException();
-		public override int Precedence => throw new NotImplementedException();
-		public override Type SystemType => throw new NotImplementedException();
-		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer) => throw new NotImplementedException();
-		public override bool Equals(ISqlExpression? other) => throw new NotImplementedException();
+		public override IList<ISqlExpression> GetKeys(bool allIfEmpty) => throw new NotSupportedException();
+		public override bool CanBeNullable(NullabilityContext nullability) => throw new NotSupportedException();
+		public override int Precedence => throw new NotSupportedException();
+		public override Type SystemType => throw new NotSupportedException();
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer) => throw new NotSupportedException();
+		public override bool Equals(ISqlExpression? other) => throw new NotSupportedException();
 
 		#endregion
 

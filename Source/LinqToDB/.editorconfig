@@ -1,5 +1,0 @@
-[*.{cs,vb}]
-
-# Namespaces
-dotnet_style_namespace_match_folder = true:error
-dotnet_diagnostic.IDE0130.severity = error # Namespace does not match folder structure

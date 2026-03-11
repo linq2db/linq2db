@@ -148,9 +148,9 @@ namespace LinqToDB.Internal.Common
 			IEqualityComparer<T> equalityComparer)
 			where T : notnull
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (dependsOnGetter == null) throw new ArgumentNullException(nameof(dependsOnGetter));
-			if (equalityComparer == null) throw new ArgumentNullException(nameof(equalityComparer));
+			ArgumentNullException.ThrowIfNull(source);
+			ArgumentNullException.ThrowIfNull(dependsOnGetter);
+			ArgumentNullException.ThrowIfNull(equalityComparer);
 
 			// Fast path
 			if (source.Count == 0)

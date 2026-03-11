@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 
 using LinqToDB.Common;
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 #if BUGCHECK
 using System.Linq;
@@ -289,6 +291,9 @@ namespace LinqToDB.Internal.SqlQuery
 			return hash.ToHashCode();
 		}
 
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlSelectClause(this);
+
 		#endregion
 
 		#region QueryElement overrides
@@ -353,7 +358,7 @@ namespace LinqToDB.Internal.SqlQuery
 						.Append('[').Append(c.Number).Append(']')
 #endif
 						.Append('.')
-						.Append(c.Alias ?? FormattableString.Invariant($"c{i + 1}"));
+						.Append(c.Alias ?? string.Create(CultureInfo.InvariantCulture, $"c{i + 1}"));
 
 					var columnName = csb.ToString();
 					columnNames.Add(columnName);
@@ -373,7 +378,7 @@ namespace LinqToDB.Internal.SqlQuery
 						using (writer.IndentScope())
 							writer.AppendElement(c.Expression);
 
-						if (writer.ToString(writer.Length - 1, 1) != "?" && c.Expression.CanBeNullable(writer.Nullability))
+						if (!string.Equals(writer.ToString(writer.Length - 1, 1), "?", StringComparison.Ordinal) && c.Expression.CanBeNullable(writer.Nullability))
 							writer.Append('?');
 
 						if (index < Columns.Count - 1)

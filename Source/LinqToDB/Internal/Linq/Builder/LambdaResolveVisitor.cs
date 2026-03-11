@@ -16,8 +16,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public LambdaResolveVisitor(IBuildContext context, BuildPurpose buildPurpose, bool includingEager)
 		{
-			_context             = context;
-			_buildPurpose        = buildPurpose;
+			_context        = context;
+			_buildPurpose   = buildPurpose;
 			_includingEager = includingEager;
 		}
 
@@ -32,7 +32,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			if (_inLambda)
 			{
-				if (null != node.Find(1, (_, e) => e is ContextRefExpression))
+				if (null != node.Find(e => e is ContextRefExpression))
 				{
 					var expanded = Builder.BuildExpandExpression(node);
 					if (!ExpressionEqualityComparer.Instance.Equals(expanded, node))
@@ -56,7 +56,7 @@ namespace LinqToDB.Internal.Linq.Builder
 		{
 			if (_inLambda)
 			{
-				if (null != node.Find(1, (_, e) => e is ContextRefExpression))
+				if (null != node.Find(e => e is ContextRefExpression))
 				{
 					var expanded = Builder.BuildExpandExpression(node);
 					if (!ExpressionEqualityComparer.Instance.Equals(expanded, node))

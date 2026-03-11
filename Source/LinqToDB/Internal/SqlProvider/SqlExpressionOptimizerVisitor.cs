@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 
 using LinqToDB.Internal.Extensions;
@@ -16,7 +17,6 @@ namespace LinqToDB.Internal.SqlProvider
 {
 	public class SqlExpressionOptimizerVisitor : SqlQueryVisitor
 	{
-		ISimilarityMerger           _similarityMerger   = SimilarityMerger.Instance;
 		NullabilityContext          _nullabilityContext = default!;
 		ICollection<ISqlPredicate>? _allowOptimizeList;
 		ISqlPredicate?              _allowOptimize;
@@ -24,6 +24,7 @@ namespace LinqToDB.Internal.SqlProvider
 		bool                        _isInsidePredicate;
 		bool                        _reducePredicates;
 		ISqlExpression?             _columnExpression;
+		bool                        _doNotOptimizeNulls;
 
 		protected DataOptions       DataOptions       { get; private set; } = default!;
 		protected EvaluationContext EvaluationContext { get; private set; } = default!;
@@ -125,7 +126,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 		#endregion
 
-		protected override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
+		protected internal override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
 		{
 			var saveNullabilityContext = _nullabilityContext;
 			_nullabilityContext = _nullabilityContext.WithJoinSource(element.Table.Source);
@@ -137,7 +138,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return newElement;
 		}
 
-		protected override IQueryElement VisitIsTruePredicate(SqlPredicate.IsTrue predicate)
+		protected internal override IQueryElement VisitIsTruePredicate(SqlPredicate.IsTrue predicate)
 		{
 			var newElement = base.VisitIsTruePredicate(predicate);
 
@@ -151,7 +152,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return predicate;
 		}
 
-		protected override IQueryElement VisitSqlConditionExpression(SqlConditionExpression element)
+		protected internal override IQueryElement VisitSqlConditionExpression(SqlConditionExpression element)
 		{
 			var saveAllowOptimize = _allowOptimize;
 			_allowOptimize = element.Condition;
@@ -256,12 +257,14 @@ namespace LinqToDB.Internal.SqlProvider
 			return newElement;
 		}
 
-		protected override IQueryElement VisitSqlCaseExpression(SqlCaseExpression element)
+		protected internal override IQueryElement VisitSqlCaseExpression(SqlCaseExpression element)
 		{
 			var newExpr = base.VisitSqlCaseExpression(element);
 
 			if (!ReferenceEquals(newExpr, element))
 				return Visit(newExpr);
+
+			HashSet<ISqlPredicate>? seen = null;
 
 			if (GetVisitMode(element) == VisitMode.Modify)
 			{
@@ -275,7 +278,8 @@ namespace LinqToDB.Internal.SqlProvider
 						break;
 					}
 
-					if (caseItem.Condition == SqlPredicate.False)
+					if (caseItem.Condition == SqlPredicate.False
+						|| !(seen ??= new HashSet<ISqlPredicate>(ISqlPredicateEqualityComparer.Instance)).Add(caseItem.Condition))
 					{
 						element._cases.RemoveAt(i);
 						--i;
@@ -298,7 +302,8 @@ namespace LinqToDB.Internal.SqlProvider
 						return Visit(newCaseExpression);
 					}
 
-					if (caseItem.Condition == SqlPredicate.False)
+					if (caseItem.Condition == SqlPredicate.False
+						|| !(seen ??= new HashSet<ISqlPredicate>(ISqlPredicateEqualityComparer.Instance)).Add(caseItem.Condition))
 					{
 						var newCases = new List<SqlCaseExpression.CaseItem>(element._cases.Count);
 						newCases.AddRange(element._cases);
@@ -313,18 +318,12 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 			}
 
-			if (element.Cases.Count == 1)
+			return element.Cases switch
 			{
-				var conditionExpression = new SqlConditionExpression(element.Cases[0].Condition, element.Cases[0].ResultExpression, element.ElseExpression ?? new SqlValue(element.Type, null));
-				return Visit(conditionExpression);
-			}
-
-			if (element.Cases.Count == 0)
-			{
-				return element.ElseExpression ?? new SqlValue(element.Type, null);
-			}
-
-			return element;
+				[{ } c] => Visit(new SqlConditionExpression(c.Condition, c.ResultExpression, element.ElseExpression ?? new SqlValue(element.Type, null))),
+				[] => element.ElseExpression ?? new SqlValue(element.Type, null),
+				_ => element,
+			};
 		}
 
 		bool IsAllowedToOptimizePredicate(ISqlPredicate testPredicate, ISqlPredicate replacement)
@@ -340,12 +339,30 @@ namespace LinqToDB.Internal.SqlProvider
 			return false;
 		}
 
-		protected override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
+		protected internal override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
 		{
 			var saveAllowToOptimize = _allowOptimizeList;
 			_allowOptimizeList = element.Predicates;
 
+			var saveDoNotOptimizeNulls = _doNotOptimizeNulls;
+			_doNotOptimizeNulls = true;
+
 			var newElement = base.VisitSqlSearchCondition(element);
+
+			_doNotOptimizeNulls = saveDoNotOptimizeNulls;
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			newElement = OptimizeSimilarFlat(element);
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			if (!_doNotOptimizeNulls && !_nullabilityContext.IsEmpty)
+			{
+				// run again to optimize possible new IS [NOT] NULL predicates with nullability context updated with previous optimizations
+				newElement = base.VisitSqlSearchCondition(element);
+			}
 
 			_allowOptimizeList = saveAllowToOptimize;
 
@@ -532,7 +549,6 @@ namespace LinqToDB.Internal.SqlProvider
 					return newElement;
 				}
 			}
-
 			// propagade IS [NOT] NULL checks to nullability context to get rid of unnecessary nested null checks
 			if (element.Predicates.Count > 1)
 			{
@@ -661,16 +677,6 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 			}
 
-			// Optimizations: PREDICATE vs PREDICATE:
-			// 1. A IS NOT NULL AND A = B => A = B, when B is not nullable
-			// 2. A OR B OR A => A OR B
-			// 3. A AND B AND A => A AND B
-			// 4. A AND !A => false
-			// 4. A OR !A => true
-			newElement = OptimizeSimilarFlat(element);
-			if (!ReferenceEquals(newElement, element))
-				return Visit(newElement);
-
 			/* TODO: it is buggy.
 
 			// Optimizations: PREDICATE vs (GROUP)
@@ -687,6 +693,12 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
+		// Optimizations: PREDICATE vs PREDICATE:
+		// 1. A IS NOT NULL AND A = B => A = B, when B is not nullable
+		// 2. A OR B OR A => A OR B
+		// 3. A AND B AND A => A AND B
+		// 4. A AND !A => false
+		// 4. A OR !A => true
 		IQueryElement OptimizeSimilarFlat(SqlSearchCondition element)
 		{
 			if (element.Predicates.Count <= 1)
@@ -697,7 +709,7 @@ namespace LinqToDB.Internal.SqlProvider
 				return element;
 
 			var predicatesToCompare = element.Predicates
-				.SelectMany(p => _similarityMerger.GetSimilarityCodes(p).Select(code => (predicate : p, code)))
+				.SelectMany(p => SimilarityMerger.Instance.GetSimilarityCodes(p).Select(code => (predicate : p, code)))
 				.GroupBy(x => x.code)
 				.Select(g => g.Select(x => x.predicate).Distinct().ToList())
 				.Where(p => p.Count > 1)
@@ -725,8 +737,8 @@ namespace LinqToDB.Internal.SqlProvider
 							if (visitedPredicates.Contains(predicate2))
 								continue;
 
-							if (_similarityMerger.TryMerge(_nullabilityContext, _isInsidePredicate, predicate1, predicate2, element.IsOr, out var mergedPredicate) || 
-							    _similarityMerger.TryMerge(_nullabilityContext, _isInsidePredicate, predicate2, predicate1, element.IsOr, out mergedPredicate))
+							if (SimilarityMerger.Instance.TryMerge(_nullabilityContext, _isInsidePredicate, predicate1, predicate2, element.IsOr, out var mergedPredicate) ||
+								SimilarityMerger.Instance.TryMerge(_nullabilityContext, _isInsidePredicate, predicate2, predicate1, element.IsOr, out mergedPredicate))
 							{
 								var predicatesList = element.Predicates;
 
@@ -847,13 +859,13 @@ namespace LinqToDB.Internal.SqlProvider
 			if (searchCondition.Predicates.Count > 100)
 				return false;
 
-			var predicateCodes = _similarityMerger.GetSimilarityCodes(predicate).ToArray();
+			var predicateCodes = SimilarityMerger.Instance.GetSimilarityCodes(predicate).ToArray();
 
 			if (predicateCodes.Length == 0)
 				return false;
 
 			var predicatesToCompare = searchCondition.Predicates
-				.Where(p => _similarityMerger.GetSimilarityCodes(p).Any(code => predicateCodes.Contains(code)))
+				.Where(p => SimilarityMerger.Instance.GetSimilarityCodes(p).Any(code => predicateCodes.Contains(code)))
 				.ToList();
 
 			if (predicatesToCompare.Count == 0)
@@ -871,7 +883,7 @@ namespace LinqToDB.Internal.SqlProvider
 				if (visitedPredicates.Contains(conditionPredicate))
 					continue;
 
-				if (_similarityMerger.TryMerge(_nullabilityContext, _isInsidePredicate, predicate, conditionPredicate, !searchCondition.IsOr, out var mergedSingle, out var mergedConditional))
+				if (SimilarityMerger.Instance.TryMerge(_nullabilityContext, _isInsidePredicate, predicate, conditionPredicate, !searchCondition.IsOr, out var mergedSingle, out var mergedConditional))
 				{
 					isOptimized = true;
 
@@ -913,7 +925,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return isOptimized;
 		}
 
-		protected override IQueryElement VisitIsDistinctPredicate(SqlPredicate.IsDistinct predicate)
+		protected internal override IQueryElement VisitIsDistinctPredicate(SqlPredicate.IsDistinct predicate)
 		{
 			var newElement = base.VisitIsDistinctPredicate(predicate);
 
@@ -941,7 +953,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return predicate;
 		}
 
-		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+		protected internal override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
 			var saveNullabilityContext = _nullabilityContext;
 			_nullabilityContext = _nullabilityContext.WithQuery(selectQuery);
@@ -953,7 +965,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return result;
 		}
 
-		protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
+		protected internal override IQueryElement VisitSqlTableSource(SqlTableSource element)
 		{
 			if (!_visitQueries)
 				return element;
@@ -961,7 +973,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return base.VisitSqlTableSource(element);
 		}
 
-		protected override IQueryElement VisitNotPredicate(SqlPredicate.Not predicate)
+		protected internal override IQueryElement VisitNotPredicate(SqlPredicate.Not predicate)
 		{
 			if (predicate.Predicate.CanInvert(_nullabilityContext))
 			{
@@ -995,22 +1007,9 @@ namespace LinqToDB.Internal.SqlProvider
 			return predicate;
 		}
 
-		protected override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
+		protected internal override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			var newElement = base.VisitSqlBinaryExpression(element);
-
-			if (!ReferenceEquals(newElement, element))
-				return Visit(newElement);
-
-			newElement = element switch
-			{
-				(var e, "+", SqlBinaryExpression { Operation: "*", Expr1: SqlValue { Value: -1 } } binary) => SqlBinaryExpressionHelper.CreateWithTypeInferred(element.SystemType!, e, "-", binary.Expr2, Precedence.Subtraction),
-				(var e, "+", SqlBinaryExpression { Operation: "*", Expr2: SqlValue { Value: -1 } } binary) => SqlBinaryExpressionHelper.CreateWithTypeInferred(e.SystemType!, e, "-", binary.Expr1, Precedence.Subtraction),
-				(var e, "-", SqlBinaryExpression { Operation: "*", Expr1: SqlValue { Value: -1 } } binary) => SqlBinaryExpressionHelper.CreateWithTypeInferred(element.SystemType!, e, "+", binary.Expr2, Precedence.Subtraction),
-				(var e, "-", SqlBinaryExpression { Operation: "*", Expr2: SqlValue { Value: -1 } } binary) => SqlBinaryExpressionHelper.CreateWithTypeInferred(e.SystemType!, e, "+", binary.Expr1, Precedence.Subtraction),
-
-				_ => element
-			};
 
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
@@ -1112,7 +1111,7 @@ namespace LinqToDB.Internal.SqlProvider
 					if (v1 && v2)
 					{
 						if (value1 is int i1 && value2 is int i2) return QueryHelper.CreateSqlValue(i1 + i2, element, MappingSchema);
-						if (value1 is string || value2 is string) return QueryHelper.CreateSqlValue(FormattableString.Invariant($"{value1}{value2}"), element, MappingSchema);
+						if (value1 is string || value2 is string) return QueryHelper.CreateSqlValue(string.Create(CultureInfo.InvariantCulture, $"{value1}{value2}"), element, MappingSchema);
 					}
 
 					break;
@@ -1192,7 +1191,7 @@ namespace LinqToDB.Internal.SqlProvider
 							case int i when i == 1 : return element.Expr2;
 							case int i when
 								element.Expr2    is SqlBinaryExpression be2 &&
-								be2.Operation == "*"                   &&
+string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 								TryEvaluateNoParameters(be2.Expr1, out var be2v1)  &&
 								be2v1 is int bi :
 							{
@@ -1229,7 +1228,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
-		protected override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
+		protected internal override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
 		{
 			if (!element.IsMandatory)
 			{
@@ -1246,34 +1245,31 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 			}
 
-			if (element.Expression is SelectQuery selectQuery && selectQuery.Select.Columns.Count == 1)
+			if (element.Expression is not SelectQuery { Select.Columns: [{ Expression: var columnExpression }] } selectQuery)
+				return base.VisitSqlCastExpression(element);
+
+			var newExpression = (ISqlExpression)Visit(new SqlCastExpression(columnExpression, element.ToType, element.FromType, isMandatory: element.IsMandatory));
+
+			if (GetVisitMode(selectQuery) == VisitMode.Modify)
 			{
-				var columnExpression = selectQuery.Select.Columns[0].Expression;
-				var newExpression = (ISqlExpression)Visit(new SqlCastExpression(columnExpression, element.ToType, element.FromType, isMandatory: element.IsMandatory));
+				selectQuery.Select.Columns[0].Expression = newExpression;
 
-				if (GetVisitMode(selectQuery) == VisitMode.Modify)
-				{
-					selectQuery.Select.Columns[0].Expression = newExpression;
-
-					return selectQuery;
-				}
-				else
-				{
-					NotifyReplaced(newExpression, columnExpression);
-
-					var query = VisitSqlQuery(selectQuery);
-
-					// magic...
-					NotifyReplaced(columnExpression, columnExpression);
-
-					return query;
-				}
+				return selectQuery;
 			}
+			else
+			{
+				NotifyReplaced(newExpression, columnExpression);
 
-			return base.VisitSqlCastExpression(element);
+				var query = VisitSqlQuery(selectQuery);
+
+				// magic...
+				NotifyReplaced(columnExpression, columnExpression);
+
+				return query;
+			}
 		}
 
-		protected override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
+		protected internal override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
 		{
 			var optmimized = base.VisitExistsPredicate(predicate);
 
@@ -1299,7 +1295,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return predicate;
 		}
 
-		protected override IQueryElement VisitSqlFunction(SqlFunction element)
+		protected internal override IQueryElement VisitSqlFunction(SqlFunction element)
 		{
 			var newElement = base.VisitSqlFunction(element);
 
@@ -1348,7 +1344,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return result;
 		}
 
-		protected override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
+		protected internal override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
 		{
 			var newElement = base.VisitSqlCoalesceExpression(element);
 
@@ -1393,18 +1389,15 @@ namespace LinqToDB.Internal.SqlProvider
 				}
 			}
 
-			if (newExpressions != null)
+			return newExpressions switch
 			{
-				if (newExpressions.Count == 1)
-					return newExpressions[0];
-				if (newExpressions.Count > 0)
-					return Visit(new SqlCoalesceExpression(newExpressions.ToArray()));
-			}
-
-			return element;
+				[{ } expr] => expr,
+				{ Count: > 1 } => Visit(new SqlCoalesceExpression([.. newExpressions])),
+				_ => element,
+			};
 		}
 
-		protected override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
+		protected internal override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
 		{
 			var newPredicate = base.VisitIsNullPredicate(predicate);
 
@@ -1414,7 +1407,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (_nullabilityContext.IsEmpty)
 				return predicate;
 
-			if (!predicate.Expr1.CanBeNullableOrUnknown(_nullabilityContext, false))
+			if (!_doNotOptimizeNulls && !predicate.Expr1.CanBeNullableOrUnknown(_nullabilityContext, false))
 			{
 				//TODO: Exception for Row, find time to analyze why it's needed
 				if (predicate.Expr1.ElementType != QueryElementType.SqlRow)
@@ -1437,7 +1430,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return predicate;
 		}
 
-		protected override IQueryElement VisitSqlNullabilityExpression(SqlNullabilityExpression element)
+		protected internal override IQueryElement VisitSqlNullabilityExpression(SqlNullabilityExpression element)
 		{
 			var newNode = base.VisitSqlNullabilityExpression(element);
 
@@ -1462,7 +1455,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
-		protected override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
+		protected internal override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
 		{
 			var result = base.VisitExprPredicate(predicate);
 
@@ -1475,7 +1468,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return predicate;
 		}
 
-		protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
+		protected internal override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 		{
 			var saveInsidePredicate = _isInsidePredicate;
 			_isInsidePredicate      = true;
@@ -1569,7 +1562,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return predicate;
 		}
 
-		protected override IQueryElement VisitSqlWhereClause(SqlWhereClause element)
+		protected internal override IQueryElement VisitSqlWhereClause(SqlWhereClause element)
 		{
 			var newElement = base.VisitSqlWhereClause(element);
 
@@ -1600,7 +1593,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return element;
 		}
 
-		protected override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		protected internal override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
 		{
 			var optmimized = base.VisitInSubQueryPredicate(predicate);
 
@@ -1615,7 +1608,7 @@ namespace LinqToDB.Internal.SqlProvider
 			return predicate;
 		}
 
-		protected override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
+		protected internal override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
 		{
 			var newElement = base.VisitInListPredicate(predicate);
 
@@ -1658,20 +1651,19 @@ namespace LinqToDB.Internal.SqlProvider
 
 		static bool Compare(int v1, int v2, SqlPredicate.Operator op)
 		{
-			switch (op)
+			return op switch
 			{
-				case SqlPredicate.Operator.Equal:          return v1 == v2;
-				case SqlPredicate.Operator.NotEqual:       return v1 != v2;
-				case SqlPredicate.Operator.Greater:        return v1 >  v2;
-				case SqlPredicate.Operator.NotLess:
-				case SqlPredicate.Operator.GreaterOrEqual: return v1 >= v2;
-				case SqlPredicate.Operator.Less:           return v1 <  v2;
-				case SqlPredicate.Operator.NotGreater:
-				case SqlPredicate.Operator.LessOrEqual:    return v1 <= v2;
+				SqlPredicate.Operator.Equal          => v1 == v2,
+				SqlPredicate.Operator.NotEqual       => v1 != v2,
+				SqlPredicate.Operator.Greater        => v1 > v2,
+				SqlPredicate.Operator.NotLess or
+				SqlPredicate.Operator.GreaterOrEqual => v1 >= v2,
+				SqlPredicate.Operator.Less           => v1 < v2,
+				SqlPredicate.Operator.NotGreater or
+				SqlPredicate.Operator.LessOrEqual    => v1 <= v2,
+				_ => throw new InvalidOperationException(),
+			};
 			}
-
-			throw new InvalidOperationException();
-		}
 
 		static bool Compare(object? value1, object? value2, SqlPredicate.Operator op, out bool result)
 		{
@@ -1726,20 +1718,30 @@ namespace LinqToDB.Internal.SqlProvider
 			if (current == additional)
 				return;
 
-			if (current == SqlPredicate.Operator.Equal && additional == SqlPredicate.Operator.Greater)
-				current = SqlPredicate.Operator.GreaterOrEqual;
-			else if (current == SqlPredicate.Operator.Equal && additional == SqlPredicate.Operator.Less)
-				current = SqlPredicate.Operator.LessOrEqual;
-			else if (current == SqlPredicate.Operator.Greater && additional == SqlPredicate.Operator.Equal)
-				current = SqlPredicate.Operator.GreaterOrEqual;
-			else if (current == SqlPredicate.Operator.Less && additional == SqlPredicate.Operator.Equal)
-				current = SqlPredicate.Operator.LessOrEqual;
-			else if (current == SqlPredicate.Operator.Greater && additional == SqlPredicate.Operator.Less)
-				current = SqlPredicate.Operator.NotEqual;
-			else if (current == SqlPredicate.Operator.Less && additional == SqlPredicate.Operator.Greater)
-				current = SqlPredicate.Operator.NotEqual;
-			else
-				throw new NotImplementedException();
+			current = (current, additional) switch
+			{
+				(SqlPredicate.Operator.Equal, SqlPredicate.Operator.Greater) => 
+					SqlPredicate.Operator.GreaterOrEqual,
+
+				(SqlPredicate.Operator.Equal, SqlPredicate.Operator.Less) => 
+					SqlPredicate.Operator.LessOrEqual,
+
+				(SqlPredicate.Operator.Greater, SqlPredicate.Operator.Equal) => 
+					SqlPredicate.Operator.GreaterOrEqual,
+
+				(SqlPredicate.Operator.Less, SqlPredicate.Operator.Equal) => 
+					SqlPredicate.Operator.LessOrEqual,
+
+				(SqlPredicate.Operator.Greater, SqlPredicate.Operator.Less) => 
+					SqlPredicate.Operator.NotEqual,
+
+				(SqlPredicate.Operator.Less, SqlPredicate.Operator.Greater) => 
+					SqlPredicate.Operator.NotEqual,
+
+				_ => throw new InvalidOperationException(
+					$"Operators `{current}` and `{additional}` cannot be combined."
+				),
+			};
 		}
 
 		static SqlPredicate.Operator SwapOperator(SqlPredicate.Operator op)
@@ -1754,7 +1756,7 @@ namespace LinqToDB.Internal.SqlProvider
 				SqlPredicate.Operator.Less => SqlPredicate.Operator.Greater,
 				SqlPredicate.Operator.NotGreater => SqlPredicate.Operator.NotLess,
 				SqlPredicate.Operator.LessOrEqual => SqlPredicate.Operator.GreaterOrEqual,
-				_ => throw new InvalidOperationException()
+				_ => throw new InvalidOperationException(),
 			};
 		}
 
@@ -1883,7 +1885,7 @@ namespace LinqToDB.Internal.SqlProvider
 								SqlPredicate.Operator.NotEqual => false,
 								SqlPredicate.Operator.Greater => false,
 								SqlPredicate.Operator.Less => false,
-								_ => throw new InvalidOperationException($"Unexpected binary operator {op}")
+								_ => throw new InvalidOperationException($"Unexpected binary operator {op}"),
 							};
 						}
 					}
@@ -2094,7 +2096,7 @@ namespace LinqToDB.Internal.SqlProvider
 							// some - e < v ===> some < v + e
 							(var some, "-", var e) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, v, "+", e), null),
 
-							_ => null
+							_ => null,
 						},
 
 					(var v, var op, SqlBinaryExpression binary) when CanBeEvaluateNoParameters(v) =>
@@ -2112,10 +2114,10 @@ namespace LinqToDB.Internal.SqlProvider
 							// v < some - e ===> v + e < some
 							(var e, "-", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, v, "+", e), op, some, null),
 
-							_ => null
+							_ => null,
 						},
 
-					_ => null
+					_ => null,
 				};
 
 				exprExpr = newExpr ?? exprExpr;
@@ -2186,7 +2188,7 @@ namespace LinqToDB.Internal.SqlProvider
 						SqlPredicate.Operator.Greater        => new SqlSearchCondition(true, true, predicate, new SqlSearchCondition(false, false, new SqlPredicate.IsNull(compare.Expression1, true), new SqlPredicate.IsNull(compare.Expression2, false))),
 						SqlPredicate.Operator.LessOrEqual    => new SqlSearchCondition(true, true, predicate, new SqlPredicate.IsNull(compare.Expression1, false)),
 						SqlPredicate.Operator.GreaterOrEqual => new SqlSearchCondition(true, true, predicate, new SqlPredicate.IsNull(compare.Expression2, false)),
-						_ => predicate
+						_ => predicate,
 					};
 				}
 

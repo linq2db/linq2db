@@ -1,5 +1,4 @@
 parameters:
-  publish: false
   release: false
 
 jobs:
@@ -12,214 +11,11 @@ jobs:
 
   steps:
 
-  - powershell: echo "##vso[task.setvariable variable=packageVersion]$(packageVersion)-dev.$(Build.BuildId)"
-    condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
-    displayName: Update nuget version
-
-  - powershell: echo "##vso[task.setvariable variable=ef3PackageVersion]$(ef3PackageVersion)-dev.$(Build.BuildId)"
-    condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
-    displayName: Update nuget version
-
-  - powershell: echo "##vso[task.setvariable variable=ef8PackageVersion]$(ef8PackageVersion)-dev.$(Build.BuildId)"
-    condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
-    displayName: Update nuget version
-
-  - powershell: echo "##vso[task.setvariable variable=ef9PackageVersion]$(ef9PackageVersion)-dev.$(Build.BuildId)"
-    condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
-    displayName: Update nuget version
-
-  - powershell: echo "##vso[task.setvariable variable=ef10PackageVersion]$(ef10PackageVersion)-dev.$(Build.BuildId)"
-    condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
-    displayName: Update nuget version
-
   - task: DownloadPipelineArtifact@2
     displayName: Download LinqToDB files
     inputs:
-      artifactName: '$(artifact_linq2db_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB/Release'
-
-  - task: DownloadPipelineArtifact@2
-    displayName: Download LinqToDB.Tools files
-    inputs:
-      artifactName: '$(artifact_linq2db_Tools_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Tools/Release'
-
-  - task: DownloadPipelineArtifact@2
-    displayName: Download LinqToDB.Extensions files
-    inputs:
-      artifactName: '$(artifact_linq2db_extensions_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Extensions/Release'
-
-  - task: DownloadPipelineArtifact@2
-    displayName: Download LinqToDB.Compat files
-    inputs:
-      artifactName: '$(artifact_linq2db_compat_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Compat/Release'
-
-  - task: DownloadPipelineArtifact@2
-    displayName: Download LinqToDB.Remote.Wcf files
-    inputs:
-      artifactName: '$(artifact_linq2db_remote_wcf_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.Wcf/Release'
-
-  - task: DownloadPipelineArtifact@2
-    displayName: Download LinqToDB.Remote.Grpc files
-    inputs:
-      artifactName: '$(artifact_linq2db_remote_grpc_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.Grpc/Release'
-
-  - task: DownloadPipelineArtifact@2
-    displayName: Download LinqToDB.Remote.SignalR.Client files
-    inputs:
-      artifactName: '$(artifact_linq2db_remote_signalr_client_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.SignalR.Client/Release'
-
-  - task: DownloadPipelineArtifact@2
-    displayName: Download LinqToDB.Remote.SignalR.Server files
-    inputs:
-      artifactName: '$(artifact_linq2db_remote_signalr_server_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.SignalR.Server/Release'
-
-  - task: DownloadPipelineArtifact@2
-    displayName: Download LinqToDB.Remote.HttpClient.Client files
-    inputs:
-      artifactName: '$(artifact_linq2db_remote_httpclient_client_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.HttpClient.Client/Release'
-
-  - task: DownloadPipelineArtifact@2
-    displayName: Download LinqToDB.Remote.HttpClient.Server files
-    inputs:
-      artifactName: '$(artifact_linq2db_remote_httpclient_server_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.HttpClient.Server/Release'
-
-  - task: DownloadPipelineArtifact@2
-    displayName: Download LinqToDB.CLI files
-    inputs:
-      artifactName: '$(artifact_linq2db_cli_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.CLI/Release'
-
-  - task: DownloadPipelineArtifact@2
-    displayName: Download LinqToDB.Scaffold files
-    inputs:
-      artifactName: '$(artifact_linq2db_scaffold_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Scaffold/Release'
-
-  - task: DownloadPipelineArtifact@2
-    displayName: Download LinqToDB.FSharp files
-    inputs:
-      artifactName: '$(artifact_linq2db_fsharp_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.FSharp/Release'
-
-  - task: DownloadPipelineArtifact@2
-    displayName: Download LinqToDB.EntityFrameworkCore files
-    inputs:
-      artifactName: '$(artifact_linq2db_efcore_3_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.EF3/Release'
-
-  - task: DownloadPipelineArtifact@2
-    displayName: Download LinqToDB.EntityFrameworkCore files
-    inputs:
-      artifactName: '$(artifact_linq2db_efcore_8_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.EF8/Release'
-
-  - task: DownloadPipelineArtifact@2
-    displayName: Download LinqToDB.EntityFrameworkCore files
-    inputs:
-      artifactName: '$(artifact_linq2db_efcore_9_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.EF9/Release'
-
-  - task: DownloadPipelineArtifact@2
-    displayName: Download LinqToDB.EntityFrameworkCore files
-    inputs:
-      artifactName: '$(artifact_linq2db_efcore_10_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.EF10/Release'
-
-  - task: DownloadPipelineArtifact@2
-    displayName: Download test files (for t4 nugets)
-    inputs:
-      artifactName: '$(artifact_t4_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/NuGet/$(release_configuration)'
-
-  - task: DownloadPipelineArtifact@2
-    displayName: Download LinqToDB.LINQPad files
-    inputs:
-      artifactName: '$(artifact_linq2db_linqpad_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.LINQPad/Release/'
-
-#dotnet tool install -g dotnet-script
-  - task: UseDotNet@2
-    displayName: 'Use latest .NET SDK'
-    inputs:
-      packageType: sdk
-      version: 9.x
-
-  - task: UseDotNet@2
-    displayName: 'Use latest .NET SDK'
-    inputs:
-      packageType: sdk
-      version: 10.x
-
-  - task: DotNetCoreCLI@2
-    displayName: Install dotnet-script tool
-    inputs:
-      command: custom
-      custom: tool
-      arguments: install -g dotnet-script
-
-  - task: DotNetCoreCLI@2
-    displayName: Update nuspecs
-    inputs:
-      command: custom
-      custom: script
-      workingDirectory: '$(Build.SourcesDirectory)/NuGet'
-      arguments: BuildNuspecs.csx /path:**/*.nuspec /buildPath:../.build/nuspecs /version:$(packageVersion) /clean:true /branch:$(Build.SourceBranchName)
-
-  - task: DotNetCoreCLI@2
-    displayName: Update nuspecs (EF3)
-    inputs:
-      command: custom
-      custom: script
-      workingDirectory: '$(Build.SourcesDirectory)/NuGet'
-      arguments: BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v3.nuspec /buildPath:../.build/nuspecs /version:$(ef3PackageVersion) /linq2DbVersion:$(packageVersion) /branch:$(Build.SourceBranchName)
-
-  - task: DotNetCoreCLI@2
-    displayName: Update nuspecs (EF8)
-    inputs:
-      command: custom
-      custom: script
-      workingDirectory: '$(Build.SourcesDirectory)/NuGet'
-      arguments: BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v8.nuspec /buildPath:../.build/nuspecs /version:$(ef8PackageVersion) /linq2DbVersion:$(packageVersion) /branch:$(Build.SourceBranchName)
-
-  - task: DotNetCoreCLI@2
-    displayName: Update nuspecs (EF9)
-    inputs:
-      command: custom
-      custom: script
-      workingDirectory: '$(Build.SourcesDirectory)/NuGet'
-      arguments: BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v9.nuspec /buildPath:../.build/nuspecs /version:$(ef9PackageVersion) /linq2DbVersion:$(packageVersion) /branch:$(Build.SourceBranchName)
-
-  - task: DotNetCoreCLI@2
-    displayName: Update nuspecs (EF10)
-    inputs:
-      command: custom
-      custom: script
-      workingDirectory: '$(Build.SourcesDirectory)/NuGet'
-      arguments: BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v10.nuspec /buildPath:../.build/nuspecs /version:$(ef10PackageVersion) /linq2DbVersion:$(packageVersion) /branch:$(Build.SourceBranchName)
-
-  - task: CmdLine@2
-    inputs:
-      script: $(Build.SourcesDirectory)/NuGet/Pack.cmd
-      workingDirectory: $(Build.SourcesDirectory)/NuGet
-      failOnStderr: true # needed as dotnet pack doesn't set exit code
-    displayName: Build nugets
-    condition: succeeded()
-
-  - task: PublishBuildArtifacts@1
-    inputs:
-      pathToPublish: '$(Build.SourcesDirectory)/.build/nugets'
       artifactName: '$(artifact_nugets)'
-    displayName: Publish nugets to artifacts
-    condition: succeeded()
+      targetPath: '$(Build.SourcesDirectory)/.build/nugets'
 
   - task: NuGetCommand@2
     inputs:
@@ -228,7 +24,7 @@ jobs:
       nuGetFeedType: 'internal'
       publishVstsFeed: '0dcc414b-ea54-451e-a54f-d63f05367c4b/967a4107-9788-41a4-9f6d-a2318aab1410'
     displayName: Publish to Azure Artifacts feed
-    condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['master_branch']), ${{ parameters.publish }})
+    condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['master_branch']))
 
   - task: NuGetCommand@2
     inputs:
@@ -237,7 +33,7 @@ jobs:
       nuGetFeedType: 'external'
       publishFeedCredentials: 'linq2db nuget.org feed'
     displayName: Publish to Nuget.org
-    condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['release_branch']), ${{ parameters.publish }})
+    condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['release_branch']))
 
   - task: PowerShell@2
     inputs:

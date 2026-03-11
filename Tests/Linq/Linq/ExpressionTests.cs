@@ -107,10 +107,8 @@ namespace Tests.Linq
 		[Test]
 		public void TestAsProperty([DataSources(false)] string context)
 		{
-			using (var db = new MyContext(context))
-			{
-				db.SomeValue.ShouldBe(10);
-			}
+			using var db = new MyContext(context);
+			db.SomeValue.ShouldBe(10);
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4226")]
@@ -388,8 +386,6 @@ namespace Tests.Linq
 			var qry = from a in t1
 					   from b in Issue4674JoinTable<Issue4674StockRoomItem>(db, b => b.TenantId == a.TenantId && b.StockroomCode == a.Code)
 					   select new { a.TenantId, a.Code, a.Description, b.StockroomCode, b.Quantity };
-
-			;
 			Assert.That(() => qry.ToArray(), Throws.InstanceOf<LinqToDBException>()
 				.With.Message.Contain("The LINQ expression could not be converted to SQL."));
 		}
@@ -493,6 +489,46 @@ namespace Tests.Linq
 			int[] ids = [10, 20];
 
 			db.Person.Where(p => IsAnyOf2(p.ID, ids)).Delete();
+		}
+
+		sealed class WarehouseTableDto
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+			public SomeEnum Value { get; set; }
+
+			public static readonly WarehouseTableDto[] Data =
+			[
+				new WarehouseTableDto() { Id = 1, Value = SomeEnum.SomeValue | SomeEnum.SomeOtherValue | SomeEnum.FifthValue }
+			];
+
+			[Flags]
+			public enum SomeEnum
+			{
+				SomeValue      = 1,
+				SecondValue    = 2,
+				SomeOtherValue = 4,
+				FourthValue    = 8,
+				FifthValue     = 16,
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5286")]
+		public void MapInvertOperator([DataSources] string context)
+		{
+			using var db  = GetDataContext(context);
+			using var tb  = db.CreateLocalTable(WarehouseTableDto.Data);
+
+			var addMask = WarehouseTableDto.SomeEnum.SomeValue | WarehouseTableDto.SomeEnum.SecondValue;
+			var removeMask = WarehouseTableDto.SomeEnum.SomeOtherValue | WarehouseTableDto.SomeEnum.FourthValue;
+
+			tb
+				.Set(w => w.Value, w => (w.Value | addMask) & ~removeMask)
+				.Update();
+
+			var record = tb.Single();
+
+			Assert.That(record.Value, Is.EqualTo(addMask | WarehouseTableDto.SomeEnum.FifthValue));
 		}
 	}
 }

@@ -39,7 +39,7 @@ namespace LinqToDB.Internal.Cache
 			get;
 			set
 			{
-				if (value < 0 || value > 1)
+				if (value is < 0 or > 1)
 				{
 					throw new ArgumentOutOfRangeException(nameof(value), value, $"{nameof(value)} must be between 0 and 1 inclusive.");
 				}

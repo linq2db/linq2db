@@ -35,59 +35,58 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDataTypes([IncludeDataSources(CurrentProvider)] string context)
 		{
-			using (var conn = GetDataConnection(context))
+			using var conn = GetDataConnection(context);
+			// TimeSpan cannot be passed as parameter if it is not IfxTimeSpan
+			// for Linq queries we handle it by converting parameters to literals, but Execute uses parameters
+			var isIDSProvider = ((InformixDataProvider)conn.DataProvider).Adapter.IsIDSProvider;
+			using (Assert.EnterMultipleScope())
 			{
-				// TimeSpan cannot be passed as parameter if it is not IfxTimeSpan
-				// for Linq queries we handle it by converting parameters to literals, but Execute uses parameters
-				var isIDSProvider = ((InformixDataProvider)conn.DataProvider).Adapter.IsIDSProvider;
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(TestType<long?>(conn, "bigintDataType", DataType.Int64), Is.EqualTo(1000000L));
-					Assert.That(TestType<long?>(conn, "int8DataType", DataType.Int64), Is.EqualTo(1000001L));
-					Assert.That(TestType<int?>(conn, "intDataType", DataType.Int32), Is.EqualTo(7777777));
-					Assert.That(TestType<short?>(conn, "smallintDataType", DataType.Int16), Is.EqualTo(100));
-					Assert.That(TestType<decimal?>(conn, "decimalDataType", DataType.Decimal), Is.EqualTo(9999999m));
-					Assert.That(TestType<decimal?>(conn, "moneyDataType", DataType.Money), Is.EqualTo(8888888m));
-					Assert.That(TestType<float?>(conn, "realDataType", DataType.Single), Is.EqualTo(20.31f));
-					Assert.That(TestType<double?>(conn, "floatDataType", DataType.Double), Is.EqualTo(16.2d));
+				Assert.That(TestType<long?>(conn, "bigintDataType", DataType.Int64), Is.EqualTo(1000000L));
+				Assert.That(TestType<long?>(conn, "int8DataType", DataType.Int64), Is.EqualTo(1000001L));
+				Assert.That(TestType<int?>(conn, "intDataType", DataType.Int32), Is.EqualTo(7777777));
+				Assert.That(TestType<short?>(conn, "smallintDataType", DataType.Int16), Is.EqualTo(100));
+				Assert.That(TestType<decimal?>(conn, "decimalDataType", DataType.Decimal), Is.EqualTo(9999999m));
+				Assert.That(TestType<decimal?>(conn, "moneyDataType", DataType.Money), Is.EqualTo(8888888m));
+				Assert.That(TestType<float?>(conn, "realDataType", DataType.Single), Is.EqualTo(20.31f));
+				Assert.That(TestType<double?>(conn, "floatDataType", DataType.Double), Is.EqualTo(16.2d));
 
-					Assert.That(TestType<bool?>(conn, "boolDataType", DataType.Boolean), Is.True);
+				Assert.That(TestType<bool?>(conn, "boolDataType", DataType.Boolean), Is.True);
 
-					Assert.That(TestType<string>(conn, "charDataType", DataType.Char), Is.EqualTo("1"));
-					Assert.That(TestType<string>(conn, "varcharDataType", DataType.VarChar), Is.EqualTo("234"));
-					Assert.That(TestType<string>(conn, "ncharDataType", DataType.NChar), Is.EqualTo("55645"));
-					Assert.That(TestType<string>(conn, "nvarcharDataType", DataType.NVarChar), Is.EqualTo("6687"));
-					Assert.That(TestType<string>(conn, "lvarcharDataType", DataType.NVarChar), Is.EqualTo("AAAAA"));
+				Assert.That(TestType<string>(conn, "charDataType", DataType.Char), Is.EqualTo("1"));
+				Assert.That(TestType<string>(conn, "varcharDataType", DataType.VarChar), Is.EqualTo("234"));
+				Assert.That(TestType<string>(conn, "ncharDataType", DataType.NChar), Is.EqualTo("55645"));
+				Assert.That(TestType<string>(conn, "nvarcharDataType", DataType.NVarChar), Is.EqualTo("6687"));
+				Assert.That(TestType<string>(conn, "lvarcharDataType", DataType.NVarChar), Is.EqualTo("AAAAA"));
 
-					Assert.That(TestType<DateTime?>(conn, "dateDataType", DataType.Date), Is.EqualTo(new DateTime(2012, 12, 12)));
-					Assert.That(TestType<DateTime?>(conn, "datetimeDataType", DataType.DateTime2), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
-				}
+				Assert.That(TestType<DateTime?>(conn, "dateDataType", DataType.Date), Is.EqualTo(new DateTime(2012, 12, 12)));
+				Assert.That(TestType<DateTime?>(conn, "datetimeDataType", DataType.DateTime2), Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12)));
+			}
 
-				if (!isIDSProvider)
-					Assert.That(TestType<TimeSpan?>   (conn, "intervalDataType", DataType.Time),      Is.EqualTo(new TimeSpan(12, 12, 12)));
-				using (Assert.EnterMultipleScope())
-				{
-					Assert.That(TestType<string>(conn, "textDataType", DataType.Text, skipPass: true), Is.EqualTo("BBBBB"));
-					Assert.That(TestType<string>(conn, "textDataType", DataType.NText, skipPass: true), Is.EqualTo("BBBBB"));
-					Assert.That(TestType<byte[]>(conn, "byteDataType", DataType.Binary, skipPass: true), Is.EqualTo(new byte[] { 1, 2 }));
-					Assert.That(TestType<byte[]>(conn, "byteDataType", DataType.VarBinary, skipPass: true), Is.EqualTo(new byte[] { 1, 2 }));
-				}
+			if (!isIDSProvider)
+				Assert.That(TestType<TimeSpan?>(conn, "intervalDataType", DataType.Time), Is.EqualTo(new TimeSpan(12, 12, 12)));
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(TestType<string>(conn, "textDataType", DataType.Text, skipPass: true), Is.EqualTo("BBBBB"));
+				Assert.That(TestType<string>(conn, "textDataType", DataType.NText, skipPass: true), Is.EqualTo("BBBBB"));
+				Assert.That(TestType<byte[]>(conn, "byteDataType", DataType.Binary, skipPass: true), Is.EqualTo(new byte[] { 1, 2 }));
+				Assert.That(TestType<byte[]>(conn, "byteDataType", DataType.VarBinary, skipPass: true), Is.EqualTo(new byte[] { 1, 2 }));
+			}
 
 #if NETFRAMEWORK
-				if (context == ProviderName.Informix)
+			if (context == ProviderName.Informix)
+			{
+				Assert.That(TestType<IfxDateTime?>(conn, "datetimeDataType", DataType.DateTime), Is.EqualTo(new IfxDateTime(new DateTime(2012, 12, 12, 12, 12, 12))));
+				if (!isIDSProvider)
 				{
-					Assert.That(TestType<IfxDateTime?>(conn, "datetimeDataType", DataType.DateTime), Is.EqualTo(new IfxDateTime(new DateTime(2012, 12, 12, 12, 12, 12))));
-					if (!isIDSProvider)
+					using (Assert.EnterMultipleScope())
 					{
-						using (Assert.EnterMultipleScope())
-						{
-							Assert.That(TestType<IfxDecimal?>(conn, "decimalDataType", DataType.Decimal), Is.EqualTo(new IfxDecimal(9999999m)));
-							Assert.That(TestType<IfxTimeSpan?>(conn, "intervalDataType", DataType.Time), Is.EqualTo(new IfxTimeSpan(new TimeSpan(12, 12, 12))));
-						}
+						Assert.That(TestType<IfxDecimal?>(conn, "decimalDataType", DataType.Decimal), Is.EqualTo(new IfxDecimal(9999999m)));
+						Assert.That(TestType<IfxTimeSpan?>(conn, "intervalDataType", DataType.Time), Is.EqualTo(new IfxTimeSpan(new TimeSpan(12, 12, 12))));
 					}
 				}
-#endif
 			}
+#endif
 		}
 
 		[Test]
@@ -95,28 +94,26 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = GetDataContext(context))
+				using var db = GetDataContext(context);
+				try
 				{
-					try
-					{
-						db.BulkCopy(
-							new BulkCopyOptions { BulkCopyType = bulkCopyType },
-							Enumerable.Range(0, 10).Select(n =>
-								new LinqDataTypes
-								{
-									ID            = 4000 + n,
-									MoneyValue    = 1000m + n,
-									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
-									BoolValue     = true,
-									GuidValue     = TestData.SequentialGuid(n),
-									SmallIntValue = (short)n
-								}
-							));
-					}
-					finally
-					{
-						db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
-					}
+					db.BulkCopy(
+						new BulkCopyOptions { BulkCopyType = bulkCopyType },
+						Enumerable.Range(0, 10).Select(n =>
+							new LinqDataTypes
+							{
+								ID = 4000 + n,
+								MoneyValue = 1000m + n,
+								DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+								BoolValue = true,
+								GuidValue = TestData.SequentialGuid(n),
+								SmallIntValue = (short)n
+							}
+						));
+				}
+				finally
+				{
+					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
 				}
 			}
 		}
@@ -126,28 +123,26 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = GetDataContext(context))
+				using var db = GetDataContext(context);
+				try
 				{
-					try
-					{
-						await db.BulkCopyAsync(
-							new BulkCopyOptions { BulkCopyType = bulkCopyType },
-							Enumerable.Range(0, 10).Select(n =>
-								new LinqDataTypes
-								{
-									ID            = 4000 + n,
-									MoneyValue    = 1000m + n,
-									DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
-									BoolValue     = true,
-									GuidValue     = TestData.SequentialGuid(n),
-									SmallIntValue = (short)n
-								}
-							));
-					}
-					finally
-					{
-						await db.GetTable<LinqDataTypes>().DeleteAsync(p => p.ID >= 4000);
-					}
+					await db.BulkCopyAsync(
+						new BulkCopyOptions { BulkCopyType = bulkCopyType },
+						Enumerable.Range(0, 10).Select(n =>
+							new LinqDataTypes
+							{
+								ID = 4000 + n,
+								MoneyValue = 1000m + n,
+								DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+								BoolValue = true,
+								GuidValue = TestData.SequentialGuid(n),
+								SmallIntValue = (short)n
+							}
+						));
+				}
+				finally
+				{
+					await db.GetTable<LinqDataTypes>().DeleteAsync(p => p.ID >= 4000);
 				}
 			}
 		}
@@ -233,218 +228,206 @@ namespace Tests.DataProvider
 		[Test]
 		public void BulkCopyLinqTypesMultipleRows([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					db.BulkCopy(
-						new BulkCopyOptions
+				db.BulkCopy(
+					new BulkCopyOptions
+					{
+						BulkCopyType = BulkCopyType.MultipleRows,
+					},
+					Enumerable.Range(0, 10).Select(n =>
+						new DataTypes
 						{
-							BulkCopyType       = BulkCopyType.MultipleRows,
-						},
-						Enumerable.Range(0, 10).Select(n =>
-							new DataTypes
-							{
-								ID             = 4000 + n,
-								MoneyValue     = 1000m + n,
-								DateTimeValue  = new DateTime(2001, 1, 11, 1, 11, 21, 100),
-								DateTimeValue2 = new DateTime(2001, 1, 10, 1, 11, 21, 100),
-								BoolValue      = true,
-								GuidValue      = TestData.SequentialGuid(n),
-								BinaryValue    = new byte[] { (byte)n },
-								SmallIntValue  = (short)n,
-								IntValue       = n,
-								BigIntValue    = n,
-								StringValue    = n.ToString(),
-							}
-						));
-				}
-				finally
-				{
-					db.GetTable<DataTypes>().Delete(p => p.ID >= 4000);
-				}
+							ID = 4000 + n,
+							MoneyValue = 1000m + n,
+							DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+							DateTimeValue2 = new DateTime(2001, 1, 10, 1, 11, 21, 100),
+							BoolValue = true,
+							GuidValue = TestData.SequentialGuid(n),
+							BinaryValue = new byte[] { (byte)n },
+							SmallIntValue = (short)n,
+							IntValue = n,
+							BigIntValue = n,
+							StringValue = n.ToString(),
+						}
+					));
+			}
+			finally
+			{
+				db.GetTable<DataTypes>().Delete(p => p.ID >= 4000);
 			}
 		}
 
 		[Test]
 		public async Task BulkCopyLinqTypesMultipleRowsAsync([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					await db.BulkCopyAsync(
-						new BulkCopyOptions
+				await db.BulkCopyAsync(
+					new BulkCopyOptions
+					{
+						BulkCopyType = BulkCopyType.MultipleRows,
+					},
+					Enumerable.Range(0, 10).Select(n =>
+						new DataTypes
 						{
-							BulkCopyType       = BulkCopyType.MultipleRows,
-						},
-						Enumerable.Range(0, 10).Select(n =>
-							new DataTypes
-							{
-								ID             = 4000 + n,
-								MoneyValue     = 1000m + n,
-								DateTimeValue  = new DateTime(2001, 1, 11, 1, 11, 21, 100),
-								DateTimeValue2 = new DateTime(2001, 1, 10, 1, 11, 21, 100),
-								BoolValue      = true,
-								GuidValue      = TestData.SequentialGuid(n),
-								BinaryValue    = new byte[] { (byte)n },
-								SmallIntValue  = (short)n,
-								IntValue       = n,
-								BigIntValue    = n,
-								StringValue    = n.ToString(),
-							}
-						));
-				}
-				finally
-				{
-					await db.GetTable<DataTypes>().DeleteAsync(p => p.ID >= 4000);
-				}
+							ID = 4000 + n,
+							MoneyValue = 1000m + n,
+							DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+							DateTimeValue2 = new DateTime(2001, 1, 10, 1, 11, 21, 100),
+							BoolValue = true,
+							GuidValue = TestData.SequentialGuid(n),
+							BinaryValue = new byte[] { (byte)n },
+							SmallIntValue = (short)n,
+							IntValue = n,
+							BigIntValue = n,
+							StringValue = n.ToString(),
+						}
+					));
+			}
+			finally
+			{
+				await db.GetTable<DataTypes>().DeleteAsync(p => p.ID >= 4000);
 			}
 		}
 
 		[Test]
 		public void BulkCopyLinqTypesProviderSpecific([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					db.BulkCopy(
-						new BulkCopyOptions
+				db.BulkCopy(
+					new BulkCopyOptions
+					{
+						BulkCopyType = BulkCopyType.ProviderSpecific,
+					},
+					Enumerable.Range(0, 10).Select(n =>
+						new DataTypes
 						{
-							BulkCopyType       = BulkCopyType.ProviderSpecific,
-						},
-						Enumerable.Range(0, 10).Select(n =>
-							new DataTypes
-							{
-								ID             = 4000 + n,
-								MoneyValue     = 1000m + n,
-								DateTimeValue  = new DateTime(2001, 1, 11, 1, 11, 21, 100),
-								DateTimeValue2 = new DateTime(2001, 1, 10, 1, 11, 21, 100),
-								BoolValue      = true,
-								GuidValue      = TestData.SequentialGuid(n),
-								BinaryValue    = new byte[] { (byte)n },
-								SmallIntValue  = (short)n,
-								IntValue       = n,
-								BigIntValue    = n,
-								StringValue    = n.ToString(),
-							}
-						));
-				}
-				finally
-				{
-					db.GetTable<DataTypes>().Delete(p => p.ID >= 4000);
-				}
+							ID = 4000 + n,
+							MoneyValue = 1000m + n,
+							DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+							DateTimeValue2 = new DateTime(2001, 1, 10, 1, 11, 21, 100),
+							BoolValue = true,
+							GuidValue = TestData.SequentialGuid(n),
+							BinaryValue = new byte[] { (byte)n },
+							SmallIntValue = (short)n,
+							IntValue = n,
+							BigIntValue = n,
+							StringValue = n.ToString(),
+						}
+					));
+			}
+			finally
+			{
+				db.GetTable<DataTypes>().Delete(p => p.ID >= 4000);
 			}
 		}
 
 		[Test]
 		public async Task BulkCopyLinqTypesProviderSpecificAsync([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			try
 			{
-				try
-				{
-					await db.BulkCopyAsync(
-						new BulkCopyOptions
+				await db.BulkCopyAsync(
+					new BulkCopyOptions
+					{
+						BulkCopyType = BulkCopyType.ProviderSpecific,
+					},
+					Enumerable.Range(0, 10).Select(n =>
+						new DataTypes
 						{
-							BulkCopyType       = BulkCopyType.ProviderSpecific,
-						},
-						Enumerable.Range(0, 10).Select(n =>
-							new DataTypes
-							{
-								ID             = 4000 + n,
-								MoneyValue     = 1000m + n,
-								DateTimeValue  = new DateTime(2001, 1, 11, 1, 11, 21, 100),
-								DateTimeValue2 = new DateTime(2001, 1, 10, 1, 11, 21, 100),
-								BoolValue      = true,
-								GuidValue      = TestData.SequentialGuid(n),
-								BinaryValue    = new byte[] { (byte)n },
-								SmallIntValue  = (short)n,
-								IntValue       = n,
-								BigIntValue    = n,
-								StringValue    = n.ToString(),
-							}
-						));
-				}
-				finally
-				{
-					await db.GetTable<DataTypes>().DeleteAsync(p => p.ID >= 4000);
-				}
+							ID = 4000 + n,
+							MoneyValue = 1000m + n,
+							DateTimeValue = new DateTime(2001, 1, 11, 1, 11, 21, 100),
+							DateTimeValue2 = new DateTime(2001, 1, 10, 1, 11, 21, 100),
+							BoolValue = true,
+							GuidValue = TestData.SequentialGuid(n),
+							BinaryValue = new byte[] { (byte)n },
+							SmallIntValue = (short)n,
+							IntValue = n,
+							BigIntValue = n,
+							StringValue = n.ToString(),
+						}
+					));
+			}
+			finally
+			{
+				await db.GetTable<DataTypes>().DeleteAsync(p => p.ID >= 4000);
 			}
 		}
 
 		void BulkCopyAllTypes(string context, BulkCopyType bulkCopyType)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				db.CommandTimeout = 60;
+			using var db = GetDataConnection(context);
+			db.CommandTimeout = 60;
 
-				db.GetTable<AllType>().Delete(p => p.ID >= _allTypeses[0].ID);
+			db.GetTable<AllType>().Delete(p => p.ID >= _allTypeses[0].ID);
 
-				var keepIdentity = bulkCopyType == BulkCopyType.ProviderSpecific
+			var keepIdentity = bulkCopyType == BulkCopyType.ProviderSpecific
 					&& ((InformixDataProvider)db.DataProvider).Adapter.IsIDSProvider;
 
-				try
-				{
-					db.BulkCopy(
-						new BulkCopyOptions
-						{
-							BulkCopyType       = bulkCopyType,
-							KeepIdentity       = keepIdentity
-						},
-						_allTypeses);
+			try
+			{
+				db.BulkCopy(
+					new BulkCopyOptions
+					{
+						BulkCopyType = bulkCopyType,
+						KeepIdentity = keepIdentity
+					},
+					_allTypeses);
 
-					var ids = _allTypeses.Select(at => at.ID).ToArray();
+				var ids = _allTypeses.Select(at => at.ID).ToArray();
 
-					var list = db.GetTable<AllType>().Where(t => ids.Contains(t.ID)).OrderBy(t => t.ID).ToList();
+				var list = db.GetTable<AllType>().Where(t => ids.Contains(t.ID)).OrderBy(t => t.ID).ToList();
 
-					Assert.That(list, Has.Count.EqualTo(_allTypeses.Length));
+				Assert.That(list, Has.Count.EqualTo(_allTypeses.Length));
 
-					for (var i = 0; i < list.Count; i++)
-						CompareObject(db.MappingSchema, list[i], _allTypeses[i]);
-				}
-				finally
-				{
-					db.GetTable<AllType>().Delete(p => p.ID >= _allTypeses[0].ID);
-				}
+				for (var i = 0; i < list.Count; i++)
+					CompareObject(db.MappingSchema, list[i], _allTypeses[i]);
+			}
+			finally
+			{
+				db.GetTable<AllType>().Delete(p => p.ID >= _allTypeses[0].ID);
 			}
 		}
 
 		async Task BulkCopyAllTypesAsync(string context, BulkCopyType bulkCopyType)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				db.CommandTimeout = 60;
+			using var db = GetDataConnection(context);
+			db.CommandTimeout = 60;
 
-				await db.GetTable<AllType>().DeleteAsync(p => p.ID >= _allTypeses[0].ID);
+			await db.GetTable<AllType>().DeleteAsync(p => p.ID >= _allTypeses[0].ID);
 
-				var keepIdentity = bulkCopyType == BulkCopyType.ProviderSpecific
+			var keepIdentity = bulkCopyType == BulkCopyType.ProviderSpecific
 					&& ((InformixDataProvider)db.DataProvider).Adapter.IsIDSProvider;
 
-				try
-				{
-					await db.BulkCopyAsync(
-						new BulkCopyOptions
-						{
-							BulkCopyType = bulkCopyType,
-							KeepIdentity = keepIdentity
-						},
-						_allTypeses);
+			try
+			{
+				await db.BulkCopyAsync(
+					new BulkCopyOptions
+					{
+						BulkCopyType = bulkCopyType,
+						KeepIdentity = keepIdentity
+					},
+					_allTypeses);
 
-					var ids = _allTypeses.Select(at => at.ID).ToArray();
+				var ids = _allTypeses.Select(at => at.ID).ToArray();
 
-					var list = await db.GetTable<AllType>().Where(t => ids.Contains(t.ID)).OrderBy(t => t.ID).ToListAsync();
+				var list = await db.GetTable<AllType>().Where(t => ids.Contains(t.ID)).OrderBy(t => t.ID).ToListAsync();
 
-					Assert.That(list, Has.Count.EqualTo(_allTypeses.Length));
+				Assert.That(list, Has.Count.EqualTo(_allTypeses.Length));
 
-					for (var i = 0; i < list.Count; i++)
-						CompareObject(db.MappingSchema, list[i], _allTypeses[i]);
-				}
-				finally
-				{
-					await db.GetTable<AllType>().DeleteAsync(p => p.ID >= _allTypeses[0].ID);
-				}
+				for (var i = 0; i < list.Count; i++)
+					CompareObject(db.MappingSchema, list[i], _allTypeses[i]);
+			}
+			finally
+			{
+				await db.GetTable<AllType>().DeleteAsync(p => p.ID >= _allTypeses[0].ID);
 			}
 		}
 
@@ -496,31 +479,29 @@ namespace Tests.DataProvider
 		[Test]
 		public void CreateAllTypes([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<AllType>()
+					.HasTableName("AllTypeCreateTest")
+				.Build();
+
+			db.AddMappingSchema(ms);
+
+			try
 			{
-				var ms = new MappingSchema();
-
-				new FluentMappingBuilder(ms)
-					.Entity<AllType>()
-						.HasTableName("AllTypeCreateTest")
-					.Build();
-
-				db.AddMappingSchema(ms);
-
-				try
-				{
-					db.DropTable<AllType>();
-				}
-				catch
-				{
-				}
-
-				var table = db.CreateTable<AllType>();
-
-				table.ToList();
-
 				db.DropTable<AllType>();
 			}
+			catch
+			{
+			}
+
+			var table = db.CreateTable<AllType>();
+
+			table.ToList();
+
+			db.DropTable<AllType>();
 		}
 		#endregion
 	}

@@ -15,43 +15,53 @@ namespace LinqToDB.Internal.DataProvider.SapHana
 		#region LIKE
 
 		// https://help.sap.com/viewer/4fe29514fd584807ac9f2a04f6754767/2.0.01/en-US/20fa17f375191014a4d8d8cbfddfe340.html
-		          static   string[] HanaLikeCharactersToEscape = { "%", "_" };
-		public    override string[] LikeCharactersToEscape => HanaLikeCharactersToEscape;
+		static readonly string[] HanaLikeCharactersToEscape = { "%", "_" };
+		public override string[] LikeCharactersToEscape => HanaLikeCharactersToEscape;
 
 		#endregion
 
+		public override ISqlExpression ConvertSqlUnaryExpression(SqlUnaryExpression element)
+		{
+			if (element.Operation is SqlUnaryOperation.BitwiseNegation)
+				return new SqlFunction(element.Type, "BITNOT", element.Expr);
+
+			return base.ConvertSqlUnaryExpression(element);
+		}
+
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
-			switch (element.Operation)
+			return element.Operation switch
 			{
-				case "%":
-					return new SqlFunction(element.Type, "MOD", element.Expr1, element.Expr2);
-				case "&":
-					return new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2);
-				case "|":
-					return Sub(
+				"%" => new SqlFunction(element.Type, "MOD", element.Expr1, element.Expr2),
+				"&" => new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2),
+
+				"|" =>
+					Sub(
 						Add(element.Expr1, element.Expr2, element.SystemType),
 						new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2),
-						element.SystemType);
-				case "^": // (a + b) - BITAND(a, b) * 2
-					return Sub(
+						element.SystemType
+					),
+
+				// (a + b) - BITAND(a, b) * 2
+				"^" =>
+					Sub(
 						Add(element.Expr1, element.Expr2, element.SystemType),
 						Mul(new SqlFunction(element.Type, "BITAND", element.Expr1, element.Expr2), 2),
-						element.SystemType);
-				case "+":
-					return element.SystemType == typeof(string) ?
-						new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence) :
-						element;
-			}
+						element.SystemType
+					),
 
-			return base.ConvertSqlBinaryExpression(element);
+				"+" when element.SystemType == typeof(string) =>
+					new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence),
+
+				_ => base.ConvertSqlBinaryExpression(element),
+			};
 		}
 
 		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
 		{
 			if (expr is SqlValue
 				{
-					Value: uint or long or ulong or float or double or decimal
+					Value: uint or long or ulong or float or double or decimal,
 				} value)
 			{
 				expr = new SqlCastExpression(expr, value.ValueType, null, isMandatory: true);

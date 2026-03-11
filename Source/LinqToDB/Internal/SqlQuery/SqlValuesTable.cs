@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
+
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.Internal.SqlQuery
 {
@@ -96,7 +99,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 			// rows pre-build for remote context
 
-			if (!(Source?.EvaluateExpression(context) is IEnumerable source))
+			if (Source?.EvaluateExpression(context) is not IEnumerable source)
 				throw new LinqToDBException($"Source must be enumerable: {Source}");
 
 			var rows = new List<List<ISqlExpression>>();
@@ -148,13 +151,13 @@ namespace LinqToDB.Internal.SqlQuery
 
 		#region ISqlExpression
 
-		public override bool CanBeNullable(NullabilityContext nullability) => throw new NotImplementedException();
+		public override bool CanBeNullable(NullabilityContext nullability) => throw new NotSupportedException();
 
-		public override int Precedence => throw new NotImplementedException();
+		public override int Precedence => throw new NotSupportedException();
 
 		public override Type SystemType => typeof(object);
 
-		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer) => throw new NotImplementedException();
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer) => throw new NotSupportedException();
 
 		#endregion
 
@@ -240,10 +243,13 @@ namespace LinqToDB.Internal.SqlQuery
 			return hash.ToHashCode();
 		}
 
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlValuesTable(this);
+
 		#endregion
 
 		#region IEquatable
-		public override bool Equals(ISqlExpression? other) => throw new NotImplementedException();
+		public override bool Equals(ISqlExpression? other) => throw new NotSupportedException();
 		#endregion
 
 		public void Modify(ISqlExpression? source)

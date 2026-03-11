@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
 
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlQuery
 {
@@ -10,7 +12,7 @@ namespace LinqToDB.SqlQuery
 		{
 			Rows,
 			Range,
-			Groups
+			Groups,
 		}
 
 		public SqlFrameClause(FrameTypeKind frameType, SqlFrameBoundary start, SqlFrameBoundary end)
@@ -74,14 +76,11 @@ namespace LinqToDB.SqlQuery
 
 		public override int GetHashCode()
 		{
-			unchecked
-			{
-				var hashCode = FrameType.GetHashCode();
-				hashCode = (hashCode * 397) ^ Start.GetHashCode();
-				hashCode = (hashCode * 397) ^ End.GetHashCode();
-				return hashCode;
-			}
+			return HashCode.Combine(FrameType, Start, End);
 		}
+
+		[DebuggerStepThrough]
+		public override IQueryElement Accept(QueryElementVisitor visitor) => visitor.VisitSqlFrameClause(this);
 
 		public void Modify(SqlFrameBoundary start, SqlFrameBoundary end)
 		{

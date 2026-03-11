@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 using LinqToDB;
@@ -71,8 +72,6 @@ namespace LinqToDB.Internal.SqlProvider
 			// provider specific query correction
 			statement = FinalizeStatement(statement, evaluationContext, dataOptions, mappingSchema);
 
-//statement.EnsureFindTables();
-
 			return statement;
 		}
 
@@ -83,14 +82,12 @@ namespace LinqToDB.Internal.SqlProvider
 			if (statement is SqlInsertStatement insertStatement)
 			{
 				var tables = insertStatement.SelectQuery.From.Tables;
-				var isSelfInsert =
-					tables.Count     == 0 ||
-					tables.Count     == 1 &&
-					tables[0].Source == insertStatement.Insert.Into;
+				var isSelfInsert = tables.Count == 0
+					|| (tables.Count == 1 && tables[0].Source == insertStatement.Insert.Into);
 
 				if (isSelfInsert)
 				{
-					if (insertStatement.SelectQuery.IsSimple || insertStatement.SelectQuery.From.Tables.Count == 0)
+					if (insertStatement.SelectQuery is { IsSimple: true } or { From.Tables.Count: 0 })
 					{
 						// simplify insert
 						//
@@ -163,7 +160,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (path.Count > 2)
 				return false;
 
-			var result = path.All(e =>
+			var result = path.TrueForAll(e =>
 			{
 				return e switch
 				{
@@ -263,10 +260,8 @@ namespace LinqToDB.Internal.SqlProvider
 				{
 					statement.Update.TableSource = tableSource;
 
-					var forceWrapping = wrapForOutput && statement.Output != null &&
-										(statement.SelectQuery.From.Tables.Count != 1 ||
-										 statement.SelectQuery.From.Tables.Count          == 1 &&
-										 statement.SelectQuery.From.Tables[0].Joins.Count == 0);
+					var forceWrapping = wrapForOutput && statement.Output != null
+						&& statement.SelectQuery.From.Tables is [{ Joins.Count: 0 }] or { Count: not 1 };
 
 					if (forceWrapping || !IsCompatibleForUpdate(queryPath))
 					{
@@ -438,7 +433,7 @@ namespace LinqToDB.Internal.SqlProvider
 			{
 			}
 
-			protected override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
+			protected internal override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
 			{
 				var newElement = base.VisitSqlSelectClause(element);
 
@@ -465,7 +460,7 @@ namespace LinqToDB.Internal.SqlProvider
 				return element;
 			}
 
-			protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
+			protected internal override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 			{
 				base.VisitExprExprPredicate(predicate);
 
@@ -479,7 +474,7 @@ namespace LinqToDB.Internal.SqlProvider
 				return predicate;
 			}
 
-			protected override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
+			protected internal override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
 			{
 				var saveUpdateSelect = _updateSelect;
 				_updateSelect = element.SelectQuery;
@@ -666,7 +661,7 @@ namespace LinqToDB.Internal.SqlProvider
 									resultExpression = field;
 									if (field.Table != originalTable)
 									{
-										var newField = (originalTable as SqlTable)?.Fields.FirstOrDefault(f => f.PhysicalName == field.PhysicalName);
+										var newField = (originalTable as SqlTable)?.Fields.Find(f => string.Equals(f.PhysicalName, field.PhysicalName, StringComparison.Ordinal));
 										if (newField != null)
 										{
 											resultExpression = newField;
@@ -705,7 +700,7 @@ namespace LinqToDB.Internal.SqlProvider
 			}
 		}
 
-		sealed class CteCollectorVisitor : SqlQueryVisitor
+		sealed class CteCollectorVisitor : QueryElementVisitor
 		{
 			public sealed class CteDependencyHolder
 			{
@@ -713,17 +708,17 @@ namespace LinqToDB.Internal.SqlProvider
 				public HashSet<CteClause>? DependsOn { get; private set; }
 
 				public CteDependencyHolder(CteClause cteClause)
-		{
+				{
 					CteClause = cteClause;
 				}
 
 				public bool AddDependency(CteClause cteClause)
-			{
-					if (ReferenceEquals(CteClause, cteClause))
 				{
+					if (ReferenceEquals(CteClause, cteClause))
+					{
 						CteClause.IsRecursive = true;
 						return false;
-				}
+					}
 
 					DependsOn ??= new HashSet<CteClause>();
 					DependsOn.Add(cteClause);
@@ -735,7 +730,7 @@ namespace LinqToDB.Internal.SqlProvider
 			Dictionary<CteClause, CteDependencyHolder>? _foundCtes;
 			Stack<CteDependencyHolder>?                  _currentCteStack;
 
-			public CteCollectorVisitor() : base(VisitMode.ReadOnly, null)
+			public CteCollectorVisitor() : base(VisitMode.ReadOnly)
 			{
 			}
 
@@ -745,47 +740,47 @@ namespace LinqToDB.Internal.SqlProvider
 				_currentCteStack = null;
 				Visit(statement);
 				return _foundCtes;
-		}
-
-			public override void Cleanup()
-		{
-				base.Cleanup();
-
-				_foundCtes       = null;
-				_currentCteStack = null;
 			}
 
-			protected override IQueryElement VisitSqlWithClause(SqlWithClause element)
+			public override void Cleanup()
+			{
+				_foundCtes       = null;
+				_currentCteStack = null;
+
+				base.Cleanup();
+			}
+
+			protected internal override IQueryElement VisitSqlWithClause(SqlWithClause element)
 			{
 				return element;
 			}
 
-			protected override IQueryElement VisitSqlCteTable(SqlCteTable element)
-				{
+			protected internal override IQueryElement VisitSqlCteTable(SqlCteTable element)
+			{
 				var cteClause = element.Cte;
 
 				CteDependencyHolder? holder    = null;
 
 				if (cteClause != null)
-						{
+				{
 					_foundCtes ??= new();
 					if (!_foundCtes.TryGetValue(cteClause, out holder))
-							{
+					{
 						cteClause.IsRecursive = false;
 						holder                = new CteDependencyHolder(cteClause);
 						_foundCtes.Add(cteClause, holder);
-							}
-						}
+					}
+				}
 
 				_currentCteStack ??= new Stack<CteDependencyHolder>();
 				if (holder != null)
-						{
+				{
 					foreach (var h in _currentCteStack)
-							{
+					{
 						// recursion found
 						if (!h.AddDependency(holder.CteClause))
 							return element;
-							}
+					}
 
 					_currentCteStack.Push(holder);
 				}
@@ -796,41 +791,41 @@ namespace LinqToDB.Internal.SqlProvider
 					_currentCteStack.Pop();
 
 				return element;
-						}
-				}
+			}
+		}
 
 		protected void FinalizeCte(SqlStatement statement)
-				{
+		{
 			if (statement is not SqlStatementWithQueryBase select)
 				return;
 
 			IDictionary<CteClause, CteCollectorVisitor.CteDependencyHolder>? foundCtes;
 
 			using (var cteCollector = _cteCollectorVisitorPool.Allocate())
-						{
+			{
 				foundCtes = cteCollector.Value.FindCtes(statement);
-				}
+			}
 
 			if (foundCtes == null)
 			{
-					select.With = null;
+				select.With = null;
 			}
-				else
-				{
-					// TODO: Ideally if there is no recursive CTEs we can convert them to SubQueries
-					if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
-						throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");
+			else
+			{
+				// TODO: Ideally if there is no recursive CTEs we can convert them to SubQueries
+				if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
+					throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");
 
 				var ordered = TopoSorting.TopoSort(foundCtes.Keys, foundCtes, static (ctes, cteClause) => (ctes.TryGetValue(cteClause, out var h) ? h.DependsOn ?? [] : []))
 					.ToList();
 
-					Utils.MakeUniqueNames(ordered, null, static (n, a) => !ReservedWords.IsReserved(n), static c => c.Name, static (c, n, a) => c.Name = n,
-						static c => string.IsNullOrEmpty(c.Name) ? "CTE_1" : c.Name, StringComparer.OrdinalIgnoreCase);
+				Utils.MakeUniqueNames(ordered, null, static (n, a) => !ReservedWords.IsReserved(n), static c => c.Name, static (c, n, a) => c.Name = n,
+					static c => string.IsNullOrEmpty(c.Name) ? "CTE_1" : c.Name, StringComparer.OrdinalIgnoreCase);
 
-					select.With = new SqlWithClause();
-					select.With.Clauses.AddRange(ordered);
-				}
+				select.With = new SqlWithClause();
+				select.With.Clauses.AddRange(ordered);
 			}
+		}
 
 		protected static bool HasParameters(ISqlExpression expr)
 		{
@@ -881,7 +876,7 @@ namespace LinqToDB.Internal.SqlProvider
 								return idx;
 							});
 
-						var changed = ctx.WriteableValue || newExpr != expr.Expr;
+						var changed = ctx.WriteableValue || !string.Equals(newExpr, expr.Expr, StringComparison.Ordinal);
 
 						if (changed)
 							newExpression = new SqlExpression(expr.Type, newExpr, expr.Precedence, expr.Flags, expr.NullabilityType, null, newExpressions.ToArray());
@@ -943,7 +938,7 @@ namespace LinqToDB.Internal.SqlProvider
 			if (query.Select.HasModifier || !query.GroupBy.IsEmpty)
 				return true;
 
-			if (!query.Where.IsEmpty)
+			if (query.HasWhere)
 			{
 				if (QueryHelper.ContainsAggregationFunction(query.Where))
 					return true;
@@ -970,7 +965,7 @@ namespace LinqToDB.Internal.SqlProvider
 				var ts = query.From.Tables[i];
 				if (ts.Source == table)
 				{
-					if (!ts.Joins.All(j => j.JoinType is JoinType.Inner or JoinType.Cross))
+					if (!ts.Joins.TrueForAll(j => j.JoinType is JoinType.Inner or JoinType.Cross))
 						return false;
 						
 					source = ts;
@@ -996,7 +991,7 @@ namespace LinqToDB.Internal.SqlProvider
 
 					if (join.Table.Source == table)
 					{
-						if (ts.Joins.Skip(j + 1).Any(sj => QueryHelper.IsDependsOnSource(sj, table)))
+						if (ts.Joins.Skip(j + 1).Any(sj => QueryHelper.IsDependsOnSource(sj, join.Table)))
 							return false;
 
 						source = join.Table;
@@ -1004,7 +999,7 @@ namespace LinqToDB.Internal.SqlProvider
 						ts.Joins.RemoveAt(j);
 						query.Where.ConcatSearchCondition(join.Condition);
 
-						for (var sj = 0; j < join.Table.Joins.Count; j++)
+						for (var sj = 0; sj < join.Table.Joins.Count; sj++)
 						{
 							ts.Joins.Insert(j + sj, join.Table.Joins[sj]);
 						}
@@ -1031,7 +1026,8 @@ namespace LinqToDB.Internal.SqlProvider
 				{
 					SqlTable table when table       == ut => false,
 					SqlField field when field.Table == ut => false,
-					_ => true,
+					SqlCteTable                           => false,
+					_                                     => true,
 				};
 			});
 
@@ -1056,13 +1052,13 @@ namespace LinqToDB.Internal.SqlProvider
 			replaceTree = replaceTree
 				.Where(pair =>
 				{
-					if (pair.Key is SqlTable table)
-						return table != exceptTable;
-					if (pair.Key is SqlColumn)
-						return true;
-					if (pair.Key is SqlField field)
-						return field.Table != exceptTable;
-					return false;
+					return pair.Key switch
+					{
+						SqlTable table => table != exceptTable,
+						SqlColumn => true,
+						SqlField field => field.Table != exceptTable,
+						_ => false,
+					};
 				})
 				.ToDictionary(pair => pair.Key, pair => pair.Value);
 
@@ -1138,7 +1134,7 @@ namespace LinqToDB.Internal.SqlProvider
 			yield return (target, source, null);
 		}
 
-		static IEnumerable<(ISqlExpression, ISqlExpression)> GenerateRows(
+		static IEnumerable<ISqlExpression> GenerateRows(
 			ISqlExpression                            target,
 			ISqlExpression                            source,
 			Dictionary<IQueryElement, IQueryElement>? mainTree,
@@ -1152,10 +1148,10 @@ namespace LinqToDB.Internal.SqlProvider
 
 				for (var i = 0; i < targetRow.Values.Length; i++)
 				{
-					var tagetRowValue  = targetRow.Values[i];
+					var targetRowValue = targetRow.Values[i];
 					var sourceRowValue = sourceRow.Values[i];
 
-					foreach (var r in GenerateRows(tagetRowValue, sourceRowValue, mainTree, innerTree, selectQuery))
+					foreach (var r in GenerateRows(targetRowValue, sourceRowValue, mainTree, innerTree, selectQuery))
 						yield return r;
 				}
 			}
@@ -1164,7 +1160,7 @@ namespace LinqToDB.Internal.SqlProvider
 				var ex         = RemapCloned(source, mainTree, innerTree);
 				var columnExpr = selectQuery.Select.AddNewColumn(ex);
 
-				yield return (target, columnExpr);
+				yield return target;
 			}
 		}
 
@@ -1216,20 +1212,12 @@ namespace LinqToDB.Internal.SqlProvider
 
 				var newUpdateStatement = new SqlUpdateStatement(sql);
 
-				if (clonedQuery == null)
-					clonedQuery = CloneQuery(updateStatement.SelectQuery, null, out replaceTree);
+				clonedQuery ??= CloneQuery(updateStatement.SelectQuery, null, out replaceTree);
 
-				SqlTable? tableToCompare = null;
 				if (replaceTree!.TryGetValue(updateStatement.Update.Table!, out var newTable))
 				{
-					tableToCompare = (SqlTable)newTable;
-				}
-
-				if (tableToCompare != null)
-				{
 					replaceTree = CorrectReplaceTree(replaceTree, updateStatement.Update.Table);
-
-					ApplyUpdateTableComparison(clonedQuery, updateStatement.Update, tableToCompare, dataOptions);
+					ApplyUpdateTableComparison(clonedQuery, updateStatement.Update, (SqlTable)newTable, dataOptions);
 				}
 
 				CorrectUpdateSetters(updateStatement);
@@ -1269,7 +1257,7 @@ namespace LinqToDB.Internal.SqlProvider
 						var innerQuery = CloneQuery(clonedQuery, updateStatement.Update.Table, out var innerTree);
 						innerQuery.Select.Columns.Clear();
 
-						var rows = new List<(ISqlExpression, ISqlExpression)>(updateStatement.Update.Items.Count);
+						var rows = new List<ISqlExpression>(updateStatement.Update.Items.Count);
 						foreach (var item in updateStatement.Update.Items)
 						{
 							if (item.Expression == null)
@@ -1278,7 +1266,7 @@ namespace LinqToDB.Internal.SqlProvider
 							rows.AddRange(GenerateRows(item.Column, item.Expression, replaceTree, innerTree, innerQuery));
 						}
 
-						var sqlRow        = new SqlRowExpression(rows.Select(r => r.Item1).ToArray());
+						var sqlRow        = new SqlRowExpression(rows.ToArray());
 						var newUpdateItem = new SqlSetExpression(sqlRow, innerQuery);
 
 						newUpdateStatement.Update.Items.Clear();
@@ -1397,9 +1385,17 @@ namespace LinqToDB.Internal.SqlProvider
 					return e;
 				});
 
-				if (item.Column is SqlRowExpression && item.Expression is SelectQuery subQuery)
+				if (item is { Column: SqlRowExpression, Expression: SelectQuery subQuery })
 				{
-					if (subQuery.Select.Columns is [var column])
+					if (subQuery.HasNoTables)
+					{
+						if (SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.UpdateLiteral))
+						{
+							var rowValues = subQuery.Select.Columns.Select(c => c.Expression).ToArray();
+							item.Expression = new SqlRowExpression(rowValues);
+						}
+					}
+					else if (subQuery.Select.Columns is [var column])
 					{
 						if (column.Expression is SelectQuery { From.Tables: [] } columnQuery)
 						{
@@ -1648,7 +1644,7 @@ namespace LinqToDB.Internal.SqlProvider
 					if (param.NeedsCast)
 						return true;
 
-					if (param.Type.SystemType.IsNullableOrReferenceType())
+					if (param.Type.SystemType.IsNullableOrReferenceType)
 						return true;
 
 					return false;
@@ -1797,12 +1793,12 @@ namespace LinqToDB.Internal.SqlProvider
 
 				if (supportsParameter)
 				{
-					if (takeExpr.ElementType != QueryElementType.SqlParameter && takeExpr.ElementType != QueryElementType.SqlValue)
+					if (takeExpr.ElementType is not QueryElementType.SqlParameter and not QueryElementType.SqlValue)
 					{
 						var takeValue = takeExpr.EvaluateExpression(optimizationContext.EvaluationContext)!;
 						var takeParameter = new SqlParameter(new DbDataType(takeValue.GetType()), "take", takeValue)
 						{
-							IsQueryParameter = dataOptions.LinqOptions.ParameterizeTakeSkip && !QueryHelper.NeedParameterInlining(takeExpr)
+							IsQueryParameter = dataOptions.LinqOptions.ParameterizeTakeSkip && !QueryHelper.NeedParameterInlining(takeExpr),
 						};
 						takeExpr = takeParameter;
 					}
@@ -1818,12 +1814,12 @@ namespace LinqToDB.Internal.SqlProvider
 
 				if (supportsParameter)
 				{
-					if (skipExpr.ElementType != QueryElementType.SqlParameter && skipExpr.ElementType != QueryElementType.SqlValue)
+					if (skipExpr.ElementType is not QueryElementType.SqlParameter and not QueryElementType.SqlValue)
 					{
 						var skipValue = skipExpr.EvaluateExpression(optimizationContext.EvaluationContext)!;
 						var skipParameter = new SqlParameter(new DbDataType(skipValue.GetType()), "skip", skipValue)
 						{
-							IsQueryParameter = dataOptions.LinqOptions.ParameterizeTakeSkip && !QueryHelper.NeedParameterInlining(skipExpr)
+							IsQueryParameter = dataOptions.LinqOptions.ParameterizeTakeSkip && !QueryHelper.NeedParameterInlining(skipExpr),
 						};
 						skipExpr = skipParameter;
 					}
@@ -1938,7 +1934,7 @@ namespace LinqToDB.Internal.SqlProvider
 						orderByItems = context.supportsEmptyOrderBy ? [] : [new SqlOrderByItem(new SqlFragment("(SELECT NULL)"), false, false)];
 
 					var orderBy = string.Join(", ",
-						orderByItems.Select(static (oi, i) => oi.IsDescending ? FormattableString.Invariant($"{{{i}}} DESC") : FormattableString.Invariant($"{{{i}}}")));
+						orderByItems.Select(static (oi, i) => oi.IsDescending ? string.Create(CultureInfo.InvariantCulture, $"{{{i}}} DESC") : string.Create(CultureInfo.InvariantCulture, $"{{{i}}}")));
 
 					var parameters = orderByItems.Select(static oi => oi.Expression).ToArray();
 
@@ -2021,7 +2017,7 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						// if multitable query has joins, we need to move tables to subquery and left joins on the current level
 						//
-						if (sqlQuery.From.Tables.Any(t => t.Joins.Count > 0))
+						if (sqlQuery.From.Tables.Exists(t => t.Joins.Count > 0))
 						{
 							var sub = new SelectQuery { DoNotRemove = true };
 
@@ -2043,7 +2039,7 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						var allJoins = sqlQuery.From.Tables.SelectMany(t => t.Joins).ToList();
 
-						if (allJoins.Any(j => j.JoinType == JoinType.Cross) && allJoins.Any(j => j.JoinType != JoinType.Cross))
+						if (allJoins.Exists(j => j.JoinType == JoinType.Cross) && allJoins.Exists(j => j.JoinType != JoinType.Cross))
 						{
 							var sub = new SelectQuery { DoNotRemove = true };
 
@@ -2095,7 +2091,7 @@ namespace LinqToDB.Internal.SqlProvider
 				return result;
 			}
 
-			protected override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
+			protected internal override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
 			{
 				if (_disableParameters)
 					sqlParameter.IsQueryParameter = false;

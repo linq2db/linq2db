@@ -174,7 +174,7 @@ namespace LinqToDB.Internal.DataProvider
 		/// workaround incorrect culture handling in provider.
 		/// </summary>
 		/// <param name="dataConnection">Current data connection object.</param>
-		/// <returns>Scoped execution disposable object or <c>null</c> if provider doesn't need scoped configuration.</returns>
+		/// <returns>Scoped execution disposable object or <see langword="null"/> if provider doesn't need scoped configuration.</returns>
 		public virtual IExecutionScope? ExecuteScope(DataConnection dataConnection) => null;
 
 		#endregion

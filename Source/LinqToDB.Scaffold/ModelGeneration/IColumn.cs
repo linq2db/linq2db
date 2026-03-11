@@ -8,7 +8,6 @@ namespace LinqToDB.Tools.ModelGeneration
 	public interface IColumn : IProperty
 	{
 		public string?    ColumnName         { get; set; } // Column name in database
-		public bool       IsNullable         { get; set; }
 		public bool       IsIdentity         { get; set; }
 		public string?    ColumnType         { get; set; } // Type of the column in database
 		public string?    DataType           { get; set; }
