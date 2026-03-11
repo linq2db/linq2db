@@ -41,7 +41,7 @@ namespace LinqToDB.Internal.SqlProvider
 		}
 
 		/// <summary>
-		/// Moves nested joins to upper level when outer join type is compatible with first nested join type.
+		/// Moves nested joins to upper level.
 		/// </summary>
 		public static void UnnestJoins(IQueryElement statement)
 		{
@@ -86,6 +86,20 @@ namespace LinqToDB.Internal.SqlProvider
 										continue;
 									}
 								}
+
+								// check if any remaining (not moved) sibling depends on this child's sources
+								var hasDependentSibling = false;
+								for (var k = cj + 1; k < childJoins.Count; k++)
+								{
+									if (QueryHelper.IsDependsOnSources(childJoins[k], currentJoinSources))
+									{
+										hasDependentSibling = true;
+										break;
+									}
+								}
+
+								if (hasDependentSibling)
+									continue;
 
 								if (parent.JoinType == JoinType.Left)
 								{
