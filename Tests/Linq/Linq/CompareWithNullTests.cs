@@ -91,9 +91,9 @@ namespace Tests.Linq
 
 		[Test]
 		public void Functional(
-			// This test can run in all providers, but it adds 72 tests per provider.
+			// This test can run in all providers, but it adds 108 tests per provider.
 			// As the behaviour is the same everywhere, we can speed things up by
-			// only running for in a single provider.
+			// only running in a single provider.
 			[IncludeDataSources(ProviderName.SQLiteMS)] string context,
 			[Values]                                    CompareNulls compareNulls,
 			// Use an indirect index into the test case data instead of [ValuesSource].
@@ -130,7 +130,7 @@ namespace Tests.Linq
 			else
 			{
 				// As this test uses DB columns only, no parameters, LikeSql and LikeSqlExceptParameters should behave the same way.
-				// See `Options` test below for a test case that differentiate them.
+				// See `Options` test below for a test case that differentiates them.
 				result.ShouldBeEquivalentTo(withoutNulls);
 			}
 		}
