@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
@@ -2134,6 +2136,47 @@ namespace Tests.xUpdate
 			db.Types
 				.Where(p => p.ID == -1)
 				.Update(p => new LinqDataTypes { BoolValue = p.BoolValue || someExternalDependency > 0 });
+		}
+
+		[Test]
+		public void Issue5413Test([IncludeDataSources(TestProvName.Oracle19Managed)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var _ = new DeletePerson(db);
+
+			var id = ConvertTo<int>.From(
+				db.Person.InsertWithIdentity(() => new() { FirstName = "Cookie", LastName = "Monster", Gender = Gender.Male })
+			);
+
+			int count = db.Person
+				.Where(x => x.ID == id)
+				.Set(
+					x => Sql.Row(x.FirstName, x.LastName),
+					x => (
+					    from start in db.SelectQuery(() => 1)
+						from canChange in db.SelectQuery(() => x.ID > -1).DefaultIfEmpty()
+						select Sql.Row(
+							canChange ? "Tooth" : x.FirstName,
+							canChange ? "Fairy" : x.LastName
+						)
+					).Single()
+				)
+				.Update();
+
+			// Ensure that query compiles and runs
+			Assert.That(count, Is.EqualTo(1));
+
+#if NET8_0_OR_GREATER
+			// Ensure the target table is only once in query, and not repeated in WHERE or subquery
+			int tableReferences = Regex.Count(LastQuery!, @"Person""\s", RegexOptions.IgnoreCase);
+			Assert.That(tableReferences, Is.EqualTo(1));
+#endif
+
+			// Sanity verification
+			var person = db.Person.First(x => x.ID == id);
+			Assert.That(person.FirstName, Is.EqualTo("Tooth"));
+			Assert.That(person.LastName, Is.EqualTo("Fairy"));
 		}
 	}
 }
