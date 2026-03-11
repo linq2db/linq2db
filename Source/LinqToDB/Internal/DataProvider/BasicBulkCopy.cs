@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -242,7 +242,7 @@ namespace LinqToDB.Internal.DataProvider
 
 			var sqlTable = new SqlTable(typeof(T), null, tableName)
 			{
-				TableOptions = options.TableOptions.Or(table.TableOptions)
+				TableOptions = options.TableOptions.Or(table.TableOptions),
 			};
 
 			return sqlBuilder

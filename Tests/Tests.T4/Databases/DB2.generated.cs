@@ -92,10 +92,10 @@ namespace DB2DataContext
 			public ITable<KeepIdentityTest>  KeepIdentityTests   { get { return _dataContext.GetTable<KeepIdentityTest>(); } }
 			public ITable<LinqDataType>      LinqDataTypes       { get { return _dataContext.GetTable<LinqDataType>(); } }
 			public ITable<MASTERTABLE>       Mastertables        { get { return _dataContext.GetTable<MASTERTABLE>(); } }
+			public ITable<PERSONVIEW>        Personviews         { get { return _dataContext.GetTable<PERSONVIEW>(); } }
 			public ITable<Parent>            Parents             { get { return _dataContext.GetTable<Parent>(); } }
 			public ITable<Patient>           Patients            { get { return _dataContext.GetTable<Patient>(); } }
 			public ITable<Person>            People              { get { return _dataContext.GetTable<Person>(); } }
-			public ITable<PERSONVIEW>        Personviews         { get { return _dataContext.GetTable<PERSONVIEW>(); } }
 			public ITable<SLAVETABLE>        Slavetables         { get { return _dataContext.GetTable<SLAVETABLE>(); } }
 			public ITable<TestIdentity>      TestIdentities      { get { return _dataContext.GetTable<TestIdentity>(); } }
 			public ITable<TestMerge1>        TestMerge1          { get { return _dataContext.GetTable<TestMerge1>(); } }
@@ -281,6 +281,16 @@ namespace DB2DataContext
 			#endregion
 		}
 
+		[Table(Schema="DB2INST1", Name="PERSONVIEW", IsView=true)]
+		public partial class PERSONVIEW
+		{
+			[Column(DbType="INTEGER",      DataType=LinqToDB.DataType.Int32),              NotNull    ] public int     PersonID   { get; set; } // INTEGER
+			[Column(DbType="VARCHAR(50)",  DataType=LinqToDB.DataType.VarChar, Length=50), NotNull    ] public string  FirstName  { get; set; } = null!; // VARCHAR(50)
+			[Column(DbType="VARCHAR(50)",  DataType=LinqToDB.DataType.VarChar, Length=50), NotNull    ] public string  LastName   { get; set; } = null!; // VARCHAR(50)
+			[Column(DbType="VARCHAR(50)",  DataType=LinqToDB.DataType.VarChar, Length=50),    Nullable] public string? MiddleName { get; set; } // VARCHAR(50)
+			[Column(DbType="CHARACTER(1)", DataType=LinqToDB.DataType.Char,    Length=1),  NotNull    ] public char    Gender     { get; set; } // CHARACTER(1)
+		}
+
 		[Table(Schema="DB2INST1", Name="Parent")]
 		public partial class Parent
 		{
@@ -329,16 +339,6 @@ namespace DB2DataContext
 			public DB2INST1Schema.Patient? Patient { get; set; }
 
 			#endregion
-		}
-
-		[Table(Schema="DB2INST1", Name="PERSONVIEW", IsView=true)]
-		public partial class PERSONVIEW
-		{
-			[Column(DbType="INTEGER",      DataType=LinqToDB.DataType.Int32),              NotNull    ] public int     PersonID   { get; set; } // INTEGER
-			[Column(DbType="VARCHAR(50)",  DataType=LinqToDB.DataType.VarChar, Length=50), NotNull    ] public string  FirstName  { get; set; } = null!; // VARCHAR(50)
-			[Column(DbType="VARCHAR(50)",  DataType=LinqToDB.DataType.VarChar, Length=50), NotNull    ] public string  LastName   { get; set; } = null!; // VARCHAR(50)
-			[Column(DbType="VARCHAR(50)",  DataType=LinqToDB.DataType.VarChar, Length=50),    Nullable] public string? MiddleName { get; set; } // VARCHAR(50)
-			[Column(DbType="CHARACTER(1)", DataType=LinqToDB.DataType.Char,    Length=1),  NotNull    ] public char    Gender     { get; set; } // CHARACTER(1)
 		}
 
 		[Table(Schema="DB2INST1", Name="SLAVETABLE")]

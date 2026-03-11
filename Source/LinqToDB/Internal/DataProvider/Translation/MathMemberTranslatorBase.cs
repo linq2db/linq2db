@@ -338,7 +338,7 @@ namespace LinqToDB.Internal.DataProvider.Translation
 
 			ISqlExpression? result = null;
 
-			if (precision == null || precision is SqlValue { Value: 0 })
+			if (precision is null or SqlValue { Value: 0 })
 			{
 				/*
 					CASE

@@ -1,7 +1,7 @@
 ﻿namespace LinqToDB.CodeModel
 {
 	/// <summary>
-	/// <c>this</c> reference.
+	/// <see langword="this"/> reference.
 	/// </summary>
 	public sealed class CodeThis : ICodeExpression
 	{

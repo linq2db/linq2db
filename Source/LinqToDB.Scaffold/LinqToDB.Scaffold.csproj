@@ -3,9 +3,6 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.Scaffold</AssemblyName>
 		<RootNamespace>LinqToDB</RootNamespace>
-
-		<!--temporary till Feb.2026 SDK release-->
-		<RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Nuget">

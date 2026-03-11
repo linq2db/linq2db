@@ -68,7 +68,7 @@ namespace LinqToDB.Internal.DataProvider.SqlServer.Translation
 							if (!info.IsNullFiltered && nullValuesAsEmptyString)
 								value = factory.Coalesce(value, factory.Value(valueType, string.Empty));
 
-							if (info.FilterCondition != null && !info.FilterCondition.IsTrue())
+							if (info is { FilterCondition.IsTrue: false })
 							{
 								value = factory.Condition(info.FilterCondition, value, factory.Null(valueType));
 

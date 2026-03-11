@@ -38,6 +38,12 @@ namespace Cli.Default.SqlServerNorthwind
 
 		#region Associations
 		/// <summary>
+		/// FK_EmployeeTerritories_Employees backreference
+		/// </summary>
+		[Association(ThisKey = nameof(EmployeeId), OtherKey = nameof(EmployeeTerritory.EmployeeId))]
+		public IEnumerable<EmployeeTerritory> EmployeeTerritories { get; set; } = null!;
+
+		/// <summary>
 		/// FK_Employees_Employees
 		/// </summary>
 		[Association(ThisKey = nameof(ReportsTo), OtherKey = nameof(EmployeeId))]
@@ -48,12 +54,6 @@ namespace Cli.Default.SqlServerNorthwind
 		/// </summary>
 		[Association(ThisKey = nameof(EmployeeId), OtherKey = nameof(ReportsTo))]
 		public IEnumerable<Employee> Employees1 { get; set; } = null!;
-
-		/// <summary>
-		/// FK_EmployeeTerritories_Employees backreference
-		/// </summary>
-		[Association(ThisKey = nameof(EmployeeId), OtherKey = nameof(EmployeeTerritory.EmployeeId))]
-		public IEnumerable<EmployeeTerritory> EmployeeTerritories { get; set; } = null!;
 
 		/// <summary>
 		/// FK_Orders_Employees backreference

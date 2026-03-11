@@ -114,7 +114,7 @@ Changes to this file may cause incorrect behavior and will be lost if the code i
 				Dictionary<(SqlObjectName from, SqlObjectName to), List<ISet<ForeignKeyColumnMapping>>>? duplicateFKs = null;
 
 				foreach (var fk in _interceptors.GetForeignKeys(_schemaProvider.GetForeignKeys())
-					.OrderBy(t => t.Name))
+					.OrderBy(t => t.Name, StringComparer.Ordinal))
 				{
 					// detect and skip duplicate foreign keys
 					if (_options.Schema.IgnoreDuplicateForeignKeys)

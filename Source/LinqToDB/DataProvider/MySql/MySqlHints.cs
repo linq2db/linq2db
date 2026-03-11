@@ -632,7 +632,7 @@ namespace LinqToDB.DataProvider.MySql
 				var hint    = (string)((SqlValue)sqlQueryExtension.Arguments["hint"]).Value!;
 				var idCount = (int)   ((SqlValue)sqlQueryExtension.Arguments["tableIDs.Count"]).Value!;
 
-				if ((hint is SubQuery.ForShare || idCount > 0) && sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.MariaDB10))
+				if ((hint is SubQuery.ForShare || idCount > 0) && sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.MariaDB10, StringComparer.Ordinal))
 					stringBuilder.Append("-- ");
 
 				stringBuilder.Append(hint);
@@ -644,7 +644,7 @@ namespace LinqToDB.DataProvider.MySql
 					else if (i > 0)
 						stringBuilder.Append(", ");
 
-					var id    = (Sql.SqlID)((SqlValue)sqlQueryExtension.Arguments[FormattableString.Invariant($"tableIDs.{i}")]).Value!;
+					var id    = (Sql.SqlID)((SqlValue)sqlQueryExtension.Arguments[string.Create(CultureInfo.InvariantCulture, $"tableIDs.{i}")]).Value!;
 					var alias = sqlBuilder.BuildSqlID(id);
 
 					stringBuilder.Append(alias);

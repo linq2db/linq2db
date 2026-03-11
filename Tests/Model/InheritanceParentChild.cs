@@ -18,8 +18,7 @@ namespace Tests.Model
 
 		public override bool Equals(object? obj)
 		{
-			var other = obj as InheritanceParentBase;
-			if (other == null)
+			if (obj is not InheritanceParentBase other)
 				return false;
 
 			if (ReferenceEquals(this, other))
@@ -61,8 +60,7 @@ namespace Tests.Model
 
 		public override bool Equals(object? obj)
 		{
-			var other = obj as InheritanceChildBase;
-			if (other == null)
+			if (obj is not InheritanceChildBase other)
 				return false;
 
 			if (ReferenceEquals(this, other))

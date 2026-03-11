@@ -41,7 +41,7 @@ namespace LinqToDB.Remote.HttpClient.Server
 			if (builder.Services.All(s => s.ServiceType != typeof(ILinqService<TContext>)))
 				builder.Services.AddScoped<ILinqService<TContext>>(provider => new LinqService<TContext>(provider.GetRequiredService<IDataContextFactory<TContext>>())
 				{
-					AllowUpdates = allowUpdate
+					AllowUpdates = allowUpdate,
 				});
 
 			return builder.Services

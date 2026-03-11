@@ -20,12 +20,12 @@ namespace LinqToDB.Metadata
 		/// </summary>
 		public string?         Configuration             { get; set; }
 		/// <summary>
-		/// If <c>true</c>, only properties/fields with <see cref="Mapping.ColumnAttribute"/> will be mapped.
-		/// Default value: <c>true</c>.
+		/// If <see langword="true" />, only properties/fields with <see cref="Mapping.ColumnAttribute"/> will be mapped.
+		/// Default value: <see langword="true" />.
 		/// </summary>
 		public bool            IsColumnAttributeRequired { get; set; } = true;
 		/// <summary>
-		/// When <c>true</c>, mapped table is temporary table.
+		/// When <see langword="true" />, mapped table is temporary table.
 		/// </summary>
 		public bool            IsTemporary               { get; set; }
 		/// <summary>

@@ -22,16 +22,14 @@ namespace Tests.UserTests
 		[Test]
 		public void Issue2994Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var qryFlt = from p in db.Person
-							 join d in db.Doctor on p.FirstName equals d.Taxonomy
-							 join g in db.Doctor on p.LastName equals g.Taxonomy  // remove this and it also would work
-						select new Combined { p = p, d = d };
-				var qry = db.Person.Where(x => qryFlt.Any(y => y.p == x)).Set(x => x.LastName, "a").Update();
-				//var qry = db.Person.Where(x => qryFlt.Any(y => y.p.ID == x.ID)).Set(x => x.LastName, "a").Update(); // workin
-				var sql = ((DataConnection)db).LastQuery;
-			}
+			using var db = GetDataContext(context);
+			var qryFlt = from p in db.Person
+						 join d in db.Doctor on p.FirstName equals d.Taxonomy
+						 join g in db.Doctor on p.LastName equals g.Taxonomy  // remove this and it also would work
+						 select new Combined { p = p, d = d };
+			var qry = db.Person.Where(x => qryFlt.Any(y => y.p == x)).Set(x => x.LastName, "a").Update();
+			//var qry = db.Person.Where(x => qryFlt.Any(y => y.p.ID == x.ID)).Set(x => x.LastName, "a").Update(); // workin
+			var sql = ((DataConnection)db).LastQuery;
 		}
 	}
 }

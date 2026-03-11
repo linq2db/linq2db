@@ -50,36 +50,34 @@ namespace Tests.UserTests
 			TestProvName.AllInformix)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
+			using var db = GetDataConnection(context);
+			var recordsBefore = db.GetTable<AllTypes>().Count();
+
+			var sp = db.DataProvider.GetSchemaProvider();
+
+			try
 			{
-				var recordsBefore = db.GetTable<AllTypes>().Count();
-
-				var sp = db.DataProvider.GetSchemaProvider();
-
-				try
+				var schemaName = TestUtils.GetSchemaName(db, context);
+				var schema     = sp.GetSchema(db, new GetSchemaOptions()
 				{
-					var schemaName = TestUtils.GetSchemaName(db, context);
-					var schema     = sp.GetSchema(db, new GetSchemaOptions()
-					{
-						GetTables       = false,
-						IncludedSchemas = schemaName != TestUtils.NO_SCHEMA_NAME ? new[] { schemaName } : null
-					});
+					GetTables       = false,
+					IncludedSchemas = schemaName != TestUtils.NO_SCHEMA_NAME ? new[] { schemaName } : null
+				});
 
-					var recordsAfter = db.GetTable<AllTypes>().Count();
-					using (Assert.EnterMultipleScope())
-					{
-						// schema request shouldn't execute procedure
-						Assert.That(recordsAfter, Is.EqualTo(recordsBefore));
-
-						// schema provider should find our procedure for real
-						Assert.That(schema.Procedures.Count(p => p.ProcedureName.ToUpperInvariant() == "ADDISSUE792RECORD"), Is.EqualTo(1));
-					}
-				}
-				finally
+				var recordsAfter = db.GetTable<AllTypes>().Count();
+				using (Assert.EnterMultipleScope())
 				{
-					// cleanup
-					db.GetTable<AllTypes>().Delete(_ => _.char20DataType == "issue792");
+					// schema request shouldn't execute procedure
+					Assert.That(recordsAfter, Is.EqualTo(recordsBefore));
+
+					// schema provider should find our procedure for real
+					Assert.That(schema.Procedures.Count(p => p.ProcedureName.ToUpperInvariant() == "ADDISSUE792RECORD"), Is.EqualTo(1));
 				}
+			}
+			finally
+			{
+				// cleanup
+				db.GetTable<AllTypes>().Delete(_ => _.char20DataType == "issue792");
 			}
 		}
 
@@ -142,14 +140,14 @@ namespace Tests.UserTests
 
 				var ex = Assert.Catch(() => sp.GetSchema(db, new GetSchemaOptions()
 				{
-					GetTables = false
+					GetTables = false,
 				}))!;
 
 				Assert.That(ex, Is.InstanceOf<InvalidOperationException>());
 				Assert.That(
-					ex.Message.Contains("requires the command to have a transaction")
-					|| ex.Message.Contains("команда имела транзакцию") //for those who accidentally installed a russian localization of Sql Server :)
-, Is.True);
+					ex.Message,
+					Does.Contain("requires the command to have a transaction")
+				);
 			}
 		}
 
@@ -165,7 +163,7 @@ namespace Tests.UserTests
 
 				var ex = Assert.Catch(() => sp.GetSchema(db, new GetSchemaOptions()
 				{
-					GetTables = false
+					GetTables = false,
 				}))!;
 
 				Assert.That(ex, Is.InstanceOf<LinqToDBException>());

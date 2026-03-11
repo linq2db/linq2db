@@ -75,21 +75,19 @@ namespace Tests.UserTests
 			ms.SetConverter<string, AnredeAuswahlliste>(s => new AnredeAuswahlliste(s));
 			ms.SetConverter<AnredeAuswahlliste, DataParameter>(v => new DataParameter("", v.Value));
 
-			using (var db = GetDataContext(context, ms))
-			using (var dataClasses = db.CreateLocalTable(items))
-			{
-				var simple = dataClasses
+			using var db = GetDataContext(context, ms);
+			using var dataClasses = db.CreateLocalTable(items);
+			var simple = dataClasses
 					.Where(m => m.Value == AnredeAuswahlliste.Frau)
 					.ToList();
 
-				Assert.That(simple, Has.Count.EqualTo(1));
+			Assert.That(simple, Has.Count.EqualTo(1));
 
-				var inList = dataClasses
+			var inList = dataClasses
 					.Where(m => m.Value!.In<AnredeAuswahlliste>(AnredeAuswahlliste.Frau, AnredeAuswahlliste.Herr))
 					.ToList();
 
-				Assert.That(inList, Has.Count.EqualTo(2));
-			}
+			Assert.That(inList, Has.Count.EqualTo(2));
 		}
 
 		[Test]
@@ -105,21 +103,19 @@ namespace Tests.UserTests
 			var builder = new FluentMappingBuilder(ms);
 			builder.Entity<DataClass>().Property(e => e.Value).HasConversion(v => v!.Value, s => new AnredeAuswahlliste(s)).Build();
 
-			using (var db = GetDataContext(context, ms))
-			using (var dataClasses = db.CreateLocalTable(items))
-			{
-				var simple = dataClasses
+			using var db = GetDataContext(context, ms);
+			using var dataClasses = db.CreateLocalTable(items);
+			var simple = dataClasses
 					.Where(m => m.Value == AnredeAuswahlliste.Frau)
 					.ToList();
 
-				Assert.That(simple, Has.Count.EqualTo(1));
+			Assert.That(simple, Has.Count.EqualTo(1));
 
-				var inList = dataClasses
+			var inList = dataClasses
 					.Where(m => m.Value!.In<AnredeAuswahlliste>(AnredeAuswahlliste.Frau, AnredeAuswahlliste.Herr))
 					.ToList();
 
-				Assert.That(inList, Has.Count.EqualTo(2));
-			}
+			Assert.That(inList, Has.Count.EqualTo(2));
 		}
 
 	}

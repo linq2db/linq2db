@@ -63,7 +63,11 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 			Func<string, DriverWrappers.ClickHouseConnectionStringBuilder>? driverConnectionStringBuilder,
 
-			MappingSchema? mappingSchema)
+			MappingSchema? mappingSchema,
+			
+			Func<string, DriverWrappers.ClickHouseClient>? clientFactory,
+			Func<DriverWrappers.InsertOptions>?            insertOptionsFactory
+			)
 		{
 			ConnectionType     = connectionType;
 			DataReaderType     = dataReaderType;
@@ -91,6 +95,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			CreateDriverConnectionStringBuilder = driverConnectionStringBuilder;
 
 			MappingSchema = mappingSchema;
+
+			CreateDriverClientFactory        = clientFactory;
+			CreateDriverInsertOptionsFactory = insertOptionsFactory;
 		}
 
 		private ClickHouseProviderAdapter(MySqlProviderAdapter mySqlProviderAdapter)
@@ -149,49 +156,52 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 		// Driver connection management
 		internal Func<string, DriverWrappers.ClickHouseConnectionStringBuilder>? CreateDriverConnectionStringBuilder { get; }
 
+		// CH.Driver v1.0+
+		internal Func<string, DriverWrappers.ClickHouseClient>? CreateDriverClientFactory { get; }
+		internal Func<DriverWrappers.InsertOptions>?            CreateDriverInsertOptionsFactory { get; }
+
 		public static ClickHouseProviderAdapter GetInstance(ClickHouseProvider provider)
 		{
-			if (provider == ClickHouseProvider.Octonica)
+			return provider switch
+			{
+				ClickHouseProvider.Octonica         => GetOctonicaAdapter(),
+				ClickHouseProvider.MySqlConnector   => GetMySqlConnectorAdapter(),
+				ClickHouseProvider.ClickHouseDriver => GetClickhouseDriverAdapter(),
+				_ => throw new InvalidOperationException($"Unsupported provider type: {provider}"),
+			};
+
+			static ClickHouseProviderAdapter GetOctonicaAdapter()
 			{
 				if (_octonicaAdapter == null)
 				{
 					lock (_octonicaSyncRoot)
-						// https://github.com/dotnet/roslyn-analyzers/issues/1649
-#pragma warning disable CA1508 // Avoid dead conditional code
 						_octonicaAdapter ??= CreateOctonicaAdapter();
-#pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
 				return _octonicaAdapter;
 			}
-			else if (provider == ClickHouseProvider.MySqlConnector)
+
+			static ClickHouseProviderAdapter GetMySqlConnectorAdapter()
 			{
 				if (_mysqlAdapter == null)
 				{
 					lock (_mysqlSyncRoot)
-						// https://github.com/dotnet/roslyn-analyzers/issues/1649
-#pragma warning disable CA1508 // Avoid dead conditional code
 						_mysqlAdapter ??= new ClickHouseProviderAdapter(MySqlProviderAdapter.GetInstance(MySqlProvider.MySqlConnector));
-#pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
 				return _mysqlAdapter;
 			}
-			else if (provider == ClickHouseProvider.ClickHouseDriver)
+
+			static ClickHouseProviderAdapter GetClickhouseDriverAdapter()
 			{
 				if (_driverAdapter == null)
 				{
 					lock (_driverSyncRoot)
-						// https://github.com/dotnet/roslyn-analyzers/issues/1649
-#pragma warning disable CA1508 // Avoid dead conditional code
 						_driverAdapter ??= CreateDriverAdapter();
-#pragma warning restore CA1508 // Avoid dead conditional code
 				}
 
 				return _driverAdapter;
 			}
-
-			throw new InvalidOperationException($"Unsupported provider type: {provider}");
 		}
 
 		private static ClickHouseProviderAdapter CreateDriverAdapter()
@@ -205,14 +215,25 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			var parameterType               = assembly.GetType($"{DriverClientNamespace}.Parameters.ClickHouseDbParameter" , true)!;
 			var dataReaderType              = assembly.GetType($"{DriverClientNamespace}.Readers.ClickHouseDataReader"     , true)!;
 			var connectionStringBuilderType = assembly.GetType($"{DriverClientNamespace}.ClickHouseConnectionStringBuilder", true)!;
-			var bulkCopyType                = assembly.GetType($"ClickHouse.Driver.Copy.ClickHouseBulkCopy"                , true)!;
+			var bulkCopyType                = assembly.GetType("ClickHouse.Driver.Copy.ClickHouseBulkCopy"                 , true)!;
 			var decimalType                 = assembly.GetType($"{DriverProviderTypesNamespace}.ClickHouseDecimal"         , true)!;
 
+			// v1.0.0
+			var clientType                  = assembly.GetType("ClickHouse.Driver.ClickHouseClient"                        , false);
+			var insertOptionsType           = assembly.GetType("ClickHouse.Driver.InsertOptions"                           , false);
+
 			var typeMapper = new TypeMapper();
-			typeMapper.RegisterTypeWrapper<DriverWrappers.ClickHouseConnection             >(connectionType);
+			typeMapper.RegisterTypeWrapper<DriverWrappers.ClickHouseConnection>(connectionType);
 			typeMapper.RegisterTypeWrapper<DriverWrappers.ClickHouseConnectionStringBuilder>(connectionStringBuilderType);
-			typeMapper.RegisterTypeWrapper<DriverWrappers.ClickHouseBulkCopy               >(bulkCopyType);
-			typeMapper.RegisterTypeWrapper<DriverWrappers.ClickHouseDecimal                >(decimalType);
+			typeMapper.RegisterTypeWrapper<DriverWrappers.ClickHouseBulkCopy>(bulkCopyType);
+			typeMapper.RegisterTypeWrapper<DriverWrappers.ClickHouseDecimal>(decimalType);
+
+			if (clientType != null)
+			{
+				typeMapper.RegisterTypeWrapper<DriverWrappers.ClickHouseClient>(clientType);
+				typeMapper.RegisterTypeWrapper<DriverWrappers.InsertOptions>(insertOptionsType!);
+			}
+
 			typeMapper.FinalizeMappings();
 
 			var mappingSchema = new MappingSchema();
@@ -248,7 +269,11 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 
 				typeMapper.BuildWrappedFactory((string connectionString) => new DriverWrappers.ClickHouseConnectionStringBuilder(connectionString)),
 
-				mappingSchema);
+				mappingSchema,
+
+				clientType        == null ? null : typeMapper.BuildWrappedFactory((string connectionString) => new DriverWrappers.ClickHouseClient(connectionString)),
+				insertOptionsType == null ? null : typeMapper.BuildWrappedFactory(() => new DriverWrappers.InsertOptions())
+				);
 		}
 
 		private static ClickHouseProviderAdapter CreateOctonicaAdapter()
@@ -315,6 +340,9 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				typeMapper.BuildWrappedFactory((Type columnType) => new OctonicaWrappers.ClickHouseColumnSettings(columnType)),
 
 				null,
+				null,
+
+				null,
 				null);
 
 			IEnumerable<int> exceptionErrorsGettter(Exception ex) => new[] { typeMapper.Wrap<OctonicaWrappers.ClickHouseException>(ex).ErrorCode };
@@ -328,7 +356,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			[Wrapper]
 			internal sealed class ClickHouseConnection
 			{
-				public ClickHouseConnection(string connectionString) => throw new NotImplementedException();
+				public ClickHouseConnection(string connectionString) => throw new NotSupportedException();
 			}
 
 			[Wrapper]
@@ -350,7 +378,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				{
 				}
 
-				public ClickHouseConnectionStringBuilder(string connectionString) => throw new NotImplementedException();
+				public ClickHouseConnectionStringBuilder(string connectionString) => throw new NotSupportedException();
 
 				public bool UseSession
 				{
@@ -364,7 +392,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			[Wrapper]
 			internal sealed class ClickHouseDecimal
 			{
-				public string ToString(IFormatProvider provider) => throw new NotImplementedException();
+				public string ToString(IFormatProvider provider) => throw new NotSupportedException();
 			}
 
 			[Wrapper]
@@ -402,7 +430,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				{
 				}
 
-				public ClickHouseBulkCopy(ClickHouseConnection connection) => throw new NotImplementedException();
+				public ClickHouseBulkCopy(ClickHouseConnection connection) => throw new NotSupportedException();
 
 				void IDisposable.Dispose() => ((Action<ClickHouseBulkCopy>)CompiledWrappers[0])(this);
 
@@ -437,8 +465,100 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				public Task InitAsync() => ((Func<ClickHouseBulkCopy, Task>)CompiledWrappers[9])(this);
 				public IReadOnlyCollection<string> ColumnNames
 				{
-					get => throw new InvalidOperationException($"get_ColumnNames is not mapped");
+					get => throw new InvalidOperationException("get_ColumnNames is not mapped");
 					set => ((Action<ClickHouseBulkCopy, IReadOnlyCollection<string>>)CompiledWrappers[10])(this, value);
+				}
+			}
+
+			internal sealed class ClickHouseClient : TypeWrapper, IDisposable
+			{
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
+				private static object[] Wrappers { get; }
+					= new[]
+				{
+					// [0]: Dispose
+					new Tuple<LambdaExpression, bool>((Expression<Action<ClickHouseClient>>)(this_ => ((IDisposable)this_).Dispose()), true),
+					// [1]: InsertBinaryAsync
+					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseClient, string, IEnumerable<string>, IEnumerable<object?[]>, InsertOptions, CancellationToken, Task<long>>>)((this_, table, columns, rows, options, cancellationToken) => this_.InsertBinaryAsync(table, columns, rows, options, cancellationToken)), true),
+					};
+
+				public ClickHouseClient(object instance, Delegate[] wrappers) : base(instance, wrappers)
+				{
+				}
+
+				public ClickHouseClient(string connectionString) => throw new NotImplementedException();
+
+				void IDisposable.Dispose() => ((Action<ClickHouseClient>)CompiledWrappers[0])(this);
+
+				public Task<long> InsertBinaryAsync(string table, IEnumerable<string> columns, IEnumerable<object?[]> rows, InsertOptions options, CancellationToken cancellationToken)
+					=> ((Func<ClickHouseClient, string, IEnumerable<string>, IEnumerable<object?[]>, InsertOptions, CancellationToken, Task<long>>)CompiledWrappers[1])(this, table, columns, rows, options, cancellationToken);
+			}
+
+			[Wrapper]
+			internal sealed class InsertOptions : TypeWrapper
+			{
+				[SuppressMessage("Style", "IDE0051:Remove unused private members", Justification = "Used from reflection")]
+				private static LambdaExpression[] Wrappers { get; }
+					= new LambdaExpression[]
+				{
+					// [0]: get BatchSize
+					(Expression<Func<InsertOptions, int>>)(this_ => this_.BatchSize),
+					// [1]: set BatchSize
+					PropertySetter((InsertOptions this_) => this_.BatchSize),
+					// [2]: get MaxDegreeOfParallelism
+					(Expression<Func<InsertOptions, int>>)(this_ => this_.MaxDegreeOfParallelism),
+					// [3]: set MaxDegreeOfParallelism
+					PropertySetter((InsertOptions this_) => this_.MaxDegreeOfParallelism),
+					// [4]: get MaxDegreeOfParallelism
+					(Expression<Func<InsertOptions, bool?>>)(this_ => this_.UseSession),
+					// [5]: set MaxDegreeOfParallelism
+					PropertySetter((InsertOptions this_) => this_.UseSession),
+					// [6]: get MaxDegreeOfParallelism
+					(Expression<Func<InsertOptions, TimeSpan?>>)(this_ => this_.MaxExecutionTime),
+					// [7]: set MaxDegreeOfParallelism
+					PropertySetter((InsertOptions this_) => this_.MaxExecutionTime),
+				};
+
+				public InsertOptions(object instance, Delegate[] wrappers) : base(instance, wrappers)
+				{
+				}
+
+				public InsertOptions() => throw new NotImplementedException();
+
+				/// <summary>
+				/// Default: 100_000.
+				/// </summary>
+				public int BatchSize
+				{
+					get => ((Func<InsertOptions, int>)CompiledWrappers[0])(this);
+					set => ((Action<InsertOptions, int>)CompiledWrappers[1])(this, value);
+				}
+
+				/// <summary>
+				/// Default: 1.
+				/// </summary>
+				public int MaxDegreeOfParallelism
+				{
+					get => ((Func<InsertOptions, int>)CompiledWrappers[2])(this);
+					set => ((Action<InsertOptions, int>)CompiledWrappers[3])(this, value);
+				}
+
+				/// <summary>
+				/// Default: null (use client settings).
+				/// </summary>
+				public bool? UseSession
+				{
+					get => ((Func<InsertOptions, bool?>)CompiledWrappers[4])(this);
+					set => ((Action<InsertOptions, bool?>)CompiledWrappers[5])(this, value);
+				}
+
+				/// <summary>
+				/// Default: null (no limit).
+				/// </summary>
+				public TimeSpan? MaxExecutionTime
+				{
+					get => ((Func<InsertOptions, TimeSpan?>)CompiledWrappers[6])(this);
+					set => ((Action<InsertOptions, TimeSpan?>)CompiledWrappers[7])(this, value);
 				}
 			}
 		}
@@ -451,10 +571,10 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 			[Wrapper]
 			internal sealed class ClickHouseConnection
 			{
-				public ClickHouseConnection(string connectionString) => throw new NotImplementedException();
+				public ClickHouseConnection(string connectionString) => throw new NotSupportedException();
 
-				public ClickHouseColumnWriter       CreateColumnWriter     (string insertFormatCommand                                     ) => throw new NotImplementedException();
-				public Task<ClickHouseColumnWriter> CreateColumnWriterAsync(string insertFormatCommand, CancellationToken cancellationToken) => throw new NotImplementedException();
+				public ClickHouseColumnWriter       CreateColumnWriter     (string insertFormatCommand                                     ) => throw new NotSupportedException();
+				public Task<ClickHouseColumnWriter> CreateColumnWriterAsync(string insertFormatCommand, CancellationToken cancellationToken) => throw new NotSupportedException();
 			}
 
 			[Wrapper]
@@ -464,7 +584,7 @@ namespace LinqToDB.Internal.DataProvider.ClickHouse
 				{
 				}
 
-				public ClickHouseColumnSettings(Type columnType) => throw new NotImplementedException();
+				public ClickHouseColumnSettings(Type columnType) => throw new NotSupportedException();
 			}
 
 			[Wrapper]

@@ -14,32 +14,30 @@ namespace Tests.UserTests
 			[IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context,
 			[Values] bool reverseWhereQuery)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var varInt = 3;
+			using var db = GetDataContext(context);
+			var varInt = 3;
 
-				var localQuery =
+			var localQuery =
 					from p in Parent
 					join c in GrandChild on p.ParentID equals c.ParentID
 					select p;
 
-				localQuery = localQuery.Where(p => varInt < p.ParentID);
-				var expected = localQuery.ToArray();
+			localQuery = localQuery.Where(p => varInt < p.ParentID);
+			var expected = localQuery.ToArray();
 
-				var dbQuery =
+			var dbQuery =
 					from p in db.Parent
 					join c in db.GrandChild on p.ParentID equals c.ParentID
 					select p;
 
-				if (reverseWhereQuery)
-					dbQuery = dbQuery.Where(p => varInt < p.ParentID);
-				else
-					dbQuery = dbQuery.Where(p => p.ParentID > varInt);
+			if (reverseWhereQuery)
+				dbQuery = dbQuery.Where(p => varInt < p.ParentID);
+			else
+				dbQuery = dbQuery.Where(p => p.ParentID > varInt);
 
-				var actual = dbQuery.ToArray();
+			var actual = dbQuery.ToArray();
 
-				Assert.That(actual, Is.EqualTo(expected));
-			}
+			Assert.That(actual, Is.EqualTo(expected));
 		}
 	}
 }

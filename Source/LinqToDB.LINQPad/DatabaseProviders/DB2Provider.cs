@@ -43,7 +43,7 @@ internal sealed class DB2Provider : DatabaseProviderBase
 #if NETFRAMEWORK
 	internal static void LoadAssembly()
 	{
-		var assemblyPath = Path.Combine(Path.GetDirectoryName(typeof(DB2Provider).Assembly.Location), "IBM.Data.DB2.DLL_provider", IntPtr.Size == 4 ? "x86" : "x64", $"IBM.Data.DB2.dll");
+		var assemblyPath = Path.Combine(Path.GetDirectoryName(typeof(DB2Provider).Assembly.Location), "IBM.Data.DB2.DLL_provider", IntPtr.Size == 4 ? "x86" : "x64", "IBM.Data.DB2.dll");
 		if (!File.Exists(assemblyPath))
 			throw new LinqToDBLinqPadException($"Failed to locate IBM.Data.DB2 assembly at {assemblyPath}");
 
@@ -72,7 +72,7 @@ internal sealed class DB2Provider : DatabaseProviderBase
 #if WITH_ISERIES
 			DB2iSeriesProviderName.DB2 => "SELECT MAX(TIME) FROM (SELECT MAX(LAST_ALTERED) AS TIME FROM QSYS2.SYSROUTINES UNION SELECT MAX(ROUTINE_CREATED) AS TIME FROM QSYS2.SYSROUTINES UNION SELECT MAX(LAST_ALTERED_TIMESTAMP) AS TIME FROM QSYS2.SYSTABLES)",
 #endif
-			_                          => throw new LinqToDBLinqPadException($"Unknown DB2 provider '{settings.Connection.Provider}'")
+			_                          => throw new LinqToDBLinqPadException($"Unknown DB2 provider '{settings.Connection.Provider}'"),
 		};
 
 		using var db = new LINQPadDataConnection(settings);

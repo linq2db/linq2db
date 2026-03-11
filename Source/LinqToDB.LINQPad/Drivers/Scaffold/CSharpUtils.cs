@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.LINQPad
 {
@@ -7,7 +8,7 @@ namespace LinqToDB.LINQPad
 	{
 		// C# keywords and contextual words
 		// https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/
-		private static readonly HashSet<string> KeyWords = new ()
+		private static readonly HashSet<string> KeyWords = new (StringComparer.Ordinal)
 		{
 			"abstract", "as"      , "base"     , "bool"     , "break"    , "byte"    , "case"   , "catch"     , "char"     , "checked",
 			"class"   , "const"   , "continue" , "decimal"  , "default"  , "delegate", "do"     , "double"    , "else"     , "enum",
@@ -22,7 +23,7 @@ namespace LinqToDB.LINQPad
 			"add"     , "and"     , "alias"    , "ascending", "async"    , "await"   , "by"     , "descending", "dynamic"  , "equals",
 			"from"    , "get"     , "global"   , "group"    , "init"     , "into"    , "join"   , "let"       , "managed"  , "nameof",
 			"nint"    , "not"     , "notnull"  , "nuint"    , "on"       , "or"      , "orderby", "partial"   , "record"   , "remove",
-			"select"  , "set"     , "unmanaged", "value"    , "var"      , "when"    , "where"  , "with"      , "yield"
+			"select"  , "set"     , "unmanaged", "value"    , "var"      , "when"    , "where"  , "with"      , "yield",
 		};
 
 		public static string EscapeIdentifier(string identifier)

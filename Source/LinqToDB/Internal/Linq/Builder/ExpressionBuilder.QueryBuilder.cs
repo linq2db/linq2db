@@ -526,7 +526,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					{
 						NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked,
 						Method: null,
-						Operand: SqlPlaceholderExpression convertPlaceholder
+						Operand: SqlPlaceholderExpression convertPlaceholder,
 					} ue
 					&& ue.Type != typeof(object) && ue.Type != typeof(Enum))
 				{
@@ -552,7 +552,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					var canBeNull = nullability.CanBeNull(placeholder.Sql) || placeholder.Type.IsNullableType;
 
-					if (canBeNull && valueType != placeholder.Type && !valueType.IsNullableOrReferenceType())
+					if (canBeNull && valueType != placeholder.Type && !valueType.IsNullableOrReferenceType)
 					{
 						valueType = valueType.AsNullable();
 					}
@@ -584,15 +584,15 @@ namespace LinqToDB.Internal.Linq.Builder
 					return new TransformInfo(readerExpression);
 				}
 
-				if (e.NodeType == ExpressionType.Equal || e.NodeType == ExpressionType.NotEqual)
+				if (e.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
 				{
 					var binary = (BinaryExpression)e;
-					if (binary.Left.IsNullValue() && binary.Right is SqlPlaceholderExpression placeholderRight)
+					if (binary is { Left.IsNullValue: true, Right: SqlPlaceholderExpression placeholderRight })
 					{
 						return new TransformInfo(new SqlReaderIsNullExpression(placeholderRight, e.NodeType == ExpressionType.NotEqual), false, true);
 					}
 
-					if (binary.Right.IsNullValue() && binary.Left is SqlPlaceholderExpression placeholderLeft)
+					if (binary is { Right.IsNullValue: true, Left: SqlPlaceholderExpression placeholderLeft })
 					{
 						return new TransformInfo(new SqlReaderIsNullExpression(placeholderLeft, e.NodeType == ExpressionType.NotEqual), false, true);
 					}

@@ -108,17 +108,19 @@ namespace Tests.UserTests
 			string context)
 		{
 
-			using (var db = (DataConnection)GetDataContext(context))
-			using (var itb = db.CreateLocalTable<InventoryResourceDTO>())
+			using var db = (DataConnection)GetDataContext(context);
+			using var itb = db.CreateLocalTable<InventoryResourceDTO>();
+			var dto1 = new InventoryResourceDTO
 			{
-				var dto1 = new InventoryResourceDTO
-				{
-					Color = ColorEnum.Blue, Id = TestData.Guid1, CMYKColor = CMYKEnum.Cyan, Status = StatusEnum.Open
-				};
+				Color = ColorEnum.Blue,
+				Id = TestData.Guid1,
+				CMYKColor = CMYKEnum.Cyan,
+				Status = StatusEnum.Open
+			};
 
-				db.Insert(dto1);
+			db.Insert(dto1);
 
-				var list = itb
+			var list = itb
 					.Where(x =>
 						x.Color.ToString().Contains("Bl")
 						&& x.CMYKColor.ToString().Contains("Cya")
@@ -126,8 +128,7 @@ namespace Tests.UserTests
 					)
 					.ToList();
 
-				Assert.That(list, Has.Count.EqualTo(1));
-			}
+			Assert.That(list, Has.Count.EqualTo(1));
 		}
 	}
 }

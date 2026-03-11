@@ -126,7 +126,7 @@ namespace LinqToDB.Internal.Linq
 			{
 				DataConnection dataConnection => dataConnection,
 				DataContext    dataContext    => dataContext.GetDataConnection(),
-				_                             => null
+				_                             => null,
 			};
 
 			if (dc == null)
@@ -157,7 +157,7 @@ namespace LinqToDB.Internal.Linq
 			{
 				DataConnection dataConnection => dataConnection,
 				DataContext    dataContext    => dataContext.GetDataConnection(),
-				_                             => null
+				_                             => null,
 			};
 
 			if (dc == null)
@@ -211,13 +211,11 @@ namespace LinqToDB.Internal.Linq
 
 			var enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
 
-#pragma warning disable CA2007
-			await using var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
-#pragma warning restore CA2007
-
-			while (await enumerator.MoveNextAsync().ConfigureAwait(false))
+			var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
+			await using (enumerator.ConfigureAwait(false))
 			{
-				action(enumerator.Current);
+				while (await enumerator.MoveNextAsync().ConfigureAwait(false))
+					action(enumerator.Current);
 			}
 		}
 
@@ -288,16 +286,14 @@ namespace LinqToDB.Internal.Linq
 
 		IQueryable<TElement> IQueryProvider.CreateQuery<TElement>(Expression expression)
 		{
-			if (expression == null)
-				throw new ArgumentNullException(nameof(expression));
+			ArgumentNullException.ThrowIfNull(expression);
 
 			return new ExpressionQueryImpl<TElement>(DataContext, expression);
 		}
 
 		IQueryable IQueryProvider.CreateQuery(Expression expression)
 		{
-			if (expression == null)
-				throw new ArgumentNullException(nameof(expression));
+			ArgumentNullException.ThrowIfNull(expression);
 
 			var elementType = expression.Type.GetItemType() ?? expression.Type;
 

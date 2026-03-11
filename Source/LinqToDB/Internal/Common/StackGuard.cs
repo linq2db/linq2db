@@ -24,17 +24,20 @@ namespace LinqToDB.Internal.Common
 		}
 
 		[DebuggerStepThrough]
-		public TResult Enter<T, TResult>(Func<T, TResult> action, T arg)
+		public TResult? Enter<T, TResult>(Func<T, TResult> action, T arg)
 		{
 			_internalDepth++;
 			_maxHops ??= LinqToDB.Common.Configuration.TranslationThreadMaxHopCount;
 
 			// test _internalDepth for 1 so we can trigger hop before doing 64 calls and fail
 			// when starting stack is already too small
-			if (_maxHops >= 0 && _internalDepth % 64 == 1 && !TryEnsureSufficientExecutionStack())
-				return RunOnEmptyStack(action, arg);
+			return _maxHops switch
+			{
+				>= 0 when _internalDepth % 64 == 1 && !TryEnsureSufficientExecutionStack() =>
+					RunOnEmptyStack(action, arg),
 
-			return default!;
+				_ => default,
+			};
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

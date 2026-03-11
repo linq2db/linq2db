@@ -65,10 +65,11 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 		static DateTime GetDateTimeAsTime(DateTime value)
 		{
-			if (value.Year == 1900 && value.Month == 1 && value.Day == 1)
-				return new DateTime(1, 1, 1, value.Hour, value.Minute, value.Second, value.Millisecond);
-
-			return value;
+			return value switch
+			{
+				{ Year: 1900, Month: 1, Day: 1 } => new DateTime(1, 1, 1, value.Hour, value.Minute, value.Second, value.Millisecond),
+				_ => value,
+			};
 		}
 
 		#endregion
@@ -81,7 +82,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 			// native client BulkCopy cannot stand nullable types
 			// AseBulkManager.IsWrongType
-			if (Name == ProviderName.Sybase)
+			if (string.Equals(Name, ProviderName.Sybase, StringComparison.Ordinal))
 			{
 				type = type.UnwrapNullableType();
 				if (type == typeof(char) || type == typeof(Guid))
@@ -117,7 +118,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 			static readonly MappingSchema _nativeMappingSchema  = new SybaseMappingSchema.NativeMappingSchema();
 			static readonly MappingSchema _managedMappingSchema = new SybaseMappingSchema.ManagedMappingSchema();
 
-			public static MappingSchema Get(string name) => name == ProviderName.Sybase ? _nativeMappingSchema : _managedMappingSchema;
+			public static MappingSchema Get(string name) => string.Equals(name, ProviderName.Sybase, StringComparison.Ordinal) ? _nativeMappingSchema : _managedMappingSchema;
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
@@ -169,7 +170,7 @@ namespace LinqToDB.Internal.DataProvider.Sybase
 
 				case DataType.Char       :
 				case DataType.NChar      :
-					if (Name == ProviderName.Sybase)
+					if (string.Equals(Name, ProviderName.Sybase, StringComparison.Ordinal))
 						if (value is char chr)
 							value = chr.ToString();
 					break;

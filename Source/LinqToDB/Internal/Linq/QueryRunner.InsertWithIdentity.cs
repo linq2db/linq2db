@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
@@ -45,12 +45,12 @@ namespace LinqToDB.Internal.Linq
 				var sqlQuery        = new SelectQuery();
 				var insertStatement = new SqlInsertStatement(sqlQuery)
 				{
-					Insert = { Into = sqlTable, WithIdentity = true }
+					Insert = { Into = sqlTable, WithIdentity = true },
 				};
 
 				var ei = new Query<object>(dataContext)
 				{
-					Queries = { new QueryInfo { Statement = insertStatement, } }
+					Queries = { new QueryInfo { Statement = insertStatement, } },
 				};
 
 				var accessorIdGenerator = new UniqueIdGenerator<ParameterAccessor>();
