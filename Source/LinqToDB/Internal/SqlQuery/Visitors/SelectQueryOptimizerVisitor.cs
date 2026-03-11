@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
@@ -86,7 +85,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			//
 			if (CorrectColumnsNesting())
 			{
-				_isColumnsOptimized = !removeWeakJoins;
+				_isColumnsOptimized = false;
 
 				do
 				{
@@ -95,6 +94,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					if (!_isColumnsOptimized)
 					{
 						_root = _columnOptimizerVisitor.OptimizeColumns(_root);
+						JoinsOptimizer.UnnestJoins(_root);
+
 						_isColumnsOptimized = true;
 						continue;
 					}
@@ -105,18 +106,10 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 				} while (true);
 
-				if (removeWeakJoins)
-				{
-					// It means that we fully optimize query
-					_root = _columnOptimizerVisitor.OptimizeColumns(_root);
-
-					// do it always, ignore dataOptions.LinqOptions.OptimizeJoins
-					JoinsOptimizer.UnnestJoins(_root);
-
-					// convert remaining nested joins to subqueries
-					if (!_providerFlags.IsNestedJoinsSupported)
-						JoinsOptimizer.UndoNestedJoins(_root);
-				}
+				
+				// convert remaining nested joins to subqueries
+				if (!_providerFlags.IsNestedJoinsSupported)
+					JoinsOptimizer.UndoNestedJoins(_root);
 			}
 
 			return _root;
@@ -1645,7 +1638,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				if (!query.GroupBy.IsEmpty)
 					return true;
-				if (query.Select.Columns.Any(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
+				if (query.Select.Columns.Exists(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
 					return true;
 				return false;
 			}
@@ -3290,7 +3283,8 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				{
 					if (join.JoinType == JoinType.Left)
 					{
-						return false;
+						if (_providerFlags.IsSupportsJoinWithoutCondition || !join.Condition.IsTrue)
+							return false;
 					}
 
 					if (_updateQuery != parentQuery)
@@ -3326,8 +3320,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 								if (updateUsage > 1)
 									return false;
 							}
-
-							return false;
 						}
 					}
 				}

@@ -22,10 +22,11 @@ namespace LinqToDB.Internal.SqlQuery
 		internal static ObjectPool<AggregationCheckVisitor> AggregationCheckVisitors =
 			new(() => new AggregationCheckVisitor(), v => v.Cleanup(), 100);
 
-		sealed class IsDependsOnSourcesContext(IReadOnlyCollection<ISqlTableSource> onSources, IReadOnlyCollection<IQueryElement>? elementsToIgnore)
+		sealed class IsDependsOnSourcesContext(IReadOnlyCollection<ISqlTableSource> onSources, IReadOnlyCollection<IQueryElement>? elementsToIgnore, IReadOnlyCollection<ISqlTableSource>? sourcesToIgnore)
 		{
-			public readonly IReadOnlyCollection<ISqlTableSource> OnSources        = onSources;
-			public readonly IReadOnlyCollection<IQueryElement>?  ElementsToIgnore = elementsToIgnore;
+			public readonly IReadOnlyCollection<ISqlTableSource>  OnSources        = onSources;
+			public readonly IReadOnlyCollection<IQueryElement>?   ElementsToIgnore = elementsToIgnore;
+			public readonly IReadOnlyCollection<ISqlTableSource>? SourcesToIgnore  = sourcesToIgnore;
 
 			public bool DependencyFound;
 		}
@@ -39,9 +40,12 @@ namespace LinqToDB.Internal.SqlQuery
 			return IsDependsOnSources(testedRoot, sources, elementsToIgnore);
 		}
 
-		public static bool IsDependsOnSources(IQueryElement testedRoot, IReadOnlyCollection<ISqlTableSource> onSources, IReadOnlyCollection<IQueryElement>? elementsToIgnore = null)
+		public static bool IsDependsOnSources(IQueryElement testedRoot, IReadOnlyCollection<ISqlTableSource> onSources, IReadOnlyCollection<IQueryElement>? elementsToIgnore = null, IReadOnlyCollection<ISqlTableSource>? sourcesToIgnore = null)
 		{
-			var ctx = new IsDependsOnSourcesContext(onSources, elementsToIgnore);
+			if (onSources.Count == 0)
+				return false;
+
+			var ctx = new IsDependsOnSourcesContext(onSources, elementsToIgnore, sourcesToIgnore);
 
 			testedRoot.VisitParentFirst(ctx, static (context, e) =>
 			{
@@ -51,7 +55,7 @@ namespace LinqToDB.Internal.SqlQuery
 				if (context.ElementsToIgnore != null && context.ElementsToIgnore.Contains(e, QueryElement.ReferenceComparer))
 					return false;
 
-				if (e is ISqlTableSource source && context.OnSources.Contains(source, QueryElement.ReferenceComparer))
+				if (e is ISqlTableSource source && (context.OnSources.Contains(source, QueryElement.ReferenceComparer) && context.SourcesToIgnore?.Contains(source, QueryElement.ReferenceComparer) != true))
 				{
 					context.DependencyFound = true;
 					return false;

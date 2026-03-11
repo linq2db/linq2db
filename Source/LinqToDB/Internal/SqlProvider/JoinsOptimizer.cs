@@ -53,38 +53,51 @@ namespace LinqToDB.Internal.SqlProvider
 					{
 						var insertIndex = i + 1;
 						var parent      = source.Joins[i];
+						var childJoins  = parent.Table.Joins;
 
 						// INNER/LEFT join with nested joins
-						if (parent.Table.Joins.Count > 0 && parent.JoinType is JoinType.Inner or JoinType.Left)
+						if (childJoins.Count > 0 && parent.JoinType is JoinType.Inner or JoinType.Left)
 						{
-							var child = parent.Table.Joins[0];
+							if (!childJoins.TrueForAll(join => join.JoinType is JoinType.Inner or JoinType.Left or JoinType.CrossApply or JoinType.OuterApply))
+								continue;
 
-							// check compatibility of outer join with first nested join:
-							// INNER + INNER/LEFT/CROSS APPLY/OUTER APPLY
-							// LEFT + LEFT
-							if ((parent.JoinType == JoinType.Inner && (child.JoinType is JoinType.Inner or JoinType.Left or JoinType.CrossApply or JoinType.OuterApply)) ||
-								(parent.JoinType == JoinType.Left && child.JoinType == JoinType.Left))
+							for (var cj = childJoins.Count - 1; cj >= 0; cj--)
 							{
-								// check that join condition doesn't reference child tables
-								var sources = new HashSet<int>(parent.Table.Joins.SelectMany(j => j.Table.GetTables().Select(t => t.SourceID)));
-								var found = parent.Condition.Find(sources, static (sources, e) =>
+								var child = childJoins[cj];
+
+								var currentJoinSources = QueryHelper.EnumerateAccessibleSources(child.Table).ToList();
+								if (QueryHelper.IsDependsOnSources(parent.Condition, currentJoinSources))
 								{
-									if (e is ISqlExpression expr
-										&& GetUnderlyingFieldOrColumn(expr) is ISqlExpression field
-										&& sources.Contains(GetFieldSourceID(field)))
-									{
-										return true;
-									}
-
-									return false;
-								});
-
-								if (found != null)
 									continue;
+								}
+
+								if (parent.JoinType is JoinType.Left)
+								{
+									var parentJoins = childJoins.ToList();
+									parentJoins.RemoveAt(cj);
+
+									var sources = parentJoins
+										.SelectMany(join => QueryHelper.EnumerateAccessibleSources(join.Table))
+										.Concat([parent.Table.Source])
+										.ToList();
+
+									if (QueryHelper.IsDependsOnSources(child.Condition, sources))
+									{
+										continue;
+									}
+								}
+
+								if (parent.JoinType == JoinType.Left)
+								{
+									if (child.JoinType == JoinType.Inner)
+										child.JoinType = JoinType.Left;
+									else if (child.JoinType == JoinType.CrossApply)
+										child.JoinType = JoinType.OuterApply;
+								}
 
 								// move all nested joins up
-								source.Joins.InsertRange(insertIndex, parent.Table.Joins);
-								parent.Table.Joins.Clear();
+								source.Joins.Insert(insertIndex, child);
+								parent.Table.Joins.RemoveAt(cj);
 							}
 						}
 					}
