@@ -43,7 +43,7 @@ namespace Tests.Linq
 			return ms;
 		}
 
-		private static readonly (Expression<Func<Src, bool>> where, int[] withoutNulls, int[] withNulls)[] _conditions 
+		private static readonly (Expression<Func<Src, bool>> where, int[] withoutNulls, int[] withNulls)[] _conditions
 			= new (Expression<Func<Src, bool>> where, int[] withoutNulls, int[] withNulls)[]
 			{
 				(x => x.A == x.B, new[] { 111 },      new[] { 100, 111 }),
@@ -92,16 +92,16 @@ namespace Tests.Linq
 		[Test]
 		public void Functional(
 			// This test can run in all providers, but it adds 72 tests per provider.
-			// As the behaviour is the same everywhere, we can speed things up by 
+			// As the behaviour is the same everywhere, we can speed things up by
 			// only running for in a single provider.
 			[IncludeDataSources(ProviderName.SQLiteMS)] string context,
-			[Values]                                    bool   withNullCompares,
+			[Values]                                    CompareNulls compareNulls,
 			// Use an indirect index into the test case data instead of [ValuesSource].
 			// The parameter (tuple including expression) is serialized into the test name
 			// when creating baseline file and this would result in path names too long for Windows to handle.
 			[Range(0, 35)]                              int index)
 		{
-			using var db  = GetDataContext(context, o => o.UseMappingSchema(mappingSchema).UseCompareNulls(withNullCompares ? CompareNulls.LikeClr : CompareNulls.LikeSql));
+			using var db  = GetDataContext(context, o => o.UseMappingSchema(mappingSchema).UseCompareNulls(compareNulls));
 			using var src = db.CreateLocalTable(Data);
 
 			var (where, withoutNulls, withNulls) = _conditions[index];
@@ -115,18 +115,24 @@ namespace Tests.Linq
 				.TagQuery(conditionStr)
 				.ToArray();
 
-			// CompareWithNullValues should behave exactly like C#
-			if (withNullCompares)
+			if (compareNulls == CompareNulls.LikeClr)
 			{
 				var linqResult = Data
 					.Where(where.Compile())
 					.Select(x => x.Id)
 					.ToArray();
 
+				// LikeClr should behave like C#
 				result.ShouldBeEquivalentTo(linqResult);
+				// Which should be the same as expectations
+				result.ShouldBeEquivalentTo(withNulls);
 			}
-
-			result.ShouldBeEquivalentTo(withNullCompares ? withNulls : withoutNulls);
+			else
+			{
+				// As this test uses DB columns only, no parameters, LikeSql and LikeSqlExceptParameters should behave the same way.
+				// See `Options` test below for a test case that differentiate them.
+				result.ShouldBeEquivalentTo(withoutNulls);
+			}
 		}
 
 		[Test]
@@ -138,11 +144,11 @@ namespace Tests.Linq
 		{
 			using var db  = GetDataContext(context, o => o.UseMappingSchema(mappingSchema).UseCompareNulls(option));
 			using var src = db.CreateLocalTable(Data);
-			
+
 			// == null always translates to IS NULL
 			var result = src.Where(x => x.A == null).Count();
 			result.ShouldBe(2);
-			
+
 			// == default is the same as == null
 			result = src.Where(x => x.A == default).Count();
 			result.ShouldBe(2);
@@ -166,7 +172,7 @@ namespace Tests.Linq
 				new Src { Id = 1, Text = "abc" },
 				new Src { Id = 2, Text = null  },
 			});
-			
+
 			// "" is the same as null in Oracle and == ""  should always translates to IS NULL
 			int result = src.Where(x => x.Text == "").Select(x => x.Id).FirstOrDefault();
 			result.ShouldBe(2);
