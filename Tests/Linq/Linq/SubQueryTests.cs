@@ -986,10 +986,10 @@ namespace Tests.Linq
 						{
 							ItemId = item.Id,
 							TotalAvailable = stock.Sum(s => s.QuantityAvailable),
-							//Reviews = t3.Where(r => r.ItemId == item.Id).OrderBy(r => r.ItemId).ThenBy(r => r.UserId)
+							Reviews = t3.Where(r => r.ItemId == item.Id).OrderBy(r => r.ItemId).ThenBy(r => r.UserId)
 						};
 
-			var filteredByScore = query/*query.Where(i => i.Reviews.Any(r => r.Score > 95))*/;
+			var filteredByScore = query.Where(i => i.Reviews.Any(r => r.Score > 95));
 
 			AssertQuery(filteredByScore);
 		}
