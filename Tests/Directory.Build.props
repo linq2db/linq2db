@@ -22,6 +22,10 @@
 		<Reference Include="System.Data.Linq" />
 	</ItemGroup>
 
+	<ItemGroup Label="Pin transitive vulnerable packages">
+		<PackageReference Include="Microsoft.Bcl.Memory" />
+	</ItemGroup>
+
 	<!--https://github.com/microsoft/vstest/issues/15297-->
 	<Target Name="Save_PublishDir" BeforeTargets="CopyTraceDataCollectorArtifacts">
 		<CreateProperty Value="$(PublishDir)">
