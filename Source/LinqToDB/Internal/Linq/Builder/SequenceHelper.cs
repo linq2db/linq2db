@@ -811,9 +811,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public static TableBuilder.TableContext? GetTableContext(IBuildContext context)
 		{
-			var contextRef = new ContextRefExpression(context.ElementType, context);
-
-			var rootContext = context.Builder.BuildTableExpression(contextRef) as ContextRefExpression;
+			var rootContext = context.Builder.BuildTableExpression(CreateRef(context)) as ContextRefExpression;
 
 			var tableContext = rootContext?.BuildContext as TableBuilder.TableContext;
 
@@ -822,10 +820,7 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		public static ITableContext? GetTableOrCteContext(IBuildContext context)
 		{
-			var contextRef = new ContextRefExpression(context.ElementType, context);
-
-			var rootContext =
-				context.Builder.BuildTableExpression(contextRef) as ContextRefExpression;
+			var rootContext = context.Builder.BuildTableExpression(CreateRef(context)) as ContextRefExpression;
 
 			var tableContext = rootContext?.BuildContext as ITableContext;
 
