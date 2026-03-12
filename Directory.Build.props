@@ -1,11 +1,11 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
 		<!-- Update to next after release -->
-		<Version>6.2.0</Version>
-		<EF3Version>3.30.0</EF3Version>
-		<EF8Version>8.4.0</EF8Version>
-		<EF9Version>9.3.0</EF9Version>
-		<EF10Version>10.2.0</EF10Version>
+		<Version>6.3.0</Version>
+		<EF3Version>3.31.0</EF3Version>
+		<EF8Version>8.5.0</EF8Version>
+		<EF9Version>9.4.0</EF9Version>
+		<EF10Version>10.3.0</EF10Version>
 		
 		<!-- Baselines update on next major release -->
 		<BaselineVersion>6.0.0</BaselineVersion>
