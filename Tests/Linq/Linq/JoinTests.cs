@@ -3241,7 +3241,7 @@ namespace Tests.Linq
 			query.ToArray();
 
 			var isNullCount = db.LastQuery!.Split(["IS NULL"], StringSplitOptions.None).Length - 1;
-			Assert.That(isNullCount, Is.EqualTo(compareNulls == CompareNulls.LikeSql ? 0 : 2));
+			Assert.That(isNullCount, Is.EqualTo(compareNulls is CompareNulls.LikeSql or CompareNulls.LikeSqlExceptParameters ? 0 : 2));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3560")]
@@ -3274,7 +3274,7 @@ namespace Tests.Linq
 			query.ToArray();
 
 			var isNullCount = db.LastQuery!.Split(["IS NULL"], StringSplitOptions.None).Length - 1;
-			Assert.That(isNullCount, Is.EqualTo(compareNulls == CompareNulls.LikeSql ? 0 : 2));
+			Assert.That(isNullCount, Is.EqualTo(compareNulls is CompareNulls.LikeSql or CompareNulls.LikeSqlExceptParameters ? 0 : 2));
 		}
 
 		[ActiveIssue]
@@ -3292,7 +3292,7 @@ namespace Tests.Linq
 			var isNullCount = db.LastQuery!.Split(["IS NULL"], StringSplitOptions.None).Length - 1;
 			using (Assert.EnterMultipleScope())
 			{
-				Assert.That(isNullCount, Is.EqualTo(compareNulls == CompareNulls.LikeSql ? 0 : 2));
+				Assert.That(isNullCount, Is.EqualTo(compareNulls is CompareNulls.LikeSql or CompareNulls.LikeSqlExceptParameters ? 0 : 2));
 				Assert.That(db.LastQuery, Does.Contain("321"));
 			}
 		}
