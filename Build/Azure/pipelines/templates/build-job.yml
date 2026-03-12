@@ -226,6 +226,6 @@ jobs:
         }
       workingDirectory: '$(System.DefaultWorkingDirectory)'
     displayName: Create Release Draft
-    condition: and(succeeded(), ${{ parameters.with_release }})
+    condition: and(succeeded(), ${{ parameters.with_release }}, false)
     env:
       GITHUB_TOKEN: $(RELEASES_GH_PAT)
