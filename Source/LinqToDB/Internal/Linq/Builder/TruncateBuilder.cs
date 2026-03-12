@@ -15,7 +15,14 @@ namespace LinqToDB.Internal.Linq.Builder
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = (TableBuilder.TableContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			builder.PushDisabledQueryFilters([]);
+			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			builder.PopDisabledFilter();
+
+			var table = SequenceHelper.GetTableContext(sequence);
+
+			if (table == null)
+				return BuildSequenceResult.Error(methodCall, "Could not find table context for Truncate operation.");
 
 			var reset = true;
 			var arg   = methodCall.Arguments[1].Unwrap();
@@ -23,7 +30,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			if (arg.Type == typeof(bool))
 				reset = (bool)builder.EvaluateExpression(arg)!;
 
-			return BuildSequenceResult.FromContext(new TruncateContext(sequence, new SqlTruncateTableStatement { Table = sequence.SqlTable, ResetIdentity = reset }));
+			return BuildSequenceResult.FromContext(new TruncateContext(sequence, new SqlTruncateTableStatement { Table = table.SqlTable, ResetIdentity = reset }));
 		}
 
 		#endregion
