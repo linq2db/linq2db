@@ -689,7 +689,9 @@ namespace LinqToDB.Internal.SqlQuery
 				};
 		}
 
+#pragma warning disable IDE0051 // false positive https://github.com/dotnet/roslyn/issues/82691
 		private static bool IsColumnNullValue(this SelectQuery query, SqlColumn column)
+#pragma warning restore IDE0051 // false positive https://github.com/dotnet/roslyn/issues/82691
 		{
 			var idx = query.Select.Columns.IndexOf(column);
 			if (idx < 0)

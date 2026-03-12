@@ -15,7 +15,7 @@ namespace Cli.Fluent.SqlServer2025
 	{
 		public int? ParentId { get; set; } // int
 		/// <summary>
-		/// This ChildID column
+		/// This &lt;тест&gt; ChildID column
 		/// </summary>
 		public int? ChildId  { get; set; } // int
 		public int  Id       { get; set; } // int
