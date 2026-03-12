@@ -1,6 +1,3 @@
-parameters:
-  release: false
-
 jobs:
 - job: build_nugets_job
   pool:
