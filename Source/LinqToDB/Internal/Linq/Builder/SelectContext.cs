@@ -188,7 +188,7 @@ namespace LinqToDB.Internal.Linq.Builder
 						if ((flags.IsRoot() || flags.IsTraverse() || flags.IsSubquery() || flags.IsMemberRoot() || flags.IsAssociationRoot()) &&
 						    !(result is ContextRefExpression or MemberExpression))
 						{
-							if (flags.IsSubquery() || flags.IsMemberRoot())
+							if (flags.IsSubquery() || flags.IsMemberRoot() || flags.IsTraverse())
 							{
 								if (Builder.IsSequence(this, result))
 									return result;

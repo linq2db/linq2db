@@ -308,12 +308,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			// Remove columns not in the keep list
 			if (indicesToKeep.Count < selectQuery.Select.Columns.Count)
 			{
-				IsOptimized = true;
-
 				// Build new column list
 				var newColumns = new List<SqlColumn>();
 				foreach (var index in indicesToKeep)
 				{
+					IsOptimized = true;
 					newColumns.Add(selectQuery.Select.Columns[index]);
 				}
 				
@@ -335,8 +334,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			// Ensure non-empty SELECT
 			if (selectQuery.Select.Columns.Count == 0 && AllowEmptyColumns(selectQuery))
 			{
-				IsOptimized = true;
-
 				if (selectQuery.GroupBy is { IsEmpty: false, GroupingType: GroupingType.Default })
 				{
 					var nonGroupingSet = selectQuery.GroupBy.Items.Find(it => it is not SqlGroupingSet);

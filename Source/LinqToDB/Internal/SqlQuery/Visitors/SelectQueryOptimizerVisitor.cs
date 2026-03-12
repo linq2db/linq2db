@@ -86,22 +86,35 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (CorrectColumnsNesting())
 			{
 				_isColumnsOptimized = false;
-
+				var isJoinsUnnested = false;
 				do
 				{
+					var continueOptimization = false;
+
 					ProcessElement(_root);
+
+					_root               = _columnOptimizerVisitor.OptimizeColumns(_root);
 
 					if (!_isColumnsOptimized)
 					{
-						_root = _columnOptimizerVisitor.OptimizeColumns(_root);
-						JoinsOptimizer.UnnestJoins(_root);
-
+						continueOptimization = true;
 						_isColumnsOptimized = true;
-						continue;
+					}
+
+					continueOptimization = continueOptimization || _columnOptimizerVisitor.IsOptimized;
+
+					if (!isJoinsUnnested)
+					{
+						if (JoinsOptimizer.UnnestJoins(_root))
+							continueOptimization = true;
+						isJoinsUnnested = true;
 					}
 
 					_orderByOptimizer.OptimizeOrderBy(_root, _providerFlags, _columnNestingCorrector);
-					if (!_orderByOptimizer.IsOptimized)
+
+					continueOptimization = continueOptimization || _orderByOptimizer.IsOptimized;
+
+					if (!continueOptimization)
 						break;
 
 				} while (true);

@@ -43,9 +43,11 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <summary>
 		/// Moves nested joins to upper level.
 		/// </summary>
-		public static void UnnestJoins(IQueryElement statement)
+		public static bool UnnestJoins(IQueryElement statement)
 		{
-			statement.Visit(static e =>
+			bool isModified = false;
+
+			statement.Visit(e =>
 			{
 				if (e is SqlTableSource source)
 				{
@@ -71,7 +73,7 @@ namespace LinqToDB.Internal.SqlProvider
 									continue;
 								}
 
-								if (parent.JoinType is JoinType.Left)
+								if (parent.JoinType is JoinType.Left && child.JoinType is JoinType.Inner or JoinType.CrossApply)
 								{
 									var parentJoins = childJoins.ToList();
 									parentJoins.RemoveAt(cj);
@@ -112,11 +114,15 @@ namespace LinqToDB.Internal.SqlProvider
 								// move all nested joins up
 								source.Joins.Insert(insertIndex, child);
 								parent.Table.Joins.RemoveAt(cj);
+
+								isModified = true;
 							}
 						}
 					}
 				}
 			});
+
+			return isModified;
 		}
 
 		public static void UndoNestedJoins(IQueryElement statement)
