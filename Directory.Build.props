@@ -93,6 +93,7 @@
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageReadmeFile>readme.md</PackageReadmeFile>
 		<PackageVersion Condition=" '$(ApplyVersionSuffix)' == 'true' ">$(Version)$(VersionSuffix)</PackageVersion>
+		<PackageVersion Condition=" '$(ApplyVersionSuffix)' != 'true' ">$(Version)</PackageVersion>
 
 		<EnablePackageValidation>true</EnablePackageValidation>
 		<PackageValidationBaselineVersion>$(BaselineVersion)</PackageValidationBaselineVersion>
