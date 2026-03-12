@@ -1816,6 +1816,42 @@ namespace LinqToDB.Internal.SqlQuery
 			return null != element.Find(clause, static (c, e) => e.ElementType == QueryElementType.SqlCteTable && ((SqlCteTable)e).Cte == c);
 		}
 
+		public static bool IsLimitedToOneRecord(SqlJoinedTable joinedTable)
+		{
+			if (joinedTable.IsSubqueryExpression || joinedTable.Cardinality.HasFlag(SourceCardinality.One))
+				return true;
+
+			if (joinedTable.Table.Source is SelectQuery subQuery)
+				return IsLimitedToOneRecord(subQuery);
+
+			return false;
+		}
+
+		public static bool IsLimitedToOneRecord(SelectQuery query)
+		{
+			if (query.HasNoTables)
+			{
+				return true;
+			}
+
+			if (query is { Select.TakeValue: SqlValue { Value: 1 } })
+			{
+				return true;
+			}
+
+			if (!query.HasGroupBy && IsAggregationQuery(query))
+			{
+				return true;
+			}
+
+			if (query is { From.Tables: [{ Source: SelectQuery subQuery }] })
+			{
+				return IsLimitedToOneRecord(subQuery);
+			}
+
+			return false;
+		}
+
 		/// <summary>
 		/// Returns true, if type represents signed integer type.
 		/// </summary>

@@ -677,7 +677,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				if (IsGroupingQueryCanBeOptimized(selectQuery))
 				{
 					// Check if query is limited to one record
-					if (IsLimitedToOneRecord(selectQuery))
+					if (QueryHelper.IsLimitedToOneRecord(selectQuery))
 					{
 						selectQuery.GroupBy.Items.Clear();
 						isModified = true;
@@ -769,7 +769,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 					if (joinQuery.Where.SearchCondition.IsFalse)
 						return true;
 
-					if (IsLimitedToOneRecord(joinQuery))
+					if (QueryHelper.IsLimitedToOneRecord(joinQuery))
 						return true;
 				}
 			}
@@ -859,22 +859,6 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			}
 
 			return isModified;
-		}
-
-		static bool IsLimitedToOneRecord(SelectQuery query)
-		{
-			return query switch
-			{
-				{ Select.TakeValue: SqlValue { Value: 1 } } => true,
-
-				{ HasGroupBy: false, Select.Columns: { Count: > 0 } columns } when columns.TrueForAll(c => QueryHelper.ContainsAggregationFunction(c.Expression)) =>
-					true,
-
-				{ From.Tables: [{ Source: SelectQuery subQuery }] } =>
-					IsLimitedToOneRecord(subQuery),
-
-				_ => false,
-			};
 		}
 
 		static bool IsComplexQuery(SelectQuery query, bool ignoreGroupBy)
@@ -1022,7 +1006,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (IsComplexQuery(selectQuery, false))
 				return false;
 
-			if (IsLimitedToOneRecord(selectQuery))
+			if (QueryHelper.IsLimitedToOneRecord(selectQuery))
 			{
 				// we can simplify query if we take only one record
 				selectQuery.Select.IsDistinct = false;
