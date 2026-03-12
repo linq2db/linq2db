@@ -11,6 +11,7 @@ jobs:
   pool:
     vmImage: 'windows-2025'
   displayName: 'Build'
+  timeoutInMinutes: 120 # 60 min sometimes is not enough to build all test TFMs for release build
   variables:
     with_analyzers: ${{ parameters.with_analyzers }}
     with_api_analyzers: ${{ parameters.with_api_analyzers }}
