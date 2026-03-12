@@ -16,7 +16,7 @@ namespace Cli.Default.SqlServer2025
 	public class Issue1144
 	{
 		/// <summary>
-		/// Column description
+		/// Column &lt;тест&gt; description
 		/// </summary>
 		[Column("id", IsPrimaryKey = true)] public int Id { get; set; } // int
 	}
