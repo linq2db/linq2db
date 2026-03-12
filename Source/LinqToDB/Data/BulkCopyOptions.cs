@@ -125,7 +125,7 @@ namespace LinqToDB.Data
 	/// Note that session-less connections cannot be used with session-bound functionality like temporary tables.
 	/// </param>
 	/// <param name="IgnoreConflicts">
-	/// When set to <c>true</c>, ignores conflicts during bulk copy operation.
+	/// When set to true, ignores conflicts during bulk copy operation.
 	/// Supported for following databases:
 	/// <list type="bullet">
 	/// <item>MySql/MariaDB (it will automatically fall back to <see cref="BulkCopyType.MultipleRows"/>)</item>
