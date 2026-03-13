@@ -79,7 +79,7 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 						return result;
 					}	
 					default:
-						return null;
+						throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented");
 				}
 
 				var resultExpression = StrFTimeInt(factory, intDbType, stringDbType, partStr, dateTimeExpression);
@@ -119,22 +119,19 @@ namespace LinqToDB.Internal.DataProvider.SQLite.Translation
 					return factory.Cast(expression, stringDbType);
 				}
 
-				ISqlExpression dateExpr;
-				switch (datepart)
+				var dateExpr = datepart switch
 				{
-					case Sql.DateParts.Year:        dateExpr = factory.Concat(stringDbType, CastToString(increment), " Year"); break;
-					case Sql.DateParts.Quarter:     dateExpr = factory.Concat(stringDbType, CastToString(factory.Multiply(increment, 3)), " Month"); break;
-					case Sql.DateParts.Month:       dateExpr = factory.Concat(stringDbType, CastToString(increment), " Month"); break;
-					case Sql.DateParts.Day:         dateExpr = factory.Concat(stringDbType, CastToString(increment), factory.Value(stringDbType, " Day")); break;
-					case Sql.DateParts.Week:        dateExpr = factory.Concat(CastToString(factory.Multiply(increment, 7)), " Day"); break;
-					case Sql.DateParts.Hour:        dateExpr = factory.Concat(CastToString(increment), " Hour"); break;
-					case Sql.DateParts.Minute:      dateExpr = factory.Concat(CastToString(increment), " Minute"); break;
-					case Sql.DateParts.Second:      dateExpr = factory.Concat(CastToString(increment), " Second"); break;
-					case Sql.DateParts.Millisecond: dateExpr = factory.Concat(CastToString(factory.Div(doubleDbType, factory.Cast(increment, doubleDbType), 1000)), " Second"); break;
-					default:
-						return null;
-				}
-
+					Sql.DateParts.Year        => factory.Concat(stringDbType, CastToString(increment), " Year"),
+					Sql.DateParts.Quarter     => factory.Concat(stringDbType, CastToString(factory.Multiply(increment, 3)), " Month"),
+					Sql.DateParts.Month       => factory.Concat(stringDbType, CastToString(increment), " Month"),
+					Sql.DateParts.Day         => factory.Concat(stringDbType, CastToString(increment), factory.Value(stringDbType, " Day")),
+					Sql.DateParts.Week        => factory.Concat(CastToString(factory.Multiply(increment, 7)), " Day"),
+					Sql.DateParts.Hour        => factory.Concat(CastToString(increment), " Hour"),
+					Sql.DateParts.Minute      => factory.Concat(CastToString(increment), " Minute"),
+					Sql.DateParts.Second      => factory.Concat(CastToString(increment), " Second"),
+					Sql.DateParts.Millisecond => factory.Concat(CastToString(factory.Div(doubleDbType, factory.Cast(increment, doubleDbType), 1000)), " Second"),
+					_ => throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented"),
+				};
 				var resultExpression = factory.Function(dateType, StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(stringDbType, DateFormat), dateTimeExpression, dateExpr);
 
 				return resultExpression;
