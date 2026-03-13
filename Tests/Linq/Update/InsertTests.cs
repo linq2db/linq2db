@@ -17,7 +17,8 @@ using Tests.Model;
 // ReSharper disable ConvertToConstant.Local
 #endregion
 
-namespace Tests.xUpdate{
+namespace Tests.xUpdate
+{
 	[TestFixture]
 	[Order(10000)]
 	public class InsertTests : TestBase
@@ -2492,7 +2493,7 @@ namespace Tests.xUpdate{
 		}
 
 		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
-		public void InsertFromWithSubqueryColumn_Same([DataSources] string context)
+		public void InsertFromWithSubqueryColumn_Same([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
@@ -2514,7 +2515,7 @@ namespace Tests.xUpdate{
 		}
 
 		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
-		public void InsertFromWithSubqueryColumn_Different([DataSources] string context)
+		public void InsertFromWithSubqueryColumn_Different([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
@@ -2537,7 +2538,7 @@ namespace Tests.xUpdate{
 		}
 
 		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
-		public void InsertFromWithSubqueryColumn_DifferentWithDuplicate([DataSources] string context)
+		public void InsertFromWithSubqueryColumn_DifferentWithDuplicate([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
