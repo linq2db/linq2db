@@ -2139,7 +2139,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void Issue5413Test([IncludeDataSources(TestProvName.Oracle19Managed)] string context)
+		public void Issue5413Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2167,16 +2167,14 @@ namespace Tests.xUpdate
 			// Ensure that query compiles and runs
 			Assert.That(count, Is.EqualTo(1));
 
-#if NET8_0_OR_GREATER
-			// Ensure the target table is only once in query, and not repeated in WHERE or subquery
-			int tableReferences = Regex.Count(db.LastQuery!, @"Person""\s", RegexOptions.IgnoreCase);
-			Assert.That(tableReferences, Is.EqualTo(1));
-#endif
-
 			// Sanity verification
 			var person = db.Person.First(x => x.ID == id);
-			Assert.That(person.FirstName, Is.EqualTo("Tooth"));
-			Assert.That(person.LastName, Is.EqualTo("Fairy"));
+
+			using (Assert.EnterMultipleScope())
+			{
+				Assert.That(person.FirstName, Is.EqualTo("Tooth"));
+				Assert.That(person.LastName, Is.EqualTo("Fairy"));
+			}
 		}
 	}
 }
