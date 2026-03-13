@@ -4561,13 +4561,12 @@ namespace LinqToDB.Internal.Linq.Builder
 					var origValue = ((ConstantExpression)value).Value;
 					var mapValue  = origValue;
 
-					foreach (var enumVal in MappingSchema.GetMapValues(type.UnwrapNullableType())!)
+					if (origValue != null)
 					{
-						if (((origValue == null && enumVal.OrigValue == null)
-								|| (origValue != null && origValue.Equals(enumVal.OrigValue)))
-							&& enumVal.MapValues.Length > 0)
+						foreach (var enumVal in MappingSchema.GetMapValues(type.UnwrapNullableType())!)
 						{
-							mapValue = enumVal.MapValues[0].Value;
+							if (origValue.Equals(enumVal.OrigValue) && enumVal.MapValues.Length > 0)
+								mapValue = enumVal.MapValues[0].Value;
 						}
 					}
 
