@@ -2309,7 +2309,7 @@ namespace Tests.Linq
 
 		#endregion
 
-		public enum ItemTypeEnum
+		enum ItemTypeEnum
 		{
 			[MapValue("type1")]
 			Type1,
@@ -2319,7 +2319,7 @@ namespace Tests.Linq
 			Type3,
 		}
 
-		public partial class Item
+		sealed class Item
 		{
 			[PrimaryKey]
 			public ItemTypeEnum Type { get; set; }
@@ -2329,7 +2329,7 @@ namespace Tests.Linq
 			public Owner Owner => throw new InvalidOperationException();
 		}
 
-		public partial class Owner
+		sealed class Owner
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
