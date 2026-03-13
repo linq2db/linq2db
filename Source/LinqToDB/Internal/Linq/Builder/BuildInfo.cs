@@ -11,7 +11,6 @@ namespace LinqToDB.Internal.Linq.Builder
 			Parent            = parent;
 			Expression        = expression;
 			SelectQuery       = selectQuery;
-			SourceCardinality = SourceCardinality.Unknown;
 		}
 
 		public BuildInfo(BuildInfo buildInfo, Expression expression)
@@ -53,19 +52,12 @@ namespace LinqToDB.Internal.Linq.Builder
 			}
 		}
 
+		SourceCardinality? _sourceCardinality;
+
 		public SourceCardinality SourceCardinality
 		{
-			get
-			{
-				if (SequenceInfo == null)
-					return field;
-				var parent = SequenceInfo.SourceCardinality;
-				if (parent == SourceCardinality.Unknown)
-					return field;
-				return parent;
-			}
-
-			set;
+			get => _sourceCardinality ?? SequenceInfo?.SourceCardinality ?? SourceCardinality.Unknown;
+			set => _sourceCardinality = value;
 		}
 
 		public bool IsAggregation
