@@ -122,5 +122,44 @@ namespace Tests.xUpdate
 				table.Truncate(withIdentity);
 			}
 		}
+
+		[Table]
+		sealed class TestTrunDetail
+		{
+			[Column, PrimaryKey] public int ID;
+			[Column]             public int TestTrunID;
+			[Column]             public bool IsActive;
+		}
+
+		static MappingSchema _queryFilterSchema = CreateQueryFilterSchema();
+
+		static MappingSchema CreateQueryFilterSchema()
+		{
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			// complex filter using association-like subquery: filters TestTrun rows
+			// to only those that have at least one active detail with matching ID > 0
+			builder.Entity<TestTrun>().HasQueryFilter((q, dc) =>
+				q.Where(e => e.ID > 0
+					&& dc.GetTable<TestTrunDetail>().Any(d => d.TestTrunID == e.ID && d.IsActive)));
+
+			builder.Build();
+
+			return builder.MappingSchema;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5417")]
+		public void TruncateWithQueryFilterTest([DataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context, _queryFilterSchema);
+			db.DropTable<TestTrun>(throwExceptionIfNotExists: false);
+			db.DropTable<TestTrunDetail>(throwExceptionIfNotExists: false);
+
+			var detailTable = db.CreateTable<TestTrunDetail>();
+			var table       = db.CreateTable<TestTrun>();
+			table.Truncate();
+			table.Drop();
+			detailTable.Drop();
+		}
 	}
 }

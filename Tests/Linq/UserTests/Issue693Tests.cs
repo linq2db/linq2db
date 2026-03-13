@@ -37,7 +37,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Issue693Test([DataSources] string context)
+		public void Issue693Test([DataSources(false)] string context)
 		{
 			ResetPersonIdentity(context);
 

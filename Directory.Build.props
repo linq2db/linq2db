@@ -1,11 +1,11 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
 		<!-- Update to next after release -->
-		<Version>6.2.0</Version>
-		<EF3Version>3.30.0</EF3Version>
-		<EF8Version>8.4.0</EF8Version>
-		<EF9Version>9.3.0</EF9Version>
-		<EF10Version>10.2.0</EF10Version>
+		<Version>6.2.1</Version>
+		<EF3Version>3.31.0</EF3Version>
+		<EF8Version>8.5.0</EF8Version>
+		<EF9Version>9.4.0</EF9Version>
+		<EF10Version>10.3.0</EF10Version>
 		
 		<!-- Baselines update on next major release -->
 		<BaselineVersion>6.0.0</BaselineVersion>
@@ -14,7 +14,8 @@
 		<EF9BaselineVersion>9.1.0</EF9BaselineVersion>
 		<EF10BaselineVersion>10.0.0</EF10BaselineVersion>
 
-		<AssemblyVersion>$(Version)</AssemblyVersion>
+		<!--don't remove it! WPF doesn't work with non-4-component versions-->
+		<AssemblyVersion>$(Version).0</AssemblyVersion>
 		<VersionSuffix Condition=" '$(VersionSuffix)' == '' ">-local.1</VersionSuffix>
 		<ApplyVersionSuffix Condition=" '$(ApplyVersionSuffix)' == '' ">true</ApplyVersionSuffix>
 		
@@ -92,7 +93,8 @@
 		<PackageIcon>images\icon.png</PackageIcon>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageReadmeFile>readme.md</PackageReadmeFile>
-		<PackageVersion Condition=" '$(ApplyVersionSuffix)' == 'true' ">$(Version)$(VersionSuffix)</PackageVersion>
+		<PackageVersion>$(Version)</PackageVersion>
+		<PackageVersion Condition=" '$(ApplyVersionSuffix)' == 'true' ">$(PackageVersion)$(VersionSuffix)</PackageVersion>
 
 		<EnablePackageValidation>true</EnablePackageValidation>
 		<PackageValidationBaselineVersion>$(BaselineVersion)</PackageValidationBaselineVersion>

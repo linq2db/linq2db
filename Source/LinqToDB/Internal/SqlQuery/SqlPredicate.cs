@@ -392,8 +392,7 @@ namespace LinqToDB.Internal.SqlQuery
 					return new ExprExpr(Expr1, Operator, Expr2, null, NotNullableExpr1, NotNullableExpr2);
 				}
 
-				// CompareNulls.LikeSqlExceptParameters and CompareNulls.LikeClr
-				// always sniffs parameters to == and != (for backward compatibility).
+				// CompareNulls.LikeSqlExceptParameters and CompareNulls.LikeClr always sniff parameters to == and !=.
 				if (Operator is Operator.Equal or Operator.NotEqual)
 				{
 					if (this.TryEvaluateExpression(context, out var value))
@@ -416,6 +415,8 @@ namespace LinqToDB.Internal.SqlQuery
 
 					if (UnknownAsValue == null && Operator == Operator.NotEqual)
 					{
+						// Flip x != true into x == false (same for x != false).
+						// This is an old user request, supposedly for better index performance.
 						if (Expr1 is SqlValue { Value: bool } sqlValue1)
 						{
 							return new ExprExpr(Expr2, Operator.Equal, new SqlValue(sqlValue1.ValueType, !(bool)sqlValue1.Value), null);
@@ -436,7 +437,8 @@ namespace LinqToDB.Internal.SqlQuery
 					}
 				}
 
-				if (UnknownAsValue == null || nullability.IsEmpty)
+				// If no operand can be evaluated to null, this is where LikeSqlExceptParameters stops and comparison remains unchanged.
+				if (UnknownAsValue == null || nullability.IsEmpty || options.CompareNulls != CompareNulls.LikeClr)
 					return this;
 
 				var expr1CanBeUnknown = !NotNullableExpr1 && Expr1.CanBeNullableOrUnknown(nullability, false);
@@ -1020,7 +1022,7 @@ namespace LinqToDB.Internal.SqlQuery
 					writer.AppendLine();
 					writer.Append(')');
 				}
-	
+
 			}
 
 			public void Deconstruct(out ISqlExpression exp1, out bool isNot, out SelectQuery subQuery)
