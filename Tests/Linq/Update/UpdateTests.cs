@@ -2164,7 +2164,8 @@ namespace Tests.xUpdate
 				.Update();
 
 			// Ensure that query compiles and runs
-			Assert.That(count, Is.EqualTo(1));
+			if (context.SupportsRowcount())
+				Assert.That(count, Is.EqualTo(1));
 
 			// Sanity verification
 			var person = db.Person.First(x => x.ID == id);
