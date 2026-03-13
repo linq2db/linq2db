@@ -4575,7 +4575,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (ce != null)
 					{
-						sqlvalue = new SqlValue(ce.ConvertValueToParameter(origValue).Value!);
+						var parameter = ce.ConvertValueToParameter(origValue);
+						sqlvalue      = new SqlValue(parameter.DbDataType, parameter.Value);
 					}
 					else
 					{
