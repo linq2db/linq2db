@@ -2169,7 +2169,7 @@ namespace Tests.xUpdate
 
 #if NET8_0_OR_GREATER
 			// Ensure the target table is only once in query, and not repeated in WHERE or subquery
-			int tableReferences = Regex.Count(LastQuery!, @"Person""\s", RegexOptions.IgnoreCase);
+			int tableReferences = Regex.Count(db.LastQuery!, @"Person""\s", RegexOptions.IgnoreCase);
 			Assert.That(tableReferences, Is.EqualTo(1));
 #endif
 
