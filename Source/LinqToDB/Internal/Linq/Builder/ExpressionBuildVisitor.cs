@@ -4558,13 +4558,17 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				case ExpressionType.Constant:
 				{
-					var origValue = ((ConstantExpression)value).Value!;
+					var origValue = ((ConstantExpression)value).Value;
 					var mapValue  = origValue;
 
 					foreach (var enumVal in MappingSchema.GetMapValues(type.UnwrapNullableType())!)
 					{
-						if (origValue.Equals(enumVal.OrigValue) && enumVal.MapValues.Length > 0)
+						if (((origValue == null && enumVal.OrigValue == null)
+								|| (origValue != null && origValue.Equals(enumVal.OrigValue)))
+							&& enumVal.MapValues.Length > 0)
+						{
 							mapValue = enumVal.MapValues[0].Value;
+						}
 					}
 
 					SqlValue sqlvalue;
