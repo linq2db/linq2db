@@ -27,7 +27,7 @@ namespace LinqToDB.Internal.Linq.Builder
 				if (disableFilters)
 					builder.PushDisabledQueryFilters([]);
 
-				var target = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()) { AssociationsAsSubQueries = true });
+				var target = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()));
 
 				if (disableFilters)
 					builder.PopDisabledFilter();
