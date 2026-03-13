@@ -1,7 +1,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
 		<!-- Update to next after release -->
-		<Version>6.3.0</Version>
+		<Version>6.2.1</Version>
 		<EF3Version>3.31.0</EF3Version>
 		<EF8Version>8.5.0</EF8Version>
 		<EF9Version>9.4.0</EF9Version>
