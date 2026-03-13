@@ -68,9 +68,29 @@ namespace LinqToDB.Internal.SqlProvider
 								var child = childJoins[cj];
 
 								var currentJoinSources = QueryHelper.EnumerateAccessibleSources(child.Table).ToList();
+								List<ISqlPredicate>? movedPredicates = null;
 								if (QueryHelper.IsDependsOnSources(parent.Condition, currentJoinSources))
 								{
-									continue;
+									// for INNER+INNER we can move dependent predicates from parent to child condition
+									if (parent.JoinType is JoinType.Inner && child.JoinType is JoinType.Inner && !parent.Condition.IsOr)
+									{
+										movedPredicates = new();
+										for (var pi = parent.Condition.Predicates.Count - 1; pi >= 0; pi--)
+										{
+											var predicate = parent.Condition.Predicates[pi];
+											if (QueryHelper.IsDependsOnSources(predicate, currentJoinSources))
+												movedPredicates.Add(predicate);
+										}
+
+										if (movedPredicates.Count == 0)
+										{
+											continue;
+										}
+									}
+									else
+									{
+										continue;
+									}
 								}
 
 								if (parent.JoinType is JoinType.Left && child.JoinType is JoinType.Inner or JoinType.CrossApply)
@@ -109,6 +129,16 @@ namespace LinqToDB.Internal.SqlProvider
 										child.JoinType = JoinType.Left;
 									else if (child.JoinType == JoinType.CrossApply)
 										child.JoinType = JoinType.OuterApply;
+								}
+
+								// move dependent predicates from parent condition to child condition
+								if (movedPredicates != null)
+								{
+									foreach (var predicate in movedPredicates)
+									{
+										parent.Condition.Predicates.Remove(predicate);
+										child.Condition.Predicates.Add(predicate);
+									}
 								}
 
 								// move all nested joins up

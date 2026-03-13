@@ -84,7 +84,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Basic62([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void Basic62([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -111,7 +111,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Basic9([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Basic9([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -120,7 +120,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Basic10([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void Basic10([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -129,7 +129,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Basic11([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		public void Basic11([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -188,7 +188,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test31([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Test31([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			TestJohn(
@@ -204,7 +204,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test32([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Test32([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			var q =
@@ -353,7 +353,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SelectManyLeftJoin3([DataSources(TestProvName.AllAccess)] string context)
+		public void SelectManyLeftJoin3([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			AreEqual(
@@ -453,7 +453,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test5([DataSources(TestProvName.AllAccess)] string context)
+		public void Test5([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			var q3 =
@@ -466,7 +466,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test6([DataSources(TestProvName.AllAccess)] string context)
+		public void Test6([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			var q3 =
