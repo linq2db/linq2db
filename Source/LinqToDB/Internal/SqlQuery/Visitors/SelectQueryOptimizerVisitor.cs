@@ -1565,13 +1565,13 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (!_providerFlags.IsOrderBySubQuerySupported)
 			{
-				if (parentQuery.OrderBy.Any(e =>
+				if (parentQuery.OrderBy.AnyElement(oi =>
 				    {
-					    if (e is SqlColumn column && column.Parent == subQuery)
+					    if (oi is SqlColumn column && column.Parent == subQuery)
 					    {
 						    if (forMovingToColumn)
 							    return true;
-						    return column.Expression.Any(ce => ce is SelectQuery);
+						    return column.Expression.AnyElement(ce => ce is SelectQuery);
 					    }
 
 					    return false;
@@ -1584,11 +1584,11 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			if (!_providerFlags.IsOrderByAggregateFunctionSupported)
 			{
 
-				if (parentQuery.OrderBy.Any(e =>
+				if (parentQuery.OrderBy.AnyElement(e =>
 				    {
 					    if (e is SqlColumn column && column.Parent == subQuery)
 					    {
-						    return column.Expression.Any(QueryHelper.IsAggregationFunction);
+						    return column.Expression.AnyElement(QueryHelper.IsAggregationFunction);
 					    }
 
 					    return false;
@@ -1600,7 +1600,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 
 			if (!_providerFlags.IsOrderByAggregateSubquerySupported)
 			{
-				if (parentQuery.OrderBy.Any(e =>
+				if (parentQuery.OrderBy.AnyElement(e =>
 				    {
 					    if (e is SqlColumn column && column.Parent == subQuery)
 					    {
@@ -1610,7 +1610,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						    }
 						    else
 						    {
-							    return column.Expression.Any(ce =>
+							    return column.Expression.AnyElement(ce =>
 							    {
 								    if (ce is SelectQuery sq)
 								    {
@@ -3239,7 +3239,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				foreach (var column in joinQuery.Select.Columns)
 				{
-					if (!_movingComplexityVisitor.IsAllowedToMove(_providerFlags, column, MovingComplexityVisitor.TestMode.TestingSubqueryExpression, parentQuery, [joinQuery]))
+					if (!_movingComplexityVisitor.IsAllowedToMove(_providerFlags, column, MovingComplexityVisitor.TestMode.TestingSubqueryExpression, parentQuery, [joinQuery]) || !IsValidForOrderBy(parentQuery, joinQuery, true))
 					{
 						if (!deduplicate)
 							return false;
@@ -3311,7 +3311,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 						// Handling Update case, when column used several times in Update statement. Check StringJoinAssociationSubqueryUpdate1 test for details.
 						if (_providerFlags.IsApplyJoinSupported && _updateQuery != null)
 						{
-							if (_updateQuery.Find(testedColumn, (tc, e) => e is SqlColumn col && col.Expression.Any(ce => ReferenceEquals(ce, tc))) is SqlColumn found)
+							if (_updateQuery.Find(testedColumn, (tc, e) => e is SqlColumn col && col.Expression.AnyElement(ce => ReferenceEquals(ce, tc))) is SqlColumn found)
 							{
 								var updateUsage = CountUsage(_updateQuery, found);
 								if (updateUsage > 1)

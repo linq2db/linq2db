@@ -4,6 +4,7 @@ using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 using LinqToDB.Internal.Common;
@@ -1656,14 +1657,15 @@ namespace LinqToDB.Internal.SqlQuery
 			return null != root.Find(element, static (tf, e) => ReferenceEquals(tf, e));
 		}
 
-		public static bool Any(this IQueryElement root, Func<IQueryElement, bool> predicate)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool AnyElement(this IQueryElement root, Func<IQueryElement, bool> predicate)
 		{
 			return null != root.Find(predicate);
 		}
 
 		public static bool HasQueryParameter(this IQueryElement root)
 		{
-			return null != root.Find(static e =>
+			return root.AnyElement(static e =>
 			{
 				if (e.ElementType == QueryElementType.SqlParameter)
 				{
@@ -1677,7 +1679,7 @@ namespace LinqToDB.Internal.SqlQuery
 
 		public static bool HasParameter(this IQueryElement root)
 		{
-			return null != root.Find(static e =>
+			return root.AnyElement(static e =>
 			{
 				if (e.ElementType == QueryElementType.SqlParameter)
 				{
