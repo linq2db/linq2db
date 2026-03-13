@@ -172,7 +172,7 @@ namespace LinqToDB.Internal.Linq.Builder
 					};
 
 					var sourceSequence = new SelectContext(
-						builder.GetTranslationModifier(), 
+						builder.GetTranslationModifier(),
 						buildInfo.Parent,
 						builder,
 						innerContext: null,

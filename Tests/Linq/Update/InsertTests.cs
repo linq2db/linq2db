@@ -2492,7 +2492,7 @@ namespace Tests.xUpdate{
 		}
 
 		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
-		public void InsertFromWithConstants([DataSources] string context)
+		public void InsertFromWithSubqueryColumn_Same([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
@@ -2505,9 +2505,57 @@ namespace Tests.xUpdate{
 			{
 				Id     = id1,
 				Value  = id3,
+				// same expressions
 				Value1 = tb.Where(r => r.Id == id2).Select(r => r.Value4).SingleOrDefault(),
 				Value2 = tb.Where(r => r.Id == id2).Select(r => r.Value4).SingleOrDefault(),
 				Value3 = "string 1",
+				Value4 = "string 2",
+			});
+		}
+
+		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
+		public void InsertFromWithSubqueryColumn_Different([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
+
+			var id1 = 1;
+			var id2 = 2;
+			var id3 = 3;
+			var id4 = 4;
+
+			tb.Insert(() => new InsertFromWithConstantsTable()
+			{
+				Id = id1,
+				Value = id3,
+				// different expressions
+				Value1 = tb.Where(r => r.Id == id2).Select(r => r.Value4).SingleOrDefault(),
+				Value2 = tb.Where(r => r.Id == id4).Select(r => r.Value3).FirstOrDefault(),
+				Value3 = "string 1",
+				Value4 = "string 2",
+			});
+		}
+
+		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
+		public void InsertFromWithSubqueryColumn_DifferentWithDuplicate([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
+
+			var id1 = 1;
+			var id2 = 2;
+			var id3 = 3;
+			var id4 = 4;
+
+			tb.Insert(() => new InsertFromWithConstantsTable()
+			{
+				Id = id1,
+				Value = id3,
+				// different expressions
+				Value1 = tb.Where(r => r.Id == id2).Select(r => r.Value4).SingleOrDefault(),
+				Value2 = tb.Where(r => r.Id == id4).Select(r => r.Value3).FirstOrDefault(),
+				// duplicate
+				Value3 = tb.Where(r => r.Id == id2).Select(r => r.Value4).SingleOrDefault(),
 				Value4 = "string 2",
 			});
 		}
