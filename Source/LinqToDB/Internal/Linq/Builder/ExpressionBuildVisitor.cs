@@ -3946,7 +3946,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			leftExpr  = Builder.UpdateNesting(BuildContext, leftExpr);
 			rightExpr = Builder.UpdateNesting(BuildContext, rightExpr);
 
-			var compareNullsAsValues = Builder.CompareNulls is CompareNulls.LikeClr or CompareNulls.LikeSqlExceptParameters;
+			var compareNullsAsValues = Builder.CompareNulls is CompareNulls.LikeClr;
 
 			//SQLRow case when needs to add Single
 			//
