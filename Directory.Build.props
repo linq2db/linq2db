@@ -14,7 +14,8 @@
 		<EF9BaselineVersion>9.1.0</EF9BaselineVersion>
 		<EF10BaselineVersion>10.0.0</EF10BaselineVersion>
 
-		<AssemblyVersion>$(Version)</AssemblyVersion>
+		<!--don't remove it! WPF doesn't work with non-4-component versions-->
+		<AssemblyVersion>$(Version).0</AssemblyVersion>
 		<VersionSuffix Condition=" '$(VersionSuffix)' == '' ">-local.1</VersionSuffix>
 		<ApplyVersionSuffix Condition=" '$(ApplyVersionSuffix)' == '' ">true</ApplyVersionSuffix>
 		
