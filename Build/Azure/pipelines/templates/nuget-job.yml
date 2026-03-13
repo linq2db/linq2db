@@ -1,6 +1,3 @@
-parameters:
-  release: false
-
 jobs:
 - job: build_nugets_job
   pool:
@@ -34,20 +31,3 @@ jobs:
       publishFeedCredentials: 'linq2db nuget.org feed'
     displayName: Publish to Nuget.org
     condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['release_branch']))
-
-  - task: PowerShell@2
-    inputs:
-      targetType: 'inline'
-      script: |
-        $relnotesVersion = '$(packageVersion)' -replace '\.',''
-        Write-Host "Add linqpad nuget to release v$(packageVersion) draft"
-        $output = gh release upload v$(packageVersion) "$(Build.SourcesDirectory)/.build/nugets/linq2db.LINQPad.$(packageVersion).nupkg"
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "Command failed. Error code ${LASTEXITCODE}, output: ${output}"
-            exit 1
-        }
-      workingDirectory: '$(System.DefaultWorkingDirectory)'
-    displayName: Upload LINQPad nuget to Release Draft
-    condition: and(succeeded(), ${{ parameters.release }})
-    env:
-      GITHUB_TOKEN: $(RELEASES_GH_PAT)
