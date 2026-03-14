@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.InteropServices;
@@ -2308,5 +2308,51 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		enum ItemTypeEnum
+		{
+			[MapValue("type1")]
+			Type1,
+			[MapValue("type2")]
+			Type2,
+			[MapValue("type3")]
+			Type3,
+		}
+
+		sealed class Item
+		{
+			[PrimaryKey]
+			public ItemTypeEnum Type { get; set; }
+			public int? OwnerId { get; set; }
+
+			[Association(ThisKey = nameof(OwnerId), OtherKey = nameof(Owner.Id), CanBeNull = true)]
+			public Owner Owner => throw new InvalidOperationException();
+		}
+
+		sealed class Owner
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+			public string? Name { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/5416")]
+		public void HandleEnumComparisonWithNull([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Item>();
+			using var t2 = db.CreateLocalTable<Owner>();
+
+			_ = t1
+				.Select(x => new
+				{
+					x.Type,
+					Owner = x.OwnerId.HasValue ? new
+					{
+						x.Owner.Id,
+						x.Owner.Name,
+					} : null,
+				}).ToArray();
+		}
 	}
 }
