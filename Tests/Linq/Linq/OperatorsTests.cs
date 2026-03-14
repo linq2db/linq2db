@@ -651,7 +651,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			using var t = db.CreateLocalTable(
+			using var t = db.CreateLocalTable(tableName: "ImplicitData",
 			[
 				new
 				{
@@ -701,7 +701,7 @@ namespace Tests.Linq
 
 			using var db = GetDataContext(context, fb.Build().MappingSchema);
 
-			using var t = db.CreateLocalTable(
+			using var t = db.CreateLocalTable(tableName: "ImplicitData",
 			[
 				new
 				{

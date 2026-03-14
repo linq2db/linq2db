@@ -5,9 +5,9 @@ using System.Data;
 using System.Linq;
 using System.Runtime.Serialization;
 
-using LinqToDB;
 using LinqToDB.Internal.DataProvider;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Internal.SqlProvider
 {
@@ -520,6 +520,20 @@ namespace LinqToDB.Internal.SqlProvider
 		public bool IsOrderByAggregateFunctionSupported { get; set; }
 
 		/// <summary>
+		/// Provider supports aggregation subquery in ORDER BY Clause.
+		/// Default <c>true</c>
+		/// </summary>
+		[DataMember(Order = 60), DefaultValue(true)]
+		public bool IsOrderByAggregateSubquerySupported { get; set; } = true;
+
+		/// <summary>
+		/// Provider supports subquery in ORDER BY Clause.
+		/// 
+		/// </summary>
+		[DataMember(Order = 61), DefaultValue(true)]
+		public bool IsOrderBySubQuerySupported { get; set; } = true;
+
+		/// <summary>
 		/// When disabled, all conditions from INNER JOIN ON moved to WHERE except conjunction of equality predicates.
 		/// <code>
 		/// FROM T1 INNER JOIN T2 ON t1.field1 == t2.field1 AND t1.field2 == t2.field2 AND t1.field3 > 10
@@ -529,35 +543,38 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </code>
 		/// Default: <see langword="true"/>.
 		/// </summary>
-		[DataMember(Order = 60), DefaultValue(true)]
+		[DataMember(Order = 62), DefaultValue(true)]
 		public bool IsComplexJoinConditionSupported { get; set; } = true;
 
 		/// <summary>
 		/// When enabled, always prefer "FROM T1 CROSS JOIN T2" over "FROM T1, T2" join syntax.
 		/// Default: <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order = 61), DefaultValue(false)]
+		[DataMember(Order = 63), DefaultValue(false)]
 		public bool IsCrossJoinSyntaxRequired { get; set; }
 
 		/// <summary>
 		/// When disabled, SQL dialect doesn't support Take/LIMIT &amp; IN/ALL/ANY/SOME subquery.
 		/// </summary>
-		[DataMember(Order = 62), DefaultValue(true)]
+		[DataMember(Order = 64), DefaultValue(true)]
 		public bool IsTakeWithInAllAnySomeSubquerySupported { get; set; } = true;
 
 		/// <summary>
 		/// Indicates that provider supports simple COALESCE translation without complex translation.
 		/// </summary>
-		[DataMember(Order = 63), DefaultValue(true)]
+		[DataMember(Order = 65), DefaultValue(true)]
 		public bool IsSimpleCoalesceSupported { get; set; } = true;
 
-		[DataMember(Order = 64), DefaultValue(true)]
+		/// <summary>
+		/// Indicates that provider supports subquery in predicate, like (SELECT column FROM ...) IS NULL, COALESCE((SELECT column FROM ...), 0).
+		/// </summary>
+		[DataMember(Order = 66), DefaultValue(true)]
 		public bool IsSubqueryExpressionInsidePredicateSupported { get; set; } = true;
 
 		/// <summary>
 		/// Provider supports JOIN to subquery which contains reference to parent table in join condition.
 		/// </summary>
-		[DataMember(Order = 66), DefaultValue(true)]
+		[DataMember(Order = 67), DefaultValue(true)]
 		public bool IsSubqueryJoinOnOuterReferenceSupported { get; set; } = true;
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
@@ -642,6 +659,8 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsDistinctFromSupported                              .GetHashCode()
 				^ DoesProviderTreatsEmptyStringAsNull                  .GetHashCode()
 				^ IsOrderByAggregateFunctionSupported                  .GetHashCode()
+				^ IsOrderByAggregateSubquerySupported                  .GetHashCode()
+				^ IsOrderBySubQuerySupported                           .GetHashCode()
 				^ IsComplexJoinConditionSupported                      .GetHashCode()
 				^ IsCrossJoinSyntaxRequired                            .GetHashCode()
 				^ IsTakeWithInAllAnySomeSubquerySupported              .GetHashCode()
@@ -712,6 +731,8 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsDistinctFromSupported                               == other.IsDistinctFromSupported
 				&& DoesProviderTreatsEmptyStringAsNull                   == other.DoesProviderTreatsEmptyStringAsNull
 				&& IsOrderByAggregateFunctionSupported                   == other.IsOrderByAggregateFunctionSupported
+				&& IsOrderByAggregateSubquerySupported                   == other.IsOrderByAggregateSubquerySupported
+				&& IsOrderBySubQuerySupported                            == other.IsOrderBySubQuerySupported
 				&& IsComplexJoinConditionSupported                       == other.IsComplexJoinConditionSupported
 				&& IsCrossJoinSyntaxRequired                             == other.IsCrossJoinSyntaxRequired
 				&& IsSimpleCoalesceSupported                             == other.IsSimpleCoalesceSupported

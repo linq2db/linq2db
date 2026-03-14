@@ -9,7 +9,6 @@ using LinqToDB.Internal.Extensions;
 using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using static LinqToDB.Internal.Common.Utils;
 
@@ -23,7 +22,6 @@ namespace LinqToDB.Internal.SqlProvider
 		bool                        _visitQueries;
 		bool                        _isInsidePredicate;
 		bool                        _reducePredicates;
-		ISqlExpression?             _columnExpression;
 		bool                        _doNotOptimizeNulls;
 
 		protected DataOptions       DataOptions       { get; private set; } = default!;
@@ -70,7 +68,6 @@ namespace LinqToDB.Internal.SqlProvider
 			MappingSchema       = default!;
 			_allowOptimize      = default;
 			_allowOptimizeList  = default;
-			_columnExpression   = default;
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
@@ -1331,28 +1328,12 @@ string.Equals(be2.Operation, "*", StringComparison.Ordinal) &&
 			return function;
 		}
 
-		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
-		{
-			var saveColumnExpression = _columnExpression;
-
-			if (column.Parent != null && QueryHelper.IsAggregationQuery(column.Parent))
-				_columnExpression = expression;
-
-			var result = base.VisitSqlColumnExpression(column, expression);
-
-			_columnExpression = saveColumnExpression;
-			return result;
-		}
-
 		protected internal override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
 		{
 			var newElement = base.VisitSqlCoalesceExpression(element);
 
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
-
-			if (ReferenceEquals(element, _columnExpression))
-				return element;
 
 			List<ISqlExpression>? newExpressions = null;
 

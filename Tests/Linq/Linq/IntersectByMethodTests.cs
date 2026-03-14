@@ -41,7 +41,9 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(CreateTestTableData());
 
 			var query = table
-				.IntersectBy(new[] { 20, 30 }, x => x.TestId);
+				.OrderByDescending(x => x.Id)
+				.IntersectBy(new[] { 20, 30 }, x => x.TestId)
+				.OrderByDescending(x => x.Id);
 
 			AssertQuery(query);
 		}
@@ -84,6 +86,7 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(CreateTestTableData());
 
 			var query = table
+				.OrderByDescending(x => x.Id)
 				.IntersectBy(new[] { 20, 30 }, x => x.TestId)
 				.OrderByDescending(x => x.Id);
 
@@ -103,8 +106,9 @@ namespace Tests.Linq
 				.Select(x => x.TestId);
 
 			var query = table
+				.OrderByDescending(x => x.Id)
 				.IntersectBy(exclude, x => x.TestId)
-				.OrderBy(x => x.TestId);
+				.OrderByDescending(x => x.Id);
 
 			AssertQuery(query);
 		}
