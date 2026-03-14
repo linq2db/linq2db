@@ -2982,7 +2982,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 		int CountUsage(SelectQuery rootQuery, SqlColumn column)
 		{
 			IQueryElement root = rootQuery;
-			if (_rootElement is not (SqlSelectStatement or SqlInsertStatement or SqlUpdateStatement))
+			if (_rootElement is not SqlSelectStatement)
 			{
 				root = _rootElement;
 			}
