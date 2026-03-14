@@ -1041,13 +1041,13 @@ namespace Tests.xUpdate
 			using var db = GetDataContext(context);
 			db.Update(new Table3 { ParentID = 10000, ChildID = null, GrandChildID = 1000 });
 
-			if (db is DataConnection)
-				Assert.That(((DataConnection)db).LastQuery!, Does.Contain("IS NULL"));
+			if (db is DataConnection dc)
+				Assert.That(dc.LastQuery!, Does.Contain("IS NULL"));
 
 			db.Update(new Table3 { ParentID = 10000, ChildID = 111, GrandChildID = 1000 });
 
-			if (db is DataConnection)
-				Assert.That(((DataConnection)db).LastQuery!, Does.Not.Contain("IS NULL"));
+			if (db is DataConnection dc2)
+				Assert.That(dc2.LastQuery!, Does.Not.Contain("IS NULL"));
 		}
 
 		[Test]
@@ -2134,6 +2134,69 @@ namespace Tests.xUpdate
 			db.Types
 				.Where(p => p.ID == -1)
 				.Update(p => new LinqDataTypes { BoolValue = p.BoolValue || someExternalDependency > 0 });
+		}
+
+		sealed class InsertFromWithConstantsTable
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+			public int? Value { get; set; }
+			public string? Value1 { get; set; }
+			public string? Value2 { get; set; }
+			public string? Value3 { get; set; }
+			public string? Value4 { get; set; }
+		}
+
+		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
+		public void UpdateFromWithDuplicateSubqueryColumn_SingleOrDefault([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
+
+			var id1 = 1;
+
+			tb
+				.Select(r => new
+				{
+					r,
+					Value1 = tb.Where(r => r.Id == id1).Select(r => r.Value3).SingleOrDefault(),
+					Value2 = "string 1",
+				})
+				.Update(
+					x => x.r,
+					x => new InsertFromWithConstantsTable()
+					{
+						Value1 = x.Value1,
+						Value2 = x.Value1,
+						Value3 = x.Value2,
+						Value4 = x.Value2,
+					});
+		}
+
+		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
+		public void UpdateFromWithDuplicateSubqueryColumn_FirstOrDefault([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
+
+			var id1 = 1;
+
+			tb
+				.Select(r => new
+				{
+					r,
+					Value1 = tb.Where(r => r.Id == id1).Select(r => r.Value3).FirstOrDefault(),
+					Value2 = "string 1",
+				})
+				.Update(
+					x => x.r,
+					x => new InsertFromWithConstantsTable()
+					{
+						Value1 = x.Value1,
+						Value2 = x.Value1,
+						Value3 = x.Value2,
+						Value4 = x.Value2,
+					});
 		}
 	}
 }
