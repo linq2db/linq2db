@@ -19,10 +19,8 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue4336Tests : TestBase
 	{
-		// bug in informix
-		[ThrowsForProvider(typeof(DB2Exception), TestProvName.AllInformix, ErrorMessage = "ERROR [IX000] [IBM][IDS/UNIX64] Internal error in routine opjoin().")]
 		[Test]
-		public void Issue4336Test([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue4336Test([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<Product>();
