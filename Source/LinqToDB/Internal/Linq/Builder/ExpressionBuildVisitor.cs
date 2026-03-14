@@ -4558,13 +4558,16 @@ namespace LinqToDB.Internal.Linq.Builder
 			{
 				case ExpressionType.Constant:
 				{
-					var origValue = ((ConstantExpression)value).Value!;
+					var origValue = ((ConstantExpression)value).Value;
 					var mapValue  = origValue;
 
-					foreach (var enumVal in MappingSchema.GetMapValues(type.UnwrapNullableType())!)
+					if (origValue != null)
 					{
-						if (origValue.Equals(enumVal.OrigValue) && enumVal.MapValues.Length > 0)
-							mapValue = enumVal.MapValues[0].Value;
+						foreach (var enumVal in MappingSchema.GetMapValues(type.UnwrapNullableType())!)
+						{
+							if (origValue.Equals(enumVal.OrigValue) && enumVal.MapValues.Length > 0)
+								mapValue = enumVal.MapValues[0].Value;
+						}
 					}
 
 					SqlValue sqlvalue;
@@ -4572,7 +4575,8 @@ namespace LinqToDB.Internal.Linq.Builder
 
 					if (ce != null)
 					{
-						sqlvalue = new SqlValue(ce.ConvertValueToParameter(origValue).Value!);
+						var parameter = ce.ConvertValueToParameter(origValue);
+						sqlvalue      = new SqlValue(parameter.DbDataType, parameter.Value);
 					}
 					else
 					{
