@@ -68,14 +68,14 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 			{
 				var firstSetOperation = selectQuery.SetOperators[0];
 
-				if (firstSetOperation.Operation != SetOperation.UnionAll)
+				if (firstSetOperation.Operation != SetOperation.UnionAll || !_providerFlags.IsSubQueryOrderBySupported)
 				{
 					RemoveOrderBy(selectQuery, true);
 				}
 
 				foreach (var so in selectQuery.SetOperators)
 				{
-					if (so.Operation != SetOperation.UnionAll)
+					if (so.Operation != SetOperation.UnionAll || !_providerFlags.IsSubQueryOrderBySupported)
 					{
 						RemoveOrderBy(so.SelectQuery, false);
 					}
@@ -152,7 +152,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
-			if (!selectQuery.OrderBy.IsEmpty)
+			if (!selectQuery.HasOrderBy)
 			{
 				if (selectQuery.From.Tables.Count == 1 && selectQuery.From.Tables[0].Source is SelectQuery sunQuery)
 				{
@@ -163,13 +163,18 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 				}
 			}
 
-			if (selectQuery.OrderBy.Items.Count > 1)
+			if (selectQuery.HasOrderBy)
 			{
 				var previousCount = selectQuery.OrderBy.Items.Count;
 				selectQuery.OrderBy.Items.RemoveDuplicates(item => item.Expression);
 
 				if (previousCount != selectQuery.OrderBy.Items.Count)
 					optimized = true;
+
+				if (parentSelectQuery != null && !_providerFlags.IsSubQueryOrderBySupported)
+				{
+					RemoveOrderBy(selectQuery, false);
+				}
 			}
 
 			return optimized;
