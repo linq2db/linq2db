@@ -20,7 +20,7 @@ namespace Tests.UserTests
 	public class Issue4336Tests : TestBase
 	{
 		[Test]
-		public void Issue4336Test([DataSources(TestProvName.AllAccess, TestProvName.AllInformix)] string context)
+		public void Issue4336Test([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<Product>();
