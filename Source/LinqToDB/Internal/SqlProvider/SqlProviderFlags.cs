@@ -119,56 +119,64 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </summary>
 		[DataMember(Order = 15)]
 		public bool        IsSubQueryOrderBySupported     { get; set; }
+
+		/// <summary>
+		/// Indicates support of <c>ORDER BY</c> clause in UNION ALL.
+		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>.
+		/// </summary>
+		[DataMember(Order = 16)]
+		public bool IsUnionAllOrderBySupported { get; set; }
+
 		/// <summary>
 		/// Indicates that database supports count subquery as scalar in column.
 		/// <code>SELECT (SELECT COUNT(*) FROM some_table) FROM ...</code>
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
 		/// </summary>
-		[DataMember(Order = 16)]
+		[DataMember(Order = 17)]
 		public bool        IsCountSubQuerySupported       { get; set; }
 
 		/// <summary>
 		/// Indicates that provider requires explicit output parameter for insert with identity queries to get identity from database.
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order = 17)]
+		[DataMember(Order = 18)]
 		public bool        IsIdentityParameterRequired    { get; set; }
 		/// <summary>
 		/// Indicates support for OUTER/CROSS APPLY.
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order = 18)]
+		[DataMember(Order = 19)]
 		public bool        IsApplyJoinSupported           { get; set; }
 		/// <summary>
 		/// Indicates support for CROSS APPLY supports condition LATERAL JOIN for example.
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order = 19)]
+		[DataMember(Order = 20)]
 		public bool IsCrossApplyJoinSupportsCondition { get; set; }
 		/// <summary>
 		/// Indicates support for OUTER APPLY supports condition LATERAL JOIN for example.
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order = 20)]
+		[DataMember(Order = 21)]
 		public bool IsOuterApplyJoinSupportsCondition { get; set; }
 		/// <summary>
 		/// Indicates support for single-query insert-or-update operation support.
 		/// Otherwise two separate queries used to emulate operation (update, then insert if nothing found to update).
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
 		/// </summary>
-		[DataMember(Order = 21)]
+		[DataMember(Order = 22)]
 		public bool        IsInsertOrUpdateSupported      { get; set; }
 		/// <summary>
 		/// Indicates that provider could share parameter between statements in multi-statement batch.
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
 		/// </summary>
-		[DataMember(Order = 22)]
+		[DataMember(Order = 23)]
 		public bool        CanCombineParameters           { get; set; }
 		/// <summary>
 		/// Specifies limit of number of values in single <c>IN</c> predicate without splitting it into several IN's.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>int.MaxValue</c> (basically means there is no limit).
 		/// </summary>
-		[DataMember(Order = 23)]
+		[DataMember(Order = 24)]
 		public int         MaxInListValuesCount           { get; set; }
 
 		/// <summary>
@@ -176,35 +184,35 @@ namespace LinqToDB.Internal.SqlProvider
 		/// table with special name (e.g. DELETED or OLD). Otherwise fields should be referenced using target table.
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order = 24)]
+		[DataMember(Order = 25)]
 		public bool        OutputDeleteUseSpecialTable    { get; set; }
 		/// <summary>
 		/// If <see langword="true"/>, added record fields in OUTPUT clause of INSERT statement should be referenced using
 		/// table with special name (e.g. INSERTED or NEW). Otherwise fields should be referenced using target table.
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order = 25)]
+		[DataMember(Order = 26)]
 		public bool        OutputInsertUseSpecialTable    { get; set; }
 		/// <summary>
 		/// If <see langword="true"/>, OUTPUT clause supports both OLD and NEW data in UPDATE statement using tables with special names.
 		/// Otherwise only current record fields (after update) available using target table.
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order = 26)]
+		[DataMember(Order = 27)]
 		public bool        OutputUpdateUseSpecialTables   { get; set; }
 		/// <summary>
 		/// If <see langword="true"/>, OUTPUT clause supports both OLD and NEW data in MERGE statement using tables with special names.
 		/// Otherwise only current record fields (after all changes) available using target table.
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order = 27)]
+		[DataMember(Order = 28)]
 		public bool        OutputMergeUseSpecialTables    { get; set; }
 
 		/// <summary>
 		/// Indicates support for CROSS JOIN.
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
 		/// </summary>
-		[DataMember(Order = 28)]
+		[DataMember(Order = 29)]
 		public bool        IsCrossJoinSupported              { get; set; }
 
 		/// <summary>
@@ -212,7 +220,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// If provider does not support CTE, unsuported exception will be thrown when using CTE.
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order = 29)]
+		[DataMember(Order = 30)]
 		public bool IsCommonTableExpressionsSupported     { get; set; }
 
 		/// <summary>
@@ -220,21 +228,21 @@ namespace LinqToDB.Internal.SqlProvider
 		/// It is specific behaviour only for Oracle.
 		/// Default <see langword="false"/>
 		/// </summary>
-		[DataMember(Order = 30)]
+		[DataMember(Order = 31)]
 		public bool DoesProviderTreatsEmptyStringAsNull { get; set; }
 
 		/// <summary>
 		/// Provider supports EXCEPT ALL, INTERSECT ALL set operators. Otherwise they will be emulated.
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order = 31)]
+		[DataMember(Order = 32)]
 		public bool IsAllSetOperationsSupported           { get; set; }
 
 		/// <summary>
 		/// Provider supports EXCEPT, INTERSECT set operators. Otherwise it will be emulated.
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
 		/// </summary>
-		[DataMember(Order = 32)]
+		[DataMember(Order = 33)]
 		public bool IsDistinctSetOperationsSupported      { get; set; }
 
 		/// <summary>
@@ -263,7 +271,7 @@ namespace LinqToDB.Internal.SqlProvider
 		///</code>
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
 		/// </summary>
-		[DataMember(Order = 33)]
+		[DataMember(Order = 34)]
 		public bool AcceptsOuterExpressionInAggregate { get; set; }
 
 		/// <summary>
@@ -275,7 +283,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </code>
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
 		/// </summary>
-		[DataMember(Order = 34)]
+		[DataMember(Order = 35)]
 		public bool IsUpdateFromSupported             { get; set; }
 
 		/// <summary>
@@ -285,48 +293,48 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </code>
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order = 35)]
+		[DataMember(Order = 36)]
 		public bool IsNamingQueryBlockSupported       { get; set; }
 
 		/// <summary>
 		/// Indicates that provider supports window functions.
 		/// Default value: <see langword="true"/>.
 		/// </summary>
-		[DataMember(Order = 36)]
+		[DataMember(Order = 37)]
 		public bool IsWindowFunctionsSupported { get; set; }
 
 		/// <summary>
 		/// Used when there is query which needs several additional database requests for completing query (e.g. eager load or client-side GroupBy).
 		/// Default (set by <see cref="DataProviderBase"/>): <see cref="IsolationLevel.RepeatableRead"/>.
 		/// </summary>
-		[DataMember(Order = 37)]
+		[DataMember(Order = 38)]
 		public IsolationLevel DefaultMultiQueryIsolationLevel { get; set; }
 
 		/// <summary>
 		/// Provider support Row Constructor `(1, 2, 3)` in various positions (flags)
 		/// Default (set by <see cref="DataProviderBase"/>): <see cref="RowFeature.None"/>.
 		/// </summary>
-		[DataMember(Order = 38), DefaultValue(RowFeature.None)]
+		[DataMember(Order = 39), DefaultValue(RowFeature.None)]
 		public RowFeature RowConstructorSupport { get; set; }
 
 		/// <summary>
 		/// Default value: <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order = 39)]
+		[DataMember(Order = 40)]
 		public bool IsExistsPreferableForContains   { get; set; }
 
 		/// <summary>
 		/// Provider supports ROW_NUMBER OVER () without ORDER BY
 		/// Default value: <see langword="true"/>.
 		/// </summary>
-		[DataMember(Order = 40), DefaultValue(true)]
+		[DataMember(Order = 41), DefaultValue(true)]
 		public bool IsRowNumberWithoutOrderBySupported { get; set; } = true;
 
 		/// <summary>
 		/// Provider supports condition in subquery which references parent table
 		/// Default value: <see langword="true"/>.
 		/// </summary>
-		[DataMember(Order = 41), DefaultValue(true)]
+		[DataMember(Order = 42), DefaultValue(true)]
 		public bool IsSubqueryWithParentReferenceInJoinConditionSupported { get; set; } = true;
 
 		/// <summary>
@@ -336,7 +344,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// Used only for Oracle 11. linq2db emulates Take(n) via 'ROWNUM' and it causes additional nesting.
 		/// Default value: <see langword="true"/>.
 		/// </remarks>
-		[DataMember(Order = 42), DefaultValue(true)]
+		[DataMember(Order = 43), DefaultValue(true)]
 		public bool IsColumnSubqueryWithParentReferenceAndTakeSupported { get; set; } = true;
 
 		/// <summary>
@@ -346,14 +354,14 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <remarks>
 		/// See Issue3557Case1 test.
 		/// </remarks>
-		[DataMember(Order = 43), DefaultValue(false)]
+		[DataMember(Order = 44), DefaultValue(false)]
 		public bool IsColumnSubqueryShouldNotContainParentIsNotNull { get; set; }
 
 		/// <summary>
 		/// Provider supports INNER JOIN with condition inside Recursive CTE, currently not supported only by DB2
 		/// Default value: <see langword="true"/>.
 		/// </summary>
-		[DataMember(Order = 44), DefaultValue(true)]
+		[DataMember(Order = 45), DefaultValue(true)]
 		public bool IsRecursiveCTEJoinWithConditionSupported { get; set; } = true;
 
 		/// <summary>
@@ -376,7 +384,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// Currently not supported only by Access.
 		/// </remarks>
 		/// </summary>
-		[DataMember(Order = 45), DefaultValue(true)]
+		[DataMember(Order = 46), DefaultValue(true)]
 		public bool IsOuterJoinSupportsInnerJoin { get; set; } = true;
 
 		/// <summary>
@@ -402,14 +410,14 @@ namespace LinqToDB.Internal.SqlProvider
 		/// Currently not supported only by Access.
 		/// </remarks>
 		/// </summary>
-		[DataMember(Order = 46), DefaultValue(true)]
+		[DataMember(Order = 47), DefaultValue(true)]
 		public bool IsMultiTablesSupportsJoins { get; set; } = true;
 
 		/// <summary>
 		/// Indicates that top level CTE query supports ORDER BY.
 		/// Default value: <see langword="true"/>.
 		/// </summary>
-		[DataMember(Order = 47), DefaultValue(true)]
+		[DataMember(Order = 48), DefaultValue(true)]
 		public bool IsCTESupportsOrdering { get; set; } = true;
 
 		/// <summary>
@@ -425,21 +433,21 @@ namespace LinqToDB.Internal.SqlProvider
 		/// As workaround translator is trying to check for nullability all projected fields.
 		/// Default value: <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order =  48)]
+		[DataMember(Order = 49)]
 		public bool IsAccessBuggyLeftJoinConstantNullability { get; set; }
 
 		/// <summary>
 		/// Indicates that provider supports direct comparison of predicates.
 		/// Default value: <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order = 49)]
+		[DataMember(Order = 50)]
 		public bool SupportsPredicatesComparison { get; set; }
 
 		/// <summary>
 		/// Indicates that boolean type could be used as predicate without additional conversions.
 		/// Default value: <see langword="true"/>.
 		/// </summary>
-		[DataMember(Order = 50), DefaultValue(true)]
+		[DataMember(Order = 51), DefaultValue(true)]
 		public bool SupportsBooleanType { get; set; } = true;
 
 		/// <summary>
@@ -453,28 +461,28 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </code>.
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
 		/// </summary>
-		[DataMember(Order = 51), DefaultValue(true)]
+		[DataMember(Order = 52), DefaultValue(true)]
 		public bool IsNestedJoinsSupported { get; set; } = true;
 
 		/// <summary>
 		/// Provider supports SUM/AVG/MIN/MAX(DISTINCT column) function. Otherwise, it will be emulated.
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="true"/>.
 		/// </summary>
-		[DataMember(Order = 52)]
+		[DataMember(Order = 53)]
 		public bool IsDerivedTableOrderBySupported { get; set; }
 
 		/// <summary>
 		/// Provider supports TAKE limit for UPDATE query.
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order = 53)]
+		[DataMember(Order = 54)]
 		public bool IsUpdateTakeSupported { get; set; }
 
 		/// <summary>
 		/// Provider supports SKIP+TAKE limit for UPDATE query.
 		/// Default (set by <see cref="DataProviderBase"/>): <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order = 54)]
+		[DataMember(Order = 55)]
 		public bool IsUpdateSkipTakeSupported { get; set; }
 
 		/// <summary>
@@ -484,21 +492,21 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <remarks>
 		/// Applied only to ClickHouse provider.
 		/// </remarks>
-		[DataMember(Order = 55)]
+		[DataMember(Order = 56)]
 		public bool IsSupportedSimpleCorrelatedSubqueries { get; set; }
 
 		/// <summary>
 		/// Provider supports correlated subqueris, but limited how deep in subquery outer reference
 		/// Default <see langword="null"/>. If this value is <c>0</c>c>, provider do not support correlated subqueries
 		/// </summary>
-		[DataMember(Order = 56)]
+		[DataMember(Order = 57)]
 		public int? SupportedCorrelatedSubqueriesLevel { get; set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating whether the calculation of deep level includes aggregation queries.
 		/// Works in conjunction with <see cref="SupportedCorrelatedSubqueriesLevel"/>.
 		/// </summary>
-		[DataMember(Order = 57)]
+		[DataMember(Order = 58)]
 		public bool CalculateSupportedCorrelatedLevelWithAggregateQueries { get; set; }
 
 		/// <summary>
@@ -506,7 +514,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// This doesn't include emulation using INTERSECT.
 		/// Default <see langword="false"/>
 		/// </summary>
-		[DataMember(Order = 58)]
+		[DataMember(Order = 59)]
 		public bool IsDistinctFromSupported { get; set; }
 
 		/// <summary>
@@ -516,7 +524,7 @@ namespace LinqToDB.Internal.SqlProvider
 		/// <remarks>
 		/// Applied only to SqlCe provider.
 		/// </remarks>
-		[DataMember(Order = 59)]
+		[DataMember(Order = 60)]
 		public bool IsOrderByAggregateFunctionSupported { get; set; }
 
 		/// <summary>
@@ -529,29 +537,29 @@ namespace LinqToDB.Internal.SqlProvider
 		/// </code>
 		/// Default: <see langword="true"/>.
 		/// </summary>
-		[DataMember(Order = 60), DefaultValue(true)]
+		[DataMember(Order = 61), DefaultValue(true)]
 		public bool IsComplexJoinConditionSupported { get; set; } = true;
 
 		/// <summary>
 		/// When enabled, always prefer "FROM T1 CROSS JOIN T2" over "FROM T1, T2" join syntax.
 		/// Default: <see langword="false"/>.
 		/// </summary>
-		[DataMember(Order = 61), DefaultValue(false)]
+		[DataMember(Order = 62), DefaultValue(false)]
 		public bool IsCrossJoinSyntaxRequired { get; set; }
 
 		/// <summary>
 		/// When disabled, SQL dialect doesn't support Take/LIMIT &amp; IN/ALL/ANY/SOME subquery.
 		/// </summary>
-		[DataMember(Order = 62), DefaultValue(true)]
+		[DataMember(Order = 63), DefaultValue(true)]
 		public bool IsTakeWithInAllAnySomeSubquerySupported { get; set; } = true;
 
 		/// <summary>
 		/// Indicates that provider supports simple COALESCE translation without complex translation.
 		/// </summary>
-		[DataMember(Order = 63), DefaultValue(true)]
+		[DataMember(Order = 64), DefaultValue(true)]
 		public bool IsSimpleCoalesceSupported { get; set; } = true;
 
-		[DataMember(Order = 64), DefaultValue(true)]
+		[DataMember(Order = 65), DefaultValue(true)]
 		public bool IsSubqueryExpressionInsidePredicateSupported { get; set; } = true;
 
 		/// <summary>
@@ -597,6 +605,7 @@ namespace LinqToDB.Internal.SqlProvider
 				^ IsSubQuerySkipSupported                              .GetHashCode()
 				^ IsSubQueryColumnSupported                            .GetHashCode()
 				^ IsSubQueryOrderBySupported                           .GetHashCode()
+				^ IsUnionAllOrderBySupported                           .GetHashCode()
 				^ IsCountSubQuerySupported                             .GetHashCode()
 				^ IsIdentityParameterRequired                          .GetHashCode()
 				^ IsApplyJoinSupported                                 .GetHashCode()
@@ -667,6 +676,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsSubQuerySkipSupported                               == other.IsSubQuerySkipSupported
 				&& IsSubQueryColumnSupported                             == other.IsSubQueryColumnSupported
 				&& IsSubQueryOrderBySupported                            == other.IsSubQueryOrderBySupported
+				&& IsUnionAllOrderBySupported                            == other.IsUnionAllOrderBySupported
 				&& IsCountSubQuerySupported                              == other.IsCountSubQuerySupported
 				&& IsIdentityParameterRequired                           == other.IsIdentityParameterRequired
 				&& IsApplyJoinSupported                                  == other.IsApplyJoinSupported
@@ -716,7 +726,7 @@ namespace LinqToDB.Internal.SqlProvider
 				&& IsCrossJoinSyntaxRequired                             == other.IsCrossJoinSyntaxRequired
 				&& IsSimpleCoalesceSupported                             == other.IsSimpleCoalesceSupported
 				&& IsSubqueryExpressionInsidePredicateSupported          == other.IsSubqueryExpressionInsidePredicateSupported
-				&& IsSubqueryJoinOnOuterReferenceSupported                       == other.IsSubqueryJoinOnOuterReferenceSupported
+				&& IsSubqueryJoinOnOuterReferenceSupported               == other.IsSubqueryJoinOnOuterReferenceSupported
 				&& IsTakeWithInAllAnySomeSubquerySupported               == other.IsTakeWithInAllAnySomeSubquerySupported
 				&& CustomFlags.SetEquals(other.CustomFlags);
 		}
