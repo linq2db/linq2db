@@ -12,8 +12,59 @@ using LinqToDB.Remote;
 namespace LinqToDB
 {
 	/// <summary>
-	/// Immutable context configuration object.
+	/// Composable options graph that configures LinqToDB translation,
+	/// execution, and materialization behavior.
 	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// <see cref="DataOptions"/> is a structured container of option groups
+	/// (e.g., LINQ, SQL, connection, retry policy, bulk copy, context behavior)
+	/// that together define how queries and commands are processed.
+	/// </para>
+	///
+	/// <para>
+	/// Use to define reusable configuration presets for creating
+	/// <see cref="DataConnection"/> or <see cref="DataContext"/> instances.
+	/// </para>
+	///
+	/// <para>
+	/// Configure options using extension methods that return a new <see cref="DataOptions"/> instance;
+	/// treat instances as immutable values. Options do not open connections or execute commands.
+	/// </para>
+	///
+	/// <para>
+	/// Options participate in the full processing pipeline:
+	/// <c>Expression Tree</c> → SQL AST → SQL text → execution → materialization.
+	/// Individual option groups may influence different stages of this pipeline.
+	/// </para>
+	///
+	/// <para>
+	/// Provider-specific and user-defined option groups are supported.
+	/// These options become part of the translation and execution contract
+	/// of the resulting <see cref="IDataContext"/> instance.
+	/// </para>
+	///
+	/// <para>
+	/// Recommended approach: define a small number of stable <see cref="DataOptions"/>
+	/// presets (per provider or environment) and create short-lived contexts
+	/// (typically <see cref="DataConnection"/>) from them.
+	/// </para>
+	///
+	/// <para><b>Performance guidance:</b></para>
+	/// <para>
+	/// Constructing and composing options may trigger initialization work.
+	/// For optimal performance, create <see cref="DataOptions"/> once
+	/// and reuse it when creating context instances.
+	/// </para>
+	/// <example>
+	/// <code>
+	/// static readonly DataOptions Options = new DataOptions(/*...*/);
+	///
+	/// using var db = new DataConnection(Options);                 // preferred
+	/// using var db2 = new DataConnection(new DataOptions(/*...*/)); // avoid rebuilding options per usage
+	/// </code>
+	/// </example>
+	/// </remarks>
 	public sealed class DataOptions : OptionsContainer<DataOptions>, IConfigurationID, IEquatable<DataOptions>, ICloneable
 	{
 		public DataOptions()

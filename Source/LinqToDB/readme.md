@@ -29,6 +29,7 @@
   - [Window (Analytic) Functions](#window-analytic-functions)
 - [MiniProfiler](#miniprofiler)
 - [More](#more)
+- [AI/LLM-oriented documentation](#aillm-oriented-documentation)
 
 LINQ to DB is the fastest LINQ database access library offering a simple, light, fast, and type-safe layer between your POCO objects and your database.
 
@@ -756,3 +757,10 @@ public class DbDataContext : DataConnection
 ## More
 
 Still have questions left? Check out our [documentation site](https://linq2db.github.io) and [FAQ](https://linq2db.github.io/articles/FAQ.html)
+
+## AI/LLM-oriented documentation
+
+- Architecture overview for agents: see XML documentation for class `LinqToDBArchitecture`.
+- Extended architecture notes: [`docs/architecture.md`](docs/architecture.md)
+- `AI-Tags` metadata format and vocabulary: [`docs/ai-tags.md`](docs/ai-tags.md)
+

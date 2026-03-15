@@ -12,12 +12,19 @@ namespace LinqToDB
 	public static partial class LinqExtensions
 	{
 		/// <summary>
-		/// Assigns table id.
+		/// Assigns a table identifier for query translation.
 		/// </summary>
 		/// <typeparam name="T">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
-		/// <param name="id">Table ID.</param>
-		/// <returns>Table-like query source with new name.</returns>
+		/// <param name="id">Table identifier. Provider-specific meaning (e.g. used for table hints or table routing).</param>
+		/// <returns>Table-like query source with the assigned table identifier.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// The identifier affects SQL semantics and is emitted into SQL text according to provider rules.
+		/// <para>
+		/// AI-Tags: Group=TableConfiguration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </para>
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> TableID<T>(this ITable<T> table, [SqlQueryDependent] string? id)
@@ -30,12 +37,19 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Overrides table or view name with new name for current query.
+		/// Overrides the table or view name for the current query.
 		/// </summary>
 		/// <typeparam name="T">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
-		/// <param name="name">Name of table.</param>
-		/// <returns>Table-like query source with new name.</returns>
+		/// <param name="name">Table or view name.</param>
+		/// <returns>Table-like query source with the overridden table name.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// The name affects SQL semantics and is emitted into SQL text according to provider rules.
+		/// <para>
+		/// AI-Tags: Group=TableConfiguration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </para>
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> TableName<T>(this ITable<T> table, [SqlQueryDependent] string name)
@@ -49,16 +63,29 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Overrides database name with new name for current query. This call will have effect only for databases that support
-		/// database name in fully-qualified table name.
-		/// <para>Supported by: Access, DB2, MySQL, PostgreSQL, SAP HANA, SQLite, Informix, SQL Server, Sybase ASE.</para>
-		/// <para>Requires schema name (see <see cref="SchemaName{T}(ITable{T}, string)"/>): DB2, SAP HANA, PostgreSQL.</para>
-		/// <para>PostgreSQL supports only name of current database.</para>
+		/// Overrides the database name for the current query.
+		/// This call affects only providers that support database name as part of a fully qualified table name.
 		/// </summary>
 		/// <typeparam name="T">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
-		/// <param name="name">Name of database.</param>
-		/// <returns>Table-like query source with new database name.</returns>
+		/// <param name="name">Database name.</param>
+		/// <returns>Table-like query source with the overridden database name.</returns>
+		/// <remarks>
+		/// Provider support: Access, DB2, MySQL, PostgreSQL, SAP HANA, SQLite, Informix, SQL Server, Sybase ASE.
+		/// <para>
+		/// Requires schema name (see <see cref="SchemaName{T}(ITable{T}, string)"/>): DB2, SAP HANA, PostgreSQL.
+		/// </para>
+		/// <para>
+		/// PostgreSQL supports only the current database name.
+		/// </para>
+		/// <para>
+		/// Execution is deferred and the method is composable.
+		/// The name affects SQL semantics and is emitted into SQL text according to provider rules.
+		/// </para>
+		/// <para>
+		/// AI-Tags: Group=TableConfiguration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </para>
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> DatabaseName<T>(this ITable<T> table, [SqlQueryDependent] string? name)
@@ -71,14 +98,23 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Overrides linked server name with new name for current query. This call will have effect only for databases that support
-		/// linked server name in fully-qualified table name.
-		/// <para>Supported by: SQL Server, Informix, Oracle, SAP HANA2.</para>
+		/// Overrides the linked server name for the current query.
+		/// This call affects only providers that support linked server name as part of a fully qualified table name.
 		/// </summary>
 		/// <typeparam name="T">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
-		/// <param name="name">Name of linked server.</param>
-		/// <returns>Table-like query source with new linked server name.</returns>
+		/// <param name="name">Linked server name.</param>
+		/// <returns>Table-like query source with the overridden linked server name.</returns>
+		/// <remarks>
+		/// Provider support: SQL Server, Informix, Oracle, SAP HANA2.
+		/// <para>
+		/// Execution is deferred and the method is composable.
+		/// The name affects SQL semantics and is emitted into SQL text according to provider rules.
+		/// </para>
+		/// <para>
+		/// AI-Tags: Group=TableConfiguration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </para>
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> ServerName<T>(this ITable<T> table, [SqlQueryDependent] string? name)
@@ -91,14 +127,23 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Overrides owner/schema name with new name for current query. This call will have effect only for databases that support
-		/// owner/schema name in fully-qualified table name.
-		/// <para>Supported by: DB2, Oracle, PostgreSQL, Informix, SQL Server, Sybase ASE.</para>
+		/// Overrides the owner/schema name for the current query.
+		/// This call affects only providers that support owner/schema name as part of a fully qualified table name.
 		/// </summary>
 		/// <typeparam name="T">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
-		/// <param name="name">Name of owner/schema.</param>
-		/// <returns>Table-like query source with new owner/schema name.</returns>
+		/// <param name="name">Owner or schema name.</param>
+		/// <returns>Table-like query source with the overridden owner/schema name.</returns>
+		/// <remarks>
+		/// Provider support: DB2, Oracle, PostgreSQL, Informix, SQL Server, Sybase ASE.
+		/// <para>
+		/// Execution is deferred and the method is composable.
+		/// The name affects SQL semantics and is emitted into SQL text according to provider rules.
+		/// </para>
+		/// <para>
+		/// AI-Tags: Group=TableConfiguration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </para>
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> SchemaName<T>(this ITable<T> table, [SqlQueryDependent] string? name)
@@ -109,19 +154,29 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Replaces access to a table in generated query with SQL expression.
-		/// Example below adds hint to a table. Also see <see cref="With{T}(ITable{T}, string)"/> method.
-		/// <code>
-		/// var tableWithHint = db.Table.WithTableExpression("{0} {1} with (UpdLock)");
-		/// </code>
+		/// Replaces the table reference in generated SQL with a user-provided SQL template.
 		/// </summary>
 		/// <typeparam name="T">Table record mapping class.</typeparam>
 		/// <param name="table">Table-like query source.</param>
-		/// <param name="expression">SQL template to use instead of table name. Template supports two parameters:
-		/// <para> - {0} original table name;</para>
-		/// <para> - {1} table alias.</para>
+		/// <param name="expression">
+		/// SQL template to use instead of the table name.
+		/// Template supports two placeholders:
+		/// <para>- <c>{0}</c>: original table name;</para>
+		/// <para>- <c>{1}</c>: table alias.</para>
 		/// </param>
-		/// <returns>Table-like query source with new table source expression.</returns>
+		/// <returns>Table-like query source with the overridden table source expression.</returns>
+		/// <remarks>
+		/// This API is typically used to inject provider-specific table syntax (e.g. hints).
+		/// For a dedicated hint API see <see cref="With{T}(ITable{T}, string)"/>.
+		/// <code>
+		/// var tableWithHint = db.Table.WithTableExpression("{0} {1} with (UpdLock)");
+		/// </code>
+		/// Execution is deferred and the method is composable.
+		/// The template affects SQL semantics and is emitted into SQL text according to provider rules.
+		/// <para>
+		/// AI-Tags: Group=TableConfiguration; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </para>
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> WithTableExpression<T>(this ITable<T> table, [SqlQueryDependent] string expression)

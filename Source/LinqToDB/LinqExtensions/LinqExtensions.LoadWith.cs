@@ -12,7 +12,7 @@ using LinqToDB.Internal.Linq;
 
 namespace LinqToDB
 {
-	public partial class LinqExtensions
+	public static partial class LinqExtensions
 	{
 		/// <summary>
 		/// Specifies associations, that should be loaded for each loaded record from current table.
@@ -42,6 +42,13 @@ namespace LinqToDB
 		/// <param name="table">Table-like query source.</param>
 		/// <param name="selector">Association selection expression.</param>
 		/// <returns>Table-like query source.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// The navigation loading directive affects SQL semantics and is emitted according to provider rules.
+		/// <para>
+		/// AI-Tags: Group=NavigationLoading; Execution=Deferred; Composability=Composable; Affects=JoinGraph; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </para>
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static ITable<T> LoadWithAsTable<T>(
@@ -158,6 +165,13 @@ namespace LinqToDB
 		/// <param name="source">The source query.</param>
 		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
 		/// <returns>Returns new query with related data included.</returns>
+		/// <remarks>
+		/// Execution is deferred and the method is composable.
+		/// The navigation loading directive affects SQL semantics and is emitted according to provider rules.
+		/// <para>
+		/// AI-Tags: Group=NavigationLoading; Execution=Deferred; Composability=Composable; Affects=JoinGraph; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
+		/// </para>
+		/// </remarks>
 		[LinqTunnel]
 		[Pure]
 		public static ILoadWithQueryable<TEntity,TProperty> LoadWith<TEntity,TProperty>(
@@ -248,6 +262,7 @@ namespace LinqToDB
 		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
 		/// <param name="loadFunc">Defines additional logic for association load query.</param>
 		/// <returns>Returns new query with related data included.</returns>
+		/// <remarks>See <see cref="LoadWith{TEntity,TProperty}(IQueryable{TEntity},Expression{Func{TEntity,TProperty}})"/> for SQL semantics and provider contract.</remarks>
 		[LinqTunnel]
 		[Pure]
 		public static ILoadWithQueryable<TEntity,TProperty> LoadWith<TEntity,TProperty>(
@@ -338,6 +353,7 @@ namespace LinqToDB
 		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
 		/// <param name="loadFunc">Defines additional logic for association load query.</param>
 		/// <returns>Returns new query with related data included.</returns>
+		/// <remarks>See <see cref="LoadWith{TEntity,TProperty}(IQueryable{TEntity},Expression{Func{TEntity,TProperty}})"/> for SQL semantics and provider contract.</remarks>
 		[LinqTunnel]
 		[Pure]
 		public static ILoadWithQueryable<TEntity,TProperty> LoadWith<TEntity,TProperty>(
@@ -399,6 +415,7 @@ namespace LinqToDB
 		/// <param name="source">The source query.</param>
 		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
 		/// <returns>Returns new query with related data included.</returns>
+		/// <remarks>See <see cref="LoadWith{TEntity,TProperty}(IQueryable{TEntity},Expression{Func{TEntity,TProperty}})"/> for SQL semantics and provider contract.</remarks>
 		[LinqTunnel]
 		[Pure]
 		public static ILoadWithQueryable<TEntity,TProperty> ThenLoad<TEntity,TPreviousProperty,TProperty>(
@@ -458,6 +475,7 @@ namespace LinqToDB
 		/// <param name="source">The source query.</param>
 		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
 		/// <returns>Returns new query with related data included.</returns>
+		/// <remarks>See <see cref="LoadWith{TEntity,TProperty}(IQueryable{TEntity},Expression{Func{TEntity,TProperty}})"/> for SQL semantics and provider contract.</remarks>
 		[LinqTunnel]
 		[Pure]
 		public static ILoadWithQueryable<TEntity,TProperty> ThenLoad<TEntity,TPreviousProperty,TProperty>(
@@ -526,6 +544,7 @@ namespace LinqToDB
 		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
 		/// <param name="loadFunc">Defines additional logic for association load query.</param>
 		/// <returns>Returns new query with related data included.</returns>
+		/// <remarks>See <see cref="LoadWith{TEntity,TProperty}(IQueryable{TEntity},Expression{Func{TEntity,TProperty}})"/> for SQL semantics and provider contract.</remarks>
 		[LinqTunnel]
 		[Pure] // ThenLoadFromSingleManyFilter
 		public static ILoadWithQueryable<TEntity,TProperty> ThenLoad<TEntity,TPreviousProperty,TProperty>(
@@ -595,6 +614,7 @@ namespace LinqToDB
 		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
 		/// <param name="loadFunc">Defines additional logic for association load query.</param>
 		/// <returns>Returns new query with related data included.</returns>
+		/// <remarks>See <see cref="LoadWith{TEntity,TProperty}(IQueryable{TEntity},Expression{Func{TEntity,TProperty}})"/> for SQL semantics and provider contract.</remarks>
 		[LinqTunnel]
 		[Pure] // Methods.LinqToDB.ThenLoadFromSingleSingleFilter
 		public static ILoadWithQueryable<TEntity,TProperty> ThenLoad<TEntity,TPreviousProperty,TProperty>(
@@ -666,6 +686,7 @@ namespace LinqToDB
 		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
 		/// <param name="loadFunc">Defines additional logic for association load query.</param>
 		/// <returns>Returns new query with related data included.</returns>
+		/// <remarks>See <see cref="LoadWith{TEntity,TProperty}(IQueryable{TEntity},Expression{Func{TEntity,TProperty}})"/> for SQL semantics and provider contract.</remarks>
 		[LinqTunnel]
 		[Pure] // // Methods.LinqToDB.ThenLoadFromManySingleFilter
 		public static ILoadWithQueryable<TEntity,TProperty> ThenLoad<TEntity,TPreviousProperty,TProperty>(
@@ -737,6 +758,7 @@ namespace LinqToDB
 		/// <param name="selector">A lambda expression representing navigation property to be included (<c>t => t.Property1</c>).</param>
 		/// <param name="loadFunc">Defines additional logic for association load query.</param>
 		/// <returns>Returns new query with related data included.</returns>
+		/// <remarks>See <see cref="LoadWith{TEntity,TProperty}(IQueryable{TEntity},Expression{Func{TEntity,TProperty}})"/> for SQL semantics and provider contract.</remarks>
 		[LinqTunnel]
 		[Pure] // Methods.LinqToDB.ThenLoadFromManyManyFilter
 		public static ILoadWithQueryable<TEntity, TProperty> ThenLoad<TEntity, TPreviousProperty, TProperty>(
@@ -760,5 +782,5 @@ namespace LinqToDB
 			var result = currentSource.Provider.CreateQuery<TEntity>(expr);
 			return new LoadWithQueryable<TEntity, TProperty>((IExpressionQuery<TEntity>)result);
 		}
-		}
 	}
+}
