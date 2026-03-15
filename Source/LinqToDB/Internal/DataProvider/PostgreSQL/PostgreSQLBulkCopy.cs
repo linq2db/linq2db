@@ -34,6 +34,13 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 			_provider = dataProvider;
 		}
 
+		protected override string? GetMultipleRowsSuffix(BulkCopyOptions options)
+		{
+			if (options.IgnoreConflicts == true)
+				return "\nON CONFLICT DO NOTHING";
+			return null;
+		}
+
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
@@ -55,6 +62,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
+			if (options.BulkCopyOptions.IgnoreConflicts == true)
+				return MultipleRowsCopy(table, options, source);
+
 			if (table.TryGetDataConnection(out var dataConnection))
 				return ProviderSpecificCopyImpl(dataConnection, table, options, source);
 
@@ -64,6 +74,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
+			if (options.BulkCopyOptions.IgnoreConflicts == true)
+				return MultipleRowsCopyAsync(table, options, source, cancellationToken);
+
 			if (table.TryGetDataConnection(out var dataConnection))
 				return ProviderSpecificCopyImplAsync(dataConnection, table, options, source, cancellationToken);
 
@@ -73,6 +86,9 @@ namespace LinqToDB.Internal.DataProvider.PostgreSQL
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
+			if (options.BulkCopyOptions.IgnoreConflicts == true)
+				return MultipleRowsCopyAsync(table, options, source, cancellationToken);
+
 			if (table.TryGetDataConnection(out var dataConnection))
 				return ProviderSpecificCopyImplAsync(dataConnection, table, options, source, cancellationToken);
 

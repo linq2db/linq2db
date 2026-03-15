@@ -19,6 +19,13 @@ namespace LinqToDB.Internal.DataProvider.SQLite
 		/// </remarks>
 		protected override int MaxSqlLength => 1000000;
 
+		protected override string GetInsertInto(MultipleRowsHelper helper)
+		{
+			if (helper.Options.BulkCopyOptions.IgnoreConflicts == true)
+				return $"INSERT OR IGNORE INTO {helper.TableName}";
+			return base.GetInsertInto(helper);
+		}
+
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{

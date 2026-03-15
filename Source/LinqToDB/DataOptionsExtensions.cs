@@ -1648,6 +1648,22 @@ namespace LinqToDB
 			return options with { WithoutSession = withoutSession };
 		}
 
+		/// <summary>
+		/// When set to <c>true</c>, ignores conflicts during bulk copy operation.
+		/// Supported for following databases:
+		/// <list type="bullet">
+		/// <item>MySql/MariaDB (it will automatically fall back to <see cref="BulkCopyType.MultipleRows"/>)</item>
+		/// <item>PostgreSQL (it will automatically fall back to <see cref="BulkCopyType.MultipleRows"/>)</item>
+		/// <item>SQLite</item>
+		/// </list>
+		/// Not compatible with <see cref="BulkCopyType.RowByRow"/> mode.
+		/// </summary>
+		[Pure]
+		public static BulkCopyOptions WithIgnoreConflicts(this BulkCopyOptions options, bool? ignoreConflicts)
+		{
+			return options with { IgnoreConflicts = ignoreConflicts };
+		}
+
 		#endregion
 
 		#region DataOptions.BulkCopyOptions
@@ -1886,6 +1902,21 @@ namespace LinqToDB
 		public static DataOptions UseBulkCopyWithoutSession(this DataOptions options, bool withoutSession)
 		{
 			return options.WithOptions<BulkCopyOptions>(o => o with { WithoutSession = withoutSession });
+		}
+
+		/// <summary>
+		/// When set to <c>true</c>, ignores conflicts during bulk copy operation.
+		/// Supported for following databases:
+		/// <list type="bullet">
+		/// <item>MySql/MariaDB (it will automatically fall back to <see cref="BulkCopyType.MultipleRows"/>)</item>
+		/// <item>PostgreSQL (it will automatically fall back to <see cref="BulkCopyType.MultipleRows"/>)</item>
+		/// <item>SQLite</item>
+		/// </list>
+		/// </summary>
+		[Pure]
+		public static DataOptions UseBulkCopyIgnoreConflicts(this DataOptions options, bool? ignoreConflicts)
+		{
+			return options.WithOptions<BulkCopyOptions>(o => o with { IgnoreConflicts = ignoreConflicts });
 		}
 
 		#endregion
