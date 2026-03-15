@@ -1760,8 +1760,6 @@ LinqToDB.Tools.ModelGeneration.IColumn.IsDuplicateOrEmpty.get -> bool
 LinqToDB.Tools.ModelGeneration.IColumn.IsDuplicateOrEmpty.set -> void
 LinqToDB.Tools.ModelGeneration.IColumn.IsIdentity.get -> bool
 LinqToDB.Tools.ModelGeneration.IColumn.IsIdentity.set -> void
-LinqToDB.Tools.ModelGeneration.IColumn.IsNullable.get -> bool
-LinqToDB.Tools.ModelGeneration.IColumn.IsNullable.set -> void
 LinqToDB.Tools.ModelGeneration.IColumn.IsPrimaryKey.get -> bool
 LinqToDB.Tools.ModelGeneration.IColumn.IsPrimaryKey.set -> void
 LinqToDB.Tools.ModelGeneration.IColumn.Length.get -> int?
@@ -2968,3 +2966,8 @@ static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Data.DataContextExtensions_Exe
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Data.DataContextExtensions_QueryProc.get -> LinqToDB.CodeModel.CodeIdentifier!
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Data.DataContextExtensions_QueryProcAsync.get -> LinqToDB.CodeModel.CodeIdentifier!
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.DataContext.get -> LinqToDB.CodeModel.IType!
+LinqToDB.CodeModel.CodeBuilder.GenericType(LinqToDB.CodeModel.IType! type, bool nullable, bool external, params LinqToDB.CodeModel.IType![]! typeArgs) -> LinqToDB.CodeModel.IType!
+LinqToDB.Tools.ModelGeneration.IProperty.IsNullable.get -> bool
+LinqToDB.Tools.ModelGeneration.IProperty.IsNullable.set -> void
+LinqToDB.Tools.ModelGeneration.Property<T>.IsNullable.get -> bool
+LinqToDB.Tools.ModelGeneration.Property<T>.IsNullable.set -> void

@@ -14,7 +14,7 @@ namespace Cli.Fluent.SqlServer2025
 	public class Issue1144
 	{
 		/// <summary>
-		/// Column description
+		/// Column &lt;тест&gt; description
 		/// </summary>
 		public int Id { get; set; } // int
 	}

@@ -14,7 +14,7 @@ namespace Cli.NoMetadata.SqlServer
 	public class Issue1144
 	{
 		/// <summary>
-		/// Column description
+		/// Column &lt;тест&gt; description
 		/// </summary>
 		public int Id { get; set; } // int
 	}
