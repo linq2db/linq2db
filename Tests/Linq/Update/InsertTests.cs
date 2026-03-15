@@ -2494,7 +2494,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
-		public void InsertFromWithSubqueryColumn_Same([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse, TestProvName.AllSqlServer2005, TestProvName.AllSybase)] string context)
+		public void InsertFromWithSubqueryColumn_Same([DataSources(TestProvName.AllSqlCe, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSqlServer2005, TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
@@ -2517,7 +2517,7 @@ namespace Tests.xUpdate
 
 		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
-		public void InsertFromWithSubqueryColumn_Different([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse, TestProvName.AllSqlServer2005)] string context)
+		public void InsertFromWithSubqueryColumn_Different([DataSources(TestProvName.AllSqlCe, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSqlServer2005)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
@@ -2541,7 +2541,7 @@ namespace Tests.xUpdate
 
 		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
 		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
-		public void InsertFromWithSubqueryColumn_DifferentWithDuplicate([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse, TestProvName.AllSqlServer2005)] string context)
+		public void InsertFromWithSubqueryColumn_DifferentWithDuplicate([DataSources(TestProvName.AllSqlCe, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSqlServer2005)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
