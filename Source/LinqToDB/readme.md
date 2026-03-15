@@ -760,6 +760,7 @@ Still have questions left? Check out our [documentation site](https://linq2db.gi
 
 ## AI/LLM-oriented documentation
 
-- Architecture overview for agents: [`LinqToDBArchitecture.cs`](LinqToDBArchitecture.cs)
-- `AI-Tags` metadata format and vocabulary: [`docs/ai-tags.md`](https://github.com/linq2db/linq2db/blob/master/docs/ai-tags.md)
+- Architecture overview for agents: see XML documentation for class `LinqToDBArchitecture`.
+- Extended architecture notes: [`docs/architecture.md`](docs/architecture.md)
+- `AI-Tags` metadata format and vocabulary: [`docs/ai-tags.md`](docs/ai-tags.md)
 
