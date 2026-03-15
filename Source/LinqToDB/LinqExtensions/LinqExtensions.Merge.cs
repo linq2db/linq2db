@@ -41,6 +41,40 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// <para><b>Merge call graph:</b></para>
+		/// <code>
+		/// Merge(ITable&lt;TTarget&gt;)
+		///  └─ Using(...) / UsingTarget()
+		///      └─ On(...) / OnTargetKey() [OnTargetKey available only for UsingTarget]
+		///          └─ Operations (1..N)
+		///              ├─ InsertWhenNotMatched*
+		///              ├─ UpdateWhenMatched*
+		///              ├─ DeleteWhenMatched*
+		///              ├─ UpdateWhenNotMatchedBySource* [SQL Server]
+		///              ├─ DeleteWhenNotMatchedBySource* [SQL Server]
+		///              └─ UpdateWhenMatchedThenDelete*  [Oracle]
+		///                  └─ Terminal
+		///                      ├─ Merge() / MergeAsync()
+		///                      ├─ MergeWithOutput*()
+		///                      └─ MergeWithOutputInto*()
+		/// </code>
+		/// <para><b>AI agent state transitions:</b></para>
+		/// <code>
+		/// S0: IMergeableUsing&lt;TTarget&gt;
+		///   - Using(...)     -&gt; S1:  IMergeableOn&lt;TTarget,TSource&gt;
+		///   - UsingTarget()  -&gt; S1': IMergeableOn&lt;TTarget,TTarget&gt;
+		///
+		/// S1/S1':
+		///   - On(...)        -&gt; S2:  IMergeableSource&lt;TTarget,TSource&gt;
+		///   - OnTargetKey()  -&gt; S2'  [only from S1']
+		///
+		/// S2/S2':
+		///   - Operation*     -&gt; S3: IMergeable&lt;TTarget,TSource&gt;
+		///
+		/// S3:
+		///   - Operation*     -&gt; S3
+		///   - Terminal*      -&gt; execute/output
+		/// </code>
 		/// <para>
 		/// AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
@@ -69,6 +103,40 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// <para><b>Merge call graph:</b></para>
+		/// <code>
+		/// Merge(ITable&lt;TTarget&gt;)
+		///  └─ Using(...) / UsingTarget()
+		///      └─ On(...) / OnTargetKey() [OnTargetKey available only for UsingTarget]
+		///          └─ Operations (1..N)
+		///              ├─ InsertWhenNotMatched*
+		///              ├─ UpdateWhenMatched*
+		///              ├─ DeleteWhenMatched*
+		///              ├─ UpdateWhenNotMatchedBySource* [SQL Server]
+		///              ├─ DeleteWhenNotMatchedBySource* [SQL Server]
+		///              └─ UpdateWhenMatchedThenDelete*  [Oracle]
+		///                  └─ Terminal
+		///                      ├─ Merge() / MergeAsync()
+		///                      ├─ MergeWithOutput*()
+		///                      └─ MergeWithOutputInto*()
+		/// </code>
+		/// <para><b>AI agent state transitions:</b></para>
+		/// <code>
+		/// S0: IMergeableUsing&lt;TTarget&gt;
+		///   - Using(...)     -&gt; S1:  IMergeableOn&lt;TTarget,TSource&gt;
+		///   - UsingTarget()  -&gt; S1': IMergeableOn&lt;TTarget,TTarget&gt;
+		///
+		/// S1/S1':
+		///   - On(...)        -&gt; S2:  IMergeableSource&lt;TTarget,TSource&gt;
+		///   - OnTargetKey()  -&gt; S2'  [only from S1']
+		///
+		/// S2/S2':
+		///   - Operation*     -&gt; S3: IMergeable&lt;TTarget,TSource&gt;
+		///
+		/// S3:
+		///   - Operation*     -&gt; S3
+		///   - Terminal*      -&gt; execute/output
+		/// </code>
 		/// <para>
 		/// AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
@@ -99,6 +167,40 @@ namespace LinqToDB
 		/// <remarks>
 		/// Execution is deferred and the method is composable.
 		/// The merge definition is represented in the SQL AST and emitted into SQL text according to provider rules.
+		/// <para><b>Merge call graph:</b></para>
+		/// <code>
+		/// Merge(ITable&lt;TTarget&gt;)
+		///  └─ Using(...) / UsingTarget()
+		///      └─ On(...) / OnTargetKey() [OnTargetKey available only for UsingTarget]
+		///          └─ Operations (1..N)
+		///              ├─ InsertWhenNotMatched*
+		///              ├─ UpdateWhenMatched*
+		///              ├─ DeleteWhenMatched*
+		///              ├─ UpdateWhenNotMatchedBySource* [SQL Server]
+		///              ├─ DeleteWhenNotMatchedBySource* [SQL Server]
+		///              └─ UpdateWhenMatchedThenDelete*  [Oracle]
+		///                  └─ Terminal
+		///                      ├─ Merge() / MergeAsync()
+		///                      ├─ MergeWithOutput*()
+		///                      └─ MergeWithOutputInto*()
+		/// </code>
+		/// <para><b>AI agent state transitions:</b></para>
+		/// <code>
+		/// S0: IMergeableUsing&lt;TTarget&gt;
+		///   - Using(...)     -&gt; S1:  IMergeableOn&lt;TTarget,TSource&gt;
+		///   - UsingTarget()  -&gt; S1': IMergeableOn&lt;TTarget,TTarget&gt;
+		///
+		/// S1/S1':
+		///   - On(...)        -&gt; S2:  IMergeableSource&lt;TTarget,TSource&gt;
+		///   - OnTargetKey()  -&gt; S2'  [only from S1']
+		///
+		/// S2/S2':
+		///   - Operation*     -&gt; S3: IMergeable&lt;TTarget,TSource&gt;
+		///
+		/// S3:
+		///   - Operation*     -&gt; S3
+		///   - Terminal*      -&gt; execute/output
+		/// </code>
 		/// <para>
 		/// AI-Tags: Group=Merge; Execution=Deferred; Composability=Composable; Affects=SqlSemantics; Pipeline=ExpressionTree,SqlAST,SqlText; Provider=ProviderDefined;
 		/// </para>
