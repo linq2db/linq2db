@@ -33,6 +33,7 @@ namespace LinqToDB.Internal.DataProvider.MySql
 			Version  = version;
 
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
+			SqlProviderFlags.IsUnionAllOrderBySupported        = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = version > MySqlVersion.MySql57;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.IsNamingQueryBlockSupported       = true;
