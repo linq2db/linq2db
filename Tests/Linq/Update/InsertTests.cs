@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Data;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 
@@ -2480,5 +2481,87 @@ namespace Tests.xUpdate
 		}
 
 		#endregion
+
+		sealed class InsertFromWithConstantsTable
+		{
+			[PrimaryKey]
+			public int     Id     { get; set; }
+			public int?    Value  { get; set; }
+			public string? Value1 { get; set; }
+			public string? Value2 { get; set; }
+			public string? Value3 { get; set; }
+			public string? Value4 { get; set; }
+		}
+
+		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
+		public void InsertFromWithSubqueryColumn_Same([DataSources(TestProvName.AllSqlCe, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSqlServer2005, TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
+
+			var id1 = 1;
+			var id2 = 2;
+			var id3 = 3;
+
+			tb.Insert(() => new InsertFromWithConstantsTable()
+			{
+				Id     = id1,
+				Value  = id3,
+				// same expressions
+				Value1 = tb.Where(r => r.Id == id2).Select(r => r.Value4).SingleOrDefault(),
+				Value2 = tb.Where(r => r.Id == id2).Select(r => r.Value4).SingleOrDefault(),
+				Value3 = "string 1",
+				Value4 = "string 2",
+			});
+		}
+
+		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
+		public void InsertFromWithSubqueryColumn_Different([DataSources(TestProvName.AllSqlCe, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSqlServer2005)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
+
+			var id1 = 1;
+			var id2 = 2;
+			var id3 = 3;
+			var id4 = 4;
+
+			tb.Insert(() => new InsertFromWithConstantsTable()
+			{
+				Id = id1,
+				Value = id3,
+				// different expressions
+				Value1 = tb.Where(r => r.Id == id2).Select(r => r.Value4).SingleOrDefault(),
+				Value2 = tb.Where(r => r.Id == id4).Select(r => r.Value3).FirstOrDefault(),
+				Value3 = "string 1",
+				Value4 = "string 2",
+			});
+		}
+
+		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
+		public void InsertFromWithSubqueryColumn_DifferentWithDuplicate([DataSources(TestProvName.AllSqlCe, TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllSqlServer2005)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
+
+			var id1 = 1;
+			var id2 = 2;
+			var id3 = 3;
+			var id4 = 4;
+
+			tb.Insert(() => new InsertFromWithConstantsTable()
+			{
+				Id = id1,
+				Value = id3,
+				// different expressions
+				Value1 = tb.Where(r => r.Id == id2).Select(r => r.Value4).SingleOrDefault(),
+				Value2 = tb.Where(r => r.Id == id4).Select(r => r.Value3).FirstOrDefault(),
+				// duplicate
+				Value3 = tb.Where(r => r.Id == id2).Select(r => r.Value4).SingleOrDefault(),
+				Value4 = "string 2",
+			});
+		}
 	}
 }
