@@ -2148,7 +2148,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
-		public void UpdateFromWithDuplicateSubqueryColumn_SingleOrDefault([DataSources(TestProvName.AllSqlCe)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
+		public void UpdateFromWithDuplicateSubqueryColumn_SingleOrDefault([DataSources(TestProvName.AllSqlCe, TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
@@ -2176,7 +2177,7 @@ namespace Tests.xUpdate
 		[Test(Description = "Tests that client/duplicate columns not removed (v6.2.0 regression)")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
-		public void UpdateFromWithDuplicateSubqueryColumn_FirstOrDefault([DataSources(TestProvName.AllSqlCe)] string context)
+		public void UpdateFromWithDuplicateSubqueryColumn_FirstOrDefault([DataSources(TestProvName.AllSqlCe, TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<InsertFromWithConstantsTable>();
