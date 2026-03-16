@@ -11,11 +11,11 @@ They are intended for:
 
 Use a single-line key-value list:
 
-`AI-Tags: Key=Value; Key=Value; ...;`
+`AI-Tags: Key1=Value1; Key2=Value2; ...;`
 
 Optional defaults line for an API surface:
 
-`AI-Tags-Defaults: Key=Value; Key=Value; ...;`
+`AI-Tags-Defaults: Key1=Value1; Key2=Value2; ...;`
 
 Example:
 
