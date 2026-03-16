@@ -637,7 +637,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByInUnion([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
+		public void OrderByInConcat([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 

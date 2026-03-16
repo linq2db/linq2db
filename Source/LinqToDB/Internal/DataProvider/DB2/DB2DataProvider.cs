@@ -27,6 +27,8 @@ namespace LinqToDB.Internal.DataProvider.DB2
 		{
 			Version = version;
 
+			SqlProviderFlags.IsSubQueryOrderBySupported                            = false;
+			SqlProviderFlags.IsUnionAllOrderBySupported                            = true;
 			SqlProviderFlags.AcceptsTakeAsParameter                                = false;
 			SqlProviderFlags.AcceptsTakeAsParameterIfSkip                          = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported                     = true;
