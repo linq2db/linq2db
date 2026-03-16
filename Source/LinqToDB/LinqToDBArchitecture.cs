@@ -103,9 +103,6 @@ namespace LinqToDB
 	/// </para>
 	/// <list type="bullet">
 	///   <item>
-	///     <description>llm.txt — high-level entry point for AI systems.</description>
-	///   </item>
-	///   <item>
 	///     <description>docs/architecture.md — architectural model and translation pipeline.</description>
 	///   </item>
 	///   <item>
