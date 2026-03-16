@@ -9,7 +9,7 @@ using LinqToDB.Internal.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlQuery
 {
-
+	// TODO: v7 - move to internal namespace to other AST members...
 	public class SqlExtendedFunction : SqlExpressionBase
 	{
 		public SqlExtendedFunction(DbDataType dbDataType,
