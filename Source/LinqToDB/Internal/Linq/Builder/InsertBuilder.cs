@@ -34,7 +34,7 @@ namespace LinqToDB.Internal.Linq.Builder
 			else
 			{
 				insertContext = new InsertContext(sequence, InsertContext.InsertTypeEnum.Insert,
-					new SqlInsertStatement(sequence.SelectQuery), null);
+					new SqlInsertStatement(sequence.SelectQuery), outputExpression: null);
 			}
 		}
 
