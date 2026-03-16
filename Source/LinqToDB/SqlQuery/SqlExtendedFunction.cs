@@ -227,6 +227,12 @@ namespace LinqToDB.SqlQuery
 			if (!string.Equals(FunctionName, otherFunction.FunctionName, StringComparison.Ordinal))
 				return false;
 
+			if (Type != otherFunction.Type)
+				return false;
+
+			if (IsAggregate != otherFunction.IsAggregate)
+				return false;
+
 			if (Arguments.Count != otherFunction.Arguments.Count)
 				return false;
 
@@ -245,11 +251,20 @@ namespace LinqToDB.SqlQuery
 			if (CanBeAffectedByOrderBy != otherFunction.CanBeAffectedByOrderBy)
 				return false;
 
+			if (CanBeNull != otherFunction.CanBeNull)
+				return false;
+
+			if (CanBeNullInAggregationQuery != otherFunction.CanBeNullInAggregationQuery)
+				return false;
+
 			foreach (var argument in Arguments)
 			{
 				if (!otherFunction.Arguments.Exists(a => argument.Modifier == a.Modifier && argument.Expression.Equals(a.Expression, comparer) && argument.Suffix.AreEqual(a.Suffix, comparer)))
 					return false;
 			}
+
+			if (!ArgumentsNullability.SequenceEqual(otherFunction.ArgumentsNullability))
+				return false;
 
 			if (!CheckNulls(PartitionBy, otherFunction.PartitionBy))
 				return false;
@@ -277,6 +292,21 @@ namespace LinqToDB.SqlQuery
 				for (var i = 0; i < OrderBy.Count; i++)
 				{
 					if (OrderBy[i].IsDescending != otherFunction.OrderBy![i].IsDescending || !OrderBy[i].Expression.Equals(otherFunction.OrderBy![i].Expression, comparer))
+						return false;
+				}
+			}
+
+			if (!CheckNulls(WithinGroup, otherFunction.WithinGroup))
+				return false;
+
+			if (WithinGroup != null && WithinGroup.Count != otherFunction.WithinGroup!.Count)
+				return false;
+
+			if (WithinGroup != null)
+			{
+				for (var i = 0; i < WithinGroup.Count; i++)
+				{
+					if (WithinGroup[i].IsDescending != otherFunction.WithinGroup![i].IsDescending || !WithinGroup[i].Expression.Equals(otherFunction.WithinGroup![i].Expression, comparer))
 						return false;
 				}
 			}
@@ -422,6 +452,8 @@ namespace LinqToDB.SqlQuery
 			hash.Add(Filter?.GetElementHashCode());
 			hash.Add(IsAggregate);
 			hash.Add(CanBeAffectedByOrderBy);
+			hash.Add(CanBeNull);
+			hash.Add(CanBeNullInAggregationQuery);
 
 			foreach (var t in Arguments)
 			{

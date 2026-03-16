@@ -191,6 +191,7 @@ namespace LinqToDB.Internal.SqlQuery.Visitors
 							arguments : arguments,
 							argumentsNullability : element.ArgumentsNullability,
 							canBeNull : element.CanBeNull,
+							canBeNullInAggregationQuery: element.CanBeNullInAggregationQuery,
 							withinGroup : withinGroup,
 							partitionBy : partitionBy,
 							orderBy : orderBy,

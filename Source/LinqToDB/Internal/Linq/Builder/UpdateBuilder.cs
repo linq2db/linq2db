@@ -651,7 +651,6 @@ namespace LinqToDB.Internal.Linq.Builder
 
 			public SqlUpdateStatement         UpdateStatement { get; }
 			public UpdateTypeEnum             UpdateType      { get; set; }
-			public bool                       CreateColumns   { get; set; }
 
 			public Expression? TablePath { get; set; }
 
